@@ -520,6 +520,7 @@ const (
 	ResourceAwsElasticacheSnapshot                                              string = "aws.elasticache.snapshot"
 	ResourceAwsRedshift                                                         string = "aws.redshift"
 	ResourceAwsRedshiftCluster                                                  string = "aws.redshift.cluster"
+	ResourceAwsRedshiftClusterLoggingStatus                                     string = "aws.redshift.cluster.loggingStatus"
 	ResourceAwsRedshiftSnapshot                                                 string = "aws.redshift.snapshot"
 	ResourceAwsRedshiftSubnetGroup                                              string = "aws.redshift.subnetGroup"
 	ResourceAwsRedshiftEventSubscription                                        string = "aws.redshift.eventSubscription"
@@ -797,6 +798,7 @@ const (
 	ResourceAwsGlueJob                                                          string = "aws.glue.job"
 	ResourceAwsGlueCatalogExportEncryption                                      string = "aws.glue.catalogExportEncryption"
 	ResourceAwsGlueSecurityConfiguration                                        string = "aws.glue.securityConfiguration"
+	ResourceAwsGlueSecurityConfigurationEncryption                              string = "aws.glue.securityConfiguration.encryption"
 	ResourceAwsGlueDatabase                                                     string = "aws.glue.database"
 	ResourceAwsGlueDatabaseTable                                                string = "aws.glue.database.table"
 	ResourceAwsElasticbeanstalk                                                 string = "aws.elasticbeanstalk"
@@ -3036,6 +3038,10 @@ func init() {
 			Init:   initAwsRedshiftCluster,
 			Create: createAwsRedshiftCluster,
 		},
+		"aws.redshift.cluster.loggingStatus": {
+			// to override args, implement: initAwsRedshiftClusterLoggingStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRedshiftClusterLoggingStatus,
+		},
 		"aws.redshift.snapshot": {
 			// to override args, implement: initAwsRedshiftSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRedshiftSnapshot,
@@ -4143,6 +4149,10 @@ func init() {
 		"aws.glue.securityConfiguration": {
 			// to override args, implement: initAwsGlueSecurityConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsGlueSecurityConfiguration,
+		},
+		"aws.glue.securityConfiguration.encryption": {
+			// to override args, implement: initAwsGlueSecurityConfigurationEncryption(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGlueSecurityConfigurationEncryption,
 		},
 		"aws.glue.database": {
 			// to override args, implement: initAwsGlueDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -20389,29 +20399,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.redshift.cluster.logging": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetLogging()).ToDataRes(types.Dict)
 	},
-	"aws.redshift.cluster.loggingEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetLoggingEnabled()).ToDataRes(types.Bool)
-	},
-	"aws.redshift.cluster.logDestinationType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetLogDestinationType()).ToDataRes(types.String)
-	},
-	"aws.redshift.cluster.logExports": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetLogExports()).ToDataRes(types.Array(types.String))
-	},
-	"aws.redshift.cluster.logBucket": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetLogBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
-	},
-	"aws.redshift.cluster.logS3KeyPrefix": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetLogS3KeyPrefix()).ToDataRes(types.String)
-	},
-	"aws.redshift.cluster.lastSuccessfulLogDeliveryAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetLastSuccessfulLogDeliveryAt()).ToDataRes(types.Time)
-	},
-	"aws.redshift.cluster.lastLogFailureMessage": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetLastLogFailureMessage()).ToDataRes(types.String)
-	},
-	"aws.redshift.cluster.lastLogFailureAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetLastLogFailureAt()).ToDataRes(types.Time)
+	"aws.redshift.cluster.auditLogging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetAuditLogging()).ToDataRes(types.Resource("aws.redshift.cluster.loggingStatus"))
 	},
 	"aws.redshift.cluster.masterUsername": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetMasterUsername()).ToDataRes(types.String)
@@ -20574,6 +20563,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.redshift.cluster.elasticIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetElasticIp()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.loggingStatus.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftClusterLoggingStatus).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.redshift.cluster.loggingStatus.destinationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftClusterLoggingStatus).GetDestinationType()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.loggingStatus.logExports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftClusterLoggingStatus).GetLogExports()).ToDataRes(types.Array(types.String))
+	},
+	"aws.redshift.cluster.loggingStatus.bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftClusterLoggingStatus).GetBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.redshift.cluster.loggingStatus.s3KeyPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftClusterLoggingStatus).GetS3KeyPrefix()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.loggingStatus.lastSuccessfulDeliveryAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftClusterLoggingStatus).GetLastSuccessfulDeliveryAt()).ToDataRes(types.Time)
+	},
+	"aws.redshift.cluster.loggingStatus.lastFailureMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftClusterLoggingStatus).GetLastFailureMessage()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.loggingStatus.lastFailureAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftClusterLoggingStatus).GetLastFailureAt()).ToDataRes(types.Time)
 	},
 	"aws.redshift.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftSnapshot).GetArn()).ToDataRes(types.String)
@@ -30421,32 +30434,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.glue.securityConfiguration.jobBookmarksEncryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueSecurityConfiguration).GetJobBookmarksEncryption()).ToDataRes(types.Dict)
 	},
-	"aws.glue.securityConfiguration.s3EncryptionMode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsGlueSecurityConfiguration).GetS3EncryptionMode()).ToDataRes(types.String)
+	"aws.glue.securityConfiguration.s3EncryptionRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetS3EncryptionRef()).ToDataRes(types.Resource("aws.glue.securityConfiguration.encryption"))
 	},
-	"aws.glue.securityConfiguration.s3EncryptionKmsKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsGlueSecurityConfiguration).GetS3EncryptionKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	"aws.glue.securityConfiguration.cloudWatchEncryptionRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetCloudWatchEncryptionRef()).ToDataRes(types.Resource("aws.glue.securityConfiguration.encryption"))
 	},
-	"aws.glue.securityConfiguration.cloudWatchEncryptionMode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsGlueSecurityConfiguration).GetCloudWatchEncryptionMode()).ToDataRes(types.String)
+	"aws.glue.securityConfiguration.jobBookmarksEncryptionRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetJobBookmarksEncryptionRef()).ToDataRes(types.Resource("aws.glue.securityConfiguration.encryption"))
 	},
-	"aws.glue.securityConfiguration.cloudWatchEncryptionKmsKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsGlueSecurityConfiguration).GetCloudWatchEncryptionKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
-	},
-	"aws.glue.securityConfiguration.jobBookmarksEncryptionMode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsGlueSecurityConfiguration).GetJobBookmarksEncryptionMode()).ToDataRes(types.String)
-	},
-	"aws.glue.securityConfiguration.jobBookmarksEncryptionKmsKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsGlueSecurityConfiguration).GetJobBookmarksEncryptionKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
-	},
-	"aws.glue.securityConfiguration.dataQualityEncryptionMode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsGlueSecurityConfiguration).GetDataQualityEncryptionMode()).ToDataRes(types.String)
-	},
-	"aws.glue.securityConfiguration.dataQualityEncryptionKmsKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsGlueSecurityConfiguration).GetDataQualityEncryptionKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	"aws.glue.securityConfiguration.dataQualityEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetDataQualityEncryption()).ToDataRes(types.Resource("aws.glue.securityConfiguration.encryption"))
 	},
 	"aws.glue.securityConfiguration.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueSecurityConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.glue.securityConfiguration.encryption.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfigurationEncryption).GetMode()).ToDataRes(types.String)
+	},
+	"aws.glue.securityConfiguration.encryption.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfigurationEncryption).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.glue.database.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueDatabase).GetName()).ToDataRes(types.String)
@@ -59718,36 +59725,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRedshiftCluster).Logging, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.redshift.cluster.loggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).LoggingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.redshift.cluster.logDestinationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).LogDestinationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.redshift.cluster.logExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).LogExports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"aws.redshift.cluster.logBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).LogBucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
-		return
-	},
-	"aws.redshift.cluster.logS3KeyPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).LogS3KeyPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.redshift.cluster.lastSuccessfulLogDeliveryAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).LastSuccessfulLogDeliveryAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"aws.redshift.cluster.lastLogFailureMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).LastLogFailureMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.redshift.cluster.lastLogFailureAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).LastLogFailureAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.redshift.cluster.auditLogging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).AuditLogging, ok = plugin.RawToTValue[*mqlAwsRedshiftClusterLoggingStatus](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.masterUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -59964,6 +59943,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.redshift.cluster.elasticIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftCluster).ElasticIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.loggingStatus.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftClusterLoggingStatus).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.redshift.cluster.loggingStatus.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftClusterLoggingStatus).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.loggingStatus.destinationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftClusterLoggingStatus).DestinationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.loggingStatus.logExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftClusterLoggingStatus).LogExports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.loggingStatus.bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftClusterLoggingStatus).Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.loggingStatus.s3KeyPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftClusterLoggingStatus).S3KeyPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.loggingStatus.lastSuccessfulDeliveryAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftClusterLoggingStatus).LastSuccessfulDeliveryAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.loggingStatus.lastFailureMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftClusterLoggingStatus).LastFailureMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.loggingStatus.lastFailureAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftClusterLoggingStatus).LastFailureAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -74202,40 +74217,36 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsGlueSecurityConfiguration).JobBookmarksEncryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.glue.securityConfiguration.s3EncryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGlueSecurityConfiguration).S3EncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.glue.securityConfiguration.s3EncryptionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).S3EncryptionRef, ok = plugin.RawToTValue[*mqlAwsGlueSecurityConfigurationEncryption](v.Value, v.Error)
 		return
 	},
-	"aws.glue.securityConfiguration.s3EncryptionKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGlueSecurityConfiguration).S3EncryptionKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+	"aws.glue.securityConfiguration.cloudWatchEncryptionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).CloudWatchEncryptionRef, ok = plugin.RawToTValue[*mqlAwsGlueSecurityConfigurationEncryption](v.Value, v.Error)
 		return
 	},
-	"aws.glue.securityConfiguration.cloudWatchEncryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGlueSecurityConfiguration).CloudWatchEncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.glue.securityConfiguration.jobBookmarksEncryptionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).JobBookmarksEncryptionRef, ok = plugin.RawToTValue[*mqlAwsGlueSecurityConfigurationEncryption](v.Value, v.Error)
 		return
 	},
-	"aws.glue.securityConfiguration.cloudWatchEncryptionKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGlueSecurityConfiguration).CloudWatchEncryptionKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
-		return
-	},
-	"aws.glue.securityConfiguration.jobBookmarksEncryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGlueSecurityConfiguration).JobBookmarksEncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.glue.securityConfiguration.jobBookmarksEncryptionKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGlueSecurityConfiguration).JobBookmarksEncryptionKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
-		return
-	},
-	"aws.glue.securityConfiguration.dataQualityEncryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGlueSecurityConfiguration).DataQualityEncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.glue.securityConfiguration.dataQualityEncryptionKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGlueSecurityConfiguration).DataQualityEncryptionKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+	"aws.glue.securityConfiguration.dataQualityEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).DataQualityEncryption, ok = plugin.RawToTValue[*mqlAwsGlueSecurityConfigurationEncryption](v.Value, v.Error)
 		return
 	},
 	"aws.glue.securityConfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGlueSecurityConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.encryption.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfigurationEncryption).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.glue.securityConfiguration.encryption.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfigurationEncryption).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.encryption.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfigurationEncryption).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.glue.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -143919,14 +143930,7 @@ type mqlAwsRedshiftCluster struct {
 	KmsKey                                  plugin.TValue[*mqlAwsKmsKey]
 	EnhancedVpcRouting                      plugin.TValue[bool]
 	Logging                                 plugin.TValue[any]
-	LoggingEnabled                          plugin.TValue[bool]
-	LogDestinationType                      plugin.TValue[string]
-	LogExports                              plugin.TValue[[]any]
-	LogBucket                               plugin.TValue[*mqlAwsS3Bucket]
-	LogS3KeyPrefix                          plugin.TValue[string]
-	LastSuccessfulLogDeliveryAt             plugin.TValue[*time.Time]
-	LastLogFailureMessage                   plugin.TValue[string]
-	LastLogFailureAt                        plugin.TValue[*time.Time]
+	AuditLogging                            plugin.TValue[*mqlAwsRedshiftClusterLoggingStatus]
 	MasterUsername                          plugin.TValue[string]
 	Name                                    plugin.TValue[string]
 	NextMaintenanceWindowStartTime          plugin.TValue[*time.Time]
@@ -144094,61 +144098,19 @@ func (c *mqlAwsRedshiftCluster) GetLogging() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsRedshiftCluster) GetLoggingEnabled() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.LoggingEnabled, func() (bool, error) {
-		return c.loggingEnabled()
-	})
-}
-
-func (c *mqlAwsRedshiftCluster) GetLogDestinationType() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.LogDestinationType, func() (string, error) {
-		return c.logDestinationType()
-	})
-}
-
-func (c *mqlAwsRedshiftCluster) GetLogExports() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.LogExports, func() ([]any, error) {
-		return c.logExports()
-	})
-}
-
-func (c *mqlAwsRedshiftCluster) GetLogBucket() *plugin.TValue[*mqlAwsS3Bucket] {
-	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.LogBucket, func() (*mqlAwsS3Bucket, error) {
+func (c *mqlAwsRedshiftCluster) GetAuditLogging() *plugin.TValue[*mqlAwsRedshiftClusterLoggingStatus] {
+	return plugin.GetOrCompute[*mqlAwsRedshiftClusterLoggingStatus](&c.AuditLogging, func() (*mqlAwsRedshiftClusterLoggingStatus, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.cluster", c.__id, "logBucket")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.cluster", c.__id, "auditLogging")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlAwsS3Bucket), nil
+				return d.Value.(*mqlAwsRedshiftClusterLoggingStatus), nil
 			}
 		}
 
-		return c.logBucket()
-	})
-}
-
-func (c *mqlAwsRedshiftCluster) GetLogS3KeyPrefix() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.LogS3KeyPrefix, func() (string, error) {
-		return c.logS3KeyPrefix()
-	})
-}
-
-func (c *mqlAwsRedshiftCluster) GetLastSuccessfulLogDeliveryAt() *plugin.TValue[*time.Time] {
-	return plugin.GetOrCompute[*time.Time](&c.LastSuccessfulLogDeliveryAt, func() (*time.Time, error) {
-		return c.lastSuccessfulLogDeliveryAt()
-	})
-}
-
-func (c *mqlAwsRedshiftCluster) GetLastLogFailureMessage() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.LastLogFailureMessage, func() (string, error) {
-		return c.lastLogFailureMessage()
-	})
-}
-
-func (c *mqlAwsRedshiftCluster) GetLastLogFailureAt() *plugin.TValue[*time.Time] {
-	return plugin.GetOrCompute[*time.Time](&c.LastLogFailureAt, func() (*time.Time, error) {
-		return c.lastLogFailureAt()
+		return c.auditLogging()
 	})
 }
 
@@ -144490,6 +144452,97 @@ func (c *mqlAwsRedshiftCluster) GetAvailabilityZoneRelocationStatus() *plugin.TV
 
 func (c *mqlAwsRedshiftCluster) GetElasticIp() *plugin.TValue[string] {
 	return &c.ElasticIp
+}
+
+// mqlAwsRedshiftClusterLoggingStatus for the aws.redshift.cluster.loggingStatus resource
+type mqlAwsRedshiftClusterLoggingStatus struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsRedshiftClusterLoggingStatusInternal
+	Enabled                  plugin.TValue[bool]
+	DestinationType          plugin.TValue[string]
+	LogExports               plugin.TValue[[]any]
+	Bucket                   plugin.TValue[*mqlAwsS3Bucket]
+	S3KeyPrefix              plugin.TValue[string]
+	LastSuccessfulDeliveryAt plugin.TValue[*time.Time]
+	LastFailureMessage       plugin.TValue[string]
+	LastFailureAt            plugin.TValue[*time.Time]
+}
+
+// createAwsRedshiftClusterLoggingStatus creates a new instance of this resource
+func createAwsRedshiftClusterLoggingStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRedshiftClusterLoggingStatus{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.redshift.cluster.loggingStatus", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRedshiftClusterLoggingStatus) MqlName() string {
+	return "aws.redshift.cluster.loggingStatus"
+}
+
+func (c *mqlAwsRedshiftClusterLoggingStatus) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRedshiftClusterLoggingStatus) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsRedshiftClusterLoggingStatus) GetDestinationType() *plugin.TValue[string] {
+	return &c.DestinationType
+}
+
+func (c *mqlAwsRedshiftClusterLoggingStatus) GetLogExports() *plugin.TValue[[]any] {
+	return &c.LogExports
+}
+
+func (c *mqlAwsRedshiftClusterLoggingStatus) GetBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.cluster.loggingStatus", c.__id, "bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.bucket()
+	})
+}
+
+func (c *mqlAwsRedshiftClusterLoggingStatus) GetS3KeyPrefix() *plugin.TValue[string] {
+	return &c.S3KeyPrefix
+}
+
+func (c *mqlAwsRedshiftClusterLoggingStatus) GetLastSuccessfulDeliveryAt() *plugin.TValue[*time.Time] {
+	return &c.LastSuccessfulDeliveryAt
+}
+
+func (c *mqlAwsRedshiftClusterLoggingStatus) GetLastFailureMessage() *plugin.TValue[string] {
+	return &c.LastFailureMessage
+}
+
+func (c *mqlAwsRedshiftClusterLoggingStatus) GetLastFailureAt() *plugin.TValue[*time.Time] {
+	return &c.LastFailureAt
 }
 
 // mqlAwsRedshiftSnapshot for the aws.redshift.snapshot resource
@@ -180009,21 +180062,17 @@ func (c *mqlAwsGlueCatalogExportEncryption) GetKmsKey() *plugin.TValue[*mqlAwsKm
 type mqlAwsGlueSecurityConfiguration struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAwsGlueSecurityConfigurationInternal
-	Name                         plugin.TValue[string]
-	CreatedAt                    plugin.TValue[*time.Time]
-	S3Encryption                 plugin.TValue[any]
-	CloudWatchEncryption         plugin.TValue[any]
-	JobBookmarksEncryption       plugin.TValue[any]
-	S3EncryptionMode             plugin.TValue[string]
-	S3EncryptionKmsKey           plugin.TValue[*mqlAwsKmsKey]
-	CloudWatchEncryptionMode     plugin.TValue[string]
-	CloudWatchEncryptionKmsKey   plugin.TValue[*mqlAwsKmsKey]
-	JobBookmarksEncryptionMode   plugin.TValue[string]
-	JobBookmarksEncryptionKmsKey plugin.TValue[*mqlAwsKmsKey]
-	DataQualityEncryptionMode    plugin.TValue[string]
-	DataQualityEncryptionKmsKey  plugin.TValue[*mqlAwsKmsKey]
-	Region                       plugin.TValue[string]
+	// optional: if you define mqlAwsGlueSecurityConfigurationInternal it will be used here
+	Name                      plugin.TValue[string]
+	CreatedAt                 plugin.TValue[*time.Time]
+	S3Encryption              plugin.TValue[any]
+	CloudWatchEncryption      plugin.TValue[any]
+	JobBookmarksEncryption    plugin.TValue[any]
+	S3EncryptionRef           plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption]
+	CloudWatchEncryptionRef   plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption]
+	JobBookmarksEncryptionRef plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption]
+	DataQualityEncryption     plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption]
+	Region                    plugin.TValue[string]
 }
 
 // createAwsGlueSecurityConfiguration creates a new instance of this resource
@@ -180078,88 +180127,85 @@ func (c *mqlAwsGlueSecurityConfiguration) GetJobBookmarksEncryption() *plugin.TV
 	return &c.JobBookmarksEncryption
 }
 
-func (c *mqlAwsGlueSecurityConfiguration) GetS3EncryptionMode() *plugin.TValue[string] {
-	return &c.S3EncryptionMode
+func (c *mqlAwsGlueSecurityConfiguration) GetS3EncryptionRef() *plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption] {
+	return &c.S3EncryptionRef
 }
 
-func (c *mqlAwsGlueSecurityConfiguration) GetS3EncryptionKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
-	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.S3EncryptionKmsKey, func() (*mqlAwsKmsKey, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue.securityConfiguration", c.__id, "s3EncryptionKmsKey")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsKmsKey), nil
-			}
-		}
-
-		return c.s3EncryptionKmsKey()
-	})
+func (c *mqlAwsGlueSecurityConfiguration) GetCloudWatchEncryptionRef() *plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption] {
+	return &c.CloudWatchEncryptionRef
 }
 
-func (c *mqlAwsGlueSecurityConfiguration) GetCloudWatchEncryptionMode() *plugin.TValue[string] {
-	return &c.CloudWatchEncryptionMode
+func (c *mqlAwsGlueSecurityConfiguration) GetJobBookmarksEncryptionRef() *plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption] {
+	return &c.JobBookmarksEncryptionRef
 }
 
-func (c *mqlAwsGlueSecurityConfiguration) GetCloudWatchEncryptionKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
-	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.CloudWatchEncryptionKmsKey, func() (*mqlAwsKmsKey, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue.securityConfiguration", c.__id, "cloudWatchEncryptionKmsKey")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsKmsKey), nil
-			}
-		}
-
-		return c.cloudWatchEncryptionKmsKey()
-	})
-}
-
-func (c *mqlAwsGlueSecurityConfiguration) GetJobBookmarksEncryptionMode() *plugin.TValue[string] {
-	return &c.JobBookmarksEncryptionMode
-}
-
-func (c *mqlAwsGlueSecurityConfiguration) GetJobBookmarksEncryptionKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
-	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.JobBookmarksEncryptionKmsKey, func() (*mqlAwsKmsKey, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue.securityConfiguration", c.__id, "jobBookmarksEncryptionKmsKey")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsKmsKey), nil
-			}
-		}
-
-		return c.jobBookmarksEncryptionKmsKey()
-	})
-}
-
-func (c *mqlAwsGlueSecurityConfiguration) GetDataQualityEncryptionMode() *plugin.TValue[string] {
-	return &c.DataQualityEncryptionMode
-}
-
-func (c *mqlAwsGlueSecurityConfiguration) GetDataQualityEncryptionKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
-	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.DataQualityEncryptionKmsKey, func() (*mqlAwsKmsKey, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue.securityConfiguration", c.__id, "dataQualityEncryptionKmsKey")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsKmsKey), nil
-			}
-		}
-
-		return c.dataQualityEncryptionKmsKey()
-	})
+func (c *mqlAwsGlueSecurityConfiguration) GetDataQualityEncryption() *plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption] {
+	return &c.DataQualityEncryption
 }
 
 func (c *mqlAwsGlueSecurityConfiguration) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+// mqlAwsGlueSecurityConfigurationEncryption for the aws.glue.securityConfiguration.encryption resource
+type mqlAwsGlueSecurityConfigurationEncryption struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsGlueSecurityConfigurationEncryptionInternal
+	Mode   plugin.TValue[string]
+	KmsKey plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsGlueSecurityConfigurationEncryption creates a new instance of this resource
+func createAwsGlueSecurityConfigurationEncryption(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlueSecurityConfigurationEncryption{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.glue.securityConfiguration.encryption", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlueSecurityConfigurationEncryption) MqlName() string {
+	return "aws.glue.securityConfiguration.encryption"
+}
+
+func (c *mqlAwsGlueSecurityConfigurationEncryption) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlueSecurityConfigurationEncryption) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlAwsGlueSecurityConfigurationEncryption) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue.securityConfiguration.encryption", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 // mqlAwsGlueDatabase for the aws.glue.database resource

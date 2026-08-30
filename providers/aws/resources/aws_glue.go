@@ -473,11 +473,34 @@ func (a *mqlAwsGlue) getSecurityConfigurations(conn *connection.AwsConnection) [
 	return tasks
 }
 
-type mqlAwsGlueSecurityConfigurationInternal struct {
-	cacheS3EncryptionKmsKeyArn           *string
-	cacheCloudWatchEncryptionKmsKeyArn   *string
-	cacheJobBookmarksEncryptionKmsKeyArn *string
-	cacheDataQualityEncryptionKmsKeyArn  *string
+type mqlAwsGlueSecurityConfigurationEncryptionInternal struct {
+	cacheKmsKeyArn *string
+	region         string
+}
+
+func (a *mqlAwsGlueSecurityConfigurationEncryption) kmsKey() (*mqlAwsKmsKey, error) {
+	return resolveKmsKeyRef(a.MqlRuntime, a.cacheKmsKeyArn, a.region, &a.KmsKey.State)
+}
+
+// newMqlGlueEncryption builds one destination's encryption setting. Glue
+// reports each destination through its own SDK struct carrying the same mode
+// plus key pair, so an absent struct means the security configuration says
+// nothing about that destination and the reference reads null.
+func newMqlGlueEncryption(runtime *plugin.Runtime, secConfArn, destination, region, mode string, kmsKeyArn *string, present bool) (*llx.RawData, error) {
+	if !present {
+		return llx.NilData, nil
+	}
+	res, err := CreateResource(runtime, "aws.glue.securityConfiguration.encryption", map[string]*llx.RawData{
+		"__id": llx.StringData(secConfArn + "/" + destination),
+		"mode": llx.StringData(mode),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlEnc := res.(*mqlAwsGlueSecurityConfigurationEncryption)
+	mqlEnc.cacheKmsKeyArn = kmsKeyArn
+	mqlEnc.region = region
+	return llx.ResourceData(mqlEnc, "aws.glue.securityConfiguration.encryption"), nil
 }
 
 // glueS3Encryption picks the S3 encryption entry a security configuration
@@ -495,8 +518,7 @@ func newMqlAwsGlueSecurityConfiguration(runtime *plugin.Runtime, region string, 
 	id := fmt.Sprintf("arn:aws:glue:%s:%s:security-configuration/%s", region, accountID, convert.ToValue(secConf.Name))
 
 	var s3Enc, cwEnc, jbEnc any
-	var s3Mode, cwMode, jbMode, dqMode string
-	var s3KeyArn, cwKeyArn, jbKeyArn, dqKeyArn *string
+	mqlS3Enc, mqlCwEnc, mqlJbEnc, mqlDqEnc := llx.NilData, llx.NilData, llx.NilData, llx.NilData
 	if secConf.EncryptionConfiguration != nil {
 		var err error
 		if s3 := glueS3Encryption(secConf.EncryptionConfiguration); s3 != nil {
@@ -504,70 +526,57 @@ func newMqlAwsGlueSecurityConfiguration(runtime *plugin.Runtime, region string, 
 			if err != nil {
 				return nil, err
 			}
-			s3Mode = string(s3.S3EncryptionMode)
-			s3KeyArn = s3.KmsKeyArn
+			mqlS3Enc, err = newMqlGlueEncryption(runtime, id, "s3Encryption", region, string(s3.S3EncryptionMode), s3.KmsKeyArn, true)
+			if err != nil {
+				return nil, err
+			}
 		}
 		cwEnc, err = convert.JsonToDict(secConf.EncryptionConfiguration.CloudWatchEncryption)
 		if err != nil {
 			return nil, err
 		}
 		if cw := secConf.EncryptionConfiguration.CloudWatchEncryption; cw != nil {
-			cwMode = string(cw.CloudWatchEncryptionMode)
-			cwKeyArn = cw.KmsKeyArn
+			mqlCwEnc, err = newMqlGlueEncryption(runtime, id, "cloudWatchEncryption", region, string(cw.CloudWatchEncryptionMode), cw.KmsKeyArn, true)
+			if err != nil {
+				return nil, err
+			}
 		}
 		jbEnc, err = convert.JsonToDict(secConf.EncryptionConfiguration.JobBookmarksEncryption)
 		if err != nil {
 			return nil, err
 		}
 		if jb := secConf.EncryptionConfiguration.JobBookmarksEncryption; jb != nil {
-			jbMode = string(jb.JobBookmarksEncryptionMode)
-			jbKeyArn = jb.KmsKeyArn
+			mqlJbEnc, err = newMqlGlueEncryption(runtime, id, "jobBookmarksEncryption", region, string(jb.JobBookmarksEncryptionMode), jb.KmsKeyArn, true)
+			if err != nil {
+				return nil, err
+			}
 		}
 		if dq := secConf.EncryptionConfiguration.DataQualityEncryption; dq != nil {
-			dqMode = string(dq.DataQualityEncryptionMode)
-			dqKeyArn = dq.KmsKeyArn
+			mqlDqEnc, err = newMqlGlueEncryption(runtime, id, "dataQualityEncryption", region, string(dq.DataQualityEncryptionMode), dq.KmsKeyArn, true)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
 	resource, err := CreateResource(runtime, "aws.glue.securityConfiguration",
 		map[string]*llx.RawData{
-			"__id":                       llx.StringData(id),
-			"name":                       llx.StringDataPtr(secConf.Name),
-			"createdAt":                  llx.TimeDataPtr(secConf.CreatedTimeStamp),
-			"s3Encryption":               llx.DictData(s3Enc),
-			"cloudWatchEncryption":       llx.DictData(cwEnc),
-			"jobBookmarksEncryption":     llx.DictData(jbEnc),
-			"s3EncryptionMode":           llx.StringData(s3Mode),
-			"cloudWatchEncryptionMode":   llx.StringData(cwMode),
-			"jobBookmarksEncryptionMode": llx.StringData(jbMode),
-			"dataQualityEncryptionMode":  llx.StringData(dqMode),
-			"region":                     llx.StringData(region),
+			"__id":                      llx.StringData(id),
+			"name":                      llx.StringDataPtr(secConf.Name),
+			"createdAt":                 llx.TimeDataPtr(secConf.CreatedTimeStamp),
+			"s3Encryption":              llx.DictData(s3Enc),
+			"cloudWatchEncryption":      llx.DictData(cwEnc),
+			"jobBookmarksEncryption":    llx.DictData(jbEnc),
+			"s3EncryptionRef":           mqlS3Enc,
+			"cloudWatchEncryptionRef":   mqlCwEnc,
+			"jobBookmarksEncryptionRef": mqlJbEnc,
+			"dataQualityEncryption":     mqlDqEnc,
+			"region":                    llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err
 	}
-	mqlSecConf := resource.(*mqlAwsGlueSecurityConfiguration)
-	mqlSecConf.cacheS3EncryptionKmsKeyArn = s3KeyArn
-	mqlSecConf.cacheCloudWatchEncryptionKmsKeyArn = cwKeyArn
-	mqlSecConf.cacheJobBookmarksEncryptionKmsKeyArn = jbKeyArn
-	mqlSecConf.cacheDataQualityEncryptionKmsKeyArn = dqKeyArn
-	return mqlSecConf, nil
-}
-
-func (a *mqlAwsGlueSecurityConfiguration) s3EncryptionKmsKey() (*mqlAwsKmsKey, error) {
-	return resolveKmsKeyRef(a.MqlRuntime, a.cacheS3EncryptionKmsKeyArn, a.Region.Data, &a.S3EncryptionKmsKey.State)
-}
-
-func (a *mqlAwsGlueSecurityConfiguration) cloudWatchEncryptionKmsKey() (*mqlAwsKmsKey, error) {
-	return resolveKmsKeyRef(a.MqlRuntime, a.cacheCloudWatchEncryptionKmsKeyArn, a.Region.Data, &a.CloudWatchEncryptionKmsKey.State)
-}
-
-func (a *mqlAwsGlueSecurityConfiguration) jobBookmarksEncryptionKmsKey() (*mqlAwsKmsKey, error) {
-	return resolveKmsKeyRef(a.MqlRuntime, a.cacheJobBookmarksEncryptionKmsKeyArn, a.Region.Data, &a.JobBookmarksEncryptionKmsKey.State)
-}
-
-func (a *mqlAwsGlueSecurityConfiguration) dataQualityEncryptionKmsKey() (*mqlAwsKmsKey, error) {
-	return resolveKmsKeyRef(a.MqlRuntime, a.cacheDataQualityEncryptionKmsKeyArn, a.Region.Data, &a.DataQualityEncryptionKmsKey.State)
+	return resource.(*mqlAwsGlueSecurityConfiguration), nil
 }
 
 func (a *mqlAwsGlue) databases() ([]any, error) {

@@ -15565,55 +15565,18 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   enhancedVpcRouting bool
   // Audit-logging delivery status for the cluster
   //
-  // Deprecated in favor of loggingEnabled, logDestinationType, logExports,
-  // logBucket, logS3KeyPrefix, lastSuccessfulLogDeliveryAt,
-  // lastLogFailureMessage, and lastLogFailureAt. Dict with the keys
-  // `LoggingEnabled`, `BucketName`, `S3KeyPrefix`, `LogDestinationType`,
-  // `LogExports`, `LastSuccessfulDeliveryTime`, `LastFailureTime`, and
+  // Deprecated in favor of auditLogging, which carries the same values as a
+  // resource with the destination bucket resolved and proper time values for
+  // the delivery timestamps. Dict with the keys `LoggingEnabled`,
+  // `BucketName`, `S3KeyPrefix`, `LogDestinationType`, `LogExports`,
+  // `LastSuccessfulDeliveryTime`, `LastFailureTime`, and
   // `LastFailureMessage`, alongside the SDK response metadata.
   logging() @maturity("deprecated") dict
-  // Whether audit logging is enabled for the cluster
+  // Audit-logging delivery status for the cluster
   //
   // Audit logs record connections, user activity and user changes. Without
   // them there is no record of who queried the cluster or what they ran.
-  loggingEnabled() bool
-  // Destination audit logs are delivered to
-  //
-  // One of s3, cloudwatch, or s3table. Empty when audit logging is off.
-  logDestinationType() string
-  // Log types exported for the cluster
-  //
-  // When the destination is s3 or cloudwatch, the values are connectionlog,
-  // useractivitylog, and userlog. When the destination is s3table, the values
-  // are the names of the system tables being published. Empty when audit
-  // logging is off.
-  logExports() []string
-  // S3 bucket receiving delivered audit logs
-  //
-  // Null when audit logging is off or the destination is not an S3 bucket.
-  // Log delivery writes into a bucket the account owns, so the bucket's own
-  // encryption, versioning and public-access settings decide how well the
-  // audit trail is protected.
-  logBucket() aws.s3.bucket
-  // Prefix applied to delivered audit log file names in the bucket
-  //
-  // Empty when audit logging is off or no prefix is configured.
-  logS3KeyPrefix() string
-  // Time audit logs were last delivered successfully
-  //
-  // Null when audit logging is off or no delivery has succeeded yet. A
-  // timestamp far in the past on a cluster that reports logging as enabled
-  // means delivery is broken.
-  lastSuccessfulLogDeliveryAt() time
-  // Message describing the most recent audit log delivery failure
-  //
-  // Empty when no delivery has failed. A bucket policy that no longer grants
-  // the Redshift service write access shows up here.
-  lastLogFailureMessage() string
-  // Time audit log delivery last failed
-  //
-  // Null when no delivery has failed.
-  lastLogFailureAt() time
+  auditLogging() aws.redshift.cluster.loggingStatus
   // Master user name for the cluster.
   masterUsername string
   // Name of the initial database created when cluster was created
@@ -15748,6 +15711,55 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   availabilityZoneRelocationStatus string
   // Elastic IP address of the cluster, when one is configured
   elasticIp string
+}
+
+// Audit-logging delivery status of an Amazon Redshift cluster
+//
+// Where a cluster delivers its connection, user-activity and user logs, and
+// whether the last delivery worked. A cluster that reports logging as enabled
+// but has a failure message and a stale successful-delivery timestamp is not
+// producing an audit trail, which a check reading only the enabled flag would
+// miss.
+private aws.redshift.cluster.loggingStatus @defaults("enabled destinationType") {
+  // Whether audit logging is enabled for the cluster
+  enabled bool
+  // Destination audit logs are delivered to
+  //
+  // One of s3, cloudwatch, or s3table. Empty when audit logging is off.
+  destinationType string
+  // Log types exported for the cluster
+  //
+  // When the destination is s3 or cloudwatch, the values are connectionlog,
+  // useractivitylog, and userlog. When the destination is s3table, the values
+  // are the names of the system tables being published. Empty when audit
+  // logging is off.
+  logExports []string
+  // S3 bucket receiving delivered audit logs
+  //
+  // Null when audit logging is off or the destination is not an S3 bucket.
+  // Log delivery writes into a bucket the account owns, so the bucket's own
+  // encryption, versioning and public-access settings decide how well the
+  // audit trail is protected.
+  bucket() aws.s3.bucket
+  // Prefix applied to delivered audit log file names in the bucket
+  //
+  // Empty when audit logging is off or no prefix is configured.
+  s3KeyPrefix string
+  // Time audit logs were last delivered successfully
+  //
+  // Null when audit logging is off or no delivery has succeeded yet. A
+  // timestamp far in the past on a cluster that reports logging as enabled
+  // means delivery is broken.
+  lastSuccessfulDeliveryAt time
+  // Message describing the most recent audit log delivery failure
+  //
+  // Empty when no delivery has failed. A bucket policy that no longer grants
+  // the Redshift service write access shows up here.
+  lastFailureMessage string
+  // Time audit log delivery last failed
+  //
+  // Null when no delivery has failed.
+  lastFailureAt time
 }
 
 // Amazon Redshift cluster snapshot
@@ -25374,59 +25386,45 @@ private aws.glue.securityConfiguration @defaults("name") {
   createdAt time
   // S3 encryption configuration
   //
-  // Deprecated in favor of s3EncryptionMode and s3EncryptionKmsKey. Shape:
-  // {S3EncryptionMode: DISABLED|SSE-KMS|SSE-S3, KmsKeyArn}.
+  // Deprecated in favor of s3EncryptionRef, which carries the same values as a
+  // resource with the key resolved. Shape: {S3EncryptionMode:
+  // DISABLED|SSE-KMS|SSE-S3, KmsKeyArn}.
   s3Encryption @maturity("deprecated") dict
   // CloudWatch encryption configuration
   //
-  // Deprecated in favor of cloudWatchEncryptionMode and
-  // cloudWatchEncryptionKmsKey. Shape: {CloudWatchEncryptionMode:
-  // DISABLED|SSE-KMS, KmsKeyArn}.
+  // Deprecated in favor of cloudWatchEncryptionRef, which carries the same
+  // values as a resource with the key resolved. Shape:
+  // {CloudWatchEncryptionMode: DISABLED|SSE-KMS, KmsKeyArn}.
   cloudWatchEncryption @maturity("deprecated") dict
   // Job bookmarks encryption configuration
   //
-  // Deprecated in favor of jobBookmarksEncryptionMode and
-  // jobBookmarksEncryptionKmsKey. Shape: {JobBookmarksEncryptionMode:
-  // DISABLED|CSE-KMS, KmsKeyArn}.
+  // Deprecated in favor of jobBookmarksEncryptionRef, which carries the same
+  // values as a resource with the key resolved. Shape:
+  // {JobBookmarksEncryptionMode: DISABLED|CSE-KMS, KmsKeyArn}.
   jobBookmarksEncryption @maturity("deprecated") dict
-  // Encryption mode applied to data the job or crawler writes to Amazon S3
+  // Encryption applied to data the job or crawler writes to Amazon S3
   //
-  // One of DISABLED, SSE-KMS, or SSE-S3. DISABLED means Glue applies no
-  // server-side encryption of its own to the data it writes. Empty when the
-  // security configuration carries no S3 encryption entry at all.
-  s3EncryptionMode string
-  // KMS key encrypting data the job or crawler writes to Amazon S3
+  // The mode is one of DISABLED, SSE-KMS, or SSE-S3, where DISABLED means
+  // Glue applies no server-side encryption of its own to the data it writes.
+  // Null when the security configuration carries no S3 encryption entry.
+  s3EncryptionRef aws.glue.securityConfiguration.encryption
+  // Encryption applied to logs the job or crawler sends to CloudWatch Logs
   //
-  // Null unless the S3 encryption mode is SSE-KMS with a key of your own.
-  s3EncryptionKmsKey() aws.kms.key
-  // Encryption mode applied to logs the job or crawler sends to CloudWatch Logs
+  // The mode is one of DISABLED or SSE-KMS. Null when the security
+  // configuration carries no CloudWatch encryption entry.
+  cloudWatchEncryptionRef aws.glue.securityConfiguration.encryption
+  // Encryption applied to job bookmark state
   //
-  // One of DISABLED or SSE-KMS. Empty when the security configuration carries
-  // no CloudWatch encryption entry.
-  cloudWatchEncryptionMode string
-  // KMS key encrypting logs the job or crawler sends to CloudWatch Logs
+  // The mode is one of DISABLED or CSE-KMS. Job bookmarks record which data a
+  // job has already processed, so the state names the objects a job has read.
+  // Null when the security configuration carries no job bookmark encryption
+  // entry.
+  jobBookmarksEncryptionRef aws.glue.securityConfiguration.encryption
+  // Encryption applied to Glue Data Quality assets
   //
-  // Null unless the CloudWatch encryption mode is SSE-KMS.
-  cloudWatchEncryptionKmsKey() aws.kms.key
-  // Encryption mode applied to job bookmark state
-  //
-  // One of DISABLED or CSE-KMS. Job bookmarks record which data a job has
-  // already processed, so the state names the objects a job has read. Empty
-  // when the security configuration carries no job bookmark encryption entry.
-  jobBookmarksEncryptionMode string
-  // KMS key encrypting job bookmark state
-  //
-  // Null unless the job bookmarks encryption mode is CSE-KMS.
-  jobBookmarksEncryptionKmsKey() aws.kms.key
-  // Encryption mode applied to Glue Data Quality assets
-  //
-  // One of DISABLED or SSE-KMS. Empty when the security configuration carries
-  // no Data Quality encryption entry.
-  dataQualityEncryptionMode string
-  // KMS key encrypting Glue Data Quality assets
-  //
-  // Null unless the Data Quality encryption mode is SSE-KMS.
-  dataQualityEncryptionKmsKey() aws.kms.key
+  // The mode is one of DISABLED or SSE-KMS. Null when the security
+  // configuration carries no Data Quality encryption entry.
+  dataQualityEncryption aws.glue.securityConfiguration.encryption
   // Region where the security configuration exists
   region string
 }
@@ -25441,6 +25439,28 @@ private aws.glue.securityConfiguration @defaults("name") {
 // describe its configuration. The `targetDatabase` and
 // `federatedDatabase` pointers identify the source when the database is
 // a resource link or a federated reference to an external metastore.
+// Encryption setting of an AWS Glue security configuration
+//
+// One encryption mode and, when the mode names a KMS key, the key it uses. A
+// Glue security configuration carries one of these per destination: the data
+// a job writes to Amazon S3, the logs it sends to CloudWatch Logs, the job
+// bookmark state that records what a job has already read, and Data Quality
+// assets. A mode of DISABLED means Glue encrypts nothing of its own for that
+// destination.
+private aws.glue.securityConfiguration.encryption @defaults("mode") {
+  // Encryption mode applied to the destination
+  //
+  // DISABLED on any destination Glue does not encrypt. The other values
+  // depend on the destination: SSE-KMS or SSE-S3 for Amazon S3, SSE-KMS for
+  // CloudWatch Logs and Data Quality, and CSE-KMS for job bookmarks.
+  mode string
+  // KMS key encrypting the destination
+  //
+  // Null when the mode names no key of your own, which is the case for
+  // DISABLED and for the S3-managed SSE-S3 mode.
+  kmsKey() aws.kms.key
+}
+
 private aws.glue.database @defaults("name region") {
   // Name of the database
   name string
