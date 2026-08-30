@@ -28,6 +28,45 @@ func (a *mqlAwsVpc) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+// initAwsVpcEncryptionControl resolves the encryption control through the
+// scanned VPC asset. Without this init, the static path
+// `aws.vpc.encryptionControl` used by policy checks instantiates the
+// sub-resource standalone (empty id, no fields set), so per-asset checks
+// scored fail even for VPCs with an enforce-mode encryption control.
+func initAwsVpcEncryptionControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
+		return args, nil, nil
+	}
+	vpcRes, err := NewResource(runtime, "aws.vpc", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	vpc := vpcRes.(*mqlAwsVpc)
+	ec := vpc.GetEncryptionControl()
+	if ec.Error != nil {
+		return nil, nil, ec.Error
+	}
+	if ec.Data == nil {
+		// No encryption control on this VPC: represent it explicitly so
+		// checks fail (instead of erroring) on the absent case.
+		res, err := CreateResource(runtime, "aws.vpc.encryptionControl",
+			map[string]*llx.RawData{
+				"__id":               llx.StringData(vpc.Arn.Data + "/encryptionControl"),
+				"id":                 llx.StringData(""),
+				"mode":               llx.StringData(""),
+				"state":              llx.StringData(""),
+				"stateMessage":       llx.StringData(""),
+				"resourceExclusions": llx.MapData(map[string]any{}, types.String),
+				"tags":               llx.MapData(map[string]any{}, types.String),
+			})
+		if err != nil {
+			return nil, nil, err
+		}
+		return args, res, nil
+	}
+	return args, ec.Data, nil
+}
+
 func (a *mqlAwsVpc) encryptionControl() (*mqlAwsVpcEncryptionControl, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Ec2(a.Region.Data)
