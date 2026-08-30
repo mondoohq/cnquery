@@ -666,3 +666,50 @@ func TestSPDXLicenseCommentsAreEmptyWithNothingToSay(t *testing.T) {
 		assert.Equal(t, "Concluded MIT: read from LICENSE.", got)
 	})
 }
+
+// Both renderers apply the same rule to a conclusion's confidence, and the rule
+// is that full confidence says nothing. The model documents 1.0 as what a value
+// carries when it is a statement rather than a measurement, so a conclusion at
+// 1.0 is asserting no measurement -- the same thing an entry with no score
+// attached says. Reporting it would read as a score somebody took.
+func TestFullConfidenceIsNotReportedByEitherRenderer(t *testing.T) {
+	bom := &Sbom{
+		Generator: &Generator{Vendor: "Mondoo, Inc", Name: "test", Version: "1"},
+		Asset:     &Asset{Name: "test-asset", Platform: &Platform{Name: "linux", Version: "1"}},
+		Packages: []*Package{{
+			Name: "certain", Version: "1.0.0", Purl: "pkg:npm/certain@1.0.0",
+			Licenses: []*License{{
+				SpdxId:      "MIT",
+				Acquisition: LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED,
+				Confidence:  1.0,
+				Location:    "LICENSE",
+			}},
+		}},
+	}
+
+	t.Run("cyclonedx omits the confidence property but keeps the location", func(t *testing.T) {
+		c := cdxComponent(t, renderBom(t, FormatCycloneDxJSON, bom), "certain")
+		require.Len(t, c.Licenses, 1)
+		require.NotNil(t, c.Licenses[0].License)
+		require.NotNil(t, c.Licenses[0].License.Properties)
+
+		names := map[string]string{}
+		for _, pr := range *c.Licenses[0].License.Properties {
+			names[pr.Name] = pr.Value
+		}
+		assert.NotContains(t, names, "mondoo:license:confidence")
+		assert.Equal(t, "LICENSE", names["mondoo:license:location"])
+	})
+
+	t.Run("spdx says the same", func(t *testing.T) {
+		var doc struct {
+			Packages []struct {
+				LicenseComments string `json:"licenseComments"`
+			} `json:"packages"`
+		}
+		require.NoError(t, json.Unmarshal([]byte(renderBom(t, FormatSpdxJSON, bom)), &doc))
+		require.Len(t, doc.Packages, 1)
+		assert.Equal(t, "Concluded MIT: read from LICENSE.", doc.Packages[0].LicenseComments)
+		assert.NotContains(t, doc.Packages[0].LicenseComments, "confidence")
+	})
+}

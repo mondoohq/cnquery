@@ -511,9 +511,16 @@ func cycloneDXAcknowledgement(a LicenseAcquisition) cyclonedx.LicenseAcknowledge
 // not a measurement -- so emitting it would be noise on every license in every
 // document. It is written only for a conclusion, where it is the difference
 // between a certainty and an inference.
+//
+// Full confidence is left out for the same reason, and on the same rule the
+// SPDX renderer applies. The model documents 1.0 as the value a license carries
+// when it is a statement rather than a measurement, so a conclusion at 1.0 is
+// asserting no measurement, which is what an entry with no score attached
+// already says. A property that states nothing would still be read by a
+// consumer ranking conclusions as a score somebody took.
 func cycloneDXLicenseProperties(l *License) *[]cyclonedx.Property {
 	props := []cyclonedx.Property{}
-	if l.GetAcquisition() == LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED && l.GetConfidence() > 0 {
+	if c := l.GetConfidence(); l.GetAcquisition() == LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED && c > 0 && c < 1 {
 		props = append(props, cyclonedx.Property{
 			Name:  "mondoo:license:confidence",
 			Value: strconv.FormatFloat(l.GetConfidence(), 'g', -1, 64),
