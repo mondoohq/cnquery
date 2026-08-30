@@ -74,7 +74,12 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 	// machine, and emitting the component anyway produced an operating system
 	// with no name -- `"bom-ref": "os:"` -- that a consumer has to recognise as
 	// junk and filter.
-	if bom.Asset.Platform.Name != "" {
+	//
+	// The nil check is not redundant with it. Platform is a pointer, and this
+	// was the only renderer that dereferenced it unguarded: SPDX and the table
+	// both render a BOM without one, and cnquery_bom.go guards the same field,
+	// so the package already treats a nil platform as something that reaches it.
+	if bom.Asset.Platform != nil && bom.Asset.Platform.Name != "" {
 		cpe := ""
 		if len(bom.Asset.Platform.Cpes) > 0 {
 			cpe = bom.Asset.Platform.Cpes[0]

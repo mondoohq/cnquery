@@ -178,3 +178,26 @@ func TestImportedConclusionReportsNoConfidence(t *testing.T) {
 	// with no name is junk a consumer has to recognise and filter.
 	assert.NotContains(t, cdx.String(), `"bom-ref": "os:"`)
 }
+
+// Platform is a pointer, and the CycloneDX renderer was the only one that
+// dereferenced it without checking: SPDX and the table both render a BOM
+// without one, and cnquery_bom.go guards the same field. Nothing in tree
+// reaches it now that the importer initialises Platform, which is exactly why
+// it is worth a test -- the next producer to build a Sbom by hand would find it
+// the hard way.
+func TestRenderersHandleABomWithNoPlatform(t *testing.T) {
+	bom := &Sbom{
+		Generator: &Generator{Vendor: "Mondoo, Inc", Name: "test", Version: "1"},
+		Asset:     &Asset{Name: "no-platform"},
+		Packages:  []*Package{{Name: "p", Version: "1.0.0", Purl: "pkg:npm/p@1.0.0"}},
+	}
+
+	for _, format := range []string{FormatCycloneDxJSON, FormatSpdxJSON, FormatList} {
+		t.Run(format, func(t *testing.T) {
+			var b strings.Builder
+			require.NotPanics(t, func() {
+				require.NoError(t, New(format).Render(&b, bom))
+			})
+		})
+	}
+}
