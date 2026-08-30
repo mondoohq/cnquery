@@ -956,26 +956,31 @@ func (a *mqlAwsElasticache) getUsers(conn *connection.AwsConnection) []*jobpool.
 					if err != nil {
 						return nil, err
 					}
-					authType := ""
-					var authPasswordCount int64
+					mqlAuth := llx.NilData
 					if user.Authentication != nil {
-						authType = string(user.Authentication.Type)
-						authPasswordCount = int64(convert.ToValue(user.Authentication.PasswordCount))
+						authRes, err := CreateResource(a.MqlRuntime, "aws.elasticache.authentication", map[string]*llx.RawData{
+							"__id":          llx.StringData(convert.ToValue(user.ARN) + "/authentication"),
+							"type":          llx.StringData(string(user.Authentication.Type)),
+							"passwordCount": llx.IntData(int64(convert.ToValue(user.Authentication.PasswordCount))),
+						})
+						if err != nil {
+							return nil, err
+						}
+						mqlAuth = llx.ResourceData(authRes, "aws.elasticache.authentication")
 					}
 					mqlUser, err := CreateResource(a.MqlRuntime, ResourceAwsElasticacheUser,
 						map[string]*llx.RawData{
-							"arn":                         llx.StringDataPtr(user.ARN),
-							"userId":                      llx.StringDataPtr(user.UserId),
-							"userName":                    llx.StringDataPtr(user.UserName),
-							"region":                      llx.StringData(region),
-							"accessString":                llx.StringDataPtr(user.AccessString),
-							"engine":                      llx.StringDataPtr(user.Engine),
-							"minimumEngineVersion":        llx.StringDataPtr(user.MinimumEngineVersion),
-							"status":                      llx.StringDataPtr(user.Status),
-							"userGroupIds":                llx.ArrayData(groupIds, types.String),
-							"authentication":              llx.DictData(auth),
-							"authenticationType":          llx.StringData(authType),
-							"authenticationPasswordCount": llx.IntData(authPasswordCount),
+							"arn":                  llx.StringDataPtr(user.ARN),
+							"userId":               llx.StringDataPtr(user.UserId),
+							"userName":             llx.StringDataPtr(user.UserName),
+							"region":               llx.StringData(region),
+							"accessString":         llx.StringDataPtr(user.AccessString),
+							"engine":               llx.StringDataPtr(user.Engine),
+							"minimumEngineVersion": llx.StringDataPtr(user.MinimumEngineVersion),
+							"status":               llx.StringDataPtr(user.Status),
+							"userGroupIds":         llx.ArrayData(groupIds, types.String),
+							"authentication":       llx.DictData(auth),
+							"authenticationRef":    mqlAuth,
 						})
 					if err != nil {
 						return nil, err

@@ -4749,6 +4749,9 @@ aws.eks.scalingConfig.minSize 13.53.4
 aws.eks.zonalShiftConfig 13.53.4
 aws.eks.zonalShiftConfig.enabled 13.53.4
 aws.elasticache 11.15.2
+aws.elasticache.authentication 13.53.4
+aws.elasticache.authentication.passwordCount 13.53.4
+aws.elasticache.authentication.type 13.53.4
 aws.elasticache.cacheClusters 11.15.2
 aws.elasticache.cluster 11.15.2
 aws.elasticache.cluster.arn 11.15.2
@@ -4906,8 +4909,7 @@ aws.elasticache.user 13.12.1
 aws.elasticache.user.accessString 13.12.1
 aws.elasticache.user.arn 13.12.1
 aws.elasticache.user.authentication 13.12.1
-aws.elasticache.user.authenticationPasswordCount 13.53.4
-aws.elasticache.user.authenticationType 13.53.4
+aws.elasticache.user.authenticationRef 13.53.4
 aws.elasticache.user.engine 13.12.1
 aws.elasticache.user.minimumEngineVersion 13.12.1
 aws.elasticache.user.region 13.12.1
@@ -6690,8 +6692,8 @@ aws.kinesis.stream.openShardCount 11.16.1
 aws.kinesis.stream.region 11.16.1
 aws.kinesis.stream.retentionPeriodHours 11.16.1
 aws.kinesis.stream.status 11.16.1
-aws.kinesis.stream.streamMode 13.53.4
 aws.kinesis.stream.streamModeDetails 11.16.1
+aws.kinesis.stream.streamModeDetailsRef 13.53.4
 aws.kinesis.stream.tags 11.16.1
 aws.kinesis.streamConsumer 11.16.1
 aws.kinesis.streamConsumer.arn 11.16.1
@@ -6701,6 +6703,8 @@ aws.kinesis.streamConsumer.region 11.16.1
 aws.kinesis.streamConsumer.status 11.16.1
 aws.kinesis.streamConsumer.stream 11.16.1
 aws.kinesis.streamConsumers 11.16.1
+aws.kinesis.streamModeDetails 13.53.4
+aws.kinesis.streamModeDetails.streamMode 13.53.4
 aws.kinesis.streams 11.16.1
 aws.kinesis.videoStream 13.33.2
 aws.kinesis.videoStream.arn 13.33.2
@@ -6903,7 +6907,6 @@ aws.lambda.function.masterFunction 13.38.2
 aws.lambda.function.memorySize 11.15.2
 aws.lambda.function.name 11.15.2
 aws.lambda.function.packageType 11.15.2
-aws.lambda.function.pinnedRuntimeVersionArn 13.53.4
 aws.lambda.function.policy 11.15.2
 aws.lambda.function.policyStatements 13.32.2
 aws.lambda.function.provisionedConcurrencyConfig 11.15.2
@@ -6921,8 +6924,8 @@ aws.lambda.function.resolvedImageUri 13.26.2
 aws.lambda.function.revisionId 13.39.2
 aws.lambda.function.role 11.15.2
 aws.lambda.function.runtime 11.15.2
+aws.lambda.function.runtimeManagement 13.53.4
 aws.lambda.function.runtimeManagementConfig 13.6.3
-aws.lambda.function.runtimeUpdateMode 13.53.4
 aws.lambda.function.runtimeVersionArn 13.39.2
 aws.lambda.function.securityGroups 13.2.7
 aws.lambda.function.signingJobArn 11.15.2
@@ -6982,6 +6985,9 @@ aws.lambda.layer.version.licenseInfo 13.12.1
 aws.lambda.layer.version.version 13.12.1
 aws.lambda.layer.versions 13.12.1
 aws.lambda.layers 11.15.2
+aws.lambda.runtimeManagementConfig 13.53.4
+aws.lambda.runtimeManagementConfig.runtimeVersionArn 13.53.4
+aws.lambda.runtimeManagementConfig.updateRuntimeOn 13.53.4
 aws.lightsail 13.1.1
 aws.lightsail.bucket 13.1.1
 aws.lightsail.bucket.ableToUpdateBundle 13.1.1
@@ -7306,6 +7312,9 @@ aws.memorydb.acl.status 11.16.1
 aws.memorydb.acl.tags 11.16.1
 aws.memorydb.acl.userNames 11.16.1
 aws.memorydb.acls 11.16.1
+aws.memorydb.authentication 13.53.4
+aws.memorydb.authentication.passwordCount 13.53.4
+aws.memorydb.authentication.type 13.53.4
 aws.memorydb.cluster 11.16.1
 aws.memorydb.cluster.aclName 11.16.1
 aws.memorydb.cluster.arn 11.16.1
@@ -7355,8 +7364,7 @@ aws.memorydb.user.accessString 11.16.1
 aws.memorydb.user.aclNames 11.16.1
 aws.memorydb.user.arn 11.16.1
 aws.memorydb.user.authentication 11.16.1
-aws.memorydb.user.authenticationPasswordCount 13.53.4
-aws.memorydb.user.authenticationType 13.53.4
+aws.memorydb.user.authenticationRef 13.53.4
 aws.memorydb.user.minimumEngineVersion 11.16.1
 aws.memorydb.user.name 11.16.1
 aws.memorydb.user.region 11.16.1
@@ -7695,6 +7703,10 @@ aws.neptune.cluster.storageType 11.15.2
 aws.neptune.cluster.subnetGroup 11.15.2
 aws.neptune.cluster.tags 13.39.2
 aws.neptune.clusters 11.15.2
+aws.neptune.endpoint 13.53.4
+aws.neptune.endpoint.address 13.53.4
+aws.neptune.endpoint.hostedZoneId 13.53.4
+aws.neptune.endpoint.port 13.53.4
 aws.neptune.instance 11.15.2
 aws.neptune.instance.arn 11.15.2
 aws.neptune.instance.autoMinorVersionUpgrade 11.15.2
@@ -7706,9 +7718,7 @@ aws.neptune.instance.createdAt 11.15.2
 aws.neptune.instance.deletionProtection 11.15.2
 aws.neptune.instance.enabledCloudwatchLogsExports 11.15.2
 aws.neptune.instance.endpoint 11.15.2
-aws.neptune.instance.endpointAddress 13.53.4
-aws.neptune.instance.endpointHostedZoneId 13.53.4
-aws.neptune.instance.endpointPort 13.53.4
+aws.neptune.instance.endpointRef 13.53.4
 aws.neptune.instance.engine 11.15.2
 aws.neptune.instance.engineVersion 11.15.2
 aws.neptune.instance.enhancedMonitoringResourceArn 11.15.2

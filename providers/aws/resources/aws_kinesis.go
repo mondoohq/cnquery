@@ -138,7 +138,7 @@ func initAwsKinesisStream(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	args["name"] = llx.StringDataPtr(desc.StreamName)
 	args["status"] = llx.StringData(string(desc.StreamStatus))
 	args["streamModeDetails"] = llx.NilData
-	args["streamMode"] = llx.StringData("")
+	args["streamModeDetailsRef"] = llx.NilData
 	args["createdAt"] = llx.TimeDataPtr(desc.StreamCreationTimestamp)
 	args["region"] = llx.StringData(parsed.Region)
 	return args, nil, nil
@@ -150,21 +150,28 @@ func newMqlAwsKinesisStream(runtime *plugin.Runtime, region string, summary *kin
 	if err != nil {
 		return nil, err
 	}
-	streamMode := ""
+	mqlStreamMode := llx.NilData
 	if summary.StreamModeDetails != nil {
-		streamMode = string(summary.StreamModeDetails.StreamMode)
+		modeRes, err := CreateResource(runtime, "aws.kinesis.streamModeDetails", map[string]*llx.RawData{
+			"__id":       llx.StringData(convert.ToValue(summary.StreamARN) + "/streamModeDetails"),
+			"streamMode": llx.StringData(string(summary.StreamModeDetails.StreamMode)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlStreamMode = llx.ResourceData(modeRes, "aws.kinesis.streamModeDetails")
 	}
 
 	resource, err := CreateResource(runtime, "aws.kinesis.stream",
 		map[string]*llx.RawData{
-			"__id":              llx.StringDataPtr(summary.StreamARN),
-			"arn":               llx.StringDataPtr(summary.StreamARN),
-			"name":              llx.StringDataPtr(summary.StreamName),
-			"status":            llx.StringData(string(summary.StreamStatus)),
-			"streamModeDetails": llx.DictData(streamModeDetails),
-			"streamMode":        llx.StringData(streamMode),
-			"createdAt":         llx.TimeDataPtr(summary.StreamCreationTimestamp),
-			"region":            llx.StringData(region),
+			"__id":                 llx.StringDataPtr(summary.StreamARN),
+			"arn":                  llx.StringDataPtr(summary.StreamARN),
+			"name":                 llx.StringDataPtr(summary.StreamName),
+			"status":               llx.StringData(string(summary.StreamStatus)),
+			"streamModeDetails":    llx.DictData(streamModeDetails),
+			"streamModeDetailsRef": mqlStreamMode,
+			"createdAt":            llx.TimeDataPtr(summary.StreamCreationTimestamp),
+			"region":               llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err

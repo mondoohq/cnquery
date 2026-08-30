@@ -372,26 +372,31 @@ func newMqlAwsMemorydbUser(runtime *plugin.Runtime, region string, user memorydb
 	if err != nil {
 		return nil, err
 	}
-	authType := ""
-	var authPasswordCount int64
+	mqlAuth := llx.NilData
 	if user.Authentication != nil {
-		authType = string(user.Authentication.Type)
-		authPasswordCount = int64(convert.ToValue(user.Authentication.PasswordCount))
+		authRes, err := CreateResource(runtime, "aws.memorydb.authentication", map[string]*llx.RawData{
+			"__id":          llx.StringData(convert.ToValue(user.ARN) + "/authentication"),
+			"type":          llx.StringData(string(user.Authentication.Type)),
+			"passwordCount": llx.IntData(int64(convert.ToValue(user.Authentication.PasswordCount))),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlAuth = llx.ResourceData(authRes, "aws.memorydb.authentication")
 	}
 
 	resource, err := CreateResource(runtime, "aws.memorydb.user",
 		map[string]*llx.RawData{
-			"__id":                        llx.StringDataPtr(user.ARN),
-			"arn":                         llx.StringDataPtr(user.ARN),
-			"name":                        llx.StringDataPtr(user.Name),
-			"status":                      llx.StringDataPtr(user.Status),
-			"accessString":                llx.StringDataPtr(user.AccessString),
-			"aclNames":                    llx.ArrayData(convert.SliceAnyToInterface(user.ACLNames), types.String),
-			"minimumEngineVersion":        llx.StringDataPtr(user.MinimumEngineVersion),
-			"authentication":              llx.DictData(auth),
-			"authenticationType":          llx.StringData(authType),
-			"authenticationPasswordCount": llx.IntData(authPasswordCount),
-			"region":                      llx.StringData(region),
+			"__id":                 llx.StringDataPtr(user.ARN),
+			"arn":                  llx.StringDataPtr(user.ARN),
+			"name":                 llx.StringDataPtr(user.Name),
+			"status":               llx.StringDataPtr(user.Status),
+			"accessString":         llx.StringDataPtr(user.AccessString),
+			"aclNames":             llx.ArrayData(convert.SliceAnyToInterface(user.ACLNames), types.String),
+			"minimumEngineVersion": llx.StringDataPtr(user.MinimumEngineVersion),
+			"authentication":       llx.DictData(auth),
+			"authenticationRef":    mqlAuth,
+			"region":               llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err

@@ -15369,6 +15369,24 @@ private aws.elasticache.subnetGroup @defaults("name") {
 // `authentication` field records whether a password is required, making
 // this the resource to audit for over-privileged or password-less cache
 // access.
+// Authentication configuration of an Amazon ElastiCache user
+//
+// How the user proves who it is, and how many passwords it has to prove it
+// with. A user set to no-password can be authenticated as without presenting
+// a credential at all, so whatever its access string grants is open to
+// anyone who can reach the cache.
+private aws.elasticache.authentication @defaults("type passwordCount") {
+  // Authentication mode for the user
+  //
+  // One of password, no-password, or iam.
+  type string
+  // Number of passwords configured for the user
+  //
+  // Up to two, so a password can be rotated without an outage. 0 when the
+  // user authenticates by IAM or not at all.
+  passwordCount int
+}
+
 private aws.elasticache.user @defaults("userName status engine") {
   // ARN of the user
   arn string
@@ -15390,20 +15408,13 @@ private aws.elasticache.user @defaults("userName status engine") {
   userGroupIds []string
   // Authentication mode for the user
   //
-  // Deprecated in favor of authenticationType and
-  // authenticationPasswordCount. Dict with `Type` and `PasswordCount`.
+  // Deprecated in favor of authenticationRef, which carries the same two
+  // values as a resource. Dict with `Type` and `PasswordCount`.
   authentication @maturity("deprecated") dict
   // Authentication mode for the user
   //
-  // One of password, no-password, or iam. A user set to no-password can be
-  // authenticated as without presenting a credential, so whatever the access
-  // string grants is open to anyone who can reach the cache. Empty when the service reports no authentication settings.
-  authenticationType string
-  // Number of passwords configured for the user
-  //
-  // Up to two, so a password can be rotated without an outage. 0 when the
-  // user authenticates by IAM or not at all.
-  authenticationPasswordCount int
+  // Null when the service reports no authentication settings for the user.
+  authenticationRef aws.elasticache.authentication
 
   // Tags for the user
   tags() map[string]string
@@ -17937,6 +17948,24 @@ aws.lambda {
   eventSourceMappings() []aws.lambda.eventSourceMapping
 }
 
+// Runtime management configuration of an AWS Lambda function
+//
+// How the function picks up the managed runtime updates AWS ships. A function
+// pinned to one runtime build stops receiving the security patches applied to
+// that runtime until someone moves the pin.
+private aws.lambda.runtimeManagementConfig @defaults("updateRuntimeOn") {
+  // How the function picks up managed runtime updates
+  //
+  // One of Auto, Manual, or FunctionUpdate.
+  updateRuntimeOn string
+  // Managed runtime version the function is pinned to
+  //
+  // Set only when updateRuntimeOn is Manual. Distinct from the function's own
+  // runtimeVersionArn, which reports the build the function is running right
+  // now whether or not it is pinned.
+  runtimeVersionArn string
+}
+
 // AWS Lambda function
 private aws.lambda.function @defaults("arn") {
   // ARN of the function
@@ -18070,23 +18099,15 @@ private aws.lambda.function @defaults("arn") {
   eventInvokeConfig() dict
   // Runtime management configuration
   //
-  // Deprecated in favor of runtimeUpdateMode and pinnedRuntimeVersionArn.
-  // Dict with `updateRuntimeOn` and, when the runtime is pinned,
-  // `runtimeVersionArn`.
+  // Deprecated in favor of runtimeManagement, which carries the same two
+  // values as a resource. Dict with `updateRuntimeOn` and, when the runtime is
+  // pinned, `runtimeVersionArn`.
   runtimeManagementConfig() @maturity("deprecated") dict
-  // How the function picks up managed runtime updates
+  // Runtime management configuration
   //
-  // One of Auto, Manual, or FunctionUpdate. Manual pins the function to one
-  // runtime build, so it stops receiving the security patches AWS ships to
-  // the managed runtime until someone moves the pin. Empty when the mode is
-  // not reported.
-  runtimeUpdateMode() string
-  // Managed runtime version the function is pinned to
-  //
-  // Set only when runtimeUpdateMode is Manual. Distinct from
-  // runtimeVersionArn, which reports the build the function is running right
-  // now whether or not it is pinned.
-  pinnedRuntimeVersionArn() string
+  // Null when the configuration cannot be read, either because the function
+  // no longer exists or because the account is not allowed to read it.
+  runtimeManagement() aws.lambda.runtimeManagementConfig
   // Published versions of this function
   versions() []aws.lambda.function.version
   // Container image URI for Image package type functions (empty for Zip package type functions)
@@ -21716,6 +21737,19 @@ private aws.neptune.cluster @defaults("arn name status") {
 // accessibility, enhanced monitoring configuration, and certificate
 // authority. Query it to find instances that are publicly accessible,
 // unencrypted, or missing IAM database authentication.
+// Connection endpoint of an Amazon Neptune instance
+//
+// Address clients connect to, the port the database engine listens on, and
+// the Route 53 hosted zone the address lives in.
+private aws.neptune.endpoint @defaults("address port") {
+  // DNS address clients connect to
+  address string
+  // Port the database engine listens on
+  port int
+  // Route 53 hosted zone ID for the endpoint address
+  hostedZoneId string
+}
+
 private aws.neptune.instance @defaults("arn name status"){
   // ARN for the instance
   arn string
@@ -21741,21 +21775,13 @@ private aws.neptune.instance @defaults("arn name status"){
   enabledCloudwatchLogsExports []string
   // Connection endpoint
   //
-  // Deprecated in favor of endpointAddress, endpointPort, and
-  // endpointHostedZoneId. Dict with `Address`, `Port`, and `HostedZoneId`.
+  // Deprecated in favor of endpointRef, which carries the same three values as
+  // a resource. Dict with `Address`, `Port`, and `HostedZoneId`.
   endpoint @maturity("deprecated") dict
-  // DNS address clients connect to
+  // Connection endpoint
   //
-  // Empty while the instance is still being created and has no endpoint yet.
-  endpointAddress string
-  // Port the database engine listens on
-  //
-  // 0 while the instance is still being created and has no endpoint yet.
-  endpointPort int
-  // Route 53 hosted zone ID for the endpoint address
-  //
-  // Empty while the instance is still being created and has no endpoint yet.
-  endpointHostedZoneId string
+  // Null while the instance is still being created and has no endpoint yet.
+  endpointRef aws.neptune.endpoint
   // Name of the database engine
   engine string
   // Database engine version
@@ -24556,6 +24582,17 @@ aws.kinesis @defaults("streams") {
   videoStreams() []aws.kinesis.videoStream
 }
 
+// Capacity mode of an Amazon Kinesis data stream
+//
+// Whether the stream provisions shards itself or runs on-demand, which is
+// what decides whether shard count is something the account manages.
+private aws.kinesis.streamModeDetails @defaults("streamMode") {
+  // Capacity mode of the stream
+  //
+  // One of ON_DEMAND or PROVISIONED.
+  streamMode string
+}
+
 // Amazon Kinesis data stream
 private aws.kinesis.stream @defaults("name status region") {
   // ARN of the stream
@@ -24576,14 +24613,14 @@ private aws.kinesis.stream @defaults("name status region") {
   consumerCount() int
   // Capacity mode of the stream
   //
-  // Deprecated in favor of streamMode. Dict with a single `StreamMode` key.
+  // Deprecated in favor of streamModeDetailsRef, which carries the same value
+  // as a resource. Dict with a single `StreamMode` key.
   streamModeDetails @maturity("deprecated") dict
   // Capacity mode of the stream
   //
-  // One of ON_DEMAND or PROVISIONED. Empty when the mode is not reported,
-  // which is what a stream reached by ARN before its description is read
-  // returns.
-  streamMode string
+  // Null when the mode is not reported, which is what a stream reached by ARN
+  // before its description is read returns.
+  streamModeDetailsRef aws.kinesis.streamModeDetails
   // Enhanced (shard-level) monitoring settings
   //
   // Each entry has a `ShardLevelMetrics` key listing the enabled CloudWatch
@@ -24984,6 +25021,24 @@ private aws.memorydb.acl @defaults("name status") {
   tags() map[string]string
 }
 
+// Authentication configuration of an Amazon MemoryDB user
+//
+// How the user proves who it is, and how many passwords it has to prove it
+// with. A user set to no-password can be authenticated as without presenting
+// a credential at all, so whatever its access string grants is open to
+// anyone who can reach the cluster.
+private aws.memorydb.authentication @defaults("type passwordCount") {
+  // Authentication mode for the user
+  //
+  // One of password, no-password, or iam.
+  type string
+  // Number of passwords assigned to the user
+  //
+  // Up to two, so a password can be rotated without an outage. 0 when the
+  // user authenticates by IAM or not at all.
+  passwordCount int
+}
+
 // Amazon MemoryDB user
 private aws.memorydb.user @defaults("name status") {
   // ARN of the user
@@ -25000,22 +25055,14 @@ private aws.memorydb.user @defaults("name status") {
   minimumEngineVersion string
   // Authentication configuration
   //
-  // Deprecated in favor of authenticationType and
-  // authenticationPasswordCount. Password and IAM authentication state for
-  // the user, with the keys `Type` and `PasswordCount`.
+  // Deprecated in favor of authenticationRef, which carries the same two
+  // values as a resource. Password and IAM authentication state for the user,
+  // with the keys `Type` and `PasswordCount`.
   authentication @maturity("deprecated") dict
-  // Authentication mode for the user
+  // Authentication configuration for the user
   //
-  // One of password, no-password, or iam. A user set to no-password can be
-  // authenticated as without presenting a credential, so whatever the access
-  // string grants is open to anyone who can reach the cluster. Empty when the
-  // service reports no authentication settings.
-  authenticationType string
-  // Number of passwords assigned to the user
-  //
-  // Up to two, so a password can be rotated without an outage. 0 when the
-  // user authenticates by IAM or not at all.
-  authenticationPasswordCount int
+  // Null when the service reports no authentication settings for the user.
+  authenticationRef aws.memorydb.authentication
   // Region where the user exists
   region string
   // Tags for the user

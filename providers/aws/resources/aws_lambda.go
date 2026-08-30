@@ -1464,20 +1464,24 @@ func (a *mqlAwsLambdaFunction) fetchRuntimeManagementConfig() (*lambda.GetRuntim
 	return a.runtimeMgmtResp, a.runtimeMgmtErr
 }
 
-func (a *mqlAwsLambdaFunction) runtimeUpdateMode() (string, error) {
+func (a *mqlAwsLambdaFunction) runtimeManagement() (*mqlAwsLambdaRuntimeManagementConfig, error) {
 	resp, err := a.fetchRuntimeManagementConfig()
-	if err != nil || resp == nil {
-		return "", err
+	if err != nil {
+		return nil, err
 	}
-	return string(resp.UpdateRuntimeOn), nil
-}
-
-func (a *mqlAwsLambdaFunction) pinnedRuntimeVersionArn() (string, error) {
-	resp, err := a.fetchRuntimeManagementConfig()
-	if err != nil || resp == nil {
-		return "", err
+	if resp == nil {
+		a.RuntimeManagement.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	return convert.ToValue(resp.RuntimeVersionArn), nil
+	res, err := CreateResource(a.MqlRuntime, "aws.lambda.runtimeManagementConfig", map[string]*llx.RawData{
+		"__id":              llx.StringData(a.Arn.Data + "/runtimeManagementConfig"),
+		"updateRuntimeOn":   llx.StringData(string(resp.UpdateRuntimeOn)),
+		"runtimeVersionArn": llx.StringData(convert.ToValue(resp.RuntimeVersionArn)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsLambdaRuntimeManagementConfig), nil
 }
 
 // ==================== Types ====================
