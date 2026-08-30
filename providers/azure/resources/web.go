@@ -975,6 +975,35 @@ func (a *mqlAzureSubscriptionWebServiceAppsiteconfig) ipSecurityRestrictionsDefa
 	return s, nil
 }
 
+// redactedAuthSettings copies legacy (V1) Easy Auth settings with the six
+// identity-provider client secrets removed.
+//
+// GetAuthSettings is the `/config/authsettings/list` action, which is Azure's
+// convention for the form that returns secret values -- the V2 sibling has a
+// separate GetAuthSettingsV2WithoutSecrets precisely because the /list form
+// does not redact. Everything else about the configuration is kept, so
+// enabled, unauthenticatedClientAction, the allowed audiences and the provider
+// client IDs still read as before.
+//
+// The V2 path is already clean: SiteAuthSettingsV2Properties carries only
+// clientSecretSettingName and a certificate thumbprint, never a value.
+//
+// The copy is by field rather than by JSON key so a secret field renamed in a
+// future SDK breaks the build instead of silently leaking again.
+func redactedAuthSettings(props *web.SiteAuthSettingsProperties) *web.SiteAuthSettingsProperties {
+	if props == nil {
+		return nil
+	}
+	safe := *props
+	safe.ClientSecret = nil
+	safe.FacebookAppSecret = nil
+	safe.GitHubClientSecret = nil
+	safe.GoogleClientSecret = nil
+	safe.MicrosoftAccountClientSecret = nil
+	safe.TwitterConsumerSecret = nil
+	return &safe
+}
+
 func (a *mqlAzureSubscriptionWebServiceAppsite) authenticationSettings() (*mqlAzureSubscriptionWebServiceAppsiteauthsettings, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -1002,7 +1031,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) authenticationSettings() (*mqlAz
 	if err != nil {
 		return nil, err
 	}
-	properties, err := convert.JsonToDict(configuration.Properties)
+	properties, err := convert.JsonToDict(redactedAuthSettings(configuration.Properties))
 	if err != nil {
 		return nil, err
 	}
