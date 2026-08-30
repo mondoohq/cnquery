@@ -11,69 +11,42 @@ import (
 	compute "google.golang.org/api/compute/v1"
 )
 
-func TestWafExpressionSetArgs(t *testing.T) {
-	args, err := wafExpressionSetArgs("proj-1", &compute.WafExpressionSet{
-		Id:      "sqli-v33-stable",
-		Aliases: []string{"sqli-stable"},
-		Expressions: []*compute.WafExpressionSetExpression{
-			{Id: "owasp-crs-v030301-id942100-sqli", Sensitivity: 1},
-			{Id: "owasp-crs-v030301-id942110-sqli", Sensitivity: 3},
-		},
-	})
-	require.NoError(t, err)
+// Sensitivity is the ModSecurity paranoia level and is the reason this resource
+// is worth reading: a policy running a set at level 1 catches far less than the
+// same set at level 3. Dropping it would leave the expressions
+// indistinguishable from a bare ID list.
+func TestWafExpressionSetExpressionArgs(t *testing.T) {
+	args := wafExpressionSetExpressionArgs("proj-1/wafExpressionSet/sqli-v33-stable",
+		&compute.WafExpressionSetExpression{Id: "owasp-crs-v030301-id942100-sqli", Sensitivity: 3})
 
-	assert.Equal(t, "sqli-v33-stable", args["id"].Value)
-	assert.Equal(t, []interface{}{"sqli-stable"}, args["aliases"].Value)
-
-	sensitivities, ok := args["expressionSensitivities"].Value.(map[string]interface{})
-	require.True(t, ok)
-	require.Len(t, sensitivities, 2)
-
-	// Sensitivity is the ModSecurity paranoia level and is the reason this
-	// resource is worth reading: a policy running a set at level 1 catches far
-	// less than the same set at level 3. Dropping it would leave the
-	// expressions indistinguishable from a bare ID list.
-	assert.EqualValues(t, 1, sensitivities["owasp-crs-v030301-id942100-sqli"])
-	assert.EqualValues(t, 3, sensitivities["owasp-crs-v030301-id942110-sqli"])
+	assert.Equal(t, "owasp-crs-v030301-id942100-sqli", args["id"].Value)
+	assert.EqualValues(t, 3, args["sensitivity"].Value)
 }
 
 // A sensitivity of 0 marks an expression applied only when a rule opts into it
-// by name. It is a real level, not an absent one, so the entry has to survive
-// into the map rather than being dropped as a zero value.
-func TestWafExpressionSetArgsKeepsZeroSensitivity(t *testing.T) {
-	args, err := wafExpressionSetArgs("proj-1", &compute.WafExpressionSet{
-		Id: "sqli-v33-stable",
-		Expressions: []*compute.WafExpressionSetExpression{
-			{Id: "owasp-crs-v030301-id942100-sqli", Sensitivity: 0},
-		},
-	})
-	require.NoError(t, err)
+// by name. It is a real level, not an absent one, so it has to reach MQL as 0
+// rather than being dropped as a zero value.
+func TestWafExpressionSetExpressionArgsKeepsZeroSensitivity(t *testing.T) {
+	args := wafExpressionSetExpressionArgs("proj-1/wafExpressionSet/sqli-v33-stable",
+		&compute.WafExpressionSetExpression{Id: "owasp-crs-v030301-id942100-sqli", Sensitivity: 0})
 
-	sensitivities := args["expressionSensitivities"].Value.(map[string]interface{})
-	require.Contains(t, sensitivities, "owasp-crs-v030301-id942100-sqli")
-	assert.EqualValues(t, 0, sensitivities["owasp-crs-v030301-id942100-sqli"])
+	assert.EqualValues(t, 0, args["sensitivity"].Value)
 }
 
-// The expression sets are Google-maintained and identical across projects, so
-// the set ID alone is not a unique cache key. Scanning two projects in one run
-// would make the second project's sets resolve to the first project's.
-func TestWafExpressionSetArgsScopesTheCacheKeyToTheProject(t *testing.T) {
-	a, err := wafExpressionSetArgs("proj-1", &compute.WafExpressionSet{Id: "xss-v33-stable"})
-	require.NoError(t, err)
-	b, err := wafExpressionSetArgs("proj-2", &compute.WafExpressionSet{Id: "xss-v33-stable"})
-	require.NoError(t, err)
+// Two expressions in one set, and the same expression across two projects, all
+// need distinct cache keys. The sets are Google-maintained and identical across
+// projects, so scanning two projects in one run would otherwise make the second
+// project's expressions resolve to the first project's.
+func TestWafExpressionSetExpressionArgsIdsAreDistinct(t *testing.T) {
+	a := wafExpressionSetExpressionArgs("proj-1/wafExpressionSet/sqli-v33-stable",
+		&compute.WafExpressionSetExpression{Id: "owasp-crs-v030301-id942100-sqli"})
+	b := wafExpressionSetExpressionArgs("proj-1/wafExpressionSet/sqli-v33-stable",
+		&compute.WafExpressionSetExpression{Id: "owasp-crs-v030301-id942110-sqli"})
+	c := wafExpressionSetExpressionArgs("proj-2/wafExpressionSet/sqli-v33-stable",
+		&compute.WafExpressionSetExpression{Id: "owasp-crs-v030301-id942100-sqli"})
 
 	assert.NotEqual(t, a["__id"].Value, b["__id"].Value)
-}
-
-// A set with no aliases or expressions must map to empty lists rather than
-// null, so a policy counting expressions sees zero instead of an unread field.
-func TestWafExpressionSetArgsEmptyCollections(t *testing.T) {
-	args, err := wafExpressionSetArgs("proj-1", &compute.WafExpressionSet{Id: "empty-set"})
-	require.NoError(t, err)
-
-	assert.Equal(t, []interface{}{}, args["aliases"].Value)
-	assert.Equal(t, map[string]interface{}{}, args["expressionSensitivities"].Value)
+	assert.NotEqual(t, a["__id"].Value, c["__id"].Value)
 }
 
 // Every level of the response is optional in the API. A nil anywhere in the

@@ -52,14 +52,6 @@ func newMqlLoggingSettings(runtime *plugin.Runtime, settings *logging.Settings, 
 		return nil, err
 	}
 
-	var defaultSinkFilter, defaultSinkFilterMode string
-	var defaultSinkExclusionsSrc []*logging.LogExclusion
-	if settings.DefaultSinkConfig != nil {
-		defaultSinkFilter = settings.DefaultSinkConfig.Filter
-		defaultSinkFilterMode = settings.DefaultSinkConfig.Mode
-		defaultSinkExclusionsSrc = settings.DefaultSinkConfig.Exclusions
-	}
-
 	name := settings.Name
 	if name == "" {
 		// Name is output-only and can come back empty; fall back to the requested
@@ -67,7 +59,7 @@ func newMqlLoggingSettings(runtime *plugin.Runtime, settings *logging.Settings, 
 		name = fallbackName
 	}
 
-	defaultSinkExclusions, err := newMqlLogExclusions(runtime, "gcp.loggingSettings/"+name+"/defaultSink", defaultSinkExclusionsSrc)
+	defaultSink, err := newMqlDefaultSinkOverride(runtime, "gcp.loggingSettings/"+name, settings.DefaultSinkConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -80,9 +72,7 @@ func newMqlLoggingSettings(runtime *plugin.Runtime, settings *logging.Settings, 
 		"loggingServiceAccountId": llx.StringData(settings.LoggingServiceAccountId),
 		"storageLocation":         llx.StringData(settings.StorageLocation),
 		"defaultSinkConfig":       llx.DictData(defaultSinkConfig),
-		"defaultSinkFilter":       llx.StringData(defaultSinkFilter),
-		"defaultSinkFilterMode":   llx.StringData(defaultSinkFilterMode),
-		"defaultSinkExclusions":   llx.ArrayData(defaultSinkExclusions, types.Resource("gcp.project.loggingservice.sink.exclusion")),
+		"defaultSink":             defaultSink,
 	})
 	if err != nil {
 		return nil, err
@@ -182,4 +172,32 @@ func (g *mqlGcpFolderLoggingService) settings() (*mqlGcpLoggingSettings, error) 
 		return nil, err
 	}
 	return newMqlLoggingSettings(g.MqlRuntime, settings, parent+"/settings")
+}
+
+// newMqlDefaultSinkOverride promotes the overrides a folder or organization
+// applies to the built-in _Default sink.
+//
+// Returns llx.NilData for a node that leaves the sink exactly as Cloud Logging
+// builds it, which is a different claim from a node that overrides it with an
+// empty filter.
+func newMqlDefaultSinkOverride(runtime *plugin.Runtime, parentID string, cfg *logging.DefaultSinkConfig) (*llx.RawData, error) {
+	if cfg == nil {
+		return llx.NilData, nil
+	}
+
+	exclusions, err := newMqlLogExclusions(runtime, parentID+"/defaultSink", cfg.Exclusions)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(runtime, "gcp.loggingSettings.defaultSinkOverride", map[string]*llx.RawData{
+		"__id":       llx.StringData(parentID + "/defaultSink"),
+		"filter":     llx.StringData(cfg.Filter),
+		"mode":       llx.StringData(cfg.Mode),
+		"exclusions": llx.ArrayData(exclusions, types.Resource("gcp.project.loggingservice.sink.exclusion")),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return llx.ResourceData(res, "gcp.loggingSettings.defaultSinkOverride"), nil
 }

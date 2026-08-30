@@ -6919,26 +6919,35 @@ private gcp.loggingSettings @defaults("name disableDefaultSink storageLocation")
   storageLocation string
   // Default sink override dict
   //
-  // Deprecated in favor of defaultSinkFilter, defaultSinkFilterMode, and
-  // defaultSinkExclusions. Carries `filter`, `mode`, and `exclusions`.
+  // Deprecated in favor of defaultSink. Carries `filter`, `mode`, and
+  // `exclusions`.
   defaultSinkConfig @maturity("deprecated") dict
+  // Overrides applied to the built-in _Default sink
+  //
+  // Null when the node leaves the _Default sink exactly as Cloud Logging
+  // builds it.
+  defaultSink gcp.loggingSettings.defaultSinkOverride
+}
+
+// Overrides applied to the built-in _Default sink
+//
+// The changes a folder or organization makes to the `_Default` sink every
+// project created under it inherits. `filter` replaces or narrows the built-in
+// inclusion filter depending on `mode`, and each entry in `exclusions` drops
+// matching entries before they reach the sink's destination. Either can quietly
+// leave a project retaining less than the sink's own configuration suggests.
+private gcp.loggingSettings.defaultSinkOverride @defaults("filter mode") {
   // Inclusion filter applied to the _Default sink in place of the built-in one
   //
-  // Empty when the built-in filter is left in place. A narrower filter here
-  // routes fewer entries into the _Default sink than the sink's own
-  // configuration suggests.
-  defaultSinkFilter string
+  // Empty when the built-in filter is left in place.
+  filter string
   // How the override filter combines with the built-in _Default sink filter
   //
   // One of OVERWRITE, APPEND, or FILTER_MODE_UNSPECIFIED. OVERWRITE replaces
   // the built-in filter outright.
-  defaultSinkFilterMode string
+  mode string
   // Additional exclusion filters applied to the _Default sink
-  //
-  // Each entry drops matching entries before they reach the sink's
-  // destination, so an enabled exclusion here silently narrows what every
-  // project created under this node retains.
-  defaultSinkExclusions []gcp.project.loggingservice.sink.exclusion
+  exclusions []gcp.project.loggingservice.sink.exclusion
 }
 
 // Google Cloud (GCP) Cloud Logging bucket
@@ -10799,8 +10808,8 @@ private gcp.project.alloydbService.backup @defaults("name") {
 // these alongside gcp.project.computeService.securityPolicy to see which rule
 // sets a policy could be running and at what strictness: the `id` field is
 // the set identifier a rule names, for example sqli-v33-stable, and each
-// entry in `expressionSensitivities` carries the paranoia level its
-// expression belongs to.
+// entry in `expressions` carries the paranoia level its expression belongs
+// to.
 private gcp.project.computeService.wafExpressionSet @defaults("id aliases") {
   // Expression set identifier a security policy rule references
   id string
@@ -10810,14 +10819,25 @@ private gcp.project.computeService.wafExpressionSet @defaults("id aliases") {
   // without being rewritten, so a rule naming an alias tracks whichever
   // version that alias currently points at.
   aliases []string
-  // Paranoia level of each WAF expression in the set, keyed by expression identifier
+  // Individual WAF expressions the set contains
+  expressions []gcp.project.computeService.wafExpressionSet.expression
+}
+
+// Expression in a Cloud Armor preconfigured WAF expression set
+//
+// One attack definition inside a rule set, and the strictness it belongs to.
+// The `id` names the definition it detects, for example
+// owasp-crs-v030301-id942100-sqli, and `sensitivity` is the ModSecurity
+// paranoia level: a policy running the set at level 1 evaluates only the
+// level 1 expressions and catches far less than the same set at level 3.
+private gcp.project.computeService.wafExpressionSet.expression @defaults("id sensitivity") {
+  // Expression identifier naming the attack definition it detects
+  id string
+  // ModSecurity paranoia level the expression belongs to
   //
-  // The key is the expression identifier naming the attack definition it
-  // detects, for example owasp-crs-v030301-id942100-sqli. The value is the
-  // ModSecurity paranoia level from 1 to 4 the expression belongs to. A
-  // sensitivity of 0 marks an expression applied only when a rule opts into
-  // it by name.
-  expressionSensitivities map[string]int
+  // From 1 to 4. A sensitivity of 0 marks an expression applied only when a
+  // rule opts into it by name.
+  sensitivity int
 }
 
 // Google Cloud (GCP) Compute Cloud Armor security policy

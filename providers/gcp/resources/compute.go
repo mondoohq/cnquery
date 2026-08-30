@@ -3470,7 +3470,7 @@ func (g *mqlGcpProjectComputeService) wafExpressionSets() ([]any, error) {
 
 	res := []any{}
 	for _, set := range wafExpressionSetsFromResponse(resp) {
-		args, err := wafExpressionSetArgs(projectId, set)
+		args, err := wafExpressionSetArgs(g.MqlRuntime, projectId, set)
 		if err != nil {
 			return nil, err
 		}
@@ -3493,26 +3493,47 @@ func wafExpressionSetsFromResponse(resp *compute.SecurityPoliciesListPreconfigur
 	return resp.PreconfiguredExpressionSets.WafRules.ExpressionSets
 }
 
+// wafExpressionSetExpressionArgs maps one expression of a set onto resource
+// arguments.
+//
+// A sensitivity of 0 is a real paranoia level, marking an expression applied
+// only when a rule opts into it by name, so it has to survive rather than be
+// dropped as a zero value. The cache key carries the project because the sets
+// are Google-maintained and identical across projects.
+func wafExpressionSetExpressionArgs(setID string, e *compute.WafExpressionSetExpression) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":        llx.StringData(setID + "/expression/" + e.Id),
+		"id":          llx.StringData(e.Id),
+		"sensitivity": llx.IntData(e.Sensitivity),
+	}
+}
+
 // wafExpressionSetArgs maps one expression set onto resource arguments.
-func wafExpressionSetArgs(projectId string, set *compute.WafExpressionSet) (map[string]*llx.RawData, error) {
+func wafExpressionSetArgs(runtime *plugin.Runtime, projectId string, set *compute.WafExpressionSet) (map[string]*llx.RawData, error) {
 	aliases := make([]any, 0, len(set.Aliases))
 	for _, a := range set.Aliases {
 		aliases = append(aliases, a)
 	}
 
-	sensitivities := make(map[string]any, len(set.Expressions))
+	setID := projectId + "/wafExpressionSet/" + set.Id
+	expressions := make([]any, 0, len(set.Expressions))
 	for _, e := range set.Expressions {
 		if e == nil {
 			continue
 		}
-		sensitivities[e.Id] = e.Sensitivity
+		mqlExpression, err := CreateResource(runtime, "gcp.project.computeService.wafExpressionSet.expression",
+			wafExpressionSetExpressionArgs(setID, e))
+		if err != nil {
+			return nil, err
+		}
+		expressions = append(expressions, mqlExpression)
 	}
 
 	return map[string]*llx.RawData{
-		"__id":                    llx.StringData(projectId + "/wafExpressionSet/" + set.Id),
-		"id":                      llx.StringData(set.Id),
-		"aliases":                 llx.ArrayData(aliases, types.String),
-		"expressionSensitivities": llx.MapData(sensitivities, types.Int),
+		"__id":        llx.StringData(setID),
+		"id":          llx.StringData(set.Id),
+		"aliases":     llx.ArrayData(aliases, types.String),
+		"expressions": llx.ArrayData(expressions, types.Resource("gcp.project.computeService.wafExpressionSet.expression")),
 	}, nil
 }
 

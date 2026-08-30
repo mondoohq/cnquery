@@ -192,6 +192,7 @@ const (
 	ResourceGcpProjectApiKeyRestrictions                                               string = "gcp.project.apiKey.restrictions"
 	ResourceGcpProjectLoggingservice                                                   string = "gcp.project.loggingservice"
 	ResourceGcpLoggingSettings                                                         string = "gcp.loggingSettings"
+	ResourceGcpLoggingSettingsDefaultSinkOverride                                      string = "gcp.loggingSettings.defaultSinkOverride"
 	ResourceGcpProjectLoggingserviceBucket                                             string = "gcp.project.loggingservice.bucket"
 	ResourceGcpProjectLoggingserviceBucketView                                         string = "gcp.project.loggingservice.bucket.view"
 	ResourceGcpProjectLoggingserviceBucketIndexConfig                                  string = "gcp.project.loggingservice.bucket.indexConfig"
@@ -289,6 +290,7 @@ const (
 	ResourceGcpProjectAlloydbServiceInstance                                           string = "gcp.project.alloydbService.instance"
 	ResourceGcpProjectAlloydbServiceBackup                                             string = "gcp.project.alloydbService.backup"
 	ResourceGcpProjectComputeServiceWafExpressionSet                                   string = "gcp.project.computeService.wafExpressionSet"
+	ResourceGcpProjectComputeServiceWafExpressionSetExpression                         string = "gcp.project.computeService.wafExpressionSet.expression"
 	ResourceGcpProjectComputeServiceSecurityPolicy                                     string = "gcp.project.computeService.securityPolicy"
 	ResourceGcpProjectComputeServiceSecurityPolicyRule                                 string = "gcp.project.computeService.securityPolicy.rule"
 	ResourceGcpProjectComputeServiceSecurityPolicyAdaptiveProtection                   string = "gcp.project.computeService.securityPolicy.adaptiveProtection"
@@ -1250,6 +1252,10 @@ func init() {
 			// to override args, implement: initGcpLoggingSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpLoggingSettings,
 		},
+		"gcp.loggingSettings.defaultSinkOverride": {
+			// to override args, implement: initGcpLoggingSettingsDefaultSinkOverride(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpLoggingSettingsDefaultSinkOverride,
+		},
 		"gcp.project.loggingservice.bucket": {
 			Init:   initGcpProjectLoggingserviceBucket,
 			Create: createGcpProjectLoggingserviceBucket,
@@ -1637,6 +1643,10 @@ func init() {
 		"gcp.project.computeService.wafExpressionSet": {
 			// to override args, implement: initGcpProjectComputeServiceWafExpressionSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectComputeServiceWafExpressionSet,
+		},
+		"gcp.project.computeService.wafExpressionSet.expression": {
+			// to override args, implement: initGcpProjectComputeServiceWafExpressionSetExpression(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceWafExpressionSetExpression,
 		},
 		"gcp.project.computeService.securityPolicy": {
 			// to override args, implement: initGcpProjectComputeServiceSecurityPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8764,14 +8774,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.loggingSettings.defaultSinkConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpLoggingSettings).GetDefaultSinkConfig()).ToDataRes(types.Dict)
 	},
-	"gcp.loggingSettings.defaultSinkFilter": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpLoggingSettings).GetDefaultSinkFilter()).ToDataRes(types.String)
+	"gcp.loggingSettings.defaultSink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpLoggingSettings).GetDefaultSink()).ToDataRes(types.Resource("gcp.loggingSettings.defaultSinkOverride"))
 	},
-	"gcp.loggingSettings.defaultSinkFilterMode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpLoggingSettings).GetDefaultSinkFilterMode()).ToDataRes(types.String)
+	"gcp.loggingSettings.defaultSinkOverride.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpLoggingSettingsDefaultSinkOverride).GetFilter()).ToDataRes(types.String)
 	},
-	"gcp.loggingSettings.defaultSinkExclusions": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpLoggingSettings).GetDefaultSinkExclusions()).ToDataRes(types.Array(types.Resource("gcp.project.loggingservice.sink.exclusion")))
+	"gcp.loggingSettings.defaultSinkOverride.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpLoggingSettingsDefaultSinkOverride).GetMode()).ToDataRes(types.String)
+	},
+	"gcp.loggingSettings.defaultSinkOverride.exclusions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpLoggingSettingsDefaultSinkOverride).GetExclusions()).ToDataRes(types.Array(types.Resource("gcp.project.loggingservice.sink.exclusion")))
 	},
 	"gcp.project.loggingservice.bucket.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceBucket).GetProjectId()).ToDataRes(types.String)
@@ -12055,8 +12068,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.wafExpressionSet.aliases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceWafExpressionSet).GetAliases()).ToDataRes(types.Array(types.String))
 	},
-	"gcp.project.computeService.wafExpressionSet.expressionSensitivities": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceWafExpressionSet).GetExpressionSensitivities()).ToDataRes(types.Map(types.String, types.Int))
+	"gcp.project.computeService.wafExpressionSet.expressions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceWafExpressionSet).GetExpressions()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.wafExpressionSet.expression")))
+	},
+	"gcp.project.computeService.wafExpressionSet.expression.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceWafExpressionSetExpression).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.wafExpressionSet.expression.sensitivity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceWafExpressionSetExpression).GetSensitivity()).ToDataRes(types.Int)
 	},
 	"gcp.project.computeService.securityPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetId()).ToDataRes(types.String)
@@ -28330,16 +28349,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpLoggingSettings).DefaultSinkConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.loggingSettings.defaultSinkFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpLoggingSettings).DefaultSinkFilter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gcp.loggingSettings.defaultSink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettings).DefaultSink, ok = plugin.RawToTValue[*mqlGcpLoggingSettingsDefaultSinkOverride](v.Value, v.Error)
 		return
 	},
-	"gcp.loggingSettings.defaultSinkFilterMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpLoggingSettings).DefaultSinkFilterMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gcp.loggingSettings.defaultSinkOverride.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettingsDefaultSinkOverride).__id, ok = v.Value.(string)
 		return
 	},
-	"gcp.loggingSettings.defaultSinkExclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpLoggingSettings).DefaultSinkExclusions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"gcp.loggingSettings.defaultSinkOverride.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettingsDefaultSinkOverride).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.loggingSettings.defaultSinkOverride.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettingsDefaultSinkOverride).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.loggingSettings.defaultSinkOverride.exclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettingsDefaultSinkOverride).Exclusions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.loggingservice.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33106,8 +33133,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceWafExpressionSet).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.computeService.wafExpressionSet.expressionSensitivities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceWafExpressionSet).ExpressionSensitivities, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+	"gcp.project.computeService.wafExpressionSet.expressions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceWafExpressionSet).Expressions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.wafExpressionSet.expression.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceWafExpressionSetExpression).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.wafExpressionSet.expression.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceWafExpressionSetExpression).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.wafExpressionSet.expression.sensitivity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceWafExpressionSetExpression).Sensitivity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.securityPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -65799,9 +65838,7 @@ type mqlGcpLoggingSettings struct {
 	LoggingServiceAccountId plugin.TValue[string]
 	StorageLocation         plugin.TValue[string]
 	DefaultSinkConfig       plugin.TValue[any]
-	DefaultSinkFilter       plugin.TValue[string]
-	DefaultSinkFilterMode   plugin.TValue[string]
-	DefaultSinkExclusions   plugin.TValue[[]any]
+	DefaultSink             plugin.TValue[*mqlGcpLoggingSettingsDefaultSinkOverride]
 }
 
 // createGcpLoggingSettings creates a new instance of this resource
@@ -65869,16 +65906,62 @@ func (c *mqlGcpLoggingSettings) GetDefaultSinkConfig() *plugin.TValue[any] {
 	return &c.DefaultSinkConfig
 }
 
-func (c *mqlGcpLoggingSettings) GetDefaultSinkFilter() *plugin.TValue[string] {
-	return &c.DefaultSinkFilter
+func (c *mqlGcpLoggingSettings) GetDefaultSink() *plugin.TValue[*mqlGcpLoggingSettingsDefaultSinkOverride] {
+	return &c.DefaultSink
 }
 
-func (c *mqlGcpLoggingSettings) GetDefaultSinkFilterMode() *plugin.TValue[string] {
-	return &c.DefaultSinkFilterMode
+// mqlGcpLoggingSettingsDefaultSinkOverride for the gcp.loggingSettings.defaultSinkOverride resource
+type mqlGcpLoggingSettingsDefaultSinkOverride struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpLoggingSettingsDefaultSinkOverrideInternal it will be used here
+	Filter     plugin.TValue[string]
+	Mode       plugin.TValue[string]
+	Exclusions plugin.TValue[[]any]
 }
 
-func (c *mqlGcpLoggingSettings) GetDefaultSinkExclusions() *plugin.TValue[[]any] {
-	return &c.DefaultSinkExclusions
+// createGcpLoggingSettingsDefaultSinkOverride creates a new instance of this resource
+func createGcpLoggingSettingsDefaultSinkOverride(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpLoggingSettingsDefaultSinkOverride{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.loggingSettings.defaultSinkOverride", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpLoggingSettingsDefaultSinkOverride) MqlName() string {
+	return "gcp.loggingSettings.defaultSinkOverride"
+}
+
+func (c *mqlGcpLoggingSettingsDefaultSinkOverride) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpLoggingSettingsDefaultSinkOverride) GetFilter() *plugin.TValue[string] {
+	return &c.Filter
+}
+
+func (c *mqlGcpLoggingSettingsDefaultSinkOverride) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlGcpLoggingSettingsDefaultSinkOverride) GetExclusions() *plugin.TValue[[]any] {
+	return &c.Exclusions
 }
 
 // mqlGcpProjectLoggingserviceBucket for the gcp.project.loggingservice.bucket resource
@@ -76910,9 +76993,9 @@ type mqlGcpProjectComputeServiceWafExpressionSet struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceWafExpressionSetInternal it will be used here
-	Id                      plugin.TValue[string]
-	Aliases                 plugin.TValue[[]any]
-	ExpressionSensitivities plugin.TValue[map[string]any]
+	Id          plugin.TValue[string]
+	Aliases     plugin.TValue[[]any]
+	Expressions plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeServiceWafExpressionSet creates a new instance of this resource
@@ -76955,8 +77038,57 @@ func (c *mqlGcpProjectComputeServiceWafExpressionSet) GetAliases() *plugin.TValu
 	return &c.Aliases
 }
 
-func (c *mqlGcpProjectComputeServiceWafExpressionSet) GetExpressionSensitivities() *plugin.TValue[map[string]any] {
-	return &c.ExpressionSensitivities
+func (c *mqlGcpProjectComputeServiceWafExpressionSet) GetExpressions() *plugin.TValue[[]any] {
+	return &c.Expressions
+}
+
+// mqlGcpProjectComputeServiceWafExpressionSetExpression for the gcp.project.computeService.wafExpressionSet.expression resource
+type mqlGcpProjectComputeServiceWafExpressionSetExpression struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceWafExpressionSetExpressionInternal it will be used here
+	Id          plugin.TValue[string]
+	Sensitivity plugin.TValue[int64]
+}
+
+// createGcpProjectComputeServiceWafExpressionSetExpression creates a new instance of this resource
+func createGcpProjectComputeServiceWafExpressionSetExpression(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceWafExpressionSetExpression{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.wafExpressionSet.expression", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceWafExpressionSetExpression) MqlName() string {
+	return "gcp.project.computeService.wafExpressionSet.expression"
+}
+
+func (c *mqlGcpProjectComputeServiceWafExpressionSetExpression) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceWafExpressionSetExpression) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceWafExpressionSetExpression) GetSensitivity() *plugin.TValue[int64] {
+	return &c.Sensitivity
 }
 
 // mqlGcpProjectComputeServiceSecurityPolicy for the gcp.project.computeService.securityPolicy resource
