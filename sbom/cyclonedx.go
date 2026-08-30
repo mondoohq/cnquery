@@ -67,21 +67,29 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 	// purl, and so the dependency graph below can drop edges to absent components.
 	emitted := map[string]bool{}
 
-	// add os as component
-	cpe := ""
-	if len(bom.Asset.Platform.Cpes) > 0 {
-		cpe = bom.Asset.Platform.Cpes[0]
-	}
+	// add os as component, when the asset names one.
+	//
+	// A scanned host always does. A document parsed from somebody else's SBOM
+	// often does not, because most SBOMs describe an application rather than a
+	// machine, and emitting the component anyway produced an operating system
+	// with no name -- `"bom-ref": "os:"` -- that a consumer has to recognise as
+	// junk and filter.
+	if bom.Asset.Platform.Name != "" {
+		cpe := ""
+		if len(bom.Asset.Platform.Cpes) > 0 {
+			cpe = bom.Asset.Platform.Cpes[0]
+		}
 
-	osRef := "os:" + bom.Asset.Platform.Name
-	emitted[osRef] = true
-	components = append(components, cyclonedx.Component{
-		BOMRef:  osRef,
-		Type:    cyclonedx.ComponentTypeOS,
-		Name:    bom.Asset.Platform.Name,
-		Version: bom.Asset.Platform.Version,
-		CPE:     cpe,
-	})
+		osRef := "os:" + bom.Asset.Platform.Name
+		emitted[osRef] = true
+		components = append(components, cyclonedx.Component{
+			BOMRef:  osRef,
+			Type:    cyclonedx.ComponentTypeOS,
+			Name:    bom.Asset.Platform.Name,
+			Version: bom.Asset.Platform.Version,
+			CPE:     cpe,
+		})
+	}
 
 	// add os packages as components
 	for i := range bom.Packages {

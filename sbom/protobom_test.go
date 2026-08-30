@@ -150,3 +150,31 @@ func TestProtobomHandlesADocumentWithoutMetadata(t *testing.T) {
 		assert.Empty(t, bom.Packages)
 	})
 }
+
+// The importer and the renderers were written on separate branches, and this is
+// the seam between them: an imported conclusion carries confidence 0, because
+// the format states no score, and both renderers report a score only when it is
+// in (0,1). So a relayed conclusion is emitted with no score attached rather
+// than as one that scored perfectly, which is the whole point of keeping the
+// zero.
+func TestImportedConclusionReportsNoConfidence(t *testing.T) {
+	f, err := os.Open("testdata/licensing.spdx.json")
+	require.NoError(t, err)
+	defer f.Close()
+
+	bom, err := NewProtobom().Parse(f)
+	require.NoError(t, err)
+
+	var cdx strings.Builder
+	require.NoError(t, New(FormatCycloneDxJSON).Render(&cdx, bom))
+	assert.NotContains(t, cdx.String(), "mondoo:license:confidence",
+		"an unscored conclusion must not be rendered as a measured one")
+	// The conclusion itself still reaches the document, marked as concluded.
+	assert.Contains(t, cdx.String(), "AGPL-3.0-only")
+	assert.Contains(t, cdx.String(), `"acknowledgement": "concluded"`)
+
+	// The importer initialises Platform so the renderers have something to
+	// dereference, which must not turn into a component: an operating system
+	// with no name is junk a consumer has to recognise and filter.
+	assert.NotContains(t, cdx.String(), `"bom-ref": "os:"`)
+}
