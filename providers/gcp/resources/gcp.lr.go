@@ -453,6 +453,9 @@ const (
 	ResourceGcpProjectDlpServiceDlpJob                                                 string = "gcp.project.dlpService.dlpJob"
 	ResourceGcpProjectDlpServiceDiscoveryConfig                                        string = "gcp.project.dlpService.discoveryConfig"
 	ResourceGcpProjectDlpServiceConnection                                             string = "gcp.project.dlpService.connection"
+	ResourceGcpProjectDlpServiceSensitivityScore                                       string = "gcp.project.dlpService.sensitivityScore"
+	ResourceGcpProjectDlpServiceDataRiskLevel                                          string = "gcp.project.dlpService.dataRiskLevel"
+	ResourceGcpProjectDlpServiceProfileStatus                                          string = "gcp.project.dlpService.profileStatus"
 	ResourceGcpProjectDlpServiceProjectDataProfile                                     string = "gcp.project.dlpService.projectDataProfile"
 	ResourceGcpProjectDlpServiceTableDataProfile                                       string = "gcp.project.dlpService.tableDataProfile"
 	ResourceGcpProjectDlpServiceColumnDataProfile                                      string = "gcp.project.dlpService.columnDataProfile"
@@ -2287,6 +2290,18 @@ func init() {
 		"gcp.project.dlpService.connection": {
 			// to override args, implement: initGcpProjectDlpServiceConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectDlpServiceConnection,
+		},
+		"gcp.project.dlpService.sensitivityScore": {
+			// to override args, implement: initGcpProjectDlpServiceSensitivityScore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDlpServiceSensitivityScore,
+		},
+		"gcp.project.dlpService.dataRiskLevel": {
+			// to override args, implement: initGcpProjectDlpServiceDataRiskLevel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDlpServiceDataRiskLevel,
+		},
+		"gcp.project.dlpService.profileStatus": {
+			// to override args, implement: initGcpProjectDlpServiceProfileStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDlpServiceProfileStatus,
 		},
 		"gcp.project.dlpService.projectDataProfile": {
 			// to override args, implement: initGcpProjectDlpServiceProjectDataProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -17341,6 +17356,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dlpService.connection.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceConnection).GetProperties()).ToDataRes(types.Dict)
 	},
+	"gcp.project.dlpService.sensitivityScore.score": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceSensitivityScore).GetScore()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.dataRiskLevel.score": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDataRiskLevel).GetScore()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.profileStatus.statusCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceProfileStatus).GetStatusCode()).ToDataRes(types.Int)
+	},
+	"gcp.project.dlpService.profileStatus.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceProfileStatus).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.profileStatus.timestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceProfileStatus).GetTimestamp()).ToDataRes(types.Time)
+	},
 	"gcp.project.dlpService.projectDataProfile.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetName()).ToDataRes(types.String)
 	},
@@ -17350,26 +17380,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dlpService.projectDataProfile.sensitivityScore": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetSensitivityScore()).ToDataRes(types.Dict)
 	},
-	"gcp.project.dlpService.projectDataProfile.sensitivityScoreLevel": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetSensitivityScoreLevel()).ToDataRes(types.String)
+	"gcp.project.dlpService.projectDataProfile.sensitivity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetSensitivity()).ToDataRes(types.Resource("gcp.project.dlpService.sensitivityScore"))
 	},
 	"gcp.project.dlpService.projectDataProfile.dataRiskLevel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetDataRiskLevel()).ToDataRes(types.Dict)
 	},
-	"gcp.project.dlpService.projectDataProfile.dataRiskScore": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetDataRiskScore()).ToDataRes(types.String)
+	"gcp.project.dlpService.projectDataProfile.riskLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetRiskLevel()).ToDataRes(types.Resource("gcp.project.dlpService.dataRiskLevel"))
 	},
 	"gcp.project.dlpService.projectDataProfile.profileStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetProfileStatus()).ToDataRes(types.Dict)
 	},
-	"gcp.project.dlpService.projectDataProfile.profileStatusCode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetProfileStatusCode()).ToDataRes(types.Int)
-	},
-	"gcp.project.dlpService.projectDataProfile.profileStatusMessage": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetProfileStatusMessage()).ToDataRes(types.String)
-	},
-	"gcp.project.dlpService.projectDataProfile.profileStatusTimestamp": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetProfileStatusTimestamp()).ToDataRes(types.Time)
+	"gcp.project.dlpService.projectDataProfile.lastProfileStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetLastProfileStatus()).ToDataRes(types.Resource("gcp.project.dlpService.profileStatus"))
 	},
 	"gcp.project.dlpService.projectDataProfile.tableDataProfileCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetTableDataProfileCount()).ToDataRes(types.Int)
@@ -17404,26 +17428,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dlpService.tableDataProfile.sensitivityScore": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetSensitivityScore()).ToDataRes(types.Dict)
 	},
-	"gcp.project.dlpService.tableDataProfile.sensitivityScoreLevel": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetSensitivityScoreLevel()).ToDataRes(types.String)
+	"gcp.project.dlpService.tableDataProfile.sensitivity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetSensitivity()).ToDataRes(types.Resource("gcp.project.dlpService.sensitivityScore"))
 	},
 	"gcp.project.dlpService.tableDataProfile.dataRiskLevel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetDataRiskLevel()).ToDataRes(types.Dict)
 	},
-	"gcp.project.dlpService.tableDataProfile.dataRiskScore": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetDataRiskScore()).ToDataRes(types.String)
+	"gcp.project.dlpService.tableDataProfile.riskLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetRiskLevel()).ToDataRes(types.Resource("gcp.project.dlpService.dataRiskLevel"))
 	},
 	"gcp.project.dlpService.tableDataProfile.profileStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetProfileStatus()).ToDataRes(types.Dict)
 	},
-	"gcp.project.dlpService.tableDataProfile.profileStatusCode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetProfileStatusCode()).ToDataRes(types.Int)
-	},
-	"gcp.project.dlpService.tableDataProfile.profileStatusMessage": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetProfileStatusMessage()).ToDataRes(types.String)
-	},
-	"gcp.project.dlpService.tableDataProfile.profileStatusTimestamp": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetProfileStatusTimestamp()).ToDataRes(types.Time)
+	"gcp.project.dlpService.tableDataProfile.lastProfileStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetLastProfileStatus()).ToDataRes(types.Resource("gcp.project.dlpService.profileStatus"))
 	},
 	"gcp.project.dlpService.tableDataProfile.predictedInfoTypes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetPredictedInfoTypes()).ToDataRes(types.Array(types.Dict))
@@ -17488,14 +17506,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dlpService.columnDataProfile.sensitivityScore": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetSensitivityScore()).ToDataRes(types.Dict)
 	},
-	"gcp.project.dlpService.columnDataProfile.sensitivityScoreLevel": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetSensitivityScoreLevel()).ToDataRes(types.String)
+	"gcp.project.dlpService.columnDataProfile.sensitivity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetSensitivity()).ToDataRes(types.Resource("gcp.project.dlpService.sensitivityScore"))
 	},
 	"gcp.project.dlpService.columnDataProfile.dataRiskLevel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetDataRiskLevel()).ToDataRes(types.Dict)
 	},
-	"gcp.project.dlpService.columnDataProfile.dataRiskScore": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetDataRiskScore()).ToDataRes(types.String)
+	"gcp.project.dlpService.columnDataProfile.riskLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetRiskLevel()).ToDataRes(types.Resource("gcp.project.dlpService.dataRiskLevel"))
 	},
 	"gcp.project.dlpService.columnDataProfile.columnInfoType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetColumnInfoType()).ToDataRes(types.Dict)
@@ -17542,14 +17560,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dlpService.fileStoreDataProfile.profileStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetProfileStatus()).ToDataRes(types.Dict)
 	},
-	"gcp.project.dlpService.fileStoreDataProfile.profileStatusCode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetProfileStatusCode()).ToDataRes(types.Int)
-	},
-	"gcp.project.dlpService.fileStoreDataProfile.profileStatusMessage": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetProfileStatusMessage()).ToDataRes(types.String)
-	},
-	"gcp.project.dlpService.fileStoreDataProfile.profileStatusTimestamp": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetProfileStatusTimestamp()).ToDataRes(types.Time)
+	"gcp.project.dlpService.fileStoreDataProfile.lastProfileStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetLastProfileStatus()).ToDataRes(types.Resource("gcp.project.dlpService.profileStatus"))
 	},
 	"gcp.project.dlpService.fileStoreDataProfile.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetState()).ToDataRes(types.String)
@@ -17560,14 +17572,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dlpService.fileStoreDataProfile.sensitivityScore": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetSensitivityScore()).ToDataRes(types.Dict)
 	},
-	"gcp.project.dlpService.fileStoreDataProfile.sensitivityScoreLevel": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetSensitivityScoreLevel()).ToDataRes(types.String)
+	"gcp.project.dlpService.fileStoreDataProfile.sensitivity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetSensitivity()).ToDataRes(types.Resource("gcp.project.dlpService.sensitivityScore"))
 	},
 	"gcp.project.dlpService.fileStoreDataProfile.dataRiskLevel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetDataRiskLevel()).ToDataRes(types.Dict)
 	},
-	"gcp.project.dlpService.fileStoreDataProfile.dataRiskScore": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetDataRiskScore()).ToDataRes(types.String)
+	"gcp.project.dlpService.fileStoreDataProfile.riskLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetRiskLevel()).ToDataRes(types.Resource("gcp.project.dlpService.dataRiskLevel"))
 	},
 	"gcp.project.dlpService.fileStoreDataProfile.fileClusterSummaries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetFileClusterSummaries()).ToDataRes(types.Array(types.Dict))
@@ -40814,6 +40826,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDlpServiceConnection).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dlpService.sensitivityScore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceSensitivityScore).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dlpService.sensitivityScore.score": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceSensitivityScore).Score, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.dataRiskLevel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDataRiskLevel).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dlpService.dataRiskLevel.score": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDataRiskLevel).Score, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.profileStatus.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProfileStatus).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dlpService.profileStatus.statusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProfileStatus).StatusCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.profileStatus.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProfileStatus).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.profileStatus.timestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProfileStatus).Timestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dlpService.projectDataProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDlpServiceProjectDataProfile).__id, ok = v.Value.(string)
 		return
@@ -40830,32 +40874,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDlpServiceProjectDataProfile).SensitivityScore, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.dlpService.projectDataProfile.sensitivityScoreLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceProjectDataProfile).SensitivityScoreLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gcp.project.dlpService.projectDataProfile.sensitivity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProjectDataProfile).Sensitivity, ok = plugin.RawToTValue[*mqlGcpProjectDlpServiceSensitivityScore](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dlpService.projectDataProfile.dataRiskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDlpServiceProjectDataProfile).DataRiskLevel, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.dlpService.projectDataProfile.dataRiskScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceProjectDataProfile).DataRiskScore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gcp.project.dlpService.projectDataProfile.riskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProjectDataProfile).RiskLevel, ok = plugin.RawToTValue[*mqlGcpProjectDlpServiceDataRiskLevel](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dlpService.projectDataProfile.profileStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDlpServiceProjectDataProfile).ProfileStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.dlpService.projectDataProfile.profileStatusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceProjectDataProfile).ProfileStatusCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"gcp.project.dlpService.projectDataProfile.profileStatusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceProjectDataProfile).ProfileStatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.dlpService.projectDataProfile.profileStatusTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceProjectDataProfile).ProfileStatusTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"gcp.project.dlpService.projectDataProfile.lastProfileStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProjectDataProfile).LastProfileStatus, ok = plugin.RawToTValue[*mqlGcpProjectDlpServiceProfileStatus](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dlpService.projectDataProfile.tableDataProfileCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40906,32 +40942,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDlpServiceTableDataProfile).SensitivityScore, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.dlpService.tableDataProfile.sensitivityScoreLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceTableDataProfile).SensitivityScoreLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gcp.project.dlpService.tableDataProfile.sensitivity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).Sensitivity, ok = plugin.RawToTValue[*mqlGcpProjectDlpServiceSensitivityScore](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dlpService.tableDataProfile.dataRiskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDlpServiceTableDataProfile).DataRiskLevel, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.dlpService.tableDataProfile.dataRiskScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceTableDataProfile).DataRiskScore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gcp.project.dlpService.tableDataProfile.riskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).RiskLevel, ok = plugin.RawToTValue[*mqlGcpProjectDlpServiceDataRiskLevel](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dlpService.tableDataProfile.profileStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDlpServiceTableDataProfile).ProfileStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.dlpService.tableDataProfile.profileStatusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceTableDataProfile).ProfileStatusCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"gcp.project.dlpService.tableDataProfile.profileStatusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceTableDataProfile).ProfileStatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.dlpService.tableDataProfile.profileStatusTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceTableDataProfile).ProfileStatusTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"gcp.project.dlpService.tableDataProfile.lastProfileStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).LastProfileStatus, ok = plugin.RawToTValue[*mqlGcpProjectDlpServiceProfileStatus](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dlpService.tableDataProfile.predictedInfoTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41022,16 +41050,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDlpServiceColumnDataProfile).SensitivityScore, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.dlpService.columnDataProfile.sensitivityScoreLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceColumnDataProfile).SensitivityScoreLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gcp.project.dlpService.columnDataProfile.sensitivity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).Sensitivity, ok = plugin.RawToTValue[*mqlGcpProjectDlpServiceSensitivityScore](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dlpService.columnDataProfile.dataRiskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDlpServiceColumnDataProfile).DataRiskLevel, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.dlpService.columnDataProfile.dataRiskScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceColumnDataProfile).DataRiskScore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gcp.project.dlpService.columnDataProfile.riskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).RiskLevel, ok = plugin.RawToTValue[*mqlGcpProjectDlpServiceDataRiskLevel](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dlpService.columnDataProfile.columnInfoType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41098,16 +41126,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).ProfileStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.dlpService.fileStoreDataProfile.profileStatusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).ProfileStatusCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"gcp.project.dlpService.fileStoreDataProfile.profileStatusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).ProfileStatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.dlpService.fileStoreDataProfile.profileStatusTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).ProfileStatusTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"gcp.project.dlpService.fileStoreDataProfile.lastProfileStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).LastProfileStatus, ok = plugin.RawToTValue[*mqlGcpProjectDlpServiceProfileStatus](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dlpService.fileStoreDataProfile.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41122,16 +41142,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).SensitivityScore, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.dlpService.fileStoreDataProfile.sensitivityScoreLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).SensitivityScoreLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gcp.project.dlpService.fileStoreDataProfile.sensitivity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).Sensitivity, ok = plugin.RawToTValue[*mqlGcpProjectDlpServiceSensitivityScore](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dlpService.fileStoreDataProfile.dataRiskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).DataRiskLevel, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.dlpService.fileStoreDataProfile.dataRiskScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).DataRiskScore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gcp.project.dlpService.fileStoreDataProfile.riskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).RiskLevel, ok = plugin.RawToTValue[*mqlGcpProjectDlpServiceDataRiskLevel](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dlpService.fileStoreDataProfile.fileClusterSummaries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -95686,6 +95706,148 @@ func (c *mqlGcpProjectDlpServiceConnection) GetProperties() *plugin.TValue[any] 
 	return &c.Properties
 }
 
+// mqlGcpProjectDlpServiceSensitivityScore for the gcp.project.dlpService.sensitivityScore resource
+type mqlGcpProjectDlpServiceSensitivityScore struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDlpServiceSensitivityScoreInternal it will be used here
+	Score plugin.TValue[string]
+}
+
+// createGcpProjectDlpServiceSensitivityScore creates a new instance of this resource
+func createGcpProjectDlpServiceSensitivityScore(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDlpServiceSensitivityScore{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dlpService.sensitivityScore", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDlpServiceSensitivityScore) MqlName() string {
+	return "gcp.project.dlpService.sensitivityScore"
+}
+
+func (c *mqlGcpProjectDlpServiceSensitivityScore) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDlpServiceSensitivityScore) GetScore() *plugin.TValue[string] {
+	return &c.Score
+}
+
+// mqlGcpProjectDlpServiceDataRiskLevel for the gcp.project.dlpService.dataRiskLevel resource
+type mqlGcpProjectDlpServiceDataRiskLevel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDlpServiceDataRiskLevelInternal it will be used here
+	Score plugin.TValue[string]
+}
+
+// createGcpProjectDlpServiceDataRiskLevel creates a new instance of this resource
+func createGcpProjectDlpServiceDataRiskLevel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDlpServiceDataRiskLevel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dlpService.dataRiskLevel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDlpServiceDataRiskLevel) MqlName() string {
+	return "gcp.project.dlpService.dataRiskLevel"
+}
+
+func (c *mqlGcpProjectDlpServiceDataRiskLevel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDlpServiceDataRiskLevel) GetScore() *plugin.TValue[string] {
+	return &c.Score
+}
+
+// mqlGcpProjectDlpServiceProfileStatus for the gcp.project.dlpService.profileStatus resource
+type mqlGcpProjectDlpServiceProfileStatus struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDlpServiceProfileStatusInternal it will be used here
+	StatusCode    plugin.TValue[int64]
+	StatusMessage plugin.TValue[string]
+	Timestamp     plugin.TValue[*time.Time]
+}
+
+// createGcpProjectDlpServiceProfileStatus creates a new instance of this resource
+func createGcpProjectDlpServiceProfileStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDlpServiceProfileStatus{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dlpService.profileStatus", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDlpServiceProfileStatus) MqlName() string {
+	return "gcp.project.dlpService.profileStatus"
+}
+
+func (c *mqlGcpProjectDlpServiceProfileStatus) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDlpServiceProfileStatus) GetStatusCode() *plugin.TValue[int64] {
+	return &c.StatusCode
+}
+
+func (c *mqlGcpProjectDlpServiceProfileStatus) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlGcpProjectDlpServiceProfileStatus) GetTimestamp() *plugin.TValue[*time.Time] {
+	return &c.Timestamp
+}
+
 // mqlGcpProjectDlpServiceProjectDataProfile for the gcp.project.dlpService.projectDataProfile resource
 type mqlGcpProjectDlpServiceProjectDataProfile struct {
 	MqlRuntime *plugin.Runtime
@@ -95694,13 +95856,11 @@ type mqlGcpProjectDlpServiceProjectDataProfile struct {
 	Name                      plugin.TValue[string]
 	ProjectId                 plugin.TValue[string]
 	SensitivityScore          plugin.TValue[any]
-	SensitivityScoreLevel     plugin.TValue[string]
+	Sensitivity               plugin.TValue[*mqlGcpProjectDlpServiceSensitivityScore]
 	DataRiskLevel             plugin.TValue[any]
-	DataRiskScore             plugin.TValue[string]
+	RiskLevel                 plugin.TValue[*mqlGcpProjectDlpServiceDataRiskLevel]
 	ProfileStatus             plugin.TValue[any]
-	ProfileStatusCode         plugin.TValue[int64]
-	ProfileStatusMessage      plugin.TValue[string]
-	ProfileStatusTimestamp    plugin.TValue[*time.Time]
+	LastProfileStatus         plugin.TValue[*mqlGcpProjectDlpServiceProfileStatus]
 	TableDataProfileCount     plugin.TValue[int64]
 	FileStoreDataProfileCount plugin.TValue[int64]
 	ProfileLastGenerated      plugin.TValue[*time.Time]
@@ -95755,32 +95915,24 @@ func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetSensitivityScore() *plugi
 	return &c.SensitivityScore
 }
 
-func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetSensitivityScoreLevel() *plugin.TValue[string] {
-	return &c.SensitivityScoreLevel
+func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetSensitivity() *plugin.TValue[*mqlGcpProjectDlpServiceSensitivityScore] {
+	return &c.Sensitivity
 }
 
 func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetDataRiskLevel() *plugin.TValue[any] {
 	return &c.DataRiskLevel
 }
 
-func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetDataRiskScore() *plugin.TValue[string] {
-	return &c.DataRiskScore
+func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetRiskLevel() *plugin.TValue[*mqlGcpProjectDlpServiceDataRiskLevel] {
+	return &c.RiskLevel
 }
 
 func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetProfileStatus() *plugin.TValue[any] {
 	return &c.ProfileStatus
 }
 
-func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetProfileStatusCode() *plugin.TValue[int64] {
-	return &c.ProfileStatusCode
-}
-
-func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetProfileStatusMessage() *plugin.TValue[string] {
-	return &c.ProfileStatusMessage
-}
-
-func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetProfileStatusTimestamp() *plugin.TValue[*time.Time] {
-	return &c.ProfileStatusTimestamp
+func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetLastProfileStatus() *plugin.TValue[*mqlGcpProjectDlpServiceProfileStatus] {
+	return &c.LastProfileStatus
 }
 
 func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetTableDataProfileCount() *plugin.TValue[int64] {
@@ -95800,35 +95952,33 @@ type mqlGcpProjectDlpServiceTableDataProfile struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectDlpServiceTableDataProfileInternal it will be used here
-	Name                   plugin.TValue[string]
-	DatasetProjectId       plugin.TValue[string]
-	DatasetLocation        plugin.TValue[string]
-	DatasetId              plugin.TValue[string]
-	TableId                plugin.TValue[string]
-	FullResource           plugin.TValue[string]
-	State                  plugin.TValue[string]
-	SensitivityScore       plugin.TValue[any]
-	SensitivityScoreLevel  plugin.TValue[string]
-	DataRiskLevel          plugin.TValue[any]
-	DataRiskScore          plugin.TValue[string]
-	ProfileStatus          plugin.TValue[any]
-	ProfileStatusCode      plugin.TValue[int64]
-	ProfileStatusMessage   plugin.TValue[string]
-	ProfileStatusTimestamp plugin.TValue[*time.Time]
-	PredictedInfoTypes     plugin.TValue[[]any]
-	OtherInfoTypes         plugin.TValue[[]any]
-	EncryptionStatus       plugin.TValue[string]
-	ResourceVisibility     plugin.TValue[string]
-	ScannedColumnCount     plugin.TValue[int64]
-	FailedColumnCount      plugin.TValue[int64]
-	TableSizeBytes         plugin.TValue[int64]
-	RowCount               plugin.TValue[int64]
-	ResourceLabels         plugin.TValue[map[string]any]
-	ProfileLastGenerated   plugin.TValue[*time.Time]
-	LastModifiedTime       plugin.TValue[*time.Time]
-	ExpirationTime         plugin.TValue[*time.Time]
-	Created                plugin.TValue[*time.Time]
-	BigqueryTable          plugin.TValue[*mqlGcpProjectBigqueryServiceTable]
+	Name                 plugin.TValue[string]
+	DatasetProjectId     plugin.TValue[string]
+	DatasetLocation      plugin.TValue[string]
+	DatasetId            plugin.TValue[string]
+	TableId              plugin.TValue[string]
+	FullResource         plugin.TValue[string]
+	State                plugin.TValue[string]
+	SensitivityScore     plugin.TValue[any]
+	Sensitivity          plugin.TValue[*mqlGcpProjectDlpServiceSensitivityScore]
+	DataRiskLevel        plugin.TValue[any]
+	RiskLevel            plugin.TValue[*mqlGcpProjectDlpServiceDataRiskLevel]
+	ProfileStatus        plugin.TValue[any]
+	LastProfileStatus    plugin.TValue[*mqlGcpProjectDlpServiceProfileStatus]
+	PredictedInfoTypes   plugin.TValue[[]any]
+	OtherInfoTypes       plugin.TValue[[]any]
+	EncryptionStatus     plugin.TValue[string]
+	ResourceVisibility   plugin.TValue[string]
+	ScannedColumnCount   plugin.TValue[int64]
+	FailedColumnCount    plugin.TValue[int64]
+	TableSizeBytes       plugin.TValue[int64]
+	RowCount             plugin.TValue[int64]
+	ResourceLabels       plugin.TValue[map[string]any]
+	ProfileLastGenerated plugin.TValue[*time.Time]
+	LastModifiedTime     plugin.TValue[*time.Time]
+	ExpirationTime       plugin.TValue[*time.Time]
+	Created              plugin.TValue[*time.Time]
+	BigqueryTable        plugin.TValue[*mqlGcpProjectBigqueryServiceTable]
 }
 
 // createGcpProjectDlpServiceTableDataProfile creates a new instance of this resource
@@ -95900,32 +96050,24 @@ func (c *mqlGcpProjectDlpServiceTableDataProfile) GetSensitivityScore() *plugin.
 	return &c.SensitivityScore
 }
 
-func (c *mqlGcpProjectDlpServiceTableDataProfile) GetSensitivityScoreLevel() *plugin.TValue[string] {
-	return &c.SensitivityScoreLevel
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetSensitivity() *plugin.TValue[*mqlGcpProjectDlpServiceSensitivityScore] {
+	return &c.Sensitivity
 }
 
 func (c *mqlGcpProjectDlpServiceTableDataProfile) GetDataRiskLevel() *plugin.TValue[any] {
 	return &c.DataRiskLevel
 }
 
-func (c *mqlGcpProjectDlpServiceTableDataProfile) GetDataRiskScore() *plugin.TValue[string] {
-	return &c.DataRiskScore
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetRiskLevel() *plugin.TValue[*mqlGcpProjectDlpServiceDataRiskLevel] {
+	return &c.RiskLevel
 }
 
 func (c *mqlGcpProjectDlpServiceTableDataProfile) GetProfileStatus() *plugin.TValue[any] {
 	return &c.ProfileStatus
 }
 
-func (c *mqlGcpProjectDlpServiceTableDataProfile) GetProfileStatusCode() *plugin.TValue[int64] {
-	return &c.ProfileStatusCode
-}
-
-func (c *mqlGcpProjectDlpServiceTableDataProfile) GetProfileStatusMessage() *plugin.TValue[string] {
-	return &c.ProfileStatusMessage
-}
-
-func (c *mqlGcpProjectDlpServiceTableDataProfile) GetProfileStatusTimestamp() *plugin.TValue[*time.Time] {
-	return &c.ProfileStatusTimestamp
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetLastProfileStatus() *plugin.TValue[*mqlGcpProjectDlpServiceProfileStatus] {
+	return &c.LastProfileStatus
 }
 
 func (c *mqlGcpProjectDlpServiceTableDataProfile) GetPredictedInfoTypes() *plugin.TValue[[]any] {
@@ -96001,22 +96143,22 @@ type mqlGcpProjectDlpServiceColumnDataProfile struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectDlpServiceColumnDataProfileInternal it will be used here
-	Name                  plugin.TValue[string]
-	Column                plugin.TValue[string]
-	DatasetId             plugin.TValue[string]
-	TableId               plugin.TValue[string]
-	TableFullResource     plugin.TValue[string]
-	State                 plugin.TValue[string]
-	SensitivityScore      plugin.TValue[any]
-	SensitivityScoreLevel plugin.TValue[string]
-	DataRiskLevel         plugin.TValue[any]
-	DataRiskScore         plugin.TValue[string]
-	ColumnInfoType        plugin.TValue[any]
-	OtherMatches          plugin.TValue[[]any]
-	FreeTextScore         plugin.TValue[float64]
-	ColumnType            plugin.TValue[string]
-	PolicyState           plugin.TValue[string]
-	ProfileLastGenerated  plugin.TValue[*time.Time]
+	Name                 plugin.TValue[string]
+	Column               plugin.TValue[string]
+	DatasetId            plugin.TValue[string]
+	TableId              plugin.TValue[string]
+	TableFullResource    plugin.TValue[string]
+	State                plugin.TValue[string]
+	SensitivityScore     plugin.TValue[any]
+	Sensitivity          plugin.TValue[*mqlGcpProjectDlpServiceSensitivityScore]
+	DataRiskLevel        plugin.TValue[any]
+	RiskLevel            plugin.TValue[*mqlGcpProjectDlpServiceDataRiskLevel]
+	ColumnInfoType       plugin.TValue[any]
+	OtherMatches         plugin.TValue[[]any]
+	FreeTextScore        plugin.TValue[float64]
+	ColumnType           plugin.TValue[string]
+	PolicyState          plugin.TValue[string]
+	ProfileLastGenerated plugin.TValue[*time.Time]
 }
 
 // createGcpProjectDlpServiceColumnDataProfile creates a new instance of this resource
@@ -96084,16 +96226,16 @@ func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetSensitivityScore() *plugin
 	return &c.SensitivityScore
 }
 
-func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetSensitivityScoreLevel() *plugin.TValue[string] {
-	return &c.SensitivityScoreLevel
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetSensitivity() *plugin.TValue[*mqlGcpProjectDlpServiceSensitivityScore] {
+	return &c.Sensitivity
 }
 
 func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetDataRiskLevel() *plugin.TValue[any] {
 	return &c.DataRiskLevel
 }
 
-func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetDataRiskScore() *plugin.TValue[string] {
-	return &c.DataRiskScore
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetRiskLevel() *plugin.TValue[*mqlGcpProjectDlpServiceDataRiskLevel] {
+	return &c.RiskLevel
 }
 
 func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetColumnInfoType() *plugin.TValue[any] {
@@ -96134,15 +96276,13 @@ type mqlGcpProjectDlpServiceFileStoreDataProfile struct {
 	FileStorePath              plugin.TValue[string]
 	FullResource               plugin.TValue[string]
 	ProfileStatus              plugin.TValue[any]
-	ProfileStatusCode          plugin.TValue[int64]
-	ProfileStatusMessage       plugin.TValue[string]
-	ProfileStatusTimestamp     plugin.TValue[*time.Time]
+	LastProfileStatus          plugin.TValue[*mqlGcpProjectDlpServiceProfileStatus]
 	State                      plugin.TValue[string]
 	ResourceVisibility         plugin.TValue[string]
 	SensitivityScore           plugin.TValue[any]
-	SensitivityScoreLevel      plugin.TValue[string]
+	Sensitivity                plugin.TValue[*mqlGcpProjectDlpServiceSensitivityScore]
 	DataRiskLevel              plugin.TValue[any]
-	DataRiskScore              plugin.TValue[string]
+	RiskLevel                  plugin.TValue[*mqlGcpProjectDlpServiceDataRiskLevel]
 	FileClusterSummaries       plugin.TValue[[]any]
 	ResourceAttributes         plugin.TValue[any]
 	ResourceLabels             plugin.TValue[map[string]any]
@@ -96227,16 +96367,8 @@ func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetProfileStatus() *plugin
 	return &c.ProfileStatus
 }
 
-func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetProfileStatusCode() *plugin.TValue[int64] {
-	return &c.ProfileStatusCode
-}
-
-func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetProfileStatusMessage() *plugin.TValue[string] {
-	return &c.ProfileStatusMessage
-}
-
-func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetProfileStatusTimestamp() *plugin.TValue[*time.Time] {
-	return &c.ProfileStatusTimestamp
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetLastProfileStatus() *plugin.TValue[*mqlGcpProjectDlpServiceProfileStatus] {
+	return &c.LastProfileStatus
 }
 
 func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetState() *plugin.TValue[string] {
@@ -96251,16 +96383,16 @@ func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetSensitivityScore() *plu
 	return &c.SensitivityScore
 }
 
-func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetSensitivityScoreLevel() *plugin.TValue[string] {
-	return &c.SensitivityScoreLevel
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetSensitivity() *plugin.TValue[*mqlGcpProjectDlpServiceSensitivityScore] {
+	return &c.Sensitivity
 }
 
 func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetDataRiskLevel() *plugin.TValue[any] {
 	return &c.DataRiskLevel
 }
 
-func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetDataRiskScore() *plugin.TValue[string] {
-	return &c.DataRiskScore
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetRiskLevel() *plugin.TValue[*mqlGcpProjectDlpServiceDataRiskLevel] {
+	return &c.RiskLevel
 }
 
 func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetFileClusterSummaries() *plugin.TValue[[]any] {

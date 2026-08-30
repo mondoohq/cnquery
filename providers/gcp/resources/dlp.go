@@ -775,19 +775,27 @@ func (g *mqlGcpProjectDlpService) projectDataProfiles() ([]any, error) {
 		riskLevel, _ := protoToDict(p.DataRiskLevel)
 		status, _ := protoToDict(p.ProfileStatus)
 
+		scores, err := newMqlDlpProfileScores(g.MqlRuntime, p.Name, p.SensitivityScore, p.DataRiskLevel)
+		if err != nil {
+			return nil, err
+		}
+		lastProfileStatus, err := newMqlDlpProfileStatus(g.MqlRuntime, p.Name, p.ProfileStatus)
+		if err != nil {
+			return nil, err
+		}
+
 		projectProfileArgs := map[string]*llx.RawData{
 			"name":                      llx.StringData(p.Name),
 			"projectId":                 llx.StringData(p.ProjectId),
 			"sensitivityScore":          llx.DictData(sensitivity),
-			"sensitivityScoreLevel":     llx.StringData(dlpSensitivityScoreLevel(p.SensitivityScore)),
 			"dataRiskLevel":             llx.DictData(riskLevel),
-			"dataRiskScore":             llx.StringData(dlpDataRiskScore(p.DataRiskLevel)),
 			"profileStatus":             llx.DictData(status),
+			"lastProfileStatus":         lastProfileStatus,
 			"tableDataProfileCount":     llx.IntData(p.TableDataProfileCount),
 			"fileStoreDataProfileCount": llx.IntData(p.FileStoreDataProfileCount),
 			"profileLastGenerated":      llx.TimeDataPtr(timestampAsTimePtr(p.ProfileLastGenerated)),
 		}
-		maps.Copy(projectProfileArgs, dlpProfileStatusArgs(p.ProfileStatus))
+		maps.Copy(projectProfileArgs, scores)
 
 		mqlP, err := CreateResource(g.MqlRuntime, "gcp.project.dlpService.projectDataProfile", projectProfileArgs)
 		if err != nil {
@@ -873,34 +881,42 @@ func newMqlTableDataProfile(runtime *plugin.Runtime, t *dlppb.TableDataProfile) 
 	if err != nil {
 		return nil, err
 	}
-	tableArgs := map[string]*llx.RawData{
-		"name":                  llx.StringData(t.Name),
-		"datasetProjectId":      llx.StringData(t.DatasetProjectId),
-		"datasetLocation":       llx.StringData(t.DatasetLocation),
-		"datasetId":             llx.StringData(t.DatasetId),
-		"tableId":               llx.StringData(t.TableId),
-		"fullResource":          llx.StringData(t.FullResource),
-		"state":                 llx.StringData(t.State.String()),
-		"sensitivityScore":      llx.DictData(sensitivity),
-		"sensitivityScoreLevel": llx.StringData(dlpSensitivityScoreLevel(t.SensitivityScore)),
-		"dataRiskLevel":         llx.DictData(riskLevel),
-		"dataRiskScore":         llx.StringData(dlpDataRiskScore(t.DataRiskLevel)),
-		"profileStatus":         llx.DictData(status),
-		"predictedInfoTypes":    llx.ArrayData(predicted, types.Dict),
-		"otherInfoTypes":        llx.ArrayData(other, types.Dict),
-		"encryptionStatus":      llx.StringData(t.EncryptionStatus.String()),
-		"resourceVisibility":    llx.StringData(t.ResourceVisibility.String()),
-		"scannedColumnCount":    llx.IntData(t.ScannedColumnCount),
-		"failedColumnCount":     llx.IntData(t.FailedColumnCount),
-		"tableSizeBytes":        llx.IntData(t.TableSizeBytes),
-		"rowCount":              llx.IntData(t.RowCount),
-		"resourceLabels":        llx.MapData(strMapToAny(t.ResourceLabels), types.String),
-		"profileLastGenerated":  llx.TimeDataPtr(timestampAsTimePtr(t.ProfileLastGenerated)),
-		"lastModifiedTime":      llx.TimeDataPtr(timestampAsTimePtr(t.LastModifiedTime)),
-		"expirationTime":        llx.TimeDataPtr(timestampAsTimePtr(t.ExpirationTime)),
-		"created":               llx.TimeDataPtr(timestampAsTimePtr(t.CreateTime)),
+	scores, err := newMqlDlpProfileScores(runtime, t.Name, t.SensitivityScore, t.DataRiskLevel)
+	if err != nil {
+		return nil, err
 	}
-	maps.Copy(tableArgs, dlpProfileStatusArgs(t.ProfileStatus))
+	lastProfileStatus, err := newMqlDlpProfileStatus(runtime, t.Name, t.ProfileStatus)
+	if err != nil {
+		return nil, err
+	}
+
+	tableArgs := map[string]*llx.RawData{
+		"name":                 llx.StringData(t.Name),
+		"datasetProjectId":     llx.StringData(t.DatasetProjectId),
+		"datasetLocation":      llx.StringData(t.DatasetLocation),
+		"datasetId":            llx.StringData(t.DatasetId),
+		"tableId":              llx.StringData(t.TableId),
+		"fullResource":         llx.StringData(t.FullResource),
+		"state":                llx.StringData(t.State.String()),
+		"sensitivityScore":     llx.DictData(sensitivity),
+		"dataRiskLevel":        llx.DictData(riskLevel),
+		"profileStatus":        llx.DictData(status),
+		"lastProfileStatus":    lastProfileStatus,
+		"predictedInfoTypes":   llx.ArrayData(predicted, types.Dict),
+		"otherInfoTypes":       llx.ArrayData(other, types.Dict),
+		"encryptionStatus":     llx.StringData(t.EncryptionStatus.String()),
+		"resourceVisibility":   llx.StringData(t.ResourceVisibility.String()),
+		"scannedColumnCount":   llx.IntData(t.ScannedColumnCount),
+		"failedColumnCount":    llx.IntData(t.FailedColumnCount),
+		"tableSizeBytes":       llx.IntData(t.TableSizeBytes),
+		"rowCount":             llx.IntData(t.RowCount),
+		"resourceLabels":       llx.MapData(strMapToAny(t.ResourceLabels), types.String),
+		"profileLastGenerated": llx.TimeDataPtr(timestampAsTimePtr(t.ProfileLastGenerated)),
+		"lastModifiedTime":     llx.TimeDataPtr(timestampAsTimePtr(t.LastModifiedTime)),
+		"expirationTime":       llx.TimeDataPtr(timestampAsTimePtr(t.ExpirationTime)),
+		"created":              llx.TimeDataPtr(timestampAsTimePtr(t.CreateTime)),
+	}
+	maps.Copy(tableArgs, scores)
 
 	return CreateResource(runtime, "gcp.project.dlpService.tableDataProfile", tableArgs)
 }
@@ -1024,24 +1040,30 @@ func (g *mqlGcpProjectDlpService) columnDataProfiles() ([]any, error) {
 				return nil, err
 			}
 
-			mqlC, err := CreateResource(g.MqlRuntime, "gcp.project.dlpService.columnDataProfile", map[string]*llx.RawData{
-				"name":                  llx.StringData(c.Name),
-				"column":                llx.StringData(c.Column),
-				"datasetId":             llx.StringData(c.DatasetId),
-				"tableId":               llx.StringData(c.TableId),
-				"tableFullResource":     llx.StringData(c.TableFullResource),
-				"state":                 llx.StringData(c.State.String()),
-				"sensitivityScore":      llx.DictData(sensitivity),
-				"sensitivityScoreLevel": llx.StringData(dlpSensitivityScoreLevel(c.SensitivityScore)),
-				"dataRiskLevel":         llx.DictData(riskLevel),
-				"dataRiskScore":         llx.StringData(dlpDataRiskScore(c.DataRiskLevel)),
-				"columnInfoType":        llx.DictData(columnInfoType),
-				"otherMatches":          llx.ArrayData(otherMatches, types.Dict),
-				"freeTextScore":         llx.FloatData(c.FreeTextScore),
-				"columnType":            llx.StringData(c.ColumnType.String()),
-				"policyState":           llx.StringData(c.PolicyState.String()),
-				"profileLastGenerated":  llx.TimeDataPtr(timestampAsTimePtr(c.ProfileLastGenerated)),
-			})
+			scores, err := newMqlDlpProfileScores(g.MqlRuntime, c.Name, c.SensitivityScore, c.DataRiskLevel)
+			if err != nil {
+				return nil, err
+			}
+
+			columnArgs := map[string]*llx.RawData{
+				"name":                 llx.StringData(c.Name),
+				"column":               llx.StringData(c.Column),
+				"datasetId":            llx.StringData(c.DatasetId),
+				"tableId":              llx.StringData(c.TableId),
+				"tableFullResource":    llx.StringData(c.TableFullResource),
+				"state":                llx.StringData(c.State.String()),
+				"sensitivityScore":     llx.DictData(sensitivity),
+				"dataRiskLevel":        llx.DictData(riskLevel),
+				"columnInfoType":       llx.DictData(columnInfoType),
+				"otherMatches":         llx.ArrayData(otherMatches, types.Dict),
+				"freeTextScore":        llx.FloatData(c.FreeTextScore),
+				"columnType":           llx.StringData(c.ColumnType.String()),
+				"policyState":          llx.StringData(c.PolicyState.String()),
+				"profileLastGenerated": llx.TimeDataPtr(timestampAsTimePtr(c.ProfileLastGenerated)),
+			}
+			maps.Copy(columnArgs, scores)
+
+			mqlC, err := CreateResource(g.MqlRuntime, "gcp.project.dlpService.columnDataProfile", columnArgs)
 			if err != nil {
 				return nil, err
 			}
@@ -1139,6 +1161,15 @@ func newMqlFileStoreDataProfile(runtime *plugin.Runtime, f *dlppb.FileStoreDataP
 		resourceAttributes[k] = d
 	}
 
+	scores, err := newMqlDlpProfileScores(runtime, f.Name, f.SensitivityScore, f.DataRiskLevel)
+	if err != nil {
+		return nil, err
+	}
+	lastProfileStatus, err := newMqlDlpProfileStatus(runtime, f.Name, f.ProfileStatus)
+	if err != nil {
+		return nil, err
+	}
+
 	fileStoreArgs := map[string]*llx.RawData{
 		"name":                       llx.StringData(f.Name),
 		"projectId":                  llx.StringData(f.ProjectId),
@@ -1152,9 +1183,8 @@ func newMqlFileStoreDataProfile(runtime *plugin.Runtime, f *dlppb.FileStoreDataP
 		"state":                      llx.StringData(f.State.String()),
 		"resourceVisibility":         llx.StringData(f.ResourceVisibility.String()),
 		"sensitivityScore":           llx.DictData(sensitivity),
-		"sensitivityScoreLevel":      llx.StringData(dlpSensitivityScoreLevel(f.SensitivityScore)),
 		"dataRiskLevel":              llx.DictData(riskLevel),
-		"dataRiskScore":              llx.StringData(dlpDataRiskScore(f.DataRiskLevel)),
+		"lastProfileStatus":          lastProfileStatus,
 		"fileClusterSummaries":       llx.ArrayData(clusterSummaries, types.Dict),
 		"resourceAttributes":         llx.DictData(resourceAttributes),
 		"resourceLabels":             llx.MapData(strMapToAny(f.ResourceLabels), types.String),
@@ -1164,7 +1194,7 @@ func newMqlFileStoreDataProfile(runtime *plugin.Runtime, f *dlppb.FileStoreDataP
 		"created":                    llx.TimeDataPtr(timestampAsTimePtr(f.CreateTime)),
 		"lastModifiedTime":           llx.TimeDataPtr(timestampAsTimePtr(f.LastModifiedTime)),
 	}
-	maps.Copy(fileStoreArgs, dlpProfileStatusArgs(f.ProfileStatus))
+	maps.Copy(fileStoreArgs, scores)
 
 	return CreateResource(runtime, "gcp.project.dlpService.fileStoreDataProfile", fileStoreArgs)
 }

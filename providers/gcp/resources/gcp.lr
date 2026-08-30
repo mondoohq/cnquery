@@ -16726,6 +16726,54 @@ private gcp.project.dlpService.connection @defaults("name state") {
   properties dict
 }
 
+// Sensitivity score of a Cloud DLP data profile
+//
+// How sensitive Cloud DLP judged the profiled data to be, from the infoTypes it
+// detected in it. The same score is attached to a project, a table, a column,
+// and a file store profile, so the one resource is read the same way from all
+// four. SENSITIVITY_UNKNOWN is DLP saying it looked and could not tell, which
+// is a different claim from a profile carrying no score at all.
+private gcp.project.dlpService.sensitivityScore @defaults("score") {
+  // Sensitivity level assigned to the data
+  //
+  // One of SENSITIVITY_LOW, SENSITIVITY_MODERATE, SENSITIVITY_HIGH,
+  // SENSITIVITY_UNKNOWN, or SENSITIVITY_SCORE_UNSPECIFIED.
+  score string
+}
+
+// Data risk level of a Cloud DLP data profile
+//
+// How much risk Cloud DLP judged the profiled data to carry. Risk combines the
+// sensitivity of the data with how broadly it is reachable, so a highly
+// sensitive table behind tight access controls scores lower than a moderately
+// sensitive public one. The same level is attached to a project, a table, a
+// column, and a file store profile.
+private gcp.project.dlpService.dataRiskLevel @defaults("score") {
+  // Risk level assigned to the data
+  //
+  // One of RISK_LOW, RISK_MODERATE, RISK_HIGH, RISK_UNKNOWN, or
+  // RISK_SCORE_UNSPECIFIED.
+  score string
+}
+
+// Generation status of a Cloud DLP data profile
+//
+// The outcome of the last attempt to regenerate a profile. A non-zero
+// `statusCode` means the attempt failed, so the sensitivity and risk scores on
+// the profile describe the data as it was at `timestamp` rather than as it is
+// now, and an audit reading those scores is reading a stale answer.
+private gcp.project.dlpService.profileStatus @defaults("statusCode timestamp") {
+  // Status code of the last profile-generation attempt
+  //
+  // A google.rpc.Code, where 0 is success. Null when no status was reported,
+  // which is a different claim from a successful generation.
+  statusCode int
+  // Message explaining a failed profile-generation attempt, empty on success
+  statusMessage string
+  // Time of the last profile-generation attempt
+  timestamp time
+}
+
 // Google Cloud (GCP) Cloud DLP project data profile
 //
 // Project-level sensitivity profile produced by Cloud DLP discovery.
@@ -16739,41 +16787,30 @@ private gcp.project.dlpService.projectDataProfile @defaults("projectId sensitivi
   projectId string
   // Sensitivity score dict
   //
-  // Deprecated in favor of sensitivityScoreLevel. Carries `score`.
+  // Deprecated in favor of sensitivity. Carries `score`.
   sensitivityScore @maturity("deprecated") dict
-  // Sensitivity level DLP assigned to the profiled data
+  // Sensitivity DLP assigned to the profiled data
   //
-  // One of SENSITIVITY_LOW, SENSITIVITY_MODERATE, SENSITIVITY_HIGH,
-  // SENSITIVITY_UNKNOWN, or SENSITIVITY_SCORE_UNSPECIFIED. Empty when the
-  // profile reports no score at all, which is different from
+  // Null when the profile reports no score at all, which is different from
   // SENSITIVITY_UNKNOWN, where DLP looked and could not tell.
-  sensitivityScoreLevel string
+  sensitivity gcp.project.dlpService.sensitivityScore
   // Data risk level dict
   //
-  // Deprecated in favor of dataRiskScore. Carries `score`.
+  // Deprecated in favor of riskLevel. Carries `score`.
   dataRiskLevel @maturity("deprecated") dict
-  // Data risk level DLP assigned to the profiled data
+  // Data risk DLP assigned to the profiled data
   //
-  // One of RISK_LOW, RISK_MODERATE, RISK_HIGH, RISK_UNKNOWN, or
-  // RISK_SCORE_UNSPECIFIED. Risk combines the sensitivity of the data with
-  // how broadly it is reachable, so a highly sensitive table behind tight
-  // access controls scores lower than a moderately sensitive public one.
-  dataRiskScore string
+  // Null when the profile reports no risk level at all.
+  riskLevel gcp.project.dlpService.dataRiskLevel
   // Profile generation status dict
   //
-  // Deprecated in favor of profileStatusCode, profileStatusMessage, and
-  // profileStatusTimestamp. Carries `status` and `timestamp`.
+  // Deprecated in favor of lastProfileStatus. Carries `status` and
+  // `timestamp`.
   profileStatus @maturity("deprecated") dict
-  // Status code of the last profile-generation attempt
+  // Outcome of the last profile-generation attempt
   //
-  // A google.rpc.Code, where 0 is success. A non-zero code means the scores on
-  // this profile describe the data as it was at profileStatusTimestamp, not as
-  // it is now. Null when no status was reported.
-  profileStatusCode int
-  // Message explaining a failed profile-generation attempt, empty on success
-  profileStatusMessage string
-  // Time of the last profile-generation attempt
-  profileStatusTimestamp time
+  // Null when the profile reports no status at all.
+  lastProfileStatus gcp.project.dlpService.profileStatus
   // Number of table data profiles backing this aggregate
   tableDataProfileCount int
   // Number of file-store data profiles backing this aggregate
@@ -16806,41 +16843,30 @@ private gcp.project.dlpService.tableDataProfile @defaults("tableId datasetId sen
   state string
   // Sensitivity score dict
   //
-  // Deprecated in favor of sensitivityScoreLevel. Carries `score`.
+  // Deprecated in favor of sensitivity. Carries `score`.
   sensitivityScore @maturity("deprecated") dict
-  // Sensitivity level DLP assigned to the profiled data
+  // Sensitivity DLP assigned to the profiled data
   //
-  // One of SENSITIVITY_LOW, SENSITIVITY_MODERATE, SENSITIVITY_HIGH,
-  // SENSITIVITY_UNKNOWN, or SENSITIVITY_SCORE_UNSPECIFIED. Empty when the
-  // profile reports no score at all, which is different from
+  // Null when the profile reports no score at all, which is different from
   // SENSITIVITY_UNKNOWN, where DLP looked and could not tell.
-  sensitivityScoreLevel string
+  sensitivity gcp.project.dlpService.sensitivityScore
   // Data risk level dict
   //
-  // Deprecated in favor of dataRiskScore. Carries `score`.
+  // Deprecated in favor of riskLevel. Carries `score`.
   dataRiskLevel @maturity("deprecated") dict
-  // Data risk level DLP assigned to the profiled data
+  // Data risk DLP assigned to the profiled data
   //
-  // One of RISK_LOW, RISK_MODERATE, RISK_HIGH, RISK_UNKNOWN, or
-  // RISK_SCORE_UNSPECIFIED. Risk combines the sensitivity of the data with
-  // how broadly it is reachable, so a highly sensitive table behind tight
-  // access controls scores lower than a moderately sensitive public one.
-  dataRiskScore string
+  // Null when the profile reports no risk level at all.
+  riskLevel gcp.project.dlpService.dataRiskLevel
   // Profile generation status dict
   //
-  // Deprecated in favor of profileStatusCode, profileStatusMessage, and
-  // profileStatusTimestamp. Carries `status` and `timestamp`.
+  // Deprecated in favor of lastProfileStatus. Carries `status` and
+  // `timestamp`.
   profileStatus @maturity("deprecated") dict
-  // Status code of the last profile-generation attempt
+  // Outcome of the last profile-generation attempt
   //
-  // A google.rpc.Code, where 0 is success. A non-zero code means the scores on
-  // this profile describe the data as it was at profileStatusTimestamp, not as
-  // it is now. Null when no status was reported.
-  profileStatusCode int
-  // Message explaining a failed profile-generation attempt, empty on success
-  profileStatusMessage string
-  // Time of the last profile-generation attempt
-  profileStatusTimestamp time
+  // Null when the profile reports no status at all.
+  lastProfileStatus gcp.project.dlpService.profileStatus
   // InfoTypes predicted from the table's data, with each entry having `infoType` and `estimatedPrevalence`
   predictedInfoTypes []dict
   // Other infoTypes found in the table that were not predicted, with each entry having `infoType`, `estimatedPrevalence`, and `excludedFromAnalysis`
@@ -16892,26 +16918,21 @@ private gcp.project.dlpService.columnDataProfile @defaults("column tableId sensi
   state string
   // Sensitivity score dict
   //
-  // Deprecated in favor of sensitivityScoreLevel. Carries `score`.
+  // Deprecated in favor of sensitivity. Carries `score`.
   sensitivityScore @maturity("deprecated") dict
-  // Sensitivity level DLP assigned to the profiled data
+  // Sensitivity DLP assigned to the profiled data
   //
-  // One of SENSITIVITY_LOW, SENSITIVITY_MODERATE, SENSITIVITY_HIGH,
-  // SENSITIVITY_UNKNOWN, or SENSITIVITY_SCORE_UNSPECIFIED. Empty when the
-  // profile reports no score at all, which is different from
+  // Null when the profile reports no score at all, which is different from
   // SENSITIVITY_UNKNOWN, where DLP looked and could not tell.
-  sensitivityScoreLevel string
+  sensitivity gcp.project.dlpService.sensitivityScore
   // Data risk level dict
   //
-  // Deprecated in favor of dataRiskScore. Carries `score`.
+  // Deprecated in favor of riskLevel. Carries `score`.
   dataRiskLevel @maturity("deprecated") dict
-  // Data risk level DLP assigned to the profiled data
+  // Data risk DLP assigned to the profiled data
   //
-  // One of RISK_LOW, RISK_MODERATE, RISK_HIGH, RISK_UNKNOWN, or
-  // RISK_SCORE_UNSPECIFIED. Risk combines the sensitivity of the data with
-  // how broadly it is reachable, so a highly sensitive table behind tight
-  // access controls scores lower than a moderately sensitive public one.
-  dataRiskScore string
+  // Null when the profile reports no risk level at all.
+  riskLevel gcp.project.dlpService.dataRiskLevel
   // InfoType detected for this column, with keys `infoType` and `estimatedPrevalence`
   columnInfoType dict
   // Other infoTypes also detected for this column
@@ -16953,45 +16974,34 @@ private gcp.project.dlpService.fileStoreDataProfile @defaults("fileStorePath sen
   fullResource string
   // Profile generation status dict
   //
-  // Deprecated in favor of profileStatusCode, profileStatusMessage, and
-  // profileStatusTimestamp. Carries `status` and `timestamp`.
+  // Deprecated in favor of lastProfileStatus. Carries `status` and
+  // `timestamp`.
   profileStatus @maturity("deprecated") dict
-  // Status code of the last profile-generation attempt
+  // Outcome of the last profile-generation attempt
   //
-  // A google.rpc.Code, where 0 is success. A non-zero code means the scores on
-  // this profile describe the data as it was at profileStatusTimestamp, not as
-  // it is now. Null when no status was reported.
-  profileStatusCode int
-  // Message explaining a failed profile-generation attempt, empty on success
-  profileStatusMessage string
-  // Time of the last profile-generation attempt
-  profileStatusTimestamp time
+  // Null when the profile reports no status at all.
+  lastProfileStatus gcp.project.dlpService.profileStatus
   // State of the profile: STATE_UNSPECIFIED, RUNNING, or DONE
   state string
   // How broadly the bucket is shared: RESOURCE_VISIBILITY_PUBLIC, RESOURCE_VISIBILITY_INCONCLUSIVE, or RESOURCE_VISIBILITY_RESTRICTED
   resourceVisibility string
   // Sensitivity score dict
   //
-  // Deprecated in favor of sensitivityScoreLevel. Carries `score`.
+  // Deprecated in favor of sensitivity. Carries `score`.
   sensitivityScore @maturity("deprecated") dict
-  // Sensitivity level DLP assigned to the profiled data
+  // Sensitivity DLP assigned to the profiled data
   //
-  // One of SENSITIVITY_LOW, SENSITIVITY_MODERATE, SENSITIVITY_HIGH,
-  // SENSITIVITY_UNKNOWN, or SENSITIVITY_SCORE_UNSPECIFIED. Empty when the
-  // profile reports no score at all, which is different from
+  // Null when the profile reports no score at all, which is different from
   // SENSITIVITY_UNKNOWN, where DLP looked and could not tell.
-  sensitivityScoreLevel string
+  sensitivity gcp.project.dlpService.sensitivityScore
   // Data risk level dict
   //
-  // Deprecated in favor of dataRiskScore. Carries `score`.
+  // Deprecated in favor of riskLevel. Carries `score`.
   dataRiskLevel @maturity("deprecated") dict
-  // Data risk level DLP assigned to the profiled data
+  // Data risk DLP assigned to the profiled data
   //
-  // One of RISK_LOW, RISK_MODERATE, RISK_HIGH, RISK_UNKNOWN, or
-  // RISK_SCORE_UNSPECIFIED. Risk combines the sensitivity of the data with
-  // how broadly it is reachable, so a highly sensitive table behind tight
-  // access controls scores lower than a moderately sensitive public one.
-  dataRiskScore string
+  // Null when the profile reports no risk level at all.
+  riskLevel gcp.project.dlpService.dataRiskLevel
   // Per-cluster summaries (clusters group files by type: documents, images, etc.)
   fileClusterSummaries []dict
   // Resource attributes captured by the profile, e.g. `customer_managed_encryption` boolean
