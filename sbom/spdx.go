@@ -10,6 +10,7 @@ import (
 	"io"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -143,6 +144,7 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 			PackageLicenseDeclared:    declared,
 			PackageLicenseConcluded:   concluded,
 			PackageCopyrightText:      spdxNoAssertion(strings.Join(pkg.Copyright, "\n")),
+			PackageLicenseComments:    spdxLicenseComments(concludedLicenses(pkg)),
 			PackageSupplier:           spdxSupplier(pkg.Supplier),
 			PackageDescription:        pkg.Description,
 			PackageExternalReferences: refs,
@@ -535,6 +537,46 @@ func spdxLicenseRef(name string) string {
 		return ""
 	}
 	return licenseRefPrefix + id
+}
+
+// spdxLicenseComments records what a conclusion was based on: the file it was
+// read from and how sure whoever read it was.
+//
+// SPDX has no field for either, and PackageLicenseComments is the one place the
+// spec puts prose about how the license fields were arrived at. It is free text,
+// so this is for a human reading the document rather than a consumer parsing it
+// -- but the alternative is dropping the difference between a certainty and an
+// inference entirely, which is what the renderer did before.
+//
+// Empty when nothing was concluded, or when a conclusion carries neither
+// detail: a comment saying nothing is worse than none, since a reader takes its
+// presence as a sign there was something to say.
+func spdxLicenseComments(licenses []*License) string {
+	notes := make([]string, 0, len(licenses))
+	for _, l := range licenses {
+		value := strings.TrimSpace(spdxLicense([]*License{l}, "", extractedLicenseSet{}))
+		if value == "" {
+			continue
+		}
+
+		var detail []string
+		if loc := strings.TrimSpace(l.GetLocation()); loc != "" {
+			detail = append(detail, "read from "+loc)
+		}
+		// A conclusion at full confidence is not worth a note: it says the same
+		// thing as a conclusion with no score attached.
+		if c := l.GetConfidence(); c > 0 && c < 1 {
+			detail = append(detail, "confidence "+strconv.FormatFloat(c, 'g', -1, 64))
+		}
+		if len(detail) == 0 {
+			continue
+		}
+		notes = append(notes, value+": "+strings.Join(detail, ", "))
+	}
+	if len(notes) == 0 {
+		return ""
+	}
+	return "Concluded " + strings.Join(notes, "; ") + "."
 }
 
 // spdxSupplier renders a supplier as the spec's Originator/Supplier shape, or

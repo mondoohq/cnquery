@@ -6,6 +6,7 @@ package sbom
 import (
 	"errors"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 
@@ -125,24 +126,29 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 		}
 		emitted[ref] = true
 
-		// Concluded licenses and copyright are evidence, not assertion: they were
-		// read out of the files the package ships rather than stated by it, and
-		// CycloneDX has a place that says exactly that.
-		if concluded := cycloneDXLicenseList(concludedLicenses(pkg)); concluded != nil {
-			if evidence == nil {
-				evidence = &cyclonedx.Evidence{}
+		// Concluded licenses and copyright are also stated as evidence, which is
+		// what CycloneDX's evidence block is for: they were read out of the
+		// files the package ships rather than asserted by it. It is a second
+		// view of what component.licenses already carries, not the only home
+		// for it, so it follows the same opt-in as the occurrences above rather
+		// than being the one part of the block that appears unasked.
+		if ccx.opts.IncludeEvidence {
+			if concluded := cycloneDXLicenseList(concludedLicenses(pkg)); concluded != nil {
+				if evidence == nil {
+					evidence = &cyclonedx.Evidence{}
+				}
+				evidence.Licenses = concluded
 			}
-			evidence.Licenses = concluded
-		}
-		if len(pkg.Copyright) > 0 {
-			if evidence == nil {
-				evidence = &cyclonedx.Evidence{}
+			if len(pkg.Copyright) > 0 {
+				if evidence == nil {
+					evidence = &cyclonedx.Evidence{}
+				}
+				copyrights := make([]cyclonedx.Copyright, 0, len(pkg.Copyright))
+				for _, c := range pkg.Copyright {
+					copyrights = append(copyrights, cyclonedx.Copyright{Text: c})
+				}
+				evidence.Copyright = &copyrights
 			}
-			copyrights := make([]cyclonedx.Copyright, 0, len(pkg.Copyright))
-			for _, c := range pkg.Copyright {
-				copyrights = append(copyrights, cyclonedx.Copyright{Text: c})
-			}
-			evidence.Copyright = &copyrights
 		}
 
 		bomPkg := cyclonedx.Component{
@@ -154,7 +160,7 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 			CPE:         cpe,
 			Evidence:    evidence,
 			Description: pkg.Description,
-			Licenses:    cycloneDXDeclared(pkg),
+			Licenses:    cycloneDXComponentLicenses(pkg),
 			Copyright:   strings.Join(pkg.Copyright, "\n"),
 		}
 		if pkg.Supplier != "" {
@@ -366,15 +372,20 @@ var familyMap = map[string][]string{
 	"rhel":    {"linux", "unix", "os"},
 }
 
-// cycloneDXDeclared renders the licenses a package declares, preferring the
-// structured list and falling back to the legacy scalar.
+// cycloneDXComponentLicenses renders every license the model carries onto the
+// component, each saying how it was arrived at.
 //
-// The fallback is what lets consumers migrate without a flag day: a producer
-// that has not yet populated Licenses still renders exactly as it did before.
-func cycloneDXDeclared(pkg *Package) *cyclonedx.Licenses {
-	if l := cycloneDXLicenseList(declaredLicenses(pkg)); l != nil {
+// Declared and concluded live in one list because `acknowledgement` tells them
+// apart, which is what the attribute is for. Putting the concluded ones only
+// under evidence would make a consumer reading component.licenses believe the
+// package is licensed as it claims, in exactly the case the two disagree and
+// the shipped text is the grant.
+func cycloneDXComponentLicenses(pkg *Package) *cyclonedx.Licenses {
+	if l := cycloneDXLicenseList(pkg.Licenses); l != nil {
 		return l
 	}
+	// No structured list: the legacy scalar is all there is, and it renders as
+	// it always did.
 	return cycloneDXLicenses(pkg.License)
 }
 
@@ -409,26 +420,110 @@ func concludedLicenses(pkg *Package) []*License {
 // The three shapes are mutually exclusive in the schema, which is why the
 // producer says which kind it has rather than the renderer guessing: a value
 // already known to be an expression must not be emitted as an id.
+//
+// How a license was arrived at travels with it, as CycloneDX 1.6's
+// `acknowledgement`. Saying it on the license is what lets a declared and a
+// concluded one sit in the same list: the alternative is to encode the
+// difference in *where* they are placed, which needs somewhere to put the
+// concluded ones and says nothing to a consumer reading a single entry.
+//
+// A conclusion's confidence and the file it was read from become license
+// properties, the schema's own extension point. Neither has a first-class field
+// in 1.6, and both are the difference between a certainty and an inference, so
+// dropping them loses the reason a consumer would trust one conclusion over
+// another.
 func cycloneDXLicenseList(licenses []*License) *cyclonedx.Licenses {
 	out := make(cyclonedx.Licenses, 0, len(licenses))
 	for _, l := range licenses {
+		var choice cyclonedx.LicenseChoice
 		switch {
 		case strings.TrimSpace(l.GetExpression()) != "":
-			out = append(out, cyclonedx.LicenseChoice{Expression: strings.TrimSpace(l.GetExpression())})
+			choice = cyclonedx.LicenseChoice{Expression: strings.TrimSpace(l.GetExpression())}
 		case strings.TrimSpace(l.GetSpdxId()) != "":
-			out = append(out, cyclonedx.LicenseChoice{
+			choice = cyclonedx.LicenseChoice{
 				License: &cyclonedx.License{ID: strings.TrimSpace(l.GetSpdxId())},
-			})
+			}
 		case strings.TrimSpace(l.GetName()) != "":
-			out = append(out, cyclonedx.LicenseChoice{
+			choice = cyclonedx.LicenseChoice{
 				License: &cyclonedx.License{Name: strings.TrimSpace(l.GetName())},
-			})
+			}
+		default:
+			continue
 		}
+
+		if ack := cycloneDXAcknowledgement(l.GetAcquisition()); ack != "" {
+			// An expression carries it on the choice, an id or a name on the
+			// license itself: the schema puts the attribute in both places and
+			// only one of the two is populated for any given entry.
+			if choice.License != nil {
+				choice.License.Acknowledgement = ack
+			} else {
+				choice.Acknowledgement = &ack
+			}
+		}
+		if props := cycloneDXLicenseProperties(l); props != nil {
+			if choice.License != nil {
+				choice.License.Properties = props
+			} else {
+				choice.Properties = props
+			}
+		}
+
+		out = append(out, choice)
 	}
 	if len(out) == 0 {
 		return nil
 	}
 	return &out
+}
+
+// cycloneDXAcknowledgement maps the model's acquisition onto the schema's
+// vocabulary, which uses the same two words. An unspecified acquisition renders
+// nothing rather than guessing at "declared": the producer did not say, and an
+// omitted attribute is how the schema spells that.
+func cycloneDXAcknowledgement(a LicenseAcquisition) cyclonedx.LicenseAcknowledgement {
+	switch a {
+	case LicenseAcquisition_LICENSE_ACQUISITION_DECLARED:
+		return cyclonedx.LicenseAcknowledgementDeclared
+	case LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED:
+		return cyclonedx.LicenseAcknowledgementConcluded
+	default:
+		return ""
+	}
+}
+
+// cycloneDXLicenseProperties carries the parts of a conclusion the schema has no
+// field for, and only when they say something.
+//
+// A declared license's confidence is 1.0 by construction -- it is a statement,
+// not a measurement -- so emitting it would be noise on every license in every
+// document. It is written only for a conclusion, where it is the difference
+// between a certainty and an inference.
+//
+// Full confidence is left out for the same reason, and on the same rule the
+// SPDX renderer applies. The model documents 1.0 as the value a license carries
+// when it is a statement rather than a measurement, so a conclusion at 1.0 is
+// asserting no measurement, which is what an entry with no score attached
+// already says. A property that states nothing would still be read by a
+// consumer ranking conclusions as a score somebody took.
+func cycloneDXLicenseProperties(l *License) *[]cyclonedx.Property {
+	props := []cyclonedx.Property{}
+	if c := l.GetConfidence(); l.GetAcquisition() == LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED && c > 0 && c < 1 {
+		props = append(props, cyclonedx.Property{
+			Name:  "mondoo:license:confidence",
+			Value: strconv.FormatFloat(l.GetConfidence(), 'g', -1, 64),
+		})
+	}
+	if loc := strings.TrimSpace(l.GetLocation()); loc != "" {
+		props = append(props, cyclonedx.Property{
+			Name:  "mondoo:license:location",
+			Value: loc,
+		})
+	}
+	if len(props) == 0 {
+		return nil
+	}
+	return &props
 }
 
 // cycloneDXLicenses renders a package's declared license as a CycloneDX license
