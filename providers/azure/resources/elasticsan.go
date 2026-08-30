@@ -261,6 +261,12 @@ func createElasticSanVolumeGroupResource(runtime *plugin.Runtime, group *armelas
 		networkRules = props.NetworkACLs.VirtualNetworkRules
 	}
 
+	identityRef, err := identityRefData(runtime, convert.ToValue(group.ID), userAssignedIdentityIds,
+		identityType(groupIdentity.Type), identityPrincipalId(groupIdentity.PrincipalID), identityTenantId(groupIdentity.TenantID))
+	if err != nil {
+		return nil, err
+	}
+
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionElasticSanServiceElasticSanVolumeGroup,
 		map[string]*llx.RawData{
 			"id":                                     llx.StringDataPtr(group.ID),
@@ -271,7 +277,7 @@ func createElasticSanVolumeGroupResource(runtime *plugin.Runtime, group *armelas
 			"protocolType":                           llx.StringData(enumString(props.ProtocolType)),
 			"enforceDataIntegrityCheckForIscsi":      llx.BoolDataPtr(props.EnforceDataIntegrityCheckForIscsi),
 			"identity":                               llx.DictData(identity),
-			"identityType":                           llx.StringDataPtr(stringEnumPtr(groupIdentity.Type)),
+			"identityRef":                            identityRef,
 			"principalId":                            llx.StringDataPtr(groupIdentity.PrincipalID),
 			"tenantId":                               llx.StringDataPtr(groupIdentity.TenantID),
 			"keyName":                                llx.StringData(keyName),

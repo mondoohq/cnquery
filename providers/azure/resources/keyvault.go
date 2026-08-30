@@ -1234,14 +1234,12 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) rotationPolicy() (*mqlAzureSubs
 			resource, err := CreateResource(a.MqlRuntime,
 				ResourceAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject,
 				map[string]*llx.RawData{
-					"__id":               llx.StringData(id + "/rotationPolicy"),
-					"lifetimeActions":    llx.ArrayData([]any{}, types.Dict),
-					"actions":            llx.ArrayData([]any{}, types.Resource("azure.subscription.keyVaultService.key.rotationPolicyObject.action")),
-					"attributes":         llx.DictData(map[string]any{}),
-					"newVersionLifetime": llx.StringDataPtr(nil),
-					"created":            llx.NilData,
-					"updated":            llx.NilData,
-					"enabled":            llx.BoolData(false),
+					"__id":             llx.StringData(id + "/rotationPolicy"),
+					"lifetimeActions":  llx.ArrayData([]any{}, types.Dict),
+					"actions":          llx.ArrayData([]any{}, types.Resource("azure.subscription.keyVaultService.key.rotationPolicyObject.action")),
+					"attributes":       llx.DictData(map[string]any{}),
+					"policyAttributes": llx.NilData,
+					"enabled":          llx.BoolData(false),
 				},
 			)
 			if err != nil {
@@ -1299,17 +1297,30 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) rotationPolicy() (*mqlAzureSubs
 		attributes = attributesDict
 	}
 
+	policyAttributes := llx.NilData
+	if attrs := policyResp.Attributes; attrs != nil {
+		const attributesResource = "azure.subscription.keyVaultService.key.rotationPolicyObject.attributes"
+		mqlAttrs, err := CreateResource(a.MqlRuntime, attributesResource, map[string]*llx.RawData{
+			"__id":       llx.StringData(id + "/rotationPolicy/attributes"),
+			"expiryTime": llx.StringDataPtr(attrs.ExpiryTime),
+			"created":    llx.TimeDataPtr(attrs.Created),
+			"updated":    llx.TimeDataPtr(attrs.Updated),
+		})
+		if err != nil {
+			return nil, err
+		}
+		policyAttributes = llx.ResourceData(mqlAttrs, attributesResource)
+	}
+
 	resource, err := CreateResource(a.MqlRuntime,
 		ResourceAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject,
 		map[string]*llx.RawData{
-			"__id":               llx.StringData(id + "/rotationPolicy"),
-			"lifetimeActions":    llx.ArrayData(lifetimeActions, types.Dict),
-			"actions":            llx.ArrayData(rotationActions, types.Resource("azure.subscription.keyVaultService.key.rotationPolicyObject.action")),
-			"attributes":         llx.DictData(attributes),
-			"newVersionLifetime": llx.StringDataPtr(orZero(policyResp.Attributes).ExpiryTime),
-			"created":            llx.TimeDataPtr(orZero(policyResp.Attributes).Created),
-			"updated":            llx.TimeDataPtr(orZero(policyResp.Attributes).Updated),
-			"enabled":            llx.BoolData(rotationEnabled),
+			"__id":             llx.StringData(id + "/rotationPolicy"),
+			"lifetimeActions":  llx.ArrayData(lifetimeActions, types.Dict),
+			"actions":          llx.ArrayData(rotationActions, types.Resource("azure.subscription.keyVaultService.key.rotationPolicyObject.action")),
+			"attributes":       llx.DictData(attributes),
+			"policyAttributes": policyAttributes,
+			"enabled":          llx.BoolData(rotationEnabled),
 		},
 	)
 	if err != nil {

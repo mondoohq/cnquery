@@ -194,15 +194,19 @@ func searchServiceToMql(runtime *plugin.Runtime, svc *armsearch.Service) (*mqlAz
 		"upgradeAvailable":            llx.StringDataPtr(upgradeAvailable),
 		"serviceUpgradedAt":           llx.TimeDataPtr(serviceUpgradedAt),
 	}
-	addSkuFields(args, skuName(svcSku.Name))
+	if err := setSkuRef(runtime, args, skuName(svcSku.Name)); err != nil {
+		return nil, err
+	}
 	svcIdentity := orZero(svc.Identity)
-	userAssignedIdentityIds := addIdentity(args, svcIdentity.Type, svcIdentity.PrincipalID, svcIdentity.TenantID, svcIdentity.UserAssignedIdentities)
+	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(svcIdentity.UserAssignedIdentities),
+		identityType(svcIdentity.Type), identityPrincipalId(svcIdentity.PrincipalID), identityTenantId(svcIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 	res, err := CreateResource(runtime, "azure.subscription.searchService.service", args)
 	if err != nil {
 		return nil, err
 	}
 	mqlService := res.(*mqlAzureSubscriptionSearchServiceService)
-	mqlService.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	sysData, err := convert.JsonToDict(svc.SystemData)
 	if err != nil {
 		return nil, err
@@ -212,12 +216,7 @@ func searchServiceToMql(runtime *plugin.Runtime, svc *armsearch.Service) (*mqlAz
 }
 
 type mqlAzureSubscriptionSearchServiceServiceInternal struct {
-	cacheSystemData              any
-	cacheUserAssignedIdentityIds []string
-}
-
-func (a *mqlAzureSubscriptionSearchServiceService) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+	cacheSystemData any
 }
 
 func (a *mqlAzureSubscriptionSearchServiceService) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {

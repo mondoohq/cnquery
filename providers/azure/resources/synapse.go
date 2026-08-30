@@ -170,6 +170,12 @@ func (a *mqlAzureSubscriptionSynapseService) workspaces() ([]any, error) {
 			wsIdentity := orZero(ws.Identity)
 			userAssignedIdentityIds := sortedUserAssignedIdentityIDs(wsIdentity.UserAssignedIdentities)
 
+			identityRef, err := identityRefData(a.MqlRuntime, convert.ToValue(ws.ID), userAssignedIdentityIds,
+				identityType(wsIdentity.Type), identityPrincipalId(wsIdentity.PrincipalID), identityTenantId(wsIdentity.TenantID))
+			if err != nil {
+				return nil, err
+			}
+
 			mqlWorkspace, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionSynapseServiceWorkspace,
 				map[string]*llx.RawData{
 					"__id":                        llx.StringDataPtr(ws.ID),
@@ -180,7 +186,7 @@ func (a *mqlAzureSubscriptionSynapseService) workspaces() ([]any, error) {
 					"type":                        llx.StringDataPtr(ws.Type),
 					"properties":                  llx.DictData(properties),
 					"identity":                    llx.DictData(identity),
-					"identityType":                llx.StringDataPtr(stringEnumPtr(wsIdentity.Type)),
+					"identityRef":                 identityRef,
 					"principalId":                 llx.StringDataPtr(wsIdentity.PrincipalID),
 					"tenantId":                    llx.StringDataPtr(wsIdentity.TenantID),
 					"managedVirtualNetwork":       llx.StringData(managedVirtualNetwork),

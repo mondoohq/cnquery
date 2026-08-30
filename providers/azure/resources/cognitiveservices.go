@@ -346,15 +346,19 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 		"multiRegionRoutingMethod":        llx.StringData(multiRegionRoutingMethod),
 		"networkInjections":               llx.ArrayData(networkInjections, types.Resource("azure.subscription.cognitiveServicesService.account.networkInjection")),
 	}
-	addSkuFields(args, skuName(accountSku.Name), skuTier(accountSku.Tier), skuSize(accountSku.Size), skuFamily(accountSku.Family), skuCapacity(accountSku.Capacity))
+	if err := setSkuRef(runtime, args, skuName(accountSku.Name), skuTier(accountSku.Tier), skuSize(accountSku.Size), skuFamily(accountSku.Family), skuCapacity(accountSku.Capacity)); err != nil {
+		return nil, err
+	}
 	accountIdentity := orZero(account.Identity)
-	userAssignedIdentityIds := addIdentity(args, accountIdentity.Type, accountIdentity.PrincipalID, accountIdentity.TenantID, accountIdentity.UserAssignedIdentities)
+	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(accountIdentity.UserAssignedIdentities),
+		identityType(accountIdentity.Type), identityPrincipalId(accountIdentity.PrincipalID), identityTenantId(accountIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 	res, err := CreateResource(runtime, "azure.subscription.cognitiveServicesService.account", args)
 	if err != nil {
 		return nil, err
 	}
 	mqlAccount := res.(*mqlAzureSubscriptionCognitiveServicesServiceAccount)
-	mqlAccount.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	sysData, err := convert.JsonToDict(account.SystemData)
 	if err != nil {
 		return nil, err
@@ -369,11 +373,6 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 type mqlAzureSubscriptionCognitiveServicesServiceAccountInternal struct {
 	cacheSystemData                 any
 	cachePrivateEndpointConnections []*armcognitiveservices.PrivateEndpointConnection
-	cacheUserAssignedIdentityIds    []string
-}
-
-func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) privateEndpointConnections() ([]any, error) {
@@ -1146,7 +1145,10 @@ func cognitiveServicesProjectToMql(runtime *plugin.Runtime, proj *armcognitivese
 		"endpoints":         llx.MapData(endpoints, types.String),
 	}
 	projIdentity := orZero(proj.Identity)
-	projUserAssignedIdentityIds := addIdentity(projArgs, projIdentity.Type, projIdentity.PrincipalID, projIdentity.TenantID, projIdentity.UserAssignedIdentities)
+	if err := setIdentityRef(runtime, projArgs, sortedUserAssignedIdentityIDs(projIdentity.UserAssignedIdentities),
+		identityType(projIdentity.Type), identityPrincipalId(projIdentity.PrincipalID), identityTenantId(projIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 	res, err := CreateResource(runtime, "azure.subscription.cognitiveServicesService.account.project", projArgs)
 	if err != nil {
 		return nil, err
@@ -1157,17 +1159,11 @@ func cognitiveServicesProjectToMql(runtime *plugin.Runtime, proj *armcognitivese
 		return nil, err
 	}
 	mqlProject.cacheSystemData = sysData
-	mqlProject.cacheUserAssignedIdentityIds = projUserAssignedIdentityIds
 	return mqlProject, nil
 }
 
 type mqlAzureSubscriptionCognitiveServicesServiceAccountProjectInternal struct {
-	cacheSystemData              any
-	cacheUserAssignedIdentityIds []string
-}
-
-func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+	cacheSystemData any
 }
 
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {

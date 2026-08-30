@@ -141,21 +141,25 @@ func vmScaleSetToMql(runtime *plugin.Runtime, vmss compute.VirtualMachineScaleSe
 	userAssignedIdentityIds := sortedUserAssignedIdentityIDs(vmssIdentity.UserAssignedIdentities)
 
 	args := map[string]*llx.RawData{
-		"id":           llx.StringDataPtr(vmss.ID),
-		"name":         llx.StringDataPtr(vmss.Name),
-		"location":     llx.StringDataPtr(vmss.Location),
-		"tags":         llx.MapData(convert.PtrMapStrToInterface(vmss.Tags), types.String),
-		"type":         llx.StringDataPtr(vmss.Type),
-		"zones":        llx.ArrayData(strPtrsToAny(vmss.Zones), types.String),
-		"sku":          llx.DictData(sku),
-		"properties":   llx.DictData(properties),
-		"identity":     llx.DictData(identityDict),
-		"identityType": llx.StringDataPtr(stringEnumPtr(vmssIdentity.Type)),
-		"principalId":  llx.StringDataPtr(vmssIdentity.PrincipalID),
-		"tenantId":     llx.StringDataPtr(vmssIdentity.TenantID),
+		"id":          llx.StringDataPtr(vmss.ID),
+		"name":        llx.StringDataPtr(vmss.Name),
+		"location":    llx.StringDataPtr(vmss.Location),
+		"tags":        llx.MapData(convert.PtrMapStrToInterface(vmss.Tags), types.String),
+		"type":        llx.StringDataPtr(vmss.Type),
+		"zones":       llx.ArrayData(strPtrsToAny(vmss.Zones), types.String),
+		"sku":         llx.DictData(sku),
+		"properties":  llx.DictData(properties),
+		"identity":    llx.DictData(identityDict),
+		"principalId": llx.StringDataPtr(vmssIdentity.PrincipalID),
 	}
 	vmssSku := orZero(vmss.SKU)
-	addSkuFields(args, skuName(vmssSku.Name), skuTier(vmssSku.Tier), skuCapacity(vmssSku.Capacity))
+	if err := setSkuRef(runtime, args, skuName(vmssSku.Name), skuTier(vmssSku.Tier), skuCapacity(vmssSku.Capacity)); err != nil {
+		return nil, err
+	}
+	if err := setIdentityRef(runtime, args, userAssignedIdentityIds,
+		identityType(vmssIdentity.Type), identityPrincipalId(vmssIdentity.PrincipalID), identityTenantId(vmssIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 
 	if vmss.Properties != nil {
 		props := vmss.Properties
@@ -319,7 +323,9 @@ func vmScaleSetInstanceToMql(runtime *plugin.Runtime, inst compute.VirtualMachin
 		"sku":        llx.DictData(sku),
 	}
 	instSku := orZero(inst.SKU)
-	addSkuFields(args, skuName(instSku.Name), skuTier(instSku.Tier), skuCapacity(instSku.Capacity))
+	if err := setSkuRef(runtime, args, skuName(instSku.Name), skuTier(instSku.Tier), skuCapacity(instSku.Capacity)); err != nil {
+		return nil, err
+	}
 
 	if inst.Properties != nil {
 		props := inst.Properties

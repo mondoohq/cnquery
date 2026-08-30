@@ -29,11 +29,6 @@ type mqlAzureSubscriptionMonitorServiceWorkspaceInternal struct {
 	cacheReplication                *armoperationalinsights.WorkspaceReplicationProperties
 	cacheFailover                   *armoperationalinsights.WorkspaceFailoverProperties
 	cacheSystemData                 any
-	cacheUserAssignedIdentityIds    []string
-}
-
-func (a *mqlAzureSubscriptionMonitorServiceWorkspace) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceWorkspace) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
@@ -160,7 +155,10 @@ func createWorkspaceResource(runtime *plugin.Runtime, ws *armoperationalinsights
 		"defaultDataCollectionRuleResourceId": llx.StringDataPtr(props.DefaultDataCollectionRuleResourceID),
 	}
 	wsIdentity := orZero(ws.Identity)
-	userAssignedIdentityIds := addIdentity(wsArgs, wsIdentity.Type, wsIdentity.PrincipalID, wsIdentity.TenantID, wsIdentity.UserAssignedIdentities)
+	if err := setIdentityRef(runtime, wsArgs, sortedUserAssignedIdentityIDs(wsIdentity.UserAssignedIdentities),
+		identityType(wsIdentity.Type), identityPrincipalId(wsIdentity.PrincipalID), identityTenantId(wsIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionMonitorServiceWorkspace, wsArgs)
 	if err != nil {
@@ -168,7 +166,6 @@ func createWorkspaceResource(runtime *plugin.Runtime, ws *armoperationalinsights
 	}
 
 	mqlWs := resource.(*mqlAzureSubscriptionMonitorServiceWorkspace)
-	mqlWs.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	mqlWs.cacheCapping = props.WorkspaceCapping
 	mqlWs.cacheFeatures = props.Features
 	mqlWs.cachePrivateLinkScopedResources = props.PrivateLinkScopedResources

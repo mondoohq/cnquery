@@ -159,17 +159,21 @@ func kustoClusterToMql(runtime *plugin.Runtime, cluster *armkusto.Cluster) (*mql
 		"cmkFederatedIdentityClientId":  llx.StringData(cmkFederatedIdentityClientID),
 	}
 	clusterSku := orZero(cluster.SKU)
-	addSkuFields(args, skuName(clusterSku.Name), skuTier(clusterSku.Tier), skuCapacity(clusterSku.Capacity))
+	if err := setSkuRef(runtime, args, skuName(clusterSku.Name), skuTier(clusterSku.Tier), skuCapacity(clusterSku.Capacity)); err != nil {
+		return nil, err
+	}
 
 	clusterIdentity := orZero(cluster.Identity)
-	userAssignedIdentityIds := addIdentity(args, clusterIdentity.Type, clusterIdentity.PrincipalID, clusterIdentity.TenantID, clusterIdentity.UserAssignedIdentities)
+	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(clusterIdentity.UserAssignedIdentities),
+		identityType(clusterIdentity.Type), identityPrincipalId(clusterIdentity.PrincipalID), identityTenantId(clusterIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 
 	res, err := CreateResource(runtime, "azure.subscription.kustoService.cluster", args)
 	if err != nil {
 		return nil, err
 	}
 	mqlCluster := res.(*mqlAzureSubscriptionKustoServiceCluster)
-	mqlCluster.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	sysData, err := convert.JsonToDict(cluster.SystemData)
 	if err != nil {
 		return nil, err
@@ -179,12 +183,7 @@ func kustoClusterToMql(runtime *plugin.Runtime, cluster *armkusto.Cluster) (*mql
 }
 
 type mqlAzureSubscriptionKustoServiceClusterInternal struct {
-	cacheSystemData              any
-	cacheUserAssignedIdentityIds []string
-}
-
-func (a *mqlAzureSubscriptionKustoServiceCluster) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+	cacheSystemData any
 }
 
 // kustoAccessDenied reports whether the error is a 403 from the Azure API, in

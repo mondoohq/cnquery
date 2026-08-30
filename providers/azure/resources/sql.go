@@ -1815,24 +1815,47 @@ func (a *mqlAzureSubscriptionSqlServiceServer) failoverGroups() ([]any, error) {
 				partners = append(partners, mqlPartner)
 			}
 
-			rwEndpoint := orZero(orZero(fg.Properties).ReadWriteEndpoint)
-			roEndpoint := orZero(orZero(fg.Properties).ReadOnlyEndpoint)
+			readWriteEndpointRef := llx.NilData
+			if rw := orZero(fg.Properties).ReadWriteEndpoint; rw != nil {
+				const rwResource = "azure.subscription.sqlService.server.failoverGroup.readWriteEndpoint"
+				mqlRW, err := CreateResource(a.MqlRuntime, rwResource, map[string]*llx.RawData{
+					"__id":                                   llx.StringData(convert.ToValue(fg.ID) + "/readWriteEndpoint"),
+					"failoverPolicy":                         llx.StringDataPtr(stringEnumPtr(rw.FailoverPolicy)),
+					"failoverWithDataLossGracePeriodMinutes": llx.IntDataPtr(rw.FailoverWithDataLossGracePeriodMinutes),
+				})
+				if err != nil {
+					return nil, err
+				}
+				readWriteEndpointRef = llx.ResourceData(mqlRW, rwResource)
+			}
+
+			readOnlyEndpointRef := llx.NilData
+			if ro := orZero(fg.Properties).ReadOnlyEndpoint; ro != nil {
+				const roResource = "azure.subscription.sqlService.server.failoverGroup.readOnlyEndpoint"
+				mqlRO, err := CreateResource(a.MqlRuntime, roResource, map[string]*llx.RawData{
+					"__id":           llx.StringData(convert.ToValue(fg.ID) + "/readOnlyEndpoint"),
+					"failoverPolicy": llx.StringDataPtr(stringEnumPtr(ro.FailoverPolicy)),
+				})
+				if err != nil {
+					return nil, err
+				}
+				readOnlyEndpointRef = llx.ResourceData(mqlRO, roResource)
+			}
 
 			mqlFG, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.failoverGroup",
 				map[string]*llx.RawData{
-					"id":                                  llx.StringDataPtr(fg.ID),
-					"name":                                llx.StringDataPtr(fg.Name),
-					"location":                            llx.StringDataPtr(fg.Location),
-					"tags":                                llx.MapData(convert.PtrMapStrToInterface(fg.Tags), types.String),
-					"replicationRole":                     llx.StringData(replicationRole),
-					"replicationState":                    llx.StringData(replicationState),
-					"partnerServers":                      llx.ArrayData(partnerServers, types.Dict),
-					"partners":                            llx.ArrayData(partners, types.Resource("azure.subscription.sqlService.server.failoverGroup.partner")),
-					"readWriteEndpoint":                   llx.DictData(readWriteEndpoint),
-					"readWriteFailoverPolicy":             llx.StringDataPtr(stringEnumPtr(rwEndpoint.FailoverPolicy)),
-					"readWriteFailoverGracePeriodMinutes": llx.IntDataPtr(rwEndpoint.FailoverWithDataLossGracePeriodMinutes),
-					"readOnlyEndpoint":                    llx.DictData(readOnlyEndpoint),
-					"readOnlyFailoverPolicy":              llx.StringDataPtr(stringEnumPtr(roEndpoint.FailoverPolicy)),
+					"id":                   llx.StringDataPtr(fg.ID),
+					"name":                 llx.StringDataPtr(fg.Name),
+					"location":             llx.StringDataPtr(fg.Location),
+					"tags":                 llx.MapData(convert.PtrMapStrToInterface(fg.Tags), types.String),
+					"replicationRole":      llx.StringData(replicationRole),
+					"replicationState":     llx.StringData(replicationState),
+					"partnerServers":       llx.ArrayData(partnerServers, types.Dict),
+					"partners":             llx.ArrayData(partners, types.Resource("azure.subscription.sqlService.server.failoverGroup.partner")),
+					"readWriteEndpoint":    llx.DictData(readWriteEndpoint),
+					"readWriteEndpointRef": readWriteEndpointRef,
+					"readOnlyEndpoint":     llx.DictData(readOnlyEndpoint),
+					"readOnlyEndpointRef":  readOnlyEndpointRef,
 				})
 			if err != nil {
 				return nil, err

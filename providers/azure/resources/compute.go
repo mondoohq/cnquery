@@ -301,7 +301,11 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 		"winRmHttpListenerEnabled":      llx.BoolDataPtr(guestAccess.winRmHTTPListenerEnabled),
 		"winRmHttpsListenerEnabled":     llx.BoolDataPtr(guestAccess.winRmHTTPSListenerEnabled),
 	}
-	userAssignedIdentityIds := addIdentity(vmArgs, vmIdentity.Type, vmIdentity.PrincipalID, vmIdentity.TenantID, vmIdentity.UserAssignedIdentities)
+	userAssignedIdentityIds := sortedUserAssignedIdentityIDs(vmIdentity.UserAssignedIdentities)
+	if err := setIdentityRef(runtime, vmArgs, userAssignedIdentityIds,
+		identityType(vmIdentity.Type), identityPrincipalId(vmIdentity.PrincipalID), identityTenantId(vmIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 
 	res, err := CreateResource(runtime, "azure.subscription.computeService.vm", vmArgs)
 	if err != nil {
@@ -580,7 +584,9 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		"properties":        llx.DictData(properties),
 	}
 	diskSku := orZero(disk.SKU)
-	addSkuFields(args, skuName(diskSku.Name), skuTier(diskSku.Tier))
+	if err := setSkuRef(runtime, args, skuName(diskSku.Name), skuTier(diskSku.Tier)); err != nil {
+		return nil, err
+	}
 
 	// Cached for secureVmDiskEncryptionSet(); the confidential-VM guest state
 	// key is a separate encryption set from the disk's own, so it cannot be
@@ -1209,7 +1215,10 @@ func diskEncryptionSetToMql(runtime *plugin.Runtime, des compute.DiskEncryptionS
 		"provisioningState":                 llx.StringData(provisioningState),
 	}
 	desIdentity := orZero(des.Identity)
-	userAssignedIdentityIds := addIdentity(desArgs, desIdentity.Type, desIdentity.PrincipalID, desIdentity.TenantID, desIdentity.UserAssignedIdentities)
+	if err := setIdentityRef(runtime, desArgs, sortedUserAssignedIdentityIDs(desIdentity.UserAssignedIdentities),
+		identityType(desIdentity.Type), identityPrincipalId(desIdentity.PrincipalID), identityTenantId(desIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 
 	res, err := CreateResource(runtime, ResourceAzureSubscriptionComputeServiceDiskEncryptionSet, desArgs)
 	if err != nil {
@@ -1221,17 +1230,11 @@ func diskEncryptionSetToMql(runtime *plugin.Runtime, des compute.DiskEncryptionS
 	}
 	mqlDes := res.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet)
 	mqlDes.cacheSystemData = sysData
-	mqlDes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	return mqlDes, nil
 }
 
 type mqlAzureSubscriptionComputeServiceDiskEncryptionSetInternal struct {
-	cacheSystemData              any
-	cacheUserAssignedIdentityIds []string
-}
-
-func (a *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+	cacheSystemData any
 }
 
 func (a *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
@@ -1578,7 +1581,9 @@ func snapshotToMql(runtime *plugin.Runtime, snap compute.Snapshot) (*mqlAzureSub
 		"properties": llx.DictData(properties),
 	}
 	snapSku := orZero(snap.SKU)
-	addSkuFields(args, skuName(snapSku.Name), skuTier(snapSku.Tier))
+	if err := setSkuRef(runtime, args, skuName(snapSku.Name), skuTier(snapSku.Tier)); err != nil {
+		return nil, err
+	}
 
 	var cacheSourceDiskId, cacheDESId, cacheSecureVMDESId *string
 	if snap.Properties != nil {

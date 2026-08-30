@@ -148,17 +148,21 @@ func automationAccountToMql(runtime *plugin.Runtime, acct *armautomation.Account
 		"lastModifiedTime":    lastModifiedTime,
 	}
 	skuVal := orZero(acctSKU)
-	addSkuFields(accountArgs, skuName(skuVal.Name), skuFamily(skuVal.Family), skuCapacity(skuVal.Capacity))
+	if err := setSkuRef(runtime, accountArgs, skuName(skuVal.Name), skuFamily(skuVal.Family), skuCapacity(skuVal.Capacity)); err != nil {
+		return nil, err
+	}
 
 	acctIdentity := orZero(acct.Identity)
-	userAssignedIdentityIds := addIdentity(accountArgs, acctIdentity.Type, acctIdentity.PrincipalID, acctIdentity.TenantID, acctIdentity.UserAssignedIdentities)
+	if err := setIdentityRef(runtime, accountArgs, sortedUserAssignedIdentityIDs(acctIdentity.UserAssignedIdentities),
+		identityType(acctIdentity.Type), identityPrincipalId(acctIdentity.PrincipalID), identityTenantId(acctIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 
 	res, err := CreateResource(runtime, "azure.subscription.automationService.account", accountArgs)
 	if err != nil {
 		return nil, err
 	}
 	mqlAccount := res.(*mqlAzureSubscriptionAutomationServiceAccount)
-	mqlAccount.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	sysData, err := convert.JsonToDict(acct.SystemData)
 	if err != nil {
 		return nil, err
@@ -168,12 +172,7 @@ func automationAccountToMql(runtime *plugin.Runtime, acct *armautomation.Account
 }
 
 type mqlAzureSubscriptionAutomationServiceAccountInternal struct {
-	cacheSystemData              any
-	cacheUserAssignedIdentityIds []string
-}
-
-func (a *mqlAzureSubscriptionAutomationServiceAccount) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+	cacheSystemData any
 }
 
 type mqlAzureSubscriptionAutomationServiceAccountVariableInternal struct {

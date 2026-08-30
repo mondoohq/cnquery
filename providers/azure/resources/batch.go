@@ -417,11 +417,11 @@ func (a *mqlAzureSubscriptionBatchServiceAccount) diagnosticSettingsCategories()
 	return getDiagnosticSettingsCategories(a.Id.Data, a.MqlRuntime, conn)
 }
 
-func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, []string, error) {
+func createBatchPoolRawData(runtime *plugin.Runtime, pool *armbatch.Pool) (map[string]*llx.RawData, error) {
 	identityData := llx.NilData
 	if pool.Identity != nil {
 		if dict, err := convert.JsonToDict(pool.Identity); err != nil {
-			return nil, nil, err
+			return nil, err
 		} else if dict != nil {
 			identityData = llx.DictData(dict)
 		}
@@ -447,21 +447,21 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, []str
 			creationTimeData = llx.TimeDataPtr(pool.Properties.CreationTime)
 		}
 		if dict, err := convert.JsonToDict(pool.Properties); err != nil {
-			return nil, nil, err
+			return nil, err
 		} else if dict != nil {
 			propertiesData = llx.DictData(dict)
 		}
 
 		if pool.Properties.DeploymentConfiguration != nil {
 			if dict, err := convert.JsonToDict(pool.Properties.DeploymentConfiguration); err != nil {
-				return nil, nil, err
+				return nil, err
 			} else if dict != nil {
 				deploymentConfigurationData = llx.DictData(dict)
 			}
 
 			if pool.Properties.DeploymentConfiguration.VirtualMachineConfiguration != nil {
 				if dict, err := convert.JsonToDict(pool.Properties.DeploymentConfiguration.VirtualMachineConfiguration); err != nil {
-					return nil, nil, err
+					return nil, err
 				} else if dict != nil {
 					virtualMachineConfigurationData = llx.DictData(dict)
 				}
@@ -549,14 +549,18 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, []str
 	}
 	// armbatch.PoolIdentity carries only Type and UserAssignedIdentities; a
 	// pool has no system-assigned principal or tenant to report, so those
-	// stay off the resource rather than reading as empty strings.
+	// members of the shared identity resource stay null rather than reading as
+	// empty strings.
 	poolIdentity := orZero(pool.Identity)
-	addIdentityFields(args, identityType(poolIdentity.Type))
-	return args, sortedUserAssignedIdentityIDs(poolIdentity.UserAssignedIdentities), nil
+	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(poolIdentity.UserAssignedIdentities),
+		identityType(poolIdentity.Type)); err != nil {
+		return nil, err
+	}
+	return args, nil
 }
 
 func batchPoolToMql(runtime *plugin.Runtime, pool *armbatch.Pool) (*mqlAzureSubscriptionBatchServiceAccountPool, error) {
-	rawData, userAssignedIdentityIds, err := createBatchPoolRawData(pool)
+	rawData, err := createBatchPoolRawData(runtime, pool)
 	if err != nil {
 		return nil, err
 	}
@@ -572,18 +576,12 @@ func batchPoolToMql(runtime *plugin.Runtime, pool *armbatch.Pool) (*mqlAzureSubs
 	}
 	mqlPool := resource.(*mqlAzureSubscriptionBatchServiceAccountPool)
 	mqlPool.cacheSystemData = sysData
-	mqlPool.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 
 	return mqlPool, nil
 }
 
 type mqlAzureSubscriptionBatchServiceAccountPoolInternal struct {
-	cacheSystemData              any
-	cacheUserAssignedIdentityIds []string
-}
-
-func (a *mqlAzureSubscriptionBatchServiceAccountPool) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+	cacheSystemData any
 }
 
 func (a *mqlAzureSubscriptionBatchServiceAccountPool) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {

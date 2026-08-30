@@ -221,7 +221,9 @@ func (a *mqlAzureSubscriptionIotService) iotHubs() ([]any, error) {
 				"tenantId":                      llx.StringDataPtr(identityTenantId),
 			}
 			hubSku := orZero(hub.SKU)
-			addSkuFields(args, skuName(hubSku.Name), skuTier(hubSku.Tier), skuCapacity(hubSku.Capacity))
+			if err := setSkuRef(a.MqlRuntime, args, skuName(hubSku.Name), skuTier(hubSku.Tier), skuCapacity(hubSku.Capacity)); err != nil {
+				return nil, err
+			}
 
 			mqlHub, err := CreateResource(a.MqlRuntime, "azure.subscription.iotService.iotHub", args)
 			if err != nil {

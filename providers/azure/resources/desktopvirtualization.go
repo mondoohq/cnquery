@@ -181,11 +181,10 @@ func hostPoolToMql(runtime *plugin.Runtime, hp *armdesktopvirtualization.HostPoo
 	// UserAssignedIdentities, so the host pool publishes only the three
 	// members the SDK reports.
 	hpIdentity := orZero(hp.Identity)
-	addIdentityFields(hpArgs,
-		identityType(hpIdentity.Type),
-		identityPrincipalId(hpIdentity.PrincipalID),
-		identityTenantId(hpIdentity.TenantID),
-	)
+	if err := setIdentityRef(runtime, hpArgs, nil,
+		identityType(hpIdentity.Type), identityPrincipalId(hpIdentity.PrincipalID), identityTenantId(hpIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 
 	res, err := CreateResource(runtime, "azure.subscription.desktopVirtualizationService.hostPool", hpArgs)
 	if err != nil {

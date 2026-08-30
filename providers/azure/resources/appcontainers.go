@@ -64,12 +64,7 @@ type mqlAzureSubscriptionContainerAppServiceManagedEnvironmentInternal struct {
 }
 
 type mqlAzureSubscriptionContainerAppServiceJobInternal struct {
-	cacheSystemData              any
-	cacheUserAssignedIdentityIds []string
-}
-
-func (a *mqlAzureSubscriptionContainerAppServiceJob) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+	cacheSystemData any
 }
 
 type mqlAzureSubscriptionContainerAppServiceManagedEnvironmentDaprComponentInternal struct {
@@ -1418,7 +1413,10 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 				"outboundIpAddresses":      llx.ArrayData(outboundIpAddresses, types.String),
 			}
 			jobIdentity := orZero(entry.Identity)
-			jobUserAssignedIdentityIds := addIdentity(jobArgs, jobIdentity.Type, jobIdentity.PrincipalID, jobIdentity.TenantID, jobIdentity.UserAssignedIdentities)
+			if err := setIdentityRef(a.MqlRuntime, jobArgs, sortedUserAssignedIdentityIDs(jobIdentity.UserAssignedIdentities),
+				identityType(jobIdentity.Type), identityPrincipalId(jobIdentity.PrincipalID), identityTenantId(jobIdentity.TenantID)); err != nil {
+				return nil, err
+			}
 			mqlJob, err := CreateResource(a.MqlRuntime, "azure.subscription.containerAppService.job", jobArgs)
 			if err != nil {
 				return nil, err
@@ -1429,7 +1427,6 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 			}
 			mqlJobRes := mqlJob.(*mqlAzureSubscriptionContainerAppServiceJob)
 			mqlJobRes.cacheSystemData = sysData
-			mqlJobRes.cacheUserAssignedIdentityIds = jobUserAssignedIdentityIds
 			res = append(res, mqlJob)
 		}
 	}

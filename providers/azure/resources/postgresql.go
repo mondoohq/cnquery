@@ -345,6 +345,12 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(dbServer.Identity.UserAssignedIdentities)
 			}
 
+			maintenanceSchedule, err := maintenanceWindowRefData(a.MqlRuntime, convert.ToValue(dbServer.ID),
+				maintenanceCustomWindow, maintenanceDayOfWeek, maintenanceStartHour, maintenanceStartMinute)
+			if err != nil {
+				return nil, err
+			}
+
 			mqlAzurePostgresServer, err := CreateResource(a.MqlRuntime, "azure.subscription.postgreSqlService.flexibleServer",
 				map[string]*llx.RawData{
 					"id":                           llx.StringDataPtr(dbServer.ID),
@@ -380,10 +386,7 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 					"replicationRole":         llx.StringDataPtr(replicationRole),
 					"entraTenantId":           llx.StringDataPtr(entraTenantId),
 					"maintenanceWindow":       llx.DictData(maintenanceWindow),
-					"maintenanceCustomWindow": llx.StringDataPtr(maintenanceCustomWindow),
-					"maintenanceDayOfWeek":    llx.IntDataPtr(maintenanceDayOfWeek),
-					"maintenanceStartHour":    llx.IntDataPtr(maintenanceStartHour),
-					"maintenanceStartMinute":  llx.IntDataPtr(maintenanceStartMinute),
+					"maintenanceSchedule":     maintenanceSchedule,
 				})
 			if err != nil {
 				return nil, err

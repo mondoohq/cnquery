@@ -1079,7 +1079,6 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 		"tags":                               llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
 		"type":                               llx.StringDataPtr(account.Type),
 		"properties":                         llx.DictData(properties),
-		"identityType":                       llx.StringDataPtr(stringEnumPtr(accountIdentity.Type)),
 		"principalId":                        llx.StringDataPtr(accountIdentity.PrincipalID),
 		"tenantId":                           llx.StringDataPtr(accountIdentity.TenantID),
 		"sku":                                llx.DictData(sku),
@@ -1132,7 +1131,13 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 		"publishInternetEndpoints":                         llx.BoolData(publishInternetEndpoints),
 		"publishMicrosoftEndpoints":                        llx.BoolData(publishMicrosoftEndpoints),
 	}
-	addSkuFields(args, skuName(accountSku.Name), skuTier(accountSku.Tier))
+	if err := setSkuRef(runtime, args, skuName(accountSku.Name), skuTier(accountSku.Tier)); err != nil {
+		return nil, err
+	}
+	if err := setIdentityRef(runtime, args, userAssignedIdentityIds,
+		identityType(accountIdentity.Type), identityPrincipalId(accountIdentity.PrincipalID), identityTenantId(accountIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 	res, err := CreateResource(runtime, "azure.subscription.storageService.account", args)
 	if err != nil {
 		return nil, err

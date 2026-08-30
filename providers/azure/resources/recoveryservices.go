@@ -369,6 +369,12 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 		regionOfChoiceStatus = string(*props.RegionOfChoiceSettings.Status)
 	}
 
+	identityRef, err := identityRefData(runtime, convert.ToValue(vault.ID), userAssignedIdentityIds,
+		identityType(vaultIdentity.Type), identityPrincipalId(vaultIdentity.PrincipalID), identityTenantId(vaultIdentity.TenantID))
+	if err != nil {
+		return nil, err
+	}
+
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionRecoveryServicesServiceVault,
 		map[string]*llx.RawData{
 			"id":                                  llx.StringDataPtr(vault.ID),
@@ -377,7 +383,7 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 			"type":                                llx.StringDataPtr(vault.Type),
 			"tags":                                llx.MapData(convert.PtrMapStrToInterface(vault.Tags), types.String),
 			"identity":                            llx.DictData(identity),
-			"identityType":                        llx.StringDataPtr(stringEnumPtr(vaultIdentity.Type)),
+			"identityRef":                         identityRef,
 			"principalId":                         llx.StringDataPtr(vaultIdentity.PrincipalID),
 			"tenantId":                            llx.StringDataPtr(vaultIdentity.TenantID),
 			"skuName":                             llx.StringData(skuName),

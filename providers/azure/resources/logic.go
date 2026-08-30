@@ -188,22 +188,19 @@ func logicWorkflowToMQL(runtime *plugin.Runtime, entry *logic.Workflow) (plugin.
 		"connectionNames":                 llx.ArrayData(connectionNames, types.String),
 	}
 	wfIdentity := orZero(entry.Identity)
-	userAssignedIdentityIds := addIdentity(wfArgs, wfIdentity.Type, wfIdentity.PrincipalID, wfIdentity.TenantID, wfIdentity.UserAssignedIdentities)
+	if err := setIdentityRef(runtime, wfArgs, sortedUserAssignedIdentityIDs(wfIdentity.UserAssignedIdentities),
+		identityType(wfIdentity.Type), identityPrincipalId(wfIdentity.PrincipalID), identityTenantId(wfIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 
 	mqlWf, err := CreateResource(runtime, "azure.subscription.logicService.workflow", wfArgs)
 	if err != nil {
 		return nil, err
 	}
-	mqlWf.(*mqlAzureSubscriptionLogicServiceWorkflow).cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	return mqlWf, nil
 }
 
 type mqlAzureSubscriptionLogicServiceWorkflowInternal struct {
-	cacheUserAssignedIdentityIds []string
-}
-
-func (a *mqlAzureSubscriptionLogicServiceWorkflow) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func workflowCreatedTime(p *logic.WorkflowProperties) *time.Time {

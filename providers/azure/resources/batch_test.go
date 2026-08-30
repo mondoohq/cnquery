@@ -174,7 +174,7 @@ func TestBatchPoolDataConversion(t *testing.T) {
 	}
 
 	t.Run("FullDataConversion", func(t *testing.T) {
-		rawData, _, err := createBatchPoolRawData(mockPool)
+		rawData, err := createBatchPoolRawData(azureTestRuntime(), mockPool)
 		assert.NoError(t, err)
 		assert.NotNil(t, rawData)
 
@@ -198,7 +198,7 @@ func TestBatchPoolDataConversion(t *testing.T) {
 			Type: ptr("Microsoft.Batch/batchAccounts/pools"),
 		}
 
-		rawData, _, err := createBatchPoolRawData(minimalPool)
+		rawData, err := createBatchPoolRawData(azureTestRuntime(), minimalPool)
 		assert.NoError(t, err)
 		assert.NotNil(t, rawData)
 

@@ -275,7 +275,9 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 		"creationTime":                    llx.TimeDataPtr(creationTime),
 	}
 	workspaceSku := orZero(workspace.SKU)
-	addSkuFields(args, skuName(workspaceSku.Name), skuTier(workspaceSku.Tier))
+	if err := setSkuRef(runtime, args, skuName(workspaceSku.Name), skuTier(workspaceSku.Tier)); err != nil {
+		return nil, err
+	}
 
 	res, err := CreateResource(runtime, ResourceAzureSubscriptionDatabricksServiceWorkspace, args)
 	if err != nil {

@@ -384,6 +384,12 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				}
 			}
 
+			identityRef, err := identityRefData(a.MqlRuntime, convert.ToValue(entry.ID), userAssignedIdentityIds,
+				identityType(clusterIdentity.Type), identityPrincipalId(clusterIdentity.PrincipalID), identityTenantId(clusterIdentity.TenantID))
+			if err != nil {
+				return nil, err
+			}
+
 			mqlAksCluster, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster",
 				map[string]*llx.RawData{
 					"id":                                llx.StringDataPtr(entry.ID),
@@ -432,9 +438,8 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"supportPlan":                       llx.StringDataPtr((*string)(entry.Properties.SupportPlan)),
 					"controlPlaneMetricsEnabled":        llx.BoolData(convert.ToValue(controlPlaneMetricsEnabled)),
 					"identity":                          llx.DictData(identityDict),
-					"identityType":                      llx.StringDataPtr(stringEnumPtr(clusterIdentity.Type)),
+					"identityRef":                       identityRef,
 					"principalId":                       llx.StringDataPtr(clusterIdentity.PrincipalID),
-					"tenantId":                          llx.StringDataPtr(clusterIdentity.TenantID),
 					"servicePrincipalClientId":          llx.StringData(servicePrincipalClientId),
 					"linuxAdminUsername":                llx.StringData(linuxAdminUsername),
 					"linuxSshPublicKeys":                llx.ArrayData(linuxSshPublicKeys, types.String),

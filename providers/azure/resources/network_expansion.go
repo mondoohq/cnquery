@@ -164,9 +164,7 @@ func azureTrafficManagerProfileToMql(runtime *plugin.Runtime, p *trafficmanager.
 		"maxReturn":                   llx.IntDataDefault[int64](nil, 0),
 		"allowedEndpointRecordTypes":  llx.ArrayData([]any{}, types.String),
 		"dnsConfig":                   llx.DictData(nil),
-		"dnsRelativeName":             llx.StringDataPtr(nil),
-		"dnsTtl":                      llx.IntDataPtr[int64](nil),
-		"dnsFqdn":                     llx.StringDataPtr(nil),
+		"dnsSettings":                 llx.NilData,
 		"monitorConfig":               llx.DictData(nil),
 		"monitorSettings":             llx.NilData,
 		"endpoints":                   llx.ArrayData([]any{}, types.Resource("azure.subscription.networkService.trafficManagerProfile.endpoint")),
@@ -201,10 +199,22 @@ func azureTrafficManagerProfileToMql(runtime *plugin.Runtime, p *trafficmanager.
 		return nil, err
 	}
 	args["dnsConfig"] = llx.DictData(dnsDict)
-	dns := orZero(props.DNSConfig)
-	args["dnsRelativeName"] = llx.StringDataPtr(dns.RelativeName)
-	args["dnsTtl"] = llx.IntDataPtr(dns.TTL)
-	args["dnsFqdn"] = llx.StringDataPtr(dns.Fqdn)
+
+	// A profile ARM returns without a DNS config reports null rather than a
+	// settings resource with a zero TTL, which would read as "never cache".
+	if dns := props.DNSConfig; dns != nil {
+		const dnsSettingsResource = "azure.subscription.networkService.trafficManagerProfile.dnsSettings"
+		mqlDNS, err := CreateResource(runtime, dnsSettingsResource, map[string]*llx.RawData{
+			"__id":         llx.StringData(convert.ToValue(p.ID) + "/dnsSettings"),
+			"relativeName": llx.StringDataPtr(dns.RelativeName),
+			"fqdn":         llx.StringDataPtr(dns.Fqdn),
+			"ttl":          llx.IntDataPtr(dns.TTL),
+		})
+		if err != nil {
+			return nil, err
+		}
+		args["dnsSettings"] = llx.ResourceData(mqlDNS, dnsSettingsResource)
+	}
 
 	monitorDict, err := convert.JsonToDict(props.MonitorConfig)
 	if err != nil {

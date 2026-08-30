@@ -127,10 +127,15 @@ func signalRToMql(runtime *plugin.Runtime, sr *armsignalr.ResourceInfo) (*mqlAzu
 		"provisioningState":        llx.StringData(provisioningState),
 	}
 	srSku := orZero(sr.SKU)
-	addSkuFields(args, skuName(srSku.Name), skuTier(srSku.Tier), skuCapacity(srSku.Capacity))
+	if err := setSkuRef(runtime, args, skuName(srSku.Name), skuTier(srSku.Tier), skuCapacity(srSku.Capacity)); err != nil {
+		return nil, err
+	}
 
 	srIdentity := orZero(sr.Identity)
-	userAssignedIdentityIds := addIdentity(args, srIdentity.Type, srIdentity.PrincipalID, srIdentity.TenantID, srIdentity.UserAssignedIdentities)
+	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(srIdentity.UserAssignedIdentities),
+		identityType(srIdentity.Type), identityPrincipalId(srIdentity.PrincipalID), identityTenantId(srIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 
 	res, err := CreateResource(runtime, "azure.subscription.signalRService.signalR", args)
 	if err != nil {
@@ -142,7 +147,6 @@ func signalRToMql(runtime *plugin.Runtime, sr *armsignalr.ResourceInfo) (*mqlAzu
 	}
 	mqlSr := res.(*mqlAzureSubscriptionSignalRServiceSignalR)
 	mqlSr.cacheSystemData = sysData
-	mqlSr.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	if sr.Properties != nil {
 		mqlSr.cachePrivateEndpointConnections = sr.Properties.PrivateEndpointConnections
 	}
@@ -152,11 +156,6 @@ func signalRToMql(runtime *plugin.Runtime, sr *armsignalr.ResourceInfo) (*mqlAzu
 type mqlAzureSubscriptionSignalRServiceSignalRInternal struct {
 	cacheSystemData                 any
 	cachePrivateEndpointConnections []*armsignalr.PrivateEndpointConnection
-	cacheUserAssignedIdentityIds    []string
-}
-
-func (a *mqlAzureSubscriptionSignalRServiceSignalR) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionSignalRServiceSignalR) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
@@ -273,10 +272,15 @@ func webPubSubToMql(runtime *plugin.Runtime, wps *armwebpubsub.ResourceInfo) (*m
 		"provisioningState":        llx.StringData(provisioningState),
 	}
 	wpsSku := orZero(wps.SKU)
-	addSkuFields(args, skuName(wpsSku.Name), skuTier(wpsSku.Tier), skuCapacity(wpsSku.Capacity))
+	if err := setSkuRef(runtime, args, skuName(wpsSku.Name), skuTier(wpsSku.Tier), skuCapacity(wpsSku.Capacity)); err != nil {
+		return nil, err
+	}
 
 	wpsIdentity := orZero(wps.Identity)
-	wpsUserAssignedIdentityIds := addIdentity(args, wpsIdentity.Type, wpsIdentity.PrincipalID, wpsIdentity.TenantID, wpsIdentity.UserAssignedIdentities)
+	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(wpsIdentity.UserAssignedIdentities),
+		identityType(wpsIdentity.Type), identityPrincipalId(wpsIdentity.PrincipalID), identityTenantId(wpsIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 
 	res, err := CreateResource(runtime, "azure.subscription.webPubSubService.webPubSub", args)
 	if err != nil {
@@ -288,7 +292,6 @@ func webPubSubToMql(runtime *plugin.Runtime, wps *armwebpubsub.ResourceInfo) (*m
 	}
 	mqlWps := res.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub)
 	mqlWps.cacheSystemData = sysData
-	mqlWps.cacheUserAssignedIdentityIds = wpsUserAssignedIdentityIds
 	if wps.Properties != nil {
 		mqlWps.cachePrivateEndpointConnections = wps.Properties.PrivateEndpointConnections
 	}
@@ -298,11 +301,6 @@ func webPubSubToMql(runtime *plugin.Runtime, wps *armwebpubsub.ResourceInfo) (*m
 type mqlAzureSubscriptionWebPubSubServiceWebPubSubInternal struct {
 	cacheSystemData                 any
 	cachePrivateEndpointConnections []*armwebpubsub.PrivateEndpointConnection
-	cacheUserAssignedIdentityIds    []string
-}
-
-func (a *mqlAzureSubscriptionWebPubSubServiceWebPubSub) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionWebPubSubServiceWebPubSub) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {

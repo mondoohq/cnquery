@@ -201,7 +201,9 @@ func (a *mqlAzureSubscriptionFrontDoorService) profiles() ([]any, error) {
 				"frontDoorId":       llx.StringData(frontDoorId),
 				"resourceState":     llx.StringData(resourceState),
 			}
-			addSkuFields(profileArgs, skuName(orZero(profile.SKU).Name))
+			if err := setSkuRef(a.MqlRuntime, profileArgs, skuName(orZero(profile.SKU).Name)); err != nil {
+				return nil, err
+			}
 
 			mqlProfile, err := CreateResource(a.MqlRuntime, "azure.subscription.frontDoorService.profile", profileArgs)
 			if err != nil {

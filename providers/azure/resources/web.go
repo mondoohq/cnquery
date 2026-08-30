@@ -107,7 +107,10 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 	// the tenant through systemAssignedIdentity, off cacheIdentityTenantId.
 	if resourceType == ResourceAzureSubscriptionWebServiceAppslot {
 		args["identity"] = llx.DictData(identity)
-		userAssignedIdentityIds = addIdentity(args, siteIdentity.Type, siteIdentity.PrincipalID, siteIdentity.TenantID, siteIdentity.UserAssignedIdentities)
+		if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(siteIdentity.UserAssignedIdentities),
+			identityType(siteIdentity.Type), identityPrincipalId(siteIdentity.PrincipalID), identityTenantId(siteIdentity.TenantID)); err != nil {
+			return nil, err
+		}
 	}
 
 	// Only set these fields for appsite, not appslot (which doesn't have them)
@@ -150,10 +153,8 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 			outboundVnetRoutingData = llx.ResourceData(ovrRes, "azure.subscription.webService.appsite.outboundVnetRouting")
 		}
 		args["outboundVnetRouting"] = outboundVnetRoutingData
-		addIdentityFields(args,
-			identityType(siteIdentity.Type),
-			identityPrincipalId(siteIdentity.PrincipalID),
-		)
+		args["identityType"] = llx.StringDataPtr(stringEnumPtr(siteIdentity.Type))
+		args["principalId"] = llx.StringDataPtr(siteIdentity.PrincipalID)
 		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(siteIdentity.UserAssignedIdentities)
 	}
 
@@ -176,7 +177,6 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 	case ResourceAzureSubscriptionWebServiceAppslot:
 		mqlAppslot := res.(*mqlAzureSubscriptionWebServiceAppslot)
 		mqlAppslot.cacheSystemData = sysData
-		mqlAppslot.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	}
 	return res, nil
 }
@@ -188,12 +188,7 @@ type mqlAzureSubscriptionWebServiceAppsiteInternal struct {
 }
 
 type mqlAzureSubscriptionWebServiceAppslotInternal struct {
-	cacheSystemData              any
-	cacheUserAssignedIdentityIds []string
-}
-
-func (a *mqlAzureSubscriptionWebServiceAppslot) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+	cacheSystemData any
 }
 
 func (a *mqlAzureSubscriptionWebServiceAppslot) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
@@ -225,9 +220,7 @@ func (a *mqlAzureSubscriptionWebServiceHostingEnvironment) systemMetadata() (*mq
 }
 
 type mqlAzureSubscriptionWebServiceAppServicePlanInternal struct {
-	cacheSystemData      any
-	cacheSkuCapabilities []*web.Capability
-	cacheSkuCapacity     *web.SKUCapacity
+	cacheSystemData any
 }
 
 func (a *mqlAzureSubscriptionWebServiceAppServicePlan) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
@@ -1929,19 +1922,27 @@ func (a *mqlAzureSubscriptionWebServiceAppServicePlan) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-// skuCapabilities returns one row per named capability the plan's SKU
-// reports (e.g. "workerSizeId", "computeMode"). The capability name is not
-// guaranteed unique on its own across parents, so the cache key is
-// parent-qualified.
-func (a *mqlAzureSubscriptionWebServiceAppServicePlan) skuCapabilities() ([]any, error) {
-	res := []any{}
-	for _, capability := range a.cacheSkuCapabilities {
+// appServicePlanSkuToMql maps an ARM SKUDescription onto the plan's SKU
+// resource, including the capability flags and the scale range Azure reports
+// alongside the billable members.
+//
+// ARM omits SKUCapacity for SKUs that are not scale-eligible, so capacityLimits
+// reads null there rather than reporting a plan that cannot scale as one whose
+// limits are zero.
+func appServicePlanSkuToMql(runtime *plugin.Runtime, planID string, sku *web.SKUDescription) (*llx.RawData, error) {
+	if sku == nil {
+		return llx.NilData, nil
+	}
+	const resourceName = "azure.subscription.webService.appServicePlan.skuDescription"
+
+	capabilities := []any{}
+	for _, capability := range sku.Capabilities {
 		if capability == nil {
 			continue
 		}
-		mqlCapability, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appServicePlan.skuCapability",
+		mqlCapability, err := CreateResource(runtime, "azure.subscription.webService.appServicePlan.skuCapability",
 			map[string]*llx.RawData{
-				"__id":   llx.StringData(subResourceCacheID(nil, a.Id.Data, "skuCapabilities", convert.ToValue(capability.Name))),
+				"__id":   llx.StringData(subResourceCacheID(nil, planID, "skuCapabilities", convert.ToValue(capability.Name))),
 				"name":   llx.StringDataPtr(capability.Name),
 				"value":  llx.StringDataPtr(capability.Value),
 				"reason": llx.StringDataPtr(capability.Reason),
@@ -1949,32 +1950,41 @@ func (a *mqlAzureSubscriptionWebServiceAppServicePlan) skuCapabilities() ([]any,
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlCapability)
+		capabilities = append(capabilities, mqlCapability)
 	}
-	return res, nil
-}
 
-// skuCapacityLimits returns the plan SKU's scale range, or null when the SKU
-// does not report one (ARM omits SKUCapacity for SKUs that are not
-// scale-eligible).
-func (a *mqlAzureSubscriptionWebServiceAppServicePlan) skuCapacityLimits() (*mqlAzureSubscriptionWebServiceAppServicePlanSkuCapacityLimits, error) {
-	if a.cacheSkuCapacity == nil {
-		a.SkuCapacityLimits.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
+	capacityLimits := llx.NilData
+	if sku.SKUCapacity != nil {
+		mqlLimits, err := CreateResource(runtime, "azure.subscription.webService.appServicePlan.skuCapacityLimits",
+			map[string]*llx.RawData{
+				"__id":                   llx.StringData(planID + "/skuCapacityLimits"),
+				"defaultCapacity":        llx.IntDataPtr(sku.SKUCapacity.Default),
+				"minimumCapacity":        llx.IntDataPtr(sku.SKUCapacity.Minimum),
+				"maximumCapacity":        llx.IntDataPtr(sku.SKUCapacity.Maximum),
+				"elasticMaximumCapacity": llx.IntDataPtr(sku.SKUCapacity.ElasticMaximum),
+				"scaleType":              llx.StringDataPtr(sku.SKUCapacity.ScaleType),
+			})
+		if err != nil {
+			return nil, err
+		}
+		capacityLimits = llx.ResourceData(mqlLimits, "azure.subscription.webService.appServicePlan.skuCapacityLimits")
 	}
-	mqlLimits, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appServicePlan.skuCapacityLimits",
-		map[string]*llx.RawData{
-			"__id":                   llx.StringData(a.Id.Data + "/skuCapacityLimits"),
-			"defaultCapacity":        llx.IntDataPtr(a.cacheSkuCapacity.Default),
-			"minimumCapacity":        llx.IntDataPtr(a.cacheSkuCapacity.Minimum),
-			"maximumCapacity":        llx.IntDataPtr(a.cacheSkuCapacity.Maximum),
-			"elasticMaximumCapacity": llx.IntDataPtr(a.cacheSkuCapacity.ElasticMaximum),
-			"scaleType":              llx.StringDataPtr(a.cacheSkuCapacity.ScaleType),
-		})
+
+	res, err := CreateResource(runtime, resourceName, map[string]*llx.RawData{
+		"__id":           llx.StringData(planID + "/sku"),
+		"name":           llx.StringDataPtr(sku.Name),
+		"tier":           llx.StringDataPtr(sku.Tier),
+		"size":           llx.StringDataPtr(sku.Size),
+		"family":         llx.StringDataPtr(sku.Family),
+		"capacity":       llx.IntDataPtr(sku.Capacity),
+		"locations":      llx.ArrayData(strPtrsToAny(sku.Locations), types.String),
+		"capabilities":   llx.ArrayData(capabilities, types.Resource("azure.subscription.webService.appServicePlan.skuCapability")),
+		"capacityLimits": capacityLimits,
+	})
 	if err != nil {
 		return nil, err
 	}
-	return mqlLimits.(*mqlAzureSubscriptionWebServiceAppServicePlanSkuCapacityLimits), nil
+	return llx.ResourceData(res, resourceName), nil
 }
 
 func (a *mqlAzureSubscriptionWebServiceHostingEnvironment) id() (string, error) {
@@ -2050,15 +2060,11 @@ func (a *mqlAzureSubscriptionWebService) appServicePlans() ([]any, error) {
 				"sku":        llx.DictData(skuDict),
 			}
 
-			planSKU := orZero(plan.SKU)
-			addSkuFields(args,
-				skuName(planSKU.Name),
-				skuTier(planSKU.Tier),
-				skuSize(planSKU.Size),
-				skuFamily(planSKU.Family),
-				skuCapacity(planSKU.Capacity),
-			)
-			args["skuLocations"] = llx.ArrayData(strPtrsToAny(planSKU.Locations), types.String)
+			skuRef, err := appServicePlanSkuToMql(a.MqlRuntime, convert.ToValue(plan.ID), plan.SKU)
+			if err != nil {
+				return nil, err
+			}
+			args["skuRef"] = skuRef
 
 			if plan.Properties != nil {
 				args["zoneRedundant"] = llx.BoolDataPtr(plan.Properties.ZoneRedundant)
@@ -2095,8 +2101,6 @@ func (a *mqlAzureSubscriptionWebService) appServicePlans() ([]any, error) {
 			}
 			mqlPlan := mqlResource.(*mqlAzureSubscriptionWebServiceAppServicePlan)
 			mqlPlan.cacheSystemData = sysData
-			mqlPlan.cacheSkuCapabilities = planSKU.Capabilities
-			mqlPlan.cacheSkuCapacity = planSKU.SKUCapacity
 			res = append(res, mqlResource)
 		}
 	}

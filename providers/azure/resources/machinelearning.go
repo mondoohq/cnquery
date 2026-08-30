@@ -30,11 +30,6 @@ type mqlAzureSubscriptionMachineLearningServiceWorkspaceInternal struct {
 	cacheOutboundRules                 map[string]ml.OutboundRuleClassification
 	cacheServerlessComputeSubnetId     *string
 	cachePrimaryUserAssignedIdentityId *string
-	cacheUserAssignedIdentityIds       []string
-}
-
-func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 // serverlessComputeSubnet resolves the subnet serverless jobs attach to. Null
@@ -284,9 +279,14 @@ func machineLearningWorkspaceToMql(runtime *plugin.Runtime, ws *ml.Workspace) (*
 		"workspaceTenantId":           llx.StringDataPtr(props.TenantID),
 		"serverlessComputeNoPublicIp": llx.BoolDataPtr(serverlessComputeNoPublicIp),
 	}
-	addSkuFields(args, skuName(wsSku.Name), skuTier(wsSku.Tier), skuSize(wsSku.Size), skuFamily(wsSku.Family), skuCapacity(wsSku.Capacity))
+	if err := setSkuRef(runtime, args, skuName(wsSku.Name), skuTier(wsSku.Tier), skuSize(wsSku.Size), skuFamily(wsSku.Family), skuCapacity(wsSku.Capacity)); err != nil {
+		return nil, err
+	}
 	wsIdentity := orZero(ws.Identity)
-	userAssignedIdentityIds := addIdentity(args, wsIdentity.Type, wsIdentity.PrincipalID, wsIdentity.TenantID, wsIdentity.UserAssignedIdentities)
+	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(wsIdentity.UserAssignedIdentities),
+		identityType(wsIdentity.Type), identityPrincipalId(wsIdentity.PrincipalID), identityTenantId(wsIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionMachineLearningServiceWorkspace, args)
 	if err != nil {
 		return nil, err
@@ -297,7 +297,6 @@ func machineLearningWorkspaceToMql(runtime *plugin.Runtime, ws *ml.Workspace) (*
 	mqlWs.cacheOutboundRules = outboundRules
 	mqlWs.cacheServerlessComputeSubnetId = serverlessComputeSubnetId
 	mqlWs.cachePrimaryUserAssignedIdentityId = props.PrimaryUserAssignedIdentity
-	mqlWs.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	sysData, err := convert.JsonToDict(ws.SystemData)
 	if err != nil {
 		return nil, err
@@ -479,14 +478,16 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) onlineEndpoints() 
 				"provisioningState":   llx.StringData(provisioningState),
 			}
 			epIdentity := orZero(ep.Identity)
-			epUserAssignedIdentityIds := addIdentity(epArgs, epIdentity.Type, epIdentity.PrincipalID, epIdentity.TenantID, epIdentity.UserAssignedIdentities)
+			if err := setIdentityRef(a.MqlRuntime, epArgs, sortedUserAssignedIdentityIDs(epIdentity.UserAssignedIdentities),
+				identityType(epIdentity.Type), identityPrincipalId(epIdentity.PrincipalID), identityTenantId(epIdentity.TenantID)); err != nil {
+				return nil, err
+			}
 			mqlRes, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.onlineEndpoint", epArgs)
 			if err != nil {
 				return nil, err
 			}
 			mqlEp := mqlRes.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint)
 			mqlEp.cacheComputeId = computeId
-			mqlEp.cacheUserAssignedIdentityIds = epUserAssignedIdentityIds
 			sysData, err := convert.JsonToDict(ep.SystemData)
 			if err != nil {
 				return nil, err
@@ -499,13 +500,8 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) onlineEndpoints() 
 }
 
 type mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpointInternal struct {
-	cacheComputeId               string
-	cacheSystemData              any
-	cacheUserAssignedIdentityIds []string
-}
-
-func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+	cacheComputeId  string
+	cacheSystemData any
 }
 
 func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
@@ -735,7 +731,10 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) serverlessEndpoint
 				"provisioningState":         llx.StringData(provisioningState),
 			}
 			slIdentity := orZero(ep.Identity)
-			slUserAssignedIdentityIds := addIdentity(slArgs, slIdentity.Type, slIdentity.PrincipalID, slIdentity.TenantID, slIdentity.UserAssignedIdentities)
+			if err := setIdentityRef(a.MqlRuntime, slArgs, sortedUserAssignedIdentityIDs(slIdentity.UserAssignedIdentities),
+				identityType(slIdentity.Type), identityPrincipalId(slIdentity.PrincipalID), identityTenantId(slIdentity.TenantID)); err != nil {
+				return nil, err
+			}
 			mqlEp, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.serverlessEndpoint", slArgs)
 			if err != nil {
 				return nil, err
@@ -746,7 +745,6 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) serverlessEndpoint
 			}
 			mqlServerless := mqlEp.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint)
 			mqlServerless.cacheSystemData = sysData
-			mqlServerless.cacheUserAssignedIdentityIds = slUserAssignedIdentityIds
 			res = append(res, mqlEp)
 		}
 	}
@@ -839,7 +837,10 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) computes() ([]any,
 				"modifiedOn":        llx.TimeDataPtr(modifiedOn),
 			}
 			computeIdentity := orZero(c.Identity)
-			computeUserAssignedIdentityIds := addIdentity(computeArgs, computeIdentity.Type, computeIdentity.PrincipalID, computeIdentity.TenantID, computeIdentity.UserAssignedIdentities)
+			if err := setIdentityRef(a.MqlRuntime, computeArgs, sortedUserAssignedIdentityIDs(computeIdentity.UserAssignedIdentities),
+				identityType(computeIdentity.Type), identityPrincipalId(computeIdentity.PrincipalID), identityTenantId(computeIdentity.TenantID)); err != nil {
+				return nil, err
+			}
 			mqlCompute, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.compute", computeArgs)
 			if err != nil {
 				return nil, err
@@ -850,7 +851,6 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) computes() ([]any,
 			}
 			mqlComputeRes := mqlCompute.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute)
 			mqlComputeRes.cacheSystemData = sysData
-			mqlComputeRes.cacheUserAssignedIdentityIds = computeUserAssignedIdentityIds
 			res = append(res, mqlCompute)
 		}
 	}
@@ -942,21 +942,11 @@ type mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpointDeployment
 }
 
 type mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpointInternal struct {
-	cacheSystemData              any
-	cacheUserAssignedIdentityIds []string
-}
-
-func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+	cacheSystemData any
 }
 
 type mqlAzureSubscriptionMachineLearningServiceWorkspaceComputeInternal struct {
-	cacheSystemData              any
-	cacheUserAssignedIdentityIds []string
-}
-
-func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+	cacheSystemData any
 }
 
 type mqlAzureSubscriptionMachineLearningServiceWorkspaceModelInternal struct {

@@ -247,7 +247,10 @@ func aciContainerGroupToMQL(runtime *plugin.Runtime, entry *aci.ContainerGroup) 
 		"zones":                    llx.ArrayData(zones, types.String),
 	}
 	groupIdentity := orZero(entry.Identity)
-	userAssignedIdentityIds := addIdentity(groupArgs, groupIdentity.Type, groupIdentity.PrincipalID, groupIdentity.TenantID, groupIdentity.UserAssignedIdentities)
+	if err := setIdentityRef(runtime, groupArgs, sortedUserAssignedIdentityIDs(groupIdentity.UserAssignedIdentities),
+		identityType(groupIdentity.Type), identityPrincipalId(groupIdentity.PrincipalID), identityTenantId(groupIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 
 	mqlGroup, err := CreateResource(runtime, "azure.subscription.containerInstanceService.containerGroup", groupArgs)
 	if err != nil {
@@ -255,7 +258,6 @@ func aciContainerGroupToMQL(runtime *plugin.Runtime, entry *aci.ContainerGroup) 
 	}
 
 	groupRes := mqlGroup.(*mqlAzureSubscriptionContainerInstanceServiceContainerGroup)
-	groupRes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 
 	containers, err := aciContainersToMQL(runtime, groupRes.Id.Data, containerSpecs, "containers")
 	if err != nil {
@@ -272,11 +274,6 @@ func aciContainerGroupToMQL(runtime *plugin.Runtime, entry *aci.ContainerGroup) 
 }
 
 type mqlAzureSubscriptionContainerInstanceServiceContainerGroupInternal struct {
-	cacheUserAssignedIdentityIds []string
-}
-
-func (a *mqlAzureSubscriptionContainerInstanceServiceContainerGroup) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func aciContainersToMQL(runtime *plugin.Runtime, parentId string, specs []*aci.Container, segment string) ([]any, error) {

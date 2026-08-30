@@ -18,12 +18,7 @@ import (
 )
 
 type mqlAzureSubscriptionResourceInternal struct {
-	cacheSystemData              any
-	cacheUserAssignedIdentityIds []string
-}
-
-func (a *mqlAzureSubscriptionResource) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+	cacheSystemData any
 }
 
 func (a *mqlAzureSubscription) resources() ([]any, error) {
@@ -92,17 +87,16 @@ func (a *mqlAzureSubscription) resources() ([]any, error) {
 				"changedTime":       llx.TimeDataPtr(resource.ChangedTime),
 			}
 			resourceSku := orZero(resource.SKU)
-			addSkuFields(args,
-				skuName(resourceSku.Name),
-				skuTier(resourceSku.Tier),
-				skuSize(resourceSku.Size),
-				skuFamily(resourceSku.Family),
-				skuCapacity(resourceSku.Capacity),
-			)
-			args["skuModel"] = llx.StringDataPtr(resourceSku.Model)
+			if err := setSkuRef(a.MqlRuntime, args, skuName(resourceSku.Name), skuTier(resourceSku.Tier), skuSize(resourceSku.Size),
+				skuFamily(resourceSku.Family), skuModel(resourceSku.Model), skuCapacity(resourceSku.Capacity)); err != nil {
+				return nil, err
+			}
 
 			resourceIdentity := orZero(resource.Identity)
-			userAssignedIdentityIds := addIdentity(args, resourceIdentity.Type, resourceIdentity.PrincipalID, resourceIdentity.TenantID, resourceIdentity.UserAssignedIdentities)
+			if err := setIdentityRef(a.MqlRuntime, args, sortedUserAssignedIdentityIDs(resourceIdentity.UserAssignedIdentities),
+				identityType(resourceIdentity.Type), identityPrincipalId(resourceIdentity.PrincipalID), identityTenantId(resourceIdentity.TenantID)); err != nil {
+				return nil, err
+			}
 
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.resource", args)
 			if err != nil {
@@ -110,7 +104,6 @@ func (a *mqlAzureSubscription) resources() ([]any, error) {
 			}
 			mqlResource := mqlAzure.(*mqlAzureSubscriptionResource)
 			mqlResource.cacheSystemData = sysData
-			mqlResource.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 			res = append(res, mqlAzure)
 		}
 	}

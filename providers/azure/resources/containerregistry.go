@@ -51,8 +51,7 @@ type mqlAzureSubscriptionContainerRegistryServiceRegistryCacheRuleInternal struc
 }
 
 type mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSetInternal struct {
-	cacheSystemData              any
-	cacheUserAssignedIdentityIds []string
+	cacheSystemData any
 }
 
 type mqlAzureSubscriptionContainerRegistryServiceRegistryConnectedRegistryInternal struct {
@@ -1202,7 +1201,10 @@ func createCredentialSetResource(runtime *plugin.Runtime, cs *armcontainerregist
 		"provisioningState": llx.StringData(provisioningState),
 	}
 	csIdentity := orZero(cs.Identity)
-	userAssignedIdentityIds := addIdentity(csArgs, csIdentity.Type, csIdentity.PrincipalID, csIdentity.TenantID, csIdentity.UserAssignedIdentities)
+	if err := setIdentityRef(runtime, csArgs, sortedUserAssignedIdentityIDs(csIdentity.UserAssignedIdentities),
+		identityType(csIdentity.Type), identityPrincipalId(csIdentity.PrincipalID), identityTenantId(csIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 
 	res, err := CreateResource(runtime, ResourceAzureSubscriptionContainerRegistryServiceRegistryCredentialSet, csArgs)
 	if err != nil {
@@ -1214,12 +1216,7 @@ func createCredentialSetResource(runtime *plugin.Runtime, cs *armcontainerregist
 		return nil, err
 	}
 	mqlCs.cacheSystemData = sysData
-	mqlCs.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	return mqlCs, nil
-}
-
-func (a *mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet) id() (string, error) {

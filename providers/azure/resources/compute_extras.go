@@ -195,7 +195,9 @@ func dedicatedHostToMql(runtime *plugin.Runtime, host compute.DedicatedHost) (*m
 		"properties": llx.DictData(properties),
 	}
 	hostSku := orZero(host.SKU)
-	addSkuFields(args, skuName(hostSku.Name), skuTier(hostSku.Tier), skuCapacity(hostSku.Capacity))
+	if err := setSkuRef(runtime, args, skuName(hostSku.Name), skuTier(hostSku.Tier), skuCapacity(hostSku.Capacity)); err != nil {
+		return nil, err
+	}
 
 	args["platformFaultDomain"] = llx.IntDataPtr[int32](nil)
 	args["autoReplaceOnFailure"] = llx.BoolDataPtr(nil)

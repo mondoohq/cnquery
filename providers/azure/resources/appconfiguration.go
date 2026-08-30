@@ -162,15 +162,19 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 		"defaultKeyValueRevisionRetentionPeriodInSeconds": llx.IntData(defaultKeyValueRevisionRetentionPeriodInSeconds),
 		"creationTime": llx.TimeDataPtr(creationTime),
 	}
-	addSkuFields(args, skuName(storeSku.Name))
+	if err := setSkuRef(runtime, args, skuName(storeSku.Name)); err != nil {
+		return nil, err
+	}
 	storeIdentity := orZero(store.Identity)
-	userAssignedIdentityIds := addIdentity(args, storeIdentity.Type, storeIdentity.PrincipalID, storeIdentity.TenantID, storeIdentity.UserAssignedIdentities)
+	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(storeIdentity.UserAssignedIdentities),
+		identityType(storeIdentity.Type), identityPrincipalId(storeIdentity.PrincipalID), identityTenantId(storeIdentity.TenantID)); err != nil {
+		return nil, err
+	}
 	res, err := CreateResource(runtime, "azure.subscription.appConfigurationService.configurationStore", args)
 	if err != nil {
 		return nil, err
 	}
 	mqlStore := res.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore)
-	mqlStore.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	sysData, err := convert.JsonToDict(store.SystemData)
 	if err != nil {
 		return nil, err
@@ -185,11 +189,6 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 type mqlAzureSubscriptionAppConfigurationServiceConfigurationStoreInternal struct {
 	cacheSystemData                 any
 	cachePrivateEndpointConnections []*armappconfiguration.PrivateEndpointConnectionReference
-	cacheUserAssignedIdentityIds    []string
-}
-
-func (a *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) userAssignedIdentities() ([]any, error) {
-	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) privateEndpointConnections() ([]any, error) {
