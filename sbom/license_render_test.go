@@ -7,6 +7,9 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // The renderers dropped every package license for as long as they existed,
@@ -250,61 +253,121 @@ func renderBom(t *testing.T, format string, bom *Sbom) string {
 }
 
 func TestCycloneDXSeparatesDeclaredFromConcluded(t *testing.T) {
-	var doc struct {
-		Components []struct {
-			Name     string `json:"name"`
-			Licenses []struct {
-				License    *struct{ ID, Name string } `json:"license"`
-				Expression string                     `json:"expression"`
-			} `json:"licenses"`
-			Copyright string `json:"copyright"`
-			Supplier  *struct {
-				Name string `json:"name"`
-			} `json:"supplier"`
-			Evidence *struct {
-				Licenses []struct {
-					License *struct{ ID, Name string } `json:"license"`
-				} `json:"licenses"`
-				Copyright []struct {
-					Text string `json:"text"`
-				} `json:"copyright"`
-			} `json:"evidence"`
-		} `json:"components"`
+	c := cdxComponent(t, renderBom(t, "cyclonedx-json", splitLicenseBom()), "disagrees")
+
+	// Both licenses sit on the component, because acknowledgement tells them
+	// apart. Carrying the concluded one only under evidence would leave a
+	// consumer reading component.licenses believing the package is licensed as
+	// it claims, in exactly the case the two disagree and the shipped text is
+	// the grant.
+	require.Len(t, c.Licenses, 2)
+
+	declared := c.Licenses[0]
+	require.NotNil(t, declared.License)
+	assert.Equal(t, "MIT", declared.License.ID)
+	assert.Equal(t, "declared", declared.License.Acknowledgement)
+
+	concluded := c.Licenses[1]
+	require.NotNil(t, concluded.License)
+	assert.Equal(t, "AGPL-3.0-only", concluded.License.ID)
+	assert.Equal(t, "concluded", concluded.License.Acknowledgement)
+
+	// The confidence and the file it was read from are what separate a
+	// certainty from an inference, and 1.6 has no field for either.
+	props := map[string]string{}
+	require.NotNil(t, concluded.License.Properties)
+	for _, pr := range *concluded.License.Properties {
+		props[pr.Name] = pr.Value
 	}
-	if err := json.Unmarshal([]byte(renderBom(t, "cyclonedx-json", splitLicenseBom())), &doc); err != nil {
-		t.Fatalf("unmarshal: %v", err)
-	}
-	// The document also carries the asset's platform component; the package is
-	// the one under test.
-	var c = doc.Components[0]
-	found := false
-	for _, comp := range doc.Components {
-		if comp.Name == "disagrees" {
-			c, found = comp, true
+	assert.Equal(t, "0.98", props["mondoo:license:confidence"])
+	assert.Equal(t, "node_modules/disagrees/LICENSE", props["mondoo:license:location"])
+
+	// A declared license is a statement rather than a measurement, so its
+	// confidence is 1.0 by construction and saying so on every license in every
+	// document would be noise.
+	if declared.License.Properties != nil {
+		for _, pr := range *declared.License.Properties {
+			assert.NotEqual(t, "mondoo:license:confidence", pr.Name)
 		}
 	}
-	if !found {
-		t.Fatalf("no component named disagrees in %d components", len(doc.Components))
-	}
 
-	// Declared is an assertion the package makes about itself.
-	if len(c.Licenses) != 1 || c.Licenses[0].License == nil || c.Licenses[0].License.ID != "MIT" {
-		t.Errorf("licenses = %+v, want the declared MIT", c.Licenses)
+	assert.Equal(t, "Copyright (c) 2019 Example Corp", c.Copyright)
+	require.NotNil(t, c.Supplier)
+	assert.Equal(t, "Example Corp", c.Supplier.Name)
+}
+
+// The evidence block is a second view of what component.licenses already
+// carries, so it follows the same opt-in as evidence.occurrences rather than
+// being the one part of the block that appears unasked.
+func TestCycloneDXEvidenceFollowsTheEvidenceOption(t *testing.T) {
+	t.Run("absent by default", func(t *testing.T) {
+		c := cdxComponent(t, renderBom(t, "cyclonedx-json", splitLicenseBom()), "disagrees")
+		if c.Evidence != nil {
+			assert.Empty(t, c.Evidence.Licenses, "evidence.licenses without WithEvidence()")
+			assert.Empty(t, c.Evidence.Copyright, "evidence.copyright without WithEvidence()")
+		}
+		// The licensing itself is still reported; only the second view is gone.
+		assert.Len(t, c.Licenses, 2)
+	})
+
+	t.Run("present when asked for", func(t *testing.T) {
+		var b strings.Builder
+		h := New(FormatCycloneDxJSON)
+		h.ApplyOptions(WithEvidence())
+		require.NoError(t, h.Render(&b, splitLicenseBom()))
+
+		c := cdxComponent(t, b.String(), "disagrees")
+		require.NotNil(t, c.Evidence)
+		require.Len(t, c.Evidence.Licenses, 1)
+		require.NotNil(t, c.Evidence.Licenses[0].License)
+		assert.Equal(t, "AGPL-3.0-only", c.Evidence.Licenses[0].License.ID)
+		require.Len(t, c.Evidence.Copyright, 1)
+	})
+}
+
+type cdxLicenseChoice struct {
+	License *struct {
+		ID              string `json:"id"`
+		Name            string `json:"name"`
+		Acknowledgement string `json:"acknowledgement"`
+		Properties      *[]struct {
+			Name  string `json:"name"`
+			Value string `json:"value"`
+		} `json:"properties"`
+	} `json:"license"`
+	Expression      string `json:"expression"`
+	Acknowledgement string `json:"acknowledgement"`
+}
+
+type cdxComponentDoc struct {
+	Name      string             `json:"name"`
+	Licenses  []cdxLicenseChoice `json:"licenses"`
+	Copyright string             `json:"copyright"`
+	Supplier  *struct {
+		Name string `json:"name"`
+	} `json:"supplier"`
+	Evidence *struct {
+		Licenses  []cdxLicenseChoice `json:"licenses"`
+		Copyright []struct {
+			Text string `json:"text"`
+		} `json:"copyright"`
+	} `json:"evidence"`
+}
+
+// cdxComponent decodes one named component out of a rendered CycloneDX document.
+func cdxComponent(t *testing.T, out, name string) cdxComponentDoc {
+	t.Helper()
+	var doc struct {
+		Components []cdxComponentDoc `json:"components"`
 	}
-	// Concluded is evidence: it was read out of a file rather than stated.
-	if c.Evidence == nil || len(c.Evidence.Licenses) != 1 ||
-		c.Evidence.Licenses[0].License == nil || c.Evidence.Licenses[0].License.ID != "AGPL-3.0-only" {
-		t.Errorf("evidence.licenses = %+v, want the concluded AGPL-3.0-only", c.Evidence)
+	require.NoError(t, json.Unmarshal([]byte(out), &doc))
+	for _, c := range doc.Components {
+		if c.Name == name {
+			return c
+		}
 	}
-	if c.Copyright != "Copyright (c) 2019 Example Corp" {
-		t.Errorf("copyright = %q", c.Copyright)
-	}
-	if c.Evidence == nil || len(c.Evidence.Copyright) != 1 {
-		t.Errorf("evidence.copyright = %+v, want the statement that was found", c.Evidence)
-	}
-	if c.Supplier == nil || c.Supplier.Name != "Example Corp" {
-		t.Errorf("supplier = %+v", c.Supplier)
-	}
+	t.Fatalf("no component named %q in %d components", name, len(doc.Components))
+	return cdxComponentDoc{}
 }
 
 func TestSPDXConcludedIsNotAnEchoOfDeclared(t *testing.T) {
@@ -545,4 +608,61 @@ func TestSPDXUnreferenceableNameIsDropped(t *testing.T) {
 			t.Errorf("emitted a bare LicenseRef prefix: %q", id)
 		}
 	}
+}
+
+// SPDX has no field for a conclusion's confidence or the file it was read from,
+// and PackageLicenseComments is the one place the spec puts prose about how the
+// license fields were arrived at. Free text, so this is for a human reading the
+// document; the alternative was dropping the difference between a certainty and
+// an inference entirely.
+func TestSPDXRecordsWhatAConclusionWasBasedOn(t *testing.T) {
+	var doc struct {
+		Packages []struct {
+			Name            string `json:"name"`
+			LicenseComments string `json:"licenseComments"`
+		} `json:"packages"`
+	}
+	require.NoError(t, json.Unmarshal([]byte(renderBom(t, FormatSpdxJSON, splitLicenseBom())), &doc))
+	require.Len(t, doc.Packages, 1)
+
+	got := doc.Packages[0].LicenseComments
+	assert.Contains(t, got, "AGPL-3.0-only")
+	assert.Contains(t, got, "node_modules/disagrees/LICENSE")
+	assert.Contains(t, got, "0.98")
+}
+
+// A comment saying nothing is worse than none: a reader takes its presence as a
+// sign there was something to say.
+func TestSPDXLicenseCommentsAreEmptyWithNothingToSay(t *testing.T) {
+	t.Run("nothing concluded", func(t *testing.T) {
+		assert.Empty(t, spdxLicenseComments(nil))
+	})
+
+	t.Run("a conclusion carrying neither detail", func(t *testing.T) {
+		assert.Empty(t, spdxLicenseComments([]*License{{
+			SpdxId:      "MIT",
+			Acquisition: LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED,
+			Confidence:  1,
+		}}))
+	})
+
+	// Full confidence says the same thing as no score attached, so it is not
+	// worth a note on its own.
+	t.Run("full confidence alone is not a note", func(t *testing.T) {
+		assert.Empty(t, spdxLicenseComments([]*License{{
+			SpdxId:      "MIT",
+			Acquisition: LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED,
+			Confidence:  1.0,
+		}}))
+	})
+
+	t.Run("a location alone is", func(t *testing.T) {
+		got := spdxLicenseComments([]*License{{
+			SpdxId:      "MIT",
+			Acquisition: LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED,
+			Location:    "LICENSE",
+			Confidence:  1,
+		}})
+		assert.Equal(t, "Concluded MIT: read from LICENSE.", got)
+	})
 }
