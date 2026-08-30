@@ -6,6 +6,8 @@ package manifestmf
 import (
 	"regexp"
 	"strings"
+
+	"go.mondoo.com/mql/providers/os/resources/languages"
 )
 
 // OSGi states a bundle's license in Bundle-License, and the header is
@@ -49,6 +51,9 @@ func (m *manifest) license() string {
 	}
 
 	names := make([]string, 0, 1)
+	// Running total of the identifiers kept, so a manifest carrying a header of
+	// arbitrary size is never joined into one string before it is rejected.
+	sum := 0
 	for _, entry := range splitOutsideQuotes(raw, ',') {
 		name := licenseIdentifier(entry)
 		// A URL is a link to the terms, not the identity of the terms.
@@ -59,6 +64,17 @@ func (m *manifest) license() string {
 		// nothing — this only adds the ones that name a license.
 		if name == "" || name == bundleLicenseExternal || urlPattern.MatchString(name) {
 			continue
+		}
+		// A manifest comes out of an artifact someone else built, and nothing
+		// in the OSGi grammar bounds an identifier. Past languages.LicenseMaxBytes
+		// the entry is not a license name, so it is dropped — the entries beside
+		// it are still reported, and truncating it would state a different
+		// license rather than a shortened one.
+		if len(name) > languages.LicenseMaxBytes {
+			continue
+		}
+		if sum += len(name); sum > languages.LicenseExpressionMaxBytes {
+			return ""
 		}
 		names = append(names, name)
 	}
@@ -71,7 +87,16 @@ func (m *manifest) license() string {
 	// reproduces what the manifest said; OR-joining would report a bundle as
 	// dual-licensed under "The Apache License" or "Version 2.0", inventing a
 	// choice the bundle never offered.
-	return strings.Join(names, ", ")
+	//
+	// The rejoined value carries the same total bound as an OR-joined one: past
+	// it the header is not a license statement, and the whole value is dropped
+	// rather than part of it kept, which would report a bundle as licensed
+	// under some of the terms it named.
+	joined := strings.Join(names, ", ")
+	if len(joined) > languages.LicenseExpressionMaxBytes {
+		return ""
+	}
+	return joined
 }
 
 // licenseIdentifier returns the license-identifier of one entry: everything

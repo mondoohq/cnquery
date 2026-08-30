@@ -155,3 +155,72 @@ func TestManifestLicenseFixtures(t *testing.T) {
 		})
 	}
 }
+
+// TestManifestLicenseBounds covers the size bounds on Bundle-License. A
+// MANIFEST.MF is read out of a JAR someone else built, and nothing in the OSGi
+// grammar bounds a license-identifier — the value flows into SBOM documents and
+// generated NOTICE files exactly as the artifact wrote it.
+//
+// The caps are literals here rather than the constants the implementation
+// reads: an expectation taken from the same constant would move with it and pin
+// nothing.
+func TestManifestLicenseBounds(t *testing.T) {
+	// A license identifier of exactly n bytes. It carries no ',' or ';', so the
+	// header parses as one entry.
+	name := func(n int) string { return strings.Repeat("a", n) }
+
+	for _, c := range []struct {
+		name   string
+		header string
+		want   string
+	}{
+		// A real identifier is nowhere near the cap, and must not start
+		// reporting "" because someone tightened it.
+		{
+			name:   "a real identifier is well under the cap",
+			header: "Bundle-License: GNU Lesser General Public License, Version 2.1;link=\"https://www.gnu.org/licenses/lgpl-2.1.html\"",
+			want:   "GNU Lesser General Public License, Version 2.1",
+		},
+		{
+			name:   "an identifier at the cap is kept",
+			header: "Bundle-License: " + name(256),
+			want:   name(256),
+		},
+		{
+			name:   "an identifier one byte over the cap is dropped",
+			header: "Bundle-License: " + name(257),
+			want:   "",
+		},
+		{
+			// Dropped whole, never truncated: a cut-off identifier reads as a
+			// different license rather than a shortened one.
+			name:   "a pasted license text is dropped rather than truncated",
+			header: "Bundle-License: " + strings.Repeat("Permission is hereby granted free of charge to any person ", 10),
+			want:   "",
+		},
+		{
+			// The oversized entry is the only thing wrong with the header.
+			name:   "an oversized identifier does not take its siblings with it",
+			header: "Bundle-License: " + name(300) + ",MIT",
+			want:   "MIT",
+		},
+		{
+			// Individually valid identifiers rejoin into a value of any size.
+			// ", " is not SPDX's OR, but it is carried into the same field, so
+			// it takes the same total bound.
+			name:   "many valid identifiers past the total cap are dropped",
+			header: "Bundle-License: " + strings.Repeat("Apache-2.0,", 200) + "MIT",
+			want:   "",
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			mf := "Manifest-Version: 1.0\nBundle-SymbolicName: com.example\nBundle-Version: 1.0.0\n" + c.header + "\n"
+			info, err := (&Extractor{}).Parse(strings.NewReader(mf), "META-INF/MANIFEST.MF")
+			require.NoError(t, err)
+
+			root := info.Root()
+			require.NotNil(t, root)
+			assert.Equal(t, c.want, root.License)
+		})
+	}
+}
