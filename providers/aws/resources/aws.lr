@@ -12658,33 +12658,49 @@ private aws.cloudtrail.channel @defaults("name sourceType") {
 // account-level Block Public Access configuration (the four settings
 // that ignore or restrict bucket and object ACLs and policies allowing
 // public access).
-aws.s3control @defaults("accountBlockPublicAcls accountBlockPublicPolicy accountIgnorePublicAcls accountRestrictPublicBuckets") {
+aws.s3control @defaults("accountPublicAccessBlockRef") {
   // Account level public access configuration for S3
   //
-  // Deprecated in favor of accountBlockPublicAcls, accountBlockPublicPolicy,
-  // accountIgnorePublicAcls, and accountRestrictPublicBuckets, which carry the
-  // same four settings as booleans. Keys `BlockPublicAcls`,
-  // `BlockPublicPolicy`, `IgnorePublicAcls`, and `RestrictPublicBuckets`, each
-  // a boolean. Null when the account has no Block Public Access configuration.
+  // Deprecated in favor of accountPublicAccessBlockRef, which carries the same
+  // four settings as a resource. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
+  // `IgnorePublicAcls`, and `RestrictPublicBuckets`, each a boolean. Null when
+  // the account has no Block Public Access configuration.
   accountPublicAccessBlock() @maturity("deprecated") dict
-  // Whether new public ACLs are blocked account-wide
+  // Account-wide Block Public Access configuration
   //
-  // False when the account has no Block Public Access configuration at all,
-  // which is the same reading as the setting being off: the protection is not
-  // in effect either way.
-  accountBlockPublicAcls() bool
-  // Whether new public bucket policies are blocked account-wide
+  // Applies on top of what each bucket and access point configures, so a
+  // setting enabled here is in force no matter what an individual bucket
+  // says. Null when the account has no Block Public Access configuration at
+  // all, which reads the same way as all four settings being off: the
+  // protection is not in effect either way.
+  accountPublicAccessBlockRef() aws.s3.publicAccessBlock
+}
+
+// Block Public Access configuration of an S3 account, bucket, or access point
+//
+// The four settings that decide whether ACLs and bucket policies granting
+// public access are accepted or ignored. S3 evaluates them at the account,
+// bucket, and access point level, and the most restrictive answer wins, so
+// the same four settings appear on aws.s3control, aws.s3.bucket, and
+// aws.s3.bucket.accessPoint.
+private aws.s3.publicAccessBlock @defaults("blockPublicAcls blockPublicPolicy ignorePublicAcls restrictPublicBuckets") {
+  // Whether new public ACLs are blocked
   //
-  // False when the account has no Block Public Access configuration.
-  accountBlockPublicPolicy() bool
-  // Whether existing public ACLs are ignored account-wide
+  // A PUT that carries a public ACL is rejected, but ACLs already on existing
+  // objects still grant what they grant.
+  blockPublicAcls bool
+  // Whether new public bucket policies are blocked
+  blockPublicPolicy bool
+  // Whether existing public ACLs are ignored
   //
-  // False when the account has no Block Public Access configuration.
-  accountIgnorePublicAcls() bool
-  // Whether cross-account access through public policies is restricted account-wide
+  // This is the setting that neutralizes public ACLs already in place, which
+  // blockPublicAcls does not.
+  ignorePublicAcls bool
+  // Whether cross-account access through public policies is restricted
   //
-  // False when the account has no Block Public Access configuration.
-  accountRestrictPublicBuckets() bool
+  // Access through a public policy is limited to principals inside the
+  // account and to AWS services.
+  restrictPublicBuckets bool
 }
 
 // Amazon Simple Storage Service (S3)
@@ -12783,11 +12799,16 @@ private aws.s3.bucket @defaults("name location public") {
   replicationRules() []aws.s3.bucket.replicationRule
   // Block Public Access configuration of the bucket
   //
-  // Deprecated in favor of blockPublicAcls, blockPublicPolicy,
-  // ignorePublicAcls, and restrictPublicBuckets, which carry the same four
-  // settings as booleans. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
+  // Deprecated in favor of publicAccessBlockRef, which carries the same four
+  // settings as a resource. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
   // `IgnorePublicAcls`, and `RestrictPublicBuckets`, each a boolean.
   publicAccessBlock() @maturity("deprecated") dict
+  // Block Public Access configuration of the bucket
+  //
+  // Null when the bucket has no Block Public Access configuration at all,
+  // which reads the same way as all four settings being off. The account-wide
+  // configuration on aws.s3control applies on top of this one.
+  publicAccessBlockRef() aws.s3.publicAccessBlock
   // Whether new public ACLs on the bucket and its objects are blocked
   blockPublicAcls() bool
   // Whether new public bucket policies are blocked
@@ -12921,29 +12942,17 @@ private aws.s3.bucket.accessPoint @defaults("name networkOrigin") {
   alias string
   // Public access block configuration for the access point
   //
-  // Deprecated in favor of blockPublicAcls, blockPublicPolicy,
-  // ignorePublicAcls, and restrictPublicBuckets, which carry the same four
-  // settings as booleans. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
+  // Deprecated in favor of publicAccessBlockRef, which carries the same four
+  // settings as a resource. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
   // `IgnorePublicAcls`, and `RestrictPublicBuckets`, each a boolean.
   publicAccessBlock() @maturity("deprecated") dict
-  // Whether new public ACLs through the access point are blocked
+  // Block Public Access configuration of the access point
   //
-  // False when the access point has no Block Public Access configuration at
-  // all, which is the same reading as the setting being off: the protection
-  // is not in effect either way.
-  blockPublicAcls() bool
-  // Whether new public policies on the access point are blocked
-  //
-  // False when the access point has no Block Public Access configuration.
-  blockPublicPolicy() bool
-  // Whether existing public ACLs are ignored through the access point
-  //
-  // False when the access point has no Block Public Access configuration.
-  ignorePublicAcls() bool
-  // Whether cross-account access through public policies is restricted on the access point
-  //
-  // False when the access point has no Block Public Access configuration.
-  restrictPublicBuckets() bool
+  // Separate from the configuration on the bucket the access point fronts, so
+  // an access point can expose a bucket that blocks public access itself.
+  // Null when the access point has no Block Public Access configuration at
+  // all, which reads the same way as all four settings being off.
+  publicAccessBlockRef() aws.s3.publicAccessBlock
   // Resource policy attached to the access point
   policy() string
 }

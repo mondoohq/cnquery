@@ -63,34 +63,36 @@ func (a *mqlAwsS3control) fetchAccountPublicAccessBlock() (*s3controltypes.Publi
 	return a.publicAccessConfig, a.publicAccessErr
 }
 
-// s3ControlPublicAccessBlockFlag resolves one account-level block-public-access
-// setting. With no configuration on the account the protection is not in
-// effect, so each flag reports false.
-func (a *mqlAwsS3control) s3ControlPublicAccessBlockFlag(get func(*s3controltypes.PublicAccessBlockConfiguration) *bool) (bool, error) {
+// newMqlS3PublicAccessBlock builds the four Block Public Access settings shared
+// by the account, a bucket, and an access point. They come back from three
+// different SDK structs carrying the same four members, which is why this
+// takes the pointers rather than a struct.
+func newMqlS3PublicAccessBlock(runtime *plugin.Runtime, ownerID string, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets *bool) (*mqlAwsS3PublicAccessBlock, error) {
+	res, err := CreateResource(runtime, "aws.s3.publicAccessBlock", map[string]*llx.RawData{
+		"__id":                  llx.StringData(ownerID + "/publicAccessBlock"),
+		"blockPublicAcls":       llx.BoolData(convert.ToValue(blockPublicAcls)),
+		"blockPublicPolicy":     llx.BoolData(convert.ToValue(blockPublicPolicy)),
+		"ignorePublicAcls":      llx.BoolData(convert.ToValue(ignorePublicAcls)),
+		"restrictPublicBuckets": llx.BoolData(convert.ToValue(restrictPublicBuckets)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsS3PublicAccessBlock), nil
+}
+
+func (a *mqlAwsS3control) accountPublicAccessBlockRef() (*mqlAwsS3PublicAccessBlock, error) {
 	config, err := a.fetchAccountPublicAccessBlock()
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	if config == nil {
-		return false, nil
+		a.AccountPublicAccessBlockRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	return convert.ToValue(get(config)), nil
-}
-
-func (a *mqlAwsS3control) accountBlockPublicAcls() (bool, error) {
-	return a.s3ControlPublicAccessBlockFlag(func(c *s3controltypes.PublicAccessBlockConfiguration) *bool { return c.BlockPublicAcls })
-}
-
-func (a *mqlAwsS3control) accountBlockPublicPolicy() (bool, error) {
-	return a.s3ControlPublicAccessBlockFlag(func(c *s3controltypes.PublicAccessBlockConfiguration) *bool { return c.BlockPublicPolicy })
-}
-
-func (a *mqlAwsS3control) accountIgnorePublicAcls() (bool, error) {
-	return a.s3ControlPublicAccessBlockFlag(func(c *s3controltypes.PublicAccessBlockConfiguration) *bool { return c.IgnorePublicAcls })
-}
-
-func (a *mqlAwsS3control) accountRestrictPublicBuckets() (bool, error) {
-	return a.s3ControlPublicAccessBlockFlag(func(c *s3controltypes.PublicAccessBlockConfiguration) *bool { return c.RestrictPublicBuckets })
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return newMqlS3PublicAccessBlock(a.MqlRuntime, ResourceAwsS3control+"/"+conn.AccountId(),
+		config.BlockPublicAcls, config.BlockPublicPolicy, config.IgnorePublicAcls, config.RestrictPublicBuckets)
 }
 
 func (a *mqlAwsS3control) accountPublicAccessBlock() (any, error) {
@@ -386,34 +388,17 @@ func (a *mqlAwsS3BucketAccessPoint) fetchPublicAccessBlock() (*s3controltypes.Pu
 	return a.publicAccessConfig, a.publicAccessErr
 }
 
-// accessPointPublicAccessBlockFlag resolves one block-public-access setting on
-// the access point. With no configuration the protection is not in effect, so
-// each flag reports false.
-func (a *mqlAwsS3BucketAccessPoint) accessPointPublicAccessBlockFlag(get func(*s3controltypes.PublicAccessBlockConfiguration) *bool) (bool, error) {
+func (a *mqlAwsS3BucketAccessPoint) publicAccessBlockRef() (*mqlAwsS3PublicAccessBlock, error) {
 	config, err := a.fetchPublicAccessBlock()
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	if config == nil {
-		return false, nil
+		a.PublicAccessBlockRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	return convert.ToValue(get(config)), nil
-}
-
-func (a *mqlAwsS3BucketAccessPoint) blockPublicAcls() (bool, error) {
-	return a.accessPointPublicAccessBlockFlag(func(c *s3controltypes.PublicAccessBlockConfiguration) *bool { return c.BlockPublicAcls })
-}
-
-func (a *mqlAwsS3BucketAccessPoint) blockPublicPolicy() (bool, error) {
-	return a.accessPointPublicAccessBlockFlag(func(c *s3controltypes.PublicAccessBlockConfiguration) *bool { return c.BlockPublicPolicy })
-}
-
-func (a *mqlAwsS3BucketAccessPoint) ignorePublicAcls() (bool, error) {
-	return a.accessPointPublicAccessBlockFlag(func(c *s3controltypes.PublicAccessBlockConfiguration) *bool { return c.IgnorePublicAcls })
-}
-
-func (a *mqlAwsS3BucketAccessPoint) restrictPublicBuckets() (bool, error) {
-	return a.accessPointPublicAccessBlockFlag(func(c *s3controltypes.PublicAccessBlockConfiguration) *bool { return c.RestrictPublicBuckets })
+	return newMqlS3PublicAccessBlock(a.MqlRuntime, a.Arn.Data,
+		config.BlockPublicAcls, config.BlockPublicPolicy, config.IgnorePublicAcls, config.RestrictPublicBuckets)
 }
 
 func (a *mqlAwsS3BucketAccessPoint) publicAccessBlock() (any, error) {
@@ -836,6 +821,19 @@ func (a *mqlAwsS3Bucket) ignorePublicAcls() (bool, error) {
 
 func (a *mqlAwsS3Bucket) restrictPublicBuckets() (bool, error) {
 	return a.s3PublicAccessBlockFlag(func(c *s3types.PublicAccessBlockConfiguration) *bool { return c.RestrictPublicBuckets })
+}
+
+func (a *mqlAwsS3Bucket) publicAccessBlockRef() (*mqlAwsS3PublicAccessBlock, error) {
+	config, err := a.fetchPublicAccessBlock()
+	if err != nil {
+		return nil, err
+	}
+	if config == nil {
+		a.PublicAccessBlockRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newMqlS3PublicAccessBlock(a.MqlRuntime, a.Arn.Data,
+		config.BlockPublicAcls, config.BlockPublicPolicy, config.IgnorePublicAcls, config.RestrictPublicBuckets)
 }
 
 func (a *mqlAwsS3Bucket) publicAccessBlock() (any, error) {
