@@ -685,8 +685,12 @@ func (a *mqlAwsEmrCluster) logEncryptionKmsKey() (*mqlAwsKmsKey, error) {
 // per-asset encryption checks scored fail even on correctly configured
 // clusters.
 func initAwsEmrClusterEncryptionConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 0 {
+	// Fully-built resources (from the accessor) always carry an __id.
+	if args["__id"] != nil {
 		return args, nil, nil
+	}
+	if len(args) > 0 {
+		return nil, nil, errors.New("aws.emr.cluster.encryptionConfiguration cannot be initialized from partial arguments; query it without arguments or through aws.emr.cluster")
 	}
 	clusterRes, err := NewResource(runtime, "aws.emr.cluster", map[string]*llx.RawData{})
 	if err != nil {

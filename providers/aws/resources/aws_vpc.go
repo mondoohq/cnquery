@@ -34,8 +34,12 @@ func (a *mqlAwsVpc) id() (string, error) {
 // sub-resource standalone (empty id, no fields set), so per-asset checks
 // scored fail even for VPCs with an enforce-mode encryption control.
 func initAwsVpcEncryptionControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 0 {
+	// Fully-built resources (from the accessor) always carry an __id.
+	if args["__id"] != nil {
 		return args, nil, nil
+	}
+	if len(args) > 0 {
+		return nil, nil, errors.New("aws.vpc.encryptionControl cannot be initialized from partial arguments; query it without arguments or through aws.vpc")
 	}
 	vpcRes, err := NewResource(runtime, "aws.vpc", map[string]*llx.RawData{})
 	if err != nil {
@@ -45,6 +49,11 @@ func initAwsVpcEncryptionControl(runtime *plugin.Runtime, args map[string]*llx.R
 	ec := vpc.GetEncryptionControl()
 	if ec.Error != nil {
 		return nil, nil, ec.Error
+	}
+	if vpc.encryptionControlAccessDenied {
+		// Do NOT fabricate an "absent" control here: that would score
+		// security checks as "no encryption" when the truth is unknown.
+		return nil, nil, errors.New("access denied reading the VPC encryption control")
 	}
 	if ec.Data == nil {
 		// No encryption control on this VPC: represent it explicitly so
@@ -77,6 +86,7 @@ func (a *mqlAwsVpc) encryptionControl() (*mqlAwsVpcEncryptionControl, error) {
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
+			a.encryptionControlAccessDenied = true
 			a.EncryptionControl.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
@@ -231,6 +241,9 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 type mqlAwsVpcInternal struct {
 	cacheCidrBlockAssociations     []vpctypes.VpcCidrBlockAssociation
 	cacheIpv6CidrBlockAssociations []vpctypes.VpcIpv6CidrBlockAssociation
+	// set when DescribeVpcEncryptionControls was denied, so callers can tell
+	// "unknown" apart from "no encryption control" (both yield a null field)
+	encryptionControlAccessDenied bool
 }
 
 func (a *mqlAwsVpc) cidrBlockAssociations() ([]any, error) {
