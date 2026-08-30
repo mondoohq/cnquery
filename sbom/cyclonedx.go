@@ -389,18 +389,6 @@ func cycloneDXComponentLicenses(pkg *Package) *cyclonedx.Licenses {
 	return cycloneDXLicenses(pkg.License)
 }
 
-// cycloneDXDeclared renders the licenses a package declares, preferring the
-// structured list and falling back to the legacy scalar.
-//
-// The fallback is what lets consumers migrate without a flag day: a producer
-// that has not yet populated Licenses still renders exactly as it did before.
-func cycloneDXDeclared(pkg *Package) *cyclonedx.Licenses {
-	if l := cycloneDXLicenseList(declaredLicenses(pkg)); l != nil {
-		return l
-	}
-	return cycloneDXLicenses(pkg.License)
-}
-
 // declaredLicenses returns the package's declared entries. An entry whose
 // acquisition the producer did not set counts as declared: it is what the
 // scalar always meant, so an unset value keeps the old reading rather than
