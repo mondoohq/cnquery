@@ -349,14 +349,24 @@ message License {
   // 'acquisition' says whether the package declared this license or it was
   // concluded from the files it ships.
   LicenseAcquisition acquisition = 4;
-  // 'confidence' is how sure the producer is, in (0,1]. A declared license is
-  // 1.0 — it is a statement, not a measurement. A license concluded by matching
-  // text carries the match's own score, so a consumer can tell a certainty from
-  // an inference rather than reading both as the same fact.
+  // 'confidence' is how sure the producer is, in (0,1], or 0 when no score was
+  // attached. A declared license is 1.0 — it is a statement, not a measurement.
+  // A license concluded by matching text carries the match's own score, so a
+  // consumer can tell a certainty from an inference rather than reading both as
+  // the same fact.
+  //
+  // 0 is the third reading, and it is not the same as 1.0: it means nobody
+  // measured this. An importer reading a format that carries no score leaves it
+  // there rather than promoting it, so a conclusion that was never scored is
+  // never mistaken for one that scored perfectly. Consumers should treat 0 as
+  // "unknown" and say nothing about it.
   double confidence = 5;
   // 'location' is the file this license was read from, relative to the scan
   // root — the evidence behind a concluded license. Empty for a declared one,
-  // whose source is the manifest already identified by the package.
+  // whose source is the manifest already identified by the package, and empty
+  // for a concluded one whose source did not record a file. It is a path, not
+  // prose: a producer holding a comment about how a conclusion was reached
+  // leaves this empty rather than putting the sentence here.
   string location = 6;
 }
 

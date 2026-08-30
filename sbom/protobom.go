@@ -55,10 +55,11 @@ func readNodeLicensing(pkg *Package, node *protobom_sbom.Node) {
 	// LICENSE" is a sentence, not a path -- so putting it there would make the
 	// field mean two different things depending on who wrote it.
 	//
-	// No confidence either, which leaves the constructor's default. The format
-	// carries no score, and 1.0 is what the model documents a value as carrying
-	// when it is a statement rather than a measurement: relaying somebody
-	// else's conclusion unscored is exactly that.
+	// No confidence either, and that is a zero rather than a default. The
+	// format carries no score, and the model spells "nobody measured this" as
+	// 0: reporting 1.0 would put an imported conclusion that was never scored
+	// alongside one that scored perfectly, which is the distinction the field
+	// exists to preserve. Both renderers say nothing about a zero.
 	if entry := ConcludedLicense(node.GetLicenseConcluded(), "", 0); entry != nil {
 		pkg.Licenses = append(pkg.Licenses, entry)
 	}

@@ -74,6 +74,17 @@ func TestProtobomReadsLicensing(t *testing.T) {
 		// so putting it here would make the field mean two different things
 		// depending on who wrote the document.
 		assert.Empty(t, concluded.GetLocation())
+
+		// And no confidence. The document attached no score, and 0 is how the
+		// model spells that; 1.0 would report a conclusion nobody measured as
+		// one that matched exactly. This is the assertion that fails if the
+		// constructor ever goes back to promoting an absent score, which is a
+		// change no other test here would notice.
+		assert.Zero(t, concluded.GetConfidence())
+
+		// The declared entry is the contrast: a package stating its own license
+		// is not a measurement, so it is certain by construction.
+		assert.Equal(t, 1.0, declared.GetConfidence())
 	})
 
 	t.Run("the legacy scalar takes the first declared entry", func(t *testing.T) {

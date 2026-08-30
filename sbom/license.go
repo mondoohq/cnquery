@@ -64,11 +64,18 @@ func DeclaredLicense(value string) *License {
 // confidence: a conclusion is a measurement, so it carries the score whoever
 // made it arrived at, and location records the file the value was read from.
 //
-// confidence is clamped into (0,1]. A conclusion nothing was confident about is
-// not evidence of anything, and a score above 1 is a producer bug rather than
-// certainty; either would be read as a real measurement by a consumer ranking
-// conclusions against each other. A zero or absent score becomes 1.0, which is
-// what an entry with no score attached already means to a reader.
+// confidence keeps the three readings the model gives it. A score in (0,1] is a
+// measurement and travels as written. Above 1 is a producer bug rather than
+// extra certainty, so it clamps to 1.0. Zero or below is *no score at all*, and
+// it stays zero: promoting it to 1.0 would report a conclusion nothing measured
+// as a certainty, which is the reading the field exists to let a consumer avoid.
+// The renderers already say nothing about an absent score, so this is the
+// difference between staying silent and asserting.
+//
+// location is the file the value was read from. Pass "" rather than something
+// that merely mentions a file: a caller that has prose about how a conclusion
+// was reached has not got a location, and putting it here makes every consumer
+// treat a sentence as a path.
 //
 // Returns nil when the value states no license, for the reason DeclaredLicense
 // does: an entry naming none asserts a fact the producer does not have.
@@ -81,8 +88,10 @@ func ConcludedLicense(value, location string, confidence float64) *License {
 	l.Acquisition = LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED
 	l.Location = strings.TrimSpace(location)
 	switch {
-	case confidence <= 0, confidence > 1:
+	case confidence > 1:
 		l.Confidence = 1.0
+	case confidence <= 0:
+		l.Confidence = 0
 	default:
 		l.Confidence = confidence
 	}

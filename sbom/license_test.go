@@ -116,14 +116,25 @@ func TestConcludedLicense(t *testing.T) {
 		assert.Equal(t, 0.98, l.GetConfidence())
 	})
 
-	// A score outside (0,1] is a producer bug, not certainty, and a consumer
-	// ranking conclusions against each other would read it as a real
-	// measurement. An entry with no score attached already reads as 1.0.
-	t.Run("confidence is clamped into (0,1]", func(t *testing.T) {
-		for _, in := range []float64{0, -1, 1.5, 42} {
+	// A score above 1 is a producer bug rather than extra certainty, so it
+	// clamps to the top of the range instead of travelling as written, where a
+	// consumer ranking conclusions would read it as a real measurement.
+	t.Run("a score above 1 clamps to 1", func(t *testing.T) {
+		for _, in := range []float64{1.5, 42} {
 			assert.Equal(t, 1.0, ConcludedLicense("MIT", "", in).GetConfidence(), "confidence %v", in)
 		}
 		assert.Equal(t, 1.0, ConcludedLicense("MIT", "", 1).GetConfidence())
+	})
+
+	// The case that matters, and the one that used to read as certainty: no
+	// score is not a perfect score. An importer whose format carries no
+	// confidence passes 0, and promoting that to 1.0 would put a conclusion
+	// nobody measured alongside one that matched exactly -- which is the
+	// distinction the field exists to preserve.
+	t.Run("no score stays no score", func(t *testing.T) {
+		for _, in := range []float64{0, -1, -0.5} {
+			assert.Equal(t, 0.0, ConcludedLicense("MIT", "", in).GetConfidence(), "confidence %v", in)
+		}
 	})
 
 	// An entry naming no license asserts a fact the producer does not have.
