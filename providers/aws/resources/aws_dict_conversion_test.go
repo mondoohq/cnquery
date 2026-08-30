@@ -9,6 +9,8 @@ import (
 	ekstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	rds_types "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/llx"
 )
 
 func TestEksControlPlaneLogging(t *testing.T) {
@@ -106,5 +108,31 @@ func TestRdsSnapshotAttributeMap(t *testing.T) {
 			{AttributeName: strPtr("restore"), AttributeValues: []string{"all"}},
 		}, splitInstance)
 		assert.Equal(t, map[string]any{"restore": []any{"all"}}, got)
+	})
+}
+
+func TestEksNodeCount(t *testing.T) {
+	int32Ptr := func(i int32) *int32 { return &i }
+
+	t.Run("an unreported count stays null", func(t *testing.T) {
+		// Reading a missing count as 0 would say the node group runs no
+		// nodes, which is a real and very different state from "EKS did not
+		// report a count".
+		assert.Equal(t, llx.NilData, eksNodeCount(nil))
+	})
+
+	t.Run("a reported count keeps its value", func(t *testing.T) {
+		got := eksNodeCount(int32Ptr(3))
+		require.NotNil(t, got)
+		assert.Equal(t, int64(3), got.Value)
+	})
+
+	t.Run("a reported zero is a value, not a null", func(t *testing.T) {
+		// A node group scaled to zero reports 0, and that has to read as 0
+		// rather than collapsing into the unreported case.
+		got := eksNodeCount(int32Ptr(0))
+		require.NotNil(t, got)
+		assert.Equal(t, int64(0), got.Value)
+		assert.NotEqual(t, llx.NilData, got)
 	})
 }
