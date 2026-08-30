@@ -5607,28 +5607,14 @@ private oci.streaming.streamPool @defaults("name isPrivate state") {
   encryptionKeyState() string
   // Kafka compatibility settings
   //
-  // Deprecated in favor of kafkaBootstrapServers,
-  // kafkaAutoCreateTopicsEnabled, kafkaLogRetentionHours and
-  // kafkaNumPartitions, which carry the four values this dict holds.
+  // Deprecated in favor of kafka, which reports the same settings as a
+  // structure.
   kafkaSettings() @maturity("deprecated") dict
-  // Kafka bootstrap servers clients connect through
+  // Kafka compatibility settings
   //
-  // Empty when the pool reports no Kafka settings.
-  kafkaBootstrapServers() string
-  // Whether producers may create topics implicitly
-  //
-  // When true any client that can publish can also create a topic, so the set
-  // of topics in the pool is not the set an administrator configured. Null
-  // when the pool reports no Kafka settings.
-  kafkaAutoCreateTopicsEnabled() bool
-  // Hours a log file is kept before deletion
-  //
-  // Null when the pool reports no Kafka settings.
-  kafkaLogRetentionHours() int
-  // Default number of log partitions per topic
-  //
-  // Null when the pool reports no Kafka settings.
-  kafkaNumPartitions() int
+  // Null when the pool reports no Kafka settings, meaning nothing connects to
+  // it through the Kafka-compatible endpoint.
+  kafka() oci.streaming.kafkaConfig
   // Zero Trust Packet Routing security attributes applied to the pool
   //
   // Deprecated in favor of appliedSecurityAttributes, which joins each
@@ -5649,6 +5635,27 @@ private oci.streaming.streamPool @defaults("name isPrivate state") {
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
 }
+
+// Kafka compatibility settings of a stream pool
+//
+// What clients reach the pool through its Kafka-compatible endpoint, and the
+// defaults applied to topics created on it. autoCreateTopicsEnable is the
+// field that decides whether a client that can publish can also create a
+// topic, which makes the set of topics in the pool wider than the set an
+// administrator configured.
+private oci.streaming.kafkaConfig @defaults("bootstrapServers autoCreateTopicsEnable") {
+  // Bootstrap servers clients connect through
+  bootstrapServers string
+  // Whether producers may create topics implicitly
+  //
+  // When true any client that can publish can also create a topic.
+  autoCreateTopicsEnable bool
+  // Hours a log file is kept before deletion
+  logRetentionHours int
+  // Default number of log partitions per topic
+  numPartitions int
+}
+
 
 // Oracle Cloud Infrastructure (OCI) Queue
 //
@@ -7289,20 +7296,14 @@ private oci.oke.nodePool @defaults("name") {
   cluster() oci.oke.cluster
   // Node shape configuration
   //
-  // Deprecated in favor of nodeOcpus and nodeMemoryInGBs, which carry the two
-  // values this dict holds. Compute sizing applied to each node when the shape
-  // is flexible.
+  // Deprecated in favor of nodeSizing, which reports the same allocation as a
+  // structure. Compute sizing applied to each node when the shape is flexible.
   nodeShapeConfig @maturity("deprecated") dict
-  // OCPUs available to each node in the pool
+  // Compute and memory allocation of each node in the pool
   //
-  // Null on a node pool whose shape is not flexible, where the shape fixes the
-  // sizing.
-  nodeOcpus float
-  // Memory available to each node in the pool, in gigabytes
-  //
-  // Null on a node pool whose shape is not flexible, where the shape fixes the
-  // sizing.
-  nodeMemoryInGBs float
+  // Null on a node pool whose shape is not flexible, where the shape name
+  // alone fixes the sizing.
+  nodeSizing() oci.oke.nodeSizing
   // Image the nodes boot from
   //
   // Resolved from the node pool's node source, so it is populated on node
@@ -7374,6 +7375,19 @@ private oci.oke.nodePool @defaults("name") {
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
 }
+
+// Node sizing of an OKE node pool
+//
+// Compute and memory allocated to each node in the pool. Present only where
+// the pool runs a flexible shape; a fixed shape fixes the sizing by name and
+// reports nothing here.
+private oci.oke.nodeSizing @defaults("ocpus memoryInGBs") {
+  // OCPUs available to each node in the pool
+  ocpus float
+  // Memory available to each node in the pool, in gigabytes
+  memoryInGBs float
+}
+
 
 // Oracle Cloud Infrastructure (OCI) Web Application Firewall
 //
@@ -7482,37 +7496,24 @@ private oci.functions.application @defaults("name") {
   shape string
   // Distributed tracing configuration
   //
-  // Deprecated in favor of tracingEnabled and apmDomainId, which carry the two
-  // values this dict holds. Application Performance Monitoring (APM) trace
-  // settings, with keys `isEnabled` and `domainId`.
+  // Deprecated in favor of tracing, which reports the same settings as a
+  // structure. Application Performance Monitoring (APM) trace settings, with
+  // keys `isEnabled` and `domainId`.
   traceConfig @maturity("deprecated") dict
-  // Whether distributed tracing is enabled for the application
+  // Distributed tracing settings of the application
   //
   // Null when the application reports no trace configuration.
-  tracingEnabled bool
-  // OCID of the Application Performance Monitoring domain traces are sent to
-  //
-  // Empty when tracing is off or no collector is configured. Reported as the
-  // OCID because Application Performance Monitoring domains are not modelled
-  // in this provider.
-  apmDomainId string
+  tracing() oci.functions.applicationTraceConfig
   // Image signature verification policy
   //
   // Deprecated in favor of imagePolicyEnabled and imagePolicyKeys, which carry
   // the two values this dict holds. Signed-image enforcement for the
   // application, with keys `isPolicyEnabled` and `keyDetails`.
   imagePolicyConfig @maturity("deprecated") dict
-  // Whether functions in the application must use signed images
+  // Signed-image enforcement for the application
   //
-  // When false any image the application can pull will run, so an image
-  // substituted in the registry runs unchallenged. Null when the application
-  // reports no image policy configuration.
-  imagePolicyEnabled bool
-  // Vault keys trusted to verify image signatures
-  //
-  // Empty when image signature verification is off, and also when it is on but
-  // no key is configured, which leaves nothing to verify against.
-  imagePolicyKeys() []oci.kms.key
+  // Null when the application reports no image policy configuration.
+  imagePolicy() oci.functions.imagePolicyConfig
   // Application creation time
   created time
   // Last update time
@@ -7532,6 +7533,40 @@ private oci.functions.application @defaults("name") {
   // Functions in this application
   functions() []oci.functions.function
 }
+
+// Distributed tracing settings of a Functions application
+//
+// Whether the application emits traces and which Application Performance
+// Monitoring collector receives them. domainId stays an OCID because APM
+// domains are not modelled in this provider.
+private oci.functions.applicationTraceConfig @defaults("isEnabled") {
+  // Whether distributed tracing is enabled for the application
+  isEnabled bool
+  // OCID of the collector traces are sent to
+  //
+  // Usually an Application Performance Monitoring domain. Empty when tracing
+  // is off or no collector is configured.
+  domainId string
+}
+
+// Image signature verification policy of a Functions application
+//
+// Whether functions in the application must run signed images, and the vault
+// keys trusted to verify those signatures. Enforcement with no key configured
+// leaves nothing to verify against, so both fields matter together.
+private oci.functions.imagePolicyConfig @defaults("isPolicyEnabled") {
+  // Whether functions in the application must use signed images
+  //
+  // When false any image the application can pull will run, so an image
+  // substituted in the registry runs unchallenged.
+  isPolicyEnabled bool
+  // Vault keys trusted to verify image signatures
+  //
+  // Empty when verification is off, and also when it is on but no key is
+  // configured.
+  keys() []oci.kms.key
+}
+
 
 // Oracle Cloud Infrastructure (OCI) serverless function
 //
@@ -7566,14 +7601,14 @@ private oci.functions.function @defaults("name") {
   invokeEndpoint string
   // Distributed tracing configuration
   //
-  // Deprecated in favor of tracingEnabled, which carries the only value this
-  // dict holds. Application Performance Monitoring (APM) trace settings, with
+  // Deprecated in favor of tracing, which reports the same setting as a
+  // structure. Application Performance Monitoring (APM) trace settings, with
   // the single key `isEnabled`.
   traceConfig @maturity("deprecated") dict
-  // Whether distributed tracing is enabled for the function
+  // Distributed tracing settings of the function
   //
   // Null when the function reports no trace configuration.
-  tracingEnabled bool
+  tracing() oci.functions.functionTraceConfig
   // Function creation time
   created time
   // Last update time
@@ -7585,6 +7620,17 @@ private oci.functions.function @defaults("name") {
   // Function environment configuration variables
   config() map[string]string
 }
+
+// Distributed tracing settings of a function
+//
+// Whether the function emits traces. The collector is chosen on the
+// application rather than per function, so this carries the single flag the
+// service reports for a function.
+private oci.functions.functionTraceConfig @defaults("isEnabled") {
+  // Whether distributed tracing is enabled for the function
+  isEnabled bool
+}
+
 
 // Oracle Cloud Infrastructure (OCI) Container Instances
 //
@@ -7620,17 +7666,13 @@ private oci.containerInstances.instance @defaults("name") {
   shape string
   // Shape allocation
   //
-  // Deprecated in favor of ocpus, memoryInGBs, processorDescription and
-  // networkingBandwidthInGbps, which carry the four values this dict holds.
+  // Deprecated in favor of sizing, which reports the same allocation as a
+  // structure.
   shapeConfig @maturity("deprecated") dict
-  // OCPUs available to the container instance
-  ocpus float
-  // Memory available to the container instance, in gigabytes
-  memoryInGBs float
-  // Short description of the container instance's processor
-  processorDescription string
-  // Networking bandwidth available to the container instance, in gigabits per second
-  networkingBandwidthInGbps float
+  // Compute, memory and network allocation of the container instance
+  //
+  // Null when the instance reports no shape configuration.
+  sizing() oci.containerInstances.shapeConfig
   // Number of containers
   containerCount int
   // Container restart policy (ALWAYS, NEVER, ON_FAILURE)
@@ -7659,6 +7701,23 @@ private oci.containerInstances.instance @defaults("name") {
   containers() []oci.containerInstances.container
 }
 
+// Resource allocation of a container instance
+//
+// Compute, memory and network the container instance is sized to. Every
+// container it runs draws from this allocation, so it is the ceiling a
+// per-container limit sits under.
+private oci.containerInstances.shapeConfig @defaults("ocpus memoryInGBs") {
+  // OCPUs available to the container instance
+  ocpus float
+  // Memory available to the container instance, in gigabytes
+  memoryInGBs float
+  // Short description of the container instance's processor
+  processorDescription string
+  // Networking bandwidth available to the container instance, in gigabits per second
+  networkingBandwidthInGbps float
+}
+
+
 // Oracle Cloud Infrastructure (OCI) container within a container instance
 //
 // Single container running inside a container instance, identified by
@@ -7686,21 +7745,14 @@ private oci.containerInstances.container @defaults("name") {
   isResourcePrincipalDisabled bool
   // Resource limits
   //
-  // Deprecated in favor of vcpusLimit and memoryLimitInGBs, which carry the
-  // two values this dict holds. Absent when the container inherits the
-  // instance defaults.
+  // Deprecated in favor of resourceLimits, which reports the same ceilings as
+  // a structure. Absent when the container inherits the instance defaults.
   resourceConfig @maturity("deprecated") dict
-  // Maximum vCPUs the container's process may consume
+  // Ceilings on what the container's process may consume
   //
-  // Fractional, and expressed in logical CPUs, so an E3 container instance
-  // with one OCPU tops out at 2.0. Null when the container declares no limit,
-  // in which case its process may use every CPU on the instance.
-  vcpusLimit float
-  // Maximum memory the container's process may consume, in gigabytes
-  //
-  // Null when the container declares no limit, in which case its process may
-  // use all the memory on the instance.
-  memoryLimitInGBs float
+  // Null when the container declares no resource configuration, in which case
+  // its process may use every CPU and all the memory on the instance.
+  resourceLimits() oci.containerInstances.resourceConfig
   // UID the container process runs as
   //
   // Null when the container declares no security context, in which case the
@@ -7738,6 +7790,24 @@ private oci.containerInstances.container @defaults("name") {
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
 }
+
+// Resource limits of a container
+//
+// Ceilings on what one container's process may consume out of its instance's
+// allocation. A limit left unset is not a limit of zero: the process may use
+// every CPU and all the memory the instance has.
+private oci.containerInstances.resourceConfig @defaults("vcpusLimit memoryLimitInGBs") {
+  // Maximum vCPUs the container's process may consume
+  //
+  // Fractional, and expressed in logical CPUs, so an E3 container instance
+  // with one OCPU tops out at 2.0. Null when the container declares no limit.
+  vcpusLimit float
+  // Maximum memory the container's process may consume, in gigabytes
+  //
+  // Null when the container declares no limit.
+  memoryLimitInGBs float
+}
+
 
 // Oracle Cloud Infrastructure (OCI) Database
 //

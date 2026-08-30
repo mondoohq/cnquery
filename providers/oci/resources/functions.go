@@ -11,6 +11,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/functions"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/oci/connection"
 	"go.mondoo.com/mql/types"
@@ -69,36 +70,17 @@ func (o *mqlOciFunctions) applications() ([]any, error) {
 					return nil, err
 				}
 
-				var tracingEnabled *bool
-				var apmDomainID string
-				if tc := app.TraceConfig; tc != nil {
-					tracingEnabled = tc.IsEnabled
-					apmDomainID = stringValue(tc.DomainId)
-				}
-
-				var imagePolicyEnabled *bool
-				var imagePolicyKeyIDs []string
-				if ipc := app.ImagePolicyConfig; ipc != nil {
-					imagePolicyEnabled = ipc.IsPolicyEnabled
-					for _, kd := range ipc.KeyDetails {
-						imagePolicyKeyIDs = append(imagePolicyKeyIDs, stringValue(kd.KmsKeyId))
-					}
-				}
-
 				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.functions.application", stringValue(app.CompartmentId), map[string]*llx.RawData{
-					"id":                 llx.StringDataPtr(app.Id),
-					"name":               llx.StringDataPtr(app.DisplayName),
-					"state":              llx.StringData(string(app.LifecycleState)),
-					"shape":              llx.StringData(string(app.Shape)),
-					"traceConfig":        llx.DictData(traceConfig),
-					"tracingEnabled":     llx.BoolDataPtr(tracingEnabled),
-					"apmDomainId":        llx.StringData(apmDomainID),
-					"imagePolicyConfig":  llx.DictData(imagePolicyConfig),
-					"imagePolicyEnabled": llx.BoolDataPtr(imagePolicyEnabled),
-					"created":            llx.TimeDataPtr(created),
-					"timeUpdated":        llx.TimeDataPtr(timeUpdated),
-					"freeformTags":       llx.MapData(strMapToAny(app.FreeformTags), types.String),
-					"definedTags":        llx.MapData(definedTagsToAny(app.DefinedTags), types.Any),
+					"id":                llx.StringDataPtr(app.Id),
+					"name":              llx.StringDataPtr(app.DisplayName),
+					"state":             llx.StringData(string(app.LifecycleState)),
+					"shape":             llx.StringData(string(app.Shape)),
+					"traceConfig":       llx.DictData(traceConfig),
+					"imagePolicyConfig": llx.DictData(imagePolicyConfig),
+					"created":           llx.TimeDataPtr(created),
+					"timeUpdated":       llx.TimeDataPtr(timeUpdated),
+					"freeformTags":      llx.MapData(strMapToAny(app.FreeformTags), types.String),
+					"definedTags":       llx.MapData(definedTagsToAny(app.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -107,6 +89,8 @@ func (o *mqlOciFunctions) applications() ([]any, error) {
 				mqlApp.cacheRegion = region
 				mqlApp.cacheSubnetIDs = app.SubnetIds
 				mqlApp.cacheNsgIDs = app.NetworkSecurityGroupIds
+				mqlApp.cacheTraceConfig = app.TraceConfig
+				mqlApp.cacheImagePolicyConfig = app.ImagePolicyConfig
 				res = append(res, mqlApp)
 			}
 
@@ -116,21 +100,72 @@ func (o *mqlOciFunctions) applications() ([]any, error) {
 
 type mqlOciFunctionsApplicationInternal struct {
 	ociCompartmentRef
-	app                   ociRetryLazy[*functions.Application]
-	cacheRegion           string
-	cacheSubnetIDs        []string
-	cacheNsgIDs           []string
-	cacheImagePolicyKeyID []string
+	app            ociRetryLazy[*functions.Application]
+	cacheRegion    string
+	cacheSubnetIDs []string
+	cacheNsgIDs    []string
+
+	cacheTraceConfig       *functions.ApplicationTraceConfig
+	cacheImagePolicyConfig *functions.ImagePolicyConfig
 }
 
-// imagePolicyKeys resolves the vault keys trusted to verify image signatures.
+// tracing builds the application's distributed tracing settings.
+//
+// Null when the application reports no trace configuration.
+func (o *mqlOciFunctionsApplication) tracing() (*mqlOciFunctionsApplicationTraceConfig, error) {
+	tc := o.cacheTraceConfig
+	if tc == nil {
+		o.Tracing.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.functions.applicationTraceConfig", map[string]*llx.RawData{
+		"__id":      llx.StringData(o.Id.Data + "/traceConfig"),
+		"isEnabled": llx.BoolDataPtr(tc.IsEnabled),
+		"domainId":  llx.StringDataPtr(tc.DomainId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciFunctionsApplicationTraceConfig), nil
+}
+
+// imagePolicy builds the application's signed-image enforcement policy.
+//
+// Null when the application reports no image policy configuration.
+func (o *mqlOciFunctionsApplication) imagePolicy() (*mqlOciFunctionsImagePolicyConfig, error) {
+	ipc := o.cacheImagePolicyConfig
+	if ipc == nil {
+		o.ImagePolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.functions.imagePolicyConfig", map[string]*llx.RawData{
+		"__id":            llx.StringData(o.Id.Data + "/imagePolicyConfig"),
+		"isPolicyEnabled": llx.BoolDataPtr(ipc.IsPolicyEnabled),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlPolicy := res.(*mqlOciFunctionsImagePolicyConfig)
+	for _, kd := range ipc.KeyDetails {
+		mqlPolicy.cacheKeyIDs = append(mqlPolicy.cacheKeyIDs, stringValue(kd.KmsKeyId))
+	}
+	return mqlPolicy, nil
+}
+
+type mqlOciFunctionsImagePolicyConfigInternal struct {
+	cacheKeyIDs []string
+}
+
+// keys resolves the vault keys trusted to verify image signatures.
 //
 // Empty both when signature verification is off and when it is on with no key
-// configured, which leaves nothing to verify against. imagePolicyEnabled is
-// what separates the two.
-func (o *mqlOciFunctionsApplication) imagePolicyKeys() ([]any, error) {
-	res := make([]any, 0, len(o.cacheImagePolicyKeyID))
-	for _, id := range o.cacheImagePolicyKeyID {
+// configured, which leaves nothing to verify against. isPolicyEnabled is what
+// separates the two.
+func (o *mqlOciFunctionsImagePolicyConfig) keys() ([]any, error) {
+	res := make([]any, 0, len(o.cacheKeyIDs))
+	for _, id := range o.cacheKeyIDs {
 		if id == "" {
 			continue
 		}
@@ -264,11 +299,6 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 			return nil, err
 		}
 
-		var tracingEnabled *bool
-		if tc := fn.TraceConfig; tc != nil {
-			tracingEnabled = tc.IsEnabled
-		}
-
 		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.functions.function", stringValue(fn.CompartmentId), map[string]*llx.RawData{
 			"id":               llx.StringDataPtr(fn.Id),
 			"name":             llx.StringDataPtr(fn.DisplayName),
@@ -281,7 +311,6 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 			"timeoutInSeconds": llx.IntData(intValue(fn.TimeoutInSeconds)),
 			"invokeEndpoint":   llx.StringDataPtr(fn.InvokeEndpoint),
 			"traceConfig":      llx.DictData(traceConfig),
-			"tracingEnabled":   llx.BoolDataPtr(tracingEnabled),
 			"created":          llx.TimeDataPtr(created),
 			"timeUpdated":      llx.TimeDataPtr(timeUpdated),
 			"freeformTags":     llx.MapData(strMapToAny(fn.FreeformTags), types.String),
@@ -292,6 +321,7 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 		}
 		mqlFn := mqlInstance.(*mqlOciFunctionsFunction)
 		mqlFn.cacheRegion = o.cacheRegion
+		mqlFn.cacheTraceConfig = fn.TraceConfig
 		res = append(res, mqlFn)
 	}
 
@@ -302,6 +332,28 @@ type mqlOciFunctionsFunctionInternal struct {
 	ociCompartmentRef
 	fn          ociRetryLazy[*functions.Function]
 	cacheRegion string
+
+	cacheTraceConfig *functions.FunctionTraceConfig
+}
+
+// tracing builds the function's distributed tracing settings.
+//
+// Null when the function reports no trace configuration.
+func (o *mqlOciFunctionsFunction) tracing() (*mqlOciFunctionsFunctionTraceConfig, error) {
+	tc := o.cacheTraceConfig
+	if tc == nil {
+		o.Tracing.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.functions.functionTraceConfig", map[string]*llx.RawData{
+		"__id":      llx.StringData(o.Id.Data + "/traceConfig"),
+		"isEnabled": llx.BoolDataPtr(tc.IsEnabled),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciFunctionsFunctionTraceConfig), nil
 }
 
 func (o *mqlOciFunctionsFunction) id() (string, error) {

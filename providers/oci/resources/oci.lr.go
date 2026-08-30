@@ -155,6 +155,7 @@ const (
 	ResourceOciStreaming                                                       string = "oci.streaming"
 	ResourceOciStreamingStream                                                 string = "oci.streaming.stream"
 	ResourceOciStreamingStreamPool                                             string = "oci.streaming.streamPool"
+	ResourceOciStreamingKafkaConfig                                            string = "oci.streaming.kafkaConfig"
 	ResourceOciQueue                                                           string = "oci.queue"
 	ResourceOciQueueQueue                                                      string = "oci.queue.queue"
 	ResourceOciKafka                                                           string = "oci.kafka"
@@ -196,15 +197,21 @@ const (
 	ResourceOciOke                                                             string = "oci.oke"
 	ResourceOciOkeCluster                                                      string = "oci.oke.cluster"
 	ResourceOciOkeNodePool                                                     string = "oci.oke.nodePool"
+	ResourceOciOkeNodeSizing                                                   string = "oci.oke.nodeSizing"
 	ResourceOciWaf                                                             string = "oci.waf"
 	ResourceOciWafFirewall                                                     string = "oci.waf.firewall"
 	ResourceOciWafPolicy                                                       string = "oci.waf.policy"
 	ResourceOciFunctions                                                       string = "oci.functions"
 	ResourceOciFunctionsApplication                                            string = "oci.functions.application"
+	ResourceOciFunctionsApplicationTraceConfig                                 string = "oci.functions.applicationTraceConfig"
+	ResourceOciFunctionsImagePolicyConfig                                      string = "oci.functions.imagePolicyConfig"
 	ResourceOciFunctionsFunction                                               string = "oci.functions.function"
+	ResourceOciFunctionsFunctionTraceConfig                                    string = "oci.functions.functionTraceConfig"
 	ResourceOciContainerInstances                                              string = "oci.containerInstances"
 	ResourceOciContainerInstancesInstance                                      string = "oci.containerInstances.instance"
+	ResourceOciContainerInstancesShapeConfig                                   string = "oci.containerInstances.shapeConfig"
 	ResourceOciContainerInstancesContainer                                     string = "oci.containerInstances.container"
+	ResourceOciContainerInstancesResourceConfig                                string = "oci.containerInstances.resourceConfig"
 	ResourceOciDatabase                                                        string = "oci.database"
 	ResourceOciDatabaseAutonomousDatabaseConsoleUrls                           string = "oci.database.autonomousDatabase.consoleUrls"
 	ResourceOciDatabaseBackup                                                  string = "oci.database.backup"
@@ -871,6 +878,10 @@ func init() {
 			Init:   initOciStreamingStreamPool,
 			Create: createOciStreamingStreamPool,
 		},
+		"oci.streaming.kafkaConfig": {
+			// to override args, implement: initOciStreamingKafkaConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciStreamingKafkaConfig,
+		},
 		"oci.queue": {
 			// to override args, implement: initOciQueue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciQueue,
@@ -1035,6 +1046,10 @@ func init() {
 			// to override args, implement: initOciOkeNodePool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciOkeNodePool,
 		},
+		"oci.oke.nodeSizing": {
+			// to override args, implement: initOciOkeNodeSizing(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciOkeNodeSizing,
+		},
 		"oci.waf": {
 			// to override args, implement: initOciWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciWaf,
@@ -1055,9 +1070,21 @@ func init() {
 			// to override args, implement: initOciFunctionsApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciFunctionsApplication,
 		},
+		"oci.functions.applicationTraceConfig": {
+			// to override args, implement: initOciFunctionsApplicationTraceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciFunctionsApplicationTraceConfig,
+		},
+		"oci.functions.imagePolicyConfig": {
+			// to override args, implement: initOciFunctionsImagePolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciFunctionsImagePolicyConfig,
+		},
 		"oci.functions.function": {
 			// to override args, implement: initOciFunctionsFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciFunctionsFunction,
+		},
+		"oci.functions.functionTraceConfig": {
+			// to override args, implement: initOciFunctionsFunctionTraceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciFunctionsFunctionTraceConfig,
 		},
 		"oci.containerInstances": {
 			// to override args, implement: initOciContainerInstances(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1067,9 +1094,17 @@ func init() {
 			// to override args, implement: initOciContainerInstancesInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciContainerInstancesInstance,
 		},
+		"oci.containerInstances.shapeConfig": {
+			// to override args, implement: initOciContainerInstancesShapeConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciContainerInstancesShapeConfig,
+		},
 		"oci.containerInstances.container": {
 			// to override args, implement: initOciContainerInstancesContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciContainerInstancesContainer,
+		},
+		"oci.containerInstances.resourceConfig": {
+			// to override args, implement: initOciContainerInstancesResourceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciContainerInstancesResourceConfig,
 		},
 		"oci.database": {
 			// to override args, implement: initOciDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6241,17 +6276,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.streaming.streamPool.kafkaSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciStreamingStreamPool).GetKafkaSettings()).ToDataRes(types.Dict)
 	},
-	"oci.streaming.streamPool.kafkaBootstrapServers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciStreamingStreamPool).GetKafkaBootstrapServers()).ToDataRes(types.String)
-	},
-	"oci.streaming.streamPool.kafkaAutoCreateTopicsEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciStreamingStreamPool).GetKafkaAutoCreateTopicsEnabled()).ToDataRes(types.Bool)
-	},
-	"oci.streaming.streamPool.kafkaLogRetentionHours": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciStreamingStreamPool).GetKafkaLogRetentionHours()).ToDataRes(types.Int)
-	},
-	"oci.streaming.streamPool.kafkaNumPartitions": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciStreamingStreamPool).GetKafkaNumPartitions()).ToDataRes(types.Int)
+	"oci.streaming.streamPool.kafka": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetKafka()).ToDataRes(types.Resource("oci.streaming.kafkaConfig"))
 	},
 	"oci.streaming.streamPool.securityAttributes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciStreamingStreamPool).GetSecurityAttributes()).ToDataRes(types.Map(types.String, types.Dict))
@@ -6270,6 +6296,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.streaming.streamPool.definedTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciStreamingStreamPool).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.streaming.kafkaConfig.bootstrapServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingKafkaConfig).GetBootstrapServers()).ToDataRes(types.String)
+	},
+	"oci.streaming.kafkaConfig.autoCreateTopicsEnable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingKafkaConfig).GetAutoCreateTopicsEnable()).ToDataRes(types.Bool)
+	},
+	"oci.streaming.kafkaConfig.logRetentionHours": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingKafkaConfig).GetLogRetentionHours()).ToDataRes(types.Int)
+	},
+	"oci.streaming.kafkaConfig.numPartitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingKafkaConfig).GetNumPartitions()).ToDataRes(types.Int)
 	},
 	"oci.queue.queues": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciQueue).GetQueues()).ToDataRes(types.Array(types.Resource("oci.queue.queue")))
@@ -7525,11 +7563,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.oke.nodePool.nodeShapeConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeNodePool).GetNodeShapeConfig()).ToDataRes(types.Dict)
 	},
-	"oci.oke.nodePool.nodeOcpus": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciOkeNodePool).GetNodeOcpus()).ToDataRes(types.Float)
-	},
-	"oci.oke.nodePool.nodeMemoryInGBs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciOkeNodePool).GetNodeMemoryInGBs()).ToDataRes(types.Float)
+	"oci.oke.nodePool.nodeSizing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeNodePool).GetNodeSizing()).ToDataRes(types.Resource("oci.oke.nodeSizing"))
 	},
 	"oci.oke.nodePool.nodeImage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeNodePool).GetNodeImage()).ToDataRes(types.Resource("oci.compute.image"))
@@ -7587,6 +7622,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.oke.nodePool.systemTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeNodePool).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.oke.nodeSizing.ocpus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeNodeSizing).GetOcpus()).ToDataRes(types.Float)
+	},
+	"oci.oke.nodeSizing.memoryInGBs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeNodeSizing).GetMemoryInGBs()).ToDataRes(types.Float)
 	},
 	"oci.waf.firewalls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciWaf).GetFirewalls()).ToDataRes(types.Array(types.Resource("oci.waf.firewall")))
@@ -7675,20 +7716,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.functions.application.traceConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFunctionsApplication).GetTraceConfig()).ToDataRes(types.Dict)
 	},
-	"oci.functions.application.tracingEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciFunctionsApplication).GetTracingEnabled()).ToDataRes(types.Bool)
-	},
-	"oci.functions.application.apmDomainId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciFunctionsApplication).GetApmDomainId()).ToDataRes(types.String)
+	"oci.functions.application.tracing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFunctionsApplication).GetTracing()).ToDataRes(types.Resource("oci.functions.applicationTraceConfig"))
 	},
 	"oci.functions.application.imagePolicyConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFunctionsApplication).GetImagePolicyConfig()).ToDataRes(types.Dict)
 	},
-	"oci.functions.application.imagePolicyEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciFunctionsApplication).GetImagePolicyEnabled()).ToDataRes(types.Bool)
-	},
-	"oci.functions.application.imagePolicyKeys": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciFunctionsApplication).GetImagePolicyKeys()).ToDataRes(types.Array(types.Resource("oci.kms.key")))
+	"oci.functions.application.imagePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFunctionsApplication).GetImagePolicy()).ToDataRes(types.Resource("oci.functions.imagePolicyConfig"))
 	},
 	"oci.functions.application.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFunctionsApplication).GetCreated()).ToDataRes(types.Time)
@@ -7716,6 +7751,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.functions.application.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFunctionsApplication).GetFunctions()).ToDataRes(types.Array(types.Resource("oci.functions.function")))
+	},
+	"oci.functions.applicationTraceConfig.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFunctionsApplicationTraceConfig).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.functions.applicationTraceConfig.domainId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFunctionsApplicationTraceConfig).GetDomainId()).ToDataRes(types.String)
+	},
+	"oci.functions.imagePolicyConfig.isPolicyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFunctionsImagePolicyConfig).GetIsPolicyEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.functions.imagePolicyConfig.keys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFunctionsImagePolicyConfig).GetKeys()).ToDataRes(types.Array(types.Resource("oci.kms.key")))
 	},
 	"oci.functions.function.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFunctionsFunction).GetId()).ToDataRes(types.String)
@@ -7753,8 +7800,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.functions.function.traceConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFunctionsFunction).GetTraceConfig()).ToDataRes(types.Dict)
 	},
-	"oci.functions.function.tracingEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciFunctionsFunction).GetTracingEnabled()).ToDataRes(types.Bool)
+	"oci.functions.function.tracing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFunctionsFunction).GetTracing()).ToDataRes(types.Resource("oci.functions.functionTraceConfig"))
 	},
 	"oci.functions.function.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFunctionsFunction).GetCreated()).ToDataRes(types.Time)
@@ -7770,6 +7817,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.functions.function.config": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFunctionsFunction).GetConfig()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.functions.functionTraceConfig.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFunctionsFunctionTraceConfig).GetIsEnabled()).ToDataRes(types.Bool)
 	},
 	"oci.containerInstances.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciContainerInstances).GetInstances()).ToDataRes(types.Array(types.Resource("oci.containerInstances.instance")))
@@ -7795,17 +7845,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.containerInstances.instance.shapeConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciContainerInstancesInstance).GetShapeConfig()).ToDataRes(types.Dict)
 	},
-	"oci.containerInstances.instance.ocpus": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciContainerInstancesInstance).GetOcpus()).ToDataRes(types.Float)
-	},
-	"oci.containerInstances.instance.memoryInGBs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciContainerInstancesInstance).GetMemoryInGBs()).ToDataRes(types.Float)
-	},
-	"oci.containerInstances.instance.processorDescription": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciContainerInstancesInstance).GetProcessorDescription()).ToDataRes(types.String)
-	},
-	"oci.containerInstances.instance.networkingBandwidthInGbps": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciContainerInstancesInstance).GetNetworkingBandwidthInGbps()).ToDataRes(types.Float)
+	"oci.containerInstances.instance.sizing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciContainerInstancesInstance).GetSizing()).ToDataRes(types.Resource("oci.containerInstances.shapeConfig"))
 	},
 	"oci.containerInstances.instance.containerCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciContainerInstancesInstance).GetContainerCount()).ToDataRes(types.Int)
@@ -7840,6 +7881,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.containerInstances.instance.containers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciContainerInstancesInstance).GetContainers()).ToDataRes(types.Array(types.Resource("oci.containerInstances.container")))
 	},
+	"oci.containerInstances.shapeConfig.ocpus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciContainerInstancesShapeConfig).GetOcpus()).ToDataRes(types.Float)
+	},
+	"oci.containerInstances.shapeConfig.memoryInGBs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciContainerInstancesShapeConfig).GetMemoryInGBs()).ToDataRes(types.Float)
+	},
+	"oci.containerInstances.shapeConfig.processorDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciContainerInstancesShapeConfig).GetProcessorDescription()).ToDataRes(types.String)
+	},
+	"oci.containerInstances.shapeConfig.networkingBandwidthInGbps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciContainerInstancesShapeConfig).GetNetworkingBandwidthInGbps()).ToDataRes(types.Float)
+	},
 	"oci.containerInstances.container.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciContainerInstancesContainer).GetId()).ToDataRes(types.String)
 	},
@@ -7867,11 +7920,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.containerInstances.container.resourceConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciContainerInstancesContainer).GetResourceConfig()).ToDataRes(types.Dict)
 	},
-	"oci.containerInstances.container.vcpusLimit": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciContainerInstancesContainer).GetVcpusLimit()).ToDataRes(types.Float)
-	},
-	"oci.containerInstances.container.memoryLimitInGBs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciContainerInstancesContainer).GetMemoryLimitInGBs()).ToDataRes(types.Float)
+	"oci.containerInstances.container.resourceLimits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciContainerInstancesContainer).GetResourceLimits()).ToDataRes(types.Resource("oci.containerInstances.resourceConfig"))
 	},
 	"oci.containerInstances.container.runAsUser": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciContainerInstancesContainer).GetRunAsUser()).ToDataRes(types.Int)
@@ -7905,6 +7955,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.containerInstances.container.systemTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciContainerInstancesContainer).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.containerInstances.resourceConfig.vcpusLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciContainerInstancesResourceConfig).GetVcpusLimit()).ToDataRes(types.Float)
+	},
+	"oci.containerInstances.resourceConfig.memoryLimitInGBs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciContainerInstancesResourceConfig).GetMemoryLimitInGBs()).ToDataRes(types.Float)
 	},
 	"oci.database.dbSystems": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabase).GetDbSystems()).ToDataRes(types.Array(types.Resource("oci.database.dbSystem")))
@@ -18480,20 +18536,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciStreamingStreamPool).KafkaSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.streaming.streamPool.kafkaBootstrapServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciStreamingStreamPool).KafkaBootstrapServers, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.streaming.streamPool.kafkaAutoCreateTopicsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciStreamingStreamPool).KafkaAutoCreateTopicsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"oci.streaming.streamPool.kafkaLogRetentionHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciStreamingStreamPool).KafkaLogRetentionHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.streaming.streamPool.kafkaNumPartitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciStreamingStreamPool).KafkaNumPartitions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"oci.streaming.streamPool.kafka": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).Kafka, ok = plugin.RawToTValue[*mqlOciStreamingKafkaConfig](v.Value, v.Error)
 		return
 	},
 	"oci.streaming.streamPool.securityAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18518,6 +18562,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.streaming.streamPool.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciStreamingStreamPool).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.kafkaConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingKafkaConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.streaming.kafkaConfig.bootstrapServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingKafkaConfig).BootstrapServers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.kafkaConfig.autoCreateTopicsEnable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingKafkaConfig).AutoCreateTopicsEnable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.kafkaConfig.logRetentionHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingKafkaConfig).LogRetentionHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.kafkaConfig.numPartitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingKafkaConfig).NumPartitions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"oci.queue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20356,12 +20420,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciOkeNodePool).NodeShapeConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.oke.nodePool.nodeOcpus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciOkeNodePool).NodeOcpus, ok = plugin.RawToTValue[float64](v.Value, v.Error)
-		return
-	},
-	"oci.oke.nodePool.nodeMemoryInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciOkeNodePool).NodeMemoryInGBs, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+	"oci.oke.nodePool.nodeSizing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeNodePool).NodeSizing, ok = plugin.RawToTValue[*mqlOciOkeNodeSizing](v.Value, v.Error)
 		return
 	},
 	"oci.oke.nodePool.nodeImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20438,6 +20498,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.oke.nodePool.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciOkeNodePool).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.oke.nodeSizing.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeNodeSizing).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.oke.nodeSizing.ocpus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeNodeSizing).Ocpus, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"oci.oke.nodeSizing.memoryInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeNodeSizing).MemoryInGBs, ok = plugin.RawToTValue[float64](v.Value, v.Error)
 		return
 	},
 	"oci.waf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20576,24 +20648,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciFunctionsApplication).TraceConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.functions.application.tracingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciFunctionsApplication).TracingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"oci.functions.application.apmDomainId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciFunctionsApplication).ApmDomainId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"oci.functions.application.tracing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFunctionsApplication).Tracing, ok = plugin.RawToTValue[*mqlOciFunctionsApplicationTraceConfig](v.Value, v.Error)
 		return
 	},
 	"oci.functions.application.imagePolicyConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciFunctionsApplication).ImagePolicyConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.functions.application.imagePolicyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciFunctionsApplication).ImagePolicyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"oci.functions.application.imagePolicyKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciFunctionsApplication).ImagePolicyKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"oci.functions.application.imagePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFunctionsApplication).ImagePolicy, ok = plugin.RawToTValue[*mqlOciFunctionsImagePolicyConfig](v.Value, v.Error)
 		return
 	},
 	"oci.functions.application.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20630,6 +20694,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.functions.application.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciFunctionsApplication).Functions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.functions.applicationTraceConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFunctionsApplicationTraceConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.functions.applicationTraceConfig.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFunctionsApplicationTraceConfig).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.functions.applicationTraceConfig.domainId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFunctionsApplicationTraceConfig).DomainId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.functions.imagePolicyConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFunctionsImagePolicyConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.functions.imagePolicyConfig.isPolicyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFunctionsImagePolicyConfig).IsPolicyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.functions.imagePolicyConfig.keys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFunctionsImagePolicyConfig).Keys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.functions.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20684,8 +20772,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciFunctionsFunction).TraceConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.functions.function.tracingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciFunctionsFunction).TracingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"oci.functions.function.tracing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFunctionsFunction).Tracing, ok = plugin.RawToTValue[*mqlOciFunctionsFunctionTraceConfig](v.Value, v.Error)
 		return
 	},
 	"oci.functions.function.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20706,6 +20794,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.functions.function.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciFunctionsFunction).Config, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.functions.functionTraceConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFunctionsFunctionTraceConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.functions.functionTraceConfig.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFunctionsFunctionTraceConfig).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"oci.containerInstances.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20748,20 +20844,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciContainerInstancesInstance).ShapeConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.containerInstances.instance.ocpus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciContainerInstancesInstance).Ocpus, ok = plugin.RawToTValue[float64](v.Value, v.Error)
-		return
-	},
-	"oci.containerInstances.instance.memoryInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciContainerInstancesInstance).MemoryInGBs, ok = plugin.RawToTValue[float64](v.Value, v.Error)
-		return
-	},
-	"oci.containerInstances.instance.processorDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciContainerInstancesInstance).ProcessorDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.containerInstances.instance.networkingBandwidthInGbps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciContainerInstancesInstance).NetworkingBandwidthInGbps, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+	"oci.containerInstances.instance.sizing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciContainerInstancesInstance).Sizing, ok = plugin.RawToTValue[*mqlOciContainerInstancesShapeConfig](v.Value, v.Error)
 		return
 	},
 	"oci.containerInstances.instance.containerCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20808,6 +20892,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciContainerInstancesInstance).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"oci.containerInstances.shapeConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciContainerInstancesShapeConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.containerInstances.shapeConfig.ocpus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciContainerInstancesShapeConfig).Ocpus, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"oci.containerInstances.shapeConfig.memoryInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciContainerInstancesShapeConfig).MemoryInGBs, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"oci.containerInstances.shapeConfig.processorDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciContainerInstancesShapeConfig).ProcessorDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.containerInstances.shapeConfig.networkingBandwidthInGbps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciContainerInstancesShapeConfig).NetworkingBandwidthInGbps, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
 	"oci.containerInstances.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciContainerInstancesContainer).__id, ok = v.Value.(string)
 		return
@@ -20848,12 +20952,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciContainerInstancesContainer).ResourceConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.containerInstances.container.vcpusLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciContainerInstancesContainer).VcpusLimit, ok = plugin.RawToTValue[float64](v.Value, v.Error)
-		return
-	},
-	"oci.containerInstances.container.memoryLimitInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciContainerInstancesContainer).MemoryLimitInGBs, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+	"oci.containerInstances.container.resourceLimits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciContainerInstancesContainer).ResourceLimits, ok = plugin.RawToTValue[*mqlOciContainerInstancesResourceConfig](v.Value, v.Error)
 		return
 	},
 	"oci.containerInstances.container.runAsUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20898,6 +20998,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.containerInstances.container.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciContainerInstancesContainer).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.containerInstances.resourceConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciContainerInstancesResourceConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.containerInstances.resourceConfig.vcpusLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciContainerInstancesResourceConfig).VcpusLimit, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"oci.containerInstances.resourceConfig.memoryLimitInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciContainerInstancesResourceConfig).MemoryLimitInGBs, ok = plugin.RawToTValue[float64](v.Value, v.Error)
 		return
 	},
 	"oci.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -43918,27 +44030,24 @@ type mqlOciStreamingStreamPool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciStreamingStreamPoolInternal
-	Id                           plugin.TValue[string]
-	Name                         plugin.TValue[string]
-	Compartment                  plugin.TValue[*mqlOciCompartment]
-	IsPrivate                    plugin.TValue[bool]
-	EndpointFqdn                 plugin.TValue[string]
-	Subnet                       plugin.TValue[*mqlOciNetworkSubnet]
-	SecurityGroups               plugin.TValue[[]any]
-	PrivateEndpointIp            plugin.TValue[string]
-	EncryptionKey                plugin.TValue[*mqlOciKmsKey]
-	EncryptionKeyState           plugin.TValue[string]
-	KafkaSettings                plugin.TValue[any]
-	KafkaBootstrapServers        plugin.TValue[string]
-	KafkaAutoCreateTopicsEnabled plugin.TValue[bool]
-	KafkaLogRetentionHours       plugin.TValue[int64]
-	KafkaNumPartitions           plugin.TValue[int64]
-	SecurityAttributes           plugin.TValue[map[string]any]
-	AppliedSecurityAttributes    plugin.TValue[[]any]
-	State                        plugin.TValue[string]
-	Created                      plugin.TValue[*time.Time]
-	FreeformTags                 plugin.TValue[map[string]any]
-	DefinedTags                  plugin.TValue[map[string]any]
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Compartment               plugin.TValue[*mqlOciCompartment]
+	IsPrivate                 plugin.TValue[bool]
+	EndpointFqdn              plugin.TValue[string]
+	Subnet                    plugin.TValue[*mqlOciNetworkSubnet]
+	SecurityGroups            plugin.TValue[[]any]
+	PrivateEndpointIp         plugin.TValue[string]
+	EncryptionKey             plugin.TValue[*mqlOciKmsKey]
+	EncryptionKeyState        plugin.TValue[string]
+	KafkaSettings             plugin.TValue[any]
+	Kafka                     plugin.TValue[*mqlOciStreamingKafkaConfig]
+	SecurityAttributes        plugin.TValue[map[string]any]
+	AppliedSecurityAttributes plugin.TValue[[]any]
+	State                     plugin.TValue[string]
+	Created                   plugin.TValue[*time.Time]
+	FreeformTags              plugin.TValue[map[string]any]
+	DefinedTags               plugin.TValue[map[string]any]
 }
 
 // createOciStreamingStreamPool creates a new instance of this resource
@@ -44078,27 +44187,19 @@ func (c *mqlOciStreamingStreamPool) GetKafkaSettings() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlOciStreamingStreamPool) GetKafkaBootstrapServers() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.KafkaBootstrapServers, func() (string, error) {
-		return c.kafkaBootstrapServers()
-	})
-}
+func (c *mqlOciStreamingStreamPool) GetKafka() *plugin.TValue[*mqlOciStreamingKafkaConfig] {
+	return plugin.GetOrCompute[*mqlOciStreamingKafkaConfig](&c.Kafka, func() (*mqlOciStreamingKafkaConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.streaming.streamPool", c.__id, "kafka")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciStreamingKafkaConfig), nil
+			}
+		}
 
-func (c *mqlOciStreamingStreamPool) GetKafkaAutoCreateTopicsEnabled() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.KafkaAutoCreateTopicsEnabled, func() (bool, error) {
-		return c.kafkaAutoCreateTopicsEnabled()
-	})
-}
-
-func (c *mqlOciStreamingStreamPool) GetKafkaLogRetentionHours() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.KafkaLogRetentionHours, func() (int64, error) {
-		return c.kafkaLogRetentionHours()
-	})
-}
-
-func (c *mqlOciStreamingStreamPool) GetKafkaNumPartitions() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.KafkaNumPartitions, func() (int64, error) {
-		return c.kafkaNumPartitions()
+		return c.kafka()
 	})
 }
 
@@ -44136,6 +44237,65 @@ func (c *mqlOciStreamingStreamPool) GetFreeformTags() *plugin.TValue[map[string]
 
 func (c *mqlOciStreamingStreamPool) GetDefinedTags() *plugin.TValue[map[string]any] {
 	return &c.DefinedTags
+}
+
+// mqlOciStreamingKafkaConfig for the oci.streaming.kafkaConfig resource
+type mqlOciStreamingKafkaConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciStreamingKafkaConfigInternal it will be used here
+	BootstrapServers       plugin.TValue[string]
+	AutoCreateTopicsEnable plugin.TValue[bool]
+	LogRetentionHours      plugin.TValue[int64]
+	NumPartitions          plugin.TValue[int64]
+}
+
+// createOciStreamingKafkaConfig creates a new instance of this resource
+func createOciStreamingKafkaConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciStreamingKafkaConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.streaming.kafkaConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciStreamingKafkaConfig) MqlName() string {
+	return "oci.streaming.kafkaConfig"
+}
+
+func (c *mqlOciStreamingKafkaConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciStreamingKafkaConfig) GetBootstrapServers() *plugin.TValue[string] {
+	return &c.BootstrapServers
+}
+
+func (c *mqlOciStreamingKafkaConfig) GetAutoCreateTopicsEnable() *plugin.TValue[bool] {
+	return &c.AutoCreateTopicsEnable
+}
+
+func (c *mqlOciStreamingKafkaConfig) GetLogRetentionHours() *plugin.TValue[int64] {
+	return &c.LogRetentionHours
+}
+
+func (c *mqlOciStreamingKafkaConfig) GetNumPartitions() *plugin.TValue[int64] {
+	return &c.NumPartitions
 }
 
 // mqlOciQueue for the oci.queue resource
@@ -48893,8 +49053,7 @@ type mqlOciOkeNodePool struct {
 	NodeShape                       plugin.TValue[string]
 	Cluster                         plugin.TValue[*mqlOciOkeCluster]
 	NodeShapeConfig                 plugin.TValue[any]
-	NodeOcpus                       plugin.TValue[float64]
-	NodeMemoryInGBs                 plugin.TValue[float64]
+	NodeSizing                      plugin.TValue[*mqlOciOkeNodeSizing]
 	NodeImage                       plugin.TValue[*mqlOciComputeImage]
 	BootVolumeSizeInGBs             plugin.TValue[int64]
 	SshPublicKey                    plugin.TValue[string]
@@ -49005,12 +49164,20 @@ func (c *mqlOciOkeNodePool) GetNodeShapeConfig() *plugin.TValue[any] {
 	return &c.NodeShapeConfig
 }
 
-func (c *mqlOciOkeNodePool) GetNodeOcpus() *plugin.TValue[float64] {
-	return &c.NodeOcpus
-}
+func (c *mqlOciOkeNodePool) GetNodeSizing() *plugin.TValue[*mqlOciOkeNodeSizing] {
+	return plugin.GetOrCompute[*mqlOciOkeNodeSizing](&c.NodeSizing, func() (*mqlOciOkeNodeSizing, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.oke.nodePool", c.__id, "nodeSizing")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciOkeNodeSizing), nil
+			}
+		}
 
-func (c *mqlOciOkeNodePool) GetNodeMemoryInGBs() *plugin.TValue[float64] {
-	return &c.NodeMemoryInGBs
+		return c.nodeSizing()
+	})
 }
 
 func (c *mqlOciOkeNodePool) GetNodeImage() *plugin.TValue[*mqlOciComputeImage] {
@@ -49135,6 +49302,55 @@ func (c *mqlOciOkeNodePool) GetDefinedTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlOciOkeNodePool) GetSystemTags() *plugin.TValue[map[string]any] {
 	return &c.SystemTags
+}
+
+// mqlOciOkeNodeSizing for the oci.oke.nodeSizing resource
+type mqlOciOkeNodeSizing struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciOkeNodeSizingInternal it will be used here
+	Ocpus       plugin.TValue[float64]
+	MemoryInGBs plugin.TValue[float64]
+}
+
+// createOciOkeNodeSizing creates a new instance of this resource
+func createOciOkeNodeSizing(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciOkeNodeSizing{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.oke.nodeSizing", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciOkeNodeSizing) MqlName() string {
+	return "oci.oke.nodeSizing"
+}
+
+func (c *mqlOciOkeNodeSizing) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciOkeNodeSizing) GetOcpus() *plugin.TValue[float64] {
+	return &c.Ocpus
+}
+
+func (c *mqlOciOkeNodeSizing) GetMemoryInGBs() *plugin.TValue[float64] {
+	return &c.MemoryInGBs
 }
 
 // mqlOciWaf for the oci.waf resource
@@ -49523,11 +49739,9 @@ type mqlOciFunctionsApplication struct {
 	State                 plugin.TValue[string]
 	Shape                 plugin.TValue[string]
 	TraceConfig           plugin.TValue[any]
-	TracingEnabled        plugin.TValue[bool]
-	ApmDomainId           plugin.TValue[string]
+	Tracing               plugin.TValue[*mqlOciFunctionsApplicationTraceConfig]
 	ImagePolicyConfig     plugin.TValue[any]
-	ImagePolicyEnabled    plugin.TValue[bool]
-	ImagePolicyKeys       plugin.TValue[[]any]
+	ImagePolicy           plugin.TValue[*mqlOciFunctionsImagePolicyConfig]
 	Created               plugin.TValue[*time.Time]
 	TimeUpdated           plugin.TValue[*time.Time]
 	FreeformTags          plugin.TValue[map[string]any]
@@ -49612,35 +49826,39 @@ func (c *mqlOciFunctionsApplication) GetTraceConfig() *plugin.TValue[any] {
 	return &c.TraceConfig
 }
 
-func (c *mqlOciFunctionsApplication) GetTracingEnabled() *plugin.TValue[bool] {
-	return &c.TracingEnabled
-}
+func (c *mqlOciFunctionsApplication) GetTracing() *plugin.TValue[*mqlOciFunctionsApplicationTraceConfig] {
+	return plugin.GetOrCompute[*mqlOciFunctionsApplicationTraceConfig](&c.Tracing, func() (*mqlOciFunctionsApplicationTraceConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.functions.application", c.__id, "tracing")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciFunctionsApplicationTraceConfig), nil
+			}
+		}
 
-func (c *mqlOciFunctionsApplication) GetApmDomainId() *plugin.TValue[string] {
-	return &c.ApmDomainId
+		return c.tracing()
+	})
 }
 
 func (c *mqlOciFunctionsApplication) GetImagePolicyConfig() *plugin.TValue[any] {
 	return &c.ImagePolicyConfig
 }
 
-func (c *mqlOciFunctionsApplication) GetImagePolicyEnabled() *plugin.TValue[bool] {
-	return &c.ImagePolicyEnabled
-}
-
-func (c *mqlOciFunctionsApplication) GetImagePolicyKeys() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.ImagePolicyKeys, func() ([]any, error) {
+func (c *mqlOciFunctionsApplication) GetImagePolicy() *plugin.TValue[*mqlOciFunctionsImagePolicyConfig] {
+	return plugin.GetOrCompute[*mqlOciFunctionsImagePolicyConfig](&c.ImagePolicy, func() (*mqlOciFunctionsImagePolicyConfig, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.functions.application", c.__id, "imagePolicyKeys")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.functions.application", c.__id, "imagePolicy")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]any), nil
+				return d.Value.(*mqlOciFunctionsImagePolicyConfig), nil
 			}
 		}
 
-		return c.imagePolicyKeys()
+		return c.imagePolicy()
 	})
 }
 
@@ -49720,6 +49938,116 @@ func (c *mqlOciFunctionsApplication) GetFunctions() *plugin.TValue[[]any] {
 	})
 }
 
+// mqlOciFunctionsApplicationTraceConfig for the oci.functions.applicationTraceConfig resource
+type mqlOciFunctionsApplicationTraceConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciFunctionsApplicationTraceConfigInternal it will be used here
+	IsEnabled plugin.TValue[bool]
+	DomainId  plugin.TValue[string]
+}
+
+// createOciFunctionsApplicationTraceConfig creates a new instance of this resource
+func createOciFunctionsApplicationTraceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciFunctionsApplicationTraceConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.functions.applicationTraceConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciFunctionsApplicationTraceConfig) MqlName() string {
+	return "oci.functions.applicationTraceConfig"
+}
+
+func (c *mqlOciFunctionsApplicationTraceConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciFunctionsApplicationTraceConfig) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+func (c *mqlOciFunctionsApplicationTraceConfig) GetDomainId() *plugin.TValue[string] {
+	return &c.DomainId
+}
+
+// mqlOciFunctionsImagePolicyConfig for the oci.functions.imagePolicyConfig resource
+type mqlOciFunctionsImagePolicyConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciFunctionsImagePolicyConfigInternal
+	IsPolicyEnabled plugin.TValue[bool]
+	Keys            plugin.TValue[[]any]
+}
+
+// createOciFunctionsImagePolicyConfig creates a new instance of this resource
+func createOciFunctionsImagePolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciFunctionsImagePolicyConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.functions.imagePolicyConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciFunctionsImagePolicyConfig) MqlName() string {
+	return "oci.functions.imagePolicyConfig"
+}
+
+func (c *mqlOciFunctionsImagePolicyConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciFunctionsImagePolicyConfig) GetIsPolicyEnabled() *plugin.TValue[bool] {
+	return &c.IsPolicyEnabled
+}
+
+func (c *mqlOciFunctionsImagePolicyConfig) GetKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Keys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.functions.imagePolicyConfig", c.__id, "keys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.keys()
+	})
+}
+
 // mqlOciFunctionsFunction for the oci.functions.function resource
 type mqlOciFunctionsFunction struct {
 	MqlRuntime *plugin.Runtime
@@ -49737,7 +50065,7 @@ type mqlOciFunctionsFunction struct {
 	TimeoutInSeconds plugin.TValue[int64]
 	InvokeEndpoint   plugin.TValue[string]
 	TraceConfig      plugin.TValue[any]
-	TracingEnabled   plugin.TValue[bool]
+	Tracing          plugin.TValue[*mqlOciFunctionsFunctionTraceConfig]
 	Created          plugin.TValue[*time.Time]
 	TimeUpdated      plugin.TValue[*time.Time]
 	FreeformTags     plugin.TValue[map[string]any]
@@ -49842,8 +50170,20 @@ func (c *mqlOciFunctionsFunction) GetTraceConfig() *plugin.TValue[any] {
 	return &c.TraceConfig
 }
 
-func (c *mqlOciFunctionsFunction) GetTracingEnabled() *plugin.TValue[bool] {
-	return &c.TracingEnabled
+func (c *mqlOciFunctionsFunction) GetTracing() *plugin.TValue[*mqlOciFunctionsFunctionTraceConfig] {
+	return plugin.GetOrCompute[*mqlOciFunctionsFunctionTraceConfig](&c.Tracing, func() (*mqlOciFunctionsFunctionTraceConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.functions.function", c.__id, "tracing")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciFunctionsFunctionTraceConfig), nil
+			}
+		}
+
+		return c.tracing()
+	})
 }
 
 func (c *mqlOciFunctionsFunction) GetCreated() *plugin.TValue[*time.Time] {
@@ -49866,6 +50206,50 @@ func (c *mqlOciFunctionsFunction) GetConfig() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Config, func() (map[string]any, error) {
 		return c.config()
 	})
+}
+
+// mqlOciFunctionsFunctionTraceConfig for the oci.functions.functionTraceConfig resource
+type mqlOciFunctionsFunctionTraceConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciFunctionsFunctionTraceConfigInternal it will be used here
+	IsEnabled plugin.TValue[bool]
+}
+
+// createOciFunctionsFunctionTraceConfig creates a new instance of this resource
+func createOciFunctionsFunctionTraceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciFunctionsFunctionTraceConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.functions.functionTraceConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciFunctionsFunctionTraceConfig) MqlName() string {
+	return "oci.functions.functionTraceConfig"
+}
+
+func (c *mqlOciFunctionsFunctionTraceConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciFunctionsFunctionTraceConfig) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
 }
 
 // mqlOciContainerInstances for the oci.containerInstances resource
@@ -49941,10 +50325,7 @@ type mqlOciContainerInstancesInstance struct {
 	State                            plugin.TValue[string]
 	Shape                            plugin.TValue[string]
 	ShapeConfig                      plugin.TValue[any]
-	Ocpus                            plugin.TValue[float64]
-	MemoryInGBs                      plugin.TValue[float64]
-	ProcessorDescription             plugin.TValue[string]
-	NetworkingBandwidthInGbps        plugin.TValue[float64]
+	Sizing                           plugin.TValue[*mqlOciContainerInstancesShapeConfig]
 	ContainerCount                   plugin.TValue[int64]
 	ContainerRestartPolicy           plugin.TValue[string]
 	FaultDomain                      plugin.TValue[string]
@@ -50035,20 +50416,20 @@ func (c *mqlOciContainerInstancesInstance) GetShapeConfig() *plugin.TValue[any] 
 	return &c.ShapeConfig
 }
 
-func (c *mqlOciContainerInstancesInstance) GetOcpus() *plugin.TValue[float64] {
-	return &c.Ocpus
-}
+func (c *mqlOciContainerInstancesInstance) GetSizing() *plugin.TValue[*mqlOciContainerInstancesShapeConfig] {
+	return plugin.GetOrCompute[*mqlOciContainerInstancesShapeConfig](&c.Sizing, func() (*mqlOciContainerInstancesShapeConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.containerInstances.instance", c.__id, "sizing")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciContainerInstancesShapeConfig), nil
+			}
+		}
 
-func (c *mqlOciContainerInstancesInstance) GetMemoryInGBs() *plugin.TValue[float64] {
-	return &c.MemoryInGBs
-}
-
-func (c *mqlOciContainerInstancesInstance) GetProcessorDescription() *plugin.TValue[string] {
-	return &c.ProcessorDescription
-}
-
-func (c *mqlOciContainerInstancesInstance) GetNetworkingBandwidthInGbps() *plugin.TValue[float64] {
-	return &c.NetworkingBandwidthInGbps
+		return c.sizing()
+	})
 }
 
 func (c *mqlOciContainerInstancesInstance) GetContainerCount() *plugin.TValue[int64] {
@@ -50107,6 +50488,65 @@ func (c *mqlOciContainerInstancesInstance) GetContainers() *plugin.TValue[[]any]
 	})
 }
 
+// mqlOciContainerInstancesShapeConfig for the oci.containerInstances.shapeConfig resource
+type mqlOciContainerInstancesShapeConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciContainerInstancesShapeConfigInternal it will be used here
+	Ocpus                     plugin.TValue[float64]
+	MemoryInGBs               plugin.TValue[float64]
+	ProcessorDescription      plugin.TValue[string]
+	NetworkingBandwidthInGbps plugin.TValue[float64]
+}
+
+// createOciContainerInstancesShapeConfig creates a new instance of this resource
+func createOciContainerInstancesShapeConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciContainerInstancesShapeConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.containerInstances.shapeConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciContainerInstancesShapeConfig) MqlName() string {
+	return "oci.containerInstances.shapeConfig"
+}
+
+func (c *mqlOciContainerInstancesShapeConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciContainerInstancesShapeConfig) GetOcpus() *plugin.TValue[float64] {
+	return &c.Ocpus
+}
+
+func (c *mqlOciContainerInstancesShapeConfig) GetMemoryInGBs() *plugin.TValue[float64] {
+	return &c.MemoryInGBs
+}
+
+func (c *mqlOciContainerInstancesShapeConfig) GetProcessorDescription() *plugin.TValue[string] {
+	return &c.ProcessorDescription
+}
+
+func (c *mqlOciContainerInstancesShapeConfig) GetNetworkingBandwidthInGbps() *plugin.TValue[float64] {
+	return &c.NetworkingBandwidthInGbps
+}
+
 // mqlOciContainerInstancesContainer for the oci.containerInstances.container resource
 type mqlOciContainerInstancesContainer struct {
 	MqlRuntime *plugin.Runtime
@@ -50121,8 +50561,7 @@ type mqlOciContainerInstancesContainer struct {
 	ImageUrl                    plugin.TValue[string]
 	IsResourcePrincipalDisabled plugin.TValue[bool]
 	ResourceConfig              plugin.TValue[any]
-	VcpusLimit                  plugin.TValue[float64]
-	MemoryLimitInGBs            plugin.TValue[float64]
+	ResourceLimits              plugin.TValue[*mqlOciContainerInstancesResourceConfig]
 	RunAsUser                   plugin.TValue[int64]
 	RunAsGroup                  plugin.TValue[int64]
 	IsNonRootUserCheckEnabled   plugin.TValue[bool]
@@ -50221,12 +50660,20 @@ func (c *mqlOciContainerInstancesContainer) GetResourceConfig() *plugin.TValue[a
 	return &c.ResourceConfig
 }
 
-func (c *mqlOciContainerInstancesContainer) GetVcpusLimit() *plugin.TValue[float64] {
-	return &c.VcpusLimit
-}
+func (c *mqlOciContainerInstancesContainer) GetResourceLimits() *plugin.TValue[*mqlOciContainerInstancesResourceConfig] {
+	return plugin.GetOrCompute[*mqlOciContainerInstancesResourceConfig](&c.ResourceLimits, func() (*mqlOciContainerInstancesResourceConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.containerInstances.container", c.__id, "resourceLimits")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciContainerInstancesResourceConfig), nil
+			}
+		}
 
-func (c *mqlOciContainerInstancesContainer) GetMemoryLimitInGBs() *plugin.TValue[float64] {
-	return &c.MemoryLimitInGBs
+		return c.resourceLimits()
+	})
 }
 
 func (c *mqlOciContainerInstancesContainer) GetRunAsUser() *plugin.TValue[int64] {
@@ -50271,6 +50718,55 @@ func (c *mqlOciContainerInstancesContainer) GetDefinedTags() *plugin.TValue[map[
 
 func (c *mqlOciContainerInstancesContainer) GetSystemTags() *plugin.TValue[map[string]any] {
 	return &c.SystemTags
+}
+
+// mqlOciContainerInstancesResourceConfig for the oci.containerInstances.resourceConfig resource
+type mqlOciContainerInstancesResourceConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciContainerInstancesResourceConfigInternal it will be used here
+	VcpusLimit       plugin.TValue[float64]
+	MemoryLimitInGBs plugin.TValue[float64]
+}
+
+// createOciContainerInstancesResourceConfig creates a new instance of this resource
+func createOciContainerInstancesResourceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciContainerInstancesResourceConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.containerInstances.resourceConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciContainerInstancesResourceConfig) MqlName() string {
+	return "oci.containerInstances.resourceConfig"
+}
+
+func (c *mqlOciContainerInstancesResourceConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciContainerInstancesResourceConfig) GetVcpusLimit() *plugin.TValue[float64] {
+	return &c.VcpusLimit
+}
+
+func (c *mqlOciContainerInstancesResourceConfig) GetMemoryLimitInGBs() *plugin.TValue[float64] {
+	return &c.MemoryLimitInGBs
 }
 
 // mqlOciDatabase for the oci.database resource

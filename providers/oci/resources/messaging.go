@@ -299,51 +299,32 @@ func (o *mqlOciStreamingStreamPool) kafkaSettings() (any, error) {
 	return convert.JsonToDict(detail.KafkaSettings)
 }
 
-func (o *mqlOciStreamingStreamPool) kafkaBootstrapServers() (string, error) {
+// kafka builds the pool's Kafka compatibility settings.
+//
+// Null when the pool reports none, which says nothing reaches it through the
+// Kafka-compatible endpoint rather than that the endpoint accepts anything.
+func (o *mqlOciStreamingStreamPool) kafka() (*mqlOciStreamingKafkaConfig, error) {
 	detail, err := o.getDetail()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	if detail.KafkaSettings == nil {
-		return "", nil
+	ks := detail.KafkaSettings
+	if ks == nil {
+		o.Kafka.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	return stringValue(detail.KafkaSettings.BootstrapServers), nil
-}
 
-func (o *mqlOciStreamingStreamPool) kafkaAutoCreateTopicsEnabled() (bool, error) {
-	detail, err := o.getDetail()
+	res, err := CreateResource(o.MqlRuntime, "oci.streaming.kafkaConfig", map[string]*llx.RawData{
+		"__id":                   llx.StringData(o.Id.Data + "/kafkaSettings"),
+		"bootstrapServers":       llx.StringDataPtr(ks.BootstrapServers),
+		"autoCreateTopicsEnable": llx.BoolDataPtr(ks.AutoCreateTopicsEnable),
+		"logRetentionHours":      llx.IntDataPtr(intPtrToInt64(ks.LogRetentionHours)),
+		"numPartitions":          llx.IntDataPtr(intPtrToInt64(ks.NumPartitions)),
+	})
 	if err != nil {
-		return false, err
+		return nil, err
 	}
-	if detail.KafkaSettings == nil || detail.KafkaSettings.AutoCreateTopicsEnable == nil {
-		o.KafkaAutoCreateTopicsEnabled.State = plugin.StateIsSet | plugin.StateIsNull
-		return false, nil
-	}
-	return *detail.KafkaSettings.AutoCreateTopicsEnable, nil
-}
-
-func (o *mqlOciStreamingStreamPool) kafkaLogRetentionHours() (int64, error) {
-	detail, err := o.getDetail()
-	if err != nil {
-		return 0, err
-	}
-	if detail.KafkaSettings == nil || detail.KafkaSettings.LogRetentionHours == nil {
-		o.KafkaLogRetentionHours.State = plugin.StateIsSet | plugin.StateIsNull
-		return 0, nil
-	}
-	return int64(*detail.KafkaSettings.LogRetentionHours), nil
-}
-
-func (o *mqlOciStreamingStreamPool) kafkaNumPartitions() (int64, error) {
-	detail, err := o.getDetail()
-	if err != nil {
-		return 0, err
-	}
-	if detail.KafkaSettings == nil || detail.KafkaSettings.NumPartitions == nil {
-		o.KafkaNumPartitions.State = plugin.StateIsSet | plugin.StateIsNull
-		return 0, nil
-	}
-	return int64(*detail.KafkaSettings.NumPartitions), nil
+	return res.(*mqlOciStreamingKafkaConfig), nil
 }
 
 // ociCustomEncryptionKeyId pulls the KMS key OCID out of a stream pool's

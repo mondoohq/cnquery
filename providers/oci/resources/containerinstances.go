@@ -11,6 +11,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/containerinstances"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/oci/connection"
 	"go.mondoo.com/mql/types"
@@ -107,13 +108,6 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 					return nil, err
 				}
 
-				shape := ci.ShapeConfig
-				if shape == nil {
-					// A nil shape config leaves the sizing fields null rather
-					// than reporting a zero-OCPU instance.
-					shape = &containerinstances.ContainerInstanceShapeConfig{}
-				}
-
 				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.containerInstances.instance", stringValue(ci.CompartmentId), map[string]*llx.RawData{
 					"id":                               llx.StringDataPtr(ci.Id),
 					"name":                             llx.StringDataPtr(ci.DisplayName),
@@ -121,10 +115,6 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 					"state":                            llx.StringData(string(ci.LifecycleState)),
 					"shape":                            llx.StringDataPtr(ci.Shape),
 					"shapeConfig":                      llx.DictData(shapeConfig),
-					"ocpus":                            llx.FloatDataPtr(shape.Ocpus),
-					"memoryInGBs":                      llx.FloatDataPtr(shape.MemoryInGBs),
-					"processorDescription":             llx.StringDataPtr(shape.ProcessorDescription),
-					"networkingBandwidthInGbps":        llx.FloatDataPtr(shape.NetworkingBandwidthInGbps),
 					"containerCount":                   llx.IntData(intValue(ci.ContainerCount)),
 					"containerRestartPolicy":           llx.StringData(string(ci.ContainerRestartPolicy)),
 					"faultDomain":                      llx.StringDataPtr(ci.FaultDomain),
@@ -141,6 +131,7 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 				}
 				mqlCI := mqlInstance.(*mqlOciContainerInstancesInstance)
 				mqlCI.cacheRegion = region
+				mqlCI.cacheShapeConfig = ci.ShapeConfig
 				res = append(res, mqlCI)
 			}
 
@@ -151,6 +142,32 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 type mqlOciContainerInstancesInstanceInternal struct {
 	ociCompartmentRef
 	cacheRegion string
+
+	cacheShapeConfig *containerinstances.ContainerInstanceShapeConfig
+}
+
+// sizing builds the compute, memory and network the instance is sized to.
+//
+// Null when the instance reports no shape configuration, rather than an
+// instance that reads as sized to zero OCPUs.
+func (o *mqlOciContainerInstancesInstance) sizing() (*mqlOciContainerInstancesShapeConfig, error) {
+	shape := o.cacheShapeConfig
+	if shape == nil {
+		o.Sizing.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.containerInstances.shapeConfig", map[string]*llx.RawData{
+		"__id":                      llx.StringData(o.Id.Data + "/shapeConfig"),
+		"ocpus":                     llx.FloatDataPtr(shape.Ocpus),
+		"memoryInGBs":               llx.FloatDataPtr(shape.MemoryInGBs),
+		"processorDescription":      llx.StringDataPtr(shape.ProcessorDescription),
+		"networkingBandwidthInGbps": llx.FloatDataPtr(shape.NetworkingBandwidthInGbps),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciContainerInstancesShapeConfig), nil
 }
 
 func (o *mqlOciContainerInstancesInstance) id() (string, error) {
@@ -198,13 +215,6 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 			return nil, err
 		}
 
-		limits := c.ResourceConfig
-		if limits == nil {
-			// No resource config means the container inherits the instance
-			// defaults, so both limits stay null rather than reading as zero.
-			limits = &containerinstances.ContainerResourceConfig{}
-		}
-
 		sec := ociContainerSecurityContext(c.SecurityContext)
 
 		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.containerInstances.container", stringValue(c.CompartmentId), map[string]*llx.RawData{
@@ -216,8 +226,6 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 			"imageUrl":                    llx.StringDataPtr(c.ImageUrl),
 			"isResourcePrincipalDisabled": llx.BoolDataPtr(c.IsResourcePrincipalDisabled),
 			"resourceConfig":              llx.DictData(resourceConfig),
-			"vcpusLimit":                  llx.FloatDataPtr(limits.VcpusLimit),
-			"memoryLimitInGBs":            llx.FloatDataPtr(limits.MemoryLimitInGBs),
 			"runAsUser":                   llx.IntDataPtr(sec.runAsUser),
 			"runAsGroup":                  llx.IntDataPtr(sec.runAsGroup),
 			"isNonRootUserCheckEnabled":   llx.BoolData(sec.nonRootUserCheck),
@@ -233,6 +241,7 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlInstance.(*mqlOciContainerInstancesContainer).cacheResourceConfig = c.ResourceConfig
 		res = append(res, mqlInstance)
 	}
 
@@ -245,4 +254,29 @@ func (o *mqlOciContainerInstancesContainer) id() (string, error) {
 
 type mqlOciContainerInstancesContainerInternal struct {
 	ociCompartmentRef
+
+	cacheResourceConfig *containerinstances.ContainerResourceConfig
+}
+
+// resourceLimits builds the ceilings on what the container's process may
+// consume.
+//
+// Null when the container declares no resource configuration: it then inherits
+// the instance defaults, which is unbounded rather than a limit of zero.
+func (o *mqlOciContainerInstancesContainer) resourceLimits() (*mqlOciContainerInstancesResourceConfig, error) {
+	limits := o.cacheResourceConfig
+	if limits == nil {
+		o.ResourceLimits.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.containerInstances.resourceConfig", map[string]*llx.RawData{
+		"__id":             llx.StringData(o.Id.Data + "/resourceConfig"),
+		"vcpusLimit":       llx.FloatDataPtr(limits.VcpusLimit),
+		"memoryLimitInGBs": llx.FloatDataPtr(limits.MemoryLimitInGBs),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciContainerInstancesResourceConfig), nil
 }
