@@ -46,8 +46,12 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) primaryUserAssigne
 		a.PrimaryUserAssignedIdentity.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
+	// "__id", not "id": azure.subscription.managedIdentity declares no id field,
+	// so SetAllData rejected the arg and this accessor returned an error for
+	// every workspace that has a primary user-assigned identity. The other
+	// twelve callers all key it this way.
 	res, err := NewResource(a.MqlRuntime, "azure.subscription.managedIdentity",
-		map[string]*llx.RawData{"id": llx.StringDataPtr(a.cachePrimaryUserAssignedIdentityId)})
+		map[string]*llx.RawData{"__id": llx.StringDataPtr(a.cachePrimaryUserAssignedIdentityId)})
 	if err != nil {
 		return nil, err
 	}

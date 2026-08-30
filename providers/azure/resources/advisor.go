@@ -40,6 +40,17 @@ func initAzureSubscriptionAdvisorService(runtime *plugin.Runtime, args map[strin
 	return args, nil, nil
 }
 
+// id keys the advisor service on its subscription, the way every other
+// per-subscription service resource does.
+//
+// Without it the cache key is "azure.subscription.advisorService\x00" for every
+// subscription, so a query that walks more than one -- azure.subscriptions
+// { advisor { ... } } -- gets the first subscription's advisor object back for
+// all of them, carrying the first subscription's recommendations and scores.
+func (a *mqlAzureSubscriptionAdvisorService) id() (string, error) {
+	return "azure.subscription.advisor/" + a.SubscriptionId.Data, nil
+}
+
 func (a *mqlAzureSubscriptionAdvisorService) recommendations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
