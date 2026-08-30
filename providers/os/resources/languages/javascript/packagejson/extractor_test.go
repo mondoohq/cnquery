@@ -223,3 +223,67 @@ func TestPackageJsonLicenseFixtures(t *testing.T) {
 		})
 	}
 }
+
+// TestPackageJsonLicenseBounds covers the size bounds on package.json's license
+// fields. The deprecated `licenses` array is the worst case in any ecosystem
+// here: it is a JSON array of registry-supplied strings with no bound of its
+// own, and what it produces flows into SBOM documents, SARIF and generated
+// NOTICE files.
+//
+// The cap is a literal here rather than the constant the implementation reads:
+// an expectation taken from the same constant would move with it and pin
+// nothing.
+func TestPackageJsonLicenseBounds(t *testing.T) {
+	// A license identifier of exactly n bytes, carrying nothing that needs JSON
+	// escaping.
+	name := func(n int) string { return strings.Repeat("a", n) }
+
+	// 500 members, each individually a valid identifier.
+	many := make([]string, 500)
+	for i := range many {
+		many[i] = `{"type":"MIT"}`
+	}
+
+	for _, c := range []struct {
+		name string
+		raw  string
+		want string
+	}{
+		{
+			// A real name is nowhere near the cap and must keep being reported.
+			name: "a full license name is well under the cap",
+			raw:  `{"name":"x","version":"1","license":"GNU Lesser General Public License, Version 2.1"}`,
+			want: "GNU Lesser General Public License, Version 2.1",
+		},
+		{
+			name: "an oversized license string is dropped",
+			raw:  `{"name":"x","version":"1","license":"` + name(300) + `"}`,
+			want: "",
+		},
+		{
+			// An oversized `license` names nothing usable, so the legacy array
+			// is still consulted — the same fallthrough as a `license` that
+			// carries only a url.
+			name: "an oversized license falls through to the legacy array",
+			raw:  `{"name":"x","version":"1","license":"` + name(300) + `","licenses":[{"type":"MIT"}]}`,
+			want: "MIT",
+		},
+		{
+			// The oversized member is the only thing wrong with the array.
+			name: "an oversized member does not take its siblings with it",
+			raw:  `{"name":"x","version":"1","licenses":[{"type":"` + name(300) + `"},{"type":"MIT"}]}`,
+			want: "MIT",
+		},
+		{
+			name: "an array past the total cap is dropped",
+			raw:  `{"name":"x","version":"1","licenses":[` + strings.Join(many, ",") + `]}`,
+			want: "",
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			info, err := (&Extractor{}).Parse(strings.NewReader(c.raw), "p/package.json")
+			require.NoError(t, err)
+			assert.Equal(t, c.want, info.Root().License)
+		})
+	}
+}

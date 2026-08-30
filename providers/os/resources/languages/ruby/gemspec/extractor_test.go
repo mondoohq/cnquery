@@ -166,3 +166,69 @@ end`,
 		})
 	}
 }
+
+// TestGemspecLicenseBounds covers the size bounds on a gemspec's license. The
+// patterns here are line-scoped but unbounded within a line, and a .gemspec is
+// read out of a gem someone else published, so the length of the value is the
+// publisher's choice — and it flows on into SBOM documents and generated NOTICE
+// files.
+//
+// The cap is a literal here rather than the constant the implementation reads:
+// an expectation taken from the same constant would move with it and pin
+// nothing.
+func TestGemspecLicenseBounds(t *testing.T) {
+	// A license identifier of exactly n bytes, carrying no quote to close the
+	// Ruby string early.
+	name := func(n int) string { return strings.Repeat("a", n) }
+
+	// 100 valid identifiers on one `licenses = [...]` line. Each is fine on its
+	// own; the expression they join into is not a license statement.
+	many := "\"" + strings.Join(func() []string {
+		out := make([]string, 100)
+		for i := range out {
+			out[i] = "GPL-2.0-or-later"
+		}
+		return out
+	}(), "\", \"") + "\""
+
+	for _, c := range []struct {
+		name string
+		spec string
+		want string
+	}{
+		{
+			// A real name is nowhere near the cap and must keep being reported.
+			name: "a full license name is well under the cap",
+			spec: "Gem::Specification.new do |spec|\n  spec.name = \"example\"\n" +
+				"  spec.license = \"GNU Lesser General Public License, Version 2.1\"\nend",
+			want: "GNU Lesser General Public License, Version 2.1",
+		},
+		{
+			name: "an oversized singular license is dropped",
+			spec: "Gem::Specification.new do |spec|\n  spec.name = \"example\"\n" +
+				"  spec.license = \"" + name(300) + "\"\nend",
+			want: "",
+		},
+		{
+			// The oversized member is the only thing wrong with the list.
+			name: "an oversized member does not take its siblings with it",
+			spec: "Gem::Specification.new do |spec|\n  spec.name = \"example\"\n" +
+				"  spec.licenses = [\"" + name(300) + "\", \"MIT\"]\nend",
+			want: "MIT",
+		},
+		{
+			name: "a list past the total cap is dropped",
+			spec: "Gem::Specification.new do |spec|\n  spec.name = \"example\"\n" +
+				"  spec.licenses = [" + many + "]\nend",
+			want: "",
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			info, err := (&Extractor{}).Parse(strings.NewReader(c.spec), "example.gemspec")
+			require.NoError(t, err)
+			root := info.Root()
+			require.NotNil(t, root)
+			assert.Equal(t, c.want, root.License)
+		})
+	}
+}
