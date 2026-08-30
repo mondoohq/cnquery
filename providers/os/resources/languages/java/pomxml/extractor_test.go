@@ -310,3 +310,92 @@ func TestPomPropertiesUnmarshal(t *testing.T) {
 		assert.NotErrorIs(t, err, io.EOF)
 	})
 }
+
+// A pom.xml states the project's own licenses in <licenses>, and Maven's
+// guidance is that several listed licenses mean the consumer may select any one
+// of them. That is SPDX's OR, which is what LicenseExpression renders, so this
+// extractor reports a license the same way every other one now does rather than
+// being the build manifest that reads none.
+func TestPomXmlReadsDeclaredLicenses(t *testing.T) {
+	t.Run("a single license passes through as written", func(t *testing.T) {
+		p := parsePom(t, `<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <groupId>com.example</groupId><artifactId>myapp</artifactId><version>1.0.0</version>
+  <licenses><license>
+    <name>Apache License, Version 2.0</name>
+    <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+  </license></licenses>
+</project>`)
+		root := p.Root()
+		require.NotNil(t, root)
+		assert.Equal(t, "Apache License, Version 2.0", root.License)
+	})
+
+	t.Run("several licenses are a choice", func(t *testing.T) {
+		p := parsePom(t, `<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <groupId>com.example</groupId><artifactId>myapp</artifactId><version>1.0.0</version>
+  <licenses>
+    <license><name>EPL-2.0</name></license>
+    <license><name>GPL-2.0-with-classpath-exception</name></license>
+  </licenses>
+</project>`)
+		assert.Equal(t, "(EPL-2.0 OR GPL-2.0-with-classpath-exception)", p.Root().License)
+	})
+
+	// The url is a link to the terms, not the identity of the terms. A license
+	// entry that carries only one names nothing this can report.
+	t.Run("a url without a name states no license", func(t *testing.T) {
+		p := parsePom(t, `<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <groupId>com.example</groupId><artifactId>myapp</artifactId><version>1.0.0</version>
+  <licenses><license><url>https://www.apache.org/licenses/LICENSE-2.0.txt</url></license></licenses>
+</project>`)
+		assert.Empty(t, p.Root().License)
+	})
+
+	t.Run("no licenses block states nothing", func(t *testing.T) {
+		p := parsePom(t, `<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <groupId>com.example</groupId><artifactId>myapp</artifactId><version>1.0.0</version>
+</project>`)
+		assert.Empty(t, p.Root().License)
+	})
+
+	// A POM that keeps its license name in a property is stating a license; the
+	// raw reference would match nothing, exactly as it would for a version.
+	t.Run("a property reference is resolved", func(t *testing.T) {
+		p := parsePom(t, `<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <groupId>com.example</groupId><artifactId>myapp</artifactId><version>1.0.0</version>
+  <properties><license.name>MIT</license.name></properties>
+  <licenses><license><name>${license.name}</name></license></licenses>
+</project>`)
+		assert.Equal(t, "MIT", p.Root().License)
+	})
+
+	// <licenses> describes the project, not what it depends on.
+	t.Run("dependencies do not inherit the project's license", func(t *testing.T) {
+		p := parsePom(t, `<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <groupId>com.example</groupId><artifactId>myapp</artifactId><version>1.0.0</version>
+  <licenses><license><name>MIT</name></license></licenses>
+  <dependencies>
+    <dependency><groupId>org.example</groupId><artifactId>dep</artifactId><version>1.0.0</version></dependency>
+  </dependencies>
+</project>`)
+		require.Equal(t, "MIT", p.Root().License)
+		dep := packagesByName(p.Transitive())["org.example:dep"]
+		require.NotNil(t, dep)
+		assert.Empty(t, dep.License, "a dependency's license is not stated by this POM")
+	})
+}
+
+// The shared renderer's bounds apply here too, so a POM cannot put an arbitrary
+// amount of text into a field consumers read as an identifier.
+func TestPomXmlLicenseIsBounded(t *testing.T) {
+	long := strings.Repeat("A", languages.LicenseMaxBytes+1)
+	p := parsePom(t, `<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <groupId>com.example</groupId><artifactId>myapp</artifactId><version>1.0.0</version>
+  <licenses>
+    <license><name>`+long+`</name></license>
+    <license><name>MIT</name></license>
+  </licenses>
+</project>`)
+	assert.Equal(t, "MIT", p.Root().License,
+		"an oversized name is dropped without taking its sibling with it")
+}

@@ -6,6 +6,8 @@ package pomxml
 import (
 	"encoding/xml"
 	"strings"
+
+	"go.mondoo.com/mql/providers/os/resources/languages"
 )
 
 // pomProject represents a parsed Maven pom.xml file.
@@ -29,6 +31,16 @@ type pomProject struct {
 		Dependencies []pomDependency `xml:"dependencies>dependency"`
 	} `xml:"dependencyManagement"`
 	Dependencies []pomDependency `xml:"dependencies>dependency"`
+	// Licenses are the licenses the POM declares for the project itself, not for
+	// its dependencies. Maven's own guidance is that several listed licenses
+	// mean the consumer may select any one of them, so the list is a choice and
+	// renders as SPDX's OR.
+	//
+	// Only this POM's own block is read. Maven inherits <licenses> from a parent
+	// POM, and resolving that needs the parent artifact, which is not available
+	// from the file on disk. A module that states none reports none rather than
+	// guessing at what it would inherit.
+	Licenses []pomLicense `xml:"licenses>license"`
 
 	// evidence is a list of file paths where the pom.xml was found.
 	evidence []string `json:"-"`
@@ -205,6 +217,29 @@ func (p *pomProject) effectiveScope(dep pomDependency) string {
 func (p *pomProject) isTestOrProvided(dep pomDependency) bool {
 	scope := p.effectiveScope(dep)
 	return scope == "test" || scope == "provided"
+}
+
+// pomLicense is one <license> entry. Maven records a name and a link to the
+// terms; only the name is carried, because a link to the terms is not the
+// identity of the terms, and a URL in a field consumers compare against
+// "Apache-2.0" matches nothing while reading as a stated identifier.
+type pomLicense struct {
+	Name string `xml:"name"`
+	URL  string `xml:"url"`
+}
+
+// licenseExpression renders the project's declared licenses as a single SPDX
+// expression, resolving ${...} references the same way a version is resolved:
+// a POM that keeps its license name in a property is stating a license, and
+// reporting the raw reference would match nothing.
+func (p *pomProject) licenseExpression() string {
+	names := make([]string, 0, len(p.Licenses))
+	for _, l := range p.Licenses {
+		if name := strings.TrimSpace(p.resolve(l.Name)); name != "" {
+			names = append(names, name)
+		}
+	}
+	return languages.LicenseExpression(names)
 }
 
 // pomParent represents the parent POM reference.

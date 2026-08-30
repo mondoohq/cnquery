@@ -61,8 +61,11 @@ func (p *pomProject) Root() *languages.Package {
 	}
 
 	return &languages.Package{
-		Name:         name,
-		Version:      version,
+		Name:    name,
+		Version: version,
+		// <licenses> describes this project, not its dependencies, so it
+		// belongs on the root package and nowhere else.
+		License:      p.licenseExpression(),
 		Purl:         java.NewPackageUrl(groupId, p.ArtifactId, version),
 		Cpes:         java.NewCpes(groupId, p.ArtifactId, version),
 		EvidenceList: java.NewEvidenceList(p.evidence),
