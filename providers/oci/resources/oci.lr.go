@@ -161,13 +161,16 @@ const (
 	ResourceOciKafkaCluster                                                    string = "oci.kafka.cluster"
 	ResourceOciMysql                                                           string = "oci.mysql"
 	ResourceOciMysqlDbSystem                                                   string = "oci.mysql.dbSystem"
+	ResourceOciMysqlDeletionPolicy                                             string = "oci.mysql.deletionPolicy"
 	ResourceOciMysqlDbSystemEndpoint                                           string = "oci.mysql.dbSystem.endpoint"
 	ResourceOciPostgresql                                                      string = "oci.postgresql"
 	ResourceOciPostgresqlDbSystem                                              string = "oci.postgresql.dbSystem"
 	ResourceOciNosql                                                           string = "oci.nosql"
 	ResourceOciNosqlTable                                                      string = "oci.nosql.table"
+	ResourceOciNosqlTableLimits                                                string = "oci.nosql.tableLimits"
 	ResourceOciOpensearch                                                      string = "oci.opensearch"
 	ResourceOciOpensearchCluster                                               string = "oci.opensearch.cluster"
+	ResourceOciOpensearchBackupPolicy                                          string = "oci.opensearch.backupPolicy"
 	ResourceOciGoldenGate                                                      string = "oci.goldenGate"
 	ResourceOciGoldenGateDeployment                                            string = "oci.goldenGate.deployment"
 	ResourceOciDns                                                             string = "oci.dns"
@@ -207,6 +210,7 @@ const (
 	ResourceOciDatabaseBackup                                                  string = "oci.database.backup"
 	ResourceOciDatabaseAutonomousDatabaseBackup                                string = "oci.database.autonomousDatabaseBackup"
 	ResourceOciDatabaseDbSystem                                                string = "oci.database.dbSystem"
+	ResourceOciDatabaseMaintenanceWindow                                       string = "oci.database.maintenanceWindow"
 	ResourceOciDatabaseAutonomousDatabase                                      string = "oci.database.autonomousDatabase"
 	ResourceOciApigateway                                                      string = "oci.apigateway"
 	ResourceOciApigatewayGateway                                               string = "oci.apigateway.gateway"
@@ -891,6 +895,10 @@ func init() {
 			// to override args, implement: initOciMysqlDbSystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciMysqlDbSystem,
 		},
+		"oci.mysql.deletionPolicy": {
+			// to override args, implement: initOciMysqlDeletionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciMysqlDeletionPolicy,
+		},
 		"oci.mysql.dbSystem.endpoint": {
 			// to override args, implement: initOciMysqlDbSystemEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciMysqlDbSystemEndpoint,
@@ -911,6 +919,10 @@ func init() {
 			// to override args, implement: initOciNosqlTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciNosqlTable,
 		},
+		"oci.nosql.tableLimits": {
+			// to override args, implement: initOciNosqlTableLimits(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciNosqlTableLimits,
+		},
 		"oci.opensearch": {
 			// to override args, implement: initOciOpensearch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciOpensearch,
@@ -918,6 +930,10 @@ func init() {
 		"oci.opensearch.cluster": {
 			// to override args, implement: initOciOpensearchCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciOpensearchCluster,
+		},
+		"oci.opensearch.backupPolicy": {
+			// to override args, implement: initOciOpensearchBackupPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciOpensearchBackupPolicy,
 		},
 		"oci.goldenGate": {
 			// to override args, implement: initOciGoldenGate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1074,6 +1090,10 @@ func init() {
 		"oci.database.dbSystem": {
 			Init:   initOciDatabaseDbSystem,
 			Create: createOciDatabaseDbSystem,
+		},
+		"oci.database.maintenanceWindow": {
+			// to override args, implement: initOciDatabaseMaintenanceWindow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDatabaseMaintenanceWindow,
 		},
 		"oci.database.autonomousDatabase": {
 			Init:   initOciDatabaseAutonomousDatabase,
@@ -6434,14 +6454,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.mysql.dbSystem.deletionPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciMysqlDbSystem).GetDeletionPolicy()).ToDataRes(types.Dict)
 	},
-	"oci.mysql.dbSystem.deleteProtected": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciMysqlDbSystem).GetDeleteProtected()).ToDataRes(types.Bool)
-	},
-	"oci.mysql.dbSystem.automaticBackupRetention": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciMysqlDbSystem).GetAutomaticBackupRetention()).ToDataRes(types.String)
-	},
-	"oci.mysql.dbSystem.finalBackup": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciMysqlDbSystem).GetFinalBackup()).ToDataRes(types.String)
+	"oci.mysql.dbSystem.deletionRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciMysqlDbSystem).GetDeletionRules()).ToDataRes(types.Resource("oci.mysql.deletionPolicy"))
 	},
 	"oci.mysql.dbSystem.availabilityDomain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciMysqlDbSystem).GetAvailabilityDomain()).ToDataRes(types.String)
@@ -6466,6 +6480,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.mysql.dbSystem.systemTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciMysqlDbSystem).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.mysql.deletionPolicy.automaticBackupRetention": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciMysqlDeletionPolicy).GetAutomaticBackupRetention()).ToDataRes(types.String)
+	},
+	"oci.mysql.deletionPolicy.finalBackup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciMysqlDeletionPolicy).GetFinalBackup()).ToDataRes(types.String)
+	},
+	"oci.mysql.deletionPolicy.deleteProtected": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciMysqlDeletionPolicy).GetDeleteProtected()).ToDataRes(types.Bool)
 	},
 	"oci.mysql.dbSystem.endpoint.ipAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciMysqlDbSystemEndpoint).GetIpAddress()).ToDataRes(types.String)
@@ -6593,17 +6616,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.nosql.table.tableLimits": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNosqlTable).GetTableLimits()).ToDataRes(types.Dict)
 	},
-	"oci.nosql.table.maxReadUnits": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNosqlTable).GetMaxReadUnits()).ToDataRes(types.Int)
-	},
-	"oci.nosql.table.maxWriteUnits": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNosqlTable).GetMaxWriteUnits()).ToDataRes(types.Int)
-	},
-	"oci.nosql.table.maxStorageInGBs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNosqlTable).GetMaxStorageInGBs()).ToDataRes(types.Int)
-	},
-	"oci.nosql.table.capacityMode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNosqlTable).GetCapacityMode()).ToDataRes(types.String)
+	"oci.nosql.table.limits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNosqlTable).GetLimits()).ToDataRes(types.Resource("oci.nosql.tableLimits"))
 	},
 	"oci.nosql.table.isMultiRegion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNosqlTable).GetIsMultiRegion()).ToDataRes(types.Bool)
@@ -6634,6 +6648,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.nosql.table.systemTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNosqlTable).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.nosql.tableLimits.maxReadUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNosqlTableLimits).GetMaxReadUnits()).ToDataRes(types.Int)
+	},
+	"oci.nosql.tableLimits.maxWriteUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNosqlTableLimits).GetMaxWriteUnits()).ToDataRes(types.Int)
+	},
+	"oci.nosql.tableLimits.maxStorageInGBs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNosqlTableLimits).GetMaxStorageInGBs()).ToDataRes(types.Int)
+	},
+	"oci.nosql.tableLimits.capacityMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNosqlTableLimits).GetCapacityMode()).ToDataRes(types.String)
 	},
 	"oci.opensearch.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOpensearch).GetClusters()).ToDataRes(types.Array(types.Resource("oci.opensearch.cluster")))
@@ -6725,14 +6751,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.opensearch.cluster.backupPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOpensearchCluster).GetBackupPolicy()).ToDataRes(types.Dict)
 	},
-	"oci.opensearch.cluster.backupEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciOpensearchCluster).GetBackupEnabled()).ToDataRes(types.Bool)
-	},
-	"oci.opensearch.cluster.backupRetentionInDays": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciOpensearchCluster).GetBackupRetentionInDays()).ToDataRes(types.Int)
-	},
-	"oci.opensearch.cluster.backupFrequencyInHours": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciOpensearchCluster).GetBackupFrequencyInHours()).ToDataRes(types.Int)
+	"oci.opensearch.cluster.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOpensearchCluster).GetBackups()).ToDataRes(types.Resource("oci.opensearch.backupPolicy"))
 	},
 	"oci.opensearch.cluster.totalStorageGB": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOpensearchCluster).GetTotalStorageGB()).ToDataRes(types.Int)
@@ -6766,6 +6786,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.opensearch.cluster.systemTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOpensearchCluster).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.opensearch.backupPolicy.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOpensearchBackupPolicy).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.opensearch.backupPolicy.retentionInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOpensearchBackupPolicy).GetRetentionInDays()).ToDataRes(types.Int)
+	},
+	"oci.opensearch.backupPolicy.frequencyInHours": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOpensearchBackupPolicy).GetFrequencyInHours()).ToDataRes(types.Int)
 	},
 	"oci.goldenGate.deployments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciGoldenGate).GetDeployments()).ToDataRes(types.Array(types.Resource("oci.goldenGate.deployment")))
@@ -8132,35 +8161,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.database.dbSystem.maintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseDbSystem).GetMaintenanceWindow()).ToDataRes(types.Dict)
 	},
-	"oci.database.dbSystem.maintenancePreference": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseDbSystem).GetMaintenancePreference()).ToDataRes(types.String)
-	},
-	"oci.database.dbSystem.maintenancePatchingMode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseDbSystem).GetMaintenancePatchingMode()).ToDataRes(types.String)
-	},
-	"oci.database.dbSystem.maintenanceCustomActionTimeoutEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseDbSystem).GetMaintenanceCustomActionTimeoutEnabled()).ToDataRes(types.Bool)
-	},
-	"oci.database.dbSystem.maintenanceCustomActionTimeoutInMins": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseDbSystem).GetMaintenanceCustomActionTimeoutInMins()).ToDataRes(types.Int)
-	},
-	"oci.database.dbSystem.maintenanceMonthlyPatchingEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseDbSystem).GetMaintenanceMonthlyPatchingEnabled()).ToDataRes(types.Bool)
-	},
-	"oci.database.dbSystem.maintenanceMonths": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseDbSystem).GetMaintenanceMonths()).ToDataRes(types.Array(types.String))
-	},
-	"oci.database.dbSystem.maintenanceWeeksOfMonth": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseDbSystem).GetMaintenanceWeeksOfMonth()).ToDataRes(types.Array(types.Int))
-	},
-	"oci.database.dbSystem.maintenanceDaysOfWeek": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseDbSystem).GetMaintenanceDaysOfWeek()).ToDataRes(types.Array(types.String))
-	},
-	"oci.database.dbSystem.maintenanceHoursOfDay": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseDbSystem).GetMaintenanceHoursOfDay()).ToDataRes(types.Array(types.Int))
-	},
-	"oci.database.dbSystem.maintenanceLeadTimeInWeeks": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseDbSystem).GetMaintenanceLeadTimeInWeeks()).ToDataRes(types.Int)
+	"oci.database.dbSystem.maintenanceSchedule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseDbSystem).GetMaintenanceSchedule()).ToDataRes(types.Resource("oci.database.maintenanceWindow"))
 	},
 	"oci.database.dbSystem.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseDbSystem).GetState()).ToDataRes(types.String)
@@ -8179,6 +8181,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.database.dbSystem.systemTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseDbSystem).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.database.maintenanceWindow.preference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseMaintenanceWindow).GetPreference()).ToDataRes(types.String)
+	},
+	"oci.database.maintenanceWindow.patchingMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseMaintenanceWindow).GetPatchingMode()).ToDataRes(types.String)
+	},
+	"oci.database.maintenanceWindow.isCustomActionTimeoutEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseMaintenanceWindow).GetIsCustomActionTimeoutEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.database.maintenanceWindow.customActionTimeoutInMins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseMaintenanceWindow).GetCustomActionTimeoutInMins()).ToDataRes(types.Int)
+	},
+	"oci.database.maintenanceWindow.isMonthlyPatchingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseMaintenanceWindow).GetIsMonthlyPatchingEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.database.maintenanceWindow.months": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseMaintenanceWindow).GetMonths()).ToDataRes(types.Array(types.String))
+	},
+	"oci.database.maintenanceWindow.weeksOfMonth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseMaintenanceWindow).GetWeeksOfMonth()).ToDataRes(types.Array(types.Int))
+	},
+	"oci.database.maintenanceWindow.daysOfWeek": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseMaintenanceWindow).GetDaysOfWeek()).ToDataRes(types.Array(types.String))
+	},
+	"oci.database.maintenanceWindow.hoursOfDay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseMaintenanceWindow).GetHoursOfDay()).ToDataRes(types.Array(types.Int))
+	},
+	"oci.database.maintenanceWindow.leadTimeInWeeks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseMaintenanceWindow).GetLeadTimeInWeeks()).ToDataRes(types.Int)
+	},
+	"oci.database.maintenanceWindow.skipRu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseMaintenanceWindow).GetSkipRu()).ToDataRes(types.Array(types.Bool))
 	},
 	"oci.database.autonomousDatabase.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetId()).ToDataRes(types.String)
@@ -18753,16 +18788,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciMysqlDbSystem).DeletionPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.mysql.dbSystem.deleteProtected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciMysqlDbSystem).DeleteProtected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"oci.mysql.dbSystem.automaticBackupRetention": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciMysqlDbSystem).AutomaticBackupRetention, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.mysql.dbSystem.finalBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciMysqlDbSystem).FinalBackup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"oci.mysql.dbSystem.deletionRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciMysqlDbSystem).DeletionRules, ok = plugin.RawToTValue[*mqlOciMysqlDeletionPolicy](v.Value, v.Error)
 		return
 	},
 	"oci.mysql.dbSystem.availabilityDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18795,6 +18822,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.mysql.dbSystem.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciMysqlDbSystem).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.mysql.deletionPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciMysqlDeletionPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.mysql.deletionPolicy.automaticBackupRetention": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciMysqlDeletionPolicy).AutomaticBackupRetention, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.mysql.deletionPolicy.finalBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciMysqlDeletionPolicy).FinalBackup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.mysql.deletionPolicy.deleteProtected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciMysqlDeletionPolicy).DeleteProtected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"oci.mysql.dbSystem.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18985,20 +19028,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNosqlTable).TableLimits, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.nosql.table.maxReadUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNosqlTable).MaxReadUnits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.nosql.table.maxWriteUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNosqlTable).MaxWriteUnits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.nosql.table.maxStorageInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNosqlTable).MaxStorageInGBs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.nosql.table.capacityMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNosqlTable).CapacityMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"oci.nosql.table.limits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNosqlTable).Limits, ok = plugin.RawToTValue[*mqlOciNosqlTableLimits](v.Value, v.Error)
 		return
 	},
 	"oci.nosql.table.isMultiRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19039,6 +19070,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.nosql.table.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNosqlTable).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.nosql.tableLimits.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNosqlTableLimits).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.nosql.tableLimits.maxReadUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNosqlTableLimits).MaxReadUnits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.nosql.tableLimits.maxWriteUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNosqlTableLimits).MaxWriteUnits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.nosql.tableLimits.maxStorageInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNosqlTableLimits).MaxStorageInGBs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.nosql.tableLimits.capacityMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNosqlTableLimits).CapacityMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.opensearch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19169,16 +19220,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciOpensearchCluster).BackupPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.opensearch.cluster.backupEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciOpensearchCluster).BackupEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"oci.opensearch.cluster.backupRetentionInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciOpensearchCluster).BackupRetentionInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.opensearch.cluster.backupFrequencyInHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciOpensearchCluster).BackupFrequencyInHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"oci.opensearch.cluster.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOpensearchCluster).Backups, ok = plugin.RawToTValue[*mqlOciOpensearchBackupPolicy](v.Value, v.Error)
 		return
 	},
 	"oci.opensearch.cluster.totalStorageGB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19223,6 +19266,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.opensearch.cluster.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciOpensearchCluster).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.opensearch.backupPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOpensearchBackupPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.opensearch.backupPolicy.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOpensearchBackupPolicy).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.opensearch.backupPolicy.retentionInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOpensearchBackupPolicy).RetentionInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.opensearch.backupPolicy.frequencyInHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOpensearchBackupPolicy).FrequencyInHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"oci.goldenGate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21201,44 +21260,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciDatabaseDbSystem).MaintenanceWindow, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.database.dbSystem.maintenancePreference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseDbSystem).MaintenancePreference, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.database.dbSystem.maintenancePatchingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseDbSystem).MaintenancePatchingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.database.dbSystem.maintenanceCustomActionTimeoutEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseDbSystem).MaintenanceCustomActionTimeoutEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"oci.database.dbSystem.maintenanceCustomActionTimeoutInMins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseDbSystem).MaintenanceCustomActionTimeoutInMins, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.database.dbSystem.maintenanceMonthlyPatchingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseDbSystem).MaintenanceMonthlyPatchingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"oci.database.dbSystem.maintenanceMonths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseDbSystem).MaintenanceMonths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"oci.database.dbSystem.maintenanceWeeksOfMonth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseDbSystem).MaintenanceWeeksOfMonth, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"oci.database.dbSystem.maintenanceDaysOfWeek": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseDbSystem).MaintenanceDaysOfWeek, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"oci.database.dbSystem.maintenanceHoursOfDay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseDbSystem).MaintenanceHoursOfDay, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"oci.database.dbSystem.maintenanceLeadTimeInWeeks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseDbSystem).MaintenanceLeadTimeInWeeks, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"oci.database.dbSystem.maintenanceSchedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseDbSystem).MaintenanceSchedule, ok = plugin.RawToTValue[*mqlOciDatabaseMaintenanceWindow](v.Value, v.Error)
 		return
 	},
 	"oci.database.dbSystem.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21263,6 +21286,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.database.dbSystem.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDatabaseDbSystem).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.database.maintenanceWindow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseMaintenanceWindow).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.database.maintenanceWindow.preference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseMaintenanceWindow).Preference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.database.maintenanceWindow.patchingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseMaintenanceWindow).PatchingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.database.maintenanceWindow.isCustomActionTimeoutEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseMaintenanceWindow).IsCustomActionTimeoutEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.database.maintenanceWindow.customActionTimeoutInMins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseMaintenanceWindow).CustomActionTimeoutInMins, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.database.maintenanceWindow.isMonthlyPatchingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseMaintenanceWindow).IsMonthlyPatchingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.database.maintenanceWindow.months": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseMaintenanceWindow).Months, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.database.maintenanceWindow.weeksOfMonth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseMaintenanceWindow).WeeksOfMonth, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.database.maintenanceWindow.daysOfWeek": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseMaintenanceWindow).DaysOfWeek, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.database.maintenanceWindow.hoursOfDay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseMaintenanceWindow).HoursOfDay, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.database.maintenanceWindow.leadTimeInWeeks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseMaintenanceWindow).LeadTimeInWeeks, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.database.maintenanceWindow.skipRu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseMaintenanceWindow).SkipRu, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.database.autonomousDatabase.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44615,9 +44686,7 @@ type mqlOciMysqlDbSystem struct {
 	TlsCertificate              plugin.TValue[*mqlOciCertificatesCertificate]
 	BackupPolicy                plugin.TValue[any]
 	DeletionPolicy              plugin.TValue[any]
-	DeleteProtected             plugin.TValue[bool]
-	AutomaticBackupRetention    plugin.TValue[string]
-	FinalBackup                 plugin.TValue[string]
+	DeletionRules               plugin.TValue[*mqlOciMysqlDeletionPolicy]
 	AvailabilityDomain          plugin.TValue[string]
 	FaultDomain                 plugin.TValue[string]
 	State                       plugin.TValue[string]
@@ -44817,16 +44886,20 @@ func (c *mqlOciMysqlDbSystem) GetDeletionPolicy() *plugin.TValue[any] {
 	return &c.DeletionPolicy
 }
 
-func (c *mqlOciMysqlDbSystem) GetDeleteProtected() *plugin.TValue[bool] {
-	return &c.DeleteProtected
-}
+func (c *mqlOciMysqlDbSystem) GetDeletionRules() *plugin.TValue[*mqlOciMysqlDeletionPolicy] {
+	return plugin.GetOrCompute[*mqlOciMysqlDeletionPolicy](&c.DeletionRules, func() (*mqlOciMysqlDeletionPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.mysql.dbSystem", c.__id, "deletionRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciMysqlDeletionPolicy), nil
+			}
+		}
 
-func (c *mqlOciMysqlDbSystem) GetAutomaticBackupRetention() *plugin.TValue[string] {
-	return &c.AutomaticBackupRetention
-}
-
-func (c *mqlOciMysqlDbSystem) GetFinalBackup() *plugin.TValue[string] {
-	return &c.FinalBackup
+		return c.deletionRules()
+	})
 }
 
 func (c *mqlOciMysqlDbSystem) GetAvailabilityDomain() *plugin.TValue[string] {
@@ -44859,6 +44932,60 @@ func (c *mqlOciMysqlDbSystem) GetDefinedTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlOciMysqlDbSystem) GetSystemTags() *plugin.TValue[map[string]any] {
 	return &c.SystemTags
+}
+
+// mqlOciMysqlDeletionPolicy for the oci.mysql.deletionPolicy resource
+type mqlOciMysqlDeletionPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciMysqlDeletionPolicyInternal it will be used here
+	AutomaticBackupRetention plugin.TValue[string]
+	FinalBackup              plugin.TValue[string]
+	DeleteProtected          plugin.TValue[bool]
+}
+
+// createOciMysqlDeletionPolicy creates a new instance of this resource
+func createOciMysqlDeletionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciMysqlDeletionPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.mysql.deletionPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciMysqlDeletionPolicy) MqlName() string {
+	return "oci.mysql.deletionPolicy"
+}
+
+func (c *mqlOciMysqlDeletionPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciMysqlDeletionPolicy) GetAutomaticBackupRetention() *plugin.TValue[string] {
+	return &c.AutomaticBackupRetention
+}
+
+func (c *mqlOciMysqlDeletionPolicy) GetFinalBackup() *plugin.TValue[string] {
+	return &c.FinalBackup
+}
+
+func (c *mqlOciMysqlDeletionPolicy) GetDeleteProtected() *plugin.TValue[bool] {
+	return &c.DeleteProtected
 }
 
 // mqlOciMysqlDbSystemEndpoint for the oci.mysql.dbSystem.endpoint resource
@@ -45305,10 +45432,7 @@ type mqlOciNosqlTable struct {
 	Name              plugin.TValue[string]
 	Compartment       plugin.TValue[*mqlOciCompartment]
 	TableLimits       plugin.TValue[any]
-	MaxReadUnits      plugin.TValue[int64]
-	MaxWriteUnits     plugin.TValue[int64]
-	MaxStorageInGBs   plugin.TValue[int64]
-	CapacityMode      plugin.TValue[string]
+	Limits            plugin.TValue[*mqlOciNosqlTableLimits]
 	IsMultiRegion     plugin.TValue[bool]
 	IsAutoReclaimable plugin.TValue[bool]
 	TimeOfExpiration  plugin.TValue[*time.Time]
@@ -45386,20 +45510,20 @@ func (c *mqlOciNosqlTable) GetTableLimits() *plugin.TValue[any] {
 	return &c.TableLimits
 }
 
-func (c *mqlOciNosqlTable) GetMaxReadUnits() *plugin.TValue[int64] {
-	return &c.MaxReadUnits
-}
+func (c *mqlOciNosqlTable) GetLimits() *plugin.TValue[*mqlOciNosqlTableLimits] {
+	return plugin.GetOrCompute[*mqlOciNosqlTableLimits](&c.Limits, func() (*mqlOciNosqlTableLimits, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.nosql.table", c.__id, "limits")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNosqlTableLimits), nil
+			}
+		}
 
-func (c *mqlOciNosqlTable) GetMaxWriteUnits() *plugin.TValue[int64] {
-	return &c.MaxWriteUnits
-}
-
-func (c *mqlOciNosqlTable) GetMaxStorageInGBs() *plugin.TValue[int64] {
-	return &c.MaxStorageInGBs
-}
-
-func (c *mqlOciNosqlTable) GetCapacityMode() *plugin.TValue[string] {
-	return &c.CapacityMode
+		return c.limits()
+	})
 }
 
 func (c *mqlOciNosqlTable) GetIsMultiRegion() *plugin.TValue[bool] {
@@ -45440,6 +45564,65 @@ func (c *mqlOciNosqlTable) GetDefinedTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlOciNosqlTable) GetSystemTags() *plugin.TValue[map[string]any] {
 	return &c.SystemTags
+}
+
+// mqlOciNosqlTableLimits for the oci.nosql.tableLimits resource
+type mqlOciNosqlTableLimits struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciNosqlTableLimitsInternal it will be used here
+	MaxReadUnits    plugin.TValue[int64]
+	MaxWriteUnits   plugin.TValue[int64]
+	MaxStorageInGBs plugin.TValue[int64]
+	CapacityMode    plugin.TValue[string]
+}
+
+// createOciNosqlTableLimits creates a new instance of this resource
+func createOciNosqlTableLimits(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNosqlTableLimits{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.nosql.tableLimits", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNosqlTableLimits) MqlName() string {
+	return "oci.nosql.tableLimits"
+}
+
+func (c *mqlOciNosqlTableLimits) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNosqlTableLimits) GetMaxReadUnits() *plugin.TValue[int64] {
+	return &c.MaxReadUnits
+}
+
+func (c *mqlOciNosqlTableLimits) GetMaxWriteUnits() *plugin.TValue[int64] {
+	return &c.MaxWriteUnits
+}
+
+func (c *mqlOciNosqlTableLimits) GetMaxStorageInGBs() *plugin.TValue[int64] {
+	return &c.MaxStorageInGBs
+}
+
+func (c *mqlOciNosqlTableLimits) GetCapacityMode() *plugin.TValue[string] {
+	return &c.CapacityMode
 }
 
 // mqlOciOpensearch for the oci.opensearch resource
@@ -45537,9 +45720,7 @@ type mqlOciOpensearchCluster struct {
 	OpendashboardPrivateIp     plugin.TValue[string]
 	OutboundClusterConfig      plugin.TValue[any]
 	BackupPolicy               plugin.TValue[any]
-	BackupEnabled              plugin.TValue[bool]
-	BackupRetentionInDays      plugin.TValue[int64]
-	BackupFrequencyInHours     plugin.TValue[int64]
+	Backups                    plugin.TValue[*mqlOciOpensearchBackupPolicy]
 	TotalStorageGB             plugin.TValue[int64]
 	AvailabilityDomains        plugin.TValue[[]any]
 	SecurityAttributes         plugin.TValue[map[string]any]
@@ -45822,16 +46003,20 @@ func (c *mqlOciOpensearchCluster) GetBackupPolicy() *plugin.TValue[any] {
 	return &c.BackupPolicy
 }
 
-func (c *mqlOciOpensearchCluster) GetBackupEnabled() *plugin.TValue[bool] {
-	return &c.BackupEnabled
-}
+func (c *mqlOciOpensearchCluster) GetBackups() *plugin.TValue[*mqlOciOpensearchBackupPolicy] {
+	return plugin.GetOrCompute[*mqlOciOpensearchBackupPolicy](&c.Backups, func() (*mqlOciOpensearchBackupPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.opensearch.cluster", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciOpensearchBackupPolicy), nil
+			}
+		}
 
-func (c *mqlOciOpensearchCluster) GetBackupRetentionInDays() *plugin.TValue[int64] {
-	return &c.BackupRetentionInDays
-}
-
-func (c *mqlOciOpensearchCluster) GetBackupFrequencyInHours() *plugin.TValue[int64] {
-	return &c.BackupFrequencyInHours
+		return c.backups()
+	})
 }
 
 func (c *mqlOciOpensearchCluster) GetTotalStorageGB() *plugin.TValue[int64] {
@@ -45888,6 +46073,60 @@ func (c *mqlOciOpensearchCluster) GetDefinedTags() *plugin.TValue[map[string]any
 
 func (c *mqlOciOpensearchCluster) GetSystemTags() *plugin.TValue[map[string]any] {
 	return &c.SystemTags
+}
+
+// mqlOciOpensearchBackupPolicy for the oci.opensearch.backupPolicy resource
+type mqlOciOpensearchBackupPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciOpensearchBackupPolicyInternal it will be used here
+	IsEnabled        plugin.TValue[bool]
+	RetentionInDays  plugin.TValue[int64]
+	FrequencyInHours plugin.TValue[int64]
+}
+
+// createOciOpensearchBackupPolicy creates a new instance of this resource
+func createOciOpensearchBackupPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciOpensearchBackupPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.opensearch.backupPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciOpensearchBackupPolicy) MqlName() string {
+	return "oci.opensearch.backupPolicy"
+}
+
+func (c *mqlOciOpensearchBackupPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciOpensearchBackupPolicy) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+func (c *mqlOciOpensearchBackupPolicy) GetRetentionInDays() *plugin.TValue[int64] {
+	return &c.RetentionInDays
+}
+
+func (c *mqlOciOpensearchBackupPolicy) GetFrequencyInHours() *plugin.TValue[int64] {
+	return &c.FrequencyInHours
 }
 
 // mqlOciGoldenGate for the oci.goldenGate resource
@@ -50597,56 +50836,47 @@ type mqlOciDatabaseDbSystem struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciDatabaseDbSystemInternal
-	Id                                    plugin.TValue[string]
-	Name                                  plugin.TValue[string]
-	Compartment                           plugin.TValue[*mqlOciCompartment]
-	AvailabilityDomain                    plugin.TValue[string]
-	Shape                                 plugin.TValue[string]
-	DatabaseEdition                       plugin.TValue[string]
-	DiskRedundancy                        plugin.TValue[string]
-	Hostname                              plugin.TValue[string]
-	Domain                                plugin.TValue[string]
-	ListenerPort                          plugin.TValue[int64]
-	ScanDnsName                           plugin.TValue[string]
-	SourceDbSystem                        plugin.TValue[*mqlOciDatabaseDbSystem]
-	Version                               plugin.TValue[string]
-	CpuCoreCount                          plugin.TValue[int64]
-	NodeCount                             plugin.TValue[int64]
-	DataStorageSizeInGBs                  plugin.TValue[int64]
-	LicenseModel                          plugin.TValue[string]
-	KmsKey                                plugin.TValue[*mqlOciKmsKey]
-	Subnet                                plugin.TValue[*mqlOciNetworkSubnet]
-	SecurityGroups                        plugin.TValue[[]any]
-	BackupSecurityGroups                  plugin.TValue[[]any]
-	BackupSubnet                          plugin.TValue[*mqlOciNetworkSubnet]
-	SshPublicKeys                         plugin.TValue[[]any]
-	FaultDomains                          plugin.TValue[[]any]
-	OsVersion                             plugin.TValue[string]
-	TimeZone                              plugin.TValue[string]
-	ClusterName                           plugin.TValue[string]
-	StorageManagement                     plugin.TValue[string]
-	IsDiagnosticsEventsEnabled            plugin.TValue[bool]
-	IsHealthMonitoringEnabled             plugin.TValue[bool]
-	IsIncidentLogsEnabled                 plugin.TValue[bool]
-	SecurityAttributes                    plugin.TValue[map[string]any]
-	AppliedSecurityAttributes             plugin.TValue[[]any]
-	MaintenanceWindow                     plugin.TValue[any]
-	MaintenancePreference                 plugin.TValue[string]
-	MaintenancePatchingMode               plugin.TValue[string]
-	MaintenanceCustomActionTimeoutEnabled plugin.TValue[bool]
-	MaintenanceCustomActionTimeoutInMins  plugin.TValue[int64]
-	MaintenanceMonthlyPatchingEnabled     plugin.TValue[bool]
-	MaintenanceMonths                     plugin.TValue[[]any]
-	MaintenanceWeeksOfMonth               plugin.TValue[[]any]
-	MaintenanceDaysOfWeek                 plugin.TValue[[]any]
-	MaintenanceHoursOfDay                 plugin.TValue[[]any]
-	MaintenanceLeadTimeInWeeks            plugin.TValue[int64]
-	State                                 plugin.TValue[string]
-	LifecycleDetails                      plugin.TValue[string]
-	Created                               plugin.TValue[*time.Time]
-	FreeformTags                          plugin.TValue[map[string]any]
-	DefinedTags                           plugin.TValue[map[string]any]
-	SystemTags                            plugin.TValue[map[string]any]
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Compartment                plugin.TValue[*mqlOciCompartment]
+	AvailabilityDomain         plugin.TValue[string]
+	Shape                      plugin.TValue[string]
+	DatabaseEdition            plugin.TValue[string]
+	DiskRedundancy             plugin.TValue[string]
+	Hostname                   plugin.TValue[string]
+	Domain                     plugin.TValue[string]
+	ListenerPort               plugin.TValue[int64]
+	ScanDnsName                plugin.TValue[string]
+	SourceDbSystem             plugin.TValue[*mqlOciDatabaseDbSystem]
+	Version                    plugin.TValue[string]
+	CpuCoreCount               plugin.TValue[int64]
+	NodeCount                  plugin.TValue[int64]
+	DataStorageSizeInGBs       plugin.TValue[int64]
+	LicenseModel               plugin.TValue[string]
+	KmsKey                     plugin.TValue[*mqlOciKmsKey]
+	Subnet                     plugin.TValue[*mqlOciNetworkSubnet]
+	SecurityGroups             plugin.TValue[[]any]
+	BackupSecurityGroups       plugin.TValue[[]any]
+	BackupSubnet               plugin.TValue[*mqlOciNetworkSubnet]
+	SshPublicKeys              plugin.TValue[[]any]
+	FaultDomains               plugin.TValue[[]any]
+	OsVersion                  plugin.TValue[string]
+	TimeZone                   plugin.TValue[string]
+	ClusterName                plugin.TValue[string]
+	StorageManagement          plugin.TValue[string]
+	IsDiagnosticsEventsEnabled plugin.TValue[bool]
+	IsHealthMonitoringEnabled  plugin.TValue[bool]
+	IsIncidentLogsEnabled      plugin.TValue[bool]
+	SecurityAttributes         plugin.TValue[map[string]any]
+	AppliedSecurityAttributes  plugin.TValue[[]any]
+	MaintenanceWindow          plugin.TValue[any]
+	MaintenanceSchedule        plugin.TValue[*mqlOciDatabaseMaintenanceWindow]
+	State                      plugin.TValue[string]
+	LifecycleDetails           plugin.TValue[string]
+	Created                    plugin.TValue[*time.Time]
+	FreeformTags               plugin.TValue[map[string]any]
+	DefinedTags                plugin.TValue[map[string]any]
+	SystemTags                 plugin.TValue[map[string]any]
 }
 
 // createOciDatabaseDbSystem creates a new instance of this resource
@@ -50918,44 +51148,20 @@ func (c *mqlOciDatabaseDbSystem) GetMaintenanceWindow() *plugin.TValue[any] {
 	return &c.MaintenanceWindow
 }
 
-func (c *mqlOciDatabaseDbSystem) GetMaintenancePreference() *plugin.TValue[string] {
-	return &c.MaintenancePreference
-}
+func (c *mqlOciDatabaseDbSystem) GetMaintenanceSchedule() *plugin.TValue[*mqlOciDatabaseMaintenanceWindow] {
+	return plugin.GetOrCompute[*mqlOciDatabaseMaintenanceWindow](&c.MaintenanceSchedule, func() (*mqlOciDatabaseMaintenanceWindow, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.database.dbSystem", c.__id, "maintenanceSchedule")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciDatabaseMaintenanceWindow), nil
+			}
+		}
 
-func (c *mqlOciDatabaseDbSystem) GetMaintenancePatchingMode() *plugin.TValue[string] {
-	return &c.MaintenancePatchingMode
-}
-
-func (c *mqlOciDatabaseDbSystem) GetMaintenanceCustomActionTimeoutEnabled() *plugin.TValue[bool] {
-	return &c.MaintenanceCustomActionTimeoutEnabled
-}
-
-func (c *mqlOciDatabaseDbSystem) GetMaintenanceCustomActionTimeoutInMins() *plugin.TValue[int64] {
-	return &c.MaintenanceCustomActionTimeoutInMins
-}
-
-func (c *mqlOciDatabaseDbSystem) GetMaintenanceMonthlyPatchingEnabled() *plugin.TValue[bool] {
-	return &c.MaintenanceMonthlyPatchingEnabled
-}
-
-func (c *mqlOciDatabaseDbSystem) GetMaintenanceMonths() *plugin.TValue[[]any] {
-	return &c.MaintenanceMonths
-}
-
-func (c *mqlOciDatabaseDbSystem) GetMaintenanceWeeksOfMonth() *plugin.TValue[[]any] {
-	return &c.MaintenanceWeeksOfMonth
-}
-
-func (c *mqlOciDatabaseDbSystem) GetMaintenanceDaysOfWeek() *plugin.TValue[[]any] {
-	return &c.MaintenanceDaysOfWeek
-}
-
-func (c *mqlOciDatabaseDbSystem) GetMaintenanceHoursOfDay() *plugin.TValue[[]any] {
-	return &c.MaintenanceHoursOfDay
-}
-
-func (c *mqlOciDatabaseDbSystem) GetMaintenanceLeadTimeInWeeks() *plugin.TValue[int64] {
-	return &c.MaintenanceLeadTimeInWeeks
+		return c.maintenanceSchedule()
+	})
 }
 
 func (c *mqlOciDatabaseDbSystem) GetState() *plugin.TValue[string] {
@@ -50980,6 +51186,100 @@ func (c *mqlOciDatabaseDbSystem) GetDefinedTags() *plugin.TValue[map[string]any]
 
 func (c *mqlOciDatabaseDbSystem) GetSystemTags() *plugin.TValue[map[string]any] {
 	return &c.SystemTags
+}
+
+// mqlOciDatabaseMaintenanceWindow for the oci.database.maintenanceWindow resource
+type mqlOciDatabaseMaintenanceWindow struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciDatabaseMaintenanceWindowInternal it will be used here
+	Preference                   plugin.TValue[string]
+	PatchingMode                 plugin.TValue[string]
+	IsCustomActionTimeoutEnabled plugin.TValue[bool]
+	CustomActionTimeoutInMins    plugin.TValue[int64]
+	IsMonthlyPatchingEnabled     plugin.TValue[bool]
+	Months                       plugin.TValue[[]any]
+	WeeksOfMonth                 plugin.TValue[[]any]
+	DaysOfWeek                   plugin.TValue[[]any]
+	HoursOfDay                   plugin.TValue[[]any]
+	LeadTimeInWeeks              plugin.TValue[int64]
+	SkipRu                       plugin.TValue[[]any]
+}
+
+// createOciDatabaseMaintenanceWindow creates a new instance of this resource
+func createOciDatabaseMaintenanceWindow(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDatabaseMaintenanceWindow{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.database.maintenanceWindow", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDatabaseMaintenanceWindow) MqlName() string {
+	return "oci.database.maintenanceWindow"
+}
+
+func (c *mqlOciDatabaseMaintenanceWindow) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDatabaseMaintenanceWindow) GetPreference() *plugin.TValue[string] {
+	return &c.Preference
+}
+
+func (c *mqlOciDatabaseMaintenanceWindow) GetPatchingMode() *plugin.TValue[string] {
+	return &c.PatchingMode
+}
+
+func (c *mqlOciDatabaseMaintenanceWindow) GetIsCustomActionTimeoutEnabled() *plugin.TValue[bool] {
+	return &c.IsCustomActionTimeoutEnabled
+}
+
+func (c *mqlOciDatabaseMaintenanceWindow) GetCustomActionTimeoutInMins() *plugin.TValue[int64] {
+	return &c.CustomActionTimeoutInMins
+}
+
+func (c *mqlOciDatabaseMaintenanceWindow) GetIsMonthlyPatchingEnabled() *plugin.TValue[bool] {
+	return &c.IsMonthlyPatchingEnabled
+}
+
+func (c *mqlOciDatabaseMaintenanceWindow) GetMonths() *plugin.TValue[[]any] {
+	return &c.Months
+}
+
+func (c *mqlOciDatabaseMaintenanceWindow) GetWeeksOfMonth() *plugin.TValue[[]any] {
+	return &c.WeeksOfMonth
+}
+
+func (c *mqlOciDatabaseMaintenanceWindow) GetDaysOfWeek() *plugin.TValue[[]any] {
+	return &c.DaysOfWeek
+}
+
+func (c *mqlOciDatabaseMaintenanceWindow) GetHoursOfDay() *plugin.TValue[[]any] {
+	return &c.HoursOfDay
+}
+
+func (c *mqlOciDatabaseMaintenanceWindow) GetLeadTimeInWeeks() *plugin.TValue[int64] {
+	return &c.LeadTimeInWeeks
+}
+
+func (c *mqlOciDatabaseMaintenanceWindow) GetSkipRu() *plugin.TValue[[]any] {
+	return &c.SkipRu
 }
 
 // mqlOciDatabaseAutonomousDatabase for the oci.database.autonomousDatabase resource

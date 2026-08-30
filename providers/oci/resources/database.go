@@ -77,8 +77,6 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
-				maintenance := ociMaintenanceWindowArgs(s.MaintenanceWindow)
-
 				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.database.dbSystem", stringValue(s.CompartmentId), map[string]*llx.RawData{
 					"id":                   llx.StringDataPtr(s.Id),
 					"name":                 llx.StringDataPtr(s.DisplayName),
@@ -113,17 +111,6 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 					"securityAttributes":         llx.MapData(definedTagsToAny(s.SecurityAttributes), types.Dict),
 					"maintenanceWindow":          llx.DictData(maintenanceWindow),
 					"lifecycleDetails":           llx.StringDataPtr(s.LifecycleDetails),
-
-					"maintenancePreference":                 maintenance["preference"],
-					"maintenancePatchingMode":               maintenance["patchingMode"],
-					"maintenanceCustomActionTimeoutEnabled": maintenance["customActionTimeoutEnabled"],
-					"maintenanceCustomActionTimeoutInMins":  maintenance["customActionTimeoutInMins"],
-					"maintenanceMonthlyPatchingEnabled":     maintenance["monthlyPatchingEnabled"],
-					"maintenanceMonths":                     maintenance["months"],
-					"maintenanceWeeksOfMonth":               maintenance["weeksOfMonth"],
-					"maintenanceDaysOfWeek":                 maintenance["daysOfWeek"],
-					"maintenanceHoursOfDay":                 maintenance["hoursOfDay"],
-					"maintenanceLeadTimeInWeeks":            maintenance["leadTimeInWeeks"],
 				})
 				if err != nil {
 					return nil, err
@@ -135,6 +122,7 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 				mqlDb.cacheSubnetID = stringValue(s.SubnetId)
 				mqlDb.cacheSourceDbSystemID = stringValue(s.SourceDbSystemId)
 				mqlDb.cacheBackupSubnetID = stringValue(s.BackupSubnetId)
+				mqlDb.cacheMaintenanceWindow = s.MaintenanceWindow
 				res = append(res, mqlDb)
 			}
 
@@ -142,24 +130,15 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 		})
 }
 
-// ociMaintenanceWindowArgs flattens a DB system's maintenance window onto the
-// system itself. A system that has never had a window configured carries none
-// at all, and every value reads null rather than the zero of its type, so
-// "patched on a rolling basis" is not reported for a system nobody configured.
+// ociMaintenanceWindowArgs maps a DB system's maintenance window onto the
+// fields of oci.database.maintenanceWindow, and reports nil for a system that
+// has never had one configured. Nil rather than a row of zeroes: a window
+// scheduled for no months on no days would read as a real schedule, and
+// "patched on a rolling basis with no lead time" is a claim about a system
+// nobody has configured.
 func ociMaintenanceWindowArgs(w *database.MaintenanceWindow) map[string]*llx.RawData {
 	if w == nil {
-		return map[string]*llx.RawData{
-			"preference":                 llx.NilData,
-			"patchingMode":               llx.NilData,
-			"customActionTimeoutEnabled": llx.NilData,
-			"customActionTimeoutInMins":  llx.NilData,
-			"monthlyPatchingEnabled":     llx.NilData,
-			"months":                     llx.NilData,
-			"weeksOfMonth":               llx.NilData,
-			"daysOfWeek":                 llx.NilData,
-			"hoursOfDay":                 llx.NilData,
-			"leadTimeInWeeks":            llx.NilData,
-		}
+		return nil
 	}
 
 	months := make([]any, 0, len(w.Months))
@@ -178,18 +157,23 @@ func ociMaintenanceWindowArgs(w *database.MaintenanceWindow) map[string]*llx.Raw
 	for _, v := range w.HoursOfDay {
 		hoursOfDay = append(hoursOfDay, int64(v))
 	}
+	skipRu := make([]any, 0, len(w.SkipRu))
+	for _, v := range w.SkipRu {
+		skipRu = append(skipRu, v)
+	}
 
 	return map[string]*llx.RawData{
-		"preference":                 llx.StringData(string(w.Preference)),
-		"patchingMode":               llx.StringData(string(w.PatchingMode)),
-		"customActionTimeoutEnabled": llx.BoolDataPtr(w.IsCustomActionTimeoutEnabled),
-		"customActionTimeoutInMins":  llx.IntDataPtr(intPtrToInt64(w.CustomActionTimeoutInMins)),
-		"monthlyPatchingEnabled":     llx.BoolDataPtr(w.IsMonthlyPatchingEnabled),
-		"months":                     llx.ArrayData(months, types.String),
-		"weeksOfMonth":               llx.ArrayData(weeksOfMonth, types.Int),
-		"daysOfWeek":                 llx.ArrayData(daysOfWeek, types.String),
-		"hoursOfDay":                 llx.ArrayData(hoursOfDay, types.Int),
-		"leadTimeInWeeks":            llx.IntDataPtr(intPtrToInt64(w.LeadTimeInWeeks)),
+		"preference":                   llx.StringData(string(w.Preference)),
+		"patchingMode":                 llx.StringData(string(w.PatchingMode)),
+		"isCustomActionTimeoutEnabled": llx.BoolDataPtr(w.IsCustomActionTimeoutEnabled),
+		"customActionTimeoutInMins":    llx.IntDataPtr(intPtrToInt64(w.CustomActionTimeoutInMins)),
+		"isMonthlyPatchingEnabled":     llx.BoolDataPtr(w.IsMonthlyPatchingEnabled),
+		"months":                       llx.ArrayData(months, types.String),
+		"weeksOfMonth":                 llx.ArrayData(weeksOfMonth, types.Int),
+		"daysOfWeek":                   llx.ArrayData(daysOfWeek, types.String),
+		"hoursOfDay":                   llx.ArrayData(hoursOfDay, types.Int),
+		"leadTimeInWeeks":              llx.IntDataPtr(intPtrToInt64(w.LeadTimeInWeeks)),
+		"skipRu":                       llx.ArrayData(skipRu, types.Bool),
 	}
 }
 
@@ -201,6 +185,26 @@ type mqlOciDatabaseDbSystemInternal struct {
 	cacheSubnetID            string
 	cacheSourceDbSystemID    string
 	cacheBackupSubnetID      string
+	cacheMaintenanceWindow   *database.MaintenanceWindow
+}
+
+// maintenanceSchedule builds the window Oracle may patch the system in.
+//
+// Null when the system has no window configured at all, which is a different
+// fact from a window that schedules no months and no days.
+func (o *mqlOciDatabaseDbSystem) maintenanceSchedule() (*mqlOciDatabaseMaintenanceWindow, error) {
+	args := ociMaintenanceWindowArgs(o.cacheMaintenanceWindow)
+	if args == nil {
+		o.MaintenanceSchedule.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	args["__id"] = llx.StringData(o.Id.Data + "/maintenanceWindow")
+
+	res, err := CreateResource(o.MqlRuntime, "oci.database.maintenanceWindow", args)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciDatabaseMaintenanceWindow), nil
 }
 
 func (o *mqlOciDatabaseDbSystem) backupSubnet() (*mqlOciNetworkSubnet, error) {

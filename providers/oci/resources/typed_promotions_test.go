@@ -13,7 +13,6 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/dns"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/types"
 )
@@ -259,18 +258,15 @@ func TestOciGroupFromList(t *testing.T) {
 }
 
 func TestOciMaintenanceWindowArgs(t *testing.T) {
-	t.Run("a system with no maintenance window reads null throughout", func(t *testing.T) {
-		// Not every DB system has a window configured. Reporting the zero of
-		// each type would say "patched on a rolling basis with no lead time",
-		// which is a claim about a system nobody has configured.
-		args := ociMaintenanceWindowArgs(nil)
-
-		for field, arg := range args {
-			assert.Equal(t, llx.NilData, arg, "%s must be null when no window is configured", field)
-		}
+	t.Run("a system with no maintenance window builds no window at all", func(t *testing.T) {
+		// Not every DB system has a window configured. Building a window out of
+		// the zero of each type would say "patched on a rolling basis with no
+		// lead time", which is a claim about a system nobody has configured.
+		// The nil return is what makes maintenanceSchedule read null.
+		assert.Nil(t, ociMaintenanceWindowArgs(nil))
 	})
 
-	t.Run("a custom window flattens onto the system", func(t *testing.T) {
+	t.Run("a custom window maps onto the sub-resource fields", func(t *testing.T) {
 		args := ociMaintenanceWindowArgs(&database.MaintenanceWindow{
 			Preference:                   database.MaintenanceWindowPreferenceCustomPreference,
 			PatchingMode:                 database.MaintenanceWindowPatchingModeNonrolling,
@@ -282,28 +278,32 @@ func TestOciMaintenanceWindowArgs(t *testing.T) {
 			DaysOfWeek:                   []database.DayOfWeek{{Name: database.DayOfWeekNameSunday}},
 			HoursOfDay:                   []int{4, 20},
 			LeadTimeInWeeks:              intPtr(2),
+			SkipRu:                       []bool{true},
 		})
+		require.NotNil(t, args)
 
 		assert.Equal(t, "CUSTOM_PREFERENCE", args["preference"].Value)
 		assert.Equal(t, "NONROLLING", args["patchingMode"].Value)
-		assert.Equal(t, true, args["customActionTimeoutEnabled"].Value)
+		assert.Equal(t, true, args["isCustomActionTimeoutEnabled"].Value)
 		assert.Equal(t, int64(30), args["customActionTimeoutInMins"].Value)
-		assert.Equal(t, false, args["monthlyPatchingEnabled"].Value)
+		assert.Equal(t, false, args["isMonthlyPatchingEnabled"].Value)
 		assert.Equal(t, []any{"JANUARY", "APRIL"}, args["months"].Value)
 		assert.Equal(t, []any{int64(2)}, args["weeksOfMonth"].Value)
 		assert.Equal(t, []any{"SUNDAY"}, args["daysOfWeek"].Value)
 		assert.Equal(t, []any{int64(4), int64(20)}, args["hoursOfDay"].Value)
 		assert.Equal(t, int64(2), args["leadTimeInWeeks"].Value)
+		assert.Equal(t, []any{true}, args["skipRu"].Value)
 	})
 
 	t.Run("an absent lead time reads null, not zero weeks", func(t *testing.T) {
 		args := ociMaintenanceWindowArgs(&database.MaintenanceWindow{
 			Preference: database.MaintenanceWindowPreferenceNoPreference,
 		})
+		require.NotNil(t, args)
 
 		assert.Equal(t, "NO_PREFERENCE", args["preference"].Value)
 		assert.Nil(t, args["leadTimeInWeeks"].Value, "zero weeks of notice is a claim; no lead time configured is not")
-		assert.Nil(t, args["customActionTimeoutEnabled"].Value)
+		assert.Nil(t, args["isCustomActionTimeoutEnabled"].Value)
 		assert.Empty(t, args["months"].Value)
 	})
 }

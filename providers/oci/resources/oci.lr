@@ -5871,25 +5871,14 @@ private oci.mysql.dbSystem @defaults("name version state") {
   backupPolicy dict
   // Policy applied to backups and automatic backups when the system is deleted
   //
-  // Deprecated in favor of deleteProtected, automaticBackupRetention and
-  // finalBackup, which carry the three values this dict holds. Together they
-  // decide whether deleting the system also destroys its recovery points.
+  // Deprecated in favor of deletionRules, which reports the same policy as a
+  // structure. Together its values decide whether deleting the system also
+  // destroys its recovery points.
   deletionPolicy @maturity("deprecated") dict
-  // Whether the database system is protected from deletion
+  // What deleting the system does to it and to its backups
   //
-  // False, the default, means an API call or console action can delete the
-  // system outright. Null when the system reports no deletion policy.
-  deleteProtected bool
-  // What happens to automatic backups when the system is deleted
-  //
-  // RETAIN keeps them, DELETE destroys them along with the system. Empty when
-  // the system reports no deletion policy.
-  automaticBackupRetention string
-  // Whether a backup is taken when the system is deleted
-  //
-  // REQUIRE_FINAL_BACKUP takes one, SKIP_FINAL_BACKUP does not. Empty when the
-  // system reports no deletion policy.
-  finalBackup string
+  // Null when the system reports no deletion policy.
+  deletionRules() oci.mysql.deletionPolicy
   // Availability domain the system is placed in
   availabilityDomain string
   // Fault domain the system is placed in
@@ -5911,6 +5900,28 @@ private oci.mysql.dbSystem @defaults("name version state") {
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
 }
+
+// Deletion policy of a MySQL database system
+//
+// What deleting the database system does to it and to its recovery points.
+// deleteProtected is what stops the delete outright, and the other two decide
+// whether the backups that would allow a restore survive it.
+private oci.mysql.deletionPolicy @defaults("deleteProtected automaticBackupRetention finalBackup") {
+  // What happens to automatic backups when the system is deleted
+  //
+  // RETAIN keeps them, DELETE destroys them along with the system.
+  automaticBackupRetention string
+  // Whether a backup is taken when the system is deleted
+  //
+  // REQUIRE_FINAL_BACKUP takes one, SKIP_FINAL_BACKUP does not.
+  finalBackup string
+  // Whether the database system is protected from deletion
+  //
+  // False, the default, means an API call or console action can delete the
+  // system outright.
+  deleteProtected bool
+}
+
 
 // Address a MySQL database system answers on
 //
@@ -6069,27 +6080,13 @@ private oci.nosql.table @defaults("name state") {
   compartment() oci.compartment
   // Throughput and storage limits
   //
-  // Deprecated in favor of maxReadUnits, maxWriteUnits, maxStorageInGBs and
-  // capacityMode, which carry the four values this dict holds.
+  // Deprecated in favor of limits, which reports the same ceilings as a
+  // structure.
   tableLimits @maturity("deprecated") dict
-  // Maximum sustained read throughput for the table
-  //
-  // Zero when `capacityMode` is ON_DEMAND, where the limit does not apply.
-  // Null when the table reports no limits.
-  maxReadUnits int
-  // Maximum sustained write throughput for the table
-  //
-  // Zero when `capacityMode` is ON_DEMAND, where the limit does not apply.
-  // Null when the table reports no limits.
-  maxWriteUnits int
-  // Maximum storage the table may use, in gigabytes
+  // Throughput and storage ceilings the table is provisioned with
   //
   // Null when the table reports no limits.
-  maxStorageInGBs int
-  // How the table's capacity is provisioned
-  //
-  // PROVISIONED or ON_DEMAND. Empty when the table reports no limits.
-  capacityMode string
+  limits() oci.nosql.tableLimits
   // Whether the table is replicated across regions
   isMultiRegion bool
   // Whether the table is reclaimed automatically after a period of inactivity
@@ -6121,6 +6118,29 @@ private oci.nosql.table @defaults("name state") {
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
 }
+
+// Throughput and storage limits of a NoSQL table
+//
+// The ceilings the table is provisioned with. capacityMode decides whether the
+// read and write units are enforced at all: an ON_DEMAND table reports zero
+// for both because the limits do not apply to it.
+private oci.nosql.tableLimits @defaults("capacityMode maxReadUnits maxWriteUnits") {
+  // Maximum sustained read throughput for the table
+  //
+  // Zero when capacityMode is ON_DEMAND, where the limit does not apply.
+  maxReadUnits int
+  // Maximum sustained write throughput for the table
+  //
+  // Zero when capacityMode is ON_DEMAND, where the limit does not apply.
+  maxWriteUnits int
+  // Maximum storage the table may use, in gigabytes
+  maxStorageInGBs int
+  // How the table's capacity is provisioned
+  //
+  // PROVISIONED or ON_DEMAND.
+  capacityMode string
+}
+
 
 // Oracle Cloud Infrastructure (OCI) Search with OpenSearch
 //
@@ -6242,21 +6262,14 @@ private oci.opensearch.cluster @defaults("name softwareVersion securityMode stat
   outboundClusterConfig dict
   // Backup policy
   //
-  // Deprecated in favor of backupEnabled, backupRetentionInDays and
-  // backupFrequencyInHours, which carry the three values this dict holds.
+  // Deprecated in favor of backups, which reports the same policy as a
+  // structure.
   backupPolicy @maturity("deprecated") dict
-  // Whether automatic backups are enabled
+  // Automatic backup schedule and retention
   //
-  // Null when the cluster reports no backup policy.
-  backupEnabled bool
-  // Days a backup copy is kept on storage
-  //
-  // Null when the cluster reports no backup policy.
-  backupRetentionInDays int
-  // Hours between backups
-  //
-  // Null when the cluster reports no backup policy.
-  backupFrequencyInHours int
+  // Null when the cluster reports no backup policy, which is a different fact
+  // from a policy that turns backups off.
+  backups() oci.opensearch.backupPolicy
   // Total storage allocated to the cluster, in GB
   totalStorageGB int
   // Availability domains the cluster is distributed across
@@ -6291,6 +6304,21 @@ private oci.opensearch.cluster @defaults("name softwareVersion securityMode stat
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
 }
+
+// Automatic backup policy of an OpenSearch cluster
+//
+// Whether the cluster takes automatic backups, how often, and how long each
+// copy is kept. A cluster with backups off has no recovery point to restore
+// from, whatever retention says.
+private oci.opensearch.backupPolicy @defaults("isEnabled frequencyInHours retentionInDays") {
+  // Whether automatic backups are enabled
+  isEnabled bool
+  // Days a backup copy is kept on storage
+  retentionInDays int
+  // Hours between backups
+  frequencyInHours int
+}
+
 
 // Oracle Cloud Infrastructure (OCI) GoldenGate
 //
@@ -7950,60 +7978,19 @@ private oci.database.dbSystem @defaults("name") {
   appliedSecurityAttributes() []oci.securityAttributes.applied
   // Patching and maintenance schedule
   //
-  // Deprecated in favor of the maintenance fields, from maintenancePreference
-  // through maintenanceLeadTimeInWeeks. Keyed by `preference` (NO_PREFERENCE
-  // or CUSTOM_PREFERENCE), `patchingMode` (ROLLING or NONROLLING),
+  // Deprecated in favor of maintenanceSchedule, which reports the same window
+  // as a structure. Keyed by `preference` (NO_PREFERENCE or
+  // CUSTOM_PREFERENCE), `patchingMode` (ROLLING or NONROLLING),
   // `isMonthlyPatchingEnabled`, `isCustomActionTimeoutEnabled` with its
   // `customActionTimeoutInMins`, `leadTimeInWeeks`, `skipRu`, and the
   // `months`, `weeksOfMonth`, `daysOfWeek`, and `hoursOfDay` that schedule the
   // window.
   maintenanceWindow @maturity("deprecated") dict
-  // How the maintenance window is scheduled
+  // When Oracle may patch the system, and how
   //
-  // NO_PREFERENCE lets Oracle choose the window, CUSTOM_PREFERENCE pins it to
-  // the months, weeks, days and hours below. Empty when the system reports no
-  // maintenance window.
-  maintenancePreference string
-  // How infrastructure nodes are patched
-  //
-  // ROLLING patches nodes one at a time, NONROLLING takes the system down for
-  // the duration. Empty when the system reports no maintenance window.
-  maintenancePatchingMode string
-  // Whether a custom wait between database server patching operations is configured
-  //
-  // Null when the system reports no maintenance window.
-  maintenanceCustomActionTimeoutEnabled bool
-  // Minutes the system waits before each database server patching operation
-  //
-  // Between 15 and 120 when set. Null when no custom action timeout is
-  // configured.
-  maintenanceCustomActionTimeoutInMins int
-  // Whether monthly patching is enabled
-  //
-  // Null when the system reports no maintenance window.
-  maintenanceMonthlyPatchingEnabled bool
-  // Months during the year maintenance may run in
-  //
-  // Empty when the preference is NO_PREFERENCE, where Oracle chooses.
-  maintenanceMonths []string
-  // Weeks within the month maintenance may run in
-  //
-  // Weeks start on the 1st, 8th, 15th and 22nd, so 2 means the 8th to the
-  // 14th. Empty when the preference is NO_PREFERENCE.
-  maintenanceWeeksOfMonth []int
-  // Days of the week maintenance may run on
-  //
-  // Empty when the preference is NO_PREFERENCE.
-  maintenanceDaysOfWeek []string
-  // Four-hour slots maintenance may start in, as the hour the slot opens
-  //
-  // 0, 4, 8, 12, 16, or 20, each covering the four hours from that hour in
-  // UTC. Empty when the preference is NO_PREFERENCE.
-  maintenanceHoursOfDay []int
-  // Weeks of notice before a maintenance window opens
-  //
-  // Between 1 and 4 when set. Null when no lead time is configured.
-  maintenanceLeadTimeInWeeks int
+  // Null when the system has no maintenance window configured, which is a
+  // different fact from a window scheduled for no months and no days.
+  maintenanceSchedule() oci.database.maintenanceWindow
   // Lifecycle state
   //
   // For example: PROVISIONING, AVAILABLE, UPDATING, TERMINATING, TERMINATED, FAILED, MIGRATED, MAINTENANCE_IN_PROGRESS, NEEDS_ATTENTION, UPGRADING.
@@ -8025,6 +8012,63 @@ private oci.database.dbSystem @defaults("name") {
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
 }
+
+// Maintenance window of a database system
+//
+// When Oracle may patch the system and how. preference separates a window
+// Oracle chooses from one pinned to the months, weeks, days and hours listed
+// here, and patchingMode is what says whether patching takes the system down:
+// NONROLLING involves an outage where ROLLING does not.
+private oci.database.maintenanceWindow @defaults("preference patchingMode") {
+  // How the maintenance window is scheduled
+  //
+  // NO_PREFERENCE lets Oracle choose the window, CUSTOM_PREFERENCE pins it to
+  // the months, weeks, days and hours listed here.
+  preference string
+  // How infrastructure nodes are patched
+  //
+  // ROLLING patches nodes one at a time, NONROLLING takes the system down for
+  // the duration.
+  patchingMode string
+  // Whether a custom wait between database server patching operations is configured
+  isCustomActionTimeoutEnabled bool
+  // Minutes the system waits before each database server patching operation
+  //
+  // Between 15 and 120 when set. Null when no custom action timeout is
+  // configured.
+  customActionTimeoutInMins int
+  // Whether monthly patching is enabled
+  isMonthlyPatchingEnabled bool
+  // Months during the year maintenance may run in
+  //
+  // Empty when the preference is NO_PREFERENCE, where Oracle chooses.
+  months []string
+  // Weeks within the month maintenance may run in
+  //
+  // Weeks start on the 1st, 8th, 15th and 22nd, so 2 means the 8th to the
+  // 14th. Empty when the preference is NO_PREFERENCE.
+  weeksOfMonth []int
+  // Days of the week maintenance may run on
+  //
+  // Empty when the preference is NO_PREFERENCE.
+  daysOfWeek []string
+  // Four-hour slots maintenance may start in, as the hour the slot opens
+  //
+  // 0, 4, 8, 12, 16, or 20, each covering the four hours from that hour in
+  // UTC. Empty when the preference is NO_PREFERENCE.
+  hoursOfDay []int
+  // Weeks of notice before a maintenance window opens
+  //
+  // Between 1 and 4 when set. Null when no lead time is configured.
+  leadTimeInWeeks int
+  // Whether a quarterly release update is skipped
+  //
+  // One entry per quarter the system is set to skip. Two consecutive quarters
+  // cannot be skipped, so a system carrying entries here is at most one
+  // release update behind by request.
+  skipRu []bool
+}
+
 
 // Oracle Cloud Infrastructure (OCI) autonomous database
 private oci.database.autonomousDatabase @defaults("name") {

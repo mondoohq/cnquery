@@ -104,14 +104,6 @@ func (o *mqlOciMysql) dbSystems() ([]any, error) {
 					return nil, err
 				}
 
-				var deleteProtected *bool
-				var automaticBackupRetention, finalBackup string
-				if dp := s.DeletionPolicy; dp != nil {
-					deleteProtected = dp.IsDeleteProtected
-					automaticBackupRetention = string(dp.AutomaticBackupRetention)
-					finalBackup = string(dp.FinalBackup)
-				}
-
 				var backupPolicy, deletionPolicy map[string]any
 				if s.BackupPolicy != nil {
 					backupPolicy, err = convert.JsonToDict(s.BackupPolicy)
@@ -142,9 +134,6 @@ func (o *mqlOciMysql) dbSystems() ([]any, error) {
 					"dbEndpoints":               llx.ArrayData(dbEndpoints, types.Resource("oci.mysql.dbSystem.endpoint")),
 					"backupPolicy":              llx.DictData(backupPolicy),
 					"deletionPolicy":            llx.DictData(deletionPolicy),
-					"deleteProtected":           llx.BoolDataPtr(deleteProtected),
-					"automaticBackupRetention":  llx.StringData(automaticBackupRetention),
-					"finalBackup":               llx.StringData(finalBackup),
 					"availabilityDomain":        llx.StringDataPtr(s.AvailabilityDomain),
 					"faultDomain":               llx.StringDataPtr(s.FaultDomain),
 					"state":                     llx.StringData(string(s.LifecycleState)),
@@ -160,6 +149,7 @@ func (o *mqlOciMysql) dbSystems() ([]any, error) {
 				mqlSystemTyped := mqlSystem.(*mqlOciMysqlDbSystem)
 				mqlSystemTyped.cacheCompartmentID = stringValue(s.CompartmentId)
 				mqlSystemTyped.cacheRegion = region
+				mqlSystemTyped.cacheDeletionPolicy = s.DeletionPolicy
 				res = append(res, mqlSystemTyped)
 			}
 
@@ -177,6 +167,32 @@ type mqlOciMysqlDbSystemInternal struct {
 	// ociLazy, not ociRetryLazy: a DB system we are not allowed to read is
 	// asked for once instead of once per field sharing the fetch.
 	detail ociLazy[*mysql.DbSystem]
+
+	cacheDeletionPolicy *mysql.DeletionPolicyDetails
+}
+
+// deletionRules builds the policy that decides what deleting the system does
+// to it and to its backups.
+//
+// Null when the system reports no deletion policy, rather than a policy that
+// reads as unprotected with its backups discarded.
+func (o *mqlOciMysqlDbSystem) deletionRules() (*mqlOciMysqlDeletionPolicy, error) {
+	dp := o.cacheDeletionPolicy
+	if dp == nil {
+		o.DeletionRules.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.mysql.deletionPolicy", map[string]*llx.RawData{
+		"__id":                     llx.StringData(o.Id.Data + "/deletionPolicy"),
+		"automaticBackupRetention": llx.StringData(string(dp.AutomaticBackupRetention)),
+		"finalBackup":              llx.StringData(string(dp.FinalBackup)),
+		"deleteProtected":          llx.BoolDataPtr(dp.IsDeleteProtected),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciMysqlDeletionPolicy), nil
 }
 
 func (o *mqlOciMysqlDbSystem) id() (string, error) {
@@ -508,26 +524,17 @@ func (o *mqlOciNosql) tables() ([]any, error) {
 				t := tables[i]
 
 				var tableLimits map[string]any
-				limits := t.TableLimits
-				if limits != nil {
-					tableLimits, err = convert.JsonToDict(limits)
+				if t.TableLimits != nil {
+					tableLimits, err = convert.JsonToDict(t.TableLimits)
 					if err != nil {
 						return nil, err
 					}
-				} else {
-					// No limits reported leaves every limit null rather than
-					// reading as a table capped at zero.
-					limits = &nosql.TableLimits{}
 				}
 
 				mqlTable, err := CreateResource(o.MqlRuntime, "oci.nosql.table", map[string]*llx.RawData{
 					"id":                llx.StringDataPtr(t.Id),
 					"name":              llx.StringDataPtr(t.Name),
 					"tableLimits":       llx.DictData(tableLimits),
-					"maxReadUnits":      llx.IntDataPtr(limits.MaxReadUnits),
-					"maxWriteUnits":     llx.IntDataPtr(limits.MaxWriteUnits),
-					"maxStorageInGBs":   llx.IntDataPtr(limits.MaxStorageInGBs),
-					"capacityMode":      llx.StringData(string(limits.CapacityMode)),
 					"isMultiRegion":     llx.BoolData(boolValue(t.IsMultiRegion)),
 					"isAutoReclaimable": llx.BoolData(boolValue(t.IsAutoReclaimable)),
 					"timeOfExpiration":  sdkTimeData(t.TimeOfExpiration),
@@ -544,6 +551,7 @@ func (o *mqlOciNosql) tables() ([]any, error) {
 				}
 				mqlTableTyped := mqlTable.(*mqlOciNosqlTable)
 				mqlTableTyped.cacheCompartmentID = stringValue(t.CompartmentId)
+				mqlTableTyped.cacheTableLimits = t.TableLimits
 				res = append(res, mqlTableTyped)
 			}
 
@@ -553,6 +561,32 @@ func (o *mqlOciNosql) tables() ([]any, error) {
 
 type mqlOciNosqlTableInternal struct {
 	cacheCompartmentID string
+	cacheTableLimits   *nosql.TableLimits
+}
+
+// limits builds the throughput and storage ceilings the table is provisioned
+// with.
+//
+// Null when the table reports no limits, rather than a table that reads as
+// capped at zero reads, zero writes and zero storage.
+func (o *mqlOciNosqlTable) limits() (*mqlOciNosqlTableLimits, error) {
+	limits := o.cacheTableLimits
+	if limits == nil {
+		o.Limits.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.nosql.tableLimits", map[string]*llx.RawData{
+		"__id":            llx.StringData(o.Id.Data + "/tableLimits"),
+		"maxReadUnits":    llx.IntDataPtr(limits.MaxReadUnits),
+		"maxWriteUnits":   llx.IntDataPtr(limits.MaxWriteUnits),
+		"maxStorageInGBs": llx.IntDataPtr(limits.MaxStorageInGBs),
+		"capacityMode":    llx.StringData(string(limits.CapacityMode)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciNosqlTableLimits), nil
 }
 
 func (o *mqlOciNosqlTable) id() (string, error) {
@@ -598,16 +632,11 @@ func (o *mqlOciOpensearch) clusters() ([]any, error) {
 				c := clusters[i]
 
 				var backupPolicy, outboundClusterConfig map[string]any
-				policy := c.BackupPolicy
-				if policy != nil {
-					backupPolicy, err = convert.JsonToDict(policy)
+				if c.BackupPolicy != nil {
+					backupPolicy, err = convert.JsonToDict(c.BackupPolicy)
 					if err != nil {
 						return nil, err
 					}
-				} else {
-					// No policy reported leaves the fields null rather than
-					// reading as backups explicitly disabled.
-					policy = &opensearch.BackupPolicy{}
 				}
 				if c.OutboundClusterConfig != nil {
 					outboundClusterConfig, err = convert.JsonToDict(c.OutboundClusterConfig)
@@ -617,25 +646,22 @@ func (o *mqlOciOpensearch) clusters() ([]any, error) {
 				}
 
 				mqlCluster, err := CreateResource(o.MqlRuntime, "oci.opensearch.cluster", map[string]*llx.RawData{
-					"id":                     llx.StringDataPtr(c.Id),
-					"name":                   llx.StringDataPtr(c.DisplayName),
-					"softwareVersion":        llx.StringDataPtr(c.SoftwareVersion),
-					"securityMode":           llx.StringData(string(c.SecurityMode)),
-					"outboundClusterConfig":  llx.DictData(outboundClusterConfig),
-					"backupPolicy":           llx.DictData(backupPolicy),
-					"backupEnabled":          llx.BoolDataPtr(policy.IsEnabled),
-					"backupRetentionInDays":  llx.IntDataPtr(policy.RetentionInDays),
-					"backupFrequencyInHours": llx.IntDataPtr(policy.FrequencyInHours),
-					"totalStorageGB":         llx.IntDataDefault(c.TotalStorageGB, 0),
-					"availabilityDomains":    llx.ArrayData(stringsToAny(c.AvailabilityDomains), types.String),
-					"securityAttributes":     llx.MapData(definedTagsToAny(c.SecurityAttributes), types.Dict),
-					"state":                  llx.StringData(string(c.LifecycleState)),
-					"stateDetails":           llx.StringDataPtr(c.LifecycleDetails),
-					"created":                sdkTimeData(c.TimeCreated),
-					"updated":                sdkTimeData(c.TimeUpdated),
-					"freeformTags":           llx.MapData(strMapToAny(c.FreeformTags), types.String),
-					"definedTags":            llx.MapData(definedTagsToAny(c.DefinedTags), types.Any),
-					"systemTags":             llx.MapData(definedTagsToAny(c.SystemTags), types.Dict),
+					"id":                    llx.StringDataPtr(c.Id),
+					"name":                  llx.StringDataPtr(c.DisplayName),
+					"softwareVersion":       llx.StringDataPtr(c.SoftwareVersion),
+					"securityMode":          llx.StringData(string(c.SecurityMode)),
+					"outboundClusterConfig": llx.DictData(outboundClusterConfig),
+					"backupPolicy":          llx.DictData(backupPolicy),
+					"totalStorageGB":        llx.IntDataDefault(c.TotalStorageGB, 0),
+					"availabilityDomains":   llx.ArrayData(stringsToAny(c.AvailabilityDomains), types.String),
+					"securityAttributes":    llx.MapData(definedTagsToAny(c.SecurityAttributes), types.Dict),
+					"state":                 llx.StringData(string(c.LifecycleState)),
+					"stateDetails":          llx.StringDataPtr(c.LifecycleDetails),
+					"created":               sdkTimeData(c.TimeCreated),
+					"updated":               sdkTimeData(c.TimeUpdated),
+					"freeformTags":          llx.MapData(strMapToAny(c.FreeformTags), types.String),
+					"definedTags":           llx.MapData(definedTagsToAny(c.DefinedTags), types.Any),
+					"systemTags":            llx.MapData(definedTagsToAny(c.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -643,6 +669,7 @@ func (o *mqlOciOpensearch) clusters() ([]any, error) {
 				mqlClusterTyped := mqlCluster.(*mqlOciOpensearchCluster)
 				mqlClusterTyped.cacheCompartmentID = stringValue(c.CompartmentId)
 				mqlClusterTyped.cacheRegion = region
+				mqlClusterTyped.cacheBackupPolicy = c.BackupPolicy
 				res = append(res, mqlClusterTyped)
 			}
 
@@ -658,6 +685,32 @@ type mqlOciOpensearchClusterInternal struct {
 	cacheRegion        string
 
 	detail ociLazy[*opensearch.OpensearchCluster]
+
+	cacheBackupPolicy *opensearch.BackupPolicy
+}
+
+// backups builds the cluster's automatic backup schedule and retention.
+//
+// Null when the cluster reports no backup policy, which is a different fact
+// from a policy that turns backups off: one says nothing was configured, the
+// other says someone turned them off.
+func (o *mqlOciOpensearchCluster) backups() (*mqlOciOpensearchBackupPolicy, error) {
+	policy := o.cacheBackupPolicy
+	if policy == nil {
+		o.Backups.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.opensearch.backupPolicy", map[string]*llx.RawData{
+		"__id":             llx.StringData(o.Id.Data + "/backupPolicy"),
+		"isEnabled":        llx.BoolDataPtr(policy.IsEnabled),
+		"retentionInDays":  llx.IntDataPtr(policy.RetentionInDays),
+		"frequencyInHours": llx.IntDataPtr(policy.FrequencyInHours),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciOpensearchBackupPolicy), nil
 }
 
 func (o *mqlOciOpensearchCluster) id() (string, error) {
