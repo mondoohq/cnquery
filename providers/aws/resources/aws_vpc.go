@@ -1907,52 +1907,31 @@ func (a *mqlAwsVpc) blockPublicAccessOptions() (any, error) {
 	}, nil
 }
 
-// vpcBlockPublicAccessString resolves one region-wide VPC Block Public Access
-// setting as a string, reading empty when the region has no configuration.
-func (a *mqlAwsVpc) vpcBlockPublicAccessString(get func(*vpctypes.VpcBlockPublicAccessOptions) string) (string, error) {
+func (a *mqlAwsVpc) blockPublicAccess() (*mqlAwsEc2VpcBlockPublicAccessOptions, error) {
 	opts, err := a.fetchBlockPublicAccessOptions()
-	if err != nil || opts == nil {
-		return "", err
-	}
-	return get(opts), nil
-}
-
-func (a *mqlAwsVpc) blockPublicAccessInternetGatewayBlockMode() (string, error) {
-	return a.vpcBlockPublicAccessString(func(o *vpctypes.VpcBlockPublicAccessOptions) string {
-		return string(o.InternetGatewayBlockMode)
-	})
-}
-
-func (a *mqlAwsVpc) blockPublicAccessState() (string, error) {
-	return a.vpcBlockPublicAccessString(func(o *vpctypes.VpcBlockPublicAccessOptions) string {
-		return string(o.State)
-	})
-}
-
-func (a *mqlAwsVpc) blockPublicAccessExclusionsAllowed() (string, error) {
-	return a.vpcBlockPublicAccessString(func(o *vpctypes.VpcBlockPublicAccessOptions) string {
-		return string(o.ExclusionsAllowed)
-	})
-}
-
-func (a *mqlAwsVpc) blockPublicAccessManagedBy() (string, error) {
-	return a.vpcBlockPublicAccessString(func(o *vpctypes.VpcBlockPublicAccessOptions) string {
-		return string(o.ManagedBy)
-	})
-}
-
-func (a *mqlAwsVpc) blockPublicAccessReason() (string, error) {
-	return a.vpcBlockPublicAccessString(func(o *vpctypes.VpcBlockPublicAccessOptions) string {
-		return convert.ToValue(o.Reason)
-	})
-}
-
-func (a *mqlAwsVpc) blockPublicAccessLastUpdatedAt() (*time.Time, error) {
-	opts, err := a.fetchBlockPublicAccessOptions()
-	if err != nil || opts == nil {
+	if err != nil {
 		return nil, err
 	}
-	return opts.LastUpdateTimestamp, nil
+	if opts == nil {
+		a.BlockPublicAccess.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	// The setting is account- and region-scoped, so every VPC in a region
+	// resolves to the same resource rather than one copy per VPC.
+	res, err := CreateResource(a.MqlRuntime, "aws.ec2.vpcBlockPublicAccessOptions", map[string]*llx.RawData{
+		"__id":                     llx.StringData("aws.ec2.vpcBlockPublicAccessOptions/" + conn.AccountId() + "/" + a.Region.Data),
+		"internetGatewayBlockMode": llx.StringData(string(opts.InternetGatewayBlockMode)),
+		"state":                    llx.StringData(string(opts.State)),
+		"exclusionsAllowed":        llx.StringData(string(opts.ExclusionsAllowed)),
+		"managedBy":                llx.StringData(string(opts.ManagedBy)),
+		"reason":                   llx.StringData(convert.ToValue(opts.Reason)),
+		"lastUpdatedAt":            llx.TimeDataPtr(opts.LastUpdateTimestamp),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2VpcBlockPublicAccessOptions), nil
 }
 
 // VPN Gateway implementation

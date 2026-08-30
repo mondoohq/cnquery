@@ -539,51 +539,18 @@ aws.vpc @defaults("id isDefault cidrBlock region") {
   defaultNetworkAcl() aws.ec2.networkacl
   // Account- and region-level VPC Block Public Access options that apply to the VPC
   //
-  // Deprecated in favor of blockPublicAccessInternetGatewayBlockMode,
-  // blockPublicAccessState, blockPublicAccessExclusionsAllowed,
-  // blockPublicAccessManagedBy, blockPublicAccessReason, and
-  // blockPublicAccessLastUpdatedAt. A dict with `internetGatewayBlockMode`,
-  // `state`, `exclusionsAllowed`, `managedBy`, `reason`, and
-  // `lastUpdateTimestamp`. Empty when VPC Block Public Access has never been
-  // configured in the region.
+  // Deprecated in favor of blockPublicAccess, which carries the same values as
+  // a resource with a proper time value for the last update rather than a
+  // string. A dict with `internetGatewayBlockMode`, `state`,
+  // `exclusionsAllowed`, `managedBy`, `reason`, and `lastUpdateTimestamp`.
+  // Empty when VPC Block Public Access has never been configured in the
+  // region.
   blockPublicAccessOptions() @maturity("deprecated") dict
-  // Region-wide VPC Block Public Access mode
-  //
-  // One of off, block-bidirectional, or block-ingress. This is the setting
-  // configured for the whole region, which the VPC's own
-  // internetGatewayBlockMode reports the effect of after any exclusion is
-  // applied, so the two disagree on a VPC that has been excluded. Empty when
-  // VPC Block Public Access has never been configured in the region.
-  blockPublicAccessInternetGatewayBlockMode() string
-  // Rollout state of the region-wide VPC Block Public Access mode
-  //
-  // One of default-state, update-in-progress, or update-complete. A mode that
-  // reads as blocking while the state is update-in-progress is not yet in
-  // force. Empty when VPC Block Public Access has never been configured in
-  // the region.
-  blockPublicAccessState() string
-  // Whether VPC Block Public Access exclusions are allowed in the region
-  //
-  // One of allowed or not-allowed. Reads not-allowed when the setting is
-  // enforced by an organization-level declarative policy, which is what stops
-  // an account excluding its own VPC from the block. Empty when VPC Block
-  // Public Access has never been configured in the region.
-  blockPublicAccessExclusionsAllowed() string
-  // Entity that manages the region-wide VPC Block Public Access state
-  //
-  // One of account or declarative-policy. A declarative-policy value means
-  // the account cannot change the setting. Empty when VPC Block Public Access
-  // has never been configured in the region.
-  blockPublicAccessManagedBy() string
-  // Reason for the current region-wide VPC Block Public Access state
-  //
-  // Empty when the service reports no reason.
-  blockPublicAccessReason() string
-  // Time the region-wide VPC Block Public Access mode was last updated
+  // Region-wide VPC Block Public Access options that apply to the VPC
   //
   // Null when VPC Block Public Access has never been configured in the
-  // region.
-  blockPublicAccessLastUpdatedAt() time
+  // region, and on a region the account cannot read the setting in.
+  blockPublicAccess() aws.ec2.vpcBlockPublicAccessOptions
   // Virtual private gateways attached to the VPC
   vpnGateways() []aws.vpc.vpnGateway
   // DHCP options set associated with the VPC
@@ -19173,6 +19140,116 @@ private aws.ec2.managedPrefixList.entry @defaults("cidr") {
   description string
 }
 
+// Region-wide VPC Block Public Access options
+//
+// Account- and region-level setting that blocks internet gateway traffic for
+// every VPC in the region, independent of what any route table, security
+// group, or network ACL allows. The mode says what is blocked, the state says
+// whether the mode is actually in force yet, and managedBy says whether the
+// account can change it at all.
+private aws.ec2.vpcBlockPublicAccessOptions @defaults("internetGatewayBlockMode state") {
+  // Region-wide VPC Block Public Access mode
+  //
+  // One of off, block-bidirectional, or block-ingress. This is the setting
+  // configured for the whole region, which a VPC's own
+  // internetGatewayBlockMode reports the effect of after any exclusion is
+  // applied, so the two disagree on a VPC that has been excluded.
+  internetGatewayBlockMode string
+  // Rollout state of the region-wide VPC Block Public Access mode
+  //
+  // One of default-state, update-in-progress, or update-complete. A mode that
+  // reads as blocking while the state is update-in-progress is not yet in
+  // force.
+  state string
+  // Whether VPC Block Public Access exclusions are allowed in the region
+  //
+  // One of allowed or not-allowed. Reads not-allowed when the setting is
+  // enforced by an organization-level declarative policy, which is what stops
+  // an account excluding its own VPC from the block.
+  exclusionsAllowed string
+  // Entity that manages the region-wide VPC Block Public Access state
+  //
+  // One of account or declarative-policy. A declarative-policy value means
+  // the account cannot change the setting.
+  managedBy string
+  // Reason for the current region-wide VPC Block Public Access state
+  //
+  // Empty when the service reports no reason.
+  reason string
+  // Time the region-wide VPC Block Public Access mode was last updated
+  //
+  // Null when the service reports no update time.
+  lastUpdatedAt time
+}
+
+// Reason an Amazon EC2 resource entered its current state
+//
+// Machine-readable code and human-readable message EC2 records for the most
+// recent state transition, for example Client.UserInitiatedShutdown for a
+// stop someone asked for and Server.SpotInstanceTermination for a Spot
+// instance reclaimed by EC2.
+private aws.ec2.stateReason @defaults("code message") {
+  // Machine-readable code for the state transition
+  code string
+  // Human-readable message for the state transition
+  message string
+}
+
+// Connection logging configuration of an EC2 Client VPN endpoint
+//
+// Where the endpoint records client connection attempts. Without connection
+// logging there is no record of who connected to the VPN, when, or from
+// where, so a compromised client credential leaves no trace.
+private aws.ec2.clientVpnConnectionLogOptions @defaults("enabled") {
+  // Whether client connection logging is enabled for the endpoint
+  enabled bool
+  // CloudWatch log group receiving connection logs for the endpoint
+  //
+  // Null when connection logging is disabled or no log group is configured.
+  cloudWatchLogGroup() aws.cloudwatch.loggroup
+  // CloudWatch log stream receiving connection logs for the endpoint
+  //
+  // Empty when connection logging is disabled or the endpoint writes to a
+  // stream it names per connection rather than a fixed one.
+  cloudWatchLogStream string
+}
+
+// Login banner of an EC2 Client VPN endpoint
+//
+// Text a client is shown when a VPN session is established, which is where an
+// acceptable-use or monitoring notice is served from.
+private aws.ec2.clientVpnLoginBannerOptions @defaults("enabled") {
+  // Whether the client login banner is enabled
+  enabled bool
+  // Text shown in the banner when a VPN session is established
+  //
+  // Empty when the banner is disabled. Up to 1400 UTF-8 characters.
+  bannerText string
+}
+
+// Client connect handling of an EC2 Client VPN endpoint
+//
+// Lambda function the endpoint runs to authorize each connection, on top of
+// whatever the endpoint's own authentication options already checked. The
+// status reports whether the endpoint applied the setting.
+private aws.ec2.clientVpnConnectOptions @defaults("enabled") {
+  // Whether client connect handling is enabled for the endpoint
+  enabled bool
+  // Lambda function that authorizes connections to the endpoint
+  //
+  // Null when client connect handling is disabled or no function is
+  // configured.
+  lambdaFunction() aws.lambda.function
+  // Status code of the client connect option
+  //
+  // One of applying or applied. Empty when the endpoint reports no status.
+  statusCode string
+  // Message describing the status of the client connect option
+  //
+  // Empty when the endpoint reports no status message.
+  statusMessage string
+}
+
 // Amazon EC2 Client VPN endpoint
 private aws.ec2.clientVpnEndpoint @defaults("id status region") {
   // Client VPN endpoint ID
@@ -19209,47 +19286,35 @@ private aws.ec2.clientVpnEndpoint @defaults("id status region") {
   sessionTimeoutHours int
   // Client connect options (Lambda ARN, enabled flag)
   //
-  // Deprecated in favor of clientConnectEnabled and clientConnectFunction.
+  // Deprecated in favor of clientConnect, which carries the same values as a
+  // resource with the Lambda function resolved.
   clientConnectOptions @maturity("deprecated") dict
   // Client login banner options (banner text, enabled flag)
   //
-  // Deprecated in favor of loginBannerEnabled and loginBannerText.
+  // Deprecated in favor of loginBanner, which carries the same two values as
+  // a resource.
   clientLoginBannerOptions @maturity("deprecated") dict
   // Connection logging options (CloudWatch log group/stream, enabled flag)
   //
-  // Deprecated in favor of connectionLoggingEnabled, connectionLogGroup, and
-  // connectionLogStreamName.
+  // Deprecated in favor of connectionLogging, which carries the same values
+  // as a resource with the log group resolved.
   connectionLogOptions @maturity("deprecated") dict
-  // Whether client connection logging is enabled for the endpoint
+  // Connection logging configuration of the endpoint
   //
-  // Without it there is no record of who connected to the VPN, when, or from
-  // where, so a compromised client credential leaves no trace.
-  connectionLoggingEnabled bool
-  // CloudWatch log group receiving connection logs for the endpoint
+  // Without connection logging there is no record of who connected to the
+  // VPN, when, or from where, so a compromised client credential leaves no
+  // trace. Null when the endpoint reports no connection log options.
+  connectionLogging aws.ec2.clientVpnConnectionLogOptions
+  // Login banner shown when a VPN session is established
   //
-  // Null when connection logging is disabled or no log group is configured.
-  connectionLogGroup() aws.cloudwatch.loggroup
-  // CloudWatch log stream receiving connection logs for the endpoint
-  //
-  // Empty when connection logging is disabled or the endpoint writes to a
-  // stream it names per connection rather than a fixed one.
-  connectionLogStreamName string
-  // Whether the client login banner is enabled
-  loginBannerEnabled bool
-  // Text shown in the banner when a VPN session is established
-  //
-  // Empty when the banner is disabled. Up to 1400 UTF-8 characters.
-  loginBannerText string
-  // Whether client connect handling is enabled for the endpoint
+  // Null when the endpoint reports no client login banner options.
+  loginBanner aws.ec2.clientVpnLoginBannerOptions
+  // Client connect handling of the endpoint
   //
   // When enabled, a Lambda function authorizes each connection in addition to
-  // the endpoint's own authentication options.
-  clientConnectEnabled bool
-  // Lambda function that authorizes connections to the endpoint
-  //
-  // Null when client connect handling is disabled or no function is
-  // configured.
-  clientConnectFunction() aws.lambda.function
+  // the endpoint's own authentication options. Null when the endpoint reports
+  // no client connect options.
+  clientConnect aws.ec2.clientVpnConnectOptions
   // Authentication methods enabled on the endpoint
   //
   // Each entry carries Type (certificate-authentication,
@@ -19438,6 +19503,47 @@ private aws.ec2.vpcEndpointServiceConfiguration @defaults("id name state") {
   connections() []aws.ec2.vpcEndpointServiceConfiguration.connection
 }
 
+// Instance metadata service options of an EC2 launch template
+//
+// How instances launched from the template reach the instance metadata
+// service: whether the endpoint is on at all, whether a session token is
+// required to read it, how far a metadata response may travel, and whether
+// the instance's own tags are readable through it. These decide how much an
+// SSRF against a workload on the instance can reach.
+private aws.ec2.launchtemplate.instanceMetadataOptions @defaults("httpTokens httpEndpoint httpPutResponseHopLimit") {
+  // Whether IMDSv2 is required on instances launched from the default version
+  //
+  // Either optional (IMDSv1 credentials are still available without a session
+  // token) or required (every metadata request must carry a session token).
+  httpTokens string
+  // Whether the HTTP metadata endpoint is enabled on instances launched from the default version
+  //
+  // Either enabled or disabled. A disabled endpoint makes instance metadata,
+  // including any IAM role credentials, unreachable from the instance.
+  httpEndpoint string
+  // Maximum number of network hops the instance metadata PUT response may travel
+  //
+  // Integers from 1 to 64. A limit above 1 lets a containerized or proxied
+  // workload reach the metadata service, which widens the blast radius of an
+  // SSRF. Null when the template sets no hop limit.
+  httpPutResponseHopLimit int
+  // Whether the IPv6 endpoint of the instance metadata service is enabled
+  //
+  // Either enabled or disabled.
+  httpProtocolIpv6 string
+  // Whether instance tags are readable through the instance metadata service
+  //
+  // Either enabled or disabled. Enabling it exposes every tag on the
+  // instance, including any that carry sensitive values, to every process on
+  // the host.
+  instanceMetadataTags string
+  // State of the metadata option changes
+  //
+  // Either pending (the options are being updated and the instance is not yet
+  // serving metadata under the new selection) or applied.
+  state string
+}
+
 // Amazon EC2 launch template
 private aws.ec2.launchtemplate @defaults("name region") {
   // Launch template ID
@@ -19464,46 +19570,16 @@ private aws.ec2.launchtemplate @defaults("name region") {
   userDataPresent() bool
   // Metadata options from the default version
   //
-  // Deprecated in favor of httpTokens, httpEndpoint,
-  // httpPutResponseHopLimit, httpProtocolIpv6, instanceMetadataTags, and
-  // metadataOptionsState. Keys are `HttpEndpoint`, `HttpProtocolIpv6`,
+  // Deprecated in favor of instanceMetadata, which carries the same six values
+  // as a resource. Keys are `HttpEndpoint`, `HttpProtocolIpv6`,
   // `HttpPutResponseHopLimit`, `HttpTokens`, `InstanceMetadataTags`, and
   // `State`.
   metadataOptions() @maturity("deprecated") dict
-  // Whether IMDSv2 is required on instances launched from the default version
+  // Instance metadata service options from the default version
   //
-  // Either optional (IMDSv1 credentials are still available without a session
-  // token) or required (every metadata request must carry a session token).
-  // Empty when the default version sets no metadata options, in which case
-  // instances launch with the account-level default.
-  httpTokens() string
-  // Whether the HTTP metadata endpoint is enabled on instances launched from the default version
-  //
-  // Either enabled or disabled. A disabled endpoint makes instance metadata,
-  // including any IAM role credentials, unreachable from the instance.
-  httpEndpoint() string
-  // Maximum number of network hops the instance metadata PUT response may travel
-  //
-  // Integers from 1 to 64. A limit above 1 lets a containerized or proxied
-  // workload reach the metadata service, which widens the blast radius of an
-  // SSRF. 0 when the default version sets no metadata options.
-  httpPutResponseHopLimit() int
-  // Whether the IPv6 endpoint of the instance metadata service is enabled
-  //
-  // Either enabled or disabled. Empty when the default version sets no
-  // metadata options.
-  httpProtocolIpv6() string
-  // Whether instance tags are readable through the instance metadata service
-  //
-  // Either enabled or disabled. Enabling it exposes every tag on the
-  // instance, including any that carry sensitive values, to every process on
-  // the host.
-  instanceMetadataTags() string
-  // State of the metadata option changes
-  //
-  // Either pending (the options are being updated and the instance is not yet
-  // serving metadata under the new selection) or applied.
-  metadataOptionsState() string
+  // Null when the default version sets no metadata options, in which case
+  // instances launch with the account-level defaults.
+  instanceMetadata() aws.ec2.launchtemplate.instanceMetadataOptions
   // Security group IDs from the default version
   securityGroupIds() []string
   // IAM instance profile ARN or name from the default version
@@ -20181,20 +20257,14 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   instanceStatus() dict
   // Reason for the most recent state transition
   //
-  // Deprecated in favor of stateReasonCode and stateReasonMessage. Carries
-  // Code and Message.
+  // Deprecated in favor of stateReasonRef, which carries the same two values
+  // as a resource. Carries Code and Message.
   stateReason @maturity("deprecated") dict
-  // Machine-readable code for the most recent state transition
+  // Reason for the most recent state transition
   //
-  // For example Client.UserInitiatedShutdown or
-  // Server.SpotInstanceTermination. Empty when the instance reports no
-  // reason, which is the usual case for an instance that has always been
-  // running.
-  stateReasonCode string
-  // Human-readable message for the most recent state transition
-  //
-  // Empty when the instance reports no reason.
-  stateReasonMessage string
+  // Null when the instance reports no reason, which is the usual case for an
+  // instance that has always been running.
+  stateReasonRef aws.ec2.stateReason
   // Reason for the most recent state transition
   stateTransitionReason string
   // Whether the instance has EBS optimization turned on

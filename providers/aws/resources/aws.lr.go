@@ -620,6 +620,11 @@ const (
 	ResourceAwsEc2TransitgatewayPeeringAttachment                               string = "aws.ec2.transitgateway.peeringAttachment"
 	ResourceAwsEc2ManagedPrefixList                                             string = "aws.ec2.managedPrefixList"
 	ResourceAwsEc2ManagedPrefixListEntry                                        string = "aws.ec2.managedPrefixList.entry"
+	ResourceAwsEc2VpcBlockPublicAccessOptions                                   string = "aws.ec2.vpcBlockPublicAccessOptions"
+	ResourceAwsEc2StateReason                                                   string = "aws.ec2.stateReason"
+	ResourceAwsEc2ClientVpnConnectionLogOptions                                 string = "aws.ec2.clientVpnConnectionLogOptions"
+	ResourceAwsEc2ClientVpnLoginBannerOptions                                   string = "aws.ec2.clientVpnLoginBannerOptions"
+	ResourceAwsEc2ClientVpnConnectOptions                                       string = "aws.ec2.clientVpnConnectOptions"
 	ResourceAwsEc2ClientVpnEndpoint                                             string = "aws.ec2.clientVpnEndpoint"
 	ResourceAwsEc2CustomerGateway                                               string = "aws.ec2.customerGateway"
 	ResourceAwsEc2EgressOnlyInternetGateway                                     string = "aws.ec2.egressOnlyInternetGateway"
@@ -627,6 +632,7 @@ const (
 	ResourceAwsEc2CapacityReservation                                           string = "aws.ec2.capacityReservation"
 	ResourceAwsEc2InstanceConnectEndpoint                                       string = "aws.ec2.instanceConnectEndpoint"
 	ResourceAwsEc2VpcEndpointServiceConfiguration                               string = "aws.ec2.vpcEndpointServiceConfiguration"
+	ResourceAwsEc2LaunchtemplateInstanceMetadataOptions                         string = "aws.ec2.launchtemplate.instanceMetadataOptions"
 	ResourceAwsEc2Launchtemplate                                                string = "aws.ec2.launchtemplate"
 	ResourceAwsEc2Launchconfiguration                                           string = "aws.ec2.launchconfiguration"
 	ResourceAwsEc2LaunchconfigurationBlockDeviceMapping                         string = "aws.ec2.launchconfiguration.blockDeviceMapping"
@@ -3438,6 +3444,26 @@ func init() {
 			// to override args, implement: initAwsEc2ManagedPrefixListEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2ManagedPrefixListEntry,
 		},
+		"aws.ec2.vpcBlockPublicAccessOptions": {
+			// to override args, implement: initAwsEc2VpcBlockPublicAccessOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2VpcBlockPublicAccessOptions,
+		},
+		"aws.ec2.stateReason": {
+			// to override args, implement: initAwsEc2StateReason(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2StateReason,
+		},
+		"aws.ec2.clientVpnConnectionLogOptions": {
+			// to override args, implement: initAwsEc2ClientVpnConnectionLogOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2ClientVpnConnectionLogOptions,
+		},
+		"aws.ec2.clientVpnLoginBannerOptions": {
+			// to override args, implement: initAwsEc2ClientVpnLoginBannerOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2ClientVpnLoginBannerOptions,
+		},
+		"aws.ec2.clientVpnConnectOptions": {
+			// to override args, implement: initAwsEc2ClientVpnConnectOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2ClientVpnConnectOptions,
+		},
 		"aws.ec2.clientVpnEndpoint": {
 			// to override args, implement: initAwsEc2ClientVpnEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2ClientVpnEndpoint,
@@ -3465,6 +3491,10 @@ func init() {
 		"aws.ec2.vpcEndpointServiceConfiguration": {
 			// to override args, implement: initAwsEc2VpcEndpointServiceConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2VpcEndpointServiceConfiguration,
+		},
+		"aws.ec2.launchtemplate.instanceMetadataOptions": {
+			// to override args, implement: initAwsEc2LaunchtemplateInstanceMetadataOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2LaunchtemplateInstanceMetadataOptions,
 		},
 		"aws.ec2.launchtemplate": {
 			Init:   initAwsEc2Launchtemplate,
@@ -5477,23 +5507,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.blockPublicAccessOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetBlockPublicAccessOptions()).ToDataRes(types.Dict)
 	},
-	"aws.vpc.blockPublicAccessInternetGatewayBlockMode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVpc).GetBlockPublicAccessInternetGatewayBlockMode()).ToDataRes(types.String)
-	},
-	"aws.vpc.blockPublicAccessState": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVpc).GetBlockPublicAccessState()).ToDataRes(types.String)
-	},
-	"aws.vpc.blockPublicAccessExclusionsAllowed": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVpc).GetBlockPublicAccessExclusionsAllowed()).ToDataRes(types.String)
-	},
-	"aws.vpc.blockPublicAccessManagedBy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVpc).GetBlockPublicAccessManagedBy()).ToDataRes(types.String)
-	},
-	"aws.vpc.blockPublicAccessReason": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVpc).GetBlockPublicAccessReason()).ToDataRes(types.String)
-	},
-	"aws.vpc.blockPublicAccessLastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVpc).GetBlockPublicAccessLastUpdatedAt()).ToDataRes(types.Time)
+	"aws.vpc.blockPublicAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetBlockPublicAccess()).ToDataRes(types.Resource("aws.ec2.vpcBlockPublicAccessOptions"))
 	},
 	"aws.vpc.vpnGateways": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetVpnGateways()).ToDataRes(types.Array(types.Resource("aws.vpc.vpnGateway")))
@@ -24035,6 +24050,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.managedPrefixList.entry.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ManagedPrefixListEntry).GetDescription()).ToDataRes(types.String)
 	},
+	"aws.ec2.vpcBlockPublicAccessOptions.internetGatewayBlockMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2VpcBlockPublicAccessOptions).GetInternetGatewayBlockMode()).ToDataRes(types.String)
+	},
+	"aws.ec2.vpcBlockPublicAccessOptions.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2VpcBlockPublicAccessOptions).GetState()).ToDataRes(types.String)
+	},
+	"aws.ec2.vpcBlockPublicAccessOptions.exclusionsAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2VpcBlockPublicAccessOptions).GetExclusionsAllowed()).ToDataRes(types.String)
+	},
+	"aws.ec2.vpcBlockPublicAccessOptions.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2VpcBlockPublicAccessOptions).GetManagedBy()).ToDataRes(types.String)
+	},
+	"aws.ec2.vpcBlockPublicAccessOptions.reason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2VpcBlockPublicAccessOptions).GetReason()).ToDataRes(types.String)
+	},
+	"aws.ec2.vpcBlockPublicAccessOptions.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2VpcBlockPublicAccessOptions).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.ec2.stateReason.code": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2StateReason).GetCode()).ToDataRes(types.String)
+	},
+	"aws.ec2.stateReason.message": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2StateReason).GetMessage()).ToDataRes(types.String)
+	},
+	"aws.ec2.clientVpnConnectionLogOptions.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnConnectionLogOptions).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.clientVpnConnectionLogOptions.cloudWatchLogGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnConnectionLogOptions).GetCloudWatchLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.ec2.clientVpnConnectionLogOptions.cloudWatchLogStream": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnConnectionLogOptions).GetCloudWatchLogStream()).ToDataRes(types.String)
+	},
+	"aws.ec2.clientVpnLoginBannerOptions.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnLoginBannerOptions).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.clientVpnLoginBannerOptions.bannerText": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnLoginBannerOptions).GetBannerText()).ToDataRes(types.String)
+	},
+	"aws.ec2.clientVpnConnectOptions.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnConnectOptions).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.clientVpnConnectOptions.lambdaFunction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnConnectOptions).GetLambdaFunction()).ToDataRes(types.Resource("aws.lambda.function"))
+	},
+	"aws.ec2.clientVpnConnectOptions.statusCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnConnectOptions).GetStatusCode()).ToDataRes(types.String)
+	},
+	"aws.ec2.clientVpnConnectOptions.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnConnectOptions).GetStatusMessage()).ToDataRes(types.String)
+	},
 	"aws.ec2.clientVpnEndpoint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetId()).ToDataRes(types.String)
 	},
@@ -24092,26 +24158,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.clientVpnEndpoint.connectionLogOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetConnectionLogOptions()).ToDataRes(types.Dict)
 	},
-	"aws.ec2.clientVpnEndpoint.connectionLoggingEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetConnectionLoggingEnabled()).ToDataRes(types.Bool)
+	"aws.ec2.clientVpnEndpoint.connectionLogging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetConnectionLogging()).ToDataRes(types.Resource("aws.ec2.clientVpnConnectionLogOptions"))
 	},
-	"aws.ec2.clientVpnEndpoint.connectionLogGroup": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetConnectionLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	"aws.ec2.clientVpnEndpoint.loginBanner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetLoginBanner()).ToDataRes(types.Resource("aws.ec2.clientVpnLoginBannerOptions"))
 	},
-	"aws.ec2.clientVpnEndpoint.connectionLogStreamName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetConnectionLogStreamName()).ToDataRes(types.String)
-	},
-	"aws.ec2.clientVpnEndpoint.loginBannerEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetLoginBannerEnabled()).ToDataRes(types.Bool)
-	},
-	"aws.ec2.clientVpnEndpoint.loginBannerText": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetLoginBannerText()).ToDataRes(types.String)
-	},
-	"aws.ec2.clientVpnEndpoint.clientConnectEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetClientConnectEnabled()).ToDataRes(types.Bool)
-	},
-	"aws.ec2.clientVpnEndpoint.clientConnectFunction": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetClientConnectFunction()).ToDataRes(types.Resource("aws.lambda.function"))
+	"aws.ec2.clientVpnEndpoint.clientConnect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetClientConnect()).ToDataRes(types.Resource("aws.ec2.clientVpnConnectOptions"))
 	},
 	"aws.ec2.clientVpnEndpoint.authenticationOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetAuthenticationOptions()).ToDataRes(types.Array(types.Dict))
@@ -24344,6 +24398,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.vpcEndpointServiceConfiguration.connections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2VpcEndpointServiceConfiguration).GetConnections()).ToDataRes(types.Array(types.Resource("aws.ec2.vpcEndpointServiceConfiguration.connection")))
 	},
+	"aws.ec2.launchtemplate.instanceMetadataOptions.httpTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchtemplateInstanceMetadataOptions).GetHttpTokens()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchtemplate.instanceMetadataOptions.httpEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchtemplateInstanceMetadataOptions).GetHttpEndpoint()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchtemplate.instanceMetadataOptions.httpPutResponseHopLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchtemplateInstanceMetadataOptions).GetHttpPutResponseHopLimit()).ToDataRes(types.Int)
+	},
+	"aws.ec2.launchtemplate.instanceMetadataOptions.httpProtocolIpv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchtemplateInstanceMetadataOptions).GetHttpProtocolIpv6()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchtemplate.instanceMetadataOptions.instanceMetadataTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchtemplateInstanceMetadataOptions).GetInstanceMetadataTags()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchtemplate.instanceMetadataOptions.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchtemplateInstanceMetadataOptions).GetState()).ToDataRes(types.String)
+	},
 	"aws.ec2.launchtemplate.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Launchtemplate).GetId()).ToDataRes(types.String)
 	},
@@ -24380,23 +24452,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.launchtemplate.metadataOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Launchtemplate).GetMetadataOptions()).ToDataRes(types.Dict)
 	},
-	"aws.ec2.launchtemplate.httpTokens": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Launchtemplate).GetHttpTokens()).ToDataRes(types.String)
-	},
-	"aws.ec2.launchtemplate.httpEndpoint": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Launchtemplate).GetHttpEndpoint()).ToDataRes(types.String)
-	},
-	"aws.ec2.launchtemplate.httpPutResponseHopLimit": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Launchtemplate).GetHttpPutResponseHopLimit()).ToDataRes(types.Int)
-	},
-	"aws.ec2.launchtemplate.httpProtocolIpv6": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Launchtemplate).GetHttpProtocolIpv6()).ToDataRes(types.String)
-	},
-	"aws.ec2.launchtemplate.instanceMetadataTags": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Launchtemplate).GetInstanceMetadataTags()).ToDataRes(types.String)
-	},
-	"aws.ec2.launchtemplate.metadataOptionsState": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Launchtemplate).GetMetadataOptionsState()).ToDataRes(types.String)
+	"aws.ec2.launchtemplate.instanceMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetInstanceMetadata()).ToDataRes(types.Resource("aws.ec2.launchtemplate.instanceMetadataOptions"))
 	},
 	"aws.ec2.launchtemplate.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Launchtemplate).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
@@ -25085,11 +25142,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.stateReason": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetStateReason()).ToDataRes(types.Dict)
 	},
-	"aws.ec2.instance.stateReasonCode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Instance).GetStateReasonCode()).ToDataRes(types.String)
-	},
-	"aws.ec2.instance.stateReasonMessage": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Instance).GetStateReasonMessage()).ToDataRes(types.String)
+	"aws.ec2.instance.stateReasonRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetStateReasonRef()).ToDataRes(types.Resource("aws.ec2.stateReason"))
 	},
 	"aws.ec2.instance.stateTransitionReason": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetStateTransitionReason()).ToDataRes(types.String)
@@ -37869,28 +37923,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpc).BlockPublicAccessOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.vpc.blockPublicAccessInternetGatewayBlockMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpc).BlockPublicAccessInternetGatewayBlockMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.vpc.blockPublicAccessState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpc).BlockPublicAccessState, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.vpc.blockPublicAccessExclusionsAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpc).BlockPublicAccessExclusionsAllowed, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.vpc.blockPublicAccessManagedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpc).BlockPublicAccessManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.vpc.blockPublicAccessReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpc).BlockPublicAccessReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.vpc.blockPublicAccessLastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpc).BlockPublicAccessLastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.vpc.blockPublicAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).BlockPublicAccess, ok = plugin.RawToTValue[*mqlAwsEc2VpcBlockPublicAccessOptions](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.vpnGateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -64973,6 +65007,94 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2ManagedPrefixListEntry).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.vpcBlockPublicAccessOptions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpcBlockPublicAccessOptions).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.vpcBlockPublicAccessOptions.internetGatewayBlockMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpcBlockPublicAccessOptions).InternetGatewayBlockMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.vpcBlockPublicAccessOptions.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpcBlockPublicAccessOptions).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.vpcBlockPublicAccessOptions.exclusionsAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpcBlockPublicAccessOptions).ExclusionsAllowed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.vpcBlockPublicAccessOptions.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpcBlockPublicAccessOptions).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.vpcBlockPublicAccessOptions.reason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpcBlockPublicAccessOptions).Reason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.vpcBlockPublicAccessOptions.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpcBlockPublicAccessOptions).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.stateReason.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2StateReason).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.stateReason.code": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2StateReason).Code, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.stateReason.message": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2StateReason).Message, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnConnectionLogOptions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnConnectionLogOptions).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.clientVpnConnectionLogOptions.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnConnectionLogOptions).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnConnectionLogOptions.cloudWatchLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnConnectionLogOptions).CloudWatchLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnConnectionLogOptions.cloudWatchLogStream": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnConnectionLogOptions).CloudWatchLogStream, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnLoginBannerOptions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnLoginBannerOptions).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.clientVpnLoginBannerOptions.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnLoginBannerOptions).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnLoginBannerOptions.bannerText": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnLoginBannerOptions).BannerText, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnConnectOptions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnConnectOptions).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.clientVpnConnectOptions.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnConnectOptions).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnConnectOptions.lambdaFunction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnConnectOptions).LambdaFunction, ok = plugin.RawToTValue[*mqlAwsLambdaFunction](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnConnectOptions.statusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnConnectOptions).StatusCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnConnectOptions.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnConnectOptions).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.clientVpnEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2ClientVpnEndpoint).__id, ok = v.Value.(string)
 		return
@@ -65053,32 +65175,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2ClientVpnEndpoint).ConnectionLogOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.ec2.clientVpnEndpoint.connectionLoggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2ClientVpnEndpoint).ConnectionLoggingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"aws.ec2.clientVpnEndpoint.connectionLogging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnEndpoint).ConnectionLogging, ok = plugin.RawToTValue[*mqlAwsEc2ClientVpnConnectionLogOptions](v.Value, v.Error)
 		return
 	},
-	"aws.ec2.clientVpnEndpoint.connectionLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2ClientVpnEndpoint).ConnectionLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+	"aws.ec2.clientVpnEndpoint.loginBanner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnEndpoint).LoginBanner, ok = plugin.RawToTValue[*mqlAwsEc2ClientVpnLoginBannerOptions](v.Value, v.Error)
 		return
 	},
-	"aws.ec2.clientVpnEndpoint.connectionLogStreamName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2ClientVpnEndpoint).ConnectionLogStreamName, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.ec2.clientVpnEndpoint.loginBannerEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2ClientVpnEndpoint).LoginBannerEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.ec2.clientVpnEndpoint.loginBannerText": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2ClientVpnEndpoint).LoginBannerText, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.ec2.clientVpnEndpoint.clientConnectEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2ClientVpnEndpoint).ClientConnectEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.ec2.clientVpnEndpoint.clientConnectFunction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2ClientVpnEndpoint).ClientConnectFunction, ok = plugin.RawToTValue[*mqlAwsLambdaFunction](v.Value, v.Error)
+	"aws.ec2.clientVpnEndpoint.clientConnect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnEndpoint).ClientConnect, ok = plugin.RawToTValue[*mqlAwsEc2ClientVpnConnectOptions](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.clientVpnEndpoint.authenticationOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -65413,6 +65519,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2VpcEndpointServiceConfiguration).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.launchtemplate.instanceMetadataOptions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchtemplateInstanceMetadataOptions).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.launchtemplate.instanceMetadataOptions.httpTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchtemplateInstanceMetadataOptions).HttpTokens, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.instanceMetadataOptions.httpEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchtemplateInstanceMetadataOptions).HttpEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.instanceMetadataOptions.httpPutResponseHopLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchtemplateInstanceMetadataOptions).HttpPutResponseHopLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.instanceMetadataOptions.httpProtocolIpv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchtemplateInstanceMetadataOptions).HttpProtocolIpv6, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.instanceMetadataOptions.instanceMetadataTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchtemplateInstanceMetadataOptions).InstanceMetadataTags, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.instanceMetadataOptions.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchtemplateInstanceMetadataOptions).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.launchtemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Launchtemplate).__id, ok = v.Value.(string)
 		return
@@ -65465,28 +65599,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Launchtemplate).MetadataOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.ec2.launchtemplate.httpTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Launchtemplate).HttpTokens, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.ec2.launchtemplate.httpEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Launchtemplate).HttpEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.ec2.launchtemplate.httpPutResponseHopLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Launchtemplate).HttpPutResponseHopLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"aws.ec2.launchtemplate.httpProtocolIpv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Launchtemplate).HttpProtocolIpv6, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.ec2.launchtemplate.instanceMetadataTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Launchtemplate).InstanceMetadataTags, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.ec2.launchtemplate.metadataOptionsState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Launchtemplate).MetadataOptionsState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.ec2.launchtemplate.instanceMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).InstanceMetadata, ok = plugin.RawToTValue[*mqlAwsEc2LaunchtemplateInstanceMetadataOptions](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.launchtemplate.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -66497,12 +66611,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Instance).StateReason, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.ec2.instance.stateReasonCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Instance).StateReasonCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.ec2.instance.stateReasonMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Instance).StateReasonMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.ec2.instance.stateReasonRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).StateReasonRef, ok = plugin.RawToTValue[*mqlAwsEc2StateReason](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.stateTransitionReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -85627,46 +85737,41 @@ type mqlAwsVpc struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsVpcInternal
-	Arn                                       plugin.TValue[string]
-	Id                                        plugin.TValue[string]
-	Name                                      plugin.TValue[string]
-	CidrBlock                                 plugin.TValue[string]
-	State                                     plugin.TValue[string]
-	IsDefault                                 plugin.TValue[bool]
-	InstanceTenancy                           plugin.TValue[string]
-	OwnerId                                   plugin.TValue[string]
-	Region                                    plugin.TValue[string]
-	Endpoints                                 plugin.TValue[[]any]
-	FlowLogs                                  plugin.TValue[[]any]
-	RouteTables                               plugin.TValue[[]any]
-	Subnets                                   plugin.TValue[[]any]
-	Tags                                      plugin.TValue[map[string]any]
-	NatGateways                               plugin.TValue[[]any]
-	ServiceEndpoints                          plugin.TValue[[]any]
-	PeeringConnections                        plugin.TValue[[]any]
-	InternetGatewayBlockMode                  plugin.TValue[string]
-	DhcpOptionsId                             plugin.TValue[string]
-	InternetGateways                          plugin.TValue[[]any]
-	SecurityGroups                            plugin.TValue[[]any]
-	DefaultSecurityGroup                      plugin.TValue[*mqlAwsEc2Securitygroup]
-	NetworkAcls                               plugin.TValue[[]any]
-	DefaultNetworkAcl                         plugin.TValue[*mqlAwsEc2Networkacl]
-	BlockPublicAccessOptions                  plugin.TValue[any]
-	BlockPublicAccessInternetGatewayBlockMode plugin.TValue[string]
-	BlockPublicAccessState                    plugin.TValue[string]
-	BlockPublicAccessExclusionsAllowed        plugin.TValue[string]
-	BlockPublicAccessManagedBy                plugin.TValue[string]
-	BlockPublicAccessReason                   plugin.TValue[string]
-	BlockPublicAccessLastUpdatedAt            plugin.TValue[*time.Time]
-	VpnGateways                               plugin.TValue[[]any]
-	DhcpOptions                               plugin.TValue[*mqlAwsEc2DhcpOptions]
-	EnableDnsSupport                          plugin.TValue[bool]
-	EnableDnsHostnames                        plugin.TValue[bool]
-	CidrBlockAssociations                     plugin.TValue[[]any]
-	Ipv6CidrBlockAssociations                 plugin.TValue[[]any]
-	CloudformationStack                       plugin.TValue[*mqlAwsCloudformationStack]
-	ManagedBy                                 plugin.TValue[string]
-	EncryptionControl                         plugin.TValue[*mqlAwsVpcEncryptionControl]
+	Arn                       plugin.TValue[string]
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	CidrBlock                 plugin.TValue[string]
+	State                     plugin.TValue[string]
+	IsDefault                 plugin.TValue[bool]
+	InstanceTenancy           plugin.TValue[string]
+	OwnerId                   plugin.TValue[string]
+	Region                    plugin.TValue[string]
+	Endpoints                 plugin.TValue[[]any]
+	FlowLogs                  plugin.TValue[[]any]
+	RouteTables               plugin.TValue[[]any]
+	Subnets                   plugin.TValue[[]any]
+	Tags                      plugin.TValue[map[string]any]
+	NatGateways               plugin.TValue[[]any]
+	ServiceEndpoints          plugin.TValue[[]any]
+	PeeringConnections        plugin.TValue[[]any]
+	InternetGatewayBlockMode  plugin.TValue[string]
+	DhcpOptionsId             plugin.TValue[string]
+	InternetGateways          plugin.TValue[[]any]
+	SecurityGroups            plugin.TValue[[]any]
+	DefaultSecurityGroup      plugin.TValue[*mqlAwsEc2Securitygroup]
+	NetworkAcls               plugin.TValue[[]any]
+	DefaultNetworkAcl         plugin.TValue[*mqlAwsEc2Networkacl]
+	BlockPublicAccessOptions  plugin.TValue[any]
+	BlockPublicAccess         plugin.TValue[*mqlAwsEc2VpcBlockPublicAccessOptions]
+	VpnGateways               plugin.TValue[[]any]
+	DhcpOptions               plugin.TValue[*mqlAwsEc2DhcpOptions]
+	EnableDnsSupport          plugin.TValue[bool]
+	EnableDnsHostnames        plugin.TValue[bool]
+	CidrBlockAssociations     plugin.TValue[[]any]
+	Ipv6CidrBlockAssociations plugin.TValue[[]any]
+	CloudformationStack       plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy                 plugin.TValue[string]
+	EncryptionControl         plugin.TValue[*mqlAwsVpcEncryptionControl]
 }
 
 // createAwsVpc creates a new instance of this resource
@@ -85952,39 +86057,19 @@ func (c *mqlAwsVpc) GetBlockPublicAccessOptions() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsVpc) GetBlockPublicAccessInternetGatewayBlockMode() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.BlockPublicAccessInternetGatewayBlockMode, func() (string, error) {
-		return c.blockPublicAccessInternetGatewayBlockMode()
-	})
-}
+func (c *mqlAwsVpc) GetBlockPublicAccess() *plugin.TValue[*mqlAwsEc2VpcBlockPublicAccessOptions] {
+	return plugin.GetOrCompute[*mqlAwsEc2VpcBlockPublicAccessOptions](&c.BlockPublicAccess, func() (*mqlAwsEc2VpcBlockPublicAccessOptions, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "blockPublicAccess")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2VpcBlockPublicAccessOptions), nil
+			}
+		}
 
-func (c *mqlAwsVpc) GetBlockPublicAccessState() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.BlockPublicAccessState, func() (string, error) {
-		return c.blockPublicAccessState()
-	})
-}
-
-func (c *mqlAwsVpc) GetBlockPublicAccessExclusionsAllowed() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.BlockPublicAccessExclusionsAllowed, func() (string, error) {
-		return c.blockPublicAccessExclusionsAllowed()
-	})
-}
-
-func (c *mqlAwsVpc) GetBlockPublicAccessManagedBy() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.BlockPublicAccessManagedBy, func() (string, error) {
-		return c.blockPublicAccessManagedBy()
-	})
-}
-
-func (c *mqlAwsVpc) GetBlockPublicAccessReason() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.BlockPublicAccessReason, func() (string, error) {
-		return c.blockPublicAccessReason()
-	})
-}
-
-func (c *mqlAwsVpc) GetBlockPublicAccessLastUpdatedAt() *plugin.TValue[*time.Time] {
-	return plugin.GetOrCompute[*time.Time](&c.BlockPublicAccessLastUpdatedAt, func() (*time.Time, error) {
-		return c.blockPublicAccessLastUpdatedAt()
+		return c.blockPublicAccess()
 	})
 }
 
@@ -157050,6 +157135,310 @@ func (c *mqlAwsEc2ManagedPrefixListEntry) GetDescription() *plugin.TValue[string
 	return &c.Description
 }
 
+// mqlAwsEc2VpcBlockPublicAccessOptions for the aws.ec2.vpcBlockPublicAccessOptions resource
+type mqlAwsEc2VpcBlockPublicAccessOptions struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2VpcBlockPublicAccessOptionsInternal it will be used here
+	InternetGatewayBlockMode plugin.TValue[string]
+	State                    plugin.TValue[string]
+	ExclusionsAllowed        plugin.TValue[string]
+	ManagedBy                plugin.TValue[string]
+	Reason                   plugin.TValue[string]
+	LastUpdatedAt            plugin.TValue[*time.Time]
+}
+
+// createAwsEc2VpcBlockPublicAccessOptions creates a new instance of this resource
+func createAwsEc2VpcBlockPublicAccessOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2VpcBlockPublicAccessOptions{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.vpcBlockPublicAccessOptions", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2VpcBlockPublicAccessOptions) MqlName() string {
+	return "aws.ec2.vpcBlockPublicAccessOptions"
+}
+
+func (c *mqlAwsEc2VpcBlockPublicAccessOptions) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2VpcBlockPublicAccessOptions) GetInternetGatewayBlockMode() *plugin.TValue[string] {
+	return &c.InternetGatewayBlockMode
+}
+
+func (c *mqlAwsEc2VpcBlockPublicAccessOptions) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsEc2VpcBlockPublicAccessOptions) GetExclusionsAllowed() *plugin.TValue[string] {
+	return &c.ExclusionsAllowed
+}
+
+func (c *mqlAwsEc2VpcBlockPublicAccessOptions) GetManagedBy() *plugin.TValue[string] {
+	return &c.ManagedBy
+}
+
+func (c *mqlAwsEc2VpcBlockPublicAccessOptions) GetReason() *plugin.TValue[string] {
+	return &c.Reason
+}
+
+func (c *mqlAwsEc2VpcBlockPublicAccessOptions) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
+}
+
+// mqlAwsEc2StateReason for the aws.ec2.stateReason resource
+type mqlAwsEc2StateReason struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2StateReasonInternal it will be used here
+	Code    plugin.TValue[string]
+	Message plugin.TValue[string]
+}
+
+// createAwsEc2StateReason creates a new instance of this resource
+func createAwsEc2StateReason(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2StateReason{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.stateReason", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2StateReason) MqlName() string {
+	return "aws.ec2.stateReason"
+}
+
+func (c *mqlAwsEc2StateReason) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2StateReason) GetCode() *plugin.TValue[string] {
+	return &c.Code
+}
+
+func (c *mqlAwsEc2StateReason) GetMessage() *plugin.TValue[string] {
+	return &c.Message
+}
+
+// mqlAwsEc2ClientVpnConnectionLogOptions for the aws.ec2.clientVpnConnectionLogOptions resource
+type mqlAwsEc2ClientVpnConnectionLogOptions struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEc2ClientVpnConnectionLogOptionsInternal
+	Enabled             plugin.TValue[bool]
+	CloudWatchLogGroup  plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	CloudWatchLogStream plugin.TValue[string]
+}
+
+// createAwsEc2ClientVpnConnectionLogOptions creates a new instance of this resource
+func createAwsEc2ClientVpnConnectionLogOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2ClientVpnConnectionLogOptions{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.clientVpnConnectionLogOptions", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2ClientVpnConnectionLogOptions) MqlName() string {
+	return "aws.ec2.clientVpnConnectionLogOptions"
+}
+
+func (c *mqlAwsEc2ClientVpnConnectionLogOptions) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2ClientVpnConnectionLogOptions) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsEc2ClientVpnConnectionLogOptions) GetCloudWatchLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.CloudWatchLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.clientVpnConnectionLogOptions", c.__id, "cloudWatchLogGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.cloudWatchLogGroup()
+	})
+}
+
+func (c *mqlAwsEc2ClientVpnConnectionLogOptions) GetCloudWatchLogStream() *plugin.TValue[string] {
+	return &c.CloudWatchLogStream
+}
+
+// mqlAwsEc2ClientVpnLoginBannerOptions for the aws.ec2.clientVpnLoginBannerOptions resource
+type mqlAwsEc2ClientVpnLoginBannerOptions struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2ClientVpnLoginBannerOptionsInternal it will be used here
+	Enabled    plugin.TValue[bool]
+	BannerText plugin.TValue[string]
+}
+
+// createAwsEc2ClientVpnLoginBannerOptions creates a new instance of this resource
+func createAwsEc2ClientVpnLoginBannerOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2ClientVpnLoginBannerOptions{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.clientVpnLoginBannerOptions", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2ClientVpnLoginBannerOptions) MqlName() string {
+	return "aws.ec2.clientVpnLoginBannerOptions"
+}
+
+func (c *mqlAwsEc2ClientVpnLoginBannerOptions) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2ClientVpnLoginBannerOptions) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsEc2ClientVpnLoginBannerOptions) GetBannerText() *plugin.TValue[string] {
+	return &c.BannerText
+}
+
+// mqlAwsEc2ClientVpnConnectOptions for the aws.ec2.clientVpnConnectOptions resource
+type mqlAwsEc2ClientVpnConnectOptions struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEc2ClientVpnConnectOptionsInternal
+	Enabled        plugin.TValue[bool]
+	LambdaFunction plugin.TValue[*mqlAwsLambdaFunction]
+	StatusCode     plugin.TValue[string]
+	StatusMessage  plugin.TValue[string]
+}
+
+// createAwsEc2ClientVpnConnectOptions creates a new instance of this resource
+func createAwsEc2ClientVpnConnectOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2ClientVpnConnectOptions{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.clientVpnConnectOptions", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2ClientVpnConnectOptions) MqlName() string {
+	return "aws.ec2.clientVpnConnectOptions"
+}
+
+func (c *mqlAwsEc2ClientVpnConnectOptions) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2ClientVpnConnectOptions) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsEc2ClientVpnConnectOptions) GetLambdaFunction() *plugin.TValue[*mqlAwsLambdaFunction] {
+	return plugin.GetOrCompute[*mqlAwsLambdaFunction](&c.LambdaFunction, func() (*mqlAwsLambdaFunction, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.clientVpnConnectOptions", c.__id, "lambdaFunction")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsLambdaFunction), nil
+			}
+		}
+
+		return c.lambdaFunction()
+	})
+}
+
+func (c *mqlAwsEc2ClientVpnConnectOptions) GetStatusCode() *plugin.TValue[string] {
+	return &c.StatusCode
+}
+
+func (c *mqlAwsEc2ClientVpnConnectOptions) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
 // mqlAwsEc2ClientVpnEndpoint for the aws.ec2.clientVpnEndpoint resource
 type mqlAwsEc2ClientVpnEndpoint struct {
 	MqlRuntime *plugin.Runtime
@@ -157074,13 +157463,9 @@ type mqlAwsEc2ClientVpnEndpoint struct {
 	ClientConnectOptions            plugin.TValue[any]
 	ClientLoginBannerOptions        plugin.TValue[any]
 	ConnectionLogOptions            plugin.TValue[any]
-	ConnectionLoggingEnabled        plugin.TValue[bool]
-	ConnectionLogGroup              plugin.TValue[*mqlAwsCloudwatchLoggroup]
-	ConnectionLogStreamName         plugin.TValue[string]
-	LoginBannerEnabled              plugin.TValue[bool]
-	LoginBannerText                 plugin.TValue[string]
-	ClientConnectEnabled            plugin.TValue[bool]
-	ClientConnectFunction           plugin.TValue[*mqlAwsLambdaFunction]
+	ConnectionLogging               plugin.TValue[*mqlAwsEc2ClientVpnConnectionLogOptions]
+	LoginBanner                     plugin.TValue[*mqlAwsEc2ClientVpnLoginBannerOptions]
+	ClientConnect                   plugin.TValue[*mqlAwsEc2ClientVpnConnectOptions]
 	AuthenticationOptions           plugin.TValue[[]any]
 	TransitGateway                  plugin.TValue[*mqlAwsEc2Transitgateway]
 	TransitGatewayAvailabilityZones plugin.TValue[[]any]
@@ -157236,56 +157621,16 @@ func (c *mqlAwsEc2ClientVpnEndpoint) GetConnectionLogOptions() *plugin.TValue[an
 	return &c.ConnectionLogOptions
 }
 
-func (c *mqlAwsEc2ClientVpnEndpoint) GetConnectionLoggingEnabled() *plugin.TValue[bool] {
-	return &c.ConnectionLoggingEnabled
+func (c *mqlAwsEc2ClientVpnEndpoint) GetConnectionLogging() *plugin.TValue[*mqlAwsEc2ClientVpnConnectionLogOptions] {
+	return &c.ConnectionLogging
 }
 
-func (c *mqlAwsEc2ClientVpnEndpoint) GetConnectionLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
-	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.ConnectionLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.clientVpnEndpoint", c.__id, "connectionLogGroup")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
-			}
-		}
-
-		return c.connectionLogGroup()
-	})
+func (c *mqlAwsEc2ClientVpnEndpoint) GetLoginBanner() *plugin.TValue[*mqlAwsEc2ClientVpnLoginBannerOptions] {
+	return &c.LoginBanner
 }
 
-func (c *mqlAwsEc2ClientVpnEndpoint) GetConnectionLogStreamName() *plugin.TValue[string] {
-	return &c.ConnectionLogStreamName
-}
-
-func (c *mqlAwsEc2ClientVpnEndpoint) GetLoginBannerEnabled() *plugin.TValue[bool] {
-	return &c.LoginBannerEnabled
-}
-
-func (c *mqlAwsEc2ClientVpnEndpoint) GetLoginBannerText() *plugin.TValue[string] {
-	return &c.LoginBannerText
-}
-
-func (c *mqlAwsEc2ClientVpnEndpoint) GetClientConnectEnabled() *plugin.TValue[bool] {
-	return &c.ClientConnectEnabled
-}
-
-func (c *mqlAwsEc2ClientVpnEndpoint) GetClientConnectFunction() *plugin.TValue[*mqlAwsLambdaFunction] {
-	return plugin.GetOrCompute[*mqlAwsLambdaFunction](&c.ClientConnectFunction, func() (*mqlAwsLambdaFunction, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.clientVpnEndpoint", c.__id, "clientConnectFunction")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsLambdaFunction), nil
-			}
-		}
-
-		return c.clientConnectFunction()
-	})
+func (c *mqlAwsEc2ClientVpnEndpoint) GetClientConnect() *plugin.TValue[*mqlAwsEc2ClientVpnConnectOptions] {
+	return &c.ClientConnect
 }
 
 func (c *mqlAwsEc2ClientVpnEndpoint) GetAuthenticationOptions() *plugin.TValue[[]any] {
@@ -158031,33 +158376,97 @@ func (c *mqlAwsEc2VpcEndpointServiceConfiguration) GetConnections() *plugin.TVal
 	})
 }
 
-// mqlAwsEc2Launchtemplate for the aws.ec2.launchtemplate resource
-type mqlAwsEc2Launchtemplate struct {
+// mqlAwsEc2LaunchtemplateInstanceMetadataOptions for the aws.ec2.launchtemplate.instanceMetadataOptions resource
+type mqlAwsEc2LaunchtemplateInstanceMetadataOptions struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAwsEc2LaunchtemplateInternal
-	Id                      plugin.TValue[string]
-	Arn                     plugin.TValue[string]
-	Name                    plugin.TValue[string]
-	Region                  plugin.TValue[string]
-	CreatedAt               plugin.TValue[*time.Time]
-	CreatedBy               plugin.TValue[string]
-	DefaultVersion          plugin.TValue[int64]
-	LatestVersion           plugin.TValue[int64]
-	Tags                    plugin.TValue[map[string]any]
-	UserData                plugin.TValue[string]
-	UserDataPresent         plugin.TValue[bool]
-	MetadataOptions         plugin.TValue[any]
+	// optional: if you define mqlAwsEc2LaunchtemplateInstanceMetadataOptionsInternal it will be used here
 	HttpTokens              plugin.TValue[string]
 	HttpEndpoint            plugin.TValue[string]
 	HttpPutResponseHopLimit plugin.TValue[int64]
 	HttpProtocolIpv6        plugin.TValue[string]
 	InstanceMetadataTags    plugin.TValue[string]
-	MetadataOptionsState    plugin.TValue[string]
-	SecurityGroupIds        plugin.TValue[[]any]
-	IamInstanceProfile      plugin.TValue[string]
-	InstanceType            plugin.TValue[string]
-	ImageId                 plugin.TValue[string]
+	State                   plugin.TValue[string]
+}
+
+// createAwsEc2LaunchtemplateInstanceMetadataOptions creates a new instance of this resource
+func createAwsEc2LaunchtemplateInstanceMetadataOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2LaunchtemplateInstanceMetadataOptions{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.launchtemplate.instanceMetadataOptions", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2LaunchtemplateInstanceMetadataOptions) MqlName() string {
+	return "aws.ec2.launchtemplate.instanceMetadataOptions"
+}
+
+func (c *mqlAwsEc2LaunchtemplateInstanceMetadataOptions) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2LaunchtemplateInstanceMetadataOptions) GetHttpTokens() *plugin.TValue[string] {
+	return &c.HttpTokens
+}
+
+func (c *mqlAwsEc2LaunchtemplateInstanceMetadataOptions) GetHttpEndpoint() *plugin.TValue[string] {
+	return &c.HttpEndpoint
+}
+
+func (c *mqlAwsEc2LaunchtemplateInstanceMetadataOptions) GetHttpPutResponseHopLimit() *plugin.TValue[int64] {
+	return &c.HttpPutResponseHopLimit
+}
+
+func (c *mqlAwsEc2LaunchtemplateInstanceMetadataOptions) GetHttpProtocolIpv6() *plugin.TValue[string] {
+	return &c.HttpProtocolIpv6
+}
+
+func (c *mqlAwsEc2LaunchtemplateInstanceMetadataOptions) GetInstanceMetadataTags() *plugin.TValue[string] {
+	return &c.InstanceMetadataTags
+}
+
+func (c *mqlAwsEc2LaunchtemplateInstanceMetadataOptions) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+// mqlAwsEc2Launchtemplate for the aws.ec2.launchtemplate resource
+type mqlAwsEc2Launchtemplate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEc2LaunchtemplateInternal
+	Id                 plugin.TValue[string]
+	Arn                plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Region             plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+	CreatedBy          plugin.TValue[string]
+	DefaultVersion     plugin.TValue[int64]
+	LatestVersion      plugin.TValue[int64]
+	Tags               plugin.TValue[map[string]any]
+	UserData           plugin.TValue[string]
+	UserDataPresent    plugin.TValue[bool]
+	MetadataOptions    plugin.TValue[any]
+	InstanceMetadata   plugin.TValue[*mqlAwsEc2LaunchtemplateInstanceMetadataOptions]
+	SecurityGroupIds   plugin.TValue[[]any]
+	IamInstanceProfile plugin.TValue[string]
+	InstanceType       plugin.TValue[string]
+	ImageId            plugin.TValue[string]
 }
 
 // createAwsEc2Launchtemplate creates a new instance of this resource
@@ -158151,39 +158560,19 @@ func (c *mqlAwsEc2Launchtemplate) GetMetadataOptions() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsEc2Launchtemplate) GetHttpTokens() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.HttpTokens, func() (string, error) {
-		return c.httpTokens()
-	})
-}
+func (c *mqlAwsEc2Launchtemplate) GetInstanceMetadata() *plugin.TValue[*mqlAwsEc2LaunchtemplateInstanceMetadataOptions] {
+	return plugin.GetOrCompute[*mqlAwsEc2LaunchtemplateInstanceMetadataOptions](&c.InstanceMetadata, func() (*mqlAwsEc2LaunchtemplateInstanceMetadataOptions, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.launchtemplate", c.__id, "instanceMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2LaunchtemplateInstanceMetadataOptions), nil
+			}
+		}
 
-func (c *mqlAwsEc2Launchtemplate) GetHttpEndpoint() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.HttpEndpoint, func() (string, error) {
-		return c.httpEndpoint()
-	})
-}
-
-func (c *mqlAwsEc2Launchtemplate) GetHttpPutResponseHopLimit() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.HttpPutResponseHopLimit, func() (int64, error) {
-		return c.httpPutResponseHopLimit()
-	})
-}
-
-func (c *mqlAwsEc2Launchtemplate) GetHttpProtocolIpv6() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.HttpProtocolIpv6, func() (string, error) {
-		return c.httpProtocolIpv6()
-	})
-}
-
-func (c *mqlAwsEc2Launchtemplate) GetInstanceMetadataTags() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.InstanceMetadataTags, func() (string, error) {
-		return c.instanceMetadataTags()
-	})
-}
-
-func (c *mqlAwsEc2Launchtemplate) GetMetadataOptionsState() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.MetadataOptionsState, func() (string, error) {
-		return c.metadataOptionsState()
+		return c.instanceMetadata()
 	})
 }
 
@@ -160507,8 +160896,7 @@ type mqlAwsEc2Instance struct {
 	PublicDnsName           plugin.TValue[string]
 	InstanceStatus          plugin.TValue[any]
 	StateReason             plugin.TValue[any]
-	StateReasonCode         plugin.TValue[string]
-	StateReasonMessage      plugin.TValue[string]
+	StateReasonRef          plugin.TValue[*mqlAwsEc2StateReason]
 	StateTransitionReason   plugin.TValue[string]
 	EbsOptimized            plugin.TValue[bool]
 	EnaSupported            plugin.TValue[bool]
@@ -160711,12 +161099,8 @@ func (c *mqlAwsEc2Instance) GetStateReason() *plugin.TValue[any] {
 	return &c.StateReason
 }
 
-func (c *mqlAwsEc2Instance) GetStateReasonCode() *plugin.TValue[string] {
-	return &c.StateReasonCode
-}
-
-func (c *mqlAwsEc2Instance) GetStateReasonMessage() *plugin.TValue[string] {
-	return &c.StateReasonMessage
+func (c *mqlAwsEc2Instance) GetStateReasonRef() *plugin.TValue[*mqlAwsEc2StateReason] {
+	return &c.StateReasonRef
 }
 
 func (c *mqlAwsEc2Instance) GetStateTransitionReason() *plugin.TValue[string] {
