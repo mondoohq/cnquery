@@ -423,8 +423,8 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 
 		var addonsConfig plugin.Resource
 		if c.AddonsConfig != nil {
-			addonsConfig, err = CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster.addonsConfig",
-				gkeAddonsConfigArgs(fmt.Sprintf("gcp.project.gkeService.cluster/%s/addonsConfig", c.Id), c.AddonsConfig))
+			addonsConfig, err = newMqlGkeAddonsConfig(g.MqlRuntime,
+				fmt.Sprintf("gcp.project.gkeService.cluster/%s/addonsConfig", c.Id), c.AddonsConfig)
 			if err != nil {
 				return nil, err
 			}

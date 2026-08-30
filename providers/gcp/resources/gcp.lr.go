@@ -130,6 +130,18 @@ const (
 	ResourceGcpProjectGkeServiceClusterNetworkPolicy                                   string = "gcp.project.gkeService.cluster.networkPolicy"
 	ResourceGcpProjectGkeServiceClusterControlPlaneEndpoints                           string = "gcp.project.gkeService.cluster.controlPlaneEndpoints"
 	ResourceGcpProjectGkeServiceClusterAddonsConfig                                    string = "gcp.project.gkeService.cluster.addonsConfig"
+	ResourceGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon              string = "gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingAddon"
+	ResourceGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon       string = "gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingAddon"
+	ResourceGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon            string = "gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardAddon"
+	ResourceGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon                  string = "gcp.project.gkeService.cluster.addonsConfig.networkPolicyAddon"
+	ResourceGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon                       string = "gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon"
+	ResourceGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon                       string = "gcp.project.gkeService.cluster.addonsConfig.dnsCacheAddon"
+	ResourceGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon                string = "gcp.project.gkeService.cluster.addonsConfig.configConnectorAddon"
+	ResourceGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon     string = "gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverAddon"
+	ResourceGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon          string = "gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverAddon"
+	ResourceGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon                 string = "gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentAddon"
+	ResourceGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon               string = "gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverAddon"
+	ResourceGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon                     string = "gcp.project.gkeService.cluster.addonsConfig.statefulHaAddon"
 	ResourceGcpProjectGkeServiceClusterIpAllocationPolicy                              string = "gcp.project.gkeService.cluster.ipAllocationPolicy"
 	ResourceGcpProjectGkeServiceClusterNetworkConfig                                   string = "gcp.project.gkeService.cluster.networkConfig"
 	ResourceGcpProjectGkeServiceClusterNodepool                                        string = "gcp.project.gkeService.cluster.nodepool"
@@ -978,6 +990,54 @@ func init() {
 		"gcp.project.gkeService.cluster.addonsConfig": {
 			// to override args, implement: initGcpProjectGkeServiceClusterAddonsConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectGkeServiceClusterAddonsConfig,
+		},
+		"gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingAddon": {
+			// to override args, implement: initGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon,
+		},
+		"gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingAddon": {
+			// to override args, implement: initGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon,
+		},
+		"gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardAddon": {
+			// to override args, implement: initGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon,
+		},
+		"gcp.project.gkeService.cluster.addonsConfig.networkPolicyAddon": {
+			// to override args, implement: initGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon,
+		},
+		"gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon": {
+			// to override args, implement: initGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon,
+		},
+		"gcp.project.gkeService.cluster.addonsConfig.dnsCacheAddon": {
+			// to override args, implement: initGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon,
+		},
+		"gcp.project.gkeService.cluster.addonsConfig.configConnectorAddon": {
+			// to override args, implement: initGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon,
+		},
+		"gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverAddon": {
+			// to override args, implement: initGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon,
+		},
+		"gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverAddon": {
+			// to override args, implement: initGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon,
+		},
+		"gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentAddon": {
+			// to override args, implement: initGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon,
+		},
+		"gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverAddon": {
+			// to override args, implement: initGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon,
+		},
+		"gcp.project.gkeService.cluster.addonsConfig.statefulHaAddon": {
+			// to override args, implement: initGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon,
 		},
 		"gcp.project.gkeService.cluster.ipAllocationPolicy": {
 			// to override args, implement: initGcpProjectGkeServiceClusterIpAllocationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7488,44 +7548,80 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.addonsConfig.statefulHaConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetStatefulHaConfig()).ToDataRes(types.Dict)
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingDisabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetHttpLoadBalancingDisabled()).ToDataRes(types.Bool)
+	"gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingAddon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetHttpLoadBalancingAddon()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingAddon"))
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingDisabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetHorizontalPodAutoscalingDisabled()).ToDataRes(types.Bool)
+	"gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingAddon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetHorizontalPodAutoscalingAddon()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingAddon"))
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardDisabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetKubernetesDashboardDisabled()).ToDataRes(types.Bool)
+	"gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardAddon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetKubernetesDashboardAddon()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardAddon"))
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.networkPolicyConfigDisabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetNetworkPolicyConfigDisabled()).ToDataRes(types.Bool)
+	"gcp.project.gkeService.cluster.addonsConfig.networkPolicyAddon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetNetworkPolicyAddon()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.addonsConfig.networkPolicyAddon"))
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.cloudRunDisabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetCloudRunDisabled()).ToDataRes(types.Bool)
+	"gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetCloudRunAddon()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon"))
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.cloudRunLoadBalancerType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetCloudRunLoadBalancerType()).ToDataRes(types.String)
+	"gcp.project.gkeService.cluster.addonsConfig.dnsCacheAddon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetDnsCacheAddon()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.addonsConfig.dnsCacheAddon"))
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.dnsCacheEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetDnsCacheEnabled()).ToDataRes(types.Bool)
+	"gcp.project.gkeService.cluster.addonsConfig.configConnectorAddon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetConfigConnectorAddon()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.addonsConfig.configConnectorAddon"))
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.configConnectorEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetConfigConnectorEnabled()).ToDataRes(types.Bool)
+	"gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverAddon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetGcePersistentDiskCsiDriverAddon()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverAddon"))
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetGcePersistentDiskCsiDriverEnabled()).ToDataRes(types.Bool)
+	"gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverAddon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetGcpFilestoreCsiDriverAddon()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverAddon"))
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetGcpFilestoreCsiDriverEnabled()).ToDataRes(types.Bool)
+	"gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentAddon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetGkeBackupAgentAddon()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentAddon"))
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetGkeBackupAgentEnabled()).ToDataRes(types.Bool)
+	"gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverAddon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetGcsFuseCsiDriverAddon()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverAddon"))
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetGcsFuseCsiDriverEnabled()).ToDataRes(types.Bool)
+	"gcp.project.gkeService.cluster.addonsConfig.statefulHaAddon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetStatefulHaAddon()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.addonsConfig.statefulHaAddon"))
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.statefulHaEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetStatefulHaEnabled()).ToDataRes(types.Bool)
+	"gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingAddon.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingAddon.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardAddon.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.networkPolicyAddon.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon.loadBalancerType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon).GetLoadBalancerType()).ToDataRes(types.String)
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.dnsCacheAddon.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.configConnectorAddon.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverAddon.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverAddon.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentAddon.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverAddon.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.statefulHaAddon.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon).GetEnabled()).ToDataRes(types.Bool)
 	},
 	"gcp.project.gkeService.cluster.ipAllocationPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterIpAllocationPolicy).GetId()).ToDataRes(types.String)
@@ -26335,56 +26431,152 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).StatefulHaConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).HttpLoadBalancingDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingAddon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).HttpLoadBalancingAddon, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon](v.Value, v.Error)
 		return
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).HorizontalPodAutoscalingDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingAddon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).HorizontalPodAutoscalingAddon, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon](v.Value, v.Error)
 		return
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).KubernetesDashboardDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardAddon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).KubernetesDashboardAddon, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon](v.Value, v.Error)
 		return
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.networkPolicyConfigDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).NetworkPolicyConfigDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"gcp.project.gkeService.cluster.addonsConfig.networkPolicyAddon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).NetworkPolicyAddon, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon](v.Value, v.Error)
 		return
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.cloudRunDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).CloudRunDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).CloudRunAddon, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon](v.Value, v.Error)
 		return
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.cloudRunLoadBalancerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).CloudRunLoadBalancerType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gcp.project.gkeService.cluster.addonsConfig.dnsCacheAddon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).DnsCacheAddon, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon](v.Value, v.Error)
 		return
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.dnsCacheEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).DnsCacheEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"gcp.project.gkeService.cluster.addonsConfig.configConnectorAddon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).ConfigConnectorAddon, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon](v.Value, v.Error)
 		return
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.configConnectorEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).ConfigConnectorEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverAddon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GcePersistentDiskCsiDriverAddon, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon](v.Value, v.Error)
 		return
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GcePersistentDiskCsiDriverEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverAddon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GcpFilestoreCsiDriverAddon, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon](v.Value, v.Error)
 		return
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GcpFilestoreCsiDriverEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentAddon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GkeBackupAgentAddon, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon](v.Value, v.Error)
 		return
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GkeBackupAgentEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverAddon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GcsFuseCsiDriverAddon, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon](v.Value, v.Error)
 		return
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GcsFuseCsiDriverEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"gcp.project.gkeService.cluster.addonsConfig.statefulHaAddon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).StatefulHaAddon, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon](v.Value, v.Error)
 		return
 	},
-	"gcp.project.gkeService.cluster.addonsConfig.statefulHaEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).StatefulHaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingAddon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingAddon.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingAddon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingAddon.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardAddon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardAddon.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.networkPolicyAddon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.networkPolicyAddon.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon.loadBalancerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon).LoadBalancerType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.dnsCacheAddon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.dnsCacheAddon.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.configConnectorAddon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.configConnectorAddon.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverAddon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverAddon.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverAddon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverAddon.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentAddon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentAddon.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverAddon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverAddon.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.statefulHaAddon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.statefulHaAddon.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.ipAllocationPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -60315,32 +60507,31 @@ type mqlGcpProjectGkeServiceClusterAddonsConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterAddonsConfigInternal it will be used here
-	Id                                plugin.TValue[string]
-	HttpLoadBalancing                 plugin.TValue[any]
-	HorizontalPodAutoscaling          plugin.TValue[any]
-	KubernetesDashboard               plugin.TValue[any]
-	NetworkPolicyConfig               plugin.TValue[any]
-	CloudRunConfig                    plugin.TValue[any]
-	DnsCacheConfig                    plugin.TValue[any]
-	ConfigConnectorConfig             plugin.TValue[any]
-	GcePersistentDiskCsiDriverConfig  plugin.TValue[any]
-	GcpFilestoreCsiDriverConfig       plugin.TValue[any]
-	GkeBackupAgentConfig              plugin.TValue[any]
-	GcsFuseCsiDriverConfig            plugin.TValue[any]
-	StatefulHaConfig                  plugin.TValue[any]
-	HttpLoadBalancingDisabled         plugin.TValue[bool]
-	HorizontalPodAutoscalingDisabled  plugin.TValue[bool]
-	KubernetesDashboardDisabled       plugin.TValue[bool]
-	NetworkPolicyConfigDisabled       plugin.TValue[bool]
-	CloudRunDisabled                  plugin.TValue[bool]
-	CloudRunLoadBalancerType          plugin.TValue[string]
-	DnsCacheEnabled                   plugin.TValue[bool]
-	ConfigConnectorEnabled            plugin.TValue[bool]
-	GcePersistentDiskCsiDriverEnabled plugin.TValue[bool]
-	GcpFilestoreCsiDriverEnabled      plugin.TValue[bool]
-	GkeBackupAgentEnabled             plugin.TValue[bool]
-	GcsFuseCsiDriverEnabled           plugin.TValue[bool]
-	StatefulHaEnabled                 plugin.TValue[bool]
+	Id                               plugin.TValue[string]
+	HttpLoadBalancing                plugin.TValue[any]
+	HorizontalPodAutoscaling         plugin.TValue[any]
+	KubernetesDashboard              plugin.TValue[any]
+	NetworkPolicyConfig              plugin.TValue[any]
+	CloudRunConfig                   plugin.TValue[any]
+	DnsCacheConfig                   plugin.TValue[any]
+	ConfigConnectorConfig            plugin.TValue[any]
+	GcePersistentDiskCsiDriverConfig plugin.TValue[any]
+	GcpFilestoreCsiDriverConfig      plugin.TValue[any]
+	GkeBackupAgentConfig             plugin.TValue[any]
+	GcsFuseCsiDriverConfig           plugin.TValue[any]
+	StatefulHaConfig                 plugin.TValue[any]
+	HttpLoadBalancingAddon           plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon]
+	HorizontalPodAutoscalingAddon    plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon]
+	KubernetesDashboardAddon         plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon]
+	NetworkPolicyAddon               plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon]
+	CloudRunAddon                    plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon]
+	DnsCacheAddon                    plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon]
+	ConfigConnectorAddon             plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon]
+	GcePersistentDiskCsiDriverAddon  plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon]
+	GcpFilestoreCsiDriverAddon       plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon]
+	GkeBackupAgentAddon              plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon]
+	GcsFuseCsiDriverAddon            plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon]
+	StatefulHaAddon                  plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon]
 }
 
 // createGcpProjectGkeServiceClusterAddonsConfig creates a new instance of this resource
@@ -60432,56 +60623,585 @@ func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetStatefulHaConfig() *plug
 	return &c.StatefulHaConfig
 }
 
-func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetHttpLoadBalancingDisabled() *plugin.TValue[bool] {
-	return &c.HttpLoadBalancingDisabled
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetHttpLoadBalancingAddon() *plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon] {
+	return &c.HttpLoadBalancingAddon
 }
 
-func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetHorizontalPodAutoscalingDisabled() *plugin.TValue[bool] {
-	return &c.HorizontalPodAutoscalingDisabled
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetHorizontalPodAutoscalingAddon() *plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon] {
+	return &c.HorizontalPodAutoscalingAddon
 }
 
-func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetKubernetesDashboardDisabled() *plugin.TValue[bool] {
-	return &c.KubernetesDashboardDisabled
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetKubernetesDashboardAddon() *plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon] {
+	return &c.KubernetesDashboardAddon
 }
 
-func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetNetworkPolicyConfigDisabled() *plugin.TValue[bool] {
-	return &c.NetworkPolicyConfigDisabled
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetNetworkPolicyAddon() *plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon] {
+	return &c.NetworkPolicyAddon
 }
 
-func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetCloudRunDisabled() *plugin.TValue[bool] {
-	return &c.CloudRunDisabled
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetCloudRunAddon() *plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon] {
+	return &c.CloudRunAddon
 }
 
-func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetCloudRunLoadBalancerType() *plugin.TValue[string] {
-	return &c.CloudRunLoadBalancerType
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetDnsCacheAddon() *plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon] {
+	return &c.DnsCacheAddon
 }
 
-func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetDnsCacheEnabled() *plugin.TValue[bool] {
-	return &c.DnsCacheEnabled
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetConfigConnectorAddon() *plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon] {
+	return &c.ConfigConnectorAddon
 }
 
-func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetConfigConnectorEnabled() *plugin.TValue[bool] {
-	return &c.ConfigConnectorEnabled
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetGcePersistentDiskCsiDriverAddon() *plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon] {
+	return &c.GcePersistentDiskCsiDriverAddon
 }
 
-func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetGcePersistentDiskCsiDriverEnabled() *plugin.TValue[bool] {
-	return &c.GcePersistentDiskCsiDriverEnabled
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetGcpFilestoreCsiDriverAddon() *plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon] {
+	return &c.GcpFilestoreCsiDriverAddon
 }
 
-func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetGcpFilestoreCsiDriverEnabled() *plugin.TValue[bool] {
-	return &c.GcpFilestoreCsiDriverEnabled
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetGkeBackupAgentAddon() *plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon] {
+	return &c.GkeBackupAgentAddon
 }
 
-func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetGkeBackupAgentEnabled() *plugin.TValue[bool] {
-	return &c.GkeBackupAgentEnabled
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetGcsFuseCsiDriverAddon() *plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon] {
+	return &c.GcsFuseCsiDriverAddon
 }
 
-func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetGcsFuseCsiDriverEnabled() *plugin.TValue[bool] {
-	return &c.GcsFuseCsiDriverEnabled
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetStatefulHaAddon() *plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon] {
+	return &c.StatefulHaAddon
 }
 
-func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetStatefulHaEnabled() *plugin.TValue[bool] {
-	return &c.StatefulHaEnabled
+// mqlGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon for the gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingAddon resource
+type mqlGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddonInternal it will be used here
+	Disabled plugin.TValue[bool]
+}
+
+// createGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon creates a new instance of this resource
+func createGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingAddon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon) MqlName() string {
+	return "gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingAddon"
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigHttpLoadBalancingAddon) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+// mqlGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon for the gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingAddon resource
+type mqlGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddonInternal it will be used here
+	Disabled plugin.TValue[bool]
+}
+
+// createGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon creates a new instance of this resource
+func createGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingAddon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon) MqlName() string {
+	return "gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingAddon"
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigHorizontalPodAutoscalingAddon) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+// mqlGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon for the gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardAddon resource
+type mqlGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddonInternal it will be used here
+	Disabled plugin.TValue[bool]
+}
+
+// createGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon creates a new instance of this resource
+func createGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardAddon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon) MqlName() string {
+	return "gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardAddon"
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigKubernetesDashboardAddon) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+// mqlGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon for the gcp.project.gkeService.cluster.addonsConfig.networkPolicyAddon resource
+type mqlGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddonInternal it will be used here
+	Disabled plugin.TValue[bool]
+}
+
+// createGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon creates a new instance of this resource
+func createGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.addonsConfig.networkPolicyAddon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon) MqlName() string {
+	return "gcp.project.gkeService.cluster.addonsConfig.networkPolicyAddon"
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigNetworkPolicyAddon) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+// mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon for the gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon resource
+type mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddonInternal it will be used here
+	Disabled         plugin.TValue[bool]
+	LoadBalancerType plugin.TValue[string]
+}
+
+// createGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon creates a new instance of this resource
+func createGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon) MqlName() string {
+	return "gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon"
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigCloudRunAddon) GetLoadBalancerType() *plugin.TValue[string] {
+	return &c.LoadBalancerType
+}
+
+// mqlGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon for the gcp.project.gkeService.cluster.addonsConfig.dnsCacheAddon resource
+type mqlGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddonInternal it will be used here
+	Enabled plugin.TValue[bool]
+}
+
+// createGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon creates a new instance of this resource
+func createGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.addonsConfig.dnsCacheAddon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon) MqlName() string {
+	return "gcp.project.gkeService.cluster.addonsConfig.dnsCacheAddon"
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigDnsCacheAddon) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+// mqlGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon for the gcp.project.gkeService.cluster.addonsConfig.configConnectorAddon resource
+type mqlGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddonInternal it will be used here
+	Enabled plugin.TValue[bool]
+}
+
+// createGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon creates a new instance of this resource
+func createGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.addonsConfig.configConnectorAddon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon) MqlName() string {
+	return "gcp.project.gkeService.cluster.addonsConfig.configConnectorAddon"
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigConfigConnectorAddon) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+// mqlGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon for the gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverAddon resource
+type mqlGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddonInternal it will be used here
+	Enabled plugin.TValue[bool]
+}
+
+// createGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon creates a new instance of this resource
+func createGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverAddon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon) MqlName() string {
+	return "gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverAddon"
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigGcePersistentDiskCsiDriverAddon) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+// mqlGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon for the gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverAddon resource
+type mqlGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddonInternal it will be used here
+	Enabled plugin.TValue[bool]
+}
+
+// createGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon creates a new instance of this resource
+func createGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverAddon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon) MqlName() string {
+	return "gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverAddon"
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigGcpFilestoreCsiDriverAddon) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+// mqlGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon for the gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentAddon resource
+type mqlGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddonInternal it will be used here
+	Enabled plugin.TValue[bool]
+}
+
+// createGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon creates a new instance of this resource
+func createGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentAddon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon) MqlName() string {
+	return "gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentAddon"
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigGkeBackupAgentAddon) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+// mqlGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon for the gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverAddon resource
+type mqlGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddonInternal it will be used here
+	Enabled plugin.TValue[bool]
+}
+
+// createGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon creates a new instance of this resource
+func createGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverAddon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon) MqlName() string {
+	return "gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverAddon"
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigGcsFuseCsiDriverAddon) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+// mqlGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon for the gcp.project.gkeService.cluster.addonsConfig.statefulHaAddon resource
+type mqlGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddonInternal it will be used here
+	Enabled plugin.TValue[bool]
+}
+
+// createGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon creates a new instance of this resource
+func createGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.addonsConfig.statefulHaAddon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon) MqlName() string {
+	return "gcp.project.gkeService.cluster.addonsConfig.statefulHaAddon"
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfigStatefulHaAddon) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
 }
 
 // mqlGcpProjectGkeServiceClusterIpAllocationPolicy for the gcp.project.gkeService.cluster.ipAllocationPolicy resource

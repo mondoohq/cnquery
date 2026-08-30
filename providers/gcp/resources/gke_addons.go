@@ -9,112 +9,161 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
-// gkeAddonsConfigArgs maps a cluster's addon configuration onto resource
-// arguments.
+const gkeAddonsConfigResource = "gcp.project.gkeService.cluster.addonsConfig"
+
+// gkeAddonsConfigChildArgs returns the resource arguments for every addon of a
+// cluster's addons config, keyed by the field the addon hangs off.
 //
 // Every addon in containerpb.AddonsConfig is its own optional message wrapping
-// a single bool. GKE omits the message entirely when the addon sits at its
-// default, so reading the addon through the dict gives null rather than false,
-// and a check written as `networkPolicyConfig.disabled == false` evaluates
-// against null and passes without ever having read the cluster. Flattening the
-// wrappers to plain bools makes an absent message report the default it stands
-// for: an unset Disabled is false, an unset Enabled is false.
-func gkeAddonsConfigArgs(id string, cfg *containerpb.AddonsConfig) map[string]*llx.RawData {
+// a single bool, and GKE omits the message entirely when the addon sits at its
+// default. Read straight off the dict that gave null rather than false, so a
+// check written as `networkPolicyConfig.disabled == false` evaluated against
+// null and passed without ever having read the cluster. Each addon resource is
+// created unconditionally and reports the default an absent message stands for:
+// an unset Disabled is false, an unset Enabled is false.
+func gkeAddonsConfigChildArgs(id string, cfg *containerpb.AddonsConfig) map[string]map[string]*llx.RawData {
+	// The load balancer type stays empty when the cluster carries no Cloud Run
+	// configuration at all, which is a different claim from the explicit
+	// LOAD_BALANCER_TYPE_UNSPECIFIED the API sends for a configured addon.
+	cloudRunLoadBalancerType := ""
+	if c := cfg.GetCloudRunConfig(); c != nil {
+		cloudRunLoadBalancerType = c.LoadBalancerType.String()
+	}
+
+	return map[string]map[string]*llx.RawData{
+		"httpLoadBalancingAddon": {
+			"__id":     llx.StringData(id + "/httpLoadBalancing"),
+			"disabled": llx.BoolData(cfg.GetHttpLoadBalancing().GetDisabled()),
+		},
+		"horizontalPodAutoscalingAddon": {
+			"__id":     llx.StringData(id + "/horizontalPodAutoscaling"),
+			"disabled": llx.BoolData(cfg.GetHorizontalPodAutoscaling().GetDisabled()),
+		},
+		"kubernetesDashboardAddon": {
+			"__id":     llx.StringData(id + "/kubernetesDashboard"),
+			"disabled": llx.BoolData(cfg.GetKubernetesDashboard().GetDisabled()),
+		},
+		"networkPolicyAddon": {
+			"__id":     llx.StringData(id + "/networkPolicyConfig"),
+			"disabled": llx.BoolData(cfg.GetNetworkPolicyConfig().GetDisabled()),
+		},
+		"cloudRunAddon": {
+			"__id":             llx.StringData(id + "/cloudRunConfig"),
+			"disabled":         llx.BoolData(cfg.GetCloudRunConfig().GetDisabled()),
+			"loadBalancerType": llx.StringData(cloudRunLoadBalancerType),
+		},
+		"dnsCacheAddon": {
+			"__id":    llx.StringData(id + "/dnsCacheConfig"),
+			"enabled": llx.BoolData(cfg.GetDnsCacheConfig().GetEnabled()),
+		},
+		"configConnectorAddon": {
+			"__id":    llx.StringData(id + "/configConnectorConfig"),
+			"enabled": llx.BoolData(cfg.GetConfigConnectorConfig().GetEnabled()),
+		},
+		"gcePersistentDiskCsiDriverAddon": {
+			"__id":    llx.StringData(id + "/gcePersistentDiskCsiDriverConfig"),
+			"enabled": llx.BoolData(cfg.GetGcePersistentDiskCsiDriverConfig().GetEnabled()),
+		},
+		"gcpFilestoreCsiDriverAddon": {
+			"__id":    llx.StringData(id + "/gcpFilestoreCsiDriverConfig"),
+			"enabled": llx.BoolData(cfg.GetGcpFilestoreCsiDriverConfig().GetEnabled()),
+		},
+		"gkeBackupAgentAddon": {
+			"__id":    llx.StringData(id + "/gkeBackupAgentConfig"),
+			"enabled": llx.BoolData(cfg.GetGkeBackupAgentConfig().GetEnabled()),
+		},
+		"gcsFuseCsiDriverAddon": {
+			"__id":    llx.StringData(id + "/gcsFuseCsiDriverConfig"),
+			"enabled": llx.BoolData(cfg.GetGcsFuseCsiDriverConfig().GetEnabled()),
+		},
+		"statefulHaAddon": {
+			"__id":    llx.StringData(id + "/statefulHaConfig"),
+			"enabled": llx.BoolData(cfg.GetStatefulHaConfig().GetEnabled()),
+		},
+	}
+}
+
+// gkeAddonsConfigDictArgs keeps the deprecated per-addon dicts populated. An
+// absent addon message stays a null dict, which is the behavior they shipped
+// with.
+func gkeAddonsConfigDictArgs(id string, cfg *containerpb.AddonsConfig) map[string]*llx.RawData {
 	var httpLoadBalancing, horizontalPodAutoscaling, kubernetesDashboard, networkPolicyConfig map[string]any
 	var cloudRunConfig, dnsCacheConfig, configConnectorConfig map[string]any
 	var gcePersistentDiskCsiDriverConfig, gcpFilestoreCsiDriverConfig map[string]any
 	var gkeBackupAgentConfig, gcsFuseCsiDriverConfig, statefulHaConfig map[string]any
 
-	var httpLoadBalancingDisabled, horizontalPodAutoscalingDisabled bool
-	var kubernetesDashboardDisabled, networkPolicyConfigDisabled, cloudRunDisabled bool
-	var cloudRunLoadBalancerType string
-	var dnsCacheEnabled, configConnectorEnabled bool
-	var gcePersistentDiskCsiDriverEnabled, gcpFilestoreCsiDriverEnabled bool
-	var gkeBackupAgentEnabled, gcsFuseCsiDriverEnabled, statefulHaEnabled bool
-
 	if cfg != nil {
 		if c := cfg.HttpLoadBalancing; c != nil {
-			httpLoadBalancingDisabled = c.Disabled
 			httpLoadBalancing = map[string]any{"disabled": c.Disabled}
 		}
 		if c := cfg.HorizontalPodAutoscaling; c != nil {
-			horizontalPodAutoscalingDisabled = c.Disabled
 			horizontalPodAutoscaling = map[string]any{"disabled": c.Disabled}
 		}
 		if c := cfg.KubernetesDashboard; c != nil {
-			kubernetesDashboardDisabled = c.Disabled
 			kubernetesDashboard = map[string]any{"disabled": c.Disabled}
 		}
 		if c := cfg.NetworkPolicyConfig; c != nil {
-			networkPolicyConfigDisabled = c.Disabled
 			networkPolicyConfig = map[string]any{"disabled": c.Disabled}
 		}
 		if c := cfg.CloudRunConfig; c != nil {
-			cloudRunDisabled = c.Disabled
-			cloudRunLoadBalancerType = c.LoadBalancerType.String()
 			cloudRunConfig = map[string]any{
 				"disabled":         c.Disabled,
 				"loadBalancerType": c.LoadBalancerType.String(),
 			}
 		}
 		if c := cfg.DnsCacheConfig; c != nil {
-			dnsCacheEnabled = c.Enabled
 			dnsCacheConfig = map[string]any{"enabled": c.Enabled}
 		}
 		if c := cfg.ConfigConnectorConfig; c != nil {
-			configConnectorEnabled = c.Enabled
 			configConnectorConfig = map[string]any{"enabled": c.Enabled}
 		}
 		if c := cfg.GcePersistentDiskCsiDriverConfig; c != nil {
-			gcePersistentDiskCsiDriverEnabled = c.Enabled
 			gcePersistentDiskCsiDriverConfig = map[string]any{"enabled": c.Enabled}
 		}
 		if c := cfg.GcpFilestoreCsiDriverConfig; c != nil {
-			gcpFilestoreCsiDriverEnabled = c.Enabled
 			gcpFilestoreCsiDriverConfig = map[string]any{"enabled": c.Enabled}
 		}
 		if c := cfg.GkeBackupAgentConfig; c != nil {
-			gkeBackupAgentEnabled = c.Enabled
 			gkeBackupAgentConfig = map[string]any{"enabled": c.Enabled}
 		}
 		if c := cfg.GcsFuseCsiDriverConfig; c != nil {
-			gcsFuseCsiDriverEnabled = c.Enabled
 			gcsFuseCsiDriverConfig = map[string]any{"enabled": c.Enabled}
 		}
 		if c := cfg.StatefulHaConfig; c != nil {
-			statefulHaEnabled = c.Enabled
 			statefulHaConfig = map[string]any{"enabled": c.Enabled}
 		}
 	}
 
 	return map[string]*llx.RawData{
-		"id":                                llx.StringData(id),
-		"httpLoadBalancing":                 llx.DictData(httpLoadBalancing),
-		"horizontalPodAutoscaling":          llx.DictData(horizontalPodAutoscaling),
-		"kubernetesDashboard":               llx.DictData(kubernetesDashboard),
-		"networkPolicyConfig":               llx.DictData(networkPolicyConfig),
-		"cloudRunConfig":                    llx.DictData(cloudRunConfig),
-		"dnsCacheConfig":                    llx.DictData(dnsCacheConfig),
-		"configConnectorConfig":             llx.DictData(configConnectorConfig),
-		"gcePersistentDiskCsiDriverConfig":  llx.DictData(gcePersistentDiskCsiDriverConfig),
-		"gcpFilestoreCsiDriverConfig":       llx.DictData(gcpFilestoreCsiDriverConfig),
-		"gkeBackupAgentConfig":              llx.DictData(gkeBackupAgentConfig),
-		"gcsFuseCsiDriverConfig":            llx.DictData(gcsFuseCsiDriverConfig),
-		"statefulHaConfig":                  llx.DictData(statefulHaConfig),
-		"httpLoadBalancingDisabled":         llx.BoolData(httpLoadBalancingDisabled),
-		"horizontalPodAutoscalingDisabled":  llx.BoolData(horizontalPodAutoscalingDisabled),
-		"kubernetesDashboardDisabled":       llx.BoolData(kubernetesDashboardDisabled),
-		"networkPolicyConfigDisabled":       llx.BoolData(networkPolicyConfigDisabled),
-		"cloudRunDisabled":                  llx.BoolData(cloudRunDisabled),
-		"cloudRunLoadBalancerType":          llx.StringData(cloudRunLoadBalancerType),
-		"dnsCacheEnabled":                   llx.BoolData(dnsCacheEnabled),
-		"configConnectorEnabled":            llx.BoolData(configConnectorEnabled),
-		"gcePersistentDiskCsiDriverEnabled": llx.BoolData(gcePersistentDiskCsiDriverEnabled),
-		"gcpFilestoreCsiDriverEnabled":      llx.BoolData(gcpFilestoreCsiDriverEnabled),
-		"gkeBackupAgentEnabled":             llx.BoolData(gkeBackupAgentEnabled),
-		"gcsFuseCsiDriverEnabled":           llx.BoolData(gcsFuseCsiDriverEnabled),
-		"statefulHaEnabled":                 llx.BoolData(statefulHaEnabled),
+		"id":                               llx.StringData(id),
+		"httpLoadBalancing":                llx.DictData(httpLoadBalancing),
+		"horizontalPodAutoscaling":         llx.DictData(horizontalPodAutoscaling),
+		"kubernetesDashboard":              llx.DictData(kubernetesDashboard),
+		"networkPolicyConfig":              llx.DictData(networkPolicyConfig),
+		"cloudRunConfig":                   llx.DictData(cloudRunConfig),
+		"dnsCacheConfig":                   llx.DictData(dnsCacheConfig),
+		"configConnectorConfig":            llx.DictData(configConnectorConfig),
+		"gcePersistentDiskCsiDriverConfig": llx.DictData(gcePersistentDiskCsiDriverConfig),
+		"gcpFilestoreCsiDriverConfig":      llx.DictData(gcpFilestoreCsiDriverConfig),
+		"gkeBackupAgentConfig":             llx.DictData(gkeBackupAgentConfig),
+		"gcsFuseCsiDriverConfig":           llx.DictData(gcsFuseCsiDriverConfig),
+		"statefulHaConfig":                 llx.DictData(statefulHaConfig),
 	}
+}
+
+// newMqlGkeAddonsConfig builds a cluster's addons config together with one
+// resource per addon.
+func newMqlGkeAddonsConfig(runtime *plugin.Runtime, id string, cfg *containerpb.AddonsConfig) (plugin.Resource, error) {
+	args := gkeAddonsConfigDictArgs(id, cfg)
+	for field, childArgs := range gkeAddonsConfigChildArgs(id, cfg) {
+		name := gkeAddonsConfigResource + "." + field
+		addon, err := CreateResource(runtime, name, childArgs)
+		if err != nil {
+			return nil, err
+		}
+		args[field] = llx.ResourceData(addon, name)
+	}
+	return CreateResource(runtime, gkeAddonsConfigResource, args)
 }
 
 // newMqlGkeControlPlaneEndpoints promotes the control plane endpoint
