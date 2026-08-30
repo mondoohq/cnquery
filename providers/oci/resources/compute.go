@@ -196,12 +196,7 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 				mqlInst.cachePlatformConfig = instance.PlatformConfig
 				mqlInst.cacheLaunchOptions = instance.LaunchOptions
 				mqlInst.cacheShapeConfig = instance.ShapeConfig
-				switch src := instance.SourceDetails.(type) {
-				case core.InstanceSourceViaBootVolumeDetails:
-					mqlInst.cacheBootVolumeID = stringValue(src.BootVolumeId)
-				case core.InstanceSourceViaImageDetails:
-					mqlInst.cacheImageSource = &src
-				}
+				mqlInst.cacheBootVolumeID, mqlInst.cacheImageSource = ociInstanceSource(instance.SourceDetails)
 				res = append(res, mqlInst)
 			}
 
@@ -246,6 +241,22 @@ func ociShieldedInstanceFlags(pc core.PlatformConfig) (secureBoot, trustedPlatfo
 		pc.GetIsTrustedPlatformModuleEnabled(),
 		pc.GetIsMeasuredBootEnabled(),
 		pc.GetIsMemoryEncryptionEnabled()
+}
+
+// ociInstanceSource splits an instance's source union into its two branches.
+//
+// The SDK unmarshals both branches as values rather than pointers, so the type
+// switch has to name the value types. Naming the pointer types instead matches
+// nothing, and an instance would report neither a boot volume nor an image
+// source while still looking like it had been read.
+func ociInstanceSource(src core.InstanceSourceDetails) (bootVolumeID string, image *core.InstanceSourceViaImageDetails) {
+	switch s := src.(type) {
+	case core.InstanceSourceViaBootVolumeDetails:
+		return stringValue(s.BootVolumeId), nil
+	case core.InstanceSourceViaImageDetails:
+		return "", &s
+	}
+	return "", nil
 }
 
 type mqlOciComputeInstanceInternal struct {

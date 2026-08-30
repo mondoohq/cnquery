@@ -70,6 +70,45 @@ func TestOciShieldedInstanceFlags(t *testing.T) {
 	})
 }
 
+func TestOciInstanceSource(t *testing.T) {
+	t.Run("an instance launched from an image", func(t *testing.T) {
+		// The SDK unmarshals this branch as a value, not a pointer. Naming the
+		// pointer type in the switch would match nothing, and the instance
+		// would report no boot source at all while still looking read.
+		bootVolumeID, image := ociInstanceSource(core.InstanceSourceViaImageDetails{
+			ImageId:             strPtr("ocid1.image.oc1..img"),
+			KmsKeyId:            strPtr("ocid1.key.oc1..key"),
+			BootVolumeSizeInGBs: int64Ptr(120),
+			BootVolumeVpusPerGB: int64Ptr(20),
+		})
+
+		assert.Empty(t, bootVolumeID, "an image-launched instance reuses no existing boot volume")
+		require.NotNil(t, image)
+		assert.Equal(t, "ocid1.image.oc1..img", *image.ImageId)
+		assert.Equal(t, "ocid1.key.oc1..key", *image.KmsKeyId)
+		assert.Equal(t, int64(120), *image.BootVolumeSizeInGBs)
+	})
+
+	t.Run("an instance launched from an existing boot volume", func(t *testing.T) {
+		// The volume was sized and keyed when it was created, so there is no
+		// image source to report. A non-nil image here would publish a boot
+		// volume size of null as a fact about the instance.
+		bootVolumeID, image := ociInstanceSource(core.InstanceSourceViaBootVolumeDetails{
+			BootVolumeId: strPtr("ocid1.bootvolume.oc1..vol"),
+		})
+
+		assert.Equal(t, "ocid1.bootvolume.oc1..vol", bootVolumeID)
+		assert.Nil(t, image)
+	})
+
+	t.Run("an instance reporting no source details", func(t *testing.T) {
+		bootVolumeID, image := ociInstanceSource(nil)
+
+		assert.Empty(t, bootVolumeID)
+		assert.Nil(t, image)
+	})
+}
+
 func TestOciRuleValuesOpenIngressAcrossBothRuleSources(t *testing.T) {
 	// The bug this replaces: the exposure resource read its open rules out of
 	// two differently-shaped dicts. A network security group rule carried

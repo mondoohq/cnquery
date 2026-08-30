@@ -147,10 +147,15 @@ func (o *mqlOciFunctionsApplication) imagePolicy() (*mqlOciFunctionsImagePolicyC
 	if err != nil {
 		return nil, err
 	}
-	mqlPolicy := res.(*mqlOciFunctionsImagePolicyConfig)
+	keyIDs := make([]string, 0, len(ipc.KeyDetails))
 	for _, kd := range ipc.KeyDetails {
-		mqlPolicy.cacheKeyIDs = append(mqlPolicy.cacheKeyIDs, stringValue(kd.KmsKeyId))
+		keyIDs = append(keyIDs, stringValue(kd.KmsKeyId))
 	}
+	mqlPolicy := res.(*mqlOciFunctionsImagePolicyConfig)
+	// Assigned rather than appended: CreateResource returns the cached
+	// resource on a second call for the same application, and appending would
+	// list every trusted key twice.
+	mqlPolicy.cacheKeyIDs = keyIDs
 	return mqlPolicy, nil
 }
 
