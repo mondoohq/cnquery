@@ -264,3 +264,49 @@ func TestSPDXDocumentSurvivesRepeatedRoundTrips(t *testing.T) {
 		bom = back
 	}
 }
+
+// The version test is a hand-rolled check rather than a pattern, so its edges
+// are pinned directly: a bare "v" is not a version, and a "v" only counts when
+// a digit follows it.
+func TestSPDXLooksLikeVersion(t *testing.T) {
+	for _, c := range []struct {
+		in   string
+		want bool
+	}{
+		{"1", true},
+		{"9", true},
+		{"v1", true},
+		{"v0", true},
+		{"0.50.1", true},
+		{"v1.2.3", true},
+		{"", false},
+		{"v", false},
+		{"vv1", false},
+		{"a1", false},
+		{"beta", false},
+		{"tool", false},
+		{"V1", false},
+		{"v-1", false},
+		{" 1", false},
+		// Multibyte input must not be read a byte at a time into a false
+		// positive: this is an Arabic-Indic one, not an ASCII digit.
+		{"\u0661", false},
+	} {
+		t.Run(c.in, func(t *testing.T) {
+			assert.Equal(t, c.want, spdxLooksLikeVersion(c.in))
+		})
+	}
+}
+
+// A namespace has to be different every time and must never be the reason a
+// render fails: the uniquifier falls back to the clock rather than panicking
+// when the entropy source cannot be read.
+func TestSPDXNamespaceSuffixIsUniqueAndNeverPanics(t *testing.T) {
+	seen := map[string]bool{}
+	for i := 0; i < 100; i++ {
+		s := spdxNamespaceSuffix()
+		require.NotEmpty(t, s)
+		require.False(t, seen[s], "suffix repeated: %q", s)
+		seen[s] = true
+	}
+}

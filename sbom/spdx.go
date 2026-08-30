@@ -409,7 +409,24 @@ func spdxDocumentName(bom *Sbom) string {
 // even when the content was imported from somebody else's SBOM -- that document
 // had its own namespace, and this is a different document.
 func spdxDocumentNamespace(name string) string {
-	return spdxNamespacePrefix + url.PathEscape(name) + "-" + uuid.New().String()
+	return spdxNamespacePrefix + url.PathEscape(name) + "-" + spdxNamespaceSuffix()
+}
+
+// spdxNamespaceSuffix is what makes one document's namespace differ from the
+// next: a UUID, or the clock when one cannot be had.
+//
+// uuid.New panics when the entropy source fails, which is rare and not
+// impossible -- a constrained container without /dev/urandom is the usual way
+// to see it. Taking a whole scan down over the uniquifying half of a metadata
+// URI is the exact failure this file exists to remove, so the error is handled
+// rather than raised. Nanosecond time is a weaker uniquifier than a UUID and a
+// far better one than a panic; it only ever runs on a machine whose randomness
+// has already failed.
+func spdxNamespaceSuffix() string {
+	if id, err := uuid.NewRandom(); err == nil {
+		return id.String()
+	}
+	return strconv.FormatInt(time.Now().UnixNano(), 10)
 }
 
 // spdxCreators renders who produced the document, dropping what is not known.
@@ -506,9 +523,12 @@ func spdxGenerator(info *spdx.CreationInfo) *Generator {
 	return g
 }
 
-// spdxToolVersion matches the part of a tool identifier that is a version:
-// digits, optionally behind a "v".
-var spdxToolVersion = regexp.MustCompile(`^v?\d`)
+// spdxLooksLikeVersion reports whether a trailing segment is a version rather
+// than the last word of a hyphenated name: digits, optionally behind a "v".
+func spdxLooksLikeVersion(s string) bool {
+	s = strings.TrimPrefix(s, "v")
+	return s != "" && s[0] >= '0' && s[0] <= '9'
+}
 
 // spdxSplitTool splits "toolidentifier-version" back into its two halves.
 //
@@ -536,7 +556,7 @@ func spdxSplitTool(tool string) (string, string) {
 	if i <= 0 {
 		return tool, ""
 	}
-	if version := tool[i+1:]; spdxToolVersion.MatchString(version) {
+	if version := tool[i+1:]; spdxLooksLikeVersion(version) {
 		return tool[:i], version
 	}
 	return tool, ""
