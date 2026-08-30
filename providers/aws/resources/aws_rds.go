@@ -961,6 +961,11 @@ func (a *mqlAwsRdsDbinstance) snapshots() ([]any, error) {
 			return nil, err
 		}
 		for _, snapshot := range snapshots.DBSnapshots {
+			// defensive: the parent instance list is already engine-filtered,
+			// but keep the account-wide listing and this one consistent
+			if snapshot.Engine != nil && slices.Contains(nonRdsEngines, *snapshot.Engine) {
+				continue
+			}
 			mqlDbSnapshot, err := newMqlAwsRdsDbSnapshot(a.MqlRuntime, region, snapshot)
 			if err != nil {
 				return nil, err
@@ -992,6 +997,9 @@ func (a *mqlAwsRds) snapshots() ([]any, error) {
 				if snapshot.Engine != nil && slices.Contains(nonRdsEngines, *snapshot.Engine) {
 					continue
 				}
+				if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(rdsTagsToMap(snapshot.TagList))) {
+					continue
+				}
 				mqlSnapshot, err := newMqlAwsRdsDbSnapshot(a.MqlRuntime, region, snapshot)
 				if err != nil {
 					return nil, err
@@ -1010,6 +1018,9 @@ func (a *mqlAwsRds) snapshots() ([]any, error) {
 				// DocumentDB and Neptune cluster snapshots come through the same
 				// API; they are not RDS assets
 				if snapshot.Engine != nil && slices.Contains(nonRdsEngines, *snapshot.Engine) {
+					continue
+				}
+				if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(rdsTagsToMap(snapshot.TagList))) {
 					continue
 				}
 				mqlSnapshot, err := newMqlAwsRdsClusterSnapshot(a.MqlRuntime, region, snapshot)
@@ -1563,6 +1574,11 @@ func (a *mqlAwsRdsDbcluster) snapshots() ([]any, error) {
 			return nil, err
 		}
 		for _, snapshot := range snapshots.DBClusterSnapshots {
+			// defensive: the parent cluster list is already engine-filtered,
+			// but keep the account-wide listing and this one consistent
+			if snapshot.Engine != nil && slices.Contains(nonRdsEngines, *snapshot.Engine) {
+				continue
+			}
 			mqlDbSnapshot, err := newMqlAwsRdsClusterSnapshot(a.MqlRuntime, region, snapshot)
 			if err != nil {
 				return nil, err
