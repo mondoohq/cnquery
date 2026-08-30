@@ -213,3 +213,54 @@ func TestSPDXSplitsAToolFromItsVersionOnlyWhenThereIsOne(t *testing.T) {
 		})
 	}
 }
+
+// Splitting a tool identifier cannot be got right from the string alone: a tool
+// genuinely called "log4j-2" is indistinguishable from version 2 of "log4j".
+// What has to hold instead is that the document does not drift -- rejoining
+// whatever the split produced reproduces the identifier exactly, so a document
+// passed through mql any number of times still names the tool it named at the
+// start. That is the property the old reader broke, and it is stronger than
+// asserting any particular split, because it holds even where the split is
+// arguable.
+func TestSPDXToolIdentifierSurvivesARoundTrip(t *testing.T) {
+	for _, tool := range []string{
+		"mql-1.2.3",
+		"my-tool",
+		"cyclonedx-gomod-v1.4.0",
+		// Arguable split, exact round trip: name "log4j", version "2".
+		"log4j-2",
+		"tool-2-beta",
+		"trivy-0.50.1",
+		"mql",
+		"v1.0",
+		"a-b-1.0-2.0",
+		// Degenerate shapes that must still come back unchanged.
+		"-1.0",
+		"mql-",
+	} {
+		t.Run(tool, func(t *testing.T) {
+			name, version := spdxSplitTool(tool)
+			assert.Equal(t, tool, spdxToolIdentifier(&Generator{Name: name, Version: version}))
+		})
+	}
+}
+
+// The same property through the real renderer and reader rather than the two
+// helpers, since that is the path a document actually takes.
+func TestSPDXDocumentSurvivesRepeatedRoundTrips(t *testing.T) {
+	bom := bomWithGenerator(&Generator{Name: "cyclonedx-gomod", Version: "v1.4.0", Vendor: "ExampleCorp"})
+	h := New(FormatSpdxJSON).(*Spdx)
+
+	for pass := 0; pass < 3; pass++ {
+		_, out := renderSpdx(t, bom)
+
+		var doc spdxDoc
+		require.NoError(t, json.Unmarshal([]byte(out), &doc))
+		assert.Equal(t, []string{"Organization: ExampleCorp", "Tool: cyclonedx-gomod-v1.4.0"},
+			doc.CreationInfo.Creators, "creators drifted on pass %d", pass)
+
+		back, err := h.Parse(strings.NewReader(out))
+		require.NoError(t, err)
+		bom = back
+	}
+}

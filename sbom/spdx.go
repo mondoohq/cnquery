@@ -517,6 +517,13 @@ var spdxToolVersion = regexp.MustCompile(`^v?\d`)
 // split happens only when what follows the last hyphen looks like a version,
 // which leaves a hyphenated name that carries no version intact rather than
 // slicing its last word off and calling it a release.
+//
+// The ambiguity cannot be resolved from the string alone -- a tool genuinely
+// called "log4j-2" is indistinguishable from version 2 of "log4j" -- so what
+// this guarantees is not that the halves are right but that the *document* does
+// not drift: rejoining whatever came out reproduces the identifier exactly, for
+// every shape above. That is the property the round trip needs, and the one the
+// old reader broke.
 func spdxSplitTool(tool string) (string, string) {
 	i := strings.LastIndex(tool, "-")
 	if i <= 0 {
