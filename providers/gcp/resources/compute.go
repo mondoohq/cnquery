@@ -3574,46 +3574,37 @@ func (g *mqlGcpProjectComputeService) securityPolicies() ([]any, error) {
 					userDefinedFields = append(userDefinedFields, d)
 				}
 
-				var layer7DdosDefenseEnabled bool
-				var layer7DdosDefenseRuleVisibility string
-				if policy.AdaptiveProtectionConfig != nil && policy.AdaptiveProtectionConfig.Layer7DdosDefenseConfig != nil {
-					layer7DdosDefenseEnabled = policy.AdaptiveProtectionConfig.Layer7DdosDefenseConfig.Enable
-					layer7DdosDefenseRuleVisibility = policy.AdaptiveProtectionConfig.Layer7DdosDefenseConfig.RuleVisibility
-				}
-
-				var jsonParsing, logLevel, requestBodyInspectionSize string
-				if policy.AdvancedOptionsConfig != nil {
-					jsonParsing = policy.AdvancedOptionsConfig.JsonParsing
-					logLevel = policy.AdvancedOptionsConfig.LogLevel
-					requestBodyInspectionSize = policy.AdvancedOptionsConfig.RequestBodyInspectionSize
-				}
-
-				var ddosProtection string
-				if policy.DdosProtectionConfig != nil {
-					ddosProtection = policy.DdosProtectionConfig.DdosProtection
-				}
-
 				policyId := strconv.FormatUint(policy.Id, 10)
+				policyKey := "gcp.project.computeService.securityPolicy/" + policyId
+				adaptiveProtection, err := newMqlSecurityPolicyAdaptiveProtection(g.MqlRuntime, policyKey, policy.AdaptiveProtectionConfig)
+				if err != nil {
+					return err
+				}
+				advancedOptions, err := newMqlSecurityPolicyAdvancedOptions(g.MqlRuntime, policyKey, policy.AdvancedOptionsConfig)
+				if err != nil {
+					return err
+				}
+				networkDdosProtection, err := newMqlSecurityPolicyDdosProtection(g.MqlRuntime, policyKey, policy.DdosProtectionConfig)
+				if err != nil {
+					return err
+				}
 				mqlPolicy, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.securityPolicy", map[string]*llx.RawData{
-					"id":                              llx.StringData(policyId),
-					"name":                            llx.StringData(policy.Name),
-					"description":                     llx.StringData(policy.Description),
-					"type":                            llx.StringData(policy.Type),
-					"labels":                          llx.MapData(convert.MapToInterfaceMap(policy.Labels), types.String),
-					"adaptiveProtectionConfig":        llx.DictData(adaptiveProtectionConfig),
-					"layer7DdosDefenseEnabled":        llx.BoolData(layer7DdosDefenseEnabled),
-					"layer7DdosDefenseRuleVisibility": llx.StringData(layer7DdosDefenseRuleVisibility),
-					"advancedOptionsConfig":           llx.DictData(advancedOptionsConfig),
-					"jsonParsing":                     llx.StringData(jsonParsing),
-					"logLevel":                        llx.StringData(logLevel),
-					"requestBodyInspectionSize":       llx.StringData(requestBodyInspectionSize),
-					"ddosProtectionConfig":            llx.DictData(ddosProtectionConfig),
-					"ddosProtection":                  llx.StringData(ddosProtection),
-					"recaptchaOptionsConfig":          llx.DictData(recaptchaOptionsConfig),
-					"fingerprint":                     llx.StringData(policy.Fingerprint),
-					"userDefinedFields":               llx.ArrayData(userDefinedFields, types.Dict),
-					"selfLink":                        llx.StringData(policy.SelfLink),
-					"createdAt":                       llx.TimeDataPtr(parseTime(policy.CreationTimestamp)),
+					"id":                       llx.StringData(policyId),
+					"name":                     llx.StringData(policy.Name),
+					"description":              llx.StringData(policy.Description),
+					"type":                     llx.StringData(policy.Type),
+					"labels":                   llx.MapData(convert.MapToInterfaceMap(policy.Labels), types.String),
+					"adaptiveProtectionConfig": llx.DictData(adaptiveProtectionConfig),
+					"adaptiveProtection":       adaptiveProtection,
+					"advancedOptionsConfig":    llx.DictData(advancedOptionsConfig),
+					"advancedOptions":          advancedOptions,
+					"ddosProtectionConfig":     llx.DictData(ddosProtectionConfig),
+					"networkDdosProtection":    networkDdosProtection,
+					"recaptchaOptionsConfig":   llx.DictData(recaptchaOptionsConfig),
+					"fingerprint":              llx.StringData(policy.Fingerprint),
+					"userDefinedFields":        llx.ArrayData(userDefinedFields, types.Dict),
+					"selfLink":                 llx.StringData(policy.SelfLink),
+					"createdAt":                llx.TimeDataPtr(parseTime(policy.CreationTimestamp)),
 				})
 				if err != nil {
 					return err
@@ -3710,30 +3701,20 @@ func (g *mqlGcpProjectComputeServiceSecurityPolicy) rules() ([]any, error) {
 			return nil, err
 		}
 
-		var matchVersionedExpr, matchExpression string
-		matchSrcIpRanges := []any{}
-		if rule.Match != nil {
-			matchVersionedExpr = rule.Match.VersionedExpr
-			if rule.Match.Config != nil {
-				for _, r := range rule.Match.Config.SrcIpRanges {
-					matchSrcIpRanges = append(matchSrcIpRanges, r)
-				}
-			}
-			if rule.Match.Expr != nil {
-				matchExpression = rule.Match.Expr.Expression
-			}
+		ruleId := fmt.Sprintf("gcp.project.computeService.securityPolicy.rule/%s/%d", policyId, rule.Priority)
+		matcher, err := newMqlSecurityPolicyRuleMatcher(g.MqlRuntime, ruleId, rule.Match)
+		if err != nil {
+			return nil, err
 		}
 
 		mqlRule, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.securityPolicy.rule", map[string]*llx.RawData{
-			"id":                     llx.StringData(fmt.Sprintf("gcp.project.computeService.securityPolicy.rule/%s/%d", policyId, rule.Priority)),
+			"id":                     llx.StringData(ruleId),
 			"action":                 llx.StringData(rule.Action),
 			"description":            llx.StringData(rule.Description),
 			"priority":               llx.IntData(rule.Priority),
 			"preview":                llx.BoolData(rule.Preview),
 			"match":                  llx.DictData(matchDict),
-			"matchVersionedExpr":     llx.StringData(matchVersionedExpr),
-			"matchSrcIpRanges":       llx.ArrayData(matchSrcIpRanges, types.String),
-			"matchExpression":        llx.StringData(matchExpression),
+			"matcher":                matcher,
 			"networkMatch":           llx.DictData(networkMatch),
 			"rateLimitOptions":       llx.DictData(rateLimitOptions),
 			"redirectOptions":        llx.DictData(redirectOptions),

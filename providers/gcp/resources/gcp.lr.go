@@ -288,6 +288,11 @@ const (
 	ResourceGcpProjectComputeServiceWafExpressionSet                                   string = "gcp.project.computeService.wafExpressionSet"
 	ResourceGcpProjectComputeServiceSecurityPolicy                                     string = "gcp.project.computeService.securityPolicy"
 	ResourceGcpProjectComputeServiceSecurityPolicyRule                                 string = "gcp.project.computeService.securityPolicy.rule"
+	ResourceGcpProjectComputeServiceSecurityPolicyAdaptiveProtection                   string = "gcp.project.computeService.securityPolicy.adaptiveProtection"
+	ResourceGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense                    string = "gcp.project.computeService.securityPolicy.layer7DdosDefense"
+	ResourceGcpProjectComputeServiceSecurityPolicyAdvancedOptions                      string = "gcp.project.computeService.securityPolicy.advancedOptions"
+	ResourceGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection                string = "gcp.project.computeService.securityPolicy.networkDdosProtection"
+	ResourceGcpProjectComputeServiceSecurityPolicyRuleMatcher                          string = "gcp.project.computeService.securityPolicy.rule.matcher"
 	ResourceGcpProjectComputeServiceSslPolicy                                          string = "gcp.project.computeService.sslPolicy"
 	ResourceGcpProjectComputeServiceSslCertificate                                     string = "gcp.project.computeService.sslCertificate"
 	ResourceGcpProjectComputeServiceVpnGateway                                         string = "gcp.project.computeService.vpnGateway"
@@ -1622,6 +1627,26 @@ func init() {
 		"gcp.project.computeService.securityPolicy.rule": {
 			// to override args, implement: initGcpProjectComputeServiceSecurityPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectComputeServiceSecurityPolicyRule,
+		},
+		"gcp.project.computeService.securityPolicy.adaptiveProtection": {
+			// to override args, implement: initGcpProjectComputeServiceSecurityPolicyAdaptiveProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceSecurityPolicyAdaptiveProtection,
+		},
+		"gcp.project.computeService.securityPolicy.layer7DdosDefense": {
+			// to override args, implement: initGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense,
+		},
+		"gcp.project.computeService.securityPolicy.advancedOptions": {
+			// to override args, implement: initGcpProjectComputeServiceSecurityPolicyAdvancedOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceSecurityPolicyAdvancedOptions,
+		},
+		"gcp.project.computeService.securityPolicy.networkDdosProtection": {
+			// to override args, implement: initGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection,
+		},
+		"gcp.project.computeService.securityPolicy.rule.matcher": {
+			// to override args, implement: initGcpProjectComputeServiceSecurityPolicyRuleMatcher(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceSecurityPolicyRuleMatcher,
 		},
 		"gcp.project.computeService.sslPolicy": {
 			// to override args, implement: initGcpProjectComputeServiceSslPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -12012,29 +12037,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.securityPolicy.adaptiveProtectionConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetAdaptiveProtectionConfig()).ToDataRes(types.Dict)
 	},
-	"gcp.project.computeService.securityPolicy.layer7DdosDefenseEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetLayer7DdosDefenseEnabled()).ToDataRes(types.Bool)
-	},
-	"gcp.project.computeService.securityPolicy.layer7DdosDefenseRuleVisibility": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetLayer7DdosDefenseRuleVisibility()).ToDataRes(types.String)
+	"gcp.project.computeService.securityPolicy.adaptiveProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetAdaptiveProtection()).ToDataRes(types.Resource("gcp.project.computeService.securityPolicy.adaptiveProtection"))
 	},
 	"gcp.project.computeService.securityPolicy.advancedOptionsConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetAdvancedOptionsConfig()).ToDataRes(types.Dict)
 	},
-	"gcp.project.computeService.securityPolicy.jsonParsing": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetJsonParsing()).ToDataRes(types.String)
-	},
-	"gcp.project.computeService.securityPolicy.logLevel": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetLogLevel()).ToDataRes(types.String)
-	},
-	"gcp.project.computeService.securityPolicy.requestBodyInspectionSize": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetRequestBodyInspectionSize()).ToDataRes(types.String)
+	"gcp.project.computeService.securityPolicy.advancedOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetAdvancedOptions()).ToDataRes(types.Resource("gcp.project.computeService.securityPolicy.advancedOptions"))
 	},
 	"gcp.project.computeService.securityPolicy.ddosProtectionConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetDdosProtectionConfig()).ToDataRes(types.Dict)
 	},
-	"gcp.project.computeService.securityPolicy.ddosProtection": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetDdosProtection()).ToDataRes(types.String)
+	"gcp.project.computeService.securityPolicy.networkDdosProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetNetworkDdosProtection()).ToDataRes(types.Resource("gcp.project.computeService.securityPolicy.networkDdosProtection"))
 	},
 	"gcp.project.computeService.securityPolicy.recaptchaOptionsConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetRecaptchaOptionsConfig()).ToDataRes(types.Dict)
@@ -12075,14 +12091,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.securityPolicy.rule.match": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyRule).GetMatch()).ToDataRes(types.Dict)
 	},
-	"gcp.project.computeService.securityPolicy.rule.matchVersionedExpr": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyRule).GetMatchVersionedExpr()).ToDataRes(types.String)
-	},
-	"gcp.project.computeService.securityPolicy.rule.matchSrcIpRanges": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyRule).GetMatchSrcIpRanges()).ToDataRes(types.Array(types.String))
-	},
-	"gcp.project.computeService.securityPolicy.rule.matchExpression": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyRule).GetMatchExpression()).ToDataRes(types.String)
+	"gcp.project.computeService.securityPolicy.rule.matcher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyRule).GetMatcher()).ToDataRes(types.Resource("gcp.project.computeService.securityPolicy.rule.matcher"))
 	},
 	"gcp.project.computeService.securityPolicy.rule.networkMatch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyRule).GetNetworkMatch()).ToDataRes(types.Dict)
@@ -12098,6 +12108,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.securityPolicy.rule.preconfiguredWafConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyRule).GetPreconfiguredWafConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.securityPolicy.adaptiveProtection.layer7DdosDefense": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyAdaptiveProtection).GetLayer7DdosDefense()).ToDataRes(types.Resource("gcp.project.computeService.securityPolicy.layer7DdosDefense"))
+	},
+	"gcp.project.computeService.securityPolicy.layer7DdosDefense.enable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense).GetEnable()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.securityPolicy.layer7DdosDefense.ruleVisibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense).GetRuleVisibility()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.securityPolicy.layer7DdosDefense.thresholdConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense).GetThresholdConfigs()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.computeService.securityPolicy.advancedOptions.jsonParsing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions).GetJsonParsing()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.securityPolicy.advancedOptions.logLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions).GetLogLevel()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.securityPolicy.advancedOptions.requestBodyInspectionSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions).GetRequestBodyInspectionSize()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.securityPolicy.advancedOptions.jsonCustomContentTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions).GetJsonCustomContentTypes()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.securityPolicy.advancedOptions.userIpRequestHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions).GetUserIpRequestHeaders()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.securityPolicy.networkDdosProtection.ddosProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection).GetDdosProtection()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.securityPolicy.networkDdosProtection.ddosAdaptiveProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection).GetDdosAdaptiveProtection()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.securityPolicy.networkDdosProtection.ddosImpactedBaselineThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection).GetDdosImpactedBaselineThreshold()).ToDataRes(types.Float)
+	},
+	"gcp.project.computeService.securityPolicy.rule.matcher.versionedExpr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher).GetVersionedExpr()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.securityPolicy.rule.matcher.srcIpRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher).GetSrcIpRanges()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.securityPolicy.rule.matcher.expression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher).GetExpression()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.securityPolicy.rule.matcher.expressionTitle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher).GetExpressionTitle()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.securityPolicy.rule.matcher.expressionDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher).GetExpressionDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.securityPolicy.rule.matcher.expressionLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher).GetExpressionLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.securityPolicy.rule.matcher.exprOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher).GetExprOptions()).ToDataRes(types.Dict)
 	},
 	"gcp.project.computeService.sslPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSslPolicy).GetId()).ToDataRes(types.String)
@@ -33011,36 +33078,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceSecurityPolicy).AdaptiveProtectionConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.computeService.securityPolicy.layer7DdosDefenseEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceSecurityPolicy).Layer7DdosDefenseEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"gcp.project.computeService.securityPolicy.layer7DdosDefenseRuleVisibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceSecurityPolicy).Layer7DdosDefenseRuleVisibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gcp.project.computeService.securityPolicy.adaptiveProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicy).AdaptiveProtection, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceSecurityPolicyAdaptiveProtection](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.securityPolicy.advancedOptionsConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSecurityPolicy).AdvancedOptionsConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.computeService.securityPolicy.jsonParsing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceSecurityPolicy).JsonParsing, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.computeService.securityPolicy.logLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceSecurityPolicy).LogLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.computeService.securityPolicy.requestBodyInspectionSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceSecurityPolicy).RequestBodyInspectionSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gcp.project.computeService.securityPolicy.advancedOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicy).AdvancedOptions, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.securityPolicy.ddosProtectionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSecurityPolicy).DdosProtectionConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.computeService.securityPolicy.ddosProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceSecurityPolicy).DdosProtection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gcp.project.computeService.securityPolicy.networkDdosProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicy).NetworkDdosProtection, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.securityPolicy.recaptchaOptionsConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33099,16 +33154,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceSecurityPolicyRule).Match, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.computeService.securityPolicy.rule.matchVersionedExpr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceSecurityPolicyRule).MatchVersionedExpr, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.computeService.securityPolicy.rule.matchSrcIpRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceSecurityPolicyRule).MatchSrcIpRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"gcp.project.computeService.securityPolicy.rule.matchExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceSecurityPolicyRule).MatchExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gcp.project.computeService.securityPolicy.rule.matcher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyRule).Matcher, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.securityPolicy.rule.networkMatch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33129,6 +33176,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.securityPolicy.rule.preconfiguredWafConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSecurityPolicyRule).PreconfiguredWafConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.adaptiveProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyAdaptiveProtection).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.adaptiveProtection.layer7DdosDefense": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyAdaptiveProtection).Layer7DdosDefense, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.layer7DdosDefense.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.layer7DdosDefense.enable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense).Enable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.layer7DdosDefense.ruleVisibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense).RuleVisibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.layer7DdosDefense.thresholdConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense).ThresholdConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.advancedOptions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.advancedOptions.jsonParsing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions).JsonParsing, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.advancedOptions.logLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions).LogLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.advancedOptions.requestBodyInspectionSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions).RequestBodyInspectionSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.advancedOptions.jsonCustomContentTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions).JsonCustomContentTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.advancedOptions.userIpRequestHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions).UserIpRequestHeaders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.networkDdosProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.networkDdosProtection.ddosProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection).DdosProtection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.networkDdosProtection.ddosAdaptiveProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection).DdosAdaptiveProtection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.networkDdosProtection.ddosImpactedBaselineThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection).DdosImpactedBaselineThreshold, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.rule.matcher.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.rule.matcher.versionedExpr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher).VersionedExpr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.rule.matcher.srcIpRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher).SrcIpRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.rule.matcher.expression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher).Expression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.rule.matcher.expressionTitle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher).ExpressionTitle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.rule.matcher.expressionDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher).ExpressionDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.rule.matcher.expressionLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher).ExpressionLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.securityPolicy.rule.matcher.exprOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher).ExprOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.sslPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -76621,27 +76764,24 @@ type mqlGcpProjectComputeServiceSecurityPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectComputeServiceSecurityPolicyInternal
-	Id                              plugin.TValue[string]
-	Name                            plugin.TValue[string]
-	Description                     plugin.TValue[string]
-	Type                            plugin.TValue[string]
-	Labels                          plugin.TValue[map[string]any]
-	AdaptiveProtectionConfig        plugin.TValue[any]
-	Layer7DdosDefenseEnabled        plugin.TValue[bool]
-	Layer7DdosDefenseRuleVisibility plugin.TValue[string]
-	AdvancedOptionsConfig           plugin.TValue[any]
-	JsonParsing                     plugin.TValue[string]
-	LogLevel                        plugin.TValue[string]
-	RequestBodyInspectionSize       plugin.TValue[string]
-	DdosProtectionConfig            plugin.TValue[any]
-	DdosProtection                  plugin.TValue[string]
-	RecaptchaOptionsConfig          plugin.TValue[any]
-	Fingerprint                     plugin.TValue[string]
-	UserDefinedFields               plugin.TValue[[]any]
-	Region                          plugin.TValue[*mqlGcpProjectComputeServiceRegion]
-	SelfLink                        plugin.TValue[string]
-	CreatedAt                       plugin.TValue[*time.Time]
-	Rules                           plugin.TValue[[]any]
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Description              plugin.TValue[string]
+	Type                     plugin.TValue[string]
+	Labels                   plugin.TValue[map[string]any]
+	AdaptiveProtectionConfig plugin.TValue[any]
+	AdaptiveProtection       plugin.TValue[*mqlGcpProjectComputeServiceSecurityPolicyAdaptiveProtection]
+	AdvancedOptionsConfig    plugin.TValue[any]
+	AdvancedOptions          plugin.TValue[*mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions]
+	DdosProtectionConfig     plugin.TValue[any]
+	NetworkDdosProtection    plugin.TValue[*mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection]
+	RecaptchaOptionsConfig   plugin.TValue[any]
+	Fingerprint              plugin.TValue[string]
+	UserDefinedFields        plugin.TValue[[]any]
+	Region                   plugin.TValue[*mqlGcpProjectComputeServiceRegion]
+	SelfLink                 plugin.TValue[string]
+	CreatedAt                plugin.TValue[*time.Time]
+	Rules                    plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeServiceSecurityPolicy creates a new instance of this resource
@@ -76705,36 +76845,24 @@ func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetAdaptiveProtectionConfig(
 	return &c.AdaptiveProtectionConfig
 }
 
-func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetLayer7DdosDefenseEnabled() *plugin.TValue[bool] {
-	return &c.Layer7DdosDefenseEnabled
-}
-
-func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetLayer7DdosDefenseRuleVisibility() *plugin.TValue[string] {
-	return &c.Layer7DdosDefenseRuleVisibility
+func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetAdaptiveProtection() *plugin.TValue[*mqlGcpProjectComputeServiceSecurityPolicyAdaptiveProtection] {
+	return &c.AdaptiveProtection
 }
 
 func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetAdvancedOptionsConfig() *plugin.TValue[any] {
 	return &c.AdvancedOptionsConfig
 }
 
-func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetJsonParsing() *plugin.TValue[string] {
-	return &c.JsonParsing
-}
-
-func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetLogLevel() *plugin.TValue[string] {
-	return &c.LogLevel
-}
-
-func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetRequestBodyInspectionSize() *plugin.TValue[string] {
-	return &c.RequestBodyInspectionSize
+func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetAdvancedOptions() *plugin.TValue[*mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions] {
+	return &c.AdvancedOptions
 }
 
 func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetDdosProtectionConfig() *plugin.TValue[any] {
 	return &c.DdosProtectionConfig
 }
 
-func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetDdosProtection() *plugin.TValue[string] {
-	return &c.DdosProtection
+func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetNetworkDdosProtection() *plugin.TValue[*mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection] {
+	return &c.NetworkDdosProtection
 }
 
 func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetRecaptchaOptionsConfig() *plugin.TValue[any] {
@@ -76800,9 +76928,7 @@ type mqlGcpProjectComputeServiceSecurityPolicyRule struct {
 	Priority               plugin.TValue[int64]
 	Preview                plugin.TValue[bool]
 	Match                  plugin.TValue[any]
-	MatchVersionedExpr     plugin.TValue[string]
-	MatchSrcIpRanges       plugin.TValue[[]any]
-	MatchExpression        plugin.TValue[string]
+	Matcher                plugin.TValue[*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher]
 	NetworkMatch           plugin.TValue[any]
 	RateLimitOptions       plugin.TValue[any]
 	RedirectOptions        plugin.TValue[any]
@@ -76871,16 +76997,8 @@ func (c *mqlGcpProjectComputeServiceSecurityPolicyRule) GetMatch() *plugin.TValu
 	return &c.Match
 }
 
-func (c *mqlGcpProjectComputeServiceSecurityPolicyRule) GetMatchVersionedExpr() *plugin.TValue[string] {
-	return &c.MatchVersionedExpr
-}
-
-func (c *mqlGcpProjectComputeServiceSecurityPolicyRule) GetMatchSrcIpRanges() *plugin.TValue[[]any] {
-	return &c.MatchSrcIpRanges
-}
-
-func (c *mqlGcpProjectComputeServiceSecurityPolicyRule) GetMatchExpression() *plugin.TValue[string] {
-	return &c.MatchExpression
+func (c *mqlGcpProjectComputeServiceSecurityPolicyRule) GetMatcher() *plugin.TValue[*mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher] {
+	return &c.Matcher
 }
 
 func (c *mqlGcpProjectComputeServiceSecurityPolicyRule) GetNetworkMatch() *plugin.TValue[any] {
@@ -76901,6 +77019,296 @@ func (c *mqlGcpProjectComputeServiceSecurityPolicyRule) GetHeaderAction() *plugi
 
 func (c *mqlGcpProjectComputeServiceSecurityPolicyRule) GetPreconfiguredWafConfig() *plugin.TValue[any] {
 	return &c.PreconfiguredWafConfig
+}
+
+// mqlGcpProjectComputeServiceSecurityPolicyAdaptiveProtection for the gcp.project.computeService.securityPolicy.adaptiveProtection resource
+type mqlGcpProjectComputeServiceSecurityPolicyAdaptiveProtection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceSecurityPolicyAdaptiveProtectionInternal it will be used here
+	Layer7DdosDefense plugin.TValue[*mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense]
+}
+
+// createGcpProjectComputeServiceSecurityPolicyAdaptiveProtection creates a new instance of this resource
+func createGcpProjectComputeServiceSecurityPolicyAdaptiveProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceSecurityPolicyAdaptiveProtection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.securityPolicy.adaptiveProtection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyAdaptiveProtection) MqlName() string {
+	return "gcp.project.computeService.securityPolicy.adaptiveProtection"
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyAdaptiveProtection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyAdaptiveProtection) GetLayer7DdosDefense() *plugin.TValue[*mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense] {
+	return &c.Layer7DdosDefense
+}
+
+// mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense for the gcp.project.computeService.securityPolicy.layer7DdosDefense resource
+type mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefenseInternal it will be used here
+	Enable           plugin.TValue[bool]
+	RuleVisibility   plugin.TValue[string]
+	ThresholdConfigs plugin.TValue[[]any]
+}
+
+// createGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense creates a new instance of this resource
+func createGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.securityPolicy.layer7DdosDefense", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense) MqlName() string {
+	return "gcp.project.computeService.securityPolicy.layer7DdosDefense"
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense) GetEnable() *plugin.TValue[bool] {
+	return &c.Enable
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense) GetRuleVisibility() *plugin.TValue[string] {
+	return &c.RuleVisibility
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyLayer7DdosDefense) GetThresholdConfigs() *plugin.TValue[[]any] {
+	return &c.ThresholdConfigs
+}
+
+// mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions for the gcp.project.computeService.securityPolicy.advancedOptions resource
+type mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptionsInternal it will be used here
+	JsonParsing               plugin.TValue[string]
+	LogLevel                  plugin.TValue[string]
+	RequestBodyInspectionSize plugin.TValue[string]
+	JsonCustomContentTypes    plugin.TValue[[]any]
+	UserIpRequestHeaders      plugin.TValue[[]any]
+}
+
+// createGcpProjectComputeServiceSecurityPolicyAdvancedOptions creates a new instance of this resource
+func createGcpProjectComputeServiceSecurityPolicyAdvancedOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.securityPolicy.advancedOptions", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions) MqlName() string {
+	return "gcp.project.computeService.securityPolicy.advancedOptions"
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions) GetJsonParsing() *plugin.TValue[string] {
+	return &c.JsonParsing
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions) GetLogLevel() *plugin.TValue[string] {
+	return &c.LogLevel
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions) GetRequestBodyInspectionSize() *plugin.TValue[string] {
+	return &c.RequestBodyInspectionSize
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions) GetJsonCustomContentTypes() *plugin.TValue[[]any] {
+	return &c.JsonCustomContentTypes
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyAdvancedOptions) GetUserIpRequestHeaders() *plugin.TValue[[]any] {
+	return &c.UserIpRequestHeaders
+}
+
+// mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection for the gcp.project.computeService.securityPolicy.networkDdosProtection resource
+type mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtectionInternal it will be used here
+	DdosProtection                plugin.TValue[string]
+	DdosAdaptiveProtection        plugin.TValue[string]
+	DdosImpactedBaselineThreshold plugin.TValue[float64]
+}
+
+// createGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection creates a new instance of this resource
+func createGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.securityPolicy.networkDdosProtection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection) MqlName() string {
+	return "gcp.project.computeService.securityPolicy.networkDdosProtection"
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection) GetDdosProtection() *plugin.TValue[string] {
+	return &c.DdosProtection
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection) GetDdosAdaptiveProtection() *plugin.TValue[string] {
+	return &c.DdosAdaptiveProtection
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyNetworkDdosProtection) GetDdosImpactedBaselineThreshold() *plugin.TValue[float64] {
+	return &c.DdosImpactedBaselineThreshold
+}
+
+// mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher for the gcp.project.computeService.securityPolicy.rule.matcher resource
+type mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceSecurityPolicyRuleMatcherInternal it will be used here
+	VersionedExpr         plugin.TValue[string]
+	SrcIpRanges           plugin.TValue[[]any]
+	Expression            plugin.TValue[string]
+	ExpressionTitle       plugin.TValue[string]
+	ExpressionDescription plugin.TValue[string]
+	ExpressionLocation    plugin.TValue[string]
+	ExprOptions           plugin.TValue[any]
+}
+
+// createGcpProjectComputeServiceSecurityPolicyRuleMatcher creates a new instance of this resource
+func createGcpProjectComputeServiceSecurityPolicyRuleMatcher(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.securityPolicy.rule.matcher", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher) MqlName() string {
+	return "gcp.project.computeService.securityPolicy.rule.matcher"
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher) GetVersionedExpr() *plugin.TValue[string] {
+	return &c.VersionedExpr
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher) GetSrcIpRanges() *plugin.TValue[[]any] {
+	return &c.SrcIpRanges
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher) GetExpression() *plugin.TValue[string] {
+	return &c.Expression
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher) GetExpressionTitle() *plugin.TValue[string] {
+	return &c.ExpressionTitle
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher) GetExpressionDescription() *plugin.TValue[string] {
+	return &c.ExpressionDescription
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher) GetExpressionLocation() *plugin.TValue[string] {
+	return &c.ExpressionLocation
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicyRuleMatcher) GetExprOptions() *plugin.TValue[any] {
+	return &c.ExprOptions
 }
 
 // mqlGcpProjectComputeServiceSslPolicy for the gcp.project.computeService.sslPolicy resource

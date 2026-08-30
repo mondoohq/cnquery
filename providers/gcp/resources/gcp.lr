@@ -10814,52 +10814,37 @@ private gcp.project.computeService.securityPolicy @defaults("name type") {
   type string
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Adaptive protection configuration
+  // Adaptive protection config dict
   //
-  // Keyed by `layer7DdosDefenseConfig`, which carries `enable`,
-  // `ruleVisibility`, and the per-traffic-granularity `thresholdConfigs`.
-  // The first two are also available as `layer7DdosDefenseEnabled` and
-  // `layer7DdosDefenseRuleVisibility`.
-  adaptiveProtectionConfig dict
-  // Whether Adaptive Protection layer 7 DDoS defense is enabled for the policy
-  layer7DdosDefenseEnabled bool
-  // How much detail Adaptive Protection publishes about the rules it generates
+  // Deprecated in favor of adaptiveProtection. Keyed by
+  // `layer7DdosDefenseConfig`, which carries `enable`, `ruleVisibility`, and
+  // the per-traffic-granularity `thresholdConfigs`.
+  adaptiveProtectionConfig @maturity("deprecated") dict
+  // Machine-learned defense the policy applies on top of its own rules
   //
-  // One of STANDARD, PREMIUM, or an empty value when Adaptive Protection is
-  // not configured.
-  layer7DdosDefenseRuleVisibility string
-  // Advanced options configuration
+  // Null when the policy has no adaptive protection configured at all.
+  adaptiveProtection gcp.project.computeService.securityPolicy.adaptiveProtection
+  // Advanced options config dict
   //
-  // Carries `jsonParsing`, `logLevel`, `requestBodyInspectionSize`, the
-  // `jsonCustomConfig` content types, and the `userIpRequestHeaders` the
-  // policy trusts for the client address. The first three are also available
-  // as `jsonParsing`, `logLevel`, and `requestBodyInspectionSize`.
-  advancedOptionsConfig dict
-  // How the policy parses JSON request bodies before evaluating preconfigured WAF rules
+  // Deprecated in favor of advancedOptions. Carries `jsonParsing`,
+  // `logLevel`, `requestBodyInspectionSize`, the `jsonCustomConfig` content
+  // types, and the `userIpRequestHeaders` the policy trusts for the client
+  // address.
+  advancedOptionsConfig @maturity("deprecated") dict
+  // How the policy reads a request before its rules evaluate it
   //
-  // One of DISABLED, STANDARD, or STANDARD_WITH_GRAPHQL. DISABLED leaves a
-  // JSON payload unparsed, so a preconfigured WAF rule cannot inspect it.
-  jsonParsing string
-  // Verbosity of the Cloud Armor request logs
+  // Null when the policy leaves every advanced option at its default.
+  advancedOptions gcp.project.computeService.securityPolicy.advancedOptions
+  // DDoS protection config dict
   //
-  // One of NORMAL or VERBOSE. VERBOSE records which rule matched and why.
-  logLevel string
-  // How much of a request body the policy inspects
+  // Deprecated in favor of networkDdosProtection. Carries `ddosProtection`,
+  // `ddosAdaptiveProtection`, and `ddosImpactedBaselineThreshold`.
+  ddosProtectionConfig @maturity("deprecated") dict
+  // Network-layer DDoS protection the policy applies
   //
-  // One of REQUEST_BODY_INSPECTION_SIZE_UNSPECIFIED, 8KB, 16KB, 32KB, 48KB, or
-  // 64KB. Anything past the limit is not evaluated by the WAF rules.
-  requestBodyInspectionSize string
-  // DDoS protection configuration
-  //
-  // Carries `ddosProtection`, `ddosAdaptiveProtection`, and
-  // `ddosImpactedBaselineThreshold`. The first is also available as
-  // `ddosProtection`.
-  ddosProtectionConfig dict
-  // Network DDoS protection level applied by the policy
-  //
-  // One of STANDARD or ADVANCED, or ADVANCED_PREVIEW. Applies to
-  // CLOUD_ARMOR_NETWORK policies.
-  ddosProtection string
+  // Null on a policy that is not a CLOUD_ARMOR_NETWORK policy, which is the
+  // only type the setting applies to.
+  networkDdosProtection gcp.project.computeService.securityPolicy.networkDdosProtection
   // reCAPTCHA options configuration
   recaptchaOptionsConfig dict
   // Fingerprint for optimistic locking
@@ -10888,31 +10873,17 @@ private gcp.project.computeService.securityPolicy.rule @defaults("priority actio
   priority int
   // Whether the rule is in preview mode (not enforced)
   preview bool
-  // Match condition
+  // Match condition dict
   //
-  // Carries `versionedExpr`, the `config` source IP ranges, the CEL `expr`,
-  // and `exprOptions` for reCAPTCHA matching. The first three are also
-  // available as `matchVersionedExpr`, `matchSrcIpRanges`, and
-  // `matchExpression`.
-  match dict
-  // Predefined match expression the rule uses
+  // Deprecated in favor of matcher. Carries `versionedExpr`, the `config`
+  // source IP ranges, the CEL `expr`, and `exprOptions` for reCAPTCHA
+  // matching.
+  match @maturity("deprecated") dict
+  // Condition deciding which requests the rule acts on
   //
-  // SRC_IPS_V1 means the rule matches on the source IP ranges in
-  // `matchSrcIpRanges`. Empty when the rule matches on a CEL expression
-  // instead.
-  matchVersionedExpr string
-  // Source IPv4 and IPv6 CIDR ranges the rule matches
-  //
-  // A range of 0.0.0.0/0 or ::/0 matches every client, which is what an allow
-  // rule at a low priority has to be checked for.
-  matchSrcIpRanges []string
-  // CEL expression the rule matches on
-  //
-  // Set when the rule uses a custom or preconfigured WAF expression rather
-  // than a source IP list, for example
-  // evaluatePreconfiguredExpr('sqli-v33-stable'). Empty when the rule matches
-  // on `matchSrcIpRanges`.
-  matchExpression string
+  // Null when the rule carries no match condition, which the API only reports
+  // on a malformed rule.
+  matcher gcp.project.computeService.securityPolicy.rule.matcher
   // Network match condition (for CLOUD_ARMOR_NETWORK policies)
   networkMatch dict
   // Rate limit options
@@ -10923,6 +10894,130 @@ private gcp.project.computeService.securityPolicy.rule @defaults("priority actio
   headerAction dict
   // Preconfigured WAF configuration
   preconfiguredWafConfig dict
+}
+
+// Adaptive protection of a Cloud Armor security policy
+//
+// The machine-learned defense a policy runs alongside its own rules. Only the
+// layer 7 defense is configurable, so the whole message is that one block.
+private gcp.project.computeService.securityPolicy.adaptiveProtection @defaults("layer7DdosDefense") {
+  // Layer 7 DDoS defense the policy runs, null when it is not configured
+  layer7DdosDefense gcp.project.computeService.securityPolicy.layer7DdosDefense
+}
+
+// Layer 7 DDoS defense of a Cloud Armor security policy
+//
+// The Adaptive Protection detector that learns a policy's normal layer 7
+// traffic and reports attacks against it. `enable` is what turns the detector
+// on, and `ruleVisibility` decides whether the rules it suggests are published
+// in full or only as opaque signatures. `thresholdConfigs` holds the
+// per-traffic-granularity tuning, each entry naming the confidence and load
+// levels at which a suggested rule is auto-deployed. Applies only to global
+// policies of type CLOUD_ARMOR.
+private gcp.project.computeService.securityPolicy.layer7DdosDefense @defaults("enable ruleVisibility") {
+  // Whether layer 7 DDoS detection is turned on for the policy
+  enable bool
+  // How much detail the detector publishes about the rules it generates
+  //
+  // One of STANDARD, which keeps the rules opaque, or PREMIUM, which makes
+  // them transparent. Empty when the detector is off.
+  ruleVisibility string
+  // Per-traffic-granularity tuning of the detector
+  //
+  // Each entry carries `name`, the auto-deploy thresholds
+  // (`autoDeployConfidenceThreshold`, `autoDeployImpactedBaselineThreshold`,
+  // `autoDeployLoadThreshold`, `autoDeployExpirationSec`), the detection
+  // thresholds (`detectionLoadThreshold`, `detectionAbsoluteQps`,
+  // `detectionRelativeToBaselineQps`), and the `trafficGranularityConfigs`
+  // that scope it to a subset of the traffic.
+  thresholdConfigs []dict
+}
+
+// Advanced options of a Cloud Armor security policy
+//
+// How a policy reads a request before its rules evaluate it. `jsonParsing`
+// decides whether a JSON body is parsed at all, and a policy that leaves it
+// DISABLED cannot have a preconfigured WAF rule inspect that body.
+// `requestBodyInspectionSize` caps how much of the body is read, so anything
+// past the limit is never evaluated. `userIpRequestHeaders` names the headers
+// the policy trusts for the client address, which is what an IP allow rule
+// then matches on.
+private gcp.project.computeService.securityPolicy.advancedOptions @defaults("jsonParsing logLevel requestBodyInspectionSize") {
+  // How the policy parses JSON request bodies before evaluating preconfigured WAF rules
+  //
+  // One of DISABLED, STANDARD, or STANDARD_WITH_GRAPHQL. DISABLED leaves a
+  // JSON payload unparsed.
+  jsonParsing string
+  // Verbosity of the Cloud Armor request logs
+  //
+  // One of NORMAL or VERBOSE. VERBOSE records which rule matched and why.
+  logLevel string
+  // How much of a request body the policy inspects
+  //
+  // One of REQUEST_BODY_INSPECTION_SIZE_UNSPECIFIED, 8KB, 16KB, 32KB, 48KB,
+  // or 64KB.
+  requestBodyInspectionSize string
+  // Content types parsed as JSON in addition to the standard ones
+  //
+  // Empty when the policy parses only the content types Cloud Armor treats as
+  // JSON by default.
+  jsonCustomContentTypes []string
+  // Request headers the policy trusts for the originating client IP address
+  //
+  // A header named here is taken at face value, so a client that can set it
+  // chooses the address an IP-based rule matches on.
+  userIpRequestHeaders []string
+}
+
+// Network DDoS protection of a Cloud Armor security policy
+//
+// The volumetric protection a CLOUD_ARMOR_NETWORK policy applies to the
+// backends it is attached to, ahead of any rule evaluation.
+private gcp.project.computeService.securityPolicy.networkDdosProtection @defaults("ddosProtection") {
+  // Protection level applied by the policy
+  //
+  // One of STANDARD, ADVANCED, or ADVANCED_PREVIEW. STANDARD is the always-on
+  // baseline; ADVANCED adds targeted mitigation for the protected backends.
+  ddosProtection string
+  // Whether adaptive tuning of the network protection is enabled
+  //
+  // One of DISABLED or PREVIEW. Empty when the policy leaves it unset.
+  ddosAdaptiveProtection string
+  // Fraction of the baseline traffic that has to be affected before mitigation applies
+  ddosImpactedBaselineThreshold float
+}
+
+// Match condition of a Cloud Armor security policy rule
+//
+// What decides whether a rule acts on a request. A rule matches either on a
+// source IP list or on an expression, never both: `versionedExpr` set to
+// SRC_IPS_V1 means the rule matches the `srcIpRanges`, while a rule with an
+// `expression` matches a CEL predicate such as
+// evaluatePreconfiguredExpr('sqli-v33-stable'). A range of 0.0.0.0/0 or ::/0
+// matches every client, which is what a low-priority allow rule has to be
+// checked for.
+private gcp.project.computeService.securityPolicy.rule.matcher @defaults("versionedExpr srcIpRanges expression") {
+  // Predefined match expression the rule uses
+  //
+  // SRC_IPS_V1 means the rule matches on `srcIpRanges`. Empty when the rule
+  // matches on an expression instead.
+  versionedExpr string
+  // Source IPv4 and IPv6 CIDR ranges the rule matches
+  srcIpRanges []string
+  // CEL expression the rule matches on, empty when the rule matches on source IP ranges
+  expression string
+  // Short title of the expression
+  expressionTitle string
+  // Description of what the expression matches
+  expressionDescription string
+  // Source position of the expression, used when reporting an error in it
+  expressionLocation string
+  // reCAPTCHA options applied when the expression evaluates a reCAPTCHA token
+  //
+  // Keyed by `recaptchaOptions`, which carries the `actionTokenSiteKeys` and
+  // `sessionTokenSiteKeys` the expression is allowed to verify a token
+  // against.
+  exprOptions dict
 }
 
 // Google Cloud (GCP) Compute SSL policy
