@@ -24,10 +24,10 @@ type packageJson struct {
 	Licenses        []packageJsonLicense  `json:"licenses"`
 	Author          *packageJsonPeople    `json:"author"`
 	Contributors    []packageJsonPeople   `json:"contributors"`
-	Dependencies    map[string]string     `jsonn:"dependencies"`
-	DevDependencies map[string]string     `jsonn:"devDependencies"`
+	Dependencies    map[string]string     `json:"dependencies"`
+	DevDependencies map[string]string     `json:"devDependencies"`
 	Repository      packageJsonRepository `json:"repository"`
-	Engines         enginesField          `jsonn:"engines"`
+	Engines         enginesField          `json:"engines"`
 	CPU             []string              `json:"cpu"`
 	OS              []string              `json:"os"`
 
