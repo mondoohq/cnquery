@@ -20,6 +20,14 @@ const (
 	FormatList          string = "table"
 )
 
+// unnamedSubject is what a BOM's subject is called when the asset does not name
+// itself. Both document formats have to put a name somewhere -- SPDX's document
+// name is mandatory, and a CycloneDX component's name is required by the schema
+// -- so the choice is between this and a nameless entry a consumer has to
+// recognise as junk. Shared so that the SPDX and CycloneDX renderings of one
+// BOM do not disagree about what its subject is called.
+const unnamedSubject = "sbom"
+
 var (
 	errConversionNotSupported = errors.New("conversion is not supported")
 	errParsingNotSupported    = errors.New("parsing is not supported")
