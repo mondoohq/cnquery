@@ -174,12 +174,18 @@ func (a *mqlAzureSubscriptionStorageService) accounts() ([]any, error) {
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) {
-	// Data Lake Storage Gen2 (HNS-enabled) accounts don't support the Blob containers API.
-	if a.GetIsHnsEnabled().Data {
-		a.Containers.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-
+	// No hierarchical-namespace guard here. This is the ARM control-plane
+	// BlobContainers client, which Microsoft supports on HNS-enabled accounts;
+	// only four data-plane blob operations are unsupported on Data Lake Storage
+	// Gen2, and none of them is this one. Skipping HNS accounts made every ADLS
+	// Gen2 account report `containers: null`, so publicAccess,
+	// hasImmutabilityPolicy, hasLegalHold and the encryption-scope fields were
+	// invisible for exactly the accounts an anonymous-access audit cares about
+	// -- and under three-valued logic a where() over null matches nothing, so
+	// the check passed rather than failed.
+	//
+	// The pager below already degrades on the one error that genuinely means
+	// "this account does not support the operation".
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -206,7 +212,9 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 		page, err := pager.NextPage(ctx)
 		if err != nil {
 			if isFeatureNotSupportedForAccountError(err) {
-				return nil, nil
+				// Keep whatever earlier pages returned. Discarding them would
+				// report a partial listing as an empty one.
+				return res, nil
 			}
 			return nil, err
 		}

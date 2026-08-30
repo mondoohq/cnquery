@@ -139,15 +139,63 @@ func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {
 	return caches, nil
 }
 
+// redactedRedisConfiguration copies a cache's Redis configuration with the
+// persistence storage connection strings removed.
+//
+// Azure returns all three verbatim, and each carries either an account key or a
+// SAS token for the storage account holding the RDB/AOF backups. They reached
+// MQL twice -- once through redisConfiguration and again through properties,
+// which serializes the whole ResourceInfo -- so anyone printing either field
+// printed the storage credential.
+//
+// The copy is by field rather than by JSON key so that a field renamed in a
+// future SDK breaks the build instead of silently leaking again. Everything
+// else in the configuration is kept, including rdbBackupEnabled, so the audit
+// signal survives the redaction.
+func redactedRedisConfiguration(cfg *armredis.CommonPropertiesRedisConfiguration) *armredis.CommonPropertiesRedisConfiguration {
+	if cfg == nil {
+		return nil
+	}
+	safe := *cfg
+	safe.AofStorageConnectionString0 = nil
+	safe.AofStorageConnectionString1 = nil
+	safe.RdbStorageConnectionString = nil
+	return &safe
+}
+
+// redactedRedisResource copies a cache with its configuration redacted, for the
+// properties bag that serializes the whole record.
+func redactedRedisResource(cache *armredis.ResourceInfo) *armredis.ResourceInfo {
+	if cache == nil {
+		return nil
+	}
+	safe := *cache
+	if cache.Properties != nil {
+		props := *cache.Properties
+		props.RedisConfiguration = redactedRedisConfiguration(cache.Properties.RedisConfiguration)
+		safe.Properties = &props
+	}
+	return &safe
+}
+
 func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.ResourceInfo) (map[string]*llx.RawData, error) {
 	// Properties is a nullable pointer that the field reads below dereference
 	// throughout; normalize to an empty struct so a cache returned without
 	// properties doesn't panic here (the callers reach this before their own
 	// nil guards).
+	//
+	// Normalize onto a local copy rather than writing back through the pointer.
+	// The caller keeps using its own *ResourceInfo after this returns -- to seed
+	// the resource's caches, behind an `if cache.Properties != nil` guard -- so
+	// filling the field in here would turn that guard into a read of an empty
+	// struct, and would contradict what the redaction helpers below promise
+	// about leaving the source alone.
 	if cache.Properties == nil {
-		cache.Properties = &armredis.Properties{}
+		normalized := *cache
+		normalized.Properties = &armredis.Properties{}
+		cache = &normalized
 	}
-	properties, err := convert.JsonToDict(cache)
+	properties, err := convert.JsonToDict(redactedRedisResource(cache))
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +223,7 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 		minimumTlsVersion = &val
 	}
 
-	redisConfiguration, err := convert.JsonToDict(cache.Properties.RedisConfiguration)
+	redisConfiguration, err := convert.JsonToDict(redactedRedisConfiguration(cache.Properties.RedisConfiguration))
 	if err != nil {
 		return nil, err
 	}
