@@ -3084,8 +3084,10 @@ parse.yaml.file 9.0.0
 parse.yaml.params 9.0.0
 php.package 13.10.1
 php.package.cpes 13.10.1
+php.package.description 13.40.10
 php.package.files 13.10.1
 php.package.id 13.10.1
+php.package.license 13.40.10
 php.package.name 13.10.1
 php.package.purl 13.10.1
 php.package.version 13.10.1

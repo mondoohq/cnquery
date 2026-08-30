@@ -9582,6 +9582,17 @@ php.package @defaults("name version purl") {
   version() string
   // Package URL (purl), a standardized identifier for the package
   purl() string
+  // Package license
+  //
+  // SPDX expression from the `license` field of composer.lock or
+  // installed.json. Composer records the field as a list, and a list means the
+  // package is offered under any one of them and the consumer chooses, so
+  // several entries render as an SPDX `OR` expression such as
+  // `(LGPL-2.1-only OR GPL-3.0-or-later)`. A single license passes through as
+  // written. Empty when the manifest declares none.
+  license() string
+  // Description of the package as its manifest states it
+  description() string
   // Common Platform Enumeration (CPE) identifiers for matching against vulnerability advisories
   cpes() []core.cpe
   // Composer files that contributed this package to the inventory
