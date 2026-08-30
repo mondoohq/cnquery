@@ -298,23 +298,18 @@ func runtimeStackDescriptorFromResource(runtime *mqlAzureSubscriptionWebServiceA
 	if runtime == nil {
 		return descriptor
 	}
-	var runtimeName string
 	if name, ok := stringFromTValue(&runtime.Name); ok {
-		runtimeName = name
 		descriptor.Name = strings.ToLower(name)
 	}
 	if minor, ok := stringFromTValue(&runtime.MinorVersion); ok {
 		descriptor.MinorVersion = strings.ToLower(minor)
 	}
-	subscriptionID := ""
-	if runtime.MqlRuntime != nil {
-		if conn, ok := runtime.MqlRuntime.Connection.(*connection.AzureConnection); ok {
-			subscriptionID = conn.SubId()
-		}
-	}
-	if subscriptionID != "" && runtimeName != "" {
-		descriptor.ID = fmt.Sprintf("%s/%s", subscriptionID, runtimeName)
-	} else if id, ok := stringFromTValue(&runtime.RuntimeVersion); ok {
+	// The ID is compared against the app's own runtime identifier, which is
+	// either its LinuxFxVersion or "<STACK>|<version>" -- so it has to be the
+	// stack's runtimeVersion ("NODE|18-lts"), not the resource's cache key. A
+	// subscription-qualified key can never equal either shape, which left the
+	// comparison dead and the whole match resting on name plus minor version.
+	if id, ok := stringFromTValue(&runtime.RuntimeVersion); ok {
 		descriptor.ID = id
 	}
 	if autoUpdate, ok := boolFromTValue(&runtime.AutoUpdate); ok {
@@ -616,6 +611,26 @@ func (a *mqlAzureSubscriptionWebService) apps() ([]any, error) {
 	return res, nil
 }
 
+// runtimeSettingsForPreferredOs picks the runtime settings matching a stack's
+// preferred OS, and names that OS.
+//
+// The wire values are capitalized -- StackPreferredOsLinux is "Linux", not
+// "linux" -- so comparing against lowercase literals matched neither arm, left
+// the settings nil, and skipped every minor version of every stack. Comparing
+// against the SDK constants is what keeps that from silently recurring.
+func runtimeSettingsForPreferredOs(preferred *web.StackPreferredOs, settings *web.WebAppRuntimes) (*web.WebAppRuntimeSettings, string) {
+	if preferred == nil || settings == nil {
+		return nil, ""
+	}
+	switch *preferred {
+	case web.StackPreferredOsLinux:
+		return settings.LinuxRuntimeSettings, "linux"
+	case web.StackPreferredOsWindows:
+		return settings.WindowsRuntimeSettings, "windows"
+	}
+	return nil, ""
+}
+
 func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -657,16 +672,7 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]any, error) {
 						continue
 					}
 
-					var os string
-					var settings *web.WebAppRuntimeSettings
-					switch convert.ToValue(entry.Properties.PreferredOs) {
-					case "linux":
-						settings = minor.StackSettings.LinuxRuntimeSettings
-						os = "linux"
-					case "windows":
-						settings = minor.StackSettings.WindowsRuntimeSettings
-						os = "windows"
-					}
+					settings, os := runtimeSettingsForPreferredOs(entry.Properties.PreferredOs, minor.StackSettings)
 
 					if settings == nil {
 						log.Debug().
