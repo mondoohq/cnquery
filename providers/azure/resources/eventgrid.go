@@ -88,9 +88,6 @@ func eventGridIpRulesToDict(rules []*eventgrid.InboundIPRule) []any {
 	return out
 }
 
-// eventGridIpRuleActions keys the inbound IP rules by the address range they
-// match, so an audit can look a range up directly instead of scanning a list
-// of two-key dicts.
 // eventGridInboundIpRulesToMql maps the firewall entries of an Event Grid
 // resource onto their own rows.
 //
