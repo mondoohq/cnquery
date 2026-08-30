@@ -524,6 +524,13 @@ var spdxToolVersion = regexp.MustCompile(`^v?\d`)
 // not drift: rejoining whatever came out reproduces the identifier exactly, for
 // every shape above. That is the property the round trip needs, and the one the
 // old reader broke.
+//
+// So the halves are safe to re-render and unsafe to believe. Nothing in this
+// repository reads a parsed Generator's name or version for anything except
+// writing it back out, which is why the guess costs nothing here -- but this is
+// a library, and a consumer that displays one, compares it, or branches on it
+// is reading a guess for the shapes above. Report the identifier whole if that
+// matters more than the split.
 func spdxSplitTool(tool string) (string, string) {
 	i := strings.LastIndex(tool, "-")
 	if i <= 0 {
