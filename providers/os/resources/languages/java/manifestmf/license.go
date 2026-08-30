@@ -37,7 +37,15 @@ import (
 const bundleLicenseExternal = "<<EXTERNAL>>"
 
 // urlPattern matches a value that is a URL rather than a license name.
-var urlPattern = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9+.\-]*://`)
+//
+// Both spellings that occur in the header, because a scheme is not what makes
+// the value a link: `https://www.eclipse.org/legal/epl-2.0/` and
+// `www.apache.org/licenses/LICENSE-2.0` are the same statement, and reporting
+// the second as a license identifier is the outcome dropping the first exists
+// to avoid. The schemeless form requires a dotted host followed by a path, so
+// it cannot match a license name: those carry no dot-then-slash, and anything
+// with a space has already been ruled out by the host pattern.
+var urlPattern = regexp.MustCompile(`^([a-zA-Z][a-zA-Z0-9+.\-]*://|[a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]+)+/)`)
 
 // license returns the license the manifest declares, or "" when it declares
 // none this can name.

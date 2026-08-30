@@ -70,6 +70,15 @@ func parseGemspec(r io.Reader) (*gemSpec, error) {
 	for scanner.Scan() {
 		line := scanner.Text()
 
+		// A commented-out line states nothing. Reading one is how a gemspec
+		// that commented its license out while changing it gets reported under
+		// the old one, and a wrong license is worse than none: a consumer
+		// cannot tell it from a license the gem actually declares. The same
+		// applies to a commented-out name or version.
+		if strings.HasPrefix(strings.TrimSpace(line), "#") {
+			continue
+		}
+
 		if m := namePattern.FindStringSubmatch(line); len(m) > 1 {
 			spec.Name = m[1]
 		}

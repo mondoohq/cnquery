@@ -224,3 +224,25 @@ func TestManifestLicenseBounds(t *testing.T) {
 		})
 	}
 }
+
+// A URL is a link to the terms, not the identity of the terms, and a scheme is
+// not what makes it one. Reporting a schemeless URL as a license identifier is
+// the outcome dropping the schemeful form exists to avoid.
+func TestBundleLicenseDropsSchemelessURLs(t *testing.T) {
+	for _, tc := range []struct{ header, want string }{
+		{"https://www.eclipse.org/legal/epl-2.0/", ""},
+		{"http://www.apache.org/licenses/LICENSE-2.0.txt", ""},
+		{"www.apache.org/licenses/LICENSE-2.0", ""},
+		{"eclipse.org/legal/epl-2.0/", ""},
+		// Still a license name, not a link: no dotted host followed by a path.
+		{"Apache-2.0", "Apache-2.0"},
+		{"MIT", "MIT"},
+		{"GPL-2.0-only WITH Classpath-exception-2.0", "GPL-2.0-only WITH Classpath-exception-2.0"},
+		{"The Apache License, Version 2.0", "The Apache License, Version 2.0"},
+		// A name beside a link keeps the name and drops the link.
+		{"Apache-2.0, www.apache.org/licenses/LICENSE-2.0", "Apache-2.0"},
+	} {
+		m := &manifest{Headers: map[string]string{headerBundleLicense: tc.header}}
+		assert.Equal(t, tc.want, m.license(), "Bundle-License: %s", tc.header)
+	}
+}

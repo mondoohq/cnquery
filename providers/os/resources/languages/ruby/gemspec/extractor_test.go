@@ -232,3 +232,31 @@ func TestGemspecLicenseBounds(t *testing.T) {
 		})
 	}
 }
+
+// A commented-out line states nothing. Reading one reports a gem under a
+// license it does not declare, and a wrong license is worse than none: nothing
+// downstream can tell it from a real declaration.
+func TestGemspecIgnoresCommentedOutLines(t *testing.T) {
+	spec, err := parseGemspec(strings.NewReader(`Gem::Specification.new do |spec|
+  spec.name = "demo"
+  spec.version = "1.0.0"
+  # spec.license = "GPL-3.0"
+  # spec.licenses = ["AGPL-3.0-only"]
+end`))
+	require.NoError(t, err)
+
+	assert.Empty(t, spec.Licenses, "a commented-out license must not be read")
+	assert.Equal(t, "demo", spec.Name)
+	assert.Equal(t, "1.0.0", spec.Version)
+}
+
+// The commented-out form must not shadow a real one stated elsewhere.
+func TestGemspecReadsTheUncommentedLicense(t *testing.T) {
+	spec, err := parseGemspec(strings.NewReader(`Gem::Specification.new do |spec|
+  spec.name = "demo"
+  # spec.license = "GPL-3.0"
+  spec.license = "MIT"
+end`))
+	require.NoError(t, err)
+	assert.Equal(t, []string{"MIT"}, spec.Licenses)
+}
