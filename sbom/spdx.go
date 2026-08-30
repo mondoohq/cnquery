@@ -8,12 +8,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/package-url/packageurl-go"
 	"github.com/spdx/tools-golang/convert"
 	"github.com/spdx/tools-golang/spdx"
@@ -47,24 +49,24 @@ func (s *Spdx) ApplyOptions(opts ...renderOption) {
 
 func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 	extractedLicenses := extractedLicenseSet{}
+	name := spdxDocumentName(bom)
 	doc := &spdx.Document{
 		SPDXVersion:                spdx.Version,
 		SPDXIdentifier:             "DOCUMENT",
 		ExternalDocumentReferences: nil,
 		DocumentComment:            "",
 
+		// The three fields below are mandatory in SPDX 2.x and were left at
+		// their zero values, which made every document this renderer produced
+		// invalid: a consumer validating against the schema rejects it, and one
+		// that does not gets a nameless document it cannot refer to.
+		DataLicense:       spdxDataLicense,
+		DocumentName:      name,
+		DocumentNamespace: spdxDocumentNamespace(name),
+
 		CreationInfo: &spdx.CreationInfo{
-			Creators: []spdx.Creator{
-				{
-					Creator:     bom.Generator.Vendor,
-					CreatorType: "Organization",
-				},
-				{
-					Creator:     bom.Generator.Name + "-" + bom.Generator.Version,
-					CreatorType: "Tool",
-				},
-			},
-			Created: time.Now().UTC().Format(time.RFC3339),
+			Creators: spdxCreators(bom.GetGenerator()),
+			Created:  time.Now().UTC().Format(time.RFC3339),
 		},
 	}
 
@@ -272,9 +274,7 @@ func (s *Spdx) Parse(r io.ReadSeeker) (*Sbom, error) {
 
 func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
 	bom := &Sbom{
-		Generator: &Generator{
-			Name: doc.CreationInfo.Creators[0].Creator,
-		},
+		Generator: spdxGenerator(doc.CreationInfo),
 		Asset: &Asset{
 			Name: doc.DocumentName,
 			Platform: &Platform{
@@ -374,6 +374,159 @@ func spdxNoAssertion(v string) string {
 }
 
 const spdxNoAssertionValue = "NOASSERTION"
+
+// spdxDataLicense is fixed by the specification: the license covering a
+// document's own metadata is always CC0-1.0, whatever the document describes.
+const spdxDataLicense = "CC0-1.0"
+
+// spdxNamespacePrefix roots the document namespace. The spec wants a URI under
+// a domain the producer controls, which is what makes two documents about the
+// same asset distinguishable rather than colliding.
+const spdxNamespacePrefix = "https://mondoo.com/spdx/"
+
+// spdxUnnamedDocument names a document whose asset does not name itself. The
+// field is mandatory and free text, and an empty one leaves a consumer unable
+// to refer to the document at all -- NOASSERTION is not used here because it is
+// an assertion about a license or a supplier, not a stand-in for a title.
+const spdxUnnamedDocument = "sbom"
+
+// spdxDocumentName is what the document calls itself: the asset it describes.
+func spdxDocumentName(bom *Sbom) string {
+	if name := strings.TrimSpace(bom.GetAsset().GetName()); name != "" {
+		return name
+	}
+	return spdxUnnamedDocument
+}
+
+// spdxDocumentNamespace builds the unique URI every SPDX document must carry.
+//
+// The spec's requirement is uniqueness per document rather than per asset:
+// scanning the same host twice produces two documents that must not claim the
+// same identity, or a consumer holding both cannot tell which package list it
+// is looking at. A UUID is the spec's own suggestion for the uniquifying part.
+//
+// The namespace says who produced this document, so it stays under this domain
+// even when the content was imported from somebody else's SBOM -- that document
+// had its own namespace, and this is a different document.
+func spdxDocumentNamespace(name string) string {
+	return spdxNamespacePrefix + url.PathEscape(name) + "-" + uuid.New().String()
+}
+
+// spdxCreators renders who produced the document, dropping what is not known.
+//
+// Every entry has to carry a value. The library marshals a Creator with an
+// empty one to zero bytes, which is not JSON, so a single blank creator fails
+// the whole document with `unexpected end of JSON input` -- a generator with no
+// vendor took every SBOM down that way, imported ones included, since an
+// imported document rarely names one.
+//
+// Omitting is the honest form: a creator naming nobody asserts an origin the
+// producer does not have. But the field's cardinality is 1..*, so a document
+// that can name nobody still has to say something, and the spec supplies the
+// word for it: "Person name or organization name may be designated as
+// 'anonymous' if appropriate." That is an Organization rather than a Tool --
+// the spec offers the escape hatch for the two human types only, and a Tool
+// entry is required to be "toolidentifier-version", which "anonymous" is not.
+// NOASSERTION is deliberately not used here: the spec never gives it a meaning
+// for this field, and it belongs to license and supplier claims.
+func spdxCreators(g *Generator) []spdx.Creator {
+	creators := make([]spdx.Creator, 0, 2)
+	if vendor := strings.TrimSpace(g.GetVendor()); vendor != "" {
+		creators = append(creators, spdx.Creator{CreatorType: "Organization", Creator: vendor})
+	}
+	if tool := spdxToolIdentifier(g); tool != "" {
+		creators = append(creators, spdx.Creator{CreatorType: "Tool", Creator: tool})
+	}
+	if len(creators) == 0 {
+		creators = append(creators, spdx.Creator{CreatorType: "Organization", Creator: spdxAnonymousCreator})
+	}
+	return creators
+}
+
+// spdxAnonymousCreator is the spec's own word for a creator that cannot be
+// named, and the only value that satisfies a mandatory field with nothing to
+// put in it.
+const spdxAnonymousCreator = "anonymous"
+
+// spdxToolIdentifier renders the tool creator the spec asks for,
+// "toolidentifier-version", or "" when the generator does not name a tool.
+//
+// The version is appended only when there is one. A bare trailing "-" reads as
+// a tool whose version is the empty string rather than one that did not say.
+func spdxToolIdentifier(g *Generator) string {
+	name := strings.TrimSpace(g.GetName())
+	if name == "" {
+		return ""
+	}
+	if version := strings.TrimSpace(g.GetVersion()); version != "" {
+		return name + "-" + version
+	}
+	return name
+}
+
+// spdxGenerator reads who made a document back out of its creators.
+//
+// Creators are a list whose entries are told apart by their type, not their
+// position, so this reads the type rather than taking the first entry: an
+// Organization is the vendor and a Tool is the tool, and a document that lists
+// them in the other order (or lists only one) is just as valid. Taking
+// creators[0] read this renderer's own Organization as the tool's *name*, which
+// dropped the vendor and version and made mql unable to re-render a document it
+// had written itself.
+//
+// A document that lists no creators at all is valid enough to parse, so this
+// returns an empty generator rather than indexing into nothing.
+func spdxGenerator(info *spdx.CreationInfo) *Generator {
+	g := &Generator{}
+	if info == nil {
+		return g
+	}
+	for _, c := range info.Creators {
+		// "anonymous" is the spec's placeholder for a creator that could not
+		// be named, so it is dropped rather than carried: a Generator whose
+		// vendor is the literal string "anonymous" would travel into every
+		// other format as though somebody were called that. Leaving it empty
+		// keeps "not known" and "known to be anonymous" the same thing, which
+		// is what the document said.
+		value := strings.TrimSpace(c.Creator)
+		if value == "" || value == spdxNoAssertionValue || value == spdxAnonymousCreator {
+			continue
+		}
+		switch c.CreatorType {
+		case "Tool":
+			if g.Name == "" {
+				g.Name, g.Version = spdxSplitTool(value)
+			}
+		case "Organization", "Person":
+			if g.Vendor == "" {
+				g.Vendor = value
+			}
+		}
+	}
+	return g
+}
+
+// spdxToolVersion matches the part of a tool identifier that is a version:
+// digits, optionally behind a "v".
+var spdxToolVersion = regexp.MustCompile(`^v?\d`)
+
+// spdxSplitTool splits "toolidentifier-version" back into its two halves.
+//
+// The spec's own format is ambiguous, because a tool identifier may contain a
+// hyphen: "cyclonedx-gomod-v1.4.0" and "my-tool" are the same shape. So the
+// split happens only when what follows the last hyphen looks like a version,
+// which leaves a hyphenated name that carries no version intact rather than
+// slicing its last word off and calling it a release.
+func spdxSplitTool(tool string) (string, string) {
+	i := strings.LastIndex(tool, "-")
+	if i <= 0 {
+		return tool, ""
+	}
+	if version := tool[i+1:]; spdxToolVersion.MatchString(version) {
+		return tool[:i], version
+	}
+	return tool, ""
+}
 
 // licenseRefPrefix marks a custom identifier that is not on the SPDX license
 // list.
