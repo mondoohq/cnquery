@@ -666,35 +666,29 @@ func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
 
 			var mutualAuth any
 			mutualAuthTrustStoreArn := ""
-			var mutualAuthMode, advertiseTrustStoreCaNames, trustStoreAssociationStatus string
-			var ignoreClientCertificateExpiry bool
 			if l.MutualAuthentication != nil {
 				mutualAuth, err = convert.JsonToDict(l.MutualAuthentication)
 				if err != nil {
 					return nil, err
 				}
 				mutualAuthTrustStoreArn = convert.ToValue(l.MutualAuthentication.TrustStoreArn)
-				mutualAuthMode = convert.ToValue(l.MutualAuthentication.Mode)
-				ignoreClientCertificateExpiry = convert.ToValue(l.MutualAuthentication.IgnoreClientCertificateExpiry)
-				advertiseTrustStoreCaNames = string(l.MutualAuthentication.AdvertiseTrustStoreCaNames)
-				trustStoreAssociationStatus = string(l.MutualAuthentication.TrustStoreAssociationStatus)
+			}
+			mqlMutualAuth, err := newMqlElbMutualAuthentication(a.MqlRuntime, convert.ToValue(l.ListenerArn), l.MutualAuthentication)
+			if err != nil {
+				return nil, err
 			}
 
 			args := map[string]*llx.RawData{
-				"__id":                 llx.StringDataPtr(l.ListenerArn),
-				"arn":                  llx.StringDataPtr(l.ListenerArn),
-				"port":                 llx.IntDataPtr(l.Port),
-				"protocol":             llx.StringData(string(l.Protocol)),
-				"sslPolicy":            llx.StringDataPtr(l.SslPolicy),
-				"defaultActions":       llx.ArrayData(defaultActions, types.Dict),
-				"certificates":         llx.ArrayData(certificates, types.Dict),
-				"alpnPolicy":           llx.ArrayData(llx.TArr2Raw(l.AlpnPolicy), types.String),
-				"mutualAuthentication": llx.DictData(mutualAuth),
-
-				"mutualAuthenticationMode":      llx.StringData(mutualAuthMode),
-				"ignoreClientCertificateExpiry": llx.BoolData(ignoreClientCertificateExpiry),
-				"advertiseTrustStoreCaNames":    llx.StringData(advertiseTrustStoreCaNames),
-				"trustStoreAssociationStatus":   llx.StringData(trustStoreAssociationStatus),
+				"__id":                    llx.StringDataPtr(l.ListenerArn),
+				"arn":                     llx.StringDataPtr(l.ListenerArn),
+				"port":                    llx.IntDataPtr(l.Port),
+				"protocol":                llx.StringData(string(l.Protocol)),
+				"sslPolicy":               llx.StringDataPtr(l.SslPolicy),
+				"defaultActions":          llx.ArrayData(defaultActions, types.Dict),
+				"certificates":            llx.ArrayData(certificates, types.Dict),
+				"alpnPolicy":              llx.ArrayData(llx.TArr2Raw(l.AlpnPolicy), types.String),
+				"mutualAuthentication":    llx.DictData(mutualAuth),
+				"mutualAuthenticationRef": mqlMutualAuth,
 			}
 
 			mqlListener, err := CreateResource(a.MqlRuntime, "aws.elb.listener", args)
@@ -1003,30 +997,71 @@ func (a *mqlAwsElbListener) sslPolicyRef() (*mqlAwsElbSslPolicy, error) {
 }
 
 func (a *mqlAwsElbListener) trustStore() (*mqlAwsElbTruststore, error) {
-	if a.mutualAuthTrustStoreArn == "" {
-		a.TrustStore.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
+	return resolveElbTrustStore(a.MqlRuntime, a.Arn.Data, a.mutualAuthTrustStoreArn, &a.TrustStore.State)
+}
+
+// newMqlElbMutualAuthentication builds the listener's mutual TLS settings. A
+// nil MutualAuthentication means the load balancer reports no mutual TLS
+// settings for the listener at all, which is reported as null rather than as
+// the off mode.
+func newMqlElbMutualAuthentication(runtime *plugin.Runtime, listenerArn string, ma *elbtypes.MutualAuthenticationAttributes) (*llx.RawData, error) {
+	if ma == nil {
+		return llx.NilData, nil
 	}
-	region, err := GetRegionFromArn(a.Arn.Data)
+	res, err := CreateResource(runtime, "aws.elb.mutualAuthentication", map[string]*llx.RawData{
+		"__id":                          llx.StringData(listenerArn + "/mutualAuthentication"),
+		"mode":                          llx.StringData(convert.ToValue(ma.Mode)),
+		"ignoreClientCertificateExpiry": llx.BoolData(convert.ToValue(ma.IgnoreClientCertificateExpiry)),
+		"advertiseTrustStoreCaNames":    llx.StringData(string(ma.AdvertiseTrustStoreCaNames)),
+		"trustStoreAssociationStatus":   llx.StringData(string(ma.TrustStoreAssociationStatus)),
+	})
 	if err != nil {
 		return nil, err
 	}
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	mqlMa := res.(*mqlAwsElbMutualAuthentication)
+	mqlMa.cacheListenerArn = listenerArn
+	mqlMa.cacheTrustStoreArn = convert.ToValue(ma.TrustStoreArn)
+	return llx.ResourceData(mqlMa, "aws.elb.mutualAuthentication"), nil
+}
+
+type mqlAwsElbMutualAuthenticationInternal struct {
+	cacheListenerArn   string
+	cacheTrustStoreArn string
+}
+
+func (a *mqlAwsElbMutualAuthentication) trustStore() (*mqlAwsElbTruststore, error) {
+	return resolveElbTrustStore(a.MqlRuntime, a.cacheListenerArn, a.cacheTrustStoreArn, &a.TrustStore.State)
+}
+
+// resolveElbTrustStore looks up the trust store a listener verifies client
+// certificates against. An empty ARN, an access-denied read, or a trust store
+// that no longer exists all leave the field null: the listener names no store
+// this scan can see, which is not the same as it naming one.
+func resolveElbTrustStore(runtime *plugin.Runtime, listenerArn, trustStoreArn string, state *plugin.State) (*mqlAwsElbTruststore, error) {
+	if trustStoreArn == "" {
+		*state = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	region, err := GetRegionFromArn(listenerArn)
+	if err != nil {
+		return nil, err
+	}
+	conn := runtime.Connection.(*connection.AwsConnection)
 	svc := conn.Elbv2(region)
 	ctx := context.Background()
-	resp, err := svc.DescribeTrustStores(ctx, &elasticloadbalancingv2.DescribeTrustStoresInput{TrustStoreArns: []string{a.mutualAuthTrustStoreArn}})
+	resp, err := svc.DescribeTrustStores(ctx, &elasticloadbalancingv2.DescribeTrustStoresInput{TrustStoreArns: []string{trustStoreArn}})
 	if err != nil {
 		if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
-			a.TrustStore.State = plugin.StateIsNull | plugin.StateIsSet
+			*state = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
 		return nil, err
 	}
 	if len(resp.TrustStores) == 0 {
-		a.TrustStore.State = plugin.StateIsNull | plugin.StateIsSet
+		*state = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return buildElbTrustStoreResource(a.MqlRuntime, region, resp.TrustStores[0])
+	return buildElbTrustStoreResource(runtime, region, resp.TrustStores[0])
 }
 
 func (a *mqlAwsElbListener) rules() ([]any, error) {

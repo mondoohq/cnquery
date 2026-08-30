@@ -82,6 +82,10 @@ const (
 	ResourceAwsNetworkfirewallTlsInspectionConfiguration                        string = "aws.networkfirewall.tlsInspectionConfiguration"
 	ResourceAwsEfs                                                              string = "aws.efs"
 	ResourceAwsEfsFilesystem                                                    string = "aws.efs.filesystem"
+	ResourceAwsEfsBackupPolicy                                                  string = "aws.efs.backupPolicy"
+	ResourceAwsEfsFileSystemProtection                                          string = "aws.efs.fileSystemProtection"
+	ResourceAwsEfsPosixUser                                                     string = "aws.efs.posixUser"
+	ResourceAwsEfsRootDirectory                                                 string = "aws.efs.rootDirectory"
 	ResourceAwsEfsFilesystemLifecycleConfiguration                              string = "aws.efs.filesystem.lifecycleConfiguration"
 	ResourceAwsEfsFilesystemReplicationConfiguration                            string = "aws.efs.filesystem.replicationConfiguration"
 	ResourceAwsEfsFilesystemReplicationDestination                              string = "aws.efs.filesystem.replicationDestination"
@@ -239,6 +243,7 @@ const (
 	ResourceAwsAutoscalingGroupTag                                              string = "aws.autoscaling.group.tag"
 	ResourceAwsElb                                                              string = "aws.elb"
 	ResourceAwsElbSslPolicy                                                     string = "aws.elb.sslPolicy"
+	ResourceAwsElbMutualAuthentication                                          string = "aws.elb.mutualAuthentication"
 	ResourceAwsElbTruststore                                                    string = "aws.elb.truststore"
 	ResourceAwsElbTargetgroup                                                   string = "aws.elb.targetgroup"
 	ResourceAwsElbTargetgroupAttributes                                         string = "aws.elb.targetgroup.attributes"
@@ -1278,6 +1283,22 @@ func init() {
 			Init:   initAwsEfsFilesystem,
 			Create: createAwsEfsFilesystem,
 		},
+		"aws.efs.backupPolicy": {
+			// to override args, implement: initAwsEfsBackupPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEfsBackupPolicy,
+		},
+		"aws.efs.fileSystemProtection": {
+			// to override args, implement: initAwsEfsFileSystemProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEfsFileSystemProtection,
+		},
+		"aws.efs.posixUser": {
+			// to override args, implement: initAwsEfsPosixUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEfsPosixUser,
+		},
+		"aws.efs.rootDirectory": {
+			// to override args, implement: initAwsEfsRootDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEfsRootDirectory,
+		},
 		"aws.efs.filesystem.lifecycleConfiguration": {
 			// to override args, implement: initAwsEfsFilesystemLifecycleConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEfsFilesystemLifecycleConfiguration,
@@ -1905,6 +1926,10 @@ func init() {
 		"aws.elb.sslPolicy": {
 			// to override args, implement: initAwsElbSslPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsElbSslPolicy,
+		},
+		"aws.elb.mutualAuthentication": {
+			// to override args, implement: initAwsElbMutualAuthentication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsElbMutualAuthentication,
 		},
 		"aws.elb.truststore": {
 			// to override args, implement: initAwsElbTruststore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6730,8 +6755,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.efs.filesystem.backupPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetBackupPolicy()).ToDataRes(types.Dict)
 	},
-	"aws.efs.filesystem.backupPolicyStatus": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEfsFilesystem).GetBackupPolicyStatus()).ToDataRes(types.String)
+	"aws.efs.filesystem.backupPolicyRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetBackupPolicyRef()).ToDataRes(types.Resource("aws.efs.backupPolicy"))
 	},
 	"aws.efs.filesystem.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetRegion()).ToDataRes(types.String)
@@ -6796,8 +6821,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.efs.filesystem.fileSystemProtection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetFileSystemProtection()).ToDataRes(types.Dict)
 	},
-	"aws.efs.filesystem.replicationOverwriteProtection": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEfsFilesystem).GetReplicationOverwriteProtection()).ToDataRes(types.String)
+	"aws.efs.filesystem.protection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetProtection()).ToDataRes(types.Resource("aws.efs.fileSystemProtection"))
+	},
+	"aws.efs.backupPolicy.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsBackupPolicy).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.efs.fileSystemProtection.replicationOverwriteProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFileSystemProtection).GetReplicationOverwriteProtection()).ToDataRes(types.String)
+	},
+	"aws.efs.posixUser.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsPosixUser).GetUid()).ToDataRes(types.Int)
+	},
+	"aws.efs.posixUser.gid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsPosixUser).GetGid()).ToDataRes(types.Int)
+	},
+	"aws.efs.posixUser.secondaryGids": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsPosixUser).GetSecondaryGids()).ToDataRes(types.Array(types.Int))
+	},
+	"aws.efs.rootDirectory.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsRootDirectory).GetPath()).ToDataRes(types.String)
+	},
+	"aws.efs.rootDirectory.ownerUid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsRootDirectory).GetOwnerUid()).ToDataRes(types.Int)
+	},
+	"aws.efs.rootDirectory.ownerGid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsRootDirectory).GetOwnerGid()).ToDataRes(types.Int)
+	},
+	"aws.efs.rootDirectory.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsRootDirectory).GetPermissions()).ToDataRes(types.String)
 	},
 	"aws.efs.filesystem.lifecycleConfiguration.transitionToIA": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystemLifecycleConfiguration).GetTransitionToIA()).ToDataRes(types.String)
@@ -6883,26 +6935,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.efs.accessPoint.rootDirectory": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsAccessPoint).GetRootDirectory()).ToDataRes(types.Dict)
 	},
-	"aws.efs.accessPoint.posixUid": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEfsAccessPoint).GetPosixUid()).ToDataRes(types.Int)
+	"aws.efs.accessPoint.posixUserRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetPosixUserRef()).ToDataRes(types.Resource("aws.efs.posixUser"))
 	},
-	"aws.efs.accessPoint.posixGid": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEfsAccessPoint).GetPosixGid()).ToDataRes(types.Int)
-	},
-	"aws.efs.accessPoint.posixSecondaryGids": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEfsAccessPoint).GetPosixSecondaryGids()).ToDataRes(types.Array(types.Int))
-	},
-	"aws.efs.accessPoint.rootDirectoryPath": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEfsAccessPoint).GetRootDirectoryPath()).ToDataRes(types.String)
-	},
-	"aws.efs.accessPoint.rootDirectoryOwnerUid": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEfsAccessPoint).GetRootDirectoryOwnerUid()).ToDataRes(types.Int)
-	},
-	"aws.efs.accessPoint.rootDirectoryOwnerGid": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEfsAccessPoint).GetRootDirectoryOwnerGid()).ToDataRes(types.Int)
-	},
-	"aws.efs.accessPoint.rootDirectoryPermissions": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEfsAccessPoint).GetRootDirectoryPermissions()).ToDataRes(types.String)
+	"aws.efs.accessPoint.rootDirectoryRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetRootDirectoryRef()).ToDataRes(types.Resource("aws.efs.rootDirectory"))
 	},
 	"aws.efs.accessPoint.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsAccessPoint).GetLifecycleState()).ToDataRes(types.String)
@@ -11965,6 +12002,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.sslPolicy.supportedLoadBalancerTypes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbSslPolicy).GetSupportedLoadBalancerTypes()).ToDataRes(types.Array(types.String))
 	},
+	"aws.elb.mutualAuthentication.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbMutualAuthentication).GetMode()).ToDataRes(types.String)
+	},
+	"aws.elb.mutualAuthentication.trustStore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbMutualAuthentication).GetTrustStore()).ToDataRes(types.Resource("aws.elb.truststore"))
+	},
+	"aws.elb.mutualAuthentication.ignoreClientCertificateExpiry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbMutualAuthentication).GetIgnoreClientCertificateExpiry()).ToDataRes(types.Bool)
+	},
+	"aws.elb.mutualAuthentication.advertiseTrustStoreCaNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbMutualAuthentication).GetAdvertiseTrustStoreCaNames()).ToDataRes(types.String)
+	},
+	"aws.elb.mutualAuthentication.trustStoreAssociationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbMutualAuthentication).GetTrustStoreAssociationStatus()).ToDataRes(types.String)
+	},
 	"aws.elb.truststore.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbTruststore).GetArn()).ToDataRes(types.String)
 	},
@@ -12253,17 +12305,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.listener.mutualAuthentication": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbListener).GetMutualAuthentication()).ToDataRes(types.Dict)
 	},
-	"aws.elb.listener.mutualAuthenticationMode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsElbListener).GetMutualAuthenticationMode()).ToDataRes(types.String)
-	},
-	"aws.elb.listener.ignoreClientCertificateExpiry": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsElbListener).GetIgnoreClientCertificateExpiry()).ToDataRes(types.Bool)
-	},
-	"aws.elb.listener.advertiseTrustStoreCaNames": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsElbListener).GetAdvertiseTrustStoreCaNames()).ToDataRes(types.String)
-	},
-	"aws.elb.listener.trustStoreAssociationStatus": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsElbListener).GetTrustStoreAssociationStatus()).ToDataRes(types.String)
+	"aws.elb.listener.mutualAuthenticationRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListener).GetMutualAuthenticationRef()).ToDataRes(types.Resource("aws.elb.mutualAuthentication"))
 	},
 	"aws.elb.listener.trustStore": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbListener).GetTrustStore()).ToDataRes(types.Resource("aws.elb.truststore"))
@@ -39749,8 +39792,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEfsFilesystem).BackupPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.efs.filesystem.backupPolicyStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEfsFilesystem).BackupPolicyStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.efs.filesystem.backupPolicyRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).BackupPolicyRef, ok = plugin.RawToTValue[*mqlAwsEfsBackupPolicy](v.Value, v.Error)
 		return
 	},
 	"aws.efs.filesystem.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39837,8 +39880,60 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEfsFilesystem).FileSystemProtection, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.efs.filesystem.replicationOverwriteProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEfsFilesystem).ReplicationOverwriteProtection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.efs.filesystem.protection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).Protection, ok = plugin.RawToTValue[*mqlAwsEfsFileSystemProtection](v.Value, v.Error)
+		return
+	},
+	"aws.efs.backupPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsBackupPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.efs.backupPolicy.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsBackupPolicy).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.fileSystemProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFileSystemProtection).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.efs.fileSystemProtection.replicationOverwriteProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFileSystemProtection).ReplicationOverwriteProtection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.posixUser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsPosixUser).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.efs.posixUser.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsPosixUser).Uid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.efs.posixUser.gid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsPosixUser).Gid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.efs.posixUser.secondaryGids": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsPosixUser).SecondaryGids, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.rootDirectory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsRootDirectory).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.efs.rootDirectory.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsRootDirectory).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.rootDirectory.ownerUid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsRootDirectory).OwnerUid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.efs.rootDirectory.ownerGid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsRootDirectory).OwnerGid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.efs.rootDirectory.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsRootDirectory).Permissions, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.efs.filesystem.lifecycleConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39973,32 +40068,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEfsAccessPoint).RootDirectory, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.efs.accessPoint.posixUid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEfsAccessPoint).PosixUid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"aws.efs.accessPoint.posixUserRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).PosixUserRef, ok = plugin.RawToTValue[*mqlAwsEfsPosixUser](v.Value, v.Error)
 		return
 	},
-	"aws.efs.accessPoint.posixGid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEfsAccessPoint).PosixGid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"aws.efs.accessPoint.posixSecondaryGids": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEfsAccessPoint).PosixSecondaryGids, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"aws.efs.accessPoint.rootDirectoryPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEfsAccessPoint).RootDirectoryPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.efs.accessPoint.rootDirectoryOwnerUid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEfsAccessPoint).RootDirectoryOwnerUid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"aws.efs.accessPoint.rootDirectoryOwnerGid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEfsAccessPoint).RootDirectoryOwnerGid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"aws.efs.accessPoint.rootDirectoryPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEfsAccessPoint).RootDirectoryPermissions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.efs.accessPoint.rootDirectoryRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).RootDirectoryRef, ok = plugin.RawToTValue[*mqlAwsEfsRootDirectory](v.Value, v.Error)
 		return
 	},
 	"aws.efs.accessPoint.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47357,6 +47432,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElbSslPolicy).SupportedLoadBalancerTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.elb.mutualAuthentication.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbMutualAuthentication).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.elb.mutualAuthentication.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbMutualAuthentication).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.mutualAuthentication.trustStore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbMutualAuthentication).TrustStore, ok = plugin.RawToTValue[*mqlAwsElbTruststore](v.Value, v.Error)
+		return
+	},
+	"aws.elb.mutualAuthentication.ignoreClientCertificateExpiry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbMutualAuthentication).IgnoreClientCertificateExpiry, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elb.mutualAuthentication.advertiseTrustStoreCaNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbMutualAuthentication).AdvertiseTrustStoreCaNames, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.mutualAuthentication.trustStoreAssociationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbMutualAuthentication).TrustStoreAssociationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.elb.truststore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbTruststore).__id, ok = v.Value.(string)
 		return
@@ -47769,20 +47868,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElbListener).MutualAuthentication, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.elb.listener.mutualAuthenticationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElbListener).MutualAuthenticationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.elb.listener.ignoreClientCertificateExpiry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElbListener).IgnoreClientCertificateExpiry, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.elb.listener.advertiseTrustStoreCaNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElbListener).AdvertiseTrustStoreCaNames, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.elb.listener.trustStoreAssociationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElbListener).TrustStoreAssociationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.elb.listener.mutualAuthenticationRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListener).MutualAuthenticationRef, ok = plugin.RawToTValue[*mqlAwsElbMutualAuthentication](v.Value, v.Error)
 		return
 	},
 	"aws.elb.listener.trustStore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -90945,36 +91032,36 @@ type mqlAwsEfsFilesystem struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEfsFilesystemInternal
-	Name                           plugin.TValue[string]
-	Id                             plugin.TValue[string]
-	Arn                            plugin.TValue[string]
-	Encrypted                      plugin.TValue[bool]
-	OwnerId                        plugin.TValue[string]
-	KmsKey                         plugin.TValue[*mqlAwsKmsKey]
-	BackupPolicy                   plugin.TValue[any]
-	BackupPolicyStatus             plugin.TValue[string]
-	Region                         plugin.TValue[string]
-	AvailabilityZone               plugin.TValue[string]
-	AvailabilityZoneId             plugin.TValue[string]
-	CreationToken                  plugin.TValue[string]
-	ProvisionedThroughputInMibps   plugin.TValue[float64]
-	Tags                           plugin.TValue[map[string]any]
-	CloudformationStack            plugin.TValue[*mqlAwsCloudformationStack]
-	ManagedBy                      plugin.TValue[string]
-	CreatedAt                      plugin.TValue[*time.Time]
-	MountTargets                   plugin.TValue[[]any]
-	AccessPoints                   plugin.TValue[[]any]
-	FileSystemPolicy               plugin.TValue[string]
-	PolicyStatements               plugin.TValue[[]any]
-	IsPublic                       plugin.TValue[bool]
-	PerformanceMode                plugin.TValue[string]
-	ThroughputMode                 plugin.TValue[string]
-	SizeInBytes                    plugin.TValue[int64]
-	LifecycleState                 plugin.TValue[string]
-	LifecycleConfiguration         plugin.TValue[*mqlAwsEfsFilesystemLifecycleConfiguration]
-	ReplicationConfiguration       plugin.TValue[*mqlAwsEfsFilesystemReplicationConfiguration]
-	FileSystemProtection           plugin.TValue[any]
-	ReplicationOverwriteProtection plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Id                           plugin.TValue[string]
+	Arn                          plugin.TValue[string]
+	Encrypted                    plugin.TValue[bool]
+	OwnerId                      plugin.TValue[string]
+	KmsKey                       plugin.TValue[*mqlAwsKmsKey]
+	BackupPolicy                 plugin.TValue[any]
+	BackupPolicyRef              plugin.TValue[*mqlAwsEfsBackupPolicy]
+	Region                       plugin.TValue[string]
+	AvailabilityZone             plugin.TValue[string]
+	AvailabilityZoneId           plugin.TValue[string]
+	CreationToken                plugin.TValue[string]
+	ProvisionedThroughputInMibps plugin.TValue[float64]
+	Tags                         plugin.TValue[map[string]any]
+	CloudformationStack          plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy                    plugin.TValue[string]
+	CreatedAt                    plugin.TValue[*time.Time]
+	MountTargets                 plugin.TValue[[]any]
+	AccessPoints                 plugin.TValue[[]any]
+	FileSystemPolicy             plugin.TValue[string]
+	PolicyStatements             plugin.TValue[[]any]
+	IsPublic                     plugin.TValue[bool]
+	PerformanceMode              plugin.TValue[string]
+	ThroughputMode               plugin.TValue[string]
+	SizeInBytes                  plugin.TValue[int64]
+	LifecycleState               plugin.TValue[string]
+	LifecycleConfiguration       plugin.TValue[*mqlAwsEfsFilesystemLifecycleConfiguration]
+	ReplicationConfiguration     plugin.TValue[*mqlAwsEfsFilesystemReplicationConfiguration]
+	FileSystemProtection         plugin.TValue[any]
+	Protection                   plugin.TValue[*mqlAwsEfsFileSystemProtection]
 }
 
 // createAwsEfsFilesystem creates a new instance of this resource
@@ -91056,9 +91143,19 @@ func (c *mqlAwsEfsFilesystem) GetBackupPolicy() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsEfsFilesystem) GetBackupPolicyStatus() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.BackupPolicyStatus, func() (string, error) {
-		return c.backupPolicyStatus()
+func (c *mqlAwsEfsFilesystem) GetBackupPolicyRef() *plugin.TValue[*mqlAwsEfsBackupPolicy] {
+	return plugin.GetOrCompute[*mqlAwsEfsBackupPolicy](&c.BackupPolicyRef, func() (*mqlAwsEfsBackupPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.filesystem", c.__id, "backupPolicyRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEfsBackupPolicy), nil
+			}
+		}
+
+		return c.backupPolicyRef()
 	})
 }
 
@@ -91226,10 +91323,221 @@ func (c *mqlAwsEfsFilesystem) GetFileSystemProtection() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsEfsFilesystem) GetReplicationOverwriteProtection() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.ReplicationOverwriteProtection, func() (string, error) {
-		return c.replicationOverwriteProtection()
+func (c *mqlAwsEfsFilesystem) GetProtection() *plugin.TValue[*mqlAwsEfsFileSystemProtection] {
+	return plugin.GetOrCompute[*mqlAwsEfsFileSystemProtection](&c.Protection, func() (*mqlAwsEfsFileSystemProtection, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.filesystem", c.__id, "protection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEfsFileSystemProtection), nil
+			}
+		}
+
+		return c.protection()
 	})
+}
+
+// mqlAwsEfsBackupPolicy for the aws.efs.backupPolicy resource
+type mqlAwsEfsBackupPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEfsBackupPolicyInternal it will be used here
+	Status plugin.TValue[string]
+}
+
+// createAwsEfsBackupPolicy creates a new instance of this resource
+func createAwsEfsBackupPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEfsBackupPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.efs.backupPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEfsBackupPolicy) MqlName() string {
+	return "aws.efs.backupPolicy"
+}
+
+func (c *mqlAwsEfsBackupPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEfsBackupPolicy) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+// mqlAwsEfsFileSystemProtection for the aws.efs.fileSystemProtection resource
+type mqlAwsEfsFileSystemProtection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEfsFileSystemProtectionInternal it will be used here
+	ReplicationOverwriteProtection plugin.TValue[string]
+}
+
+// createAwsEfsFileSystemProtection creates a new instance of this resource
+func createAwsEfsFileSystemProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEfsFileSystemProtection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.efs.fileSystemProtection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEfsFileSystemProtection) MqlName() string {
+	return "aws.efs.fileSystemProtection"
+}
+
+func (c *mqlAwsEfsFileSystemProtection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEfsFileSystemProtection) GetReplicationOverwriteProtection() *plugin.TValue[string] {
+	return &c.ReplicationOverwriteProtection
+}
+
+// mqlAwsEfsPosixUser for the aws.efs.posixUser resource
+type mqlAwsEfsPosixUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEfsPosixUserInternal it will be used here
+	Uid           plugin.TValue[int64]
+	Gid           plugin.TValue[int64]
+	SecondaryGids plugin.TValue[[]any]
+}
+
+// createAwsEfsPosixUser creates a new instance of this resource
+func createAwsEfsPosixUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEfsPosixUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.efs.posixUser", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEfsPosixUser) MqlName() string {
+	return "aws.efs.posixUser"
+}
+
+func (c *mqlAwsEfsPosixUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEfsPosixUser) GetUid() *plugin.TValue[int64] {
+	return &c.Uid
+}
+
+func (c *mqlAwsEfsPosixUser) GetGid() *plugin.TValue[int64] {
+	return &c.Gid
+}
+
+func (c *mqlAwsEfsPosixUser) GetSecondaryGids() *plugin.TValue[[]any] {
+	return &c.SecondaryGids
+}
+
+// mqlAwsEfsRootDirectory for the aws.efs.rootDirectory resource
+type mqlAwsEfsRootDirectory struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEfsRootDirectoryInternal it will be used here
+	Path        plugin.TValue[string]
+	OwnerUid    plugin.TValue[int64]
+	OwnerGid    plugin.TValue[int64]
+	Permissions plugin.TValue[string]
+}
+
+// createAwsEfsRootDirectory creates a new instance of this resource
+func createAwsEfsRootDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEfsRootDirectory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.efs.rootDirectory", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEfsRootDirectory) MqlName() string {
+	return "aws.efs.rootDirectory"
+}
+
+func (c *mqlAwsEfsRootDirectory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEfsRootDirectory) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlAwsEfsRootDirectory) GetOwnerUid() *plugin.TValue[int64] {
+	return &c.OwnerUid
+}
+
+func (c *mqlAwsEfsRootDirectory) GetOwnerGid() *plugin.TValue[int64] {
+	return &c.OwnerGid
+}
+
+func (c *mqlAwsEfsRootDirectory) GetPermissions() *plugin.TValue[string] {
+	return &c.Permissions
 }
 
 // mqlAwsEfsFilesystemLifecycleConfiguration for the aws.efs.filesystem.lifecycleConfiguration resource
@@ -91602,22 +91910,17 @@ type mqlAwsEfsAccessPoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEfsAccessPointInternal
-	AccessPointId            plugin.TValue[string]
-	Arn                      plugin.TValue[string]
-	FileSystem               plugin.TValue[*mqlAwsEfsFilesystem]
-	Name                     plugin.TValue[string]
-	PosixUser                plugin.TValue[any]
-	RootDirectory            plugin.TValue[any]
-	PosixUid                 plugin.TValue[int64]
-	PosixGid                 plugin.TValue[int64]
-	PosixSecondaryGids       plugin.TValue[[]any]
-	RootDirectoryPath        plugin.TValue[string]
-	RootDirectoryOwnerUid    plugin.TValue[int64]
-	RootDirectoryOwnerGid    plugin.TValue[int64]
-	RootDirectoryPermissions plugin.TValue[string]
-	LifecycleState           plugin.TValue[string]
-	Tags                     plugin.TValue[map[string]any]
-	Region                   plugin.TValue[string]
+	AccessPointId    plugin.TValue[string]
+	Arn              plugin.TValue[string]
+	FileSystem       plugin.TValue[*mqlAwsEfsFilesystem]
+	Name             plugin.TValue[string]
+	PosixUser        plugin.TValue[any]
+	RootDirectory    plugin.TValue[any]
+	PosixUserRef     plugin.TValue[*mqlAwsEfsPosixUser]
+	RootDirectoryRef plugin.TValue[*mqlAwsEfsRootDirectory]
+	LifecycleState   plugin.TValue[string]
+	Tags             plugin.TValue[map[string]any]
+	Region           plugin.TValue[string]
 }
 
 // createAwsEfsAccessPoint creates a new instance of this resource
@@ -91688,32 +91991,12 @@ func (c *mqlAwsEfsAccessPoint) GetRootDirectory() *plugin.TValue[any] {
 	return &c.RootDirectory
 }
 
-func (c *mqlAwsEfsAccessPoint) GetPosixUid() *plugin.TValue[int64] {
-	return &c.PosixUid
+func (c *mqlAwsEfsAccessPoint) GetPosixUserRef() *plugin.TValue[*mqlAwsEfsPosixUser] {
+	return &c.PosixUserRef
 }
 
-func (c *mqlAwsEfsAccessPoint) GetPosixGid() *plugin.TValue[int64] {
-	return &c.PosixGid
-}
-
-func (c *mqlAwsEfsAccessPoint) GetPosixSecondaryGids() *plugin.TValue[[]any] {
-	return &c.PosixSecondaryGids
-}
-
-func (c *mqlAwsEfsAccessPoint) GetRootDirectoryPath() *plugin.TValue[string] {
-	return &c.RootDirectoryPath
-}
-
-func (c *mqlAwsEfsAccessPoint) GetRootDirectoryOwnerUid() *plugin.TValue[int64] {
-	return &c.RootDirectoryOwnerUid
-}
-
-func (c *mqlAwsEfsAccessPoint) GetRootDirectoryOwnerGid() *plugin.TValue[int64] {
-	return &c.RootDirectoryOwnerGid
-}
-
-func (c *mqlAwsEfsAccessPoint) GetRootDirectoryPermissions() *plugin.TValue[string] {
-	return &c.RootDirectoryPermissions
+func (c *mqlAwsEfsAccessPoint) GetRootDirectoryRef() *plugin.TValue[*mqlAwsEfsRootDirectory] {
+	return &c.RootDirectoryRef
 }
 
 func (c *mqlAwsEfsAccessPoint) GetLifecycleState() *plugin.TValue[string] {
@@ -111482,6 +111765,82 @@ func (c *mqlAwsElbSslPolicy) GetSupportedLoadBalancerTypes() *plugin.TValue[[]an
 	return &c.SupportedLoadBalancerTypes
 }
 
+// mqlAwsElbMutualAuthentication for the aws.elb.mutualAuthentication resource
+type mqlAwsElbMutualAuthentication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsElbMutualAuthenticationInternal
+	Mode                          plugin.TValue[string]
+	TrustStore                    plugin.TValue[*mqlAwsElbTruststore]
+	IgnoreClientCertificateExpiry plugin.TValue[bool]
+	AdvertiseTrustStoreCaNames    plugin.TValue[string]
+	TrustStoreAssociationStatus   plugin.TValue[string]
+}
+
+// createAwsElbMutualAuthentication creates a new instance of this resource
+func createAwsElbMutualAuthentication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsElbMutualAuthentication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.elb.mutualAuthentication", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsElbMutualAuthentication) MqlName() string {
+	return "aws.elb.mutualAuthentication"
+}
+
+func (c *mqlAwsElbMutualAuthentication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsElbMutualAuthentication) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlAwsElbMutualAuthentication) GetTrustStore() *plugin.TValue[*mqlAwsElbTruststore] {
+	return plugin.GetOrCompute[*mqlAwsElbTruststore](&c.TrustStore, func() (*mqlAwsElbTruststore, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.mutualAuthentication", c.__id, "trustStore")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsElbTruststore), nil
+			}
+		}
+
+		return c.trustStore()
+	})
+}
+
+func (c *mqlAwsElbMutualAuthentication) GetIgnoreClientCertificateExpiry() *plugin.TValue[bool] {
+	return &c.IgnoreClientCertificateExpiry
+}
+
+func (c *mqlAwsElbMutualAuthentication) GetAdvertiseTrustStoreCaNames() *plugin.TValue[string] {
+	return &c.AdvertiseTrustStoreCaNames
+}
+
+func (c *mqlAwsElbMutualAuthentication) GetTrustStoreAssociationStatus() *plugin.TValue[string] {
+	return &c.TrustStoreAssociationStatus
+}
+
 // mqlAwsElbTruststore for the aws.elb.truststore resource
 type mqlAwsElbTruststore struct {
 	MqlRuntime *plugin.Runtime
@@ -112326,25 +112685,22 @@ type mqlAwsElbListener struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsElbListenerInternal
-	Arn                           plugin.TValue[string]
-	LoadBalancer                  plugin.TValue[*mqlAwsElbLoadbalancer]
-	Port                          plugin.TValue[int64]
-	Protocol                      plugin.TValue[string]
-	SslPolicy                     plugin.TValue[string]
-	DefaultActions                plugin.TValue[[]any]
-	ForwardTargetGroups           plugin.TValue[[]any]
-	Certificates                  plugin.TValue[[]any]
-	AlpnPolicy                    plugin.TValue[[]any]
-	SslPolicyRef                  plugin.TValue[*mqlAwsElbSslPolicy]
-	MutualAuthentication          plugin.TValue[any]
-	MutualAuthenticationMode      plugin.TValue[string]
-	IgnoreClientCertificateExpiry plugin.TValue[bool]
-	AdvertiseTrustStoreCaNames    plugin.TValue[string]
-	TrustStoreAssociationStatus   plugin.TValue[string]
-	TrustStore                    plugin.TValue[*mqlAwsElbTruststore]
-	Rules                         plugin.TValue[[]any]
-	SniCertificates               plugin.TValue[[]any]
-	Tags                          plugin.TValue[map[string]any]
+	Arn                     plugin.TValue[string]
+	LoadBalancer            plugin.TValue[*mqlAwsElbLoadbalancer]
+	Port                    plugin.TValue[int64]
+	Protocol                plugin.TValue[string]
+	SslPolicy               plugin.TValue[string]
+	DefaultActions          plugin.TValue[[]any]
+	ForwardTargetGroups     plugin.TValue[[]any]
+	Certificates            plugin.TValue[[]any]
+	AlpnPolicy              plugin.TValue[[]any]
+	SslPolicyRef            plugin.TValue[*mqlAwsElbSslPolicy]
+	MutualAuthentication    plugin.TValue[any]
+	MutualAuthenticationRef plugin.TValue[*mqlAwsElbMutualAuthentication]
+	TrustStore              plugin.TValue[*mqlAwsElbTruststore]
+	Rules                   plugin.TValue[[]any]
+	SniCertificates         plugin.TValue[[]any]
+	Tags                    plugin.TValue[map[string]any]
 }
 
 // createAwsElbListener creates a new instance of this resource
@@ -112464,20 +112820,8 @@ func (c *mqlAwsElbListener) GetMutualAuthentication() *plugin.TValue[any] {
 	return &c.MutualAuthentication
 }
 
-func (c *mqlAwsElbListener) GetMutualAuthenticationMode() *plugin.TValue[string] {
-	return &c.MutualAuthenticationMode
-}
-
-func (c *mqlAwsElbListener) GetIgnoreClientCertificateExpiry() *plugin.TValue[bool] {
-	return &c.IgnoreClientCertificateExpiry
-}
-
-func (c *mqlAwsElbListener) GetAdvertiseTrustStoreCaNames() *plugin.TValue[string] {
-	return &c.AdvertiseTrustStoreCaNames
-}
-
-func (c *mqlAwsElbListener) GetTrustStoreAssociationStatus() *plugin.TValue[string] {
-	return &c.TrustStoreAssociationStatus
+func (c *mqlAwsElbListener) GetMutualAuthenticationRef() *plugin.TValue[*mqlAwsElbMutualAuthentication] {
+	return &c.MutualAuthenticationRef
 }
 
 func (c *mqlAwsElbListener) GetTrustStore() *plugin.TValue[*mqlAwsElbTruststore] {

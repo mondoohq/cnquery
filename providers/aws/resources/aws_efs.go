@@ -232,12 +232,23 @@ func (a *mqlAwsEfsFilesystem) backupPolicy() (any, error) {
 	return convert.JsonToDict(resp)
 }
 
-func (a *mqlAwsEfsFilesystem) backupPolicyStatus() (string, error) {
+func (a *mqlAwsEfsFilesystem) backupPolicyRef() (*mqlAwsEfsBackupPolicy, error) {
 	resp, err := a.fetchBackupPolicy()
-	if err != nil || resp == nil || resp.BackupPolicy == nil {
-		return "", err
+	if err != nil {
+		return nil, err
 	}
-	return string(resp.BackupPolicy.Status), nil
+	if resp == nil || resp.BackupPolicy == nil {
+		a.BackupPolicyRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := CreateResource(a.MqlRuntime, "aws.efs.backupPolicy", map[string]*llx.RawData{
+		"__id":   llx.StringData(a.Arn.Data + "/backupPolicy"),
+		"status": llx.StringData(string(resp.BackupPolicy.Status)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEfsBackupPolicy), nil
 }
 
 func (a *mqlAwsEfsFilesystem) lifecycleConfiguration() (*mqlAwsEfsFilesystemLifecycleConfiguration, error) {
@@ -427,11 +438,19 @@ func (a *mqlAwsEfsFilesystem) fileSystemProtection() (any, error) {
 	return result, nil
 }
 
-func (a *mqlAwsEfsFilesystem) replicationOverwriteProtection() (string, error) {
+func (a *mqlAwsEfsFilesystem) protection() (*mqlAwsEfsFileSystemProtection, error) {
 	if a.cacheFileSystemProtection == nil {
-		return "", nil
+		a.Protection.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	return string(a.cacheFileSystemProtection.ReplicationOverwriteProtection), nil
+	res, err := CreateResource(a.MqlRuntime, "aws.efs.fileSystemProtection", map[string]*llx.RawData{
+		"__id":                           llx.StringData(a.Arn.Data + "/fileSystemProtection"),
+		"replicationOverwriteProtection": llx.StringData(string(a.cacheFileSystemProtection.ReplicationOverwriteProtection)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEfsFileSystemProtection), nil
 }
 
 func efsTagsToMap(tags []efstypes.Tag) map[string]any {
@@ -556,39 +575,26 @@ func (a *mqlAwsEfsFilesystem) accessPoints() ([]any, error) {
 
 			// A nil PosixUser or RootDirectory is not "empty", it means the
 			// access point enforces no identity or no root of its own, so the
-			// scalars stay null rather than reporting uid 0 and path "".
-			var posixUid, posixGid, rootOwnerUid, rootOwnerGid *int64
-			var rootPath, rootPermissions *string
-			secondaryGids := []any{}
-			if ap.PosixUser != nil {
-				posixUid = ap.PosixUser.Uid
-				posixGid = ap.PosixUser.Gid
-				secondaryGids = convert.SliceAnyToInterface(ap.PosixUser.SecondaryGids)
+			// reference stays null rather than reporting uid 0 and path "".
+			mqlPosixUser, err := newMqlEfsPosixUser(a.MqlRuntime, convert.ToValue(ap.AccessPointArn), ap.PosixUser)
+			if err != nil {
+				return nil, err
 			}
-			if ap.RootDirectory != nil {
-				rootPath = ap.RootDirectory.Path
-				if ci := ap.RootDirectory.CreationInfo; ci != nil {
-					rootOwnerUid = ci.OwnerUid
-					rootOwnerGid = ci.OwnerGid
-					rootPermissions = ci.Permissions
-				}
+			mqlRootDirectory, err := newMqlEfsRootDirectory(a.MqlRuntime, convert.ToValue(ap.AccessPointArn), ap.RootDirectory)
+			if err != nil {
+				return nil, err
 			}
 
 			args := map[string]*llx.RawData{
-				"__id":                     llx.StringDataPtr(ap.AccessPointArn),
-				"accessPointId":            llx.StringDataPtr(ap.AccessPointId),
-				"arn":                      llx.StringDataPtr(ap.AccessPointArn),
-				"name":                     llx.StringDataPtr(ap.Name),
-				"lifecycleState":           llx.StringData(string(ap.LifeCycleState)),
-				"region":                   llx.StringData(region),
-				"tags":                     llx.MapData(efsTagsToMap(ap.Tags), types.String),
-				"posixUid":                 llx.IntDataPtr(posixUid),
-				"posixGid":                 llx.IntDataPtr(posixGid),
-				"posixSecondaryGids":       llx.ArrayData(secondaryGids, types.Int),
-				"rootDirectoryPath":        llx.StringDataPtr(rootPath),
-				"rootDirectoryOwnerUid":    llx.IntDataPtr(rootOwnerUid),
-				"rootDirectoryOwnerGid":    llx.IntDataPtr(rootOwnerGid),
-				"rootDirectoryPermissions": llx.StringDataPtr(rootPermissions),
+				"__id":             llx.StringDataPtr(ap.AccessPointArn),
+				"accessPointId":    llx.StringDataPtr(ap.AccessPointId),
+				"arn":              llx.StringDataPtr(ap.AccessPointArn),
+				"name":             llx.StringDataPtr(ap.Name),
+				"lifecycleState":   llx.StringData(string(ap.LifeCycleState)),
+				"region":           llx.StringData(region),
+				"tags":             llx.MapData(efsTagsToMap(ap.Tags), types.String),
+				"posixUserRef":     mqlPosixUser,
+				"rootDirectoryRef": mqlRootDirectory,
 			}
 
 			// Set unconditionally: a key left out of the args map leaves the
@@ -743,4 +749,51 @@ type mqlAwsEfsFilesystemReplicationDestinationInternal struct {
 
 type mqlAwsEfsAccessPointInternal struct {
 	cacheFileSystemId string
+}
+
+// newMqlEfsPosixUser builds the POSIX identity an access point enforces. A nil
+// PosixUser means the access point enforces no identity at all, which is
+// reported as null rather than as uid 0, the identity that would make every
+// client root.
+func newMqlEfsPosixUser(runtime *plugin.Runtime, accessPointArn string, pu *efstypes.PosixUser) (*llx.RawData, error) {
+	if pu == nil {
+		return llx.NilData, nil
+	}
+	res, err := CreateResource(runtime, "aws.efs.posixUser", map[string]*llx.RawData{
+		"__id":          llx.StringData(accessPointArn + "/posixUser"),
+		"uid":           llx.IntDataPtr(pu.Uid),
+		"gid":           llx.IntDataPtr(pu.Gid),
+		"secondaryGids": llx.ArrayData(convert.SliceAnyToInterface(pu.SecondaryGids), types.Int),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return llx.ResourceData(res, "aws.efs.posixUser"), nil
+}
+
+// newMqlEfsRootDirectory builds the root an access point exposes. A nil
+// RootDirectory means the access point does not restrict the root, which is
+// reported as null rather than as the empty path.
+func newMqlEfsRootDirectory(runtime *plugin.Runtime, accessPointArn string, rd *efstypes.RootDirectory) (*llx.RawData, error) {
+	if rd == nil {
+		return llx.NilData, nil
+	}
+	ownerUid, ownerGid := llx.NilData, llx.NilData
+	permissions := llx.NilData
+	if ci := rd.CreationInfo; ci != nil {
+		ownerUid = llx.IntDataPtr(ci.OwnerUid)
+		ownerGid = llx.IntDataPtr(ci.OwnerGid)
+		permissions = llx.StringDataPtr(ci.Permissions)
+	}
+	res, err := CreateResource(runtime, "aws.efs.rootDirectory", map[string]*llx.RawData{
+		"__id":        llx.StringData(accessPointArn + "/rootDirectory"),
+		"path":        llx.StringDataPtr(rd.Path),
+		"ownerUid":    ownerUid,
+		"ownerGid":    ownerGid,
+		"permissions": permissions,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return llx.ResourceData(res, "aws.efs.rootDirectory"), nil
 }

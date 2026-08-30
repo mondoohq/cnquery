@@ -1969,16 +1969,16 @@ private aws.efs.filesystem @defaults("name id region") {
   kmsKey() aws.kms.key
   // Backup policy for the file system
   //
-  // Deprecated in favor of backupPolicyStatus. Dict with a `BackupPolicy`
-  // object whose `Status` reports the automatic backup state. Null when the
-  // file system has no backup policy configured.
+  // Deprecated in favor of backupPolicyRef, which carries the same value as a
+  // resource. Dict with a `BackupPolicy` object whose `Status` reports the
+  // automatic backup state. Null when the file system has no backup policy
+  // configured.
   backupPolicy() @maturity("deprecated") dict
-  // Automatic backup state for the file system
+  // Automatic backup policy for the file system
   //
-  // One of ENABLED, ENABLING, DISABLED, or DISABLING. Empty when the file
-  // system has no backup policy configured, which reads the same way as
-  // DISABLED: nothing is backing the file system up.
-  backupPolicyStatus() string
+  // Null when the file system has no backup policy configured, which reads
+  // the same way as DISABLED: nothing is backing the file system up.
+  backupPolicyRef() aws.efs.backupPolicy
   // Region in which the file system exists
   region string
   // Availability zone where the file system exists if a specific AZ is defined
@@ -2028,15 +2028,81 @@ private aws.efs.filesystem @defaults("name id region") {
   replicationConfiguration() aws.efs.filesystem.replicationConfiguration
   // File system protection configuration
   //
-  // Deprecated in favor of replicationOverwriteProtection. Dict with a
-  // `replicationOverwriteProtection` key.
+  // Deprecated in favor of protection, which carries the same value as a
+  // resource. Dict with a `replicationOverwriteProtection` key.
   fileSystemProtection() @maturity("deprecated") dict
+  // File system protection configuration
+  //
+  // Null when the service reports no protection settings for the file system.
+  protection() aws.efs.fileSystemProtection
+}
+
+// Automatic backup policy of an Amazon EFS file system
+//
+// Whether AWS Backup takes automatic daily backups of the file system. A file
+// system with no backup policy at all reads the same way as one that has
+// backups disabled: nothing is backing it up.
+private aws.efs.backupPolicy @defaults("status") {
+  // Automatic backup state for the file system
+  //
+  // One of ENABLED, ENABLING, DISABLED, or DISABLING.
+  status string
+}
+
+// Protection configuration of an Amazon EFS file system
+//
+// Whether the file system is guarded against being overwritten by an incoming
+// replication. A file system left unprotected can have its contents replaced
+// by a replication configuration created against it from elsewhere.
+private aws.efs.fileSystemProtection @defaults("replicationOverwriteProtection") {
   // Whether the file system is guarded against being overwritten by an incoming replication
   //
   // One of ENABLED, DISABLED, or REPLICATING. DISABLED means a replication
   // configuration pointed at this file system may overwrite its contents.
-  // Empty when the service reports no protection setting.
-  replicationOverwriteProtection() string
+  replicationOverwriteProtection string
+}
+
+// POSIX identity an Amazon EFS access point enforces
+//
+// User and group IDs EFS substitutes for the NFS client's own identity on
+// every request made through the access point, which is what decides the
+// files that request can reach. A uid of 0 makes every client root on the
+// file system.
+private aws.efs.posixUser @defaults("uid gid") {
+  // POSIX user ID that every request through the access point runs as
+  uid int
+  // POSIX group ID that every request through the access point runs as
+  gid int
+  // Secondary POSIX group IDs applied to requests through the access point
+  //
+  // Up to 16 additional groups, each widening what the request can reach.
+  // Empty when none are configured.
+  secondaryGids []int
+}
+
+// Root directory an Amazon EFS access point exposes
+//
+// Directory within the file system that NFS clients reaching the access point
+// see as the root and cannot escape, so a path of "/" exposes the whole file
+// system. The creation values are the ownership and permission bits EFS
+// applies when it has to create the directory itself.
+private aws.efs.rootDirectory @defaults("path permissions") {
+  // Directory within the file system exposed to NFS clients through the access point
+  path string
+  // Owner user ID EFS applies when it creates the root directory
+  //
+  // Null when the access point supplies no creation info, in which case EFS
+  // does not create the directory and a missing path fails the mount.
+  ownerUid int
+  // Owner group ID EFS applies when it creates the root directory
+  //
+  // Null when the access point supplies no creation info.
+  ownerGid int
+  // POSIX permission bits EFS applies when it creates the root directory
+  //
+  // A three- or four-digit octal string, for example "0755". Empty when the
+  // access point supplies no creation info.
+  permissions string
 }
 
 // AWS EFS lifecycle configuration
@@ -2115,51 +2181,25 @@ private aws.efs.accessPoint @defaults("accessPointId name") {
   name string
   // POSIX user identity
   //
-  // Deprecated in favor of posixUid, posixGid, and posixSecondaryGids. Dict
-  // with `uid`, `gid`, and `secondaryGids`.
+  // Deprecated in favor of posixUserRef, which carries the same three values
+  // as a resource. Dict with `uid`, `gid`, and `secondaryGids`.
   posixUser @maturity("deprecated") dict
   // Root directory configuration
   //
-  // Deprecated in favor of rootDirectoryPath, rootDirectoryOwnerUid,
-  // rootDirectoryOwnerGid, and rootDirectoryPermissions. Dict with `path` and
-  // `creationInfo`, an object with `ownerUid`, `ownerGid`, and `permissions`.
+  // Deprecated in favor of rootDirectoryRef, which carries the same values as
+  // a resource. Dict with `path` and `creationInfo`, an object with
+  // `ownerUid`, `ownerGid`, and `permissions`.
   rootDirectory @maturity("deprecated") dict
-  // POSIX user ID that every request through the access point runs as
+  // POSIX identity every request through the access point runs as
   //
-  // EFS overrides the NFS client's own identity with this one, so it decides
-  // what the client can reach on the file system. A value of 0 makes every
-  // client root. Null when the access point enforces no user identity and the
-  // client's own uid is used.
-  posixUid int
-  // POSIX group ID that every request through the access point runs as
+  // Null when the access point enforces no user identity, in which case the
+  // NFS client's own identity is used.
+  posixUserRef aws.efs.posixUser
+  // Root directory configuration of the access point
   //
-  // Null when the access point enforces no user identity.
-  posixGid int
-  // Secondary POSIX group IDs applied to requests through the access point
-  //
-  // Up to 16 additional groups, each widening what the request can reach.
-  // Empty when none are configured.
-  posixSecondaryGids []int
-  // Directory within the file system exposed to NFS clients through the access point
-  //
-  // A client reaching the access point sees this directory as the root and
-  // cannot escape it, so a path of "/" exposes the whole file system. Empty
-  // when the access point does not restrict the root.
-  rootDirectoryPath string
-  // Owner user ID EFS applies when it creates the root directory
-  //
-  // Null when the access point supplies no creation info, in which case EFS
-  // does not create the directory and a missing path fails the mount.
-  rootDirectoryOwnerUid int
-  // Owner group ID EFS applies when it creates the root directory
-  //
-  // Null when the access point supplies no creation info.
-  rootDirectoryOwnerGid int
-  // POSIX permission bits EFS applies when it creates the root directory
-  //
-  // A three- or four-digit octal string, for example "0755". Empty when the
-  // access point supplies no creation info.
-  rootDirectoryPermissions string
+  // Null when the access point does not restrict the root, in which case a
+  // client reaching it sees the whole file system.
+  rootDirectoryRef aws.efs.rootDirectory
   // Access point state
   lifecycleState string
   // Resource tags
@@ -6849,6 +6889,39 @@ private aws.elb.sslPolicy @defaults("name region") {
   supportedLoadBalancerTypes []string
 }
 
+// Mutual TLS authentication settings of an ELB listener
+//
+// How a listener treats a client certificate: whether it validates one at
+// all, which trust store it validates against, and whether an expired
+// certificate is still admitted. Only the verify mode actually checks the
+// certificate, so a listener in passthrough mode forwards it to the target
+// without authenticating anyone.
+private aws.elb.mutualAuthentication @defaults("mode trustStoreAssociationStatus") {
+  // Client certificate handling method for the listener
+  //
+  // One of off, passthrough, or verify, defaulting to off.
+  mode string
+  // Trust store used to verify client certificates
+  //
+  // Null for a listener that names no trust store, which is every listener
+  // outside verify mode.
+  trustStore() aws.elb.truststore
+  // Whether expired client certificates are accepted
+  //
+  // True means a client presenting a certificate past its expiry is still
+  // admitted.
+  ignoreClientCertificateExpiry bool
+  // Whether trust store CA certificate names are advertised to clients
+  //
+  // One of on or off.
+  advertiseTrustStoreCaNames string
+  // Association status of the shared trust store
+  //
+  // One of active or removed. A removed trust store leaves a listener in
+  // verify mode with nothing to verify against.
+  trustStoreAssociationStatus string
+}
+
 // AWS ELB mutual TLS trust store
 //
 // Bundle of certificate authority certificates a load balancer uses to verify
@@ -7162,35 +7235,16 @@ private aws.elb.listener @defaults("arn port protocol") {
   sslPolicyRef() aws.elb.sslPolicy
   // Mutual TLS authentication settings for the listener
   //
-  // Deprecated in favor of mutualAuthenticationMode,
-  // ignoreClientCertificateExpiry, advertiseTrustStoreCaNames,
-  // trustStoreAssociationStatus, and the trustStore reference. Has `Mode`,
+  // Deprecated in favor of mutualAuthenticationRef, which carries the same
+  // values as a resource with the trust store resolved. Has `Mode`,
   // `TrustStoreArn`, `IgnoreClientCertificateExpiry`,
   // `AdvertiseTrustStoreCaNames`, and `TrustStoreAssociationStatus`. Empty for
   // listeners without mTLS.
   mutualAuthentication @maturity("deprecated") dict
-  // Client certificate handling method for the listener
+  // Mutual TLS authentication settings for the listener
   //
-  // One of off, passthrough, or verify, defaulting to off. Only verify
-  // actually validates the client certificate against the trust store;
-  // passthrough forwards it to the target without checking it, so a listener
-  // in passthrough mode is not authenticating anyone.
-  mutualAuthenticationMode string
-  // Whether expired client certificates are accepted
-  //
-  // True means a client presenting a certificate past its expiry is still
-  // admitted. False for listeners without mutual TLS.
-  ignoreClientCertificateExpiry bool
-  // Whether trust store CA certificate names are advertised to clients
-  //
-  // One of on or off. Empty for listeners without mutual TLS.
-  advertiseTrustStoreCaNames string
-  // Association status of the shared trust store
-  //
-  // One of active or removed. A removed trust store leaves a listener in
-  // verify mode with nothing to verify against. Empty for listeners without
-  // mutual TLS.
-  trustStoreAssociationStatus string
+  // Null for listeners the load balancer reports no mutual TLS settings for.
+  mutualAuthenticationRef aws.elb.mutualAuthentication
   // Trust store used to verify client certificates on mutual TLS listeners
   trustStore() aws.elb.truststore
   // Rules that route requests reaching the listener
