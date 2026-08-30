@@ -110,6 +110,18 @@ func TestProtobomReadsLicensing(t *testing.T) {
 		assert.Empty(t, p.Licenses)
 		assert.Empty(t, p.License)
 	})
+
+	// NONE is the other half of that vocabulary: the package is under no
+	// license, which is a statement of absence rather than a license called
+	// "NONE". Unlike NOASSERTION, protobom passes it straight through, so it
+	// reached both the list and the scalar -- reported to a consumer as a fact
+	// about the package and indistinguishable from a real one.
+	t.Run("NONE is not a license either", func(t *testing.T) {
+		p := byName["states-none"]
+		require.NotNil(t, p)
+		assert.Empty(t, p.Licenses)
+		assert.Empty(t, p.License)
+	})
 }
 
 // Every renderer reads Asset.Platform unguarded, so an imported document that
@@ -199,5 +211,24 @@ func TestRenderersHandleABomWithNoPlatform(t *testing.T) {
 				require.NoError(t, New(format).Render(&b, bom))
 			})
 		})
+	}
+}
+
+// Which absence sentinels a parser filters is its decision, not a contract, and
+// getting it wrong is silent in either direction: a filtered value that should
+// have been a license disappears, and an unfiltered one becomes a license the
+// package never had.
+func TestImportedLicenseValue(t *testing.T) {
+	for _, in := range []string{"NONE", "NOASSERTION", "none", "noassertion", " NONE ", "NoAssertion"} {
+		assert.Empty(t, importedLicenseValue(in), "%q states absence, not a license", in)
+	}
+	for in, want := range map[string]string{
+		"MIT":               "MIT",
+		"  Apache-2.0  ":    "Apache-2.0",
+		"MIT OR Apache-2.0": "MIT OR Apache-2.0",
+		// Not a sentinel: a real identifier that merely starts with the letters.
+		"NONE-OF-YOUR-BUSINESS": "NONE-OF-YOUR-BUSINESS",
+	} {
+		assert.Equal(t, want, importedLicenseValue(in))
 	}
 }

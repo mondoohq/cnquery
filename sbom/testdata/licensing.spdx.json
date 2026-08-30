@@ -4,7 +4,12 @@
   "SPDXID": "SPDXRef-DOCUMENT",
   "name": "licensing-fixture",
   "documentNamespace": "https://mondoo.com/spdx/licensing-fixture",
-  "creationInfo": { "created": "2026-08-30T09:00:00Z", "creators": ["Tool: fixture"] },
+  "creationInfo": {
+    "created": "2026-08-30T09:00:00Z",
+    "creators": [
+      "Tool: fixture"
+    ]
+  },
   "packages": [
     {
       "name": "declared-and-concluded",
@@ -19,7 +24,11 @@
       "copyrightText": "Copyright (c) 2019 Example Corp",
       "supplier": "Organization: Example Corp",
       "externalRefs": [
-        {"referenceCategory": "PACKAGE-MANAGER", "referenceType": "purl", "referenceLocator": "pkg:npm/declared-and-concluded@1.0.0"}
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/declared-and-concluded@1.0.0"
+        }
       ]
     },
     {
@@ -31,7 +40,11 @@
       "primaryPackagePurpose": "APPLICATION",
       "licenseDeclared": "Apache-2.0",
       "externalRefs": [
-        {"referenceCategory": "PACKAGE-MANAGER", "referenceType": "purl", "referenceLocator": "pkg:npm/declared-only@2.0.0"}
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/declared-only@2.0.0"
+        }
       ]
     },
     {
@@ -44,7 +57,27 @@
       "licenseDeclared": "NOASSERTION",
       "licenseConcluded": "NOASSERTION",
       "externalRefs": [
-        {"referenceCategory": "PACKAGE-MANAGER", "referenceType": "purl", "referenceLocator": "pkg:npm/states-nothing@3.0.0"}
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/states-nothing@3.0.0"
+        }
+      ]
+    },
+    {
+      "name": "states-none",
+      "SPDXID": "SPDXRef-Package-4",
+      "versionInfo": "4.0.0",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "primaryPackagePurpose": "APPLICATION",
+      "licenseConcluded": "NONE",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/states-none@4.0.0"
+        }
       ]
     }
   ]

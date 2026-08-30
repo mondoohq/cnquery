@@ -44,7 +44,7 @@ func (s *Protobom) Parse(f io.ReadSeeker) (*Sbom, error) {
 // acquisitions rather than being merged into one list.
 func readNodeLicensing(pkg *Package, node *protobom_sbom.Node) {
 	for _, l := range node.GetLicenses() {
-		if entry := DeclaredLicense(l); entry != nil {
+		if entry := DeclaredLicense(importedLicenseValue(l)); entry != nil {
 			pkg.Licenses = append(pkg.Licenses, entry)
 		}
 	}
@@ -60,7 +60,7 @@ func readNodeLicensing(pkg *Package, node *protobom_sbom.Node) {
 	// 0: reporting 1.0 would put an imported conclusion that was never scored
 	// alongside one that scored perfectly, which is the distinction the field
 	// exists to preserve. Both renderers say nothing about a zero.
-	if entry := ConcludedLicense(node.GetLicenseConcluded(), "", 0); entry != nil {
+	if entry := ConcludedLicense(importedLicenseValue(node.GetLicenseConcluded()), "", 0); entry != nil {
 		pkg.Licenses = append(pkg.Licenses, entry)
 	}
 
@@ -78,7 +78,7 @@ func readNodeLicensing(pkg *Package, node *protobom_sbom.Node) {
 		}
 	}
 	if pkg.License == "" {
-		pkg.License = strings.TrimSpace(node.GetLicenseConcluded())
+		pkg.License = importedLicenseValue(node.GetLicenseConcluded())
 	}
 
 	if c := strings.TrimSpace(node.GetCopyright()); c != "" {
@@ -91,6 +91,27 @@ func readNodeLicensing(pkg *Package, node *protobom_sbom.Node) {
 			break
 		}
 	}
+}
+
+// importedLicenseValue returns a license value from an imported document, or ""
+// when the document is using SPDX's vocabulary to say it has none to give.
+//
+// NONE and NOASSERTION are how the spec states absence: one means the package is
+// under no license, the other that the document does not know. Neither is a
+// license, but both are identifier-shaped, so nothing about their spelling stops
+// them becoming a license named "NONE" -- reported to a consumer as a fact about
+// the package, and indistinguishable from one the document actually stated.
+//
+// protobom already drops NOASSERTION and passes NONE through, so only one of the
+// two reaches this today. Both are handled because which sentinels a parser
+// filters is its decision and not a contract, and the failure is silent in
+// either direction.
+func importedLicenseValue(value string) string {
+	value = strings.TrimSpace(value)
+	if strings.EqualFold(value, "NONE") || strings.EqualFold(value, "NOASSERTION") {
+		return ""
+	}
+	return value
 }
 
 // licenseValueOf returns whichever of the three mutually exclusive value fields
