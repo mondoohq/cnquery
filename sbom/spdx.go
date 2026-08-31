@@ -384,18 +384,18 @@ const spdxDataLicense = "CC0-1.0"
 // same asset distinguishable rather than colliding.
 const spdxNamespacePrefix = "https://mondoo.com/spdx/"
 
-// spdxUnnamedDocument names a document whose asset does not name itself. The
-// field is mandatory and free text, and an empty one leaves a consumer unable
-// to refer to the document at all -- NOASSERTION is not used here because it is
-// an assertion about a license or a supplier, not a stand-in for a title.
-const spdxUnnamedDocument = "sbom"
-
 // spdxDocumentName is what the document calls itself: the asset it describes.
+//
+// The fallback is shared with the CycloneDX renderer, because it answers the
+// same question from the same empty field -- what to call a subject that does
+// not name itself -- and the two documents describing one BOM should not
+// disagree about it. NOASSERTION is not used here: it is an assertion about a
+// license or a supplier, not a stand-in for a title.
 func spdxDocumentName(bom *Sbom) string {
 	if name := strings.TrimSpace(bom.GetAsset().GetName()); name != "" {
 		return name
 	}
-	return spdxUnnamedDocument
+	return unnamedSubject
 }
 
 // spdxDocumentNamespace builds the unique URI every SPDX document must carry.

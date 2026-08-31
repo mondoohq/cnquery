@@ -38,26 +38,26 @@ type CycloneDX struct {
 func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 	sbom := cyclonedx.NewBOM()
 	sbom.SerialNumber = uuid.New().URN()
+	// The subject's name, which the root component below is required to carry.
+	// Read through the getters: a hand-built BOM need not populate Asset or
+	// Generator, and a renderer that dies on a missing metadata field reports
+	// nothing about the packages it could have listed.
+	subject := unnamedSubject
+	if name := strings.TrimSpace(bom.GetAsset().GetName()); name != "" {
+		subject = name
+	}
+
 	sbom.Metadata = &cyclonedx.Metadata{
 		Timestamp: time.Now().Format(time.RFC3339),
-		Tools: &cyclonedx.ToolsChoice{
-			Components: &[]cyclonedx.Component{
-				{
-					Type:    cyclonedx.ComponentTypeApplication,
-					Author:  bom.Generator.Vendor,
-					Name:    bom.Generator.Name,
-					Version: bom.Generator.Version,
-				},
-			},
-		},
+		Tools:     cycloneDXTools(bom.GetGenerator()),
 		Component: &cyclonedx.Component{
 			// Deterministic (was a per-render UUID) so the document's root
 			// component id is stable across renders.
-			BOMRef: "root:" + bom.Asset.Name,
+			BOMRef: "root:" + subject,
 			// TODO: understand the device type
 			// Type: cyclonedx.ComponentTypeContainer,
 			Type: cyclonedx.ComponentTypeDevice,
-			Name: bom.Asset.Name,
+			Name: subject,
 		},
 	}
 
@@ -79,19 +79,19 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 	// was the only renderer that dereferenced it unguarded: SPDX and the table
 	// both render a BOM without one, and cnquery_bom.go guards the same field,
 	// so the package already treats a nil platform as something that reaches it.
-	if bom.Asset.Platform != nil && bom.Asset.Platform.Name != "" {
+	if platform := bom.GetAsset().GetPlatform(); platform.GetName() != "" {
 		cpe := ""
-		if len(bom.Asset.Platform.Cpes) > 0 {
-			cpe = bom.Asset.Platform.Cpes[0]
+		if len(platform.GetCpes()) > 0 {
+			cpe = platform.GetCpes()[0]
 		}
 
-		osRef := "os:" + bom.Asset.Platform.Name
+		osRef := "os:" + platform.GetName()
 		emitted[osRef] = true
 		components = append(components, cyclonedx.Component{
 			BOMRef:  osRef,
 			Type:    cyclonedx.ComponentTypeOS,
-			Name:    bom.Asset.Platform.Name,
-			Version: bom.Asset.Platform.Version,
+			Name:    platform.GetName(),
+			Version: platform.GetVersion(),
 			CPE:     cpe,
 		})
 	}
@@ -383,6 +383,31 @@ var familyMap = map[string][]string{
 	"alpine":  {"linux", "unix", "os"},
 	"fedora":  {"linux", "unix", "os"},
 	"rhel":    {"linux", "unix", "os"},
+}
+
+// cycloneDXTools renders the tool that produced the document, or nothing when
+// no tool is named.
+//
+// A component's name is required by the schema, so a generator that names no
+// tool cannot be rendered as one: the entry would be a component called "",
+// which is the nameless-component shape a consumer has to recognise as junk and
+// filter. `tools` is optional, so leaving it out says the same thing honestly.
+// The reader already tolerates its absence.
+func cycloneDXTools(g *Generator) *cyclonedx.ToolsChoice {
+	name := strings.TrimSpace(g.GetName())
+	if name == "" {
+		return nil
+	}
+	return &cyclonedx.ToolsChoice{
+		Components: &[]cyclonedx.Component{
+			{
+				Type:    cyclonedx.ComponentTypeApplication,
+				Author:  strings.TrimSpace(g.GetVendor()),
+				Name:    name,
+				Version: strings.TrimSpace(g.GetVersion()),
+			},
+		},
+	}
 }
 
 // cycloneDXComponentLicenses renders every license the model carries onto the
