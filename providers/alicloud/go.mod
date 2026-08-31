@@ -12,25 +12,25 @@ require (
 	github.com/alibabacloud-go/cloudsso-20210515 v1.6.3
 	github.com/alibabacloud-go/config-20200907/v4 v4.2.3
 	github.com/alibabacloud-go/cr-20181201/v3 v3.2.2
-	github.com/alibabacloud-go/cs-20151215/v8 v8.1.3
+	github.com/alibabacloud-go/cs-20151215/v8 v8.2.0
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.4
 	github.com/alibabacloud-go/ddoscoo-20200101/v5 v5.0.2
 	github.com/alibabacloud-go/dds-20151201/v10 v10.4.2
-	github.com/alibabacloud-go/ecs-20140526/v7 v7.10.0
+	github.com/alibabacloud-go/ecs-20140526/v7 v7.11.0
 	github.com/alibabacloud-go/elasticsearch-20170613/v6 v6.3.3
 	github.com/alibabacloud-go/ess-20220222/v2 v2.13.3
 	github.com/alibabacloud-go/fc-20230330/v4 v4.8.2
 	github.com/alibabacloud-go/kms-20160120/v4 v4.3.0
 	github.com/alibabacloud-go/nas-20170626/v4 v4.7.0
 	github.com/alibabacloud-go/nlb-20220430/v4 v4.1.3
-	github.com/alibabacloud-go/polardb-20170801/v9 v9.0.0
+	github.com/alibabacloud-go/polardb-20170801/v9 v9.1.0
 	github.com/alibabacloud-go/r-kvstore-20150101/v7 v7.6.0
 	github.com/alibabacloud-go/ram-20150501/v2 v2.2.1
 	github.com/alibabacloud-go/rds-20140815/v16 v16.9.1
 	github.com/alibabacloud-go/resourcemanager-20200331/v3 v3.5.1
 	github.com/alibabacloud-go/sas-20181203/v9 v9.3.3
 	github.com/alibabacloud-go/slb-20140515/v4 v4.0.14
-	github.com/alibabacloud-go/sls-20201230/v6 v6.13.0
+	github.com/alibabacloud-go/sls-20201230/v6 v6.14.0
 	github.com/alibabacloud-go/sts-20150401/v2 v2.1.0
 	github.com/alibabacloud-go/tea v1.5.3
 	github.com/alibabacloud-go/vpc-20160428/v7 v7.2.5
@@ -39,7 +39,7 @@ require (
 	github.com/aliyun/credentials-go v1.4.13
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20260827233456-d1d441d21624
+	go.mondoo.com/mql v0.0.0-20260831061709-d8437f66ebc6
 )
 
 require (
@@ -60,19 +60,19 @@ require (
 	github.com/alibabacloud-go/endpoint-util v1.1.0 // indirect
 	github.com/alibabacloud-go/openapi-util v0.1.2 // indirect
 	github.com/alibabacloud-go/tea-utils/v2 v2.0.9 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.45.0 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.33.0 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.20.0 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.19.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.0 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.45.1 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.33.1 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.20.1 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.19.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.19 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.7.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.35.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.40.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.47.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.7.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.35.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.40.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.47.1 // indirect
 	github.com/aws/smithy-go v1.28.1 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
