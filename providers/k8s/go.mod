@@ -6,12 +6,12 @@ go 1.26.6
 
 require (
 	github.com/cockroachdb/errors v1.14.0
-	github.com/gobwas/glob v0.2.3
+	github.com/gobwas/glob v1.0.0
 	github.com/google/go-containerregistry v0.21.7 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20260828013304-1ca40436f767
+	go.mondoo.com/mql v0.0.0-20260831061709-d8437f66ebc6
 	k8s.io/api v0.37.0
 	k8s.io/apiextensions-apiserver v0.37.0
 	k8s.io/apimachinery v0.37.0
@@ -22,9 +22,9 @@ require (
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.23.1
-	github.com/aws/aws-sdk-go-v2 v1.45.0
-	github.com/aws/aws-sdk-go-v2/config v1.33.0
-	github.com/aws/aws-sdk-go-v2/service/sts v1.47.0
+	github.com/aws/aws-sdk-go-v2 v1.45.1
+	github.com/aws/aws-sdk-go-v2/config v1.33.1
+	github.com/aws/aws-sdk-go-v2/service/sts v1.47.1
 	github.com/aws/smithy-go v1.28.1
 	github.com/distribution/reference v0.6.0
 	golang.org/x/oauth2 v0.36.0
@@ -54,21 +54,21 @@ require (
 	github.com/alecthomas/participle v0.3.0 // indirect
 	github.com/alecthomas/participle/v2 v2.1.4 // indirect
 	github.com/anchore/go-struct-converter v0.1.0 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.20.0 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.19.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.325.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.37.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.62.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.43.0 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.20.1 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.19.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.325.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.37.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.62.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.43.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.19 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.7.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.75.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.35.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.40.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.7.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.75.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.35.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.40.1 // indirect
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.12.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -202,7 +202,7 @@ require (
 	github.com/prometheus/client_golang v1.24.1 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.70.1 // indirect
-	github.com/prometheus/procfs v0.21.1 // indirect
+	github.com/prometheus/procfs v0.22.0 // indirect
 	github.com/protobom/protobom v0.6.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
@@ -228,7 +228,7 @@ require (
 	github.com/ulikunitz/xz v0.5.16 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20260827153822-e77029cf444e // indirect
+	go.mondoo.com/mondoo-go v0.0.0-20260829001136-4bd66bb0ea33 // indirect
 	go.mondoo.com/ranger-rpc v0.8.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.71.0 // indirect
