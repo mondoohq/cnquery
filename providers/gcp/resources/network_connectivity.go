@@ -159,7 +159,7 @@ func (g *mqlGcpProjectNetworkConnectivityService) hubs() ([]any, error) {
 			return nil, err
 		}
 
-		routingVpcs, err := convert.JsonToDictSlice(hub.GetRoutingVpcs())
+		routingVpcs, err := protoToDictSlice(hub.GetRoutingVpcs())
 		if err != nil {
 			return nil, err
 		}
@@ -265,7 +265,7 @@ func (g *mqlGcpProjectNetworkConnectivityService) spokes() ([]any, error) {
 			return nil, err
 		}
 
-		reasons, err := convert.JsonToDictSlice(spoke.GetReasons())
+		reasons, err := protoToDictSlice(spoke.GetReasons())
 		if err != nil {
 			return nil, err
 		}

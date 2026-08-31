@@ -93,7 +93,10 @@ func newMqlInsight(runtime *plugin.Runtime, item *recommenderpb.Insight) (*mqlGc
 	if item.GetContent() != nil {
 		content = item.GetContent().AsMap()
 	}
-	stateInfo, err := convert.JsonToDict(item.GetStateInfo())
+	// protojson, not encoding/json: encoding/json over a protobuf-generated
+	// struct emits the snake_case json tags, so this dict documented `state`
+	// and `stateMetadata` while carrying `state` and `state_metadata`.
+	stateInfo, err := protoToDict(item.GetStateInfo())
 	if err != nil {
 		return nil, err
 	}

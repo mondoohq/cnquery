@@ -11,7 +11,6 @@ import (
 
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/gcp/connection"
 
 	recommender "cloud.google.com/go/recommender/apiv1"
@@ -27,12 +26,28 @@ func newMqlRecommendation(runtime *plugin.Runtime, item *recommenderpb.Recommend
 		category = item.PrimaryImpact.Category.String()
 	}
 
-	primaryImpact, _ := convert.JsonToDict(item.PrimaryImpact)
-	additionalImpact, _ := convert.JsonToDictSlice(item.AdditionalImpact)
-	content, _ := convert.JsonToDict(item.Content)
+	// protojson, not encoding/json: encoding/json over a protobuf-generated
+	// struct emits the snake_case json tags and renders enums as their numeric
+	// values, so `category` came back as `2` and the projection oneof appeared
+	// under its bare Go field name rather than as `costProjection` and friends.
+	primaryImpact, err := protoToDict(item.PrimaryImpact)
+	if err != nil {
+		return nil, err
+	}
+	additionalImpact, err := protoToDictSlice(item.AdditionalImpact)
+	if err != nil {
+		return nil, err
+	}
+	content, err := protoToDict(item.Content)
+	if err != nil {
+		return nil, err
+	}
 	lastRefreshTime := item.LastRefreshTime.AsTime()
 	priority := item.Priority.String()
-	state, _ := convert.JsonToDict(item.StateInfo)
+	state, err := protoToDict(item.StateInfo)
+	if err != nil {
+		return nil, err
+	}
 
 	// projects/{projectid}/locations/{zone}/recommenders/{recommender}/recommendations/{id}
 	values := strings.Split(item.Name, "/")
