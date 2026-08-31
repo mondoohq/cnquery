@@ -456,3 +456,88 @@ func TestParser_OptionalChaining_trailingWithOperator(t *testing.T) {
 	require.Len(t, res.Expressions[0].Operations, 1)
 	assert.Equal(t, OpEqual, res.Expressions[0].Operations[0].Operator)
 }
+
+// TestParser_StringEscapes pins the escape handling of string literals. Before
+// the lexer learned about escape pairs, `"[^"]*"` ended the literal at the
+// backslash in `\"`, so `"a\"b"` lexed as the string `a\` followed by the
+// identifier `b` and an unterminated quote. The failure surfaced far from its
+// cause ("cannot find resource for identifier 'b'", or a truncated string with
+// no error at all), so every case below is asserted by value.
+func TestParser_StringEscapes(t *testing.T) {
+	tests := []struct {
+		code string
+		res  string
+	}{
+		// the bug: a double quote inside a double-quoted string
+		{`"a\"b"`, `a"b`},
+		{`"\""`, `"`},
+		{`"he said \"hi\""`, `he said "hi"`},
+		// ... and a single quote inside a single-quoted string
+		{`'a\'b'`, `a'b`},
+		{`'\''`, `'`},
+		// both quote styles in one literal, previously unrepresentable
+		{`"he said \"hi\" to 'me'"`, `he said "hi" to 'me'`},
+		{`'he said "hi" to \'me\''`, `he said "hi" to 'me'`},
+		// inline JSON, the shape that found this
+		{`"{\"a\": 1}"`, `{"a": 1}`},
+
+		// escapes that already worked and must keep their values
+		{`"a\nb"`, "a\nb"},
+		{`"a\tb"`, "a\tb"},
+		{`"a\\b"`, `a\b`},
+		{`"\\"`, `\`},
+		{`"tab\there"`, "tab\there"},
+		// an unknown escape still collapses to its second character, so a
+		// Windows path keeps losing its separators rather than changing shape
+		{`"C:\path"`, `C:path`},
+		{`""`, ``},
+
+		// single-quoted strings stay raw for everything but \'
+		{`'h\ni'`, `h\ni`},
+		{`'h\i'`, `h\i`},
+		{`'a\\b'`, `a\\b`},
+		{`''`, ``},
+	}
+
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.code, func(t *testing.T) {
+			res, err := Parse(test.code)
+			require.NoError(t, err)
+			require.Len(t, res.Expressions, 1, "the literal must consume the whole source")
+
+			op := res.Expressions[0].Operand
+			require.NotNil(t, op)
+			require.Empty(t, op.Calls, "a bare literal must not pick up trailing calls")
+			require.NotNil(t, op.Value.String, "must parse as a string, not another value type")
+			assert.Equal(t, test.res, *op.Value.String)
+		})
+	}
+}
+
+// TestParser_StringEscapes_unterminated rejects a literal whose closing quote is
+// consumed by a trailing backslash. `"a\"` used to lex as the string `a\`; now
+// the backslash escapes the closing quote and the literal is unterminated,
+// which is a deliberate tightening.
+func TestParser_StringEscapes_unterminated(t *testing.T) {
+	for _, code := range []string{`"a\"`, `'a\'`, `"\"`, `'\'`} {
+		t.Run(code, func(t *testing.T) {
+			_, err := Parse(code)
+			assert.Error(t, err, "an unterminated string literal must not parse")
+		})
+	}
+}
+
+// TestParser_LexStringEscapes checks that an escaped quote stays inside one
+// String token instead of splitting the source into three.
+func TestParser_LexStringEscapes(t *testing.T) {
+	for _, code := range []string{`"a\"b"`, `'a\'b'`, `"a\\"`, `'a\\'`} {
+		t.Run(code, func(t *testing.T) {
+			res, err := Lex(code)
+			require.NoError(t, err)
+			require.Len(t, res, 1, "the whole literal must be a single token")
+			assert.Equal(t, String, res[0].Type)
+			assert.Equal(t, code, res[0].Value)
+		})
+	}
+}
