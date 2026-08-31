@@ -60,14 +60,29 @@ type coordinator struct {
 	lastConnectionID uint32
 	connectionsLock  sync.Mutex
 
+	// providersMu guards providers. It is a leaf lock: it is taken while
+	// holding mutex (unsafeStartProvider) and while holding schema.sync
+	// (extensibleSchema.unsafeLoadAll -> LoadSchema), so it must never be
+	// held while acquiring either of those.
+	//
+	// providers is only ever replaced wholesale (SetProviders), never
+	// mutated in place: Providers hands the map out after releasing
+	// providersMu, and callers hold that reference unguarded.
+	providersMu sync.RWMutex
 	providers   Providers
 	runningByID map[string]*RunningProvider
 
 	unprocessedRuntimes []*Runtime
 	runtimes            map[string]*Runtime
 	runtimeCnt          int
-	mutex               sync.Mutex
-	schema              extensibleSchema
+	// mutex guards runningByID and the runtime bookkeeping. Lock order is
+	// mutex -> schema.sync -> providersMu: unsafeStartProvider holds mutex
+	// while it calls schema.Add (so a provider is never visible before its
+	// schema is registered), and schema lookups hold schema.sync while they
+	// call LoadSchema, which therefore must not take mutex. Doing so wedged
+	// scans in an ABBA deadlock; see TestCoordinatorSchemaLockOrder.
+	mutex  sync.Mutex
+	schema extensibleSchema
 }
 
 type builtinProvider struct {
@@ -281,15 +296,17 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 		return x.Runtime, nil
 	}
 
-	if c.providers == nil {
+	providers := c.Providers()
+	if providers == nil {
 		var err error
-		c.providers, err = ListActive()
+		providers, err = ListActive()
 		if err != nil {
 			return nil, err
 		}
+		c.SetProviders(providers)
 	}
 
-	provider, ok := c.providers[id]
+	provider, ok := providers[id]
 	if !ok {
 		return nil, errors.New("cannot find provider " + id)
 	}
@@ -391,10 +408,17 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 }
 
 func (c *coordinator) SetProviders(providers Providers) {
+	c.providersMu.Lock()
 	c.providers = providers
+	c.providersMu.Unlock()
 }
 
+// Providers returns the current provider map. It is safe to read without
+// providersMu only because the map is replaced, never mutated (see the
+// field); don't write to the returned map.
 func (c *coordinator) Providers() Providers {
+	c.providersMu.RLock()
+	defer c.providersMu.RUnlock()
 	return c.providers
 }
 
@@ -440,14 +464,20 @@ func (c *coordinator) Schema() resources.ResourcesSchema {
 // LoadSchema for a given provider. Providers also cache their Schemas, so
 // calling this with the same provider multiple times will use the loaded
 // cached schema after the first call.
+//
+// It is called by extensibleSchema with schema.sync held, so it must not
+// take c.mutex (unsafeStartProvider holds c.mutex while it waits for
+// schema.sync in schema.Add — the two would deadlock). Nothing here needs
+// it: builtinProviders is immutable, providers has its own lock, and
+// LoadResources synchronizes itself.
 func (c *coordinator) LoadSchema(name string) (resources.ResourcesSchema, error) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
 	if x, ok := builtinProviders[name]; ok {
 		return x.Runtime.Schema, nil
 	}
 
+	c.providersMu.RLock()
 	provider, ok := c.providers[name]
+	c.providersMu.RUnlock()
 	if !ok {
 		return nil, errors.New("cannot find provider '" + name + "'")
 	}
