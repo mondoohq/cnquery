@@ -127,13 +127,17 @@ func TestRedactedAuthSettingsDropsEveryProviderSecret(t *testing.T) {
 func TestCreateRedisInstanceRawDataLeavesTheSourceAlone(t *testing.T) {
 	bare := &armredis.ResourceInfo{Name: to.Ptr("no-properties")}
 
-	_, err := createRedisInstanceRawData(nil, bare)
+	_, err := createRedisInstanceRawData(azureTestRuntime(), bare)
 	require.NoError(t, err)
 
 	assert.Nil(t, bare.Properties,
 		"a cache that arrived without properties must still have none afterwards")
 
+	// The id is what keys the configuration sub-resource; a cache carrying a
+	// configuration block and no id is rejected rather than given a colliding
+	// cache key, so the fixture carries the id ARM always reports.
 	withSecret := &armredis.ResourceInfo{
+		ID:   to.Ptr("/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Cache/redis/has-properties"),
 		Name: to.Ptr("has-properties"),
 		Properties: &armredis.Properties{
 			RedisConfiguration: &armredis.CommonPropertiesRedisConfiguration{
@@ -142,7 +146,7 @@ func TestCreateRedisInstanceRawDataLeavesTheSourceAlone(t *testing.T) {
 		},
 	}
 
-	args, err := createRedisInstanceRawData(nil, withSecret)
+	args, err := createRedisInstanceRawData(azureTestRuntime(), withSecret)
 	require.NoError(t, err)
 
 	// The secret is gone from both fields it used to reach.
