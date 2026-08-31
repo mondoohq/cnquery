@@ -908,6 +908,14 @@ func lastPathSegment(s string) string {
 }
 
 func (g *mqlGcpProjectPubsubService) schemas() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}

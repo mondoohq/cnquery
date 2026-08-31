@@ -73,6 +73,7 @@ func vertexaiEndpoint(region string) string {
 }
 
 type mqlGcpProjectVertexaiServiceInternal struct {
+	serviceGate
 	// skippedRegions tracks regions where the API is not available, keyed by
 	// resource kind. It MUST be per-kind: Vertex AI sub-services have very
 	// different regional footprints (the RAG data service is available in a
@@ -133,7 +134,24 @@ func (g *mqlGcpProject) vertexai() (*mqlGcpProjectVertexaiService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectVertexaiService), nil
+
+	serviceEnabled, err := g.isServiceEnabled(service_aiplatform)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := res.(*mqlGcpProjectVertexaiService)
+	svc.recordEnabled(serviceEnabled)
+	if !serviceEnabled {
+		log.Debug().Str("service", service_aiplatform).Msg("gcp service is not enabled, skipping")
+	}
+
+	return svc, nil
+}
+
+// isEnabled reports whether the API is enabled on this project.
+func (g *mqlGcpProjectVertexaiService) isEnabled() (bool, error) {
+	return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_aiplatform)
 }
 
 func initGcpProjectVertexaiService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -215,6 +233,14 @@ func (g *mqlGcpProjectVertexaiService) listAcrossRegions(
 }
 
 func (g *mqlGcpProjectVertexaiService) models() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -329,6 +355,14 @@ func (g *mqlGcpProjectVertexaiServiceModel) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiService) endpoints() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -635,6 +669,14 @@ func (d *mqlGcpProjectVertexaiServiceEndpointDeployment) serviceAccount() (*mqlG
 }
 
 func (g *mqlGcpProjectVertexaiService) pipelineJobs() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -793,6 +835,14 @@ func (g *mqlGcpProjectVertexaiServiceIndexEndpoint) networkRef() (*mqlGcpProject
 }
 
 func (g *mqlGcpProjectVertexaiService) datasets() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -872,6 +922,14 @@ func (g *mqlGcpProjectVertexaiServiceDataset) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiService) featureOnlineStores() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -967,6 +1025,14 @@ func (g *mqlGcpProjectVertexaiServiceTensorboard) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiService) tensorboards() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -1415,6 +1481,14 @@ func mqlVertexAICustomJobFromProto(runtime *plugin.Runtime, job *aiplatformpb.Cu
 }
 
 func (g *mqlGcpProjectVertexaiService) customJobs() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -1475,6 +1549,14 @@ func (g *mqlGcpProjectVertexaiServiceIndex) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiService) indexes() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -1571,6 +1653,14 @@ func (g *mqlGcpProjectVertexaiServiceIndexEndpoint) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiService) indexEndpoints() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -1659,6 +1749,14 @@ func (g *mqlGcpProjectVertexaiServiceMetadataStore) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiService) metadataStores() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -1733,6 +1831,14 @@ func (g *mqlGcpProjectVertexaiService) metadataStores() ([]any, error) {
 }
 
 func (g *mqlGcpProjectVertexaiService) notebookRuntimes() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -1851,6 +1957,14 @@ func (g *mqlGcpProjectVertexaiServiceNotebookRuntime) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiService) notebookRuntimeTemplates() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -1976,6 +2090,14 @@ func (g *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) id() (string, erro
 }
 
 func (g *mqlGcpProjectVertexaiService) notebookExecutionJobs() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -2060,6 +2182,14 @@ func (g *mqlGcpProjectVertexaiServiceNotebookExecutionJob) id() (string, error) 
 }
 
 func (g *mqlGcpProjectVertexaiService) reasoningEngines() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -2160,6 +2290,14 @@ func (a *mqlGcpProjectVertexaiServiceReasoningEngine) serviceAccount() (*mqlGcpP
 }
 
 func (g *mqlGcpProjectVertexaiService) ragCorpora() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -2234,6 +2372,14 @@ func (g *mqlGcpProjectVertexaiServiceRagCorpus) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiService) featureGroups() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -2303,6 +2449,14 @@ func (g *mqlGcpProjectVertexaiServiceFeatureGroup) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiService) persistentResources() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -2391,6 +2545,14 @@ func (g *mqlGcpProjectVertexaiServicePersistentResource) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiService) schedules() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -2537,6 +2699,14 @@ func initGcpProjectVertexaiServiceSchedule(runtime *plugin.Runtime, args map[str
 }
 
 func (g *mqlGcpProjectVertexaiService) deploymentResourcePools() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -2612,6 +2782,14 @@ func (g *mqlGcpProjectVertexaiServiceDeploymentResourcePool) id() (string, error
 }
 
 func (g *mqlGcpProjectVertexaiService) cachedContents() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -2687,6 +2865,14 @@ func (g *mqlGcpProjectVertexaiServiceCachedContent) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiService) batchPredictionJobs() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -2776,6 +2962,14 @@ func (g *mqlGcpProjectVertexaiServiceBatchPredictionJob) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiService) tuningJobs() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -2865,6 +3059,14 @@ func (g *mqlGcpProjectVertexaiServiceTuningJob) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiService) trainingPipelines() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -2948,6 +3150,14 @@ func (g *mqlGcpProjectVertexaiServiceTrainingPipeline) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiService) hyperparameterTuningJobs() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -3039,6 +3249,14 @@ func (g *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) id() (string, erro
 }
 
 func (g *mqlGcpProjectVertexaiService) modelDeploymentMonitoringJobs() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}

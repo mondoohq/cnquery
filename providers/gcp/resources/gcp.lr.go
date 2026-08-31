@@ -69208,7 +69208,7 @@ func (c *mqlGcpAccessApprovalSettings) GetInvalidKeyVersion() *plugin.TValue[boo
 type mqlGcpProjectMonitoringService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectMonitoringServiceInternal it will be used here
+	mqlGcpProjectMonitoringServiceInternal
 	ProjectId            plugin.TValue[string]
 	AlertPolicies        plugin.TValue[[]any]
 	UptimeCheckConfigs   plugin.TValue[[]any]
