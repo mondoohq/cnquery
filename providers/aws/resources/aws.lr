@@ -2372,6 +2372,11 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   // Region the key lives in
   region string
   // Whether key rotation is enabled
+  //
+  // Null when the key policy withholds kms:GetKeyRotationStatus, which
+  // AWS-managed keys such as alias/aws/acm do even for an account
+  // administrator. Null means the rotation state could not be read, not that
+  // rotation is off.
   keyRotationEnabled() bool
   // Raw key metadata as returned by the KMS DescribeKey API
   //
@@ -2402,14 +2407,25 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   // Description of the key
   description() string
   // Grants for the key
+  //
+  // Null when the key policy withholds kms:ListGrants, since a partial list
+  // cannot be told apart from a complete one.
   grants() []aws.kms.grant
   // Whether the key is managed by AWS or the customer (AWS or CUSTOMER)
   keyManager() string
   // Key policy document in JSON format
+  //
+  // Null when kms:GetKeyPolicy is denied. Every KMS key has a key policy, so
+  // an empty document is never a valid reading of one.
   policy() string
   // Parsed statements from the key policy
+  //
+  // Null when the key policy could not be read.
   policyStatements() []aws.iam.policyStatement
   // Whether the resource policy grants public access (a wildcard principal with no scoping conditions)
+  //
+  // Null when the key policy could not be read, which leaves the answer
+  // unknown rather than false.
   isPublic() bool
   // IAM Access Analyzer findings reporting external or public access to this resource
   externalAccessFindings() []aws.iam.accessAnalyzer.finding
@@ -2435,11 +2451,21 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   //
   // Shape (when present): `{id: "external-key-id"}` — the identifier the external key store proxy uses to address the external key. Null for keys not backed by an External Key Store.
   xksKeyConfiguration() dict
-  // Number of days between each automatic rotation (default 365)
+  // Number of days between each automatic rotation
+  //
+  // Null when the key does not rotate automatically, since AWS reports no
+  // period for a key with rotation off, and null when the rotation status
+  // could not be read. Automatic rotation defaults to 365 days.
   rotationPeriodInDays() int
   // Next date that KMS will automatically rotate the key material
+  //
+  // Null when the key does not rotate automatically, and null when the
+  // rotation status could not be read.
   nextRotationAt() time
   // Date and time an in-progress on-demand rotation was initiated
+  //
+  // Null when no on-demand rotation is in progress, and null when the
+  // rotation status could not be read.
   onDemandRotationStartedAt() time
   // Encryption algorithms the key supports (e.g., SYMMETRIC_DEFAULT, RSAES_OAEP_SHA_1, RSAES_OAEP_SHA_256)
   encryptionAlgorithms() []string
@@ -2455,9 +2481,12 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   validTo() time
   // Last successful cryptographic operation
   //
-  // For example: Decrypt, Encrypt, Sign, Verify, GenerateDataKey, GenerateMac, ReEncrypt, DeriveSharedSecret. Empty if the key has not been used since KMS began tracking.
+  // For example: Decrypt, Encrypt, Sign, Verify, GenerateDataKey, GenerateMac, ReEncrypt, DeriveSharedSecret. Null if the key has not been used since KMS began tracking, and null when kms:GetKeyLastUsage is denied.
   lastUsageOperation() string
-  // Date the key was last used for a successful cryptographic operation. Null if the key has not been used since KMS began tracking.
+  // Date the key was last used for a successful cryptographic operation
+  //
+  // Null if the key has not been used since KMS began tracking, and null when
+  // kms:GetKeyLastUsage is denied.
   lastUsedAt() time
   // EBS volumes encrypted with this key
   //

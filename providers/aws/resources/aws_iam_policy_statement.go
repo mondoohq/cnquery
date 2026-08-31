@@ -269,6 +269,13 @@ func (a *mqlAwsKmsKey) policyStatements() ([]any, error) {
 	if policy.Error != nil {
 		return nil, policy.Error
 	}
+	// A key policy AWS refused to disclose reads null, and its statements are
+	// unknown with it. Parsing the empty string would produce an empty
+	// statement list, which statementsAllowPublic answers "not public" for.
+	if policy.IsNull() {
+		a.PolicyStatements.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	return newPolicyStatementResources(a.MqlRuntime, a.Arn.Data, policy.Data)
 }
 
@@ -389,8 +396,27 @@ func resourceIsPublic(statements *plugin.TValue[[]any]) (bool, error) {
 	return statementsAllowPublic(statements.Data)
 }
 
+// resourceIsPublicOrUnknown is resourceIsPublic for a resource whose policy
+// read can be refused. A null statement list means the policy could not be
+// read, and "we were not allowed to look" must not be published as "not
+// public": the isPublic field is marked null instead.
+//
+// A statement list that was read and is merely empty still answers false. The
+// distinction is three-way, and collapsing the first case into the second is
+// how a denied read became a confident isPublic:false.
+func resourceIsPublicOrUnknown(statements *plugin.TValue[[]any], field *plugin.TValue[bool]) (bool, error) {
+	if statements.Error != nil {
+		return false, statements.Error
+	}
+	if statements.IsNull() {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+	return statementsAllowPublic(statements.Data)
+}
+
 func (a *mqlAwsKmsKey) isPublic() (bool, error) {
-	return resourceIsPublic(a.GetPolicyStatements())
+	return resourceIsPublicOrUnknown(a.GetPolicyStatements(), &a.IsPublic)
 }
 
 func (a *mqlAwsSnsTopic) isPublic() (bool, error) {
