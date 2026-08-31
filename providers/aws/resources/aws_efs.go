@@ -232,13 +232,13 @@ func (a *mqlAwsEfsFilesystem) backupPolicy() (any, error) {
 	return convert.JsonToDict(resp)
 }
 
-func (a *mqlAwsEfsFilesystem) backupPolicyRef() (*mqlAwsEfsBackupPolicy, error) {
+func (a *mqlAwsEfsFilesystem) automaticBackup() (*mqlAwsEfsBackupPolicy, error) {
 	resp, err := a.fetchBackupPolicy()
 	if err != nil {
 		return nil, err
 	}
 	if resp == nil || resp.BackupPolicy == nil {
-		a.BackupPolicyRef.State = plugin.StateIsSet | plugin.StateIsNull
+		a.AutomaticBackup.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := CreateResource(a.MqlRuntime, "aws.efs.backupPolicy", map[string]*llx.RawData{
@@ -586,15 +586,15 @@ func (a *mqlAwsEfsFilesystem) accessPoints() ([]any, error) {
 			}
 
 			args := map[string]*llx.RawData{
-				"__id":             llx.StringDataPtr(ap.AccessPointArn),
-				"accessPointId":    llx.StringDataPtr(ap.AccessPointId),
-				"arn":              llx.StringDataPtr(ap.AccessPointArn),
-				"name":             llx.StringDataPtr(ap.Name),
-				"lifecycleState":   llx.StringData(string(ap.LifeCycleState)),
-				"region":           llx.StringData(region),
-				"tags":             llx.MapData(efsTagsToMap(ap.Tags), types.String),
-				"posixUserRef":     mqlPosixUser,
-				"rootDirectoryRef": mqlRootDirectory,
+				"__id":           llx.StringDataPtr(ap.AccessPointArn),
+				"accessPointId":  llx.StringDataPtr(ap.AccessPointId),
+				"arn":            llx.StringDataPtr(ap.AccessPointArn),
+				"name":           llx.StringDataPtr(ap.Name),
+				"lifecycleState": llx.StringData(string(ap.LifeCycleState)),
+				"region":         llx.StringData(region),
+				"tags":           llx.MapData(efsTagsToMap(ap.Tags), types.String),
+				"posixIdentity":  mqlPosixUser,
+				"root":           mqlRootDirectory,
 			}
 
 			// Set unconditionally: a key left out of the args map leaves the

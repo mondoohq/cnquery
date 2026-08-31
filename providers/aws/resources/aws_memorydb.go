@@ -395,7 +395,7 @@ func newMqlAwsMemorydbUser(runtime *plugin.Runtime, region string, user memorydb
 			"aclNames":             llx.ArrayData(convert.SliceAnyToInterface(user.ACLNames), types.String),
 			"minimumEngineVersion": llx.StringDataPtr(user.MinimumEngineVersion),
 			"authentication":       llx.DictData(auth),
-			"authenticationRef":    mqlAuth,
+			"authenticationMode":   mqlAuth,
 			"region":               llx.StringData(region),
 		})
 	if err != nil {

@@ -751,7 +751,7 @@ func newMqlMacieBucket(runtime *plugin.Runtime, bm types.BucketMetadata, region 
 		"sharedAccess":                       llx.StringData(string(bm.SharedAccess)),
 		"publicAccess":                       llx.DictData(publicAccess),
 		"serverSideEncryption":               llx.DictData(serverSideEncryption),
-		"serverSideEncryptionRef":            mqlSse,
+		"defaultEncryption":                  mqlSse,
 		"versioning":                         llx.BoolData(versioning),
 		"allowsUnencryptedObjectUploads":     llx.StringData(string(bm.AllowsUnencryptedObjectUploads)),
 		"automatedDiscoveryMonitoringStatus": llx.StringData(string(bm.AutomatedDiscoveryMonitoringStatus)),

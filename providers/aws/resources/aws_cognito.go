@@ -255,13 +255,13 @@ func (a *mqlAwsCognitoUserPool) passwordPolicy() (any, error) {
 	return convert.JsonToDict(resp.UserPool.Policies.PasswordPolicy)
 }
 
-func (a *mqlAwsCognitoUserPool) passwordPolicyRef() (*mqlAwsCognitoUserPoolPasswordPolicy, error) {
+func (a *mqlAwsCognitoUserPool) passwordRequirements() (*mqlAwsCognitoUserPoolPasswordPolicy, error) {
 	resp, err := a.fetchDescribeUserPool()
 	if err != nil {
 		return nil, err
 	}
 	if resp == nil || resp.UserPool == nil || resp.UserPool.Policies == nil || resp.UserPool.Policies.PasswordPolicy == nil {
-		a.PasswordPolicyRef.State = plugin.StateIsSet | plugin.StateIsNull
+		a.PasswordRequirements.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	pp := resp.UserPool.Policies.PasswordPolicy
@@ -329,7 +329,7 @@ func (a *mqlAwsCognitoUserPool) usernameConfiguration() (any, error) {
 	return convert.JsonToDict(resp.UserPool.UsernameConfiguration)
 }
 
-func (a *mqlAwsCognitoUserPool) deviceConfigurationRef() (*mqlAwsCognitoDeviceConfiguration, error) {
+func (a *mqlAwsCognitoUserPool) deviceRemembering() (*mqlAwsCognitoDeviceConfiguration, error) {
 	resp, err := a.fetchDescribeUserPool()
 	if err != nil {
 		return nil, err
@@ -338,7 +338,7 @@ func (a *mqlAwsCognitoUserPool) deviceConfigurationRef() (*mqlAwsCognitoDeviceCo
 		// A user pool with device remembering deactivated returns no device
 		// configuration at all, which is not the same as one that remembers
 		// devices with both settings off.
-		a.DeviceConfigurationRef.State = plugin.StateIsSet | plugin.StateIsNull
+		a.DeviceRemembering.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	dc := resp.UserPool.DeviceConfiguration
@@ -353,13 +353,13 @@ func (a *mqlAwsCognitoUserPool) deviceConfigurationRef() (*mqlAwsCognitoDeviceCo
 	return res.(*mqlAwsCognitoDeviceConfiguration), nil
 }
 
-func (a *mqlAwsCognitoUserPool) usernameConfigurationRef() (*mqlAwsCognitoUsernameConfiguration, error) {
+func (a *mqlAwsCognitoUserPool) usernamePolicy() (*mqlAwsCognitoUsernameConfiguration, error) {
 	resp, err := a.fetchDescribeUserPool()
 	if err != nil {
 		return nil, err
 	}
 	if resp == nil || resp.UserPool == nil || resp.UserPool.UsernameConfiguration == nil {
-		a.UsernameConfigurationRef.State = plugin.StateIsSet | plugin.StateIsNull
+		a.UsernamePolicy.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := CreateResource(a.MqlRuntime, "aws.cognito.usernameConfiguration", map[string]*llx.RawData{
@@ -799,7 +799,7 @@ func newMqlAwsCognitoUserPoolClient(runtime *plugin.Runtime, region string, c *c
 		"accessTokenValidity":             llx.IntData(int64(aws.ToInt32(c.AccessTokenValidity))),
 		"idTokenValidity":                 llx.IntData(int64(aws.ToInt32(c.IdTokenValidity))),
 		"tokenValidityUnits":              llx.DictData(tokenUnits),
-		"tokenValidityUnitsRef":           mqlTokenUnits,
+		"validityUnits":                   mqlTokenUnits,
 		"explicitAuthFlows":               llx.ArrayData(authFlows, types.String),
 		"supportedIdentityProviders":      llx.ArrayData(stringsToAnyArray(c.SupportedIdentityProviders), types.String),
 		"callbackURLs":                    llx.ArrayData(stringsToAnyArray(c.CallbackURLs), types.String),

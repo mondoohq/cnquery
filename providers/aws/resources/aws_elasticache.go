@@ -980,7 +980,7 @@ func (a *mqlAwsElasticache) getUsers(conn *connection.AwsConnection) []*jobpool.
 							"status":               llx.StringDataPtr(user.Status),
 							"userGroupIds":         llx.ArrayData(groupIds, types.String),
 							"authentication":       llx.DictData(auth),
-							"authenticationRef":    mqlAuth,
+							"authenticationMode":   mqlAuth,
 						})
 					if err != nil {
 						return nil, err

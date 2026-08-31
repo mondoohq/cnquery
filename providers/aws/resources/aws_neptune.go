@@ -338,7 +338,7 @@ func newMqlAwsNeptuneInstance(runtime *plugin.Runtime, region string, instance n
 			"enabledCloudwatchLogsExports":     llx.ArrayData(convert.SliceAnyToInterface(instance.EnabledCloudwatchLogsExports), types.String),
 			"enhancedMonitoringResourceArn":    llx.StringDataPtr(instance.EnhancedMonitoringResourceArn),
 			"endpoint":                         llx.DictData(endpoint),
-			"endpointRef":                      mqlEndpoint,
+			"connectionEndpoint":               mqlEndpoint,
 			"iamDatabaseAuthenticationEnabled": llx.BoolDataPtr(instance.IAMDatabaseAuthenticationEnabled),
 			"masterUsername":                   llx.StringDataPtr(instance.MasterUsername),
 			"multiAZ":                          llx.BoolDataPtr(instance.MultiAZ),

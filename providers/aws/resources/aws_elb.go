@@ -679,16 +679,16 @@ func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
 			}
 
 			args := map[string]*llx.RawData{
-				"__id":                    llx.StringDataPtr(l.ListenerArn),
-				"arn":                     llx.StringDataPtr(l.ListenerArn),
-				"port":                    llx.IntDataPtr(l.Port),
-				"protocol":                llx.StringData(string(l.Protocol)),
-				"sslPolicy":               llx.StringDataPtr(l.SslPolicy),
-				"defaultActions":          llx.ArrayData(defaultActions, types.Dict),
-				"certificates":            llx.ArrayData(certificates, types.Dict),
-				"alpnPolicy":              llx.ArrayData(llx.TArr2Raw(l.AlpnPolicy), types.String),
-				"mutualAuthentication":    llx.DictData(mutualAuth),
-				"mutualAuthenticationRef": mqlMutualAuth,
+				"__id":                 llx.StringDataPtr(l.ListenerArn),
+				"arn":                  llx.StringDataPtr(l.ListenerArn),
+				"port":                 llx.IntDataPtr(l.Port),
+				"protocol":             llx.StringData(string(l.Protocol)),
+				"sslPolicy":            llx.StringDataPtr(l.SslPolicy),
+				"defaultActions":       llx.ArrayData(defaultActions, types.Dict),
+				"certificates":         llx.ArrayData(certificates, types.Dict),
+				"alpnPolicy":           llx.ArrayData(llx.TArr2Raw(l.AlpnPolicy), types.String),
+				"mutualAuthentication": llx.DictData(mutualAuth),
+				"mutualTls":            mqlMutualAuth,
 			}
 
 			mqlListener, err := CreateResource(a.MqlRuntime, "aws.elb.listener", args)

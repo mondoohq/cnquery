@@ -1936,7 +1936,7 @@ private aws.efs.filesystem @defaults("name id region") {
   kmsKey() aws.kms.key
   // Backup policy for the file system
   //
-  // Deprecated in favor of backupPolicyRef, which carries the same value as a
+  // Deprecated in favor of automaticBackup, which carries the same value as a
   // resource. Dict with a `BackupPolicy` object whose `Status` reports the
   // automatic backup state. Null when the file system has no backup policy
   // configured.
@@ -1945,7 +1945,7 @@ private aws.efs.filesystem @defaults("name id region") {
   //
   // Null when the file system has no backup policy configured, which reads
   // the same way as DISABLED: nothing is backing the file system up.
-  backupPolicyRef() aws.efs.backupPolicy
+  automaticBackup() aws.efs.backupPolicy
   // Region in which the file system exists
   region string
   // Availability zone where the file system exists if a specific AZ is defined
@@ -2148,12 +2148,12 @@ private aws.efs.accessPoint @defaults("accessPointId name") {
   name string
   // POSIX user identity
   //
-  // Deprecated in favor of posixUserRef, which carries the same three values
+  // Deprecated in favor of posixIdentity, which carries the same three values
   // as a resource. Dict with `uid`, `gid`, and `secondaryGids`.
   posixUser @maturity("deprecated") dict
   // Root directory configuration
   //
-  // Deprecated in favor of rootDirectoryRef, which carries the same values as
+  // Deprecated in favor of root, which carries the same values as
   // a resource. Dict with `path` and `creationInfo`, an object with
   // `ownerUid`, `ownerGid`, and `permissions`.
   rootDirectory @maturity("deprecated") dict
@@ -2161,12 +2161,12 @@ private aws.efs.accessPoint @defaults("accessPointId name") {
   //
   // Null when the access point enforces no user identity, in which case the
   // NFS client's own identity is used.
-  posixUserRef aws.efs.posixUser
+  posixIdentity aws.efs.posixUser
   // Root directory configuration of the access point
   //
   // Null when the access point does not restrict the root, in which case a
   // client reaching it sees the whole file system.
-  rootDirectoryRef aws.efs.rootDirectory
+  root aws.efs.rootDirectory
   // Access point state
   lifecycleState string
   // Resource tags
@@ -2591,7 +2591,7 @@ aws.iam {
   virtualMfaDevices() []aws.iam.virtualmfadevice
   // Server certificates stored in IAM
   //
-  // Deprecated in favor of serverCertificateRefs, which carries the same
+  // Deprecated in favor of tlsCertificates, which carries the same
   // entries as resources with proper time values for the expiry and upload
   // dates rather than JSON strings. Each entry has the shape `{Arn, Path,
   // ServerCertificateId, ServerCertificateName, Expiration, UploadDate}`.
@@ -2602,7 +2602,7 @@ aws.iam {
   // certificate that has passed its expiration is still served by whatever
   // load balancer references it, so this is where an expired-certificate
   // check reads from.
-  serverCertificateRefs() []aws.iam.serverCertificate
+  tlsCertificates() []aws.iam.serverCertificate
   // List of IAM instance profiles in the account
   instanceProfiles() []aws.iam.instanceProfile
   // List of SAML 2.0 identity providers configured in IAM
@@ -2781,16 +2781,16 @@ private aws.iam.user @defaults("arn name createdAt") {
   path string
   // MFA devices (virtual and hardware) assigned to the user
   //
-  // Deprecated in favor of mfaDeviceRefs, which carries the same entries as
-  // resources with a proper time value for the enablement date rather than a
-  // JSON string. Each entry has the shape `{SerialNumber, EnableDate,
+  // Deprecated in favor of assignedMfaDevices, which carries the same entries
+  // as resources with a proper time value for the enablement date rather than
+  // a JSON string. Each entry has the shape `{SerialNumber, EnableDate,
   // UserName}`. For a virtual MFA device the SerialNumber is the device ARN.
   mfaDevices() @maturity("deprecated") []dict
   // MFA devices (virtual and hardware) assigned to the user
   //
   // Empty when the user has no second factor, which is the reading a
   // console-user MFA check is looking for.
-  mfaDeviceRefs() []aws.iam.user.mfaDevice
+  assignedMfaDevices() []aws.iam.user.mfaDevice
   // Managed policy that sets the permissions boundary for the user, if one is set
   permissionsBoundary() aws.iam.policy
   // Services the user is permitted to use, with when each was last accessed
@@ -7202,7 +7202,7 @@ private aws.elb.listener @defaults("arn port protocol") {
   sslPolicyRef() aws.elb.sslPolicy
   // Mutual TLS authentication settings for the listener
   //
-  // Deprecated in favor of mutualAuthenticationRef, which carries the same
+  // Deprecated in favor of mutualTls, which carries the same
   // values as a resource with the trust store resolved. Has `Mode`,
   // `TrustStoreArn`, `IgnoreClientCertificateExpiry`,
   // `AdvertiseTrustStoreCaNames`, and `TrustStoreAssociationStatus`. Empty for
@@ -7211,7 +7211,7 @@ private aws.elb.listener @defaults("arn port protocol") {
   // Mutual TLS authentication settings for the listener
   //
   // Null for listeners the load balancer reports no mutual TLS settings for.
-  mutualAuthenticationRef aws.elb.mutualAuthentication
+  mutualTls aws.elb.mutualAuthentication
   // Trust store used to verify client certificates on mutual TLS listeners
   trustStore() aws.elb.truststore
   // Rules that route requests reaching the listener
@@ -8291,7 +8291,7 @@ private aws.macie.bucket @defaults("name region sensitivityScore sharedAccess") 
   publicAccess dict
   // Default server-side encryption settings
   //
-  // Deprecated in favor of serverSideEncryptionRef, which carries the same two
+  // Deprecated in favor of defaultEncryption, which carries the same two
   // settings with the key resolved to a resource. Keys `Type` and
   // `KmsMasterKeyId`.
   serverSideEncryption @maturity("deprecated") dict
@@ -8299,7 +8299,7 @@ private aws.macie.bucket @defaults("name region sensitivityScore sharedAccess") 
   //
   // Encryption Amazon S3 applies to new objects written to the bucket, as
   // reported by Macie.
-  serverSideEncryptionRef aws.macie.bucket.encryption
+  defaultEncryption aws.macie.bucket.encryption
   // Whether versioning is enabled for the bucket
   versioning bool
   // Whether the bucket policy requires server-side encryption of new objects: FALSE (required), TRUE (not required or no policy), UNKNOWN
@@ -12643,10 +12643,10 @@ private aws.cloudtrail.channel @defaults("name sourceType") {
 // account-level Block Public Access configuration (the four settings
 // that ignore or restrict bucket and object ACLs and policies allowing
 // public access).
-aws.s3control @defaults("accountPublicAccessBlockRef") {
+aws.s3control @defaults("accountBlockPublicAccess") {
   // Account level public access configuration for S3
   //
-  // Deprecated in favor of accountPublicAccessBlockRef, which carries the same
+  // Deprecated in favor of accountBlockPublicAccess, which carries the same
   // four settings as a resource. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
   // `IgnorePublicAcls`, and `RestrictPublicBuckets`, each a boolean. Null when
   // the account has no Block Public Access configuration.
@@ -12658,7 +12658,7 @@ aws.s3control @defaults("accountPublicAccessBlockRef") {
   // says. Null when the account has no Block Public Access configuration at
   // all, which reads the same way as all four settings being off: the
   // protection is not in effect either way.
-  accountPublicAccessBlockRef() aws.s3.publicAccessBlock
+  accountBlockPublicAccess() aws.s3.publicAccessBlock
 }
 
 // Block Public Access configuration of an S3 account, bucket, or access point
@@ -12784,7 +12784,7 @@ private aws.s3.bucket @defaults("name location public") {
   replicationRules() []aws.s3.bucket.replicationRule
   // Block Public Access configuration of the bucket
   //
-  // Deprecated in favor of publicAccessBlockRef, which carries the same four
+  // Deprecated in favor of blockPublicAccess, which carries the same four
   // settings as a resource. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
   // `IgnorePublicAcls`, and `RestrictPublicBuckets`, each a boolean.
   publicAccessBlock() @maturity("deprecated") dict
@@ -12793,7 +12793,7 @@ private aws.s3.bucket @defaults("name location public") {
   // Null when the bucket has no Block Public Access configuration at all,
   // which reads the same way as all four settings being off. The account-wide
   // configuration on aws.s3control applies on top of this one.
-  publicAccessBlockRef() aws.s3.publicAccessBlock
+  blockPublicAccess() aws.s3.publicAccessBlock
   // Whether new public ACLs on the bucket and its objects are blocked
   blockPublicAcls() bool
   // Whether new public bucket policies are blocked
@@ -12927,7 +12927,7 @@ private aws.s3.bucket.accessPoint @defaults("name networkOrigin") {
   alias string
   // Public access block configuration for the access point
   //
-  // Deprecated in favor of publicAccessBlockRef, which carries the same four
+  // Deprecated in favor of blockPublicAccess, which carries the same four
   // settings as a resource. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
   // `IgnorePublicAcls`, and `RestrictPublicBuckets`, each a boolean.
   publicAccessBlock() @maturity("deprecated") dict
@@ -12937,7 +12937,7 @@ private aws.s3.bucket.accessPoint @defaults("name networkOrigin") {
   // an access point can expose a bucket that blocks public access itself.
   // Null when the access point has no Block Public Access configuration at
   // all, which reads the same way as all four settings being off.
-  publicAccessBlockRef() aws.s3.publicAccessBlock
+  blockPublicAccess() aws.s3.publicAccessBlock
   // Resource policy attached to the access point
   policy() string
 }
@@ -15408,13 +15408,13 @@ private aws.elasticache.user @defaults("userName status engine") {
   userGroupIds []string
   // Authentication mode for the user
   //
-  // Deprecated in favor of authenticationRef, which carries the same two
+  // Deprecated in favor of authenticationMode, which carries the same two
   // values as a resource. Dict with `Type` and `PasswordCount`.
   authentication @maturity("deprecated") dict
   // Authentication mode for the user
   //
   // Null when the service reports no authentication settings for the user.
-  authenticationRef aws.elasticache.authentication
+  authenticationMode aws.elasticache.authentication
 
   // Tags for the user
   tags() map[string]string
@@ -20329,14 +20329,14 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   instanceStatus() dict
   // Reason for the most recent state transition
   //
-  // Deprecated in favor of stateReasonRef, which carries the same two values
+  // Deprecated in favor of stateChangeReason, which carries the same two values
   // as a resource. Carries Code and Message.
   stateReason @maturity("deprecated") dict
   // Reason for the most recent state transition
   //
   // Null when the instance reports no reason, which is the usual case for an
   // instance that has always been running.
-  stateReasonRef aws.ec2.stateReason
+  stateChangeReason aws.ec2.stateReason
   // Reason for the most recent state transition
   stateTransitionReason string
   // Whether the instance has EBS optimization turned on
@@ -21200,7 +21200,7 @@ private aws.eks.nodegroup @defaults("name diskSize status") {
   releaseVersion() string
   // Remote access configuration for the node group
   //
-  // Deprecated in favor of remoteAccessRef, which carries the same values as a
+  // Deprecated in favor of sshAccess, which carries the same values as a
   // resource with the key pair and security groups resolved. Keys:
   // `Ec2SshKey` (EC2 key pair granting SSH access to the nodes) and
   // `SourceSecurityGroups` (security group IDs allowed SSH access).
@@ -21209,7 +21209,7 @@ private aws.eks.nodegroup @defaults("name diskSize status") {
   //
   // Null when the node group reports no remote access configuration, which
   // means SSH access to the nodes is not provisioned through the node group.
-  remoteAccessRef() aws.eks.remoteAccess
+  sshAccess() aws.eks.remoteAccess
   // Update configuration for the node group
   //
   // Keys: `MaxUnavailable`, `MaxUnavailablePercentage`, and `UpdateStrategy`
@@ -21775,13 +21775,13 @@ private aws.neptune.instance @defaults("arn name status"){
   enabledCloudwatchLogsExports []string
   // Connection endpoint
   //
-  // Deprecated in favor of endpointRef, which carries the same three values as
-  // a resource. Dict with `Address`, `Port`, and `HostedZoneId`.
+  // Deprecated in favor of connectionEndpoint, which carries the same three
+  // values as a resource. Dict with `Address`, `Port`, and `HostedZoneId`.
   endpoint @maturity("deprecated") dict
   // Connection endpoint
   //
   // Null while the instance is still being created and has no endpoint yet.
-  endpointRef aws.neptune.endpoint
+  connectionEndpoint aws.neptune.endpoint
   // Name of the database engine
   engine string
   // Database engine version
@@ -21946,7 +21946,7 @@ private aws.cognito.userPool @defaults("arn name") {
   mfaConfiguration() string
   // Password policy
   //
-  // Deprecated in favor of passwordPolicyRef, which carries the same values
+  // Deprecated in favor of passwordRequirements, which carries the same values
   // as a resource. Keys: MinimumLength, RequireUppercase, RequireLowercase,
   // RequireNumbers, RequireSymbols, TemporaryPasswordValidityDays, and
   // PasswordHistorySize (how many previous passwords are blocked from reuse).
@@ -21954,7 +21954,7 @@ private aws.cognito.userPool @defaults("arn name") {
   // Password-strength requirements enforced on the user pool
   //
   // Null when the user pool reports no password policy.
-  passwordPolicyRef() aws.cognito.userPool.passwordPolicy
+  passwordRequirements() aws.cognito.userPool.passwordPolicy
   // Advanced security mode: OFF, AUDIT, ENFORCED
   advancedSecurityMode() string
   // User pool tags
@@ -21978,7 +21978,7 @@ private aws.cognito.userPool @defaults("arn name") {
   accountRecoverySetting() dict
   // Device-remembering configuration
   //
-  // Deprecated in favor of deviceConfigurationRef, which carries the same two
+  // Deprecated in favor of deviceRemembering, which carries the same two
   // values as a resource. A null value means device remembering is
   // deactivated. When set, exposes ChallengeRequiredOnNewDevice and
   // DeviceOnlyRememberedOnUserPrompt.
@@ -21986,17 +21986,17 @@ private aws.cognito.userPool @defaults("arn name") {
   // Device-remembering configuration
   //
   // Null when device remembering is deactivated on the user pool.
-  deviceConfigurationRef() aws.cognito.deviceConfiguration
+  deviceRemembering() aws.cognito.deviceConfiguration
   // Username case-sensitivity configuration
   //
-  // Deprecated in favor of usernameConfigurationRef, which carries the same
+  // Deprecated in favor of usernamePolicy, which carries the same
   // value as a resource. Exposes CaseSensitive: when false, users can sign in
   // with any capitalization variation of their username or email alias.
   usernameConfiguration() @maturity("deprecated") dict
   // Username case-sensitivity configuration
   //
   // Null when the user pool reports no username configuration.
-  usernameConfigurationRef() aws.cognito.usernameConfiguration
+  usernamePolicy() aws.cognito.usernameConfiguration
   // Attribute schema of the user pool
   //
   // Each entry describes a standard or custom attribute (custom: prefix).
@@ -22096,7 +22096,7 @@ private aws.cognito.userPoolClient @defaults("clientId clientName userPoolId") {
   idTokenValidity int
   // Time units applied to the *Validity numeric fields, keyed by token type
   //
-  // Deprecated in favor of tokenValidityUnitsRef, which carries the same three
+  // Deprecated in favor of validityUnits, which carries the same three
   // values as a resource. Keys: accessToken, idToken, refreshToken. Values
   // are seconds, minutes, hours, or days.
   tokenValidityUnits @maturity("deprecated") dict
@@ -22105,7 +22105,7 @@ private aws.cognito.userPoolClient @defaults("clientId clientName userPoolId") {
   // Null when the client reports no token validity units, in which case the
   // Cognito defaults apply: hours for the access and ID tokens and days for
   // the refresh token.
-  tokenValidityUnitsRef aws.cognito.tokenValidityUnits
+  validityUnits aws.cognito.tokenValidityUnits
   // Permitted sign-in flows, e.g. ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH
   explicitAuthFlows []string
   // Identity providers the client can use, e.g. COGNITO, Google, SAML provider names
@@ -24613,14 +24613,14 @@ private aws.kinesis.stream @defaults("name status region") {
   consumerCount() int
   // Capacity mode of the stream
   //
-  // Deprecated in favor of streamModeDetailsRef, which carries the same value
+  // Deprecated in favor of capacityMode, which carries the same value
   // as a resource. Dict with a single `StreamMode` key.
   streamModeDetails @maturity("deprecated") dict
   // Capacity mode of the stream
   //
   // Null when the mode is not reported, which is what a stream reached by ARN
   // before its description is read returns.
-  streamModeDetailsRef aws.kinesis.streamModeDetails
+  capacityMode aws.kinesis.streamModeDetails
   // Enhanced (shard-level) monitoring settings
   //
   // Each entry has a `ShardLevelMetrics` key listing the enabled CloudWatch
@@ -25055,14 +25055,14 @@ private aws.memorydb.user @defaults("name status") {
   minimumEngineVersion string
   // Authentication configuration
   //
-  // Deprecated in favor of authenticationRef, which carries the same two
+  // Deprecated in favor of authenticationMode, which carries the same two
   // values as a resource. Password and IAM authentication state for the user,
   // with the keys `Type` and `PasswordCount`.
   authentication @maturity("deprecated") dict
   // Authentication configuration for the user
   //
   // Null when the service reports no authentication settings for the user.
-  authenticationRef aws.memorydb.authentication
+  authenticationMode aws.memorydb.authentication
   // Region where the user exists
   region string
   // Tags for the user
@@ -25619,19 +25619,19 @@ private aws.glue.securityConfiguration @defaults("name") {
   createdAt time
   // S3 encryption configuration
   //
-  // Deprecated in favor of s3EncryptionRef, which carries the same values as a
+  // Deprecated in favor of s3DataEncryption, which carries the same values as a
   // resource with the key resolved. Shape: {S3EncryptionMode:
   // DISABLED|SSE-KMS|SSE-S3, KmsKeyArn}.
   s3Encryption @maturity("deprecated") dict
   // CloudWatch encryption configuration
   //
-  // Deprecated in favor of cloudWatchEncryptionRef, which carries the same
+  // Deprecated in favor of cloudWatchLogsEncryption, which carries the same
   // values as a resource with the key resolved. Shape:
   // {CloudWatchEncryptionMode: DISABLED|SSE-KMS, KmsKeyArn}.
   cloudWatchEncryption @maturity("deprecated") dict
   // Job bookmarks encryption configuration
   //
-  // Deprecated in favor of jobBookmarksEncryptionRef, which carries the same
+  // Deprecated in favor of bookmarkStateEncryption, which carries the same
   // values as a resource with the key resolved. Shape:
   // {JobBookmarksEncryptionMode: DISABLED|CSE-KMS, KmsKeyArn}.
   jobBookmarksEncryption @maturity("deprecated") dict
@@ -25640,19 +25640,19 @@ private aws.glue.securityConfiguration @defaults("name") {
   // The mode is one of DISABLED, SSE-KMS, or SSE-S3, where DISABLED means
   // Glue applies no server-side encryption of its own to the data it writes.
   // Null when the security configuration carries no S3 encryption entry.
-  s3EncryptionRef aws.glue.securityConfiguration.encryption
+  s3DataEncryption aws.glue.securityConfiguration.encryption
   // Encryption applied to logs the job or crawler sends to CloudWatch Logs
   //
   // The mode is one of DISABLED or SSE-KMS. Null when the security
   // configuration carries no CloudWatch encryption entry.
-  cloudWatchEncryptionRef aws.glue.securityConfiguration.encryption
+  cloudWatchLogsEncryption aws.glue.securityConfiguration.encryption
   // Encryption applied to job bookmark state
   //
   // The mode is one of DISABLED or CSE-KMS. Job bookmarks record which data a
   // job has already processed, so the state names the objects a job has read.
   // Null when the security configuration carries no job bookmark encryption
   // entry.
-  jobBookmarksEncryptionRef aws.glue.securityConfiguration.encryption
+  bookmarkStateEncryption aws.glue.securityConfiguration.encryption
   // Encryption applied to Glue Data Quality assets
   //
   // The mode is one of DISABLED or SSE-KMS. Null when the security
@@ -29477,7 +29477,7 @@ private aws.identitycenter.permissionSet @defaults("arn name") {
   inlinePolicy() string
   // AWS managed policies attached to the permission set
   //
-  // Deprecated in favor of managedPolicyRefs. Each entry has the keys `arn`
+  // Deprecated in favor of awsManagedPolicies. Each entry has the keys `arn`
   // (the managed policy ARN) and `name` (the managed policy name).
   managedPolicies() @maturity("deprecated") []dict
   // AWS managed policies attached to the permission set
@@ -29488,7 +29488,7 @@ private aws.identitycenter.permissionSet @defaults("arn name") {
   // carry on into the statements and reach hasWildcardAllow, rather than
   // stopping at a name. Empty when only customer managed policies or an
   // inline policy are attached.
-  managedPolicyRefs() []aws.iam.policy
+  awsManagedPolicies() []aws.iam.policy
   // Customer managed policies attached to the permission set
   //
   // Each entry has the keys `name` (the policy name) and `path` (the IAM
@@ -29791,7 +29791,7 @@ private aws.verifiedaccess.trustProvider @defaults("verifiedAccessTrustProviderI
   oidcOptions dict
   // Server-side encryption specification
   //
-  // Deprecated in favor of sseSpecificationRef, which carries the same two
+  // Deprecated in favor of serverSideEncryption, which carries the same two
   // settings with the key resolved to a resource. KMS encryption settings for
   // the trust provider, with keys `CustomerManagedKeyEnabled` and `KmsKeyArn`.
   sseSpecification @maturity("deprecated") dict
@@ -29799,7 +29799,7 @@ private aws.verifiedaccess.trustProvider @defaults("verifiedAccessTrustProviderI
   //
   // Encryption settings AWS Verified Access applies to the trust provider. Null when
   // the service reports no encryption settings.
-  sseSpecificationRef aws.verifiedaccess.sseSpecification
+  serverSideEncryption aws.verifiedaccess.sseSpecification
   // Tags for the trust provider
   tags map[string]string
 }
@@ -29816,7 +29816,7 @@ private aws.verifiedaccess.group @defaults("verifiedAccessGroupId verifiedAccess
   verifiedAccessInstanceId string
   // Server-side encryption specification
   //
-  // Deprecated in favor of sseSpecificationRef, which carries the same two
+  // Deprecated in favor of serverSideEncryption, which carries the same two
   // settings with the key resolved to a resource. KMS encryption settings for
   // the group, with keys `CustomerManagedKeyEnabled` and `KmsKeyArn`.
   sseSpecification @maturity("deprecated") dict
@@ -29824,7 +29824,7 @@ private aws.verifiedaccess.group @defaults("verifiedAccessGroupId verifiedAccess
   //
   // Encryption settings AWS Verified Access applies to the group. Null when
   // the service reports no encryption settings.
-  sseSpecificationRef aws.verifiedaccess.sseSpecification
+  serverSideEncryption aws.verifiedaccess.sseSpecification
   // Owner of the group
   owner string
   // Tags for the group
@@ -29860,7 +29860,7 @@ private aws.verifiedaccess.endpoint @defaults("verifiedAccessEndpointId applicat
   securityGroups() []aws.ec2.securitygroup
   // Server-side encryption specification
   //
-  // Deprecated in favor of sseSpecificationRef, which carries the same two
+  // Deprecated in favor of serverSideEncryption, which carries the same two
   // settings with the key resolved to a resource. KMS encryption settings for
   // the endpoint, with keys `CustomerManagedKeyEnabled` and `KmsKeyArn`.
   sseSpecification @maturity("deprecated") dict
@@ -29868,7 +29868,7 @@ private aws.verifiedaccess.endpoint @defaults("verifiedAccessEndpointId applicat
   //
   // Encryption settings AWS Verified Access applies to the endpoint. Null when
   // the service reports no encryption settings.
-  sseSpecificationRef aws.verifiedaccess.sseSpecification
+  serverSideEncryption aws.verifiedaccess.sseSpecification
   // Tags for the endpoint
   tags map[string]string
 }

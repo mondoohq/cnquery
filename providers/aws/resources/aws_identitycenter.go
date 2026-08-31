@@ -306,7 +306,7 @@ func (a *mqlAwsIdentitycenterPermissionSet) managedPolicies() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIdentitycenterPermissionSet) managedPolicyRefs() ([]any, error) {
+func (a *mqlAwsIdentitycenterPermissionSet) awsManagedPolicies() ([]any, error) {
 	policies, err := a.listManagedPolicies()
 	if err != nil {
 		return nil, err

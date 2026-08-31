@@ -561,17 +561,17 @@ func newMqlAwsGlueSecurityConfiguration(runtime *plugin.Runtime, region string, 
 
 	resource, err := CreateResource(runtime, "aws.glue.securityConfiguration",
 		map[string]*llx.RawData{
-			"__id":                      llx.StringData(id),
-			"name":                      llx.StringDataPtr(secConf.Name),
-			"createdAt":                 llx.TimeDataPtr(secConf.CreatedTimeStamp),
-			"s3Encryption":              llx.DictData(s3Enc),
-			"cloudWatchEncryption":      llx.DictData(cwEnc),
-			"jobBookmarksEncryption":    llx.DictData(jbEnc),
-			"s3EncryptionRef":           mqlS3Enc,
-			"cloudWatchEncryptionRef":   mqlCwEnc,
-			"jobBookmarksEncryptionRef": mqlJbEnc,
-			"dataQualityEncryption":     mqlDqEnc,
-			"region":                    llx.StringData(region),
+			"__id":                     llx.StringData(id),
+			"name":                     llx.StringDataPtr(secConf.Name),
+			"createdAt":                llx.TimeDataPtr(secConf.CreatedTimeStamp),
+			"s3Encryption":             llx.DictData(s3Enc),
+			"cloudWatchEncryption":     llx.DictData(cwEnc),
+			"jobBookmarksEncryption":   llx.DictData(jbEnc),
+			"s3DataEncryption":         mqlS3Enc,
+			"cloudWatchLogsEncryption": mqlCwEnc,
+			"bookmarkStateEncryption":  mqlJbEnc,
+			"dataQualityEncryption":    mqlDqEnc,
+			"region":                   llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err

@@ -71,7 +71,7 @@ func (a *mqlAwsIam) serverCertificates() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIam) serverCertificateRefs() ([]any, error) {
+func (a *mqlAwsIam) tlsCertificates() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -662,7 +662,7 @@ func (a *mqlAwsIamUser) mfaDevices() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIamUser) mfaDeviceRefs() ([]any, error) {
+func (a *mqlAwsIamUser) assignedMfaDevices() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Iam("")
 	ctx := context.Background()

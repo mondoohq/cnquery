@@ -264,7 +264,7 @@ func (a *mqlAwsVerifiedaccess) getTrustProviders(conn *connection.AwsConnection)
 							"policyReferenceName":           llx.StringDataPtr(tp.PolicyReferenceName),
 							"oidcOptions":                   llx.DictData(oidcOpts),
 							"sseSpecification":              llx.DictData(sseSpec),
-							"sseSpecificationRef":           mqlSse,
+							"serverSideEncryption":          mqlSse,
 							"tags":                          llx.MapData(toInterfaceMap(ec2TagsToMap(tp.Tags)), types.String),
 						})
 					if err != nil {
@@ -347,7 +347,7 @@ func (a *mqlAwsVerifiedaccess) getGroups(conn *connection.AwsConnection) []*jobp
 							"region":                   llx.StringData(region),
 							"verifiedAccessInstanceId": llx.StringDataPtr(grp.VerifiedAccessInstanceId),
 							"sseSpecification":         llx.DictData(sseSpec),
-							"sseSpecificationRef":      mqlSse,
+							"serverSideEncryption":     mqlSse,
 							"owner":                    llx.StringDataPtr(grp.Owner),
 							"tags":                     llx.MapData(toInterfaceMap(ec2TagsToMap(grp.Tags)), types.String),
 						})
@@ -453,7 +453,7 @@ func newMqlVerifiedAccessEndpoint(runtime *plugin.Runtime, ep ec2types.VerifiedA
 			"attachmentType":           llx.StringData(string(ep.AttachmentType)),
 			"status":                   llx.DictData(statusDict),
 			"sseSpecification":         llx.DictData(sseSpec),
-			"sseSpecificationRef":      mqlSse,
+			"serverSideEncryption":     mqlSse,
 			"tags":                     llx.MapData(toInterfaceMap(ec2TagsToMap(ep.Tags)), types.String),
 		})
 	if err != nil {

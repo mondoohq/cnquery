@@ -6860,8 +6860,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.efs.filesystem.backupPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetBackupPolicy()).ToDataRes(types.Dict)
 	},
-	"aws.efs.filesystem.backupPolicyRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEfsFilesystem).GetBackupPolicyRef()).ToDataRes(types.Resource("aws.efs.backupPolicy"))
+	"aws.efs.filesystem.automaticBackup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetAutomaticBackup()).ToDataRes(types.Resource("aws.efs.backupPolicy"))
 	},
 	"aws.efs.filesystem.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetRegion()).ToDataRes(types.String)
@@ -7040,11 +7040,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.efs.accessPoint.rootDirectory": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsAccessPoint).GetRootDirectory()).ToDataRes(types.Dict)
 	},
-	"aws.efs.accessPoint.posixUserRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEfsAccessPoint).GetPosixUserRef()).ToDataRes(types.Resource("aws.efs.posixUser"))
+	"aws.efs.accessPoint.posixIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetPosixIdentity()).ToDataRes(types.Resource("aws.efs.posixUser"))
 	},
-	"aws.efs.accessPoint.rootDirectoryRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEfsAccessPoint).GetRootDirectoryRef()).ToDataRes(types.Resource("aws.efs.rootDirectory"))
+	"aws.efs.accessPoint.root": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetRoot()).ToDataRes(types.Resource("aws.efs.rootDirectory"))
 	},
 	"aws.efs.accessPoint.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsAccessPoint).GetLifecycleState()).ToDataRes(types.String)
@@ -7478,8 +7478,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.serverCertificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIam).GetServerCertificates()).ToDataRes(types.Array(types.Dict))
 	},
-	"aws.iam.serverCertificateRefs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIam).GetServerCertificateRefs()).ToDataRes(types.Array(types.Resource("aws.iam.serverCertificate")))
+	"aws.iam.tlsCertificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetTlsCertificates()).ToDataRes(types.Array(types.Resource("aws.iam.serverCertificate")))
 	},
 	"aws.iam.instanceProfiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIam).GetInstanceProfiles()).ToDataRes(types.Array(types.Resource("aws.iam.instanceProfile")))
@@ -7658,8 +7658,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.user.mfaDevices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetMfaDevices()).ToDataRes(types.Array(types.Dict))
 	},
-	"aws.iam.user.mfaDeviceRefs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamUser).GetMfaDeviceRefs()).ToDataRes(types.Array(types.Resource("aws.iam.user.mfaDevice")))
+	"aws.iam.user.assignedMfaDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetAssignedMfaDevices()).ToDataRes(types.Array(types.Resource("aws.iam.user.mfaDevice")))
 	},
 	"aws.iam.user.permissionsBoundary": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetPermissionsBoundary()).ToDataRes(types.Resource("aws.iam.policy"))
@@ -12410,8 +12410,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.listener.mutualAuthentication": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbListener).GetMutualAuthentication()).ToDataRes(types.Dict)
 	},
-	"aws.elb.listener.mutualAuthenticationRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsElbListener).GetMutualAuthenticationRef()).ToDataRes(types.Resource("aws.elb.mutualAuthentication"))
+	"aws.elb.listener.mutualTls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListener).GetMutualTls()).ToDataRes(types.Resource("aws.elb.mutualAuthentication"))
 	},
 	"aws.elb.listener.trustStore": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbListener).GetTrustStore()).ToDataRes(types.Resource("aws.elb.truststore"))
@@ -13430,8 +13430,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.macie.bucket.serverSideEncryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieBucket).GetServerSideEncryption()).ToDataRes(types.Dict)
 	},
-	"aws.macie.bucket.serverSideEncryptionRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsMacieBucket).GetServerSideEncryptionRef()).ToDataRes(types.Resource("aws.macie.bucket.encryption"))
+	"aws.macie.bucket.defaultEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetDefaultEncryption()).ToDataRes(types.Resource("aws.macie.bucket.encryption"))
 	},
 	"aws.macie.bucket.versioning": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieBucket).GetVersioning()).ToDataRes(types.Bool)
@@ -17645,8 +17645,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3control.accountPublicAccessBlock": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3control).GetAccountPublicAccessBlock()).ToDataRes(types.Dict)
 	},
-	"aws.s3control.accountPublicAccessBlockRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsS3control).GetAccountPublicAccessBlockRef()).ToDataRes(types.Resource("aws.s3.publicAccessBlock"))
+	"aws.s3control.accountBlockPublicAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3control).GetAccountBlockPublicAccess()).ToDataRes(types.Resource("aws.s3.publicAccessBlock"))
 	},
 	"aws.s3.publicAccessBlock.blockPublicAcls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3PublicAccessBlock).GetBlockPublicAcls()).ToDataRes(types.Bool)
@@ -17726,8 +17726,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.publicAccessBlock": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetPublicAccessBlock()).ToDataRes(types.Dict)
 	},
-	"aws.s3.bucket.publicAccessBlockRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsS3Bucket).GetPublicAccessBlockRef()).ToDataRes(types.Resource("aws.s3.publicAccessBlock"))
+	"aws.s3.bucket.blockPublicAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetBlockPublicAccess()).ToDataRes(types.Resource("aws.s3.publicAccessBlock"))
 	},
 	"aws.s3.bucket.blockPublicAcls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetBlockPublicAcls()).ToDataRes(types.Bool)
@@ -17849,8 +17849,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.accessPoint.publicAccessBlock": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketAccessPoint).GetPublicAccessBlock()).ToDataRes(types.Dict)
 	},
-	"aws.s3.bucket.accessPoint.publicAccessBlockRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsS3BucketAccessPoint).GetPublicAccessBlockRef()).ToDataRes(types.Resource("aws.s3.publicAccessBlock"))
+	"aws.s3.bucket.accessPoint.blockPublicAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketAccessPoint).GetBlockPublicAccess()).ToDataRes(types.Resource("aws.s3.publicAccessBlock"))
 	},
 	"aws.s3.bucket.accessPoint.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketAccessPoint).GetPolicy()).ToDataRes(types.String)
@@ -20345,8 +20345,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elasticache.user.authentication": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheUser).GetAuthentication()).ToDataRes(types.Dict)
 	},
-	"aws.elasticache.user.authenticationRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsElasticacheUser).GetAuthenticationRef()).ToDataRes(types.Resource("aws.elasticache.authentication"))
+	"aws.elasticache.user.authenticationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheUser).GetAuthenticationMode()).ToDataRes(types.Resource("aws.elasticache.authentication"))
 	},
 	"aws.elasticache.user.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheUser).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -25238,8 +25238,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.stateReason": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetStateReason()).ToDataRes(types.Dict)
 	},
-	"aws.ec2.instance.stateReasonRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Instance).GetStateReasonRef()).ToDataRes(types.Resource("aws.ec2.stateReason"))
+	"aws.ec2.instance.stateChangeReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetStateChangeReason()).ToDataRes(types.Resource("aws.ec2.stateReason"))
 	},
 	"aws.ec2.instance.stateTransitionReason": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetStateTransitionReason()).ToDataRes(types.String)
@@ -26129,8 +26129,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.nodegroup.remoteAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetRemoteAccess()).ToDataRes(types.Dict)
 	},
-	"aws.eks.nodegroup.remoteAccessRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEksNodegroup).GetRemoteAccessRef()).ToDataRes(types.Resource("aws.eks.remoteAccess"))
+	"aws.eks.nodegroup.sshAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetSshAccess()).ToDataRes(types.Resource("aws.eks.remoteAccess"))
 	},
 	"aws.eks.nodegroup.updateConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetUpdateConfig()).ToDataRes(types.Dict)
@@ -26711,8 +26711,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.neptune.instance.endpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneInstance).GetEndpoint()).ToDataRes(types.Dict)
 	},
-	"aws.neptune.instance.endpointRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsNeptuneInstance).GetEndpointRef()).ToDataRes(types.Resource("aws.neptune.endpoint"))
+	"aws.neptune.instance.connectionEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetConnectionEndpoint()).ToDataRes(types.Resource("aws.neptune.endpoint"))
 	},
 	"aws.neptune.instance.engine": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneInstance).GetEngine()).ToDataRes(types.String)
@@ -26879,8 +26879,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cognito.userPool.passwordPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetPasswordPolicy()).ToDataRes(types.Dict)
 	},
-	"aws.cognito.userPool.passwordPolicyRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsCognitoUserPool).GetPasswordPolicyRef()).ToDataRes(types.Resource("aws.cognito.userPool.passwordPolicy"))
+	"aws.cognito.userPool.passwordRequirements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetPasswordRequirements()).ToDataRes(types.Resource("aws.cognito.userPool.passwordPolicy"))
 	},
 	"aws.cognito.userPool.advancedSecurityMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetAdvancedSecurityMode()).ToDataRes(types.String)
@@ -26906,14 +26906,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cognito.userPool.deviceConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetDeviceConfiguration()).ToDataRes(types.Dict)
 	},
-	"aws.cognito.userPool.deviceConfigurationRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsCognitoUserPool).GetDeviceConfigurationRef()).ToDataRes(types.Resource("aws.cognito.deviceConfiguration"))
+	"aws.cognito.userPool.deviceRemembering": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetDeviceRemembering()).ToDataRes(types.Resource("aws.cognito.deviceConfiguration"))
 	},
 	"aws.cognito.userPool.usernameConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetUsernameConfiguration()).ToDataRes(types.Dict)
 	},
-	"aws.cognito.userPool.usernameConfigurationRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsCognitoUserPool).GetUsernameConfigurationRef()).ToDataRes(types.Resource("aws.cognito.usernameConfiguration"))
+	"aws.cognito.userPool.usernamePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetUsernamePolicy()).ToDataRes(types.Resource("aws.cognito.usernameConfiguration"))
 	},
 	"aws.cognito.userPool.schema": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetSchema()).ToDataRes(types.Array(types.Dict))
@@ -26990,8 +26990,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cognito.userPoolClient.tokenValidityUnits": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPoolClient).GetTokenValidityUnits()).ToDataRes(types.Dict)
 	},
-	"aws.cognito.userPoolClient.tokenValidityUnitsRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsCognitoUserPoolClient).GetTokenValidityUnitsRef()).ToDataRes(types.Resource("aws.cognito.tokenValidityUnits"))
+	"aws.cognito.userPoolClient.validityUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetValidityUnits()).ToDataRes(types.Resource("aws.cognito.tokenValidityUnits"))
 	},
 	"aws.cognito.userPoolClient.explicitAuthFlows": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPoolClient).GetExplicitAuthFlows()).ToDataRes(types.Array(types.String))
@@ -29549,8 +29549,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kinesis.stream.streamModeDetails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisStream).GetStreamModeDetails()).ToDataRes(types.Dict)
 	},
-	"aws.kinesis.stream.streamModeDetailsRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsKinesisStream).GetStreamModeDetailsRef()).ToDataRes(types.Resource("aws.kinesis.streamModeDetails"))
+	"aws.kinesis.stream.capacityMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetCapacityMode()).ToDataRes(types.Resource("aws.kinesis.streamModeDetails"))
 	},
 	"aws.kinesis.stream.enhancedMonitoring": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisStream).GetEnhancedMonitoring()).ToDataRes(types.Array(types.Dict))
@@ -30041,8 +30041,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.memorydb.user.authentication": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMemorydbUser).GetAuthentication()).ToDataRes(types.Dict)
 	},
-	"aws.memorydb.user.authenticationRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsMemorydbUser).GetAuthenticationRef()).ToDataRes(types.Resource("aws.memorydb.authentication"))
+	"aws.memorydb.user.authenticationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbUser).GetAuthenticationMode()).ToDataRes(types.Resource("aws.memorydb.authentication"))
 	},
 	"aws.memorydb.user.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMemorydbUser).GetRegion()).ToDataRes(types.String)
@@ -30611,14 +30611,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.glue.securityConfiguration.jobBookmarksEncryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueSecurityConfiguration).GetJobBookmarksEncryption()).ToDataRes(types.Dict)
 	},
-	"aws.glue.securityConfiguration.s3EncryptionRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsGlueSecurityConfiguration).GetS3EncryptionRef()).ToDataRes(types.Resource("aws.glue.securityConfiguration.encryption"))
+	"aws.glue.securityConfiguration.s3DataEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetS3DataEncryption()).ToDataRes(types.Resource("aws.glue.securityConfiguration.encryption"))
 	},
-	"aws.glue.securityConfiguration.cloudWatchEncryptionRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsGlueSecurityConfiguration).GetCloudWatchEncryptionRef()).ToDataRes(types.Resource("aws.glue.securityConfiguration.encryption"))
+	"aws.glue.securityConfiguration.cloudWatchLogsEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetCloudWatchLogsEncryption()).ToDataRes(types.Resource("aws.glue.securityConfiguration.encryption"))
 	},
-	"aws.glue.securityConfiguration.jobBookmarksEncryptionRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsGlueSecurityConfiguration).GetJobBookmarksEncryptionRef()).ToDataRes(types.Resource("aws.glue.securityConfiguration.encryption"))
+	"aws.glue.securityConfiguration.bookmarkStateEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetBookmarkStateEncryption()).ToDataRes(types.Resource("aws.glue.securityConfiguration.encryption"))
 	},
 	"aws.glue.securityConfiguration.dataQualityEncryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueSecurityConfiguration).GetDataQualityEncryption()).ToDataRes(types.Resource("aws.glue.securityConfiguration.encryption"))
@@ -34634,8 +34634,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.identitycenter.permissionSet.managedPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenterPermissionSet).GetManagedPolicies()).ToDataRes(types.Array(types.Dict))
 	},
-	"aws.identitycenter.permissionSet.managedPolicyRefs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIdentitycenterPermissionSet).GetManagedPolicyRefs()).ToDataRes(types.Array(types.Resource("aws.iam.policy")))
+	"aws.identitycenter.permissionSet.awsManagedPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterPermissionSet).GetAwsManagedPolicies()).ToDataRes(types.Array(types.Resource("aws.iam.policy")))
 	},
 	"aws.identitycenter.permissionSet.customerManagedPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenterPermissionSet).GetCustomerManagedPolicies()).ToDataRes(types.Array(types.Dict))
@@ -34880,8 +34880,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.verifiedaccess.trustProvider.sseSpecification": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetSseSpecification()).ToDataRes(types.Dict)
 	},
-	"aws.verifiedaccess.trustProvider.sseSpecificationRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetSseSpecificationRef()).ToDataRes(types.Resource("aws.verifiedaccess.sseSpecification"))
+	"aws.verifiedaccess.trustProvider.serverSideEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetServerSideEncryption()).ToDataRes(types.Resource("aws.verifiedaccess.sseSpecification"))
 	},
 	"aws.verifiedaccess.trustProvider.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -34901,8 +34901,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.verifiedaccess.group.sseSpecification": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessGroup).GetSseSpecification()).ToDataRes(types.Dict)
 	},
-	"aws.verifiedaccess.group.sseSpecificationRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVerifiedaccessGroup).GetSseSpecificationRef()).ToDataRes(types.Resource("aws.verifiedaccess.sseSpecification"))
+	"aws.verifiedaccess.group.serverSideEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessGroup).GetServerSideEncryption()).ToDataRes(types.Resource("aws.verifiedaccess.sseSpecification"))
 	},
 	"aws.verifiedaccess.group.owner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessGroup).GetOwner()).ToDataRes(types.String)
@@ -34946,8 +34946,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.verifiedaccess.endpoint.sseSpecification": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessEndpoint).GetSseSpecification()).ToDataRes(types.Dict)
 	},
-	"aws.verifiedaccess.endpoint.sseSpecificationRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVerifiedaccessEndpoint).GetSseSpecificationRef()).ToDataRes(types.Resource("aws.verifiedaccess.sseSpecification"))
+	"aws.verifiedaccess.endpoint.serverSideEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetServerSideEncryption()).ToDataRes(types.Resource("aws.verifiedaccess.sseSpecification"))
 	},
 	"aws.verifiedaccess.endpoint.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessEndpoint).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -39958,8 +39958,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEfsFilesystem).BackupPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.efs.filesystem.backupPolicyRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEfsFilesystem).BackupPolicyRef, ok = plugin.RawToTValue[*mqlAwsEfsBackupPolicy](v.Value, v.Error)
+	"aws.efs.filesystem.automaticBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).AutomaticBackup, ok = plugin.RawToTValue[*mqlAwsEfsBackupPolicy](v.Value, v.Error)
 		return
 	},
 	"aws.efs.filesystem.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40234,12 +40234,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEfsAccessPoint).RootDirectory, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.efs.accessPoint.posixUserRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEfsAccessPoint).PosixUserRef, ok = plugin.RawToTValue[*mqlAwsEfsPosixUser](v.Value, v.Error)
+	"aws.efs.accessPoint.posixIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).PosixIdentity, ok = plugin.RawToTValue[*mqlAwsEfsPosixUser](v.Value, v.Error)
 		return
 	},
-	"aws.efs.accessPoint.rootDirectoryRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEfsAccessPoint).RootDirectoryRef, ok = plugin.RawToTValue[*mqlAwsEfsRootDirectory](v.Value, v.Error)
+	"aws.efs.accessPoint.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).Root, ok = plugin.RawToTValue[*mqlAwsEfsRootDirectory](v.Value, v.Error)
 		return
 	},
 	"aws.efs.accessPoint.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40862,8 +40862,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIam).ServerCertificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.iam.serverCertificateRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIam).ServerCertificateRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"aws.iam.tlsCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).TlsCertificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.instanceProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41114,8 +41114,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIamUser).MfaDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.iam.user.mfaDeviceRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamUser).MfaDeviceRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"aws.iam.user.assignedMfaDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).AssignedMfaDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.user.permissionsBoundary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48034,8 +48034,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElbListener).MutualAuthentication, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.elb.listener.mutualAuthenticationRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElbListener).MutualAuthenticationRef, ok = plugin.RawToTValue[*mqlAwsElbMutualAuthentication](v.Value, v.Error)
+	"aws.elb.listener.mutualTls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListener).MutualTls, ok = plugin.RawToTValue[*mqlAwsElbMutualAuthentication](v.Value, v.Error)
 		return
 	},
 	"aws.elb.listener.trustStore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49510,8 +49510,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMacieBucket).ServerSideEncryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.macie.bucket.serverSideEncryptionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsMacieBucket).ServerSideEncryptionRef, ok = plugin.RawToTValue[*mqlAwsMacieBucketEncryption](v.Value, v.Error)
+	"aws.macie.bucket.defaultEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).DefaultEncryption, ok = plugin.RawToTValue[*mqlAwsMacieBucketEncryption](v.Value, v.Error)
 		return
 	},
 	"aws.macie.bucket.versioning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55806,8 +55806,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsS3control).AccountPublicAccessBlock, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.s3control.accountPublicAccessBlockRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3control).AccountPublicAccessBlockRef, ok = plugin.RawToTValue[*mqlAwsS3PublicAccessBlock](v.Value, v.Error)
+	"aws.s3control.accountBlockPublicAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3control).AccountBlockPublicAccess, ok = plugin.RawToTValue[*mqlAwsS3PublicAccessBlock](v.Value, v.Error)
 		return
 	},
 	"aws.s3.publicAccessBlock.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55926,8 +55926,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsS3Bucket).PublicAccessBlock, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.s3.bucket.publicAccessBlockRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3Bucket).PublicAccessBlockRef, ok = plugin.RawToTValue[*mqlAwsS3PublicAccessBlock](v.Value, v.Error)
+	"aws.s3.bucket.blockPublicAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).BlockPublicAccess, ok = plugin.RawToTValue[*mqlAwsS3PublicAccessBlock](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.blockPublicAcls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56098,8 +56098,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsS3BucketAccessPoint).PublicAccessBlock, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.s3.bucket.accessPoint.publicAccessBlockRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3BucketAccessPoint).PublicAccessBlockRef, ok = plugin.RawToTValue[*mqlAwsS3PublicAccessBlock](v.Value, v.Error)
+	"aws.s3.bucket.accessPoint.blockPublicAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).BlockPublicAccess, ok = plugin.RawToTValue[*mqlAwsS3PublicAccessBlock](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.accessPoint.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -59682,8 +59682,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElasticacheUser).Authentication, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.elasticache.user.authenticationRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElasticacheUser).AuthenticationRef, ok = plugin.RawToTValue[*mqlAwsElasticacheAuthentication](v.Value, v.Error)
+	"aws.elasticache.user.authenticationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheUser).AuthenticationMode, ok = plugin.RawToTValue[*mqlAwsElasticacheAuthentication](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.user.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -66786,8 +66786,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Instance).StateReason, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.ec2.instance.stateReasonRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Instance).StateReasonRef, ok = plugin.RawToTValue[*mqlAwsEc2StateReason](v.Value, v.Error)
+	"aws.ec2.instance.stateChangeReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).StateChangeReason, ok = plugin.RawToTValue[*mqlAwsEc2StateReason](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.stateTransitionReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -68090,8 +68090,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEksNodegroup).RemoteAccess, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.eks.nodegroup.remoteAccessRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksNodegroup).RemoteAccessRef, ok = plugin.RawToTValue[*mqlAwsEksRemoteAccess](v.Value, v.Error)
+	"aws.eks.nodegroup.sshAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).SshAccess, ok = plugin.RawToTValue[*mqlAwsEksRemoteAccess](v.Value, v.Error)
 		return
 	},
 	"aws.eks.nodegroup.updateConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -68918,8 +68918,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNeptuneInstance).Endpoint, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.neptune.instance.endpointRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsNeptuneInstance).EndpointRef, ok = plugin.RawToTValue[*mqlAwsNeptuneEndpoint](v.Value, v.Error)
+	"aws.neptune.instance.connectionEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).ConnectionEndpoint, ok = plugin.RawToTValue[*mqlAwsNeptuneEndpoint](v.Value, v.Error)
 		return
 	},
 	"aws.neptune.instance.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -69166,8 +69166,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCognitoUserPool).PasswordPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.cognito.userPool.passwordPolicyRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCognitoUserPool).PasswordPolicyRef, ok = plugin.RawToTValue[*mqlAwsCognitoUserPoolPasswordPolicy](v.Value, v.Error)
+	"aws.cognito.userPool.passwordRequirements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).PasswordRequirements, ok = plugin.RawToTValue[*mqlAwsCognitoUserPoolPasswordPolicy](v.Value, v.Error)
 		return
 	},
 	"aws.cognito.userPool.advancedSecurityMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -69202,16 +69202,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCognitoUserPool).DeviceConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.cognito.userPool.deviceConfigurationRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCognitoUserPool).DeviceConfigurationRef, ok = plugin.RawToTValue[*mqlAwsCognitoDeviceConfiguration](v.Value, v.Error)
+	"aws.cognito.userPool.deviceRemembering": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).DeviceRemembering, ok = plugin.RawToTValue[*mqlAwsCognitoDeviceConfiguration](v.Value, v.Error)
 		return
 	},
 	"aws.cognito.userPool.usernameConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCognitoUserPool).UsernameConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.cognito.userPool.usernameConfigurationRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCognitoUserPool).UsernameConfigurationRef, ok = plugin.RawToTValue[*mqlAwsCognitoUsernameConfiguration](v.Value, v.Error)
+	"aws.cognito.userPool.usernamePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).UsernamePolicy, ok = plugin.RawToTValue[*mqlAwsCognitoUsernameConfiguration](v.Value, v.Error)
 		return
 	},
 	"aws.cognito.userPool.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -69322,8 +69322,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCognitoUserPoolClient).TokenValidityUnits, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.cognito.userPoolClient.tokenValidityUnitsRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCognitoUserPoolClient).TokenValidityUnitsRef, ok = plugin.RawToTValue[*mqlAwsCognitoTokenValidityUnits](v.Value, v.Error)
+	"aws.cognito.userPoolClient.validityUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).ValidityUnits, ok = plugin.RawToTValue[*mqlAwsCognitoTokenValidityUnits](v.Value, v.Error)
 		return
 	},
 	"aws.cognito.userPoolClient.explicitAuthFlows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -73026,8 +73026,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKinesisStream).StreamModeDetails, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.kinesis.stream.streamModeDetailsRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsKinesisStream).StreamModeDetailsRef, ok = plugin.RawToTValue[*mqlAwsKinesisStreamModeDetails](v.Value, v.Error)
+	"aws.kinesis.stream.capacityMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).CapacityMode, ok = plugin.RawToTValue[*mqlAwsKinesisStreamModeDetails](v.Value, v.Error)
 		return
 	},
 	"aws.kinesis.stream.enhancedMonitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -73750,8 +73750,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMemorydbUser).Authentication, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.memorydb.user.authenticationRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsMemorydbUser).AuthenticationRef, ok = plugin.RawToTValue[*mqlAwsMemorydbAuthentication](v.Value, v.Error)
+	"aws.memorydb.user.authenticationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbUser).AuthenticationMode, ok = plugin.RawToTValue[*mqlAwsMemorydbAuthentication](v.Value, v.Error)
 		return
 	},
 	"aws.memorydb.user.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -74574,16 +74574,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsGlueSecurityConfiguration).JobBookmarksEncryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.glue.securityConfiguration.s3EncryptionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGlueSecurityConfiguration).S3EncryptionRef, ok = plugin.RawToTValue[*mqlAwsGlueSecurityConfigurationEncryption](v.Value, v.Error)
+	"aws.glue.securityConfiguration.s3DataEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).S3DataEncryption, ok = plugin.RawToTValue[*mqlAwsGlueSecurityConfigurationEncryption](v.Value, v.Error)
 		return
 	},
-	"aws.glue.securityConfiguration.cloudWatchEncryptionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGlueSecurityConfiguration).CloudWatchEncryptionRef, ok = plugin.RawToTValue[*mqlAwsGlueSecurityConfigurationEncryption](v.Value, v.Error)
+	"aws.glue.securityConfiguration.cloudWatchLogsEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).CloudWatchLogsEncryption, ok = plugin.RawToTValue[*mqlAwsGlueSecurityConfigurationEncryption](v.Value, v.Error)
 		return
 	},
-	"aws.glue.securityConfiguration.jobBookmarksEncryptionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsGlueSecurityConfiguration).JobBookmarksEncryptionRef, ok = plugin.RawToTValue[*mqlAwsGlueSecurityConfigurationEncryption](v.Value, v.Error)
+	"aws.glue.securityConfiguration.bookmarkStateEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).BookmarkStateEncryption, ok = plugin.RawToTValue[*mqlAwsGlueSecurityConfigurationEncryption](v.Value, v.Error)
 		return
 	},
 	"aws.glue.securityConfiguration.dataQualityEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80418,8 +80418,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIdentitycenterPermissionSet).ManagedPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.identitycenter.permissionSet.managedPolicyRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIdentitycenterPermissionSet).ManagedPolicyRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"aws.identitycenter.permissionSet.awsManagedPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterPermissionSet).AwsManagedPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.identitycenter.permissionSet.customerManagedPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80790,8 +80790,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVerifiedaccessTrustProvider).SseSpecification, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.verifiedaccess.trustProvider.sseSpecificationRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVerifiedaccessTrustProvider).SseSpecificationRef, ok = plugin.RawToTValue[*mqlAwsVerifiedaccessSseSpecification](v.Value, v.Error)
+	"aws.verifiedaccess.trustProvider.serverSideEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessTrustProvider).ServerSideEncryption, ok = plugin.RawToTValue[*mqlAwsVerifiedaccessSseSpecification](v.Value, v.Error)
 		return
 	},
 	"aws.verifiedaccess.trustProvider.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80822,8 +80822,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVerifiedaccessGroup).SseSpecification, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.verifiedaccess.group.sseSpecificationRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVerifiedaccessGroup).SseSpecificationRef, ok = plugin.RawToTValue[*mqlAwsVerifiedaccessSseSpecification](v.Value, v.Error)
+	"aws.verifiedaccess.group.serverSideEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessGroup).ServerSideEncryption, ok = plugin.RawToTValue[*mqlAwsVerifiedaccessSseSpecification](v.Value, v.Error)
 		return
 	},
 	"aws.verifiedaccess.group.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80886,8 +80886,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVerifiedaccessEndpoint).SseSpecification, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.verifiedaccess.endpoint.sseSpecificationRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVerifiedaccessEndpoint).SseSpecificationRef, ok = plugin.RawToTValue[*mqlAwsVerifiedaccessSseSpecification](v.Value, v.Error)
+	"aws.verifiedaccess.endpoint.serverSideEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).ServerSideEncryption, ok = plugin.RawToTValue[*mqlAwsVerifiedaccessSseSpecification](v.Value, v.Error)
 		return
 	},
 	"aws.verifiedaccess.endpoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -91384,7 +91384,7 @@ type mqlAwsEfsFilesystem struct {
 	OwnerId                      plugin.TValue[string]
 	KmsKey                       plugin.TValue[*mqlAwsKmsKey]
 	BackupPolicy                 plugin.TValue[any]
-	BackupPolicyRef              plugin.TValue[*mqlAwsEfsBackupPolicy]
+	AutomaticBackup              plugin.TValue[*mqlAwsEfsBackupPolicy]
 	Region                       plugin.TValue[string]
 	AvailabilityZone             plugin.TValue[string]
 	AvailabilityZoneId           plugin.TValue[string]
@@ -91488,10 +91488,10 @@ func (c *mqlAwsEfsFilesystem) GetBackupPolicy() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsEfsFilesystem) GetBackupPolicyRef() *plugin.TValue[*mqlAwsEfsBackupPolicy] {
-	return plugin.GetOrCompute[*mqlAwsEfsBackupPolicy](&c.BackupPolicyRef, func() (*mqlAwsEfsBackupPolicy, error) {
+func (c *mqlAwsEfsFilesystem) GetAutomaticBackup() *plugin.TValue[*mqlAwsEfsBackupPolicy] {
+	return plugin.GetOrCompute[*mqlAwsEfsBackupPolicy](&c.AutomaticBackup, func() (*mqlAwsEfsBackupPolicy, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.filesystem", c.__id, "backupPolicyRef")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.filesystem", c.__id, "automaticBackup")
 			if err != nil {
 				return nil, err
 			}
@@ -91500,7 +91500,7 @@ func (c *mqlAwsEfsFilesystem) GetBackupPolicyRef() *plugin.TValue[*mqlAwsEfsBack
 			}
 		}
 
-		return c.backupPolicyRef()
+		return c.automaticBackup()
 	})
 }
 
@@ -92255,17 +92255,17 @@ type mqlAwsEfsAccessPoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEfsAccessPointInternal
-	AccessPointId    plugin.TValue[string]
-	Arn              plugin.TValue[string]
-	FileSystem       plugin.TValue[*mqlAwsEfsFilesystem]
-	Name             plugin.TValue[string]
-	PosixUser        plugin.TValue[any]
-	RootDirectory    plugin.TValue[any]
-	PosixUserRef     plugin.TValue[*mqlAwsEfsPosixUser]
-	RootDirectoryRef plugin.TValue[*mqlAwsEfsRootDirectory]
-	LifecycleState   plugin.TValue[string]
-	Tags             plugin.TValue[map[string]any]
-	Region           plugin.TValue[string]
+	AccessPointId  plugin.TValue[string]
+	Arn            plugin.TValue[string]
+	FileSystem     plugin.TValue[*mqlAwsEfsFilesystem]
+	Name           plugin.TValue[string]
+	PosixUser      plugin.TValue[any]
+	RootDirectory  plugin.TValue[any]
+	PosixIdentity  plugin.TValue[*mqlAwsEfsPosixUser]
+	Root           plugin.TValue[*mqlAwsEfsRootDirectory]
+	LifecycleState plugin.TValue[string]
+	Tags           plugin.TValue[map[string]any]
+	Region         plugin.TValue[string]
 }
 
 // createAwsEfsAccessPoint creates a new instance of this resource
@@ -92336,12 +92336,12 @@ func (c *mqlAwsEfsAccessPoint) GetRootDirectory() *plugin.TValue[any] {
 	return &c.RootDirectory
 }
 
-func (c *mqlAwsEfsAccessPoint) GetPosixUserRef() *plugin.TValue[*mqlAwsEfsPosixUser] {
-	return &c.PosixUserRef
+func (c *mqlAwsEfsAccessPoint) GetPosixIdentity() *plugin.TValue[*mqlAwsEfsPosixUser] {
+	return &c.PosixIdentity
 }
 
-func (c *mqlAwsEfsAccessPoint) GetRootDirectoryRef() *plugin.TValue[*mqlAwsEfsRootDirectory] {
-	return &c.RootDirectoryRef
+func (c *mqlAwsEfsAccessPoint) GetRoot() *plugin.TValue[*mqlAwsEfsRootDirectory] {
+	return &c.Root
 }
 
 func (c *mqlAwsEfsAccessPoint) GetLifecycleState() *plugin.TValue[string] {
@@ -93820,21 +93820,21 @@ type mqlAwsIam struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsIamInternal it will be used here
-	Users                 plugin.TValue[[]any]
-	Roles                 plugin.TValue[[]any]
-	Groups                plugin.TValue[[]any]
-	Policies              plugin.TValue[[]any]
-	AttachedPolicies      plugin.TValue[[]any]
-	CredentialReport      plugin.TValue[[]any]
-	PasswordPolicy        plugin.TValue[*mqlAwsIamPasswordPolicy]
-	AccountSummary        plugin.TValue[map[string]any]
-	VirtualMfaDevices     plugin.TValue[[]any]
-	ServerCertificates    plugin.TValue[[]any]
-	ServerCertificateRefs plugin.TValue[[]any]
-	InstanceProfiles      plugin.TValue[[]any]
-	SamlProviders         plugin.TValue[[]any]
-	OidcProviders         plugin.TValue[[]any]
-	AccountAlias          plugin.TValue[string]
+	Users              plugin.TValue[[]any]
+	Roles              plugin.TValue[[]any]
+	Groups             plugin.TValue[[]any]
+	Policies           plugin.TValue[[]any]
+	AttachedPolicies   plugin.TValue[[]any]
+	CredentialReport   plugin.TValue[[]any]
+	PasswordPolicy     plugin.TValue[*mqlAwsIamPasswordPolicy]
+	AccountSummary     plugin.TValue[map[string]any]
+	VirtualMfaDevices  plugin.TValue[[]any]
+	ServerCertificates plugin.TValue[[]any]
+	TlsCertificates    plugin.TValue[[]any]
+	InstanceProfiles   plugin.TValue[[]any]
+	SamlProviders      plugin.TValue[[]any]
+	OidcProviders      plugin.TValue[[]any]
+	AccountAlias       plugin.TValue[string]
 }
 
 // createAwsIam creates a new instance of this resource
@@ -94014,10 +94014,10 @@ func (c *mqlAwsIam) GetServerCertificates() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlAwsIam) GetServerCertificateRefs() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.ServerCertificateRefs, func() ([]any, error) {
+func (c *mqlAwsIam) GetTlsCertificates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsCertificates, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "serverCertificateRefs")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "tlsCertificates")
 			if err != nil {
 				return nil, err
 			}
@@ -94026,7 +94026,7 @@ func (c *mqlAwsIam) GetServerCertificateRefs() *plugin.TValue[[]any] {
 			}
 		}
 
-		return c.serverCertificateRefs()
+		return c.tlsCertificates()
 	})
 }
 
@@ -94441,7 +94441,7 @@ type mqlAwsIamUser struct {
 	LoginProfile               plugin.TValue[*mqlAwsIamLoginProfile]
 	Path                       plugin.TValue[string]
 	MfaDevices                 plugin.TValue[[]any]
-	MfaDeviceRefs              plugin.TValue[[]any]
+	AssignedMfaDevices         plugin.TValue[[]any]
 	PermissionsBoundary        plugin.TValue[*mqlAwsIamPolicy]
 	LastAccessedServices       plugin.TValue[[]any]
 }
@@ -94633,10 +94633,10 @@ func (c *mqlAwsIamUser) GetMfaDevices() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlAwsIamUser) GetMfaDeviceRefs() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.MfaDeviceRefs, func() ([]any, error) {
+func (c *mqlAwsIamUser) GetAssignedMfaDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AssignedMfaDevices, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.user", c.__id, "mfaDeviceRefs")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.user", c.__id, "assignedMfaDevices")
 			if err != nil {
 				return nil, err
 			}
@@ -94645,7 +94645,7 @@ func (c *mqlAwsIamUser) GetMfaDeviceRefs() *plugin.TValue[[]any] {
 			}
 		}
 
-		return c.mfaDeviceRefs()
+		return c.assignedMfaDevices()
 	})
 }
 
@@ -113030,22 +113030,22 @@ type mqlAwsElbListener struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsElbListenerInternal
-	Arn                     plugin.TValue[string]
-	LoadBalancer            plugin.TValue[*mqlAwsElbLoadbalancer]
-	Port                    plugin.TValue[int64]
-	Protocol                plugin.TValue[string]
-	SslPolicy               plugin.TValue[string]
-	DefaultActions          plugin.TValue[[]any]
-	ForwardTargetGroups     plugin.TValue[[]any]
-	Certificates            plugin.TValue[[]any]
-	AlpnPolicy              plugin.TValue[[]any]
-	SslPolicyRef            plugin.TValue[*mqlAwsElbSslPolicy]
-	MutualAuthentication    plugin.TValue[any]
-	MutualAuthenticationRef plugin.TValue[*mqlAwsElbMutualAuthentication]
-	TrustStore              plugin.TValue[*mqlAwsElbTruststore]
-	Rules                   plugin.TValue[[]any]
-	SniCertificates         plugin.TValue[[]any]
-	Tags                    plugin.TValue[map[string]any]
+	Arn                  plugin.TValue[string]
+	LoadBalancer         plugin.TValue[*mqlAwsElbLoadbalancer]
+	Port                 plugin.TValue[int64]
+	Protocol             plugin.TValue[string]
+	SslPolicy            plugin.TValue[string]
+	DefaultActions       plugin.TValue[[]any]
+	ForwardTargetGroups  plugin.TValue[[]any]
+	Certificates         plugin.TValue[[]any]
+	AlpnPolicy           plugin.TValue[[]any]
+	SslPolicyRef         plugin.TValue[*mqlAwsElbSslPolicy]
+	MutualAuthentication plugin.TValue[any]
+	MutualTls            plugin.TValue[*mqlAwsElbMutualAuthentication]
+	TrustStore           plugin.TValue[*mqlAwsElbTruststore]
+	Rules                plugin.TValue[[]any]
+	SniCertificates      plugin.TValue[[]any]
+	Tags                 plugin.TValue[map[string]any]
 }
 
 // createAwsElbListener creates a new instance of this resource
@@ -113165,8 +113165,8 @@ func (c *mqlAwsElbListener) GetMutualAuthentication() *plugin.TValue[any] {
 	return &c.MutualAuthentication
 }
 
-func (c *mqlAwsElbListener) GetMutualAuthenticationRef() *plugin.TValue[*mqlAwsElbMutualAuthentication] {
-	return &c.MutualAuthenticationRef
+func (c *mqlAwsElbListener) GetMutualTls() *plugin.TValue[*mqlAwsElbMutualAuthentication] {
+	return &c.MutualTls
 }
 
 func (c *mqlAwsElbListener) GetTrustStore() *plugin.TValue[*mqlAwsElbTruststore] {
@@ -116774,7 +116774,7 @@ type mqlAwsMacieBucket struct {
 	SharedAccess                       plugin.TValue[string]
 	PublicAccess                       plugin.TValue[any]
 	ServerSideEncryption               plugin.TValue[any]
-	ServerSideEncryptionRef            plugin.TValue[*mqlAwsMacieBucketEncryption]
+	DefaultEncryption                  plugin.TValue[*mqlAwsMacieBucketEncryption]
 	Versioning                         plugin.TValue[bool]
 	AllowsUnencryptedObjectUploads     plugin.TValue[string]
 	AutomatedDiscoveryMonitoringStatus plugin.TValue[string]
@@ -116905,8 +116905,8 @@ func (c *mqlAwsMacieBucket) GetServerSideEncryption() *plugin.TValue[any] {
 	return &c.ServerSideEncryption
 }
 
-func (c *mqlAwsMacieBucket) GetServerSideEncryptionRef() *plugin.TValue[*mqlAwsMacieBucketEncryption] {
-	return &c.ServerSideEncryptionRef
+func (c *mqlAwsMacieBucket) GetDefaultEncryption() *plugin.TValue[*mqlAwsMacieBucketEncryption] {
+	return &c.DefaultEncryption
 }
 
 func (c *mqlAwsMacieBucket) GetVersioning() *plugin.TValue[bool] {
@@ -134417,8 +134417,8 @@ type mqlAwsS3control struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsS3controlInternal
-	AccountPublicAccessBlock    plugin.TValue[any]
-	AccountPublicAccessBlockRef plugin.TValue[*mqlAwsS3PublicAccessBlock]
+	AccountPublicAccessBlock plugin.TValue[any]
+	AccountBlockPublicAccess plugin.TValue[*mqlAwsS3PublicAccessBlock]
 }
 
 // createAwsS3control creates a new instance of this resource
@@ -134464,10 +134464,10 @@ func (c *mqlAwsS3control) GetAccountPublicAccessBlock() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsS3control) GetAccountPublicAccessBlockRef() *plugin.TValue[*mqlAwsS3PublicAccessBlock] {
-	return plugin.GetOrCompute[*mqlAwsS3PublicAccessBlock](&c.AccountPublicAccessBlockRef, func() (*mqlAwsS3PublicAccessBlock, error) {
+func (c *mqlAwsS3control) GetAccountBlockPublicAccess() *plugin.TValue[*mqlAwsS3PublicAccessBlock] {
+	return plugin.GetOrCompute[*mqlAwsS3PublicAccessBlock](&c.AccountBlockPublicAccess, func() (*mqlAwsS3PublicAccessBlock, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3control", c.__id, "accountPublicAccessBlockRef")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3control", c.__id, "accountBlockPublicAccess")
 			if err != nil {
 				return nil, err
 			}
@@ -134476,7 +134476,7 @@ func (c *mqlAwsS3control) GetAccountPublicAccessBlockRef() *plugin.TValue[*mqlAw
 			}
 		}
 
-		return c.accountPublicAccessBlockRef()
+		return c.accountBlockPublicAccess()
 	})
 }
 
@@ -134626,7 +134626,7 @@ type mqlAwsS3Bucket struct {
 	KmsKey                           plugin.TValue[*mqlAwsKmsKey]
 	ReplicationRules                 plugin.TValue[[]any]
 	PublicAccessBlock                plugin.TValue[any]
-	PublicAccessBlockRef             plugin.TValue[*mqlAwsS3PublicAccessBlock]
+	BlockPublicAccess                plugin.TValue[*mqlAwsS3PublicAccessBlock]
 	BlockPublicAcls                  plugin.TValue[bool]
 	BlockPublicPolicy                plugin.TValue[bool]
 	IgnorePublicAcls                 plugin.TValue[bool]
@@ -134893,10 +134893,10 @@ func (c *mqlAwsS3Bucket) GetPublicAccessBlock() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsS3Bucket) GetPublicAccessBlockRef() *plugin.TValue[*mqlAwsS3PublicAccessBlock] {
-	return plugin.GetOrCompute[*mqlAwsS3PublicAccessBlock](&c.PublicAccessBlockRef, func() (*mqlAwsS3PublicAccessBlock, error) {
+func (c *mqlAwsS3Bucket) GetBlockPublicAccess() *plugin.TValue[*mqlAwsS3PublicAccessBlock] {
+	return plugin.GetOrCompute[*mqlAwsS3PublicAccessBlock](&c.BlockPublicAccess, func() (*mqlAwsS3PublicAccessBlock, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "publicAccessBlockRef")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "blockPublicAccess")
 			if err != nil {
 				return nil, err
 			}
@@ -134905,7 +134905,7 @@ func (c *mqlAwsS3Bucket) GetPublicAccessBlockRef() *plugin.TValue[*mqlAwsS3Publi
 			}
 		}
 
-		return c.publicAccessBlockRef()
+		return c.blockPublicAccess()
 	})
 }
 
@@ -135240,16 +135240,16 @@ type mqlAwsS3BucketAccessPoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsS3BucketAccessPointInternal
-	Arn                  plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	Bucket               plugin.TValue[*mqlAwsS3Bucket]
-	BucketAccountId      plugin.TValue[string]
-	NetworkOrigin        plugin.TValue[string]
-	Vpc                  plugin.TValue[*mqlAwsVpc]
-	Alias                plugin.TValue[string]
-	PublicAccessBlock    plugin.TValue[any]
-	PublicAccessBlockRef plugin.TValue[*mqlAwsS3PublicAccessBlock]
-	Policy               plugin.TValue[string]
+	Arn               plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Bucket            plugin.TValue[*mqlAwsS3Bucket]
+	BucketAccountId   plugin.TValue[string]
+	NetworkOrigin     plugin.TValue[string]
+	Vpc               plugin.TValue[*mqlAwsVpc]
+	Alias             plugin.TValue[string]
+	PublicAccessBlock plugin.TValue[any]
+	BlockPublicAccess plugin.TValue[*mqlAwsS3PublicAccessBlock]
+	Policy            plugin.TValue[string]
 }
 
 // createAwsS3BucketAccessPoint creates a new instance of this resource
@@ -135347,10 +135347,10 @@ func (c *mqlAwsS3BucketAccessPoint) GetPublicAccessBlock() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsS3BucketAccessPoint) GetPublicAccessBlockRef() *plugin.TValue[*mqlAwsS3PublicAccessBlock] {
-	return plugin.GetOrCompute[*mqlAwsS3PublicAccessBlock](&c.PublicAccessBlockRef, func() (*mqlAwsS3PublicAccessBlock, error) {
+func (c *mqlAwsS3BucketAccessPoint) GetBlockPublicAccess() *plugin.TValue[*mqlAwsS3PublicAccessBlock] {
+	return plugin.GetOrCompute[*mqlAwsS3PublicAccessBlock](&c.BlockPublicAccess, func() (*mqlAwsS3PublicAccessBlock, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket.accessPoint", c.__id, "publicAccessBlockRef")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket.accessPoint", c.__id, "blockPublicAccess")
 			if err != nil {
 				return nil, err
 			}
@@ -135359,7 +135359,7 @@ func (c *mqlAwsS3BucketAccessPoint) GetPublicAccessBlockRef() *plugin.TValue[*mq
 			}
 		}
 
-		return c.publicAccessBlockRef()
+		return c.blockPublicAccess()
 	})
 }
 
@@ -143880,7 +143880,7 @@ type mqlAwsElasticacheUser struct {
 	Status               plugin.TValue[string]
 	UserGroupIds         plugin.TValue[[]any]
 	Authentication       plugin.TValue[any]
-	AuthenticationRef    plugin.TValue[*mqlAwsElasticacheAuthentication]
+	AuthenticationMode   plugin.TValue[*mqlAwsElasticacheAuthentication]
 	Tags                 plugin.TValue[map[string]any]
 }
 
@@ -143961,8 +143961,8 @@ func (c *mqlAwsElasticacheUser) GetAuthentication() *plugin.TValue[any] {
 	return &c.Authentication
 }
 
-func (c *mqlAwsElasticacheUser) GetAuthenticationRef() *plugin.TValue[*mqlAwsElasticacheAuthentication] {
-	return &c.AuthenticationRef
+func (c *mqlAwsElasticacheUser) GetAuthenticationMode() *plugin.TValue[*mqlAwsElasticacheAuthentication] {
+	return &c.AuthenticationMode
 }
 
 func (c *mqlAwsElasticacheUser) GetTags() *plugin.TValue[map[string]any] {
@@ -161444,7 +161444,7 @@ type mqlAwsEc2Instance struct {
 	PublicDnsName           plugin.TValue[string]
 	InstanceStatus          plugin.TValue[any]
 	StateReason             plugin.TValue[any]
-	StateReasonRef          plugin.TValue[*mqlAwsEc2StateReason]
+	StateChangeReason       plugin.TValue[*mqlAwsEc2StateReason]
 	StateTransitionReason   plugin.TValue[string]
 	EbsOptimized            plugin.TValue[bool]
 	EnaSupported            plugin.TValue[bool]
@@ -161647,8 +161647,8 @@ func (c *mqlAwsEc2Instance) GetStateReason() *plugin.TValue[any] {
 	return &c.StateReason
 }
 
-func (c *mqlAwsEc2Instance) GetStateReasonRef() *plugin.TValue[*mqlAwsEc2StateReason] {
-	return &c.StateReasonRef
+func (c *mqlAwsEc2Instance) GetStateChangeReason() *plugin.TValue[*mqlAwsEc2StateReason] {
+	return &c.StateChangeReason
 }
 
 func (c *mqlAwsEc2Instance) GetStateTransitionReason() *plugin.TValue[string] {
@@ -164796,7 +164796,7 @@ type mqlAwsEksNodegroup struct {
 	Taints                plugin.TValue[[]any]
 	ReleaseVersion        plugin.TValue[string]
 	RemoteAccess          plugin.TValue[any]
-	RemoteAccessRef       plugin.TValue[*mqlAwsEksRemoteAccess]
+	SshAccess             plugin.TValue[*mqlAwsEksRemoteAccess]
 	UpdateConfig          plugin.TValue[any]
 	NodeVersion           plugin.TValue[string]
 	NodeRepairEnabled     plugin.TValue[bool]
@@ -164994,10 +164994,10 @@ func (c *mqlAwsEksNodegroup) GetRemoteAccess() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetRemoteAccessRef() *plugin.TValue[*mqlAwsEksRemoteAccess] {
-	return plugin.GetOrCompute[*mqlAwsEksRemoteAccess](&c.RemoteAccessRef, func() (*mqlAwsEksRemoteAccess, error) {
+func (c *mqlAwsEksNodegroup) GetSshAccess() *plugin.TValue[*mqlAwsEksRemoteAccess] {
+	return plugin.GetOrCompute[*mqlAwsEksRemoteAccess](&c.SshAccess, func() (*mqlAwsEksRemoteAccess, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.nodegroup", c.__id, "remoteAccessRef")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.nodegroup", c.__id, "sshAccess")
 			if err != nil {
 				return nil, err
 			}
@@ -165006,7 +165006,7 @@ func (c *mqlAwsEksNodegroup) GetRemoteAccessRef() *plugin.TValue[*mqlAwsEksRemot
 			}
 		}
 
-		return c.remoteAccessRef()
+		return c.sshAccess()
 	})
 }
 
@@ -166971,7 +166971,7 @@ type mqlAwsNeptuneInstance struct {
 	DeletionProtection               plugin.TValue[bool]
 	EnabledCloudwatchLogsExports     plugin.TValue[[]any]
 	Endpoint                         plugin.TValue[any]
-	EndpointRef                      plugin.TValue[*mqlAwsNeptuneEndpoint]
+	ConnectionEndpoint               plugin.TValue[*mqlAwsNeptuneEndpoint]
 	Engine                           plugin.TValue[string]
 	EngineVersion                    plugin.TValue[string]
 	EnhancedMonitoringResourceArn    plugin.TValue[string]
@@ -167076,8 +167076,8 @@ func (c *mqlAwsNeptuneInstance) GetEndpoint() *plugin.TValue[any] {
 	return &c.Endpoint
 }
 
-func (c *mqlAwsNeptuneInstance) GetEndpointRef() *plugin.TValue[*mqlAwsNeptuneEndpoint] {
-	return &c.EndpointRef
+func (c *mqlAwsNeptuneInstance) GetConnectionEndpoint() *plugin.TValue[*mqlAwsNeptuneEndpoint] {
+	return &c.ConnectionEndpoint
 }
 
 func (c *mqlAwsNeptuneInstance) GetEngine() *plugin.TValue[string] {
@@ -167583,7 +167583,7 @@ type mqlAwsCognitoUserPool struct {
 	DeletionProtection          plugin.TValue[bool]
 	MfaConfiguration            plugin.TValue[string]
 	PasswordPolicy              plugin.TValue[any]
-	PasswordPolicyRef           plugin.TValue[*mqlAwsCognitoUserPoolPasswordPolicy]
+	PasswordRequirements        plugin.TValue[*mqlAwsCognitoUserPoolPasswordPolicy]
 	AdvancedSecurityMode        plugin.TValue[string]
 	Tags                        plugin.TValue[map[string]any]
 	Clients                     plugin.TValue[[]any]
@@ -167592,9 +167592,9 @@ type mqlAwsCognitoUserPool struct {
 	UserPoolTier                plugin.TValue[string]
 	AccountRecoverySetting      plugin.TValue[any]
 	DeviceConfiguration         plugin.TValue[any]
-	DeviceConfigurationRef      plugin.TValue[*mqlAwsCognitoDeviceConfiguration]
+	DeviceRemembering           plugin.TValue[*mqlAwsCognitoDeviceConfiguration]
 	UsernameConfiguration       plugin.TValue[any]
-	UsernameConfigurationRef    plugin.TValue[*mqlAwsCognitoUsernameConfiguration]
+	UsernamePolicy              plugin.TValue[*mqlAwsCognitoUsernameConfiguration]
 	Schema                      plugin.TValue[[]any]
 	VerificationMessageTemplate plugin.TValue[any]
 	EmailConfiguration          plugin.TValue[any]
@@ -167675,10 +167675,10 @@ func (c *mqlAwsCognitoUserPool) GetPasswordPolicy() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsCognitoUserPool) GetPasswordPolicyRef() *plugin.TValue[*mqlAwsCognitoUserPoolPasswordPolicy] {
-	return plugin.GetOrCompute[*mqlAwsCognitoUserPoolPasswordPolicy](&c.PasswordPolicyRef, func() (*mqlAwsCognitoUserPoolPasswordPolicy, error) {
+func (c *mqlAwsCognitoUserPool) GetPasswordRequirements() *plugin.TValue[*mqlAwsCognitoUserPoolPasswordPolicy] {
+	return plugin.GetOrCompute[*mqlAwsCognitoUserPoolPasswordPolicy](&c.PasswordRequirements, func() (*mqlAwsCognitoUserPoolPasswordPolicy, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito.userPool", c.__id, "passwordPolicyRef")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito.userPool", c.__id, "passwordRequirements")
 			if err != nil {
 				return nil, err
 			}
@@ -167687,7 +167687,7 @@ func (c *mqlAwsCognitoUserPool) GetPasswordPolicyRef() *plugin.TValue[*mqlAwsCog
 			}
 		}
 
-		return c.passwordPolicyRef()
+		return c.passwordRequirements()
 	})
 }
 
@@ -167769,10 +167769,10 @@ func (c *mqlAwsCognitoUserPool) GetDeviceConfiguration() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsCognitoUserPool) GetDeviceConfigurationRef() *plugin.TValue[*mqlAwsCognitoDeviceConfiguration] {
-	return plugin.GetOrCompute[*mqlAwsCognitoDeviceConfiguration](&c.DeviceConfigurationRef, func() (*mqlAwsCognitoDeviceConfiguration, error) {
+func (c *mqlAwsCognitoUserPool) GetDeviceRemembering() *plugin.TValue[*mqlAwsCognitoDeviceConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsCognitoDeviceConfiguration](&c.DeviceRemembering, func() (*mqlAwsCognitoDeviceConfiguration, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito.userPool", c.__id, "deviceConfigurationRef")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito.userPool", c.__id, "deviceRemembering")
 			if err != nil {
 				return nil, err
 			}
@@ -167781,7 +167781,7 @@ func (c *mqlAwsCognitoUserPool) GetDeviceConfigurationRef() *plugin.TValue[*mqlA
 			}
 		}
 
-		return c.deviceConfigurationRef()
+		return c.deviceRemembering()
 	})
 }
 
@@ -167791,10 +167791,10 @@ func (c *mqlAwsCognitoUserPool) GetUsernameConfiguration() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsCognitoUserPool) GetUsernameConfigurationRef() *plugin.TValue[*mqlAwsCognitoUsernameConfiguration] {
-	return plugin.GetOrCompute[*mqlAwsCognitoUsernameConfiguration](&c.UsernameConfigurationRef, func() (*mqlAwsCognitoUsernameConfiguration, error) {
+func (c *mqlAwsCognitoUserPool) GetUsernamePolicy() *plugin.TValue[*mqlAwsCognitoUsernameConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsCognitoUsernameConfiguration](&c.UsernamePolicy, func() (*mqlAwsCognitoUsernameConfiguration, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito.userPool", c.__id, "usernameConfigurationRef")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito.userPool", c.__id, "usernamePolicy")
 			if err != nil {
 				return nil, err
 			}
@@ -167803,7 +167803,7 @@ func (c *mqlAwsCognitoUserPool) GetUsernameConfigurationRef() *plugin.TValue[*mq
 			}
 		}
 
-		return c.usernameConfigurationRef()
+		return c.usernamePolicy()
 	})
 }
 
@@ -167940,7 +167940,7 @@ type mqlAwsCognitoUserPoolClient struct {
 	AccessTokenValidity             plugin.TValue[int64]
 	IdTokenValidity                 plugin.TValue[int64]
 	TokenValidityUnits              plugin.TValue[any]
-	TokenValidityUnitsRef           plugin.TValue[*mqlAwsCognitoTokenValidityUnits]
+	ValidityUnits                   plugin.TValue[*mqlAwsCognitoTokenValidityUnits]
 	ExplicitAuthFlows               plugin.TValue[[]any]
 	SupportedIdentityProviders      plugin.TValue[[]any]
 	CallbackURLs                    plugin.TValue[[]any]
@@ -168045,8 +168045,8 @@ func (c *mqlAwsCognitoUserPoolClient) GetTokenValidityUnits() *plugin.TValue[any
 	return &c.TokenValidityUnits
 }
 
-func (c *mqlAwsCognitoUserPoolClient) GetTokenValidityUnitsRef() *plugin.TValue[*mqlAwsCognitoTokenValidityUnits] {
-	return &c.TokenValidityUnitsRef
+func (c *mqlAwsCognitoUserPoolClient) GetValidityUnits() *plugin.TValue[*mqlAwsCognitoTokenValidityUnits] {
+	return &c.ValidityUnits
 }
 
 func (c *mqlAwsCognitoUserPoolClient) GetExplicitAuthFlows() *plugin.TValue[[]any] {
@@ -177442,7 +177442,7 @@ type mqlAwsKinesisStream struct {
 	OpenShardCount       plugin.TValue[int64]
 	ConsumerCount        plugin.TValue[int64]
 	StreamModeDetails    plugin.TValue[any]
-	StreamModeDetailsRef plugin.TValue[*mqlAwsKinesisStreamModeDetails]
+	CapacityMode         plugin.TValue[*mqlAwsKinesisStreamModeDetails]
 	EnhancedMonitoring   plugin.TValue[[]any]
 	CreatedAt            plugin.TValue[*time.Time]
 	Region               plugin.TValue[string]
@@ -177538,8 +177538,8 @@ func (c *mqlAwsKinesisStream) GetStreamModeDetails() *plugin.TValue[any] {
 	return &c.StreamModeDetails
 }
 
-func (c *mqlAwsKinesisStream) GetStreamModeDetailsRef() *plugin.TValue[*mqlAwsKinesisStreamModeDetails] {
-	return &c.StreamModeDetailsRef
+func (c *mqlAwsKinesisStream) GetCapacityMode() *plugin.TValue[*mqlAwsKinesisStreamModeDetails] {
+	return &c.CapacityMode
 }
 
 func (c *mqlAwsKinesisStream) GetEnhancedMonitoring() *plugin.TValue[[]any] {
@@ -179339,7 +179339,7 @@ type mqlAwsMemorydbUser struct {
 	AclNames             plugin.TValue[[]any]
 	MinimumEngineVersion plugin.TValue[string]
 	Authentication       plugin.TValue[any]
-	AuthenticationRef    plugin.TValue[*mqlAwsMemorydbAuthentication]
+	AuthenticationMode   plugin.TValue[*mqlAwsMemorydbAuthentication]
 	Region               plugin.TValue[string]
 	Tags                 plugin.TValue[map[string]any]
 }
@@ -179404,8 +179404,8 @@ func (c *mqlAwsMemorydbUser) GetAuthentication() *plugin.TValue[any] {
 	return &c.Authentication
 }
 
-func (c *mqlAwsMemorydbUser) GetAuthenticationRef() *plugin.TValue[*mqlAwsMemorydbAuthentication] {
-	return &c.AuthenticationRef
+func (c *mqlAwsMemorydbUser) GetAuthenticationMode() *plugin.TValue[*mqlAwsMemorydbAuthentication] {
+	return &c.AuthenticationMode
 }
 
 func (c *mqlAwsMemorydbUser) GetRegion() *plugin.TValue[string] {
@@ -181437,16 +181437,16 @@ type mqlAwsGlueSecurityConfiguration struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsGlueSecurityConfigurationInternal it will be used here
-	Name                      plugin.TValue[string]
-	CreatedAt                 plugin.TValue[*time.Time]
-	S3Encryption              plugin.TValue[any]
-	CloudWatchEncryption      plugin.TValue[any]
-	JobBookmarksEncryption    plugin.TValue[any]
-	S3EncryptionRef           plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption]
-	CloudWatchEncryptionRef   plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption]
-	JobBookmarksEncryptionRef plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption]
-	DataQualityEncryption     plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption]
-	Region                    plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	CreatedAt                plugin.TValue[*time.Time]
+	S3Encryption             plugin.TValue[any]
+	CloudWatchEncryption     plugin.TValue[any]
+	JobBookmarksEncryption   plugin.TValue[any]
+	S3DataEncryption         plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption]
+	CloudWatchLogsEncryption plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption]
+	BookmarkStateEncryption  plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption]
+	DataQualityEncryption    plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption]
+	Region                   plugin.TValue[string]
 }
 
 // createAwsGlueSecurityConfiguration creates a new instance of this resource
@@ -181501,16 +181501,16 @@ func (c *mqlAwsGlueSecurityConfiguration) GetJobBookmarksEncryption() *plugin.TV
 	return &c.JobBookmarksEncryption
 }
 
-func (c *mqlAwsGlueSecurityConfiguration) GetS3EncryptionRef() *plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption] {
-	return &c.S3EncryptionRef
+func (c *mqlAwsGlueSecurityConfiguration) GetS3DataEncryption() *plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption] {
+	return &c.S3DataEncryption
 }
 
-func (c *mqlAwsGlueSecurityConfiguration) GetCloudWatchEncryptionRef() *plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption] {
-	return &c.CloudWatchEncryptionRef
+func (c *mqlAwsGlueSecurityConfiguration) GetCloudWatchLogsEncryption() *plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption] {
+	return &c.CloudWatchLogsEncryption
 }
 
-func (c *mqlAwsGlueSecurityConfiguration) GetJobBookmarksEncryptionRef() *plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption] {
-	return &c.JobBookmarksEncryptionRef
+func (c *mqlAwsGlueSecurityConfiguration) GetBookmarkStateEncryption() *plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption] {
+	return &c.BookmarkStateEncryption
 }
 
 func (c *mqlAwsGlueSecurityConfiguration) GetDataQualityEncryption() *plugin.TValue[*mqlAwsGlueSecurityConfigurationEncryption] {
@@ -195926,7 +195926,7 @@ type mqlAwsIdentitycenterPermissionSet struct {
 	CreatedAt               plugin.TValue[*time.Time]
 	InlinePolicy            plugin.TValue[string]
 	ManagedPolicies         plugin.TValue[[]any]
-	ManagedPolicyRefs       plugin.TValue[[]any]
+	AwsManagedPolicies      plugin.TValue[[]any]
 	CustomerManagedPolicies plugin.TValue[[]any]
 	PermissionsBoundary     plugin.TValue[any]
 	Tags                    plugin.TValue[map[string]any]
@@ -196015,10 +196015,10 @@ func (c *mqlAwsIdentitycenterPermissionSet) GetManagedPolicies() *plugin.TValue[
 	})
 }
 
-func (c *mqlAwsIdentitycenterPermissionSet) GetManagedPolicyRefs() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.ManagedPolicyRefs, func() ([]any, error) {
+func (c *mqlAwsIdentitycenterPermissionSet) GetAwsManagedPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AwsManagedPolicies, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.identitycenter.permissionSet", c.__id, "managedPolicyRefs")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.identitycenter.permissionSet", c.__id, "awsManagedPolicies")
 			if err != nil {
 				return nil, err
 			}
@@ -196027,7 +196027,7 @@ func (c *mqlAwsIdentitycenterPermissionSet) GetManagedPolicyRefs() *plugin.TValu
 			}
 		}
 
-		return c.managedPolicyRefs()
+		return c.awsManagedPolicies()
 	})
 }
 
@@ -197024,7 +197024,7 @@ type mqlAwsVerifiedaccessTrustProvider struct {
 	PolicyReferenceName           plugin.TValue[string]
 	OidcOptions                   plugin.TValue[any]
 	SseSpecification              plugin.TValue[any]
-	SseSpecificationRef           plugin.TValue[*mqlAwsVerifiedaccessSseSpecification]
+	ServerSideEncryption          plugin.TValue[*mqlAwsVerifiedaccessSseSpecification]
 	Tags                          plugin.TValue[map[string]any]
 }
 
@@ -197097,8 +197097,8 @@ func (c *mqlAwsVerifiedaccessTrustProvider) GetSseSpecification() *plugin.TValue
 	return &c.SseSpecification
 }
 
-func (c *mqlAwsVerifiedaccessTrustProvider) GetSseSpecificationRef() *plugin.TValue[*mqlAwsVerifiedaccessSseSpecification] {
-	return &c.SseSpecificationRef
+func (c *mqlAwsVerifiedaccessTrustProvider) GetServerSideEncryption() *plugin.TValue[*mqlAwsVerifiedaccessSseSpecification] {
+	return &c.ServerSideEncryption
 }
 
 func (c *mqlAwsVerifiedaccessTrustProvider) GetTags() *plugin.TValue[map[string]any] {
@@ -197115,7 +197115,7 @@ type mqlAwsVerifiedaccessGroup struct {
 	Region                   plugin.TValue[string]
 	VerifiedAccessInstanceId plugin.TValue[string]
 	SseSpecification         plugin.TValue[any]
-	SseSpecificationRef      plugin.TValue[*mqlAwsVerifiedaccessSseSpecification]
+	ServerSideEncryption     plugin.TValue[*mqlAwsVerifiedaccessSseSpecification]
 	Owner                    plugin.TValue[string]
 	Tags                     plugin.TValue[map[string]any]
 }
@@ -197177,8 +197177,8 @@ func (c *mqlAwsVerifiedaccessGroup) GetSseSpecification() *plugin.TValue[any] {
 	return &c.SseSpecification
 }
 
-func (c *mqlAwsVerifiedaccessGroup) GetSseSpecificationRef() *plugin.TValue[*mqlAwsVerifiedaccessSseSpecification] {
-	return &c.SseSpecificationRef
+func (c *mqlAwsVerifiedaccessGroup) GetServerSideEncryption() *plugin.TValue[*mqlAwsVerifiedaccessSseSpecification] {
+	return &c.ServerSideEncryption
 }
 
 func (c *mqlAwsVerifiedaccessGroup) GetOwner() *plugin.TValue[string] {
@@ -197206,7 +197206,7 @@ type mqlAwsVerifiedaccessEndpoint struct {
 	Status                   plugin.TValue[any]
 	SecurityGroups           plugin.TValue[[]any]
 	SseSpecification         plugin.TValue[any]
-	SseSpecificationRef      plugin.TValue[*mqlAwsVerifiedaccessSseSpecification]
+	ServerSideEncryption     plugin.TValue[*mqlAwsVerifiedaccessSseSpecification]
 	Tags                     plugin.TValue[map[string]any]
 }
 
@@ -197319,8 +197319,8 @@ func (c *mqlAwsVerifiedaccessEndpoint) GetSseSpecification() *plugin.TValue[any]
 	return &c.SseSpecification
 }
 
-func (c *mqlAwsVerifiedaccessEndpoint) GetSseSpecificationRef() *plugin.TValue[*mqlAwsVerifiedaccessSseSpecification] {
-	return &c.SseSpecificationRef
+func (c *mqlAwsVerifiedaccessEndpoint) GetServerSideEncryption() *plugin.TValue[*mqlAwsVerifiedaccessSseSpecification] {
+	return &c.ServerSideEncryption
 }
 
 func (c *mqlAwsVerifiedaccessEndpoint) GetTags() *plugin.TValue[map[string]any] {

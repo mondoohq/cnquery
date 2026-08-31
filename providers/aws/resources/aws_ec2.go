@@ -1434,7 +1434,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 			"rootDeviceType":     llx.StringData(string(instance.RootDeviceType)),
 			"state":              llx.StringData(stateName),
 			"stateReason":        llx.MapData(stateReason, types.Any),
-			"stateReasonRef":     mqlStateReason,
+			"stateChangeReason":  mqlStateReason,
 			// "iamInstanceProfile":    llx.MapData(iamInstanceProfile, types.Any),
 			"stateTransitionReason": llx.StringDataPtr(instance.StateTransitionReason),
 			"stateTransitionTime":   llx.TimeDataPtr(stateTransitionTime),

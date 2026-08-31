@@ -81,13 +81,13 @@ func newMqlS3PublicAccessBlock(runtime *plugin.Runtime, ownerID string, blockPub
 	return res.(*mqlAwsS3PublicAccessBlock), nil
 }
 
-func (a *mqlAwsS3control) accountPublicAccessBlockRef() (*mqlAwsS3PublicAccessBlock, error) {
+func (a *mqlAwsS3control) accountBlockPublicAccess() (*mqlAwsS3PublicAccessBlock, error) {
 	config, err := a.fetchAccountPublicAccessBlock()
 	if err != nil {
 		return nil, err
 	}
 	if config == nil {
-		a.AccountPublicAccessBlockRef.State = plugin.StateIsSet | plugin.StateIsNull
+		a.AccountBlockPublicAccess.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -388,13 +388,13 @@ func (a *mqlAwsS3BucketAccessPoint) fetchPublicAccessBlock() (*s3controltypes.Pu
 	return a.publicAccessConfig, a.publicAccessErr
 }
 
-func (a *mqlAwsS3BucketAccessPoint) publicAccessBlockRef() (*mqlAwsS3PublicAccessBlock, error) {
+func (a *mqlAwsS3BucketAccessPoint) blockPublicAccess() (*mqlAwsS3PublicAccessBlock, error) {
 	config, err := a.fetchPublicAccessBlock()
 	if err != nil {
 		return nil, err
 	}
 	if config == nil {
-		a.PublicAccessBlockRef.State = plugin.StateIsSet | plugin.StateIsNull
+		a.BlockPublicAccess.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	return newMqlS3PublicAccessBlock(a.MqlRuntime, a.Arn.Data,
@@ -823,13 +823,13 @@ func (a *mqlAwsS3Bucket) restrictPublicBuckets() (bool, error) {
 	return a.s3PublicAccessBlockFlag(func(c *s3types.PublicAccessBlockConfiguration) *bool { return c.RestrictPublicBuckets })
 }
 
-func (a *mqlAwsS3Bucket) publicAccessBlockRef() (*mqlAwsS3PublicAccessBlock, error) {
+func (a *mqlAwsS3Bucket) blockPublicAccess() (*mqlAwsS3PublicAccessBlock, error) {
 	config, err := a.fetchPublicAccessBlock()
 	if err != nil {
 		return nil, err
 	}
 	if config == nil {
-		a.PublicAccessBlockRef.State = plugin.StateIsSet | plugin.StateIsNull
+		a.BlockPublicAccess.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	return newMqlS3PublicAccessBlock(a.MqlRuntime, a.Arn.Data,

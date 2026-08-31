@@ -828,13 +828,13 @@ func eksNodeCount(v *int32) *llx.RawData {
 	return llx.IntData(int64(*v))
 }
 
-func (a *mqlAwsEksNodegroup) remoteAccessRef() (*mqlAwsEksRemoteAccess, error) {
+func (a *mqlAwsEksNodegroup) sshAccess() (*mqlAwsEksRemoteAccess, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
 	}
 	if ng.RemoteAccess == nil {
-		a.RemoteAccessRef.State = plugin.StateIsSet | plugin.StateIsNull
+		a.SshAccess.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := CreateResource(a.MqlRuntime, "aws.eks.remoteAccess", map[string]*llx.RawData{
