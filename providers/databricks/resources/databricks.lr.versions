@@ -321,6 +321,9 @@ databricks.ipAccessList.label 13.0.0
 databricks.ipAccessList.listType 13.0.0
 databricks.ipAccessLists 13.0.0
 databricks.job 13.1.4
+databricks.job.continuousMaintenanceWindowDayOfWeek 13.3.1
+databricks.job.continuousMaintenanceWindowStartHour 13.3.1
+databricks.job.continuousMaintenanceWindowTimezoneId 13.3.1
 databricks.job.continuousPauseStatus 13.1.4
 databricks.job.createdTime 13.1.4
 databricks.job.creatorUserName 13.1.4
@@ -351,6 +354,7 @@ databricks.job.schedulePauseStatus 13.1.4
 databricks.job.scheduleTimezoneId 13.1.4
 databricks.job.tags 13.1.4
 databricks.job.task 13.1.4
+databricks.job.task.alertParameters 13.3.1
 databricks.job.task.dbtCommands 13.1.4
 databricks.job.task.dependsOn 13.1.4
 databricks.job.task.description 13.1.4

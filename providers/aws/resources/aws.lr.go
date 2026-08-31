@@ -14555,6 +14555,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.service.deploymentConfiguration.strategy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsServiceDeploymentConfiguration).GetStrategy()).ToDataRes(types.String)
 	},
+	"aws.ecs.service.deploymentConfiguration.earlySuccessCriteriaEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsServiceDeploymentConfiguration).GetEarlySuccessCriteriaEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ecs.service.deploymentConfiguration.earlySuccessCriteriaHealthyPercent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsServiceDeploymentConfiguration).GetEarlySuccessCriteriaHealthyPercent()).ToDataRes(types.Int)
+	},
+	"aws.ecs.service.deploymentConfiguration.earlySuccessCriteriaRevisionCleanup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsServiceDeploymentConfiguration).GetEarlySuccessCriteriaRevisionCleanup()).ToDataRes(types.String)
+	},
 	"aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker.enable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsServiceDeploymentConfigurationDeploymentCircuitBreaker).GetEnable()).ToDataRes(types.Bool)
 	},
@@ -50731,6 +50740,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.service.deploymentConfiguration.strategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsServiceDeploymentConfiguration).Strategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.service.deploymentConfiguration.earlySuccessCriteriaEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsServiceDeploymentConfiguration).EarlySuccessCriteriaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.service.deploymentConfiguration.earlySuccessCriteriaHealthyPercent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsServiceDeploymentConfiguration).EarlySuccessCriteriaHealthyPercent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.service.deploymentConfiguration.earlySuccessCriteriaRevisionCleanup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsServiceDeploymentConfiguration).EarlySuccessCriteriaRevisionCleanup, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -120120,15 +120141,18 @@ type mqlAwsEcsServiceDeploymentConfiguration struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsEcsServiceDeploymentConfigurationInternal it will be used here
-	MaximumPercent           plugin.TValue[int64]
-	MinimumHealthyPercent    plugin.TValue[int64]
-	DeploymentCircuitBreaker plugin.TValue[*mqlAwsEcsServiceDeploymentConfigurationDeploymentCircuitBreaker]
-	Alarms                   plugin.TValue[any]
-	BakeTimeInMinutes        plugin.TValue[int64]
-	CanaryConfiguration      plugin.TValue[any]
-	LifecycleHooks           plugin.TValue[any]
-	LinearConfiguration      plugin.TValue[any]
-	Strategy                 plugin.TValue[string]
+	MaximumPercent                      plugin.TValue[int64]
+	MinimumHealthyPercent               plugin.TValue[int64]
+	DeploymentCircuitBreaker            plugin.TValue[*mqlAwsEcsServiceDeploymentConfigurationDeploymentCircuitBreaker]
+	Alarms                              plugin.TValue[any]
+	BakeTimeInMinutes                   plugin.TValue[int64]
+	CanaryConfiguration                 plugin.TValue[any]
+	LifecycleHooks                      plugin.TValue[any]
+	LinearConfiguration                 plugin.TValue[any]
+	Strategy                            plugin.TValue[string]
+	EarlySuccessCriteriaEnabled         plugin.TValue[bool]
+	EarlySuccessCriteriaHealthyPercent  plugin.TValue[int64]
+	EarlySuccessCriteriaRevisionCleanup plugin.TValue[string]
 }
 
 // createAwsEcsServiceDeploymentConfiguration creates a new instance of this resource
@@ -120209,6 +120233,18 @@ func (c *mqlAwsEcsServiceDeploymentConfiguration) GetLinearConfiguration() *plug
 
 func (c *mqlAwsEcsServiceDeploymentConfiguration) GetStrategy() *plugin.TValue[string] {
 	return &c.Strategy
+}
+
+func (c *mqlAwsEcsServiceDeploymentConfiguration) GetEarlySuccessCriteriaEnabled() *plugin.TValue[bool] {
+	return &c.EarlySuccessCriteriaEnabled
+}
+
+func (c *mqlAwsEcsServiceDeploymentConfiguration) GetEarlySuccessCriteriaHealthyPercent() *plugin.TValue[int64] {
+	return &c.EarlySuccessCriteriaHealthyPercent
+}
+
+func (c *mqlAwsEcsServiceDeploymentConfiguration) GetEarlySuccessCriteriaRevisionCleanup() *plugin.TValue[string] {
+	return &c.EarlySuccessCriteriaRevisionCleanup
 }
 
 // mqlAwsEcsServiceDeploymentConfigurationDeploymentCircuitBreaker for the aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker resource

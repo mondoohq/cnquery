@@ -3554,6 +3554,93 @@ alicloud.polardb.cluster {
   // One of Enable, Enabling, Disable, or Disabling. Only Enable means
   // statements are being recorded now.
   auditLogCollectorStatus() string
+  // Applications provisioned on the cluster
+  applications() []alicloud.polardb.application
+}
+
+// PolarDB application
+//
+// A single application provisioned on a PolarDB cluster, such as a PolarFS
+// store or a vector store an AI workload reads. An application carries its own
+// network endpoints and its own TLS settings, separate from the cluster ones,
+// so a cluster with TLS on can still front an application that accepts
+// unencrypted client connections. Exposes those endpoints, whether TLS is
+// enabled and rotates automatically, and the server certificate common name,
+// source, fingerprint, and expiry.
+alicloud.polardb.application @defaults("applicationId applicationType status sslEnabled") {
+  // Application ID, for example pa-xxxxxxxx
+  applicationId string
+  // Kind of application
+  //
+  // For example PolarFS or VectorStore. Reported as returned by the API, so a
+  // kind added after this provider shipped still appears.
+  applicationType string
+  // Application description, empty when none is set
+  description string
+  // Cluster the application is provisioned on
+  dbCluster() alicloud.polardb.cluster
+  // Database engine version the application runs
+  engineVersion string
+  // Lifecycle state of the application, for example Running or Creating
+  status string
+  // Region ID the application resides in, for example cn-hangzhou
+  regionId string
+  // Zone ID the application resides in, for example cn-hangzhou-i
+  zoneId string
+  // Billing method
+  //
+  // One of Prepaid (subscription) or Postpaid (pay-as-you-go).
+  payType string
+  // When the application was created
+  createTime time
+  // When a prepaid application expires, null for postpaid
+  expireTime time
+  // Whether the application has passed its expiry, empty for postpaid
+  expired string
+  // PolarFS instance backing the application, empty when none
+  polarFsInstanceId string
+  // Network addresses the application is reachable on
+  //
+  // One entry per address with ip, netType (the network type, Public or
+  // Private), and port. A Public entry means the application answers from
+  // outside the VPC, so the TLS and whitelist settings are what stand between
+  // it and the internet.
+  endpoints []dict
+  // Tags attached to the application
+  tags map[string]string
+  // Whether the application requires TLS on client connections
+  //
+  // False when TLS is off, and when the setting could not be read, so a "TLS is
+  // on" check fails rather than passing on an application nobody could read.
+  // With it off, client traffic to the endpoints travels in the clear.
+  sslEnabled() bool
+  // Whether the server certificate rotates automatically before it expires
+  //
+  // Null when TLS is off. With it false, the certificate has to be rotated by
+  // hand and connections break when certExpireTime passes.
+  sslAutoRotate() bool
+  // Common Name of the server certificate
+  //
+  // Null when TLS is off.
+  certCommonName() string
+  // Where the server certificate comes from
+  //
+  // For example aliyun for an Alibaba Cloud issued certificate, or custom for
+  // one uploaded by the account. Null when TLS is off.
+  certSource() string
+  // SHA-256 fingerprint of the server certificate, in lowercase hex
+  //
+  // The DER fingerprint, matching openssl -fingerprint -sha256, for clients
+  // that pin the certificate. Null when TLS is off.
+  certFingerprintSha256() string
+  // When the server certificate expires
+  //
+  // Null when TLS is off.
+  certExpireTime() time
+  // When the server certificate was last installed
+  //
+  // Null when TLS is off.
+  certModifiedTime() time
 }
 
 // VPC flow log

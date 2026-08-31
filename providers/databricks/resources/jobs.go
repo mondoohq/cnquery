@@ -196,8 +196,19 @@ func newMqlDatabricksJob(runtime *plugin.Runtime, job jobs.BaseJob) (*mqlDatabri
 	}
 
 	continuousPause := ""
+	// A job with no maintenance window reports the three window fields as null
+	// rather than as ""/0: start hour 0 is a legitimate window (midnight), so a
+	// zero value would report a real window on every job that sets none.
+	maintenanceDayOfWeek := llx.NilData
+	maintenanceStartHour := llx.NilData
+	maintenanceTimezoneId := llx.NilData
 	if settings.Continuous != nil {
 		continuousPause = string(settings.Continuous.PauseStatus)
+		if w := settings.Continuous.MaintenanceWindow; w != nil {
+			maintenanceDayOfWeek = llx.StringData(string(w.DayOfWeek))
+			maintenanceStartHour = llx.IntData(int64(w.StartHour))
+			maintenanceTimezoneId = llx.StringData(w.TimezoneId)
+		}
 	}
 
 	deploymentKind := ""
@@ -222,34 +233,37 @@ func newMqlDatabricksJob(runtime *plugin.Runtime, job jobs.BaseJob) (*mqlDatabri
 
 	jobId := strconv.FormatInt(job.JobId, 10)
 	res, err := CreateResource(runtime, "databricks.job", map[string]*llx.RawData{
-		"__id":                   llx.StringData("databricks.job/" + jobId),
-		"id":                     llx.IntData(job.JobId),
-		"name":                   llx.StringData(settings.Name),
-		"description":            llx.StringData(settings.Description),
-		"createdTime":            llx.TimeDataPtr(epochMsTime(job.CreatedTime)),
-		"creatorUserName":        llx.StringData(job.CreatorUserName),
-		"runAs":                  llx.StringData(runAs),
-		"runAsType":              llx.StringData(runAsType),
-		"format":                 llx.StringData(string(settings.Format)),
-		"editMode":               llx.StringData(string(settings.EditMode)),
-		"maxConcurrentRuns":      llx.IntData(int64(settings.MaxConcurrentRuns)),
-		"timeoutSeconds":         llx.IntData(int64(settings.TimeoutSeconds)),
-		"tags":                   llx.MapData(strMap(settings.Tags), types.String),
-		"scheduleCronExpression": llx.StringData(scheduleCron),
-		"scheduleTimezoneId":     llx.StringData(scheduleTimezone),
-		"schedulePauseStatus":    llx.StringData(schedulePause),
-		"continuousPauseStatus":  llx.StringData(continuousPause),
-		"performanceTarget":      llx.StringData(string(settings.PerformanceTarget)),
-		"deploymentKind":         llx.StringData(deploymentKind),
-		"deploymentId":           llx.StringData(deploymentId),
-		"parentPath":             llx.StringData(settings.ParentPath),
-		"gitUrl":                 llx.StringData(gitUrl),
-		"gitProvider":            llx.StringData(gitProvider),
-		"gitBranch":              llx.StringData(gitBranch),
-		"gitTag":                 llx.StringData(gitTag),
-		"gitCommit":              llx.StringData(gitCommit),
-		"notificationEmails":     llx.ArrayData(strSlice(notificationEmailsOf(settings.EmailNotifications)), types.String),
-		"webhookNotificationIds": llx.ArrayData(strSlice(webhookNotificationIdsOf(settings.WebhookNotifications)), types.String),
+		"__id":                                  llx.StringData("databricks.job/" + jobId),
+		"id":                                    llx.IntData(job.JobId),
+		"name":                                  llx.StringData(settings.Name),
+		"description":                           llx.StringData(settings.Description),
+		"createdTime":                           llx.TimeDataPtr(epochMsTime(job.CreatedTime)),
+		"creatorUserName":                       llx.StringData(job.CreatorUserName),
+		"runAs":                                 llx.StringData(runAs),
+		"runAsType":                             llx.StringData(runAsType),
+		"format":                                llx.StringData(string(settings.Format)),
+		"editMode":                              llx.StringData(string(settings.EditMode)),
+		"maxConcurrentRuns":                     llx.IntData(int64(settings.MaxConcurrentRuns)),
+		"timeoutSeconds":                        llx.IntData(int64(settings.TimeoutSeconds)),
+		"tags":                                  llx.MapData(strMap(settings.Tags), types.String),
+		"scheduleCronExpression":                llx.StringData(scheduleCron),
+		"scheduleTimezoneId":                    llx.StringData(scheduleTimezone),
+		"schedulePauseStatus":                   llx.StringData(schedulePause),
+		"continuousPauseStatus":                 llx.StringData(continuousPause),
+		"continuousMaintenanceWindowDayOfWeek":  maintenanceDayOfWeek,
+		"continuousMaintenanceWindowStartHour":  maintenanceStartHour,
+		"continuousMaintenanceWindowTimezoneId": maintenanceTimezoneId,
+		"performanceTarget":                     llx.StringData(string(settings.PerformanceTarget)),
+		"deploymentKind":                        llx.StringData(deploymentKind),
+		"deploymentId":                          llx.StringData(deploymentId),
+		"parentPath":                            llx.StringData(settings.ParentPath),
+		"gitUrl":                                llx.StringData(gitUrl),
+		"gitProvider":                           llx.StringData(gitProvider),
+		"gitBranch":                             llx.StringData(gitBranch),
+		"gitTag":                                llx.StringData(gitTag),
+		"gitCommit":                             llx.StringData(gitCommit),
+		"notificationEmails":                    llx.ArrayData(strSlice(notificationEmailsOf(settings.EmailNotifications)), types.String),
+		"webhookNotificationIds":                llx.ArrayData(strSlice(webhookNotificationIdsOf(settings.WebhookNotifications)), types.String),
 	})
 	if err != nil {
 		return nil, err
@@ -518,6 +532,13 @@ func (r *mqlDatabricksJob) tasks() ([]any, error) {
 			dbtCommands = t.DbtTask.Commands
 		}
 
+		alertParameters := map[string]any{}
+		if t.AlertTask != nil {
+			for k, v := range t.AlertTask.Parameters {
+				alertParameters[k] = v
+			}
+		}
+
 		dependsOn := make([]string, 0, len(t.DependsOn))
 		for j := range t.DependsOn {
 			dependsOn = append(dependsOn, t.DependsOn[j].TaskKey)
@@ -534,6 +555,7 @@ func (r *mqlDatabricksJob) tasks() ([]any, error) {
 			"sparkJarMainClass":     llx.StringData(sparkJarMainClass),
 			"sparkPythonFile":       llx.StringData(sparkPythonFile),
 			"sparkSubmitParameters": llx.ArrayData(strSlice(sparkSubmitParameters), types.String),
+			"alertParameters":       llx.MapData(alertParameters, types.String),
 			"dbtCommands":           llx.ArrayData(strSlice(dbtCommands), types.String),
 			"libraries":             llx.ArrayData(jobLibrariesToDict(t.Libraries), types.Dict),
 			"dependsOn":             llx.ArrayData(strSlice(dependsOn), types.String),

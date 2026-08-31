@@ -1637,6 +1637,24 @@ databricks.job @defaults("name runAs format") {
   //
   // Empty when the job does not run continuously.
   continuousPauseStatus string
+  // Day of week platform maintenance may restart a continuous job
+  //
+  // One of MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, or SUNDAY.
+  // Null when the job does not run continuously, or runs continuously without
+  // a maintenance window, in which case Databricks may restart the run at any
+  // time.
+  continuousMaintenanceWindowDayOfWeek string
+  // Hour of the day the maintenance window opens
+  //
+  // An integer between 0 and 23 in the 24-hour day, resolved in
+  // continuousMaintenanceWindowTimezoneId. Platform-initiated maintenance
+  // starts only within the one-hour window beginning at this hour. Null when
+  // the job sets no maintenance window.
+  continuousMaintenanceWindowStartHour int
+  // Java timezone id the maintenance window is resolved in
+  //
+  // Null when the job sets no maintenance window.
+  continuousMaintenanceWindowTimezoneId string
   // Performance target for serverless runs, empty when unset
   performanceTarget string
   // How the job is managed, BUNDLE or SYSTEM_MANAGED
@@ -1738,6 +1756,13 @@ private databricks.job.task @defaults("taskKey taskType") {
   // A spark-submit task bypasses the notebook and JAR entry points, so these
   // parameters can carry arbitrary driver and executor configuration.
   sparkSubmitParameters []string
+  // Per-run parameter overrides an alert task applies, empty for other kinds
+  //
+  // Keyed by parameter name, applied onto the alert's stored query parameters
+  // before the query runs. Values may reference job parameters through
+  // {{job.parameters.*}}, which are resolved at run time, so an override can
+  // widen what the alert query reads beyond what the stored alert defines.
+  alertParameters map[string]string
   // dbt commands the task runs, empty for other task kinds
   dbtCommands []string
   // Libraries installed on the compute before the task runs
