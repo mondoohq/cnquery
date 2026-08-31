@@ -134,9 +134,25 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 		declared := spdxNoAssertion(spdxLicense(declaredLicenses(pkg), pkg.License, extractedLicenses))
 		concluded := spdxNoAssertion(spdxLicense(concludedLicenses(pkg), "", extractedLicenses))
 		if concluded == spdxNoAssertionValue {
-			// Nothing was concluded. Echoing the declared value is the honest
-			// reading: it is what the document has to go on, and asserting more
-			// than was determined is what NOASSERTION exists to avoid.
+			// Nothing was concluded, so this repeats the declared value.
+			//
+			// The comment that stood here called that "the honest reading",
+			// which had the argument backwards: echoing IS asserting more than
+			// was determined, and NOASSERTION is the thing that avoids it. The
+			// echo is a deliberate overstatement, not a modest one.
+			//
+			// It stays because the strictly accurate value is the more
+			// misleading one in practice. A consumer reading licenseConcluded
+			// as the package's license -- and many read it first -- sees
+			// NOASSERTION and takes a package that plainly declares MIT for one
+			// whose license is unknown. Repeating the declaration is wrong in a
+			// direction a reader can recover from; NOASSERTION is wrong in a
+			// direction they cannot.
+			//
+			// What makes the overstatement safe to keep is that it no longer
+			// survives a round trip: readSpdxPackageLicensing recognises a
+			// concluded value equal to the declared one as this echo and does
+			// not import it as a determination.
 			concluded = declared
 		}
 		doc.Packages = append(doc.Packages, &spdx.Package{
@@ -301,6 +317,8 @@ func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
 			Purl:        "", // extract package type from purl, see below
 			Cpes:        []string{},
 		}
+
+		readSpdxPackageLicensing(bomPkg, pkg)
 
 		for _, ref := range pkg.PackageExternalReferences {
 			if ref.RefType == spdx.PackageManagerPURL {
@@ -779,4 +797,86 @@ func spdxSupplier(supplier string) *common.Supplier {
 		return &common.Supplier{Supplier: spdxNoAssertionValue}
 	}
 	return &common.Supplier{Supplier: supplier, SupplierType: "Organization"}
+}
+
+// readSpdxPackageLicensing carries what an imported SPDX document states about a
+// package's licensing into the model.
+//
+// This decoder read a package's name, version, identifiers and file evidence and
+// dropped everything else the document said, which is information that exists
+// nowhere else in the file: a document stating a declared license, a concluded
+// one, a copyright and a supplier came out carrying none of them. #10597 fixed
+// the same gap in the Protobom decoder, but DefaultMultiDecoder routes SPDX
+// here, so no consumer of that entry point saw the difference.
+//
+// SPDX separates the two acquisitions by field, which is exactly the distinction
+// the model draws: PackageLicenseDeclared is what the package says about itself,
+// PackageLicenseConcluded is what the document's producer determined. Both are
+// single expressions rather than lists, so there is at most one entry of each.
+func readSpdxPackageLicensing(bomPkg *Package, pkg *v2_3.Package) {
+	declared := importedLicenseValue(pkg.PackageLicenseDeclared)
+	concluded := importedLicenseValue(pkg.PackageLicenseConcluded)
+
+	// A concluded value equal to the declared one is an echo, not a conclusion.
+	//
+	// This renderer writes one: where nothing was concluded it repeats the
+	// declared value rather than NOASSERTION, on the grounds that it is what the
+	// document has to go on, and other SPDX producers do the same. Reading it
+	// back as a determination turns a package that declared MIT and concluded
+	// nothing into one asserting somebody concluded MIT -- a claim that the
+	// license was verified, invented by a round trip.
+	//
+	// The two are indistinguishable in the document, so this is a choice about
+	// which way to be wrong, and it is not free either way. A third-party tool
+	// that genuinely concluded MIT for a package declaring MIT wrote the same
+	// two fields as our echo, and its real conclusion is dropped here with the
+	// echoes. What is lost is the acquisition signal, not the license: the
+	// package is still reported as licensed MIT, on its own declaration.
+	//
+	// It goes this way on frequency and on direction. This renderer echoes for
+	// every unconcluded package, so keeping the entry over-asserts across most
+	// of every document it produces, against a minority of genuine agreements;
+	// and inventing a verification nobody performed is worse than omitting one
+	// that happened. A conclusion that DISAGREES is the case the split exists
+	// for and is never touched.
+	if concluded == declared {
+		concluded = ""
+	}
+
+	if entry := DeclaredLicense(declared); entry != nil {
+		bomPkg.Licenses = append(bomPkg.Licenses, entry)
+	}
+
+	// No location and no confidence, for the reasons the Protobom decoder
+	// records: SPDX carries neither for a concluded license, and the model
+	// spells "nobody measured this" as 0. Reporting 1.0 would rank an imported
+	// conclusion that was never scored alongside one that scored perfectly.
+	if entry := ConcludedLicense(concluded, "", 0); entry != nil {
+		bomPkg.Licenses = append(bomPkg.Licenses, entry)
+	}
+
+	// The legacy scalar keeps being written, as every other producer in this
+	// package does, so a consumer that has not migrated to the list still sees a
+	// license. It takes the DECLARED entry, falling back to the concluded value
+	// when the document declared none: a scalar left empty while the document
+	// did state a license is the failure the fallback exists to prevent.
+	for _, l := range bomPkg.Licenses {
+		if l.GetAcquisition() == LicenseAcquisition_LICENSE_ACQUISITION_DECLARED {
+			bomPkg.License = licenseValueOf(l)
+			break
+		}
+	}
+	if bomPkg.License == "" {
+		bomPkg.License = concluded
+	}
+
+	if c := importedLicenseValue(pkg.PackageCopyrightText); c != "" {
+		bomPkg.Copyright = []string{c}
+	}
+
+	if pkg.PackageSupplier != nil {
+		if name := importedLicenseValue(pkg.PackageSupplier.Supplier); name != "" {
+			bomPkg.Supplier = name
+		}
+	}
 }
