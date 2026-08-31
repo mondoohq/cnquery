@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -149,9 +150,11 @@ func getLambdaArn(name string, region string, accountId string) string {
 // that the lazy accessors depend on. Shared by the list path and the targeted
 // init lookup.
 func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID string, function lambdatypes.FunctionConfiguration) (*mqlAwsLambdaFunction, error) {
-	var dlqTarget string
+	// A function with no dead-letter config has no target ARN; reporting ""
+	// would assert "not configured" as a measured value.
+	var dlqTarget *string
 	if function.DeadLetterConfig != nil {
-		dlqTarget = convert.ToValue(function.DeadLetterConfig.TargetArn)
+		dlqTarget = function.DeadLetterConfig.TargetArn
 	}
 
 	// Convert architectures to []any
@@ -239,7 +242,7 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 		"arn":                         llx.StringDataPtr(function.FunctionArn),
 		"name":                        llx.StringDataPtr(function.FunctionName),
 		"runtime":                     llx.StringData(string(function.Runtime)),
-		"dlqTargetArn":                llx.StringData(dlqTarget),
+		"dlqTargetArn":                llx.StringDataPtr(dlqTarget),
 		"region":                      llx.StringData(region),
 		"architectures":               llx.ArrayData(architectures, types.String),
 		"ephemeralStorageSize":        llx.IntData(ephemeralStorageSize),
@@ -252,11 +255,7 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 		"revisionId":                  llx.StringDataPtr(function.RevisionId),
 		"description":                 llx.StringDataPtr(function.Description),
 		"lastModifiedAt":              llx.TimeDataPtr(lastModifiedAt),
-		"state":                       llx.StringData(string(function.State)),
 		"codeSize":                    llx.IntData(function.CodeSize),
-		"stateReason":                 llx.StringDataPtr(function.StateReason),
-		"lastUpdateStatus":            llx.StringData(string(function.LastUpdateStatus)),
-		"lastUpdateStatusReason":      llx.StringDataPtr(function.LastUpdateStatusReason),
 		"environment":                 llx.MapData(envVars, types.String),
 		"snapStartApplyOn":            llx.StringData(snapStartApplyOn),
 		"snapStartOptimizationStatus": llx.StringData(snapStartOptimizationStatus),
@@ -287,6 +286,14 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 	}
 	mqlFunc.(*mqlAwsLambdaFunction).cacheKmsKeyArn = convert.ToValue(function.KMSKeyArn)
 	f := mqlFunc.(*mqlAwsLambdaFunction)
+	// A GetFunction lookup already carries the lifecycle fields, so seeding the
+	// memo here spares that path the extra GetFunctionConfiguration call. A
+	// ListFunctions summary carries none of them and seeds nothing, leaving the
+	// accessors to read them.
+	if status := lambdaStatusFromConfiguration(&function); status != nil {
+		f.status = status
+		f.statusFetched.Store(true)
+	}
 	f.cacheRoleArn = function.Role
 	f.region = region
 	f.accountID = accountID
@@ -429,6 +436,184 @@ type mqlAwsLambdaFunctionInternal struct {
 	runtimeMgmtOnce sync.Once
 	runtimeMgmtResp *lambda.GetRuntimeManagementConfigOutput
 	runtimeMgmtErr  error
+
+	statusFetched atomic.Bool
+	statusLock    sync.Mutex
+	status        *lambdaFunctionStatus
+}
+
+// lambdaFunctionStatus carries the lifecycle values that only a per-function
+// configuration lookup reports. The ListFunctions summary omits every one of
+// them, so a function reached through the list has to read them separately.
+type lambdaFunctionStatus struct {
+	state                  string
+	stateReason            *string
+	lastUpdateStatus       string
+	lastUpdateStatusReason *string
+	runtimeVersionArn      *string
+}
+
+// State reports the function lifecycle state, empty when nothing was read.
+func (s *lambdaFunctionStatus) State() string {
+	if s == nil {
+		return ""
+	}
+	return s.state
+}
+
+// StateReason reports why the function is in its current state, empty when
+// nothing was read or AWS gave no reason.
+func (s *lambdaFunctionStatus) StateReason() string {
+	if s == nil {
+		return ""
+	}
+	return convert.ToValue(s.stateReason)
+}
+
+// LastUpdateStatus reports the outcome of the most recent update, empty when
+// nothing was read.
+func (s *lambdaFunctionStatus) LastUpdateStatus() string {
+	if s == nil {
+		return ""
+	}
+	return s.lastUpdateStatus
+}
+
+// LastUpdateStatusReason reports why the most recent update ended the way it
+// did, empty when nothing was read or AWS gave no reason.
+func (s *lambdaFunctionStatus) LastUpdateStatusReason() string {
+	if s == nil {
+		return ""
+	}
+	return convert.ToValue(s.lastUpdateStatusReason)
+}
+
+// RuntimeVersionArn reports the patched managed-runtime build the function
+// runs on, empty when nothing was read or the runtime has no versioned build.
+func (s *lambdaFunctionStatus) RuntimeVersionArn() string {
+	if s == nil {
+		return ""
+	}
+	return convert.ToValue(s.runtimeVersionArn)
+}
+
+// lambdaStatusFromConfiguration reads the lifecycle values off a function
+// configuration, returning nil when the configuration carries none of them.
+// ListFunctions returns a summary with State, StateReason, LastUpdateStatus,
+// LastUpdateStatusReason and RuntimeVersionConfig all absent; treating that
+// summary as a status would report "" for every function in every account.
+// A real configuration always names a state.
+func lambdaStatusFromConfiguration(cfg *lambdatypes.FunctionConfiguration) *lambdaFunctionStatus {
+	if cfg == nil || cfg.State == "" {
+		return nil
+	}
+	status := &lambdaFunctionStatus{
+		state:                  string(cfg.State),
+		stateReason:            cfg.StateReason,
+		lastUpdateStatus:       string(cfg.LastUpdateStatus),
+		lastUpdateStatusReason: cfg.LastUpdateStatusReason,
+	}
+	if cfg.RuntimeVersionConfig != nil {
+		status.runtimeVersionArn = cfg.RuntimeVersionConfig.RuntimeVersionArn
+	}
+	return status
+}
+
+// lambdaStatusFromConfigurationOutput reads the lifecycle values off a
+// GetFunctionConfiguration response, which flattens the same fields the
+// FunctionConfiguration struct nests.
+func lambdaStatusFromConfigurationOutput(resp *lambda.GetFunctionConfigurationOutput) *lambdaFunctionStatus {
+	if resp == nil {
+		return nil
+	}
+	return lambdaStatusFromConfiguration(&lambdatypes.FunctionConfiguration{
+		State:                  resp.State,
+		StateReason:            resp.StateReason,
+		LastUpdateStatus:       resp.LastUpdateStatus,
+		LastUpdateStatusReason: resp.LastUpdateStatusReason,
+		RuntimeVersionConfig:   resp.RuntimeVersionConfig,
+	})
+}
+
+// nullOnEmpty reports value, marking the field null when the value is empty.
+// The callers read values that AWS either names or omits entirely, so an empty
+// string means the value was never read and must not be asserted as measured.
+func nullOnEmpty(field *plugin.TValue[string], value string) (string, error) {
+	if value == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	return value, nil
+}
+
+// fetchStatus resolves the lifecycle values a ListFunctions summary omits,
+// with one GetFunctionConfiguration call shared by every field derived from
+// it. A 404 or an access denial leaves the status absent, so those fields read
+// as null rather than as an empty string.
+func (a *mqlAwsLambdaFunction) fetchStatus() (*lambdaFunctionStatus, error) {
+	if a.statusFetched.Load() {
+		return a.status, nil
+	}
+	a.statusLock.Lock()
+	defer a.statusLock.Unlock()
+	if a.statusFetched.Load() {
+		return a.status, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Lambda(a.Region.Data)
+	funcName := a.Name.Data
+	resp, err := svc.GetFunctionConfiguration(context.Background(), &lambda.GetFunctionConfigurationInput{
+		FunctionName: &funcName,
+	})
+	if err != nil {
+		var respErr *http.ResponseError
+		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
+			a.statusFetched.Store(true)
+			return nil, nil
+		}
+		if Is400AccessDeniedError(err) {
+			a.statusFetched.Store(true)
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	a.status = lambdaStatusFromConfigurationOutput(resp)
+	a.statusFetched.Store(true)
+	return a.status, nil
+}
+
+func (a *mqlAwsLambdaFunction) state() (string, error) {
+	status, err := a.fetchStatus()
+	if err != nil {
+		return "", err
+	}
+	return nullOnEmpty(&a.State, status.State())
+}
+
+func (a *mqlAwsLambdaFunction) stateReason() (string, error) {
+	status, err := a.fetchStatus()
+	if err != nil {
+		return "", err
+	}
+	return nullOnEmpty(&a.StateReason, status.StateReason())
+}
+
+func (a *mqlAwsLambdaFunction) lastUpdateStatus() (string, error) {
+	status, err := a.fetchStatus()
+	if err != nil {
+		return "", err
+	}
+	return nullOnEmpty(&a.LastUpdateStatus, status.LastUpdateStatus())
+}
+
+func (a *mqlAwsLambdaFunction) lastUpdateStatusReason() (string, error) {
+	status, err := a.fetchStatus()
+	if err != nil {
+		return "", err
+	}
+	return nullOnEmpty(&a.LastUpdateStatusReason, status.LastUpdateStatusReason())
 }
 
 // fetchImageData resolves the container image URIs for Image package type
@@ -639,14 +824,24 @@ func (a *mqlAwsLambdaFunction) concurrency() (int64, error) {
 	functionConcurrency, err := svc.GetFunctionConcurrency(ctx, &lambda.GetFunctionConcurrencyInput{FunctionName: &funcName})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
+			a.Concurrency.State = plugin.StateIsSet | plugin.StateIsNull
 			return 0, nil
 		}
 		return 0, errors.Wrap(err, "could not gather aws lambda function concurrency")
 	}
-	if functionConcurrency.ReservedConcurrentExecutions == nil {
+	return reservedConcurrency(&a.Concurrency, functionConcurrency.ReservedConcurrentExecutions)
+}
+
+// reservedConcurrency reports a function's reserved concurrency, keeping an
+// absent reservation distinct from a reservation of zero. They are opposite
+// postures: no reservation draws on the account's unreserved pool, while a
+// reservation of zero throttles the function so it cannot be invoked at all.
+func reservedConcurrency(field *plugin.TValue[int64], reserved *int32) (int64, error) {
+	if reserved == nil {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return 0, nil
 	}
-	return int64(*functionConcurrency.ReservedConcurrentExecutions), nil
+	return int64(*reserved), nil
 }
 
 func (a *mqlAwsLambdaFunction) policy() (any, error) {
@@ -1054,9 +1249,31 @@ func (a *mqlAwsLambda) getEventSourceMappings(conn *connection.AwsConnection) []
 // createEventSourceMappingResource creates an aws.lambda.eventSourceMapping resource from SDK data.
 // Shared between top-level listing and per-function listing to ensure cache reuse via UUID-based __id.
 func createEventSourceMappingResource(runtime *plugin.Runtime, esm lambdatypes.EventSourceMappingConfiguration, region string) (*mqlAwsLambdaEventSourceMapping, error) {
-	var onFailureDestinationArn string
+	args, err := eventSourceMappingArgs(esm, region)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(runtime, "aws.lambda.eventSourceMapping", args)
+	if err != nil {
+		return nil, err
+	}
+	mqlEsm := res.(*mqlAwsLambdaEventSourceMapping)
+	mqlEsm.cacheFunctionArn = convert.ToValue(esm.FunctionArn)
+	mqlEsm.cacheArn = convert.ToValue(esm.EventSourceMappingArn)
+	return mqlEsm, nil
+}
+
+// eventSourceMappingArgs maps an SDK event source mapping into resource
+// arguments. Settings the mapping does not carry stay null: zero is outside
+// the valid range of parallelizationFactor (1-10) and maximumConcurrency
+// (2-1000), so reporting it would name a value that cannot exist. The -1
+// fallbacks on maximumRetryAttempts and maximumRecordAgeInSeconds are the
+// documented "retry forever" and "no maximum age" sentinels, not stand-ins.
+func eventSourceMappingArgs(esm lambdatypes.EventSourceMappingConfiguration, region string) (map[string]*llx.RawData, error) {
+	var onFailureDestinationArn *string
 	if esm.DestinationConfig != nil && esm.DestinationConfig.OnFailure != nil {
-		onFailureDestinationArn = convert.ToValue(esm.DestinationConfig.OnFailure.Destination)
+		onFailureDestinationArn = esm.DestinationConfig.OnFailure.Destination
 	}
 
 	filterCriteria, err := convert.JsonToDict(esm.FilterCriteria)
@@ -1064,40 +1281,41 @@ func createEventSourceMappingResource(runtime *plugin.Runtime, esm lambdatypes.E
 		return nil, err
 	}
 
-	var maximumConcurrency int64
-	if esm.ScalingConfig != nil && esm.ScalingConfig.MaximumConcurrency != nil {
-		maximumConcurrency = int64(*esm.ScalingConfig.MaximumConcurrency)
+	var maximumConcurrency *int32
+	if esm.ScalingConfig != nil {
+		maximumConcurrency = esm.ScalingConfig.MaximumConcurrency
 	}
 
-	res, err := CreateResource(runtime, "aws.lambda.eventSourceMapping",
-		map[string]*llx.RawData{
-			"__id":                           llx.StringDataPtr(esm.UUID),
-			"uuid":                           llx.StringDataPtr(esm.UUID),
-			"eventSourceArn":                 llx.StringDataPtr(esm.EventSourceArn),
-			"region":                         llx.StringData(region),
-			"state":                          llx.StringDataPtr(esm.State),
-			"stateTransitionReason":          llx.StringDataPtr(esm.StateTransitionReason),
-			"batchSize":                      llx.IntDataDefault(esm.BatchSize, 0),
-			"maximumBatchingWindowInSeconds": llx.IntDataDefault(esm.MaximumBatchingWindowInSeconds, 0),
-			"parallelizationFactor":          llx.IntDataDefault(esm.ParallelizationFactor, 0),
-			"maximumRetryAttempts":           llx.IntDataDefault(esm.MaximumRetryAttempts, -1),
-			"maximumRecordAgeInSeconds":      llx.IntDataDefault(esm.MaximumRecordAgeInSeconds, -1),
-			"bisectBatchOnFunctionError":     llx.BoolDataPtr(esm.BisectBatchOnFunctionError),
-			"lastModified":                   llx.TimeDataPtr(esm.LastModified),
-			"lastProcessingResult":           llx.StringDataPtr(esm.LastProcessingResult),
-			"topics":                         llx.ArrayData(toInterfaceArr(esm.Topics), types.String),
-			"queues":                         llx.ArrayData(toInterfaceArr(esm.Queues), types.String),
-			"tumblingWindowInSeconds":        llx.IntDataDefault(esm.TumblingWindowInSeconds, 0),
-			"startingPosition":               llx.StringData(string(esm.StartingPosition)),
-			"onFailureDestinationArn":        llx.StringData(onFailureDestinationArn),
-			"filterCriteria":                 llx.DictData(filterCriteria),
-			"maximumConcurrency":             llx.IntData(maximumConcurrency),
-		})
-	if err != nil {
-		return nil, err
+	// StartingPosition is only meaningful for stream and Kafka sources; an SQS
+	// mapping has none, and "" is not one of its documented values.
+	startingPosition := llx.NilData
+	if esm.StartingPosition != "" {
+		startingPosition = llx.StringData(string(esm.StartingPosition))
 	}
-	res.(*mqlAwsLambdaEventSourceMapping).cacheFunctionArn = convert.ToValue(esm.FunctionArn)
-	return res.(*mqlAwsLambdaEventSourceMapping), nil
+
+	return map[string]*llx.RawData{
+		"__id":                           llx.StringDataPtr(esm.UUID),
+		"uuid":                           llx.StringDataPtr(esm.UUID),
+		"eventSourceArn":                 llx.StringDataPtr(esm.EventSourceArn),
+		"region":                         llx.StringData(region),
+		"state":                          llx.StringDataPtr(esm.State),
+		"stateTransitionReason":          llx.StringDataPtr(esm.StateTransitionReason),
+		"batchSize":                      llx.IntDataDefault(esm.BatchSize, 0),
+		"maximumBatchingWindowInSeconds": llx.IntDataDefault(esm.MaximumBatchingWindowInSeconds, 0),
+		"parallelizationFactor":          llx.IntDataPtr(esm.ParallelizationFactor),
+		"maximumRetryAttempts":           llx.IntDataDefault(esm.MaximumRetryAttempts, -1),
+		"maximumRecordAgeInSeconds":      llx.IntDataDefault(esm.MaximumRecordAgeInSeconds, -1),
+		"bisectBatchOnFunctionError":     llx.BoolDataPtr(esm.BisectBatchOnFunctionError),
+		"lastModified":                   llx.TimeDataPtr(esm.LastModified),
+		"lastProcessingResult":           llx.StringDataPtr(esm.LastProcessingResult),
+		"topics":                         llx.ArrayData(toInterfaceArr(esm.Topics), types.String),
+		"queues":                         llx.ArrayData(toInterfaceArr(esm.Queues), types.String),
+		"tumblingWindowInSeconds":        llx.IntDataPtr(esm.TumblingWindowInSeconds),
+		"startingPosition":               startingPosition,
+		"onFailureDestinationArn":        llx.StringDataPtr(onFailureDestinationArn),
+		"filterCriteria":                 llx.DictData(filterCriteria),
+		"maximumConcurrency":             llx.IntDataPtr(maximumConcurrency),
+	}, nil
 }
 
 func (a *mqlAwsLambdaEventSourceMapping) id() (string, error) {
@@ -1106,9 +1324,23 @@ func (a *mqlAwsLambdaEventSourceMapping) id() (string, error) {
 
 const lambdaEventSourceMappingArnPattern = "arn:aws:lambda:%s:%s:event-source-mapping:%s"
 
+// eventSourceMappingArn prefers the ARN the API returns. The composed fallback
+// hardcodes the `aws` partition, which is wrong in GovCloud (`aws-us-gov`) and
+// China (`aws-cn`); it is kept only for a response that names no ARN.
+func eventSourceMappingArn(sdkArn string, region string, accountID string, uuid string) string {
+	if sdkArn != "" {
+		return sdkArn
+	}
+	return fmt.Sprintf(lambdaEventSourceMappingArnPattern, region, accountID, uuid)
+}
+
 func (a *mqlAwsLambdaEventSourceMapping) arn() (string, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	return fmt.Sprintf(lambdaEventSourceMappingArnPattern, a.Region.Data, conn.AccountId(), a.Uuid.Data), nil
+	accountID := ""
+	if a.cacheArn == "" {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		accountID = conn.AccountId()
+	}
+	return eventSourceMappingArn(a.cacheArn, a.Region.Data, accountID, a.Uuid.Data), nil
 }
 
 func (a *mqlAwsLambdaEventSourceMapping) function() (*mqlAwsLambdaFunction, error) {
@@ -1376,33 +1608,19 @@ func (a *mqlAwsLambdaFunction) eventInvokeConfig() (any, error) {
 
 // runtimeVersionArn resolves the exact patched managed-runtime build the
 // function runs on. The ListFunctions summary omits RuntimeVersionConfig, so
-// this is fetched per function via GetFunctionConfiguration.
+// it shares the per-function configuration lookup with the lifecycle fields.
+// It stays empty for runtimes that have no versioned build, and reads null
+// when the configuration could not be read at all.
 func (a *mqlAwsLambdaFunction) runtimeVersionArn() (string, error) {
-	funcName := a.Name.Data
-	region := a.Region.Data
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Lambda(region)
-	ctx := context.Background()
-
-	resp, err := svc.GetFunctionConfiguration(ctx, &lambda.GetFunctionConfigurationInput{
-		FunctionName: &funcName,
-	})
+	status, err := a.fetchStatus()
 	if err != nil {
-		var respErr *http.ResponseError
-		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
-			return "", nil
-		}
-		if Is400AccessDeniedError(err) {
-			return "", nil
-		}
 		return "", err
 	}
-
-	if resp.RuntimeVersionConfig != nil {
-		return convert.ToValue(resp.RuntimeVersionConfig.RuntimeVersionArn), nil
+	if status == nil {
+		a.RuntimeVersionArn.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
 	}
-	return "", nil
+	return status.RuntimeVersionArn(), nil
 }
 
 func (a *mqlAwsLambdaFunction) runtimeManagementConfig() (any, error) {
@@ -1473,15 +1691,24 @@ func (a *mqlAwsLambdaFunction) runtimeManagement() (*mqlAwsLambdaRuntimeManageme
 		a.RuntimeManagement.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	res, err := CreateResource(a.MqlRuntime, "aws.lambda.runtimeManagementConfig", map[string]*llx.RawData{
-		"__id":              llx.StringData(a.Arn.Data + "/runtimeManagementConfig"),
-		"updateRuntimeOn":   llx.StringData(string(resp.UpdateRuntimeOn)),
-		"runtimeVersionArn": llx.StringData(convert.ToValue(resp.RuntimeVersionArn)),
-	})
+	res, err := CreateResource(a.MqlRuntime, "aws.lambda.runtimeManagementConfig",
+		runtimeManagementArgs(a.Arn.Data, resp))
 	if err != nil {
 		return nil, err
 	}
 	return res.(*mqlAwsLambdaRuntimeManagementConfig), nil
+}
+
+// runtimeManagementArgs maps a runtime management response into resource
+// arguments. AWS omits the pinned version for a function on Auto updates, so
+// runtimeVersionArn stays null there rather than claiming an empty ARN, which
+// is what the deprecated dict this resource replaces already did.
+func runtimeManagementArgs(functionArn string, resp *lambda.GetRuntimeManagementConfigOutput) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":              llx.StringData(functionArn + "/runtimeManagementConfig"),
+		"updateRuntimeOn":   llx.StringData(string(resp.UpdateRuntimeOn)),
+		"runtimeVersionArn": llx.StringDataPtr(resp.RuntimeVersionArn),
+	}
 }
 
 // ==================== Types ====================
@@ -1527,7 +1754,6 @@ func (a *mqlAwsLambdaFunction) versions() ([]any, error) {
 					"memorySize":     llx.IntDataDefault(v.MemorySize, 0),
 					"timeout":        llx.IntDataDefault(v.Timeout, 3),
 					"lastModifiedAt": llx.TimeDataPtr(lastModifiedAt),
-					"state":          llx.StringData(string(v.State)),
 				})
 			if err != nil {
 				return nil, err
@@ -1540,6 +1766,51 @@ func (a *mqlAwsLambdaFunction) versions() ([]any, error) {
 
 func (a *mqlAwsLambdaFunctionVersion) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+// lambdaRegionFromArn pulls the region out of a Lambda ARN, returning "" when
+// the value is not a parseable ARN.
+func lambdaRegionFromArn(value string) string {
+	parsed, err := arn.Parse(value)
+	if err != nil {
+		return ""
+	}
+	return parsed.Region
+}
+
+// state resolves the version's lifecycle state. ListVersionsByFunction omits
+// State on every entry it returns, so the version is read by its own
+// qualified ARN. It reads null when the state could not be read at all.
+func (a *mqlAwsLambdaFunctionVersion) state() (string, error) {
+	versionArn := a.Arn.Data
+	region := lambdaRegionFromArn(versionArn)
+	if region == "" {
+		a.State.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+
+	// One call per version, and there is no cheaper shape: ListVersionsByFunction
+	// omits State, which is the defect this accessor exists to fix, and Lambda
+	// offers no batch equivalent. GetOrCompute caches the result per version
+	// resource, so the cost is one call per version read, not per access.
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Lambda(region)
+	resp, err := svc.GetFunctionConfiguration(context.Background(), &lambda.GetFunctionConfigurationInput{
+		FunctionName: &versionArn,
+	})
+	if err != nil {
+		var respErr *http.ResponseError
+		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
+			a.State.State = plugin.StateIsSet | plugin.StateIsNull
+			return "", nil
+		}
+		if Is400AccessDeniedError(err) {
+			a.State.State = plugin.StateIsSet | plugin.StateIsNull
+			return "", nil
+		}
+		return "", err
+	}
+	return nullOnEmpty(&a.State, string(resp.State))
 }
 
 // ==================== Per-Layer Versions ====================
@@ -1604,4 +1875,5 @@ func (a *mqlAwsLambdaLayerVersion) id() (string, error) {
 
 type mqlAwsLambdaEventSourceMappingInternal struct {
 	cacheFunctionArn string
+	cacheArn         string
 }

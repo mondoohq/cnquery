@@ -18026,9 +18026,9 @@ private aws.lambda.runtimeManagementConfig @defaults("updateRuntimeOn") {
   updateRuntimeOn string
   // Managed runtime version the function is pinned to
   //
-  // Set only when updateRuntimeOn is Manual. Distinct from the function's own
-  // runtimeVersionArn, which reports the build the function is running right
-  // now whether or not it is pinned.
+  // Set only when updateRuntimeOn is Manual, and null otherwise. Distinct from
+  // the function's own runtimeVersionArn, which reports the build the function
+  // is running right now whether or not it is pinned.
   runtimeVersionArn string
 }
 
@@ -18040,9 +18040,16 @@ private aws.lambda.function @defaults("arn") {
   name string
   // Runtime environment for the function
   runtime string
-  // Concurrency limit for the function
+  // Reserved concurrency limit for the function
+  //
+  // The share of the account's concurrency pool set aside for this function.
+  // A value of 0 is a real setting that throttles the function so it cannot be
+  // invoked at all. Null means no reservation is configured, so the function
+  // draws on the account's unreserved pool.
   concurrency() int
   // Target ARN of the dead-letter queue config
+  //
+  // Null when the function has no dead-letter queue configured.
   dlqTargetArn string
   // Recursive loop detection mode, either "Allow" or "Terminate"
   recursiveLoop() string
@@ -18101,7 +18108,7 @@ private aws.lambda.function @defaults("arn") {
   revisionId string
   // ARN of the resolved managed runtime version the function runs on
   //
-  // Identifies the exact patched build of the managed runtime, distinct from runtimeManagementConfig, which only reports the update mode. Empty for OS-only runtimes and container-image functions.
+  // Identifies the exact patched build of the managed runtime, distinct from runtimeManagementConfig, which only reports the update mode. Empty for OS-only runtimes and container-image functions, and null when the function configuration could not be read.
   runtimeVersionArn() string
   // Human-readable description of the function
   description string
@@ -18115,16 +18122,29 @@ private aws.lambda.function @defaults("arn") {
   // configured. NONE means the function URL is publicly invocable without
   // authentication.
   urlConfigAuthType() string
-  // Current state of the function (Active, Inactive, Pending, Failed, Deactivating, Deactivated, ActiveNonInvocable, Deleting)
-  state string
+  // Current state of the function
+  //
+  // One of Active, Inactive, Pending, Failed, Deactivating, Deactivated,
+  // ActiveNonInvocable, or Deleting. Only Active and ActiveNonInvocable
+  // functions can be invoked. Null when the state could not be read.
+  state() string
   // Size of the function deployment package in bytes
   codeSize int
   // Reason for the function's current state
-  stateReason string
-  // Status of the last function update (Successful, Failed, InProgress)
-  lastUpdateStatus string
+  //
+  // Null when the function is in a state AWS gives no reason for, which is the
+  // usual case for a healthy Active function.
+  stateReason() string
+  // Status of the last function update
+  //
+  // One of Successful, Failed, or InProgress. Null when the status could not
+  // be read.
+  lastUpdateStatus() string
   // Reason for the last update status
-  lastUpdateStatusReason string
+  //
+  // Null when AWS gives no reason, which is the usual case after a successful
+  // update.
+  lastUpdateStatusReason() string
   // KMS key used to encrypt environment variables
   kmsKey() aws.kms.key
   // Environment variables configured for the function
@@ -18224,8 +18244,14 @@ private aws.lambda.function.version @defaults("arn version") {
   timeout int
   // When this version was last modified
   lastModifiedAt time
-  // State: Active, Inactive, Pending, Failed
-  state string
+  // Lifecycle state of this version
+  //
+  // One of Active, Inactive, Pending, or Failed. Null when the state could not
+  // be read. ListVersionsByFunction does not carry the state, so reading this
+  // field costs one GetFunctionConfiguration call per version, and a query
+  // shaped like functions { versions { state } } scales with the total number
+  // of versions in the account.
+  state() string
 }
 
 // AWS Lambda function URL configuration
@@ -18323,6 +18349,9 @@ private aws.lambda.eventSourceMapping @defaults("uuid eventSourceArn") {
   // UUID of the event source mapping
   uuid string
   // Amazon Resource Name (ARN) of the event source mapping
+  //
+  // Reported by the API. Composed from the region, account, and UUID only for
+  // a response that names no ARN.
   arn() string
   // ARN of the event source
   eventSourceArn string
@@ -18339,6 +18368,8 @@ private aws.lambda.eventSourceMapping @defaults("uuid eventSourceArn") {
   // Maximum time in seconds to gather records before invoking the function
   maximumBatchingWindowInSeconds int
   // Number of batches to process concurrently from each shard
+  //
+  // Between 1 and 10. Null for a source that does not use shards, such as SQS.
   parallelizationFactor int
   // Maximum number of retry attempts (-1 for infinite)
   maximumRetryAttempts int
@@ -18355,10 +18386,18 @@ private aws.lambda.eventSourceMapping @defaults("uuid eventSourceArn") {
   // Amazon MQ broker destination queues
   queues []string
   // Duration in seconds of the tumbling window
+  //
+  // Between 0 and 900. Null when the mapping does not aggregate records into
+  // windows.
   tumblingWindowInSeconds int
-  // Position in stream to start reading: AT_TIMESTAMP, LATEST, TRIM_HORIZON
+  // Position in stream to start reading
+  //
+  // One of AT_TIMESTAMP, LATEST, or TRIM_HORIZON. Null for a source that has
+  // no reading position, such as SQS.
   startingPosition string
   // ARN of the on-failure destination
+  //
+  // Null when the mapping has no on-failure destination configured.
   onFailureDestinationArn string
   // Event filtering criteria
   //
@@ -18367,6 +18406,9 @@ private aws.lambda.eventSourceMapping @defaults("uuid eventSourceArn") {
   // are discarded before the function is invoked.
   filterCriteria dict
   // Maximum concurrency for SQS event sources
+  //
+  // Between 2 and 1000. Null when no maximum is configured, leaving the
+  // mapping to scale on the default schedule.
   maximumConcurrency int
 }
 

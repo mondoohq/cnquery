@@ -398,24 +398,39 @@ func parseAwsTimestampPtr(value *string) *time.Time {
 	return parseAwsTimestamp(*value)
 }
 
+// awsTimestampLayouts lists every shape a string timestamp arrives in from the
+// AWS APIs that hand back timestamps as strings instead of typed times. They
+// are tried in order; the first that parses wins.
+var awsTimestampLayouts = []string{
+	// The common case, e.g. "2026-04-09T05:40:04Z" or "2026-04-09T05:40:04+00:00".
+	time.RFC3339,
+	// Some AWS APIs (e.g., Lambda layers) return timestamps with a non-RFC3339
+	// timezone offset like "2026-04-12T18:11:01.019+0000" (missing colon).
+	"2006-01-02T15:04:05.000-0700",
+	// The same offset shape without fractional seconds, e.g. Lambda provisioned
+	// concurrency: "2026-08-31T20:11:24+0000". The layout above demands the
+	// fractional part, so this form needs its own entry.
+	"2006-01-02T15:04:05-0700",
+	// Some AWS APIs (e.g., EC2 Verified Access) return timestamps without
+	// timezone info like "2026-04-09T05:40:04". Read as UTC in that case.
+	"2006-01-02T15:04:05",
+}
+
 func parseAwsTimestamp(value string) *time.Time {
-	timestamp, err := time.Parse(time.RFC3339, value)
-	if err != nil {
-		// Some AWS APIs (e.g., Lambda layers) return timestamps with non-RFC3339
-		// timezone offset like "2026-04-12T18:11:01.019+0000" (missing colon).
-		timestamp, err = time.Parse("2006-01-02T15:04:05.000-0700", value)
+	for _, layout := range awsTimestampLayouts {
+		timestamp, err := time.Parse(layout, value)
 		if err != nil {
-			// Some AWS APIs (e.g., EC2 Verified Access) return timestamps without
-			// timezone info like "2026-04-09T05:40:04". Parse as UTC in that case.
-			timestamp, err = time.Parse("2006-01-02T15:04:05", value)
-			if err != nil {
-				log.Warn().Err(err).Str("timestamp", value).Msg("failed to parse timestamp")
-				return nil
-			}
+			continue
+		}
+		// A layout carrying no zone parses into UTC already; normalizing keeps
+		// the location explicit rather than the zero Location value.
+		if layout == "2006-01-02T15:04:05" {
 			timestamp = timestamp.UTC()
 		}
+		return &timestamp
 	}
-	return &timestamp
+	log.Warn().Str("timestamp", value).Msg("failed to parse timestamp")
+	return nil
 }
 
 func (a *mqlAwsGuarddutyDetector) featureConfigurations() ([]any, error) {
