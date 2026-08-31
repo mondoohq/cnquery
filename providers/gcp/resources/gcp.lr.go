@@ -4366,6 +4366,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instance.exposure.openIngressFirewalls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceExposure).GetOpenIngressFirewalls()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.firewall")))
 	},
+	"gcp.project.computeService.instance.exposure.openIngressPolicyRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceExposure).GetOpenIngressPolicyRules()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.firewallPolicy.rule")))
+	},
 	"gcp.project.computeService.instance.networkInterface.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceNetworkInterface).GetName()).ToDataRes(types.String)
 	},
@@ -21425,6 +21428,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.instance.exposure.openIngressFirewalls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstanceExposure).OpenIngressFirewalls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.exposure.openIngressPolicyRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceExposure).OpenIngressPolicyRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.instance.networkInterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49685,10 +49692,11 @@ type mqlGcpProjectComputeServiceInstanceExposure struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceInstanceExposureInternal it will be used here
-	InternetReachable     plugin.TValue[bool]
-	HasPublicIp           plugin.TValue[bool]
-	FirewallAllowsIngress plugin.TValue[bool]
-	OpenIngressFirewalls  plugin.TValue[[]any]
+	InternetReachable      plugin.TValue[bool]
+	HasPublicIp            plugin.TValue[bool]
+	FirewallAllowsIngress  plugin.TValue[bool]
+	OpenIngressFirewalls   plugin.TValue[[]any]
+	OpenIngressPolicyRules plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeServiceInstanceExposure creates a new instance of this resource
@@ -49737,6 +49745,10 @@ func (c *mqlGcpProjectComputeServiceInstanceExposure) GetFirewallAllowsIngress()
 
 func (c *mqlGcpProjectComputeServiceInstanceExposure) GetOpenIngressFirewalls() *plugin.TValue[[]any] {
 	return &c.OpenIngressFirewalls
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceExposure) GetOpenIngressPolicyRules() *plugin.TValue[[]any] {
+	return &c.OpenIngressPolicyRules
 }
 
 // mqlGcpProjectComputeServiceInstanceNetworkInterface for the gcp.project.computeService.instance.networkInterface resource

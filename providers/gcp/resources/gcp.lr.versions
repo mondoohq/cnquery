@@ -1964,6 +1964,7 @@ gcp.project.computeService.instance.exposure.firewallAllowsIngress 13.24.1
 gcp.project.computeService.instance.exposure.hasPublicIp 13.24.1
 gcp.project.computeService.instance.exposure.internetReachable 13.24.1
 gcp.project.computeService.instance.exposure.openIngressFirewalls 13.24.1
+gcp.project.computeService.instance.exposure.openIngressPolicyRules 13.37.1
 gcp.project.computeService.instance.fingerprint 9.0.0
 gcp.project.computeService.instance.guestAccelerators 9.0.0
 gcp.project.computeService.instance.hasFullCloudPlatformScope 13.12.2

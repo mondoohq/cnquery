@@ -1903,18 +1903,27 @@ gcp.project.computeService.instance @defaults("name id") {
 // Compute instance internet-exposure breakdown
 //
 // Explains whether a Compute Engine instance is reachable from the internet:
-// whether it has an external IP and whether a VPC firewall rule that applies to
-// it (same network, matching target tags or service accounts) admits ingress
-// from any address.
+// whether it has an external IP, and whether anything that applies to it admits
+// ingress from any address. Both ways a VPC admits traffic are read, because a
+// network migrated to network firewall policies can carry no legacy rules at
+// all: `openIngressFirewalls` lists the legacy VPC firewall rules that match the
+// instance by network and target tags or service accounts, and
+// `openIngressPolicyRules` the network firewall policy rules that match it,
+// counting only policies associated with one of its networks.
 private gcp.project.computeService.instance.exposure @defaults("internetReachable hasPublicIp") {
-  // Whether the instance is reachable from the internet (an external IP and an applicable firewall rule that admits any address)
+  // Whether the instance is reachable from the internet (an external IP and an applicable firewall rule or policy rule that admits any address)
   internetReachable bool
   // Whether the instance has an external IP
   hasPublicIp bool
-  // Whether a firewall rule that applies to the instance admits inbound traffic from any address (0.0.0.0/0 or ::/0)
+  // Whether a firewall rule or network firewall policy rule that applies to the instance admits inbound traffic from any address (0.0.0.0/0 or ::/0)
   firewallAllowsIngress bool
-  // Firewall rules that apply to the instance and admit ingress from any address
+  // Legacy VPC firewall rules that apply to the instance and admit ingress from any address
   openIngressFirewalls []gcp.project.computeService.firewall
+  // Network firewall policy rules that apply to the instance and admit ingress from any address
+  //
+  // Only rules from policies associated with one of the instance's networks are
+  // listed, since an unassociated policy enforces nothing.
+  openIngressPolicyRules []gcp.project.computeService.firewallPolicy.rule
 }
 
 // Compute instance network interface

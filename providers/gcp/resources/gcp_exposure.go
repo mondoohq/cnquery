@@ -91,6 +91,149 @@ func firewallRuleOpenIngress(isAllow bool, direction string, disabled bool, sour
 	return false
 }
 
+// openIngressPolicyRulesForInstance returns the network firewall policy rules
+// that apply to an instance and admit ingress from any address.
+//
+// Only policies associated with one of the instance's networks are considered,
+// because an unassociated policy enforces nothing.
+func openIngressPolicyRulesForInstance(
+	svc *mqlGcpProjectComputeService,
+	instanceNetworks, instanceServiceAccounts map[string]bool,
+) ([]any, error) {
+	policies := svc.GetFirewallPolicies()
+	if policies.Error != nil {
+		return nil, policies.Error
+	}
+
+	openRules := []any{}
+	for _, p := range policies.Data {
+		policy, ok := p.(*mqlGcpProjectComputeServiceFirewallPolicy)
+		if !ok {
+			continue
+		}
+		associations := policy.GetAssociations()
+		if associations.Error != nil {
+			return nil, associations.Error
+		}
+		if !policyAppliesToNetworks(associations.Data, instanceNetworks) {
+			continue
+		}
+
+		rules := policy.GetRules()
+		if rules.Error != nil {
+			return nil, rules.Error
+		}
+		for _, r := range rules.Data {
+			rule, ok := r.(*mqlGcpProjectComputeServiceFirewallPolicyRule)
+			if !ok {
+				continue
+			}
+			action := rule.GetAction()
+			if action.Error != nil {
+				return nil, action.Error
+			}
+			direction := rule.GetDirection()
+			if direction.Error != nil {
+				return nil, direction.Error
+			}
+			disabled := rule.GetDisabled()
+			if disabled.Error != nil {
+				return nil, disabled.Error
+			}
+			srcIpRanges := rule.GetSrcIpRanges()
+			if srcIpRanges.Error != nil {
+				return nil, srcIpRanges.Error
+			}
+			if !policyRuleOpenIngress(action.Data, direction.Data, disabled.Data, srcIpRanges.Data) {
+				continue
+			}
+
+			targetResources := rule.GetTargetResources()
+			if targetResources.Error != nil {
+				return nil, targetResources.Error
+			}
+			targetServiceAccounts := rule.GetTargetServiceAccounts()
+			if targetServiceAccounts.Error != nil {
+				return nil, targetServiceAccounts.Error
+			}
+			if policyRuleTargetsInstance(targetResources.Data, targetServiceAccounts.Data,
+				instanceNetworks, instanceServiceAccounts) {
+				openRules = append(openRules, rule)
+			}
+		}
+	}
+	return openRules, nil
+}
+
+// policyRuleOpenIngress reports whether a network firewall policy rule admits
+// ingress from the whole internet.
+//
+// Policy rules differ from legacy VPC firewall rules in two ways that matter
+// here. Their effect is an `action` string rather than the presence of an allow
+// block, and only "allow" opens traffic -- "deny", "goto_next" and
+// "apply_security_profile_group" do not. And their sources live in
+// `srcIpRanges` rather than `sourceRanges`.
+func policyRuleOpenIngress(action, direction string, disabled bool, srcIpRanges []any) bool {
+	if disabled || !strings.EqualFold(direction, "INGRESS") || !strings.EqualFold(action, "allow") {
+		return false
+	}
+	for _, s := range srcIpRanges {
+		if cidr, ok := s.(string); ok && isOpenCIDR(cidr) {
+			return true
+		}
+	}
+	return false
+}
+
+// policyRuleTargetsInstance reports whether a policy rule's targeting applies to
+// an instance.
+//
+// targetResources holds network URLs, not tags: a policy rule scoped to one
+// network in a policy associated with several applies only to that network. An
+// empty targetResources means every network the policy is associated with, and
+// an empty targetServiceAccounts means every instance, so a rule with neither
+// applies to all of them. Networks are compared by trailing name so a full URL
+// and a partial reference match.
+func policyRuleTargetsInstance(targetResources, targetServiceAccounts []any, instanceNetworks, instanceServiceAccounts map[string]bool) bool {
+	if len(targetResources) == 0 && len(targetServiceAccounts) == 0 {
+		return true
+	}
+	for _, r := range targetResources {
+		if url, ok := r.(string); ok && instanceNetworks[networkNameFromUrl(url)] {
+			return true
+		}
+	}
+	for _, sa := range targetServiceAccounts {
+		if email, ok := sa.(string); ok && instanceServiceAccounts[email] {
+			return true
+		}
+	}
+	return false
+}
+
+// policyAppliesToNetworks reports whether a firewall policy is associated with
+// any of the instance's networks.
+//
+// A policy enforces nothing until it is associated with a network, so an
+// unassociated policy must not contribute exposure no matter what its rules
+// say. Each association is a dict whose attachmentTarget names the network.
+func policyAppliesToNetworks(associations []any, instanceNetworks map[string]bool) bool {
+	for _, a := range associations {
+		assoc, ok := a.(map[string]any)
+		if !ok {
+			continue
+		}
+		target, ok := assoc["attachmentTarget"].(string)
+		if !ok || target == "" {
+			continue
+		}
+		if instanceNetworks[networkNameFromUrl(target)] {
+			return true
+		}
+	}
+	return false
+}
+
 // networkNameFromUrl returns the trailing network name from a GCP network URL or
 // partial reference, so full URLs and short names compare equal.
 func networkNameFromUrl(url string) string {
@@ -242,15 +385,26 @@ func (g *mqlGcpProjectComputeServiceInstance) exposure() (*mqlGcpProjectComputeS
 		}
 	}
 
-	firewallAllowsIngress := len(openFirewalls) > 0
+	// Network firewall policies are the second, newer way a VPC admits traffic,
+	// and they are evaluated ahead of the legacy rules above. A VPC migrated to
+	// them can have no legacy rules at all, in which case reading only those
+	// reports internetReachable: false for a genuinely reachable instance.
+	openPolicyRules, err := openIngressPolicyRulesForInstance(
+		svc.(*mqlGcpProjectComputeService), instanceNetworks, instanceServiceAccounts)
+	if err != nil {
+		return nil, err
+	}
+
+	firewallAllowsIngress := len(openFirewalls) > 0 || len(openPolicyRules) > 0
 	internetReachable := hasPublicIp.Data && firewallAllowsIngress
 
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.instance.exposure", map[string]*llx.RawData{
-		"__id":                  llx.StringData("gcp.project.computeService.instance/" + id.Data + "/exposure"),
-		"internetReachable":     llx.BoolData(internetReachable),
-		"hasPublicIp":           llx.BoolData(hasPublicIp.Data),
-		"firewallAllowsIngress": llx.BoolData(firewallAllowsIngress),
-		"openIngressFirewalls":  llx.ArrayData(openFirewalls, types.Resource("gcp.project.computeService.firewall")),
+		"__id":                   llx.StringData("gcp.project.computeService.instance/" + id.Data + "/exposure"),
+		"internetReachable":      llx.BoolData(internetReachable),
+		"hasPublicIp":            llx.BoolData(hasPublicIp.Data),
+		"firewallAllowsIngress":  llx.BoolData(firewallAllowsIngress),
+		"openIngressFirewalls":   llx.ArrayData(openFirewalls, types.Resource("gcp.project.computeService.firewall")),
+		"openIngressPolicyRules": llx.ArrayData(openPolicyRules, types.Resource("gcp.project.computeService.firewallPolicy.rule")),
 	})
 	if err != nil {
 		return nil, err
