@@ -5,6 +5,7 @@ package resources
 
 import (
 	"math"
+	"math/big"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -712,6 +713,44 @@ func TestFirewallRangeSets(t *testing.T) {
 	require.Len(t, v6, 1)
 	assert.Equal(t, "0", v6[0].lo.String())
 	assert.Equal(t, "65535", v6[0].hi.String())
+}
+
+// TestMergeIPv6RangesSkipsNilBounds guards against a panic, not a wrong answer.
+// big.Int methods dereference their receiver, so a zero-value ipv6Range reaching
+// the Cmp in mergeIPv6Ranges would panic, and a panic in provider code takes down
+// the entire scan rather than one field. Every production range is built by
+// firewallRangeSets with non-nil bounds, so this pins the precondition for any
+// future caller.
+func TestMergeIPv6RangesSkipsNilBounds(t *testing.T) {
+	full := ipv6Range{lo: big.NewInt(0), hi: new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 128), big.NewInt(1))}
+
+	cases := []struct {
+		name   string
+		ranges []ipv6Range
+	}{
+		{"zero value", []ipv6Range{{}}},
+		{"nil lo only", []ipv6Range{{lo: nil, hi: big.NewInt(10)}}},
+		{"nil hi only", []ipv6Range{{lo: big.NewInt(10), hi: nil}}},
+		{"nil beside a real range", []ipv6Range{{}, full}},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.NotPanics(t, func() { mergeIPv6Ranges(tc.ranges) })
+			require.NotPanics(t, func() { ipv6RangesAdmitInternet(tc.ranges) })
+		})
+	}
+
+	// A malformed neighbour must not swallow a range that is genuinely there:
+	// the full-space range still has to be merged and still has to read as open.
+	merged := mergeIPv6Ranges([]ipv6Range{{}, full})
+	require.Len(t, merged, 1)
+	assert.Equal(t, 0, merged[0].lo.Cmp(full.lo))
+	assert.Equal(t, 0, merged[0].hi.Cmp(full.hi))
+	assert.True(t, ipv6RangesAdmitInternet([]ipv6Range{{}, full}))
+
+	// A list with nothing usable in it admits nothing.
+	assert.False(t, ipv6RangesAdmitInternet([]ipv6Range{{}}))
 }
 
 // TestIPv6RangesAdmitInternet mirrors the IPv4 union for the family Azure keeps

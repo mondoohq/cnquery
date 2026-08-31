@@ -234,9 +234,19 @@ func ipv4RangesAdmitInternet(ranges []ipRange) bool {
 type ipv6Range struct{ lo, hi *big.Int }
 
 // mergeIPv6Ranges is mergeIPv4Ranges for the 128-bit space.
+//
+// A range whose bounds are nil is dropped rather than dereferenced. big.Int
+// methods panic on a nil receiver, and a panic here would take down the whole
+// scan rather than one field. Dropping does not weaken the safe-verdict rule
+// the rest of this file follows: nil bounds can only come from a zero-value
+// ipv6Range built in code, never from a firewall rule that failed to read, so
+// there is no unread evidence being silently discounted.
 func mergeIPv6Ranges(ranges []ipv6Range) []ipv6Range {
 	sorted := make([]ipv6Range, 0, len(ranges))
 	for _, r := range ranges {
+		if r.lo == nil || r.hi == nil {
+			continue
+		}
 		if r.hi.Cmp(r.lo) < 0 {
 			continue
 		}
