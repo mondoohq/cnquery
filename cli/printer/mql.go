@@ -366,10 +366,10 @@ func (print *Printer) refMap(data map[string]any, checksum string, indent string
 		}
 	}
 
+	code := cache.bundle.CodeV2
 	ep := cache.checksumLookup[checksum]
 	listType := ""
 	if ep != 0 {
-		code := cache.bundle.CodeV2
 		chunk := code.Chunk(ep)
 		switch chunk.Id {
 		case "$one", "$all", "$none", "$any":
@@ -428,8 +428,73 @@ func (print *Printer) refMap(data map[string]any, checksum string, indent string
 
 	if len(nonDefaultFields) > 0 {
 		res.WriteString("{\n")
+
+		// Work out which fields render as an assessment, and which fields those
+		// assessments consume. A consumed field can sit earlier in the list than
+		// the assessment using it, so this has to be settled before we write
+		// anything -- otherwise the output order would depend on it.
+		assessments := map[string]string{}
+		skipFields := map[string]struct{}{}
+		for _, k := range nonDefaultFields {
+			ref, ok := cache.checksumLookup[k]
+			if !ok {
+				continue
+			}
+
+			consumed := []string{}
+			assessment := code.Entrypoint2Assessment(cache.bundle, ref, func(s string) (*llx.RawResult, bool) {
+				found, ok := data[s]
+				if !ok {
+					return nil, false
+				}
+				raw, ok := found.(*llx.RawData)
+				if !ok {
+					return nil, false
+				}
+				consumed = append(consumed, s)
+				return &llx.RawResult{Data: raw, CodeID: s}, true
+			})
+			// Entrypoint2Assessment also returns items for plain fields. Only
+			// actual assertions are worth rendering as an assessment; anything
+			// else stays a regular field.
+			if assessment == nil || !assessment.IsAssertion {
+				continue
+			}
+
+			// The operands an assessment compares are already conveyed by it, so
+			// they must not also show up as standalone fields. Note that lookup
+			// is first called for the assertion itself, and that one only gets
+			// suppressed when we go on to render the expanded form below.
+			for _, v := range consumed {
+				if v == k && assessment.Success {
+					continue
+				}
+				skipFields[v] = struct{}{}
+			}
+
+			// A passing assertion needs no expansion: "x == 'a': true" already
+			// says everything, and an [ok] block would drop the label and cost
+			// three lines to say the same thing.
+			if assessment.Success {
+				continue
+			}
+
+			assessments[k] = print.assessment(assessment, indent+"  ", cache)
+		}
+
 		for _, k := range nonDefaultFields {
 			if k == "_" {
+				continue
+			}
+			if _, ok := skipFields[k]; ok {
+				// Either this field is an assertion we expand here, or it is an
+				// operand some other assertion already reported on.
+				if a, ok := assessments[k]; ok {
+					res.WriteString(indent)
+					res.WriteString("  ")
+					res.WriteString(a)
+					res.WriteByte('\n')
+				}
 				continue
 			}
 
