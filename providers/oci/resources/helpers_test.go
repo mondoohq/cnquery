@@ -13,3 +13,4 @@ package resources
 func intPtr(i int) *int       { return &i }
 func strPtr(s string) *string { return &s }
 func boolPtr(b bool) *bool    { return &b }
+func int64Ptr(i int64) *int64 { return &i }

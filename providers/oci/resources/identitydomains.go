@@ -341,10 +341,101 @@ func (o *mqlOciIdentityDomain) users() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlUser.(*mqlOciIdentityDomainUser).cacheDomain = o
+		mqlUser.(*mqlOciIdentityDomainUser).cacheGroups = user.Groups
 		res = append(res, mqlUser)
 	}
 
 	return res, nil
+}
+
+type mqlOciIdentityDomainUserInternal struct {
+	cacheDomain *mqlOciIdentityDomain
+	cacheGroups []identitydomains.UserGroups
+}
+
+// groupMemberships builds one resource per group the user belongs to.
+func (o *mqlOciIdentityDomainUser) groupMemberships() ([]any, error) {
+	res := make([]any, 0, len(o.cacheGroups))
+	for i := range o.cacheGroups {
+		g := o.cacheGroups[i]
+
+		mqlMembership, err := CreateResource(o.MqlRuntime, "oci.identity.domain.user.groupMembership", map[string]*llx.RawData{
+			"__id":           llx.StringData(o.__id + "/groupMembership/" + stringValue(g.Value)),
+			"membershipOcid": llx.StringDataPtr(g.MembershipOcid),
+			"groupId":        llx.StringDataPtr(g.Value),
+			"displayName":    llx.StringDataPtr(g.Display),
+			"type":           llx.StringData(string(g.Type)),
+			"dateAdded":      llx.StringDataPtr(g.DateAdded),
+			"externalId":     llx.StringDataPtr(g.ExternalId),
+		})
+		if err != nil {
+			return nil, err
+		}
+		membership := mqlMembership.(*mqlOciIdentityDomainUserGroupMembership)
+		membership.cacheDomain = o.cacheDomain
+		membership.cacheGroupOcid = stringValue(g.Ocid)
+		res = append(res, membership)
+	}
+	return res, nil
+}
+
+type mqlOciIdentityDomainUserGroupMembershipInternal struct {
+	cacheDomain    *mqlOciIdentityDomain
+	cacheGroupOcid string
+}
+
+// group resolves the membership against the domain's already fetched group
+// list. NewResource would re-run the group lookup per membership, since init
+// runs before the runtime cache is consulted.
+func (o *mqlOciIdentityDomainUserGroupMembership) group() (*mqlOciIdentityDomainGroup, error) {
+	if o.cacheDomain == nil {
+		o.Group.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	groups := o.cacheDomain.GetGroups()
+	if groups.Error != nil {
+		return nil, groups.Error
+	}
+
+	if g := ociGroupFromList(groups.Data, o.cacheGroupOcid, o.GroupId.Data); g != nil {
+		return g, nil
+	}
+
+	// A group the caller cannot read leaves the membership in place with
+	// nothing behind it, which is the reading the schema documents.
+	o.Group.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
+// ociGroupFromList picks a membership's group out of the domain's group list.
+//
+// The membership carries both the group's OCID and its SCIM id, and which of
+// them is populated varies: OCIDs were added to memberships later, so a domain
+// predating that returns only the SCIM id. Matching on either is what keeps
+// those domains resolvable. An empty ocid must never match a group that
+// reports no OCID, or every membership on such a domain would resolve to
+// whichever group came back first.
+func ociGroupFromList(groups []any, ocid, groupID string) *mqlOciIdentityDomainGroup {
+	// The OCID is scanned across the whole list before the SCIM id is tried, so
+	// the stronger key decides even when a weaker match sits earlier in the
+	// list.
+	if ocid != "" {
+		for _, raw := range groups {
+			if g, ok := raw.(*mqlOciIdentityDomainGroup); ok && g.Ocid.Data == ocid {
+				return g
+			}
+		}
+	}
+	if groupID != "" {
+		for _, raw := range groups {
+			if g, ok := raw.(*mqlOciIdentityDomainGroup); ok && g.Id.Data == groupID {
+				return g
+			}
+		}
+	}
+	return nil
 }
 
 func (o *mqlOciIdentityDomain) groups() ([]any, error) {

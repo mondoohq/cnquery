@@ -193,9 +193,10 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 				mqlInst.cacheRegion = region
 				mqlInst.cacheImageID = stringValue(instance.ImageId)
 				mqlInst.cacheCompartmentID = stringValue(instance.CompartmentId)
-				if src, ok := instance.SourceDetails.(core.InstanceSourceViaBootVolumeDetails); ok {
-					mqlInst.cacheBootVolumeID = stringValue(src.BootVolumeId)
-				}
+				mqlInst.cachePlatformConfig = instance.PlatformConfig
+				mqlInst.cacheLaunchOptions = instance.LaunchOptions
+				mqlInst.cacheShapeConfig = instance.ShapeConfig
+				mqlInst.cacheBootVolumeID, mqlInst.cacheImageSource = ociInstanceSource(instance.SourceDetails)
 				res = append(res, mqlInst)
 			}
 
@@ -223,11 +224,179 @@ func (o *mqlOciCompute) getComputeInstancesForRegion(ctx context.Context, comput
 	return instances, nil
 }
 
+// ociShieldedInstanceFlags reads the shielded-instance and
+// confidential-computing settings off an instance's platform configuration.
+//
+// core.PlatformConfig is an interface with a member per platform variant, but
+// these four getters are declared on the interface itself, so a variant the
+// pinned SDK does not know about still answers them and no type switch is
+// needed. A shape that does not offer these features carries no platform
+// configuration at all, and every flag stays nil so the schema reports null
+// rather than reporting Secure Boot as disabled on a shape that cannot run it.
+func ociShieldedInstanceFlags(pc core.PlatformConfig) (secureBoot, trustedPlatformModule, measuredBoot, memoryEncryption *bool) {
+	if pc == nil {
+		return nil, nil, nil, nil
+	}
+	return pc.GetIsSecureBootEnabled(),
+		pc.GetIsTrustedPlatformModuleEnabled(),
+		pc.GetIsMeasuredBootEnabled(),
+		pc.GetIsMemoryEncryptionEnabled()
+}
+
+// ociInstanceSource splits an instance's source union into its two branches.
+//
+// The SDK unmarshals both branches as values rather than pointers, so the type
+// switch has to name the value types. Naming the pointer types instead matches
+// nothing, and an instance would report neither a boot volume nor an image
+// source while still looking like it had been read.
+func ociInstanceSource(src core.InstanceSourceDetails) (bootVolumeID string, image *core.InstanceSourceViaImageDetails) {
+	switch s := src.(type) {
+	case core.InstanceSourceViaBootVolumeDetails:
+		return stringValue(s.BootVolumeId), nil
+	case core.InstanceSourceViaImageDetails:
+		return "", &s
+	}
+	return "", nil
+}
+
 type mqlOciComputeInstanceInternal struct {
 	cacheImageID       string
 	cacheRegion        string
 	cacheBootVolumeID  string
 	cacheCompartmentID string
+
+	cachePlatformConfig core.PlatformConfig
+	cacheLaunchOptions  *core.LaunchOptions
+	cacheShapeConfig    *core.InstanceShapeConfig
+	cacheImageSource    *core.InstanceSourceViaImageDetails
+}
+
+// platformSecurity builds the shielded-instance and confidential-computing
+// settings the instance runs with.
+//
+// A shape that offers none of these features carries no platform configuration
+// at all, and the whole structure is null rather than four flags reading false
+// on hardware that cannot run them.
+func (o *mqlOciComputeInstance) platformSecurity() (*mqlOciComputePlatformSecurity, error) {
+	if o.cachePlatformConfig == nil {
+		o.PlatformSecurity.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	secureBoot, trustedPlatformModule, measuredBoot, memoryEncryption := ociShieldedInstanceFlags(o.cachePlatformConfig)
+
+	res, err := CreateResource(o.MqlRuntime, "oci.compute.platformSecurity", map[string]*llx.RawData{
+		"__id":                         llx.StringData(o.Id.Data + "/platformSecurity"),
+		"secureBootEnabled":            llx.BoolDataPtr(secureBoot),
+		"trustedPlatformModuleEnabled": llx.BoolDataPtr(trustedPlatformModule),
+		"measuredBootEnabled":          llx.BoolDataPtr(measuredBoot),
+		"memoryEncryptionEnabled":      llx.BoolDataPtr(memoryEncryption),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciComputePlatformSecurity), nil
+}
+
+// launchConfig builds the emulation and I/O settings the instance was launched
+// with.
+func (o *mqlOciComputeInstance) launchConfig() (*mqlOciComputeLaunchConfig, error) {
+	lo := o.cacheLaunchOptions
+	if lo == nil {
+		o.LaunchConfig.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.compute.launchConfig", map[string]*llx.RawData{
+		"__id":                          llx.StringData(o.Id.Data + "/launchConfig"),
+		"bootVolumeType":                llx.StringData(string(lo.BootVolumeType)),
+		"firmware":                      llx.StringData(string(lo.Firmware)),
+		"networkType":                   llx.StringData(string(lo.NetworkType)),
+		"remoteDataVolumeType":          llx.StringData(string(lo.RemoteDataVolumeType)),
+		"pvEncryptionInTransitEnabled":  llx.BoolDataPtr(lo.IsPvEncryptionInTransitEnabled),
+		"consistentVolumeNamingEnabled": llx.BoolDataPtr(lo.IsConsistentVolumeNamingEnabled),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciComputeLaunchConfig), nil
+}
+
+// sizing builds the resource allocation of a flexible-shape instance.
+//
+// A fixed shape carries no shape configuration, because the shape name alone
+// fixes the allocation, and the whole structure is null rather than a set of
+// zeroes.
+func (o *mqlOciComputeInstance) sizing() (*mqlOciComputeInstanceSizing, error) {
+	shape := o.cacheShapeConfig
+	if shape == nil {
+		o.Sizing.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.compute.instanceSizing", map[string]*llx.RawData{
+		"__id":                      llx.StringData(o.Id.Data + "/sizing"),
+		"ocpus":                     llx.FloatDataPtr(shape.Ocpus),
+		"memoryInGBs":               llx.FloatDataPtr(shape.MemoryInGBs),
+		"baselineOcpuUtilization":   llx.StringData(string(shape.BaselineOcpuUtilization)),
+		"processorDescription":      llx.StringDataPtr(shape.ProcessorDescription),
+		"networkingBandwidthInGbps": llx.FloatDataPtr(shape.NetworkingBandwidthInGbps),
+		"maxVnicAttachments":        llx.IntDataPtr(shape.MaxVnicAttachments),
+		"gpus":                      llx.IntDataPtr(shape.Gpus),
+		"gpuDescription":            llx.StringDataPtr(shape.GpuDescription),
+		"localDisks":                llx.IntDataPtr(shape.LocalDisks),
+		"localDisksTotalSizeInGBs":  llx.FloatDataPtr(shape.LocalDisksTotalSizeInGBs),
+		"localDiskDescription":      llx.StringDataPtr(shape.LocalDiskDescription),
+		"vcpus":                     llx.IntDataPtr(shape.Vcpus),
+		"localVolumeSizeInGBs":      llx.IntDataPtr(shape.LocalVolumeSizeInGBs),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciComputeInstanceSizing), nil
+}
+
+// bootSource builds the image branch of the instance's source union.
+//
+// An instance launched from an existing boot volume reports null: that volume
+// was sized, tiered and keyed when it was created rather than at launch, and
+// bootVolume is what resolves it.
+func (o *mqlOciComputeInstance) bootSource() (*mqlOciComputeImageSource, error) {
+	src := o.cacheImageSource
+	if src == nil {
+		o.BootSource.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.compute.imageSource", map[string]*llx.RawData{
+		"__id":                llx.StringData(o.Id.Data + "/bootSource"),
+		"bootVolumeSizeInGBs": llx.IntDataPtr(src.BootVolumeSizeInGBs),
+		"bootVolumeVpusPerGB": llx.IntDataPtr(src.BootVolumeVpusPerGB),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlSrc := res.(*mqlOciComputeImageSource)
+	mqlSrc.cacheImageID = stringValue(src.ImageId)
+	mqlSrc.cacheKmsKeyID = stringValue(src.KmsKeyId)
+	return mqlSrc, nil
+}
+
+type mqlOciComputeImageSourceInternal struct {
+	cacheImageID  string
+	cacheKmsKeyID string
+}
+
+// image resolves the image the boot volume was created from.
+func (o *mqlOciComputeImageSource) image() (*mqlOciComputeImage, error) {
+	return resolveOciImage(o.MqlRuntime, ocidOrEmpty(o.cacheImageID), &o.Image)
+}
+
+// kmsKey resolves the customer-managed key the boot volume was created with.
+//
+// Null when the boot volume is encrypted with an Oracle-managed key, which is
+// the default and carries no key the tenancy controls.
+func (o *mqlOciComputeImageSource) kmsKey() (*mqlOciKmsKey, error) {
+	return resolveOciKmsKey(o.MqlRuntime, ocidOrEmpty(o.cacheKmsKeyID), &o.KmsKey)
 }
 
 func (o *mqlOciComputeInstance) id() (string, error) {

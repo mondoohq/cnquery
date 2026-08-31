@@ -67,6 +67,27 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 					created = &lb.TimeCreated.Time
 				}
 
+				addresses := make([]any, 0, len(lb.IpAddresses))
+				for _, ip := range lb.IpAddresses {
+					mqlAddress, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.ipAddress", map[string]*llx.RawData{
+						"__id":      llx.StringData(stringValue(lb.Id) + "/ipAddress/" + stringValue(ip.IpAddress)),
+						"ipAddress": llx.StringDataPtr(ip.IpAddress),
+						// Faithful to the SDK: null when the balancer does not
+						// report the flag. ociLoadBalancerHasPublicIp reads a
+						// null as public, matching the fallback the deprecated
+						// dict resolves eagerly.
+						"isPublic": llx.BoolDataPtr(ip.IsPublic),
+					})
+					if err != nil {
+						return nil, err
+					}
+					mqlAddr := mqlAddress.(*mqlOciLoadBalancerIpAddress)
+					if ip.ReservedIp != nil {
+						mqlAddr.cacheReservedIpID = stringValue(ip.ReservedIp.Id)
+					}
+					addresses = append(addresses, mqlAddr)
+				}
+
 				ipAddresses := make([]any, 0, len(lb.IpAddresses))
 				for _, ip := range lb.IpAddresses {
 					// isPublic is optional on the SDK model, and exposure()
@@ -110,6 +131,7 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 					"requestIdHeader":           llx.StringDataPtr(lb.RequestIdHeader),
 					"hostnames":                 llx.MapData(hostnames, types.String),
 					"ipAddresses":               llx.ArrayData(ipAddresses, types.Dict),
+					"addresses":                 llx.ArrayData(addresses, types.Resource("oci.loadBalancer.ipAddress")),
 					"isDeleteProtectionEnabled": llx.BoolDataPtr(lb.IsDeleteProtectionEnabled),
 					"securityAttributes":        llx.MapData(definedTagsToAny(lb.SecurityAttributes), types.Dict),
 					"state":                     llx.StringData(string(lb.LifecycleState)),
@@ -436,6 +458,7 @@ func (o *mqlOciLoadBalancerLoadBalancer) backendSets() ([]any, error) {
 		mqlBs.cacheCertBundleName = ssl.certificateName
 		mqlBs.cacheLbCipherSuites = o.cacheCipherSuites
 		mqlBs.cacheLbCertificates = o.cacheCertificates
+		mqlBs.cacheHealthChecker = bs.HealthChecker
 		res = append(res, mqlBs)
 	}
 	return res, nil
@@ -451,6 +474,38 @@ type mqlOciLoadBalancerBackendSetInternal struct {
 	cacheCertBundleName  string
 	cacheLbCipherSuites  map[string]loadbalancer.SslCipherSuite
 	cacheLbCertificates  map[string]loadbalancer.Certificate
+
+	cacheHealthChecker *loadbalancer.HealthChecker
+}
+
+// healthCheck builds the probe that decides which backends stay in rotation.
+//
+// A backend set with no health checker reports null rather than a probe whose
+// every field is empty: nothing removes a failed backend from rotation, which
+// is a different fact from a probe configured to accept anything.
+func (o *mqlOciLoadBalancerBackendSet) healthCheck() (*mqlOciLoadBalancerHealthChecker, error) {
+	hc := o.cacheHealthChecker
+	if hc == nil {
+		o.HealthCheck.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.healthChecker", map[string]*llx.RawData{
+		"__id":              llx.StringData(o.__id + "/healthChecker"),
+		"protocol":          llx.StringDataPtr(hc.Protocol),
+		"port":              llx.IntDataPtr(hc.Port),
+		"returnCode":        llx.IntDataPtr(hc.ReturnCode),
+		"responseBodyRegex": llx.StringDataPtr(hc.ResponseBodyRegex),
+		"urlPath":           llx.StringDataPtr(hc.UrlPath),
+		"retries":           llx.IntDataPtr(hc.Retries),
+		"timeoutInMillis":   llx.IntDataPtr(hc.TimeoutInMillis),
+		"intervalInMillis":  llx.IntDataPtr(hc.IntervalInMillis),
+		"forcePlainText":    llx.BoolDataPtr(hc.IsForcePlainText),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciLoadBalancerHealthChecker), nil
 }
 
 // sslCipherSuite resolves the cipher suite used toward the backends. Null when
@@ -662,4 +717,16 @@ func (o *mqlOciLoadBalancerListener) id() (string, error) {
 
 func (o *mqlOciLoadBalancerBackendSet) id() (string, error) {
 	return o.__id, nil
+}
+
+type mqlOciLoadBalancerIpAddressInternal struct {
+	cacheReservedIpID string
+}
+
+// reservedIp resolves the reserved public IP backing this address.
+//
+// Null on an ephemeral address, which is released with the load balancer rather
+// than staying registered in the VCN.
+func (o *mqlOciLoadBalancerIpAddress) reservedIp() (*mqlOciNetworkPublicIp, error) {
+	return resolveRef(o.MqlRuntime, "oci.network.publicIp", o.cacheReservedIpID, &o.ReservedIp)
 }

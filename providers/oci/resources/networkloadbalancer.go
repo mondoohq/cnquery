@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"encoding/base64"
 	"sort"
 	"strconv"
 	"strings"
@@ -60,6 +61,28 @@ func (o *mqlOciNetworkLoadBalancer) newNetworkLoadBalancers(nlbs []networkloadba
 		// internet reachability. A marshalled nil arrives as JSON null, which
 		// reads as "not public" and clears a genuinely internet-facing
 		// balancer. This mirrors the classic load balancer.
+		addresses := make([]any, 0, len(nlb.IpAddresses))
+		for j := range nlb.IpAddresses {
+			ip := nlb.IpAddresses[j]
+			mqlAddress, err := CreateResource(o.MqlRuntime, "oci.networkLoadBalancer.ipAddress", map[string]*llx.RawData{
+				"__id":      llx.StringData(stringValue(nlb.Id) + "/ipAddress/" + stringValue(ip.IpAddress)),
+				"ipAddress": llx.StringDataPtr(ip.IpAddress),
+				// Faithful to the SDK: null when the balancer does not report
+				// the flag. ociLoadBalancerHasPublicIp reads a null as public,
+				// matching the fallback the deprecated dict resolves eagerly.
+				"isPublic":  llx.BoolDataPtr(ip.IsPublic),
+				"ipVersion": llx.StringData(string(ip.IpVersion)),
+			})
+			if err != nil {
+				return nil, err
+			}
+			mqlAddr := mqlAddress.(*mqlOciNetworkLoadBalancerIpAddress)
+			if ip.ReservedIp != nil {
+				mqlAddr.cacheReservedIpID = stringValue(ip.ReservedIp.Id)
+			}
+			addresses = append(addresses, mqlAddr)
+		}
+
 		ipAddresses := make([]any, 0, len(nlb.IpAddresses))
 		for j := range nlb.IpAddresses {
 			ip := nlb.IpAddresses[j]
@@ -88,6 +111,7 @@ func (o *mqlOciNetworkLoadBalancer) newNetworkLoadBalancers(nlbs []networkloadba
 			"name":                        llx.StringDataPtr(nlb.DisplayName),
 			"isPrivate":                   llx.BoolData(boolValue(nlb.IsPrivate)),
 			"ipAddresses":                 llx.ArrayData(ipAddresses, types.Dict),
+			"addresses":                   llx.ArrayData(addresses, types.Resource("oci.networkLoadBalancer.ipAddress")),
 			"ipVersion":                   llx.StringData(string(nlb.NlbIpVersion)),
 			"listeners":                   llx.ArrayData(listeners, types.Resource("oci.networkLoadBalancer.listener")),
 			"backendSets":                 llx.ArrayData(backendSets, types.Resource("oci.networkLoadBalancer.backendSet")),
@@ -191,6 +215,7 @@ func (o *mqlOciNetworkLoadBalancer) newBackendSets(nlbID string, backendSets map
 		if err != nil {
 			return nil, err
 		}
+		mqlBackendSet.(*mqlOciNetworkLoadBalancerBackendSet).cacheHealthChecker = backendSet.HealthChecker
 		res = append(res, mqlBackendSet)
 	}
 
@@ -283,4 +308,91 @@ func (o *mqlOciNetworkLoadBalancerBackend) instance() (*mqlOciComputeInstance, e
 		return nil, err
 	}
 	return res.(*mqlOciComputeInstance), nil
+}
+
+type mqlOciNetworkLoadBalancerIpAddressInternal struct {
+	cacheReservedIpID string
+}
+
+// reservedIp resolves the reserved public IP backing this address.
+//
+// Null on an ephemeral address, which is released with the load balancer rather
+// than staying registered in the VCN.
+func (o *mqlOciNetworkLoadBalancerIpAddress) reservedIp() (*mqlOciNetworkPublicIp, error) {
+	return resolveRef(o.MqlRuntime, "oci.network.publicIp", o.cacheReservedIpID, &o.ReservedIp)
+}
+
+type mqlOciNetworkLoadBalancerBackendSetInternal struct {
+	cacheHealthChecker *networkloadbalancer.HealthChecker
+}
+
+// healthCheck builds the probe that decides which backends stay in rotation.
+//
+// A backend set with no health checker reports null rather than a probe whose
+// every field is empty: nothing removes a failed backend from rotation, which
+// is a different fact from a probe configured to accept anything.
+func (o *mqlOciNetworkLoadBalancerBackendSet) healthCheck() (*mqlOciNetworkLoadBalancerHealthChecker, error) {
+	hc := o.cacheHealthChecker
+	if hc == nil {
+		o.HealthCheck.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.networkLoadBalancer.healthChecker", map[string]*llx.RawData{
+		"__id":              llx.StringData(o.__id + "/healthChecker"),
+		"protocol":          llx.StringData(string(hc.Protocol)),
+		"port":              llx.IntDataPtr(hc.Port),
+		"retries":           llx.IntDataPtr(hc.Retries),
+		"timeoutInMillis":   llx.IntDataPtr(hc.TimeoutInMillis),
+		"intervalInMillis":  llx.IntDataPtr(hc.IntervalInMillis),
+		"urlPath":           llx.StringDataPtr(hc.UrlPath),
+		"responseBodyRegex": llx.StringDataPtr(hc.ResponseBodyRegex),
+		"returnCode":        llx.IntDataPtr(hc.ReturnCode),
+		// The SDK hands these back as raw bytes it already base64-decoded, so
+		// they are re-encoded to survive as a string field.
+		"requestData":  llx.StringData(base64.StdEncoding.EncodeToString(hc.RequestData)),
+		"responseData": llx.StringData(base64.StdEncoding.EncodeToString(hc.ResponseData)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlHc := res.(*mqlOciNetworkLoadBalancerHealthChecker)
+	mqlHc.cacheDns = hc.Dns
+	mqlHc.cacheBackendSetID = o.__id
+	return mqlHc, nil
+}
+
+type mqlOciNetworkLoadBalancerHealthCheckerInternal struct {
+	cacheDns          *networkloadbalancer.DnsHealthCheckerDetails
+	cacheBackendSetID string
+}
+
+// dns builds the query a DNS probe issues.
+//
+// Null on every probe that is not a DNS probe, which keeps "this probe asks no
+// DNS question" apart from "it asks for an empty name".
+func (o *mqlOciNetworkLoadBalancerHealthChecker) dns() (*mqlOciNetworkLoadBalancerDnsHealthCheck, error) {
+	dns := o.cacheDns
+	if dns == nil {
+		o.Dns.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	rcodes := make([]any, 0, len(dns.Rcodes))
+	for _, rc := range dns.Rcodes {
+		rcodes = append(rcodes, string(rc))
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.networkLoadBalancer.dnsHealthCheck", map[string]*llx.RawData{
+		"__id":              llx.StringData(o.cacheBackendSetID + "/healthChecker/dns"),
+		"domainName":        llx.StringDataPtr(dns.DomainName),
+		"transportProtocol": llx.StringData(string(dns.TransportProtocol)),
+		"queryClass":        llx.StringData(string(dns.QueryClass)),
+		"queryType":         llx.StringData(string(dns.QueryType)),
+		"rcodes":            llx.ArrayData(rcodes, types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciNetworkLoadBalancerDnsHealthCheck), nil
 }

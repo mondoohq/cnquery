@@ -1387,6 +1387,47 @@ func (o *mqlOciNetworkPublicIp) id() (string, error) {
 	return "oci.network.publicIp/" + o.Id.Data, nil
 }
 
+// initOciNetworkPublicIp resolves a public IP by OCID.
+//
+// Without an init, NewResource falls straight through to Create with only the
+// id it was handed, caching a husk under the real OCID that a later
+// oci.network.publicIps query would then be served. The tenancy's public IP
+// listing is fetched once and shared through the runtime cache, so resolving
+// against it costs one call however many load balancer addresses reference a
+// reserved IP.
+func initOciNetworkPublicIp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
+		return nil, nil, errors.New("id required to fetch oci.network.publicIp")
+	}
+
+	obj, err := CreateResource(runtime, "oci.network", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	publicIps := obj.(*mqlOciNetwork).GetPublicIps()
+	if publicIps.Error != nil {
+		return nil, nil, publicIps.Error
+	}
+
+	for _, raw := range publicIps.Data {
+		ip, ok := raw.(*mqlOciNetworkPublicIp)
+		if !ok {
+			continue
+		}
+		if ip.Id.Data == idVal {
+			return args, ip, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("oci.network.publicIp with id %q not found", idVal)
+}
+
 type mqlOciNetworkPublicIpInternal struct {
 	ociCompartmentRef
 }

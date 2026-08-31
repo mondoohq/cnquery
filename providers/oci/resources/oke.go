@@ -516,6 +516,7 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 		mqlPool.cacheClusterID = stringValue(np.ClusterId)
 		mqlPool.cacheNodeImageID = nodeImageId
 		mqlPool.cacheNodeKmsKeyID = nodeKmsKeyID
+		mqlPool.cacheNodeShapeConfig = np.NodeShapeConfig
 		res = append(res, mqlPool)
 	}
 
@@ -529,6 +530,30 @@ type mqlOciOkeNodePoolInternal struct {
 	cacheClusterID    string
 	cacheNodeImageID  string
 	cacheNodeKmsKeyID string
+
+	cacheNodeShapeConfig *containerengine.NodeShapeConfig
+}
+
+// nodeSizing builds the compute and memory allocated to each node in the pool.
+//
+// Null on a pool running a fixed shape, which carries no shape configuration
+// because the shape name alone fixes the sizing.
+func (o *mqlOciOkeNodePool) nodeSizing() (*mqlOciOkeNodeSizing, error) {
+	shape := o.cacheNodeShapeConfig
+	if shape == nil {
+		o.NodeSizing.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.oke.nodeSizing", map[string]*llx.RawData{
+		"__id":        llx.StringData(o.Id.Data + "/nodeShapeConfig"),
+		"ocpus":       llx.FloatDataPtr(shape.Ocpus),
+		"memoryInGBs": llx.FloatDataPtr(shape.MemoryInGBs),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciOkeNodeSizing), nil
 }
 
 func (o *mqlOciOkeNodePool) nodeKmsKey() (*mqlOciKmsKey, error) {

@@ -82,6 +82,11 @@ func (o *mqlOciDns) newZones(region string, zones []dns.ZoneSummary) ([]any, err
 			}
 		}
 
+		kskVersions, zskVersions, err := o.newDnssecKeyVersions(stringValue(zone.Id), zone.DnssecConfig)
+		if err != nil {
+			return nil, err
+		}
+
 		mqlZone, err := CreateResource(o.MqlRuntime, "oci.dns.zone", map[string]*llx.RawData{
 			"id":                llx.StringDataPtr(zone.Id),
 			"name":              llx.StringDataPtr(zone.Name),
@@ -90,6 +95,8 @@ func (o *mqlOciDns) newZones(region string, zones []dns.ZoneSummary) ([]any, err
 			"resolutionMode":    llx.StringData(string(zone.ResolutionMode)),
 			"dnssecState":       llx.StringData(string(zone.DnssecState)),
 			"dnssecKeyVersions": llx.DictData(dnssecKeyVersions),
+			"kskVersions":       llx.ArrayData(kskVersions, types.Resource("oci.dns.zone.dnssecKeyVersion")),
+			"zskVersions":       llx.ArrayData(zskVersions, types.Resource("oci.dns.zone.dnssecKeyVersion")),
 			"isProtected":       llx.BoolData(boolValue(zone.IsProtected)),
 			"serial":            llx.IntDataDefault(zone.Serial, 0),
 			"version":           llx.StringDataPtr(zone.Version),
@@ -110,6 +117,92 @@ func (o *mqlOciDns) newZones(region string, zones []dns.ZoneSummary) ([]any, err
 	}
 
 	return res, nil
+}
+
+// newDnssecKeyVersions builds the key-signing and zone-signing key version
+// resources for one zone. Both are the same shape apart from the DS records,
+// which only a key-signing key carries.
+func (o *mqlOciDns) newDnssecKeyVersions(zoneID string, config *dns.DnssecConfig) (ksks []any, zsks []any, err error) {
+	ksks = []any{}
+	zsks = []any{}
+	if config == nil {
+		return ksks, zsks, nil
+	}
+
+	for i := range config.KskDnssecKeyVersions {
+		mqlKsk, err := CreateResource(o.MqlRuntime, "oci.dns.zone.dnssecKeyVersion",
+			ociKskKeyVersionArgs(zoneID, config.KskDnssecKeyVersions[i]))
+		if err != nil {
+			return nil, nil, err
+		}
+		ksks = append(ksks, mqlKsk)
+	}
+
+	for i := range config.ZskDnssecKeyVersions {
+		mqlZsk, err := CreateResource(o.MqlRuntime, "oci.dns.zone.dnssecKeyVersion",
+			ociZskKeyVersionArgs(zoneID, config.ZskDnssecKeyVersions[i]))
+		if err != nil {
+			return nil, nil, err
+		}
+		zsks = append(zsks, mqlZsk)
+	}
+
+	return ksks, zsks, nil
+}
+
+// ociKskKeyVersionArgs maps one key-signing key version.
+//
+// Every lifecycle timestamp is optional, and an absent one has to stay null:
+// the zero time would read as 1 January year 1, which an "activated before X"
+// or "expired before now" audit would count as a real date and act on.
+func ociKskKeyVersionArgs(zoneID string, k dns.KskDnssecKeyVersion) map[string]*llx.RawData {
+	dsData := make([]any, 0, len(k.DsData))
+	for _, ds := range k.DsData {
+		dsData = append(dsData, map[string]any{
+			"rdata":      stringValue(ds.Rdata),
+			"digestType": string(ds.DigestType),
+		})
+	}
+
+	return map[string]*llx.RawData{
+		"__id":            llx.StringData(zoneID + "/ksk/" + stringValue(k.Uuid)),
+		"algorithm":       llx.StringData(string(k.Algorithm)),
+		"lengthInBytes":   llx.IntDataPtr(intPtrToInt64(k.LengthInBytes)),
+		"keyTag":          llx.IntDataPtr(intPtrToInt64(k.KeyTag)),
+		"created":         sdkTimeData(k.TimeCreated),
+		"timePublished":   sdkTimeData(k.TimePublished),
+		"timeActivated":   sdkTimeData(k.TimeActivated),
+		"timeInactivated": sdkTimeData(k.TimeInactivated),
+		"timeUnpublished": sdkTimeData(k.TimeUnpublished),
+		"timeExpired":     sdkTimeData(k.TimeExpired),
+		"timePromoted":    sdkTimeData(k.TimePromoted),
+		"predecessorUuid": llx.StringDataPtr(k.PredecessorDnssecKeyVersionUuid),
+		"successorUuid":   llx.StringDataPtr(k.SuccessorDnssecKeyVersionUuid),
+		"dsData":          llx.ArrayData(dsData, types.Dict),
+	}
+}
+
+// ociZskKeyVersionArgs maps one zone-signing key version. It is the key-signing
+// shape without the DS records, which only a key-signing key publishes.
+func ociZskKeyVersionArgs(zoneID string, z dns.ZskDnssecKeyVersion) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":            llx.StringData(zoneID + "/zsk/" + stringValue(z.Uuid)),
+		"algorithm":       llx.StringData(string(z.Algorithm)),
+		"lengthInBytes":   llx.IntDataPtr(intPtrToInt64(z.LengthInBytes)),
+		"keyTag":          llx.IntDataPtr(intPtrToInt64(z.KeyTag)),
+		"created":         sdkTimeData(z.TimeCreated),
+		"timePublished":   sdkTimeData(z.TimePublished),
+		"timeActivated":   sdkTimeData(z.TimeActivated),
+		"timeInactivated": sdkTimeData(z.TimeInactivated),
+		"timeUnpublished": sdkTimeData(z.TimeUnpublished),
+		"timeExpired":     sdkTimeData(z.TimeExpired),
+		"timePromoted":    sdkTimeData(z.TimePromoted),
+		"predecessorUuid": llx.StringDataPtr(z.PredecessorDnssecKeyVersionUuid),
+		"successorUuid":   llx.StringDataPtr(z.SuccessorDnssecKeyVersionUuid),
+		// A zone-signing key publishes no DS records; the chain of trust runs
+		// through the key-signing key.
+		"dsData": llx.ArrayData([]any{}, types.Dict),
+	}
 }
 
 func (o *mqlOciDns) steeringPolicies() ([]any, error) {

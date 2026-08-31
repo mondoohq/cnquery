@@ -215,3 +215,15 @@ func (o *mqlOciNetworkFirewallFirewall) appliedSecurityAttributes() ([]any, erro
 func (o *mqlOciDatabaseDbSystem) appliedSecurityAttributes() ([]any, error) {
 	return ociAppliedSecurityAttributes(o.MqlRuntime, o.Id.Data, o.SecurityAttributes.Data)
 }
+
+func (o *mqlOciStreamingStreamPool) appliedSecurityAttributes() ([]any, error) {
+	return ociAppliedSecurityAttributes(o.MqlRuntime, o.Id.Data, o.SecurityAttributes.Data)
+}
+
+func (o *mqlOciOpensearchCluster) appliedSecurityAttributes() ([]any, error) {
+	return ociAppliedSecurityAttributes(o.MqlRuntime, o.Id.Data, o.SecurityAttributes.Data)
+}
+
+func (o *mqlOciGoldenGateDeployment) appliedSecurityAttributes() ([]any, error) {
+	return ociAppliedSecurityAttributes(o.MqlRuntime, o.Id.Data, o.SecurityAttributes.Data)
+}

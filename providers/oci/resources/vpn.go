@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -608,6 +609,77 @@ type mqlOciNetworkVirtualCircuitInternal struct {
 	cacheDrgID string
 }
 
+// newOciCrossConnectMappings builds one resource per BGP peering mapping on a
+// virtual circuit. BgpMd5AuthKey is deliberately not carried across.
+func newOciCrossConnectMappings(runtime *plugin.Runtime, circuitID string, mappings []core.CrossConnectMapping) ([]any, error) {
+	res := make([]any, 0, len(mappings))
+	for i := range mappings {
+		m := mappings[i]
+
+		crossConnectID := stringValue(m.CrossConnectOrCrossConnectGroupId)
+		var vlan *int64
+		if m.Vlan != nil {
+			v := int64(*m.Vlan)
+			vlan = &v
+		}
+
+		mqlMapping, err := CreateResource(runtime, "oci.network.virtualCircuit.crossConnectMapping", map[string]*llx.RawData{
+			"__id":                   llx.StringData(circuitID + "/crossConnectMapping/" + strconv.Itoa(i)),
+			"crossConnectId":         llx.StringData(crossConnectID),
+			"vlan":                   llx.IntDataPtr(vlan),
+			"customerBgpPeeringIp":   llx.StringDataPtr(m.CustomerBgpPeeringIp),
+			"oracleBgpPeeringIp":     llx.StringDataPtr(m.OracleBgpPeeringIp),
+			"customerBgpPeeringIpv6": llx.StringDataPtr(m.CustomerBgpPeeringIpv6),
+			"oracleBgpPeeringIpv6":   llx.StringDataPtr(m.OracleBgpPeeringIpv6),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlMapping.(*mqlOciNetworkVirtualCircuitCrossConnectMapping).cacheCrossConnectID = crossConnectID
+		res = append(res, mqlMapping)
+	}
+	return res, nil
+}
+
+type mqlOciNetworkVirtualCircuitCrossConnectMappingInternal struct {
+	cacheCrossConnectID string
+}
+
+// crossConnect resolves the mapping against the tenancy's cross-connect
+// listing. The list is fetched once and shared through the runtime cache, so
+// resolving against it costs one call however many mappings reference a port.
+func (o *mqlOciNetworkVirtualCircuitCrossConnectMapping) crossConnect() (*mqlOciNetworkCrossConnect, error) {
+	if ociResourceTypeFromOCID(o.cacheCrossConnectID) != "crossconnect" {
+		// Either unset, or a cross-connect group rather than a single port.
+		o.CrossConnect.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	obj, err := CreateResource(o.MqlRuntime, "oci.network", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	crossConnects := obj.(*mqlOciNetwork).GetCrossConnects()
+	if crossConnects.Error != nil {
+		return nil, crossConnects.Error
+	}
+
+	for _, raw := range crossConnects.Data {
+		cc, ok := raw.(*mqlOciNetworkCrossConnect)
+		if !ok {
+			continue
+		}
+		if cc.Id.Data == o.cacheCrossConnectID {
+			return cc, nil
+		}
+	}
+
+	// A port the FastConnect provider owns is not readable in this tenancy.
+	o.CrossConnect.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
 // crossConnectMapping is the subset of an OCI virtual-circuit cross-connect
 // mapping we surface to dict. It deliberately omits BgpMd5AuthKey (a secret).
 type crossConnectMapping struct {
@@ -670,6 +742,10 @@ func (o *mqlOciNetwork) virtualCircuits() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				mqlMappings, err := newOciCrossConnectMappings(o.MqlRuntime, stringValue(vc.Id), vc.CrossConnectMappings)
+				if err != nil {
+					return nil, err
+				}
 
 				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.virtualCircuit", stringValue(vc.CompartmentId), map[string]*llx.RawData{
 					"id":                   llx.StringDataPtr(vc.Id),
@@ -684,6 +760,7 @@ func (o *mqlOciNetwork) virtualCircuits() ([]any, error) {
 					"providerServiceName":  llx.StringDataPtr(vc.ProviderServiceName),
 					"publicPrefixes":       llx.ArrayData(stringsToAny(vc.PublicPrefixes), types.String),
 					"crossConnectMappings": llx.ArrayData(mappingDicts, types.Dict),
+					"mappings":             llx.ArrayData(mqlMappings, types.Resource("oci.network.virtualCircuit.crossConnectMapping")),
 					"state":                llx.StringData(string(vc.LifecycleState)),
 					"created":              llx.TimeDataPtr(created),
 					"freeformTags":         llx.MapData(strMapToAny(vc.FreeformTags), types.String),

@@ -11,6 +11,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/containerinstances"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/oci/connection"
 	"go.mondoo.com/mql/types"
@@ -130,6 +131,7 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 				}
 				mqlCI := mqlInstance.(*mqlOciContainerInstancesInstance)
 				mqlCI.cacheRegion = region
+				mqlCI.cacheShapeConfig = ci.ShapeConfig
 				res = append(res, mqlCI)
 			}
 
@@ -140,6 +142,32 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 type mqlOciContainerInstancesInstanceInternal struct {
 	ociCompartmentRef
 	cacheRegion string
+
+	cacheShapeConfig *containerinstances.ContainerInstanceShapeConfig
+}
+
+// sizing builds the compute, memory and network the instance is sized to.
+//
+// Null when the instance reports no shape configuration, rather than an
+// instance that reads as sized to zero OCPUs.
+func (o *mqlOciContainerInstancesInstance) sizing() (*mqlOciContainerInstancesShapeConfig, error) {
+	shape := o.cacheShapeConfig
+	if shape == nil {
+		o.Sizing.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.containerInstances.shapeConfig", map[string]*llx.RawData{
+		"__id":                      llx.StringData(o.Id.Data + "/shapeConfig"),
+		"ocpus":                     llx.FloatDataPtr(shape.Ocpus),
+		"memoryInGBs":               llx.FloatDataPtr(shape.MemoryInGBs),
+		"processorDescription":      llx.StringDataPtr(shape.ProcessorDescription),
+		"networkingBandwidthInGbps": llx.FloatDataPtr(shape.NetworkingBandwidthInGbps),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciContainerInstancesShapeConfig), nil
 }
 
 func (o *mqlOciContainerInstancesInstance) id() (string, error) {
@@ -213,6 +241,7 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlInstance.(*mqlOciContainerInstancesContainer).cacheResourceConfig = c.ResourceConfig
 		res = append(res, mqlInstance)
 	}
 
@@ -225,4 +254,29 @@ func (o *mqlOciContainerInstancesContainer) id() (string, error) {
 
 type mqlOciContainerInstancesContainerInternal struct {
 	ociCompartmentRef
+
+	cacheResourceConfig *containerinstances.ContainerResourceConfig
+}
+
+// resourceLimits builds the ceilings on what the container's process may
+// consume.
+//
+// Null when the container declares no resource configuration: it then inherits
+// the instance defaults, which is unbounded rather than a limit of zero.
+func (o *mqlOciContainerInstancesContainer) resourceLimits() (*mqlOciContainerInstancesResourceConfig, error) {
+	limits := o.cacheResourceConfig
+	if limits == nil {
+		o.ResourceLimits.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.containerInstances.resourceConfig", map[string]*llx.RawData{
+		"__id":             llx.StringData(o.Id.Data + "/resourceConfig"),
+		"vcpusLimit":       llx.FloatDataPtr(limits.VcpusLimit),
+		"memoryLimitInGBs": llx.FloatDataPtr(limits.MemoryLimitInGBs),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciContainerInstancesResourceConfig), nil
 }

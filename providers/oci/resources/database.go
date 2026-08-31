@@ -77,7 +77,6 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
-
 				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.database.dbSystem", stringValue(s.CompartmentId), map[string]*llx.RawData{
 					"id":                   llx.StringDataPtr(s.Id),
 					"name":                 llx.StringDataPtr(s.DisplayName),
@@ -123,11 +122,59 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 				mqlDb.cacheSubnetID = stringValue(s.SubnetId)
 				mqlDb.cacheSourceDbSystemID = stringValue(s.SourceDbSystemId)
 				mqlDb.cacheBackupSubnetID = stringValue(s.BackupSubnetId)
+				mqlDb.cacheMaintenanceWindow = s.MaintenanceWindow
 				res = append(res, mqlDb)
 			}
 
 			return res, nil
 		})
+}
+
+// ociMaintenanceWindowArgs maps a DB system's maintenance window onto the
+// fields of oci.database.maintenanceWindow, and reports nil for a system that
+// has never had one configured. Nil rather than a row of zeroes: a window
+// scheduled for no months on no days would read as a real schedule, and
+// "patched on a rolling basis with no lead time" is a claim about a system
+// nobody has configured.
+func ociMaintenanceWindowArgs(w *database.MaintenanceWindow) map[string]*llx.RawData {
+	if w == nil {
+		return nil
+	}
+
+	months := make([]any, 0, len(w.Months))
+	for _, m := range w.Months {
+		months = append(months, string(m.Name))
+	}
+	daysOfWeek := make([]any, 0, len(w.DaysOfWeek))
+	for _, d := range w.DaysOfWeek {
+		daysOfWeek = append(daysOfWeek, string(d.Name))
+	}
+	weeksOfMonth := make([]any, 0, len(w.WeeksOfMonth))
+	for _, v := range w.WeeksOfMonth {
+		weeksOfMonth = append(weeksOfMonth, int64(v))
+	}
+	hoursOfDay := make([]any, 0, len(w.HoursOfDay))
+	for _, v := range w.HoursOfDay {
+		hoursOfDay = append(hoursOfDay, int64(v))
+	}
+	skipRu := make([]any, 0, len(w.SkipRu))
+	for _, v := range w.SkipRu {
+		skipRu = append(skipRu, v)
+	}
+
+	return map[string]*llx.RawData{
+		"preference":                   llx.StringData(string(w.Preference)),
+		"patchingMode":                 llx.StringData(string(w.PatchingMode)),
+		"isCustomActionTimeoutEnabled": llx.BoolDataPtr(w.IsCustomActionTimeoutEnabled),
+		"customActionTimeoutInMins":    llx.IntDataPtr(intPtrToInt64(w.CustomActionTimeoutInMins)),
+		"isMonthlyPatchingEnabled":     llx.BoolDataPtr(w.IsMonthlyPatchingEnabled),
+		"months":                       llx.ArrayData(months, types.String),
+		"weeksOfMonth":                 llx.ArrayData(weeksOfMonth, types.Int),
+		"daysOfWeek":                   llx.ArrayData(daysOfWeek, types.String),
+		"hoursOfDay":                   llx.ArrayData(hoursOfDay, types.Int),
+		"leadTimeInWeeks":              llx.IntDataPtr(intPtrToInt64(w.LeadTimeInWeeks)),
+		"skipRu":                       llx.ArrayData(skipRu, types.Bool),
+	}
 }
 
 type mqlOciDatabaseDbSystemInternal struct {
@@ -138,6 +185,26 @@ type mqlOciDatabaseDbSystemInternal struct {
 	cacheSubnetID            string
 	cacheSourceDbSystemID    string
 	cacheBackupSubnetID      string
+	cacheMaintenanceWindow   *database.MaintenanceWindow
+}
+
+// maintenanceSchedule builds the window Oracle may patch the system in.
+//
+// Null when the system has no window configured at all, which is a different
+// fact from a window that schedules no months and no days.
+func (o *mqlOciDatabaseDbSystem) maintenanceSchedule() (*mqlOciDatabaseMaintenanceWindow, error) {
+	args := ociMaintenanceWindowArgs(o.cacheMaintenanceWindow)
+	if args == nil {
+		o.MaintenanceSchedule.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	args["__id"] = llx.StringData(o.Id.Data + "/maintenanceWindow")
+
+	res, err := CreateResource(o.MqlRuntime, "oci.database.maintenanceWindow", args)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciDatabaseMaintenanceWindow), nil
 }
 
 func (o *mqlOciDatabaseDbSystem) backupSubnet() (*mqlOciNetworkSubnet, error) {
@@ -280,6 +347,8 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 				mqlAdb.cacheVaultID = stringValue(a.VaultId)
 				mqlAdb.cacheSubnetID = stringValue(a.SubnetId)
 				mqlAdb.cacheSourceID = stringValue(a.SourceId)
+				mqlAdb.cacheConnectionUrls = a.ConnectionUrls
+				mqlAdb.cachePublicConnectionUrls = a.PublicConnectionUrls
 				res = append(res, mqlAdb)
 			}
 
@@ -289,11 +358,52 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 
 type mqlOciDatabaseAutonomousDatabaseInternal struct {
 	ociCompartmentRef
-	cacheNsgIDs   []any
-	cacheKmsKeyID string
-	cacheVaultID  string
-	cacheSubnetID string
-	cacheSourceID string
+	cacheNsgIDs               []any
+	cacheKmsKeyID             string
+	cacheVaultID              string
+	cacheSubnetID             string
+	cacheSourceID             string
+	cacheConnectionUrls       *database.AutonomousDatabaseConnectionUrls
+	cachePublicConnectionUrls *database.AutonomousDatabaseConnectionUrls
+}
+
+// newOciAutonomousDatabaseConsoleUrls builds one console-URL resource. The
+// endpoint name is part of the cache key because a database publishes the same
+// consoles twice, once privately and once on its public endpoint, and the two
+// sets are different answers to the same audit.
+func newOciAutonomousDatabaseConsoleUrls(runtime *plugin.Runtime, dbID, endpoint string, urls *database.AutonomousDatabaseConnectionUrls) (*mqlOciDatabaseAutonomousDatabaseConsoleUrls, error) {
+	res, err := CreateResource(runtime, "oci.database.autonomousDatabase.consoleUrls", map[string]*llx.RawData{
+		"__id":                             llx.StringData(dbID + "/" + endpoint),
+		"sqlDevWebUrl":                     llx.StringDataPtr(urls.SqlDevWebUrl),
+		"apexUrl":                          llx.StringDataPtr(urls.ApexUrl),
+		"machineLearningUserManagementUrl": llx.StringDataPtr(urls.MachineLearningUserManagementUrl),
+		"graphStudioUrl":                   llx.StringDataPtr(urls.GraphStudioUrl),
+		"mongoDbUrl":                       llx.StringDataPtr(urls.MongoDbUrl),
+		"machineLearningNotebookUrl":       llx.StringDataPtr(urls.MachineLearningNotebookUrl),
+		"ordsUrl":                          llx.StringDataPtr(urls.OrdsUrl),
+		"databaseTransformsUrl":            llx.StringDataPtr(urls.DatabaseTransformsUrl),
+		"spatialStudioUrl":                 llx.StringDataPtr(urls.SpatialStudioUrl),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciDatabaseAutonomousDatabaseConsoleUrls), nil
+}
+
+func (o *mqlOciDatabaseAutonomousDatabase) managementUrls() (*mqlOciDatabaseAutonomousDatabaseConsoleUrls, error) {
+	if o.cacheConnectionUrls == nil {
+		o.ManagementUrls.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newOciAutonomousDatabaseConsoleUrls(o.MqlRuntime, o.Id.Data, "consoleUrls", o.cacheConnectionUrls)
+}
+
+func (o *mqlOciDatabaseAutonomousDatabase) publicManagementUrls() (*mqlOciDatabaseAutonomousDatabaseConsoleUrls, error) {
+	if o.cachePublicConnectionUrls == nil {
+		o.PublicManagementUrls.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newOciAutonomousDatabaseConsoleUrls(o.MqlRuntime, o.Id.Data, "publicConsoleUrls", o.cachePublicConnectionUrls)
 }
 
 func (o *mqlOciDatabaseAutonomousDatabase) id() (string, error) {

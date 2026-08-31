@@ -299,6 +299,34 @@ func (o *mqlOciStreamingStreamPool) kafkaSettings() (any, error) {
 	return convert.JsonToDict(detail.KafkaSettings)
 }
 
+// kafka builds the pool's Kafka compatibility settings.
+//
+// Null when the pool reports none, which says nothing reaches it through the
+// Kafka-compatible endpoint rather than that the endpoint accepts anything.
+func (o *mqlOciStreamingStreamPool) kafka() (*mqlOciStreamingKafkaConfig, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+	ks := detail.KafkaSettings
+	if ks == nil {
+		o.Kafka.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.streaming.kafkaConfig", map[string]*llx.RawData{
+		"__id":                   llx.StringData(o.Id.Data + "/kafkaSettings"),
+		"bootstrapServers":       llx.StringDataPtr(ks.BootstrapServers),
+		"autoCreateTopicsEnable": llx.BoolDataPtr(ks.AutoCreateTopicsEnable),
+		"logRetentionHours":      llx.IntDataPtr(intPtrToInt64(ks.LogRetentionHours)),
+		"numPartitions":          llx.IntDataPtr(intPtrToInt64(ks.NumPartitions)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciStreamingKafkaConfig), nil
+}
+
 // ociCustomEncryptionKeyId pulls the KMS key OCID out of a stream pool's
 // encryption block. A NONE key state means Oracle-managed encryption, which
 // carries no customer key to resolve.

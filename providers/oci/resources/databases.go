@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/goldengate"
@@ -98,6 +99,11 @@ func (o *mqlOciMysql) dbSystems() ([]any, error) {
 					return nil, err
 				}
 
+				dbEndpoints, err := o.newDbSystemEndpoints(stringValue(s.Id), s.Endpoints)
+				if err != nil {
+					return nil, err
+				}
+
 				var backupPolicy, deletionPolicy map[string]any
 				if s.BackupPolicy != nil {
 					backupPolicy, err = convert.JsonToDict(s.BackupPolicy)
@@ -125,6 +131,7 @@ func (o *mqlOciMysql) dbSystems() ([]any, error) {
 					"crashRecovery":             llx.StringData(string(s.CrashRecovery)),
 					"databaseManagement":        llx.StringData(string(s.DatabaseManagement)),
 					"endpoints":                 llx.ArrayData(endpoints, types.Dict),
+					"dbEndpoints":               llx.ArrayData(dbEndpoints, types.Resource("oci.mysql.dbSystem.endpoint")),
 					"backupPolicy":              llx.DictData(backupPolicy),
 					"deletionPolicy":            llx.DictData(deletionPolicy),
 					"availabilityDomain":        llx.StringDataPtr(s.AvailabilityDomain),
@@ -142,6 +149,7 @@ func (o *mqlOciMysql) dbSystems() ([]any, error) {
 				mqlSystemTyped := mqlSystem.(*mqlOciMysqlDbSystem)
 				mqlSystemTyped.cacheCompartmentID = stringValue(s.CompartmentId)
 				mqlSystemTyped.cacheRegion = region
+				mqlSystemTyped.cacheDeletionPolicy = s.DeletionPolicy
 				res = append(res, mqlSystemTyped)
 			}
 
@@ -159,6 +167,32 @@ type mqlOciMysqlDbSystemInternal struct {
 	// ociLazy, not ociRetryLazy: a DB system we are not allowed to read is
 	// asked for once instead of once per field sharing the fetch.
 	detail ociLazy[*mysql.DbSystem]
+
+	cacheDeletionPolicy *mysql.DeletionPolicyDetails
+}
+
+// deletionRules builds the policy that decides what deleting the system does
+// to it and to its backups.
+//
+// Null when the system reports no deletion policy, rather than a policy that
+// reads as unprotected with its backups discarded.
+func (o *mqlOciMysqlDbSystem) deletionRules() (*mqlOciMysqlDeletionPolicy, error) {
+	dp := o.cacheDeletionPolicy
+	if dp == nil {
+		o.DeletionRules.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.mysql.deletionPolicy", map[string]*llx.RawData{
+		"__id":                     llx.StringData(o.Id.Data + "/deletionPolicy"),
+		"automaticBackupRetention": llx.StringData(string(dp.AutomaticBackupRetention)),
+		"finalBackup":              llx.StringData(string(dp.FinalBackup)),
+		"deleteProtected":          llx.BoolDataPtr(dp.IsDeleteProtected),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciMysqlDeletionPolicy), nil
 }
 
 func (o *mqlOciMysqlDbSystem) id() (string, error) {
@@ -517,6 +551,7 @@ func (o *mqlOciNosql) tables() ([]any, error) {
 				}
 				mqlTableTyped := mqlTable.(*mqlOciNosqlTable)
 				mqlTableTyped.cacheCompartmentID = stringValue(t.CompartmentId)
+				mqlTableTyped.cacheTableLimits = t.TableLimits
 				res = append(res, mqlTableTyped)
 			}
 
@@ -526,6 +561,32 @@ func (o *mqlOciNosql) tables() ([]any, error) {
 
 type mqlOciNosqlTableInternal struct {
 	cacheCompartmentID string
+	cacheTableLimits   *nosql.TableLimits
+}
+
+// limits builds the throughput and storage ceilings the table is provisioned
+// with.
+//
+// Null when the table reports no limits, rather than a table that reads as
+// capped at zero reads, zero writes and zero storage.
+func (o *mqlOciNosqlTable) limits() (*mqlOciNosqlTableLimits, error) {
+	limits := o.cacheTableLimits
+	if limits == nil {
+		o.Limits.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.nosql.tableLimits", map[string]*llx.RawData{
+		"__id":            llx.StringData(o.Id.Data + "/tableLimits"),
+		"maxReadUnits":    llx.IntDataPtr(limits.MaxReadUnits),
+		"maxWriteUnits":   llx.IntDataPtr(limits.MaxWriteUnits),
+		"maxStorageInGBs": llx.IntDataPtr(limits.MaxStorageInGBs),
+		"capacityMode":    llx.StringData(string(limits.CapacityMode)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciNosqlTableLimits), nil
 }
 
 func (o *mqlOciNosqlTable) id() (string, error) {
@@ -608,6 +669,7 @@ func (o *mqlOciOpensearch) clusters() ([]any, error) {
 				mqlClusterTyped := mqlCluster.(*mqlOciOpensearchCluster)
 				mqlClusterTyped.cacheCompartmentID = stringValue(c.CompartmentId)
 				mqlClusterTyped.cacheRegion = region
+				mqlClusterTyped.cacheBackupPolicy = c.BackupPolicy
 				res = append(res, mqlClusterTyped)
 			}
 
@@ -623,6 +685,32 @@ type mqlOciOpensearchClusterInternal struct {
 	cacheRegion        string
 
 	detail ociLazy[*opensearch.OpensearchCluster]
+
+	cacheBackupPolicy *opensearch.BackupPolicy
+}
+
+// backups builds the cluster's automatic backup schedule and retention.
+//
+// Null when the cluster reports no backup policy, which is a different fact
+// from a policy that turns backups off: one says nothing was configured, the
+// other says someone turned them off.
+func (o *mqlOciOpensearchCluster) backups() (*mqlOciOpensearchBackupPolicy, error) {
+	policy := o.cacheBackupPolicy
+	if policy == nil {
+		o.Backups.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.opensearch.backupPolicy", map[string]*llx.RawData{
+		"__id":             llx.StringData(o.Id.Data + "/backupPolicy"),
+		"isEnabled":        llx.BoolDataPtr(policy.IsEnabled),
+		"retentionInDays":  llx.IntDataPtr(policy.RetentionInDays),
+		"frequencyInHours": llx.IntDataPtr(policy.FrequencyInHours),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciOpensearchBackupPolicy), nil
 }
 
 func (o *mqlOciOpensearchCluster) id() (string, error) {
@@ -1052,4 +1140,43 @@ func (o *mqlOciGoldenGateDeployment) securityGroups() ([]any, error) {
 		return []any{}, nil
 	}
 	return resolveOciSecurityGroups(o.MqlRuntime, stringsToAny(detail.NsgIds))
+}
+
+// newDbSystemEndpoints builds the address resources a MySQL database system
+// answers on. The endpoints are keyed by address and port together: a system
+// publishes the classic and X protocol on the same address, and a read replica
+// can share an address with the primary.
+//
+// resourceId stays a string. Which kind of resource it names varies with
+// resourceType, and only the LOAD_BALANCER case points at something this
+// provider models.
+func (o *mqlOciMysql) newDbSystemEndpoints(dbSystemID string, endpoints []mysql.DbSystemEndpoint) ([]any, error) {
+	res := make([]any, 0, len(endpoints))
+	for i := range endpoints {
+		e := endpoints[i]
+
+		modes := make([]any, 0, len(e.Modes))
+		for _, m := range e.Modes {
+			modes = append(modes, string(m))
+		}
+
+		mqlEndpoint, err := CreateResource(o.MqlRuntime, "oci.mysql.dbSystem.endpoint", map[string]*llx.RawData{
+			"__id":             llx.StringData(dbSystemID + "/endpoint/" + stringValue(e.IpAddress) + "/" + strconv.FormatInt(intValue(e.Port), 10)),
+			"ipAddress":        llx.StringDataPtr(e.IpAddress),
+			"hostname":         llx.StringDataPtr(e.Hostname),
+			"port":             llx.IntDataPtr(e.Port),
+			"portX":            llx.IntDataPtr(e.PortX),
+			"ipAddressVersion": llx.StringData(string(e.IpAddressVersion)),
+			"modes":            llx.ArrayData(modes, types.String),
+			"status":           llx.StringData(string(e.Status)),
+			"statusDetails":    llx.StringDataPtr(e.StatusDetails),
+			"resourceType":     llx.StringData(string(e.ResourceType)),
+			"resourceId":       llx.StringDataPtr(e.ResourceId),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlEndpoint)
+	}
+	return res, nil
 }

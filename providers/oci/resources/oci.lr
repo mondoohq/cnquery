@@ -300,11 +300,54 @@ private oci.identity.domain.user @defaults("userName active mfaStatus") {
   capabilities map[string]bool
   // Groups the user belongs to
   //
-  // Each entry has the group's `value` (its SCIM id), `display` name,
-  // `ocid`, and the `type` of membership.
-  groups []dict
+  // Deprecated in favor of groupMemberships, which resolves each row to the
+  // group resource behind it. Each entry has the group's `value` (its SCIM
+  // id), `display` name, `ocid`, and the `type` of membership.
+  groups @maturity("deprecated") []dict
+  // Group memberships held by the user
+  //
+  // One row per group the user belongs to, each resolving to the group
+  // resource so the group's own description, member count and requestable
+  // flag can be read from the user. `type` separates a direct membership from
+  // one inherited through nesting, which is what decides whether removing the
+  // user from a group actually revokes the access it grants.
+  groupMemberships() []oci.identity.domain.user.groupMembership
   // When the account was created
   created time
+}
+
+// Group membership held by an identity domain user
+//
+// A single user-to-group binding, carrying the membership's own OCID, when
+// the user was added, and the group it binds to. `type` reports whether the
+// membership is direct or indirect, which decides whether removing the user
+// from the group revokes what it grants.
+private oci.identity.domain.user.groupMembership @defaults("displayName type") {
+  // Membership OCID
+  //
+  // Empty on a domain that predates membership OCIDs.
+  membershipOcid string
+  // Group SCIM identifier the membership binds to
+  groupId string
+  // Group display name, as recorded on the membership
+  displayName string
+  // Group the membership binds to
+  //
+  // Null when the group is not readable in this domain, which leaves the
+  // membership in place with nothing behind it.
+  group() oci.identity.domain.group
+  // How the membership was acquired
+  //
+  // `direct` when the user was added to the group itself, `indirect` when the
+  // membership comes through group nesting.
+  type string
+  // When the user was added to the group
+  //
+  // Returned as the service records it, which is not always an RFC 3339
+  // timestamp, so it is reported as written rather than parsed.
+  dateAdded string
+  // Identifier for the membership as defined by the service consumer
+  externalId string
 }
 
 // Oracle Cloud Infrastructure (OCI) identity domain group
@@ -653,11 +696,38 @@ private oci.identity.domain.networkPerimeter @defaults("name") {
   description string
   // Client addresses the perimeter covers
   //
-  // Each entry carries `value` with the address or range, `type` as CIDR,
-  // RANGE or EXACT, and `version` as IPV4 or IPV6.
-  ipAddresses []dict
+  // Deprecated in favor of addresses, which returns the same entries as
+  // resources. Each entry carries `value` with the address or range, `type` as
+  // CIDR, RANGE or EXACT, and `version` as IPV4 or IPV6.
+  ipAddresses @maturity("deprecated") []dict
+  // Client addresses the perimeter covers
+  //
+  // One row per entry in the perimeter. A perimeter naming a single wide CIDR
+  // covers far more of the internet than the pair of office prefixes a sign-on
+  // rule referencing it implies, and this is where that difference shows.
+  addresses []oci.identity.domain.networkPerimeter.address
   // Network perimeter creation time
   created time
+}
+
+// Client address entry in an identity domain network perimeter
+//
+// A single address, range, or CIDR block the perimeter covers, as a sign-on
+// rule sees it. `type` decides how `value` is read.
+private oci.identity.domain.networkPerimeter.address @defaults("value type version") {
+  // Address, address range, or CIDR block
+  //
+  // Read according to `type`: a single address for EXACT, a start and end
+  // address for RANGE, and a prefix for CIDR.
+  value string
+  // How the value is read
+  //
+  // One of CIDR, RANGE, or EXACT.
+  type string
+  // Address family of the entry
+  //
+  // IPV4 or IPV6.
+  version string
 }
 
 // Oracle Cloud Infrastructure (OCI) IAM user
@@ -1100,20 +1170,34 @@ private oci.network.exposure @defaults("internetReachable hasPublicIp") {
   hasRouteToInternet bool
   // Ingress rules that admit traffic from any address (0.0.0.0/0 or ::/0)
   //
+  // Deprecated in favor of internetIngressRules, which returns the same rules
+  // as security rule resources with one shape for both sources. The two rule
+  // sources spell the stateless flag differently in this dict: network
+  // security group rules carry `isStateless` while security list rules carry
+  // `stateless`, so a filter naming either one silently misses half the rows.
+  // Each entry: {source, sourceType, protocol (IANA number, e.g. "6"=TCP,
+  // "17"=UDP, "1"=ICMP), description, tcpOptions, udpOptions, icmpOptions}.
+  openIngressRules @maturity("deprecated") []dict
+  // Ingress rules that admit traffic from any address (0.0.0.0/0 or ::/0)
+  //
   // The matching rules from every attached network security group and from the
-  // subnet's security list, combined. Each entry: {source, sourceType, protocol
-  // (IANA number, e.g. "6"=TCP, "17"=UDP, "1"=ICMP), description, tcpOptions,
-  // udpOptions, icmpOptions}; network security group rules carry `isStateless`
-  // while security list rules carry `stateless`.
-  openIngressRules []dict
+  // subnet's security list, combined into one list. Both sources are returned
+  // in the same shape, so `stateless`, the port bounds and the ICMP type and
+  // code can be read across all of them without knowing which layer a rule
+  // came from.
+  internetIngressRules []oci.network.securityRule
   // Security attributes carried by the resource, keyed by namespace
   //
-  // Each key is a security attribute namespace and each value maps that
-  // namespace's attribute names to the resource's values. Zero Trust Packet
-  // Routing decides what a resource may talk to from these attributes rather
-  // than from its address, so a resource carrying none is outside ZPR's reach
-  // no matter what policies the tenancy has written.
-  securityAttributes map[string]dict
+  // Deprecated in favor of appliedSecurityAttributes, which joins each
+  // labelling to the namespace behind it and so reports whether that namespace
+  // enforces or only audits. Each key is a security attribute namespace and
+  // each value maps that namespace's attribute names to the resource's values.
+  securityAttributes @maturity("deprecated") map[string]dict
+  // Security attributes applied to this resource, resolved
+  //
+  // Each labelling as a row carrying its namespace, its definition and whether
+  // that namespace enforces or only audits.
+  appliedSecurityAttributes() []oci.securityAttributes.applied
   // Whether Zero Trust Packet Routing is enforcing on this resource
   //
   // True when ZPR is enabled for the tenancy and the resource carries at least
@@ -1169,28 +1253,39 @@ private oci.compute.instance @defaults("name") {
   dedicatedVmHostId string
   // Platform security configuration
   //
-  // Shielded-instance and confidential-computing settings. Keys: `type`
-  // (the platform variant, for example AMD_VM, INTEL_VM, or AMD_MILAN_BM),
-  // `isSecureBootEnabled`, `isTrustedPlatformModuleEnabled`,
-  // `isMeasuredBootEnabled`, and `isMemoryEncryptionEnabled`. Absent when
-  // the shape does not support these features.
-  platformConfig dict
+  // Deprecated in favor of platformSecurity, which reports the same settings
+  // as a structure. Shielded-instance and confidential-computing settings.
+  // Keys: `type` (the platform variant, for example AMD_VM, INTEL_VM, or
+  // AMD_MILAN_BM), `isSecureBootEnabled`, `isTrustedPlatformModuleEnabled`,
+  // `isMeasuredBootEnabled`, and `isMemoryEncryptionEnabled`. Absent when the
+  // shape does not support these features.
+  platformConfig @maturity("deprecated") dict
+  // Shielded-instance and confidential-computing settings
+  //
+  // Null when the instance carries no platform configuration, which is the
+  // case on shapes that do not offer shielded-instance or
+  // confidential-computing features.
+  platformSecurity() oci.compute.platformSecurity
   // Launch configuration options
   //
-  // Emulation and I/O settings chosen at launch. Keys: `bootVolumeType` and
-  // `remoteDataVolumeType` (ISCSI, SCSI, IDE, VFIO, or PARAVIRTUALIZED),
-  // `firmware` (BIOS or UEFI_64), `networkType` (E1000, VFIO,
-  // PARAVIRTUALIZED, or ACCELERATEDPV), `isPvEncryptionInTransitEnabled`
-  // for in-transit encryption of paravirtualized volume traffic, and
-  // `isConsistentVolumeNamingEnabled`.
-  launchOptions dict
+  // Deprecated in favor of launchConfig, which reports the same settings as a
+  // structure. Emulation and I/O settings chosen at launch. Keys:
+  // `bootVolumeType` and `remoteDataVolumeType` (ISCSI, SCSI, IDE, VFIO, or
+  // PARAVIRTUALIZED), `firmware` (BIOS or UEFI_64), `networkType` (E1000,
+  // VFIO, PARAVIRTUALIZED, or ACCELERATEDPV),
+  // `isPvEncryptionInTransitEnabled`, and `isConsistentVolumeNamingEnabled`.
+  launchOptions @maturity("deprecated") dict
+  // Emulation and I/O settings chosen at launch
+  //
+  // Null when the instance reports no launch options.
+  launchConfig() oci.compute.launchConfig
   // Instance runtime options
   //
-  // Runtime configuration of the instance. The single key
+  // Deprecated in favor of legacyImdsEndpointsDisabled, which carries the
+  // only value this dict holds. The single key
   // `areLegacyImdsEndpointsDisabled` reports whether the legacy instance
-  // metadata service (IMDSv1) endpoints are turned off, also surfaced as
-  // the `legacyImdsEndpointsDisabled` field.
-  instanceOptions dict
+  // metadata service (IMDSv1) endpoints are turned off.
+  instanceOptions @maturity("deprecated") dict
   // Whether legacy instance metadata service (IMDSv1) endpoints are disabled
   //
   // When true, only the more secure IMDSv2 (/v2) endpoints are reachable.
@@ -1217,21 +1312,34 @@ private oci.compute.instance @defaults("name") {
   agentPlugins map[string]string
   // Shape configuration details
   //
-  // Resolved sizing for the instance's shape. Keys: `ocpus`, `memoryInGBs`,
-  // `baselineOcpuUtilization` (BASELINE_1_8, BASELINE_1_2, or BASELINE_1_1
-  // for burstable shapes), `networkingBandwidthInGbps`, `maxVnicAttachments`,
-  // `gpus` with `gpuDescription`, `localDisks` with `localDisksTotalSizeInGBs`,
-  // and `processorDescription`.
-  shapeConfig dict
+  // Deprecated in favor of sizing, which reports the same allocation as a
+  // structure. Keys: `ocpus`, `memoryInGBs`, `baselineOcpuUtilization`
+  // (BASELINE_1_8, BASELINE_1_2, or BASELINE_1_1 for burstable shapes),
+  // `networkingBandwidthInGbps`, `maxVnicAttachments`, `gpus` with
+  // `gpuDescription`, `localDisks` with `localDisksTotalSizeInGBs`, and
+  // `processorDescription`.
+  shapeConfig @maturity("deprecated") dict
+  // Compute, memory, network and local-disk allocation of the instance
+  //
+  // Null when the instance reports no shape configuration, which is the case
+  // on fixed shapes where the shape name alone fixes the allocation.
+  sizing() oci.compute.instanceSizing
   // Boot volume or image source details
   //
-  // What the instance was launched from. The `sourceType` key discriminates
-  // the shape: when "image", the keys are `imageId`, `bootVolumeSizeInGBs`,
+  // Deprecated in favor of bootSource and bootVolume, which together carry
+  // everything this dict holds. The `sourceType` key discriminates the shape:
+  // when "image", the keys are `imageId`, `bootVolumeSizeInGBs`,
   // `bootVolumeVpusPerGB`, and `kmsKeyId`; when "bootVolume", the single key
   // is `bootVolumeId`.
-  sourceDetails dict
+  sourceDetails @maturity("deprecated") dict
   // Boot volume the instance was launched from, when launched from an existing boot volume
   bootVolume() oci.compute.bootVolume
+  // Image and boot volume the instance was created from at launch
+  //
+  // Null when the instance was launched from an existing boot volume, in
+  // which case the volume was sized and keyed when it was created rather than
+  // at launch, and bootVolume is what resolves it.
+  bootSource() oci.compute.imageSource
   // Instance metadata key-value pairs
   metadata map[string]string
   // Nested instance metadata beyond the flat key-value pairs
@@ -1259,12 +1367,12 @@ private oci.compute.instance @defaults("name") {
   timeMaintenanceRebootDue time
   // Security attributes applied to the instance, keyed by namespace
   //
-  // Each key is a security attribute namespace and each value maps that
-  // namespace's attribute names to this instance's values. Zero Trust Packet
-  // Routing authorizes traffic from these rather than from the instance's
-  // address, so an instance carrying none is outside ZPR's reach whatever
-  // policies the tenancy has written.
-  securityAttributes map[string]dict
+  // Deprecated in favor of appliedSecurityAttributes, which joins each
+  // labelling to the namespace behind it and so reports whether that namespace
+  // enforces or only audits. Each key is a security attribute namespace and
+  // each value maps that namespace's attribute names to this instance's
+  // values.
+  securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -1297,6 +1405,139 @@ private oci.compute.instance @defaults("name") {
   cisBenchmarkScanResult() oci.vulnerabilityScanning.hostCisBenchmarkScanResult
   // Most recent endpoint protection scan result for this instance
   endpointProtectionScanResult() oci.vulnerabilityScanning.hostEndpointProtectionScanResult
+}
+
+// Shielded-instance and confidential-computing settings of a compute instance
+//
+// The platform security features an instance runs with: Secure Boot, the
+// virtual Trusted Platform Module, Measured Boot, and memory encryption. Each
+// flag is null when the platform variant does not report it, which keeps "not
+// offered on this shape" apart from "offered and turned off".
+private oci.compute.platformSecurity @defaults("secureBootEnabled measuredBootEnabled memoryEncryptionEnabled") {
+  // Whether Secure Boot is enabled
+  //
+  // Secure Boot refuses to load any boot component the platform does not
+  // trust, so a bootkit cannot survive a reboot.
+  secureBootEnabled bool
+  // Whether the Trusted Platform Module is enabled
+  //
+  // The vTPM holds the measurements Measured Boot records and the keys that
+  // seal to them.
+  trustedPlatformModuleEnabled bool
+  // Whether Measured Boot is enabled
+  //
+  // Measured Boot records each boot component into the vTPM so a later
+  // attestation can tell a tampered boot chain from a clean one.
+  measuredBootEnabled bool
+  // Whether memory encryption is enabled, making this a confidential instance
+  //
+  // Encrypts the instance's memory with a key the hypervisor cannot read, so
+  // data in use is protected as well as data at rest.
+  memoryEncryptionEnabled bool
+}
+
+// Launch configuration of a compute instance
+//
+// The emulation and I/O settings chosen when the instance was launched, and
+// fixed for its lifetime. pvEncryptionInTransitEnabled decides whether traffic
+// to paravirtualized block volumes is encrypted, and firmware decides whether
+// the instance can run Secure Boot at all.
+private oci.compute.launchConfig @defaults("firmware networkType pvEncryptionInTransitEnabled") {
+  // Emulation type for the boot volume
+  //
+  // One of ISCSI, SCSI, IDE, VFIO, or PARAVIRTUALIZED.
+  bootVolumeType string
+  // Firmware the instance boots with
+  //
+  // BIOS or UEFI_64. Secure Boot requires UEFI_64, so a BIOS instance cannot
+  // be running it whatever the platform security settings report.
+  firmware string
+  // Emulation type for the network interface card
+  //
+  // One of E1000, VFIO, PARAVIRTUALIZED, or ACCELERATEDPV.
+  networkType string
+  // Emulation type for remote data volumes
+  //
+  // One of ISCSI, SCSI, IDE, VFIO, or PARAVIRTUALIZED.
+  remoteDataVolumeType string
+  // Whether paravirtualized volume traffic is encrypted in transit
+  //
+  // When false the data moving between the instance and its paravirtualized
+  // block volumes crosses the virtual network unencrypted.
+  pvEncryptionInTransitEnabled bool
+  // Whether consistent volume naming is enabled
+  consistentVolumeNamingEnabled bool
+}
+
+// Resource allocation of a compute instance
+//
+// What a flexible shape was sized to: OCPUs and memory, the networking
+// bandwidth and VNIC slots that come with them, and any GPUs or local NVMe
+// disks attached. A field is null when the shape does not offer that resource,
+// so an instance with no GPUs reports null rather than zero.
+private oci.compute.instanceSizing @defaults("ocpus memoryInGBs") {
+  // OCPUs available to the instance
+  ocpus float
+  // Memory available to the instance, in gigabytes
+  memoryInGBs float
+  // Baseline OCPU utilization for a burstable instance
+  //
+  // BASELINE_1_8, BASELINE_1_2, or BASELINE_1_1. Empty on a non-burstable
+  // shape, where the instance always has its full OCPU allocation.
+  baselineOcpuUtilization string
+  // Short description of the instance's processor
+  processorDescription string
+  // Networking bandwidth available to the instance, in gigabits per second
+  networkingBandwidthInGbps float
+  // Maximum number of VNIC attachments the instance supports
+  maxVnicAttachments int
+  // Number of GPUs available to the instance
+  gpus int
+  // Short description of the instance's graphics processing unit
+  //
+  // Empty when the instance has no GPUs.
+  gpuDescription string
+  // Number of local disks available to the instance
+  localDisks int
+  // Aggregate size of all local disks, in gigabytes
+  //
+  // Null when the instance has no local disks.
+  localDisksTotalSizeInGBs float
+  // Short description of the local disks available to the instance
+  //
+  // Empty when the instance has no local disks.
+  localDiskDescription string
+  // Total number of vCPUs available to the instance
+  //
+  // Null on shapes sized in OCPUs alone.
+  vcpus int
+  // NVMe-backed local storage capacity, in gigabytes, on flexible dense shapes
+  //
+  // Null on every shape that is not a flexible dense (DenseLV) VM shape.
+  localVolumeSizeInGBs int
+}
+
+// Image a compute instance was launched from, with the boot volume built for it
+//
+// Present only on an instance launched from an image, where the boot volume was
+// created at launch and its size, performance tier and encryption key were
+// chosen then. kmsKey is what says the boot volume is protected by a
+// customer-managed key rather than an Oracle-managed one.
+private oci.compute.imageSource @defaults("bootVolumeSizeInGBs bootVolumeVpusPerGB") {
+  // Image the boot volume was created from
+  image() oci.compute.image
+  // Size of the boot volume created at launch, in gigabytes
+  bootVolumeSizeInGBs int
+  // Volume performance units per gigabyte applied to the boot volume created at launch
+  //
+  // 10 is the Balanced option, 20 Higher Performance, and 30 to 120 Ultra High
+  // Performance.
+  bootVolumeVpusPerGB int
+  // Vault key protecting the boot volume created at launch
+  //
+  // Null when the boot volume is encrypted with an Oracle-managed key rather
+  // than a customer-managed one.
+  kmsKey() oci.kms.key
 }
 
 // Oracle Cloud Infrastructure (OCI) virtual network interface card (VNIC)
@@ -1337,11 +1578,12 @@ private oci.compute.vnic @defaults("name") {
   skipSourceDestCheck bool
   // Security attributes applied to the VNIC, keyed by namespace
   //
-  // Each key is a security attribute namespace and each value maps that
-  // namespace's attribute names to this VNIC's values. A VNIC can carry
-  // attributes its instance does not, so Zero Trust Packet Routing may govern
-  // one interface of a multi-homed instance and not another.
-  securityAttributes map[string]dict
+  // Deprecated in favor of appliedSecurityAttributes, which joins each
+  // labelling to the namespace behind it and so reports whether that namespace
+  // enforces or only audits. A VNIC can carry attributes its instance does
+  // not, so Zero Trust Packet Routing may govern one interface of a
+  // multi-homed instance and not another.
+  securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -1614,11 +1856,11 @@ private oci.network.vcn @defaults("name") {
   vcnDomainName string
   // Security attributes applied to the VCN, keyed by namespace
   //
-  // Each key is a security attribute namespace and each value maps that
-  // namespace's attribute names to this VCN's values. Zero Trust Packet
-  // Routing statements can name a whole VCN this way rather than naming the
-  // resources inside it.
-  securityAttributes map[string]dict
+  // Deprecated in favor of appliedSecurityAttributes, which joins each
+  // labelling to the namespace behind it and so reports whether that namespace
+  // enforces or only audits. Zero Trust Packet Routing statements can name a
+  // whole VCN this way rather than naming the resources inside it.
+  securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -2006,10 +2248,11 @@ private oci.network.routeTable @defaults("name") {
   vcn() oci.network.vcn
   // Raw route rules defining traffic destinations and targets
   //
-  // Each entry: {networkEntityId, destination, destinationType (CIDR_BLOCK,
-  // SERVICE_CIDR_BLOCK), description, routeType (STATIC, LOCAL)}. See `routes`
-  // for the same rules resolved to their destination and typed target entity.
-  routeRules []dict
+  // Deprecated in favor of routes, which is built from these rules and
+  // resolves each one's target to the gateway resource it names. Each entry:
+  // {networkEntityId, destination, destinationType (CIDR_BLOCK,
+  // SERVICE_CIDR_BLOCK), description, routeType (STATIC, LOCAL)}.
+  routeRules @maturity("deprecated") []dict
   // Route rules resolved to their destination and target network entity
   routes() []oci.network.routeTable.route
   // Lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
@@ -2446,9 +2689,18 @@ private oci.network.virtualCircuit @defaults("name type state") {
   publicPrefixes []string
   // BGP peering mappings to the underlying cross-connects
   //
-  // Each entry: {crossConnectOrCrossConnectGroupId, vlan, customerBgpPeeringIp,
-  // oracleBgpPeeringIp, customerBgpPeeringIpv6, oracleBgpPeeringIpv6}.
-  crossConnectMappings []dict
+  // Deprecated in favor of mappings, which returns the same entries as
+  // resources and resolves each one to the cross-connect it terminates on.
+  // Each entry: {crossConnectOrCrossConnectGroupId, vlan,
+  // customerBgpPeeringIp, oracleBgpPeeringIp, customerBgpPeeringIpv6,
+  // oracleBgpPeeringIpv6}.
+  crossConnectMappings @maturity("deprecated") []dict
+  // BGP peering mappings to the underlying cross-connects
+  //
+  // One row per cross-connect the circuit terminates on, carrying the VLAN and
+  // both ends of the BGP session. The BGP MD5 authentication key the API also
+  // returns is deliberately not exposed.
+  mappings []oci.network.virtualCircuit.crossConnectMapping
   // Lifecycle state (e.g., PENDING_PROVIDER, PROVISIONING, PROVISIONED, FAILED, INACTIVE, TERMINATING, TERMINATED)
   state string
   // Creation time
@@ -2457,6 +2709,43 @@ private oci.network.virtualCircuit @defaults("name type state") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+}
+
+// BGP peering mapping on a FastConnect virtual circuit
+//
+// A single cross-connect the virtual circuit terminates on, with the VLAN it
+// was assigned and both ends of the BGP session. `crossConnect` resolves the
+// physical port when the mapping names one; it is null when the mapping names
+// a cross-connect group instead, or when the port belongs to the FastConnect
+// provider rather than the tenancy. The BGP MD5 authentication key the API
+// also returns for this mapping is deliberately not exposed.
+private oci.network.virtualCircuit.crossConnectMapping @defaults("vlan customerBgpPeeringIp oracleBgpPeeringIp") {
+  // OCID of the cross-connect or cross-connect group the mapping terminates on
+  //
+  // Empty on a provider-mediated circuit, where the FastConnect partner owns
+  // the port rather than the tenancy.
+  crossConnectId string
+  // Cross-connect the mapping terminates on
+  //
+  // Null when the mapping names a cross-connect group rather than a single
+  // port, and when the port is not readable in this tenancy.
+  crossConnect() oci.network.crossConnect
+  // VLAN assigned to this virtual circuit on the cross-connect
+  //
+  // Null on a mapping the tenancy does not own the port for.
+  vlan int
+  // BGP IPv4 address of the router on the far end of the session
+  customerBgpPeeringIp string
+  // BGP IPv4 address of Oracle's end of the session
+  oracleBgpPeeringIp string
+  // BGP IPv6 address of the router on the far end of the session
+  //
+  // Empty on a mapping that peers over IPv4 only.
+  customerBgpPeeringIpv6 string
+  // BGP IPv6 address of Oracle's end of the session
+  //
+  // Empty on a mapping that peers over IPv4 only.
+  oracleBgpPeeringIpv6 string
 }
 
 // Oracle Cloud Infrastructure (OCI) FastConnect cross-connect
@@ -3026,11 +3315,11 @@ private oci.fileStorage.mountTarget @defaults("name state availabilityDomain") {
   created time
   // Security attributes applied to the mount target, keyed by namespace
   //
-  // Each key is a security attribute namespace and each value maps that
-  // namespace's attribute names to this mount target's values. Zero Trust
-  // Packet Routing authorizes traffic from these rather than from the mount
-  // target's address.
-  securityAttributes map[string]dict
+  // Deprecated in favor of appliedSecurityAttributes, which joins each
+  // labelling to the namespace behind it and so reports whether that namespace
+  // enforces or only audits. Zero Trust Packet Routing authorizes traffic from
+  // these rather than from the mount target's address.
+  securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -3577,10 +3866,17 @@ private oci.cloudGuard.detectorRule @defaults("name isEnabled riskLevel") {
   labels []string
   // Tunable parameters for the rule
   //
-  // Each entry has `configKey`, `name`, `value`, `dataType`, and for
-  // multi-valued settings a `values` list whose entries carry `name`,
+  // Deprecated in favor of settings, which returns the same entries as
+  // resources. Each entry has `configKey`, `name`, `value`, `dataType`, and
+  // for multi-valued settings a `values` list whose entries carry `name`,
   // `value`, and `listType`.
-  configurations []dict
+  configurations @maturity("deprecated") []dict
+  // Tunable parameters for the rule
+  //
+  // One row per setting the rule exposes, keyed by `configKey`. A rule is only
+  // as strict as its settings, so a threshold or an allow-list left at the
+  // default is what decides whether the rule fires on a real finding.
+  settings []oci.cloudGuard.detectorRule.configuration
   // Whether the rule's configuration may be changed
   isConfigurationAllowed bool
   // Whether the rule can be cloned into a customer-managed recipe
@@ -3593,6 +3889,41 @@ private oci.cloudGuard.detectorRule @defaults("name isEnabled riskLevel") {
   created time
   // Detector rule last-update time
   updated time
+}
+
+// Tunable parameter on a Cloud Guard detector rule
+//
+// A single setting the detector rule exposes, keyed by `configKey`. `value`
+// carries the setting as configured, and `values` the entries when the setting
+// is multi-valued. `allowedValues` lists what the setting accepts, which is
+// what separates a setting left at its default from one that was narrowed.
+private oci.cloudGuard.detectorRule.configuration @defaults("configKey name value") {
+  // Unique identifier of the setting within the rule
+  configKey string
+  // Setting name
+  name string
+  // Setting value
+  //
+  // Empty on a multi-valued setting, where `values` carries the entries.
+  value string
+  // Data type of the setting value
+  dataType string
+  // Entries of a multi-valued setting
+  //
+  // Each entry carries `name`, `value`, and `listType`. Empty on a
+  // single-valued setting.
+  values []dict
+  // Data type of the entries in `allowedValues`
+  allowedValuesDataType string
+  // Values the setting accepts
+  //
+  // Each entry carries `key` and `value`. Empty when the setting accepts any
+  // value of its data type.
+  allowedValues []dict
+  // Additional property definitions for the setting
+  //
+  // Each entry carries `name`, `type`, and the `value` it defaults to.
+  additionalProperties []dict
 }
 
 // Oracle Cloud Infrastructure (OCI) Cloud Guard problem
@@ -4376,10 +4707,18 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
   hostnames map[string]string
   // Assigned IP addresses
   //
-  // Each entry is a dict with an `ipAddress`, an `isPublic` flag indicating
-  // internet reachability, and a `reservedIpId` (the oci.network.publicIp
-  // OCID) when the address is backed by a reserved public IP.
-  ipAddresses []dict
+  // Deprecated in favor of addresses, which returns the same entries as
+  // resources and resolves a reserved address to the public IP behind it. Each
+  // entry is a dict with an `ipAddress`, an `isPublic` flag indicating
+  // internet reachability, and a `reservedIpId` when the address is backed by
+  // a reserved public IP.
+  ipAddresses @maturity("deprecated") []dict
+  // Assigned IP addresses
+  //
+  // One row per address the load balancer answers on. A row whose `isPublic`
+  // is true is an internet-facing address, and `reservedIp` resolves the
+  // reserved public IP backing it when there is one.
+  addresses []oci.loadBalancer.ipAddress
   // Whether delete protection is enabled
   isDeleteProtectionEnabled bool
   // Subnets the load balancer is attached to
@@ -4388,11 +4727,11 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
   state string
   // Security attributes applied to the load balancer, keyed by namespace
   //
-  // Each key is a security attribute namespace and each value maps that
-  // namespace's attribute names to this load balancer's values. Zero Trust
-  // Packet Routing decides what the load balancer may talk to from these
-  // rather than from its address.
-  securityAttributes map[string]dict
+  // Deprecated in favor of appliedSecurityAttributes, which joins each
+  // labelling to the namespace behind it and so reports whether that namespace
+  // enforces or only audits. Zero Trust Packet Routing decides what the load
+  // balancer may talk to from these rather than from its address.
+  securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -4600,6 +4939,28 @@ private oci.loadBalancer.ruleSet @defaults("name") {
   rules []dict
 }
 
+// IP address assigned to a load balancer
+//
+// A single address the load balancer answers on. `isPublic` is what separates
+// an internet-facing address from one reachable only inside the VCN, and
+// `reservedIp` resolves the reserved public IP behind an address that is
+// backed by one, which survives the load balancer being deleted.
+private oci.loadBalancer.ipAddress @defaults("ipAddress isPublic") {
+  // The address itself
+  ipAddress string
+  // Whether the address is reachable from the internet
+  //
+  // False means the address is private and reachable only from within the
+  // associated VCN. Null when the load balancer does not report the flag, in
+  // which case the load balancer's own private flag decides.
+  isPublic bool
+  // Reserved public IP backing the address
+  //
+  // Null when the address is ephemeral, meaning it is released when the load
+  // balancer is deleted rather than staying registered in the VCN.
+  reservedIp() oci.network.publicIp
+}
+
 // Oracle Cloud Infrastructure (OCI) load balancer backend set
 private oci.loadBalancer.backendSet @defaults("name") {
   // Backend set name
@@ -4608,11 +4969,17 @@ private oci.loadBalancer.backendSet @defaults("name") {
   policy string
   // Health checker configuration
   //
-  // A dict describing the backend health probe. Keys: `protocol` (the
-  // probe protocol, e.g., HTTP, HTTPS, or TCP), `port`, `urlPath`,
-  // `returnCode` (expected status code), `responseBodyRegex`, `retries`,
-  // `timeoutInMillis`, `intervalInMillis`, and `isForcePlainText`.
-  healthChecker dict
+  // Deprecated in favor of healthCheck, which reports the same probe as a
+  // structure. Keys: `protocol` (the probe protocol, e.g., HTTP, HTTPS, or
+  // TCP), `port`, `urlPath`, `returnCode` (expected status code),
+  // `responseBodyRegex`, `retries`, `timeoutInMillis`, `intervalInMillis`, and
+  // `isForcePlainText`.
+  healthChecker @maturity("deprecated") dict
+  // Probe that decides whether a backend is healthy
+  //
+  // Null when the backend set carries no health checker, in which case no
+  // probe removes a failed backend from rotation.
+  healthCheck() oci.loadBalancer.healthChecker
   // Number of backends
   backendCount int
   // Backend servers in the set
@@ -4697,6 +5064,42 @@ private oci.loadBalancer.backendSet @defaults("name") {
   lbCookieIsHttpOnly bool
 }
 
+// Health probe of a load balancer backend set
+//
+// The probe that decides which backends stay in rotation: the protocol and
+// port it uses, what it asks for, what answer it accepts, and how many
+// failures it tolerates. forcePlainText is the field that says the probe never
+// speaks TLS, which lets a backend with an expired certificate keep reporting
+// healthy.
+private oci.loadBalancer.healthChecker @defaults("protocol port urlPath") {
+  // Protocol the probe uses
+  //
+  // HTTP or TCP.
+  protocol string
+  // Backend port the probe connects to
+  //
+  // Null when the probe uses the port each backend declares for itself.
+  port int
+  // Status code a healthy backend is expected to return
+  returnCode int
+  // Regular expression the probe matches the response body against
+  responseBodyRegex string
+  // Path the probe requests, on an HTTP probe
+  urlPath string
+  // Consecutive failures before a backend is considered unhealthy
+  retries int
+  // Time the probe waits for a reply, in milliseconds
+  timeoutInMillis int
+  // Interval between probes, in milliseconds
+  intervalInMillis int
+  // Whether the probe always runs in plain text
+  //
+  // When true the probe skips TLS even where the backend set is configured to
+  // use it, so a backend whose certificate has expired or been replaced still
+  // reports healthy.
+  forcePlainText bool
+}
+
 // Backend server in an Oracle Cloud Infrastructure (OCI) load balancer backend set
 //
 // One server the load balancer forwards to, with the weighting and drain,
@@ -4759,11 +5162,19 @@ private oci.networkLoadBalancer.loadBalancer @defaults("name isPrivate state") {
   isPrivate bool
   // Assigned IP addresses
   //
-  // Each entry is a dict with an `ipAddress`, an `isPublic` flag indicating
-  // internet reachability, an `ipVersion` of IPV4 or IPV6, and a
-  // `reservedIp` block carrying the OCID when the address is backed by a
-  // reserved public IP.
-  ipAddresses []dict
+  // Deprecated in favor of addresses, which returns the same entries as
+  // resources and resolves a reserved address to the public IP behind it. Each
+  // entry is a dict with an `ipAddress`, an `isPublic` flag indicating
+  // internet reachability, an `ipVersion` of IPV4 or IPV6, and a `reservedIp`
+  // block carrying the OCID when the address is backed by a reserved public
+  // IP.
+  ipAddresses @maturity("deprecated") []dict
+  // Assigned IP addresses
+  //
+  // One row per address the network load balancer answers on. A row whose
+  // `isPublic` is true is an internet-facing address, and `reservedIp`
+  // resolves the reserved public IP backing it when there is one.
+  addresses []oci.networkLoadBalancer.ipAddress
   // IP version the network load balancer serves (IPV4, IPV4_AND_IPV6, IPV6)
   ipVersion string
   // Subnet the network load balancer is attached to
@@ -4785,7 +5196,11 @@ private oci.networkLoadBalancer.loadBalancer @defaults("name isPrivate state") {
   // Whether symmetric hashing is enabled for flow distribution
   isSymmetricHashEnabled bool
   // Zero Trust Packet Routing security attributes applied to the load balancer
-  securityAttributes map[string]dict
+  //
+  // Deprecated in favor of appliedSecurityAttributes, which joins each
+  // labelling to the namespace behind it and so reports whether that namespace
+  // enforces or only audits.
+  securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -4855,15 +5270,116 @@ private oci.networkLoadBalancer.backendSet @defaults("name policy") {
   isInstantFailoverEnabled bool
   // Health checker configuration
   //
-  // A dict describing the backend health probe. Keys: `protocol` (HTTP,
-  // HTTPS, TCP, UDP, or DNS), `port`, `urlPath`, `returnCode` (expected
-  // status code), `responseBodyRegex`, `retries`, `timeoutInMillis`,
-  // `intervalInMillis`, and a `dns` block for DNS probes.
-  healthChecker dict
+  // Deprecated in favor of healthCheck, which reports the same probe as a
+  // structure. Keys: `protocol` (HTTP, HTTPS, TCP, UDP, or DNS), `port`,
+  // `urlPath`, `returnCode` (expected status code), `responseBodyRegex`,
+  // `retries`, `timeoutInMillis`, `intervalInMillis`, and a `dns` block for
+  // DNS probes.
+  healthChecker @maturity("deprecated") dict
+  // Probe that decides whether a backend is healthy
+  //
+  // Null when the backend set carries no health checker, in which case no
+  // probe removes a failed backend from rotation.
+  healthCheck() oci.networkLoadBalancer.healthChecker
   // Backends traffic is distributed to
   backends []oci.networkLoadBalancer.backend
   // Number of backends
   backendCount int
+}
+
+// Health probe of a network load balancer backend set
+//
+// The probe that decides which backends stay in rotation. A network load
+// balancer probes at layer 3 and 4 as well as layer 7, so alongside the HTTP
+// fields it carries the raw payload a UDP or TCP probe sends and expects back,
+// and a DNS query for a DNS probe.
+private oci.networkLoadBalancer.healthChecker @defaults("protocol port urlPath") {
+  // Protocol the probe uses
+  //
+  // HTTP, HTTPS, TCP, UDP, or DNS.
+  protocol string
+  // Backend port the probe connects to
+  //
+  // Null when the probe uses the port each backend declares for itself.
+  port int
+  // Consecutive failures before a backend is considered unhealthy
+  retries int
+  // Time the probe waits for a reply, in milliseconds
+  timeoutInMillis int
+  // Interval between probes, in milliseconds
+  intervalInMillis int
+  // Path the probe requests, on an HTTP or HTTPS probe
+  urlPath string
+  // Regular expression the probe matches the response body against
+  responseBodyRegex string
+  // Status code a healthy backend is expected to return
+  returnCode int
+  // Base64-encoded payload sent as the UDP or TCP probe
+  //
+  // Empty on probes that send no payload.
+  requestData string
+  // Base64-encoded payload the UDP or TCP probe response is matched against
+  //
+  // Empty when the probe accepts any response.
+  responseData string
+  // DNS query the probe sends, on a DNS probe
+  //
+  // Null on a probe that is not a DNS probe.
+  dns() oci.networkLoadBalancer.dnsHealthCheck
+}
+
+// DNS query a network load balancer health probe sends
+//
+// The query a DNS probe issues against each backend and the response codes it
+// accepts as healthy. A backend answering NXDOMAIN counts as healthy whenever
+// that code is in rcodes, so the accepted set is what decides whether a
+// resolver that has lost its zone stays in rotation.
+private oci.networkLoadBalancer.dnsHealthCheck @defaults("domainName queryType") {
+  // Fully-qualified domain name the probe queries
+  domainName string
+  // Transport the probe uses
+  //
+  // UDP or TCP.
+  transportProtocol string
+  // Query class the probe sends
+  //
+  // IN or CH.
+  queryClass string
+  // Query type the probe sends
+  //
+  // A, AAAA, or TXT.
+  queryType string
+  // Response codes the probe accepts as healthy
+  //
+  // For example NOERROR and NXDOMAIN.
+  rcodes []string
+}
+
+// IP address assigned to a network load balancer
+//
+// A single address the network load balancer answers on. `isPublic` is what
+// separates an internet-facing address from one reachable only inside the
+// VCN, `ipVersion` reports the address family, and `reservedIp` resolves the
+// reserved public IP behind an address that is backed by one.
+private oci.networkLoadBalancer.ipAddress @defaults("ipAddress isPublic ipVersion") {
+  // The address itself
+  ipAddress string
+  // Whether the address is reachable from the internet
+  //
+  // False means the address is private and reachable only from within the
+  // associated virtual cloud network. Null when the network load balancer does
+  // not report the flag, in which case its own private flag decides.
+  isPublic bool
+  // Address family of the address
+  //
+  // IPV4 or IPV6.
+  ipVersion string
+  // Reserved public IP backing the address
+  //
+  // Null when the address is ephemeral, meaning it is released when the
+  // network load balancer is deleted rather than staying registered in the
+  // VCN.
+  reservedIp() oci.network.publicIp
 }
 
 // Oracle Cloud Infrastructure (OCI) network load balancer backend
@@ -5091,12 +5607,25 @@ private oci.streaming.streamPool @defaults("name isPrivate state") {
   encryptionKeyState() string
   // Kafka compatibility settings
   //
-  // Has `bootstrapServers`, `autoCreateTopicsEnable` (whether producers
-  // may create topics implicitly), `logRetentionHours`, and
-  // `numPartitions`.
-  kafkaSettings() dict
+  // Deprecated in favor of kafka, which reports the same settings as a
+  // structure.
+  kafkaSettings() @maturity("deprecated") dict
+  // Kafka compatibility settings
+  //
+  // Null when the pool reports no Kafka settings, meaning nothing connects to
+  // it through the Kafka-compatible endpoint.
+  kafka() oci.streaming.kafkaConfig
   // Zero Trust Packet Routing security attributes applied to the pool
-  securityAttributes map[string]dict
+  //
+  // Deprecated in favor of appliedSecurityAttributes, which joins each
+  // labelling to the namespace behind it and so reports whether that namespace
+  // enforces or only audits.
+  securityAttributes @maturity("deprecated") map[string]dict
+  // Security attributes applied to this resource, resolved
+  //
+  // Each labelling as a row carrying its namespace, its definition and whether
+  // that namespace enforces or only audits.
+  appliedSecurityAttributes() []oci.securityAttributes.applied
   // Lifecycle state (CREATING, ACTIVE, DELETING, DELETED, FAILED, UPDATING)
   state string
   // Creation time
@@ -5106,6 +5635,27 @@ private oci.streaming.streamPool @defaults("name isPrivate state") {
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
 }
+
+// Kafka compatibility settings of a stream pool
+//
+// What clients reach the pool through its Kafka-compatible endpoint, and the
+// defaults applied to topics created on it. autoCreateTopicsEnable is the
+// field that decides whether a client that can publish can also create a
+// topic, which makes the set of topics in the pool wider than the set an
+// administrator configured.
+private oci.streaming.kafkaConfig @defaults("bootstrapServers autoCreateTopicsEnable") {
+  // Bootstrap servers clients connect through
+  bootstrapServers string
+  // Whether producers may create topics implicitly
+  //
+  // When true any client that can publish can also create a topic.
+  autoCreateTopicsEnable bool
+  // Hours a log file is kept before deletion
+  logRetentionHours int
+  // Default number of log partitions per topic
+  numPartitions int
+}
+
 
 // Oracle Cloud Infrastructure (OCI) Queue
 //
@@ -5297,11 +5847,18 @@ private oci.mysql.dbSystem @defaults("name version state") {
   securityGroups() []oci.network.networkSecurityGroup
   // Addresses the database system answers on
   //
-  // Each entry has an `ipAddress`, `hostname`, `port` and `portX`, an
-  // `ipAddressVersion`, a `status`, the `modes` the endpoint accepts
-  // (READ, WRITE), and a `resourceType` of DBSYSTEM, READ_REPLICA,
-  // LOAD_BALANCER, or READ_ENDPOINT.
-  endpoints []dict
+  // Deprecated in favor of dbEndpoints, which returns the same entries as
+  // resources. Each entry has an `ipAddress`, `hostname`, `port` and `portX`,
+  // an `ipAddressVersion`, a `status`, the `modes` the endpoint accepts (READ,
+  // WRITE), and a `resourceType` of DBSYSTEM, READ_REPLICA, LOAD_BALANCER, or
+  // READ_ENDPOINT.
+  endpoints @maturity("deprecated") []dict
+  // Addresses the database system answers on
+  //
+  // One row per address the system listens on. `modes` separates a read-only
+  // endpoint from one that accepts writes, and `resourceType` separates the
+  // system's own address from a read replica or the load balancer fronting it.
+  dbEndpoints []oci.mysql.dbSystem.endpoint
   // How the data-at-rest encryption key is managed (SYSTEM, BYOK)
   encryptionKeyGenerationType() string
   // Customer-managed KMS key protecting data at rest
@@ -5321,10 +5878,14 @@ private oci.mysql.dbSystem @defaults("name version state") {
   backupPolicy dict
   // Policy applied to backups and automatic backups when the system is deleted
   //
-  // Has `automaticBackupRetention`, `finalBackup`, and
-  // `isDeleteProtected`, which together decide whether deleting the
-  // system also destroys its recovery points.
-  deletionPolicy dict
+  // Deprecated in favor of deletionRules, which reports the same policy as a
+  // structure. Together its values decide whether deleting the system also
+  // destroys its recovery points.
+  deletionPolicy @maturity("deprecated") dict
+  // What deleting the system does to it and to its backups
+  //
+  // Null when the system reports no deletion policy.
+  deletionRules() oci.mysql.deletionPolicy
   // Availability domain the system is placed in
   availabilityDomain string
   // Fault domain the system is placed in
@@ -5345,6 +5906,74 @@ private oci.mysql.dbSystem @defaults("name version state") {
   // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
+}
+
+// Deletion policy of a MySQL database system
+//
+// What deleting the database system does to it and to its recovery points.
+// deleteProtected is what stops the delete outright, and the other two decide
+// whether the backups that would allow a restore survive it.
+private oci.mysql.deletionPolicy @defaults("deleteProtected automaticBackupRetention finalBackup") {
+  // What happens to automatic backups when the system is deleted
+  //
+  // RETAIN keeps them, DELETE destroys them along with the system.
+  automaticBackupRetention string
+  // Whether a backup is taken when the system is deleted
+  //
+  // REQUIRE_FINAL_BACKUP takes one, SKIP_FINAL_BACKUP does not.
+  finalBackup string
+  // Whether the database system is protected from deletion
+  //
+  // False, the default, means an API call or console action can delete the
+  // system outright.
+  deleteProtected bool
+}
+
+
+// Address a MySQL database system answers on
+//
+// A single listener the database system publishes, with the port for the
+// classic MySQL protocol in `port` and the port for the X protocol in `portX`.
+// `modes` reports whether the endpoint accepts writes or only reads, and
+// `resourceType` separates the system's own address from a read replica or the
+// load balancer fronting it.
+private oci.mysql.dbSystem.endpoint @defaults("hostname ipAddress port status") {
+  // Address the endpoint listens on
+  ipAddress string
+  // Network address of the endpoint
+  //
+  // Empty when the endpoint publishes no hostname, leaving the address as the
+  // only way to reach it.
+  hostname string
+  // Port the classic MySQL protocol listens on
+  port int
+  // Port the X protocol listens on
+  portX int
+  // Address family of the endpoint
+  //
+  // IPV4 or IPV6.
+  ipAddressVersion string
+  // Access modes the endpoint accepts
+  //
+  // READ, WRITE, or both. An endpoint offering only READ cannot be used to
+  // modify data whatever the connecting account is granted.
+  modes []string
+  // State of the endpoint as the database system sees it
+  //
+  // For example ACTIVE, INACTIVE, or UPDATING. This is the system's own view
+  // and can lag the actual state of the MySQL service.
+  status string
+  // Detail behind the endpoint status
+  statusDetails string
+  // Kind of resource the endpoint is attached to
+  //
+  // DBSYSTEM, READ_REPLICA, LOAD_BALANCER, or READ_ENDPOINT.
+  resourceType string
+  // OCID of the resource the endpoint is attached to
+  //
+  // The kind of resource this names varies with `resourceType`, so it is
+  // reported as the OCID rather than resolved.
+  resourceId string
 }
 
 // Oracle Cloud Infrastructure (OCI) Database with PostgreSQL
@@ -5458,9 +6087,13 @@ private oci.nosql.table @defaults("name state") {
   compartment() oci.compartment
   // Throughput and storage limits
   //
-  // Has `maxReadUnits`, `maxWriteUnits`, `maxStorageInGBs`, and a
-  // `capacityMode` of PROVISIONED or ON_DEMAND.
-  tableLimits dict
+  // Deprecated in favor of limits, which reports the same ceilings as a
+  // structure.
+  tableLimits @maturity("deprecated") dict
+  // Throughput and storage ceilings the table is provisioned with
+  //
+  // Null when the table reports no limits.
+  limits() oci.nosql.tableLimits
   // Whether the table is replicated across regions
   isMultiRegion bool
   // Whether the table is reclaimed automatically after a period of inactivity
@@ -5492,6 +6125,29 @@ private oci.nosql.table @defaults("name state") {
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
 }
+
+// Throughput and storage limits of a NoSQL table
+//
+// The ceilings the table is provisioned with. capacityMode decides whether the
+// read and write units are enforced at all: an ON_DEMAND table reports zero
+// for both because the limits do not apply to it.
+private oci.nosql.tableLimits @defaults("capacityMode maxReadUnits maxWriteUnits") {
+  // Maximum sustained read throughput for the table
+  //
+  // Zero when capacityMode is ON_DEMAND, where the limit does not apply.
+  maxReadUnits int
+  // Maximum sustained write throughput for the table
+  //
+  // Zero when capacityMode is ON_DEMAND, where the limit does not apply.
+  maxWriteUnits int
+  // Maximum storage the table may use, in gigabytes
+  maxStorageInGBs int
+  // How the table's capacity is provisioned
+  //
+  // PROVISIONED or ON_DEMAND.
+  capacityMode string
+}
+
 
 // Oracle Cloud Infrastructure (OCI) Search with OpenSearch
 //
@@ -5613,15 +6269,29 @@ private oci.opensearch.cluster @defaults("name softwareVersion securityMode stat
   outboundClusterConfig dict
   // Backup policy
   //
-  // Has `isEnabled`, a `retentionInDays`, and the cron `scheduleTime`
-  // the snapshot runs on.
-  backupPolicy dict
+  // Deprecated in favor of backups, which reports the same policy as a
+  // structure.
+  backupPolicy @maturity("deprecated") dict
+  // Automatic backup schedule and retention
+  //
+  // Null when the cluster reports no backup policy, which is a different fact
+  // from a policy that turns backups off.
+  backups() oci.opensearch.backupPolicy
   // Total storage allocated to the cluster, in GB
   totalStorageGB int
   // Availability domains the cluster is distributed across
   availabilityDomains []string
   // Zero Trust Packet Routing security attributes applied to the cluster
-  securityAttributes map[string]dict
+  //
+  // Deprecated in favor of appliedSecurityAttributes, which joins each
+  // labelling to the namespace behind it and so reports whether that namespace
+  // enforces or only audits.
+  securityAttributes @maturity("deprecated") map[string]dict
+  // Security attributes applied to this resource, resolved
+  //
+  // Each labelling as a row carrying its namespace, its definition and whether
+  // that namespace enforces or only audits.
+  appliedSecurityAttributes() []oci.securityAttributes.applied
   // Lifecycle state (CREATING, UPDATING, ACTIVE, DELETING, DELETED, FAILED)
   state string
   // Detail explaining the current lifecycle state, for FAILED clusters
@@ -5641,6 +6311,21 @@ private oci.opensearch.cluster @defaults("name softwareVersion securityMode stat
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
 }
+
+// Automatic backup policy of an OpenSearch cluster
+//
+// Whether the cluster takes automatic backups, how often, and how long each
+// copy is kept. A cluster with backups off has no recovery point to restore
+// from, whatever retention says.
+private oci.opensearch.backupPolicy @defaults("isEnabled frequencyInHours retentionInDays") {
+  // Whether automatic backups are enabled
+  isEnabled bool
+  // Days a backup copy is kept on storage
+  retentionInDays int
+  // Hours between backups
+  frequencyInHours int
+}
+
 
 // Oracle Cloud Infrastructure (OCI) GoldenGate
 //
@@ -5709,7 +6394,16 @@ private oci.goldenGate.deployment @defaults("name isPublic state") {
   // OCPUs allocated to the deployment
   cpuCoreCount int
   // Zero Trust Packet Routing security attributes applied to the deployment
-  securityAttributes map[string]dict
+  //
+  // Deprecated in favor of appliedSecurityAttributes, which joins each
+  // labelling to the namespace behind it and so reports whether that namespace
+  // enforces or only audits.
+  securityAttributes @maturity("deprecated") map[string]dict
+  // Security attributes applied to this resource, resolved
+  //
+  // Each labelling as a row carrying its namespace, its definition and whether
+  // that namespace enforces or only audits.
+  appliedSecurityAttributes() []oci.securityAttributes.applied
   // Lifecycle state
   //
   // One of CREATING, UPDATING, ACTIVE, INACTIVE, DELETING, DELETED,
@@ -5783,13 +6477,23 @@ private oci.dns.zone @defaults("name zoneType scope dnssecState") {
   dnssecState string
   // DNSSEC key-signing and zone-signing key versions
   //
-  // Has `kskDnssecKeyVersions` and `zskDnssecKeyVersions` lists. Each
-  // entry carries the key's `algorithm`, `lengthInBytes`, `uuid`, the
-  // `timeCreated`, `timeActivated`, `timeExpired` and `timeInactivated`
-  // marking its lifecycle, and the scheduled `timePromoted` and
-  // `predecessorId` or `successorId` linking a rollover. Empty when
+  // Deprecated in favor of kskVersions and zskVersions, which return the two
+  // lists as resources with the timestamps as real times rather than strings.
+  // The field name describes a list, but the value is an object holding the
+  // `kskDnssecKeyVersions` and `zskDnssecKeyVersions` lists. Empty when
   // `dnssecState` is DISABLED.
-  dnssecKeyVersions dict
+  dnssecKeyVersions @maturity("deprecated") dict
+  // Key-signing key versions for the zone
+  //
+  // The keys whose material signs the zone's DNSKEY record set, and whose
+  // digests the parent zone publishes as DS records. Empty when `dnssecState`
+  // is DISABLED.
+  kskVersions []oci.dns.zone.dnssecKeyVersion
+  // Zone-signing key versions for the zone
+  //
+  // The keys whose material signs the zone's records. Empty when
+  // `dnssecState` is DISABLED.
+  zskVersions []oci.dns.zone.dnssecKeyVersion
   // Resource records published by the zone
   records() []oci.dns.record
   // Whether the zone is managed by OCI and cannot be modified
@@ -5808,6 +6512,71 @@ private oci.dns.zone @defaults("name zoneType scope dnssecState") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+}
+
+// DNSSEC key version for a DNS zone
+//
+// A single key-signing or zone-signing key version, keyed by its UUID. The
+// lifecycle timestamps are what make key rollover auditable: `timeActivated`
+// says when the key started signing, `timeExpired` when its recommended
+// lifetime ends, and `timeInactivated` when it stopped. A key that is past
+// `timeExpired` and still active means a rollover was never completed, and a
+// key-signing key stays active arbitrarily long in that state rather than
+// breaking resolution.
+private oci.dns.zone.dnssecKeyVersion @defaults("algorithm lengthInBytes keyTag") {
+  // Signing algorithm used for the key
+  //
+  // For example RSASHA256 or ECDSAP256SHA256.
+  algorithm string
+  // Length of the corresponding private key, in bytes
+  lengthInBytes int
+  // Key tag carried in the RRSIG and DS records for this key
+  keyTag int
+  // When the key version was created
+  created time
+  // When the DNSKEY record for this key was, or will be, published in the zone
+  //
+  // Null when no publication is scheduled.
+  timePublished time
+  // When the key started, or will start, generating signatures
+  //
+  // Null when no activation is scheduled.
+  timeActivated time
+  // When the key stopped, or will stop, generating signatures
+  //
+  // Null while the key is still in use. On a key-signing key this is only
+  // populated once the successor has been promoted.
+  timeInactivated time
+  // When the DNSKEY record for this key was, or will be, removed from the zone
+  //
+  // Null while the key is still published.
+  timeUnpublished time
+  // When the recommended publication and activation lifetime ends
+  //
+  // A key still active past this time has an incomplete rollover behind it. A
+  // key-signing key whose successor has not been promoted stays active past
+  // this point rather than breaking resolution.
+  timeExpired time
+  // When the key version was promoted
+  //
+  // Null on a key that has not been promoted.
+  timePromoted time
+  // UUID of the key version this one replaces
+  //
+  // Empty when this key version has no predecessor.
+  predecessorUuid string
+  // UUID of the key version that replaces this one
+  //
+  // Empty when no successor has been created, which on a key-signing key past
+  // its expiry means the rollover has not been started.
+  successorUuid string
+  // DS record data for this key version
+  //
+  // One entry per supported DS digest algorithm, each carrying `rdata` and
+  // `digestType`. These are the records the parent zone must publish for the
+  // chain of trust to hold. Empty on a zone-signing key, which has no DS
+  // records.
+  dsData []dict
 }
 
 // Oracle Cloud Infrastructure (OCI) DNS record
@@ -5903,9 +6672,11 @@ private oci.networkFirewall.firewall @defaults("name") {
   timeUpdated time
   // Zero Trust Packet Routing security attributes enforced on the firewall
   //
-  // Keyed by security-attribute namespace. Each value is a dict mapping
-  // the attribute names within that namespace to their assigned values.
-  securityAttributes map[string]dict
+  // Deprecated in favor of appliedSecurityAttributes, which joins each
+  // labelling to the namespace behind it and so reports whether that namespace
+  // enforces or only audits. Keyed by security-attribute namespace, each value
+  // maps the attribute names within that namespace to their assigned values.
+  securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -6491,7 +7262,11 @@ private oci.oke.cluster @defaults("name") {
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
   // Zero Trust Packet Routing security attributes on the cluster API endpoint
-  securityAttributes map[string]dict
+  //
+  // Deprecated in favor of appliedSecurityAttributes, which joins each
+  // labelling to the namespace behind it and so reports whether that namespace
+  // enforces or only audits.
+  securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -6521,10 +7296,14 @@ private oci.oke.nodePool @defaults("name") {
   cluster() oci.oke.cluster
   // Node shape configuration
   //
-  // Compute sizing applied to each node when the shape is flexible.
-  // The `ocpus` key holds the number of OCPUs and `memoryInGBs` the
-  // memory in gigabytes.
-  nodeShapeConfig dict
+  // Deprecated in favor of nodeSizing, which reports the same allocation as a
+  // structure. Compute sizing applied to each node when the shape is flexible.
+  nodeShapeConfig @maturity("deprecated") dict
+  // Compute and memory allocation of each node in the pool
+  //
+  // Null on a node pool whose shape is not flexible, where the shape name
+  // alone fixes the sizing.
+  nodeSizing() oci.oke.nodeSizing
   // Image the nodes boot from
   //
   // Resolved from the node pool's node source, so it is populated on node
@@ -6596,6 +7375,19 @@ private oci.oke.nodePool @defaults("name") {
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
 }
+
+// Node sizing of an OKE node pool
+//
+// Compute and memory allocated to each node in the pool. Present only where
+// the pool runs a flexible shape; a fixed shape fixes the sizing by name and
+// reports nothing here.
+private oci.oke.nodeSizing @defaults("ocpus memoryInGBs") {
+  // OCPUs available to each node in the pool
+  ocpus float
+  // Memory available to each node in the pool, in gigabytes
+  memoryInGBs float
+}
+
 
 // Oracle Cloud Infrastructure (OCI) Web Application Firewall
 //
@@ -6704,17 +7496,24 @@ private oci.functions.application @defaults("name") {
   shape string
   // Distributed tracing configuration
   //
-  // Application Performance Monitoring (APM) trace settings, with keys
-  // `isEnabled` (bool, whether tracing is enabled) and `domainId`
-  // (OCID of the APM domain that traces are sent to).
-  traceConfig dict
+  // Deprecated in favor of tracing, which reports the same settings as a
+  // structure. Application Performance Monitoring (APM) trace settings, with
+  // keys `isEnabled` and `domainId`.
+  traceConfig @maturity("deprecated") dict
+  // Distributed tracing settings of the application
+  //
+  // Null when the application reports no trace configuration.
+  tracing() oci.functions.applicationTraceConfig
   // Image signature verification policy
   //
-  // Signed-image enforcement for the application, with keys
-  // `isPolicyEnabled` (bool, whether functions must use signed images)
-  // and `keyDetails` (array of objects, each carrying `kmsKeyId`, the
-  // OCID of a KMS key trusted to verify image signatures).
-  imagePolicyConfig dict
+  // Deprecated in favor of imagePolicyEnabled and imagePolicyKeys, which carry
+  // the two values this dict holds. Signed-image enforcement for the
+  // application, with keys `isPolicyEnabled` and `keyDetails`.
+  imagePolicyConfig @maturity("deprecated") dict
+  // Signed-image enforcement for the application
+  //
+  // Null when the application reports no image policy configuration.
+  imagePolicy() oci.functions.imagePolicyConfig
   // Application creation time
   created time
   // Last update time
@@ -6734,6 +7533,40 @@ private oci.functions.application @defaults("name") {
   // Functions in this application
   functions() []oci.functions.function
 }
+
+// Distributed tracing settings of a Functions application
+//
+// Whether the application emits traces and which Application Performance
+// Monitoring collector receives them. domainId stays an OCID because APM
+// domains are not modelled in this provider.
+private oci.functions.applicationTraceConfig @defaults("isEnabled") {
+  // Whether distributed tracing is enabled for the application
+  isEnabled bool
+  // OCID of the collector traces are sent to
+  //
+  // Usually an Application Performance Monitoring domain. Empty when tracing
+  // is off or no collector is configured.
+  domainId string
+}
+
+// Image signature verification policy of a Functions application
+//
+// Whether functions in the application must run signed images, and the vault
+// keys trusted to verify those signatures. Enforcement with no key configured
+// leaves nothing to verify against, so both fields matter together.
+private oci.functions.imagePolicyConfig @defaults("isPolicyEnabled") {
+  // Whether functions in the application must use signed images
+  //
+  // When false any image the application can pull will run, so an image
+  // substituted in the registry runs unchallenged.
+  isPolicyEnabled bool
+  // Vault keys trusted to verify image signatures
+  //
+  // Empty when verification is off, and also when it is on but no key is
+  // configured.
+  keys() []oci.kms.key
+}
+
 
 // Oracle Cloud Infrastructure (OCI) serverless function
 //
@@ -6768,10 +7601,14 @@ private oci.functions.function @defaults("name") {
   invokeEndpoint string
   // Distributed tracing configuration
   //
-  // Application Performance Monitoring (APM) trace settings, with a
-  // single key `isEnabled` (bool, whether tracing is enabled for this
-  // function).
-  traceConfig dict
+  // Deprecated in favor of tracing, which reports the same setting as a
+  // structure. Application Performance Monitoring (APM) trace settings, with
+  // the single key `isEnabled`.
+  traceConfig @maturity("deprecated") dict
+  // Distributed tracing settings of the function
+  //
+  // Null when the function reports no trace configuration.
+  tracing() oci.functions.functionTraceConfig
   // Function creation time
   created time
   // Last update time
@@ -6783,6 +7620,17 @@ private oci.functions.function @defaults("name") {
   // Function environment configuration variables
   config() map[string]string
 }
+
+// Distributed tracing settings of a function
+//
+// Whether the function emits traces. The collector is chosen on the
+// application rather than per function, so this carries the single flag the
+// service reports for a function.
+private oci.functions.functionTraceConfig @defaults("isEnabled") {
+  // Whether distributed tracing is enabled for the function
+  isEnabled bool
+}
+
 
 // Oracle Cloud Infrastructure (OCI) Container Instances
 //
@@ -6818,10 +7666,13 @@ private oci.containerInstances.instance @defaults("name") {
   shape string
   // Shape allocation
   //
-  // OCPU and memory sizing for the instance, with keys `ocpus`,
-  // `memoryInGBs`, `processorDescription`, and
-  // `networkingBandwidthInGbps`.
-  shapeConfig dict
+  // Deprecated in favor of sizing, which reports the same allocation as a
+  // structure.
+  shapeConfig @maturity("deprecated") dict
+  // Compute, memory and network allocation of the container instance
+  //
+  // Null when the instance reports no shape configuration.
+  sizing() oci.containerInstances.shapeConfig
   // Number of containers
   containerCount int
   // Container restart policy (ALWAYS, NEVER, ON_FAILURE)
@@ -6850,6 +7701,23 @@ private oci.containerInstances.instance @defaults("name") {
   containers() []oci.containerInstances.container
 }
 
+// Resource allocation of a container instance
+//
+// Compute, memory and network the container instance is sized to. Every
+// container it runs draws from this allocation, so it is the ceiling a
+// per-container limit sits under.
+private oci.containerInstances.shapeConfig @defaults("ocpus memoryInGBs") {
+  // OCPUs available to the container instance
+  ocpus float
+  // Memory available to the container instance, in gigabytes
+  memoryInGBs float
+  // Short description of the container instance's processor
+  processorDescription string
+  // Networking bandwidth available to the container instance, in gigabits per second
+  networkingBandwidthInGbps float
+}
+
+
 // Oracle Cloud Infrastructure (OCI) container within a container instance
 //
 // Single container running inside a container instance, identified by
@@ -6877,10 +7745,14 @@ private oci.containerInstances.container @defaults("name") {
   isResourcePrincipalDisabled bool
   // Resource limits
   //
-  // Per-container CPU and memory caps, with keys `vcpusLimit`
-  // (fractional vCPUs) and `memoryLimitInGBs`. Absent when the container
-  // inherits the instance defaults.
-  resourceConfig dict
+  // Deprecated in favor of resourceLimits, which reports the same ceilings as
+  // a structure. Absent when the container inherits the instance defaults.
+  resourceConfig @maturity("deprecated") dict
+  // Ceilings on what the container's process may consume
+  //
+  // Null when the container declares no resource configuration, in which case
+  // its process may use every CPU and all the memory on the instance.
+  resourceLimits() oci.containerInstances.resourceConfig
   // UID the container process runs as
   //
   // Null when the container declares no security context, in which case the
@@ -6919,6 +7791,24 @@ private oci.containerInstances.container @defaults("name") {
   systemTags map[string]dict
 }
 
+// Resource limits of a container
+//
+// Ceilings on what one container's process may consume out of its instance's
+// allocation. A limit left unset is not a limit of zero: the process may use
+// every CPU and all the memory the instance has.
+private oci.containerInstances.resourceConfig @defaults("vcpusLimit memoryLimitInGBs") {
+  // Maximum vCPUs the container's process may consume
+  //
+  // Fractional, and expressed in logical CPUs, so an E3 container instance
+  // with one OCPU tops out at 2.0. Null when the container declares no limit.
+  vcpusLimit float
+  // Maximum memory the container's process may consume, in gigabytes
+  //
+  // Null when the container declares no limit.
+  memoryLimitInGBs float
+}
+
+
 // Oracle Cloud Infrastructure (OCI) Database
 //
 // Database deployments and their backups across the tenancy. The
@@ -6940,6 +7830,41 @@ oci.database {
   backups() []oci.database.backup
   // Autonomous database backups across all regions
   autonomousDatabaseBackups() []oci.database.autonomousDatabaseBackup
+}
+
+// Management and user interface URLs for an Autonomous Database
+//
+// The web consoles an Autonomous Database publishes, one field per interface.
+// Each is a full URL a browser can open, so a populated set on the public
+// endpoint means those consoles answer requests from the internet and their
+// only remaining control is the credentials they ask for.
+private oci.database.autonomousDatabase.consoleUrls @defaults("sqlDevWebUrl apexUrl ordsUrl") {
+  // Oracle SQL Developer Web URL
+  //
+  // A browser-based SQL client with full query access to the database.
+  sqlDevWebUrl string
+  // Oracle Application Express (APEX) URL
+  apexUrl string
+  // Oracle Machine Learning user management URL
+  //
+  // Manages the accounts that may use Oracle Machine Learning against the
+  // database.
+  machineLearningUserManagementUrl string
+  // Graph Studio URL
+  graphStudioUrl string
+  // MongoDB API URL
+  mongoDbUrl string
+  // Oracle Machine Learning notebook URL
+  machineLearningNotebookUrl string
+  // Oracle REST Data Services (ORDS) web access URL
+  //
+  // The entry point through which the database's REST-enabled objects are
+  // reachable over HTTP.
+  ordsUrl string
+  // Database Transforms URL
+  databaseTransformsUrl string
+  // Spatial Studio URL
+  spatialStudioUrl string
 }
 
 // Oracle Cloud Infrastructure (OCI) database backup (for VM/BM databases)
@@ -7110,9 +8035,12 @@ private oci.database.dbSystem @defaults("name") {
   isIncidentLogsEnabled bool
   // Zero Trust Packet Routing security attributes applied to the DB system
   //
-  // Each key is a security attribute namespace and each value maps that
-  // namespace's attribute names to this DB system's values.
-  securityAttributes map[string]dict
+  // Deprecated in favor of appliedSecurityAttributes, which joins each
+  // labelling to the namespace behind it and so reports whether that namespace
+  // enforces or only audits. Each key is a security attribute namespace and
+  // each value maps that namespace's attribute names to this DB system's
+  // values.
+  securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -7120,12 +8048,19 @@ private oci.database.dbSystem @defaults("name") {
   appliedSecurityAttributes() []oci.securityAttributes.applied
   // Patching and maintenance schedule
   //
-  // Keyed by `preference` (NO_PREFERENCE or CUSTOM_PREFERENCE),
-  // `patchingMode` (ROLLING or NONROLLING), `isMonthlyPatchingEnabled`,
-  // `isCustomActionTimeoutEnabled` with its `customActionTimeoutInMins`,
-  // and the `months`, `weeksOfMonth`, `daysOfWeek`, and `hoursOfDay` that
-  // schedule the window.
-  maintenanceWindow dict
+  // Deprecated in favor of maintenanceSchedule, which reports the same window
+  // as a structure. Keyed by `preference` (NO_PREFERENCE or
+  // CUSTOM_PREFERENCE), `patchingMode` (ROLLING or NONROLLING),
+  // `isMonthlyPatchingEnabled`, `isCustomActionTimeoutEnabled` with its
+  // `customActionTimeoutInMins`, `leadTimeInWeeks`, `skipRu`, and the
+  // `months`, `weeksOfMonth`, `daysOfWeek`, and `hoursOfDay` that schedule the
+  // window.
+  maintenanceWindow @maturity("deprecated") dict
+  // When Oracle may patch the system, and how
+  //
+  // Null when the system has no maintenance window configured, which is a
+  // different fact from a window scheduled for no months and no days.
+  maintenanceSchedule() oci.database.maintenanceWindow
   // Lifecycle state
   //
   // For example: PROVISIONING, AVAILABLE, UPDATING, TERMINATING, TERMINATED, FAILED, MIGRATED, MAINTENANCE_IN_PROGRESS, NEEDS_ATTENTION, UPGRADING.
@@ -7147,6 +8082,63 @@ private oci.database.dbSystem @defaults("name") {
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
 }
+
+// Maintenance window of a database system
+//
+// When Oracle may patch the system and how. preference separates a window
+// Oracle chooses from one pinned to the months, weeks, days and hours listed
+// here, and patchingMode is what says whether patching takes the system down:
+// NONROLLING involves an outage where ROLLING does not.
+private oci.database.maintenanceWindow @defaults("preference patchingMode") {
+  // How the maintenance window is scheduled
+  //
+  // NO_PREFERENCE lets Oracle choose the window, CUSTOM_PREFERENCE pins it to
+  // the months, weeks, days and hours listed here.
+  preference string
+  // How infrastructure nodes are patched
+  //
+  // ROLLING patches nodes one at a time, NONROLLING takes the system down for
+  // the duration.
+  patchingMode string
+  // Whether a custom wait between database server patching operations is configured
+  isCustomActionTimeoutEnabled bool
+  // Minutes the system waits before each database server patching operation
+  //
+  // Between 15 and 120 when set. Null when no custom action timeout is
+  // configured.
+  customActionTimeoutInMins int
+  // Whether monthly patching is enabled
+  isMonthlyPatchingEnabled bool
+  // Months during the year maintenance may run in
+  //
+  // Empty when the preference is NO_PREFERENCE, where Oracle chooses.
+  months []string
+  // Weeks within the month maintenance may run in
+  //
+  // Weeks start on the 1st, 8th, 15th and 22nd, so 2 means the 8th to the
+  // 14th. Empty when the preference is NO_PREFERENCE.
+  weeksOfMonth []int
+  // Days of the week maintenance may run on
+  //
+  // Empty when the preference is NO_PREFERENCE.
+  daysOfWeek []string
+  // Four-hour slots maintenance may start in, as the hour the slot opens
+  //
+  // 0, 4, 8, 12, 16, or 20, each covering the four hours from that hour in
+  // UTC. Empty when the preference is NO_PREFERENCE.
+  hoursOfDay []int
+  // Weeks of notice before a maintenance window opens
+  //
+  // Between 1 and 4 when set. Null when no lead time is configured.
+  leadTimeInWeeks int
+  // Whether a quarterly release update is skipped
+  //
+  // One entry per quarter the system is set to skip. Two consecutive quarters
+  // cannot be skipped, so a system carrying entries here is at most one
+  // release update behind by request.
+  skipRu []bool
+}
+
 
 // Oracle Cloud Infrastructure (OCI) autonomous database
 private oci.database.autonomousDatabase @defaults("name") {
@@ -7260,15 +8252,30 @@ private oci.database.autonomousDatabase @defaults("name") {
   privateEndpointLabel string
   // Connection URLs for management and user interfaces
   //
-  // Covers SQL Developer Web, APEX, GraphStudio, ORDS, MongoDB, Machine Learning Notebook/User Management, and Database Transforms. Populated when the database is publicly accessible or reachable via an allowed private endpoint.
-  connectionUrls dict
+  // Deprecated in favor of managementUrls, which returns the same URLs as a
+  // resource with one field per interface. Covers SQL Developer Web, APEX,
+  // GraphStudio, ORDS, MongoDB, Machine Learning Notebook and User Management,
+  // and Database Transforms. Populated when the database is publicly
+  // accessible or reachable via an allowed private endpoint.
+  connectionUrls @maturity("deprecated") dict
   // Connection URLs reachable over the public internet
   //
-  // The same management and user interfaces as connectionUrls, but the
-  // copies served on the database's public endpoint. Populated only when
-  // the database exposes a public endpoint, so a non-empty value means
-  // those interfaces are reachable from the internet.
-  publicConnectionUrls dict
+  // Deprecated in favor of publicManagementUrls. The same management and user
+  // interfaces as connectionUrls, but the copies served on the database's
+  // public endpoint.
+  publicConnectionUrls @maturity("deprecated") dict
+  // Management and user interface URLs for the database
+  //
+  // The web consoles the database publishes, one field per interface.
+  // Populated when the database is publicly accessible or reachable through an
+  // allowed private endpoint, and null otherwise.
+  managementUrls() oci.database.autonomousDatabase.consoleUrls
+  // Management and user interface URLs served on the public endpoint
+  //
+  // The same consoles as managementUrls, but the copies reachable over the
+  // public internet. Non-null is itself the exposure signal: it means those
+  // consoles answer from outside the tenancy's network.
+  publicManagementUrls() oci.database.autonomousDatabase.consoleUrls
   // Lifecycle state
   //
   // For example: PROVISIONING, AVAILABLE, STOPPING, STOPPED, STARTING, TERMINATING, TERMINATED, UNAVAILABLE, RESTORE_IN_PROGRESS, RESTORE_FAILED, BACKUP_IN_PROGRESS, SCALE_IN_PROGRESS, AVAILABLE_NEEDS_ATTENTION, UPDATING, MAINTENANCE_IN_PROGRESS, RESTARTING, RECREATING, ROLE_CHANGE_IN_PROGRESS, UPGRADING, INACCESSIBLE, STANDBY.
@@ -8175,10 +9182,16 @@ private oci.vulnerabilityScanning.hostAgentScanResult.problem @defaults("name se
   vulnerability() oci.vulnerabilityScanning.vulnerability
   // Installed packages affected by this vulnerability
   //
-  // Each entry has `name`, `version`, `type` (RPM, DPKG, ...),
-  // `cveFixVersion` (empty when no fix is available), and
-  // `locations` (file paths where the package is installed).
-  vulnerablePackages []dict
+  // Deprecated in favor of packages, which returns the same entries as
+  // resources. Each entry has `name`, `version`, `type` (RPM, DPKG, and so
+  // on), `cveFixVersion` (empty when no fix is available), and `locations`
+  // (file paths where the package is installed).
+  vulnerablePackages @maturity("deprecated") []dict
+  // Installed packages affected by this vulnerability
+  //
+  // One row per affected package. `cveFixVersion` is what separates a finding
+  // that can be remediated by upgrading from one with no fix published yet.
+  packages() []oci.vulnerabilityScanning.vulnerablePackage
   // Time the problem was first detected
   firstDetected time
   // Time the problem was last detected
@@ -8266,10 +9279,15 @@ private oci.vulnerabilityScanning.hostCisBenchmarkScanResult @defaults("name ins
   state string
   // Per-control benchmark scores
   //
-  // Each entry has `benchmarkIdentifier` (e.g., "1.1.1"),
-  // `description` (the control statement), and `score` (PASS or
-  // FAIL).
-  scores() []dict
+  // Deprecated in favor of benchmarkScores, which returns the same entries as
+  // resources. Each entry has `benchmarkIdentifier` (e.g., "1.1.1"),
+  // `description` (the control statement), and `score` (PASS or FAIL).
+  scores() @maturity("deprecated") []dict
+  // Per-control benchmark scores
+  //
+  // One row per benchmark control the scan evaluated, so a policy can require
+  // a named control to pass rather than only reading the failure count.
+  benchmarkScores() []oci.vulnerabilityScanning.hostCisBenchmarkScanResult.score
   // Time the scan started
   //
   // Distinguishes a scan that never ran from one that ran and found
@@ -8305,10 +9323,19 @@ private oci.vulnerabilityScanning.hostEndpointProtectionScanResult @defaults("na
   state string
   // Per-service endpoint protection findings
   //
-  // Each entry has `service` (the endpoint protection product name),
-  // `configurationFinding` (the misconfiguration, if any), and
-  // `severity`.
-  endpointProtections() []dict
+  // Deprecated in favor of protections, which returns the same entries as
+  // resources and reports the signature timestamp as a real time rather than
+  // the formatted string a dict value has to be. Each entry has `service` (the
+  // endpoint protection product name), `configurationFinding` (the
+  // misconfiguration, if any), `severity`, and `timeSignatureUpdated`.
+  endpointProtections() @maturity("deprecated") []dict
+  // Per-service endpoint protection findings
+  //
+  // One row per endpoint protection product found on the host.
+  // `timeSignatureUpdated` is a real time here, so an audit can require
+  // signatures newer than a given age rather than string-matching a
+  // timestamp.
+  protections() []oci.vulnerabilityScanning.hostEndpointProtectionScanResult.protection
   // Time the scan started
   //
   // Distinguishes a scan that never ran from one that ran and found
@@ -8378,10 +9405,16 @@ private oci.vulnerabilityScanning.containerScanResult.problem @defaults("name se
   vulnerability() oci.vulnerabilityScanning.vulnerability
   // Image layer packages affected by this vulnerability
   //
-  // Each entry has `name`, `version`, `type`, `cveFixVersion`, and
-  // `locations` (file paths inside the image where the package
-  // resides).
-  vulnerablePackages []dict
+  // Deprecated in favor of packages, which returns the same entries as
+  // resources. Each entry has `name`, `version`, `type`, `cveFixVersion`, and
+  // `locations` (file paths inside the image where the package resides).
+  vulnerablePackages @maturity("deprecated") []dict
+  // Image layer packages affected by this vulnerability
+  //
+  // One row per affected package. `cveFixVersion` is what separates a finding
+  // that can be remediated by rebuilding the image from one with no fix
+  // published yet.
+  packages() []oci.vulnerabilityScanning.vulnerablePackage
   // Time the problem was first detected
   firstDetected time
   // Time the problem was last detected
@@ -8453,9 +9486,99 @@ private oci.vulnerabilityScanning.vulnerability @defaults("name severity vulnera
   impactedHosts() []oci.compute.instance
   // Container images affected by this vulnerability
   //
-  // Each entry has `image`, `repository`, `registry`,
-  // `containerScanTargetId`, and `lastContainerScanId`.
-  impactedContainerImages() []dict
+  // Deprecated in favor of impactedContainers, which returns the same entries
+  // as resources and adds the scan completion time this dict drops. Each entry
+  // has `image`, `repository`, `registry`, `containerScanTargetId`, and
+  // `lastContainerScanId`.
+  impactedContainerImages() @maturity("deprecated") []dict
+  // Container images affected by this vulnerability
+  //
+  // One row per affected image, each carrying when the scan that found it
+  // completed, so a stale result can be told from a current one.
+  impactedContainers() []oci.vulnerabilityScanning.impactedContainerImage
+}
+
+// Package affected by a vulnerability scanning finding
+//
+// A single installed package a scan found affected by a vulnerability, with
+// where it sits on disk or in the image. `cveFixVersion` is the version that
+// resolves the finding, and is empty when no fix has been published, which
+// separates a finding that can be patched from one that can only be mitigated.
+private oci.vulnerabilityScanning.vulnerablePackage @defaults("name version cveFixVersion") {
+  // Package name
+  name string
+  // Installed package version
+  version string
+  // Package format
+  //
+  // For example RPM or DPKG.
+  type string
+  // Version in which the vulnerability is fixed
+  //
+  // Empty when no fixed version has been published, so upgrading the package
+  // does not resolve the finding.
+  cveFixVersion string
+  // Paths where the package was found
+  locations []string
+}
+
+// Benchmark control score from a host benchmark scan
+//
+// One control the scan evaluated, with the control statement and whether the
+// host passed it.
+private oci.vulnerabilityScanning.hostCisBenchmarkScanResult.score @defaults("benchmarkIdentifier score") {
+  // Identifier for the benchmark control, for example "1.1.1"
+  benchmarkIdentifier string
+  // The control statement the identifier refers to
+  description string
+  // Whether the host passed the control
+  //
+  // PASS or FAIL.
+  score string
+}
+
+// Endpoint protection finding from a host scan
+//
+// One endpoint protection product the scan found on the host, with its
+// configuration finding and when its signatures were last updated.
+private oci.vulnerabilityScanning.hostEndpointProtectionScanResult.protection @defaults("service severity timeSignatureUpdated") {
+  // Name of the endpoint protection product
+  service string
+  // What the scan found about the product's configuration
+  //
+  // Empty when the scan found nothing to report.
+  configurationFinding string
+  // Severity assigned to the finding
+  severity string
+  // When the product's signatures were last updated
+  //
+  // Null when the product reports no signature timestamp. Signatures older
+  // than the vendor's release cadence mean the product is running but not
+  // detecting current threats.
+  timeSignatureUpdated time
+}
+
+// Container image affected by a vulnerability
+//
+// One container image a scan found affected by a vulnerability, with the
+// registry and repository it lives in and when the scan that found it
+// completed.
+private oci.vulnerabilityScanning.impactedContainerImage @defaults("registry repository image timeScanCompleted") {
+  // Container image name
+  image string
+  // Repository holding the image
+  repository string
+  // Registry holding the repository
+  registry string
+  // Scan target that produced the finding
+  containerScanTargetId string
+  // Most recent container scan result for the image
+  lastContainerScanId string
+  // When the scan that found the image completed
+  //
+  // A finding whose scan completed long ago describes an image as it was then,
+  // not as it is now.
+  timeScanCompleted time
 }
 
 // Oracle Cloud Infrastructure (OCI) AI services
