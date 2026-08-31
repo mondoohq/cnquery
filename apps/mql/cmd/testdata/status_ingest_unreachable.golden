@@ -1,6 +1,6 @@
 
-  ● Client     registered   ✗ authentication failed
-  ● Platform   reachable · SERVING   ✓ healthy
+  ● Client     registered   ✓ authenticated
+  ● Platform   reachable · SERVING   ⚠ ingest unreachable
   ● Updates    up to date
 
   ── System ──────────────────────────────────────────────
@@ -17,7 +17,7 @@
   │  Endpoint   https://us.api.mondoo.com
   │  Status     SERVING   API v13 ✓ in sync
   │  Time       2026-06-29T21:37:00Z
-  │  Ingest     https://ingest.us.mondoo.com   ✓ reachable · 41ms
+  │  Ingest     https://ingest.us.mondoo.com   ✗ unreachable · timeout
   │  Client     //agents.api.mondoo.app/spaces/test/agents/123
   │  Account    //agents.api.mondoo.app/spaces/test/serviceaccounts/abc
 
@@ -26,6 +26,6 @@
   │
   │  ✓ current  aws, core, os
 
-  ✗ authentication failed · exit 1 · next steps:
-    → mql login --token <token>       re-register with a fresh token from Mondoo Platform
+  next steps:
+    → allow egress to ingest.us.mondoo.com:443    scan results are uploaded to this endpoint
 

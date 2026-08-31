@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"syscall"
@@ -185,6 +186,13 @@ func checkStatus(ctx context.Context) (Status, error) {
 		return s, cli_errors.NewCommandError(errors.Wrap(err, "failed to set up Mondoo API client"), 1)
 	}
 
+	// Probe the ingest endpoint alongside the checks below rather than in
+	// series. Uploads go to a different host than the API on a different static
+	// IP, so a firewall can allow the API and blackhole ingest — and a
+	// blackholed host answers nothing until the probe's own deadline, which
+	// would otherwise eat a third of this command's shared budget.
+	ingest := probeIngestEndpoint(ctx, httpClient, opts.UpstreamIngestEndpoint())
+
 	sysInfo, err := sysinfo.Get()
 	if err == nil {
 		s.Client.Platform = sysInfo.Platform
@@ -264,12 +272,42 @@ func checkStatus(ctx context.Context) (Status, error) {
 	}
 	s.Client.Providers = providersList
 
+	if ingest != nil {
+		ingestStatus := <-ingest
+		s.Ingest = &ingestStatus
+	}
+
 	return s, nil
+}
+
+// probeIngestEndpoint starts the ingest reachability probe in the background and
+// returns the channel its single result arrives on, or nil when there is no
+// endpoint to probe (see config.IngestEndpointFor: a self-hosted or otherwise
+// non-hosted API endpoint derives none, and the check is skipped rather than
+// reported as failing).
+//
+// The channel is buffered so the probe never blocks on a receiver: if
+// checkStatus returns early, the goroutine parks its result and exits, and ctx
+// — the command's overall deadline — bounds the request either way.
+func probeIngestEndpoint(ctx context.Context, httpClient *http.Client, endpoint string) <-chan health.IngestStatus {
+	if endpoint == "" {
+		return nil
+	}
+
+	results := make(chan health.IngestStatus, 1)
+	go func() {
+		results <- health.CheckIngestReachable(ctx, httpClient, endpoint)
+	}()
+	return results
 }
 
 type Status struct {
 	Client   ClientStatus  `json:"client"`
 	Upstream health.Status `json:"upstream"`
+	// Ingest is the reachability probe of the endpoint scan uploads are routed
+	// through. nil when the check did not run: no ingest endpoint could be
+	// derived from the configured API endpoint.
+	Ingest *health.IngestStatus `json:"ingest,omitempty"`
 }
 
 type ClientStatus struct {
