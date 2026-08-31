@@ -64,6 +64,10 @@ type coordinator struct {
 	// holding mutex (unsafeStartProvider) and while holding schema.sync
 	// (extensibleSchema.unsafeLoadAll -> LoadSchema), so it must never be
 	// held while acquiring either of those.
+	//
+	// providers is only ever replaced wholesale (SetProviders), never
+	// mutated in place: Providers hands the map out after releasing
+	// providersMu, and callers hold that reference unguarded.
 	providersMu sync.RWMutex
 	providers   Providers
 	runningByID map[string]*RunningProvider
@@ -412,6 +416,9 @@ func (c *coordinator) SetProviders(providers Providers) {
 	c.providersMu.Unlock()
 }
 
+// Providers returns the current provider map. It is safe to read without
+// providersMu only because the map is replaced, never mutated (see the
+// field); don't write to the returned map.
 func (c *coordinator) Providers() Providers {
 	c.providersMu.RLock()
 	defer c.providersMu.RUnlock()
