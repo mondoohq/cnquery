@@ -496,7 +496,7 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRules() (*mqlAzure
 
 	const ipRuleResource = "azure.subscription.eventHubService.namespace.networkRules.ipRule"
 	ipRules := []any{}
-	ipRulesRef := []any{}
+	ipAllowRules := []any{}
 	for i, r := range props.IPRules {
 		if r == nil {
 			continue
@@ -524,7 +524,7 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRules() (*mqlAzure
 		if err != nil {
 			return nil, err
 		}
-		ipRulesRef = append(ipRulesRef, mqlIPRule)
+		ipAllowRules = append(ipAllowRules, mqlIPRule)
 	}
 
 	vnetRules := []any{}
@@ -559,7 +559,7 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRules() (*mqlAzure
 		"publicNetworkAccess":         llx.StringData(publicNetworkAccess),
 		"trustedServiceAccessEnabled": llx.BoolData(trustedServiceAccess),
 		"ipRules":                     llx.ArrayData(ipRules, types.Dict),
-		"ipRulesRef":                  llx.ArrayData(ipRulesRef, types.Resource(ipRuleResource)),
+		"ipAllowRules":                llx.ArrayData(ipAllowRules, types.Resource(ipRuleResource)),
 		"virtualNetworkRules":         llx.ArrayData(vnetRules, types.Resource(ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule)),
 	})
 	if err != nil {

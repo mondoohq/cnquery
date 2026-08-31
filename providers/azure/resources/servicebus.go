@@ -656,7 +656,7 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) networkRules() (*mqlAzu
 
 	const ipRuleResource = "azure.subscription.serviceBusService.namespace.networkRules.ipRule"
 	ipRules := []any{}
-	ipRulesRef := []any{}
+	ipAllowRules := []any{}
 	for i, r := range props.IPRules {
 		if r == nil {
 			continue
@@ -684,7 +684,7 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) networkRules() (*mqlAzu
 		if err != nil {
 			return nil, err
 		}
-		ipRulesRef = append(ipRulesRef, mqlIPRule)
+		ipAllowRules = append(ipAllowRules, mqlIPRule)
 	}
 
 	vnetRules := []any{}
@@ -719,7 +719,7 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) networkRules() (*mqlAzu
 		"publicNetworkAccess":         llx.StringData(publicNetworkAccess),
 		"trustedServiceAccessEnabled": llx.BoolData(trustedServiceAccess),
 		"ipRules":                     llx.ArrayData(ipRules, types.Dict),
-		"ipRulesRef":                  llx.ArrayData(ipRulesRef, types.Resource(ipRuleResource)),
+		"ipAllowRules":                llx.ArrayData(ipAllowRules, types.Resource(ipRuleResource)),
 		"virtualNetworkRules":         llx.ArrayData(vnetRules, types.Resource("azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule")),
 	})
 	if err != nil {

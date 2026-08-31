@@ -8381,16 +8381,16 @@ private azure.subscription.sqlService.server.failoverGroup @defaults("name repli
   partners []azure.subscription.sqlService.server.failoverGroup.partner
   // Read/write endpoint configuration
   //
-  // Deprecated in favor of readWriteEndpointRef, which carries the failover
+  // Deprecated in favor of readWriteListener, which carries the failover
   // policy and grace period as typed fields.
   readWriteEndpoint @maturity("deprecated") dict
-  // Failover policy of the read-write listener endpoint
-  readWriteEndpointRef azure.subscription.sqlService.server.failoverGroup.readWriteEndpoint
-  // Failover policy of the read-only listener endpoint
-  readOnlyEndpointRef azure.subscription.sqlService.server.failoverGroup.readOnlyEndpoint
+  // Failover configuration of the read-write listener endpoint
+  readWriteListener azure.subscription.sqlService.server.failoverGroup.readWriteEndpoint
+  // Failover configuration of the read-only listener endpoint
+  readOnlyListener azure.subscription.sqlService.server.failoverGroup.readOnlyEndpoint
   // Read-only endpoint configuration
   //
-  // Deprecated in favor of readOnlyEndpointRef, which carries the failover
+  // Deprecated in favor of readOnlyListener, which carries the failover
   // policy as a typed field.
   readOnlyEndpoint @maturity("deprecated") dict
   // Databases included in the failover group
@@ -9385,11 +9385,11 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   encryptionKeyVersion string
   // Generation timestamps for the account's data-plane keys
   //
-  // Deprecated in favor of keysMetadataRef, which carries the four key
+  // Deprecated in favor of masterKeyMetadata, which carries the four key
   // generation times as typed fields.
   keysMetadata @maturity("deprecated") dict
   // Generation times of the account's four master keys
-  keysMetadataRef azure.subscription.cosmosDbService.account.keysMetadata
+  masterKeyMetadata azure.subscription.cosmosDbService.account.keysMetadata
   // Optional capabilities turned on for the account
   //
   // Capability names such as EnableServerless,
@@ -15117,11 +15117,11 @@ private azure.subscription.serviceBusService.namespace.networkRules @defaults("d
   trustedServiceAccessEnabled bool
   // IP allow rules
   //
-  // Deprecated in favor of ipRulesRef, which carries the address range and
+  // Deprecated in favor of ipAllowRules, which carries the address range and
   // action of each rule as typed fields.
   ipRules @maturity("deprecated") []dict
   // IP rules in the namespace firewall
-  ipRulesRef []azure.subscription.serviceBusService.namespace.networkRules.ipRule
+  ipAllowRules []azure.subscription.serviceBusService.namespace.networkRules.ipRule
   // Virtual network rules; each references a subnet
   virtualNetworkRules []azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule
 }
@@ -15378,11 +15378,11 @@ private azure.subscription.eventHubService.namespace.networkRules @defaults("def
   trustedServiceAccessEnabled bool
   // IP allow rules
   //
-  // Deprecated in favor of ipRulesRef, which carries the address range and
+  // Deprecated in favor of ipAllowRules, which carries the address range and
   // action of each rule as typed fields.
   ipRules @maturity("deprecated") []dict
   // IP rules in the namespace firewall
-  ipRulesRef []azure.subscription.eventHubService.namespace.networkRules.ipRule
+  ipAllowRules []azure.subscription.eventHubService.namespace.networkRules.ipRule
   // Virtual network rules; each references a subnet
   virtualNetworkRules []azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule
 }
@@ -15511,11 +15511,11 @@ azure.subscription.eventGridService.topic @defaults("name location publicNetwork
   dataResidencyBoundary string
   // Inbound IP rules
   //
-  // Deprecated in favor of inboundIpRulesRef, which carries the address
+  // Deprecated in favor of inboundIpAllowRules, which carries the address
   // range and action of each rule as typed fields.
   inboundIpRules @maturity("deprecated") []dict
   // Inbound IP rules in the resource firewall
-  inboundIpRulesRef []azure.subscription.eventGridService.inboundIpRule
+  inboundIpAllowRules []azure.subscription.eventGridService.inboundIpRule
   // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
   identityType string
   // Number of private endpoint connections to the topic
@@ -15601,11 +15601,11 @@ azure.subscription.eventGridService.domain @defaults("name location publicNetwor
   autoDeleteTopicWithLastSubscription bool
   // Inbound IP rules
   //
-  // Deprecated in favor of inboundIpRulesRef, which carries the address
+  // Deprecated in favor of inboundIpAllowRules, which carries the address
   // range and action of each rule as typed fields.
   inboundIpRules @maturity("deprecated") []dict
   // Inbound IP rules in the resource firewall
-  inboundIpRulesRef []azure.subscription.eventGridService.inboundIpRule
+  inboundIpAllowRules []azure.subscription.eventGridService.inboundIpRule
   // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
   identityType string
   // Number of private endpoint connections to the domain
@@ -15710,11 +15710,11 @@ azure.subscription.eventGridService.namespace @defaults("name location publicNet
   minimumTlsVersionAllowed string
   // Inbound IP rules
   //
-  // Deprecated in favor of inboundIpRulesRef, which carries the address
+  // Deprecated in favor of inboundIpAllowRules, which carries the address
   // range and action of each rule as typed fields.
   inboundIpRules @maturity("deprecated") []dict
   // Inbound IP rules in the resource firewall
-  inboundIpRulesRef []azure.subscription.eventGridService.inboundIpRule
+  inboundIpAllowRules []azure.subscription.eventGridService.inboundIpRule
   // Whether the MQTT broker is enabled ("Enabled" or "Disabled")
   topicSpacesState string
   // Maximum simultaneous client sessions per authentication name

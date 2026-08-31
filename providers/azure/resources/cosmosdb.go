@@ -203,7 +203,7 @@ func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccou
 		}
 	}
 
-	keysMetadataRef, err := cosmosKeysMetadataToMql(runtime, convert.ToValue(account.ID), orZero(account.Properties).KeysMetadata)
+	masterKeyMetadata, err := cosmosKeysMetadataToMql(runtime, convert.ToValue(account.ID), orZero(account.Properties).KeysMetadata)
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +268,7 @@ func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccou
 			"customerManagedKeyStatus":           llx.StringDataPtr(customerManagedKeyStatus),
 			"encryptionKeyVersion":               llx.StringDataPtr(encryptionKeyVersion),
 			"keysMetadata":                       llx.DictData(keysMetadata),
-			"keysMetadataRef":                    keysMetadataRef,
+			"masterKeyMetadata":                  masterKeyMetadata,
 			"capabilities":                       llx.ArrayData(capabilities, types.String),
 			"enableAnalyticalStorage":            llx.BoolDataPtr(enableAnalyticalStorage),
 			"analyticalStorageSchemaType":        llx.StringDataPtr(analyticalStorageSchemaType),

@@ -11195,11 +11195,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.sqlService.server.failoverGroup.readWriteEndpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetReadWriteEndpoint()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.sqlService.server.failoverGroup.readWriteEndpointRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetReadWriteEndpointRef()).ToDataRes(types.Resource("azure.subscription.sqlService.server.failoverGroup.readWriteEndpoint"))
+	"azure.subscription.sqlService.server.failoverGroup.readWriteListener": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetReadWriteListener()).ToDataRes(types.Resource("azure.subscription.sqlService.server.failoverGroup.readWriteEndpoint"))
 	},
-	"azure.subscription.sqlService.server.failoverGroup.readOnlyEndpointRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetReadOnlyEndpointRef()).ToDataRes(types.Resource("azure.subscription.sqlService.server.failoverGroup.readOnlyEndpoint"))
+	"azure.subscription.sqlService.server.failoverGroup.readOnlyListener": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetReadOnlyListener()).ToDataRes(types.Resource("azure.subscription.sqlService.server.failoverGroup.readOnlyEndpoint"))
 	},
 	"azure.subscription.sqlService.server.failoverGroup.readOnlyEndpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetReadOnlyEndpoint()).ToDataRes(types.Dict)
@@ -12191,8 +12191,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.account.keysMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetKeysMetadata()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.cosmosDbService.account.keysMetadataRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetKeysMetadataRef()).ToDataRes(types.Resource("azure.subscription.cosmosDbService.account.keysMetadata"))
+	"azure.subscription.cosmosDbService.account.masterKeyMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetMasterKeyMetadata()).ToDataRes(types.Resource("azure.subscription.cosmosDbService.account.keysMetadata"))
 	},
 	"azure.subscription.cosmosDbService.account.capabilities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetCapabilities()).ToDataRes(types.Array(types.String))
@@ -17753,8 +17753,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.serviceBusService.namespace.networkRules.ipRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).GetIpRules()).ToDataRes(types.Array(types.Dict))
 	},
-	"azure.subscription.serviceBusService.namespace.networkRules.ipRulesRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).GetIpRulesRef()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.namespace.networkRules.ipRule")))
+	"azure.subscription.serviceBusService.namespace.networkRules.ipAllowRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).GetIpAllowRules()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.namespace.networkRules.ipRule")))
 	},
 	"azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).GetVirtualNetworkRules()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule")))
@@ -17996,8 +17996,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventHubService.namespace.networkRules.ipRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).GetIpRules()).ToDataRes(types.Array(types.Dict))
 	},
-	"azure.subscription.eventHubService.namespace.networkRules.ipRulesRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).GetIpRulesRef()).ToDataRes(types.Array(types.Resource("azure.subscription.eventHubService.namespace.networkRules.ipRule")))
+	"azure.subscription.eventHubService.namespace.networkRules.ipAllowRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).GetIpAllowRules()).ToDataRes(types.Array(types.Resource("azure.subscription.eventHubService.namespace.networkRules.ipRule")))
 	},
 	"azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).GetVirtualNetworkRules()).ToDataRes(types.Array(types.Resource("azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule")))
@@ -18119,8 +18119,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventGridService.topic.inboundIpRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetInboundIpRules()).ToDataRes(types.Array(types.Dict))
 	},
-	"azure.subscription.eventGridService.topic.inboundIpRulesRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetInboundIpRulesRef()).ToDataRes(types.Array(types.Resource("azure.subscription.eventGridService.inboundIpRule")))
+	"azure.subscription.eventGridService.topic.inboundIpAllowRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetInboundIpAllowRules()).ToDataRes(types.Array(types.Resource("azure.subscription.eventGridService.inboundIpRule")))
 	},
 	"azure.subscription.eventGridService.topic.identityType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetIdentityType()).ToDataRes(types.String)
@@ -18212,8 +18212,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventGridService.domain.inboundIpRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetInboundIpRules()).ToDataRes(types.Array(types.Dict))
 	},
-	"azure.subscription.eventGridService.domain.inboundIpRulesRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetInboundIpRulesRef()).ToDataRes(types.Array(types.Resource("azure.subscription.eventGridService.inboundIpRule")))
+	"azure.subscription.eventGridService.domain.inboundIpAllowRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetInboundIpAllowRules()).ToDataRes(types.Array(types.Resource("azure.subscription.eventGridService.inboundIpRule")))
 	},
 	"azure.subscription.eventGridService.domain.identityType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetIdentityType()).ToDataRes(types.String)
@@ -18296,8 +18296,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventGridService.namespace.inboundIpRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetInboundIpRules()).ToDataRes(types.Array(types.Dict))
 	},
-	"azure.subscription.eventGridService.namespace.inboundIpRulesRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetInboundIpRulesRef()).ToDataRes(types.Array(types.Resource("azure.subscription.eventGridService.inboundIpRule")))
+	"azure.subscription.eventGridService.namespace.inboundIpAllowRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetInboundIpAllowRules()).ToDataRes(types.Array(types.Resource("azure.subscription.eventGridService.inboundIpRule")))
 	},
 	"azure.subscription.eventGridService.namespace.topicSpacesState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetTopicSpacesState()).ToDataRes(types.String)
@@ -35135,12 +35135,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).ReadWriteEndpoint, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.sqlService.server.failoverGroup.readWriteEndpointRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).ReadWriteEndpointRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionSqlServiceServerFailoverGroupReadWriteEndpoint](v.Value, v.Error)
+	"azure.subscription.sqlService.server.failoverGroup.readWriteListener": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).ReadWriteListener, ok = plugin.RawToTValue[*mqlAzureSubscriptionSqlServiceServerFailoverGroupReadWriteEndpoint](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.sqlService.server.failoverGroup.readOnlyEndpointRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).ReadOnlyEndpointRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionSqlServiceServerFailoverGroupReadOnlyEndpoint](v.Value, v.Error)
+	"azure.subscription.sqlService.server.failoverGroup.readOnlyListener": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).ReadOnlyListener, ok = plugin.RawToTValue[*mqlAzureSubscriptionSqlServiceServerFailoverGroupReadOnlyEndpoint](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.sqlService.server.failoverGroup.readOnlyEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36571,8 +36571,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).KeysMetadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.keysMetadataRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).KeysMetadataRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionCosmosDbServiceAccountKeysMetadata](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.account.masterKeyMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).MasterKeyMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionCosmosDbServiceAccountKeysMetadata](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.account.capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44707,8 +44707,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).IpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.serviceBusService.namespace.networkRules.ipRulesRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).IpRulesRef, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.serviceBusService.namespace.networkRules.ipAllowRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).IpAllowRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45063,8 +45063,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).IpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.eventHubService.namespace.networkRules.ipRulesRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).IpRulesRef, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.eventHubService.namespace.networkRules.ipAllowRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).IpAllowRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45251,8 +45251,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventGridServiceTopic).InboundIpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.eventGridService.topic.inboundIpRulesRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionEventGridServiceTopic).InboundIpRulesRef, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.eventGridService.topic.inboundIpAllowRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).InboundIpAllowRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.eventGridService.topic.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45383,8 +45383,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventGridServiceDomain).InboundIpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.eventGridService.domain.inboundIpRulesRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionEventGridServiceDomain).InboundIpRulesRef, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.eventGridService.domain.inboundIpAllowRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).InboundIpAllowRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.eventGridService.domain.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45503,8 +45503,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventGridServiceNamespace).InboundIpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.eventGridService.namespace.inboundIpRulesRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionEventGridServiceNamespace).InboundIpRulesRef, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.eventGridService.namespace.inboundIpAllowRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).InboundIpAllowRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.eventGridService.namespace.topicSpacesState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80809,19 +80809,19 @@ type mqlAzureSubscriptionSqlServiceServerFailoverGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionSqlServiceServerFailoverGroupInternal
-	Id                   plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	Location             plugin.TValue[string]
-	Tags                 plugin.TValue[map[string]any]
-	ReplicationRole      plugin.TValue[string]
-	ReplicationState     plugin.TValue[string]
-	PartnerServers       plugin.TValue[[]any]
-	Partners             plugin.TValue[[]any]
-	ReadWriteEndpoint    plugin.TValue[any]
-	ReadWriteEndpointRef plugin.TValue[*mqlAzureSubscriptionSqlServiceServerFailoverGroupReadWriteEndpoint]
-	ReadOnlyEndpointRef  plugin.TValue[*mqlAzureSubscriptionSqlServiceServerFailoverGroupReadOnlyEndpoint]
-	ReadOnlyEndpoint     plugin.TValue[any]
-	Databases            plugin.TValue[[]any]
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Location          plugin.TValue[string]
+	Tags              plugin.TValue[map[string]any]
+	ReplicationRole   plugin.TValue[string]
+	ReplicationState  plugin.TValue[string]
+	PartnerServers    plugin.TValue[[]any]
+	Partners          plugin.TValue[[]any]
+	ReadWriteEndpoint plugin.TValue[any]
+	ReadWriteListener plugin.TValue[*mqlAzureSubscriptionSqlServiceServerFailoverGroupReadWriteEndpoint]
+	ReadOnlyListener  plugin.TValue[*mqlAzureSubscriptionSqlServiceServerFailoverGroupReadOnlyEndpoint]
+	ReadOnlyEndpoint  plugin.TValue[any]
+	Databases         plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionSqlServiceServerFailoverGroup creates a new instance of this resource
@@ -80897,12 +80897,12 @@ func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetReadWriteEndpoint
 	return &c.ReadWriteEndpoint
 }
 
-func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetReadWriteEndpointRef() *plugin.TValue[*mqlAzureSubscriptionSqlServiceServerFailoverGroupReadWriteEndpoint] {
-	return &c.ReadWriteEndpointRef
+func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetReadWriteListener() *plugin.TValue[*mqlAzureSubscriptionSqlServiceServerFailoverGroupReadWriteEndpoint] {
+	return &c.ReadWriteListener
 }
 
-func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetReadOnlyEndpointRef() *plugin.TValue[*mqlAzureSubscriptionSqlServiceServerFailoverGroupReadOnlyEndpoint] {
-	return &c.ReadOnlyEndpointRef
+func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetReadOnlyListener() *plugin.TValue[*mqlAzureSubscriptionSqlServiceServerFailoverGroupReadOnlyEndpoint] {
+	return &c.ReadOnlyListener
 }
 
 func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetReadOnlyEndpoint() *plugin.TValue[any] {
@@ -84185,7 +84185,7 @@ type mqlAzureSubscriptionCosmosDbServiceAccount struct {
 	CustomerManagedKeyStatus           plugin.TValue[string]
 	EncryptionKeyVersion               plugin.TValue[string]
 	KeysMetadata                       plugin.TValue[any]
-	KeysMetadataRef                    plugin.TValue[*mqlAzureSubscriptionCosmosDbServiceAccountKeysMetadata]
+	MasterKeyMetadata                  plugin.TValue[*mqlAzureSubscriptionCosmosDbServiceAccountKeysMetadata]
 	Capabilities                       plugin.TValue[[]any]
 	EnableAnalyticalStorage            plugin.TValue[bool]
 	AnalyticalStorageSchemaType        plugin.TValue[string]
@@ -84348,8 +84348,8 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetKeysMetadata() *plugin.T
 	return &c.KeysMetadata
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetKeysMetadataRef() *plugin.TValue[*mqlAzureSubscriptionCosmosDbServiceAccountKeysMetadata] {
-	return &c.KeysMetadataRef
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetMasterKeyMetadata() *plugin.TValue[*mqlAzureSubscriptionCosmosDbServiceAccountKeysMetadata] {
+	return &c.MasterKeyMetadata
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetCapabilities() *plugin.TValue[[]any] {
@@ -104698,7 +104698,7 @@ type mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules struct {
 	PublicNetworkAccess         plugin.TValue[string]
 	TrustedServiceAccessEnabled plugin.TValue[bool]
 	IpRules                     plugin.TValue[[]any]
-	IpRulesRef                  plugin.TValue[[]any]
+	IpAllowRules                plugin.TValue[[]any]
 	VirtualNetworkRules         plugin.TValue[[]any]
 }
 
@@ -104750,8 +104750,8 @@ func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules) GetIpRules(
 	return &c.IpRules
 }
 
-func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules) GetIpRulesRef() *plugin.TValue[[]any] {
-	return &c.IpRulesRef
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules) GetIpAllowRules() *plugin.TValue[[]any] {
+	return &c.IpAllowRules
 }
 
 func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules) GetVirtualNetworkRules() *plugin.TValue[[]any] {
@@ -105613,7 +105613,7 @@ type mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules struct {
 	PublicNetworkAccess         plugin.TValue[string]
 	TrustedServiceAccessEnabled plugin.TValue[bool]
 	IpRules                     plugin.TValue[[]any]
-	IpRulesRef                  plugin.TValue[[]any]
+	IpAllowRules                plugin.TValue[[]any]
 	VirtualNetworkRules         plugin.TValue[[]any]
 }
 
@@ -105665,8 +105665,8 @@ func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules) GetIpRules() 
 	return &c.IpRules
 }
 
-func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules) GetIpRulesRef() *plugin.TValue[[]any] {
-	return &c.IpRulesRef
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules) GetIpAllowRules() *plugin.TValue[[]any] {
+	return &c.IpAllowRules
 }
 
 func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules) GetVirtualNetworkRules() *plugin.TValue[[]any] {
@@ -106156,7 +106156,7 @@ type mqlAzureSubscriptionEventGridServiceTopic struct {
 	MinimumTlsVersionAllowed       plugin.TValue[string]
 	DataResidencyBoundary          plugin.TValue[string]
 	InboundIpRules                 plugin.TValue[[]any]
-	InboundIpRulesRef              plugin.TValue[[]any]
+	InboundIpAllowRules            plugin.TValue[[]any]
 	IdentityType                   plugin.TValue[string]
 	PrivateEndpointConnectionCount plugin.TValue[int64]
 	SystemMetadata                 plugin.TValue[*mqlAzureSubscriptionSystemData]
@@ -106252,8 +106252,8 @@ func (c *mqlAzureSubscriptionEventGridServiceTopic) GetInboundIpRules() *plugin.
 	return &c.InboundIpRules
 }
 
-func (c *mqlAzureSubscriptionEventGridServiceTopic) GetInboundIpRulesRef() *plugin.TValue[[]any] {
-	return &c.InboundIpRulesRef
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetInboundIpAllowRules() *plugin.TValue[[]any] {
+	return &c.InboundIpAllowRules
 }
 
 func (c *mqlAzureSubscriptionEventGridServiceTopic) GetIdentityType() *plugin.TValue[string] {
@@ -106439,7 +106439,7 @@ type mqlAzureSubscriptionEventGridServiceDomain struct {
 	AutoCreateTopicWithFirstSubscription plugin.TValue[bool]
 	AutoDeleteTopicWithLastSubscription  plugin.TValue[bool]
 	InboundIpRules                       plugin.TValue[[]any]
-	InboundIpRulesRef                    plugin.TValue[[]any]
+	InboundIpAllowRules                  plugin.TValue[[]any]
 	IdentityType                         plugin.TValue[string]
 	PrivateEndpointConnectionCount       plugin.TValue[int64]
 	SystemMetadata                       plugin.TValue[*mqlAzureSubscriptionSystemData]
@@ -106543,8 +106543,8 @@ func (c *mqlAzureSubscriptionEventGridServiceDomain) GetInboundIpRules() *plugin
 	return &c.InboundIpRules
 }
 
-func (c *mqlAzureSubscriptionEventGridServiceDomain) GetInboundIpRulesRef() *plugin.TValue[[]any] {
-	return &c.InboundIpRulesRef
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetInboundIpAllowRules() *plugin.TValue[[]any] {
+	return &c.InboundIpAllowRules
 }
 
 func (c *mqlAzureSubscriptionEventGridServiceDomain) GetIdentityType() *plugin.TValue[string] {
@@ -106706,7 +106706,7 @@ type mqlAzureSubscriptionEventGridServiceNamespace struct {
 	PublicNetworkAccess                        plugin.TValue[string]
 	MinimumTlsVersionAllowed                   plugin.TValue[string]
 	InboundIpRules                             plugin.TValue[[]any]
-	InboundIpRulesRef                          plugin.TValue[[]any]
+	InboundIpAllowRules                        plugin.TValue[[]any]
 	TopicSpacesState                           plugin.TValue[string]
 	MaximumClientSessionsPerAuthenticationName plugin.TValue[int64]
 	MaximumSessionExpiryInHours                plugin.TValue[int64]
@@ -106789,8 +106789,8 @@ func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetInboundIpRules() *plu
 	return &c.InboundIpRules
 }
 
-func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetInboundIpRulesRef() *plugin.TValue[[]any] {
-	return &c.InboundIpRulesRef
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetInboundIpAllowRules() *plugin.TValue[[]any] {
+	return &c.InboundIpAllowRules
 }
 
 func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetTopicSpacesState() *plugin.TValue[string] {
