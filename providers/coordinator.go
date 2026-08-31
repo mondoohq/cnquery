@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"maps"
 	"math"
 	"os/exec"
 	"strconv"
@@ -65,9 +66,15 @@ type coordinator struct {
 	// (extensibleSchema.unsafeLoadAll -> LoadSchema), so it must never be
 	// held while acquiring either of those.
 	//
-	// providers is only ever replaced wholesale (SetProviders), never
-	// mutated in place: Providers hands the map out after releasing
-	// providersMu, and callers hold that reference unguarded.
+	// providers is only ever replaced wholesale, never mutated in place.
+	// That is enforced rather than assumed: SetProviders stores a clone and
+	// Providers returns one, so no caller holds an alias of the published
+	// map. It has to be, because callers do mutate what they are handed —
+	// EnsureProvider adds the builtin connection providers, and
+	// installDependencies adds freshly installed dependencies — while
+	// LoadSchema reads the published map under providersMu without
+	// coordinator.mutex to keep the lock order below acyclic. Concurrent
+	// map read and write is a fatal runtime error, not a recoverable one.
 	providersMu sync.RWMutex
 	providers   Providers
 	runningByID map[string]*RunningProvider
@@ -274,6 +281,45 @@ func (c *coordinator) GetRunningProvider(id string, update UpdateProvidersConfig
 	return running, nil
 }
 
+// lookupProvider reads a single entry from the published snapshot. Callers on
+// the provider-start path use this rather than Providers, which has to clone
+// the whole map to hand it out safely.
+func (c *coordinator) lookupProvider(id string) (*Provider, bool) {
+	c.providersMu.RLock()
+	defer c.providersMu.RUnlock()
+	provider, ok := c.providers[id]
+	return provider, ok
+}
+
+// unsafeResolveProvider finds an installed provider by id, re-listing once if
+// the published snapshot doesn't have it. A snapshot goes stale on the
+// install-on-demand path: EnsureProvider installs the provider an asset needs
+// and adds it to the map it was handed, which is the caller's own copy, so the
+// coordinator never sees that write. Install resets CachedProviders, so
+// re-listing re-scans disk and picks it up. When the id is simply unknown the
+// re-list is cheap — ListActive rebuilds its map from CachedProviders without
+// touching disk.
+//
+// It is called with coordinator.mutex held and takes only providersMu, which
+// is the documented order: mutex -> schema.sync -> providersMu.
+func (c *coordinator) unsafeResolveProvider(id string) (*Provider, error) {
+	if provider, ok := c.lookupProvider(id); ok {
+		return provider, nil
+	}
+
+	refreshed, err := ListActive()
+	if err != nil {
+		return nil, err
+	}
+	c.SetProviders(refreshed)
+
+	provider, ok := refreshed[id]
+	if !ok {
+		return nil, errors.New("cannot find provider " + id)
+	}
+	return provider, nil
+}
+
 // unsafeStartProvider will start a provider and add it to the list of running providers. Must be called
 // with a mutex lock around it.
 func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
@@ -296,19 +342,9 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 		return x.Runtime, nil
 	}
 
-	providers := c.Providers()
-	if providers == nil {
-		var err error
-		providers, err = ListActive()
-		if err != nil {
-			return nil, err
-		}
-		c.SetProviders(providers)
-	}
-
-	provider, ok := providers[id]
-	if !ok {
-		return nil, errors.New("cannot find provider " + id)
+	provider, err := c.unsafeResolveProvider(id)
+	if err != nil {
+		return nil, err
 	}
 
 	if update.Enabled {
@@ -407,19 +443,25 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 	return res, nil
 }
 
+// SetProviders publishes a snapshot of providers. It clones because callers
+// keep and mutate the map they pass (ListActive hands its map to
+// installDependencies), and the published one is read by LoadSchema under
+// providersMu alone.
 func (c *coordinator) SetProviders(providers Providers) {
 	c.providersMu.Lock()
-	c.providers = providers
+	c.providers = maps.Clone(providers)
 	c.providersMu.Unlock()
 }
 
-// Providers returns the current provider map. It is safe to read without
-// providersMu only because the map is replaced, never mutated (see the
-// field); don't write to the returned map.
+// Providers returns a snapshot of the installed providers. It is a clone:
+// callers mutate what they get (see EnsureProvider), and the published map
+// is read concurrently by LoadSchema. Writes to the returned map are local
+// to the caller — a provider installed that way is picked up by the next
+// ListActive, which re-scans after Install resets the cache.
 func (c *coordinator) Providers() Providers {
 	c.providersMu.RLock()
 	defer c.providersMu.RUnlock()
-	return c.providers
+	return maps.Clone(c.providers)
 }
 
 // stop will stop a provider and remove it from the list of running providers. Must be called
@@ -475,9 +517,7 @@ func (c *coordinator) LoadSchema(name string) (resources.ResourcesSchema, error)
 		return x.Runtime.Schema, nil
 	}
 
-	c.providersMu.RLock()
-	provider, ok := c.providers[name]
-	c.providersMu.RUnlock()
+	provider, ok := c.lookupProvider(name)
 	if !ok {
 		return nil, errors.New("cannot find provider '" + name + "'")
 	}
