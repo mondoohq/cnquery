@@ -3533,6 +3533,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"os.rootCertificates.content": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsRootCertificates).GetContent()).ToDataRes(types.Array(types.String))
 	},
+	"os.rootCertificates.unparseable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsRootCertificates).GetUnparseable()).ToDataRes(types.Int)
+	},
 	"os.rootCertificates.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsRootCertificates).GetList()).ToDataRes(types.Array(types.Resource("certificate")))
 	},
@@ -17654,6 +17657,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"os.rootCertificates.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsRootCertificates).Content, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"os.rootCertificates.unparseable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsRootCertificates).Unparseable, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"os.rootCertificates.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40082,9 +40089,10 @@ type mqlOsRootCertificates struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlOsRootCertificatesInternal it will be used here
-	Files   plugin.TValue[[]any]
-	Content plugin.TValue[[]any]
-	List    plugin.TValue[[]any]
+	Files       plugin.TValue[[]any]
+	Content     plugin.TValue[[]any]
+	Unparseable plugin.TValue[int64]
+	List        plugin.TValue[[]any]
 }
 
 // createOsRootCertificates creates a new instance of this resource
@@ -40136,6 +40144,17 @@ func (c *mqlOsRootCertificates) GetContent() *plugin.TValue[[]any] {
 		}
 
 		return c.content(vargFiles.Data)
+	})
+}
+
+func (c *mqlOsRootCertificates) GetUnparseable() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Unparseable, func() (int64, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return 0, vargContent.Error
+		}
+
+		return c.unparseable(vargContent.Data)
 	})
 }
 
