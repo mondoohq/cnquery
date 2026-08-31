@@ -63,9 +63,25 @@ func init() {
 
 	LastProviderInstall = time.Now().Unix()
 
+	stampBuiltinSchemas()
+
 	// Initialize the global coordinator instance
 	coordinator := newCoordinator()
 	Coordinator = coordinator
+}
+
+// stampBuiltinSchemas applies the provenance stamp (ADR 040 part 1) to the
+// builtin providers' schemas. Builtins never go through Provider.LoadResources,
+// which stamps on-disk providers. It runs once at init rather than on every
+// builtin start: the schema object is shared with extensibleSchema's
+// aggregate, which ranges over ProviderVersions under schema.sync, and a
+// concurrent stamp is a map write during that iteration.
+func stampBuiltinSchemas() {
+	for _, x := range builtinProviders {
+		if concrete, ok := x.Runtime.Schema.(*resources.Schema); ok && x.Config != nil {
+			stampProviderVersion(concrete, x.Config.ID, x.Config.Version)
+		}
+	}
 }
 
 // deleteProvider removes a single resolved provider from disk. The path it
