@@ -240,6 +240,8 @@ func (a *mqlAwsEcrRepository) scanningFrequency() (string, error) {
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
+			// The null state above is the answer; this empty string is only
+			// the zero value Go requires and the runtime discards it.
 			a.ScanningFrequency.State = plugin.StateIsSet | plugin.StateIsNull
 			return "", nil
 		}
@@ -413,10 +415,11 @@ const (
 // field null. Only the absent case is a measurement, so only it may let
 // isPublic report false; conflating them is how a scan role missing
 // GetRepositoryPolicy reports a world-pullable repository as private.
+//
+// err must be non-nil: the caller establishes that the call failed before
+// asking what kind of failure it was. There is no outcome that describes a
+// successful read, so a nil error has no meaningful classification here.
 func classifyEcrPolicyError(err error, public bool) ecrPolicyOutcome {
-	if err == nil {
-		return ecrPolicyOutcomeFailed
-	}
 	if Is400AccessDeniedError(err) {
 		return ecrPolicyOutcomeUnreadable
 	}
