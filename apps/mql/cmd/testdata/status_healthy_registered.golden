@@ -17,6 +17,7 @@
   │  Endpoint   https://us.api.mondoo.com
   │  Status     SERVING   API v13 ✓ in sync
   │  Time       2026-06-29T21:37:00Z
+  │  Ingest     https://ingest.us.mondoo.com   ✓ reachable · 41ms
   │  Client     //agents.api.mondoo.app/spaces/test/agents/123
   │  Account    //agents.api.mondoo.app/spaces/test/serviceaccounts/abc
 
