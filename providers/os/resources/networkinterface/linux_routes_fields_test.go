@@ -18,7 +18,7 @@ func TestParseIpRouteJSON_TableFields(t *testing.T) {
 	output := `[
 		{"dst":"default","gateway":"192.0.2.1","dev":"swp1","protocol":"bgp","metric":20,"table":"main","flags":[]},
 		{"dst":"10.100.0.0/16","dev":"cluster","protocol":"kernel","scope":"link","prefsrc":"10.100.0.5","table":"1005","flags":[]},
-		{"type":"blackhole","dst":"192.168.10.0/24","protocol":"static","table":"1007","flags":[]}
+		{"type":"unicast","dst":"192.168.10.0/24","protocol":"static","table":"1007","flags":[]}
 	]`
 
 	routes, err := detector.parseIpRouteJSON(output)
@@ -37,7 +37,7 @@ func TestParseIpRouteJSON_TableFields(t *testing.T) {
 	assert.Equal(t, "10.100.0.5", routes[1].Source)
 	assert.Equal(t, "cluster", routes[1].Interface)
 
-	assert.Equal(t, "blackhole", routes[2].Type)
+	assert.Equal(t, "unicast", routes[2].Type)
 	assert.Equal(t, "1007", routes[2].Table)
 }
 
