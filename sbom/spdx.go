@@ -302,6 +302,8 @@ func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
 			Cpes:        []string{},
 		}
 
+		readSpdxPackageLicensing(bomPkg, pkg)
+
 		for _, ref := range pkg.PackageExternalReferences {
 			if ref.RefType == spdx.PackageManagerPURL {
 				bomPkg.Purl = ref.Locator
@@ -779,4 +781,57 @@ func spdxSupplier(supplier string) *common.Supplier {
 		return &common.Supplier{Supplier: spdxNoAssertionValue}
 	}
 	return &common.Supplier{Supplier: supplier, SupplierType: "Organization"}
+}
+
+// readSpdxPackageLicensing carries what an imported SPDX document states about a
+// package's licensing into the model.
+//
+// This decoder read a package's name, version, identifiers and file evidence and
+// dropped everything else the document said, which is information that exists
+// nowhere else in the file: a document stating a declared license, a concluded
+// one, a copyright and a supplier came out carrying none of them. #10597 fixed
+// the same gap in the Protobom decoder, but DefaultMultiDecoder routes SPDX
+// here, so no consumer of that entry point saw the difference.
+//
+// SPDX separates the two acquisitions by field, which is exactly the distinction
+// the model draws: PackageLicenseDeclared is what the package says about itself,
+// PackageLicenseConcluded is what the document's producer determined. Both are
+// single expressions rather than lists, so there is at most one entry of each.
+func readSpdxPackageLicensing(bomPkg *Package, pkg *v2_3.Package) {
+	if entry := DeclaredLicense(importedLicenseValue(pkg.PackageLicenseDeclared)); entry != nil {
+		bomPkg.Licenses = append(bomPkg.Licenses, entry)
+	}
+
+	// No location and no confidence, for the reasons the Protobom decoder
+	// records: SPDX carries neither for a concluded license, and the model
+	// spells "nobody measured this" as 0. Reporting 1.0 would rank an imported
+	// conclusion that was never scored alongside one that scored perfectly.
+	if entry := ConcludedLicense(importedLicenseValue(pkg.PackageLicenseConcluded), "", 0); entry != nil {
+		bomPkg.Licenses = append(bomPkg.Licenses, entry)
+	}
+
+	// The legacy scalar keeps being written, as every other producer in this
+	// package does, so a consumer that has not migrated to the list still sees a
+	// license. It takes the DECLARED entry, falling back to the concluded value
+	// when the document declared none: a scalar left empty while the document
+	// did state a license is the failure the fallback exists to prevent.
+	for _, l := range bomPkg.Licenses {
+		if l.GetAcquisition() == LicenseAcquisition_LICENSE_ACQUISITION_DECLARED {
+			bomPkg.License = licenseValueOf(l)
+			break
+		}
+	}
+	if bomPkg.License == "" {
+		bomPkg.License = importedLicenseValue(pkg.PackageLicenseConcluded)
+	}
+
+	if c := importedLicenseValue(pkg.PackageCopyrightText); c != "" {
+		bomPkg.Copyright = []string{c}
+	}
+
+	if pkg.PackageSupplier != nil {
+		if name := importedLicenseValue(pkg.PackageSupplier.Supplier); name != "" {
+			bomPkg.Supplier = name
+		}
+	}
 }
