@@ -4220,6 +4220,9 @@ aws.ecs.service.deploymentConfiguration.canaryConfiguration 11.15.2
 aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker 11.15.2
 aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker.enable 11.15.2
 aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker.rollback 11.15.2
+aws.ecs.service.deploymentConfiguration.earlySuccessCriteriaEnabled 13.53.4
+aws.ecs.service.deploymentConfiguration.earlySuccessCriteriaHealthyPercent 13.53.4
+aws.ecs.service.deploymentConfiguration.earlySuccessCriteriaRevisionCleanup 13.53.4
 aws.ecs.service.deploymentConfiguration.lifecycleHooks 11.15.2
 aws.ecs.service.deploymentConfiguration.linearConfiguration 11.15.2
 aws.ecs.service.deploymentConfiguration.maximumPercent 11.15.2

@@ -73,6 +73,7 @@ const (
 	ResourceAlicloudMongodbInstance               string = "alicloud.mongodb.instance"
 	ResourceAlicloudPolardb                       string = "alicloud.polardb"
 	ResourceAlicloudPolardbCluster                string = "alicloud.polardb.cluster"
+	ResourceAlicloudPolardbApplication            string = "alicloud.polardb.application"
 	ResourceAlicloudVpcFlowLog                    string = "alicloud.vpc.flowLog"
 	ResourceAlicloudKms                           string = "alicloud.kms"
 	ResourceAlicloudKmsKey                        string = "alicloud.kms.key"
@@ -406,6 +407,10 @@ func init() {
 		"alicloud.polardb.cluster": {
 			Init:   initAlicloudPolardbCluster,
 			Create: createAlicloudPolardbCluster,
+		},
+		"alicloud.polardb.application": {
+			// to override args, implement: initAlicloudPolardbApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudPolardbApplication,
 		},
 		"alicloud.vpc.flowLog": {
 			// to override args, implement: initAlicloudVpcFlowLog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3847,6 +3852,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.polardb.cluster.auditLogCollectorStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudPolardbCluster).GetAuditLogCollectorStatus()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.cluster.applications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbCluster).GetApplications()).ToDataRes(types.Array(types.Resource("alicloud.polardb.application")))
+	},
+	"alicloud.polardb.application.applicationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetApplicationId()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.applicationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetApplicationType()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.dbCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetDbCluster()).ToDataRes(types.Resource("alicloud.polardb.cluster"))
+	},
+	"alicloud.polardb.application.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.zoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetZoneId()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.payType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetPayType()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.polardb.application.expireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetExpireTime()).ToDataRes(types.Time)
+	},
+	"alicloud.polardb.application.expired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetExpired()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.polarFsInstanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetPolarFsInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetEndpoints()).ToDataRes(types.Array(types.Dict))
+	},
+	"alicloud.polardb.application.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"alicloud.polardb.application.sslEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetSslEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.polardb.application.sslAutoRotate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetSslAutoRotate()).ToDataRes(types.Bool)
+	},
+	"alicloud.polardb.application.certCommonName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetCertCommonName()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.certSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetCertSource()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.certFingerprintSha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetCertFingerprintSha256()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.certExpireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetCertExpireTime()).ToDataRes(types.Time)
+	},
+	"alicloud.polardb.application.certModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetCertModifiedTime()).ToDataRes(types.Time)
 	},
 	"alicloud.vpc.flowLog.regionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcFlowLog).GetRegionId()).ToDataRes(types.String)
@@ -12024,6 +12098,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.polardb.cluster.auditLogCollectorStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudPolardbCluster).AuditLogCollectorStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.cluster.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbCluster).Applications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.polardb.application.applicationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).ApplicationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.applicationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).ApplicationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.dbCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).DbCluster, ok = plugin.RawToTValue[*mqlAlicloudPolardbCluster](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.zoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).ZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.payType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).PayType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.expireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.expired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).Expired, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.polarFsInstanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).PolarFsInstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.sslEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).SslEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.sslAutoRotate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).SslAutoRotate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.certCommonName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).CertCommonName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.certSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).CertSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.certFingerprintSha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).CertFingerprintSha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.certExpireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).CertExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.certModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).CertModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"alicloud.vpc.flowLog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26985,6 +27155,7 @@ type mqlAlicloudPolardbCluster struct {
 	Endpoints               plugin.TValue[[]any]
 	AuditLogEnabled         plugin.TValue[bool]
 	AuditLogCollectorStatus plugin.TValue[string]
+	Applications            plugin.TValue[[]any]
 }
 
 // createAlicloudPolardbCluster creates a new instance of this resource
@@ -27239,6 +27410,202 @@ func (c *mqlAlicloudPolardbCluster) GetAuditLogEnabled() *plugin.TValue[bool] {
 func (c *mqlAlicloudPolardbCluster) GetAuditLogCollectorStatus() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.AuditLogCollectorStatus, func() (string, error) {
 		return c.auditLogCollectorStatus()
+	})
+}
+
+func (c *mqlAlicloudPolardbCluster) GetApplications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Applications, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.polardb.cluster", c.__id, "applications")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.applications()
+	})
+}
+
+// mqlAlicloudPolardbApplication for the alicloud.polardb.application resource
+type mqlAlicloudPolardbApplication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudPolardbApplicationInternal
+	ApplicationId         plugin.TValue[string]
+	ApplicationType       plugin.TValue[string]
+	Description           plugin.TValue[string]
+	DbCluster             plugin.TValue[*mqlAlicloudPolardbCluster]
+	EngineVersion         plugin.TValue[string]
+	Status                plugin.TValue[string]
+	RegionId              plugin.TValue[string]
+	ZoneId                plugin.TValue[string]
+	PayType               plugin.TValue[string]
+	CreateTime            plugin.TValue[*time.Time]
+	ExpireTime            plugin.TValue[*time.Time]
+	Expired               plugin.TValue[string]
+	PolarFsInstanceId     plugin.TValue[string]
+	Endpoints             plugin.TValue[[]any]
+	Tags                  plugin.TValue[map[string]any]
+	SslEnabled            plugin.TValue[bool]
+	SslAutoRotate         plugin.TValue[bool]
+	CertCommonName        plugin.TValue[string]
+	CertSource            plugin.TValue[string]
+	CertFingerprintSha256 plugin.TValue[string]
+	CertExpireTime        plugin.TValue[*time.Time]
+	CertModifiedTime      plugin.TValue[*time.Time]
+}
+
+// createAlicloudPolardbApplication creates a new instance of this resource
+func createAlicloudPolardbApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudPolardbApplication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.polardb.application", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudPolardbApplication) MqlName() string {
+	return "alicloud.polardb.application"
+}
+
+func (c *mqlAlicloudPolardbApplication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudPolardbApplication) GetApplicationId() *plugin.TValue[string] {
+	return &c.ApplicationId
+}
+
+func (c *mqlAlicloudPolardbApplication) GetApplicationType() *plugin.TValue[string] {
+	return &c.ApplicationType
+}
+
+func (c *mqlAlicloudPolardbApplication) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudPolardbApplication) GetDbCluster() *plugin.TValue[*mqlAlicloudPolardbCluster] {
+	return plugin.GetOrCompute[*mqlAlicloudPolardbCluster](&c.DbCluster, func() (*mqlAlicloudPolardbCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.polardb.application", c.__id, "dbCluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudPolardbCluster), nil
+			}
+		}
+
+		return c.dbCluster()
+	})
+}
+
+func (c *mqlAlicloudPolardbApplication) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAlicloudPolardbApplication) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudPolardbApplication) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudPolardbApplication) GetZoneId() *plugin.TValue[string] {
+	return &c.ZoneId
+}
+
+func (c *mqlAlicloudPolardbApplication) GetPayType() *plugin.TValue[string] {
+	return &c.PayType
+}
+
+func (c *mqlAlicloudPolardbApplication) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudPolardbApplication) GetExpireTime() *plugin.TValue[*time.Time] {
+	return &c.ExpireTime
+}
+
+func (c *mqlAlicloudPolardbApplication) GetExpired() *plugin.TValue[string] {
+	return &c.Expired
+}
+
+func (c *mqlAlicloudPolardbApplication) GetPolarFsInstanceId() *plugin.TValue[string] {
+	return &c.PolarFsInstanceId
+}
+
+func (c *mqlAlicloudPolardbApplication) GetEndpoints() *plugin.TValue[[]any] {
+	return &c.Endpoints
+}
+
+func (c *mqlAlicloudPolardbApplication) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAlicloudPolardbApplication) GetSslEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SslEnabled, func() (bool, error) {
+		return c.sslEnabled()
+	})
+}
+
+func (c *mqlAlicloudPolardbApplication) GetSslAutoRotate() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SslAutoRotate, func() (bool, error) {
+		return c.sslAutoRotate()
+	})
+}
+
+func (c *mqlAlicloudPolardbApplication) GetCertCommonName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CertCommonName, func() (string, error) {
+		return c.certCommonName()
+	})
+}
+
+func (c *mqlAlicloudPolardbApplication) GetCertSource() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CertSource, func() (string, error) {
+		return c.certSource()
+	})
+}
+
+func (c *mqlAlicloudPolardbApplication) GetCertFingerprintSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CertFingerprintSha256, func() (string, error) {
+		return c.certFingerprintSha256()
+	})
+}
+
+func (c *mqlAlicloudPolardbApplication) GetCertExpireTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CertExpireTime, func() (*time.Time, error) {
+		return c.certExpireTime()
+	})
+}
+
+func (c *mqlAlicloudPolardbApplication) GetCertModifiedTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CertModifiedTime, func() (*time.Time, error) {
+		return c.certModifiedTime()
 	})
 }
 

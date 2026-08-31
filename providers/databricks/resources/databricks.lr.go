@@ -1836,6 +1836,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.job.continuousPauseStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksJob).GetContinuousPauseStatus()).ToDataRes(types.String)
 	},
+	"databricks.job.continuousMaintenanceWindowDayOfWeek": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJob).GetContinuousMaintenanceWindowDayOfWeek()).ToDataRes(types.String)
+	},
+	"databricks.job.continuousMaintenanceWindowStartHour": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJob).GetContinuousMaintenanceWindowStartHour()).ToDataRes(types.Int)
+	},
+	"databricks.job.continuousMaintenanceWindowTimezoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJob).GetContinuousMaintenanceWindowTimezoneId()).ToDataRes(types.String)
+	},
 	"databricks.job.performanceTarget": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksJob).GetPerformanceTarget()).ToDataRes(types.String)
 	},
@@ -1913,6 +1922,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"databricks.job.task.sparkSubmitParameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksJobTask).GetSparkSubmitParameters()).ToDataRes(types.Array(types.String))
+	},
+	"databricks.job.task.alertParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTask).GetAlertParameters()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"databricks.job.task.dbtCommands": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksJobTask).GetDbtCommands()).ToDataRes(types.Array(types.String))
@@ -4543,6 +4555,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricksJob).ContinuousPauseStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"databricks.job.continuousMaintenanceWindowDayOfWeek": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJob).ContinuousMaintenanceWindowDayOfWeek, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.job.continuousMaintenanceWindowStartHour": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJob).ContinuousMaintenanceWindowStartHour, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"databricks.job.continuousMaintenanceWindowTimezoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJob).ContinuousMaintenanceWindowTimezoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"databricks.job.performanceTarget": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksJob).PerformanceTarget, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4649,6 +4673,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"databricks.job.task.sparkSubmitParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksJobTask).SparkSubmitParameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.job.task.alertParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTask).AlertParameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"databricks.job.task.dbtCommands": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10380,39 +10408,42 @@ type mqlDatabricksJob struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlDatabricksJobInternal
-	Id                     plugin.TValue[int64]
-	Name                   plugin.TValue[string]
-	Description            plugin.TValue[string]
-	CreatedTime            plugin.TValue[*time.Time]
-	CreatorUserName        plugin.TValue[string]
-	RunAs                  plugin.TValue[string]
-	RunAsType              plugin.TValue[string]
-	Format                 plugin.TValue[string]
-	EditMode               plugin.TValue[string]
-	MaxConcurrentRuns      plugin.TValue[int64]
-	TimeoutSeconds         plugin.TValue[int64]
-	Tags                   plugin.TValue[map[string]any]
-	ScheduleCronExpression plugin.TValue[string]
-	ScheduleTimezoneId     plugin.TValue[string]
-	SchedulePauseStatus    plugin.TValue[string]
-	ContinuousPauseStatus  plugin.TValue[string]
-	PerformanceTarget      plugin.TValue[string]
-	DeploymentKind         plugin.TValue[string]
-	DeploymentId           plugin.TValue[string]
-	ParentPath             plugin.TValue[string]
-	GitUrl                 plugin.TValue[string]
-	GitProvider            plugin.TValue[string]
-	GitBranch              plugin.TValue[string]
-	GitTag                 plugin.TValue[string]
-	GitCommit              plugin.TValue[string]
-	NotificationEmails     plugin.TValue[[]any]
-	WebhookNotificationIds plugin.TValue[[]any]
-	Tasks                  plugin.TValue[[]any]
-	Triggers               plugin.TValue[[]any]
-	JobClusters            plugin.TValue[[]any]
-	PolicyCompliant        plugin.TValue[bool]
-	PolicyViolations       plugin.TValue[map[string]any]
-	Permissions            plugin.TValue[[]any]
+	Id                                    plugin.TValue[int64]
+	Name                                  plugin.TValue[string]
+	Description                           plugin.TValue[string]
+	CreatedTime                           plugin.TValue[*time.Time]
+	CreatorUserName                       plugin.TValue[string]
+	RunAs                                 plugin.TValue[string]
+	RunAsType                             plugin.TValue[string]
+	Format                                plugin.TValue[string]
+	EditMode                              plugin.TValue[string]
+	MaxConcurrentRuns                     plugin.TValue[int64]
+	TimeoutSeconds                        plugin.TValue[int64]
+	Tags                                  plugin.TValue[map[string]any]
+	ScheduleCronExpression                plugin.TValue[string]
+	ScheduleTimezoneId                    plugin.TValue[string]
+	SchedulePauseStatus                   plugin.TValue[string]
+	ContinuousPauseStatus                 plugin.TValue[string]
+	ContinuousMaintenanceWindowDayOfWeek  plugin.TValue[string]
+	ContinuousMaintenanceWindowStartHour  plugin.TValue[int64]
+	ContinuousMaintenanceWindowTimezoneId plugin.TValue[string]
+	PerformanceTarget                     plugin.TValue[string]
+	DeploymentKind                        plugin.TValue[string]
+	DeploymentId                          plugin.TValue[string]
+	ParentPath                            plugin.TValue[string]
+	GitUrl                                plugin.TValue[string]
+	GitProvider                           plugin.TValue[string]
+	GitBranch                             plugin.TValue[string]
+	GitTag                                plugin.TValue[string]
+	GitCommit                             plugin.TValue[string]
+	NotificationEmails                    plugin.TValue[[]any]
+	WebhookNotificationIds                plugin.TValue[[]any]
+	Tasks                                 plugin.TValue[[]any]
+	Triggers                              plugin.TValue[[]any]
+	JobClusters                           plugin.TValue[[]any]
+	PolicyCompliant                       plugin.TValue[bool]
+	PolicyViolations                      plugin.TValue[map[string]any]
+	Permissions                           plugin.TValue[[]any]
 }
 
 // createDatabricksJob creates a new instance of this resource
@@ -10509,6 +10540,18 @@ func (c *mqlDatabricksJob) GetSchedulePauseStatus() *plugin.TValue[string] {
 
 func (c *mqlDatabricksJob) GetContinuousPauseStatus() *plugin.TValue[string] {
 	return &c.ContinuousPauseStatus
+}
+
+func (c *mqlDatabricksJob) GetContinuousMaintenanceWindowDayOfWeek() *plugin.TValue[string] {
+	return &c.ContinuousMaintenanceWindowDayOfWeek
+}
+
+func (c *mqlDatabricksJob) GetContinuousMaintenanceWindowStartHour() *plugin.TValue[int64] {
+	return &c.ContinuousMaintenanceWindowStartHour
+}
+
+func (c *mqlDatabricksJob) GetContinuousMaintenanceWindowTimezoneId() *plugin.TValue[string] {
+	return &c.ContinuousMaintenanceWindowTimezoneId
 }
 
 func (c *mqlDatabricksJob) GetPerformanceTarget() *plugin.TValue[string] {
@@ -10645,6 +10688,7 @@ type mqlDatabricksJobTask struct {
 	SparkJarMainClass     plugin.TValue[string]
 	SparkPythonFile       plugin.TValue[string]
 	SparkSubmitParameters plugin.TValue[[]any]
+	AlertParameters       plugin.TValue[map[string]any]
 	DbtCommands           plugin.TValue[[]any]
 	Libraries             plugin.TValue[[]any]
 	DependsOn             plugin.TValue[[]any]
@@ -10722,6 +10766,10 @@ func (c *mqlDatabricksJobTask) GetSparkPythonFile() *plugin.TValue[string] {
 
 func (c *mqlDatabricksJobTask) GetSparkSubmitParameters() *plugin.TValue[[]any] {
 	return &c.SparkSubmitParameters
+}
+
+func (c *mqlDatabricksJobTask) GetAlertParameters() *plugin.TValue[map[string]any] {
+	return &c.AlertParameters
 }
 
 func (c *mqlDatabricksJobTask) GetDbtCommands() *plugin.TValue[[]any] {
