@@ -4,9 +4,13 @@
 package resources
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 func TestIsInternetOpenSourcePrefix(t *testing.T) {
@@ -319,5 +323,447 @@ func TestNsgAllowsInternetIngress(t *testing.T) {
 		open, surviving := nsgAllowsInternetIngress([]map[string]any{allowSsh, allowHttp, denySshHigh})
 		assert.True(t, open)
 		assert.Len(t, surviving, 1, "only the HTTPS allow survives")
+	})
+}
+
+// --- Exposure verdicts: a read that did not happen reports null ---
+
+// TestResolveExposureVerdicts pins the verdict that a deallocated VM used to
+// get wrong. Azure computes effective NSG rules only for a NIC attached to a
+// running VM and answers 400 otherwise, so stopping a machine flipped
+// internetReachable from true to false while its NSG still allowed 22/tcp from
+// anywhere -- and a policy asserting "not reachable from the internet" started
+// passing on it. The same 400 comes back for a scanner running as Reader, which
+// does not hold the effectiveNetworkSecurityGroups action.
+func TestResolveExposureVerdicts(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		obs  exposureObservations
+		want exposureVerdicts
+	}{
+		{
+			name: "unread NSGs on a machine with a public IP leaves reachability unknown",
+			obs: exposureObservations{
+				hasPublicIp: true, loadBalancersEvaluated: true,
+				sgAllowsIngress: false, nsgsEvaluated: false,
+			},
+			want: exposureVerdicts{
+				internetReachable:          exposureVerdict{value: false, known: false},
+				behindPublicLoadBalancer:   exposureVerdict{value: false, known: true},
+				securityGroupAllowsIngress: exposureVerdict{value: false, known: false},
+			},
+		},
+		{
+			name: "evaluated NSGs that admit ingress on a machine with a public IP is reachable",
+			obs: exposureObservations{
+				hasPublicIp: true, loadBalancersEvaluated: true,
+				sgAllowsIngress: true, nsgsEvaluated: true,
+			},
+			want: exposureVerdicts{
+				internetReachable:          exposureVerdict{value: true, known: true},
+				behindPublicLoadBalancer:   exposureVerdict{value: false, known: true},
+				securityGroupAllowsIngress: exposureVerdict{value: true, known: true},
+			},
+		},
+		{
+			name: "evaluated NSGs that deny ingress on a machine with a public IP is not reachable",
+			obs: exposureObservations{
+				hasPublicIp: true, loadBalancersEvaluated: true,
+				sgAllowsIngress: false, nsgsEvaluated: true,
+			},
+			want: exposureVerdicts{
+				internetReachable:          exposureVerdict{value: false, known: true},
+				behindPublicLoadBalancer:   exposureVerdict{value: false, known: true},
+				securityGroupAllowsIngress: exposureVerdict{value: false, known: true},
+			},
+		},
+		{
+			// The NSGs went unread, but nothing can reach the machine in the
+			// first place, so the answer is settled without them.
+			name: "no public IP and no load balancer is a determined false even with unread NSGs",
+			obs: exposureObservations{
+				hasPublicIp: false, loadBalancersEvaluated: true,
+				sgAllowsIngress: false, nsgsEvaluated: false,
+			},
+			want: exposureVerdicts{
+				internetReachable:          exposureVerdict{value: false, known: true},
+				behindPublicLoadBalancer:   exposureVerdict{value: false, known: true},
+				securityGroupAllowsIngress: exposureVerdict{value: false, known: false},
+			},
+		},
+		{
+			// securityGroupAllowsIngress is an OR across the NICs: one NIC that
+			// admits internet ingress settles it however many went unread.
+			name: "one NIC admitting ingress settles the OR even with another unread",
+			obs: exposureObservations{
+				hasPublicIp: true, loadBalancersEvaluated: true,
+				sgAllowsIngress: true, nsgsEvaluated: false,
+			},
+			want: exposureVerdicts{
+				internetReachable:          exposureVerdict{value: true, known: true},
+				behindPublicLoadBalancer:   exposureVerdict{value: false, known: true},
+				securityGroupAllowsIngress: exposureVerdict{value: true, known: true},
+			},
+		},
+		{
+			name: "a public load balancer in front of open NSGs is reachable without a public IP",
+			obs: exposureObservations{
+				hasPublicIp: false, behindPublicLb: true, loadBalancersEvaluated: true,
+				sgAllowsIngress: true, nsgsEvaluated: true,
+			},
+			want: exposureVerdicts{
+				internetReachable:          exposureVerdict{value: true, known: true},
+				behindPublicLoadBalancer:   exposureVerdict{value: true, known: true},
+				securityGroupAllowsIngress: exposureVerdict{value: true, known: true},
+			},
+		},
+		{
+			// The load-balancer listing failed, so whether traffic can arrive is
+			// unknown and the open NSGs cannot settle it either way.
+			name: "unreadable load balancers with no public IP leaves reachability unknown",
+			obs: exposureObservations{
+				hasPublicIp: false, loadBalancersEvaluated: false,
+				sgAllowsIngress: true, nsgsEvaluated: true,
+			},
+			want: exposureVerdicts{
+				internetReachable:          exposureVerdict{value: false, known: false},
+				behindPublicLoadBalancer:   exposureVerdict{value: false, known: false},
+				securityGroupAllowsIngress: exposureVerdict{value: true, known: true},
+			},
+		},
+		{
+			name: "unreadable load balancers with closed NSGs is still a determined false",
+			obs: exposureObservations{
+				hasPublicIp: false, loadBalancersEvaluated: false,
+				sgAllowsIngress: false, nsgsEvaluated: true,
+			},
+			want: exposureVerdicts{
+				internetReachable:          exposureVerdict{value: false, known: true},
+				behindPublicLoadBalancer:   exposureVerdict{value: false, known: false},
+				securityGroupAllowsIngress: exposureVerdict{value: false, known: true},
+			},
+		},
+		{
+			name: "nothing readable at all on a machine with a public IP is unknown",
+			obs: exposureObservations{
+				hasPublicIp: true, loadBalancersEvaluated: false,
+				sgAllowsIngress: false, nsgsEvaluated: false,
+			},
+			want: exposureVerdicts{
+				internetReachable:          exposureVerdict{value: false, known: false},
+				behindPublicLoadBalancer:   exposureVerdict{value: false, known: false},
+				securityGroupAllowsIngress: exposureVerdict{value: false, known: false},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, resolveExposureVerdicts(tc.obs))
+		})
+	}
+}
+
+// TestRawVerdict pins the rendering, which is where a null verdict either
+// reaches the user as null or collapses back into the false this whole change
+// exists to remove.
+func TestRawVerdict(t *testing.T) {
+	t.Run("a determined verdict renders its boolean", func(t *testing.T) {
+		assert.Equal(t, true, rawVerdict(exposureVerdict{value: true, known: true}).Value)
+		assert.Equal(t, false, rawVerdict(exposureVerdict{value: false, known: true}).Value)
+	})
+
+	t.Run("an undetermined verdict renders null", func(t *testing.T) {
+		assert.Nil(t, rawVerdict(exposureVerdict{value: false, known: false}).Value)
+
+		// and the runtime reads that as set-and-null rather than as false
+		tv, ok := plugin.RawToTValue[bool](rawVerdict(exposureVerdict{}).Value, nil)
+		require.True(t, ok)
+		assert.True(t, tv.IsSet(), "an unset field is a different failure mode from null")
+		assert.True(t, tv.IsNull())
+		assert.False(t, tv.Data)
+	})
+}
+
+// --- Effective rules: an unevaluated NIC reports null, not an empty list ---
+
+func newTestNic(runtime *plugin.Runtime, evaluated bool, groups []effectiveNsgGroup) *mqlAzureSubscriptionNetworkServiceInterface {
+	nic := &mqlAzureSubscriptionNetworkServiceInterface{
+		MqlRuntime: runtime,
+		Id:         plugin.TValue[string]{Data: "/subscriptions/s/resourceGroups/rg/providers/Microsoft.Network/networkInterfaces/nic", State: plugin.StateIsSet},
+	}
+	nic.effNsgLoaded = true
+	nic.effNsgEvaluated = evaluated
+	nic.effNsgGroups = groups
+	return nic
+}
+
+// TestEffectiveRulesNullWhenNotEvaluated pins the degrade. Both accessors used
+// to discard the "evaluated" flag, and an unset nil slice renders as an empty
+// list -- so `effectiveRules.none(access == "Allow" && direction == "Inbound"
+// && sourceAddressPrefix == "*")` passed vacuously on every stopped VM and in
+// every subscription where the scanning identity cannot read effective NSGs.
+func TestEffectiveRulesNullWhenNotEvaluated(t *testing.T) {
+	t.Run("raw rules", func(t *testing.T) {
+		nic := newTestNic(nil, false, nil)
+		res, err := nic.effectiveSecurityRules()
+		require.NoError(t, err)
+		assert.Nil(t, res)
+		assert.True(t, nic.EffectiveSecurityRules.IsSet())
+		assert.True(t, nic.EffectiveSecurityRules.IsNull())
+	})
+
+	t.Run("typed rules", func(t *testing.T) {
+		nic := newTestNic(nil, false, nil)
+		res, err := nic.effectiveRules()
+		require.NoError(t, err)
+		assert.Nil(t, res)
+		assert.True(t, nic.EffectiveRules.IsSet())
+		assert.True(t, nic.EffectiveRules.IsNull())
+	})
+}
+
+// TestEffectiveRulesEmptyWhenEvaluated is the other half of the same contract:
+// Azure answering with no rules is a real empty list, and must not be reported
+// as null. Null and empty mean different things and both have to survive.
+func TestEffectiveRulesEmptyWhenEvaluated(t *testing.T) {
+	t.Run("raw rules", func(t *testing.T) {
+		nic := newTestNic(nil, true, nil)
+		res, err := nic.effectiveSecurityRules()
+		require.NoError(t, err)
+		assert.Equal(t, []any{}, res)
+		assert.False(t, nic.EffectiveSecurityRules.IsNull())
+	})
+
+	t.Run("typed rules", func(t *testing.T) {
+		nic := newTestNic(cacheIDTestRuntime(), true, nil)
+		res, err := nic.effectiveRules()
+		require.NoError(t, err)
+		assert.Equal(t, []any{}, res)
+		assert.False(t, nic.EffectiveRules.IsNull())
+	})
+}
+
+// TestEffectiveRulesReturnedWhenEvaluated pins that the degrade guard did not
+// swallow the ordinary path.
+func TestEffectiveRulesReturnedWhenEvaluated(t *testing.T) {
+	groups := []effectiveNsgGroup{{
+		nsgID: "/subscriptions/s/resourceGroups/rg/providers/Microsoft.Network/networkSecurityGroups/nsg",
+		rules: []map[string]any{{
+			"name": "AllowSshFromAnywhere", "direction": "Inbound", "access": "Allow",
+			"protocol": "Tcp", "destinationPortRange": "22", "sourceAddressPrefix": "*",
+			"priority": float64(300),
+		}},
+	}}
+
+	t.Run("raw rules", func(t *testing.T) {
+		nic := newTestNic(nil, true, groups)
+		res, err := nic.effectiveSecurityRules()
+		require.NoError(t, err)
+		require.Len(t, res, 1)
+		assert.Equal(t, "AllowSshFromAnywhere", res[0].(map[string]any)["name"])
+		assert.False(t, nic.EffectiveSecurityRules.IsNull())
+	})
+
+	t.Run("typed rules", func(t *testing.T) {
+		nic := newTestNic(cacheIDTestRuntime(), true, groups)
+		res, err := nic.effectiveRules()
+		require.NoError(t, err)
+		require.Len(t, res, 1)
+		rule := res[0].(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule)
+		assert.Equal(t, "AllowSshFromAnywhere", rule.Name.Data)
+		assert.Equal(t, "*", rule.SourceAddressPrefix.Data)
+		assert.False(t, nic.EffectiveRules.IsNull())
+	})
+}
+
+// --- Database firewall rules are judged as a union ---
+
+// TestNonRoutableIPv4Blocks pins the discount table the coverage measure is
+// built on. The entries are parsed from strings, and a typo drops one silently
+// -- which moves the threshold without touching any of the logic around it.
+func TestNonRoutableIPv4Blocks(t *testing.T) {
+	assert.Len(t, nonRoutableIPv4Blocks, 15, "an entry that fails to parse is dropped, not reported")
+	assert.Equal(t, uint64(3702258432), routableIPv4Total)
+
+	for i := 1; i < len(nonRoutableIPv4Blocks); i++ {
+		assert.Greaterf(t, nonRoutableIPv4Blocks[i].lo, nonRoutableIPv4Blocks[i-1].hi,
+			"blocks must be ascending and disjoint, or the total double-counts at index %d", i)
+	}
+}
+
+func TestMergeIPv4Ranges(t *testing.T) {
+	t.Run("the two halves coalesce into the whole space", func(t *testing.T) {
+		assert.Equal(t, []ipRange{{0, math.MaxUint32}}, mergeIPv4Ranges([]ipRange{
+			{0, 2147483647}, {2147483648, math.MaxUint32},
+		}))
+	})
+	t.Run("touching ranges merge", func(t *testing.T) {
+		assert.Equal(t, []ipRange{{10, 30}}, mergeIPv4Ranges([]ipRange{{10, 20}, {21, 30}}))
+	})
+	t.Run("a one-address gap does not merge", func(t *testing.T) {
+		assert.Equal(t, []ipRange{{10, 20}, {22, 30}}, mergeIPv4Ranges([]ipRange{{22, 30}, {10, 20}}))
+	})
+	t.Run("a contained range is absorbed", func(t *testing.T) {
+		assert.Equal(t, []ipRange{{10, 100}}, mergeIPv4Ranges([]ipRange{{10, 100}, {20, 30}}))
+	})
+	t.Run("inverted ranges admit nothing and are dropped", func(t *testing.T) {
+		assert.Nil(t, mergeIPv4Ranges([]ipRange{{30, 10}}))
+		assert.Empty(t, mergeIPv4Ranges(nil))
+	})
+	t.Run("the caller's slice is not reordered", func(t *testing.T) {
+		in := []ipRange{{10, 20}, {0, 5}}
+		mergeIPv4Ranges(in)
+		assert.Equal(t, []ipRange{{10, 20}, {0, 5}}, in, "the input is often a resource's own rule list")
+	})
+}
+
+func TestIPv4RoutableCoverage(t *testing.T) {
+	whole := []ipRange{{0, math.MaxUint32}}
+	assert.Equal(t, routableIPv4Total, ipv4RoutableCoverage(whole))
+
+	// 10.0.0.0/8 is private: a rule spanning it admits nothing on the internet
+	assert.Equal(t, uint64(0), ipv4RoutableCoverage([]ipRange{{167772160, 184549375}}))
+
+	// 20.10.0.0/24, an ordinary public /24
+	assert.Equal(t, uint64(256), ipv4RoutableCoverage([]ipRange{{336855040, 336855295}}))
+
+	assert.Equal(t, uint64(0), ipv4RoutableCoverage(nil))
+}
+
+// TestDatabaseFirewallRangesJudgedAsUnion is the case that was live-confirmed
+// on an Azure SQL server: five rules, no catch-all, and between them every
+// address on the internet. Each rule was judged on its own, none of them
+// reached the threshold, and the server reported internetReachable: false.
+func TestDatabaseFirewallRangesJudgedAsUnion(t *testing.T) {
+	thirds := [][2]string{
+		{"0.0.0.0", "84.255.255.255"},
+		{"85.0.0.0", "169.255.255.255"},
+		{"170.0.0.0", "255.255.255.255"},
+	}
+
+	t.Run("no single third is open on its own", func(t *testing.T) {
+		for _, r := range thirds {
+			assert.Falsef(t, firewallRuleAllowsAnyInternet(r[0], r[1]), "%s-%s", r[0], r[1])
+		}
+	})
+	t.Run("the three together are the whole internet", func(t *testing.T) {
+		assert.True(t, databaseInternetReachable("Enabled", thirds))
+	})
+	t.Run("the live rule set, sentinel and overlap included", func(t *testing.T) {
+		live := append([][2]string{}, thirds...)
+		live = append(live,
+			[2]string{"1.0.0.0", "127.255.255.255"}, // overlaps the first two thirds
+			[2]string{"0.0.0.0", "0.0.0.0"},         // the allow-all-Azure-services sentinel
+		)
+		assert.True(t, databaseInternetReachable("Enabled", live))
+	})
+	t.Run("public network access disabled still wins over the union", func(t *testing.T) {
+		assert.False(t, databaseInternetReachable("Disabled", thirds))
+	})
+
+	t.Run("two adjacent halves are the whole internet", func(t *testing.T) {
+		assert.True(t, databaseInternetReachable("Enabled", [][2]string{
+			{"0.0.0.0", "127.255.255.255"}, {"128.0.0.0", "255.255.255.255"},
+		}))
+	})
+	t.Run("the upper half alone is not", func(t *testing.T) {
+		assert.False(t, firewallRuleAllowsAnyInternet("128.0.0.0", "255.255.255.255"))
+	})
+
+	// half the internet written without touching 0.0.0.0/8, which a raw
+	// half-of-IPv4 threshold scored as an allowlist by 16.7 million addresses
+	t.Run("1.0.0.0 to 127.255.255.255 alone is open", func(t *testing.T) {
+		assert.True(t, firewallRuleAllowsAnyInternet("1.0.0.0", "127.255.255.255"))
+		assert.True(t, databaseInternetReachable("Enabled", [][2]string{{"1.0.0.0", "127.255.255.255"}}))
+	})
+
+	t.Run("the allow-all-Azure-services sentinel alone is not exposure", func(t *testing.T) {
+		assert.False(t, databaseInternetReachable("Enabled", [][2]string{{"0.0.0.0", "0.0.0.0"}}))
+	})
+	t.Run("an office allowlist is not exposure", func(t *testing.T) {
+		assert.False(t, databaseInternetReachable("Enabled", [][2]string{
+			{"20.10.0.0", "20.10.0.255"}, {"52.1.2.0", "52.1.2.255"},
+		}))
+	})
+	t.Run("private ranges do not accumulate into exposure", func(t *testing.T) {
+		assert.False(t, databaseInternetReachable("Enabled", [][2]string{
+			{"10.0.0.0", "10.255.255.255"},
+			{"172.16.0.0", "172.31.255.255"},
+			{"192.168.0.0", "192.168.255.255"},
+			{"127.0.0.0", "127.255.255.255"},
+		}))
+	})
+}
+
+// TestFirewallRangeSets pins the split that feeds the union, including the
+// pairs that describe no coherent range at all. A pair that survived
+// mis-classified would be summed into the coverage measure.
+func TestFirewallRangeSets(t *testing.T) {
+	v4, v6 := firewallRangeSets([][2]string{
+		{"1.2.3.4", "1.2.3.5"},
+		{"::", "::ffff"},
+		{"0.0.0.0", ""},                      // unparseable end
+		{"not-an-address", "1.2.3.4"},        // unparseable start
+		{"1.2.3.5", "1.2.3.4"},               // inverted
+		{"::2", "::1"},                       // inverted, IPv6
+		{"0.0.0.0", "ffff::"},                // mixed families
+		{"::ffff:0.0.0.0", "::ffff:1.2.3.4"}, // IPv4-mapped is not the IPv6 internet
+	})
+	assert.Equal(t, []ipRange{{16909060, 16909061}}, v4)
+	require.Len(t, v6, 1)
+	assert.Equal(t, "0", v6[0].lo.String())
+	assert.Equal(t, "65535", v6[0].hi.String())
+}
+
+// TestIPv6RangesAdmitInternet mirrors the IPv4 union for the family Azure keeps
+// in a rule list of its own.
+func TestIPv6RangesAdmitInternet(t *testing.T) {
+	halves := [][2]string{
+		{"::", "7fff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"},
+		{"8000::", "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"},
+	}
+	t.Run("the two IPv6 halves together are open", func(t *testing.T) {
+		assert.True(t, databaseInternetReachable("Enabled", halves))
+	})
+	t.Run("a documentation prefix is not", func(t *testing.T) {
+		assert.False(t, databaseInternetReachable("Enabled", [][2]string{{"2001:db8::", "2001:db8::ffff"}}))
+	})
+	t.Run("quarters of the space sum to half", func(t *testing.T) {
+		assert.True(t, databaseInternetReachable("Enabled", [][2]string{
+			{"::", "3fff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"},
+			{"4000::", "7fff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"},
+		}))
+	})
+	t.Run("one quarter alone is not half", func(t *testing.T) {
+		assert.False(t, databaseInternetReachable("Enabled", [][2]string{
+			{"::", "3fff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"},
+		}))
+	})
+	t.Run("overlapping ranges are not double counted", func(t *testing.T) {
+		assert.False(t, databaseInternetReachable("Enabled", [][2]string{
+			{"::", "3fff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"},
+			{"::", "3fff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"},
+			{"1000::", "2fff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"},
+		}))
+	})
+}
+
+// TestRawOpenIngressRules pins the list form of the same rule. An empty
+// openIngressRules on a VM whose NICs could not be read says "nothing admits
+// internet traffic here", which is the claim a `.none(...)` check passes on.
+func TestRawOpenIngressRules(t *testing.T) {
+	rule := map[string]any{"name": "AllowSshFromAnywhere", "access": "Allow"}
+
+	t.Run("nothing evaluated and nothing found is null", func(t *testing.T) {
+		assert.Nil(t, rawOpenIngressRules([]any{}, false).Value)
+		assert.Nil(t, rawOpenIngressRules(nil, false).Value)
+	})
+	t.Run("rules found on a readable NIC survive an unreadable sibling", func(t *testing.T) {
+		assert.Equal(t, []any{rule}, rawOpenIngressRules([]any{rule}, false).Value)
+	})
+	t.Run("evaluated and empty is a real empty list", func(t *testing.T) {
+		assert.Equal(t, []any{}, rawOpenIngressRules([]any{}, true).Value)
+	})
+	t.Run("evaluated with rules is the list", func(t *testing.T) {
+		assert.Equal(t, []any{rule}, rawOpenIngressRules([]any{rule}, true).Value)
 	})
 }

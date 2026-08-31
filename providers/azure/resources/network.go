@@ -372,12 +372,24 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveNsgGroupsCached()
 // effectiveSecurityRules computes the merged NSG rules effective on this NIC
 // (NSG attached to NIC + ASG + NSG attached to subnet), flattened across the
 // effective-NSG chain. Lazily called per NIC.
+//
+// When Azure did not answer authoritatively -- a NIC on a deallocated VM, or a
+// caller without the effectiveNetworkSecurityGroups action -- this reports null
+// rather than an empty list. An empty list is a claim: it says this NIC has no
+// effective rules, so a check of the form
+// `.none(access == "Allow" && sourceAddressPrefix == "*")` passes over every
+// stopped machine and every subscription the scanner cannot read the rules in.
 func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveSecurityRules() ([]any, error) {
-	groups, _, err := a.effectiveNsgGroupsCached()
+	groups, evaluated, err := a.effectiveNsgGroupsCached()
 	if err != nil {
 		return nil, err
 	}
-	var res []any
+	if !evaluated {
+		a.EffectiveSecurityRules.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res := []any{}
 	for _, g := range groups {
 		for _, rule := range g.rules {
 			res = append(res, rule)

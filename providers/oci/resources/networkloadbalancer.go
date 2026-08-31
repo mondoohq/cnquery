@@ -57,7 +57,7 @@ func (o *mqlOciNetworkLoadBalancer) newNetworkLoadBalancers(nlbs []networkloadba
 		nlb := nlbs[i]
 
 		// Built by hand rather than marshalled from the SDK slice: isPublic is
-		// optional on the model, and exposure() reads the key back to decide
+		// optional on the model, and exposure() reads these addresses to decide
 		// internet reachability. A marshalled nil arrives as JSON null, which
 		// reads as "not public" and clears a genuinely internet-facing
 		// balancer. This mirrors the classic load balancer.
@@ -68,8 +68,8 @@ func (o *mqlOciNetworkLoadBalancer) newNetworkLoadBalancers(nlbs []networkloadba
 				"__id":      llx.StringData(stringValue(nlb.Id) + "/ipAddress/" + stringValue(ip.IpAddress)),
 				"ipAddress": llx.StringDataPtr(ip.IpAddress),
 				// Faithful to the SDK: null when the balancer does not report
-				// the flag. ociLoadBalancerHasPublicIp reads a null as public,
-				// matching the fallback the deprecated dict resolves eagerly.
+				// the flag. exposure() takes a null as public, since a balancer
+				// that is not private answers on a public address.
 				"isPublic":  llx.BoolDataPtr(ip.IsPublic),
 				"ipVersion": llx.StringData(string(ip.IpVersion)),
 			})
@@ -83,6 +83,9 @@ func (o *mqlOciNetworkLoadBalancer) newNetworkLoadBalancers(nlbs []networkloadba
 			addresses = append(addresses, mqlAddr)
 		}
 
+		// The deprecated dict has no way to carry the distinction the address
+		// resource keeps, so the fallback is resolved eagerly here: a missing
+		// flag on a non-private load balancer means public.
 		ipAddresses := make([]any, 0, len(nlb.IpAddresses))
 		for j := range nlb.IpAddresses {
 			ip := nlb.IpAddresses[j]

@@ -109,13 +109,24 @@ func TestOciInstanceSource(t *testing.T) {
 	})
 }
 
+// ociIngressValuesOf lifts a normalized rule into the values the open-ingress
+// predicate reads, so a test can go straight from an SDK rule to a verdict.
+func ociIngressValuesOf(r securityRule) ociIngressRuleValues {
+	return ociIngressRuleValues{
+		direction:  r.direction,
+		sourceType: r.sourceType,
+		source:     r.source,
+		protocol:   r.protocol,
+	}
+}
+
 func TestOciRuleValuesOpenIngressAcrossBothRuleSources(t *testing.T) {
 	// The bug this replaces: the exposure resource read its open rules out of
 	// two differently-shaped dicts. A network security group rule carried
 	// isStateless and a security list rule carried stateless, so a filter
 	// naming either one silently matched half the rows. Both sources now
 	// normalize onto securityRule before they reach MQL, so the predicate sees
-	// the same three values whichever layer wrote the rule.
+	// the same values whichever layer wrote the rule.
 	nsgRule := securityRuleFromNsg(core.SecurityRule{
 		Id:          strPtr("ocid1.securityrule.oc1..open"),
 		Direction:   core.SecurityRuleDirectionIngress,
@@ -131,9 +142,9 @@ func TestOciRuleValuesOpenIngressAcrossBothRuleSources(t *testing.T) {
 		IsStateless: boolPtr(true),
 	})
 
-	assert.True(t, ociRuleValuesOpenIngress(nsgRule.direction, nsgRule.sourceType, nsgRule.source),
+	assert.True(t, ociRuleValuesOpenIngress(ociIngressValuesOf(nsgRule)),
 		"a network security group rule open to any address must match")
-	assert.True(t, ociRuleValuesOpenIngress(listRule.direction, listRule.sourceType, listRule.source),
+	assert.True(t, ociRuleValuesOpenIngress(ociIngressValuesOf(listRule)),
 		"a security list rule open to any address must match")
 
 	// Both sources land the stateless flag on the same field, which is what
@@ -151,20 +162,20 @@ func TestOciRuleValuesOpenIngressAcrossBothRuleSources(t *testing.T) {
 			Source:     strPtr("10.0.0.0/16"),
 			SourceType: core.IngressSecurityRuleSourceTypeCidrBlock,
 		})
-		assert.False(t, ociRuleValuesOpenIngress(narrow.direction, narrow.sourceType, narrow.source))
+		assert.False(t, ociRuleValuesOpenIngress(ociIngressValuesOf(narrow)))
 
 		service := securityRuleFromIngress(core.IngressSecurityRule{
 			Source:     strPtr("all-services-in-oracle-services-network"),
 			SourceType: core.IngressSecurityRuleSourceTypeServiceCidrBlock,
 		})
-		assert.False(t, ociRuleValuesOpenIngress(service.direction, service.sourceType, service.source))
+		assert.False(t, ociRuleValuesOpenIngress(ociIngressValuesOf(service)))
 
 		egress := securityRuleFromNsg(core.SecurityRule{
 			Direction:       core.SecurityRuleDirectionEgress,
 			Destination:     strPtr("0.0.0.0/0"),
 			DestinationType: core.SecurityRuleDestinationTypeCidrBlock,
 		})
-		assert.False(t, ociRuleValuesOpenIngress(egress.direction, egress.sourceType, egress.source),
+		assert.False(t, ociRuleValuesOpenIngress(ociIngressValuesOf(egress)),
 			"an egress rule open to the world is not an ingress opening")
 	})
 
@@ -174,7 +185,7 @@ func TestOciRuleValuesOpenIngressAcrossBothRuleSources(t *testing.T) {
 			Source:     strPtr("::/0"),
 			SourceType: core.SecurityRuleSourceTypeCidrBlock,
 		})
-		assert.True(t, ociRuleValuesOpenIngress(v6.direction, v6.sourceType, v6.source))
+		assert.True(t, ociRuleValuesOpenIngress(ociIngressValuesOf(v6)))
 	})
 }
 

@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"strconv"
 	"strings"
 
 	"go.mondoo.com/mql/llx"
@@ -80,15 +81,7 @@ func firewallRuleOpenIngress(isAllow bool, direction string, disabled bool, sour
 	// A GCP VPC firewall rule is exclusively an allow rule or a deny rule. Only
 	// allow rules can open ingress; a broad-source INGRESS deny rule (a common
 	// "block all" pattern) must not be counted as reachable exposure.
-	if !isAllow || disabled || !strings.EqualFold(direction, "INGRESS") {
-		return false
-	}
-	for _, s := range sourceRanges {
-		if cidr, ok := s.(string); ok && (cidr == "0.0.0.0/0" || cidr == "::/0") {
-			return true
-		}
-	}
-	return false
+	return isAllow && ingressFromInternet(direction, disabled, sourceRanges)
 }
 
 // openIngressPolicyRulesForInstance returns the network firewall policy rules
@@ -285,6 +278,324 @@ func firewallTargetsInstance(targetTags, targetServiceAccounts []any, instanceTa
 	return false
 }
 
+// firewallProtocolAll is the wildcard protocol on a VPC firewall rule's layer 4
+// match. Compute spells it "all".
+const firewallProtocolAll = "all"
+
+// gcpProtocolAliases folds the spellings a layer 4 match may carry onto one
+// name, so an IANA protocol number and its name compare equal.
+var gcpProtocolAliases = map[string]string{
+	"1":       "icmp",
+	"6":       "tcp",
+	"17":      "udp",
+	"47":      "gre",
+	"50":      "esp",
+	"51":      "ah",
+	"58":      "ipv6-icmp",
+	"94":      "ipip",
+	"132":     "sctp",
+	"icmpv6":  "ipv6-icmp",
+	"icmp-v6": "ipv6-icmp",
+}
+
+// normalizeFirewallProtocol lowercases a protocol and resolves its numeric
+// aliases. An absent protocol reads as the wildcard, which is how Compute treats
+// a match that names none.
+func normalizeFirewallProtocol(protocol string) string {
+	p := strings.ToLower(strings.TrimSpace(protocol))
+	if p == "" {
+		return firewallProtocolAll
+	}
+	if name, ok := gcpProtocolAliases[p]; ok {
+		return name
+	}
+	return p
+}
+
+// firewallProtocolCovers reports whether a rule for protocol outer matches every
+// packet a rule for protocol inner matches. The wildcard covers everything;
+// otherwise the two protocols must be the same.
+func firewallProtocolCovers(outer, inner string) bool {
+	o, i := normalizeFirewallProtocol(outer), normalizeFirewallProtocol(inner)
+	return o == firewallProtocolAll || o == i
+}
+
+// firewallPortRange is an inclusive port span taken from one entry of a layer 4
+// match's port list. all is true when the match names no ports at all, which
+// Compute reads as every port of the protocol, and is also the only form
+// protocols with no port concept (icmp, esp, ah) take.
+type firewallPortRange struct {
+	from int64
+	to   int64
+	all  bool
+}
+
+// parseFirewallPortSpec parses a single port entry, which is either one port
+// ("22") or an inclusive range ("20-25"). Anything else returns false; a caller
+// that cannot read a port must not pretend to know which ports it covers.
+func parseFirewallPortSpec(spec string) (firewallPortRange, bool) {
+	s := strings.TrimSpace(spec)
+	if s == "" {
+		return firewallPortRange{}, false
+	}
+	low, high, isRange := strings.Cut(s, "-")
+	if !isRange {
+		high = low
+	}
+	from, err := strconv.ParseInt(strings.TrimSpace(low), 10, 64)
+	if err != nil {
+		return firewallPortRange{}, false
+	}
+	to, err := strconv.ParseInt(strings.TrimSpace(high), 10, 64)
+	if err != nil {
+		return firewallPortRange{}, false
+	}
+	if from > to {
+		from, to = to, from
+	}
+	return firewallPortRange{from: from, to: to}, true
+}
+
+// covers reports whether every port in other falls inside r.
+func (r firewallPortRange) covers(other firewallPortRange) bool {
+	if r.all {
+		return true
+	}
+	if other.all {
+		// other spans every port; a bounded range cannot contain it.
+		return false
+	}
+	return r.from <= other.from && r.to >= other.to
+}
+
+// firewallTraffic is one slice of the packets a firewall rule matches: an
+// address family, a protocol, and a port span. A rule fans out into one entry
+// per open source family and per port entry of its layer 4 match, because a
+// deny only silences an allow for the traffic both of them match.
+type firewallTraffic struct {
+	ipv6     bool
+	protocol string
+	ports    firewallPortRange
+}
+
+// covers reports whether t matches every packet other matches.
+//
+// The address family is part of that: an IPv4 rule and an IPv6 rule never match
+// the same packet, so a deny on 0.0.0.0/0 does not shadow an allow on ::/0.
+func (t firewallTraffic) covers(other firewallTraffic) bool {
+	if t.ipv6 != other.ipv6 {
+		return false
+	}
+	if !firewallProtocolCovers(t.protocol, other.protocol) {
+		return false
+	}
+	return t.ports.covers(other.ports)
+}
+
+// openSourceFamilies reports which address families a rule's source ranges open
+// to the whole internet.
+//
+// Only the two all-address blocks count. A set of narrower ranges that together
+// span the internet is not recognized, which leaves an allow rule counted as
+// open and a deny rule counted as not covering: both err toward reporting an
+// instance reachable.
+func openSourceFamilies(sourceRanges []any) (v4 bool, v6 bool) {
+	for _, s := range sourceRanges {
+		cidr, ok := s.(string)
+		if !ok {
+			continue
+		}
+		switch strings.TrimSpace(cidr) {
+		case "0.0.0.0/0":
+			v4 = true
+		case "::/0":
+			v6 = true
+		}
+	}
+	return v4, v6
+}
+
+// ingressFromInternet reports whether a firewall rule is an enabled INGRESS rule
+// whose source ranges admit any address, without regard to whether it allows or
+// denies that traffic.
+func ingressFromInternet(direction string, disabled bool, sourceRanges []any) bool {
+	if disabled || !strings.EqualFold(direction, "INGRESS") {
+		return false
+	}
+	v4, v6 := openSourceFamilies(sourceRanges)
+	return v4 || v6
+}
+
+// ingressTraffic expands a firewall rule into the internet-sourced traffic it
+// matches: the cross product of the open address families in its source ranges
+// and the port spans in its layer 4 match.
+//
+// widenUnreadable decides what an unreadable layer 4 match means, and the two
+// callers need opposite answers. On an allow rule the match is the evidence of
+// exposure, so an unreadable one widens to every protocol and port and the rule
+// stays in the exposure list. On a deny rule the match is the evidence that
+// traffic is blocked, so an unreadable one is dropped and the deny shadows
+// nothing. Both directions keep an input that could not be read from reporting
+// an instance as protected.
+func ingressTraffic(sourceRanges []any, protocols map[string]any, widenUnreadable bool) []firewallTraffic {
+	v4, v6 := openSourceFamilies(sourceRanges)
+	families := []bool{}
+	if v4 {
+		families = append(families, false)
+	}
+	if v6 {
+		families = append(families, true)
+	}
+	if len(families) == 0 {
+		return nil
+	}
+
+	res := []firewallTraffic{}
+	for _, ipv6 := range families {
+		if len(protocols) == 0 {
+			if widenUnreadable {
+				res = append(res, firewallTraffic{ipv6: ipv6, protocol: firewallProtocolAll, ports: firewallPortRange{all: true}})
+			}
+			continue
+		}
+		for protocol, raw := range protocols {
+			ports, ok := raw.([]any)
+			if !ok || len(ports) == 0 {
+				// A match that names no ports covers every port of the protocol.
+				res = append(res, firewallTraffic{ipv6: ipv6, protocol: protocol, ports: firewallPortRange{all: true}})
+				continue
+			}
+			parsed := 0
+			for _, p := range ports {
+				spec, ok := p.(string)
+				if !ok {
+					continue
+				}
+				span, ok := parseFirewallPortSpec(spec)
+				if !ok {
+					continue
+				}
+				parsed++
+				res = append(res, firewallTraffic{ipv6: ipv6, protocol: protocol, ports: span})
+			}
+			if parsed == 0 && widenUnreadable {
+				res = append(res, firewallTraffic{ipv6: ipv6, protocol: protocol, ports: firewallPortRange{all: true}})
+			}
+		}
+	}
+	return res
+}
+
+// allowIngressTraffic expands an allow rule's internet-sourced traffic.
+func allowIngressTraffic(sourceRanges []any, protocols map[string]any) []firewallTraffic {
+	return ingressTraffic(sourceRanges, protocols, true)
+}
+
+// denyIngressTraffic expands a deny rule's internet-sourced traffic.
+func denyIngressTraffic(sourceRanges []any, protocols map[string]any) []firewallTraffic {
+	return ingressTraffic(sourceRanges, protocols, false)
+}
+
+// firewallIngressRule is the shape of a VPC firewall rule needed to decide
+// whether it leaves an instance reachable from the internet.
+type firewallIngressRule struct {
+	priority              int64
+	direction             string
+	disabled              bool
+	allow                 bool
+	network               string
+	sourceRanges          []any
+	protocols             map[string]any
+	targetTags            []any
+	targetServiceAccounts []any
+}
+
+// appliesToInstance reports whether the rule is enforced on an instance: it sits
+// on one of the instance's networks and its targeting selects the instance.
+func (r firewallIngressRule) appliesToInstance(instanceNetworks, instanceTags, instanceServiceAccounts map[string]bool) bool {
+	if !instanceNetworks[networkNameFromUrl(r.network)] {
+		return false
+	}
+	return firewallTargetsInstance(r.targetTags, r.targetServiceAccounts, instanceTags, instanceServiceAccounts)
+}
+
+// trafficIsCovered reports whether a single entry of covering matches every
+// packet traffic matches.
+//
+// Coverage is asked of one entry at a time rather than of the union: several
+// entries that jointly span a range do not count as covering it. Missing that
+// case leaves an allow rule reported as open, which is the safe direction.
+func trafficIsCovered(covering []firewallTraffic, traffic firewallTraffic) bool {
+	for _, c := range covering {
+		if c.covers(traffic) {
+			return true
+		}
+	}
+	return false
+}
+
+// ingressAllowSurvives reports whether any traffic an allow rule admits is left
+// open by the deny rules that outrank it.
+//
+// Compute evaluates VPC firewall rules by priority, lowest number first, and the
+// highest-priority rule matching a packet decides it. A deny at the same number
+// also wins: "A rule with a deny action overrides another with an allow action
+// only if the two rules have the same priority."
+//
+// Shadowing is decided per packet, so partial overlap is not shadowing. A deny
+// on tcp/22 in front of an allow on tcp/1-1024 still leaves 1023 ports open, and
+// a deny that covers only the IPv4 half of a dual-family allow still leaves the
+// IPv6 half open.
+func ingressAllowSurvives(allow firewallIngressRule, allowTraffic []firewallTraffic, denies []firewallIngressRule) bool {
+	for _, traffic := range allowTraffic {
+		shadowed := false
+		for _, deny := range denies {
+			if deny.priority > allow.priority {
+				continue
+			}
+			if trafficIsCovered(denyIngressTraffic(deny.sourceRanges, deny.protocols), traffic) {
+				shadowed = true
+				break
+			}
+		}
+		if !shadowed {
+			return true
+		}
+	}
+	return false
+}
+
+// unshadowedOpenIngressFirewalls returns the indexes of the rules that leave an
+// instance reachable from the internet: enabled INGRESS allow rules with an
+// all-address source that apply to the instance and are not fully shadowed by a
+// deny rule of equal or lower priority number.
+func unshadowedOpenIngressFirewalls(rules []firewallIngressRule, instanceNetworks, instanceTags, instanceServiceAccounts map[string]bool) []int {
+	denies := []firewallIngressRule{}
+	for _, r := range rules {
+		if r.allow || !ingressFromInternet(r.direction, r.disabled, r.sourceRanges) {
+			continue
+		}
+		if !r.appliesToInstance(instanceNetworks, instanceTags, instanceServiceAccounts) {
+			continue
+		}
+		denies = append(denies, r)
+	}
+
+	open := []int{}
+	for i, r := range rules {
+		if !firewallRuleOpenIngress(r.allow, r.direction, r.disabled, r.sourceRanges) {
+			continue
+		}
+		if !r.appliesToInstance(instanceNetworks, instanceTags, instanceServiceAccounts) {
+			continue
+		}
+		if ingressAllowSurvives(r, allowIngressTraffic(r.sourceRanges, r.protocols), denies) {
+			open = append(open, i)
+		}
+	}
+	return open
+}
+
 func anyStringSet(items []any) map[string]bool {
 	set := map[string]bool{}
 	for _, i := range items {
@@ -361,7 +672,12 @@ func (g *mqlGcpProjectComputeServiceInstance) exposure() (*mqlGcpProjectComputeS
 		return nil, firewalls.Error
 	}
 
-	openFirewalls := []any{}
+	// Both the allow rules and the deny rules are collected, because a deny of
+	// equal or lower priority number silences an allow for the traffic the two
+	// share. Reading only the allow rules reports an instance behind a
+	// higher-precedence deny as reachable.
+	fws := []*mqlGcpProjectComputeServiceFirewall{}
+	rules := []firewallIngressRule{}
 	for _, f := range firewalls.Data {
 		fw, ok := f.(*mqlGcpProjectComputeServiceFirewall)
 		if !ok {
@@ -375,6 +691,10 @@ func (g *mqlGcpProjectComputeServiceInstance) exposure() (*mqlGcpProjectComputeS
 		if disabled.Error != nil {
 			return nil, disabled.Error
 		}
+		priority := fw.GetPriority()
+		if priority.Error != nil {
+			return nil, priority.Error
+		}
 		sourceRanges := fw.GetSourceRanges()
 		if sourceRanges.Error != nil {
 			return nil, sourceRanges.Error
@@ -383,12 +703,13 @@ func (g *mqlGcpProjectComputeServiceInstance) exposure() (*mqlGcpProjectComputeS
 		if allowed.Error != nil {
 			return nil, allowed.Error
 		}
-		isAllow := len(allowed.Data) > 0
-		if !firewallRuleOpenIngress(isAllow, direction.Data, disabled.Data, sourceRanges.Data) {
-			continue
+		allowedProtocols := fw.GetAllowedProtocols()
+		if allowedProtocols.Error != nil {
+			return nil, allowedProtocols.Error
 		}
-		if !instanceNetworks[networkNameFromUrl(fw.cacheNetworkUrl)] {
-			continue
+		deniedProtocols := fw.GetDeniedProtocols()
+		if deniedProtocols.Error != nil {
+			return nil, deniedProtocols.Error
 		}
 		targetTags := fw.GetTargetTags()
 		if targetTags.Error != nil {
@@ -398,9 +719,31 @@ func (g *mqlGcpProjectComputeServiceInstance) exposure() (*mqlGcpProjectComputeS
 		if targetServiceAccounts.Error != nil {
 			return nil, targetServiceAccounts.Error
 		}
-		if firewallTargetsInstance(targetTags.Data, targetServiceAccounts.Data, instanceTags, instanceServiceAccounts) {
-			openFirewalls = append(openFirewalls, fw)
+
+		// A rule carries either allow entries or deny entries, never both.
+		isAllow := len(allowed.Data) > 0
+		protocols := deniedProtocols.Data
+		if isAllow {
+			protocols = allowedProtocols.Data
 		}
+
+		fws = append(fws, fw)
+		rules = append(rules, firewallIngressRule{
+			priority:              priority.Data,
+			direction:             direction.Data,
+			disabled:              disabled.Data,
+			allow:                 isAllow,
+			network:               fw.cacheNetworkUrl,
+			sourceRanges:          sourceRanges.Data,
+			protocols:             protocols,
+			targetTags:            targetTags.Data,
+			targetServiceAccounts: targetServiceAccounts.Data,
+		})
+	}
+
+	openFirewalls := []any{}
+	for _, i := range unshadowedOpenIngressFirewalls(rules, instanceNetworks, instanceTags, instanceServiceAccounts) {
+		openFirewalls = append(openFirewalls, fws[i])
 	}
 
 	// Network firewall policies are the second, newer way a VPC admits traffic,

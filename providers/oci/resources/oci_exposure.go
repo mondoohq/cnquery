@@ -81,18 +81,21 @@ func ociAnyPublicIpv6(addresses []any) bool {
 }
 
 // ociNsgRuleOpensIngress reports whether an OCI network-security-group rule dict
-// is an INGRESS rule whose source is a CIDR block admitting any address. NSG and
-// SERVICE_CIDR_BLOCK sources reference internal networks, not an internet-wide
-// opening, so only CIDR_BLOCK sources can be public.
+// is an INGRESS rule admitting traffic to a service port from any address. The
+// dict is the deprecated shape of the same rule the security rule resource
+// carries, so it is decided by the same predicate to keep the two descriptions
+// of an opening from drifting apart.
 func ociNsgRuleOpensIngress(rule map[string]any) bool {
-	if direction, _ := rule["direction"].(string); !strings.EqualFold(direction, "INGRESS") {
-		return false
-	}
-	if st, _ := rule["sourceType"].(string); st != "" && !strings.EqualFold(st, "CIDR_BLOCK") {
-		return false
-	}
+	direction, _ := rule["direction"].(string)
+	sourceType, _ := rule["sourceType"].(string)
 	source, _ := rule["source"].(string)
-	return ociCidrOpensInternet(source)
+	protocol, _ := rule["protocol"].(string)
+	return ociRuleValuesOpenIngress(ociIngressRuleValues{
+		direction:  direction,
+		sourceType: sourceType,
+		source:     source,
+		protocol:   protocol,
+	})
 }
 
 // ociSecurityRuleOpensIngress reports whether a security rule resource is an
@@ -118,20 +121,91 @@ func ociSecurityRuleOpensIngress(rule *mqlOciNetworkSecurityRule) (bool, error) 
 	if source.Error != nil {
 		return false, source.Error
 	}
-	return ociRuleValuesOpenIngress(direction.Data, sourceType.Data, source.Data), nil
+	protocol := rule.GetProtocol()
+	if protocol.Error != nil {
+		return false, protocol.Error
+	}
+	return ociRuleValuesOpenIngress(ociIngressRuleValues{
+		direction:  direction.Data,
+		sourceType: sourceType.Data,
+		source:     source.Data,
+		protocol:   protocol.Data,
+	}), nil
 }
 
-// ociRuleValuesOpenIngress is the predicate itself, over the three values that
-// decide it. Both rule sources normalize onto securityRule before they reach
-// MQL, so the same three values arrive whichever layer wrote the rule.
-func ociRuleValuesOpenIngress(direction, sourceType, source string) bool {
-	if !strings.EqualFold(direction, securityRuleIngress) {
+// ociIngressRuleValues is the set of rule values the open-ingress predicate
+// decides on. Both rule sources normalize onto securityRule before they reach
+// MQL, so the same values arrive whichever layer wrote the rule. They are named
+// rather than passed positionally because four strings in a row are four
+// chances to swap two of them without the compiler noticing.
+type ociIngressRuleValues struct {
+	// direction is INGRESS or EGRESS. A security list ingress rule states none
+	// of its own, so its adapter supplies INGRESS.
+	direction string
+	// sourceType is CIDR_BLOCK, SERVICE_CIDR_BLOCK or NETWORK_SECURITY_GROUP,
+	// or empty when the rule does not state one.
+	sourceType string
+	// source is the CIDR block, service label or group OCID the rule admits.
+	source string
+	// protocol is the IANA protocol number as a string, or "all".
+	protocol string
+}
+
+// OCI states a security rule's transport protocol as the IANA protocol number
+// in a string ("6" for TCP, "17" for UDP), or "all" for every protocol. Only the
+// two protocols carrying no ports are named: they are the only values the
+// open-ingress predicate has to tell apart from every other.
+const (
+	ociProtocolICMP   = "1"
+	ociProtocolICMPv6 = "58"
+)
+
+// ociProtocolOpensServicePort reports whether a rule's protocol admits traffic
+// to a service port, which is what makes an ingress opening something a host
+// can actually be reached on.
+//
+// OCI states the protocol as the IANA protocol number in a string ("6" for TCP,
+// "17" for UDP, "1" for ICMP, "58" for ICMPv6), or "all" for every protocol.
+// ICMP and ICMPv6 carry no ports. That matters because the default VCN security
+// list ships two 0.0.0.0/0 ingress rules, TCP 22 and ICMP type 3 code 4 for Path
+// MTU Discovery, and Oracle documents keeping the ICMP one even on hardened
+// subnets. Counting ICMP as an opening left a subnet with SSH removed reading
+// exactly like a subnet with SSH open to the world, so the field could not be
+// used to find hosts reachable on a service port.
+//
+// Every other value opens a port, including one that is empty or not a protocol
+// number at all: a protocol that could not be read is an unknown, and an unknown
+// must fail toward reachable rather than report a resource as protected.
+func ociProtocolOpensServicePort(protocol string) bool {
+	switch strings.ToLower(strings.TrimSpace(protocol)) {
+	case ociProtocolICMP, ociProtocolICMPv6:
+		return false
+	default:
+		return true
+	}
+}
+
+// ociRuleValuesOpenIngress is the predicate itself. A rule is an internet-wide
+// opening when it is inbound, its source is a CIDR block admitting any address,
+// and its protocol reaches a service port. NSG and SERVICE_CIDR_BLOCK sources
+// reference internal networks rather than an internet-wide opening, so only a
+// CIDR_BLOCK (or unset) source can be public.
+//
+// The destination port range is deliberately not consulted to close a rule. A
+// rule that states no range covers every port, which is wider than any explicit
+// range and not narrower, and an explicit range still leaves ports reachable.
+// Reading an absent range as "no ports" would clear exactly the widest rules.
+func ociRuleValuesOpenIngress(rule ociIngressRuleValues) bool {
+	if !strings.EqualFold(rule.direction, securityRuleIngress) {
 		return false
 	}
-	if sourceType != "" && !strings.EqualFold(sourceType, "CIDR_BLOCK") {
+	if rule.sourceType != "" && !strings.EqualFold(rule.sourceType, "CIDR_BLOCK") {
 		return false
 	}
-	return ociCidrOpensInternet(source)
+	if !ociCidrOpensInternet(rule.source) {
+		return false
+	}
+	return ociProtocolOpensServicePort(rule.protocol)
 }
 
 // ociOpenIngressRules filters a list of security rule resources down to the
@@ -224,16 +298,21 @@ func ociNsgIngressVerdict(nsgRuleSets [][]map[string]any) ([]any, bool) {
 }
 
 // ociSecurityListRuleOpensIngress reports whether a VCN security-list ingress
-// rule dict admits traffic from any address. Security-list ingress rules are
-// inherently inbound, so they carry no direction field. NSG and
-// SERVICE_CIDR_BLOCK sources reference internal networks, so only a CIDR_BLOCK
-// (or unset) source can be public.
+// rule dict admits traffic to a service port from any address. Security-list
+// ingress rules are inherently inbound, so they carry no direction field and
+// the direction is supplied here. The dict is the deprecated shape of the same
+// rule the security rule resource carries, so it is decided by the same
+// predicate.
 func ociSecurityListRuleOpensIngress(rule map[string]any) bool {
-	if st, _ := rule["sourceType"].(string); st != "" && !strings.EqualFold(st, "CIDR_BLOCK") {
-		return false
-	}
+	sourceType, _ := rule["sourceType"].(string)
 	source, _ := rule["source"].(string)
-	return ociCidrOpensInternet(source)
+	protocol, _ := rule["protocol"].(string)
+	return ociRuleValuesOpenIngress(ociIngressRuleValues{
+		direction:  securityRuleIngress,
+		sourceType: sourceType,
+		source:     source,
+		protocol:   protocol,
+	})
 }
 
 // ociCollectOpenSecurityListRules inspects the ingress rules of the security
@@ -415,8 +494,10 @@ type ociLbAddress interface {
 	GetIsPublic() *plugin.TValue[bool]
 }
 
-// ociLoadBalancerHasPublicIp reports whether any of a load balancer's IP
-// address entries is internet-facing.
+// ociLoadBalancerHasPublicIp reports whether any of a load balancer's addresses
+// is internet-facing. It takes the address resources, which is what carries the
+// isPublic flag; the deprecated ipAddresses dicts implement no accessor, so
+// every one of them would be skipped.
 //
 // A private balancer short-circuits: its addresses are internal whatever the
 // individual flags say. isPublic is optional on both load balancer SDK models,
@@ -424,18 +505,27 @@ type ociLbAddress interface {
 // private flag, for the same reason ociIpIsPublic does: absent does not mean
 // private, and defaulting it to false clears a genuinely internet-facing
 // balancer.
-func ociLoadBalancerHasPublicIp(ips []any, isPrivate bool) bool {
+//
+// A list with nothing readable in it is the same unknown as an absent flag, so
+// on a balancer that is not private it reports public. A balancer that is not
+// private answers on a public address by definition, and an address list that
+// could not be read must not be the reason it is reported as protected.
+func ociLoadBalancerHasPublicIp(addresses []any, isPrivate bool) bool {
 	if isPrivate {
 		return false
 	}
-	for _, e := range ips {
+	read := 0
+	for _, e := range addresses {
 		addr, ok := e.(ociLbAddress)
 		if !ok {
 			continue
 		}
+		read++
 		pub := addr.GetIsPublic()
 		if pub.Error != nil {
-			continue
+			// The flag could not be read. Not private, so the address counts as
+			// public rather than silently clearing the balancer.
+			return true
 		}
 		if pub.IsNull() {
 			// The balancer did not report the flag. Not private, so treat the
@@ -446,7 +536,7 @@ func ociLoadBalancerHasPublicIp(ips []any, isPrivate bool) bool {
 			return true
 		}
 	}
-	return false
+	return read == 0
 }
 
 // ociWhitelistOpensInternet reports whether an Autonomous Database access-control
@@ -702,11 +792,14 @@ func (l *mqlOciLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposure, err
 		return nil, isPrivate.Error
 	}
 
-	ips := l.GetIpAddresses()
-	if ips.Error != nil {
-		return nil, ips.Error
+	// The address resources, not the deprecated ipAddresses dicts: a dict is a
+	// map with no isPublic accessor on it, so reading the verdict from that
+	// field skipped every entry and made hasPublicIp permanently false.
+	addresses := l.GetAddresses()
+	if addresses.Error != nil {
+		return nil, addresses.Error
 	}
-	hasPublicIp := ociLoadBalancerHasPublicIp(ips.Data, isPrivate.Data)
+	hasPublicIp := ociLoadBalancerHasPublicIp(addresses.Data, isPrivate.Data)
 
 	listeners := l.GetListeners()
 	if listeners.Error != nil {
@@ -820,11 +913,13 @@ func (n *mqlOciNetworkLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposu
 		return nil, isPrivate.Error
 	}
 
-	ips := n.GetIpAddresses()
-	if ips.Error != nil {
-		return nil, ips.Error
+	// The address resources, for the same reason as the classic load balancer:
+	// the deprecated ipAddresses dicts carry no isPublic accessor.
+	addresses := n.GetAddresses()
+	if addresses.Error != nil {
+		return nil, addresses.Error
 	}
-	hasPublicIp := ociLoadBalancerHasPublicIp(ips.Data, isPrivate.Data)
+	hasPublicIp := ociLoadBalancerHasPublicIp(addresses.Data, isPrivate.Data)
 
 	listeners := n.GetListeners()
 	if listeners.Error != nil {

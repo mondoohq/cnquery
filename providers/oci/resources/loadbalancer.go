@@ -73,9 +73,10 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 						"__id":      llx.StringData(stringValue(lb.Id) + "/ipAddress/" + stringValue(ip.IpAddress)),
 						"ipAddress": llx.StringDataPtr(ip.IpAddress),
 						// Faithful to the SDK: null when the balancer does not
-						// report the flag. ociLoadBalancerHasPublicIp reads a
-						// null as public, matching the fallback the deprecated
-						// dict resolves eagerly.
+						// report the flag. exposure() reads these addresses to
+						// decide internet reachability and takes a null as
+						// public, since a balancer that is not private answers
+						// on a public address.
 						"isPublic": llx.BoolDataPtr(ip.IsPublic),
 					})
 					if err != nil {
@@ -90,11 +91,12 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 
 				ipAddresses := make([]any, 0, len(lb.IpAddresses))
 				for _, ip := range lb.IpAddresses {
-					// isPublic is optional on the SDK model, and exposure()
-					// reads this key back to decide internet reachability. A
-					// missing flag on a non-private load balancer means public,
-					// so falling back to false would clear a genuinely
-					// internet-facing balancer.
+					// isPublic is optional on the SDK model. This deprecated
+					// dict has no way to carry the distinction the address
+					// resource keeps, so the fallback is resolved eagerly here:
+					// a missing flag on a non-private load balancer means
+					// public, and falling back to false would describe a
+					// genuinely internet-facing balancer as internal.
 					entry := map[string]any{
 						"ipAddress": stringValue(ip.IpAddress),
 						"isPublic":  ociIpIsPublic(ip.IsPublic, boolValue(lb.IsPrivate)),
