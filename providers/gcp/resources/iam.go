@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -840,12 +841,18 @@ func (g *mqlGcpProjectIamService) denyPolicies() ([]any, error) {
 			rules = append(rules, ruleDict)
 		}
 
+		denyRules, err := newMqlIamDenyRules(g.MqlRuntime, p.Name, p.Rules)
+		if err != nil {
+			return nil, err
+		}
+
 		mqlPolicy, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.denyPolicy", map[string]*llx.RawData{
 			"name":        llx.StringData(p.Name),
 			"uid":         llx.StringData(p.Uid),
 			"displayName": llx.StringData(p.DisplayName),
 			"annotations": llx.MapData(convert.MapToInterfaceMap(p.Annotations), types.String),
 			"rules":       llx.ArrayData(rules, types.Dict),
+			"denyRules":   llx.ArrayData(denyRules, types.Resource("gcp.project.iamService.denyPolicy.denyRule")),
 			"etag":        llx.StringData(p.Etag),
 			"created":     llx.TimeDataPtr(timestampAsTimePtr(p.CreateTime)),
 			"updated":     llx.TimeDataPtr(timestampAsTimePtr(p.UpdateTime)),
@@ -933,4 +940,50 @@ func (g *mqlGcpProjectIamServiceServiceAccount) canBeImpersonated() (bool, error
 // isEnabled reports whether the API is enabled on this project.
 func (g *mqlGcpProjectIamService) isEnabled() (bool, error) {
 	return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_iam)
+}
+
+// newMqlIamDenyRules promotes the rules of a deny policy.
+//
+// A deny rule overrides every allow policy that would otherwise grant the
+// permission, so what a principal can actually do is only knowable by reading
+// them. PolicyRule carries its rule kind as a oneof and DenyRule is the only
+// arm the API populates today; a rule of any other kind is skipped rather than
+// published as a deny rule that denies nothing.
+func newMqlIamDenyRules(runtime *plugin.Runtime, policyName string, rules []*iamv2pb.PolicyRule) ([]any, error) {
+	res := make([]any, 0, len(rules))
+	for i, r := range rules {
+		if r == nil {
+			continue
+		}
+		denyRule := r.GetDenyRule()
+		if denyRule == nil {
+			continue
+		}
+
+		var expression, title, description, location string
+		if cond := denyRule.DenialCondition; cond != nil {
+			expression = cond.Expression
+			title = cond.Title
+			description = cond.Description
+			location = cond.Location
+		}
+
+		mqlRule, err := CreateResource(runtime, "gcp.project.iamService.denyPolicy.denyRule", map[string]*llx.RawData{
+			"__id":                       llx.StringData(policyName + "/rule/" + strconv.Itoa(i)),
+			"description":                llx.StringData(r.Description),
+			"deniedPrincipals":           llx.ArrayData(convert.SliceAnyToInterface(denyRule.DeniedPrincipals), types.String),
+			"exceptionPrincipals":        llx.ArrayData(convert.SliceAnyToInterface(denyRule.ExceptionPrincipals), types.String),
+			"deniedPermissions":          llx.ArrayData(convert.SliceAnyToInterface(denyRule.DeniedPermissions), types.String),
+			"exceptionPermissions":       llx.ArrayData(convert.SliceAnyToInterface(denyRule.ExceptionPermissions), types.String),
+			"denialConditionExpression":  llx.StringData(expression),
+			"denialConditionTitle":       llx.StringData(title),
+			"denialConditionDescription": llx.StringData(description),
+			"denialConditionLocation":    llx.StringData(location),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRule)
+	}
+	return res, nil
 }

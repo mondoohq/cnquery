@@ -1837,23 +1837,30 @@ gcp.project.computeService.instance @defaults("name id") {
   satisfiesPzs bool
   // Workload identity configuration for the instance
   workloadIdentityConfig dict
-  // Customer-supplied or KMS-backed encryption key for instance suspend state and Local SSDs
+  // Instance encryption key dict
   //
-  // The key material that protects suspended data and Local
-  // SSD storage attached to the instance: `kmsKeyName` for
-  // customer-managed KMS keys, `kmsKeyServiceAccount` for the service
-  // account used against the KMS key, `rawKey` / `rsaEncryptedKey` for
-  // customer-supplied encryption keys (CSEK), and `sha256` of the
-  // supplied key. Null when the instance has no instance-level
-  // encryption key configured (Google-managed encryption).
-  instanceEncryptionKey dict
+  // Deprecated in favor of instanceEncryption. Carries `kmsKeyName`,
+  // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and `sha256`.
+  instanceEncryptionKey @maturity("deprecated") dict
+  // Encryption key protecting the instance suspend state and its Local SSDs
+  //
+  // Null when the instance has no instance-level encryption key configured,
+  // which means Google-managed encryption. Distinguishes a customer-managed
+  // key, which resolves through `kmsKey`, from a customer-supplied key, which
+  // reports only `sha256`.
+  instanceEncryption gcp.project.computeService.customerEncryptionKey
+  // Source machine image encryption key dict
+  //
+  // Deprecated in favor of sourceMachineImageEncryption. Carries
+  // `kmsKeyName`, `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and
+  // `sha256`.
+  sourceMachineImageEncryptionKey @maturity("deprecated") dict
   // Encryption key used to decrypt the source machine image when the instance was created from one
   //
-  // Same shape as `instanceEncryptionKey`: `kmsKeyName`,
-  // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, `sha256`.
-  // Useful for tracking encryption lineage from the source machine
-  // image into the instance.
-  sourceMachineImageEncryptionKey dict
+  // Tracks encryption lineage from the source machine image into the
+  // instance. Null when the instance was not created from an encrypted
+  // machine image.
+  sourceMachineImageEncryption gcp.project.computeService.customerEncryptionKey
   // Advanced machine features controlling BIOS-level behavior
   //
   // Surfaces options usually configured in a BIOS:
@@ -1861,7 +1868,8 @@ gcp.project.computeService.instance @defaults("name id") {
   // `threadsPerCore` (set to 1 to disable SMT), `visibleCoreCount`
   // (number of physical cores exposed), and
   // `performanceMonitoringUnit` (one of ARCHITECTURAL, ENHANCED,
-  // STANDARD, or PERFORMANCE_MONITORING_UNIT_UNSPECIFIED).
+  // STANDARD, or PERFORMANCE_MONITORING_UNIT_UNSPECIFIED), and `turboMode`
+  // (ALL_CORE_MAX or empty when the default turbo behavior applies).
   advancedMachineFeatures dict
   // VM Manager OS inventory of installed packages and operating system details
   inventory() gcp.project.computeService.instance.osInventory
@@ -1930,9 +1938,9 @@ private gcp.project.computeService.instance.exposure @defaults("internetReachabl
 //
 // Single network interface (NIC) attached to a Compute Engine
 // instance. Surfaces the internal `networkIP`, the `network` and `subnetwork`
-// the interface is attached to, the `accessConfigs` that assign external
-// (public) IPs, the `aliasIpRanges` used for alias IP / GKE Pod ranges, and the
-// IP `stackType` and `nicType`.
+// the interface is attached to, the `externalIpConfigs` that assign external
+// (public) IPv4 and IPv6 addresses, the `aliasIpRanges` used for alias IP and
+// GKE Pod ranges, and the IP `stackType` and `nicType`.
 private gcp.project.computeService.instance.networkInterface @defaults("name networkIP") {
   // Name of the network interface (nic0, nic1, ...)
   name string
@@ -1950,12 +1958,62 @@ private gcp.project.computeService.instance.networkInterface @defaults("name net
   network() gcp.project.computeService.network
   // Subnetwork the interface is attached to
   subnetwork() gcp.project.computeService.subnetwork
-  // External IP configurations for the interface; each entry carries name, natIP, type, networkTier, and public-PTR settings
-  accessConfigs []dict
-  // External IPv6 configurations for the interface
-  ipv6AccessConfigs []dict
+  // External IPv4 configuration dicts
+  //
+  // Deprecated in favor of externalIpConfigs. Each entry carries `name`,
+  // `natIP`, `type`, `networkTier`, `setPublicPtr`, `publicPtrDomainName`,
+  // and `securityPolicy`.
+  accessConfigs @maturity("deprecated") []dict
+  // External IPv6 configuration dicts
+  //
+  // Deprecated in favor of externalIpConfigs. Each entry carries `name`,
+  // `externalIpv6`, `externalIpv6PrefixLength`, `type`, `networkTier`,
+  // `setPublicPtr`, `publicPtrDomainName`, and `securityPolicy`.
+  ipv6AccessConfigs @maturity("deprecated") []dict
+  // External IP configurations attached to the interface, IPv4 and IPv6 together
+  //
+  // One entry per external address the interface carries. A non-empty list is
+  // what makes the VM reachable from outside the VPC, so it is the list an
+  // exposure audit reads. The `type` field separates the IPv4 one-to-one NAT
+  // entries from the IPv6 ones, and `securityPolicy` links the Cloud Armor
+  // policy filtering traffic to the address.
+  externalIpConfigs() []gcp.project.computeService.instance.networkInterface.accessConfig
   // Alias IP ranges assigned to the interface; each entry carries ipCidrRange and subnetworkRangeName
   aliasIpRanges []dict
+}
+
+// External IP configuration on a Compute Engine network interface
+//
+// A single external address assigned to a network interface, IPv4 or IPv6.
+// Its presence is what puts the VM on the internet, so it is the record an
+// exposure audit reads: `natIP` is the external IPv4 address,
+// `externalIpv6` the external IPv6 address, `networkTier` whether the
+// address is served over the premium or standard network, and
+// `securityPolicy` the Cloud Armor policy filtering traffic to it.
+// `setPublicPtr` and `publicPtrDomainName` record whether a reverse DNS
+// record publishes the address under a domain the project controls.
+private gcp.project.computeService.instance.networkInterface.accessConfig @defaults("name natIP type") {
+  // Name of the configuration, for example "External NAT"
+  name string
+  // Configuration type
+  //
+  // ONE_TO_ONE_NAT for an external IPv4 address, DIRECT_IPV6 for an external
+  // IPv6 address.
+  type string
+  // External IPv4 address assigned to the interface, empty for an IPv6 configuration
+  natIP string
+  // External IPv6 address assigned to the interface, empty for an IPv4 configuration
+  externalIpv6 string
+  // Network service tier the external address is served over
+  //
+  // One of PREMIUM, STANDARD, or FIXED_STANDARD.
+  networkTier string
+  // Whether a reverse DNS (PTR) record is published for the external address
+  setPublicPtr bool
+  // Domain name the reverse DNS record resolves to, empty when no PTR record is published
+  publicPtrDomainName string
+  // Cloud Armor security policy filtering traffic to the external address
+  securityPolicy() gcp.project.computeService.securityPolicy
 }
 
 // VM Manager OS inventory for a Compute Engine instance
@@ -2108,6 +2166,25 @@ private gcp.project.computeService.serviceaccount @defaults("email") {
   scopes []string
 }
 
+// Customer encryption key protecting a Compute Engine resource
+//
+// The key that protects a disk, snapshot, image, or instance beyond the
+// default Google-managed encryption. `kmsKey` resolves the customer-managed
+// KMS key when one is configured, letting an audit read the key rotation
+// period, protection level, and IAM policy from the resource it protects.
+// `kmsKeyServiceAccount` names the identity Compute Engine authenticates as
+// against that key, and `sha256` is the hash of the supplied key. Null on a
+// resource that uses Google-managed encryption. The raw customer-supplied
+// key material is deliberately not exposed.
+private gcp.project.computeService.customerEncryptionKey @defaults("kmsKeyServiceAccount sha256") {
+  // Customer-managed KMS key protecting the resource, null for a customer-supplied key
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Service account Compute Engine authenticates as against the KMS key, empty when the Compute Engine service agent is used
+  kmsKeyServiceAccount string
+  // SHA-256 hash of the encryption key, base64 encoded
+  sha256 string
+}
+
 // Google Cloud (GCP) Compute Engine persistent disk
 //
 // Compute Engine persistent disk and its security
@@ -2153,24 +2230,39 @@ private gcp.project.computeService.disk @defaults("name") {
   zone gcp.project.computeService.zone
   // Creation timestamp
   created time
-  // Disk encryption key
-  diskEncryptionKey dict
+  // Disk encryption key dict
+  //
+  // Deprecated in favor of diskEncryption. Carries `kmsKeyName`,
+  // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and `sha256`.
+  diskEncryptionKey @maturity("deprecated") dict
   // Customer-managed KMS key used for disk encryption (null when Google-managed or customer-supplied)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Encryption key protecting the disk
+  //
+  // Null when the disk uses Google-managed encryption. Distinguishes a
+  // customer-managed key, which resolves through `kmsKey`, from a
+  // customer-supplied key, which reports only `sha256`.
+  diskEncryption gcp.project.computeService.customerEncryptionKey
+  // Source image encryption key dict
+  //
+  // Deprecated in favor of sourceImageEncryption. Carries `kmsKeyName`,
+  // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and `sha256`.
+  sourceImageEncryptionKey @maturity("deprecated") dict
   // Encryption key used to decrypt the source image when the disk was created from one
   //
-  // Same shape as `diskEncryptionKey`: `kmsKeyName`,
-  // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, `sha256`.
-  // Useful for auditing encryption lineage from the source image into
-  // the disk.
-  sourceImageEncryptionKey dict
+  // Tracks encryption lineage from the source image into the disk. Null when
+  // the disk was not created from an encrypted image.
+  sourceImageEncryption gcp.project.computeService.customerEncryptionKey
+  // Source snapshot encryption key dict
+  //
+  // Deprecated in favor of sourceSnapshotEncryption. Carries `kmsKeyName`,
+  // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and `sha256`.
+  sourceSnapshotEncryptionKey @maturity("deprecated") dict
   // Encryption key used to decrypt the source snapshot when the disk was created from one
   //
-  // Same shape as `diskEncryptionKey`: `kmsKeyName`,
-  // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, `sha256`.
-  // Useful for auditing encryption lineage from the source snapshot
-  // into the disk.
-  sourceSnapshotEncryptionKey dict
+  // Tracks encryption lineage from the source snapshot into the disk. Null
+  // when the disk was not created from an encrypted snapshot.
+  sourceSnapshotEncryption gcp.project.computeService.customerEncryptionKey
   // Primary of the async replication pair when this disk is a secondary
   //
   // Surfaces the replication primary for an asynchronously replicated
@@ -2267,11 +2359,17 @@ private gcp.project.computeService.attachedDisk {
   source() gcp.project.computeService.disk
   // Disk type
   type string
-  // Encryption key protecting this attached disk
+  // Attached disk encryption key dict
   //
-  // Distinguishes customer-managed (kmsKeyName), customer-supplied
-  // (rawKey / rsaEncryptedKey), and Google-managed (empty) encryption.
-  diskEncryptionKey dict
+  // Deprecated in favor of diskEncryption. Carries `kmsKeyName`,
+  // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and `sha256`.
+  diskEncryptionKey @maturity("deprecated") dict
+  // Encryption key protecting the attached disk
+  //
+  // Null when the disk uses Google-managed encryption. Distinguishes a
+  // customer-managed key, which resolves through `kmsKey`, from a
+  // customer-supplied key, which reports only `sha256`.
+  diskEncryption gcp.project.computeService.customerEncryptionKey
 }
 
 // Google Cloud (GCP) Compute Engine persistent disk snapshot
@@ -2338,11 +2436,17 @@ private gcp.project.computeService.snapshot @defaults("name") {
   sourceSnapshotSchedulePolicyId string
   // Customer-managed KMS key used for snapshot encryption (null when Google-managed or customer-supplied)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Snapshot encryption key dict
+  //
+  // Deprecated in favor of snapshotEncryption. Carries `kmsKeyName`,
+  // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and `sha256`.
+  snapshotEncryptionKey @maturity("deprecated") dict
   // Encryption key protecting the snapshot
   //
-  // Distinguishes customer-managed (kmsKeyName), customer-supplied
-  // (rawKey / rsaEncryptedKey), and Google-managed (empty) encryption.
-  snapshotEncryptionKey dict
+  // Null when the snapshot uses Google-managed encryption. Distinguishes a
+  // customer-managed key, which resolves through `kmsKey`, from a
+  // customer-supplied key, which reports only `sha256`.
+  snapshotEncryption gcp.project.computeService.customerEncryptionKey
   // IAM policy bindings for this snapshot (includes allUsers / allAuthenticatedUsers grants when the snapshot is publicly shared)
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the snapshot's IAM policy grants any role to allUsers or allAuthenticatedUsers
@@ -2406,11 +2510,17 @@ private gcp.project.computeService.image @defaults("id name") {
   sourceSnapshot() gcp.project.computeService.snapshot
   // Customer-managed KMS key used for image encryption (null when Google-managed or customer-supplied)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Image encryption key dict
+  //
+  // Deprecated in favor of imageEncryption. Carries `kmsKeyName`,
+  // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and `sha256`.
+  imageEncryptionKey @maturity("deprecated") dict
   // Encryption key protecting the image
   //
-  // Distinguishes customer-managed (kmsKeyName), customer-supplied
-  // (rawKey / rsaEncryptedKey), and Google-managed (empty) encryption.
-  imageEncryptionKey dict
+  // Null when the image uses Google-managed encryption. Distinguishes a
+  // customer-managed key, which resolves through `kmsKey`, from a
+  // customer-supplied key, which reports only `sha256`.
+  imageEncryption gcp.project.computeService.customerEncryptionKey
   // Secure Boot trust anchors (PK, KEKs, db, dbx) that VMs booted from this image will trust
   shieldedInstanceInitialState dict
   // IAM policy bindings for this image (includes allUsers / allAuthenticatedUsers grants when the image is publicly shared)
@@ -2773,7 +2883,13 @@ private gcp.project.computeService.backendService @defaults("name") {
   localityLbPolicies []dict
   // Load balancing algorithm used within the scope of the locality
   localityLbPolicy string
-  // Log configuration
+  // Load-balancer request log configuration
+  //
+  // Carries `enable`, `sampleRate` (the fraction of requests logged, 0.0 to
+  // 1.0), `optionalMode` (EXCLUDE_ALL_OPTIONAL, INCLUDE_ALL_OPTIONAL, or
+  // CUSTOM), the `optionalFields` logged under CUSTOM, and the
+  // `loggingHttpRequestHeaders` and `loggingHttpResponseHeaders` header
+  // names copied into the log entries.
   logConfig dict
   // Default maximum duration (timeout) for streams to this service
   maxStreamDuration time
@@ -3024,10 +3140,32 @@ private gcp.project.storageService.bucket @defaults("id") {
   objectRetentionMode string
   // Automatic storage class management (enabled, toggleTime, terminalStorageClass)
   autoclass dict
-  // Bucket-level access control list (legacy, only populated when uniform bucket-level access is disabled)
-  acl() []dict
-  // Default access control list applied to newly-created objects (legacy, only populated when uniform bucket-level access is disabled)
-  defaultObjectAcl() []dict
+  // Bucket-level access control list dicts
+  //
+  // Deprecated in favor of accessControl. Each entry carries `entity`,
+  // `entityId`, `role`, `email`, `domain`, `projectTeam`, `bucket`, `id`,
+  // `etag`, `kind`, and `selfLink`.
+  acl() @maturity("deprecated") []dict
+  // Default object access control list dicts
+  //
+  // Deprecated in favor of defaultObjectAccessControl. Each entry carries the
+  // same keys as `acl` plus `object` and `generation`.
+  defaultObjectAcl() @maturity("deprecated") []dict
+  // Legacy access control list granting access to the bucket itself
+  //
+  // Each entry names one grantee and the role it holds. An entity of
+  // `allUsers` or `allAuthenticatedUsers` is a public grant. Null, not empty,
+  // when uniform bucket-level access is enabled: the bucket then has no
+  // legacy ACL at all, which is a different fact from an ACL that exists and
+  // grants nothing.
+  accessControl() []gcp.project.storageService.bucket.accessControl
+  // Legacy access control list applied to newly created objects
+  //
+  // The grants every object written to the bucket receives unless the write
+  // overrides them, so a public entity here makes new objects public without
+  // touching the bucket ACL. Null, not empty, when uniform bucket-level
+  // access is enabled.
+  defaultObjectAccessControl() []gcp.project.storageService.bucket.accessControl
   // Whether the bucket is publicly accessible via any mechanism
   //
   // Reflects IAM policy, bucket ACL, or default object ACL. Returns false when iamConfiguration.publicAccessPrevention is "enforced".
@@ -3044,6 +3182,11 @@ private gcp.project.storageService.bucket @defaults("id") {
   // `Enabled`. `publicNetworkSource` lists allowed public CIDR ranges;
   // `vpcNetworkSources` lists allowed VPC networks with their CIDR ranges.
   ipFilter dict
+  // Networks permitted to reach the bucket and its objects
+  //
+  // Null when the bucket has no IP filter configured, which leaves it
+  // reachable from anywhere its IAM policy allows.
+  ipFilterConfig gcp.project.storageService.bucket.ipFilterConfig
   // Hierarchical namespace configuration
   //
   // Shape: `{enabled}`. When enabled, the bucket uses folder-based filesystem
@@ -3104,6 +3247,72 @@ private gcp.project.storageService.bucket @defaults("id") {
   // `softDeletePolicy` which configures object-level soft-delete retention.
   // Null on live buckets.
   softDeleteTime time
+}
+
+// Legacy access control entry on a Cloud Storage bucket
+//
+// One grantee of the bucket's legacy ACL, or of the default ACL applied to new
+// objects. `entity` names the grantee and is what an exposure audit reads:
+// `allUsers` makes the grant anonymous and `allAuthenticatedUsers` opens it to
+// every Google account, while `user-`, `group-`, `domain-`, and `project-`
+// prefixed entities name a specific principal. `role` is the access it carries,
+// one of READER, WRITER, or OWNER.
+private gcp.project.storageService.bucket.accessControl @defaults("entity role") {
+  // Grantee of the access
+  //
+  // One of `allUsers`, `allAuthenticatedUsers`, `user-{userId}`,
+  // `user-{email}`, `group-{groupId}`, `group-{email}`, `domain-{domain}`, or
+  // `project-{team}-{projectNumber}`.
+  entity string
+  // Identifier of the grantee, empty for the `allUsers` and `allAuthenticatedUsers` entities
+  entityId string
+  // Access the grantee holds, one of READER, WRITER, or OWNER
+  role string
+  // Email address of the grantee, set when the entity names a user or group by email
+  email string
+  // Domain of the grantee, set when the entity names a domain
+  domain string
+  // Project number the grantee team belongs to, set when the entity names a project team
+  projectTeamId string
+  // Project team the grantee belongs to, one of owners, editors, or viewers
+  projectTeamRole string
+}
+
+// IP filter of a Cloud Storage bucket
+//
+// The networks permitted to reach a bucket and its objects. The filter is only
+// enforced when `mode` is Enabled, so a bucket carrying a full set of allowed
+// sources with the mode left Disabled is still reachable from anywhere its IAM
+// policy allows. `publicAllowedIpCidrRanges` lists the public ranges that may
+// reach it and `vpcSources` the VPC networks, each with its own permitted
+// ranges. `allowAllServiceAgentAccess` exempts Google Cloud service agents
+// from the filter entirely, and `allowCrossOrgVpcs` lets networks outside the
+// bucket's own organization appear in the VPC sources.
+private gcp.project.storageService.bucket.ipFilterConfig @defaults("mode") {
+  // Whether the filter is enforced, one of Enabled or Disabled
+  mode string
+  // Whether Google Cloud service agents may reach the bucket regardless of the filter
+  allowAllServiceAgentAccess bool
+  // Whether VPC networks outside the bucket's own organization may be named as sources
+  allowCrossOrgVpcs bool
+  // Public IPv4 and IPv6 CIDR ranges permitted to reach the bucket
+  //
+  // A range of 0.0.0.0/0 permits every public address, which leaves an enabled
+  // filter no narrower than no filter at all.
+  publicAllowedIpCidrRanges []string
+  // VPC networks permitted to reach the bucket, each with its own allowed ranges
+  vpcSources []gcp.project.storageService.bucket.ipFilterConfig.vpcSource
+}
+
+// VPC network permitted to reach a Cloud Storage bucket
+//
+// One entry of a bucket IP filter's VPC source list: the `network` traffic may
+// arrive from, and the CIDR ranges within it that are permitted.
+private gcp.project.storageService.bucket.ipFilterConfig.vpcSource @defaults("allowedIpCidrRanges") {
+  // VPC network traffic may reach the bucket from
+  network() gcp.project.computeService.network
+  // CIDR ranges within the network permitted to reach the bucket
+  allowedIpCidrRanges []string
 }
 
 // Google Cloud bucket's lifecycle configuration
@@ -4713,20 +4922,22 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   // One of `DISABLED` or `PROJECT_SINGLETON_POLICY_ENFORCE`.
   // Replaces the legacy boolean `binaryAuthorization.enabled` flag.
   binaryAuthorizationEvaluationMode string
-  // Legacy ABAC authorization configuration
-  legacyAbac dict
+  // Legacy ABAC config dict
+  //
+  // Deprecated in favor of legacyAbacEnabled. containerpb.LegacyAbac has
+  // exactly one field, so this dict only ever carried `enabled`.
+  legacyAbac @maturity("deprecated") dict
   // Whether the legacy ABAC authorizer is enabled on the cluster
   legacyAbacEnabled bool
-  // Control plane authentication information
+  // Control plane authentication dict
   //
-  // Keys: `username` (basic-auth username, empty when basic auth is off),
-  // `clientCertificateConfig` (whether the cluster issues a client
-  // certificate), `clusterCaCertificate` (the cluster certificate authority
-  // certificate), and `clientCertificate` (the issued client certificate).
-  // The basic-auth password and the client private key are deliberately not
-  // published; read `basicAuthEnabled` and `clientCertificateEnabled` for the
-  // audit signals instead.
-  masterAuth dict
+  // Deprecated in favor of clientCertificateEnabled and basicAuthEnabled,
+  // which carry the two signals worth auditing. Carries `username`,
+  // `clientCertificateConfig`, `clusterCaCertificate`, and
+  // `clientCertificate`. The basic-auth password and the client private key
+  // are deliberately not published; the rest of the message is credential
+  // material.
+  masterAuth @maturity("deprecated") dict
   // Whether client certificate authentication to the control plane is enabled
   //
   // True when the cluster issues a client certificate (MasterAuth client
@@ -4753,6 +4964,8 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   // whether it is allowed. Replaces the legacy `masterAuthorizedNetworksConfig`
   // and the access-related fields of `privateClusterConfig`.
   controlPlaneEndpointsConfig dict
+  // How the cluster's control plane can be reached
+  controlPlaneEndpoints gcp.project.gkeService.cluster.controlPlaneEndpoints
   // Whether the control plane is reachable through a public IP endpoint
   //
   // True when the modern `controlPlaneEndpointsConfig.ipEndpointsConfig`
@@ -5090,34 +5303,297 @@ private gcp.project.gkeService.cluster.networkPolicy @defaults("enabled provider
   provider string
 }
 
+// Control plane endpoints of a GKE cluster
+//
+// How the Kubernetes API server of a cluster can be reached, across both the IP
+// and the DNS endpoint. `publicEndpointEnabled` together with
+// `publicEndpointAddress` is what puts the API server on the internet, and
+// `globalAccess` widens the private endpoint from the control plane's own
+// region to every region in the VPC. On the DNS side `dnsAllowExternalTraffic`
+// decides whether the managed DNS endpoint answers from outside the VPC, and
+// `dnsK8sTokensEnabled` and `dnsK8sCertsEnabled` decide which credentials that
+// endpoint accepts. Replaces the access-related fields of the legacy private
+// cluster configuration.
+private gcp.project.gkeService.cluster.controlPlaneEndpoints @defaults("publicEndpointEnabled dnsAllowExternalTraffic") {
+  // Whether the IP endpoints of the control plane are enabled at all
+  ipEndpointsEnabled bool
+  // Whether the control plane is reachable through its public IP endpoint
+  publicEndpointEnabled bool
+  // Whether the private endpoint is reachable from every region in the VPC
+  //
+  // When false, only clients in the control plane's own region reach the
+  // private endpoint.
+  globalAccess bool
+  // Public IP address of the control plane, empty when no public endpoint is enabled
+  publicEndpointAddress string
+  // Internal IP address of the control plane
+  privateEndpointAddress string
+  // Subnetwork the private endpoint is allocated from
+  privateEndpointSubnetwork string
+  // Managed DNS name of the control plane, empty when the DNS endpoint is not configured
+  dnsEndpoint string
+  // Whether the DNS endpoint answers requests originating outside the VPC
+  //
+  // With this enabled the control plane is reachable from the internet through
+  // its DNS name, regardless of the IP endpoint configuration.
+  dnsAllowExternalTraffic bool
+  // Whether the DNS endpoint accepts Kubernetes service account tokens
+  dnsK8sTokensEnabled bool
+  // Whether the DNS endpoint serves Kubernetes client certificates
+  dnsK8sCertsEnabled bool
+}
+
 // Google Kubernetes Engine (GKE) cluster addons config
-private gcp.project.gkeService.cluster.addonsConfig @defaults("httpLoadBalancing horizontalPodAutoscaling kubernetesDashboard networkPolicyConfig cloudRunConfig dnsCacheConfig configConnectorConfig gcePersistentDiskCsiDriverConfig gcpFilestoreCsiDriverConfig gkeBackupAgentConfig gcsFuseCsiDriverConfig statefulHaConfig") {
+//
+// The managed addons a cluster runs, one field per addon. Each addon carries
+// its own on/off switch, so `networkPolicyAddon.disabled` and
+// `kubernetesDashboardAddon.disabled` are read separately rather than through
+// one combined flag. An addon a cluster has never configured reports the
+// default its absence stands for, which is off in both directions: an unset
+// `disabled` is false and an unset `enabled` is false.
+private gcp.project.gkeService.cluster.addonsConfig @defaults("httpLoadBalancingAddon horizontalPodAutoscalingAddon kubernetesDashboardAddon networkPolicyAddon cloudRunAddon dnsCacheAddon configConnectorAddon gcePersistentDiskCsiDriverAddon gcpFilestoreCsiDriverAddon gkeBackupAgentAddon gcsFuseCsiDriverAddon statefulHaAddon") {
   // Internal ID for this resource
   id string
-  // Configuration for the HTTP (L7) load balancing controller addon
-  httpLoadBalancing dict
-  // Configuration for the horizontal pod autoscaling feature
-  horizontalPodAutoscaling dict
-  // Configuration for the Kubernetes Dashboard
-  kubernetesDashboard dict
-  // Configuration for NetworkPolicy
-  networkPolicyConfig dict
-  // Configuration for the Cloud Run addon
-  cloudRunConfig dict
-  // Configuration for NodeLocalDNS, a DNS cache running on cluster nodes
-  dnsCacheConfig dict
-  // Configuration for the ConfigConnector addon
-  configConnectorConfig dict
-  // Configuration for the Compute Engine Persistent Disk CSI driver
-  gcePersistentDiskCsiDriverConfig dict
-  // Configuration for the GCP Filestore CSI driver
-  gcpFilestoreCsiDriverConfig dict
-  // Configuration for the backup for GKE agent addon
-  gkeBackupAgentConfig dict
-  // Configuration for the Cloud Storage Fuse CSI driver
-  gcsFuseCsiDriverConfig dict
-  // Configuration for the StatefulHA add-on.
-  statefulHaConfig dict
+  // HTTP load balancing controller addon dict
+  //
+  // Deprecated in favor of httpLoadBalancingAddon. Carries `disabled`.
+  httpLoadBalancing @maturity("deprecated") dict
+  // Horizontal pod autoscaling addon dict
+  //
+  // Deprecated in favor of horizontalPodAutoscalingAddon. Carries `disabled`.
+  horizontalPodAutoscaling @maturity("deprecated") dict
+  // Kubernetes Dashboard addon dict
+  //
+  // Deprecated in favor of kubernetesDashboardAddon. Carries `disabled`.
+  kubernetesDashboard @maturity("deprecated") dict
+  // NetworkPolicy addon dict
+  //
+  // Deprecated in favor of networkPolicyAddon. Carries `disabled`.
+  networkPolicyConfig @maturity("deprecated") dict
+  // Cloud Run addon dict
+  //
+  // Deprecated in favor of cloudRunAddon. Carries `disabled` and
+  // `loadBalancerType`.
+  cloudRunConfig @maturity("deprecated") dict
+  // NodeLocalDNS addon dict
+  //
+  // Deprecated in favor of dnsCacheAddon. Carries `enabled`.
+  dnsCacheConfig @maturity("deprecated") dict
+  // ConfigConnector addon dict
+  //
+  // Deprecated in favor of configConnectorAddon. Carries `enabled`.
+  configConnectorConfig @maturity("deprecated") dict
+  // Compute Engine Persistent Disk CSI driver addon dict
+  //
+  // Deprecated in favor of gcePersistentDiskCsiDriverAddon. Carries
+  // `enabled`.
+  gcePersistentDiskCsiDriverConfig @maturity("deprecated") dict
+  // Filestore CSI driver addon dict
+  //
+  // Deprecated in favor of gcpFilestoreCsiDriverAddon. Carries `enabled`.
+  gcpFilestoreCsiDriverConfig @maturity("deprecated") dict
+  // Backup for GKE agent addon dict
+  //
+  // Deprecated in favor of gkeBackupAgentAddon. Carries `enabled`.
+  gkeBackupAgentConfig @maturity("deprecated") dict
+  // Cloud Storage FUSE CSI driver addon dict
+  //
+  // Deprecated in favor of gcsFuseCsiDriverAddon. Carries `enabled`.
+  gcsFuseCsiDriverConfig @maturity("deprecated") dict
+  // StatefulHA addon dict
+  //
+  // Deprecated in favor of statefulHaAddon. Carries `enabled`.
+  statefulHaConfig @maturity("deprecated") dict
+  // GKE HTTP load balancing addon
+  //
+  // The addon that turns an Ingress object into a Google Cloud HTTP(S) load
+  // balancer. With the addon off, an Ingress provisions nothing and the
+  // Service it points at stays unreachable from outside the cluster.
+  httpLoadBalancingAddon gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingAddon
+  // GKE horizontal pod autoscaling addon
+  //
+  // The addon that scales a Deployment's replica count against observed
+  // metrics. With the addon off, a HorizontalPodAutoscaler object has no
+  // controller acting on it.
+  horizontalPodAutoscalingAddon gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingAddon
+  // GKE Kubernetes Dashboard addon
+  //
+  // The addon that runs the Kubernetes web dashboard in the cluster. GKE has
+  // deprecated it and it runs with broad cluster permissions, so a cluster
+  // with the dashboard still enabled carries a wider attack surface than one
+  // without it.
+  kubernetesDashboardAddon gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardAddon
+  // GKE NetworkPolicy addon
+  //
+  // The addon that enforces NetworkPolicy objects. With the addon off, the
+  // policies applied to a namespace are inert and every Pod can reach every
+  // other Pod in the cluster.
+  networkPolicyAddon gcp.project.gkeService.cluster.addonsConfig.networkPolicyAddon
+  // GKE Cloud Run addon
+  //
+  // The addon that runs Cloud Run services on the cluster, and the load
+  // balancer it provisions for them. An external load balancer publishes
+  // those services on the internet.
+  cloudRunAddon gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon
+  // GKE NodeLocalDNS addon
+  //
+  // The addon that runs a DNS cache on every node, so Pod lookups are
+  // answered locally instead of crossing the cluster to kube-dns.
+  dnsCacheAddon gcp.project.gkeService.cluster.addonsConfig.dnsCacheAddon
+  // GKE Config Connector addon
+  //
+  // The addon that manages Google Cloud resources from inside the cluster.
+  // Its service account holds project-level permissions, so a workload that
+  // can create Config Connector objects can create cloud resources.
+  configConnectorAddon gcp.project.gkeService.cluster.addonsConfig.configConnectorAddon
+  // GKE Compute Engine Persistent Disk CSI driver addon
+  //
+  // The addon that lets a PersistentVolumeClaim bind a Compute Engine
+  // persistent disk, including customer-managed encryption on the volumes it
+  // provisions.
+  gcePersistentDiskCsiDriverAddon gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverAddon
+  // GKE Filestore CSI driver addon
+  //
+  // The addon that lets a PersistentVolumeClaim bind a Filestore instance as
+  // a shared read-write volume.
+  gcpFilestoreCsiDriverAddon gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverAddon
+  // GKE Backup for GKE agent addon
+  //
+  // The addon that runs the Backup for GKE agent in the cluster. Without it
+  // the cluster's workloads and volumes have no managed backup plan.
+  gkeBackupAgentAddon gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentAddon
+  // GKE Cloud Storage FUSE CSI driver addon
+  //
+  // The addon that mounts a Cloud Storage bucket into a Pod as a filesystem,
+  // which puts bucket contents inside the cluster's trust boundary.
+  gcsFuseCsiDriverAddon gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverAddon
+  // GKE stateful high availability addon
+  //
+  // The addon that fails a stateful workload over to another node when the
+  // node it runs on becomes unavailable.
+  statefulHaAddon gcp.project.gkeService.cluster.addonsConfig.statefulHaAddon
+}
+
+// GKE HTTP load balancing addon
+//
+// The addon that turns an Ingress object into a Google Cloud HTTP(S) load
+// balancer. With the addon off, an Ingress provisions nothing and the
+// Service it points at stays unreachable from outside the cluster.
+private gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingAddon @defaults("disabled") {
+  // Whether the addon is turned off
+  disabled bool
+}
+
+// GKE horizontal pod autoscaling addon
+//
+// The addon that scales a Deployment's replica count against observed
+// metrics. With the addon off, a HorizontalPodAutoscaler object has no
+// controller acting on it.
+private gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingAddon @defaults("disabled") {
+  // Whether the addon is turned off
+  disabled bool
+}
+
+// GKE Kubernetes Dashboard addon
+//
+// The addon that runs the Kubernetes web dashboard in the cluster. GKE has
+// deprecated it and it runs with broad cluster permissions, so a cluster
+// with the dashboard still enabled carries a wider attack surface than one
+// without it.
+private gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardAddon @defaults("disabled") {
+  // Whether the addon is turned off
+  disabled bool
+}
+
+// GKE NetworkPolicy addon
+//
+// The addon that enforces NetworkPolicy objects. With the addon off, the
+// policies applied to a namespace are inert and every Pod can reach every
+// other Pod in the cluster.
+private gcp.project.gkeService.cluster.addonsConfig.networkPolicyAddon @defaults("disabled") {
+  // Whether the addon is turned off
+  disabled bool
+}
+
+// GKE Cloud Run addon
+//
+// The addon that runs Cloud Run services on the cluster, and the load
+// balancer it provisions for them. An external load balancer publishes
+// those services on the internet.
+private gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon @defaults("disabled loadBalancerType") {
+  // Whether the addon is turned off
+  disabled bool
+  // Load balancer the addon provisions for the cluster's Cloud Run services
+  //
+  // One of LOAD_BALANCER_TYPE_EXTERNAL, LOAD_BALANCER_TYPE_INTERNAL, or
+  // LOAD_BALANCER_TYPE_UNSPECIFIED. Empty when the cluster carries no Cloud
+  // Run configuration at all.
+  loadBalancerType string
+}
+
+// GKE NodeLocalDNS addon
+//
+// The addon that runs a DNS cache on every node, so Pod lookups are
+// answered locally instead of crossing the cluster to kube-dns.
+private gcp.project.gkeService.cluster.addonsConfig.dnsCacheAddon @defaults("enabled") {
+  // Whether the addon is turned on
+  enabled bool
+}
+
+// GKE Config Connector addon
+//
+// The addon that manages Google Cloud resources from inside the cluster.
+// Its service account holds project-level permissions, so a workload that
+// can create Config Connector objects can create cloud resources.
+private gcp.project.gkeService.cluster.addonsConfig.configConnectorAddon @defaults("enabled") {
+  // Whether the addon is turned on
+  enabled bool
+}
+
+// GKE Compute Engine Persistent Disk CSI driver addon
+//
+// The addon that lets a PersistentVolumeClaim bind a Compute Engine
+// persistent disk, including customer-managed encryption on the volumes it
+// provisions.
+private gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverAddon @defaults("enabled") {
+  // Whether the addon is turned on
+  enabled bool
+}
+
+// GKE Filestore CSI driver addon
+//
+// The addon that lets a PersistentVolumeClaim bind a Filestore instance as
+// a shared read-write volume.
+private gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverAddon @defaults("enabled") {
+  // Whether the addon is turned on
+  enabled bool
+}
+
+// GKE Backup for GKE agent addon
+//
+// The addon that runs the Backup for GKE agent in the cluster. Without it
+// the cluster's workloads and volumes have no managed backup plan.
+private gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentAddon @defaults("enabled") {
+  // Whether the addon is turned on
+  enabled bool
+}
+
+// GKE Cloud Storage FUSE CSI driver addon
+//
+// The addon that mounts a Cloud Storage bucket into a Pod as a filesystem,
+// which puts bucket contents inside the cluster's trust boundary.
+private gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverAddon @defaults("enabled") {
+  // Whether the addon is turned on
+  enabled bool
+}
+
+// GKE stateful high availability addon
+//
+// The addon that fails a stateful workload over to another node when the
+// node it runs on becomes unavailable.
+private gcp.project.gkeService.cluster.addonsConfig.statefulHaAddon @defaults("enabled") {
+  // Whether the addon is turned on
+  enabled bool
 }
 
 // Google Kubernetes Engine (GKE) cluster IP allocation policy
@@ -6290,6 +6766,45 @@ private gcp.project.apiKey @defaults("name") {
   managedBy() string
 }
 
+// API target of a Google Cloud API key restriction
+//
+// One service an API key is permitted to call, and the methods within it. An
+// empty `methods` list permits every method of the service. A key with no API
+// targets at all may call every API enabled in the project.
+private gcp.project.apiKey.restrictions.apiTarget @defaults("service methods") {
+  // Service the key may call, for example compute.googleapis.com
+  service string
+  // Methods of the service the key may call, empty when every method is permitted
+  methods []string
+}
+
+// Browser restriction on a Google Cloud API key
+//
+// The HTTP referrers a key may be used from. A pattern of `*` permits every
+// referrer, which is no restriction at all, and a key restricted this way is
+// still usable by anyone who can forge the Referer header.
+private gcp.project.apiKey.restrictions.browserRestriction @defaults("allowedReferrers") {
+  // HTTP referrer patterns permitted to use the key
+  allowedReferrers []string
+}
+
+// iOS restriction on a Google Cloud API key
+//
+// The iOS applications a key may be used from, named by bundle ID.
+private gcp.project.apiKey.restrictions.iosRestriction @defaults("allowedBundleIds") {
+  // iOS bundle IDs permitted to use the key
+  allowedBundleIds []string
+}
+
+// Server restriction on a Google Cloud API key
+//
+// The caller addresses a key may be used from. A range of 0.0.0.0/0 permits
+// every caller, which is no restriction at all.
+private gcp.project.apiKey.restrictions.serverRestriction @defaults("allowedIps") {
+  // IPv4 and IPv6 addresses and CIDR ranges permitted to use the key
+  allowedIps []string
+}
+
 // Google Cloud (GCP) project API key restrictions
 //
 // Access restrictions applied to a GCP API key: Android app restrictions,
@@ -6305,27 +6820,41 @@ private gcp.project.apiKey.restrictions {
   // Dict with `allowedApplications`, a list of `{packageName,
   // sha1Fingerprint}` entries identifying each permitted Android app.
   androidKeyRestrictions dict
-  // API targets the key is restricted to
+  // API target dicts
   //
-  // Each entry is a `{service, methods}` dict: `service` is the target
-  // service name and `methods` is the list of allowed methods (an empty
-  // list means all methods of that service).
-  apiTargets []dict
-  // HTTP referrers allowed to use the key
+  // Deprecated in favor of allowedApiTargets. Each entry carries `service`
+  // and `methods`.
+  apiTargets @maturity("deprecated") []dict
+  // Services and methods the key may call
   //
-  // Dict with `allowedReferrers`, a list of referrer patterns permitted to
-  // use the key.
-  browserKeyRestrictions dict
-  // iOS apps allowed to use the key
+  // An empty list means the key may call every API enabled in the project,
+  // which is the state that turns a leaked key into project-wide access.
+  allowedApiTargets []gcp.project.apiKey.restrictions.apiTarget
+  // Browser restriction dict
   //
-  // Dict with `allowedBundleIds`, a list of iOS bundle IDs permitted to use
-  // the key.
-  iosKeyRestrictions dict
-  // IP addresses allowed to use the key
+  // Deprecated in favor of browser. Carries `allowedReferrers`.
+  browserKeyRestrictions @maturity("deprecated") dict
+  // Restriction limiting the key to a set of HTTP referrers
   //
-  // Dict with `allowedIps`, a list of IPv4 or IPv6 addresses or CIDR ranges
-  // permitted to use the key.
-  serverKeyRestrictions dict
+  // Null when the key carries no browser restriction, which leaves it usable
+  // from any web page that has the key.
+  browser gcp.project.apiKey.restrictions.browserRestriction
+  // iOS restriction dict
+  //
+  // Deprecated in favor of ios. Carries `allowedBundleIds`.
+  iosKeyRestrictions @maturity("deprecated") dict
+  // Restriction limiting the key to a set of iOS apps
+  //
+  // Null when the key carries no iOS restriction.
+  ios gcp.project.apiKey.restrictions.iosRestriction
+  // Server restriction dict
+  //
+  // Deprecated in favor of server. Carries `allowedIps`.
+  serverKeyRestrictions @maturity("deprecated") dict
+  // Restriction limiting the key to a set of caller IP addresses
+  //
+  // Null when the key carries no server restriction.
+  server gcp.project.apiKey.restrictions.serverRestriction
   // Whether the API key has no restrictions configured (no app/IP/referrer/API target restriction). Unrestricted keys are higher risk.
   unrestricted() bool
   // Names of the restriction categories actually set on the key
@@ -6388,12 +6917,37 @@ private gcp.loggingSettings @defaults("name disableDefaultSink storageLocation")
   loggingServiceAccountId string
   // Storage location for the _Default and _Required log buckets of new projects and folders
   storageLocation string
-  // Overrides for the built-in _Default sink configuration
+  // Default sink override dict
   //
-  // Holds `filter`, the inclusion filter applied to the `_Default` sink in place
-  // of the built-in one, and `exclusions`, the additional exclusion filters
-  // applied to it. Either can silently narrow what the sink retains.
-  defaultSinkConfig dict
+  // Deprecated in favor of defaultSink. Carries `filter`, `mode`, and
+  // `exclusions`.
+  defaultSinkConfig @maturity("deprecated") dict
+  // Overrides applied to the built-in _Default sink
+  //
+  // Null when the node leaves the _Default sink exactly as Cloud Logging
+  // builds it.
+  defaultSink gcp.loggingSettings.defaultSinkOverride
+}
+
+// Overrides applied to the built-in _Default sink
+//
+// The changes a folder or organization makes to the `_Default` sink every
+// project created under it inherits. `filter` replaces or narrows the built-in
+// inclusion filter depending on `mode`, and each entry in `exclusions` drops
+// matching entries before they reach the sink's destination. Either can quietly
+// leave a project retaining less than the sink's own configuration suggests.
+private gcp.loggingSettings.defaultSinkOverride @defaults("filter mode") {
+  // Inclusion filter applied to the _Default sink in place of the built-in one
+  //
+  // Empty when the built-in filter is left in place.
+  filter string
+  // How the override filter combines with the built-in _Default sink filter
+  //
+  // One of OVERWRITE, APPEND, or FILTER_MODE_UNSPECIFIED. OVERWRITE replaces
+  // the built-in filter outright.
+  mode string
+  // Additional exclusion filters applied to the _Default sink
+  exclusions []gcp.project.loggingservice.sink.exclusion
 }
 
 // Google Cloud (GCP) Cloud Logging bucket
@@ -6552,15 +7106,42 @@ private gcp.project.loggingservice.sink @defaults("destination") {
   includeChildren bool
   // Whether the sink is disabled. A disabled sink stops exporting log entries.
   disabled bool
+  // Per-sink exclusion filter dicts
+  //
+  // Deprecated in favor of exclusionRules. Each entry carries `name`,
+  // `description`, `filter`, and `disabled`.
+  exclusions @maturity("deprecated") []dict
   // Per-sink exclusion filters
   //
   // Each entry drops matching log entries from this sink's export before they
-  // reach the destination, with keys `name` (the exclusion identifier),
-  // `description`, `filter` (the advanced log filter selecting entries to
-  // drop), and `disabled` (whether the exclusion is currently inactive).
-  exclusions []dict
+  // reach the destination. An enabled exclusion is the quiet way a sink stops
+  // carrying a log category the sink's own filter says it exports.
+  exclusionRules []gcp.project.loggingservice.sink.exclusion
   // Whether the sink exports every log entry because its filter is empty
   capturesAllLogs() bool
+}
+
+// Exclusion filter attached to a log sink
+//
+// A single exclusion applied to one sink, dropping matching entries from that
+// sink's export before they reach its destination. The `filter` selects the
+// entries to drop and `disabled` records whether the exclusion is currently
+// inactive, so an enabled exclusion naming an audit log category is how a sink
+// comes to carry less than its own filter promises. The same shape is applied
+// to the built-in _Default sink through the Log Router settings.
+private gcp.project.loggingservice.sink.exclusion @defaults("name disabled filter") {
+  // Exclusion name, unique within the sink it is attached to
+  name string
+  // Human-readable description of the exclusion
+  description string
+  // Advanced log filter selecting the entries to drop
+  filter string
+  // Whether the exclusion is disabled, which leaves the matching entries in place
+  disabled bool
+  // Creation timestamp
+  created time
+  // Last update timestamp
+  updated time
 }
 
 // Google Cloud (GCP) Cloud Logging exclusion filter
@@ -6760,6 +7341,38 @@ private gcp.project.iamService.serviceAccount.key @defaults("name") {
   ageInDays() int
 }
 
+// Deny rule of an IAM deny policy
+//
+// One rule of a deny policy: the `deniedPrincipals` that lose the
+// `deniedPermissions`, and the `exceptionPrincipals` and
+// `exceptionPermissions` carved back out of the denial. A deny rule overrides
+// every allow policy that would otherwise grant the permission, so reading the
+// deny rules is the only way to know what a principal can actually do. The
+// `denialConditionExpression` gates when the denial fires, and a rule carrying
+// one denies nothing outside the cases the expression matches.
+private gcp.project.iamService.denyPolicy.denyRule @defaults("deniedPrincipals deniedPermissions") {
+  // Human-readable description of the rule
+  description string
+  // Principals denied the permissions, in IAM v2 principal format
+  //
+  // A value of `principalSet://goog/public:all` denies every principal.
+  deniedPrincipals []string
+  // Principals exempted from the denial, in IAM v2 principal format
+  exceptionPrincipals []string
+  // Permissions the denied principals lose, in service.resource.verb form
+  deniedPermissions []string
+  // Permissions carved back out of the denial for the denied principals
+  exceptionPermissions []string
+  // CEL expression gating when the denial fires, empty when it always fires
+  denialConditionExpression string
+  // Short title of the denial condition
+  denialConditionTitle string
+  // Description of the denial condition
+  denialConditionDescription string
+  // Source position of the denial condition, used when reporting an error in the expression
+  denialConditionLocation string
+}
+
 // Google Cloud (GCP) IAM deny policy
 //
 // Deny rules that block principals from using specific permissions on the
@@ -6777,14 +7390,14 @@ private gcp.project.iamService.denyPolicy @defaults("displayName name") {
   displayName string
   // Arbitrary user-supplied metadata attached to the policy
   annotations map[string]string
-  // Deny rules that make up the policy
+  // Deny rule dicts
   //
-  // Each rule is a dict with `description`, `deniedPrincipals`,
-  // `deniedPermissions`, `exceptionPrincipals`, and `exceptionPermissions`
-  // (lists of strings), plus an optional `denialCondition` dict carrying the
-  // CEL `expression`, `title`, `description`, and `location` that gates when
-  // the denial fires.
-  rules []dict
+  // Deprecated in favor of denyRules. Each entry carries `description`,
+  // `deniedPrincipals`, `deniedPermissions`, `exceptionPrincipals`,
+  // `exceptionPermissions`, and an optional `denialCondition`.
+  rules @maturity("deprecated") []dict
+  // Deny rules that make up the policy
+  denyRules []gcp.project.iamService.denyPolicy.denyRule
   // Etag for optimistic concurrency control
   etag string
   // Creation timestamp
@@ -7151,21 +7764,20 @@ private gcp.project.cloudFunction @defaults("name") {
   buildId string
   // Cloud Build name of the function deployment
   buildName string
-  // Secret environment variables
+  // Secret environment variable dicts
   //
-  // Secret Manager secrets exposed to the function as environment variables,
-  // keyed by the environment variable name. Each value has keys: `projectId`
-  // (project holding the secret), `secret` (the secret name), and `version`
-  // (the bound secret version).
-  secretEnvVars map[string]dict
-  // Secret volumes
+  // Deprecated in favor of boundSecretEnvVars. Keyed by environment variable
+  // name, each value carrying `projectId`, `secret`, and `version`.
+  secretEnvVars @maturity("deprecated") map[string]dict
+  // Secret volume dicts
   //
-  // Secret Manager secrets mounted into the function's filesystem. Each entry
-  // has keys: `mountPath` (directory the secret is mounted at), `projectId`
-  // (project holding the secret), `secret` (the secret name), and `versions`
-  // (a list of `{version, path}` objects mapping each mounted secret version
-  // to its relative file path under the mount).
-  secretVolumes []dict
+  // Deprecated in favor of boundSecretVolumes. Each entry carries
+  // `mountPath`, `projectId`, `secret`, and `versions`.
+  secretVolumes @maturity("deprecated") []dict
+  // Secret Manager secrets exposed to the function as environment variables
+  boundSecretEnvVars []gcp.project.cloudFunction.secretEnvVar
+  // Secret Manager secrets mounted into the function filesystem
+  boundSecretVolumes []gcp.project.cloudFunction.secretVolume
   // Artifact Registry repository that stores the function's built image
   dockerRepositoryRef() gcp.project.artifactRegistryService.repository
   // Docker registry to use for this deployment
@@ -7307,20 +7919,54 @@ private gcp.project.cloudFunctionV2.serviceConfig @defaults("service timeoutSeco
   iamServiceAccount() gcp.project.iamService.serviceAccount
   // Whether all traffic is routed to the latest revision
   allTrafficOnLatestRevision bool
-  // Secret environment variables
+  // Secret environment variable dicts
   //
-  // Each entry exposes a Secret Manager secret as an environment variable,
-  // with keys `key` (the environment variable name), `projectId` (project
-  // holding the secret), `secret` (secret name), and `version` (secret
-  // version, or "latest").
-  secretEnvironmentVariables []dict
-  // Secret volume mounts
+  // Deprecated in favor of boundSecretEnvVars. Each entry carries `key`,
+  // `projectId`, `secret`, and `version`.
+  secretEnvironmentVariables @maturity("deprecated") []dict
+  // Secret volume dicts
   //
-  // Each entry mounts a Secret Manager secret as files, with keys `mountPath`
-  // (directory the secret is mounted at), `projectId` (project holding the
-  // secret), `secret` (secret name), and `versions` (a list of `version` /
-  // `path` pairs mapping each secret version to a file under the mount path).
-  secretVolumes []dict
+  // Deprecated in favor of boundSecretVolumes. Each entry carries
+  // `mountPath`, `projectId`, `secret`, and `versions`.
+  secretVolumes @maturity("deprecated") []dict
+  // Secret Manager secrets exposed to the function as environment variables
+  boundSecretEnvVars []gcp.project.cloudFunction.secretEnvVar
+  // Secret Manager secrets mounted into the function filesystem
+  boundSecretVolumes []gcp.project.cloudFunction.secretVolume
+}
+
+// Secret Manager secret bound to a Cloud Function as an environment variable
+//
+// One secret exposed to a function's runtime under an environment variable
+// name. `secret` resolves the Secret Manager secret, so its rotation policy,
+// replication and IAM policy can be read from the function that consumes it,
+// and `version` records whether the function is pinned to a version or follows
+// "latest".
+private gcp.project.cloudFunction.secretEnvVar @defaults("key version") {
+  // Environment variable name the secret value is exposed under
+  key string
+  // Secret Manager secret the value comes from
+  secret() gcp.project.secretmanagerService.secret
+  // Secret version bound to the variable, or "latest" to follow the newest enabled version
+  version string
+}
+
+// Secret Manager secret mounted into a Cloud Function filesystem
+//
+// One secret mounted as files under `mountPath`. `secret` resolves the Secret
+// Manager secret and `versionPaths` maps each mounted version to its file path
+// relative to the mount, so a function pinned to an old version is visible
+// without reading the function's code.
+private gcp.project.cloudFunction.secretVolume @defaults("mountPath") {
+  // Directory the secret is mounted at
+  mountPath string
+  // Secret Manager secret the files come from
+  secret() gcp.project.secretmanagerService.secret
+  // Mounted secret versions, keyed by version, valued by the file path relative to the mount
+  //
+  // Empty when the whole secret is mounted under its own name rather than
+  // specific versions being mapped to paths.
+  versionPaths map[string]string
 }
 
 // Google Cloud (GCP) Cloud Function v2 event trigger
@@ -9674,10 +10320,11 @@ private gcp.project.bigtableService.cluster @defaults("name") {
   defaultStorageType string
   // Encryption configuration (CMEK)
   //
-  // Present when customer-managed encryption is enabled, with the key
-  // `kmsKeyName` giving the KMS key that protects the cluster. Null for
-  // Google-managed encryption.
-  encryptionConfig dict
+  // Cluster encryption config dict
+  //
+  // Deprecated in favor of kmsKey. The message has exactly one field, so this
+  // dict only ever carried `kmsKeyName`.
+  encryptionConfig @maturity("deprecated") dict
   // Customer-managed KMS key used for cluster encryption (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Node scaling factor
@@ -10173,13 +10820,24 @@ private gcp.project.computeService.wafExpressionSet @defaults("id aliases") {
   // version that alias currently points at.
   aliases []string
   // Individual WAF expressions the set contains
+  expressions []gcp.project.computeService.wafExpressionSet.expression
+}
+
+// Expression in a Cloud Armor preconfigured WAF expression set
+//
+// One attack definition inside a rule set, and the strictness it belongs to.
+// The `id` names the definition it detects, for example
+// owasp-crs-v030301-id942100-sqli, and `sensitivity` is the ModSecurity
+// paranoia level: a policy running the set at level 1 evaluates only the
+// level 1 expressions and catches far less than the same set at level 3.
+private gcp.project.computeService.wafExpressionSet.expression @defaults("id sensitivity") {
+  // Expression identifier naming the attack definition it detects
+  id string
+  // ModSecurity paranoia level the expression belongs to
   //
-  // Each entry carries `id`, the expression identifier naming the attack
-  // definition it detects (for example owasp-crs-v030301-id942100-sqli),
-  // and `sensitivity`, the ModSecurity paranoia level from 1 to 4 the
-  // expression belongs to. A sensitivity of 0 marks an expression applied
-  // only when a rule opts into it by name.
-  expressions []dict
+  // From 1 to 4. A sensitivity of 0 marks an expression applied only when a
+  // rule opts into it by name.
+  sensitivity int
 }
 
 // Google Cloud (GCP) Compute Cloud Armor security policy
@@ -10202,12 +10860,37 @@ private gcp.project.computeService.securityPolicy @defaults("name type") {
   type string
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Adaptive protection configuration
-  adaptiveProtectionConfig dict
-  // Advanced options configuration
-  advancedOptionsConfig dict
-  // DDoS protection configuration
-  ddosProtectionConfig dict
+  // Adaptive protection config dict
+  //
+  // Deprecated in favor of adaptiveProtection. Keyed by
+  // `layer7DdosDefenseConfig`, which carries `enable`, `ruleVisibility`, and
+  // the per-traffic-granularity `thresholdConfigs`.
+  adaptiveProtectionConfig @maturity("deprecated") dict
+  // Machine-learned defense the policy applies on top of its own rules
+  //
+  // Null when the policy has no adaptive protection configured at all.
+  adaptiveProtection gcp.project.computeService.securityPolicy.adaptiveProtection
+  // Advanced options config dict
+  //
+  // Deprecated in favor of advancedOptions. Carries `jsonParsing`,
+  // `logLevel`, `requestBodyInspectionSize`, the `jsonCustomConfig` content
+  // types, and the `userIpRequestHeaders` the policy trusts for the client
+  // address.
+  advancedOptionsConfig @maturity("deprecated") dict
+  // How the policy reads a request before its rules evaluate it
+  //
+  // Null when the policy leaves every advanced option at its default.
+  advancedOptions gcp.project.computeService.securityPolicy.advancedOptions
+  // DDoS protection config dict
+  //
+  // Deprecated in favor of networkDdosProtection. Carries `ddosProtection`,
+  // `ddosAdaptiveProtection`, and `ddosImpactedBaselineThreshold`.
+  ddosProtectionConfig @maturity("deprecated") dict
+  // Network-layer DDoS protection the policy applies
+  //
+  // Null on a policy that is not a CLOUD_ARMOR_NETWORK policy, which is the
+  // only type the setting applies to.
+  networkDdosProtection gcp.project.computeService.securityPolicy.networkDdosProtection
   // reCAPTCHA options configuration
   recaptchaOptionsConfig dict
   // Fingerprint for optimistic locking
@@ -10236,8 +10919,17 @@ private gcp.project.computeService.securityPolicy.rule @defaults("priority actio
   priority int
   // Whether the rule is in preview mode (not enforced)
   preview bool
-  // Match condition
-  match dict
+  // Match condition dict
+  //
+  // Deprecated in favor of matcher. Carries `versionedExpr`, the `config`
+  // source IP ranges, the CEL `expr`, and `exprOptions` for reCAPTCHA
+  // matching.
+  match @maturity("deprecated") dict
+  // Condition deciding which requests the rule acts on
+  //
+  // Null when the rule carries no match condition, which the API only reports
+  // on a malformed rule.
+  matcher gcp.project.computeService.securityPolicy.rule.matcher
   // Network match condition (for CLOUD_ARMOR_NETWORK policies)
   networkMatch dict
   // Rate limit options
@@ -10248,6 +10940,130 @@ private gcp.project.computeService.securityPolicy.rule @defaults("priority actio
   headerAction dict
   // Preconfigured WAF configuration
   preconfiguredWafConfig dict
+}
+
+// Adaptive protection of a Cloud Armor security policy
+//
+// The machine-learned defense a policy runs alongside its own rules. Only the
+// layer 7 defense is configurable, so the whole message is that one block.
+private gcp.project.computeService.securityPolicy.adaptiveProtection @defaults("layer7DdosDefense") {
+  // Layer 7 DDoS defense the policy runs, null when it is not configured
+  layer7DdosDefense gcp.project.computeService.securityPolicy.layer7DdosDefense
+}
+
+// Layer 7 DDoS defense of a Cloud Armor security policy
+//
+// The Adaptive Protection detector that learns a policy's normal layer 7
+// traffic and reports attacks against it. `enable` is what turns the detector
+// on, and `ruleVisibility` decides whether the rules it suggests are published
+// in full or only as opaque signatures. `thresholdConfigs` holds the
+// per-traffic-granularity tuning, each entry naming the confidence and load
+// levels at which a suggested rule is auto-deployed. Applies only to global
+// policies of type CLOUD_ARMOR.
+private gcp.project.computeService.securityPolicy.layer7DdosDefense @defaults("enable ruleVisibility") {
+  // Whether layer 7 DDoS detection is turned on for the policy
+  enable bool
+  // How much detail the detector publishes about the rules it generates
+  //
+  // One of STANDARD, which keeps the rules opaque, or PREMIUM, which makes
+  // them transparent. Empty when the detector is off.
+  ruleVisibility string
+  // Per-traffic-granularity tuning of the detector
+  //
+  // Each entry carries `name`, the auto-deploy thresholds
+  // (`autoDeployConfidenceThreshold`, `autoDeployImpactedBaselineThreshold`,
+  // `autoDeployLoadThreshold`, `autoDeployExpirationSec`), the detection
+  // thresholds (`detectionLoadThreshold`, `detectionAbsoluteQps`,
+  // `detectionRelativeToBaselineQps`), and the `trafficGranularityConfigs`
+  // that scope it to a subset of the traffic.
+  thresholdConfigs []dict
+}
+
+// Advanced options of a Cloud Armor security policy
+//
+// How a policy reads a request before its rules evaluate it. `jsonParsing`
+// decides whether a JSON body is parsed at all, and a policy that leaves it
+// DISABLED cannot have a preconfigured WAF rule inspect that body.
+// `requestBodyInspectionSize` caps how much of the body is read, so anything
+// past the limit is never evaluated. `userIpRequestHeaders` names the headers
+// the policy trusts for the client address, which is what an IP allow rule
+// then matches on.
+private gcp.project.computeService.securityPolicy.advancedOptions @defaults("jsonParsing logLevel requestBodyInspectionSize") {
+  // How the policy parses JSON request bodies before evaluating preconfigured WAF rules
+  //
+  // One of DISABLED, STANDARD, or STANDARD_WITH_GRAPHQL. DISABLED leaves a
+  // JSON payload unparsed.
+  jsonParsing string
+  // Verbosity of the Cloud Armor request logs
+  //
+  // One of NORMAL or VERBOSE. VERBOSE records which rule matched and why.
+  logLevel string
+  // How much of a request body the policy inspects
+  //
+  // One of REQUEST_BODY_INSPECTION_SIZE_UNSPECIFIED, 8KB, 16KB, 32KB, 48KB,
+  // or 64KB.
+  requestBodyInspectionSize string
+  // Content types parsed as JSON in addition to the standard ones
+  //
+  // Empty when the policy parses only the content types Cloud Armor treats as
+  // JSON by default.
+  jsonCustomContentTypes []string
+  // Request headers the policy trusts for the originating client IP address
+  //
+  // A header named here is taken at face value, so a client that can set it
+  // chooses the address an IP-based rule matches on.
+  userIpRequestHeaders []string
+}
+
+// Network DDoS protection of a Cloud Armor security policy
+//
+// The volumetric protection a CLOUD_ARMOR_NETWORK policy applies to the
+// backends it is attached to, ahead of any rule evaluation.
+private gcp.project.computeService.securityPolicy.networkDdosProtection @defaults("ddosProtection") {
+  // Protection level applied by the policy
+  //
+  // One of STANDARD, ADVANCED, or ADVANCED_PREVIEW. STANDARD is the always-on
+  // baseline; ADVANCED adds targeted mitigation for the protected backends.
+  ddosProtection string
+  // Whether adaptive tuning of the network protection is enabled
+  //
+  // One of DISABLED or PREVIEW. Empty when the policy leaves it unset.
+  ddosAdaptiveProtection string
+  // Fraction of the baseline traffic that has to be affected before mitigation applies
+  ddosImpactedBaselineThreshold float
+}
+
+// Match condition of a Cloud Armor security policy rule
+//
+// What decides whether a rule acts on a request. A rule matches either on a
+// source IP list or on an expression, never both: `versionedExpr` set to
+// SRC_IPS_V1 means the rule matches the `srcIpRanges`, while a rule with an
+// `expression` matches a CEL predicate such as
+// evaluatePreconfiguredExpr('sqli-v33-stable'). A range of 0.0.0.0/0 or ::/0
+// matches every client, which is what a low-priority allow rule has to be
+// checked for.
+private gcp.project.computeService.securityPolicy.rule.matcher @defaults("versionedExpr srcIpRanges expression") {
+  // Predefined match expression the rule uses
+  //
+  // SRC_IPS_V1 means the rule matches on `srcIpRanges`. Empty when the rule
+  // matches on an expression instead.
+  versionedExpr string
+  // Source IPv4 and IPv6 CIDR ranges the rule matches
+  srcIpRanges []string
+  // CEL expression the rule matches on, empty when the rule matches on source IP ranges
+  expression string
+  // Short title of the expression
+  expressionTitle string
+  // Description of what the expression matches
+  expressionDescription string
+  // Source position of the expression, used when reporting an error in it
+  expressionLocation string
+  // reCAPTCHA options applied when the expression evaluates a reCAPTCHA token
+  //
+  // Keyed by `recaptchaOptions`, which carries the `actionTokenSiteKeys` and
+  // `sessionTokenSiteKeys` the expression is allowed to verify a token
+  // against.
+  exprOptions dict
 }
 
 // Google Cloud (GCP) Compute SSL policy
@@ -12202,8 +13018,10 @@ private gcp.project.healthcareService.dataset @defaults("name timeZone") {
   name string
   // Default IANA time zone used by the dataset (e.g. "America/New_York")
   timeZone string
-  // Customer-managed encryption key configuration (includes kmsKeyName)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. The dict carries only `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // DICOM stores in this dataset
@@ -12973,10 +13791,12 @@ private gcp.project.computeService.publicAdvertisedPrefix @defaults("name ipCidr
 
 // Google Cloud (GCP) Compute instance template
 //
-// Compute Engine instance template: the instance properties it
-// defines (machine type, boot and data disks, network interfaces, service
-// account, metadata, and scheduling options), whether it was derived from an
-// existing instance, and its creation timestamp.
+// Compute Engine instance template and the instance configuration it
+// defines. The `vmProperties` field carries the machine type, boot and data
+// disks, network interfaces, service accounts, metadata, tags, Shielded VM and
+// Confidential Computing settings, and scheduling options every VM created
+// from the template receives. Also records whether the template was derived
+// from an existing instance, and when it was created.
 private gcp.project.computeService.instanceTemplate @defaults("name description") {
   // Unique identifier
   id string
@@ -12990,10 +13810,100 @@ private gcp.project.computeService.instanceTemplate @defaults("name description"
   sourceInstance string
   // Existing instance this template was created from
   sourceInstanceRef() gcp.project.computeService.instance
-  // Instance properties (machine type, disks, network interfaces, etc.)
-  properties dict
+  // Instance properties dict
+  //
+  // Deprecated in favor of vmProperties. Carries the raw JSON shape of the
+  // instance properties block: machineType, disks, networkInterfaces,
+  // serviceAccounts, metadata, tags, scheduling, shieldedInstanceConfig,
+  // confidentialInstanceConfig, advancedMachineFeatures, and labels.
+  properties @maturity("deprecated") dict
+  // Instance configuration every VM created from this template receives
+  vmProperties gcp.project.computeService.instanceTemplate.instanceProperties
   // Creation timestamp
   creationTimestamp time
+}
+
+// Instance configuration defined by a Compute Engine instance template
+//
+// The settings every VM created from an instance template receives. Surfaces
+// the `machineType` and `minCpuPlatform` the VMs run on, whether they may
+// forward packets for addresses other than their own (`canIpForward`), the
+// `metadata` key/value pairs (including `enable-oslogin`,
+// `block-project-ssh-keys`, and `serial-port-enable`), the network `tags` that
+// firewall rules target, the Shielded VM boot chain
+// (`enableSecureBoot`, `enableVtpm`, `enableIntegrityMonitoring`),
+// Confidential Computing (`enableConfidentialCompute` and
+// `confidentialInstanceType`), the `serviceAccounts` the VMs authenticate
+// with and the OAuth scopes granted to them, the Spot and preemptible
+// lifecycle settings (`preemptible`, `provisioningModel`,
+// `instanceTerminationAction`), nested virtualization, and the `labels`
+// applied to the VMs. Auditing the template catches a misconfiguration before
+// a managed instance group multiplies it across a fleet.
+private gcp.project.computeService.instanceTemplate.instanceProperties @defaults("machineType") {
+  // Machine type the VMs run on, as a bare name such as n2-standard-4
+  machineType string
+  // Whether the VMs may send and receive packets with source or destination IPs other than their own
+  canIpForward bool
+  // Minimum CPU platform the VMs are scheduled on, for example "Intel Haswell"
+  minCpuPlatform string
+  // Metadata key/value pairs assigned to the VMs
+  //
+  // Carries the guest configuration keys Compute Engine reads, including
+  // `enable-oslogin`, `block-project-ssh-keys`, `serial-port-enable`, and
+  // `ssh-keys`, alongside any custom keys and the startup script.
+  metadata map[string]string
+  // Network tags applied to the VMs, which firewall rules and routes select on
+  tags []string
+  // Whether Secure Boot is enabled for the VMs
+  enableSecureBoot bool
+  // Whether a virtual Trusted Platform Module is enabled for the VMs
+  enableVtpm bool
+  // Whether Shielded VM integrity monitoring is enabled for the VMs
+  enableIntegrityMonitoring bool
+  // Whether the VMs run as Confidential VMs with memory encryption
+  enableConfidentialCompute bool
+  // Confidential Computing technology the VMs use
+  //
+  // One of SEV, SEV_SNP, TDX, CCA, or
+  // CONFIDENTIAL_INSTANCE_TYPE_UNSPECIFIED.
+  confidentialInstanceType string
+  // Service accounts the VMs authenticate with, and the OAuth scopes granted to each
+  serviceAccounts []gcp.project.computeService.serviceaccount
+  // Whether the VMs are preemptible and can be reclaimed at any time
+  preemptible bool
+  // How the VMs are provisioned
+  //
+  // One of STANDARD, SPOT, FLEX_START, or RESERVATION_BOUND. SPOT instances
+  // run at a discount and can be reclaimed whenever Compute Engine needs the
+  // capacity back.
+  provisioningModel string
+  // What happens to a Spot VM when Compute Engine reclaims its capacity
+  //
+  // One of STOP, DELETE, or INSTANCE_TERMINATION_ACTION_UNSPECIFIED.
+  instanceTerminationAction string
+  // What the VMs do when the customer-managed key protecting them is revoked
+  //
+  // One of NONE, STOP, or KEY_REVOCATION_ACTION_TYPE_UNSPECIFIED.
+  keyRevocationActionType string
+  // Whether nested virtualization is enabled for the VMs
+  nestedVirtualizationEnabled bool
+  // Labels applied to the VMs
+  labels map[string]string
+  // Disks attached to the VMs
+  //
+  // Each entry carries `boot`, `autoDelete`, `deviceName`, `index`,
+  // `interface`, `mode`, `type`, `diskSizeGb`, `source` for an existing disk,
+  // `diskEncryptionKey`, and `initializeParams` (`sourceImage`,
+  // `sourceSnapshot`, `diskType`, `diskSizeGb`, `labels`,
+  // `sourceImageEncryptionKey`, and `resourcePolicies`) for a disk the
+  // template creates.
+  disks []dict
+  // Network interfaces attached to the VMs
+  //
+  // Each entry carries `name`, `network`, `subnetwork`, `stackType`,
+  // `nicType`, `queueCount`, `accessConfigs` and `ipv6AccessConfigs` for
+  // external addressing, and `aliasIpRanges`.
+  networkInterfaces []dict
 }
 
 // Google Cloud (GCP) Cloud Deploy
@@ -13702,8 +14612,11 @@ private gcp.project.vertexaiService.metadataStore @defaults("name state") {
   description string
   // State information of the metadata store
   state dict
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Dataplex integration config
@@ -13749,8 +14662,11 @@ private gcp.project.vertexaiService.model @defaults("name displayName") {
   trainingPipeline string
   // Artifact URI
   artifactUri string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
@@ -13793,8 +14709,11 @@ private gcp.project.vertexaiService.endpoint @defaults("name displayName") {
   description string
   // Models deployed to this endpoint
   deployments []gcp.project.vertexaiService.endpoint.deployment
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // VPC network used for private endpoints (resolved from network)
@@ -13893,8 +14812,11 @@ private gcp.project.vertexaiService.pipelineJob @defaults("name displayName stat
   serviceAccountRef() gcp.project.iamService.serviceAccount
   // VPC network the resource is attached to (resolved from network)
   networkRef() gcp.project.computeService.network
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Template URI
@@ -13942,8 +14864,11 @@ private gcp.project.vertexaiService.dataset @defaults("name displayName") {
   metadataSchemaUri string
   // User-defined metadata payload conforming to metadataSchemaUri
   metadata dict
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
@@ -13974,8 +14899,11 @@ private gcp.project.vertexaiService.featureOnlineStore @defaults("name state") {
   optimized dict
   // Dedicated serving endpoint
   dedicatedServingEndpoint dict
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
@@ -14008,8 +14936,11 @@ private gcp.project.vertexaiService.tensorboard @defaults("displayName") {
   isDefault bool
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14046,8 +14977,11 @@ private gcp.project.vertexaiService.customJob @defaults("displayName state") {
   enableWebAccess bool
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Error details (if failed)
@@ -14090,8 +15024,11 @@ private gcp.project.vertexaiService.index @defaults("displayName") {
   deployedIndexes []dict
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Index update method (BATCH_UPDATE, STREAM_UPDATE)
@@ -14128,8 +15065,11 @@ private gcp.project.vertexaiService.indexEndpoint @defaults("displayName") {
   publicEndpointDomainName string
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14201,8 +15141,11 @@ private gcp.project.vertexaiService.notebookRuntime @defaults("displayName runti
   softwareConfig dict
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14266,8 +15209,11 @@ private gcp.project.vertexaiService.notebookRuntimeTemplate @defaults("displayNa
   etag string
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Resource-level IAM policy bindings governing who can use this template
@@ -14309,8 +15255,11 @@ private gcp.project.vertexaiService.notebookExecutionJob @defaults("displayName 
   executionTimeoutSeconds int
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14352,8 +15301,11 @@ private gcp.project.vertexaiService.reasoningEngine @defaults("displayName agent
   agentFramework string
   // Full deployment specification (package spec, deployment spec, class methods)
   spec dict
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
@@ -14382,8 +15334,11 @@ private gcp.project.vertexaiService.ragCorpus @defaults("displayName") {
   description string
   // Corpus status (indexing state and errors)
   corpusStatus dict
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14440,8 +15395,11 @@ private gcp.project.vertexaiService.persistentResource @defaults("displayName st
   resourceRuntimeSpec dict
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14508,8 +15466,11 @@ private gcp.project.vertexaiService.deploymentResourcePool @defaults("name") {
   disableContainerLogging bool
   // Dedicated resources (machine spec and autoscaling)
   dedicatedResources dict
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14534,8 +15495,11 @@ private gcp.project.vertexaiService.cachedContent @defaults("displayName model")
   usageMetadata dict
   // Time the cache expires
   expireTime time
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14578,8 +15542,11 @@ private gcp.project.vertexaiService.batchPredictionJob @defaults("displayName st
   disableContainerLogging bool
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14630,8 +15597,11 @@ private gcp.project.vertexaiService.tuningJob @defaults("tunedModelDisplayName s
   serviceAccount() gcp.project.iamService.serviceAccount
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14676,8 +15646,11 @@ private gcp.project.vertexaiService.trainingPipeline @defaults("displayName stat
   state string
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14722,8 +15695,11 @@ private gcp.project.vertexaiService.hyperparameterTuningJob @defaults("displayNa
   networkRef() gcp.project.computeService.network
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14766,8 +15742,11 @@ private gcp.project.vertexaiService.modelDeploymentMonitoringJob @defaults("disp
   enableMonitoringPipelineLogs bool
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14897,14 +15876,16 @@ private gcp.scc.finding @defaults("name category severity") {
   // through. The `relatedFindings` key lists the resource names of other
   // findings that share this chokepoint.
   chokepoint dict
-  // External exposure details for the finding
+  // External exposure dict
   //
-  // Describes how the affected resource is reachable from the internet. Keys:
-  // `privateIpAddress`, `privatePort`, `publicIpAddress`, `publicPort`,
-  // `exposedService`, `exposedEndpoint`, `loadBalancerFirewallPolicy`,
-  // `serviceFirewallPolicy`, `forwardingRule`, `backendService`,
-  // `instanceGroup`, and `networkEndpointGroup`.
-  externalExposure dict
+  // Deprecated in favor of internetExposure. Carries `privateIpAddress`,
+  // `privatePort`, `publicIpAddress`, `publicPort`, `exposedService`,
+  // `exposedEndpoint`, `loadBalancerFirewallPolicy`, `serviceFirewallPolicy`,
+  // `forwardingRule`, `backendService`, `instanceGroup`, and
+  // `networkEndpointGroup`.
+  externalExposure @maturity("deprecated") dict
+  // How the affected resource is reachable from the internet
+  internetExposure gcp.scc.finding.internetExposure
   // Toxic combination details for the finding
   //
   // A toxic combination is a set of otherwise-benign findings that together
@@ -14912,6 +15893,47 @@ private gcp.scc.finding @defaults("name category severity") {
   // combined exposure) and `relatedFindings` (resource names of the findings
   // that make up the combination).
   toxicCombination dict
+}
+
+// Internet reachability of a Security Command Center finding
+//
+// The path by which the resource a finding was raised against is reachable from
+// the internet: the `publicIpAddress` and `publicPort` traffic arrives on, the
+// `privateIpAddress` and `privatePort` it lands on, the `exposedService` and
+// `exposedEndpoint` naming what answers, and the Google Cloud resources in
+// between. `loadBalancerFirewallPolicy` and `serviceFirewallPolicy` name the
+// policies filtering that traffic, so a finding with a public port and no
+// firewall policy is one nothing is standing in front of.
+//
+// The resource fields are full resource names rather than resolved resources.
+// Findings are organization-wide, while the Compute Engine resources are read
+// per project, so a resource named here often sits outside the connected
+// project and would read as null.
+private gcp.scc.finding.internetExposure @defaults("publicIpAddress publicPort exposedService") {
+  // Public IP address the resource is reachable on
+  publicIpAddress string
+  // Public port the resource is reachable on
+  publicPort string
+  // Private IP address the public traffic is delivered to
+  privateIpAddress string
+  // Private port the public traffic is delivered to
+  privatePort string
+  // Service exposed on the public endpoint, for example HTTP or SSH
+  exposedService string
+  // Endpoint the exposed service answers on
+  exposedEndpoint string
+  // Full resource name of the firewall policy filtering traffic to the load balancer, empty when none applies
+  loadBalancerFirewallPolicy string
+  // Full resource name of the firewall policy filtering traffic to the service, empty when none applies
+  serviceFirewallPolicy string
+  // Full resource name of the forwarding rule carrying the traffic
+  forwardingRule string
+  // Full resource name of the backend service the traffic is routed to
+  backendService string
+  // Full resource name of the instance group backing the service
+  instanceGroup string
+  // Full resource name of the network endpoint group backing the service
+  networkEndpointGroup string
 }
 
 // Google Cloud Security Command Center notification config
@@ -15750,6 +16772,54 @@ private gcp.project.dlpService.connection @defaults("name state") {
   properties dict
 }
 
+// Sensitivity score of a Cloud DLP data profile
+//
+// How sensitive Cloud DLP judged the profiled data to be, from the infoTypes it
+// detected in it. The same score is attached to a project, a table, a column,
+// and a file store profile, so the one resource is read the same way from all
+// four. SENSITIVITY_UNKNOWN is DLP saying it looked and could not tell, which
+// is a different claim from a profile carrying no score at all.
+private gcp.project.dlpService.sensitivityScore @defaults("score") {
+  // Sensitivity level assigned to the data
+  //
+  // One of SENSITIVITY_LOW, SENSITIVITY_MODERATE, SENSITIVITY_HIGH,
+  // SENSITIVITY_UNKNOWN, or SENSITIVITY_SCORE_UNSPECIFIED.
+  score string
+}
+
+// Data risk level of a Cloud DLP data profile
+//
+// How much risk Cloud DLP judged the profiled data to carry. Risk combines the
+// sensitivity of the data with how broadly it is reachable, so a highly
+// sensitive table behind tight access controls scores lower than a moderately
+// sensitive public one. The same level is attached to a project, a table, a
+// column, and a file store profile.
+private gcp.project.dlpService.dataRiskLevel @defaults("score") {
+  // Risk level assigned to the data
+  //
+  // One of RISK_LOW, RISK_MODERATE, RISK_HIGH, RISK_UNKNOWN, or
+  // RISK_SCORE_UNSPECIFIED.
+  score string
+}
+
+// Generation status of a Cloud DLP data profile
+//
+// The outcome of the last attempt to regenerate a profile. A non-zero
+// `statusCode` means the attempt failed, so the sensitivity and risk scores on
+// the profile describe the data as it was at `timestamp` rather than as it is
+// now, and an audit reading those scores is reading a stale answer.
+private gcp.project.dlpService.profileStatus @defaults("statusCode timestamp") {
+  // Status code of the last profile-generation attempt
+  //
+  // A google.rpc.Code, where 0 is success. Null when no status was reported,
+  // which is a different claim from a successful generation.
+  statusCode int
+  // Message explaining a failed profile-generation attempt, empty on success
+  statusMessage string
+  // Time of the last profile-generation attempt
+  timestamp time
+}
+
 // Google Cloud (GCP) Cloud DLP project data profile
 //
 // Project-level sensitivity profile produced by Cloud DLP discovery.
@@ -15761,12 +16831,32 @@ private gcp.project.dlpService.projectDataProfile @defaults("projectId sensitivi
   name string
   // Project ID this profile describes
   projectId string
-  // Sensitivity score, with keys `score` (HIGH/MEDIUM_LOW) and numeric breakdowns
-  sensitivityScore dict
-  // Data risk level, with key `score` (HIGH/MEDIUM/LOW)
-  dataRiskLevel dict
-  // Status of the last profile-generation attempt
-  profileStatus dict
+  // Sensitivity score dict
+  //
+  // Deprecated in favor of sensitivity. Carries `score`.
+  sensitivityScore @maturity("deprecated") dict
+  // Sensitivity DLP assigned to the profiled data
+  //
+  // Null when the profile reports no score at all, which is different from
+  // SENSITIVITY_UNKNOWN, where DLP looked and could not tell.
+  sensitivity gcp.project.dlpService.sensitivityScore
+  // Data risk level dict
+  //
+  // Deprecated in favor of riskLevel. Carries `score`.
+  dataRiskLevel @maturity("deprecated") dict
+  // Data risk DLP assigned to the profiled data
+  //
+  // Null when the profile reports no risk level at all.
+  riskLevel gcp.project.dlpService.dataRiskLevel
+  // Profile generation status dict
+  //
+  // Deprecated in favor of lastProfileStatus. Carries `status` and
+  // `timestamp`.
+  profileStatus @maturity("deprecated") dict
+  // Outcome of the last profile-generation attempt
+  //
+  // Null when the profile reports no status at all.
+  lastProfileStatus gcp.project.dlpService.profileStatus
   // Number of table data profiles backing this aggregate
   tableDataProfileCount int
   // Number of file-store data profiles backing this aggregate
@@ -15797,12 +16887,32 @@ private gcp.project.dlpService.tableDataProfile @defaults("tableId datasetId sen
   fullResource string
   // State of the profile: STATE_UNSPECIFIED, RUNNING, or DONE
   state string
-  // Sensitivity score, with keys `score` (HIGH/MEDIUM_LOW) and numeric breakdowns
-  sensitivityScore dict
-  // Data risk level, with key `score` (HIGH/MEDIUM/LOW)
-  dataRiskLevel dict
-  // Status of the last profile-generation attempt
-  profileStatus dict
+  // Sensitivity score dict
+  //
+  // Deprecated in favor of sensitivity. Carries `score`.
+  sensitivityScore @maturity("deprecated") dict
+  // Sensitivity DLP assigned to the profiled data
+  //
+  // Null when the profile reports no score at all, which is different from
+  // SENSITIVITY_UNKNOWN, where DLP looked and could not tell.
+  sensitivity gcp.project.dlpService.sensitivityScore
+  // Data risk level dict
+  //
+  // Deprecated in favor of riskLevel. Carries `score`.
+  dataRiskLevel @maturity("deprecated") dict
+  // Data risk DLP assigned to the profiled data
+  //
+  // Null when the profile reports no risk level at all.
+  riskLevel gcp.project.dlpService.dataRiskLevel
+  // Profile generation status dict
+  //
+  // Deprecated in favor of lastProfileStatus. Carries `status` and
+  // `timestamp`.
+  profileStatus @maturity("deprecated") dict
+  // Outcome of the last profile-generation attempt
+  //
+  // Null when the profile reports no status at all.
+  lastProfileStatus gcp.project.dlpService.profileStatus
   // InfoTypes predicted from the table's data, with each entry having `infoType` and `estimatedPrevalence`
   predictedInfoTypes []dict
   // Other infoTypes found in the table that were not predicted, with each entry having `infoType`, `estimatedPrevalence`, and `excludedFromAnalysis`
@@ -15852,10 +16962,23 @@ private gcp.project.dlpService.columnDataProfile @defaults("column tableId sensi
   tableFullResource string
   // State of the profile: STATE_UNSPECIFIED, RUNNING, or DONE
   state string
-  // Column-level sensitivity score
-  sensitivityScore dict
-  // Column-level data risk level
-  dataRiskLevel dict
+  // Sensitivity score dict
+  //
+  // Deprecated in favor of sensitivity. Carries `score`.
+  sensitivityScore @maturity("deprecated") dict
+  // Sensitivity DLP assigned to the profiled data
+  //
+  // Null when the profile reports no score at all, which is different from
+  // SENSITIVITY_UNKNOWN, where DLP looked and could not tell.
+  sensitivity gcp.project.dlpService.sensitivityScore
+  // Data risk level dict
+  //
+  // Deprecated in favor of riskLevel. Carries `score`.
+  dataRiskLevel @maturity("deprecated") dict
+  // Data risk DLP assigned to the profiled data
+  //
+  // Null when the profile reports no risk level at all.
+  riskLevel gcp.project.dlpService.dataRiskLevel
   // InfoType detected for this column, with keys `infoType` and `estimatedPrevalence`
   columnInfoType dict
   // Other infoTypes also detected for this column
@@ -15895,16 +17018,36 @@ private gcp.project.dlpService.fileStoreDataProfile @defaults("fileStorePath sen
   fileStorePath string
   // Full resource name of the profiled resource
   fullResource string
-  // Status of the last profile-generation attempt
-  profileStatus dict
+  // Profile generation status dict
+  //
+  // Deprecated in favor of lastProfileStatus. Carries `status` and
+  // `timestamp`.
+  profileStatus @maturity("deprecated") dict
+  // Outcome of the last profile-generation attempt
+  //
+  // Null when the profile reports no status at all.
+  lastProfileStatus gcp.project.dlpService.profileStatus
   // State of the profile: STATE_UNSPECIFIED, RUNNING, or DONE
   state string
   // How broadly the bucket is shared: RESOURCE_VISIBILITY_PUBLIC, RESOURCE_VISIBILITY_INCONCLUSIVE, or RESOURCE_VISIBILITY_RESTRICTED
   resourceVisibility string
-  // Sensitivity score, with keys `score` (HIGH/MEDIUM_LOW) and numeric breakdowns
-  sensitivityScore dict
-  // Data risk level, with key `score` (HIGH/MEDIUM/LOW)
-  dataRiskLevel dict
+  // Sensitivity score dict
+  //
+  // Deprecated in favor of sensitivity. Carries `score`.
+  sensitivityScore @maturity("deprecated") dict
+  // Sensitivity DLP assigned to the profiled data
+  //
+  // Null when the profile reports no score at all, which is different from
+  // SENSITIVITY_UNKNOWN, where DLP looked and could not tell.
+  sensitivity gcp.project.dlpService.sensitivityScore
+  // Data risk level dict
+  //
+  // Deprecated in favor of riskLevel. Carries `score`.
+  dataRiskLevel @maturity("deprecated") dict
+  // Data risk DLP assigned to the profiled data
+  //
+  // Null when the profile reports no risk level at all.
+  riskLevel gcp.project.dlpService.dataRiskLevel
   // Per-cluster summaries (clusters group files by type: documents, images, etc.)
   fileClusterSummaries []dict
   // Resource attributes captured by the profile, e.g. `customer_managed_encryption` boolean

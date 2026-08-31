@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/gcp/connection"
+	"go.mondoo.com/mql/types"
 	"google.golang.org/api/logging/v2"
 	"google.golang.org/api/option"
 )
@@ -58,6 +59,11 @@ func newMqlLoggingSettings(runtime *plugin.Runtime, settings *logging.Settings, 
 		name = fallbackName
 	}
 
+	defaultSink, err := newMqlDefaultSinkOverride(runtime, "gcp.loggingSettings/"+name, settings.DefaultSinkConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	res, err := CreateResource(runtime, "gcp.loggingSettings", map[string]*llx.RawData{
 		"name":                    llx.StringData(name),
 		"disableDefaultSink":      llx.BoolData(settings.DisableDefaultSink),
@@ -66,6 +72,7 @@ func newMqlLoggingSettings(runtime *plugin.Runtime, settings *logging.Settings, 
 		"loggingServiceAccountId": llx.StringData(settings.LoggingServiceAccountId),
 		"storageLocation":         llx.StringData(settings.StorageLocation),
 		"defaultSinkConfig":       llx.DictData(defaultSinkConfig),
+		"defaultSink":             defaultSink,
 	})
 	if err != nil {
 		return nil, err
@@ -165,4 +172,32 @@ func (g *mqlGcpFolderLoggingService) settings() (*mqlGcpLoggingSettings, error) 
 		return nil, err
 	}
 	return newMqlLoggingSettings(g.MqlRuntime, settings, parent+"/settings")
+}
+
+// newMqlDefaultSinkOverride promotes the overrides a folder or organization
+// applies to the built-in _Default sink.
+//
+// Returns llx.NilData for a node that leaves the sink exactly as Cloud Logging
+// builds it, which is a different claim from a node that overrides it with an
+// empty filter.
+func newMqlDefaultSinkOverride(runtime *plugin.Runtime, parentID string, cfg *logging.DefaultSinkConfig) (*llx.RawData, error) {
+	if cfg == nil {
+		return llx.NilData, nil
+	}
+
+	exclusions, err := newMqlLogExclusions(runtime, parentID+"/defaultSink", cfg.Exclusions)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(runtime, "gcp.loggingSettings.defaultSinkOverride", map[string]*llx.RawData{
+		"__id":       llx.StringData(parentID + "/defaultSink"),
+		"filter":     llx.StringData(cfg.Filter),
+		"mode":       llx.StringData(cfg.Mode),
+		"exclusions": llx.ArrayData(exclusions, types.Resource("gcp.project.loggingservice.sink.exclusion")),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return llx.ResourceData(res, "gcp.loggingSettings.defaultSinkOverride"), nil
 }

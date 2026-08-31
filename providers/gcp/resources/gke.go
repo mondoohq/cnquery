@@ -423,106 +423,8 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 
 		var addonsConfig plugin.Resource
 		if c.AddonsConfig != nil {
-			var httpLoadBalancing map[string]any
-			if c.AddonsConfig.HttpLoadBalancing != nil {
-				httpLoadBalancing = map[string]any{
-					"disabled": c.AddonsConfig.HttpLoadBalancing.Disabled,
-				}
-			}
-
-			var horizontalPodAutoscaling map[string]any
-			if c.AddonsConfig.HorizontalPodAutoscaling != nil {
-				horizontalPodAutoscaling = map[string]any{
-					"disabled": c.AddonsConfig.HorizontalPodAutoscaling.Disabled,
-				}
-			}
-
-			var kubernetesDashboard map[string]any
-			if c.AddonsConfig.KubernetesDashboard != nil {
-				kubernetesDashboard = map[string]any{
-					"disabled": c.AddonsConfig.KubernetesDashboard.Disabled,
-				}
-			}
-
-			var networkPolicyConfig map[string]any
-			if c.AddonsConfig.NetworkPolicyConfig != nil {
-				networkPolicyConfig = map[string]any{
-					"disabled": c.AddonsConfig.NetworkPolicyConfig.Disabled,
-				}
-			}
-
-			var cloudRunConfig map[string]any
-			if c.AddonsConfig.CloudRunConfig != nil {
-				cloudRunConfig = map[string]any{
-					"disabled":         c.AddonsConfig.CloudRunConfig.Disabled,
-					"loadBalancerType": c.AddonsConfig.CloudRunConfig.LoadBalancerType.String(),
-				}
-			}
-
-			var dnsCacheConfig map[string]any
-			if c.AddonsConfig.DnsCacheConfig != nil {
-				dnsCacheConfig = map[string]any{
-					"enabled": c.AddonsConfig.DnsCacheConfig.Enabled,
-				}
-			}
-
-			var configConnectorConfig map[string]any
-			if c.AddonsConfig.ConfigConnectorConfig != nil {
-				configConnectorConfig = map[string]any{
-					"enabled": c.AddonsConfig.ConfigConnectorConfig.Enabled,
-				}
-			}
-
-			var gcePersistentDiskCsiDriverConfig map[string]any
-			if c.AddonsConfig.GcePersistentDiskCsiDriverConfig != nil {
-				gcePersistentDiskCsiDriverConfig = map[string]any{
-					"enabled": c.AddonsConfig.GcePersistentDiskCsiDriverConfig.Enabled,
-				}
-			}
-
-			var gcpFilestoreCsiDriverConfig map[string]any
-			if c.AddonsConfig.GcpFilestoreCsiDriverConfig != nil {
-				gcpFilestoreCsiDriverConfig = map[string]any{
-					"enabled": c.AddonsConfig.GcpFilestoreCsiDriverConfig.Enabled,
-				}
-			}
-
-			var gkeBackupAgentConfig map[string]any
-			if c.AddonsConfig.GkeBackupAgentConfig != nil {
-				gkeBackupAgentConfig = map[string]any{
-					"enabled": c.AddonsConfig.GkeBackupAgentConfig.Enabled,
-				}
-			}
-
-			var gcsFuseCsiDriverConfig map[string]any
-			if c.AddonsConfig.GcsFuseCsiDriverConfig != nil {
-				gcsFuseCsiDriverConfig = map[string]any{
-					"enabled": c.AddonsConfig.GcsFuseCsiDriverConfig.Enabled,
-				}
-			}
-
-			var statefulHaConfig map[string]any
-			if c.AddonsConfig.StatefulHaConfig != nil {
-				statefulHaConfig = map[string]any{
-					"enabled": c.AddonsConfig.StatefulHaConfig.Enabled,
-				}
-			}
-
-			addonsConfig, err = CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster.addonsConfig", map[string]*llx.RawData{
-				"id":                               llx.StringData(fmt.Sprintf("gcp.project.gkeService.cluster/%s/addonsConfig", c.Id)),
-				"httpLoadBalancing":                llx.DictData(httpLoadBalancing),
-				"horizontalPodAutoscaling":         llx.DictData(horizontalPodAutoscaling),
-				"kubernetesDashboard":              llx.DictData(kubernetesDashboard),
-				"networkPolicyConfig":              llx.DictData(networkPolicyConfig),
-				"cloudRunConfig":                   llx.DictData(cloudRunConfig),
-				"dnsCacheConfig":                   llx.DictData(dnsCacheConfig),
-				"configConnectorConfig":            llx.DictData(configConnectorConfig),
-				"gcePersistentDiskCsiDriverConfig": llx.DictData(gcePersistentDiskCsiDriverConfig),
-				"gcpFilestoreCsiDriverConfig":      llx.DictData(gcpFilestoreCsiDriverConfig),
-				"gkeBackupAgentConfig":             llx.DictData(gkeBackupAgentConfig),
-				"gcsFuseCsiDriverConfig":           llx.DictData(gcsFuseCsiDriverConfig),
-				"statefulHaConfig":                 llx.DictData(statefulHaConfig),
-			})
+			addonsConfig, err = newMqlGkeAddonsConfig(g.MqlRuntime,
+				fmt.Sprintf("gcp.project.gkeService.cluster/%s/addonsConfig", c.Id), c.AddonsConfig)
 			if err != nil {
 				return nil, err
 			}
@@ -833,6 +735,12 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			return nil, err
 		}
 
+		controlPlaneEndpoints, err := newMqlGkeControlPlaneEndpoints(g.MqlRuntime,
+			fmt.Sprintf("gcp.project.gkeService.cluster/%s", c.Id), c.ControlPlaneEndpointsConfig)
+		if err != nil {
+			return nil, err
+		}
+
 		loggingConfig, err := protoToDict(c.LoggingConfig)
 		if err != nil {
 			return nil, err
@@ -998,6 +906,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"nodeAutoprovisioning":                     nodeAutoprovisioningData,
 			"meshCertificates":                         llx.DictData(meshCertificates),
 			"controlPlaneEndpointsConfig":              llx.DictData(controlPlaneEndpointsConfig),
+			"controlPlaneEndpoints":                    controlPlaneEndpoints,
 			"controlPlanePublicEndpointEnabled":        llx.BoolData(controlPlanePublicEndpointEnabled),
 			"masterAuthorizedNetworksCidrs":            llx.ArrayData(masterAuthorizedNetworksCidrs, types.String),
 			"masterAuthorizedNetworksAllowed":          llx.BoolData(masterAuthorizedNetworksAllowed),

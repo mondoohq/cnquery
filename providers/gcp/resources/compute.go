@@ -686,6 +686,11 @@ func newMqlAttachedDisk(id string, projectId string, runtime *plugin.Runtime, at
 		guestOsFeatures = append(guestOsFeatures, entry.Type)
 	}
 
+	diskEncryption, err := newMqlCustomerEncryptionKey(runtime, id, "diskEncryption", attachedDisk.DiskEncryptionKey)
+	if err != nil {
+		return nil, err
+	}
+
 	mqlAttachedDisk, err := CreateResource(runtime, "gcp.project.computeService.attachedDisk", map[string]*llx.RawData{
 		"id":                llx.StringData(id),
 		"projectId":         llx.StringData(projectId),
@@ -702,6 +707,7 @@ func newMqlAttachedDisk(id string, projectId string, runtime *plugin.Runtime, at
 		"mode":              llx.StringData(attachedDisk.Mode),
 		"type":              llx.StringData(attachedDisk.Type),
 		"diskEncryptionKey": llx.DictData(customerEncryptionKeyToDict(attachedDisk.DiskEncryptionKey)),
+		"diskEncryption":    diskEncryption,
 	})
 	if err != nil {
 		return nil, err
@@ -883,6 +889,14 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 
 	mqlInstanceEncryptionKey := customerEncryptionKeyToDict(instance.InstanceEncryptionKey)
 	mqlSourceMachineImageEncryptionKey := customerEncryptionKeyToDict(instance.SourceMachineImageEncryptionKey)
+	instanceEncryption, err := newMqlCustomerEncryptionKey(runtime, "gcp.project.computeService.instance/"+strconv.FormatUint(instance.Id, 10), "instanceEncryption", instance.InstanceEncryptionKey)
+	if err != nil {
+		return nil, err
+	}
+	sourceMachineImageEncryption, err := newMqlCustomerEncryptionKey(runtime, "gcp.project.computeService.instance/"+strconv.FormatUint(instance.Id, 10), "sourceMachineImageEncryption", instance.SourceMachineImageEncryptionKey)
+	if err != nil {
+		return nil, err
+	}
 
 	var mqlAdvancedMachineFeatures map[string]any
 	if instance.AdvancedMachineFeatures != nil {
@@ -892,6 +906,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 			"threadsPerCore":             instance.AdvancedMachineFeatures.ThreadsPerCore,
 			"visibleCoreCount":           instance.AdvancedMachineFeatures.VisibleCoreCount,
 			"performanceMonitoringUnit":  instance.AdvancedMachineFeatures.PerformanceMonitoringUnit,
+			"turboMode":                  instance.AdvancedMachineFeatures.TurboMode,
 		}
 	}
 
@@ -989,7 +1004,9 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		"satisfiesPzs":                    llx.BoolData(instance.SatisfiesPzs),
 		"workloadIdentityConfig":          llx.DictData(mqlWorkloadIdentityConfig),
 		"instanceEncryptionKey":           llx.DictData(mqlInstanceEncryptionKey),
+		"instanceEncryption":              instanceEncryption,
 		"sourceMachineImageEncryptionKey": llx.DictData(mqlSourceMachineImageEncryptionKey),
+		"sourceMachineImageEncryption":    sourceMachineImageEncryption,
 		"advancedMachineFeatures":         llx.DictData(mqlAdvancedMachineFeatures),
 	})
 	if err != nil {
@@ -1364,6 +1381,19 @@ func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 				mqlDiskEnc := customerEncryptionKeyToDict(disk.DiskEncryptionKey)
 				mqlSourceImageEnc := customerEncryptionKeyToDict(disk.SourceImageEncryptionKey)
 				mqlSourceSnapshotEnc := customerEncryptionKeyToDict(disk.SourceSnapshotEncryptionKey)
+				diskID := "gcp.project.computeService.disk/" + strconv.FormatUint(disk.Id, 10)
+				diskEncryption, err := newMqlCustomerEncryptionKey(g.MqlRuntime, diskID, "diskEncryption", disk.DiskEncryptionKey)
+				if err != nil {
+					return err
+				}
+				sourceImageEncryption, err := newMqlCustomerEncryptionKey(g.MqlRuntime, diskID, "sourceImageEncryption", disk.SourceImageEncryptionKey)
+				if err != nil {
+					return err
+				}
+				sourceSnapshotEncryption, err := newMqlCustomerEncryptionKey(g.MqlRuntime, diskID, "sourceSnapshotEncryption", disk.SourceSnapshotEncryptionKey)
+				if err != nil {
+					return err
+				}
 
 				var mqlAsyncPrimary map[string]any
 				if disk.AsyncPrimaryDisk != nil {
@@ -1415,8 +1445,11 @@ func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 					"zone":                        zoneData,
 					"created":                     llx.TimeDataPtr(parseTime(disk.CreationTimestamp)),
 					"diskEncryptionKey":           llx.DictData(mqlDiskEnc),
+					"diskEncryption":              diskEncryption,
 					"sourceImageEncryptionKey":    llx.DictData(mqlSourceImageEnc),
+					"sourceImageEncryption":       sourceImageEncryption,
 					"sourceSnapshotEncryptionKey": llx.DictData(mqlSourceSnapshotEnc),
+					"sourceSnapshotEncryption":    sourceSnapshotEncryption,
 					"asyncPrimaryDisk":            llx.DictData(mqlAsyncPrimary),
 					"asyncSecondaryDisks":         llx.DictData(mqlAsyncSecondaries),
 					"enableConfidentialCompute":   llx.BoolData(disk.EnableConfidentialCompute),
@@ -1708,6 +1741,10 @@ func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 			if snapshot.SnapshotEncryptionKey != nil {
 				snapshotKmsKeyName = snapshot.SnapshotEncryptionKey.KmsKeyName
 			}
+			snapshotEncryption, err := newMqlCustomerEncryptionKey(g.MqlRuntime, "gcp.project.computeService.snapshot/"+strconv.FormatUint(snapshot.Id, 10), "snapshotEncryption", snapshot.SnapshotEncryptionKey)
+			if err != nil {
+				return err
+			}
 			mqlSnapshpt, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.snapshot", map[string]*llx.RawData{
 				"id":                             llx.StringData(strconv.FormatUint(snapshot.Id, 10)),
 				"projectId":                      llx.StringData(projectId),
@@ -1734,6 +1771,7 @@ func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 				"sourceSnapshotSchedulePolicy":   llx.StringData(snapshot.SourceSnapshotSchedulePolicy),
 				"sourceSnapshotSchedulePolicyId": llx.StringData(snapshot.SourceSnapshotSchedulePolicyId),
 				"snapshotEncryptionKey":          llx.DictData(customerEncryptionKeyToDict(snapshot.SnapshotEncryptionKey)),
+				"snapshotEncryption":             snapshotEncryption,
 			})
 			if err != nil {
 				return err
@@ -1982,6 +2020,10 @@ func (g *mqlGcpProjectComputeService) images() ([]any, error) {
 				}
 				shieldedInitialState = d
 			}
+			imageEncryption, err := newMqlCustomerEncryptionKey(g.MqlRuntime, "gcp.project.computeService.image/"+strconv.FormatUint(image.Id, 10), "imageEncryption", image.ImageEncryptionKey)
+			if err != nil {
+				return err
+			}
 			mqlImage, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.image", map[string]*llx.RawData{
 				"id":                           llx.StringData(strconv.FormatUint(image.Id, 10)),
 				"projectId":                    llx.StringData(projectId),
@@ -2000,6 +2042,7 @@ func (g *mqlGcpProjectComputeService) images() ([]any, error) {
 				"satisfiesPzs":                 llx.BoolData(image.SatisfiesPzs),
 				"storageLocations":             llx.ArrayData(convert.SliceAnyToInterface(image.StorageLocations), types.String),
 				"imageEncryptionKey":           llx.DictData(customerEncryptionKeyToDict(image.ImageEncryptionKey)),
+				"imageEncryption":              imageEncryption,
 				"shieldedInstanceInitialState": llx.DictData(shieldedInitialState),
 			})
 			if err != nil {
@@ -3427,7 +3470,7 @@ func (g *mqlGcpProjectComputeService) wafExpressionSets() ([]any, error) {
 
 	res := []any{}
 	for _, set := range wafExpressionSetsFromResponse(resp) {
-		args, err := wafExpressionSetArgs(projectId, set)
+		args, err := wafExpressionSetArgs(g.MqlRuntime, projectId, set)
 		if err != nil {
 			return nil, err
 		}
@@ -3450,30 +3493,47 @@ func wafExpressionSetsFromResponse(resp *compute.SecurityPoliciesListPreconfigur
 	return resp.PreconfiguredExpressionSets.WafRules.ExpressionSets
 }
 
+// wafExpressionSetExpressionArgs maps one expression of a set onto resource
+// arguments.
+//
+// A sensitivity of 0 is a real paranoia level, marking an expression applied
+// only when a rule opts into it by name, so it has to survive rather than be
+// dropped as a zero value. The cache key carries the project because the sets
+// are Google-maintained and identical across projects.
+func wafExpressionSetExpressionArgs(setID string, e *compute.WafExpressionSetExpression) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":        llx.StringData(setID + "/expression/" + e.Id),
+		"id":          llx.StringData(e.Id),
+		"sensitivity": llx.IntData(e.Sensitivity),
+	}
+}
+
 // wafExpressionSetArgs maps one expression set onto resource arguments.
-func wafExpressionSetArgs(projectId string, set *compute.WafExpressionSet) (map[string]*llx.RawData, error) {
+func wafExpressionSetArgs(runtime *plugin.Runtime, projectId string, set *compute.WafExpressionSet) (map[string]*llx.RawData, error) {
 	aliases := make([]any, 0, len(set.Aliases))
 	for _, a := range set.Aliases {
 		aliases = append(aliases, a)
 	}
 
+	setID := projectId + "/wafExpressionSet/" + set.Id
 	expressions := make([]any, 0, len(set.Expressions))
 	for _, e := range set.Expressions {
 		if e == nil {
 			continue
 		}
-		d, err := convert.JsonToDict(e)
+		mqlExpression, err := CreateResource(runtime, "gcp.project.computeService.wafExpressionSet.expression",
+			wafExpressionSetExpressionArgs(setID, e))
 		if err != nil {
 			return nil, err
 		}
-		expressions = append(expressions, d)
+		expressions = append(expressions, mqlExpression)
 	}
 
 	return map[string]*llx.RawData{
-		"__id":        llx.StringData(projectId + "/wafExpressionSet/" + set.Id),
+		"__id":        llx.StringData(setID),
 		"id":          llx.StringData(set.Id),
 		"aliases":     llx.ArrayData(aliases, types.String),
-		"expressions": llx.ArrayData(expressions, types.Dict),
+		"expressions": llx.ArrayData(expressions, types.Resource("gcp.project.computeService.wafExpressionSet.expression")),
 	}, nil
 }
 
@@ -3536,6 +3596,19 @@ func (g *mqlGcpProjectComputeService) securityPolicies() ([]any, error) {
 				}
 
 				policyId := strconv.FormatUint(policy.Id, 10)
+				policyKey := "gcp.project.computeService.securityPolicy/" + policyId
+				adaptiveProtection, err := newMqlSecurityPolicyAdaptiveProtection(g.MqlRuntime, policyKey, policy.AdaptiveProtectionConfig)
+				if err != nil {
+					return err
+				}
+				advancedOptions, err := newMqlSecurityPolicyAdvancedOptions(g.MqlRuntime, policyKey, policy.AdvancedOptionsConfig)
+				if err != nil {
+					return err
+				}
+				networkDdosProtection, err := newMqlSecurityPolicyDdosProtection(g.MqlRuntime, policyKey, policy.DdosProtectionConfig)
+				if err != nil {
+					return err
+				}
 				mqlPolicy, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.securityPolicy", map[string]*llx.RawData{
 					"id":                       llx.StringData(policyId),
 					"name":                     llx.StringData(policy.Name),
@@ -3543,8 +3616,11 @@ func (g *mqlGcpProjectComputeService) securityPolicies() ([]any, error) {
 					"type":                     llx.StringData(policy.Type),
 					"labels":                   llx.MapData(convert.MapToInterfaceMap(policy.Labels), types.String),
 					"adaptiveProtectionConfig": llx.DictData(adaptiveProtectionConfig),
+					"adaptiveProtection":       adaptiveProtection,
 					"advancedOptionsConfig":    llx.DictData(advancedOptionsConfig),
+					"advancedOptions":          advancedOptions,
 					"ddosProtectionConfig":     llx.DictData(ddosProtectionConfig),
+					"networkDdosProtection":    networkDdosProtection,
 					"recaptchaOptionsConfig":   llx.DictData(recaptchaOptionsConfig),
 					"fingerprint":              llx.StringData(policy.Fingerprint),
 					"userDefinedFields":        llx.ArrayData(userDefinedFields, types.Dict),
@@ -3646,13 +3722,20 @@ func (g *mqlGcpProjectComputeServiceSecurityPolicy) rules() ([]any, error) {
 			return nil, err
 		}
 
+		ruleId := fmt.Sprintf("gcp.project.computeService.securityPolicy.rule/%s/%d", policyId, rule.Priority)
+		matcher, err := newMqlSecurityPolicyRuleMatcher(g.MqlRuntime, ruleId, rule.Match)
+		if err != nil {
+			return nil, err
+		}
+
 		mqlRule, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.securityPolicy.rule", map[string]*llx.RawData{
-			"id":                     llx.StringData(fmt.Sprintf("gcp.project.computeService.securityPolicy.rule/%s/%d", policyId, rule.Priority)),
+			"id":                     llx.StringData(ruleId),
 			"action":                 llx.StringData(rule.Action),
 			"description":            llx.StringData(rule.Description),
 			"priority":               llx.IntData(rule.Priority),
 			"preview":                llx.BoolData(rule.Preview),
 			"match":                  llx.DictData(matchDict),
+			"matcher":                matcher,
 			"networkMatch":           llx.DictData(networkMatch),
 			"rateLimitOptions":       llx.DictData(rateLimitOptions),
 			"redirectOptions":        llx.DictData(redirectOptions),

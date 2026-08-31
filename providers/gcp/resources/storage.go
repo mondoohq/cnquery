@@ -251,6 +251,11 @@ func mqlBucketFromAPI(runtime *plugin.Runtime, projectId string, bucket *storage
 
 	softDeleteTime := parseTime(bucket.SoftDeleteTime)
 
+	ipFilterConfig, err := newMqlBucketIpFilterConfig(runtime, "gcp.project.storageService.bucket/"+bucket.Id, bucket.IpFilter)
+	if err != nil {
+		return nil, err
+	}
+
 	mqlInstance, err := CreateResource(runtime, "gcp.project.storageService.bucket", map[string]*llx.RawData{
 		"id":                    llx.StringData(bucket.Id),
 		"projectId":             llx.StringData(projectId),
@@ -286,6 +291,7 @@ func mqlBucketFromAPI(runtime *plugin.Runtime, projectId string, bucket *storage
 		"objectRetentionMode":         llx.StringData(objectRetentionMode),
 		"autoclass":                   llx.DictData(autoclass),
 		"ipFilter":                    llx.DictData(ipFilter),
+		"ipFilterConfig":              ipFilterConfig,
 		"hierarchicalNamespace":       llx.DictData(hierarchicalNamespace),
 		"customPlacementConfig":       llx.DictData(customPlacementConfig),
 		"logging":                     llx.DictData(logging),
