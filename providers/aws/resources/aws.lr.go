@@ -153000,7 +153000,9 @@ func (c *mqlAwsLambdaFunction) GetUrlConfigAuthType() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsLambdaFunction) GetState() *plugin.TValue[string] {
-	return &c.State
+	return plugin.GetOrCompute[string](&c.State, func() (string, error) {
+		return c.state()
+	})
 }
 
 func (c *mqlAwsLambdaFunction) GetCodeSize() *plugin.TValue[int64] {
@@ -153008,15 +153010,21 @@ func (c *mqlAwsLambdaFunction) GetCodeSize() *plugin.TValue[int64] {
 }
 
 func (c *mqlAwsLambdaFunction) GetStateReason() *plugin.TValue[string] {
-	return &c.StateReason
+	return plugin.GetOrCompute[string](&c.StateReason, func() (string, error) {
+		return c.stateReason()
+	})
 }
 
 func (c *mqlAwsLambdaFunction) GetLastUpdateStatus() *plugin.TValue[string] {
-	return &c.LastUpdateStatus
+	return plugin.GetOrCompute[string](&c.LastUpdateStatus, func() (string, error) {
+		return c.lastUpdateStatus()
+	})
 }
 
 func (c *mqlAwsLambdaFunction) GetLastUpdateStatusReason() *plugin.TValue[string] {
-	return &c.LastUpdateStatusReason
+	return plugin.GetOrCompute[string](&c.LastUpdateStatusReason, func() (string, error) {
+		return c.lastUpdateStatusReason()
+	})
 }
 
 func (c *mqlAwsLambdaFunction) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
@@ -153344,7 +153352,9 @@ func (c *mqlAwsLambdaFunctionVersion) GetLastModifiedAt() *plugin.TValue[*time.T
 }
 
 func (c *mqlAwsLambdaFunctionVersion) GetState() *plugin.TValue[string] {
-	return &c.State
+	return plugin.GetOrCompute[string](&c.State, func() (string, error) {
+		return c.state()
+	})
 }
 
 // mqlAwsLambdaFunctionUrlConfig for the aws.lambda.function.urlConfig resource
