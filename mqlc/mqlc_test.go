@@ -2466,7 +2466,7 @@ func TestCompiler_NestedEntrypoints(t *testing.T) {
 					a == b
 				}
 			`,
-			[]uint64{},
+			[]uint64{(2 << 32) | 3, (2 << 32) | 4},
 			[]uint64{(1 << 32) | 1, (2 << 32) | 5},
 		},
 		{
@@ -2481,7 +2481,7 @@ func TestCompiler_NestedEntrypoints(t *testing.T) {
 					x == y
 				}
 			`,
-			[]uint64{},
+			[]uint64{(2 << 32) | 3, (2 << 32) | 4, (3 << 32) | 3, (3 << 32) | 4},
 			[]uint64{(1 << 32) | 1, (2 << 32) | 5, (3 << 32) | 5},
 		},
 		{
@@ -2501,7 +2501,12 @@ func TestCompiler_NestedEntrypoints(t *testing.T) {
 					j == k
 				}
 			`,
-			[]uint64{(1 << 32) | 2},
+			[]uint64{
+				(1 << 32) | 2,
+				(2 << 32) | 3, (2 << 32) | 4,
+				(3 << 32) | 3, (3 << 32) | 4,
+				(4 << 32) | 3, (4 << 32) | 4,
+			},
 			[]uint64{(1 << 32) | 6, (2 << 32) | 5, (3 << 32) | 5, (4 << 32) | 5},
 		},
 		{
@@ -2517,7 +2522,7 @@ func TestCompiler_NestedEntrypoints(t *testing.T) {
 					x == y
 				}
 			`,
-			[]uint64{},
+			[]uint64{(2 << 32) | 3, (2 << 32) | 4, (3 << 32) | 3, (3 << 32) | 4},
 			[]uint64{(1 << 32) | 5, (2 << 32) | 5, (3 << 32) | 5},
 		},
 		{
@@ -2528,7 +2533,7 @@ func TestCompiler_NestedEntrypoints(t *testing.T) {
 					a == b
 				}
 			`,
-			[]uint64{},
+			[]uint64{(2 << 32) | 4, (2 << 32) | 5},
 			[]uint64{(1 << 32) | 2, (2 << 32) | 6},
 		},
 		{
@@ -2539,7 +2544,7 @@ func TestCompiler_NestedEntrypoints(t *testing.T) {
 					x == y
 				}
 			`,
-			[]uint64{},
+			[]uint64{(2 << 32) | 4, (2 << 32) | 5},
 			[]uint64{(1 << 32) | 2, (2 << 32) | 6},
 		},
 		{
@@ -2550,7 +2555,7 @@ func TestCompiler_NestedEntrypoints(t *testing.T) {
 					x == y
 				}
 			`,
-			[]uint64{},
+			[]uint64{(2 << 32) | 4, (2 << 32) | 5},
 			[]uint64{(1 << 32) | 2, (2 << 32) | 6},
 		},
 		{

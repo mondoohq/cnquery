@@ -150,6 +150,9 @@ func TestMap(t *testing.T) {
 				"__t": llx.BoolTrue,
 				"__s": llx.BoolTrue,
 				"CQ28lTwZsvVdJM4dCyeTdbQhExY8oiUIcMoPyPjXAJNgtjMLnHK6qgEVywRY1Hbw9QqInuL06EWIOaEMj2e9NA==": llx.BoolTrue,
+				// the comparison's operand is collected as a datapoint, so that a
+				// failing assertion can report the value it actually saw
+				"LCXQj0xjiWsmFuiDOIUFsxcFUaSQPRQ6CTTXaNl3BENej4ffvSZX7Z1rBoDlePTJNeW8XeF4/gOgkSwenn88Sw==": llx.DictData(nil),
 			},
 		},
 	})
@@ -192,6 +195,10 @@ func TestListResource(t *testing.T) {
 					"__s": llx.BoolTrue,
 					"BamDDGp87sNG0hVjpmEAPEjF6fZmdA6j3nDinlgr/y5xK3KaLgulyscoeEEaEASm2RkRXifnWj3ZbF0OZBF6XA==": llx.BoolTrue,
 					"ytOUfV4UyOjY0C6HKzQ8GcA/hshrh2ahRySNG41RbFt3TNNf+6gBuHvs2hGTNDPUZR/oN8WH0QFIYYm/Vj3pGQ==": llx.BoolTrue,
+					// uid and gid are collected as datapoints, so that a failing
+					// assertion can report the values it actually saw
+					"aBOtIXBPoe9nWUDBl9sr+N5w+QLjyg8Vsr5dDM1hapmEyb4hX9KM2Q87iKM2mFWBHve+BMe/lARHrXwwyfvOxA==": llx.IntData(0),
+					"ylMU7sDF2mljSq+Et4sJDLsZL6AJTL8VaJMEMpBk0OljnQTRBZBoq7C/DfUXuM667DH0hA+hP4Ywv5gfmVppog==": llx.IntData(0),
 				},
 			},
 		},

@@ -232,6 +232,7 @@ func TestLabels(t *testing.T) {
 				Labels: map[string]string{
 					"7NxXEUBD5O9yqcbS1gghsap3uMTanBAaQoU1061BWC4zNG74Nv4CoNIkjnhac27hKYIpxS8HcY3DgYKG5ct9Eg==": "permissions.string",
 					"7ssUZ+7ZcZ1C3VPTkHgoxXfjTCKWxzWqNgcg8KjukJ6gak4KRkuH8hnP4iCIo7WWuQBmAPuMDYmMAJP18YTPzQ==": "sshd.config.files.$whereNot",
+					"EF2j9MZ5k+98O64CFpYyIpeZlEKybXZBdhqyvpk4iYlZCsxohReNTQ3M4NNC3yHBRCgkmjBEM2UhXhPbDv67+Q==": "group",
 					"GtNpr16YRhlm6mLxwtpY85pTl5djJb0RM/JxMb2l9CgapVzIC/BJERmQcrTGlrMUoSL4JYCZOCJqMfEYJzuxtA==": "gid",
 					"WTVWqxulB/XLD1JGBWA2L43HNW0C6gvbfMIOeuNQaFqi9a2ZiDPTFnbeBjNxMuO7yst9EGdqXe//A6pm8AUOJA==": "[].all()",
 					"XP1c/yncrad6armVwSmXAvI84OcAOGlB0VCmfbGyCico7MDMHd5sT7KrqThFoSCi76HMHZGnLn4/x3mgMBX7+A==": "group",
