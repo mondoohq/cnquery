@@ -381,6 +381,7 @@ func (a *mqlAzureSubscriptionContainerRegistryServiceRegistry) policies() (*mqlA
 			"retentionPolicyDays":     llx.IntData(retentionDays),
 			"quarantinePolicyEnabled": llx.BoolData(quarantineEnabled),
 			"exportPolicyEnabled":     llx.BoolData(exportEnabled),
+
 			"azureADAuthenticationAsArmPolicyEnabled": llx.BoolData(aadAsArmEnabled),
 		})
 	if err != nil {
