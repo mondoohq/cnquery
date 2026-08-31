@@ -798,7 +798,29 @@ func spdxSupplier(supplier string) *common.Supplier {
 // PackageLicenseConcluded is what the document's producer determined. Both are
 // single expressions rather than lists, so there is at most one entry of each.
 func readSpdxPackageLicensing(bomPkg *Package, pkg *v2_3.Package) {
-	if entry := DeclaredLicense(importedLicenseValue(pkg.PackageLicenseDeclared)); entry != nil {
+	declared := importedLicenseValue(pkg.PackageLicenseDeclared)
+	concluded := importedLicenseValue(pkg.PackageLicenseConcluded)
+
+	// A concluded value equal to the declared one is an echo, not a conclusion.
+	//
+	// This renderer writes one: where nothing was concluded it repeats the
+	// declared value rather than NOASSERTION, on the grounds that it is what the
+	// document has to go on, and other SPDX producers do the same. Reading it
+	// back as a determination turns a package that declared MIT and concluded
+	// nothing into one asserting somebody concluded MIT -- a claim that the
+	// license was verified, invented by a round trip.
+	//
+	// The two are indistinguishable in the document, so the question is which
+	// way to be wrong. Dropping a conclusion that merely agrees with the
+	// declaration costs nothing: the license is still reported, as declared, and
+	// only the unverifiable claim that someone checked it goes. Keeping it
+	// manufactures that claim. A conclusion that DISAGREES is the case the split
+	// exists for and is always kept.
+	if concluded == declared {
+		concluded = ""
+	}
+
+	if entry := DeclaredLicense(declared); entry != nil {
 		bomPkg.Licenses = append(bomPkg.Licenses, entry)
 	}
 
@@ -806,7 +828,7 @@ func readSpdxPackageLicensing(bomPkg *Package, pkg *v2_3.Package) {
 	// records: SPDX carries neither for a concluded license, and the model
 	// spells "nobody measured this" as 0. Reporting 1.0 would rank an imported
 	// conclusion that was never scored alongside one that scored perfectly.
-	if entry := ConcludedLicense(importedLicenseValue(pkg.PackageLicenseConcluded), "", 0); entry != nil {
+	if entry := ConcludedLicense(concluded, "", 0); entry != nil {
 		bomPkg.Licenses = append(bomPkg.Licenses, entry)
 	}
 
@@ -822,7 +844,7 @@ func readSpdxPackageLicensing(bomPkg *Package, pkg *v2_3.Package) {
 		}
 	}
 	if bomPkg.License == "" {
-		bomPkg.License = importedLicenseValue(pkg.PackageLicenseConcluded)
+		bomPkg.License = concluded
 	}
 
 	if c := importedLicenseValue(pkg.PackageCopyrightText); c != "" {

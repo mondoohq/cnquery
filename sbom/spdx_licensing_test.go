@@ -5,6 +5,7 @@ package sbom
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -78,4 +79,94 @@ func TestSpdxDecoderReadsLicensing(t *testing.T) {
 			assert.Empty(t, p.License)
 		})
 	}
+}
+
+// This renderer writes a concluded value equal to the declared one where nothing
+// was concluded, rather than NOASSERTION, and other SPDX producers do the same.
+// Reading that back as a determination is how a round trip through our own
+// output invents a claim the model never made: a package that declared MIT and
+// concluded nothing returns asserting somebody concluded MIT.
+func TestSPDXDecoderDoesNotReadAnEchoAsAConclusion(t *testing.T) {
+	orig := &Sbom{
+		Generator: &Generator{Vendor: "Mondoo, Inc", Name: "test", Version: "1"},
+		Asset:     &Asset{Name: "a", Platform: &Platform{Name: "linux", Version: "1"}},
+		Packages: []*Package{{
+			Name: "declares-only", Version: "1.0.0", Purl: "pkg:npm/declares-only@1.0.0",
+			Licenses: []*License{DeclaredLicense("MIT")},
+			License:  "MIT",
+		}},
+	}
+
+	var rendered strings.Builder
+	require.NoError(t, New(FormatSpdxJSON).Render(&rendered, orig))
+	// The echo is in the document: this is what the decoder has to interpret.
+	assert.Contains(t, rendered.String(), `"licenseConcluded": "MIT"`)
+
+	back, err := NewSPDX(FormatSpdxJSON).Parse(strings.NewReader(rendered.String()))
+	require.NoError(t, err)
+
+	var got *Package
+	for _, p := range back.Packages {
+		if p.Name == "declares-only" {
+			got = p
+		}
+	}
+	require.NotNil(t, got)
+
+	require.Len(t, got.Licenses, 1, "the echoed conclusion must not become a second entry")
+	assert.Equal(t, LicenseAcquisition_LICENSE_ACQUISITION_DECLARED, got.Licenses[0].GetAcquisition())
+	assert.Equal(t, "MIT", got.Licenses[0].GetSpdxId())
+	assert.Equal(t, "MIT", got.License)
+}
+
+// A conclusion that DISAGREES with the declaration is the case the split exists
+// for, and must survive the echo check.
+func TestSPDXDecoderKeepsAConclusionThatDisagrees(t *testing.T) {
+	doc := `{
+  "spdxVersion": "SPDX-2.3", "dataLicense": "CC0-1.0", "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "disagreeing", "documentNamespace": "https://mondoo.com/spdx/d",
+  "creationInfo": { "created": "2026-08-30T09:00:00Z", "creators": ["Tool: fixture-1"] },
+  "packages": [{
+    "name": "disagrees", "SPDXID": "SPDXRef-P1", "versionInfo": "1.0.0",
+    "downloadLocation": "NOASSERTION", "filesAnalyzed": false,
+    "licenseDeclared": "MIT", "licenseConcluded": "AGPL-3.0-only"
+  }]
+}`
+	back, err := NewSPDX(FormatSpdxJSON).Parse(strings.NewReader(doc))
+	require.NoError(t, err)
+	require.Len(t, back.Packages, 1)
+
+	licenses := back.Packages[0].Licenses
+	require.Len(t, licenses, 2)
+	assert.Equal(t, LicenseAcquisition_LICENSE_ACQUISITION_DECLARED, licenses[0].GetAcquisition())
+	assert.Equal(t, "MIT", licenses[0].GetSpdxId())
+	assert.Equal(t, LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED, licenses[1].GetAcquisition())
+	assert.Equal(t, "AGPL-3.0-only", licenses[1].GetSpdxId())
+
+	// The scalar still takes the declared entry.
+	assert.Equal(t, "MIT", back.Packages[0].License)
+}
+
+// A document that concludes without declaring is not an echo: the conclusion is
+// the only thing it states, and dropping it would lose the license entirely.
+func TestSPDXDecoderKeepsAConclusionWithNoDeclaration(t *testing.T) {
+	doc := `{
+  "spdxVersion": "SPDX-2.3", "dataLicense": "CC0-1.0", "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "concluded-only", "documentNamespace": "https://mondoo.com/spdx/c",
+  "creationInfo": { "created": "2026-08-30T09:00:00Z", "creators": ["Tool: fixture-1"] },
+  "packages": [{
+    "name": "concluded-only", "SPDXID": "SPDXRef-P1", "versionInfo": "1.0.0",
+    "downloadLocation": "NOASSERTION", "filesAnalyzed": false,
+    "licenseDeclared": "NOASSERTION", "licenseConcluded": "Apache-2.0"
+  }]
+}`
+	back, err := NewSPDX(FormatSpdxJSON).Parse(strings.NewReader(doc))
+	require.NoError(t, err)
+	require.Len(t, back.Packages, 1)
+
+	licenses := back.Packages[0].Licenses
+	require.Len(t, licenses, 1)
+	assert.Equal(t, LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED, licenses[0].GetAcquisition())
+	assert.Equal(t, "Apache-2.0", licenses[0].GetSpdxId())
+	assert.Equal(t, "Apache-2.0", back.Packages[0].License, "the scalar falls back to the conclusion")
 }
