@@ -134,9 +134,25 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 		declared := spdxNoAssertion(spdxLicense(declaredLicenses(pkg), pkg.License, extractedLicenses))
 		concluded := spdxNoAssertion(spdxLicense(concludedLicenses(pkg), "", extractedLicenses))
 		if concluded == spdxNoAssertionValue {
-			// Nothing was concluded. Echoing the declared value is the honest
-			// reading: it is what the document has to go on, and asserting more
-			// than was determined is what NOASSERTION exists to avoid.
+			// Nothing was concluded, so this repeats the declared value.
+			//
+			// The comment that stood here called that "the honest reading",
+			// which had the argument backwards: echoing IS asserting more than
+			// was determined, and NOASSERTION is the thing that avoids it. The
+			// echo is a deliberate overstatement, not a modest one.
+			//
+			// It stays because the strictly accurate value is the more
+			// misleading one in practice. A consumer reading licenseConcluded
+			// as the package's license -- and many read it first -- sees
+			// NOASSERTION and takes a package that plainly declares MIT for one
+			// whose license is unknown. Repeating the declaration is wrong in a
+			// direction a reader can recover from; NOASSERTION is wrong in a
+			// direction they cannot.
+			//
+			// What makes the overstatement safe to keep is that it no longer
+			// survives a round trip: readSpdxPackageLicensing recognises a
+			// concluded value equal to the declared one as this echo and does
+			// not import it as a determination.
 			concluded = declared
 		}
 		doc.Packages = append(doc.Packages, &spdx.Package{
@@ -810,12 +826,19 @@ func readSpdxPackageLicensing(bomPkg *Package, pkg *v2_3.Package) {
 	// nothing into one asserting somebody concluded MIT -- a claim that the
 	// license was verified, invented by a round trip.
 	//
-	// The two are indistinguishable in the document, so the question is which
-	// way to be wrong. Dropping a conclusion that merely agrees with the
-	// declaration costs nothing: the license is still reported, as declared, and
-	// only the unverifiable claim that someone checked it goes. Keeping it
-	// manufactures that claim. A conclusion that DISAGREES is the case the split
-	// exists for and is always kept.
+	// The two are indistinguishable in the document, so this is a choice about
+	// which way to be wrong, and it is not free either way. A third-party tool
+	// that genuinely concluded MIT for a package declaring MIT wrote the same
+	// two fields as our echo, and its real conclusion is dropped here with the
+	// echoes. What is lost is the acquisition signal, not the license: the
+	// package is still reported as licensed MIT, on its own declaration.
+	//
+	// It goes this way on frequency and on direction. This renderer echoes for
+	// every unconcluded package, so keeping the entry over-asserts across most
+	// of every document it produces, against a minority of genuine agreements;
+	// and inventing a verification nobody performed is worse than omitting one
+	// that happened. A conclusion that DISAGREES is the case the split exists
+	// for and is never touched.
 	if concluded == declared {
 		concluded = ""
 	}
