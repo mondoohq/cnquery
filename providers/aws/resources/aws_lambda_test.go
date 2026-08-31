@@ -161,7 +161,7 @@ func TestLambdaFunctionStatusAccessorsReportNullWhenUnread(t *testing.T) {
 	newUnread := func() *mqlAwsLambdaFunction {
 		fn := &mqlAwsLambdaFunction{}
 		// What fetchStatus leaves behind on a 404 or an access denial.
-		fn.statusFetched = true
+		fn.statusFetched.Store(true)
 		return fn
 	}
 
@@ -223,7 +223,7 @@ func TestLambdaFunctionStatusAccessorsReadSeededStatus(t *testing.T) {
 	fn := &mqlAwsLambdaFunction{}
 	if status := lambdaStatusFromConfiguration(&cfg); status != nil {
 		fn.status = status
-		fn.statusFetched = true
+		fn.statusFetched.Store(true)
 	}
 
 	state, err := fn.state()

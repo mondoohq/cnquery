@@ -18181,7 +18181,10 @@ private aws.lambda.function.version @defaults("arn version") {
   // Lifecycle state of this version
   //
   // One of Active, Inactive, Pending, or Failed. Null when the state could not
-  // be read.
+  // be read. ListVersionsByFunction does not carry the state, so reading this
+  // field costs one GetFunctionConfiguration call per version, and a query
+  // shaped like functions { versions { state } } scales with the total number
+  // of versions in the account.
   state() string
 }
 

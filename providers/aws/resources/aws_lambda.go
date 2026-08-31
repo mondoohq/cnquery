@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -291,7 +292,7 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 	// accessors to read them.
 	if status := lambdaStatusFromConfiguration(&function); status != nil {
 		f.status = status
-		f.statusFetched = true
+		f.statusFetched.Store(true)
 	}
 	f.cacheRoleArn = function.Role
 	f.region = region
@@ -436,7 +437,7 @@ type mqlAwsLambdaFunctionInternal struct {
 	runtimeMgmtResp *lambda.GetRuntimeManagementConfigOutput
 	runtimeMgmtErr  error
 
-	statusFetched bool
+	statusFetched atomic.Bool
 	statusLock    sync.Mutex
 	status        *lambdaFunctionStatus
 }
@@ -550,12 +551,12 @@ func nullOnEmpty(field *plugin.TValue[string], value string) (string, error) {
 // it. A 404 or an access denial leaves the status absent, so those fields read
 // as null rather than as an empty string.
 func (a *mqlAwsLambdaFunction) fetchStatus() (*lambdaFunctionStatus, error) {
-	if a.statusFetched {
+	if a.statusFetched.Load() {
 		return a.status, nil
 	}
 	a.statusLock.Lock()
 	defer a.statusLock.Unlock()
-	if a.statusFetched {
+	if a.statusFetched.Load() {
 		return a.status, nil
 	}
 
@@ -568,18 +569,18 @@ func (a *mqlAwsLambdaFunction) fetchStatus() (*lambdaFunctionStatus, error) {
 	if err != nil {
 		var respErr *http.ResponseError
 		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
-			a.statusFetched = true
+			a.statusFetched.Store(true)
 			return nil, nil
 		}
 		if Is400AccessDeniedError(err) {
-			a.statusFetched = true
+			a.statusFetched.Store(true)
 			return nil, nil
 		}
 		return nil, err
 	}
 
 	a.status = lambdaStatusFromConfigurationOutput(resp)
-	a.statusFetched = true
+	a.statusFetched.Store(true)
 	return a.status, nil
 }
 
@@ -1788,6 +1789,10 @@ func (a *mqlAwsLambdaFunctionVersion) state() (string, error) {
 		return "", nil
 	}
 
+	// One call per version, and there is no cheaper shape: ListVersionsByFunction
+	// omits State, which is the defect this accessor exists to fix, and Lambda
+	// offers no batch equivalent. GetOrCompute caches the result per version
+	// resource, so the cost is one call per version read, not per access.
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Lambda(region)
 	resp, err := svc.GetFunctionConfiguration(context.Background(), &lambda.GetFunctionConfigurationInput{
