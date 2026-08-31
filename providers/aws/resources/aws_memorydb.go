@@ -372,6 +372,18 @@ func newMqlAwsMemorydbUser(runtime *plugin.Runtime, region string, user memorydb
 	if err != nil {
 		return nil, err
 	}
+	mqlAuth := llx.NilData
+	if user.Authentication != nil {
+		authRes, err := CreateResource(runtime, "aws.memorydb.authentication", map[string]*llx.RawData{
+			"__id":          llx.StringData(convert.ToValue(user.ARN) + "/authentication"),
+			"type":          llx.StringData(string(user.Authentication.Type)),
+			"passwordCount": llx.IntData(int64(convert.ToValue(user.Authentication.PasswordCount))),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlAuth = llx.ResourceData(authRes, "aws.memorydb.authentication")
+	}
 
 	resource, err := CreateResource(runtime, "aws.memorydb.user",
 		map[string]*llx.RawData{
@@ -383,6 +395,7 @@ func newMqlAwsMemorydbUser(runtime *plugin.Runtime, region string, user memorydb
 			"aclNames":             llx.ArrayData(convert.SliceAnyToInterface(user.ACLNames), types.String),
 			"minimumEngineVersion": llx.StringDataPtr(user.MinimumEngineVersion),
 			"authentication":       llx.DictData(auth),
+			"authenticationMode":   mqlAuth,
 			"region":               llx.StringData(region),
 		})
 	if err != nil {

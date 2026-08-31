@@ -956,6 +956,18 @@ func (a *mqlAwsElasticache) getUsers(conn *connection.AwsConnection) []*jobpool.
 					if err != nil {
 						return nil, err
 					}
+					mqlAuth := llx.NilData
+					if user.Authentication != nil {
+						authRes, err := CreateResource(a.MqlRuntime, "aws.elasticache.authentication", map[string]*llx.RawData{
+							"__id":          llx.StringData(convert.ToValue(user.ARN) + "/authentication"),
+							"type":          llx.StringData(string(user.Authentication.Type)),
+							"passwordCount": llx.IntData(int64(convert.ToValue(user.Authentication.PasswordCount))),
+						})
+						if err != nil {
+							return nil, err
+						}
+						mqlAuth = llx.ResourceData(authRes, "aws.elasticache.authentication")
+					}
 					mqlUser, err := CreateResource(a.MqlRuntime, ResourceAwsElasticacheUser,
 						map[string]*llx.RawData{
 							"arn":                  llx.StringDataPtr(user.ARN),
@@ -968,6 +980,7 @@ func (a *mqlAwsElasticache) getUsers(conn *connection.AwsConnection) []*jobpool.
 							"status":               llx.StringDataPtr(user.Status),
 							"userGroupIds":         llx.ArrayData(groupIds, types.String),
 							"authentication":       llx.DictData(auth),
+							"authenticationMode":   mqlAuth,
 						})
 					if err != nil {
 						return nil, err

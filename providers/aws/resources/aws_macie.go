@@ -668,6 +668,10 @@ func (a *mqlAwsMacie) buckets() ([]any, error) {
 func newMqlMacieBucket(runtime *plugin.Runtime, bm types.BucketMetadata, region string) (*mqlAwsMacieBucket, error) {
 	publicAccess, _ := convert.JsonToDict(bm.PublicAccess)
 	serverSideEncryption, _ := convert.JsonToDict(bm.ServerSideEncryption)
+	mqlSse, err := newMqlMacieBucketServerSideEncryption(runtime, convert.ToValue(bm.BucketArn), region, bm.ServerSideEncryption)
+	if err != nil {
+		return nil, err
+	}
 	jobDetails, _ := convert.JsonToDict(bm.JobDetails)
 	replicationDetails, _ := convert.JsonToDict(bm.ReplicationDetails)
 	objectCountByEncryptionType, _ := convert.JsonToDict(bm.ObjectCountByEncryptionType)
@@ -747,6 +751,7 @@ func newMqlMacieBucket(runtime *plugin.Runtime, bm types.BucketMetadata, region 
 		"sharedAccess":                       llx.StringData(string(bm.SharedAccess)),
 		"publicAccess":                       llx.DictData(publicAccess),
 		"serverSideEncryption":               llx.DictData(serverSideEncryption),
+		"defaultEncryption":                  mqlSse,
 		"versioning":                         llx.BoolData(versioning),
 		"allowsUnencryptedObjectUploads":     llx.StringData(string(bm.AllowsUnencryptedObjectUploads)),
 		"automatedDiscoveryMonitoringStatus": llx.StringData(string(bm.AutomatedDiscoveryMonitoringStatus)),
@@ -763,6 +768,37 @@ func newMqlMacieBucket(runtime *plugin.Runtime, bm types.BucketMetadata, region 
 		return nil, err
 	}
 	return res.(*mqlAwsMacieBucket), nil
+}
+
+// newMqlMacieBucketServerSideEncryption builds the bucket's default encryption
+// settings. A nil block means Macie reported no encryption settings for the
+// bucket at all, which is reported as null rather than as encryption being off.
+func newMqlMacieBucketServerSideEncryption(runtime *plugin.Runtime, bucketArn, region string, sse *types.BucketServerSideEncryption) (*llx.RawData, error) {
+	if sse == nil {
+		return llx.NilData, nil
+	}
+	res, err := CreateResource(runtime, "aws.macie.bucket.encryption", map[string]*llx.RawData{
+		"__id": llx.StringData(bucketArn + "/serverSideEncryption"),
+		"type": llx.StringData(string(sse.Type)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlSse := res.(*mqlAwsMacieBucketEncryption)
+	// Macie reports the default encryption key as an ARN or as a bare key ID,
+	// which is why this is a key reference rather than an ARN.
+	mqlSse.cacheKmsKeyRef = sse.KmsMasterKeyId
+	mqlSse.region = region
+	return llx.ResourceData(mqlSse, "aws.macie.bucket.encryption"), nil
+}
+
+type mqlAwsMacieBucketEncryptionInternal struct {
+	cacheKmsKeyRef *string
+	region         string
+}
+
+func (a *mqlAwsMacieBucketEncryption) kmsKey() (*mqlAwsKmsKey, error) {
+	return resolveKmsKeyRef(a.MqlRuntime, a.cacheKmsKeyRef, a.region, &a.KmsKey.State)
 }
 
 func (a *mqlAwsMacieBucket) id() (string, error) {

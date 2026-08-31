@@ -425,6 +425,10 @@ type mqlAwsLambdaFunctionInternal struct {
 	cacheSourceKmsKeyArn  *string
 
 	cacheDurableExecutionKmsKeyArn *string
+
+	runtimeMgmtOnce sync.Once
+	runtimeMgmtResp *lambda.GetRuntimeManagementConfigOutput
+	runtimeMgmtErr  error
 }
 
 // fetchImageData resolves the container image URIs for Image package type
@@ -1430,6 +1434,54 @@ func (a *mqlAwsLambdaFunction) runtimeManagementConfig() (any, error) {
 		result["runtimeVersionArn"] = *resp.RuntimeVersionArn
 	}
 	return result, nil
+}
+
+// fetchRuntimeManagementConfig reads the function's runtime management
+// configuration once and hands it to every field derived from it. A 404 or an
+// access denial leaves it absent rather than failing, matching what the
+// deprecated dict already did.
+func (a *mqlAwsLambdaFunction) fetchRuntimeManagementConfig() (*lambda.GetRuntimeManagementConfigOutput, error) {
+	a.runtimeMgmtOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.Lambda(a.Region.Data)
+		funcName := a.Name.Data
+		resp, err := svc.GetRuntimeManagementConfig(context.Background(), &lambda.GetRuntimeManagementConfigInput{
+			FunctionName: &funcName,
+		})
+		if err != nil {
+			var respErr *http.ResponseError
+			if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
+				return
+			}
+			if Is400AccessDeniedError(err) {
+				return
+			}
+			a.runtimeMgmtErr = err
+			return
+		}
+		a.runtimeMgmtResp = resp
+	})
+	return a.runtimeMgmtResp, a.runtimeMgmtErr
+}
+
+func (a *mqlAwsLambdaFunction) runtimeManagement() (*mqlAwsLambdaRuntimeManagementConfig, error) {
+	resp, err := a.fetchRuntimeManagementConfig()
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil {
+		a.RuntimeManagement.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := CreateResource(a.MqlRuntime, "aws.lambda.runtimeManagementConfig", map[string]*llx.RawData{
+		"__id":              llx.StringData(a.Arn.Data + "/runtimeManagementConfig"),
+		"updateRuntimeOn":   llx.StringData(string(resp.UpdateRuntimeOn)),
+		"runtimeVersionArn": llx.StringData(convert.ToValue(resp.RuntimeVersionArn)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsLambdaRuntimeManagementConfig), nil
 }
 
 // ==================== Types ====================

@@ -304,6 +304,19 @@ func (a *mqlAwsNeptune) getDbInstances(conn *connection.AwsConnection) []*jobpoo
 
 func newMqlAwsNeptuneInstance(runtime *plugin.Runtime, region string, instance neptune_types.DBInstance) (*mqlAwsNeptuneInstance, error) {
 	endpoint, _ := convert.JsonToDict(instance.Endpoint)
+	mqlEndpoint := llx.NilData
+	if instance.Endpoint != nil {
+		endpointRes, err := CreateResource(runtime, "aws.neptune.endpoint", map[string]*llx.RawData{
+			"__id":         llx.StringData(convert.ToValue(instance.DBInstanceArn) + "/endpoint"),
+			"address":      llx.StringData(convert.ToValue(instance.Endpoint.Address)),
+			"port":         llx.IntData(int64(convert.ToValue(instance.Endpoint.Port))),
+			"hostedZoneId": llx.StringData(convert.ToValue(instance.Endpoint.HostedZoneId)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlEndpoint = llx.ResourceData(endpointRes, "aws.neptune.endpoint")
+	}
 
 	resource, err := CreateResource(runtime, "aws.neptune.instance",
 		map[string]*llx.RawData{
@@ -325,6 +338,7 @@ func newMqlAwsNeptuneInstance(runtime *plugin.Runtime, region string, instance n
 			"enabledCloudwatchLogsExports":     llx.ArrayData(convert.SliceAnyToInterface(instance.EnabledCloudwatchLogsExports), types.String),
 			"enhancedMonitoringResourceArn":    llx.StringDataPtr(instance.EnhancedMonitoringResourceArn),
 			"endpoint":                         llx.DictData(endpoint),
+			"connectionEndpoint":               mqlEndpoint,
 			"iamDatabaseAuthenticationEnabled": llx.BoolDataPtr(instance.IAMDatabaseAuthenticationEnabled),
 			"masterUsername":                   llx.StringDataPtr(instance.MasterUsername),
 			"multiAZ":                          llx.BoolDataPtr(instance.MultiAZ),

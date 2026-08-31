@@ -473,14 +473,60 @@ func (a *mqlAwsGlue) getSecurityConfigurations(conn *connection.AwsConnection) [
 	return tasks
 }
 
+type mqlAwsGlueSecurityConfigurationEncryptionInternal struct {
+	cacheKmsKeyArn *string
+	region         string
+}
+
+func (a *mqlAwsGlueSecurityConfigurationEncryption) kmsKey() (*mqlAwsKmsKey, error) {
+	return resolveKmsKeyRef(a.MqlRuntime, a.cacheKmsKeyArn, a.region, &a.KmsKey.State)
+}
+
+// newMqlGlueEncryption builds one destination's encryption setting. Glue
+// reports each destination through its own SDK struct carrying the same mode
+// plus key pair, so an absent struct means the security configuration says
+// nothing about that destination and the reference reads null.
+func newMqlGlueEncryption(runtime *plugin.Runtime, secConfArn, destination, region, mode string, kmsKeyArn *string, present bool) (*llx.RawData, error) {
+	if !present {
+		return llx.NilData, nil
+	}
+	res, err := CreateResource(runtime, "aws.glue.securityConfiguration.encryption", map[string]*llx.RawData{
+		"__id": llx.StringData(secConfArn + "/" + destination),
+		"mode": llx.StringData(mode),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlEnc := res.(*mqlAwsGlueSecurityConfigurationEncryption)
+	mqlEnc.cacheKmsKeyArn = kmsKeyArn
+	mqlEnc.region = region
+	return llx.ResourceData(mqlEnc, "aws.glue.securityConfiguration.encryption"), nil
+}
+
+// glueS3Encryption picks the S3 encryption entry a security configuration
+// applies. The SDK types this as a list, but Glue rejects a configuration with
+// more than one entry, so an entry beyond the first cannot exist; returning
+// only the first is the whole list.
+func glueS3Encryption(enc *glue_types.EncryptionConfiguration) *glue_types.S3Encryption {
+	if enc == nil || len(enc.S3Encryption) == 0 {
+		return nil
+	}
+	return &enc.S3Encryption[0]
+}
+
 func newMqlAwsGlueSecurityConfiguration(runtime *plugin.Runtime, region string, accountID string, secConf glue_types.SecurityConfiguration) (*mqlAwsGlueSecurityConfiguration, error) {
 	id := fmt.Sprintf("arn:aws:glue:%s:%s:security-configuration/%s", region, accountID, convert.ToValue(secConf.Name))
 
 	var s3Enc, cwEnc, jbEnc any
+	mqlS3Enc, mqlCwEnc, mqlJbEnc, mqlDqEnc := llx.NilData, llx.NilData, llx.NilData, llx.NilData
 	if secConf.EncryptionConfiguration != nil {
 		var err error
-		if len(secConf.EncryptionConfiguration.S3Encryption) > 0 {
-			s3Enc, err = convert.JsonToDict(secConf.EncryptionConfiguration.S3Encryption[0])
+		if s3 := glueS3Encryption(secConf.EncryptionConfiguration); s3 != nil {
+			s3Enc, err = convert.JsonToDict(*s3)
+			if err != nil {
+				return nil, err
+			}
+			mqlS3Enc, err = newMqlGlueEncryption(runtime, id, "s3Encryption", region, string(s3.S3EncryptionMode), s3.KmsKeyArn, true)
 			if err != nil {
 				return nil, err
 			}
@@ -489,21 +535,43 @@ func newMqlAwsGlueSecurityConfiguration(runtime *plugin.Runtime, region string, 
 		if err != nil {
 			return nil, err
 		}
+		if cw := secConf.EncryptionConfiguration.CloudWatchEncryption; cw != nil {
+			mqlCwEnc, err = newMqlGlueEncryption(runtime, id, "cloudWatchEncryption", region, string(cw.CloudWatchEncryptionMode), cw.KmsKeyArn, true)
+			if err != nil {
+				return nil, err
+			}
+		}
 		jbEnc, err = convert.JsonToDict(secConf.EncryptionConfiguration.JobBookmarksEncryption)
 		if err != nil {
 			return nil, err
+		}
+		if jb := secConf.EncryptionConfiguration.JobBookmarksEncryption; jb != nil {
+			mqlJbEnc, err = newMqlGlueEncryption(runtime, id, "jobBookmarksEncryption", region, string(jb.JobBookmarksEncryptionMode), jb.KmsKeyArn, true)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if dq := secConf.EncryptionConfiguration.DataQualityEncryption; dq != nil {
+			mqlDqEnc, err = newMqlGlueEncryption(runtime, id, "dataQualityEncryption", region, string(dq.DataQualityEncryptionMode), dq.KmsKeyArn, true)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
 	resource, err := CreateResource(runtime, "aws.glue.securityConfiguration",
 		map[string]*llx.RawData{
-			"__id":                   llx.StringData(id),
-			"name":                   llx.StringDataPtr(secConf.Name),
-			"createdAt":              llx.TimeDataPtr(secConf.CreatedTimeStamp),
-			"s3Encryption":           llx.DictData(s3Enc),
-			"cloudWatchEncryption":   llx.DictData(cwEnc),
-			"jobBookmarksEncryption": llx.DictData(jbEnc),
-			"region":                 llx.StringData(region),
+			"__id":                     llx.StringData(id),
+			"name":                     llx.StringDataPtr(secConf.Name),
+			"createdAt":                llx.TimeDataPtr(secConf.CreatedTimeStamp),
+			"s3Encryption":             llx.DictData(s3Enc),
+			"cloudWatchEncryption":     llx.DictData(cwEnc),
+			"jobBookmarksEncryption":   llx.DictData(jbEnc),
+			"s3DataEncryption":         mqlS3Enc,
+			"cloudWatchLogsEncryption": mqlCwEnc,
+			"bookmarkStateEncryption":  mqlJbEnc,
+			"dataQualityEncryption":    mqlDqEnc,
+			"region":                   llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err

@@ -33,24 +33,77 @@ func (a *mqlAwsS3control) id() (string, error) {
 	return ResourceAwsS3control, nil
 }
 
-func (a *mqlAwsS3control) accountPublicAccessBlock() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+type mqlAwsS3controlInternal struct {
+	publicAccessOnce   sync.Once
+	publicAccessConfig *s3controltypes.PublicAccessBlockConfiguration
+	publicAccessErr    error
+}
 
-	svc := conn.S3Control("")
-	ctx := context.Background()
+// fetchAccountPublicAccessBlock reads the account-level Block Public Access
+// configuration once and hands it to every field derived from it. An account
+// that has never configured one is not an error: the API reports
+// NoSuchPublicAccessBlockConfiguration, and the configuration is simply absent.
+func (a *mqlAwsS3control) fetchAccountPublicAccessBlock() (*s3controltypes.PublicAccessBlockConfiguration, error) {
+	a.publicAccessOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.S3Control("")
+		resp, err := svc.GetPublicAccessBlock(context.Background(), &s3control.GetPublicAccessBlockInput{
+			AccountId: aws.String(conn.AccountId()),
+		})
+		if err != nil {
+			var notFoundErr *s3controltypes.NoSuchPublicAccessBlockConfiguration
+			if errors.As(err, &notFoundErr) {
+				return
+			}
+			a.publicAccessErr = err
+			return
+		}
+		a.publicAccessConfig = resp.PublicAccessBlockConfiguration
+	})
+	return a.publicAccessConfig, a.publicAccessErr
+}
 
-	publicAccessBlock, err := svc.GetPublicAccessBlock(ctx, &s3control.GetPublicAccessBlockInput{
-		AccountId: aws.String(conn.AccountId()),
+// newMqlS3PublicAccessBlock builds the four Block Public Access settings shared
+// by the account, a bucket, and an access point. They come back from three
+// different SDK structs carrying the same four members, which is why this
+// takes the pointers rather than a struct.
+func newMqlS3PublicAccessBlock(runtime *plugin.Runtime, ownerID string, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets *bool) (*mqlAwsS3PublicAccessBlock, error) {
+	res, err := CreateResource(runtime, "aws.s3.publicAccessBlock", map[string]*llx.RawData{
+		"__id":                  llx.StringData(ownerID + "/publicAccessBlock"),
+		"blockPublicAcls":       llx.BoolData(convert.ToValue(blockPublicAcls)),
+		"blockPublicPolicy":     llx.BoolData(convert.ToValue(blockPublicPolicy)),
+		"ignorePublicAcls":      llx.BoolData(convert.ToValue(ignorePublicAcls)),
+		"restrictPublicBuckets": llx.BoolData(convert.ToValue(restrictPublicBuckets)),
 	})
 	if err != nil {
-		var notFoundErr *s3controltypes.NoSuchPublicAccessBlockConfiguration
-		if errors.As(err, &notFoundErr) {
-			return nil, nil
-		}
 		return nil, err
 	}
+	return res.(*mqlAwsS3PublicAccessBlock), nil
+}
 
-	return convert.JsonToDict(publicAccessBlock.PublicAccessBlockConfiguration)
+func (a *mqlAwsS3control) accountBlockPublicAccess() (*mqlAwsS3PublicAccessBlock, error) {
+	config, err := a.fetchAccountPublicAccessBlock()
+	if err != nil {
+		return nil, err
+	}
+	if config == nil {
+		a.AccountBlockPublicAccess.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return newMqlS3PublicAccessBlock(a.MqlRuntime, ResourceAwsS3control+"/"+conn.AccountId(),
+		config.BlockPublicAcls, config.BlockPublicPolicy, config.IgnorePublicAcls, config.RestrictPublicBuckets)
+}
+
+func (a *mqlAwsS3control) accountPublicAccessBlock() (any, error) {
+	config, err := a.fetchAccountPublicAccessBlock()
+	if err != nil {
+		return nil, err
+	}
+	if config == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(config)
 }
 
 func (a *mqlAwsS3) id() (string, error) {
@@ -205,6 +258,10 @@ type mqlAwsS3BucketAccessPointInternal struct {
 	accountID       string
 	cacheBucketName string
 	cacheVpcId      string
+
+	publicAccessOnce   sync.Once
+	publicAccessConfig *s3controltypes.PublicAccessBlockConfiguration
+	publicAccessErr    error
 }
 
 func (a *mqlAwsS3BucketAccessPoint) id() (string, error) {
@@ -303,28 +360,56 @@ func (a *mqlAwsS3BucketAccessPoint) vpc() (*mqlAwsVpc, error) {
 	return res.(*mqlAwsVpc), nil
 }
 
-func (a *mqlAwsS3BucketAccessPoint) publicAccessBlock() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.S3Control(a.region)
-	ctx := context.Background()
-
-	name := a.Name.Data
-	resp, err := svc.GetAccessPoint(ctx, &s3control.GetAccessPointInput{
-		AccountId: aws.String(a.accountID),
-		Name:      aws.String(name),
-	})
-	if err != nil {
-		if Is400AccessDeniedError(err) {
-			log.Debug().Str("accessPoint", a.Arn.Data).Err(err).Msg("access denied reading s3 access point public access block")
-			return nil, nil
+// fetchPublicAccessBlock reads the access point's Block Public Access
+// configuration once and hands it to every field derived from it.
+func (a *mqlAwsS3BucketAccessPoint) fetchPublicAccessBlock() (*s3controltypes.PublicAccessBlockConfiguration, error) {
+	a.publicAccessOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.S3Control(a.region)
+		name := a.Name.Data
+		resp, err := svc.GetAccessPoint(context.Background(), &s3control.GetAccessPointInput{
+			AccountId: aws.String(a.accountID),
+			Name:      aws.String(name),
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Debug().Str("accessPoint", a.Arn.Data).Err(err).Msg("access denied reading s3 access point public access block")
+				return
+			}
+			a.publicAccessErr = err
+			return
 		}
+		if resp.PublicAccessBlockConfiguration == nil {
+			log.Debug().Str("accessPoint", a.Arn.Data).Msg("s3 access point has no public access block configured")
+			return
+		}
+		a.publicAccessConfig = resp.PublicAccessBlockConfiguration
+	})
+	return a.publicAccessConfig, a.publicAccessErr
+}
+
+func (a *mqlAwsS3BucketAccessPoint) blockPublicAccess() (*mqlAwsS3PublicAccessBlock, error) {
+	config, err := a.fetchPublicAccessBlock()
+	if err != nil {
 		return nil, err
 	}
-	if resp.PublicAccessBlockConfiguration == nil {
-		log.Debug().Str("accessPoint", a.Arn.Data).Msg("s3 access point has no public access block configured")
+	if config == nil {
+		a.BlockPublicAccess.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return convert.JsonToDict(resp.PublicAccessBlockConfiguration)
+	return newMqlS3PublicAccessBlock(a.MqlRuntime, a.Arn.Data,
+		config.BlockPublicAcls, config.BlockPublicPolicy, config.IgnorePublicAcls, config.RestrictPublicBuckets)
+}
+
+func (a *mqlAwsS3BucketAccessPoint) publicAccessBlock() (any, error) {
+	config, err := a.fetchPublicAccessBlock()
+	if err != nil {
+		return nil, err
+	}
+	if config == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(config)
 }
 
 func (a *mqlAwsS3BucketAccessPoint) policy() (string, error) {
@@ -736,6 +821,19 @@ func (a *mqlAwsS3Bucket) ignorePublicAcls() (bool, error) {
 
 func (a *mqlAwsS3Bucket) restrictPublicBuckets() (bool, error) {
 	return a.s3PublicAccessBlockFlag(func(c *s3types.PublicAccessBlockConfiguration) *bool { return c.RestrictPublicBuckets })
+}
+
+func (a *mqlAwsS3Bucket) blockPublicAccess() (*mqlAwsS3PublicAccessBlock, error) {
+	config, err := a.fetchPublicAccessBlock()
+	if err != nil {
+		return nil, err
+	}
+	if config == nil {
+		a.BlockPublicAccess.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newMqlS3PublicAccessBlock(a.MqlRuntime, a.Arn.Data,
+		config.BlockPublicAcls, config.BlockPublicPolicy, config.IgnorePublicAcls, config.RestrictPublicBuckets)
 }
 
 func (a *mqlAwsS3Bucket) publicAccessBlock() (any, error) {

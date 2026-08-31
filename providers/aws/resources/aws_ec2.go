@@ -1397,6 +1397,10 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 		if err != nil {
 			return nil, err
 		}
+		mqlStateReason, err := newMqlEc2StateReason(a.MqlRuntime, convert.ToValue(instance.InstanceId), instance.StateReason)
+		if err != nil {
+			return nil, err
+		}
 
 		stateTransitionTime := parseStateTransitionTime(convert.ToValue(instance.StateTransitionReason))
 		var detailedMonitoring string
@@ -1430,6 +1434,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 			"rootDeviceType":     llx.StringData(string(instance.RootDeviceType)),
 			"state":              llx.StringData(stateName),
 			"stateReason":        llx.MapData(stateReason, types.Any),
+			"stateChangeReason":  mqlStateReason,
 			// "iamInstanceProfile":    llx.MapData(iamInstanceProfile, types.Any),
 			"stateTransitionReason": llx.StringDataPtr(instance.StateTransitionReason),
 			"stateTransitionTime":   llx.TimeDataPtr(stateTransitionTime),
@@ -3082,6 +3087,38 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 
 type mqlAwsEc2SnapshotInternal struct {
 	cacheKmsKeyId *string
+
+	cvpOnce   sync.Once
+	cvp       []ec2types.CreateVolumePermission
+	cvpErr    error
+	cvpDenied bool
+}
+
+// fetchCreateVolumePermissions reads the snapshot's createVolumePermission
+// attribute once. Four fields answer from it (the deprecated dict, the two
+// typed lists, and isPublic), and without memoizing, a query touching more
+// than one of them repeats DescribeSnapshotAttribute per field per snapshot.
+func (a *mqlAwsEc2Snapshot) fetchCreateVolumePermissions() ([]ec2types.CreateVolumePermission, bool, error) {
+	a.cvpOnce.Do(func() {
+		id := a.Id.Data
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.Ec2(a.Region.Data)
+		attribute, err := svc.DescribeSnapshotAttribute(context.Background(), &ec2.DescribeSnapshotAttributeInput{
+			SnapshotId: &id,
+			Attribute:  ec2types.SnapshotAttributeNameCreateVolumePermission,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Debug().Str("snapshot", id).Msg("access denied when retrieving snapshot volume permissions")
+				a.cvpDenied = true
+				return
+			}
+			a.cvpErr = err
+			return
+		}
+		a.cvp = attribute.CreateVolumePermissions
+	})
+	return a.cvp, a.cvpDenied, a.cvpErr
 }
 
 // sourceVolume resolves the volume the snapshot was created from when it is
@@ -3121,40 +3158,72 @@ func (a *mqlAwsEc2Snapshot) kmsKey() (*mqlAwsKmsKey, error) {
 }
 
 func (a *mqlAwsEc2Snapshot) isPublic() (bool, error) {
-	perms, err := a.createVolumePermission()
+	perms, denied, err := a.fetchCreateVolumePermissions()
 	if err != nil {
 		return false, err
 	}
+	if denied {
+		// Reading false out of a denied call would assert the snapshot is
+		// definitively not public when its permissions were never read.
+		a.IsPublic.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
 	for _, p := range perms {
-		permMap, ok := p.(map[string]any)
-		if !ok {
-			continue
-		}
-		if group, ok := permMap["Group"].(string); ok && group == "all" {
+		if p.Group == ec2types.PermissionGroupAll {
 			return true, nil
 		}
 	}
 	return false, nil
 }
 
-func (a *mqlAwsEc2Snapshot) createVolumePermission() ([]any, error) {
-	id := a.Id.Data
-	region := a.Region.Data
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Ec2(region)
-	ctx := context.Background()
-
-	attribute, err := svc.DescribeSnapshotAttribute(ctx, &ec2.DescribeSnapshotAttributeInput{SnapshotId: &id, Attribute: ec2types.SnapshotAttributeNameCreateVolumePermission})
+func (a *mqlAwsEc2Snapshot) createVolumePermissionUserIds() ([]any, error) {
+	perms, denied, err := a.fetchCreateVolumePermissions()
 	if err != nil {
-		if Is400AccessDeniedError(err) {
-			log.Debug().Str("snapshot", id).Msg("access denied when retrieving snapshot volume permissions")
-			return nil, nil
-		}
 		return nil, err
 	}
+	if denied {
+		// Reading "no accounts" out of a denied call would report the snapshot
+		// as unshared when it may not be.
+		a.CreateVolumePermissionUserIds.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res := []any{}
+	for _, p := range perms {
+		if p.UserId != nil && *p.UserId != "" {
+			res = append(res, *p.UserId)
+		}
+	}
+	return res, nil
+}
 
-	return convert.JsonToDictSlice(attribute.CreateVolumePermissions)
+func (a *mqlAwsEc2Snapshot) createVolumePermissionGroups() ([]any, error) {
+	perms, denied, err := a.fetchCreateVolumePermissions()
+	if err != nil {
+		return nil, err
+	}
+	if denied {
+		a.CreateVolumePermissionGroups.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res := []any{}
+	for _, p := range perms {
+		if p.Group != "" {
+			res = append(res, string(p.Group))
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEc2Snapshot) createVolumePermission() ([]any, error) {
+	perms, denied, err := a.fetchCreateVolumePermissions()
+	if err != nil {
+		return nil, err
+	}
+	if denied {
+		a.CreateVolumePermission.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return convert.JsonToDictSlice(perms)
 }
 
 func (a *mqlAwsEc2) internetGateways() ([]any, error) {
@@ -4283,6 +4352,45 @@ func (a *mqlAwsEc2Launchtemplate) metadataOptions() (any, error) {
 	return convert.JsonToDict(data.MetadataOptions)
 }
 
+func (a *mqlAwsEc2Launchtemplate) instanceMetadata() (*mqlAwsEc2LaunchtemplateInstanceMetadataOptions, error) {
+	opts, err := a.launchTemplateMetadataOptions()
+	if err != nil {
+		return nil, err
+	}
+	if opts == nil {
+		a.InstanceMetadata.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	hopLimit := llx.NilData
+	if opts.HttpPutResponseHopLimit != nil {
+		hopLimit = llx.IntData(int64(*opts.HttpPutResponseHopLimit))
+	}
+	res, err := CreateResource(a.MqlRuntime, "aws.ec2.launchtemplate.instanceMetadataOptions", map[string]*llx.RawData{
+		"__id":                    llx.StringData(a.Arn.Data + "/metadataOptions"),
+		"httpTokens":              llx.StringData(string(opts.HttpTokens)),
+		"httpEndpoint":            llx.StringData(string(opts.HttpEndpoint)),
+		"httpPutResponseHopLimit": hopLimit,
+		"httpProtocolIpv6":        llx.StringData(string(opts.HttpProtocolIpv6)),
+		"instanceMetadataTags":    llx.StringData(string(opts.InstanceMetadataTags)),
+		"state":                   llx.StringData(string(opts.State)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2LaunchtemplateInstanceMetadataOptions), nil
+}
+
+func (a *mqlAwsEc2Launchtemplate) launchTemplateMetadataOptions() (*ec2types.LaunchTemplateInstanceMetadataOptions, error) {
+	data, err := a.fetchLaunchTemplateData()
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+	return data.MetadataOptions, nil
+}
+
 func (a *mqlAwsEc2Launchtemplate) securityGroupIds() ([]any, error) {
 	data, err := a.fetchLaunchTemplateData()
 	if err != nil {
@@ -4951,4 +5059,23 @@ func deriveVolumeSseType(vol ec2types.Volume) string {
 		return "sse-kms"
 	}
 	return "none"
+}
+
+// newMqlEc2StateReason builds the reason an instance entered its current
+// state. A nil StateReason means EC2 reports no reason, which is the usual
+// case for an instance that has always been running, so the reference reads
+// null rather than as an empty code.
+func newMqlEc2StateReason(runtime *plugin.Runtime, ownerID string, sr *ec2types.StateReason) (*llx.RawData, error) {
+	if sr == nil {
+		return llx.NilData, nil
+	}
+	res, err := CreateResource(runtime, "aws.ec2.stateReason", map[string]*llx.RawData{
+		"__id":    llx.StringData(ownerID + "/stateReason"),
+		"code":    llx.StringData(convert.ToValue(sr.Code)),
+		"message": llx.StringData(convert.ToValue(sr.Message)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return llx.ResourceData(res, "aws.ec2.stateReason"), nil
 }

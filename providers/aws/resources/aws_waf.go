@@ -196,6 +196,17 @@ func (a *mqlAwsWafAcl) visibilityConfig() (any, error) {
 	return wafVisibilityConfigToDict(a.cachedACL.VisibilityConfig), nil
 }
 
+func (a *mqlAwsWafAcl) visibility() (*mqlAwsWafVisibilityConfig, error) {
+	if err := a.fetchACLDetails(); err != nil {
+		return nil, err
+	}
+	if a.cachedACL == nil {
+		a.Visibility.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newMqlWafVisibilityConfig(a.MqlRuntime, a.Arn.Data, a.cachedACL.VisibilityConfig)
+}
+
 func (a *mqlAwsWafAcl) capacity() (int64, error) {
 	if err := a.fetchACLDetails(); err != nil {
 		return 0, err
@@ -224,6 +235,31 @@ func (a *mqlAwsWafAcl) labelNamespace() (string, error) {
 		return "", nil
 	}
 	return convert.ToValue(a.cachedACL.LabelNamespace), nil
+}
+
+// newMqlWafVisibilityConfig builds the visibility settings shared by a web ACL
+// and every rule inside it. A nil VisibilityConfig means the ACL or rule
+// reports no visibility settings, which reads the same way as having them off:
+// nothing is emitted and nothing is sampled.
+func newMqlWafVisibilityConfig(runtime *plugin.Runtime, ownerID string, vc *waftypes.VisibilityConfig) (*mqlAwsWafVisibilityConfig, error) {
+	metricsEnabled := false
+	sampledRequests := false
+	metricName := ""
+	if vc != nil {
+		metricsEnabled = vc.CloudWatchMetricsEnabled
+		sampledRequests = vc.SampledRequestsEnabled
+		metricName = convert.ToValue(vc.MetricName)
+	}
+	res, err := CreateResource(runtime, "aws.waf.visibilityConfig", map[string]*llx.RawData{
+		"__id":                     llx.StringData(ownerID + "/visibilityConfig"),
+		"cloudWatchMetricsEnabled": llx.BoolData(metricsEnabled),
+		"sampledRequestsEnabled":   llx.BoolData(sampledRequests),
+		"metricName":               llx.StringData(metricName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsWafVisibilityConfig), nil
 }
 
 func wafVisibilityConfigToDict(vc *waftypes.VisibilityConfig) map[string]any {
@@ -591,6 +627,10 @@ func (a *mqlAwsWafRulegroup) rules() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlVisibility, err := newMqlWafVisibilityConfig(a.MqlRuntime, ruleID, rule.VisibilityConfig)
+		if err != nil {
+			return nil, err
+		}
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
 				"id":               llx.StringData(ruleID),
@@ -602,6 +642,7 @@ func (a *mqlAwsWafRulegroup) rules() ([]any, error) {
 				"ruleLabels":       llx.ArrayData(wafRuleLabelsToInterface(rule.RuleLabels), types.String),
 				"statement":        llx.ResourceData(mqlStatement, "aws.waf.rule.statement"),
 				"belongsTo":        llx.StringData(a.Arn.Data),
+				"visibility":       llx.ResourceData(mqlVisibility, "aws.waf.visibilityConfig"),
 			},
 		)
 		if err != nil {
@@ -707,6 +748,10 @@ func (a *mqlAwsWafAcl) rules() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlVisibility, err := newMqlWafVisibilityConfig(a.MqlRuntime, ruleID, rule.VisibilityConfig)
+		if err != nil {
+			return nil, err
+		}
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
 				"id":               llx.StringData(ruleID),
@@ -718,6 +763,7 @@ func (a *mqlAwsWafAcl) rules() ([]any, error) {
 				"ruleLabels":       llx.ArrayData(wafRuleLabelsToInterface(rule.RuleLabels), types.String),
 				"statement":        llx.ResourceData(mqlStatement, "aws.waf.rule.statement"),
 				"belongsTo":        llx.StringData(a.Arn.Data),
+				"visibility":       llx.ResourceData(mqlVisibility, "aws.waf.visibilityConfig"),
 			},
 		)
 		if err != nil {

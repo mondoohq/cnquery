@@ -539,10 +539,18 @@ aws.vpc @defaults("id isDefault cidrBlock region") {
   defaultNetworkAcl() aws.ec2.networkacl
   // Account- and region-level VPC Block Public Access options that apply to the VPC
   //
-  // A dict with `internetGatewayBlockMode`, `state`, `exclusionsAllowed`,
-  // `managedBy`, `reason`, and `lastUpdateTimestamp`. Empty when VPC Block
-  // Public Access has never been configured in the region.
-  blockPublicAccessOptions() dict
+  // Deprecated in favor of blockPublicAccess, which carries the same values as
+  // a resource with a proper time value for the last update rather than a
+  // string. A dict with `internetGatewayBlockMode`, `state`,
+  // `exclusionsAllowed`, `managedBy`, `reason`, and `lastUpdateTimestamp`.
+  // Empty when VPC Block Public Access has never been configured in the
+  // region.
+  blockPublicAccessOptions() @maturity("deprecated") dict
+  // Region-wide VPC Block Public Access options that apply to the VPC
+  //
+  // Null when VPC Block Public Access has never been configured in the
+  // region, and on a region the account cannot read the setting in.
+  blockPublicAccess() aws.ec2.vpcBlockPublicAccessOptions
   // Virtual private gateways attached to the VPC
   vpnGateways() []aws.vpc.vpnGateway
   // DHCP options set associated with the VPC
@@ -952,10 +960,16 @@ private aws.waf.acl @defaults("name") {
   defaultAction() string
   // CloudWatch metrics and request-sampling settings for the ACL
   //
-  // Has `cloudWatchMetricsEnabled` (whether metrics are emitted),
-  // `sampledRequestsEnabled` (whether a sample of inspected requests is stored),
+  // Deprecated in favor of cloudWatchMetricsEnabled, sampledRequestsEnabled,
+  // and metricName. Has `cloudWatchMetricsEnabled`, `sampledRequestsEnabled`,
   // and `metricName`.
-  visibilityConfig() dict
+  visibilityConfig() @maturity("deprecated") dict
+  // CloudWatch metrics and request-sampling settings for the ACL
+  //
+  // Without metrics there is nothing to alert on when the ACL starts blocking
+  // or stops blocking traffic, and without sampled requests an investigation
+  // has nothing to read to see what a rule actually matched.
+  visibility() aws.waf.visibilityConfig
   // Web ACL capacity units (WCU) consumed by the ACL
   capacity() int
   // Domains WAF accepts in host headers when generating and validating challenge and CAPTCHA tokens
@@ -1036,12 +1050,35 @@ private aws.waf.rule @defaults("name") {
   overrideAction string
   // CloudWatch metrics and request-sampling settings for the rule
   //
-  // Has `cloudWatchMetricsEnabled`, `sampledRequestsEnabled`, and `metricName`.
-  visibilityConfig dict
+  // Deprecated in favor of cloudWatchMetricsEnabled, sampledRequestsEnabled,
+  // and metricName. Has `cloudWatchMetricsEnabled`, `sampledRequestsEnabled`,
+  // and `metricName`.
+  visibilityConfig @maturity("deprecated") dict
+  // CloudWatch metrics and request-sampling settings for the rule
+  //
+  // A rule with metrics off is invisible in the ACL's own dashboards even
+  // when the ACL itself has metrics on.
+  visibility aws.waf.visibilityConfig
   // Labels WAF adds to matching requests, consumed by later label-match rules
   ruleLabels []string
   // ARN of either rule ACL or the RuleGroup that this rule belongs to
   belongsTo string
+}
+
+// CloudWatch metrics and request-sampling settings of a WAF web ACL or rule
+//
+// Whether the ACL or rule emits CloudWatch metrics, whether it stores a sample
+// of the requests it inspects, and the metric name both are published under.
+// The same settings are configured on a web ACL and on every rule inside it,
+// so a rule can be invisible in CloudWatch even when the ACL that runs it is
+// not.
+private aws.waf.visibilityConfig @defaults("metricName cloudWatchMetricsEnabled sampledRequestsEnabled") {
+  // Whether CloudWatch metrics are emitted
+  cloudWatchMetricsEnabled bool
+  // Whether a sample of the inspected requests is stored
+  sampledRequestsEnabled bool
+  // CloudWatch metric name the settings publish under
+  metricName string
 }
 
 // Action that happens if a rule statement matches
@@ -1899,10 +1936,16 @@ private aws.efs.filesystem @defaults("name id region") {
   kmsKey() aws.kms.key
   // Backup policy for the file system
   //
-  // Dict with a `BackupPolicy` object whose `Status` reports the automatic
-  // backup state, one of ENABLED, ENABLING, DISABLED, or DISABLING. Null
-  // when the file system has no backup policy configured.
-  backupPolicy() dict
+  // Deprecated in favor of automaticBackup, which carries the same value as a
+  // resource. Dict with a `BackupPolicy` object whose `Status` reports the
+  // automatic backup state. Null when the file system has no backup policy
+  // configured.
+  backupPolicy() @maturity("deprecated") dict
+  // Automatic backup policy for the file system
+  //
+  // Null when the file system has no backup policy configured, which reads
+  // the same way as DISABLED: nothing is backing the file system up.
+  automaticBackup() aws.efs.backupPolicy
   // Region in which the file system exists
   region string
   // Availability zone where the file system exists if a specific AZ is defined
@@ -1952,10 +1995,81 @@ private aws.efs.filesystem @defaults("name id region") {
   replicationConfiguration() aws.efs.filesystem.replicationConfiguration
   // File system protection configuration
   //
-  // Dict with a `replicationOverwriteProtection` key reporting whether the
-  // file system is guarded against being overwritten by an incoming
-  // replication, one of ENABLED, DISABLED, or REPLICATING.
-  fileSystemProtection() dict
+  // Deprecated in favor of protection, which carries the same value as a
+  // resource. Dict with a `replicationOverwriteProtection` key.
+  fileSystemProtection() @maturity("deprecated") dict
+  // File system protection configuration
+  //
+  // Null when the service reports no protection settings for the file system.
+  protection() aws.efs.fileSystemProtection
+}
+
+// Automatic backup policy of an Amazon EFS file system
+//
+// Whether AWS Backup takes automatic daily backups of the file system. A file
+// system with no backup policy at all reads the same way as one that has
+// backups disabled: nothing is backing it up.
+private aws.efs.backupPolicy @defaults("status") {
+  // Automatic backup state for the file system
+  //
+  // One of ENABLED, ENABLING, DISABLED, or DISABLING.
+  status string
+}
+
+// Protection configuration of an Amazon EFS file system
+//
+// Whether the file system is guarded against being overwritten by an incoming
+// replication. A file system left unprotected can have its contents replaced
+// by a replication configuration created against it from elsewhere.
+private aws.efs.fileSystemProtection @defaults("replicationOverwriteProtection") {
+  // Whether the file system is guarded against being overwritten by an incoming replication
+  //
+  // One of ENABLED, DISABLED, or REPLICATING. DISABLED means a replication
+  // configuration pointed at this file system may overwrite its contents.
+  replicationOverwriteProtection string
+}
+
+// POSIX identity an Amazon EFS access point enforces
+//
+// User and group IDs EFS substitutes for the NFS client's own identity on
+// every request made through the access point, which is what decides the
+// files that request can reach. A uid of 0 makes every client root on the
+// file system.
+private aws.efs.posixUser @defaults("uid gid") {
+  // POSIX user ID that every request through the access point runs as
+  uid int
+  // POSIX group ID that every request through the access point runs as
+  gid int
+  // Secondary POSIX group IDs applied to requests through the access point
+  //
+  // Up to 16 additional groups, each widening what the request can reach.
+  // Empty when none are configured.
+  secondaryGids []int
+}
+
+// Root directory an Amazon EFS access point exposes
+//
+// Directory within the file system that NFS clients reaching the access point
+// see as the root and cannot escape, so a path of "/" exposes the whole file
+// system. The creation values are the ownership and permission bits EFS
+// applies when it has to create the directory itself.
+private aws.efs.rootDirectory @defaults("path permissions") {
+  // Directory within the file system exposed to NFS clients through the access point
+  path string
+  // Owner user ID EFS applies when it creates the root directory
+  //
+  // Null when the access point supplies no creation info, in which case EFS
+  // does not create the directory and a missing path fails the mount.
+  ownerUid int
+  // Owner group ID EFS applies when it creates the root directory
+  //
+  // Null when the access point supplies no creation info.
+  ownerGid int
+  // POSIX permission bits EFS applies when it creates the root directory
+  //
+  // A three- or four-digit octal string, for example "0755". Empty when the
+  // access point supplies no creation info.
+  permissions string
 }
 
 // AWS EFS lifecycle configuration
@@ -2032,15 +2146,27 @@ private aws.efs.accessPoint @defaults("accessPointId name") {
   fileSystem() aws.efs.filesystem
   // Access point name
   name string
-  // POSIX user identity (uid, gid, secondaryGids)
-  posixUser dict
+  // POSIX user identity
+  //
+  // Deprecated in favor of posixIdentity, which carries the same three values
+  // as a resource. Dict with `uid`, `gid`, and `secondaryGids`.
+  posixUser @maturity("deprecated") dict
   // Root directory configuration
   //
-  // Dict with `path` (the directory within the file system exposed to NFS
-  // clients through this access point) and `creationInfo`, an object with
-  // `ownerUid`, `ownerGid`, and `permissions` that EFS applies when it
-  // creates the root directory.
-  rootDirectory dict
+  // Deprecated in favor of root, which carries the same values as
+  // a resource. Dict with `path` and `creationInfo`, an object with
+  // `ownerUid`, `ownerGid`, and `permissions`.
+  rootDirectory @maturity("deprecated") dict
+  // POSIX identity every request through the access point runs as
+  //
+  // Null when the access point enforces no user identity, in which case the
+  // NFS client's own identity is used.
+  posixIdentity aws.efs.posixUser
+  // Root directory configuration of the access point
+  //
+  // Null when the access point does not restrict the root, in which case a
+  // client reaching it sees the whole file system.
+  root aws.efs.rootDirectory
   // Access point state
   lifecycleState string
   // Resource tags
@@ -2249,8 +2375,12 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   keyRotationEnabled() bool
   // Raw key metadata as returned by the KMS DescribeKey API
   //
-  // JSON form of the KeyMetadata structure, with keys such as `KeyId`, `Arn`, `Description`, `KeyState`, `KeyUsage`, `KeySpec`, `Origin`, `KeyManager`, `CreationDate`, `Enabled`, `MultiRegion`, and `CustomKeyStoreId`. Most values are also exposed as dedicated fields (`keyState`, `keyUsage`, `keySpec`, `origin`, `keyManager`, `description`); prefer those for audits and use this dict for values without a dedicated accessor.
-  metadata() dict
+  // Deprecated in favor of keyState, keyUsage, keySpec, origin, keyManager,
+  // description, and the other dedicated fields on this resource. JSON form
+  // of the KeyMetadata structure, with keys such as `KeyId`, `Arn`,
+  // `Description`, `KeyState`, `KeyUsage`, `KeySpec`, `Origin`, `KeyManager`,
+  // `CreationDate`, `Enabled`, `MultiRegion`, and `CustomKeyStoreId`.
+  metadata() @maturity("deprecated") dict
   // Tags for the KMS key
   tags() map[string]string
   // CloudFormation stack that manages this key, if any
@@ -2461,10 +2591,18 @@ aws.iam {
   virtualMfaDevices() []aws.iam.virtualmfadevice
   // Server certificates stored in IAM
   //
-  // Each entry has the shape `{Arn, Path, ServerCertificateId,
-  // ServerCertificateName, Expiration, UploadDate}`. Expiration is the
-  // certificate expiry date and UploadDate is when it was uploaded to IAM.
-  serverCertificates() []dict
+  // Deprecated in favor of tlsCertificates, which carries the same
+  // entries as resources with proper time values for the expiry and upload
+  // dates rather than JSON strings. Each entry has the shape `{Arn, Path,
+  // ServerCertificateId, ServerCertificateName, Expiration, UploadDate}`.
+  serverCertificates() @maturity("deprecated") []dict
+  // Server certificates stored in IAM
+  //
+  // IAM is the legacy store for TLS certificates, predating ACM. A
+  // certificate that has passed its expiration is still served by whatever
+  // load balancer references it, so this is where an expired-certificate
+  // check reads from.
+  tlsCertificates() []aws.iam.serverCertificate
   // List of IAM instance profiles in the account
   instanceProfiles() []aws.iam.instanceProfile
   // List of SAML 2.0 identity providers configured in IAM
@@ -2643,9 +2781,16 @@ private aws.iam.user @defaults("arn name createdAt") {
   path string
   // MFA devices (virtual and hardware) assigned to the user
   //
-  // Each entry has the shape `{SerialNumber, EnableDate, UserName}`. For a
-  // virtual MFA device the SerialNumber is the device ARN.
-  mfaDevices() []dict
+  // Deprecated in favor of assignedMfaDevices, which carries the same entries
+  // as resources with a proper time value for the enablement date rather than
+  // a JSON string. Each entry has the shape `{SerialNumber, EnableDate,
+  // UserName}`. For a virtual MFA device the SerialNumber is the device ARN.
+  mfaDevices() @maturity("deprecated") []dict
+  // MFA devices (virtual and hardware) assigned to the user
+  //
+  // Empty when the user has no second factor, which is the reading a
+  // console-user MFA check is looking for.
+  assignedMfaDevices() []aws.iam.user.mfaDevice
   // Managed policy that sets the permissions boundary for the user, if one is set
   permissionsBoundary() aws.iam.policy
   // Services the user is permitted to use, with when each was last accessed
@@ -3052,6 +3197,48 @@ private aws.iam.group @defaults("arn name") {
   // lastAuthenticatedAt are the services the group grants but no member has
   // used.
   lastAccessedServices() []aws.iam.serviceLastAccessed
+}
+
+// Server certificate stored in IAM
+//
+// TLS certificate held in the IAM certificate store, which predates ACM and
+// is still where certificates for some load balancers and CloudFront
+// distributions live. The `expiration` field is what an expiry audit reads;
+// IAM keeps serving an expired certificate to anything that references it.
+private aws.iam.serverCertificate @defaults("name expiration") {
+  // ARN of the server certificate
+  arn string
+  // Name of the server certificate
+  name string
+  // Identifier IAM assigned the server certificate
+  id string
+  // Path under which the server certificate is stored
+  path string
+  // Date the certificate expires
+  //
+  // Null when IAM reports no expiration for the certificate.
+  expiration time
+  // Date the certificate was uploaded to IAM
+  //
+  // Null when IAM reports no upload date for the certificate.
+  uploadedAt time
+}
+
+// MFA device assigned to an IAM user
+//
+// Virtual or hardware second factor registered against a user. The
+// `serialNumber` field identifies the device, and is the device ARN for a
+// virtual MFA device and the hardware serial for a physical one.
+private aws.iam.user.mfaDevice @defaults("serialNumber enabledAt") {
+  // Serial number identifying the device
+  //
+  // The device ARN for a virtual MFA device, the hardware serial for a
+  // physical one.
+  serialNumber string
+  // Name of the user the device is assigned to
+  userName string
+  // Date the device was enabled for the user
+  enabledAt time
 }
 
 // AWS IAM virtual MFA device
@@ -5879,13 +6066,12 @@ private aws.sns.topic @defaults("arn") {
   subscriptions() []aws.sns.subscription
   // Raw topic attribute map
   //
-  // The complete set of topic attributes as returned by SNS, including
-  // Policy, Owner, DisplayName, KmsMasterKeyId, FifoTopic,
-  // ContentBasedDeduplication, SignatureVersion, TracingConfig,
-  // EffectiveDeliveryPolicy, and the SubscriptionsConfirmed,
-  // SubscriptionsPending, and SubscriptionsDeleted counts. Most values are
-  // also surfaced as dedicated fields on this resource.
-  attributes() dict
+  // Deprecated in favor of policy, owner, displayName, kmsMasterKey,
+  // fifoTopic, contentBasedDeduplication, signatureVersion, tracingConfig,
+  // and deliveryPolicy. The complete set of topic attributes as returned by
+  // SNS, including the SubscriptionsConfirmed, SubscriptionsPending, and
+  // SubscriptionsDeleted counts, which have no dedicated field.
+  attributes() @maturity("deprecated") dict
   // Tags for the topic
   tags() map[string]string
   // Signature version used for Amazon SNS message signing (1 or 2)
@@ -5960,12 +6146,11 @@ private aws.sns.subscription @defaults("arn") {
   region string
   // Raw subscription attribute map
   //
-  // The complete set of subscription attributes as returned by SNS,
-  // including SubscriptionArn, TopicArn, Protocol, Endpoint, Owner,
-  // ConfirmationWasAuthenticated, PendingConfirmation, RawMessageDelivery,
-  // FilterPolicy, FilterPolicyScope, RedrivePolicy, and DeliveryPolicy.
-  // Most values are also surfaced as dedicated fields on this resource.
-  attributes() dict
+  // Deprecated in favor of arn, topic, protocol, endpoint, owner,
+  // confirmationWasAuthenticated, pendingConfirmation, rawMessageDelivery,
+  // filterPolicy, filterPolicyScope, redrivePolicy, and deliveryPolicy. The
+  // complete set of subscription attributes as returned by SNS.
+  attributes() @maturity("deprecated") dict
   // Whether raw message delivery is enabled (no SNS metadata wrapper)
   rawMessageDelivery() bool
   // Message filter policy
@@ -6671,6 +6856,39 @@ private aws.elb.sslPolicy @defaults("name region") {
   supportedLoadBalancerTypes []string
 }
 
+// Mutual TLS authentication settings of an ELB listener
+//
+// How a listener treats a client certificate: whether it validates one at
+// all, which trust store it validates against, and whether an expired
+// certificate is still admitted. Only the verify mode actually checks the
+// certificate, so a listener in passthrough mode forwards it to the target
+// without authenticating anyone.
+private aws.elb.mutualAuthentication @defaults("mode trustStoreAssociationStatus") {
+  // Client certificate handling method for the listener
+  //
+  // One of off, passthrough, or verify, defaulting to off.
+  mode string
+  // Trust store used to verify client certificates
+  //
+  // Null for a listener that names no trust store, which is every listener
+  // outside verify mode.
+  trustStore() aws.elb.truststore
+  // Whether expired client certificates are accepted
+  //
+  // True means a client presenting a certificate past its expiry is still
+  // admitted.
+  ignoreClientCertificateExpiry bool
+  // Whether trust store CA certificate names are advertised to clients
+  //
+  // One of on or off.
+  advertiseTrustStoreCaNames string
+  // Association status of the shared trust store
+  //
+  // One of active or removed. A removed trust store leaves a listener in
+  // verify mode with nothing to verify against.
+  trustStoreAssociationStatus string
+}
+
 // AWS ELB mutual TLS trust store
 //
 // Bundle of certificate authority certificates a load balancer uses to verify
@@ -6984,10 +7202,16 @@ private aws.elb.listener @defaults("arn port protocol") {
   sslPolicyRef() aws.elb.sslPolicy
   // Mutual TLS authentication settings for the listener
   //
-  // Has `Mode` (off, passthrough, or verify), `TrustStoreArn`,
-  // `IgnoreClientCertificateExpiry`, `AdvertiseTrustStoreCaNames`, and
-  // `TrustStoreAssociationStatus`. Empty for listeners without mTLS.
-  mutualAuthentication dict
+  // Deprecated in favor of mutualTls, which carries the same
+  // values as a resource with the trust store resolved. Has `Mode`,
+  // `TrustStoreArn`, `IgnoreClientCertificateExpiry`,
+  // `AdvertiseTrustStoreCaNames`, and `TrustStoreAssociationStatus`. Empty for
+  // listeners without mTLS.
+  mutualAuthentication @maturity("deprecated") dict
+  // Mutual TLS authentication settings for the listener
+  //
+  // Null for listeners the load balancer reports no mutual TLS settings for.
+  mutualTls aws.elb.mutualAuthentication
   // Trust store used to verify client certificates on mutual TLS listeners
   trustStore() aws.elb.truststore
   // Rules that route requests reaching the listener
@@ -7129,22 +7353,23 @@ private aws.codebuild.project @defaults("arn name") {
   name string
   // Raw build environment configuration
   //
-  // Keys are `Type`, `Image`, `ComputeType`, `Certificate`,
+  // Deprecated in favor of environmentType, environmentImage,
+  // environmentComputeType, environmentCertificate,
+  // environmentImagePullCredentialsType, environmentVariables, and
+  // privilegedMode. Keys are `Type`, `Image`, `ComputeType`, `Certificate`,
   // `ComputeConfiguration`, `DockerServer`, `EnvironmentVariables`, `Fleet`,
   // `ImagePullCredentialsType`, `PrivilegedMode`, and `RegistryCredential`.
-  // The same values are also exposed flattened as environmentType,
-  // environmentImage, environmentComputeType, and environmentVariables.
-  environment dict
+  environment @maturity("deprecated") dict
   // Region where the project exists
   region string
   // Raw primary source configuration
   //
-  // Keys are `Type`, `Location`, `GitCloneDepth`, `Buildspec`, `Auth`,
-  // `BuildStatusConfig`, `GitSubmodulesConfig`, `InsecureSsl`,
-  // `ReportBuildStatus`, and `SourceIdentifier`. The same values are also
-  // exposed flattened as sourceType, sourceLocation, sourceBuildspec, and the
-  // related source fields.
-  source dict
+  // Deprecated in favor of sourceType, sourceLocation, sourceGitCloneDepth,
+  // sourceBuildspec, sourceInsecureSsl, sourceReportBuildStatus, and
+  // sourceIdentifier. Keys are `Type`, `Location`, `GitCloneDepth`,
+  // `Buildspec`, `Auth`, `BuildStatusConfig`, `GitSubmodulesConfig`,
+  // `InsecureSsl`, `ReportBuildStatus`, and `SourceIdentifier`.
+  source @maturity("deprecated") dict
   // Tags for the project
   tags map[string]string
   // Date the project was created
@@ -8064,8 +8289,17 @@ private aws.macie.bucket @defaults("name region sensitivityScore sharedAccess") 
   sharedAccess string
   // Public-access summary, including whether the bucket is publicly accessible and the account-level and bucket-level permissions that determine it
   publicAccess dict
-  // Default server-side encryption settings (type and KMS key, if any)
-  serverSideEncryption dict
+  // Default server-side encryption settings
+  //
+  // Deprecated in favor of defaultEncryption, which carries the same two
+  // settings with the key resolved to a resource. Keys `Type` and
+  // `KmsMasterKeyId`.
+  serverSideEncryption @maturity("deprecated") dict
+  // Default server-side encryption settings
+  //
+  // Encryption Amazon S3 applies to new objects written to the bucket, as
+  // reported by Macie.
+  defaultEncryption aws.macie.bucket.encryption
   // Whether versioning is enabled for the bucket
   versioning bool
   // Whether the bucket policy requires server-side encryption of new objects: FALSE (required), TRUE (not required or no policy), UNKNOWN
@@ -8088,6 +8322,26 @@ private aws.macie.bucket @defaults("name region sensitivityScore sharedAccess") 
   errorMessage string
   // Tags on the bucket as captured by Macie
   tags map[string]string
+}
+
+// Default server-side encryption settings of an S3 bucket, as reported by Macie
+//
+// Encryption Amazon S3 applies to new objects written to the bucket when the
+// request does not name its own key. A bucket reporting NONE encrypts nothing
+// by default, and one reporting an AES256 mode is encrypted with a key AWS
+// owns rather than one the account controls.
+private aws.macie.bucket.encryption @defaults("type") {
+  // Default server-side encryption algorithm configured on the bucket
+  //
+  // One of NONE, AES256, aws:kms, or aws:kms:dsse. NONE means the bucket's
+  // default encryption settings specify no server-side encryption behavior
+  // for new objects.
+  type string
+  // KMS key configured as the bucket's default server-side encryption key
+  //
+  // Null unless the encryption type is one of the KMS modes. Macie reports
+  // the key as an ARN or as a bare key ID, and both resolve.
+  kmsKey() aws.kms.key
 }
 
 // Amazon Macie allow list
@@ -9049,11 +9303,23 @@ private aws.ecs.cluster @defaults("name region status runningTasksCount pendingT
   registeredContainerInstancesCount int
   // Cluster configuration
   //
+  // Deprecated in favor of executeCommandConfiguration and managedStorage.
   // Keyed by ExecuteCommandConfiguration (ECS Exec logging and KMS key:
   // KmsKeyId, Logging, LogConfiguration) and ManagedStorageConfiguration
   // (KmsKeyId and FargateEphemeralStorageKmsKeyId for encrypting managed and
   // Fargate ephemeral storage).
-  configuration dict
+  configuration @maturity("deprecated") dict
+  // ECS Exec session logging and encryption settings for the cluster
+  //
+  // Null when the cluster leaves ECS Exec at its defaults, in which case
+  // session output is logged to the container's own log configuration and is
+  // not encrypted with a customer key.
+  executeCommandConfiguration() aws.ecs.cluster.executeCommandConfiguration
+  // Managed storage encryption settings for the cluster
+  //
+  // Null when the cluster leaves its managed storage at the AWS-owned
+  // encryption keys.
+  managedStorage() aws.ecs.cluster.managedStorageConfiguration
   // Cluster settings
   //
   // Keyed by setting name; the containerInsights key reports the CloudWatch
@@ -9081,6 +9347,57 @@ private aws.ecs.cluster @defaults("name region status runningTasksCount pendingT
   serviceConnectNamespace string
   // Statistics for the cluster, broken down by launch type (e.g., runningEC2TasksCount, runningFargateTasksCount)
   statistics map[string]string
+}
+
+// ECS Exec configuration of an Amazon ECS cluster
+//
+// Where the output of an ECS Exec session is logged and whether that log is
+// encrypted. An interactive session into a running container is a privileged
+// path into the workload, so this is what makes the session auditable: the
+// destination log group or S3 bucket, whether the delivery is encrypted, and
+// the KMS key that protects the session channel itself.
+private aws.ecs.cluster.executeCommandConfiguration @defaults("logging cloudWatchEncryptionEnabled s3EncryptionEnabled") {
+  // Where ECS Exec session output is logged
+  //
+  // One of NONE (session output is not logged), DEFAULT (logged to the
+  // container's configured log driver), or OVERRIDE (logged to the CloudWatch
+  // log group or S3 bucket named on this resource).
+  logging string
+  // KMS key used to encrypt the data between the local client and the container
+  //
+  // Null when the session channel uses the AWS-managed default rather than a
+  // customer-managed key.
+  kmsKey() aws.kms.key
+  // CloudWatch log group receiving ECS Exec session output
+  //
+  // Null when logging is not OVERRIDE or no log group is named.
+  cloudWatchLogGroup() aws.cloudwatch.loggroup
+  // Whether session output sent to CloudWatch Logs is encrypted
+  cloudWatchEncryptionEnabled bool
+  // S3 bucket receiving ECS Exec session output
+  //
+  // Null when logging is not OVERRIDE or no bucket is named.
+  s3Bucket() aws.s3.bucket
+  // Whether session output sent to S3 is encrypted
+  s3EncryptionEnabled bool
+  // Optional folder in the S3 bucket that session output is written under
+  s3KeyPrefix string
+}
+
+// Managed storage encryption of an Amazon ECS cluster
+//
+// Customer managed KMS keys ECS uses to encrypt the storage it manages for
+// tasks in the cluster. A cluster that names no key of its own is encrypted
+// with an AWS owned key, which you cannot audit, rotate, or revoke.
+private aws.ecs.cluster.managedStorageConfiguration @defaults("kmsKey") {
+  // KMS key used to encrypt the managed storage of tasks in the cluster
+  //
+  // Null when the cluster names no key for managed storage.
+  kmsKey() aws.kms.key
+  // KMS key used to encrypt the ephemeral storage of Fargate tasks in the cluster
+  //
+  // Null when the cluster names no key for Fargate ephemeral storage.
+  fargateEphemeralStorageKmsKey() aws.kms.key
 }
 
 // Capacity provider strategy item for an ECS cluster
@@ -12326,9 +12643,49 @@ private aws.cloudtrail.channel @defaults("name sourceType") {
 // account-level Block Public Access configuration (the four settings
 // that ignore or restrict bucket and object ACLs and policies allowing
 // public access).
-aws.s3control @defaults("accountPublicAccessBlock") {
+aws.s3control @defaults("accountBlockPublicAccess") {
   // Account level public access configuration for S3
-  accountPublicAccessBlock() dict
+  //
+  // Deprecated in favor of accountBlockPublicAccess, which carries the same
+  // four settings as a resource. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
+  // `IgnorePublicAcls`, and `RestrictPublicBuckets`, each a boolean. Null when
+  // the account has no Block Public Access configuration.
+  accountPublicAccessBlock() @maturity("deprecated") dict
+  // Account-wide Block Public Access configuration
+  //
+  // Applies on top of what each bucket and access point configures, so a
+  // setting enabled here is in force no matter what an individual bucket
+  // says. Null when the account has no Block Public Access configuration at
+  // all, which reads the same way as all four settings being off: the
+  // protection is not in effect either way.
+  accountBlockPublicAccess() aws.s3.publicAccessBlock
+}
+
+// Block Public Access configuration of an S3 account, bucket, or access point
+//
+// The four settings that decide whether ACLs and bucket policies granting
+// public access are accepted or ignored. S3 evaluates them at the account,
+// bucket, and access point level, and the most restrictive answer wins, so
+// the same four settings appear on aws.s3control, aws.s3.bucket, and
+// aws.s3.bucket.accessPoint.
+private aws.s3.publicAccessBlock @defaults("blockPublicAcls blockPublicPolicy ignorePublicAcls restrictPublicBuckets") {
+  // Whether new public ACLs are blocked
+  //
+  // A PUT that carries a public ACL is rejected, but ACLs already on existing
+  // objects still grant what they grant.
+  blockPublicAcls bool
+  // Whether new public bucket policies are blocked
+  blockPublicPolicy bool
+  // Whether existing public ACLs are ignored
+  //
+  // This is the setting that neutralizes public ACLs already in place, which
+  // blockPublicAcls does not.
+  ignorePublicAcls bool
+  // Whether cross-account access through public policies is restricted
+  //
+  // Access through a public policy is limited to principals inside the
+  // account and to AWS services.
+  restrictPublicBuckets bool
 }
 
 // Amazon Simple Storage Service (S3)
@@ -12427,11 +12784,16 @@ private aws.s3.bucket @defaults("name location public") {
   replicationRules() []aws.s3.bucket.replicationRule
   // Block Public Access configuration of the bucket
   //
-  // Keys `BlockPublicAcls`, `BlockPublicPolicy`, `IgnorePublicAcls`, and
-  // `RestrictPublicBuckets`, each a boolean. The same four settings are also
-  // exposed as the top-level `blockPublicAcls`, `blockPublicPolicy`,
-  // `ignorePublicAcls`, and `restrictPublicBuckets` fields.
-  publicAccessBlock() dict
+  // Deprecated in favor of blockPublicAccess, which carries the same four
+  // settings as a resource. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
+  // `IgnorePublicAcls`, and `RestrictPublicBuckets`, each a boolean.
+  publicAccessBlock() @maturity("deprecated") dict
+  // Block Public Access configuration of the bucket
+  //
+  // Null when the bucket has no Block Public Access configuration at all,
+  // which reads the same way as all four settings being off. The account-wide
+  // configuration on aws.s3control applies on top of this one.
+  blockPublicAccess() aws.s3.publicAccessBlock
   // Whether new public ACLs on the bucket and its objects are blocked
   blockPublicAcls() bool
   // Whether new public bucket policies are blocked
@@ -12541,13 +12903,13 @@ private aws.s3.bucket.eventNotification @defaults("id type events") {
 
 // Amazon S3 bucket access point
 //
-// Examine an S3 access point, a named endpoint attached to a bucket that
-// can have its own resource `policy()` and `publicAccessBlock()` separate
-// from the parent `bucket()`. `networkOrigin` distinguishes Internet-facing
-// from VPC-restricted access points (the latter resolve `vpc()` to the
-// allowed `aws.vpc`), `bucketAccountId` shows the account that owns the
-// underlying bucket, and `alias` exposes the access-point alias usable in
-// place of the bucket name in S3 API calls.
+// A named endpoint attached to a bucket that can carry its own resource
+// `policy` and Block Public Access settings separate from the `bucket` it
+// fronts. `networkOrigin` distinguishes Internet-facing from VPC-restricted
+// access points, the latter resolving `vpc` to the allowed `aws.vpc`;
+// `bucketAccountId` names the account that owns the underlying bucket, and
+// `alias` exposes the access-point alias usable in place of the bucket name
+// in S3 API calls.
 private aws.s3.bucket.accessPoint @defaults("name networkOrigin") {
   // ARN of the access point
   arn string
@@ -12564,7 +12926,18 @@ private aws.s3.bucket.accessPoint @defaults("name networkOrigin") {
   // Alias of the access point
   alias string
   // Public access block configuration for the access point
-  publicAccessBlock() dict
+  //
+  // Deprecated in favor of blockPublicAccess, which carries the same four
+  // settings as a resource. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
+  // `IgnorePublicAcls`, and `RestrictPublicBuckets`, each a boolean.
+  publicAccessBlock() @maturity("deprecated") dict
+  // Block Public Access configuration of the access point
+  //
+  // Separate from the configuration on the bucket the access point fronts, so
+  // an access point can expose a bucket that blocks public access itself.
+  // Null when the access point has no Block Public Access configuration at
+  // all, which reads the same way as all four settings being off.
+  blockPublicAccess() aws.s3.publicAccessBlock
   // Resource policy attached to the access point
   policy() string
 }
@@ -12901,13 +13274,14 @@ private aws.drs.sourceServer @defaults("sourceServerID arn") {
   agentVersion string
   // Data replication status and progress
   //
-  // Keys: DataReplicationError, DataReplicationInitiation, DataReplicationState,
-  // EtaDateTime, LagDuration, ReplicatedDisks (per-disk backlog and replicated
-  // byte counts), StagingAvailabilityZone, and StagingOutpostArn. The commonly
-  // queried values are also flattened onto this resource as dataReplicationState,
-  // dataReplicationLagDuration, dataReplicationEtaAt, and
-  // dataReplicationStagingAvailabilityZone.
-  dataReplicationInfo dict
+  // Deprecated in favor of dataReplicationState, dataReplicationLagDuration,
+  // dataReplicationEtaAt, and dataReplicationStagingAvailabilityZone. Keys:
+  // DataReplicationError, DataReplicationInitiation, DataReplicationState,
+  // EtaDateTime, LagDuration, ReplicatedDisks (per-disk backlog and
+  // replicated byte counts), StagingAvailabilityZone, and StagingOutpostArn.
+  // EtaDateTime is a JSON string here, where dataReplicationEtaAt is a proper
+  // time value that compares against other times.
+  dataReplicationInfo @maturity("deprecated") dict
   // State of the data replication (e.g. INITIATING, INITIAL_SYNC, BACKLOG, CONTINUOUS, STALLED, DISCONNECTED)
   dataReplicationState string
   // Data replication lag duration (ISO 8601 duration)
@@ -12920,13 +13294,14 @@ private aws.drs.sourceServer @defaults("sourceServerID arn") {
   lastLaunchResult string
   // Lifecycle state information
   //
-  // Keys: AddedToServiceDateTime, FirstByteDateTime, LastSeenByServiceDateTime,
-  // ElapsedReplicationDuration, and LastLaunch (result and status of the most
-  // recent launch). The individual timestamps are also flattened onto this
-  // resource as lifeCycleAddedToServiceAt, lifeCycleFirstByteAt,
+  // Deprecated in favor of lifeCycleAddedToServiceAt, lifeCycleFirstByteAt,
   // lifeCycleLastSeenAt, lifeCycleElapsedReplicationDuration, and
-  // lifeCycleLastLaunchStatus.
-  lifeCycle dict
+  // lifeCycleLastLaunchStatus. Keys: AddedToServiceDateTime,
+  // FirstByteDateTime, LastSeenByServiceDateTime,
+  // ElapsedReplicationDuration, and LastLaunch (result and status of the most
+  // recent launch). Timestamps are JSON strings here, where the dedicated
+  // fields are proper time values that compare against other times.
+  lifeCycle @maturity("deprecated") dict
   // Date the source server was added to the service
   lifeCycleAddedToServiceAt time
   // Date of the first byte that was replicated from the source server
@@ -12939,12 +13314,12 @@ private aws.drs.sourceServer @defaults("sourceServerID arn") {
   lifeCycleLastLaunchStatus string
   // Source server properties (OS, disks, network)
   //
-  // Keys: Cpus, Disks, NetworkInterfaces, Os, RamBytes, RecommendedInstanceType,
-  // SupportsNitroInstances, IdentificationHints, and LastUpdatedDateTime. The
-  // scalar summaries are also flattened onto this resource as sourceCpuCount,
-  // sourceDiskCount, sourceRamBytes, sourceRecommendedInstanceType, and
-  // sourceSupportsNitroInstances.
-  sourceProperties dict
+  // Deprecated in favor of sourceCpuCount, sourceDiskCount, sourceRamBytes,
+  // sourceRecommendedInstanceType, sourceSupportsNitroInstances,
+  // sourceIdentificationFqdn, and sourceIdentificationHostname. Keys: Cpus,
+  // Disks, NetworkInterfaces, Os, RamBytes, RecommendedInstanceType,
+  // SupportsNitroInstances, IdentificationHints, and LastUpdatedDateTime.
+  sourceProperties @maturity("deprecated") dict
   // Number of CPUs reported by the source server
   sourceCpuCount int
   // Number of disks reported by the source server
@@ -13028,11 +13403,12 @@ private aws.drs.recoveryInstance @defaults("recoveryInstanceID arn ec2InstanceSt
   pointInTimeSnapshotAt time
   // Data replication info for failback (state, lag, replicated disks)
   //
-  // Keys: DataReplicationError, DataReplicationInitiation, DataReplicationState,
-  // EtaDateTime, LagDuration, ReplicatedDisks, StagingAvailabilityZone, and
-  // StagingOutpostArn. The state and lag are also flattened onto this resource
-  // as dataReplicationState and dataReplicationLagDuration.
-  dataReplicationInfo dict
+  // Deprecated in favor of dataReplicationState and
+  // dataReplicationLagDuration. Keys: DataReplicationError,
+  // DataReplicationInitiation, DataReplicationState, EtaDateTime,
+  // LagDuration, ReplicatedDisks, StagingAvailabilityZone, and
+  // StagingOutpostArn.
+  dataReplicationInfo @maturity("deprecated") dict
   // State of failback data replication
   //
   // One of STOPPED, INITIATING, INITIAL_SYNC, BACKLOG, CREATING_SNAPSHOT,
@@ -13716,11 +14092,10 @@ private aws.dynamodb.table @defaults("name region") {
   backups() []dict
   // Server-side encryption settings for the table
   //
-  // Carries Status (ENABLING, ENABLED, DISABLING, DISABLED, or UPDATING),
-  // SSEType (AES256 or KMS), KMSMasterKeyArn, and
-  // InaccessibleEncryptionDateTime. See sseType and sseKmsKey for the
-  // resolved values.
-  sseDescription() dict
+  // Deprecated in favor of sseType, kmsMasterKeyId, and sseKmsKey. Carries
+  // Status (ENABLING, ENABLED, DISABLING, DISABLED, or UPDATING), SSEType
+  // (AES256 or KMS), KMSMasterKeyArn, and InaccessibleEncryptionDateTime.
+  sseDescription() @maturity("deprecated") dict
   // Type of server-side encryption: "AES256" (AWS-owned) or "KMS" (customer-managed or AWS-managed KMS key)
   sseType() string
   // ARN of the KMS key used for server-side encryption at rest
@@ -13735,13 +14110,12 @@ private aws.dynamodb.table @defaults("name region") {
   provisionedThroughput() dict
   // Continuous backups and point-in-time recovery settings for the table
   //
-  // Carries ContinuousBackupsStatus (ENABLED or DISABLED) and a nested
-  // PointInTimeRecoveryDescription with PointInTimeRecoveryStatus,
-  // EarliestRestorableDateTime, LatestRestorableDateTime, and
-  // RecoveryPeriodInDays. See continuousBackupsEnabled,
-  // pointInTimeRecoveryEnabled, and pitrRecoveryPeriodInDays for the resolved
-  // values.
-  continuousBackups() dict
+  // Deprecated in favor of continuousBackupsEnabled,
+  // pointInTimeRecoveryEnabled, pitrRecoveryPeriodInDays,
+  // earliestRestorableDateTime, and latestRestorableDateTime. Timestamps
+  // inside this dict are JSON strings, where the dedicated fields are proper
+  // time values that compare against other times.
+  continuousBackups() @maturity("deprecated") dict
   // Whether point-in-time recovery (PITR) is enabled
   pointInTimeRecoveryEnabled() bool
   // Whether continuous backups are enabled
@@ -14222,11 +14596,19 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   id string
   // Attribute values that describe permissions to restore the snapshot
   //
-  // Each entry contains AttributeName and AttributeValues. For the "restore"
-  // attribute, AttributeValues lists the AWS account IDs allowed to restore
-  // the snapshot; the value "all" means the snapshot is public. The isPublic
+  // Deprecated in favor of restoreAttributes, which reports the same
+  // name/value pairs keyed by attribute name. Each entry contains
+  // AttributeName and AttributeValues. For the "restore" attribute,
+  // AttributeValues lists the AWS account IDs allowed to restore the
+  // snapshot; the value "all" means the snapshot is public. The isPublic
   // field derives its result from this.
-  attributes() []dict
+  attributes() @maturity("deprecated") []dict
+  // Permissions to restore the snapshot, keyed by attribute name
+  //
+  // The "restore" key lists the AWS account IDs allowed to restore the
+  // snapshot, and the value "all" in that list means anyone can restore it.
+  // An attribute RDS does not report is absent from the map.
+  restoreAttributes() map[string][]string
   // Type of snapshot: manual or automated
   type string
   // Whether the snapshot is encrypted
@@ -14987,6 +15369,24 @@ private aws.elasticache.subnetGroup @defaults("name") {
 // `authentication` field records whether a password is required, making
 // this the resource to audit for over-privileged or password-less cache
 // access.
+// Authentication configuration of an Amazon ElastiCache user
+//
+// How the user proves who it is, and how many passwords it has to prove it
+// with. A user set to no-password can be authenticated as without presenting
+// a credential at all, so whatever its access string grants is open to
+// anyone who can reach the cache.
+private aws.elasticache.authentication @defaults("type passwordCount") {
+  // Authentication mode for the user
+  //
+  // One of password, no-password, or iam.
+  type string
+  // Number of passwords configured for the user
+  //
+  // Up to two, so a password can be rotated without an outage. 0 when the
+  // user authenticates by IAM or not at all.
+  passwordCount int
+}
+
 private aws.elasticache.user @defaults("userName status engine") {
   // ARN of the user
   arn string
@@ -15008,9 +15408,13 @@ private aws.elasticache.user @defaults("userName status engine") {
   userGroupIds []string
   // Authentication mode for the user
   //
-  // Dict with `Type` (the authentication mode, one of password, no-password,
-  // or iam) and `PasswordCount` (number of configured passwords, up to two).
-  authentication dict
+  // Deprecated in favor of authenticationMode, which carries the same two
+  // values as a resource. Dict with `Type` and `PasswordCount`.
+  authentication @maturity("deprecated") dict
+  // Authentication mode for the user
+  //
+  // Null when the service reports no authentication settings for the user.
+  authenticationMode aws.elasticache.authentication
 
   // Tags for the user
   tags() map[string]string
@@ -15157,14 +15561,18 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   enhancedVpcRouting bool
   // Audit-logging delivery status for the cluster
   //
-  // Dict with the keys `LoggingEnabled` (bool, true when audit logging is
-  // on), `BucketName` and `S3KeyPrefix` (the S3 destination for delivered
-  // logs), `LogDestinationType` (`s3`, `cloudwatch`, or `s3table`),
-  // `LogExports` (the
-  // exported log types: `connectionlog`, `useractivitylog`, `userlog`), and
-  // the delivery timestamps `LastSuccessfulDeliveryTime`, `LastFailureTime`,
-  // and `LastFailureMessage`.
-  logging() dict
+  // Deprecated in favor of auditLogging, which carries the same values as a
+  // resource with the destination bucket resolved and proper time values for
+  // the delivery timestamps. Dict with the keys `LoggingEnabled`,
+  // `BucketName`, `S3KeyPrefix`, `LogDestinationType`, `LogExports`,
+  // `LastSuccessfulDeliveryTime`, `LastFailureTime`, and
+  // `LastFailureMessage`, alongside the SDK response metadata.
+  logging() @maturity("deprecated") dict
+  // Audit-logging delivery status for the cluster
+  //
+  // Audit logs record connections, user activity and user changes. Without
+  // them there is no record of who queried the cluster or what they ran.
+  auditLogging() aws.redshift.cluster.loggingStatus
   // Master user name for the cluster.
   masterUsername string
   // Name of the initial database created when cluster was created
@@ -15299,6 +15707,55 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   availabilityZoneRelocationStatus string
   // Elastic IP address of the cluster, when one is configured
   elasticIp string
+}
+
+// Audit-logging delivery status of an Amazon Redshift cluster
+//
+// Where a cluster delivers its connection, user-activity and user logs, and
+// whether the last delivery worked. A cluster that reports logging as enabled
+// but has a failure message and a stale successful-delivery timestamp is not
+// producing an audit trail, which a check reading only the enabled flag would
+// miss.
+private aws.redshift.cluster.loggingStatus @defaults("enabled destinationType") {
+  // Whether audit logging is enabled for the cluster
+  enabled bool
+  // Destination audit logs are delivered to
+  //
+  // One of s3, cloudwatch, or s3table. Empty when audit logging is off.
+  destinationType string
+  // Log types exported for the cluster
+  //
+  // When the destination is s3 or cloudwatch, the values are connectionlog,
+  // useractivitylog, and userlog. When the destination is s3table, the values
+  // are the names of the system tables being published. Empty when audit
+  // logging is off.
+  logExports []string
+  // S3 bucket receiving delivered audit logs
+  //
+  // Null when audit logging is off or the destination is not an S3 bucket.
+  // Log delivery writes into a bucket the account owns, so the bucket's own
+  // encryption, versioning and public-access settings decide how well the
+  // audit trail is protected.
+  bucket() aws.s3.bucket
+  // Prefix applied to delivered audit log file names in the bucket
+  //
+  // Empty when audit logging is off or no prefix is configured.
+  s3KeyPrefix string
+  // Time audit logs were last delivered successfully
+  //
+  // Null when audit logging is off or no delivery has succeeded yet. A
+  // timestamp far in the past on a cluster that reports logging as enabled
+  // means delivery is broken.
+  lastSuccessfulDeliveryAt time
+  // Message describing the most recent audit log delivery failure
+  //
+  // Empty when no delivery has failed. A bucket policy that no longer grants
+  // the Redshift service write access shows up here.
+  lastFailureMessage string
+  // Time audit log delivery last failed
+  //
+  // Null when no delivery has failed.
+  lastFailureAt time
 }
 
 // Amazon Redshift cluster snapshot
@@ -15571,8 +16028,9 @@ private aws.route53.hostedZone @defaults("id name type isPrivate") {
   type string
   // Hosted zone configuration
   //
-  // Has `comment` (string) and `privateZone` (bool).
-  config dict
+  // Deprecated in favor of comment and isPrivate, which carry the same two
+  // values. Has `comment` and `privateZone`.
+  config @maturity("deprecated") dict
   // Whether this is a private hosted zone
   isPrivate bool
   // Comment associated with the hosted zone
@@ -15651,10 +16109,10 @@ private aws.route53.record @defaults("name type") {
   resourceRecords() []string
   // Alias target configuration for AWS resource aliases
   //
-  // Has `dnsName` (string), `hostedZoneId` (string), and
-  // `evaluateTargetHealth` (bool). The `aliasTargetDnsName` and
-  // `aliasTargetHostedZoneId` fields expose the first two directly.
-  aliasTarget() dict
+  // Deprecated in favor of aliasTargetDnsName, aliasTargetHostedZoneId, and
+  // aliasEvaluateTargetHealth, which carry the same three values. Has
+  // `dnsName`, `hostedZoneId`, and `evaluateTargetHealth`.
+  aliasTarget() @maturity("deprecated") dict
   // Whether this is an alias record
   isAlias bool
   // DNS name of the alias target (if alias record)
@@ -16830,6 +17288,29 @@ private aws.apigateway.restapi @defaults("name id") {
   policy string
 }
 
+// Access-log configuration of an API Gateway REST API stage
+//
+// Where the stage writes one line per request and what that line contains.
+// Without it there is no per-request record of who called the API, so a stage
+// with no access log configuration cannot be investigated after the fact.
+private aws.apigateway.stage.accessLogConfiguration @defaults("destinationArn") {
+  // ARN of the destination receiving the stage access log
+  //
+  // Either a CloudWatch Logs log group or a Kinesis Data Firehose delivery
+  // stream.
+  destinationArn string
+  // CloudWatch log group receiving the stage access log
+  //
+  // Null when the destination is a Kinesis Data Firehose delivery stream
+  // rather than a log group. Read destinationArn to tell the two apart.
+  logGroup() aws.cloudwatch.loggroup
+  // Format of the stage access log
+  //
+  // A single line built from $context variables, which must include at least
+  // $context.requestId.
+  format string
+}
+
 // Amazon API Gateway REST API stages
 private aws.apigateway.stage @defaults("arn") {
   // ARN for the REST API stage
@@ -16860,12 +17341,10 @@ private aws.apigateway.stage @defaults("arn") {
   cacheDataEncrypted bool
   // Access-log configuration for the stage
   //
-  // Keys: destinationArn (CloudWatch Logs log group or Kinesis Data
-  // Firehose delivery stream) and format (the $context log format
-  // string). Null when access logging is off. Mirrors
-  // `aws.apigatewayv2.stage.accessLogSettings`, so one check can cover
-  // REST and HTTP APIs the same way.
-  accessLogSettings dict
+  // Null when access logging is off, which is the reading an access-logging
+  // check is looking for. Mirrors `aws.apigatewayv2.stage.accessLog`, so one
+  // check can cover REST and HTTP APIs the same way.
+  accessLog aws.apigateway.stage.accessLogConfiguration
   // Client certificate ID for mutual TLS with backend
   clientCertificateId string
   // WAF web ACL associated with the stage
@@ -17108,6 +17587,59 @@ private aws.apigatewayv2.api @defaults("apiId name protocolType") {
   createdAt time
 }
 
+// Access-log configuration of an API Gateway v2 API stage
+//
+// Where the stage writes one line per request and what that line contains.
+// Without it there is no per-request record of who called the API, so a stage
+// with no access log configuration cannot be investigated after the fact.
+private aws.apigatewayv2.stage.accessLogConfiguration @defaults("destinationArn") {
+  // ARN of the destination receiving the stage access log
+  //
+  // Either a CloudWatch Logs log group or a Kinesis Data Firehose delivery
+  // stream.
+  destinationArn string
+  // CloudWatch log group receiving the stage access log
+  //
+  // Null when the destination is a Kinesis Data Firehose delivery stream
+  // rather than a log group. Read destinationArn to tell the two apart.
+  logGroup() aws.cloudwatch.loggroup
+  // Format of the stage access log
+  //
+  // A single line built from $context variables, which must include at least
+  // $context.requestId.
+  format string
+}
+
+// Route settings of an API Gateway v2 API stage
+//
+// Logging, metrics and throttling a stage applies to a route. The same shape
+// is used for the stage-wide defaults and for the per-route overrides that
+// replace them.
+private aws.apigatewayv2.routeSettings @defaults("loggingLevel detailedMetricsEnabled") {
+  // Whether data trace logging is enabled
+  //
+  // Data traces record full request and response bodies into CloudWatch Logs,
+  // so leaving this on in production writes payloads, including any secrets
+  // they carry, into the log group. Supported only for WebSocket APIs.
+  dataTraceEnabled bool
+  // Whether detailed CloudWatch metrics are enabled
+  detailedMetricsEnabled bool
+  // Execution logging level
+  //
+  // One of INFO, ERROR, or OFF. Supported only for WebSocket APIs.
+  loggingLevel string
+  // Throttling burst limit
+  //
+  // Null when no burst limit is set, in which case the account-level limit
+  // applies.
+  throttlingBurstLimit int
+  // Throttling steady-state rate limit, in requests per second
+  //
+  // Null when no rate limit is set, in which case the account-level limit
+  // applies.
+  throttlingRateLimit float
+}
+
 // Stage of an API Gateway v2 API
 //
 // Deployed stage, the named environment that exposes a particular
@@ -17136,8 +17668,16 @@ private aws.apigatewayv2.stage @defaults("stageName apiId") {
   stageVariables map[string]string
   // Default per-route settings
   //
-  // Keys: throttlingBurstLimit, throttlingRateLimit, detailedMetricsEnabled, dataTraceEnabled, loggingLevel.
-  defaultRouteSettings dict
+  // Deprecated in favor of defaultRoute, which carries the same five values as
+  // a resource. Keys: throttlingBurstLimit, throttlingRateLimit,
+  // detailedMetricsEnabled, dataTraceEnabled, loggingLevel.
+  defaultRouteSettings @maturity("deprecated") dict
+  // Default per-route settings
+  //
+  // Applied to every route on the stage that has no override of its own. Null
+  // when the stage sets no defaults, in which case the account-level
+  // throttling limits apply and logging is off.
+  defaultRoute aws.apigatewayv2.routeSettings
   // Per-route setting overrides
   //
   // Keyed by route key; each value carries the same shape as
@@ -17146,10 +17686,16 @@ private aws.apigatewayv2.stage @defaults("stageName apiId") {
   routeSettings dict
   // Access-log configuration
   //
-  // Keys: destinationArn (CloudWatch Logs log group or Kinesis Data
-  // Firehose delivery stream) and format (the $context log format
-  // string). Null when access logging is off.
-  accessLogSettings dict
+  // Deprecated in favor of accessLog, which carries the same two values as a
+  // resource with the destination log group resolved. Keys: destinationArn
+  // (CloudWatch Logs log group or Kinesis Data Firehose delivery stream) and
+  // format (the $context log format string). Null when access logging is off.
+  accessLogSettings @maturity("deprecated") dict
+  // Access-log configuration for the stage
+  //
+  // Null when access logging is off, which is the reading an access-logging
+  // check is looking for.
+  accessLog aws.apigatewayv2.stage.accessLogConfiguration
   // Whether the stage is owned and managed by another AWS service
   apiGatewayManaged bool
   // Status message of the most recent deployment
@@ -17402,6 +17948,24 @@ aws.lambda {
   eventSourceMappings() []aws.lambda.eventSourceMapping
 }
 
+// Runtime management configuration of an AWS Lambda function
+//
+// How the function picks up the managed runtime updates AWS ships. A function
+// pinned to one runtime build stops receiving the security patches applied to
+// that runtime until someone moves the pin.
+private aws.lambda.runtimeManagementConfig @defaults("updateRuntimeOn") {
+  // How the function picks up managed runtime updates
+  //
+  // One of Auto, Manual, or FunctionUpdate.
+  updateRuntimeOn string
+  // Managed runtime version the function is pinned to
+  //
+  // Set only when updateRuntimeOn is Manual. Distinct from the function's own
+  // runtimeVersionArn, which reports the build the function is running right
+  // now whether or not it is pinned.
+  runtimeVersionArn string
+}
+
 // AWS Lambda function
 private aws.lambda.function @defaults("arn") {
   // ARN of the function
@@ -17535,10 +18099,15 @@ private aws.lambda.function @defaults("arn") {
   eventInvokeConfig() dict
   // Runtime management configuration
   //
-  // Dict with `updateRuntimeOn` (the runtime update mode: Auto, Manual, or
-  // FunctionUpdate) and, when the runtime is pinned, `runtimeVersionArn`
-  // identifying the specific managed runtime version.
-  runtimeManagementConfig() dict
+  // Deprecated in favor of runtimeManagement, which carries the same two
+  // values as a resource. Dict with `updateRuntimeOn` and, when the runtime is
+  // pinned, `runtimeVersionArn`.
+  runtimeManagementConfig() @maturity("deprecated") dict
+  // Runtime management configuration
+  //
+  // Null when the configuration cannot be read, either because the function
+  // no longer exists or because the account is not allowed to read it.
+  runtimeManagement() aws.lambda.runtimeManagementConfig
   // Published versions of this function
   versions() []aws.lambda.function.version
   // Container image URI for Image package type functions (empty for Zip package type functions)
@@ -18643,6 +19212,116 @@ private aws.ec2.managedPrefixList.entry @defaults("cidr") {
   description string
 }
 
+// Region-wide VPC Block Public Access options
+//
+// Account- and region-level setting that blocks internet gateway traffic for
+// every VPC in the region, independent of what any route table, security
+// group, or network ACL allows. The mode says what is blocked, the state says
+// whether the mode is actually in force yet, and managedBy says whether the
+// account can change it at all.
+private aws.ec2.vpcBlockPublicAccessOptions @defaults("internetGatewayBlockMode state") {
+  // Region-wide VPC Block Public Access mode
+  //
+  // One of off, block-bidirectional, or block-ingress. This is the setting
+  // configured for the whole region, which a VPC's own
+  // internetGatewayBlockMode reports the effect of after any exclusion is
+  // applied, so the two disagree on a VPC that has been excluded.
+  internetGatewayBlockMode string
+  // Rollout state of the region-wide VPC Block Public Access mode
+  //
+  // One of default-state, update-in-progress, or update-complete. A mode that
+  // reads as blocking while the state is update-in-progress is not yet in
+  // force.
+  state string
+  // Whether VPC Block Public Access exclusions are allowed in the region
+  //
+  // One of allowed or not-allowed. Reads not-allowed when the setting is
+  // enforced by an organization-level declarative policy, which is what stops
+  // an account excluding its own VPC from the block.
+  exclusionsAllowed string
+  // Entity that manages the region-wide VPC Block Public Access state
+  //
+  // One of account or declarative-policy. A declarative-policy value means
+  // the account cannot change the setting.
+  managedBy string
+  // Reason for the current region-wide VPC Block Public Access state
+  //
+  // Empty when the service reports no reason.
+  reason string
+  // Time the region-wide VPC Block Public Access mode was last updated
+  //
+  // Null when the service reports no update time.
+  lastUpdatedAt time
+}
+
+// Reason an Amazon EC2 resource entered its current state
+//
+// Machine-readable code and human-readable message EC2 records for the most
+// recent state transition, for example Client.UserInitiatedShutdown for a
+// stop someone asked for and Server.SpotInstanceTermination for a Spot
+// instance reclaimed by EC2.
+private aws.ec2.stateReason @defaults("code message") {
+  // Machine-readable code for the state transition
+  code string
+  // Human-readable message for the state transition
+  message string
+}
+
+// Connection logging configuration of an EC2 Client VPN endpoint
+//
+// Where the endpoint records client connection attempts. Without connection
+// logging there is no record of who connected to the VPN, when, or from
+// where, so a compromised client credential leaves no trace.
+private aws.ec2.clientVpnConnectionLogOptions @defaults("enabled") {
+  // Whether client connection logging is enabled for the endpoint
+  enabled bool
+  // CloudWatch log group receiving connection logs for the endpoint
+  //
+  // Null when connection logging is disabled or no log group is configured.
+  cloudWatchLogGroup() aws.cloudwatch.loggroup
+  // CloudWatch log stream receiving connection logs for the endpoint
+  //
+  // Empty when connection logging is disabled or the endpoint writes to a
+  // stream it names per connection rather than a fixed one.
+  cloudWatchLogStream string
+}
+
+// Login banner of an EC2 Client VPN endpoint
+//
+// Text a client is shown when a VPN session is established, which is where an
+// acceptable-use or monitoring notice is served from.
+private aws.ec2.clientVpnLoginBannerOptions @defaults("enabled") {
+  // Whether the client login banner is enabled
+  enabled bool
+  // Text shown in the banner when a VPN session is established
+  //
+  // Empty when the banner is disabled. Up to 1400 UTF-8 characters.
+  bannerText string
+}
+
+// Client connect handling of an EC2 Client VPN endpoint
+//
+// Lambda function the endpoint runs to authorize each connection, on top of
+// whatever the endpoint's own authentication options already checked. The
+// status reports whether the endpoint applied the setting.
+private aws.ec2.clientVpnConnectOptions @defaults("enabled") {
+  // Whether client connect handling is enabled for the endpoint
+  enabled bool
+  // Lambda function that authorizes connections to the endpoint
+  //
+  // Null when client connect handling is disabled or no function is
+  // configured.
+  lambdaFunction() aws.lambda.function
+  // Status code of the client connect option
+  //
+  // One of applying or applied. Empty when the endpoint reports no status.
+  statusCode string
+  // Message describing the status of the client connect option
+  //
+  // Empty when the endpoint reports no status message.
+  statusMessage string
+}
+
 // Amazon EC2 Client VPN endpoint
 private aws.ec2.clientVpnEndpoint @defaults("id status region") {
   // Client VPN endpoint ID
@@ -18678,11 +19357,36 @@ private aws.ec2.clientVpnEndpoint @defaults("id status region") {
   // Session timeout in hours
   sessionTimeoutHours int
   // Client connect options (Lambda ARN, enabled flag)
-  clientConnectOptions dict
+  //
+  // Deprecated in favor of clientConnect, which carries the same values as a
+  // resource with the Lambda function resolved.
+  clientConnectOptions @maturity("deprecated") dict
   // Client login banner options (banner text, enabled flag)
-  clientLoginBannerOptions dict
+  //
+  // Deprecated in favor of loginBanner, which carries the same two values as
+  // a resource.
+  clientLoginBannerOptions @maturity("deprecated") dict
   // Connection logging options (CloudWatch log group/stream, enabled flag)
-  connectionLogOptions dict
+  //
+  // Deprecated in favor of connectionLogging, which carries the same values
+  // as a resource with the log group resolved.
+  connectionLogOptions @maturity("deprecated") dict
+  // Connection logging configuration of the endpoint
+  //
+  // Without connection logging there is no record of who connected to the
+  // VPN, when, or from where, so a compromised client credential leaves no
+  // trace. Null when the endpoint reports no connection log options.
+  connectionLogging aws.ec2.clientVpnConnectionLogOptions
+  // Login banner shown when a VPN session is established
+  //
+  // Null when the endpoint reports no client login banner options.
+  loginBanner aws.ec2.clientVpnLoginBannerOptions
+  // Client connect handling of the endpoint
+  //
+  // When enabled, a Lambda function authorizes each connection in addition to
+  // the endpoint's own authentication options. Null when the endpoint reports
+  // no client connect options.
+  clientConnect aws.ec2.clientVpnConnectOptions
   // Authentication methods enabled on the endpoint
   //
   // Each entry carries Type (certificate-authentication,
@@ -18871,6 +19575,47 @@ private aws.ec2.vpcEndpointServiceConfiguration @defaults("id name state") {
   connections() []aws.ec2.vpcEndpointServiceConfiguration.connection
 }
 
+// Instance metadata service options of an EC2 launch template
+//
+// How instances launched from the template reach the instance metadata
+// service: whether the endpoint is on at all, whether a session token is
+// required to read it, how far a metadata response may travel, and whether
+// the instance's own tags are readable through it. These decide how much an
+// SSRF against a workload on the instance can reach.
+private aws.ec2.launchtemplate.instanceMetadataOptions @defaults("httpTokens httpEndpoint httpPutResponseHopLimit") {
+  // Whether IMDSv2 is required on instances launched from the default version
+  //
+  // Either optional (IMDSv1 credentials are still available without a session
+  // token) or required (every metadata request must carry a session token).
+  httpTokens string
+  // Whether the HTTP metadata endpoint is enabled on instances launched from the default version
+  //
+  // Either enabled or disabled. A disabled endpoint makes instance metadata,
+  // including any IAM role credentials, unreachable from the instance.
+  httpEndpoint string
+  // Maximum number of network hops the instance metadata PUT response may travel
+  //
+  // Integers from 1 to 64. A limit above 1 lets a containerized or proxied
+  // workload reach the metadata service, which widens the blast radius of an
+  // SSRF. Null when the template sets no hop limit.
+  httpPutResponseHopLimit int
+  // Whether the IPv6 endpoint of the instance metadata service is enabled
+  //
+  // Either enabled or disabled.
+  httpProtocolIpv6 string
+  // Whether instance tags are readable through the instance metadata service
+  //
+  // Either enabled or disabled. Enabling it exposes every tag on the
+  // instance, including any that carry sensitive values, to every process on
+  // the host.
+  instanceMetadataTags string
+  // State of the metadata option changes
+  //
+  // Either pending (the options are being updated and the instance is not yet
+  // serving metadata under the new selection) or applied.
+  state string
+}
+
 // Amazon EC2 launch template
 private aws.ec2.launchtemplate @defaults("name region") {
   // Launch template ID
@@ -18895,8 +19640,18 @@ private aws.ec2.launchtemplate @defaults("name region") {
   userData() string
   // Whether the launch template has user data set (a launch script that may embed secrets)
   userDataPresent() bool
-  // Metadata options from the default version (httpTokens, httpEndpoint, httpPutResponseHopLimit)
-  metadataOptions() dict
+  // Metadata options from the default version
+  //
+  // Deprecated in favor of instanceMetadata, which carries the same six values
+  // as a resource. Keys are `HttpEndpoint`, `HttpProtocolIpv6`,
+  // `HttpPutResponseHopLimit`, `HttpTokens`, `InstanceMetadataTags`, and
+  // `State`.
+  metadataOptions() @maturity("deprecated") dict
+  // Instance metadata service options from the default version
+  //
+  // Null when the default version sets no metadata options, in which case
+  // instances launch with the account-level defaults.
+  instanceMetadata() aws.ec2.launchtemplate.instanceMetadataOptions
   // Security group IDs from the default version
   securityGroupIds() []string
   // IAM instance profile ARN or name from the default version
@@ -18993,9 +19748,22 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   region string
   // Accounts and groups permitted to create volumes from the snapshot
   //
-  // Each entry carries either UserId (an AWS account ID granted permission)
-  // or Group (set to all when the snapshot is shared publicly).
-  createVolumePermission() []dict
+  // Deprecated in favor of createVolumePermissionUserIds and
+  // createVolumePermissionGroups. Each entry carries either UserId (an AWS
+  // account ID granted permission) or Group (set to all when the snapshot is
+  // shared publicly).
+  createVolumePermission() @maturity("deprecated") []dict
+  // AWS account IDs permitted to create volumes from the snapshot
+  //
+  // Every account outside the owner listed here can restore the snapshot's
+  // contents into a volume of its own. Empty when the snapshot is not shared
+  // with any individual account.
+  createVolumePermissionUserIds() []string
+  // Groups permitted to create volumes from the snapshot
+  //
+  // The single group EC2 supports is all, which makes the snapshot public.
+  // Empty when the snapshot is not shared publicly.
+  createVolumePermissionGroups() []string
   // ID of the volume used to create the snapshot
   volumeId string
   // Time when the snapshot began
@@ -19561,9 +20329,14 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   instanceStatus() dict
   // Reason for the most recent state transition
   //
-  // Carries Code (for example Client.UserInitiatedShutdown or
-  // Server.SpotInstanceTermination) and a human-readable Message.
-  stateReason dict
+  // Deprecated in favor of stateChangeReason, which carries the same two values
+  // as a resource. Carries Code and Message.
+  stateReason @maturity("deprecated") dict
+  // Reason for the most recent state transition
+  //
+  // Null when the instance reports no reason, which is the usual case for an
+  // instance that has always been running.
+  stateChangeReason aws.ec2.stateReason
   // Reason for the most recent state transition
   stateTransitionReason string
   // Whether the instance has EBS optimization turned on
@@ -20327,8 +21100,49 @@ aws.eks {
   clusters() []aws.eks.cluster
 }
 
+// Scaling configuration of an Amazon EKS managed node group
+//
+// Node counts the managed node group maintains: the floor it never scales
+// below, the ceiling it never scales above, and the count it currently aims
+// to run.
+private aws.eks.scalingConfig @defaults("desiredSize minSize maxSize") {
+  // Minimum number of nodes the managed node group maintains
+  minSize int
+  // Maximum number of nodes the managed node group maintains
+  maxSize int
+  // Number of nodes the managed node group currently aims to run
+  desiredSize int
+}
+
+// Remote access configuration of an Amazon EKS managed node group
+//
+// SSH access provisioned onto the nodes in the group. When a key pair is set
+// with no source security groups, the SSH port is reachable from anywhere the
+// node subnets allow.
+private aws.eks.remoteAccess @defaults("keyPair") {
+  // EC2 key pair granting SSH access to the nodes in the group
+  //
+  // Null when no key pair is configured, which means SSH access to the nodes
+  // is not provisioned through the node group.
+  keyPair() aws.ec2.keypair
+  // Security groups allowed SSH access to the nodes in the group
+  //
+  // Empty when a key pair is set with no source security groups, in which
+  // case SSH reaches the nodes from anywhere the node subnets allow.
+  sourceSecurityGroups() []aws.ec2.securitygroup
+}
+
+// Zonal shift configuration of an Amazon EKS cluster
+//
+// Whether Amazon Application Recovery Controller may shift traffic away from
+// an impaired availability zone for the cluster.
+private aws.eks.zonalShiftConfig @defaults("enabled") {
+  // Whether ARC zonal shift is enabled on the cluster
+  enabled bool
+}
+
 // Amazon EKS managed node group
-private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize status") {
+private aws.eks.nodegroup @defaults("name diskSize status") {
   // Name for the EKS node group
   name string
   // ARN for the EKS node group
@@ -20345,9 +21159,14 @@ private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize sta
   capacityType() string
   // Scaling configuration for the EKS node group
   //
-  // Keys: `MinSize`, `MaxSize`, and `DesiredSize` (node counts the managed
-  // node group maintains).
-  scalingConfig() dict
+  // Deprecated in favor of scaling, which carries the same three values as a
+  // resource. Keys: `MinSize`, `MaxSize`, and `DesiredSize` (node counts the
+  // managed node group maintains).
+  scalingConfig() @maturity("deprecated") dict
+  // Scaling configuration for the node group
+  //
+  // Null when the node group reports no scaling configuration.
+  scaling() aws.eks.scalingConfig
   // Instance types for the EKS node group
   instanceTypes() []string
   // AMI type for the EKS node group
@@ -20381,11 +21200,16 @@ private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize sta
   releaseVersion() string
   // Remote access configuration for the node group
   //
-  // Keys: `Ec2SshKey` (EC2 key pair granting SSH access to the nodes) and
-  // `SourceSecurityGroups` (security group IDs allowed SSH access). When a
-  // key is set with no source security groups, the SSH port is open to the
-  // internet.
-  remoteAccess() dict
+  // Deprecated in favor of sshAccess, which carries the same values as a
+  // resource with the key pair and security groups resolved. Keys:
+  // `Ec2SshKey` (EC2 key pair granting SSH access to the nodes) and
+  // `SourceSecurityGroups` (security group IDs allowed SSH access).
+  remoteAccess() @maturity("deprecated") dict
+  // Remote access configuration for the node group
+  //
+  // Null when the node group reports no remote access configuration, which
+  // means SSH access to the nodes is not provisioned through the node group.
+  sshAccess() aws.eks.remoteAccess
   // Update configuration for the node group
   //
   // Keys: `MaxUnavailable`, `MaxUnavailablePercentage`, and `UpdateStrategy`
@@ -20475,10 +21299,18 @@ aws.eks.cluster @defaults("arn version status") {
   encryptionResources() []string
   // Cluster logging configuration
   //
-  // Contains a `ClusterLogging` list, where each entry has `Enabled` and a
-  // `Types` list of control-plane log types (api, audit, authenticator,
-  // controllerManager, scheduler) exported to CloudWatch Logs.
-  logging() dict
+  // Deprecated in favor of controlPlaneLogging, which reports the same
+  // setting keyed by log type. Contains a `ClusterLogging` list, where each
+  // entry has `Enabled` and a `Types` list of control-plane log types (api,
+  // audit, authenticator, controllerManager, scheduler) exported to
+  // CloudWatch Logs.
+  logging() @maturity("deprecated") dict
+  // Whether each control-plane log type is exported to CloudWatch Logs
+  //
+  // Keyed by log type: api, audit, authenticator, controllerManager, and
+  // scheduler. A log type EKS does not report is absent from the map, so
+  // check for the key rather than reading a missing type as disabled.
+  controlPlaneLogging() map[string]bool
   // Kubernetes network configuration
   //
   // Keys: `ServiceIpv4Cidr` and `ServiceIpv6Cidr` (CIDR blocks pods and
@@ -20570,15 +21402,20 @@ aws.eks.cluster @defaults("arn version status") {
   availableAddonVersions() []aws.eks.addonVersion
   // Upgrade policy for the cluster
   //
-  // Contains `SupportType`, one of STANDARD (auto-upgrade at the end of
-  // standard support) or EXTENDED (enter extended support at the end of
-  // standard support).
-  upgradePolicy() dict
+  // Deprecated in favor of supportType. Contains `SupportType`, one of
+  // STANDARD (auto-upgrade at the end of standard support) or EXTENDED
+  // (enter extended support at the end of standard support).
+  upgradePolicy() @maturity("deprecated") dict
   // Zonal shift configuration for the cluster
   //
-  // Contains `Enabled`, indicating whether ARC zonal shift is enabled to
-  // shift traffic away from an impaired Availability Zone.
-  zonalShiftConfig() dict
+  // Deprecated in favor of zonalShift, which carries the same value as a
+  // resource. Contains `Enabled`, indicating whether ARC zonal shift is
+  // enabled to shift traffic away from an impaired Availability Zone.
+  zonalShiftConfig() @maturity("deprecated") dict
+  // Zonal shift configuration for the cluster
+  //
+  // Null when the cluster reports no zonal shift configuration.
+  zonalShift() aws.eks.zonalShiftConfig
   // Compute configuration for Auto Mode clusters
   //
   // Keys: `Enabled` (whether EKS Auto Mode manages EC2 compute), `NodePools`
@@ -20900,6 +21737,19 @@ private aws.neptune.cluster @defaults("arn name status") {
 // accessibility, enhanced monitoring configuration, and certificate
 // authority. Query it to find instances that are publicly accessible,
 // unencrypted, or missing IAM database authentication.
+// Connection endpoint of an Amazon Neptune instance
+//
+// Address clients connect to, the port the database engine listens on, and
+// the Route 53 hosted zone the address lives in.
+private aws.neptune.endpoint @defaults("address port") {
+  // DNS address clients connect to
+  address string
+  // Port the database engine listens on
+  port int
+  // Route 53 hosted zone ID for the endpoint address
+  hostedZoneId string
+}
+
 private aws.neptune.instance @defaults("arn name status"){
   // ARN for the instance
   arn string
@@ -20925,9 +21775,13 @@ private aws.neptune.instance @defaults("arn name status"){
   enabledCloudwatchLogsExports []string
   // Connection endpoint
   //
-  // Dict with the instance's DNS `Address`, the `Port` the database
-  // engine listens on, and the Route 53 `HostedZoneId` for the address.
-  endpoint dict
+  // Deprecated in favor of connectionEndpoint, which carries the same three
+  // values as a resource. Dict with `Address`, `Port`, and `HostedZoneId`.
+  endpoint @maturity("deprecated") dict
+  // Connection endpoint
+  //
+  // Null while the instance is still being created and has no endpoint yet.
+  connectionEndpoint aws.neptune.endpoint
   // Name of the database engine
   engine string
   // Database engine version
@@ -21031,6 +21885,49 @@ aws.cognito @defaults("userPools") {
   identityPools() []aws.cognito.identityPool
 }
 
+// Device-remembering configuration of an Amazon Cognito user pool
+//
+// Whether Cognito remembers the devices users sign in from, and whether a
+// remembered device can stand in for the second authentication factor. A
+// remembered device that satisfies the challenge means a session continues
+// without the user presenting a one-time code.
+private aws.cognito.deviceConfiguration @defaults("challengeRequiredOnNewDevice deviceOnlyRememberedOnUserPrompt") {
+  // Whether a remembered device can stand in for the second authentication factor
+  //
+  // When true, a remembered device signs in with device authentication
+  // instead of SMS or a time-based one-time password.
+  challengeRequiredOnNewDevice bool
+  // Whether a device is remembered only after the user is prompted
+  //
+  // When true, Cognito does not remember a device on ConfirmDevice unless the
+  // app reports the user's own choice.
+  deviceOnlyRememberedOnUserPrompt bool
+}
+
+// Username case-sensitivity configuration of an Amazon Cognito user pool
+//
+// Whether the user pool treats usernames as case sensitive. A pool that does
+// not lets a user sign in with any capitalization variation of their username
+// or email alias, so two spellings reach one account.
+private aws.cognito.usernameConfiguration @defaults("caseSensitive") {
+  // Whether username case sensitivity applies to every user in the pool
+  caseSensitive bool
+}
+
+// Token validity units of an Amazon Cognito user pool app client
+//
+// Units the client's access, ID and refresh token validity numbers are
+// counted in, which is what turns a validity of 24 into either a day or a
+// day-and-a-bit-under-a-month depending on the unit.
+private aws.cognito.tokenValidityUnits @defaults("accessToken idToken refreshToken") {
+  // Time unit applied to accessTokenValidity: seconds, minutes, hours, or days
+  accessToken string
+  // Time unit applied to idTokenValidity: seconds, minutes, hours, or days
+  idToken string
+  // Time unit applied to refreshTokenValidity: seconds, minutes, hours, or days
+  refreshToken string
+}
+
 // Amazon Cognito user pool
 private aws.cognito.userPool @defaults("arn name") {
   // ARN of the user pool
@@ -21049,11 +21946,15 @@ private aws.cognito.userPool @defaults("arn name") {
   mfaConfiguration() string
   // Password policy
   //
-  // Password-strength requirements enforced on user-pool sign-up and
-  // reset. Keys: MinimumLength, RequireUppercase, RequireLowercase,
+  // Deprecated in favor of passwordRequirements, which carries the same values
+  // as a resource. Keys: MinimumLength, RequireUppercase, RequireLowercase,
   // RequireNumbers, RequireSymbols, TemporaryPasswordValidityDays, and
   // PasswordHistorySize (how many previous passwords are blocked from reuse).
-  passwordPolicy() dict
+  passwordPolicy() @maturity("deprecated") dict
+  // Password-strength requirements enforced on the user pool
+  //
+  // Null when the user pool reports no password policy.
+  passwordRequirements() aws.cognito.userPool.passwordPolicy
   // Advanced security mode: OFF, AUDIT, ENFORCED
   advancedSecurityMode() string
   // User pool tags
@@ -21077,14 +21978,25 @@ private aws.cognito.userPool @defaults("arn name") {
   accountRecoverySetting() dict
   // Device-remembering configuration
   //
-  // A null value means device remembering is deactivated. When set, exposes
-  // ChallengeRequiredOnNewDevice and DeviceOnlyRememberedOnUserPrompt.
-  deviceConfiguration() dict
+  // Deprecated in favor of deviceRemembering, which carries the same two
+  // values as a resource. A null value means device remembering is
+  // deactivated. When set, exposes ChallengeRequiredOnNewDevice and
+  // DeviceOnlyRememberedOnUserPrompt.
+  deviceConfiguration() @maturity("deprecated") dict
+  // Device-remembering configuration
+  //
+  // Null when device remembering is deactivated on the user pool.
+  deviceRemembering() aws.cognito.deviceConfiguration
   // Username case-sensitivity configuration
   //
-  // Exposes CaseSensitive: when false, users can sign in with any
-  // capitalization variation of their username or email alias.
-  usernameConfiguration() dict
+  // Deprecated in favor of usernamePolicy, which carries the same
+  // value as a resource. Exposes CaseSensitive: when false, users can sign in
+  // with any capitalization variation of their username or email alias.
+  usernameConfiguration() @maturity("deprecated") dict
+  // Username case-sensitivity configuration
+  //
+  // Null when the user pool reports no username configuration.
+  usernamePolicy() aws.cognito.usernameConfiguration
   // Attribute schema of the user pool
   //
   // Each entry describes a standard or custom attribute (custom: prefix).
@@ -21133,6 +22045,35 @@ private aws.cognito.userPool @defaults("arn name") {
   updatedAt time
 }
 
+// Password policy of an Amazon Cognito user pool
+//
+// Password-strength requirements Cognito enforces when a user signs up,
+// changes their password, or completes a reset. Covers the minimum length,
+// which character classes are mandatory, how many previous passwords are
+// blocked from reuse, and how long an administrator-issued temporary
+// password stays usable.
+private aws.cognito.userPool.passwordPolicy @defaults("minimumLength requireUppercase requireLowercase requireNumbers requireSymbols") {
+  // Minimum length of a password, which cannot be less than 6
+  minimumLength int
+  // Number of previous passwords a user is blocked from reusing
+  //
+  // 0 when the user pool does not restrict password reuse.
+  passwordHistorySize int
+  // Whether a password must include at least one lowercase letter
+  requireLowercase bool
+  // Whether a password must include at least one number
+  requireNumbers bool
+  // Whether a password must include at least one symbol
+  requireSymbols bool
+  // Whether a password must include at least one uppercase letter
+  requireUppercase bool
+  // Number of days an administrator-issued temporary password stays valid
+  //
+  // Defaults to 7. If the user does not sign in within this window, an
+  // administrator has to reset the password again.
+  temporaryPasswordValidityDays int
+}
+
 // Cognito user pool app client
 private aws.cognito.userPoolClient @defaults("clientId clientName userPoolId") {
   // Client ID
@@ -21155,8 +22096,16 @@ private aws.cognito.userPoolClient @defaults("clientId clientName userPoolId") {
   idTokenValidity int
   // Time units applied to the *Validity numeric fields, keyed by token type
   //
-  // Keys: accessToken, idToken, refreshToken. Values are seconds, minutes, hours, or days.
-  tokenValidityUnits dict
+  // Deprecated in favor of validityUnits, which carries the same three
+  // values as a resource. Keys: accessToken, idToken, refreshToken. Values
+  // are seconds, minutes, hours, or days.
+  tokenValidityUnits @maturity("deprecated") dict
+  // Time units applied to the *Validity numeric fields
+  //
+  // Null when the client reports no token validity units, in which case the
+  // Cognito defaults apply: hours for the access and ID tokens and days for
+  // the refresh token.
+  validityUnits aws.cognito.tokenValidityUnits
   // Permitted sign-in flows, e.g. ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH
   explicitAuthFlows []string
   // Identity providers the client can use, e.g. COGNITO, Google, SAML provider names
@@ -23633,6 +24582,17 @@ aws.kinesis @defaults("streams") {
   videoStreams() []aws.kinesis.videoStream
 }
 
+// Capacity mode of an Amazon Kinesis data stream
+//
+// Whether the stream provisions shards itself or runs on-demand, which is
+// what decides whether shard count is something the account manages.
+private aws.kinesis.streamModeDetails @defaults("streamMode") {
+  // Capacity mode of the stream
+  //
+  // One of ON_DEMAND or PROVISIONED.
+  streamMode string
+}
+
 // Amazon Kinesis data stream
 private aws.kinesis.stream @defaults("name status region") {
   // ARN of the stream
@@ -23653,9 +24613,14 @@ private aws.kinesis.stream @defaults("name status region") {
   consumerCount() int
   // Capacity mode of the stream
   //
-  // Dict with a single `StreamMode` key whose value is `ON_DEMAND` or
-  // `PROVISIONED`.
-  streamModeDetails dict
+  // Deprecated in favor of capacityMode, which carries the same value
+  // as a resource. Dict with a single `StreamMode` key.
+  streamModeDetails @maturity("deprecated") dict
+  // Capacity mode of the stream
+  //
+  // Null when the mode is not reported, which is what a stream reached by ARN
+  // before its description is read returns.
+  capacityMode aws.kinesis.streamModeDetails
   // Enhanced (shard-level) monitoring settings
   //
   // Each entry has a `ShardLevelMetrics` key listing the enabled CloudWatch
@@ -24056,6 +25021,24 @@ private aws.memorydb.acl @defaults("name status") {
   tags() map[string]string
 }
 
+// Authentication configuration of an Amazon MemoryDB user
+//
+// How the user proves who it is, and how many passwords it has to prove it
+// with. A user set to no-password can be authenticated as without presenting
+// a credential at all, so whatever its access string grants is open to
+// anyone who can reach the cluster.
+private aws.memorydb.authentication @defaults("type passwordCount") {
+  // Authentication mode for the user
+  //
+  // One of password, no-password, or iam.
+  type string
+  // Number of passwords assigned to the user
+  //
+  // Up to two, so a password can be rotated without an outage. 0 when the
+  // user authenticates by IAM or not at all.
+  passwordCount int
+}
+
 // Amazon MemoryDB user
 private aws.memorydb.user @defaults("name status") {
   // ARN of the user
@@ -24072,10 +25055,14 @@ private aws.memorydb.user @defaults("name status") {
   minimumEngineVersion string
   // Authentication configuration
   //
-  // Password and IAM authentication state for the user. The `Type` key is one
-  // of password, no-password, or iam, and `PasswordCount` gives the number of
-  // passwords assigned to the user (maximum two).
-  authentication dict
+  // Deprecated in favor of authenticationMode, which carries the same two
+  // values as a resource. Password and IAM authentication state for the user,
+  // with the keys `Type` and `PasswordCount`.
+  authentication @maturity("deprecated") dict
+  // Authentication configuration for the user
+  //
+  // Null when the service reports no authentication settings for the user.
+  authenticationMode aws.memorydb.authentication
   // Region where the user exists
   region string
   // Tags for the user
@@ -24632,16 +25619,45 @@ private aws.glue.securityConfiguration @defaults("name") {
   createdAt time
   // S3 encryption configuration
   //
-  // Shape: {S3EncryptionMode: DISABLED|SSE-KMS|SSE-S3, KmsKeyArn}. Controls how data the job or crawler writes to Amazon S3 is encrypted; DISABLED means no server-side encryption is applied by Glue.
-  s3Encryption dict
+  // Deprecated in favor of s3DataEncryption, which carries the same values as a
+  // resource with the key resolved. Shape: {S3EncryptionMode:
+  // DISABLED|SSE-KMS|SSE-S3, KmsKeyArn}.
+  s3Encryption @maturity("deprecated") dict
   // CloudWatch encryption configuration
   //
-  // Shape: {CloudWatchEncryptionMode: DISABLED|SSE-KMS, KmsKeyArn}. Controls how logs sent to CloudWatch Logs are encrypted.
-  cloudWatchEncryption dict
+  // Deprecated in favor of cloudWatchLogsEncryption, which carries the same
+  // values as a resource with the key resolved. Shape:
+  // {CloudWatchEncryptionMode: DISABLED|SSE-KMS, KmsKeyArn}.
+  cloudWatchEncryption @maturity("deprecated") dict
   // Job bookmarks encryption configuration
   //
-  // Shape: {JobBookmarksEncryptionMode: DISABLED|CSE-KMS, KmsKeyArn}. Controls how job bookmark state, which tracks already-processed data, is encrypted.
-  jobBookmarksEncryption dict
+  // Deprecated in favor of bookmarkStateEncryption, which carries the same
+  // values as a resource with the key resolved. Shape:
+  // {JobBookmarksEncryptionMode: DISABLED|CSE-KMS, KmsKeyArn}.
+  jobBookmarksEncryption @maturity("deprecated") dict
+  // Encryption applied to data the job or crawler writes to Amazon S3
+  //
+  // The mode is one of DISABLED, SSE-KMS, or SSE-S3, where DISABLED means
+  // Glue applies no server-side encryption of its own to the data it writes.
+  // Null when the security configuration carries no S3 encryption entry.
+  s3DataEncryption aws.glue.securityConfiguration.encryption
+  // Encryption applied to logs the job or crawler sends to CloudWatch Logs
+  //
+  // The mode is one of DISABLED or SSE-KMS. Null when the security
+  // configuration carries no CloudWatch encryption entry.
+  cloudWatchLogsEncryption aws.glue.securityConfiguration.encryption
+  // Encryption applied to job bookmark state
+  //
+  // The mode is one of DISABLED or CSE-KMS. Job bookmarks record which data a
+  // job has already processed, so the state names the objects a job has read.
+  // Null when the security configuration carries no job bookmark encryption
+  // entry.
+  bookmarkStateEncryption aws.glue.securityConfiguration.encryption
+  // Encryption applied to Glue Data Quality assets
+  //
+  // The mode is one of DISABLED or SSE-KMS. Null when the security
+  // configuration carries no Data Quality encryption entry.
+  dataQualityEncryption aws.glue.securityConfiguration.encryption
   // Region where the security configuration exists
   region string
 }
@@ -24656,6 +25672,28 @@ private aws.glue.securityConfiguration @defaults("name") {
 // describe its configuration. The `targetDatabase` and
 // `federatedDatabase` pointers identify the source when the database is
 // a resource link or a federated reference to an external metastore.
+// Encryption setting of an AWS Glue security configuration
+//
+// One encryption mode and, when the mode names a KMS key, the key it uses. A
+// Glue security configuration carries one of these per destination: the data
+// a job writes to Amazon S3, the logs it sends to CloudWatch Logs, the job
+// bookmark state that records what a job has already read, and Data Quality
+// assets. A mode of DISABLED means Glue encrypts nothing of its own for that
+// destination.
+private aws.glue.securityConfiguration.encryption @defaults("mode") {
+  // Encryption mode applied to the destination
+  //
+  // DISABLED on any destination Glue does not encrypt. The other values
+  // depend on the destination: SSE-KMS or SSE-S3 for Amazon S3, SSE-KMS for
+  // CloudWatch Logs and Data Quality, and CSE-KMS for job bookmarks.
+  mode string
+  // KMS key encrypting the destination
+  //
+  // Null when the mode names no key of your own, which is the case for
+  // DISABLED and for the S3-managed SSE-S3 mode.
+  kmsKey() aws.kms.key
+}
+
 private aws.glue.database @defaults("name region") {
   // Name of the database
   name string
@@ -28439,9 +29477,18 @@ private aws.identitycenter.permissionSet @defaults("arn name") {
   inlinePolicy() string
   // AWS managed policies attached to the permission set
   //
-  // Each entry has the keys `arn` (the managed policy ARN) and `name` (the
-  // managed policy name).
-  managedPolicies() []dict
+  // Deprecated in favor of awsManagedPolicies. Each entry has the keys `arn`
+  // (the managed policy ARN) and `name` (the managed policy name).
+  managedPolicies() @maturity("deprecated") []dict
+  // AWS managed policies attached to the permission set
+  //
+  // A permission set is provisioned as an IAM role into every account it is
+  // assigned to, so the policies attached here become effective permissions
+  // across the organization. Resolving them to policies means a query can
+  // carry on into the statements and reach hasWildcardAllow, rather than
+  // stopping at a name. Empty when only customer managed policies or an
+  // inline policy are attached.
+  awsManagedPolicies() []aws.iam.policy
   // Customer managed policies attached to the permission set
   //
   // Each entry has the keys `name` (the policy name) and `path` (the IAM
@@ -28744,10 +29791,15 @@ private aws.verifiedaccess.trustProvider @defaults("verifiedAccessTrustProviderI
   oidcOptions dict
   // Server-side encryption specification
   //
-  // KMS encryption settings for the trust provider, with keys
-  // `CustomerManagedKeyEnabled` (true when a customer managed key is in
-  // use) and `KmsKeyArn`.
-  sseSpecification dict
+  // Deprecated in favor of serverSideEncryption, which carries the same two
+  // settings with the key resolved to a resource. KMS encryption settings for
+  // the trust provider, with keys `CustomerManagedKeyEnabled` and `KmsKeyArn`.
+  sseSpecification @maturity("deprecated") dict
+  // Server-side encryption specification
+  //
+  // Encryption settings AWS Verified Access applies to the trust provider. Null when
+  // the service reports no encryption settings.
+  serverSideEncryption aws.verifiedaccess.sseSpecification
   // Tags for the trust provider
   tags map[string]string
 }
@@ -28764,10 +29816,15 @@ private aws.verifiedaccess.group @defaults("verifiedAccessGroupId verifiedAccess
   verifiedAccessInstanceId string
   // Server-side encryption specification
   //
-  // KMS encryption settings for the group, with keys
-  // `CustomerManagedKeyEnabled` (true when a customer managed key is in
-  // use) and `KmsKeyArn`.
-  sseSpecification dict
+  // Deprecated in favor of serverSideEncryption, which carries the same two
+  // settings with the key resolved to a resource. KMS encryption settings for
+  // the group, with keys `CustomerManagedKeyEnabled` and `KmsKeyArn`.
+  sseSpecification @maturity("deprecated") dict
+  // Server-side encryption specification
+  //
+  // Encryption settings AWS Verified Access applies to the group. Null when
+  // the service reports no encryption settings.
+  serverSideEncryption aws.verifiedaccess.sseSpecification
   // Owner of the group
   owner string
   // Tags for the group
@@ -28803,12 +29860,31 @@ private aws.verifiedaccess.endpoint @defaults("verifiedAccessEndpointId applicat
   securityGroups() []aws.ec2.securitygroup
   // Server-side encryption specification
   //
-  // KMS encryption settings for the endpoint, with keys
-  // `CustomerManagedKeyEnabled` (true when a customer managed key is in
-  // use) and `KmsKeyArn`.
-  sseSpecification dict
+  // Deprecated in favor of serverSideEncryption, which carries the same two
+  // settings with the key resolved to a resource. KMS encryption settings for
+  // the endpoint, with keys `CustomerManagedKeyEnabled` and `KmsKeyArn`.
+  sseSpecification @maturity("deprecated") dict
+  // Server-side encryption specification
+  //
+  // Encryption settings AWS Verified Access applies to the endpoint. Null when
+  // the service reports no encryption settings.
+  serverSideEncryption aws.verifiedaccess.sseSpecification
   // Tags for the endpoint
   tags map[string]string
+}
+
+// Server-side encryption specification of an AWS Verified Access resource
+//
+// KMS settings Verified Access applies to the trust provider, group, or
+// endpoint they are attached to. A resource with no customer managed key is
+// encrypted with an AWS owned key, which you cannot audit, rotate, or revoke.
+private aws.verifiedaccess.sseSpecification @defaults("customerManagedKeyEnabled") {
+  // Whether a customer managed KMS key encrypts the resource
+  customerManagedKeyEnabled bool
+  // KMS key encrypting the resource
+  //
+  // Null when no customer managed key is in use.
+  kmsKey() aws.kms.key
 }
 
 // AWS Verified Access instance logging configuration

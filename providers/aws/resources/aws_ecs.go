@@ -243,11 +243,172 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		args["serviceConnectNamespace"] = llx.NilData
 	}
 
+	execCfg, err := newMqlEcsExecuteCommandConfiguration(runtime, a, region, conn.AccountId(), c.Configuration)
+	if err != nil {
+		return nil, nil, err
+	}
+	if execCfg != nil {
+		args["executeCommandConfiguration"] = llx.ResourceData(execCfg, "aws.ecs.cluster.executeCommandConfiguration")
+	} else {
+		args["executeCommandConfiguration"] = llx.NilData
+	}
+
+	managedStorage, err := newMqlEcsManagedStorageConfiguration(runtime, a, c.Configuration)
+	if err != nil {
+		return nil, nil, err
+	}
+	args["managedStorage"] = managedStorage
+
 	return args, nil, nil
+}
+
+// newMqlEcsExecuteCommandConfiguration builds the ECS Exec configuration
+// resource for a cluster, or returns nil when the cluster reports none.
+func newMqlEcsExecuteCommandConfiguration(runtime *plugin.Runtime, clusterArn, region, accountID string, cfg *ecstypes.ClusterConfiguration) (plugin.Resource, error) {
+	if cfg == nil || cfg.ExecuteCommandConfiguration == nil {
+		return nil, nil
+	}
+	ec := cfg.ExecuteCommandConfiguration
+
+	var logGroupName, s3Bucket, s3KeyPrefix string
+	var cwEncrypted, s3Encrypted bool
+	if ec.LogConfiguration != nil {
+		logGroupName = convert.ToValue(ec.LogConfiguration.CloudWatchLogGroupName)
+		s3Bucket = convert.ToValue(ec.LogConfiguration.S3BucketName)
+		s3KeyPrefix = convert.ToValue(ec.LogConfiguration.S3KeyPrefix)
+		cwEncrypted = ec.LogConfiguration.CloudWatchEncryptionEnabled
+		s3Encrypted = ec.LogConfiguration.S3EncryptionEnabled
+	}
+
+	res, err := CreateResource(runtime, "aws.ecs.cluster.executeCommandConfiguration", map[string]*llx.RawData{
+		"__id":                        llx.StringData(clusterArn + "/executeCommandConfiguration"),
+		"logging":                     llx.StringData(string(ec.Logging)),
+		"cloudWatchEncryptionEnabled": llx.BoolData(cwEncrypted),
+		"s3EncryptionEnabled":         llx.BoolData(s3Encrypted),
+		"s3KeyPrefix":                 llx.StringData(s3KeyPrefix),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlCfg := res.(*mqlAwsEcsClusterExecuteCommandConfiguration)
+	mqlCfg.region = region
+	mqlCfg.accountID = accountID
+	mqlCfg.cacheKmsKeyId = convert.ToValue(ec.KmsKeyId)
+	mqlCfg.cacheLogGroupName = logGroupName
+	mqlCfg.cacheS3BucketName = s3Bucket
+	return mqlCfg, nil
+}
+
+type mqlAwsEcsClusterExecuteCommandConfigurationInternal struct {
+	region            string
+	accountID         string
+	cacheKmsKeyId     string
+	cacheLogGroupName string
+	cacheS3BucketName string
+}
+
+func (a *mqlAwsEcsClusterExecuteCommandConfiguration) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey, map[string]*llx.RawData{
+		"arn": llx.StringData(a.cacheKmsKeyId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsEcsClusterExecuteCommandConfiguration) cloudWatchLogGroup() (*mqlAwsCloudwatchLoggroup, error) {
+	if a.cacheLogGroupName == "" {
+		a.CloudWatchLogGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	// ECS reports the log group by name; the log group init only accepts an
+	// ARN, so build one from the cluster's own region and account.
+	res, err := NewResource(a.MqlRuntime, "aws.cloudwatch.loggroup", map[string]*llx.RawData{
+		"arn": llx.StringData(fmt.Sprintf(logGroupArnPattern, a.region, a.accountID, a.cacheLogGroupName)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsCloudwatchLoggroup), nil
+}
+
+func (a *mqlAwsEcsClusterExecuteCommandConfiguration) s3Bucket() (*mqlAwsS3Bucket, error) {
+	if a.cacheS3BucketName == "" {
+		a.S3Bucket.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.s3.bucket", map[string]*llx.RawData{
+		"name": llx.StringData(a.cacheS3BucketName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsS3Bucket), nil
 }
 
 func (a *mqlAwsEcsCluster) defaultCapacityProviderStrategy() ([]any, error) {
 	return nil, errors.New("defaultCapacityProviderStrategy not set during init")
+}
+
+func (a *mqlAwsEcsCluster) executeCommandConfiguration() (*mqlAwsEcsClusterExecuteCommandConfiguration, error) {
+	return nil, errors.New("executeCommandConfiguration not set during init")
+}
+
+func (a *mqlAwsEcsCluster) managedStorage() (*mqlAwsEcsClusterManagedStorageConfiguration, error) {
+	return nil, errors.New("managedStorage not set during init")
+}
+
+// newMqlEcsManagedStorageConfiguration builds the cluster's managed storage
+// encryption settings. A cluster with no ManagedStorageConfiguration names no
+// key of its own, which is reported as null rather than as a resource with two
+// empty keys.
+func newMqlEcsManagedStorageConfiguration(runtime *plugin.Runtime, clusterArn string, cfg *ecstypes.ClusterConfiguration) (*llx.RawData, error) {
+	if cfg == nil || cfg.ManagedStorageConfiguration == nil {
+		return llx.NilData, nil
+	}
+	msc := cfg.ManagedStorageConfiguration
+	res, err := CreateResource(runtime, "aws.ecs.cluster.managedStorageConfiguration", map[string]*llx.RawData{
+		"__id": llx.StringData(clusterArn + "/managedStorageConfiguration"),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlMsc := res.(*mqlAwsEcsClusterManagedStorageConfiguration)
+	mqlMsc.cacheKmsKeyId = convert.ToValue(msc.KmsKeyId)
+	mqlMsc.cacheFargateEphemeralStorageKmsKeyId = convert.ToValue(msc.FargateEphemeralStorageKmsKeyId)
+	return llx.ResourceData(mqlMsc, "aws.ecs.cluster.managedStorageConfiguration"), nil
+}
+
+type mqlAwsEcsClusterManagedStorageConfigurationInternal struct {
+	cacheKmsKeyId                        string
+	cacheFargateEphemeralStorageKmsKeyId string
+}
+
+func (a *mqlAwsEcsClusterManagedStorageConfiguration) kmsKey() (*mqlAwsKmsKey, error) {
+	return resolveEcsManagedStorageKey(a.MqlRuntime, a.cacheKmsKeyId, &a.KmsKey.State)
+}
+
+func (a *mqlAwsEcsClusterManagedStorageConfiguration) fargateEphemeralStorageKmsKey() (*mqlAwsKmsKey, error) {
+	return resolveEcsManagedStorageKey(a.MqlRuntime, a.cacheFargateEphemeralStorageKmsKeyId, &a.FargateEphemeralStorageKmsKey.State)
+}
+
+func resolveEcsManagedStorageKey(runtime *plugin.Runtime, keyId string, state *plugin.State) (*mqlAwsKmsKey, error) {
+	if keyId == "" {
+		*state = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(runtime, ResourceAwsKmsKey, map[string]*llx.RawData{
+		"arn": llx.StringData(keyId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsEcsCluster) fargateEphemeralStorageKmsKey() (*mqlAwsKmsKey, error) {

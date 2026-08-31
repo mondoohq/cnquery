@@ -1860,47 +1860,78 @@ func (a *mqlAwsVpc) defaultNetworkAcl() (*mqlAwsEc2Networkacl, error) {
 	return mqlAcl.(*mqlAwsEc2Networkacl), nil
 }
 
-func (a *mqlAwsVpc) blockPublicAccessOptions() (any, error) {
+// fetchBlockPublicAccessOptions reads the region's VPC Block Public Access
+// options. The setting is account- and region-scoped, so every VPC in a region
+// returns identical data and the response is cached per region on the
+// connection. A nil result means the region has no configuration, which is not
+// an error: it is what a region where the feature was never turned on reports.
+func (a *mqlAwsVpc) fetchBlockPublicAccessOptions() (*vpctypes.VpcBlockPublicAccessOptions, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	region := a.Region.Data
 
-	// VPC Block Public Access is account/region-scoped, so every VPC in a
-	// region returns identical data — cache it per region on the connection.
 	cacheKey := "_vpc_bpa_" + region
 	if cached, ok := conn.GetCachedValue(cacheKey); ok {
-		return cached, nil
+		opts, _ := cached.(*vpctypes.VpcBlockPublicAccessOptions)
+		return opts, nil
 	}
 
 	svc := conn.Ec2(region)
-	ctx := context.Background()
-
-	resp, err := svc.DescribeVpcBlockPublicAccessOptions(ctx, &ec2.DescribeVpcBlockPublicAccessOptionsInput{})
+	resp, err := svc.DescribeVpcBlockPublicAccessOptions(context.Background(), &ec2.DescribeVpcBlockPublicAccessOptionsInput{})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			conn.SetCachedValue(cacheKey, nil)
+			conn.SetCachedValue(cacheKey, (*vpctypes.VpcBlockPublicAccessOptions)(nil))
 			return nil, nil
 		}
 		return nil, err
 	}
-	opts := resp.VpcBlockPublicAccessOptions
-	if opts == nil {
-		conn.SetCachedValue(cacheKey, nil)
-		return nil, nil
+	conn.SetCachedValue(cacheKey, resp.VpcBlockPublicAccessOptions)
+	return resp.VpcBlockPublicAccessOptions, nil
+}
+
+func (a *mqlAwsVpc) blockPublicAccessOptions() (any, error) {
+	opts, err := a.fetchBlockPublicAccessOptions()
+	if err != nil || opts == nil {
+		return nil, err
 	}
 	lastUpdate := ""
 	if opts.LastUpdateTimestamp != nil {
 		lastUpdate = opts.LastUpdateTimestamp.Format(time.RFC3339)
 	}
-	result := map[string]any{
+	return map[string]any{
 		"internetGatewayBlockMode": string(opts.InternetGatewayBlockMode),
 		"state":                    string(opts.State),
 		"exclusionsAllowed":        string(opts.ExclusionsAllowed),
 		"managedBy":                string(opts.ManagedBy),
 		"reason":                   convert.ToValue(opts.Reason),
 		"lastUpdateTimestamp":      lastUpdate,
+	}, nil
+}
+
+func (a *mqlAwsVpc) blockPublicAccess() (*mqlAwsEc2VpcBlockPublicAccessOptions, error) {
+	opts, err := a.fetchBlockPublicAccessOptions()
+	if err != nil {
+		return nil, err
 	}
-	conn.SetCachedValue(cacheKey, result)
-	return result, nil
+	if opts == nil {
+		a.BlockPublicAccess.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	// The setting is account- and region-scoped, so every VPC in a region
+	// resolves to the same resource rather than one copy per VPC.
+	res, err := CreateResource(a.MqlRuntime, "aws.ec2.vpcBlockPublicAccessOptions", map[string]*llx.RawData{
+		"__id":                     llx.StringData("aws.ec2.vpcBlockPublicAccessOptions/" + conn.AccountId() + "/" + a.Region.Data),
+		"internetGatewayBlockMode": llx.StringData(string(opts.InternetGatewayBlockMode)),
+		"state":                    llx.StringData(string(opts.State)),
+		"exclusionsAllowed":        llx.StringData(string(opts.ExclusionsAllowed)),
+		"managedBy":                llx.StringData(string(opts.ManagedBy)),
+		"reason":                   llx.StringData(convert.ToValue(opts.Reason)),
+		"lastUpdatedAt":            llx.TimeDataPtr(opts.LastUpdateTimestamp),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2VpcBlockPublicAccessOptions), nil
 }
 
 // VPN Gateway implementation

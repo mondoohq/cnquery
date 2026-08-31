@@ -1887,6 +1887,56 @@ func (a *mqlAwsRdsSnapshot) attributes() ([]any, error) {
 	return convert.JsonToDictSlice(snapshotAttributes.DBSnapshotAttributesResult.DBSnapshotAttributes)
 }
 
+// restoreAttributes re-keys the name/value pair list RDS returns into a map of
+// attribute name to its values. Cluster and instance snapshots come back from
+// two different API calls with two different result shapes, so both branches
+// have to be walked to answer "who may restore this".
+func (a *mqlAwsRdsSnapshot) restoreAttributes() (map[string]any, error) {
+	snapshotId := a.Id.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Rds(region)
+	ctx := context.Background()
+	if a.IsClusterSnapshot.Data {
+		out, err := svc.DescribeDBClusterSnapshotAttributes(ctx, &rds.DescribeDBClusterSnapshotAttributesInput{DBClusterSnapshotIdentifier: &snapshotId})
+		if err != nil {
+			return nil, err
+		}
+		if out == nil || out.DBClusterSnapshotAttributesResult == nil {
+			return map[string]any{}, nil
+		}
+		return rdsSnapshotAttributeMap(out.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes,
+			func(a rds_types.DBClusterSnapshotAttribute) (*string, []string) {
+				return a.AttributeName, a.AttributeValues
+			}), nil
+	}
+	out, err := svc.DescribeDBSnapshotAttributes(ctx, &rds.DescribeDBSnapshotAttributesInput{DBSnapshotIdentifier: &snapshotId})
+	if err != nil {
+		return nil, err
+	}
+	if out == nil || out.DBSnapshotAttributesResult == nil {
+		return map[string]any{}, nil
+	}
+	return rdsSnapshotAttributeMap(out.DBSnapshotAttributesResult.DBSnapshotAttributes,
+		func(a rds_types.DBSnapshotAttribute) (*string, []string) { return a.AttributeName, a.AttributeValues }), nil
+}
+
+// rdsSnapshotAttributeMap re-keys a snapshot attribute pair list into a map of
+// attribute name to its values. An attribute with no name is dropped: it can
+// key nothing, and an empty-string key would read as a real attribute named "".
+func rdsSnapshotAttributeMap[T any](attrs []T, split func(T) (*string, []string)) map[string]any {
+	res := map[string]any{}
+	for _, attr := range attrs {
+		name, values := split(attr)
+		if name == nil {
+			continue
+		}
+		res[*name] = stringsToAnyArray(values)
+	}
+	return res
+}
+
 // isPublic reports whether the snapshot is shared with all AWS accounts, which
 // makes it restorable by anyone. RDS exposes this through the "restore" attribute
 // carrying the special value "all" in its list of authorized accounts.

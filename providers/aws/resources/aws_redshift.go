@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	redshifttypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
@@ -246,6 +247,10 @@ type mqlAwsRedshiftClusterInternal struct {
 	cacheDefaultIamRoleArn          *string
 	cacheMasterPasswordSecretArn    *string
 	cacheCustomDomainCertificateArn *string
+
+	loggingStatusOnce sync.Once
+	loggingStatus     *redshift.DescribeLoggingStatusOutput
+	loggingStatusErr  error
 }
 
 // redshiftRestoreProgressPercent computes how far a restore-from-snapshot has
@@ -443,19 +448,71 @@ func (a *mqlAwsRedshiftCluster) parameters() ([]any, error) {
 	return convert.JsonToDictSlice(res)
 }
 
+// fetchLoggingStatus reads the cluster's audit-log delivery status once and
+// hands the same response to every field derived from it. Nine fields read
+// this, and DescribeLoggingStatus is one call per cluster per read.
+func (a *mqlAwsRedshiftCluster) fetchLoggingStatus() (*redshift.DescribeLoggingStatusOutput, error) {
+	a.loggingStatusOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.Redshift(a.Region.Data)
+		name := a.Name.Data
+		a.loggingStatus, a.loggingStatusErr = svc.DescribeLoggingStatus(context.Background(),
+			&redshift.DescribeLoggingStatusInput{ClusterIdentifier: &name})
+	})
+	return a.loggingStatus, a.loggingStatusErr
+}
+
 func (a *mqlAwsRedshiftCluster) logging() (any, error) {
-	name := a.Name.Data
-	region := a.Region.Data
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Redshift(region)
-	ctx := context.Background()
-
-	params, err := svc.DescribeLoggingStatus(ctx, &redshift.DescribeLoggingStatusInput{ClusterIdentifier: &name})
+	params, err := a.fetchLoggingStatus()
 	if err != nil {
 		return nil, err
 	}
 	return convert.JsonToDict(params)
+}
+
+func (a *mqlAwsRedshiftCluster) auditLogging() (*mqlAwsRedshiftClusterLoggingStatus, error) {
+	params, err := a.fetchLoggingStatus()
+	if err != nil {
+		return nil, err
+	}
+	if params == nil {
+		a.AuditLogging.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := CreateResource(a.MqlRuntime, "aws.redshift.cluster.loggingStatus", map[string]*llx.RawData{
+		"__id":                     llx.StringData(a.Arn.Data + "/loggingStatus"),
+		"enabled":                  llx.BoolData(convert.ToValue(params.LoggingEnabled)),
+		"destinationType":          llx.StringData(string(params.LogDestinationType)),
+		"logExports":               llx.ArrayData(convert.SliceAnyToInterface(params.LogExports), types.String),
+		"s3KeyPrefix":              llx.StringData(convert.ToValue(params.S3KeyPrefix)),
+		"lastSuccessfulDeliveryAt": llx.TimeDataPtr(params.LastSuccessfulDeliveryTime),
+		"lastFailureMessage":       llx.StringData(convert.ToValue(params.LastFailureMessage)),
+		"lastFailureAt":            llx.TimeDataPtr(params.LastFailureTime),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlStatus := res.(*mqlAwsRedshiftClusterLoggingStatus)
+	mqlStatus.cacheBucketName = convert.ToValue(params.BucketName)
+	return mqlStatus, nil
+}
+
+type mqlAwsRedshiftClusterLoggingStatusInternal struct {
+	cacheBucketName string
+}
+
+func (a *mqlAwsRedshiftClusterLoggingStatus) bucket() (*mqlAwsS3Bucket, error) {
+	if a.cacheBucketName == "" {
+		a.Bucket.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.s3.bucket", map[string]*llx.RawData{
+		"name": llx.StringData(a.cacheBucketName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsS3Bucket), nil
 }
 
 func (a *mqlAwsRedshiftSnapshot) id() (string, error) {

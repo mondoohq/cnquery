@@ -255,6 +255,32 @@ func (a *mqlAwsCognitoUserPool) passwordPolicy() (any, error) {
 	return convert.JsonToDict(resp.UserPool.Policies.PasswordPolicy)
 }
 
+func (a *mqlAwsCognitoUserPool) passwordRequirements() (*mqlAwsCognitoUserPoolPasswordPolicy, error) {
+	resp, err := a.fetchDescribeUserPool()
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil || resp.UserPool == nil || resp.UserPool.Policies == nil || resp.UserPool.Policies.PasswordPolicy == nil {
+		a.PasswordRequirements.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	pp := resp.UserPool.Policies.PasswordPolicy
+	res, err := CreateResource(a.MqlRuntime, "aws.cognito.userPool.passwordPolicy", map[string]*llx.RawData{
+		"__id":                          llx.StringData(a.Arn.Data + "/passwordPolicy"),
+		"minimumLength":                 llx.IntDataDefault(pp.MinimumLength, 0),
+		"passwordHistorySize":           llx.IntDataDefault(pp.PasswordHistorySize, 0),
+		"requireLowercase":              llx.BoolData(pp.RequireLowercase),
+		"requireNumbers":                llx.BoolData(pp.RequireNumbers),
+		"requireSymbols":                llx.BoolData(pp.RequireSymbols),
+		"requireUppercase":              llx.BoolData(pp.RequireUppercase),
+		"temporaryPasswordValidityDays": llx.IntData(int64(pp.TemporaryPasswordValidityDays)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsCognitoUserPoolPasswordPolicy), nil
+}
+
 func (a *mqlAwsCognitoUserPool) advancedSecurityMode() (string, error) {
 	resp, err := a.fetchDescribeUserPool()
 	if err != nil || resp == nil || resp.UserPool == nil || resp.UserPool.UserPoolAddOns == nil {
@@ -301,6 +327,49 @@ func (a *mqlAwsCognitoUserPool) usernameConfiguration() (any, error) {
 		return nil, err
 	}
 	return convert.JsonToDict(resp.UserPool.UsernameConfiguration)
+}
+
+func (a *mqlAwsCognitoUserPool) deviceRemembering() (*mqlAwsCognitoDeviceConfiguration, error) {
+	resp, err := a.fetchDescribeUserPool()
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil || resp.UserPool == nil || resp.UserPool.DeviceConfiguration == nil {
+		// A user pool with device remembering deactivated returns no device
+		// configuration at all, which is not the same as one that remembers
+		// devices with both settings off.
+		a.DeviceRemembering.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	dc := resp.UserPool.DeviceConfiguration
+	res, err := CreateResource(a.MqlRuntime, "aws.cognito.deviceConfiguration", map[string]*llx.RawData{
+		"__id":                             llx.StringData(a.Arn.Data + "/deviceConfiguration"),
+		"challengeRequiredOnNewDevice":     llx.BoolData(dc.ChallengeRequiredOnNewDevice),
+		"deviceOnlyRememberedOnUserPrompt": llx.BoolData(dc.DeviceOnlyRememberedOnUserPrompt),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsCognitoDeviceConfiguration), nil
+}
+
+func (a *mqlAwsCognitoUserPool) usernamePolicy() (*mqlAwsCognitoUsernameConfiguration, error) {
+	resp, err := a.fetchDescribeUserPool()
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil || resp.UserPool == nil || resp.UserPool.UsernameConfiguration == nil {
+		a.UsernamePolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := CreateResource(a.MqlRuntime, "aws.cognito.usernameConfiguration", map[string]*llx.RawData{
+		"__id":          llx.StringData(a.Arn.Data + "/usernameConfiguration"),
+		"caseSensitive": llx.BoolData(aws.ToBool(resp.UserPool.UsernameConfiguration.CaseSensitive)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsCognitoUsernameConfiguration), nil
 }
 
 func (a *mqlAwsCognitoUserPool) schema() ([]any, error) {
@@ -689,10 +758,22 @@ func (a *mqlAwsCognitoUserPool) clients() ([]any, error) {
 
 func newMqlAwsCognitoUserPoolClient(runtime *plugin.Runtime, region string, c *cognitoidentityprovidertypes.UserPoolClientType) (plugin.Resource, error) {
 	tokenUnits := map[string]any{}
+	mqlTokenUnits := llx.NilData
 	if c.TokenValidityUnits != nil {
 		tokenUnits["accessToken"] = string(c.TokenValidityUnits.AccessToken)
 		tokenUnits["idToken"] = string(c.TokenValidityUnits.IdToken)
 		tokenUnits["refreshToken"] = string(c.TokenValidityUnits.RefreshToken)
+
+		res, err := CreateResource(runtime, "aws.cognito.tokenValidityUnits", map[string]*llx.RawData{
+			"__id":         llx.StringData(aws.ToString(c.UserPoolId) + "/" + aws.ToString(c.ClientId) + "/tokenValidityUnits"),
+			"accessToken":  llx.StringData(string(c.TokenValidityUnits.AccessToken)),
+			"idToken":      llx.StringData(string(c.TokenValidityUnits.IdToken)),
+			"refreshToken": llx.StringData(string(c.TokenValidityUnits.RefreshToken)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlTokenUnits = llx.ResourceData(res, "aws.cognito.tokenValidityUnits")
 	}
 
 	authFlows := make([]any, 0, len(c.ExplicitAuthFlows))
@@ -718,6 +799,7 @@ func newMqlAwsCognitoUserPoolClient(runtime *plugin.Runtime, region string, c *c
 		"accessTokenValidity":             llx.IntData(int64(aws.ToInt32(c.AccessTokenValidity))),
 		"idTokenValidity":                 llx.IntData(int64(aws.ToInt32(c.IdTokenValidity))),
 		"tokenValidityUnits":              llx.DictData(tokenUnits),
+		"validityUnits":                   mqlTokenUnits,
 		"explicitAuthFlows":               llx.ArrayData(authFlows, types.String),
 		"supportedIdentityProviders":      llx.ArrayData(stringsToAnyArray(c.SupportedIdentityProviders), types.String),
 		"callbackURLs":                    llx.ArrayData(stringsToAnyArray(c.CallbackURLs), types.String),

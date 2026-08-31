@@ -243,8 +243,24 @@ func newMqlAwsApigatewayv2Stage(runtime *plugin.Runtime, region, apiId string, s
 	if s.StageName != nil {
 		stageName = *s.StageName
 	}
+
+	stageId := apigatewayv2StageId(region, apiId, stageName)
+	defaultRoute, err := newMqlApigatewayv2RouteSettings(runtime, stageId, s.DefaultRouteSettings)
+	if err != nil {
+		return nil, err
+	}
+
+	mqlAccessLog := llx.NilData
+	if s.AccessLogSettings != nil {
+		mqlAccessLog, err = newMqlApigatewayAccessLog(runtime, "aws.apigatewayv2.stage.accessLogConfiguration", stageId,
+			convert.ToValue(s.AccessLogSettings.DestinationArn), convert.ToValue(s.AccessLogSettings.Format))
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	res, err := CreateResource(runtime, "aws.apigatewayv2.stage", map[string]*llx.RawData{
-		"__id":                        llx.StringData(apigatewayv2StageId(region, apiId, stageName)),
+		"__id":                        llx.StringData(stageId),
 		"stageName":                   llx.StringData(stageName),
 		"apiId":                       llx.StringData(apiId),
 		"region":                      llx.StringData(region),
@@ -256,6 +272,8 @@ func newMqlAwsApigatewayv2Stage(runtime *plugin.Runtime, region, apiId string, s
 		"defaultRouteSettings":        llx.DictData(defaultRouteSettings),
 		"routeSettings":               llx.DictData(routeSettings),
 		"accessLogSettings":           llx.DictData(accessLog),
+		"defaultRoute":                defaultRoute,
+		"accessLog":                   mqlAccessLog,
 		"apiGatewayManaged":           llx.BoolDataPtr(s.ApiGatewayManaged),
 		"lastDeploymentStatusMessage": llx.StringDataPtr(s.LastDeploymentStatusMessage),
 		"tags":                        llx.MapData(stringMapToAny(s.Tags), types.String),
@@ -266,6 +284,40 @@ func newMqlAwsApigatewayv2Stage(runtime *plugin.Runtime, region, apiId string, s
 		return nil, err
 	}
 	return res.(*mqlAwsApigatewayv2Stage), nil
+}
+
+func (a *mqlAwsApigatewayv2StageAccessLogConfiguration) logGroup() (*mqlAwsCloudwatchLoggroup, error) {
+	return resolveAccessLogGroup(a.MqlRuntime, a.DestinationArn.Data, &a.LogGroup.State)
+}
+
+// newMqlApigatewayv2RouteSettings builds the stage-wide default route
+// settings. Nil settings mean the stage sets no defaults at all, which is
+// reported as null rather than as logging off with a zero throttling limit,
+// since a zero limit would read as "throttled to nothing".
+func newMqlApigatewayv2RouteSettings(runtime *plugin.Runtime, stageId string, rs *apigwv2types.RouteSettings) (*llx.RawData, error) {
+	if rs == nil {
+		return llx.NilData, nil
+	}
+	burstLimit := llx.NilData
+	if rs.ThrottlingBurstLimit != nil {
+		burstLimit = llx.IntData(int64(*rs.ThrottlingBurstLimit))
+	}
+	rateLimit := llx.NilData
+	if rs.ThrottlingRateLimit != nil {
+		rateLimit = llx.FloatData(*rs.ThrottlingRateLimit)
+	}
+	res, err := CreateResource(runtime, "aws.apigatewayv2.routeSettings", map[string]*llx.RawData{
+		"__id":                   llx.StringData(stageId + "/defaultRouteSettings"),
+		"dataTraceEnabled":       llx.BoolData(convert.ToValue(rs.DataTraceEnabled)),
+		"detailedMetricsEnabled": llx.BoolData(convert.ToValue(rs.DetailedMetricsEnabled)),
+		"loggingLevel":           llx.StringData(string(rs.LoggingLevel)),
+		"throttlingBurstLimit":   burstLimit,
+		"throttlingRateLimit":    rateLimit,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return llx.ResourceData(res, "aws.apigatewayv2.routeSettings"), nil
 }
 
 func apigatewayv2StageId(region, apiId, stageName string) string {

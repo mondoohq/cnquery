@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
@@ -65,6 +66,36 @@ func (a *mqlAwsEfs) filesystems() ([]any, error) {
 type mqlAwsEfsFilesystemInternal struct {
 	cacheKmsKeyID             *string
 	cacheFileSystemProtection *efstypes.FileSystemProtectionDescription
+
+	backupPolicyOnce sync.Once
+	backupPolicyResp *efs.DescribeBackupPolicyOutput
+	backupPolicyErr  error
+}
+
+// fetchBackupPolicy reads the file system's backup policy once and hands it to
+// both fields derived from it. A 404 means the file system has no backup
+// policy, which reads the same way as DISABLED; any other error (403, 5xx,
+// ...) propagates, because a null status would let a backup check pass on a
+// file system nobody could read.
+func (a *mqlAwsEfsFilesystem) fetchBackupPolicy() (*efs.DescribeBackupPolicyOutput, error) {
+	a.backupPolicyOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.Efs(a.Region.Data)
+		id := a.Id.Data
+		resp, err := svc.DescribeBackupPolicy(context.Background(), &efs.DescribeBackupPolicyInput{
+			FileSystemId: &id,
+		})
+		if err != nil {
+			var respErr *http.ResponseError
+			if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
+				return
+			}
+			a.backupPolicyErr = err
+			return
+		}
+		a.backupPolicyResp = resp
+	})
+	return a.backupPolicyResp, a.backupPolicyErr
 }
 
 func buildEfsFilesystemResource(runtime *plugin.Runtime, region string, fs efstypes.FileSystemDescription) (*mqlAwsEfsFilesystem, error) {
@@ -194,30 +225,30 @@ func initAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 }
 
 func (a *mqlAwsEfsFilesystem) backupPolicy() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	id := a.Id.Data
-	region := a.Region.Data
+	resp, err := a.fetchBackupPolicy()
+	if err != nil || resp == nil {
+		return nil, err
+	}
+	return convert.JsonToDict(resp)
+}
 
-	svc := conn.Efs(region)
-	ctx := context.Background()
-
-	backupPolicy, err := svc.DescribeBackupPolicy(ctx, &efs.DescribeBackupPolicyInput{
-		FileSystemId: &id,
+func (a *mqlAwsEfsFilesystem) automaticBackup() (*mqlAwsEfsBackupPolicy, error) {
+	resp, err := a.fetchBackupPolicy()
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil || resp.BackupPolicy == nil {
+		a.AutomaticBackup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := CreateResource(a.MqlRuntime, "aws.efs.backupPolicy", map[string]*llx.RawData{
+		"__id":   llx.StringData(a.Arn.Data + "/backupPolicy"),
+		"status": llx.StringData(string(resp.BackupPolicy.Status)),
 	})
 	if err != nil {
-		// A 404 means the filesystem has no backup policy; treat as absent.
-		// Any other error (403, 5xx, …) must propagate, not be swallowed.
-		var respErr *http.ResponseError
-		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
-			return nil, nil
-		}
 		return nil, err
 	}
-	res, err := convert.JsonToDict(backupPolicy)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
+	return res.(*mqlAwsEfsBackupPolicy), nil
 }
 
 func (a *mqlAwsEfsFilesystem) lifecycleConfiguration() (*mqlAwsEfsFilesystemLifecycleConfiguration, error) {
@@ -407,6 +438,21 @@ func (a *mqlAwsEfsFilesystem) fileSystemProtection() (any, error) {
 	return result, nil
 }
 
+func (a *mqlAwsEfsFilesystem) protection() (*mqlAwsEfsFileSystemProtection, error) {
+	if a.cacheFileSystemProtection == nil {
+		a.Protection.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := CreateResource(a.MqlRuntime, "aws.efs.fileSystemProtection", map[string]*llx.RawData{
+		"__id":                           llx.StringData(a.Arn.Data + "/fileSystemProtection"),
+		"replicationOverwriteProtection": llx.StringData(string(a.cacheFileSystemProtection.ReplicationOverwriteProtection)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEfsFileSystemProtection), nil
+}
+
 func efsTagsToMap(tags []efstypes.Tag) map[string]any {
 	return tagsToMap(tags, func(t efstypes.Tag) *string { return t.Key }, func(t efstypes.Tag) *string { return t.Value })
 }
@@ -527,6 +573,18 @@ func (a *mqlAwsEfsFilesystem) accessPoints() ([]any, error) {
 				}
 			}
 
+			// A nil PosixUser or RootDirectory is not "empty", it means the
+			// access point enforces no identity or no root of its own, so the
+			// reference stays null rather than reporting uid 0 and path "".
+			mqlPosixUser, err := newMqlEfsPosixUser(a.MqlRuntime, convert.ToValue(ap.AccessPointArn), ap.PosixUser)
+			if err != nil {
+				return nil, err
+			}
+			mqlRootDirectory, err := newMqlEfsRootDirectory(a.MqlRuntime, convert.ToValue(ap.AccessPointArn), ap.RootDirectory)
+			if err != nil {
+				return nil, err
+			}
+
 			args := map[string]*llx.RawData{
 				"__id":           llx.StringDataPtr(ap.AccessPointArn),
 				"accessPointId":  llx.StringDataPtr(ap.AccessPointId),
@@ -535,14 +593,15 @@ func (a *mqlAwsEfsFilesystem) accessPoints() ([]any, error) {
 				"lifecycleState": llx.StringData(string(ap.LifeCycleState)),
 				"region":         llx.StringData(region),
 				"tags":           llx.MapData(efsTagsToMap(ap.Tags), types.String),
+				"posixIdentity":  mqlPosixUser,
+				"root":           mqlRootDirectory,
 			}
 
-			if posixUser != nil {
-				args["posixUser"] = llx.DictData(posixUser)
-			}
-			if rootDirectory != nil {
-				args["rootDirectory"] = llx.DictData(rootDirectory)
-			}
+			// Set unconditionally: a key left out of the args map leaves the
+			// field unset rather than null, and reading an unset field crosses
+			// the plugin boundary with no type information.
+			args["posixUser"] = llx.DictData(posixUser)
+			args["rootDirectory"] = llx.DictData(rootDirectory)
 
 			mqlAccessPoint, err := CreateResource(a.MqlRuntime, ResourceAwsEfsAccessPoint, args)
 			if err != nil {
@@ -690,4 +749,51 @@ type mqlAwsEfsFilesystemReplicationDestinationInternal struct {
 
 type mqlAwsEfsAccessPointInternal struct {
 	cacheFileSystemId string
+}
+
+// newMqlEfsPosixUser builds the POSIX identity an access point enforces. A nil
+// PosixUser means the access point enforces no identity at all, which is
+// reported as null rather than as uid 0, the identity that would make every
+// client root.
+func newMqlEfsPosixUser(runtime *plugin.Runtime, accessPointArn string, pu *efstypes.PosixUser) (*llx.RawData, error) {
+	if pu == nil {
+		return llx.NilData, nil
+	}
+	res, err := CreateResource(runtime, "aws.efs.posixUser", map[string]*llx.RawData{
+		"__id":          llx.StringData(accessPointArn + "/posixUser"),
+		"uid":           llx.IntDataPtr(pu.Uid),
+		"gid":           llx.IntDataPtr(pu.Gid),
+		"secondaryGids": llx.ArrayData(convert.SliceAnyToInterface(pu.SecondaryGids), types.Int),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return llx.ResourceData(res, "aws.efs.posixUser"), nil
+}
+
+// newMqlEfsRootDirectory builds the root an access point exposes. A nil
+// RootDirectory means the access point does not restrict the root, which is
+// reported as null rather than as the empty path.
+func newMqlEfsRootDirectory(runtime *plugin.Runtime, accessPointArn string, rd *efstypes.RootDirectory) (*llx.RawData, error) {
+	if rd == nil {
+		return llx.NilData, nil
+	}
+	ownerUid, ownerGid := llx.NilData, llx.NilData
+	permissions := llx.NilData
+	if ci := rd.CreationInfo; ci != nil {
+		ownerUid = llx.IntDataPtr(ci.OwnerUid)
+		ownerGid = llx.IntDataPtr(ci.OwnerGid)
+		permissions = llx.StringDataPtr(ci.Permissions)
+	}
+	res, err := CreateResource(runtime, "aws.efs.rootDirectory", map[string]*llx.RawData{
+		"__id":        llx.StringData(accessPointArn + "/rootDirectory"),
+		"path":        llx.StringDataPtr(rd.Path),
+		"ownerUid":    ownerUid,
+		"ownerGid":    ownerGid,
+		"permissions": permissions,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return llx.ResourceData(res, "aws.efs.rootDirectory"), nil
 }
