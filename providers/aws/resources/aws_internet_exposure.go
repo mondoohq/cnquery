@@ -25,7 +25,7 @@ func (a *mqlAwsNeptuneInstance) exposure() (*mqlAwsNetworkExposure, error) {
 	if err != nil {
 		return nil, err
 	}
-	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible.Data, sgs)
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible, sgs)
 }
 
 // clusterSecurityGroups returns the security groups of the Neptune cluster that

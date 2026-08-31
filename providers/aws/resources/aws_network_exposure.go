@@ -59,6 +59,22 @@ func securityGroupCount(sgs *plugin.TValue[[]any]) int {
 	return len(sgs.Data)
 }
 
+// knownPublicAccess carries a public-access verdict a caller derived itself --
+// from a load balancer scheme, a task network configuration, or the absence of
+// any public endpoint at all -- rather than reading it off a resource field.
+// The value is known, so it is never null.
+func knownPublicAccess(publiclyAccessible bool) *plugin.TValue[bool] {
+	return &plugin.TValue[bool]{Data: publiclyAccessible, State: plugin.StateIsSet}
+}
+
+// publicAccessIsUnknown reports whether a resource's public-access toggle was
+// never read: the field does not exist for this resource shape (Aurora clusters
+// do not carry PubliclyAccessible) or the call that would have answered it was
+// denied.
+func publicAccessIsUnknown(publiclyAccessible *plugin.TValue[bool]) bool {
+	return publiclyAccessible == nil || publiclyAccessible.State&plugin.StateIsNull != 0
+}
+
 // buildNetworkExposure creates a shared aws.network.exposure from a resource's
 // public-access toggle and its attached security groups.
 //
@@ -73,7 +89,12 @@ func securityGroupCount(sgs *plugin.TValue[[]any]) int {
 // report an empty list. Requiring sgAllows there made every internet-facing NLB
 // -- including one with a world-open listener -- report internetReachable:false.
 // It is also the safe direction when the group list could not be enumerated.
-func buildNetworkExposure(runtime *plugin.Runtime, id string, publiclyAccessible bool, sgs *plugin.TValue[[]any]) (*mqlAwsNetworkExposure, error) {
+//
+// A null public-access toggle stays null on the exposure, for both
+// publiclyAccessible and internetReachable. Reading false out of a value nobody
+// ever read would report the resource as shielded from the internet on evidence
+// that does not exist, which silently passes an audit.
+func buildNetworkExposure(runtime *plugin.Runtime, id string, publiclyAccessible *plugin.TValue[bool], sgs *plugin.TValue[[]any]) (*mqlAwsNetworkExposure, error) {
 	openRules, err := openIngressRulesFromSecurityGroups(sgs)
 	if err != nil {
 		return nil, err
@@ -81,15 +102,21 @@ func buildNetworkExposure(runtime *plugin.Runtime, id string, publiclyAccessible
 	sgAllows := len(openRules) > 0
 	sgsApply := securityGroupCount(sgs) > 0
 
-	internetReachable := publiclyAccessible
-	if sgsApply {
-		internetReachable = publiclyAccessible && sgAllows
+	publiclyAccessibleData := llx.NilData
+	internetReachableData := llx.NilData
+	if !publicAccessIsUnknown(publiclyAccessible) {
+		internetReachable := publiclyAccessible.Data
+		if sgsApply {
+			internetReachable = publiclyAccessible.Data && sgAllows
+		}
+		publiclyAccessibleData = llx.BoolData(publiclyAccessible.Data)
+		internetReachableData = llx.BoolData(internetReachable)
 	}
 
 	res, err := CreateResource(runtime, "aws.network.exposure", map[string]*llx.RawData{
 		"__id":                       llx.StringData(id),
-		"internetReachable":          llx.BoolData(internetReachable),
-		"publiclyAccessible":         llx.BoolData(publiclyAccessible),
+		"internetReachable":          internetReachableData,
+		"publiclyAccessible":         publiclyAccessibleData,
 		"securityGroupAllowsIngress": llx.BoolData(sgAllows),
 		"openIngressRules":           llx.ArrayData(openRules, types.Resource("aws.ec2.securitygroup.ippermission")),
 	})
@@ -101,7 +128,7 @@ func buildNetworkExposure(runtime *plugin.Runtime, id string, publiclyAccessible
 
 // buildNetworkExposureFromGroups is buildNetworkExposure for callers holding
 // already-resolved security groups rather than a lazily-fetched field.
-func buildNetworkExposureFromGroups(runtime *plugin.Runtime, id string, publiclyAccessible bool, sgs []any) (*mqlAwsNetworkExposure, error) {
+func buildNetworkExposureFromGroups(runtime *plugin.Runtime, id string, publiclyAccessible *plugin.TValue[bool], sgs []any) (*mqlAwsNetworkExposure, error) {
 	return buildNetworkExposure(runtime, id, publiclyAccessible, &plugin.TValue[[]any]{
 		Data:  sgs,
 		State: plugin.StateIsSet,
@@ -117,7 +144,7 @@ func (a *mqlAwsRdsDbinstance) exposure() (*mqlAwsNetworkExposure, error) {
 	if publiclyAccessible.Error != nil {
 		return nil, publiclyAccessible.Error
 	}
-	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible.Data, a.GetSecurityGroups())
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible, a.GetSecurityGroups())
 }
 
 func (a *mqlAwsDocumentdbInstance) exposure() (*mqlAwsNetworkExposure, error) {
@@ -129,7 +156,7 @@ func (a *mqlAwsDocumentdbInstance) exposure() (*mqlAwsNetworkExposure, error) {
 	if publiclyAccessible.Error != nil {
 		return nil, publiclyAccessible.Error
 	}
-	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible.Data, a.GetSecurityGroups())
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible, a.GetSecurityGroups())
 }
 
 func (a *mqlAwsElbLoadbalancer) exposure() (*mqlAwsNetworkExposure, error) {
@@ -141,7 +168,7 @@ func (a *mqlAwsElbLoadbalancer) exposure() (*mqlAwsNetworkExposure, error) {
 	if scheme.Error != nil {
 		return nil, scheme.Error
 	}
-	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", scheme.Data == "internet-facing", a.GetSecurityGroups())
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", knownPublicAccess(scheme.Data == "internet-facing"), a.GetSecurityGroups())
 }
 
 func (a *mqlAwsRdsDbcluster) exposure() (*mqlAwsNetworkExposure, error) {
@@ -153,7 +180,7 @@ func (a *mqlAwsRdsDbcluster) exposure() (*mqlAwsNetworkExposure, error) {
 	if publiclyAccessible.Error != nil {
 		return nil, publiclyAccessible.Error
 	}
-	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible.Data, a.GetSecurityGroups())
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible, a.GetSecurityGroups())
 }
 
 func (a *mqlAwsRedshiftCluster) exposure() (*mqlAwsNetworkExposure, error) {
@@ -165,7 +192,7 @@ func (a *mqlAwsRedshiftCluster) exposure() (*mqlAwsNetworkExposure, error) {
 	if publiclyAccessible.Error != nil {
 		return nil, publiclyAccessible.Error
 	}
-	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible.Data, a.GetSecurityGroups())
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible, a.GetSecurityGroups())
 }
 
 func (a *mqlAwsMqBroker) exposure() (*mqlAwsNetworkExposure, error) {
@@ -177,7 +204,7 @@ func (a *mqlAwsMqBroker) exposure() (*mqlAwsNetworkExposure, error) {
 	if publiclyAccessible.Error != nil {
 		return nil, publiclyAccessible.Error
 	}
-	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible.Data, a.GetSecurityGroups())
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible, a.GetSecurityGroups())
 }
 
 func (a *mqlAwsDmsReplicationInstance) exposure() (*mqlAwsNetworkExposure, error) {
@@ -189,7 +216,7 @@ func (a *mqlAwsDmsReplicationInstance) exposure() (*mqlAwsNetworkExposure, error
 	if publiclyAccessible.Error != nil {
 		return nil, publiclyAccessible.Error
 	}
-	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible.Data, a.GetSecurityGroups())
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible, a.GetSecurityGroups())
 }
 
 func (a *mqlAwsMskCluster) exposure() (*mqlAwsNetworkExposure, error) {
@@ -201,7 +228,7 @@ func (a *mqlAwsMskCluster) exposure() (*mqlAwsNetworkExposure, error) {
 	if publicAccess.Error != nil {
 		return nil, publicAccess.Error
 	}
-	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publicAccess.Data, a.GetSecurityGroups())
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publicAccess, a.GetSecurityGroups())
 }
 
 // buildVpcOnlyExposure builds a network exposure for a service that has no
@@ -216,7 +243,7 @@ func buildVpcOnlyExposure(a interface {
 	if arn.Error != nil {
 		return nil, arn.Error
 	}
-	return buildNetworkExposure(runtime, arn.Data+"/exposure", false, a.GetSecurityGroups())
+	return buildNetworkExposure(runtime, arn.Data+"/exposure", knownPublicAccess(false), a.GetSecurityGroups())
 }
 
 func (a *mqlAwsDocumentdbCluster) exposure() (*mqlAwsNetworkExposure, error) {
@@ -236,7 +263,7 @@ func (a *mqlAwsEksCluster) exposure() (*mqlAwsNetworkExposure, error) {
 	if publicAccess.Error != nil {
 		return nil, publicAccess.Error
 	}
-	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publicAccess.Data, a.GetClusterSecurityGroups())
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publicAccess, a.GetClusterSecurityGroups())
 }
 
 // exposure reports the internet exposure of tasks the service runs.
@@ -282,7 +309,7 @@ func (a *mqlAwsEcsService) exposure() (*mqlAwsNetworkExposure, error) {
 		return nil, err
 	}
 	return buildNetworkExposureFromGroups(a.MqlRuntime, arn.Data+"/exposure",
-		strings.EqualFold(assignPublicIp.Data, "ENABLED"), sgs)
+		knownPublicAccess(strings.EqualFold(assignPublicIp.Data, "ENABLED")), sgs)
 }
 
 // resolveSecurityGroupsByIdInArnScope turns bare security group IDs into typed
@@ -318,7 +345,7 @@ func (a *mqlAwsApprunnerService) exposure() (*mqlAwsNetworkExposure, error) {
 	if publiclyAccessible.Error != nil {
 		return nil, publiclyAccessible.Error
 	}
-	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible.Data, nil)
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible, nil)
 }
 
 // exposure reports the internet exposure of the notebook instance. Both inputs
@@ -342,7 +369,7 @@ func (a *mqlAwsSagemakerNotebookinstance) exposure() (*mqlAwsNetworkExposure, er
 		return nil, directInternetAccess.Error
 	}
 	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure",
-		directInternetAccess.Data, details.Data.GetSecurityGroups())
+		directInternetAccess, details.Data.GetSecurityGroups())
 }
 
 func (a *mqlAwsElasticacheCluster) exposure() (*mqlAwsNetworkExposure, error) {

@@ -69,7 +69,14 @@ func TestOciLoadBalancerHasPublicIp(t *testing.T) {
 		isPrivate bool
 		want      bool
 	}{
-		{"no addresses at all", nil, false, false},
+		// A balancer that is not private answers on a public address by
+		// definition, so an address list with nothing readable in it is an
+		// unread fact, not a private balancer. Reporting false here would let
+		// an address list that failed to load be the reason a public balancer
+		// passes an "must not be exposed" policy.
+		{"no addresses at all", nil, false, true},
+		{"empty address list", []any{}, false, true},
+		{"no addresses on a private balancer", nil, true, false},
 		{"one public address", []any{ip("203.0.113.10", true)}, false, true},
 		{"only private addresses", []any{ip("10.0.0.5", false)}, false, false},
 		{"a public address among private ones", []any{
@@ -93,9 +100,13 @@ func TestOciLoadBalancerHasPublicIp(t *testing.T) {
 		{"null isPublic on a public balancer", []any{nullIp("203.0.113.10")}, false, true},
 		{"null isPublic on a private balancer", []any{nullIp("10.0.0.5")}, true, false},
 
-		// An entry of some other type must not panic or be mistaken for a
-		// verdict.
-		{"foreign entry is skipped", []any{"203.0.113.10"}, false, false},
+		// An entry of some other type must not panic. Nothing was read from it
+		// either, so it lands on the same unread-fact answer as an empty list.
+		// This is the shape the regression took: the deprecated ipAddresses
+		// dicts were passed in, every map failed the type assertion, and the
+		// balancer read as having no public address at all.
+		{"foreign entry is not a private verdict", []any{"203.0.113.10"}, false, true},
+		{"foreign entry on a private balancer", []any{"10.0.0.5"}, true, false},
 		{"foreign entry alongside a public one", []any{
 			"garbage", ip("203.0.113.10", true),
 		}, false, true},

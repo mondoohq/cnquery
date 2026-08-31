@@ -105,10 +105,18 @@ func (a *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) netwo
 	return res.(*mqlAzureSubscriptionNetworkServiceSecurityGroup), nil
 }
 
+// effectiveRules is the typed form of effectiveSecurityRules and degrades the
+// same way: an unevaluated NIC reports null, not an empty rule set, so a policy
+// asserting nothing allows internet ingress cannot pass on rules that were
+// never read.
 func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveRules() ([]any, error) {
-	groups, _, err := a.effectiveNsgGroupsCached()
+	groups, evaluated, err := a.effectiveNsgGroupsCached()
 	if err != nil {
 		return nil, err
+	}
+	if !evaluated {
+		a.EffectiveRules.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 
 	res := []any{}

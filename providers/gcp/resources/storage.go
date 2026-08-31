@@ -171,14 +171,8 @@ func mqlBucketFromAPI(runtime *plugin.Runtime, projectId string, bucket *storage
 	created := parseTime(bucket.TimeCreated)
 	updated := parseTime(bucket.Updated)
 
-	iamConfigurationDict, err := convert.JsonToDict(bucket.IamConfiguration)
-	if err != nil {
-		return nil, err
-	}
-	retentionPolicy, err := convert.JsonToDict(bucket.RetentionPolicy)
-	if err != nil {
-		return nil, err
-	}
+	iamConfigurationDict := bucketIamConfigurationDict(bucket.IamConfiguration)
+	retentionPolicy := bucketRetentionPolicyDict(bucket.RetentionPolicy)
 	enc, err := convert.JsonToDict(bucket.Encryption)
 	if err != nil {
 		return nil, err
@@ -188,10 +182,7 @@ func mqlBucketFromAPI(runtime *plugin.Runtime, projectId string, bucket *storage
 	var uniformBucketLevelAccess map[string]any
 	if bucket.IamConfiguration != nil {
 		publicAccessPrevention = bucket.IamConfiguration.PublicAccessPrevention
-		uniformBucketLevelAccess, err = convert.JsonToDict(bucket.IamConfiguration.UniformBucketLevelAccess)
-		if err != nil {
-			return nil, err
-		}
+		uniformBucketLevelAccess = bucketUniformBucketLevelAccessDict(bucket.IamConfiguration.UniformBucketLevelAccess)
 	}
 
 	softDeletePolicy, err := convert.JsonToDict(bucket.SoftDeletePolicy)
@@ -204,20 +195,9 @@ func mqlBucketFromAPI(runtime *plugin.Runtime, projectId string, bucket *storage
 		objectRetentionMode = bucket.ObjectRetention.Mode
 	}
 
-	autoclass, err := convert.JsonToDict(bucket.Autoclass)
-	if err != nil {
-		return nil, err
-	}
-
-	ipFilter, err := convert.JsonToDict(bucket.IpFilter)
-	if err != nil {
-		return nil, err
-	}
-
-	hierarchicalNamespace, err := convert.JsonToDict(bucket.HierarchicalNamespace)
-	if err != nil {
-		return nil, err
-	}
+	autoclass := bucketAutoclassDict(bucket.Autoclass)
+	ipFilter := bucketIpFilterDict(bucket.IpFilter)
+	hierarchicalNamespace := bucketHierarchicalNamespaceDict(bucket.HierarchicalNamespace)
 
 	customPlacementConfig, err := convert.JsonToDict(bucket.CustomPlacementConfig)
 	if err != nil {
@@ -239,10 +219,7 @@ func mqlBucketFromAPI(runtime *plugin.Runtime, projectId string, bucket *storage
 		return nil, err
 	}
 
-	billing, err := convert.JsonToDict(bucket.Billing)
-	if err != nil {
-		return nil, err
-	}
+	billing := bucketBillingDict(bucket.Billing)
 
 	owner, err := convert.JsonToDict(bucket.Owner)
 	if err != nil {
