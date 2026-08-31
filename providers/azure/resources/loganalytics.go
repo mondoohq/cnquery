@@ -135,26 +135,32 @@ func createWorkspaceResource(runtime *plugin.Runtime, ws *armoperationalinsights
 		return nil, err
 	}
 
-	resource, err := CreateResource(runtime, ResourceAzureSubscriptionMonitorServiceWorkspace,
-		map[string]*llx.RawData{
-			"id":                                  llx.StringDataPtr(ws.ID),
-			"name":                                llx.StringDataPtr(ws.Name),
-			"location":                            llx.StringDataPtr(ws.Location),
-			"type":                                llx.StringDataPtr(ws.Type),
-			"tags":                                llx.MapData(convert.PtrMapStrToInterface(ws.Tags), types.String),
-			"skuName":                             llx.StringData(skuName),
-			"skuCapacityReservationLevel":         llx.IntData(skuCapacityReservationLevel),
-			"retentionInDays":                     llx.IntData(retentionInDays),
-			"publicNetworkAccessForIngestion":     llx.StringData(publicNetworkAccessForIngestion),
-			"publicNetworkAccessForQuery":         llx.StringData(publicNetworkAccessForQuery),
-			"forceCmkForQuery":                    llx.BoolDataPtr(props.ForceCmkForQuery),
-			"createdDate":                         llx.TimeDataPtr(props.CreatedDate),
-			"modifiedDate":                        llx.TimeDataPtr(props.ModifiedDate),
-			"provisioningState":                   llx.StringData(provisioningState),
-			"customerId":                          llx.StringDataPtr(props.CustomerID),
-			"identity":                            llx.DictData(identity),
-			"defaultDataCollectionRuleResourceId": llx.StringDataPtr(props.DefaultDataCollectionRuleResourceID),
-		})
+	wsArgs := map[string]*llx.RawData{
+		"id":                                  llx.StringDataPtr(ws.ID),
+		"name":                                llx.StringDataPtr(ws.Name),
+		"location":                            llx.StringDataPtr(ws.Location),
+		"type":                                llx.StringDataPtr(ws.Type),
+		"tags":                                llx.MapData(convert.PtrMapStrToInterface(ws.Tags), types.String),
+		"skuName":                             llx.StringData(skuName),
+		"skuCapacityReservationLevel":         llx.IntData(skuCapacityReservationLevel),
+		"retentionInDays":                     llx.IntData(retentionInDays),
+		"publicNetworkAccessForIngestion":     llx.StringData(publicNetworkAccessForIngestion),
+		"publicNetworkAccessForQuery":         llx.StringData(publicNetworkAccessForQuery),
+		"forceCmkForQuery":                    llx.BoolDataPtr(props.ForceCmkForQuery),
+		"createdDate":                         llx.TimeDataPtr(props.CreatedDate),
+		"modifiedDate":                        llx.TimeDataPtr(props.ModifiedDate),
+		"provisioningState":                   llx.StringData(provisioningState),
+		"customerId":                          llx.StringDataPtr(props.CustomerID),
+		"identity":                            llx.DictData(identity),
+		"defaultDataCollectionRuleResourceId": llx.StringDataPtr(props.DefaultDataCollectionRuleResourceID),
+	}
+	wsIdentity := orZero(ws.Identity)
+	if err := setResourceIdentity(runtime, wsArgs, sortedUserAssignedIdentityIDs(wsIdentity.UserAssignedIdentities),
+		identityType(wsIdentity.Type), identityPrincipalId(wsIdentity.PrincipalID), identityTenantId(wsIdentity.TenantID)); err != nil {
+		return nil, err
+	}
+
+	resource, err := CreateResource(runtime, ResourceAzureSubscriptionMonitorServiceWorkspace, wsArgs)
 	if err != nil {
 		return nil, err
 	}

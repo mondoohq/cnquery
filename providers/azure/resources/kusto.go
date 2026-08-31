@@ -132,33 +132,44 @@ func kustoClusterToMql(runtime *plugin.Runtime, cluster *armkusto.Cluster) (*mql
 		}
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.kustoService.cluster",
-		map[string]*llx.RawData{
-			"id":                            llx.StringDataPtr(cluster.ID),
-			"name":                          llx.StringDataPtr(cluster.Name),
-			"location":                      llx.StringDataPtr(cluster.Location),
-			"tags":                          llx.MapData(convert.PtrMapStrToInterface(cluster.Tags), types.String),
-			"sku":                           llx.DictData(sku),
-			"identity":                      llx.DictData(identity),
-			"uri":                           llx.StringData(uri),
-			"dataIngestionUri":              llx.StringData(dataIngestionURI),
-			"state":                         llx.StringData(state),
-			"provisioningState":             llx.StringData(provisioningState),
-			"publicNetworkAccess":           llx.StringData(publicNetworkAccess),
-			"publicIpType":                  llx.StringData(publicIPType),
-			"restrictOutboundNetworkAccess": llx.StringData(restrictOutbound),
-			"enableDiskEncryption":          llx.BoolData(enableDiskEncryption),
-			"enableDoubleEncryption":        llx.BoolData(enableDoubleEncryption),
-			"enableStreamingIngest":         llx.BoolData(enableStreamingIngest),
-			"enablePurge":                   llx.BoolData(enablePurge),
-			"allowedIpRangeList":            llx.ArrayData(allowedIPRangeList, types.String),
-			"allowedFqdnList":               llx.ArrayData(allowedFqdnList, types.String),
-			"trustedExternalTenants":        llx.ArrayData(trustedExternalTenants, types.String),
-			"cmkKeyName":                    llx.StringData(cmkKeyName),
-			"cmkKeyVaultUri":                llx.StringData(cmkKeyVaultURI),
-			"cmkKeyVersion":                 llx.StringData(cmkKeyVersion),
-			"cmkFederatedIdentityClientId":  llx.StringData(cmkFederatedIdentityClientID),
-		})
+	args := map[string]*llx.RawData{
+		"id":                            llx.StringDataPtr(cluster.ID),
+		"name":                          llx.StringDataPtr(cluster.Name),
+		"location":                      llx.StringDataPtr(cluster.Location),
+		"tags":                          llx.MapData(convert.PtrMapStrToInterface(cluster.Tags), types.String),
+		"sku":                           llx.DictData(sku),
+		"identity":                      llx.DictData(identity),
+		"uri":                           llx.StringData(uri),
+		"dataIngestionUri":              llx.StringData(dataIngestionURI),
+		"state":                         llx.StringData(state),
+		"provisioningState":             llx.StringData(provisioningState),
+		"publicNetworkAccess":           llx.StringData(publicNetworkAccess),
+		"publicIpType":                  llx.StringData(publicIPType),
+		"restrictOutboundNetworkAccess": llx.StringData(restrictOutbound),
+		"enableDiskEncryption":          llx.BoolData(enableDiskEncryption),
+		"enableDoubleEncryption":        llx.BoolData(enableDoubleEncryption),
+		"enableStreamingIngest":         llx.BoolData(enableStreamingIngest),
+		"enablePurge":                   llx.BoolData(enablePurge),
+		"allowedIpRangeList":            llx.ArrayData(allowedIPRangeList, types.String),
+		"allowedFqdnList":               llx.ArrayData(allowedFqdnList, types.String),
+		"trustedExternalTenants":        llx.ArrayData(trustedExternalTenants, types.String),
+		"cmkKeyName":                    llx.StringData(cmkKeyName),
+		"cmkKeyVaultUri":                llx.StringData(cmkKeyVaultURI),
+		"cmkKeyVersion":                 llx.StringData(cmkKeyVersion),
+		"cmkFederatedIdentityClientId":  llx.StringData(cmkFederatedIdentityClientID),
+	}
+	clusterSku := orZero(cluster.SKU)
+	if err := setSkuData(runtime, args, skuName(clusterSku.Name), skuTier(clusterSku.Tier), skuCapacity(clusterSku.Capacity)); err != nil {
+		return nil, err
+	}
+
+	clusterIdentity := orZero(cluster.Identity)
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(clusterIdentity.UserAssignedIdentities),
+		identityType(clusterIdentity.Type), identityPrincipalId(clusterIdentity.PrincipalID), identityTenantId(clusterIdentity.TenantID)); err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.kustoService.cluster", args)
 	if err != nil {
 		return nil, err
 	}

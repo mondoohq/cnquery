@@ -124,10 +124,8 @@ func createAmlFilesystemResource(runtime *plugin.Runtime, fs *armstoragecache.Am
 		return nil, err
 	}
 
-	var userAssignedIdentityIds []string
-	if fs.Identity != nil {
-		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(fs.Identity.UserAssignedIdentities)
-	}
+	fsIdentity := orZero(fs.Identity)
+	userAssignedIdentityIds := sortedUserAssignedIdentityIDs(fsIdentity.UserAssignedIdentities)
 
 	var skuName string
 	if fs.SKU != nil {
@@ -179,6 +177,12 @@ func createAmlFilesystemResource(runtime *plugin.Runtime, fs *armstoragecache.Am
 		mountCommand = convert.ToValue(props.ClientInfo.MountCommand)
 	}
 
+	resourceIdentity, err := resourceIdentityData(runtime, convert.ToValue(fs.ID), userAssignedIdentityIds,
+		identityType(fsIdentity.Type), identityPrincipalId(fsIdentity.PrincipalID), identityTenantId(fsIdentity.TenantID))
+	if err != nil {
+		return nil, err
+	}
+
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionStorageCacheServiceAmlFilesystem,
 		map[string]*llx.RawData{
 			"id":                            llx.StringDataPtr(fs.ID),
@@ -190,6 +194,9 @@ func createAmlFilesystemResource(runtime *plugin.Runtime, fs *armstoragecache.Am
 			"skuName":                       llx.StringData(skuName),
 			"provisioningState":             llx.StringData(enumString(props.ProvisioningState)),
 			"identity":                      llx.DictData(identity),
+			"resourceIdentity":              resourceIdentity,
+			"principalId":                   llx.StringDataPtr(fsIdentity.PrincipalID),
+			"tenantId":                      llx.StringDataPtr(fsIdentity.TenantID),
 			"storageCapacityTiB":            llx.FloatDataPtr(props.StorageCapacityTiB),
 			"currentStorageCapacityTiB":     llx.FloatDataPtr(props.CurrentStorageCapacityTiB),
 			"throughputProvisionedMbps":     llx.IntDataPtr(props.ThroughputProvisionedMBps),

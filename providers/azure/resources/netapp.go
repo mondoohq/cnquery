@@ -131,9 +131,13 @@ func createNetAppAccountResource(runtime *plugin.Runtime, account *armnetapp.Acc
 		return nil, err
 	}
 
-	var userAssignedIdentityIds []string
-	if account.Identity != nil {
-		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(account.Identity.UserAssignedIdentities)
+	accountIdentity := orZero(account.Identity)
+	userAssignedIdentityIds := sortedUserAssignedIdentityIDs(accountIdentity.UserAssignedIdentities)
+
+	resourceIdentity, err := resourceIdentityData(runtime, convert.ToValue(account.ID), userAssignedIdentityIds,
+		identityType(accountIdentity.Type), identityPrincipalId(accountIdentity.PrincipalID), identityTenantId(accountIdentity.TenantID))
+	if err != nil {
+		return nil, err
 	}
 
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionNetAppServiceAccount,
@@ -145,6 +149,9 @@ func createNetAppAccountResource(runtime *plugin.Runtime, account *armnetapp.Acc
 			"tags":              llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
 			"provisioningState": llx.StringDataPtr(props.ProvisioningState),
 			"identity":          llx.DictData(identity),
+			"resourceIdentity":  resourceIdentity,
+			"principalId":       llx.StringDataPtr(accountIdentity.PrincipalID),
+			"tenantId":          llx.StringDataPtr(accountIdentity.TenantID),
 			"nfsV4IdDomain":     llx.StringDataPtr(props.NfsV4IDDomain),
 			// The API documents null as false here, so the absence is not a
 			// missing reading: showmount is on unless it was turned off.

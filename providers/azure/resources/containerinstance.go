@@ -218,35 +218,41 @@ func aciContainerGroupToMQL(runtime *plugin.Runtime, entry *aci.ContainerGroup) 
 		}
 	}
 
-	mqlGroup, err := CreateResource(runtime, "azure.subscription.containerInstanceService.containerGroup",
-		map[string]*llx.RawData{
-			"id":                       llx.StringDataPtr(entry.ID),
-			"name":                     llx.StringDataPtr(entry.Name),
-			"location":                 llx.StringDataPtr(entry.Location),
-			"tags":                     llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-			"provisioningState":        llx.StringData(provisioningState),
-			"osType":                   llx.StringData(osType),
-			"restartPolicy":            llx.StringData(restartPolicy),
-			"sku":                      llx.StringData(sku),
-			"confidential":             llx.BoolData(confidential),
-			"ccePolicyHash":            llx.StringData(ccePolicyHash),
-			"identity":                 llx.DictData(identity),
-			"ipAddressType":            llx.StringData(ipAddressType),
-			"publicIp":                 llx.StringData(publicIp),
-			"fqdn":                     llx.StringData(fqdn),
-			"dnsNameLabelReusePolicy":  llx.StringData(dnsLabelScope),
-			"exposedPorts":             llx.ArrayData(exposedPorts, types.Dict),
-			"subnetIds":                llx.ArrayData(subnetIds, types.String),
-			"dnsConfig":                llx.DictData(dnsConfig),
-			"imageRegistryCredentials": llx.ArrayData(imageRegistry, types.Dict),
-			"registryAuthUsesIdentity": llx.BoolData(registryUsesIdentity),
-			"volumes":                  llx.ArrayData(volumes, types.Dict),
-			"hasSecretVolume":          llx.BoolData(hasSecretVolume),
-			"logAnalyticsWorkspaceId":  llx.StringData(logAnalyticsWorkspaceId),
-			"encryption":               llx.DictData(encryption),
-			"priority":                 llx.StringData(priority),
-			"zones":                    llx.ArrayData(zones, types.String),
-		})
+	groupArgs := map[string]*llx.RawData{
+		"id":                       llx.StringDataPtr(entry.ID),
+		"name":                     llx.StringDataPtr(entry.Name),
+		"location":                 llx.StringDataPtr(entry.Location),
+		"tags":                     llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+		"provisioningState":        llx.StringData(provisioningState),
+		"osType":                   llx.StringData(osType),
+		"restartPolicy":            llx.StringData(restartPolicy),
+		"sku":                      llx.StringData(sku),
+		"confidential":             llx.BoolData(confidential),
+		"ccePolicyHash":            llx.StringData(ccePolicyHash),
+		"identity":                 llx.DictData(identity),
+		"ipAddressType":            llx.StringData(ipAddressType),
+		"publicIp":                 llx.StringData(publicIp),
+		"fqdn":                     llx.StringData(fqdn),
+		"dnsNameLabelReusePolicy":  llx.StringData(dnsLabelScope),
+		"exposedPorts":             llx.ArrayData(exposedPorts, types.Dict),
+		"subnetIds":                llx.ArrayData(subnetIds, types.String),
+		"dnsConfig":                llx.DictData(dnsConfig),
+		"imageRegistryCredentials": llx.ArrayData(imageRegistry, types.Dict),
+		"registryAuthUsesIdentity": llx.BoolData(registryUsesIdentity),
+		"volumes":                  llx.ArrayData(volumes, types.Dict),
+		"hasSecretVolume":          llx.BoolData(hasSecretVolume),
+		"logAnalyticsWorkspaceId":  llx.StringData(logAnalyticsWorkspaceId),
+		"encryption":               llx.DictData(encryption),
+		"priority":                 llx.StringData(priority),
+		"zones":                    llx.ArrayData(zones, types.String),
+	}
+	groupIdentity := orZero(entry.Identity)
+	if err := setResourceIdentity(runtime, groupArgs, sortedUserAssignedIdentityIDs(groupIdentity.UserAssignedIdentities),
+		identityType(groupIdentity.Type), identityPrincipalId(groupIdentity.PrincipalID), identityTenantId(groupIdentity.TenantID)); err != nil {
+		return nil, err
+	}
+
+	mqlGroup, err := CreateResource(runtime, "azure.subscription.containerInstanceService.containerGroup", groupArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -265,6 +271,9 @@ func aciContainerGroupToMQL(runtime *plugin.Runtime, entry *aci.ContainerGroup) 
 	groupRes.InitContainers = plugin.TValue[[]any]{Data: initContainers, State: plugin.StateIsSet}
 
 	return groupRes, nil
+}
+
+type mqlAzureSubscriptionContainerInstanceServiceContainerGroupInternal struct {
 }
 
 func aciContainersToMQL(runtime *plugin.Runtime, parentId string, specs []*aci.Container, segment string) ([]any, error) {

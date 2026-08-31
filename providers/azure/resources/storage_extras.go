@@ -664,6 +664,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) defenderForStorage() (*mqlAz
 		malwareScanningResultsEventGridTopicId string
 	)
 	var sensitiveDataDiscoveryStatus, malwareScanningStatus map[string]any
+	var sensitiveDataDiscoveryOperationStatus, malwareScanningOperationStatus *armsecurity.OperationStatus
 
 	malwareScanningCapGBPerMonth = -1
 
@@ -681,6 +682,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) defenderForStorage() (*mqlAz
 			if d, _ := convert.JsonToDict(p.SensitiveDataDiscovery.OperationStatus); d != nil {
 				sensitiveDataDiscoveryStatus = d
 			}
+			sensitiveDataDiscoveryOperationStatus = p.SensitiveDataDiscovery.OperationStatus
 		}
 		if p.MalwareScanning != nil {
 			if p.MalwareScanning.OnUpload != nil {
@@ -697,6 +699,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) defenderForStorage() (*mqlAz
 			if d, _ := convert.JsonToDict(p.MalwareScanning.OperationStatus); d != nil {
 				malwareScanningStatus = d
 			}
+			malwareScanningOperationStatus = p.MalwareScanning.OperationStatus
 		}
 	}
 
@@ -708,6 +711,15 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) defenderForStorage() (*mqlAz
 		settingId = resourceId + "/providers/Microsoft.Security/defenderForStorageSettings/current"
 	}
 
+	sensitiveDataDiscoveryStatusRef, err := defenderOperationStatusToMql(a.MqlRuntime, settingId, "sensitiveDataDiscovery", sensitiveDataDiscoveryOperationStatus)
+	if err != nil {
+		return nil, err
+	}
+	malwareScanningStatusRef, err := defenderOperationStatusToMql(a.MqlRuntime, settingId, "malwareScanning", malwareScanningOperationStatus)
+	if err != nil {
+		return nil, err
+	}
+
 	mqlSetting, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.defenderForStorageSetting",
 		map[string]*llx.RawData{
 			"id":                                     llx.StringData(settingId),
@@ -715,15 +727,39 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) defenderForStorage() (*mqlAz
 			"overrideSubscriptionLevelSettings":      llx.BoolData(overrideSubscriptionLevelSettings),
 			"sensitiveDataDiscoveryEnabled":          llx.BoolData(sensitiveDataDiscoveryEnabled),
 			"sensitiveDataDiscoveryStatus":           llx.DictData(sensitiveDataDiscoveryStatus),
+			"sensitiveDataDiscoveryOperationStatus":  sensitiveDataDiscoveryStatusRef,
 			"malwareScanningOnUploadEnabled":         llx.BoolData(malwareScanningOnUploadEnabled),
 			"malwareScanningCapGBPerMonth":           llx.IntData(malwareScanningCapGBPerMonth),
 			"malwareScanningResultsEventGridTopicId": llx.StringData(malwareScanningResultsEventGridTopicId),
 			"malwareScanningStatus":                  llx.DictData(malwareScanningStatus),
+			"malwareScanningOperationStatus":         malwareScanningStatusRef,
 		})
 	if err != nil {
 		return nil, err
 	}
 	return mqlSetting.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting), nil
+}
+
+// defenderOperationStatusToMql maps the status Defender reports for one of its
+// features onto the shared status resource.
+//
+// A feature can be switched on in the configuration and still not be running,
+// so a check that reads only the enabled flag can report protection that is
+// not in effect. A feature Defender reports no status for reads null.
+func defenderOperationStatusToMql(runtime *plugin.Runtime, settingID, feature string, status *armsecurity.OperationStatus) (*llx.RawData, error) {
+	if status == nil {
+		return llx.NilData, nil
+	}
+	const resourceName = "azure.subscription.storageService.account.defenderForStorageSetting.operationStatus"
+	res, err := CreateResource(runtime, resourceName, map[string]*llx.RawData{
+		"__id":    llx.StringData(settingID + "/" + feature + "/operationStatus"),
+		"code":    llx.StringDataPtr(status.Code),
+		"message": llx.StringDataPtr(status.Message),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return llx.ResourceData(res, resourceName), nil
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) id() (string, error) {
@@ -959,11 +995,20 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) tables() ([]any, error) {
 					signedIdentifiers = append(signedIdentifiers, entry)
 				}
 			}
+			var tablePolicies []*storage.TableSignedIdentifier
+			if t.TableProperties != nil {
+				tablePolicies = t.TableProperties.SignedIdentifiers
+			}
+			storedAccessPolicies, err := storedAccessPoliciesToMql(a.MqlRuntime, convert.ToValue(t.ID), tableStoredAccessPolicies(tablePolicies))
+			if err != nil {
+				return nil, err
+			}
 			mqlTable, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.table",
 				map[string]*llx.RawData{
-					"id":                llx.StringDataPtr(t.ID),
-					"name":              llx.StringDataPtr(t.Name),
-					"signedIdentifiers": llx.ArrayData(signedIdentifiers, types.Dict),
+					"id":                   llx.StringDataPtr(t.ID),
+					"name":                 llx.StringDataPtr(t.Name),
+					"signedIdentifiers":    llx.ArrayData(signedIdentifiers, types.Dict),
+					"storedAccessPolicies": llx.ArrayData(storedAccessPolicies, types.Resource("azure.subscription.storageService.account.storedAccessPolicy")),
 				})
 			if err != nil {
 				return nil, err

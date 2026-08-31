@@ -70,26 +70,40 @@ func (a *mqlAzureSubscription) resources() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.resource",
-				map[string]*llx.RawData{
-					"id":                llx.StringDataPtr(resource.ID),
-					"name":              llx.StringDataPtr(resource.Name),
-					"kind":              llx.StringDataPtr(resource.Kind),
-					"location":          llx.StringDataPtr(resource.Location),
-					"tags":              llx.MapData(convert.PtrMapStrToInterface(resource.Tags), types.String),
-					"type":              llx.StringDataPtr(resource.Type),
-					"managedBy":         llx.StringDataPtr(resource.ManagedBy),
-					"sku":               llx.DictData(sku),
-					"plan":              llx.DictData(plan),
-					"identity":          llx.DictData(identity),
-					"provisioningState": llx.StringDataPtr(resource.ProvisioningState),
-					"createdTime":       llx.TimeDataPtr(resource.CreatedTime),
-					"changedTime":       llx.TimeDataPtr(resource.ChangedTime),
-				})
+
+			args := map[string]*llx.RawData{
+				"id":                llx.StringDataPtr(resource.ID),
+				"name":              llx.StringDataPtr(resource.Name),
+				"kind":              llx.StringDataPtr(resource.Kind),
+				"location":          llx.StringDataPtr(resource.Location),
+				"tags":              llx.MapData(convert.PtrMapStrToInterface(resource.Tags), types.String),
+				"type":              llx.StringDataPtr(resource.Type),
+				"managedBy":         llx.StringDataPtr(resource.ManagedBy),
+				"sku":               llx.DictData(sku),
+				"plan":              llx.DictData(plan),
+				"identity":          llx.DictData(identity),
+				"provisioningState": llx.StringDataPtr(resource.ProvisioningState),
+				"createdTime":       llx.TimeDataPtr(resource.CreatedTime),
+				"changedTime":       llx.TimeDataPtr(resource.ChangedTime),
+			}
+			resourceSku := orZero(resource.SKU)
+			if err := setSkuData(a.MqlRuntime, args, skuName(resourceSku.Name), skuTier(resourceSku.Tier), skuSize(resourceSku.Size),
+				skuFamily(resourceSku.Family), skuModel(resourceSku.Model), skuCapacity(resourceSku.Capacity)); err != nil {
+				return nil, err
+			}
+
+			resourceIdentity := orZero(resource.Identity)
+			if err := setResourceIdentity(a.MqlRuntime, args, sortedUserAssignedIdentityIDs(resourceIdentity.UserAssignedIdentities),
+				identityType(resourceIdentity.Type), identityPrincipalId(resourceIdentity.PrincipalID), identityTenantId(resourceIdentity.TenantID)); err != nil {
+				return nil, err
+			}
+
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.resource", args)
 			if err != nil {
 				return nil, err
 			}
-			mqlAzure.(*mqlAzureSubscriptionResource).cacheSystemData = sysData
+			mqlResource := mqlAzure.(*mqlAzureSubscriptionResource)
+			mqlResource.cacheSystemData = sysData
 			res = append(res, mqlAzure)
 		}
 	}

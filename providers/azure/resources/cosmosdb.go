@@ -203,6 +203,11 @@ func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccou
 		}
 	}
 
+	masterKeyMetadata, err := cosmosKeysMetadataToMql(runtime, convert.ToValue(account.ID), orZero(account.Properties).KeysMetadata)
+	if err != nil {
+		return nil, err
+	}
+
 	virtualNetworkRules := []any{}
 	if account.Properties != nil && account.Properties.VirtualNetworkRules != nil {
 		for _, rule := range account.Properties.VirtualNetworkRules {
@@ -263,6 +268,7 @@ func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccou
 			"customerManagedKeyStatus":           llx.StringDataPtr(customerManagedKeyStatus),
 			"encryptionKeyVersion":               llx.StringDataPtr(encryptionKeyVersion),
 			"keysMetadata":                       llx.DictData(keysMetadata),
+			"masterKeyMetadata":                  masterKeyMetadata,
 			"capabilities":                       llx.ArrayData(capabilities, types.String),
 			"enableAnalyticalStorage":            llx.BoolDataPtr(enableAnalyticalStorage),
 			"analyticalStorageSchemaType":        llx.StringDataPtr(analyticalStorageSchemaType),
@@ -539,6 +545,7 @@ func newPostgresClusterResource(runtime *plugin.Runtime, cluster *armcosmosforpo
 		"sourceResourceId":                llx.NilData,
 		"readReplicas":                    llx.NilData,
 		"maintenanceWindow":               llx.NilData,
+		"maintenanceSchedule":             llx.NilData,
 		"serverNames":                     llx.NilData,
 	}
 
@@ -579,6 +586,13 @@ func newPostgresClusterResource(runtime *plugin.Runtime, cluster *armcosmosforpo
 				return nil, err
 			}
 			args["maintenanceWindow"] = llx.DictData(mw)
+			schedule, err := maintenanceWindowRefData(runtime, convert.ToValue(cluster.ID),
+				p.MaintenanceWindow.CustomWindow, p.MaintenanceWindow.DayOfWeek,
+				p.MaintenanceWindow.StartHour, p.MaintenanceWindow.StartMinute)
+			if err != nil {
+				return nil, err
+			}
+			args["maintenanceSchedule"] = schedule
 		}
 		if p.ServerNames != nil {
 			names := []any{}
@@ -782,6 +796,11 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) sqlRoleDefinitions() ([]any
 				}
 				args["permissions"] = llx.ArrayData(perms, types.Dict)
 			}
+			dataPermissions, err := cosmosRolePermissionsToMql(a.MqlRuntime, convert.ToValue(def.ID), orZero(def.Properties).Permissions)
+			if err != nil {
+				return nil, err
+			}
+			args["dataPermissions"] = llx.ArrayData(dataPermissions, types.Resource("azure.subscription.cosmosDbService.account.roleDefinitionPermission"))
 			mqlDef, err := CreateResource(a.MqlRuntime, "azure.subscription.cosmosDbService.account.sqlRoleDefinition", args)
 			if err != nil {
 				return nil, err
@@ -885,4 +904,57 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) diagnosticSettings() ([]any
 func (a *mqlAzureSubscriptionCosmosDbServiceAccount) diagnosticSettingsCategories() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	return getDiagnosticSettingsCategories(a.Id.Data, a.MqlRuntime, conn)
+}
+
+// cosmosKeysMetadataToMql maps the account's key metadata onto its own
+// resource, with one entry per master key.
+//
+// The generation time is the only member ARM records per key, and it is what a
+// key-rotation audit reads: a primary key that has not been regenerated in
+// months is the finding, and the read-only keys rotate independently of the
+// read-write ones. An account whose metadata ARM does not report reads null
+// rather than four keys with a zero timestamp.
+func cosmosKeysMetadataToMql(runtime *plugin.Runtime, accountID string, km *cosmosdb.DatabaseAccountKeysMetadata) (*llx.RawData, error) {
+	if km == nil {
+		return llx.NilData, nil
+	}
+	if accountID == "" {
+		return nil, errors.New("cannot key the Cosmos DB key metadata: the account has no id")
+	}
+	const resourceName = "azure.subscription.cosmosDbService.account.keysMetadata"
+	const entryName = "azure.subscription.cosmosDbService.account.accountKeyMetadata"
+
+	entry := func(key string, meta *cosmosdb.AccountKeyMetadata) (*llx.RawData, error) {
+		if meta == nil {
+			return llx.NilData, nil
+		}
+		res, err := CreateResource(runtime, entryName, map[string]*llx.RawData{
+			"__id":           llx.StringData(accountID + "/keysMetadata/" + key),
+			"generationTime": llx.TimeDataPtr(meta.GenerationTime),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return llx.ResourceData(res, entryName), nil
+	}
+
+	args := map[string]*llx.RawData{"__id": llx.StringData(accountID + "/keysMetadata")}
+	for key, meta := range map[string]*cosmosdb.AccountKeyMetadata{
+		"primaryMasterKey":           km.PrimaryMasterKey,
+		"secondaryMasterKey":         km.SecondaryMasterKey,
+		"primaryReadonlyMasterKey":   km.PrimaryReadonlyMasterKey,
+		"secondaryReadonlyMasterKey": km.SecondaryReadonlyMasterKey,
+	} {
+		data, err := entry(key, meta)
+		if err != nil {
+			return nil, err
+		}
+		args[key] = data
+	}
+
+	res, err := CreateResource(runtime, resourceName, args)
+	if err != nil {
+		return nil, err
+	}
+	return llx.ResourceData(res, resourceName), nil
 }

@@ -171,17 +171,21 @@ func (a *mqlAzureSubscriptionDnsServiceZone) recordSets() ([]any, error) {
 			// up on its own).
 			cnameTarget := cnameTargetFromProperties(properties)
 
-			mqlRs, err := CreateResource(a.MqlRuntime, "azure.subscription.dnsService.zone.recordSet", map[string]*llx.RawData{
-				"id":                 llx.StringDataPtr(rs.ID),
-				"name":               llx.StringDataPtr(rs.Name),
-				"type":               llx.StringDataPtr(rs.Type),
-				"ttl":                llx.IntData(ttl),
-				"fqdn":               llx.StringData(fqdn),
-				"properties":         llx.DictData(properties),
-				"cnameTarget":        llx.StringData(cnameTarget),
-				"targetAzureService": llx.StringData(azureServiceForHostname(cnameTarget)),
-				"targetResourceId":   llx.StringData(targetResourceIDFromProperties(properties)),
-			})
+			recordArgs, err := dnsRecordSetTypedArgs(a.MqlRuntime, convert.ToValue(rs.ID), rs.Properties)
+			if err != nil {
+				return nil, err
+			}
+			recordArgs["id"] = llx.StringDataPtr(rs.ID)
+			recordArgs["name"] = llx.StringDataPtr(rs.Name)
+			recordArgs["type"] = llx.StringDataPtr(rs.Type)
+			recordArgs["ttl"] = llx.IntData(ttl)
+			recordArgs["fqdn"] = llx.StringData(fqdn)
+			recordArgs["properties"] = llx.DictData(properties)
+			recordArgs["cnameTarget"] = llx.StringData(cnameTarget)
+			recordArgs["targetAzureService"] = llx.StringData(azureServiceForHostname(cnameTarget))
+			recordArgs["targetResourceId"] = llx.StringData(targetResourceIDFromProperties(properties))
+
+			mqlRs, err := CreateResource(a.MqlRuntime, "azure.subscription.dnsService.zone.recordSet", recordArgs)
 			if err != nil {
 				return nil, err
 			}

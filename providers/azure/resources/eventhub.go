@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -198,7 +199,7 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 
 // createEventHubNamespace builds the MQL resource for one Event Hub namespace.
 func createEventHubNamespace(runtime *plugin.Runtime, ns *armeventhub.EHNamespace) (plugin.Resource, error) {
-	rawData, err := createEventHubNamespaceRawData(ns)
+	rawData, err := createEventHubNamespaceRawData(runtime, ns)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +227,7 @@ func createEventHubNamespace(runtime *plugin.Runtime, ns *armeventhub.EHNamespac
 // Properties block and a KeyVaultProperties list with a nil entry in it. Both of
 // those panic if dereferenced, and a panic in an accessor ends the scan rather
 // than the query.
-func createEventHubNamespaceRawData(ns *armeventhub.EHNamespace) (map[string]*llx.RawData, error) {
+func createEventHubNamespaceRawData(runtime *plugin.Runtime, ns *armeventhub.EHNamespace) (map[string]*llx.RawData, error) {
 	sku, err := convert.JsonToDict(ns.SKU)
 	if err != nil {
 		return nil, err
@@ -287,7 +288,7 @@ func createEventHubNamespaceRawData(ns *armeventhub.EHNamespace) (map[string]*ll
 		}
 	}
 
-	return map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"id":                              llx.StringDataPtr(ns.ID),
 		"name":                            llx.StringDataPtr(ns.Name),
 		"location":                        llx.StringDataPtr(ns.Location),
@@ -310,7 +311,13 @@ func createEventHubNamespaceRawData(ns *armeventhub.EHNamespace) (map[string]*ll
 		"clusterArmId":                    llx.StringDataPtr(clusterArmId),
 		"serviceBusEndpoint":              llx.StringDataPtr(serviceBusEndpoint),
 		"updatedAt":                       llx.TimeDataPtr(updatedAt),
-	}, nil
+	}
+	nsSku := orZero(ns.SKU)
+	if err := setSkuData(runtime, args, skuName(nsSku.Name), skuTier(nsSku.Tier), skuCapacity(nsSku.Capacity)); err != nil {
+		return nil, err
+	}
+
+	return args, nil
 }
 
 func (a *mqlAzureSubscriptionEventHubServiceNamespace) eventHubs() ([]any, error) {
@@ -487,8 +494,10 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRules() (*mqlAzure
 		trustedServiceAccess = *props.TrustedServiceAccessEnabled
 	}
 
+	const ipRuleResource = "azure.subscription.eventHubService.namespace.networkRules.ipRule"
 	ipRules := []any{}
-	for _, r := range props.IPRules {
+	ipAllowRules := []any{}
+	for i, r := range props.IPRules {
 		if r == nil {
 			continue
 		}
@@ -500,6 +509,22 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRules() (*mqlAzure
 			entry["action"] = string(*r.Action)
 		}
 		ipRules = append(ipRules, entry)
+
+		// The address range keys the rule; a namespace can be returned with a
+		// rule that carries none, and the position keeps those apart.
+		key := convert.ToValue(r.IPMask)
+		if key == "" {
+			key = strconv.Itoa(i)
+		}
+		mqlIPRule, err := CreateResource(a.MqlRuntime, ipRuleResource, map[string]*llx.RawData{
+			"__id":   llx.StringData(subResourceCacheID(nil, a.Id.Data+"/networkRules", "ipRules", key)),
+			"ipMask": llx.StringDataPtr(r.IPMask),
+			"action": llx.StringDataPtr(stringEnumPtr(r.Action)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		ipAllowRules = append(ipAllowRules, mqlIPRule)
 	}
 
 	vnetRules := []any{}
@@ -534,6 +559,7 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRules() (*mqlAzure
 		"publicNetworkAccess":         llx.StringData(publicNetworkAccess),
 		"trustedServiceAccessEnabled": llx.BoolData(trustedServiceAccess),
 		"ipRules":                     llx.ArrayData(ipRules, types.Dict),
+		"ipAllowRules":                llx.ArrayData(ipAllowRules, types.Resource(ipRuleResource)),
 		"virtualNetworkRules":         llx.ArrayData(vnetRules, types.Resource(ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule)),
 	})
 	if err != nil {

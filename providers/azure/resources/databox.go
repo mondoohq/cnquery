@@ -106,10 +106,8 @@ func createDataBoxJobResource(runtime *plugin.Runtime, job *armdatabox.JobResour
 		return nil, err
 	}
 
-	var userAssignedIdentityIds []string
-	if job.Identity != nil {
-		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(job.Identity.UserAssignedIdentities)
-	}
+	jobIdentity := orZero(job.Identity)
+	userAssignedIdentityIds := sortedUserAssignedIdentityIDs(jobIdentity.UserAssignedIdentities)
 
 	var skuName, skuDisplayName, skuFamily, skuModel string
 	if job.SKU != nil {
@@ -117,6 +115,12 @@ func createDataBoxJobResource(runtime *plugin.Runtime, job *armdatabox.JobResour
 		skuDisplayName = convert.ToValue(job.SKU.DisplayName)
 		skuFamily = convert.ToValue(job.SKU.Family)
 		skuModel = enumString(job.SKU.Model)
+	}
+
+	resourceIdentity, err := resourceIdentityData(runtime, convert.ToValue(job.ID), userAssignedIdentityIds,
+		identityType(jobIdentity.Type), identityPrincipalId(jobIdentity.PrincipalID), identityTenantId(jobIdentity.TenantID))
+	if err != nil {
+		return nil, err
 	}
 
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionDataBoxServiceJob,
@@ -139,13 +143,13 @@ func createDataBoxJobResource(runtime *plugin.Runtime, job *armdatabox.JobResour
 			"skuFamily":          llx.StringData(skuFamily),
 			"skuModel":           llx.StringData(skuModel),
 			"identity":           llx.DictData(identity),
+			"resourceIdentity":   resourceIdentity,
 		})
 	if err != nil {
 		return nil, err
 	}
 
 	mqlJob := resource.(*mqlAzureSubscriptionDataBoxServiceJob)
-	mqlJob.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 
 	sysData, err := convert.JsonToDict(job.SystemData)
 	if err != nil {

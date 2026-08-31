@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	eventgrid "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/eventgrid/armeventgrid/v2"
@@ -87,6 +88,38 @@ func eventGridIpRulesToDict(rules []*eventgrid.InboundIPRule) []any {
 	return out
 }
 
+// eventGridInboundIpRulesToMql maps the firewall entries of an Event Grid
+// resource onto their own rows.
+//
+// The rules only take effect while public network access is enabled, so an
+// empty list on a topic that is publicly reachable is the finding, not a
+// missing reading.
+func eventGridInboundIpRulesToMql(runtime *plugin.Runtime, parentID string, rules []*eventgrid.InboundIPRule) ([]any, error) {
+	const resourceName = "azure.subscription.eventGridService.inboundIpRule"
+	out := []any{}
+	for i, r := range rules {
+		if r == nil {
+			continue
+		}
+		// The address range keys the rule; the position covers a rule the
+		// service returned without one.
+		key := convert.ToValue(r.IPMask)
+		if key == "" {
+			key = strconv.Itoa(i)
+		}
+		res, err := CreateResource(runtime, resourceName, map[string]*llx.RawData{
+			"__id":   llx.StringData(subResourceCacheID(nil, parentID, "inboundIpRules", key)),
+			"ipMask": llx.StringDataPtr(r.IPMask),
+			"action": llx.StringDataPtr(stringEnumPtr(r.Action)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
 func eventGridIdentityType(identity *eventgrid.IdentityInfo) string {
 	if identity == nil || identity.Type == nil {
 		return ""
@@ -128,6 +161,7 @@ func (a *mqlAzureSubscriptionEventGridService) topics() ([]any, error) {
 				minimumTlsVersionAllowed string
 				dataResidencyBoundary    string
 				inboundIpRules           []any
+				inboundIpAllowRules      = []any{}
 				privateEndpointCount     int64
 			)
 			if p := t.Properties; p != nil {
@@ -156,6 +190,10 @@ func (a *mqlAzureSubscriptionEventGridService) topics() ([]any, error) {
 					dataResidencyBoundary = string(*p.DataResidencyBoundary)
 				}
 				inboundIpRules = eventGridIpRulesToDict(p.InboundIPRules)
+				inboundIpAllowRules, err = eventGridInboundIpRulesToMql(a.MqlRuntime, convert.ToValue(t.ID), p.InboundIPRules)
+				if err != nil {
+					return nil, err
+				}
 				privateEndpointCount = int64(len(p.PrivateEndpointConnections))
 			}
 
@@ -174,6 +212,7 @@ func (a *mqlAzureSubscriptionEventGridService) topics() ([]any, error) {
 					"minimumTlsVersionAllowed":       llx.StringData(minimumTlsVersionAllowed),
 					"dataResidencyBoundary":          llx.StringData(dataResidencyBoundary),
 					"inboundIpRules":                 llx.ArrayData(inboundIpRules, types.Dict),
+					"inboundIpAllowRules":            llx.ArrayData(inboundIpAllowRules, types.Resource("azure.subscription.eventGridService.inboundIpRule")),
 					"identityType":                   llx.StringData(eventGridIdentityType(t.Identity)),
 					"privateEndpointConnectionCount": llx.IntData(privateEndpointCount),
 				})
@@ -292,6 +331,7 @@ func (a *mqlAzureSubscriptionEventGridService) domains() ([]any, error) {
 				autoCreateTopicWithFirstSubscription bool
 				autoDeleteTopicWithLastSubscription  bool
 				inboundIpRules                       []any
+				inboundIpAllowRules                  = []any{}
 				privateEndpointCount                 int64
 			)
 			if p := d.Properties; p != nil {
@@ -326,6 +366,10 @@ func (a *mqlAzureSubscriptionEventGridService) domains() ([]any, error) {
 					autoDeleteTopicWithLastSubscription = *p.AutoDeleteTopicWithLastSubscription
 				}
 				inboundIpRules = eventGridIpRulesToDict(p.InboundIPRules)
+				inboundIpAllowRules, err = eventGridInboundIpRulesToMql(a.MqlRuntime, convert.ToValue(d.ID), p.InboundIPRules)
+				if err != nil {
+					return nil, err
+				}
 				privateEndpointCount = int64(len(p.PrivateEndpointConnections))
 			}
 
@@ -346,6 +390,7 @@ func (a *mqlAzureSubscriptionEventGridService) domains() ([]any, error) {
 					"autoCreateTopicWithFirstSubscription": llx.BoolData(autoCreateTopicWithFirstSubscription),
 					"autoDeleteTopicWithLastSubscription":  llx.BoolData(autoDeleteTopicWithLastSubscription),
 					"inboundIpRules":                       llx.ArrayData(inboundIpRules, types.Dict),
+					"inboundIpAllowRules":                  llx.ArrayData(inboundIpAllowRules, types.Resource("azure.subscription.eventGridService.inboundIpRule")),
 					"identityType":                         llx.StringData(eventGridIdentityType(d.Identity)),
 					"privateEndpointConnectionCount":       llx.IntData(privateEndpointCount),
 				})

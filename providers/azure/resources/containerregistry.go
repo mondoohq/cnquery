@@ -374,13 +374,14 @@ func (a *mqlAzureSubscriptionContainerRegistryServiceRegistry) policies() (*mqlA
 
 	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionContainerRegistryServiceRegistryPolicies,
 		map[string]*llx.RawData{
-			"id":                                      llx.StringData(a.Id.Data + "/policies"),
-			"trustPolicyEnabled":                      llx.BoolData(trustEnabled),
-			"trustPolicyType":                         llx.StringData(trustType),
-			"retentionPolicyEnabled":                  llx.BoolData(retentionEnabled),
-			"retentionPolicyDays":                     llx.IntData(retentionDays),
-			"quarantinePolicyEnabled":                 llx.BoolData(quarantineEnabled),
-			"exportPolicyEnabled":                     llx.BoolData(exportEnabled),
+			"id":                      llx.StringData(a.Id.Data + "/policies"),
+			"trustPolicyEnabled":      llx.BoolData(trustEnabled),
+			"trustPolicyType":         llx.StringData(trustType),
+			"retentionPolicyEnabled":  llx.BoolData(retentionEnabled),
+			"retentionPolicyDays":     llx.IntData(retentionDays),
+			"quarantinePolicyEnabled": llx.BoolData(quarantineEnabled),
+			"exportPolicyEnabled":     llx.BoolData(exportEnabled),
+
 			"azureADAuthenticationAsArmPolicyEnabled": llx.BoolData(aadAsArmEnabled),
 		})
 	if err != nil {
@@ -1190,17 +1191,23 @@ func createCredentialSetResource(runtime *plugin.Runtime, cs *armcontainerregist
 		creationDate = llx.NilData
 	}
 
-	res, err := CreateResource(runtime, ResourceAzureSubscriptionContainerRegistryServiceRegistryCredentialSet,
-		map[string]*llx.RawData{
-			"id":                llx.StringDataPtr(cs.ID),
-			"name":              llx.StringDataPtr(cs.Name),
-			"type":              llx.StringDataPtr(cs.Type),
-			"loginServer":       llx.StringData(loginServer),
-			"identity":          llx.DictData(identity),
-			"authCredentials":   llx.ArrayData(authCredentials, types.Dict),
-			"creationDate":      creationDate,
-			"provisioningState": llx.StringData(provisioningState),
-		})
+	csArgs := map[string]*llx.RawData{
+		"id":                llx.StringDataPtr(cs.ID),
+		"name":              llx.StringDataPtr(cs.Name),
+		"type":              llx.StringDataPtr(cs.Type),
+		"loginServer":       llx.StringData(loginServer),
+		"identity":          llx.DictData(identity),
+		"authCredentials":   llx.ArrayData(authCredentials, types.Dict),
+		"creationDate":      creationDate,
+		"provisioningState": llx.StringData(provisioningState),
+	}
+	csIdentity := orZero(cs.Identity)
+	if err := setResourceIdentity(runtime, csArgs, sortedUserAssignedIdentityIDs(csIdentity.UserAssignedIdentities),
+		identityType(csIdentity.Type), identityPrincipalId(csIdentity.PrincipalID), identityTenantId(csIdentity.TenantID)); err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(runtime, ResourceAzureSubscriptionContainerRegistryServiceRegistryCredentialSet, csArgs)
 	if err != nil {
 		return nil, err
 	}

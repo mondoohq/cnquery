@@ -321,10 +321,8 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 		return nil, err
 	}
 
-	var userAssignedIdentityIds []string
-	if vault.Identity != nil {
-		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(vault.Identity.UserAssignedIdentities)
-	}
+	vaultIdentity := orZero(vault.Identity)
+	userAssignedIdentityIds := sortedUserAssignedIdentityIDs(vaultIdentity.UserAssignedIdentities)
 
 	var skuName string
 	if vault.SKU != nil && vault.SKU.Name != nil {
@@ -371,6 +369,12 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 		regionOfChoiceStatus = string(*props.RegionOfChoiceSettings.Status)
 	}
 
+	resourceIdentity, err := resourceIdentityData(runtime, convert.ToValue(vault.ID), userAssignedIdentityIds,
+		identityType(vaultIdentity.Type), identityPrincipalId(vaultIdentity.PrincipalID), identityTenantId(vaultIdentity.TenantID))
+	if err != nil {
+		return nil, err
+	}
+
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionRecoveryServicesServiceVault,
 		map[string]*llx.RawData{
 			"id":                                  llx.StringDataPtr(vault.ID),
@@ -379,6 +383,9 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 			"type":                                llx.StringDataPtr(vault.Type),
 			"tags":                                llx.MapData(convert.PtrMapStrToInterface(vault.Tags), types.String),
 			"identity":                            llx.DictData(identity),
+			"resourceIdentity":                    resourceIdentity,
+			"principalId":                         llx.StringDataPtr(vaultIdentity.PrincipalID),
+			"tenantId":                            llx.StringDataPtr(vaultIdentity.TenantID),
 			"skuName":                             llx.StringData(skuName),
 			"provisioningState":                   llx.StringData(provisioningState),
 			"publicNetworkAccess":                 llx.StringData(publicNetworkAccess),

@@ -190,7 +190,7 @@ func (a *mqlAzureSubscriptionFrontDoorService) profiles() ([]any, error) {
 				}
 			}
 
-			mqlProfile, err := CreateResource(a.MqlRuntime, "azure.subscription.frontDoorService.profile", map[string]*llx.RawData{
+			profileArgs := map[string]*llx.RawData{
 				"id":                llx.StringDataPtr(profile.ID),
 				"name":              llx.StringDataPtr(profile.Name),
 				"location":          llx.StringDataPtr(profile.Location),
@@ -200,7 +200,12 @@ func (a *mqlAzureSubscriptionFrontDoorService) profiles() ([]any, error) {
 				"provisioningState": llx.StringData(provisioningState),
 				"frontDoorId":       llx.StringData(frontDoorId),
 				"resourceState":     llx.StringData(resourceState),
-			})
+			}
+			if err := setSkuData(a.MqlRuntime, profileArgs, skuName(orZero(profile.SKU).Name)); err != nil {
+				return nil, err
+			}
+
+			mqlProfile, err := CreateResource(a.MqlRuntime, "azure.subscription.frontDoorService.profile", profileArgs)
 			if err != nil {
 				return nil, err
 			}

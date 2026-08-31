@@ -101,6 +101,7 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 	if err != nil {
 		return nil, err
 	}
+	accountSku := orZero(account.SKU)
 	identity, err := convert.JsonToDict(account.Identity)
 	if err != nil {
 		return nil, err
@@ -305,7 +306,7 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 		}
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.cognitiveServicesService.account", map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"id":                              llx.StringDataPtr(account.ID),
 		"name":                            llx.StringDataPtr(account.Name),
 		"location":                        llx.StringDataPtr(account.Location),
@@ -344,7 +345,16 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 		"multiRegionSettings":             llx.ArrayData(multiRegionSettings, types.Dict),
 		"multiRegionRoutingMethod":        llx.StringData(multiRegionRoutingMethod),
 		"networkInjections":               llx.ArrayData(networkInjections, types.Resource("azure.subscription.cognitiveServicesService.account.networkInjection")),
-	})
+	}
+	if err := setSkuData(runtime, args, skuName(accountSku.Name), skuTier(accountSku.Tier), skuSize(accountSku.Size), skuFamily(accountSku.Family), skuCapacity(accountSku.Capacity)); err != nil {
+		return nil, err
+	}
+	accountIdentity := orZero(account.Identity)
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(accountIdentity.UserAssignedIdentities),
+		identityType(accountIdentity.Type), identityPrincipalId(accountIdentity.PrincipalID), identityTenantId(accountIdentity.TenantID)); err != nil {
+		return nil, err
+	}
+	res, err := CreateResource(runtime, "azure.subscription.cognitiveServicesService.account", args)
 	if err != nil {
 		return nil, err
 	}
@@ -1122,7 +1132,7 @@ func cognitiveServicesProjectToMql(runtime *plugin.Runtime, proj *armcognitivese
 		}
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.cognitiveServicesService.account.project", map[string]*llx.RawData{
+	projArgs := map[string]*llx.RawData{
 		"id":                llx.StringDataPtr(proj.ID),
 		"name":              llx.StringDataPtr(proj.Name),
 		"location":          llx.StringDataPtr(proj.Location),
@@ -1133,7 +1143,13 @@ func cognitiveServicesProjectToMql(runtime *plugin.Runtime, proj *armcognitivese
 		"isDefault":         llx.BoolData(isDefault),
 		"provisioningState": llx.StringData(provisioningState),
 		"endpoints":         llx.MapData(endpoints, types.String),
-	})
+	}
+	projIdentity := orZero(proj.Identity)
+	if err := setResourceIdentity(runtime, projArgs, sortedUserAssignedIdentityIDs(projIdentity.UserAssignedIdentities),
+		identityType(projIdentity.Type), identityPrincipalId(projIdentity.PrincipalID), identityTenantId(projIdentity.TenantID)); err != nil {
+		return nil, err
+	}
+	res, err := CreateResource(runtime, "azure.subscription.cognitiveServicesService.account.project", projArgs)
 	if err != nil {
 		return nil, err
 	}

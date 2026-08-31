@@ -62,7 +62,7 @@ func TestAzureSubscriptionCacheServiceRedis(t *testing.T) {
 	t.Run("TestRedisDataConversion", func(t *testing.T) {
 		// runtime is nil because mock data has no PrivateEndpointConnections;
 		// if PECs are added, a real runtime is needed to avoid nil dereference in CreateResource.
-		rawData, err := createRedisInstanceRawData(nil, mockRedisCache)
+		rawData, err := createRedisInstanceRawData(azureTestRuntime(), mockRedisCache)
 		require.NoError(t, err)
 		require.NotNil(t, rawData)
 
@@ -146,7 +146,7 @@ func TestAzureSubscriptionCacheServiceRedis(t *testing.T) {
 			},
 		}
 
-		rawData, err := createRedisInstanceRawData(nil, minimalCache)
+		rawData, err := createRedisInstanceRawData(azureTestRuntime(), minimalCache)
 		require.NoError(t, err)
 		require.NotNil(t, rawData)
 

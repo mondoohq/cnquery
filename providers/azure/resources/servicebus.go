@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -213,7 +214,7 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 				}
 			}
 
-			mqlNs, err := CreateResource(a.MqlRuntime, "azure.subscription.serviceBusService.namespace", map[string]*llx.RawData{
+			args := map[string]*llx.RawData{
 				"id":                              llx.StringDataPtr(ns.ID),
 				"name":                            llx.StringDataPtr(ns.Name),
 				"location":                        llx.StringDataPtr(ns.Location),
@@ -231,7 +232,13 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 				"alternateName":                   llx.StringDataPtr(alternateName),
 				"metricId":                        llx.StringDataPtr(metricId),
 				"updatedAt":                       llx.TimeDataPtr(updatedAt),
-			})
+			}
+			nsSku := orZero(ns.SKU)
+			if err := setSkuData(a.MqlRuntime, args, skuName(nsSku.Name), skuTier(nsSku.Tier), skuCapacity(nsSku.Capacity)); err != nil {
+				return nil, err
+			}
+
+			mqlNs, err := CreateResource(a.MqlRuntime, "azure.subscription.serviceBusService.namespace", args)
 			if err != nil {
 				return nil, err
 			}
@@ -647,8 +654,10 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) networkRules() (*mqlAzu
 		trustedServiceAccess = *props.TrustedServiceAccessEnabled
 	}
 
+	const ipRuleResource = "azure.subscription.serviceBusService.namespace.networkRules.ipRule"
 	ipRules := []any{}
-	for _, r := range props.IPRules {
+	ipAllowRules := []any{}
+	for i, r := range props.IPRules {
 		if r == nil {
 			continue
 		}
@@ -660,6 +669,22 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) networkRules() (*mqlAzu
 			entry["action"] = string(*r.Action)
 		}
 		ipRules = append(ipRules, entry)
+
+		// The address range keys the rule; a namespace can be returned with a
+		// rule that carries none, and the position keeps those apart.
+		key := convert.ToValue(r.IPMask)
+		if key == "" {
+			key = strconv.Itoa(i)
+		}
+		mqlIPRule, err := CreateResource(a.MqlRuntime, ipRuleResource, map[string]*llx.RawData{
+			"__id":   llx.StringData(subResourceCacheID(nil, a.Id.Data+"/networkRules", "ipRules", key)),
+			"ipMask": llx.StringDataPtr(r.IPMask),
+			"action": llx.StringDataPtr(stringEnumPtr(r.Action)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		ipAllowRules = append(ipAllowRules, mqlIPRule)
 	}
 
 	vnetRules := []any{}
@@ -694,6 +719,7 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) networkRules() (*mqlAzu
 		"publicNetworkAccess":         llx.StringData(publicNetworkAccess),
 		"trustedServiceAccessEnabled": llx.BoolData(trustedServiceAccess),
 		"ipRules":                     llx.ArrayData(ipRules, types.Dict),
+		"ipAllowRules":                llx.ArrayData(ipAllowRules, types.Resource(ipRuleResource)),
 		"virtualNetworkRules":         llx.ArrayData(vnetRules, types.Resource("azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule")),
 	})
 	if err != nil {

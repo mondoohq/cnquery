@@ -233,10 +233,7 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 		return nil, err
 	}
 
-	var principalId *string
-	if cache.Identity != nil {
-		principalId = cache.Identity.PrincipalID
-	}
+	cacheIdentity := orZero(cache.Identity)
 
 	zones := []any{}
 	for _, z := range cache.Zones {
@@ -245,7 +242,7 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 		}
 	}
 
-	return map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"id":                  llx.StringDataPtr(cache.ID),
 		"name":                llx.StringDataPtr(cache.Name),
 		"type":                llx.StringDataPtr(cache.Type),
@@ -269,13 +266,59 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 		"subnetId":            llx.StringDataPtr(cache.Properties.SubnetID),
 		"zones":               llx.ArrayData(zones, types.String),
 		"identity":            llx.DictData(identity),
-		"principalId":         llx.StringDataPtr(principalId),
+		"principalId":         llx.StringDataPtr(cacheIdentity.PrincipalID),
 
 		"disableAccessKeyAuthentication": llx.BoolDataPtr(cache.Properties.DisableAccessKeyAuthentication),
 		"updateChannel":                  llx.StringDataPtr(stringEnumPtr(cache.Properties.UpdateChannel)),
 		"zonalAllocationPolicy":          llx.StringDataPtr(stringEnumPtr(cache.Properties.ZonalAllocationPolicy)),
 		"tenantSettings":                 llx.MapData(convert.PtrMapStrToInterface(cache.Properties.TenantSettings), types.String),
-	}, nil
+	}
+	redisSku := orZero(cache.Properties.SKU)
+	if err := setSkuData(runtime, args, skuName(redisSku.Name), skuFamily(redisSku.Family), skuCapacity(redisSku.Capacity)); err != nil {
+		return nil, err
+	}
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(cacheIdentity.UserAssignedIdentities),
+		identityType(cacheIdentity.Type), identityPrincipalId(cacheIdentity.PrincipalID), identityTenantId(cacheIdentity.TenantID)); err != nil {
+		return nil, err
+	}
+	if err := setRedisConfigurationRef(runtime, args, cache.Properties.RedisConfiguration); err != nil {
+		return nil, err
+	}
+
+	return args, nil
+}
+
+// setRedisConfigurationRef publishes the Redis server settings as a child
+// resource of the cache.
+//
+// The storage connection strings on this block are credentials and are
+// deliberately not modeled; the auth method that selects between them is what
+// an audit needs.
+func setRedisConfigurationRef(runtime *plugin.Runtime, args map[string]*llx.RawData, cfg *armredis.CommonPropertiesRedisConfiguration) error {
+	if cfg == nil {
+		args["configuration"] = llx.NilData
+		return nil
+	}
+	parentID := subResourceParentKey(args)
+	if parentID == "" {
+		return errors.New("cannot key the Redis configuration: the cache has no id")
+	}
+	res, err := CreateResource(runtime, "azure.subscription.cacheService.redisInstance.redisConfiguration",
+		map[string]*llx.RawData{
+			"__id":                               llx.StringData(parentID + "/redisConfiguration"),
+			"authNotRequired":                    llx.StringDataPtr(cfg.Authnotrequired),
+			"aadEnabled":                         llx.StringDataPtr(cfg.AADEnabled),
+			"maxmemoryPolicy":                    llx.StringDataPtr(cfg.MaxmemoryPolicy),
+			"rdbBackupEnabled":                   llx.StringDataPtr(cfg.RdbBackupEnabled),
+			"rdbBackupFrequency":                 llx.StringDataPtr(cfg.RdbBackupFrequency),
+			"aofBackupEnabled":                   llx.StringDataPtr(cfg.AofBackupEnabled),
+			"preferredDataPersistenceAuthMethod": llx.StringDataPtr(cfg.PreferredDataPersistenceAuthMethod),
+		})
+	if err != nil {
+		return err
+	}
+	args["configuration"] = llx.ResourceData(res, "azure.subscription.cacheService.redisInstance.redisConfiguration")
+	return nil
 }
 
 // linkedServers resolves the caches this one is geo-replicated with, so a

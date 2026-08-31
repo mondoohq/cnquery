@@ -10,12 +10,14 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	armstorage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v4"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/container"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azqueue/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestSignedIdentifiersToDicts(t *testing.T) {
+func TestStoredAccessPolicyNormalization(t *testing.T) {
 	str := func(s string) *string { return &s }
 	ts := func(s string) *time.Time {
 		parsed, err := time.Parse(time.RFC3339, s)
@@ -24,51 +26,65 @@ func TestSignedIdentifiersToDicts(t *testing.T) {
 	}
 
 	t.Run("no policies is an empty list, never nil", func(t *testing.T) {
-		res := signedIdentifiersToDicts(nil)
-		require.NotNil(t, res)
-		assert.Empty(t, res)
+		require.NotNil(t, blobStoredAccessPolicies(nil))
+		require.NotNil(t, queueStoredAccessPolicies(nil))
+		require.NotNil(t, tableStoredAccessPolicies(nil))
 	})
 
 	t.Run("nil entries are skipped", func(t *testing.T) {
-		res := signedIdentifiersToDicts([]*container.SignedIdentifier{nil, nil})
-		assert.Empty(t, res)
+		assert.Empty(t, blobStoredAccessPolicies([]*container.SignedIdentifier{nil, nil}))
+		assert.Empty(t, queueStoredAccessPolicies([]*azqueue.SignedIdentifier{nil, nil}))
+		assert.Empty(t, tableStoredAccessPolicies([]*armstorage.TableSignedIdentifier{nil, nil}))
 	})
 
-	// The keys have to match what the table resource already reports, or a
-	// query that spans containers and tables reads different keys per row.
-	t.Run("a full policy maps to the table resource's key set", func(t *testing.T) {
-		res := signedIdentifiersToDicts([]*container.SignedIdentifier{{
-			ID: str("readers"),
-			AccessPolicy: &container.AccessPolicy{
-				Permission: str("rl"),
-				Start:      ts("2026-01-02T03:04:05Z"),
-				Expiry:     ts("2027-01-02T03:04:05Z"),
-			},
+	// The three services ship three SignedIdentifier types for the same four
+	// values, and armstorage names the timestamps StartTime/ExpiryTime where
+	// the data-plane SDKs name them Start/Expiry. Reading the wrong pair off
+	// any one of them leaves every policy on that service reporting no expiry,
+	// which is the same answer a genuinely non-expiring policy gives.
+	t.Run("every service maps onto the same four values", func(t *testing.T) {
+		start, expiry := ts("2026-01-02T03:04:05Z"), ts("2027-01-02T03:04:05Z")
+		want := storedAccessPolicy{id: str("readers"), permission: str("rl"), startTime: start, expiryTime: expiry}
+
+		blob := blobStoredAccessPolicies([]*container.SignedIdentifier{{
+			ID:           str("readers"),
+			AccessPolicy: &container.AccessPolicy{Permission: str("rl"), Start: start, Expiry: expiry},
 		}})
-		require.Len(t, res, 1)
-		assert.Equal(t, map[string]any{
-			"id":         "readers",
-			"permission": "rl",
-			"startTime":  "2026-01-02T03:04:05Z",
-			"expiryTime": "2027-01-02T03:04:05Z",
-		}, res[0])
+		require.Len(t, blob, 1)
+		assert.Equal(t, want, blob[0])
+
+		queue := queueStoredAccessPolicies([]*azqueue.SignedIdentifier{{
+			ID:           str("readers"),
+			AccessPolicy: &azqueue.AccessPolicy{Permission: str("rl"), Start: start, Expiry: expiry},
+		}})
+		require.Len(t, queue, 1)
+		assert.Equal(t, want, queue[0])
+
+		table := tableStoredAccessPolicies([]*armstorage.TableSignedIdentifier{{
+			ID:           str("readers"),
+			AccessPolicy: &armstorage.TableAccessPolicy{Permission: str("rl"), StartTime: start, ExpiryTime: expiry},
+		}})
+		require.Len(t, table, 1)
+		assert.Equal(t, want, table[0])
 	})
 
 	t.Run("a policy with no access policy still reports its id", func(t *testing.T) {
-		res := signedIdentifiersToDicts([]*container.SignedIdentifier{{ID: str("orphan")}})
+		res := blobStoredAccessPolicies([]*container.SignedIdentifier{{ID: str("orphan")}})
 		require.Len(t, res, 1)
-		assert.Equal(t, map[string]any{"id": "orphan"}, res[0])
+		assert.Equal(t, storedAccessPolicy{id: str("orphan")}, res[0])
 	})
 
-	t.Run("absent times are omitted, not zero-valued", func(t *testing.T) {
-		res := signedIdentifiersToDicts([]*container.SignedIdentifier{{
+	// An absent timestamp has to stay nil so the resource reports null. Zeroing
+	// it would publish 1 January year 1 as a real expiry, and a check for
+	// "expires in the past" would then pass on a policy that never expires.
+	t.Run("absent times stay nil, not zero-valued", func(t *testing.T) {
+		res := blobStoredAccessPolicies([]*container.SignedIdentifier{{
 			ID:           str("perm"),
 			AccessPolicy: &container.AccessPolicy{Permission: str("r")},
 		}})
 		require.Len(t, res, 1)
-		entry := res[0].(map[string]any)
-		assert.NotContains(t, entry, "startTime")
-		assert.NotContains(t, entry, "expiryTime")
+		assert.Nil(t, res[0].startTime)
+		assert.Nil(t, res[0].expiryTime)
 	})
 }
 

@@ -94,11 +94,11 @@ func (a *mqlAzureSubscriptionAutomationService) accounts() ([]any, error) {
 func automationAccountToMql(runtime *plugin.Runtime, acct *armautomation.Account) (*mqlAzureSubscriptionAutomationServiceAccount, error) {
 	// Properties is a nullable pointer; guard before reading SKU (the nil guard
 	// for the remaining property reads is already below).
-	var skuRaw any
+	var acctSKU *armautomation.SKU
 	if acct.Properties != nil {
-		skuRaw = acct.Properties.SKU
+		acctSKU = acct.Properties.SKU
 	}
-	sku, err := convert.JsonToDict(skuRaw)
+	sku, err := convert.JsonToDict(acctSKU)
 	if err != nil {
 		return nil, err
 	}
@@ -131,23 +131,34 @@ func automationAccountToMql(runtime *plugin.Runtime, acct *armautomation.Account
 		lastModifiedTime = llx.NilData
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.automationService.account",
-		map[string]*llx.RawData{
-			"id":                  llx.StringDataPtr(acct.ID),
-			"name":                llx.StringDataPtr(acct.Name),
-			"location":            llx.StringDataPtr(acct.Location),
-			"tags":                llx.MapData(convert.PtrMapStrToInterface(acct.Tags), types.String),
-			"sku":                 llx.DictData(sku),
-			"identity":            llx.DictData(identity),
-			"state":               llx.StringData(state),
-			"publicNetworkAccess": llx.BoolData(publicNetworkAccess),
-			"disableLocalAuth":    llx.BoolData(disableLocalAuth),
-			"cmkKeySource":        llx.StringData(cmkKeySource),
-			"cmkKeyName":          llx.StringData(cmkKeyName),
-			"cmkKeyVaultUri":      llx.StringData(cmkKeyVaultURI),
-			"creationTime":        creationTime,
-			"lastModifiedTime":    lastModifiedTime,
-		})
+	accountArgs := map[string]*llx.RawData{
+		"id":                  llx.StringDataPtr(acct.ID),
+		"name":                llx.StringDataPtr(acct.Name),
+		"location":            llx.StringDataPtr(acct.Location),
+		"tags":                llx.MapData(convert.PtrMapStrToInterface(acct.Tags), types.String),
+		"sku":                 llx.DictData(sku),
+		"identity":            llx.DictData(identity),
+		"state":               llx.StringData(state),
+		"publicNetworkAccess": llx.BoolData(publicNetworkAccess),
+		"disableLocalAuth":    llx.BoolData(disableLocalAuth),
+		"cmkKeySource":        llx.StringData(cmkKeySource),
+		"cmkKeyName":          llx.StringData(cmkKeyName),
+		"cmkKeyVaultUri":      llx.StringData(cmkKeyVaultURI),
+		"creationTime":        creationTime,
+		"lastModifiedTime":    lastModifiedTime,
+	}
+	skuVal := orZero(acctSKU)
+	if err := setSkuData(runtime, accountArgs, skuName(skuVal.Name), skuFamily(skuVal.Family), skuCapacity(skuVal.Capacity)); err != nil {
+		return nil, err
+	}
+
+	acctIdentity := orZero(acct.Identity)
+	if err := setResourceIdentity(runtime, accountArgs, sortedUserAssignedIdentityIDs(acctIdentity.UserAssignedIdentities),
+		identityType(acctIdentity.Type), identityPrincipalId(acctIdentity.PrincipalID), identityTenantId(acctIdentity.TenantID)); err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.automationService.account", accountArgs)
 	if err != nil {
 		return nil, err
 	}

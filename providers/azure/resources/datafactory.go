@@ -89,10 +89,8 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 				return nil, err
 			}
 
-			var userAssignedIdentityIds []string
-			if factory.Identity != nil {
-				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(factory.Identity.UserAssignedIdentities)
-			}
+			factoryIdentity := orZero(factory.Identity)
+			userAssignedIdentityIds := sortedUserAssignedIdentityIDs(factoryIdentity.UserAssignedIdentities)
 
 			var publicNetworkAccess string
 			var provisioningState string
@@ -137,6 +135,12 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 				created = llx.TimeData(llx.NeverFutureTime)
 			}
 
+			resourceIdentity, err := resourceIdentityData(a.MqlRuntime, convert.ToValue(factory.ID), userAssignedIdentityIds,
+				identityType(factoryIdentity.Type), identityPrincipalId(factoryIdentity.PrincipalID), identityTenantId(factoryIdentity.TenantID))
+			if err != nil {
+				return nil, err
+			}
+
 			mqlFactory, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionDataFactoryServiceFactory,
 				map[string]*llx.RawData{
 					"__id":                llx.StringDataPtr(factory.ID),
@@ -148,6 +152,9 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 					"properties":          llx.DictData(properties),
 					"publicNetworkAccess": llx.StringData(publicNetworkAccess),
 					"identity":            llx.DictData(identity),
+					"resourceIdentity":    resourceIdentity,
+					"principalId":         llx.StringDataPtr(factoryIdentity.PrincipalID),
+					"tenantId":            llx.StringDataPtr(factoryIdentity.TenantID),
 					"provisioningState":   llx.StringData(provisioningState),
 					"version":             llx.StringData(version),
 					"repoConfiguration":   llx.DictData(repoConfig),

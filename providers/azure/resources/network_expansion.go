@@ -164,7 +164,9 @@ func azureTrafficManagerProfileToMql(runtime *plugin.Runtime, p *trafficmanager.
 		"maxReturn":                   llx.IntDataDefault[int64](nil, 0),
 		"allowedEndpointRecordTypes":  llx.ArrayData([]any{}, types.String),
 		"dnsConfig":                   llx.DictData(nil),
+		"dnsSettings":                 llx.NilData,
 		"monitorConfig":               llx.DictData(nil),
+		"monitorSettings":             llx.NilData,
 		"endpoints":                   llx.ArrayData([]any{}, types.Resource("azure.subscription.networkService.trafficManagerProfile.endpoint")),
 	}
 
@@ -198,11 +200,68 @@ func azureTrafficManagerProfileToMql(runtime *plugin.Runtime, p *trafficmanager.
 	}
 	args["dnsConfig"] = llx.DictData(dnsDict)
 
+	// A profile ARM returns without a DNS config reports null rather than a
+	// settings resource with a zero TTL, which would read as "never cache".
+	if dns := props.DNSConfig; dns != nil {
+		const dnsSettingsResource = "azure.subscription.networkService.trafficManagerProfile.dnsSettings"
+		mqlDNS, err := CreateResource(runtime, dnsSettingsResource, map[string]*llx.RawData{
+			"__id":         llx.StringData(convert.ToValue(p.ID) + "/dnsSettings"),
+			"relativeName": llx.StringDataPtr(dns.RelativeName),
+			"fqdn":         llx.StringDataPtr(dns.Fqdn),
+			"ttl":          llx.IntDataPtr(dns.TTL),
+		})
+		if err != nil {
+			return nil, err
+		}
+		args["dnsSettings"] = llx.ResourceData(mqlDNS, dnsSettingsResource)
+	}
+
 	monitorDict, err := convert.JsonToDict(props.MonitorConfig)
 	if err != nil {
 		return nil, err
 	}
 	args["monitorConfig"] = llx.DictData(monitorDict)
+
+	// A profile with no monitoring configuration reports null rather than a
+	// settings resource full of zeros, which would read as a probe on port 0.
+	if props.MonitorConfig != nil {
+		mc := props.MonitorConfig
+		customHeaders := map[string]any{}
+		for _, h := range mc.CustomHeaders {
+			if h == nil || h.Name == nil {
+				continue
+			}
+			customHeaders[*h.Name] = convert.ToValue(h.Value)
+		}
+		statusRanges := []any{}
+		for _, r := range mc.ExpectedStatusCodeRanges {
+			if r == nil {
+				continue
+			}
+			d, err := convert.JsonToDict(r)
+			if err != nil {
+				return nil, err
+			}
+			statusRanges = append(statusRanges, d)
+		}
+		mqlMonitor, err := CreateResource(runtime, "azure.subscription.networkService.trafficManagerProfile.monitorSettings",
+			map[string]*llx.RawData{
+				"__id":                      llx.StringData(convert.ToValue(p.ID) + "/monitorSettings"),
+				"protocol":                  llx.StringDataPtr(stringEnumPtr(mc.Protocol)),
+				"port":                      llx.IntDataPtr(mc.Port),
+				"path":                      llx.StringDataPtr(mc.Path),
+				"intervalInSeconds":         llx.IntDataPtr(mc.IntervalInSeconds),
+				"timeoutInSeconds":          llx.IntDataPtr(mc.TimeoutInSeconds),
+				"toleratedNumberOfFailures": llx.IntDataPtr(mc.ToleratedNumberOfFailures),
+				"profileMonitorStatus":      llx.StringDataPtr(stringEnumPtr(mc.ProfileMonitorStatus)),
+				"customHeaders":             llx.MapData(customHeaders, types.String),
+				"expectedStatusCodeRanges":  llx.ArrayData(statusRanges, types.Dict),
+			})
+		if err != nil {
+			return nil, err
+		}
+		args["monitorSettings"] = llx.ResourceData(mqlMonitor, "azure.subscription.networkService.trafficManagerProfile.monitorSettings")
+	}
 
 	endpoints := []any{}
 	for _, ep := range props.Endpoints {

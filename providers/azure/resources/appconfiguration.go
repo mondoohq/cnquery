@@ -85,6 +85,7 @@ func (a *mqlAzureSubscriptionAppConfigurationService) configurationStores() ([]a
 
 func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration.ConfigurationStore) (*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore, error) {
 	sku, err := convert.JsonToDict(store.SKU)
+	storeSku := orZero(store.SKU)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +141,7 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 		}
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.appConfigurationService.configurationStore", map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"id":                                  llx.StringDataPtr(store.ID),
 		"name":                                llx.StringDataPtr(store.Name),
 		"location":                            llx.StringDataPtr(store.Location),
@@ -160,7 +161,16 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 		"createMode":                          llx.StringData(createMode),
 		"defaultKeyValueRevisionRetentionPeriodInSeconds": llx.IntData(defaultKeyValueRevisionRetentionPeriodInSeconds),
 		"creationTime": llx.TimeDataPtr(creationTime),
-	})
+	}
+	if err := setSkuData(runtime, args, skuName(storeSku.Name)); err != nil {
+		return nil, err
+	}
+	storeIdentity := orZero(store.Identity)
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(storeIdentity.UserAssignedIdentities),
+		identityType(storeIdentity.Type), identityPrincipalId(storeIdentity.PrincipalID), identityTenantId(storeIdentity.TenantID)); err != nil {
+		return nil, err
+	}
+	res, err := CreateResource(runtime, "azure.subscription.appConfigurationService.configurationStore", args)
 	if err != nil {
 		return nil, err
 	}

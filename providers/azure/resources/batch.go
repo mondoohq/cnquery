@@ -417,7 +417,7 @@ func (a *mqlAzureSubscriptionBatchServiceAccount) diagnosticSettingsCategories()
 	return getDiagnosticSettingsCategories(a.Id.Data, a.MqlRuntime, conn)
 }
 
-func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error) {
+func createBatchPoolRawData(runtime *plugin.Runtime, pool *armbatch.Pool) (map[string]*llx.RawData, error) {
 	identityData := llx.NilData
 	if pool.Identity != nil {
 		if dict, err := convert.JsonToDict(pool.Identity); err != nil {
@@ -528,7 +528,7 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error
 		}
 	}
 
-	return map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"id":                            llx.StringDataPtr(pool.ID),
 		"name":                          llx.StringDataPtr(pool.Name),
 		"type":                          llx.StringDataPtr(pool.Type),
@@ -546,11 +546,21 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error
 		"securityEncryptionType":        securityEncryptionType,
 		"securityType":                  securityType,
 		"creationTime":                  creationTimeData,
-	}, nil
+	}
+	// armbatch.PoolIdentity carries only Type and UserAssignedIdentities; a
+	// pool has no system-assigned principal or tenant to report, so those
+	// members of the shared identity resource stay null rather than reading as
+	// empty strings.
+	poolIdentity := orZero(pool.Identity)
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(poolIdentity.UserAssignedIdentities),
+		identityType(poolIdentity.Type)); err != nil {
+		return nil, err
+	}
+	return args, nil
 }
 
 func batchPoolToMql(runtime *plugin.Runtime, pool *armbatch.Pool) (*mqlAzureSubscriptionBatchServiceAccountPool, error) {
-	rawData, err := createBatchPoolRawData(pool)
+	rawData, err := createBatchPoolRawData(runtime, pool)
 	if err != nil {
 		return nil, err
 	}
@@ -564,9 +574,10 @@ func batchPoolToMql(runtime *plugin.Runtime, pool *armbatch.Pool) (*mqlAzureSubs
 	if err != nil {
 		return nil, err
 	}
-	resource.(*mqlAzureSubscriptionBatchServiceAccountPool).cacheSystemData = sysData
+	mqlPool := resource.(*mqlAzureSubscriptionBatchServiceAccountPool)
+	mqlPool.cacheSystemData = sysData
 
-	return resource.(*mqlAzureSubscriptionBatchServiceAccountPool), nil
+	return mqlPool, nil
 }
 
 type mqlAzureSubscriptionBatchServiceAccountPoolInternal struct {

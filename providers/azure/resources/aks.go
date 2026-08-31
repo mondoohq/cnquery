@@ -360,12 +360,8 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			var principalId *string
-			var userAssignedIdentityIds []string
-			if entry.Identity != nil {
-				principalId = entry.Identity.PrincipalID
-				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(entry.Identity.UserAssignedIdentities)
-			}
+			clusterIdentity := orZero(entry.Identity)
+			userAssignedIdentityIds := sortedUserAssignedIdentityIDs(clusterIdentity.UserAssignedIdentities)
 
 			diskEncryptionSetId := ""
 			if entry.Properties != nil && entry.Properties.DiskEncryptionSetID != nil {
@@ -388,6 +384,12 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				}
 			}
 
+			resourceIdentity, err := resourceIdentityData(a.MqlRuntime, convert.ToValue(entry.ID), userAssignedIdentityIds,
+				identityType(clusterIdentity.Type), identityPrincipalId(clusterIdentity.PrincipalID), identityTenantId(clusterIdentity.TenantID))
+			if err != nil {
+				return nil, err
+			}
+
 			mqlAksCluster, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster",
 				map[string]*llx.RawData{
 					"id":                                llx.StringDataPtr(entry.ID),
@@ -404,7 +406,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"fqdn":                              llx.StringDataPtr(entry.Properties.Fqdn),
 					"fqdnSubdomain":                     llx.StringDataPtr(entry.Properties.FqdnSubdomain),
 					"privateFqdn":                       llx.StringDataPtr(entry.Properties.PrivateFQDN),
-					"addonProfiles":                     llx.DictData(addonProfiles),
+					"addonProfiles":                     llx.ArrayData(addonProfiles, types.Dict),
 					"httpProxyConfig":                   llx.DictData(httpProxyConfig),
 					"networkProfile":                    llx.DictData(networkProfile),
 					"podIdentityProfile":                llx.DictData(podIdentityProfile),
@@ -436,7 +438,8 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"supportPlan":                       llx.StringDataPtr((*string)(entry.Properties.SupportPlan)),
 					"controlPlaneMetricsEnabled":        llx.BoolData(convert.ToValue(controlPlaneMetricsEnabled)),
 					"identity":                          llx.DictData(identityDict),
-					"principalId":                       llx.StringDataPtr(principalId),
+					"resourceIdentity":                  resourceIdentity,
+					"principalId":                       llx.StringDataPtr(clusterIdentity.PrincipalID),
 					"servicePrincipalClientId":          llx.StringData(servicePrincipalClientId),
 					"linuxAdminUsername":                llx.StringData(linuxAdminUsername),
 					"linuxSshPublicKeys":                llx.ArrayData(linuxSshPublicKeys, types.String),

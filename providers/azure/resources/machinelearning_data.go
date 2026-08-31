@@ -421,7 +421,7 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) batchEndpoints() (
 				}
 			}
 
-			mqlEp, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.batchEndpoint", map[string]*llx.RawData{
+			epArgs := map[string]*llx.RawData{
 				"id":                    llx.StringDataPtr(ep.ID),
 				"name":                  llx.StringDataPtr(ep.Name),
 				"location":              llx.StringDataPtr(ep.Location),
@@ -435,7 +435,13 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) batchEndpoints() (
 				"defaultDeploymentName": llx.StringData(defaultDeploymentName),
 				"identity":              llx.DictData(identity),
 				"properties":            llx.MapData(convert.PtrMapStrToInterface(properties), types.String),
-			})
+			}
+			epIdentity := orZero(ep.Identity)
+			if err := setResourceIdentity(a.MqlRuntime, epArgs, sortedUserAssignedIdentityIDs(epIdentity.UserAssignedIdentities),
+				identityType(epIdentity.Type), identityPrincipalId(epIdentity.PrincipalID), identityTenantId(epIdentity.TenantID)); err != nil {
+				return nil, err
+			}
+			mqlEp, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.batchEndpoint", epArgs)
 			if err != nil {
 				return nil, err
 			}
@@ -443,7 +449,8 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) batchEndpoints() (
 			if err != nil {
 				return nil, err
 			}
-			mqlEp.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).cacheSystemData = sysData
+			mqlBatchEp := mqlEp.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint)
+			mqlBatchEp.cacheSystemData = sysData
 			res = append(res, mqlEp)
 		}
 	}
@@ -563,7 +570,7 @@ func mlBatchDeploymentToMql(runtime *plugin.Runtime, dep *ml.BatchDeployment) (*
 		resources, _ = convert.JsonToDict(p.Resources)
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.machineLearningService.workspace.batchEndpoint.deployment", map[string]*llx.RawData{
+	depArgs := map[string]*llx.RawData{
 		"id":                        llx.StringDataPtr(dep.ID),
 		"name":                      llx.StringDataPtr(dep.Name),
 		"location":                  llx.StringDataPtr(dep.Location),
@@ -584,7 +591,13 @@ func mlBatchDeploymentToMql(runtime *plugin.Runtime, dep *ml.BatchDeployment) (*
 		"resources":                 llx.DictData(resources),
 		"identity":                  llx.DictData(identity),
 		"properties":                llx.MapData(convert.PtrMapStrToInterface(properties), types.String),
-	})
+	}
+	depIdentity := orZero(dep.Identity)
+	if err := setResourceIdentity(runtime, depArgs, sortedUserAssignedIdentityIDs(depIdentity.UserAssignedIdentities),
+		identityType(depIdentity.Type), identityPrincipalId(depIdentity.PrincipalID), identityTenantId(depIdentity.TenantID)); err != nil {
+		return nil, err
+	}
+	res, err := CreateResource(runtime, "azure.subscription.machineLearningService.workspace.batchEndpoint.deployment", depArgs)
 	if err != nil {
 		return nil, err
 	}

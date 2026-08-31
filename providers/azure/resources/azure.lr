@@ -435,9 +435,11 @@ private azure.subscription.resource @defaults("id name location") {
   managedBy string
   // Resource SKU
   //
-  // Billing and capacity tier of the resource, with keys name, tier, size,
-  // family, model, and capacity.
-  sku dict
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Resource plan
   //
   // Azure Marketplace purchase plan for resources deployed from a Marketplace
@@ -446,10 +448,11 @@ private azure.subscription.resource @defaults("id name location") {
   plan dict
   // Resource identity
   //
-  // Managed identity assigned to the resource, with keys type, principalId,
-  // tenantId, and userAssignedIdentities. The type is one of None,
-  // SystemAssigned, UserAssigned, or "SystemAssigned, UserAssigned".
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Resource provisioning state
   provisioningState string
   // When the resource was created
@@ -757,7 +760,12 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   // Virtual Machine Scale Set that manages this VM, if any (resolved from managedBy)
   vmScaleSet() azure.subscription.computeService.vmScaleSet
   // Managed identity configuration (type, system- and user-assigned identities)
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Principal ID of the VM's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // System-assigned managed identity of the VM; null when no system-assigned identity is enabled
@@ -972,8 +980,13 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
   managedByExtended []string
   // The logical zone list for disk
   zones []string
-  // The disk SKU name and tier
-  sku dict
+  // Disk SKU
+  //
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Disk resource properties
   properties dict
   // Disk network access policy (AllowAll, AllowPrivate, DenyAll)
@@ -1106,7 +1119,12 @@ azure.subscription.computeService.diskEncryptionSet @defaults("name location enc
   // Provisioning state
   provisioningState string
   // Identity configuration
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -1163,8 +1181,13 @@ azure.subscription.computeService.snapshot @defaults("name location diskSizeByte
   tags map[string]string
   // Snapshot type
   type string
-  // The snapshot SKU name and tier
-  sku dict
+  // Snapshot SKU
+  //
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Snapshot resource properties
   properties dict
   // Disk creation source information (createOption, sourceResourceId, sourceUri, etc.)
@@ -1284,8 +1307,13 @@ azure.subscription.computeService.vmScaleSet @defaults("name location orchestrat
   type string
   // Availability zones for the VMSS
   zones []string
-  // VMSS SKU (name, tier, capacity)
-  sku dict
+  // Scale set SKU
+  //
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // VMSS resource properties
   properties dict
   // Orchestration mode ("Uniform" or "Flexible")
@@ -1335,7 +1363,12 @@ azure.subscription.computeService.vmScaleSet @defaults("name location orchestrat
   // Extensions installed on the scale set (each dict describes one extension)
   extensions() []dict
   // Managed identity configuration (type, system- and user-assigned identities)
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Principal ID of the scale set's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // System-assigned managed identity of the scale set; null when no system-assigned identity is enabled
@@ -1384,8 +1417,13 @@ azure.subscription.computeService.vmScaleSet.instance @defaults("name instanceId
   timeCreated time
   // Instance properties
   properties dict
-  // Instance SKU (name, tier, capacity)
-  sku dict
+  // Instance SKU
+  //
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -1444,8 +1482,13 @@ azure.subscription.computeService.dedicatedHost @defaults("name sku.name provisi
   tags map[string]string
   // Dedicated host resource type
   type string
-  // Dedicated host SKU (name, tier, family)
-  sku dict
+  // Dedicated host SKU
+  //
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Unmodeled resource properties returned by the Azure API
   properties dict
   // The fault domain of the host within its group
@@ -1785,9 +1828,11 @@ azure.subscription.batchService.account.pool @defaults("id name") {
   etag string
   // Managed identity configuration
   //
-  // Keys: `type` (None or UserAssigned) and `userAssignedIdentities`
-  // (a map of identity resource id to {clientId, principalId}).
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Pool configuration settings including scale, network, and task scheduling options
   properties dict
   // Pool provisioning state
@@ -1877,9 +1922,11 @@ azure.subscription.databricksService.workspace @defaults("id name location publi
   properties dict
   // Workspace pricing SKU
   //
-  // SKU object with keys `name` (Standard, Premium, or Trial) and `tier`,
-  // identifying the Databricks plan the workspace runs under.
-  sku dict
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Public network access setting ("Enabled" or "Disabled")
   publicNetworkAccess string
   // Whether public IPs are disabled on cluster nodes (Secure Cluster Connectivity / VNet injection)
@@ -3298,7 +3345,15 @@ azure.subscription.networkService.loadBalancer @defaults("id name location") {
 }
 
 // Azure network probe
-private azure.subscription.networkService.probe @defaults("id name"){
+//
+// Health probe a load balancer uses to decide whether a backend instance
+// still receives traffic. The probe's transport is `protocol` (Tcp, Http,
+// or Https) with `port` and, for the HTTP protocols, `requestPath`.
+// `intervalInSeconds`, `numberOfProbes` and `probeThreshold` set how fast
+// an unhealthy instance is taken out of rotation, and
+// `noHealthyBackendsBehavior` decides whether traffic is dropped or still
+// forwarded once every instance fails.
+private azure.subscription.networkService.probe @defaults("name protocol port"){
   // Probe ID
   id string
   // Probe name
@@ -3307,12 +3362,44 @@ private azure.subscription.networkService.probe @defaults("id name"){
   type string
   // Probe etag
   etag string
-  // Probe properties
-  properties dict
+  // Raw probe properties
+  //
+  // Deprecated in favor of the flattened fields on this resource, which
+  // carry every value the ARM probe properties hold.
+  properties @maturity("deprecated") dict
+  // Port the probe connects to on the backend instance
+  port int
+  // Probe protocol ("Http", "Tcp", or "Https")
+  protocol string
+  // Seconds between two consecutive probes
+  intervalInSeconds int
+  // Number of consecutive probe failures that take an instance out of rotation
+  numberOfProbes int
+  // Number of consecutive successes or failures required to change the instance's health state
+  probeThreshold int
+  // URI the HTTP or HTTPS probe requests, for example "/healthz"
+  requestPath string
+  // How the load balancer routes traffic once every backend instance fails its probe
+  //
+  // "AllProbedDown" keeps forwarding to all instances and "AllProbedUp"
+  // drops the traffic. Null when the load balancer does not report the
+  // setting.
+  noHealthyBackendsBehavior string
+  // Probe provisioning state ("Succeeded", "Updating", "Deleting", or "Failed")
+  provisioningState string
+  // Load balancing rules that use this probe for their health checks
+  loadBalancerRules() []azure.subscription.networkService.loadBalancerRule
 }
 
 // Azure network backend address pool
-private azure.subscription.networkService.backendAddressPool @defaults("id name") {
+//
+// Set of backend instances a load balancer distributes traffic to. The
+// pool's membership is reported through the raw properties, while
+// `drainPeriodInSeconds` (how long existing connections survive after an
+// instance is removed) and `syncMode` are queryable directly. The rules
+// that send traffic to this pool are reachable as loadBalancerRules,
+// inboundNatRules and outboundRules.
+private azure.subscription.networkService.backendAddressPool @defaults("name") {
   // Backend Address Pool ID
   id string
   // Backend Address Pool name
@@ -3321,12 +3408,38 @@ private azure.subscription.networkService.backendAddressPool @defaults("id name"
   type string
   // Backend Address Pool etag
   etag string
-  // Backend Address Pool properties
+  // Raw backend address pool properties
+  //
+  // Carries the pool membership that has no flattened equivalent:
+  // `loadBalancerBackendAddresses`, `backendIPConfigurations`, and
+  // `tunnelInterfaces`.
   properties dict
+  // Seconds a connection to a removed backend instance is allowed to drain before it is cut
+  drainPeriodInSeconds int
+  // Region of the backend address pool, set for a global load balancer's regional pools
+  location string
+  // How backend addresses are kept in step with the pool ("Automatic" or "Manual")
+  syncMode string
+  // Backend address pool provisioning state ("Succeeded", "Updating", "Deleting", or "Failed")
+  provisioningState string
+  // Load balancing rules that distribute traffic to this pool
+  loadBalancerRules() []azure.subscription.networkService.loadBalancerRule
+  // Inbound NAT rules that forward to this pool
+  inboundNatRules() []azure.subscription.networkService.inboundNatRule
+  // Outbound rules that use this pool as their source of outbound connections
+  outboundRules() []azure.subscription.networkService.outboundRule
 }
 
 // Azure network inbound NAT pool
-private azure.subscription.networkService.inboundNatPool @defaults("id name") {
+//
+// Range of frontend ports a load balancer maps onto one backend port
+// across every instance of a scale set. `protocol`,
+// `frontendPortRangeStart`, `frontendPortRangeEnd` and `backendPort`
+// describe the mapping, and the frontend it listens on is reachable as
+// frontendIpConfig. A pool that publishes an administrative backend port
+// such as 22 or 3389 from a public frontend exposes every instance in
+// the set at once.
+private azure.subscription.networkService.inboundNatPool @defaults("name protocol backendPort") {
   // Inbound NAT Pool ID
   id string
   // Inbound NAT Pool name
@@ -3335,12 +3448,39 @@ private azure.subscription.networkService.inboundNatPool @defaults("id name") {
   type string
   // Inbound NAT Pool etag
   etag string
-  // Inbound NAT Pool properties
-  properties dict
+  // Raw inbound NAT pool properties
+  //
+  // Deprecated in favor of the flattened fields on this resource, which
+  // carry every value the ARM inbound NAT pool properties hold.
+  properties @maturity("deprecated") dict
+  // Backend port every frontend port in the range is translated to
+  backendPort int
+  // First frontend port in the range
+  frontendPortRangeStart int
+  // Last frontend port in the range
+  frontendPortRangeEnd int
+  // Transport protocol ("Udp", "Tcp", or "All")
+  protocol string
+  // Whether floating IP (direct server return) is enabled
+  enableFloatingIp bool
+  // Whether a TCP reset is sent on idle timeout instead of silently dropping the flow
+  enableTcpReset bool
+  // Minutes an idle TCP connection is kept before it times out
+  idleTimeoutInMinutes int
+  // Inbound NAT pool provisioning state ("Succeeded", "Updating", "Deleting", or "Failed")
+  provisioningState string
+  // Frontend the NAT pool listens on; null when the load balancer does not report one
+  frontendIpConfig() azure.subscription.networkService.frontendIpConfig
 }
 
 // Azure network inbound NAT rule
-private azure.subscription.networkService.inboundNatRule @defaults("id name") {
+//
+// Port-forwarding rule that maps one frontend port onto a backend port on
+// a single instance. `protocol`, `frontendPort` and `backendPort` describe
+// the mapping, and the frontend it listens on is reachable as
+// frontendIpConfig. A rule forwarding a public frontend to 22 or 3389 puts
+// an administrative port on the internet.
+private azure.subscription.networkService.inboundNatRule @defaults("name protocol frontendPort backendPort") {
   // Inbound NAT Rule ID
   id string
   // Inbound NAT Rule name
@@ -3349,8 +3489,33 @@ private azure.subscription.networkService.inboundNatRule @defaults("id name") {
   type string
   // Inbound NAT Rule etag
   etag string
-  // Inbound NAT Rule properties
+  // Raw inbound NAT rule properties
+  //
+  // Carries the resolved `backendIPConfiguration` of the instance the rule
+  // forwards to, which has no flattened equivalent.
   properties dict
+  // Frontend port the rule listens on
+  frontendPort int
+  // First frontend port in the range, set when the rule maps a range onto a backend pool
+  frontendPortRangeStart int
+  // Last frontend port in the range, set when the rule maps a range onto a backend pool
+  frontendPortRangeEnd int
+  // Backend port the frontend port is translated to
+  backendPort int
+  // Transport protocol ("Udp", "Tcp", or "All")
+  protocol string
+  // Whether floating IP (direct server return) is enabled
+  enableFloatingIp bool
+  // Whether a TCP reset is sent on idle timeout instead of silently dropping the flow
+  enableTcpReset bool
+  // Minutes an idle TCP connection is kept before it times out
+  idleTimeoutInMinutes int
+  // Inbound NAT rule provisioning state ("Succeeded", "Updating", "Deleting", or "Failed")
+  provisioningState string
+  // Frontend the rule listens on; null when the load balancer does not report one
+  frontendIpConfig() azure.subscription.networkService.frontendIpConfig
+  // Backend pool the rule forwards to; null when the rule targets a single instance instead of a pool
+  backendAddressPool() azure.subscription.networkService.backendAddressPool
 }
 
 // Azure network frontend IP configuration
@@ -3386,7 +3551,14 @@ private azure.subscription.networkService.frontendIpConfig @defaults("id name") 
 }
 
 // Azure Load Balancer rule
-private azure.subscription.networkService.loadBalancerRule @defaults("id name") {
+//
+// Rule that distributes inbound traffic from a frontend to a backend pool.
+// `protocol`, `frontendPort` and `backendPort` describe what is published,
+// `loadDistribution` sets the session affinity, and `disableOutboundSnat`
+// decides whether the rule also provides outbound connectivity for the
+// pool. The frontend, backend pool and health probe it binds together are
+// reachable as frontendIpConfig, backendAddressPool and probe.
+private azure.subscription.networkService.loadBalancerRule @defaults("name protocol frontendPort backendPort") {
   // Load Balancer rule ID
   id string
   // Load Balancer rule name
@@ -3395,12 +3567,53 @@ private azure.subscription.networkService.loadBalancerRule @defaults("id name") 
   type string
   // Load Balancer rule etag
   etag string
-  // Load Balancer rule properties
-  properties dict
+  // Raw load balancing rule properties
+  //
+  // Deprecated in favor of the flattened fields on this resource, which
+  // carry every value the ARM load balancing rule properties hold.
+  properties @maturity("deprecated") dict
+  // Frontend port the rule listens on; 0 means all ports (a high-availability ports rule)
+  frontendPort int
+  // Backend port traffic is delivered to on the pool members
+  backendPort int
+  // Transport protocol ("Udp", "Tcp", or "All")
+  protocol string
+  // Whether the rule stops providing outbound SNAT for its backend pool
+  //
+  // True leaves the pool without outbound connectivity unless an outbound
+  // rule or NAT gateway supplies it, which is the recommended shape
+  // because implicit SNAT shares a small port budget across the pool.
+  disableOutboundSnat bool
+  // Whether connection tracking is enabled for the rule
+  enableConnectionTracking bool
+  // Whether floating IP (direct server return) is enabled
+  enableFloatingIp bool
+  // Whether a TCP reset is sent on idle timeout instead of silently dropping the flow
+  enableTcpReset bool
+  // Minutes an idle TCP connection is kept before it times out
+  idleTimeoutInMinutes int
+  // Session affinity applied to the rule ("Default", "SourceIP", or "SourceIPProtocol")
+  loadDistribution string
+  // Load balancing rule provisioning state ("Succeeded", "Updating", "Deleting", or "Failed")
+  provisioningState string
+  // Frontend the rule listens on; null when the load balancer does not report one
+  frontendIpConfig() azure.subscription.networkService.frontendIpConfig
+  // Backend pool the rule distributes to; null when the rule reports several pools instead
+  backendAddressPool() azure.subscription.networkService.backendAddressPool
+  // Backend pools the rule distributes to, for a gateway load balancer that reports more than one
+  backendAddressPools() []azure.subscription.networkService.backendAddressPool
+  // Health probe that decides which pool members the rule sends traffic to; null when the rule has no probe
+  probe() azure.subscription.networkService.probe
 }
 
 // Azure network outbound rule
-private azure.subscription.networkService.outboundRule @defaults("id name") {
+//
+// Rule that gives a backend pool outbound connectivity through a set of
+// frontends. `allocatedOutboundPorts` is the SNAT port budget each backend
+// instance receives; leaving it at 0 lets Azure derive it from the pool
+// size, and an undersized budget shows up as intermittent outbound
+// connection failures rather than as an error.
+private azure.subscription.networkService.outboundRule @defaults("name protocol") {
   // Outbound rule ID
   id string
   // Outbound rule name
@@ -3409,8 +3622,25 @@ private azure.subscription.networkService.outboundRule @defaults("id name") {
   type string
   // Outbound rule etag
   etag string
-  // Outbound rule properties
-  properties dict
+  // Raw outbound rule properties
+  //
+  // Deprecated in favor of the flattened fields on this resource, which
+  // carry every value the ARM outbound rule properties hold.
+  properties @maturity("deprecated") dict
+  // Transport protocol ("Tcp", "Udp", or "All")
+  protocol string
+  // SNAT ports allocated per backend instance; 0 lets Azure size the allocation automatically
+  allocatedOutboundPorts int
+  // Whether a TCP reset is sent on idle timeout instead of silently dropping the flow
+  enableTcpReset bool
+  // Minutes an idle outbound connection is kept before it times out
+  idleTimeoutInMinutes int
+  // Outbound rule provisioning state ("Succeeded", "Updating", "Deleting", or "Failed")
+  provisioningState string
+  // Backend pool this rule gives outbound connectivity to; null when the load balancer does not report one
+  backendAddressPool() azure.subscription.networkService.backendAddressPool
+  // Frontends the rule sources its outbound connections from
+  frontendIpConfigs() []azure.subscription.networkService.frontendIpConfig
 }
 
 // Azure network interface
@@ -3709,7 +3939,10 @@ private azure.subscription.networkService.bastionHost @defaults("id name locatio
   // Bastion host properties
   properties dict
   // Bastion host SKU
-  sku dict
+  //
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
   // Bastion SKU name ("Basic", "Standard", "Developer", "Premium")
   skuName string
   // Whether copy/paste between the local machine and the remote session is disabled
@@ -3734,6 +3967,8 @@ private azure.subscription.networkService.bastionHost @defaults("id name locatio
   allowedIpRules []string
   // IP configurations binding the Bastion host to its subnet and public IP
   ipConfigurations() []azure.subscription.networkService.bastionHost.ipConfiguration
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
 }
 
 // Azure Bastion host IP configuration
@@ -4388,7 +4623,52 @@ azure.subscription.networkService.wafConfig @defaults("id name type") {
   // Kind of WAF configuration
   kind string
   // Properties for the WAF configuration
-  properties dict
+  //
+  // Deprecated in favor of enabled, firewallMode, ruleSetType,
+  // ruleSetVersion, requestBodyCheck, maxRequestBodySizeInKb,
+  // fileUploadLimitInMb, and disabledRuleGroups.
+  properties @maturity("deprecated") dict
+  // Whether the web application firewall is turned on
+  //
+  // A gateway carrying a WAF configuration that is disabled passes every
+  // request through unfiltered while still reporting a firewall.
+  enabled bool
+  // Whether matching requests are blocked or only logged ("Prevention" or "Detection")
+  //
+  // Detection logs an attack and serves the request anyway, so a gateway
+  // left in Detection is monitored rather than protected.
+  firewallMode string
+  // Rule set family the firewall enforces, for example "OWASP"
+  ruleSetType string
+  // Version of the rule set the firewall enforces
+  ruleSetVersion string
+  // Whether the firewall inspects the request body
+  //
+  // False leaves every body-carried payload uninspected, whatever the
+  // rule set says.
+  requestBodyCheck bool
+  // Maximum request body size the firewall inspects, in kilobytes
+  maxRequestBodySizeInKb int
+  // Maximum file upload size the firewall inspects, in megabytes
+  fileUploadLimitInMb int
+  // Rule groups turned off on this configuration
+  //
+  // Each entry names a group and, when the configuration disables only
+  // part of it, the individual rule IDs. An empty list means the full
+  // rule set is in force.
+  disabledRuleGroups []azure.subscription.networkService.wafConfig.disabledRuleGroup
+}
+
+// Disabled rule group of an Application Gateway WAF configuration
+//
+// One managed rule group turned off on a legacy WAF configuration, and the
+// individual rules within it that are turned off. A group listed here with no
+// rule IDs is disabled in full.
+private azure.subscription.networkService.wafConfig.disabledRuleGroup @defaults("ruleGroupName") {
+  // Name of the rule group that is turned off
+  ruleGroupName string
+  // Rule IDs turned off within the group; empty when the whole group is turned off
+  rules []int
 }
 
 // Azure Web Application Firewall (WAF) policy
@@ -4638,7 +4918,11 @@ private azure.subscription.networkService.privateEndpoint @defaults("id name loc
   privateLinkServiceConnections []azure.subscription.networkService.privateEndpoint.serviceconnection
   // Manually approved private link service connections
   manualPrivateLinkServiceConnections []azure.subscription.networkService.privateEndpoint.serviceconnection
-  // Private DNS zone groups attached to this PE (each entry: { name, privateDnsZoneIds, recordSets })
+  // Private DNS zone groups attached to the endpoint
+  //
+  // Each entry has `id`, `name`, `provisioningState`, the
+  // `privateDnsZoneIds` the group registers records into, and `configs`,
+  // one `{name, privateDnsZoneId}` per zone configuration in the group.
   privateDnsZoneGroups() []dict
 }
 
@@ -4820,12 +5104,57 @@ azure.subscription.networkService.trafficManagerProfile @defaults("id name locat
   maxReturn int
   // Allowed endpoint record types (e.g., "DomainName", "IPv4Address", "IPv6Address")
   allowedEndpointRecordTypes []string
-  // DNS settings: relativeName, ttl, fqdn
-  dnsConfig dict
-  // Endpoint health monitoring settings: protocol, port, path, intervals, expected status codes, custom headers
-  monitorConfig dict
+  // DNS settings
+  //
+  // Deprecated in favor of dnsSettings, which carries the DNS name and
+  // TTL as typed fields.
+  dnsConfig @maturity("deprecated") dict
+  // DNS name and TTL the profile answers on
+  dnsSettings azure.subscription.networkService.trafficManagerProfile.dnsSettings
+  // Endpoint health monitoring settings
+  //
+  // Deprecated in favor of monitorSettings.
+  monitorConfig @maturity("deprecated") dict
+  // Endpoint health monitoring settings
+  //
+  // How the profile probes its endpoints and what it accepts as healthy.
+  // Null when the profile carries no monitoring configuration.
+  monitorSettings azure.subscription.networkService.trafficManagerProfile.monitorSettings
   // Endpoints configured on the profile
   endpoints []azure.subscription.networkService.trafficManagerProfile.endpoint
+}
+
+// Endpoint health monitoring settings of a Traffic Manager profile
+//
+// How the profile probes the endpoints behind it and what it accepts as a
+// healthy answer. A profile probing over HTTP sends its health check in the
+// clear, and a long interval combined with a high failure tolerance leaves a
+// failed endpoint in rotation for minutes.
+private azure.subscription.networkService.trafficManagerProfile.monitorSettings @defaults("protocol port path profileMonitorStatus") {
+  // Protocol the health probe uses ("HTTP", "HTTPS", or "TCP")
+  protocol string
+  // TCP port the health probe connects to
+  port int
+  // Path, relative to the endpoint domain name, the health probe requests
+  path string
+  // Seconds between health checks
+  intervalInSeconds int
+  // Seconds the profile waits for an endpoint to answer a health check
+  timeoutInSeconds int
+  // Consecutive failed checks tolerated before an endpoint is marked degraded
+  //
+  // Multiplied by intervalInSeconds, this is how long a failed endpoint
+  // keeps receiving traffic.
+  toleratedNumberOfFailures int
+  // Aggregate monitoring status of the profile, for example "Online", "Degraded", "Inactive", or "CheckingEndpoints"
+  profileMonitorStatus string
+  // Custom headers sent with each health check, keyed by header name
+  customHeaders map[string]string
+  // HTTP status code ranges the probe accepts as healthy
+  //
+  // Each entry has `min` and `max`. An empty list means the profile
+  // accepts the default 200 range only.
+  expectedStatusCodeRanges []dict
 }
 
 // Traffic Manager endpoint
@@ -5917,6 +6246,8 @@ private azure.subscription.storageService.account @defaults("id name location") 
   // fields, the encryption fields, and so on); prefer those over reading
   // raw keys here.
   properties dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Principal ID of the account's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // Tenant ID of the account's managed identity; empty when no managed identity is configured
@@ -5927,9 +6258,11 @@ private azure.subscription.storageService.account @defaults("id name location") 
   encryptionIdentity() azure.subscription.managedIdentity
   // Storage account SKU
   //
-  // Dict with keys `name` (e.g. "Standard_LRS", "Standard_GRS",
-  // "Premium_LRS") and `tier` ("Standard" or "Premium").
-  sku dict
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Storage account kind
   kind string
   // Minimum TLS version enforced on the storage account
@@ -6129,13 +6462,12 @@ private azure.subscription.storageService.account.queue @defaults("id name") {
   approximateMessageCount() int
   // Stored access policies on the queue
   //
-  // Each entry has `id`, `permission`, `startTime`, and `expiryTime`. A
-  // shared access signature bound to one of these policies can be revoked
+  // A shared access signature bound to one of these policies can be revoked
   // server-side by deleting or expiring the policy; a signature issued
   // without one cannot be withdrawn before it expires. Empty when the
   // queue carries no policies. Read from the queue service rather than
   // Azure Resource Manager, so it needs data access to the queue.
-  signedIdentifiers() []dict
+  storedAccessPolicies() []azure.subscription.storageService.account.storedAccessPolicy
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -6146,10 +6478,43 @@ private azure.subscription.storageService.account.table @defaults("id name") {
   id string
   // Table name
   name string
-  // Stored access policies (SAS) on the table; each entry has id, permission, startTime, expiryTime
-  signedIdentifiers []dict
+  // Stored access policies on the table
+  //
+  // Deprecated in favor of storedAccessPolicies.
+  signedIdentifiers @maturity("deprecated") []dict
+  // Stored access policies on the table
+  //
+  // A shared access signature bound to one of these policies can be revoked
+  // server-side by deleting or expiring the policy; a signature issued
+  // without one cannot be withdrawn before it expires. Empty when the table
+  // carries no policies.
+  storedAccessPolicies []azure.subscription.storageService.account.storedAccessPolicy
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+
+// Stored access policy on a storage account container, queue or table
+//
+// Named policy that a shared access signature can be bound to. The policy is
+// what makes such a signature revocable: deleting or expiring it withdraws
+// every signature issued against it, where a signature issued with its
+// permissions and expiry inline stays valid until it expires on its own.
+private azure.subscription.storageService.account.storedAccessPolicy @defaults("id permission expiryTime") {
+  // Policy identifier a shared access signature binds to
+  id string
+  // Permission letters the policy grants
+  //
+  // Any of "r" (read), "a" (add), "c" (create), "w" (write), "d" (delete),
+  // "l" (list), "u" (update), and "p" (process), concatenated. The set
+  // that applies depends on the service the policy sits on.
+  permission string
+  // When the policy starts granting access; null when it grants access immediately
+  startTime time
+  // When the policy stops granting access
+  //
+  // Null when the policy sets no expiry, which leaves every signature bound
+  // to it valid until the policy itself is deleted.
+  expiryTime time
 }
 
 // Local user configured on a storage account for SFTP/SSH access
@@ -6172,14 +6537,40 @@ private azure.subscription.storageService.account.localUser @defaults("id name h
   isNFSv3Enabled bool
   // Optional home directory (constrains the file system path the user sees)
   homeDirectory string
-  // Permission scopes (each: { permissions, service, resourceName })
-  permissionScopes []dict
+  // Permission scopes granted to the local user
+  //
+  // Deprecated in favor of permissions.
+  permissionScopes @maturity("deprecated") []dict
+  // Permission scopes granted to the local user
+  //
+  // One entry per container or file share the user can reach, with the
+  // permission letters that apply there. A local user with no scopes can
+  // authenticate but reach nothing.
+  permissions []azure.subscription.storageService.account.localUser.permissionScope
   // Numeric POSIX user ID
   userId int
   // Numeric POSIX group ID
   groupId int
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+
+// Permission scope of a storage account local user
+//
+// One container or file share the local user can reach through SFTP or
+// NFSv3, and the permission letters that apply to it.
+private azure.subscription.storageService.account.localUser.permissionScope @defaults("service resourceName permissions") {
+  // Permission letters granted on the resource
+  //
+  // Any of "r" (read), "w" (write), "d" (delete), "l" (list), "c"
+  // (create), "o" (modify ownership), and "p" (modify permissions),
+  // concatenated. A scope carrying "w", "d", or "p" lets the user change
+  // data or its access control, not just read it.
+  permissions string
+  // Storage service the scope applies to ("blob" or "file")
+  service string
+  // Container or file share name the scope applies to
+  resourceName string
 }
 
 // Azure Storage account data protection
@@ -6488,13 +6879,12 @@ private azure.subscription.storageService.account.container @defaults("id name")
   remainingRetentionDays int
   // Stored access policies on the container
   //
-  // Each entry has `id`, `permission`, `startTime`, and `expiryTime`. A
-  // shared access signature bound to one of these policies can be revoked
+  // A shared access signature bound to one of these policies can be revoked
   // server-side by deleting or expiring the policy; a signature issued
   // without one cannot be withdrawn before it expires. Empty when the
   // container carries no policies. Read from the blob service rather than
   // Azure Resource Manager, so it needs data access to the container.
-  signedIdentifiers() []dict
+  storedAccessPolicies() []azure.subscription.storageService.account.storedAccessPolicy
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -6711,16 +7101,24 @@ private azure.subscription.storageService.account.defenderForStorageSetting @def
   sensitiveDataDiscoveryEnabled bool
   // Status of the most recent Sensitive Data Discovery enable/disable operation
   //
-  // Dict with keys `code` and `message` (populated only on failure or partial success).
-  sensitiveDataDiscoveryStatus dict
+  // Deprecated in favor of sensitiveDataDiscoveryOperationStatus, which
+  // carries the status code and message as typed fields.
+  sensitiveDataDiscoveryStatus @maturity("deprecated") dict
+  // Operational status Defender reports for sensitive data discovery
+  sensitiveDataDiscoveryOperationStatus azure.subscription.storageService.account.defenderForStorageSetting.operationStatus
+  // Operational status Defender reports for on-upload malware scanning
+  malwareScanningOperationStatus azure.subscription.storageService.account.defenderForStorageSetting.operationStatus
   // Whether on-upload malware scanning is enabled — every new blob is scanned for malware before becoming readable
   malwareScanningOnUploadEnabled bool
   // Monthly per-storage-account cap on the GB scanned for on-upload malware scanning. Negative values mean no cap
   malwareScanningCapGBPerMonth int
   // Resource ID of the Event Grid Topic that receives malware scan results, empty when no topic is configured
   malwareScanningResultsEventGridTopicId string
-  // Status of the most recent Malware Scanning enable/disable operation, with keys `code` and `message` (populated only on failure or partial success)
-  malwareScanningStatus dict
+  // Status of the most recent Malware Scanning enable/disable operation
+  //
+  // Deprecated in favor of malwareScanningOperationStatus, which carries
+  // the status code and message as typed fields.
+  malwareScanningStatus @maturity("deprecated") dict
 }
 
 // Azure Web
@@ -6970,7 +7368,12 @@ private azure.subscription.webService.appslot @defaults("id name location") {
   // App slot properties
   properties dict
   // App slot identity
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Parent web app site for this slot
   parent() azure.subscription.webService.appsite
   // App slot configuration
@@ -7273,8 +7676,13 @@ private azure.subscription.webService.appServicePlan @defaults("id name location
   tags map[string]string
   // App Service plan properties
   properties dict
-  // SKU description (name, tier, size, family, capacity)
-  sku dict
+  // App Service plan SKU
+  //
+  // Deprecated in favor of skuData, which carries the SKU members, its
+  // capabilities and its scaling limits as typed fields.
+  sku @maturity("deprecated") dict
+  // SKU the plan is provisioned at, with its capabilities and scaling limits
+  skuData azure.subscription.webService.appServicePlan.skuDescription
   // Whether the plan is zone-redundant
   zoneRedundant bool
   // Number of web apps assigned to this plan
@@ -7293,6 +7701,68 @@ private azure.subscription.webService.appServicePlan @defaults("id name location
   elasticScaleEnabled bool
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+
+// App Service plan SKU description
+//
+// The billable SKU an App Service plan runs on, together with the feature
+// flags and scaling limits Azure reports for it. The tier decides which
+// platform security features the plan can offer, among them VNet integration,
+// private endpoints and IP restrictions, so it is read alongside the app
+// settings that depend on them.
+private azure.subscription.webService.appServicePlan.skuDescription @defaults("name tier capacity") {
+  // SKU name, for example "P1v3", "S1", or "Y1"
+  name string
+  // SKU tier
+  //
+  // One of "Free", "Shared", "Basic", "Standard", "Premium", "PremiumV2",
+  // "PremiumV3", "Isolated", "IsolatedV2", "Dynamic", or "ElasticPremium".
+  tier string
+  // SKU size, the instance size within the tier
+  size string
+  // SKU family
+  family string
+  // Number of worker instances the plan is provisioned for
+  capacity int
+  // Regions the SKU is offered in
+  locations []string
+  // Feature flags Azure reports for the SKU
+  capabilities []azure.subscription.webService.appServicePlan.skuCapability
+  // Scaling limits of the SKU; null when Azure does not report them
+  capacityLimits azure.subscription.webService.appServicePlan.skuCapacityLimits
+}
+
+// Feature flag on an App Service plan SKU
+//
+// One capability Azure reports for the plan's SKU, such as whether the SKU
+// supports VNet integration or always-on. The `value` is the reported
+// setting and `reason` carries any qualifier Azure attaches to it.
+private azure.subscription.webService.appServicePlan.skuCapability @defaults("name value") {
+  // Capability name
+  name string
+  // Capability value
+  value string
+  // Qualifier Azure attaches to the capability; empty when none is reported
+  reason string
+}
+
+// Scaling limits of an App Service plan SKU
+//
+// The worker-instance range the plan's SKU allows, together with the
+// scaling model `scaleType` uses to move within it. `elasticMaximum` is
+// the ceiling for elastic (pre-warmed) scale-out on the SKUs that support
+// it.
+private azure.subscription.webService.appServicePlan.skuCapacityLimits @defaults("defaultCapacity minimumCapacity maximumCapacity scaleType") {
+  // Default number of worker instances
+  defaultCapacity int
+  // Minimum number of worker instances
+  minimumCapacity int
+  // Maximum number of worker instances
+  maximumCapacity int
+  // Maximum number of elastic worker instances; null on SKUs without elastic scale-out
+  elasticMaximumCapacity int
+  // Scaling model of the SKU ("None", "Manual", or "Automatic")
+  scaleType string
 }
 
 // Azure App Service Certificate
@@ -7900,14 +8370,46 @@ private azure.subscription.sqlService.server.failoverGroup @defaults("name repli
   replicationRole string
   // Replication state of the failover group
   replicationState string
-  // Partner server descriptors ({id, location, replicationRole})
-  partnerServers []dict
-  // Read/write endpoint configuration ({failoverPolicy, failoverWithDataLossGracePeriodMinutes})
-  readWriteEndpoint dict
-  // Read-only endpoint configuration ({failoverPolicy, targetServer})
-  readOnlyEndpoint dict
+  // Partner server descriptors
+  //
+  // Deprecated in favor of partners.
+  partnerServers @maturity("deprecated") []dict
+  // Servers this failover group pairs with
+  //
+  // The secondary a primary fails over to, resolved to the server
+  // resource so its own configuration is reachable from here.
+  partners []azure.subscription.sqlService.server.failoverGroup.partner
+  // Read/write endpoint configuration
+  //
+  // Deprecated in favor of readWriteListener, which carries the failover
+  // policy and grace period as typed fields.
+  readWriteEndpoint @maturity("deprecated") dict
+  // Failover configuration of the read-write listener endpoint
+  readWriteListener azure.subscription.sqlService.server.failoverGroup.readWriteEndpoint
+  // Failover configuration of the read-only listener endpoint
+  readOnlyListener azure.subscription.sqlService.server.failoverGroup.readOnlyEndpoint
+  // Read-only endpoint configuration
+  //
+  // Deprecated in favor of readOnlyListener, which carries the failover
+  // policy as a typed field.
+  readOnlyEndpoint @maturity("deprecated") dict
   // Databases included in the failover group
   databases() []azure.subscription.sqlService.database
+}
+
+// Partner server of a SQL failover group
+//
+// One server paired into a failover group, with the role it plays and the
+// region it sits in. The server itself is reachable through `server`, so its
+// firewall rules, auditing, and administrators can be checked from the
+// failover group.
+private azure.subscription.sqlService.server.failoverGroup.partner @defaults("location replicationRole") {
+  // Partner server
+  server() azure.subscription.sqlService.server
+  // Region the partner server sits in
+  location string
+  // Role the partner plays in the group ("Primary" or "Secondary")
+  replicationRole string
 }
 
 // Azure SQL Database geo-replication link
@@ -8242,10 +8744,11 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
   privateDnsZone() azure.subscription.dnsService.privateZone
   // Weekly maintenance window
   //
-  // Keyed by `customWindow` ("Enabled" or "Disabled"), `dayOfWeek`,
-  // `startHour`, and `startMinute`. A custom window pins patching to a
-  // chosen time instead of letting Azure select one.
-  maintenanceWindow dict
+  // Deprecated in favor of maintenanceSchedule, which carries the window
+  // as typed fields.
+  maintenanceWindow @maturity("deprecated") dict
+  // Weekly window in which Azure applies planned maintenance
+  maintenanceSchedule azure.subscription.maintenanceWindow
   // PostgreSQL server configuration
   configuration() []azure.subscription.sqlService.configuration
   // PostgreSQL server databases
@@ -8441,9 +8944,24 @@ private azure.subscription.sqlService.virtualNetworkRule @defaults("id name") {
   // Virtual network rule type
   type string
   // Virtual network rule properties
-  properties dict
+  //
+  // Deprecated in favor of state and ignoreMissingVnetServiceEndpoint.
+  properties @maturity("deprecated") dict
   // Virtual network rule Subnet ID
   virtualNetworkSubnetId string
+  // Subnet the rule admits; null when the subnet cannot be read
+  subnet() azure.subscription.networkService.subnet
+  // Rule state, for example "Ready", "InProgress", "Initializing", "Unknown", or "Failed"
+  //
+  // A rule that never left InProgress or Failed is not admitting the
+  // subnet it names, so a server relying on it is either unreachable from
+  // that subnet or open by some other path.
+  state string
+  // Whether the rule was created before the subnet had the SQL service endpoint enabled
+  //
+  // True means the rule was accepted without the subnet being ready for
+  // it, so it may name a subnet that still cannot reach the server.
+  ignoreMissingVnetServiceEndpoint bool
 }
 
 // Azure SQL Managed Instance
@@ -8714,10 +9232,11 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   privateDnsZone() azure.subscription.dnsService.privateZone
   // Weekly maintenance window
   //
-  // Keyed by `customWindow` ("Enabled" or "Disabled"), `dayOfWeek`,
-  // `startHour`, and `startMinute`. A custom window pins patching to a
-  // chosen time instead of letting Azure select one.
-  maintenanceWindow dict
+  // Deprecated in favor of maintenanceSchedule, which carries the window
+  // as typed fields.
+  maintenanceWindow @maturity("deprecated") dict
+  // Weekly window in which Azure applies planned maintenance
+  maintenanceSchedule azure.subscription.maintenanceWindow
   // Whether the MySQL flexible server is reachable from the public internet
   //
   // True when `publicNetworkAccess` is enabled AND at least one firewall rule
@@ -8866,12 +9385,11 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   encryptionKeyVersion string
   // Generation timestamps for the account's data-plane keys
   //
-  // Keyed by `primaryMasterKey`, `secondaryMasterKey`,
-  // `primaryReadonlyMasterKey`, and `secondaryReadonlyMasterKey`, each
-  // holding a `generationTime`. These are the only record of how old
-  // an account key is, which is what a rotation policy is measured
-  // against.
-  keysMetadata dict
+  // Deprecated in favor of masterKeyMetadata, which carries the four key
+  // generation times as typed fields.
+  keysMetadata @maturity("deprecated") dict
+  // Generation times of the account's four master keys
+  masterKeyMetadata azure.subscription.cosmosDbService.account.keysMetadata
   // Optional capabilities turned on for the account
   //
   // Capability names such as EnableServerless,
@@ -9099,10 +9617,11 @@ private azure.subscription.cosmosDbService.postgresqlCluster @defaults("postgres
   readReplicas []string
   // Maintenance window of the cluster
   //
-  // Keys: `customWindow` (whether a custom maintenance window is enabled),
-  // `dayOfWeek` (preferred day of the week, 0 to 6), `startHour`, and
-  // `startMinute`.
-  maintenanceWindow dict
+  // Deprecated in favor of maintenanceSchedule, which carries the window
+  // as typed fields.
+  maintenanceWindow @maturity("deprecated") dict
+  // Weekly window in which Azure applies planned maintenance
+  maintenanceSchedule azure.subscription.maintenanceWindow
   // Server names in the cluster
   //
   // Each entry has keys `name` (the server name) and
@@ -9126,10 +9645,39 @@ private azure.subscription.cosmosDbService.account.sqlRoleDefinition @defaults("
   roleType string
   // Scopes at or below which assignments using this definition may be created
   assignableScopes []string
-  // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
-  permissions []dict
+  // Permission set granted by this role
+  //
+  // Deprecated in favor of dataPermissions.
+  permissions @maturity("deprecated") []dict
+  // Permission sets granted by this role
+  //
+  // Each entry lists the data actions the role allows and the ones it
+  // withholds. A role granting the wildcard action carries full data-plane
+  // access to everything its assignable scopes cover.
+  dataPermissions []azure.subscription.cosmosDbService.account.roleDefinitionPermission
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+
+// Permission set of a Cosmos DB data-plane role definition
+//
+// One block of data actions a role definition allows, together with the
+// actions it withholds from that block. Cosmos evaluates the allowed actions
+// first and then removes the withheld ones, so a role with a wildcard in
+// dataActions is only as narrow as its notDataActions make it.
+private azure.subscription.cosmosDbService.account.roleDefinitionPermission @defaults("dataActions") {
+  // Identifier of the permission block, empty when Cosmos returns none
+  id string
+  // Data actions the role allows, for example "Microsoft.DocumentDB/databaseAccounts/readMetadata"
+  //
+  // The wildcard "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/*"
+  // grants every data-plane operation on the databases the scope covers.
+  dataActions []string
+  // Data actions withheld from the allowed set
+  //
+  // Subtracted from dataActions after it is evaluated, so this is what
+  // narrows a wildcard grant.
+  notDataActions []string
 }
 
 // Azure Cosmos DB SQL data-plane role assignment
@@ -9164,8 +9712,16 @@ private azure.subscription.cosmosDbService.account.cassandraRoleDefinition @defa
   roleType string
   // Scopes at or below which assignments using this definition may be created
   assignableScopes []string
-  // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
-  permissions []dict
+  // Permission set granted by this role
+  //
+  // Deprecated in favor of dataPermissions.
+  permissions @maturity("deprecated") []dict
+  // Permission sets granted by this role
+  //
+  // Each entry lists the data actions the role allows and the ones it
+  // withholds. A role granting the wildcard action carries full data-plane
+  // access to everything its assignable scopes cover.
+  dataPermissions []azure.subscription.cosmosDbService.account.roleDefinitionPermission
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -9204,8 +9760,16 @@ private azure.subscription.cosmosDbService.account.gremlinRoleDefinition @defaul
   roleType string
   // Scopes at or below which assignments using this definition may be created
   assignableScopes []string
-  // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
-  permissions []dict
+  // Permission set granted by this role
+  //
+  // Deprecated in favor of dataPermissions.
+  permissions @maturity("deprecated") []dict
+  // Permission sets granted by this role
+  //
+  // Each entry lists the data actions the role allows and the ones it
+  // withholds. A role granting the wildcard action carries full data-plane
+  // access to everything its assignable scopes cover.
+  dataPermissions []azure.subscription.cosmosDbService.account.roleDefinitionPermission
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -9244,8 +9808,16 @@ private azure.subscription.cosmosDbService.account.tableRoleDefinition @defaults
   roleType string
   // Scopes at or below which assignments using this definition may be created
   assignableScopes []string
-  // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
-  permissions []dict
+  // Permission set granted by this role
+  //
+  // Deprecated in favor of dataPermissions.
+  permissions @maturity("deprecated") []dict
+  // Permission sets granted by this role
+  //
+  // Each entry lists the data actions the role allows and the ones it
+  // withholds. A role granting the wildcard action carries full data-plane
+  // access to everything its assignable scopes cover.
+  dataPermissions []azure.subscription.cosmosDbService.account.roleDefinitionPermission
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -9284,8 +9856,16 @@ private azure.subscription.cosmosDbService.account.mongoMIRoleDefinition @defaul
   roleType string
   // Scopes at or below which assignments using this definition may be created
   assignableScopes []string
-  // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
-  permissions []dict
+  // Permission set granted by this role
+  //
+  // Deprecated in favor of dataPermissions.
+  permissions @maturity("deprecated") []dict
+  // Permission sets granted by this role
+  //
+  // Each entry lists the data actions the role allows and the ones it
+  // withholds. A role granting the wildcard action carries full data-plane
+  // access to everything its assignable scopes cover.
+  dataPermissions []azure.subscription.cosmosDbService.account.roleDefinitionPermission
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -9450,11 +10030,15 @@ azure.subscription.keyVaultService.managedHsm @defaults("name location") {
   publicNetworkAccess string
   // Inbound network rule set
   //
-  // Keys: `bypass` ("AzureServices" or "None"), `defaultAction`
-  // ("Allow" or "Deny", applied when no rule matches), `ipRules` (a
-  // list of `{value}` allowed CIDR ranges), `virtualNetworkRules` (a
-  // list of `{id}` allowed subnet resource IDs), and `serviceTags`.
-  networkAcls dict
+  // Deprecated in favor of networkRuleSet.
+  networkAcls @maturity("deprecated") dict
+  // Inbound network rule set
+  //
+  // The IP, virtual-network and service-tag rules that decide which
+  // callers reach the pool, and the default action applied when none of
+  // them matches. Null when the pool sets no rules, which leaves it
+  // reachable from anywhere its publicNetworkAccess allows.
+  networkRuleSet() azure.subscription.keyVaultService.managedHsm.networkRuleSet
   // Provisioning state
   provisioningState string
   // Scheduled purge date (if soft-deleted)
@@ -9609,6 +10193,28 @@ private azure.subscription.keyVaultService.vault.networkAcls @defaults("defaultA
   virtualNetworkSubnetIds []string
 }
 
+// Inbound network rule set of a managed HSM pool
+//
+// The rules that decide which callers reach the pool over the network, and
+// the default action applied when none of them matches. A pool whose default
+// action is Allow is reachable from every address its publicNetworkAccess
+// permits, whatever the rules say.
+private azure.subscription.keyVaultService.managedHsm.networkRuleSet @defaults("defaultAction bypass") {
+  // Whether trusted Azure services can bypass the network rules ("AzureServices" or "None")
+  bypass string
+  // Action applied when no IP, virtual-network, or service-tag rule matches ("Allow" or "Deny")
+  //
+  // Evaluated after bypass. Allow leaves the pool open to every caller
+  // publicNetworkAccess admits, which makes the rule list decorative.
+  defaultAction string
+  // Allowed IPv4 address ranges, in CIDR notation
+  ipRules []string
+  // Resource IDs of the virtual network subnets allowed to reach the pool
+  virtualNetworkSubnetIds []string
+  // Names of the Azure service tags allowed to reach the pool
+  serviceTags []string
+}
+
 // Azure Key Vault key auto-rotation
 private azure.subscription.keyVaultService.key.autorotation @defaults("enabled") {
   // Key ID
@@ -9659,19 +10265,42 @@ private azure.subscription.keyVaultService.key @defaults("kid keyName") {
 private azure.subscription.keyVaultService.key.rotationPolicyObject @defaults("enabled") {
   // Lifetime actions for the rotation policy
   //
-  // Each entry has `action` (`{type}`, where type is "Rotate" or
-  // "Notify") and `trigger` (`{timeAfterCreate, timeBeforeExpiry}`,
-  // ISO 8601 durations such as "P90D" that schedule the action relative
-  // to key creation or expiry).
-  lifetimeActions []dict
+  // Deprecated in favor of actions.
+  lifetimeActions @maturity("deprecated") []dict
+  // Lifetime actions for the rotation policy
+  //
+  // One entry per scheduled action. A policy carrying only a Notify
+  // action warns before a key expires and never rotates it.
+  actions []azure.subscription.keyVaultService.key.rotationPolicyObject.action
   // Attributes of the rotation policy
   //
-  // Keys: `expiryTime` (ISO 8601 duration giving the lifetime of newly
-  // rotated key versions, such as "P90D"), `created`, and `updated`
-  // (timestamps for the policy itself).
-  attributes dict
+  // Deprecated in favor of policyAttributes, which carries the key version
+  // lifetime and the policy provenance as typed fields.
+  attributes @maturity("deprecated") dict
+  // Lifetime and provenance the policy records
+  policyAttributes azure.subscription.keyVaultService.key.rotationPolicyObject.attributes
   // Whether automatic key rotation is enabled (true if rotationPolicy exists with Rotate action)
   enabled bool
+}
+
+// Lifetime action of a Key Vault key rotation policy
+//
+// One action Key Vault performs over a key's lifetime, and the trigger that
+// schedules it. Only a Rotate action creates a new key version; a Notify
+// action sends an Event Grid message and leaves the key as it is.
+private azure.subscription.keyVaultService.key.rotationPolicyObject.action @defaults("actionType timeAfterCreate timeBeforeExpiry") {
+  // Action Key Vault performs ("Rotate" or "Notify")
+  actionType string
+  // Time after key creation the action fires, in ISO 8601 duration form
+  //
+  // For example "P90D". Applies to Rotate only. Empty when the action is
+  // scheduled against expiry instead.
+  timeAfterCreate string
+  // Time before key expiry the action fires, in ISO 8601 duration form
+  //
+  // For example "P30D". Empty when the action is scheduled against
+  // creation instead.
+  timeBeforeExpiry string
 }
 
 // Azure Key Vault certificate
@@ -10164,15 +10793,72 @@ private azure.subscription.monitorService.diagnosticsetting @defaults("id name")
   enabledMetricCategories []string
   // Per-category log settings
   //
-  // Each entry describes one log stream with its `category` (or
-  // `categoryGroup`), whether it is `enabled`, and the legacy
-  // `retentionPolicy` (retention is now managed at the destination).
-  logs []dict
+  // Deprecated in favor of logSettings.
+  logs @maturity("deprecated") []dict
   // Per-category metric settings
   //
-  // Each entry describes one metric stream with its `category`, whether
-  // it is `enabled`, and the legacy `retentionPolicy`.
-  metrics []dict
+  // Deprecated in favor of metricSettings.
+  metrics @maturity("deprecated") []dict
+  // Per-category log settings
+  //
+  // One entry per log stream the setting can forward, whether or not it
+  // is turned on. A category that is present and disabled is a category
+  // the resource could emit and does not, which is what separates an
+  // incomplete diagnostic setting from one the resource type cannot
+  // support.
+  logSettings []azure.subscription.monitorService.diagnosticsetting.logSetting
+  // Per-category metric settings
+  //
+  // One entry per metric stream the setting can forward, whether or not
+  // it is turned on.
+  metricSettings []azure.subscription.monitorService.diagnosticsetting.metricSetting
+}
+
+// Log category of a diagnostic setting
+//
+// One log stream a diagnostic setting can forward, named either by category
+// or by category group, together with whether it is turned on and the legacy
+// per-setting retention that Azure now manages at the destination instead.
+private azure.subscription.monitorService.diagnosticsetting.logSetting @defaults("category categoryGroup enabled") {
+  // Whether this log category is forwarded
+  enabled bool
+  // Diagnostic log category name, empty when the setting names a category group instead
+  category string
+  // Diagnostic log category group name ("allLogs" or "audit"), empty when the setting names a single category
+  //
+  // A setting written against a group forwards every category in it,
+  // including categories added to the group later, so a group and a
+  // hand-listed set of categories are not interchangeable.
+  categoryGroup string
+  // Whether the legacy per-setting retention policy is enabled
+  //
+  // Retention is now set on the destination (the storage account or Log
+  // Analytics workspace), so this is false on a setting created since
+  // that change.
+  retentionEnabled bool
+  // Days the legacy per-setting retention policy keeps events; 0 keeps them indefinitely
+  retentionDays int
+}
+
+// Metric category of a diagnostic setting
+//
+// One metric stream a diagnostic setting can forward, together with whether
+// it is turned on, its aggregation interval, and the legacy per-setting
+// retention that Azure now manages at the destination instead.
+private azure.subscription.monitorService.diagnosticsetting.metricSetting @defaults("category enabled timeGrain") {
+  // Whether this metric category is forwarded
+  enabled bool
+  // Diagnostic metric category name
+  category string
+  // Aggregation interval of the metric, in ISO 8601 duration form (for example "PT1M")
+  timeGrain string
+  // Whether the legacy per-setting retention policy is enabled
+  //
+  // Retention is now set on the destination, so this is false on a
+  // setting created since that change.
+  retentionEnabled bool
+  // Days the legacy per-setting retention policy keeps metrics; 0 keeps them indefinitely
+  retentionDays int
 }
 
 // Azure Monitor diagnostic settings category
@@ -10387,9 +11073,41 @@ private azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMa
   publicIpAddress string
   // Per-port just-in-time rules
   //
-  // Each entry carries number, protocol, maxRequestAccessDuration, and either
-  // allowedSourceAddressPrefix or allowedSourceAddressPrefixes.
-  ports []dict
+  // Deprecated in favor of portRules.
+  ports @maturity("deprecated") []dict
+  // Per-port just-in-time rules
+  //
+  // One rule per port the policy can open on demand, with the sources it
+  // may be opened to and how long a grant lasts.
+  portRules []azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule
+}
+
+// Just-in-time port rule
+//
+// One port a just-in-time policy can open on a virtual machine, the sources
+// it may be opened to, and the longest a single grant can last. A rule
+// allowing "*" opens the port to the whole internet for the duration of every
+// approved request, which makes just-in-time access a delay rather than a
+// restriction.
+private azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule @defaults("number protocol maxRequestAccessDuration") {
+  // Port number the rule governs
+  number int
+  // Transport protocol the rule governs ("TCP", "UDP", or "*")
+  protocol string
+  // Longest a single access grant lasts, in ISO 8601 duration form
+  //
+  // At least 5 minutes and at most 1 day, for example "PT3H".
+  maxRequestAccessDuration string
+  // Single source address or CIDR range access may be granted to
+  //
+  // Mutually exclusive with allowedSourceAddressPrefixes; empty when the
+  // rule uses the list form instead.
+  allowedSourceAddressPrefix string
+  // Source addresses or CIDR ranges access may be granted to
+  //
+  // Mutually exclusive with allowedSourceAddressPrefix; empty when the
+  // rule uses the single-value form instead.
+  allowedSourceAddressPrefixes []string
 }
 
 // Microsoft Defender secure score
@@ -11476,6 +12194,243 @@ private azure.subscription.authorizationService.roleAssignment  @defaults("princ
   principal() azure.entraPrincipal
 }
 
+// Azure resource SKU
+//
+// The billable tier and capacity an Azure resource is provisioned at. The tier
+// gates which security features a service can use, so it is read together with
+// the feature flags it enables. Azure models a different subset of the SKU
+// members per service, and a member the service does not report reads null
+// rather than an empty value.
+private azure.subscription.resourceSku @defaults("name tier") {
+  // SKU name, the billable product identifier
+  name string
+  // SKU tier gating the available feature set
+  //
+  // Commonly "Free", "Basic", "Standard", "Premium" or "Isolated", with the
+  // exact set varying by service. Null on services whose SKU carries no tier,
+  // among them Azure Cache for Redis and Azure Automation.
+  tier string
+  // SKU size within the tier
+  size string
+  // SKU family, the hardware or capability generation the SKU belongs to
+  family string
+  // SKU model, reported by the services that version their SKUs by model
+  model string
+  // Number of provisioned units of the SKU
+  capacity int
+}
+
+// Azure managed identity assignment
+//
+// The managed identity configuration attached to an Azure resource: whether
+// the resource carries a system-assigned identity, user-assigned identities,
+// or both, the object ID of the system-assigned principal, and the tenant that
+// owns it. Read userAssignedIdentities to reach the standalone identities and,
+// through them, the role assignments that grant the resource its privileges. A
+// member the service does not report reads null rather than an empty value.
+private azure.subscription.resourceIdentity @defaults("type principalId") {
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  type string
+  // Object ID of the system-assigned managed identity principal
+  //
+  // Null on the services whose identity block carries no principal, among
+  // them an Azure Batch pool.
+  principalId string
+  // Entra ID tenant that owns the system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the resource
+  userAssignedIdentities() []azure.subscription.managedIdentity
+}
+
+// Azure managed database maintenance window
+//
+// The weekly window in which Azure applies planned maintenance to a managed
+// database server, or the marker that the server takes the system default
+// window instead. The day of week runs 0 for Sunday through 6 for Saturday and
+// the start time is expressed in UTC.
+private azure.subscription.maintenanceWindow @defaults("customWindow dayOfWeek startHour") {
+  // Whether a custom window is in effect, "Enabled" or "Disabled"
+  customWindow string
+  // Day of the week the window opens, 0 for Sunday through 6 for Saturday
+  dayOfWeek int
+  // Hour of the day the window opens, in UTC
+  startHour int
+  // Minute of the hour the window opens
+  startMinute int
+}
+
+// Azure Cache for Redis server configuration
+//
+// The Redis server settings Azure reports for a cache: whether unauthenticated
+// access is permitted, whether Microsoft Entra ID authentication is enabled,
+// the eviction policy, and the RDB and AOF persistence settings together with
+// the credential the cache uses to reach its backup storage. ARM reports every
+// one of these as a string rather than a boolean, so "true" and "false" arrive
+// as text.
+private azure.subscription.cacheService.redisInstance.redisConfiguration @defaults("authNotRequired aadEnabled maxmemoryPolicy") {
+  // Whether the cache accepts connections without an access key
+  //
+  // Azure reports "true" when key authentication is turned off, and leaves the
+  // setting absent (null) when it is required.
+  authNotRequired string
+  // Whether Microsoft Entra ID authentication is enabled, "true" or "false"
+  aadEnabled string
+  // Key eviction policy applied when the cache reaches its memory limit
+  //
+  // For example "volatile-lru", "allkeys-lru", "volatile-random",
+  // "allkeys-random", "volatile-ttl", or "noeviction".
+  maxmemoryPolicy string
+  // Whether RDB snapshot persistence is enabled, "true" or "false"
+  rdbBackupEnabled string
+  // Interval between RDB snapshots, in minutes
+  rdbBackupFrequency string
+  // Whether AOF persistence is enabled, "true" or "false"
+  aofBackupEnabled string
+  // Credential the cache uses to reach its data-persistence storage account
+  //
+  // "SAS" for a shared access signature or "ManagedIdentity" for a managed
+  // identity, which avoids a long-lived secret in the cache configuration.
+  preferredDataPersistenceAuthMethod string
+}
+
+// Cosmos DB account key metadata
+//
+// When each of the four account master keys was last generated. A key that has
+// not been regenerated in a long time is the signal a key-rotation audit is
+// looking for, and the read-only keys rotate independently of the read-write
+// ones.
+private azure.subscription.cosmosDbService.account.keysMetadata {
+  // Metadata of the primary read-write master key
+  primaryMasterKey azure.subscription.cosmosDbService.account.accountKeyMetadata
+  // Metadata of the secondary read-write master key
+  secondaryMasterKey azure.subscription.cosmosDbService.account.accountKeyMetadata
+  // Metadata of the primary read-only master key
+  primaryReadonlyMasterKey azure.subscription.cosmosDbService.account.accountKeyMetadata
+  // Metadata of the secondary read-only master key
+  secondaryReadonlyMasterKey azure.subscription.cosmosDbService.account.accountKeyMetadata
+}
+
+// Cosmos DB account key metadata entry
+//
+// The provenance Azure records for a single Cosmos DB account master key.
+private azure.subscription.cosmosDbService.account.accountKeyMetadata @defaults("generationTime") {
+  // When the key was last generated; null when Azure has never recorded a rotation
+  generationTime time
+}
+
+// Traffic Manager profile DNS settings
+//
+// The DNS name a Traffic Manager profile answers on and the time to live it
+// hands out. A short TTL shortens the window in which clients keep resolving
+// to an endpoint the profile has already taken out of rotation, which is what
+// a failover-readiness check looks at.
+private azure.subscription.networkService.trafficManagerProfile.dnsSettings @defaults("fqdn ttl") {
+  // Leftmost label of the profile's DNS name, unique within trafficmanager.net
+  relativeName string
+  // Fully qualified DNS name the profile answers on
+  fqdn string
+  // Time to live of the DNS responses, in seconds
+  ttl int
+}
+
+// SQL failover group read-write endpoint
+//
+// How the read-write listener of a failover group fails over to the secondary
+// server. An automatic policy fails over without an operator, after the grace
+// period has elapsed; a manual policy leaves the group on the primary until
+// someone triggers the failover.
+private azure.subscription.sqlService.server.failoverGroup.readWriteEndpoint @defaults("failoverPolicy") {
+  // Failover policy of the read-write endpoint, "Automatic" or "Manual"
+  failoverPolicy string
+  // Grace period Azure waits before failing over with possible data loss, in minutes
+  //
+  // Null on a manual policy, where no automatic failover is attempted.
+  failoverWithDataLossGracePeriodMinutes int
+}
+
+// SQL failover group read-only endpoint
+//
+// Whether the read-only listener of a failover group follows the primary when
+// the group fails over. Disabled means read-only traffic stops rather than
+// following the new primary.
+private azure.subscription.sqlService.server.failoverGroup.readOnlyEndpoint @defaults("failoverPolicy") {
+  // Failover policy of the read-only endpoint, "Enabled" or "Disabled"
+  failoverPolicy string
+}
+
+// Defender for Storage feature operational status
+//
+// The status Microsoft Defender for Storage reports for one of its features on
+// an account. A feature can be switched on in the configuration and still not
+// be running, so a "the feature is enabled" check that ignores this status can
+// report protection that is not in effect.
+private azure.subscription.storageService.account.defenderForStorageSetting.operationStatus @defaults("code message") {
+  // Status code, "Succeeded" when the feature is operating
+  code string
+  // Human-readable explanation of the status; empty when the feature is operating
+  message string
+}
+
+// Key rotation policy attributes
+//
+// How long a key version stays current under the rotation policy, and when the
+// policy itself was created and last changed. The expiry time is an ISO 8601
+// duration, for example "P90D" for ninety days, and is the value a
+// "keys rotate at least every N days" check reads.
+private azure.subscription.keyVaultService.key.rotationPolicyObject.attributes @defaults("expiryTime") {
+  // Lifetime of a key version created under this policy, as an ISO 8601 duration
+  //
+  // For example "P90D" or "P1Y". Null when the policy sets no expiry, which
+  // leaves key versions valid indefinitely.
+  expiryTime string
+  // When the rotation policy was created
+  created time
+  // When the rotation policy was last updated
+  updated time
+}
+
+// Service Bus namespace firewall IP rule
+//
+// A single entry of the namespace firewall: the address or CIDR range the rule
+// covers and what the namespace does with traffic from it. Azure only supports
+// an allow action today, so a rule list that is empty while public network
+// access is enabled means the namespace is reachable from anywhere.
+private azure.subscription.serviceBusService.namespace.networkRules.ipRule @defaults("ipMask action") {
+  // IPv4 address or CIDR range the rule covers
+  ipMask string
+  // Action taken for traffic from the range, "Allow"
+  action string
+}
+
+// Event Hubs namespace firewall IP rule
+//
+// A single entry of the namespace firewall: the address or CIDR range the rule
+// covers and what the namespace does with traffic from it. Azure only supports
+// an allow action today, so a rule list that is empty while public network
+// access is enabled means the namespace is reachable from anywhere.
+private azure.subscription.eventHubService.namespace.networkRules.ipRule @defaults("ipMask action") {
+  // IPv4 address or CIDR range the rule covers
+  ipMask string
+  // Action taken for traffic from the range, "Allow"
+  action string
+}
+
+// Event Grid inbound IP rule
+//
+// A single entry of an Event Grid resource firewall: the address or CIDR range
+// the rule covers and what the resource does with publish traffic from it. The
+// rules only take effect while public network access is enabled, so both are
+// read together.
+private azure.subscription.eventGridService.inboundIpRule @defaults("ipMask action") {
+  // IPv4 address or CIDR range the rule covers
+  ipMask string
+  // Action taken for publish traffic from the range, "Allow"
+  action string
+}
+
 // Azure managed identity
 //
 // Azure managed identity that a resource uses to authenticate to other
@@ -11671,7 +12626,12 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   // Workload identity bindings attached to the cluster
   identityBindings() []azure.subscription.aksService.cluster.identityBinding
   // Control-plane managed identity configuration (type, system- and user-assigned identities)
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Principal ID of the cluster's system-assigned control-plane managed identity; empty when a user-assigned identity is used
   principalId string
   // System-assigned control-plane managed identity of the cluster; null when a user-assigned identity is used
@@ -12381,12 +13341,13 @@ private azure.subscription.iotService.iotHub @defaults("id name location") {
   location string
   // Tags applied to the IoT hub
   tags map[string]string
-  // SKU details
+  // IoT Hub SKU
   //
-  // Pricing and scale keyed by `name` (edition, one of F1, B1, B2, B3, S1, S2,
-  // or S3), `tier` (Free, Basic, or Standard), and `capacity` (number of
-  // provisioned units).
-  sku dict
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Provisioning state
   provisioningState string
   // Hub state
@@ -12516,23 +13477,20 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   linkedServers() []azure.subscription.cacheService.redisInstance
   // Cache SKU
   //
-  // Pricing tier and size, keyed by `name` (Basic, Standard, or
-  // Premium), `family` (C for Basic/Standard, P for Premium), and
-  // `capacity` (the size number within the family).
-  sku dict
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Tags of redis cache
   tags map[string]string
   // Redis configuration settings
   //
-  // Server-side settings keyed by their ARM configuration names. Security
-  // and durability relevant keys include `authnotrequired` (when set,
-  // password auth is disabled), `aad-enabled` (Entra ID authentication),
-  // `maxmemory-policy` (eviction strategy), `rdb-backup-enabled` and
-  // `aof-backup-enabled` with their `rdb-storage-connection-string` /
-  // `aof-storage-connection-string-0` / `aof-storage-connection-string-1`
-  // persistence targets, and `preferred-data-persistence-auth-method`
-  // (SAS or ManagedIdentity).
-  redisConfiguration dict
+  // Deprecated in favor of configuration, which carries the Redis server
+  // settings as typed fields.
+  redisConfiguration @maturity("deprecated") dict
+  // Redis server configuration the cache runs with
+  configuration azure.subscription.cacheService.redisInstance.redisConfiguration
   // Number of shards (Premium Cluster Cache only)
   shardCount int
   // Static IP address (when deployed in a VNet)
@@ -12545,13 +13503,11 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   zones []string
   // Managed identity assignment
   //
-  // Managed identity block keyed by `type` (None, SystemAssigned,
-  // UserAssigned, or "SystemAssigned, UserAssigned"), `principalId` and
-  // `tenantId` of the system-assigned identity, and
-  // `userAssignedIdentities`. The system-assigned principal is also
-  // available as principalId, and the attached user-assigned identities
-  // as userAssignedIdentities.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Principal ID of the cache's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // User-assigned managed identities attached to the cache
@@ -12651,11 +13607,11 @@ azure.subscription.dataFactoryService.factory @defaults("name location") {
   publicNetworkAccess string
   // Managed identity assigned to the factory
   //
-  // Keys: type ("SystemAssigned", "UserAssigned", or
-  // "SystemAssigned,UserAssigned"), principalId, tenantId, and
-  // userAssignedIdentities (map keyed by identity resource ID). Null
-  // when no identity is configured.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Provisioning state
   provisioningState string
   // Version of the factory
@@ -12850,13 +13806,11 @@ azure.subscription.synapseService.workspace @defaults("name location") {
   properties dict
   // Managed identity configuration
   //
-  // Identity block for the workspace. Keys include `type` (None,
-  // SystemAssigned, or "SystemAssigned,UserAssigned"), `principalId`
-  // and `tenantId` of the system-assigned identity, and
-  // `userAssignedIdentities` keyed by identity resource ID. The
-  // user-assigned identities are also available through
-  // userAssignedIdentities.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Managed virtual network setting, set to "default" when enabled and empty when disabled
   managedVirtualNetwork string
   // Public network access setting ("Enabled" or "Disabled")
@@ -13288,11 +14242,11 @@ private azure.subscription.containerRegistryService.registry.credentialSet @defa
   loginServer string
   // Managed identity used to read the Key Vault secrets
   //
-  // Carries `type` ("SystemAssigned", "UserAssigned", "SystemAssigned,
-  // UserAssigned", or "None"), `principalId`, `tenantId`, and
-  // `userAssignedIdentities` (map keyed by user-assigned identity
-  // resource ID).
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Upstream authentication credentials
   //
   // Each entry carries `name` ("Credential1"), the Key Vault secret URIs
@@ -13402,7 +14356,12 @@ azure.subscription.monitorService.workspace @defaults("id name location skuName"
   // Workspace GUID
   customerId string
   // Managed identity configuration (type, principalId, tenantId, userAssignedIdentities)
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // ARM resource ID of the default Data Collection Rule for this workspace
   defaultDataCollectionRuleResourceId string
   // Daily data volume capping
@@ -13699,13 +14658,11 @@ azure.subscription.recoveryServicesService.vault @defaults("id name location sku
   tags map[string]string
   // Managed identity configuration
   //
-  // Managed identity block of the vault, with keys `type` (one of
-  // "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned", or
-  // "None"), `principalId` and `tenantId` for the system-assigned identity,
-  // and `userAssignedIdentities` mapping each assigned identity resource ID
-  // to its client and principal IDs. See userAssignedIdentities for the
-  // resolved user-assigned identity resources.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the vault
   userAssignedIdentities() []azure.subscription.managedIdentity
   // SKU name ("Standard" or "RS0")
@@ -14091,11 +15048,13 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   location string
   // Namespace tags
   tags map[string]string
-  // SKU details
+  // Namespace SKU
   //
-  // Keys: `name` and `tier` (Basic, Standard, or Premium) plus
-  // `capacity` (messaging unit count, Premium only).
-  sku dict
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Namespace status
   status string
   // Service Bus endpoint
@@ -14156,8 +15115,13 @@ private azure.subscription.serviceBusService.namespace.networkRules @defaults("d
   publicNetworkAccess string
   // Whether Microsoft-owned trusted services can bypass the rule set
   trustedServiceAccessEnabled bool
-  // IP allow rules. Each entry is `{ipMask, action}` where `action` is "Allow".
-  ipRules []dict
+  // IP allow rules
+  //
+  // Deprecated in favor of ipAllowRules, which carries the address range and
+  // action of each rule as typed fields.
+  ipRules @maturity("deprecated") []dict
+  // IP rules in the namespace firewall
+  ipAllowRules []azure.subscription.serviceBusService.namespace.networkRules.ipRule
   // Virtual network rules; each references a subnet
   virtualNetworkRules []azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule
 }
@@ -14333,11 +15297,13 @@ azure.subscription.eventHubService.namespace @defaults("id name location") {
   location string
   // Namespace tags
   tags map[string]string
-  // SKU tier and capacity
+  // Namespace SKU
   //
-  // Keys: `name` and `tier` (one of Basic, Standard, or Premium), and
-  // `capacity` (the provisioned throughput or premium units).
-  sku dict
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Namespace status
   status string
   // Whether auto-inflate is enabled
@@ -14410,8 +15376,13 @@ private azure.subscription.eventHubService.namespace.networkRules @defaults("def
   publicNetworkAccess string
   // Whether Microsoft-owned trusted services can bypass the rule set
   trustedServiceAccessEnabled bool
-  // IP allow rules. Each entry is `{ipMask, action}` where `action` is "Allow".
-  ipRules []dict
+  // IP allow rules
+  //
+  // Deprecated in favor of ipAllowRules, which carries the address range and
+  // action of each rule as typed fields.
+  ipRules @maturity("deprecated") []dict
+  // IP rules in the namespace firewall
+  ipAllowRules []azure.subscription.eventHubService.namespace.networkRules.ipRule
   // Virtual network rules; each references a subnet
   virtualNetworkRules []azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule
 }
@@ -14538,8 +15509,13 @@ azure.subscription.eventGridService.topic @defaults("name location publicNetwork
   minimumTlsVersionAllowed string
   // Data residency boundary ("WithinGeopair" or "WithinRegion")
   dataResidencyBoundary string
-  // Inbound IP rules; each entry has ipMask and action ("Allow")
-  inboundIpRules []dict
+  // Inbound IP rules
+  //
+  // Deprecated in favor of inboundIpAllowRules, which carries the address
+  // range and action of each rule as typed fields.
+  inboundIpRules @maturity("deprecated") []dict
+  // Inbound IP rules in the resource firewall
+  inboundIpAllowRules []azure.subscription.eventGridService.inboundIpRule
   // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
   identityType string
   // Number of private endpoint connections to the topic
@@ -14623,8 +15599,13 @@ azure.subscription.eventGridService.domain @defaults("name location publicNetwor
   autoCreateTopicWithFirstSubscription bool
   // Whether domain topics are auto-deleted when the last subscription is deleted
   autoDeleteTopicWithLastSubscription bool
-  // Inbound IP rules; each entry has ipMask and action ("Allow")
-  inboundIpRules []dict
+  // Inbound IP rules
+  //
+  // Deprecated in favor of inboundIpAllowRules, which carries the address
+  // range and action of each rule as typed fields.
+  inboundIpRules @maturity("deprecated") []dict
+  // Inbound IP rules in the resource firewall
+  inboundIpAllowRules []azure.subscription.eventGridService.inboundIpRule
   // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
   identityType string
   // Number of private endpoint connections to the domain
@@ -14727,11 +15708,13 @@ azure.subscription.eventGridService.namespace @defaults("name location publicNet
   publicNetworkAccess string
   // Minimum TLS version accepted from clients ("1.0", "1.1", "1.2")
   minimumTlsVersionAllowed string
-  // Inbound IP rules; each entry has ipMask and action ("Allow")
+  // Inbound IP rules
   //
-  // Only consulted when publicNetworkAccess is "Enabled". An empty list
-  // with public access enabled permits every source address.
-  inboundIpRules []dict
+  // Deprecated in favor of inboundIpAllowRules, which carries the address
+  // range and action of each rule as typed fields.
+  inboundIpRules @maturity("deprecated") []dict
+  // Inbound IP rules in the resource firewall
+  inboundIpAllowRules []azure.subscription.eventGridService.inboundIpRule
   // Whether the MQTT broker is enabled ("Enabled" or "Disabled")
   topicSpacesState string
   // Maximum simultaneous client sessions per authentication name
@@ -14806,12 +15789,48 @@ private azure.subscription.dnsService.zone.recordSet @defaults("id name type") {
   fqdn string
   // Record set properties
   //
-  // Raw record-set properties keyed by record type. The type-specific
-  // record array present depends on the record type: aRecords,
-  // aaaaRecords, cnameRecord, mxRecords, nsRecords, ptrRecords,
-  // srvRecords, txtRecords, caaRecords, and soaRecord. Also carries
-  // fqdn, TTL, metadata, provisioningState, and targetResource.
-  properties dict
+  // Deprecated in favor of the per-record-type fields on this resource:
+  // aRecords, aaaaRecords, nsRecords, ptrRecords, txtRecords, mxRecords,
+  // caaRecords, srvRecords, soaRecord, cnameTarget, targetResourceId,
+  // metadata, and provisioningState.
+  properties @maturity("deprecated") dict
+  // IPv4 addresses of an A record set; empty for every other record type
+  aRecords []string
+  // IPv6 addresses of an AAAA record set; empty for every other record type
+  aaaaRecords []string
+  // Name servers of an NS record set; empty for every other record type
+  //
+  // On a zone's apex NS record set these are the servers the parent zone
+  // must delegate to. A record set here that does not match the
+  // delegation in the parent zone leaves the subdomain unresolvable or,
+  // if the parent still points at a name server that no longer serves the
+  // zone, resolvable by whoever now controls it.
+  nsRecords []string
+  // Target hostnames of a PTR record set; empty for every other record type
+  ptrRecords []string
+  // Text values of a TXT record set; empty for every other record type
+  //
+  // DNS splits a text value into 255-byte chunks on the wire; each entry
+  // here is one record's chunks joined back into the single value the
+  // record carries. SPF, DKIM, DMARC, and domain-ownership verification
+  // tokens all live in TXT records, so this is where an overly broad SPF
+  // policy or a stale verification token shows up.
+  txtRecords []string
+  // Mail exchangers of an MX record set; empty for every other record type
+  mxRecords []azure.subscription.dnsService.zone.recordSet.mxRecord
+  // Certificate authority authorizations of a CAA record set; empty for every other record type
+  //
+  // CAA records name which certificate authorities may issue for the
+  // domain. A zone with no CAA record set lets any public CA issue for it.
+  caaRecords []azure.subscription.dnsService.zone.recordSet.caaRecord
+  // Service locations of an SRV record set; empty for every other record type
+  srvRecords []azure.subscription.dnsService.zone.recordSet.srvRecord
+  // Start-of-authority record of an SOA record set; null for every other record type
+  soaRecord azure.subscription.dnsService.zone.recordSet.soaRecord
+  // User-defined metadata attached to the record set
+  metadata map[string]string
+  // Record set provisioning state
+  provisioningState string
   // Hostname a CNAME record points at
   //
   // Empty for every record type other than CNAME. Normalized to lower
@@ -14842,6 +15861,75 @@ private azure.subscription.dnsService.zone.recordSet @defaults("id name type") {
   // away. Empty for an ordinary record set. A non-empty value means this
   // record cannot be left dangling.
   targetResourceId string
+}
+
+// Mail exchanger in a DNS MX record set
+//
+// One mail server the domain accepts mail through. `preference` orders
+// the servers, lowest first, and `exchange` is the server's hostname.
+private azure.subscription.dnsService.zone.recordSet.mxRecord @defaults("preference exchange") {
+  // Preference value ordering this exchanger against the others; lower is tried first
+  preference int
+  // Hostname of the mail server
+  exchange string
+}
+
+// Certificate authority authorization in a DNS CAA record set
+//
+// One rule about which certificate authority may issue certificates for
+// the domain. `tag` is "issue" (regular certificates), "issuewild"
+// (wildcards), or "iodef" (a reporting address), and `value` is the CA's
+// domain or the reporting URL. `flags` set to 128 marks the property
+// critical, meaning a CA that does not understand the tag must refuse to
+// issue.
+private azure.subscription.dnsService.zone.recordSet.caaRecord @defaults("tag value flags") {
+  // Flags byte; 128 marks the property critical
+  flags int
+  // Property tag ("issue", "issuewild", or "iodef")
+  tag string
+  // Property value: the authorized CA's domain, or the reporting URL for an "iodef" tag
+  value string
+}
+
+// Service location in a DNS SRV record set
+//
+// One host that serves the record set's service. `priority` and `weight`
+// order and load-balance the candidates, and `target` with `port` is
+// where clients connect.
+private azure.subscription.dnsService.zone.recordSet.srvRecord @defaults("priority weight port target") {
+  // Priority of this target; lower is preferred
+  priority int
+  // Relative weight used to distribute load among targets of equal priority
+  weight int
+  // Port the service listens on
+  port int
+  // Hostname of the target
+  target string
+}
+
+// Start-of-authority record of a DNS zone
+//
+// The zone's authoritative parameters: the primary name server in `host`,
+// the zone administrator's address in `email`, the `serialNumber`
+// secondaries compare to detect a change, and the timers that decide how
+// long a stale answer can survive. `minimumTtl` is the negative-caching
+// TTL, so it sets how long a resolver remembers that a name does not
+// exist.
+private azure.subscription.dnsService.zone.recordSet.soaRecord @defaults("host email serialNumber") {
+  // Primary name server for the zone
+  host string
+  // Email address of the zone administrator, in DNS dotted form
+  email string
+  // Serial number secondaries compare to detect that the zone changed
+  serialNumber int
+  // Seconds a secondary waits before checking for a zone update
+  refreshTime int
+  // Seconds a secondary waits before retrying a failed zone update check
+  retryTime int
+  // Seconds a secondary keeps serving the zone when it cannot reach the primary
+  expireTime int
+  // Seconds a resolver caches a negative answer for a name in the zone
+  minimumTtl int
 }
 
 // Azure Private DNS zone
@@ -15162,10 +16250,11 @@ azure.subscription.frontDoorService.profile @defaults("id name location") {
   tags map[string]string
   // Pricing tier
   //
-  // Object with a single `name` key holding the pricing tier:
-  // Standard_AzureFrontDoor, Premium_AzureFrontDoor, Standard_Microsoft,
-  // Standard_Verizon, Premium_Verizon, Standard_Akamai, or Standard_ChinaCdn.
-  sku dict
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Profile kind (frontdoor, cdn)
   kind string
   // Provisioning state
@@ -15605,10 +16694,14 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   corsAllowedOrigins []string
   // IP security restrictions on ingress
   //
-  // Each entry has `name`, `description`, `ipAddressRange` (CIDR), and
-  // `action` ("Allow" or "Deny"). A rule set is all-Allow or all-Deny;
-  // when Allow rules are present, every other source IP is denied.
-  ipSecurityRestrictions []dict
+  // Deprecated in favor of ingressIpRestrictions.
+  ipSecurityRestrictions @maturity("deprecated") []dict
+  // IP security restrictions on ingress
+  //
+  // A rule set is all-Allow or all-Deny. When Allow rules are present
+  // every other source address is denied, so an empty list on an app with
+  // external ingress means the app answers the whole internet.
+  ingressIpRestrictions []azure.subscription.containerAppService.containerApp.ipRestriction
   // Workload profile name in the parent environment ("Consumption" by default)
   workloadProfileName string
   // Min replica count
@@ -15653,6 +16746,22 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   revisions() []azure.subscription.containerAppService.containerApp.revision
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+
+// Ingress IP restriction rule of a container app
+//
+// One CIDR range the app's ingress allows or denies, together with the name
+// and description the rule carries. A rule set is all-Allow or all-Deny: when
+// Allow rules are present every source outside them is denied.
+private azure.subscription.containerAppService.containerApp.ipRestriction @defaults("name ipAddressRange action") {
+  // Name of the restriction rule
+  name string
+  // Description of the restriction rule
+  description string
+  // CIDR range the rule matches
+  ipAddressRange string
+  // Whether the rule allows or denies the range ("Allow" or "Deny")
+  action string
 }
 
 // Container definition inside a Container App
@@ -15771,11 +16880,11 @@ azure.subscription.containerAppService.job @defaults("name location triggerType 
   replicaRetryLimit int
   // Managed identity
   //
-  // Keys: `type` ("SystemAssigned", "UserAssigned", "SystemAssigned,
-  // UserAssigned", or "None"), `principalId` and `tenantId` of the
-  // system-assigned identity, and `userAssignedIdentities` keyed by
-  // resource ID.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Container definitions (image, env, resources, probes); flattened
   containers []dict
   // Workload profile name in the parent environment
@@ -15841,11 +16950,11 @@ azure.subscription.containerInstanceService.containerGroup @defaults("name locat
   ccePolicyHash string
   // Managed identity assigned to the group
   //
-  // Keys: type ("None", "SystemAssigned", "UserAssigned", or
-  // "SystemAssigned, UserAssigned"), principalId and tenantId of the
-  // system-assigned identity, and userAssignedIdentities keyed by identity
-  // resource ID.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // IP address type ("Public", "Private", or null)
   ipAddressType string
   // Public IP address, if any
@@ -15980,10 +17089,11 @@ azure.subscription.logicService.workflow @defaults("name location state provisio
   accessEndpoint string
   // Managed identity
   //
-  // Has `type` ("SystemAssigned", "UserAssigned", or "None"), `principalId`,
-  // `tenantId`, and `userAssignedIdentities` (map keyed by the identity's ARM
-  // resource id).
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // ARM id of the linked integration account, if any
   integrationAccountId string
   // ARM id of the linked integration service environment (ISE), if any
@@ -16394,10 +17504,20 @@ private azure.subscription.purviewService.account @defaults("name location publi
   type string
   // Tags on the account
   tags map[string]string
-  // Account SKU (name, capacity)
-  sku dict
+  // Account SKU
+  //
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Friendly display name for the account
   friendlyName string
   // Provisioning state: Succeeded, Failed, Canceled, Creating, Deleting, Moving, SoftDeleting, SoftDeleted, or Unknown
@@ -16464,15 +17584,20 @@ azure.subscription.searchService.service @defaults("id name location publicNetwo
   location string
   // Search service tags
   tags map[string]string
-  // SKU details (name: free, basic, standard, standard2, standard3, storage_optimized_l1, storage_optimized_l2)
-  sku dict
+  // Search service SKU
+  //
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Managed identity configuration
   //
-  // Keys: `type` ("None", "SystemAssigned", "UserAssigned", or
-  // "SystemAssigned, UserAssigned"), `userAssignedIdentities` (map of
-  // user-assigned identity resource IDs), and the read-only `principalId`
-  // and `tenantId` of the system-assigned identity.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Whether the service is reachable from the public internet ("enabled" or "disabled")
   publicNetworkAccess string
   // Whether API-key (local) authentication is disabled, leaving Microsoft Entra ID as the only method
@@ -16691,10 +17816,20 @@ azure.subscription.machineLearningService.workspace @defaults("id name location 
   tags map[string]string
   // Workspace kind (e.g., Default, Hub, Project, FeatureStore)
   kind string
-  // SKU details (name and tier)
-  sku dict
+  // Workspace SKU
+  //
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Immutable workspace identifier assigned by Azure
   workspaceId string
   // Friendly (display) name of the workspace
@@ -16869,7 +18004,12 @@ azure.subscription.machineLearningService.workspace.onlineEndpoint @defaults("na
   // Resource kind metadata used by tooling
   kind string
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Description of the endpoint
   description string
   // Authentication mode: "Key" (non-expiring keys) or "AMLToken" (expiring Azure Machine Learning tokens)
@@ -16955,7 +18095,12 @@ azure.subscription.machineLearningService.workspace.serverlessEndpoint @defaults
   // Endpoint tags
   tags map[string]string
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Authentication mode for the endpoint (e.g., "Key")
   authMode string
   // Lifecycle state of the endpoint (e.g., "Creating", "Online", "Deleting", "Failed")
@@ -16993,7 +18138,12 @@ azure.subscription.machineLearningService.workspace.compute @defaults("name comp
   // Compute tags
   tags map[string]string
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Kind of compute
   //
   // Examples include "AmlCompute", "ComputeInstance", "Kubernetes", "AKS", "VirtualMachine", "DataFactory", "Databricks", "HDInsight", and "SynapseSpark".
@@ -17179,10 +18329,11 @@ azure.subscription.machineLearningService.workspace.batchEndpoint @defaults("nam
   defaultDeploymentName string
   // Managed identity configuration
   //
-  // Keys: `type` ("None", "SystemAssigned", "UserAssigned", or
-  // "SystemAssigned, UserAssigned"), `userAssignedIdentities`, and the
-  // read-only `principalId` and `tenantId` of the system-assigned identity.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Endpoint-specific settings
   properties map[string]string
   // Model deployments behind the endpoint
@@ -17247,7 +18398,12 @@ azure.subscription.machineLearningService.workspace.batchEndpoint.deployment @de
   // Keys: `instanceCount`, `instanceType`, and `properties`.
   resources dict
   // Managed identity configuration
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Deployment-specific settings
   properties map[string]string
   // Creation and last-modification provenance recorded by Azure Resource Manager
@@ -17287,14 +18443,20 @@ azure.subscription.appConfigurationService.configurationStore @defaults("id name
   location string
   // Configuration store tags
   tags map[string]string
-  // SKU details (name: free or standard)
-  sku dict
+  // Configuration store SKU
+  //
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Managed identity configuration
   //
-  // Keys: `type` (None, SystemAssigned, UserAssigned, or
-  // "SystemAssigned, UserAssigned"), `userAssignedIdentities`,
-  // `principalId`, and `tenantId`.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Whether the store is reachable from the public internet ("Enabled" or "Disabled")
   publicNetworkAccess string
   // Whether access-key (local) authentication is disabled, leaving Microsoft Entra ID as the only method
@@ -17377,10 +18539,20 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   kind string
   // Account tags
   tags map[string]string
-  // SKU details (e.g., name "S0", "F0")
-  sku dict
+  // Account SKU
+  //
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Whether the account is reachable from the public internet ("Enabled" or "Disabled")
   publicNetworkAccess string
   // Whether API-key (local) authentication is disabled, leaving Microsoft Entra ID as the only method
@@ -17624,7 +18796,12 @@ azure.subscription.cognitiveServicesService.account.project @defaults("name disp
   // Project tags
   tags map[string]string
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Human-facing display name of the project
   displayName string
   // Project description
@@ -18297,18 +19474,20 @@ azure.subscription.signalRService.signalR @defaults("id name location publicNetw
   tags map[string]string
   // Service mode kind ("SignalR" or "RawWebSockets")
   kind string
-  // SKU details
+  // Instance SKU
   //
-  // Pricing tier of the instance with keys `name` (e.g. Standard_S1,
-  // Free_F1), `tier` (Free, Basic, Standard, or Premium), `capacity`
-  // (unit count), `family`, and `size`.
-  sku dict
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Identity configuration
   //
-  // Managed identity assigned to the instance with keys `type` (None,
-  // SystemAssigned, or UserAssigned), `userAssignedIdentities`,
-  // `principalId`, and `tenantId`.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Public hostname clients connect to
   hostName string
   // External IP of the instance
@@ -18368,10 +19547,20 @@ azure.subscription.webPubSubService.webPubSub @defaults("id name location public
   tags map[string]string
   // Service kind ("WebPubSub" or "SocketIO")
   kind string
-  // SKU details (name, tier, capacity)
-  sku dict
+  // Instance SKU
+  //
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Public hostname clients connect to
   hostName string
   // External IP of the instance
@@ -18430,10 +19619,20 @@ azure.subscription.kustoService.cluster @defaults("id name location publicNetwor
   location string
   // Cluster tags
   tags map[string]string
-  // SKU details (name, tier, capacity)
-  sku dict
+  // Instance SKU
+  //
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Cluster query endpoint URI
   uri string
   // Cluster data ingestion URI
@@ -18737,16 +19936,18 @@ azure.subscription.automationService.account @defaults("id name location publicN
   tags map[string]string
   // SKU
   //
-  // Pricing tier of the account. Keys: `name` (either "Free" or
-  // "Basic"), `capacity`, and `family`.
-  sku dict
+  // Deprecated in favor of skuData, which carries the SKU members as
+  // typed fields.
+  sku @maturity("deprecated") dict
+  // Billable SKU the resource is provisioned at
+  skuData azure.subscription.resourceSku
   // Managed identity configuration
   //
-  // Keys: `type` (one of "None", "SystemAssigned", "UserAssigned", or
-  // "SystemAssigned, UserAssigned"), `userAssignedIdentities` (map keyed
-  // by user-assigned identity resource ID), `principalId`, and
-  // `tenantId`.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Account lifecycle state ("Ok", "Unavailable", "Suspended")
   state string
   // Whether the account is reachable from the public internet
@@ -18864,10 +20065,11 @@ azure.subscription.desktopVirtualizationService.hostPool @defaults("id name loca
   tags map[string]string
   // Managed identity assigned to the host pool
   //
-  // Keys: `type` (the identity model, currently always "SystemAssigned"),
-  // `principalId` (the object ID of the system-assigned identity), and
-  // `tenantId` (the Entra tenant that owns the identity).
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // Host pool type ("Personal", "Pooled", or "BYODesktop")
   hostPoolType string
   // Load-balancing algorithm ("BreadthFirst", "DepthFirst", or "Persistent")
@@ -18977,13 +20179,11 @@ azure.subscription.dataProtectionService.backupVault @defaults("id name location
   provisioningState string
   // Managed identity configuration
   //
-  // Managed identity block of the vault, with keys `type` (one of
-  // "SystemAssigned", "UserAssigned", or "None"), `principalId` and
-  // `tenantId` for the system-assigned identity, and
-  // `userAssignedIdentities` mapping each assigned identity resource ID to
-  // its client and principal IDs. See userAssignedIdentities for the resolved
-  // identity resources.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the vault
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Soft delete state ("AlwaysOn", "On", or "Off")
@@ -19097,13 +20297,11 @@ azure.subscription.netAppService.account @defaults("id name location provisionin
   provisioningState string
   // Managed identity configuration
   //
-  // Managed identity block of the account, with keys `type` (one of
-  // "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned", or
-  // "None"), `principalId` and `tenantId` for the system-assigned identity,
-  // and `userAssignedIdentities` mapping each assigned identity resource ID
-  // to its client and principal IDs. See userAssignedIdentities for the
-  // resolved user-assigned identity resources.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the account
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Domain used for NFSv4 user ID mapping
@@ -19371,14 +20569,11 @@ azure.subscription.dataBoxService.job @defaults("id name status transferType") {
   skuModel string
   // Managed identity configuration
   //
-  // Managed identity block of the job, with keys `type` (one of
-  // "SystemAssigned", "UserAssigned", or "None"), `principalId` and
-  // `tenantId` for the system-assigned identity, and
-  // `userAssignedIdentities` mapping each assigned identity resource ID to
-  // its client and principal IDs. A user-assigned identity is what reaches a
-  // customer-managed passkey. See userAssignedIdentities for the resolved
-  // identity resources.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the job
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Kind of job details Azure returned ("DataBox", "DataBoxDisk", "DataBoxHeavy", or "DataBoxCustomerDisk")
@@ -19574,13 +20769,11 @@ azure.subscription.elasticSanService.elasticSan.volumeGroup @defaults("id name e
   enforceDataIntegrityCheckForIscsi bool
   // Managed identity configuration
   //
-  // Managed identity block of the volume group, with keys `type` (one of
-  // "SystemAssigned", "UserAssigned", or "None"), `principalId` and
-  // `tenantId` for the system-assigned identity, and
-  // `userAssignedIdentities` mapping each assigned identity resource ID to
-  // its client and principal IDs. See userAssignedIdentities for the
-  // resolved identity resources.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the volume group
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Name of the Key Vault key encrypting the group
@@ -19830,13 +21023,11 @@ azure.subscription.storageCacheService.amlFilesystem @defaults("id name location
   provisioningState string
   // Managed identity configuration
   //
-  // Managed identity block of the file system, with keys `type` (one of
-  // "UserAssigned" or "None"), `principalId` and `tenantId`, and
-  // `userAssignedIdentities` mapping each assigned identity resource ID to
-  // its client and principal IDs. A user-assigned identity is what reaches
-  // the customer-managed key. See userAssignedIdentities for the resolved
-  // identity resources.
-  identity dict
+  // Deprecated in favor of resourceIdentity, which carries the managed
+  // identity members as typed fields.
+  identity @maturity("deprecated") dict
+  // Managed identity attached to the resource
+  resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the file system
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Provisioned storage capacity in TiB

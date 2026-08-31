@@ -137,12 +137,8 @@ func vmScaleSetToMql(runtime *plugin.Runtime, vmss compute.VirtualMachineScaleSe
 	if err != nil {
 		return nil, err
 	}
-	var principalId *string
-	var userAssignedIdentityIds []string
-	if vmss.Identity != nil {
-		principalId = vmss.Identity.PrincipalID
-		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(vmss.Identity.UserAssignedIdentities)
-	}
+	vmssIdentity := orZero(vmss.Identity)
+	userAssignedIdentityIds := sortedUserAssignedIdentityIDs(vmssIdentity.UserAssignedIdentities)
 
 	args := map[string]*llx.RawData{
 		"id":          llx.StringDataPtr(vmss.ID),
@@ -154,7 +150,15 @@ func vmScaleSetToMql(runtime *plugin.Runtime, vmss compute.VirtualMachineScaleSe
 		"sku":         llx.DictData(sku),
 		"properties":  llx.DictData(properties),
 		"identity":    llx.DictData(identityDict),
-		"principalId": llx.StringDataPtr(principalId),
+		"principalId": llx.StringDataPtr(vmssIdentity.PrincipalID),
+	}
+	vmssSku := orZero(vmss.SKU)
+	if err := setSkuData(runtime, args, skuName(vmssSku.Name), skuTier(vmssSku.Tier), skuCapacity(vmssSku.Capacity)); err != nil {
+		return nil, err
+	}
+	if err := setResourceIdentity(runtime, args, userAssignedIdentityIds,
+		identityType(vmssIdentity.Type), identityPrincipalId(vmssIdentity.PrincipalID), identityTenantId(vmssIdentity.TenantID)); err != nil {
+		return nil, err
 	}
 
 	if vmss.Properties != nil {
@@ -317,6 +321,10 @@ func vmScaleSetInstanceToMql(runtime *plugin.Runtime, inst compute.VirtualMachin
 		"zones":      llx.ArrayData(strPtrsToAny(inst.Zones), types.String),
 		"properties": llx.DictData(properties),
 		"sku":        llx.DictData(sku),
+	}
+	instSku := orZero(inst.SKU)
+	if err := setSkuData(runtime, args, skuName(instSku.Name), skuTier(instSku.Tier), skuCapacity(instSku.Capacity)); err != nil {
+		return nil, err
 	}
 
 	if inst.Properties != nil {

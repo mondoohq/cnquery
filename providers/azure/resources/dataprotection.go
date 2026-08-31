@@ -124,10 +124,8 @@ func createBackupVaultResource(runtime *plugin.Runtime, vault *armdataprotection
 		return nil, err
 	}
 
-	var userAssignedIdentityIds []string
-	if vault.Identity != nil {
-		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(vault.Identity.UserAssignedIdentities)
-	}
+	vaultIdentity := orZero(vault.Identity)
+	userAssignedIdentityIds := sortedUserAssignedIdentityIDs(vaultIdentity.UserAssignedIdentities)
 
 	var softDeleteState, immutabilityState string
 	var softDeleteRetentionDays float64
@@ -169,6 +167,12 @@ func createBackupVaultResource(runtime *plugin.Runtime, vault *armdataprotection
 		alertsForAllJobFailures = enumString(props.MonitoringSettings.AzureMonitorAlertSettings.AlertsForAllJobFailures)
 	}
 
+	resourceIdentity, err := resourceIdentityData(runtime, convert.ToValue(vault.ID), userAssignedIdentityIds,
+		identityType(vaultIdentity.Type), identityPrincipalId(vaultIdentity.PrincipalID), identityTenantId(vaultIdentity.TenantID))
+	if err != nil {
+		return nil, err
+	}
+
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionDataProtectionServiceBackupVault,
 		map[string]*llx.RawData{
 			"id":                              llx.StringDataPtr(vault.ID),
@@ -179,6 +183,7 @@ func createBackupVaultResource(runtime *plugin.Runtime, vault *armdataprotection
 			"etag":                            llx.StringDataPtr(vault.ETag),
 			"provisioningState":               llx.StringData(enumString(props.ProvisioningState)),
 			"identity":                        llx.DictData(identity),
+			"resourceIdentity":                resourceIdentity,
 			"softDeleteState":                 llx.StringData(softDeleteState),
 			"softDeleteRetentionPeriodInDays": llx.FloatData(softDeleteRetentionDays),
 			"immutabilityState":               llx.StringData(immutabilityState),

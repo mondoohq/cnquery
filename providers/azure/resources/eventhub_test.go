@@ -48,7 +48,7 @@ func TestCreateEventHubNamespaceRawData(t *testing.T) {
 		},
 	}
 
-	raw, err := createEventHubNamespaceRawData(ns)
+	raw, err := createEventHubNamespaceRawData(azureTestRuntime(), ns)
 	require.NoError(t, err)
 
 	assert.Equal(t, "/subscriptions/s/resourceGroups/rg/providers/Microsoft.EventHub/namespaces/ns1", raw["id"].Value)
@@ -73,7 +73,7 @@ func TestCreateEventHubNamespaceRawData(t *testing.T) {
 func TestCreateEventHubNamespaceRawDataWithoutProperties(t *testing.T) {
 	ns := &armeventhub.EHNamespace{ID: ptr("/subscriptions/s/x/ns1"), Name: ptr("ns1")}
 
-	raw, err := createEventHubNamespaceRawData(ns)
+	raw, err := createEventHubNamespaceRawData(azureTestRuntime(), ns)
 
 	require.NoError(t, err)
 	assert.Equal(t, "ns1", raw["name"].Value)
@@ -98,7 +98,7 @@ func TestCreateEventHubNamespaceRawDataSkipsNilKeyVaultProperties(t *testing.T) 
 		},
 	}
 
-	raw, err := createEventHubNamespaceRawData(ns)
+	raw, err := createEventHubNamespaceRawData(azureTestRuntime(), ns)
 
 	require.NoError(t, err)
 	assert.Len(t, raw["cmkKeys"].Value, 1)

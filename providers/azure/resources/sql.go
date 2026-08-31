@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -497,12 +498,14 @@ func (a *mqlAzureSubscriptionSqlServiceServer) virtualNetworkRules() ([]any, err
 
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.virtualNetworkRule",
 				map[string]*llx.RawData{
-					"__id":                   llx.StringData(subResourceCacheID(entry.ID, a.Id.Data, "virtualNetworkRules", convert.ToValue(entry.Name))),
-					"id":                     llx.StringDataPtr(entry.ID),
-					"name":                   llx.StringDataPtr(entry.Name),
-					"type":                   llx.StringDataPtr(entry.Type),
-					"properties":             llx.DictData(properties),
-					"virtualNetworkSubnetId": llx.StringDataPtr(orZero(entry.Properties).VirtualNetworkSubnetID),
+					"__id":                             llx.StringData(subResourceCacheID(entry.ID, a.Id.Data, "virtualNetworkRules", convert.ToValue(entry.Name))),
+					"id":                               llx.StringDataPtr(entry.ID),
+					"name":                             llx.StringDataPtr(entry.Name),
+					"type":                             llx.StringDataPtr(entry.Type),
+					"properties":                       llx.DictData(properties),
+					"virtualNetworkSubnetId":           llx.StringDataPtr(orZero(entry.Properties).VirtualNetworkSubnetID),
+					"state":                            llx.StringDataPtr(stringEnumPtr(orZero(entry.Properties).State)),
+					"ignoreMissingVnetServiceEndpoint": llx.BoolDataPtr(orZero(entry.Properties).IgnoreMissingVnetServiceEndpoint),
 				})
 			if err != nil {
 				return nil, err
@@ -511,6 +514,25 @@ func (a *mqlAzureSubscriptionSqlServiceServer) virtualNetworkRules() ([]any, err
 		}
 	}
 	return res, nil
+}
+
+// subnet resolves the virtual network subnet the rule admits. Null when the
+// rule names none, which ARM should not produce but a partially created rule
+// can.
+func (a *mqlAzureSubscriptionSqlServiceVirtualNetworkRule) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	if a.VirtualNetworkSubnetId.Error != nil {
+		return nil, a.VirtualNetworkSubnetId.Error
+	}
+	if a.VirtualNetworkSubnetId.IsNull() || a.VirtualNetworkSubnetId.Data == "" {
+		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.subnet",
+		map[string]*llx.RawData{"id": llx.StringData(a.VirtualNetworkSubnetId.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
 }
 
 func (a *mqlAzureSubscriptionSqlServiceServer) azureAdAdministrators() ([]any, error) {
@@ -1769,6 +1791,57 @@ func (a *mqlAzureSubscriptionSqlServiceServer) failoverGroups() ([]any, error) {
 				databaseIds = convert.ToListFromPtrs(fg.Properties.Databases)
 			}
 
+			partners := []any{}
+			for i, partner := range orZero(fg.Properties).PartnerServers {
+				if partner == nil {
+					continue
+				}
+				// A partner entry carries no id of its own beyond the server
+				// it names, which is what distinguishes it within the group.
+				key := convert.ToValue(partner.ID)
+				if key == "" {
+					key = strconv.Itoa(i)
+				}
+				mqlPartner, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.failoverGroup.partner",
+					map[string]*llx.RawData{
+						"__id":            llx.StringData(subResourceCacheID(nil, convert.ToValue(fg.ID), "partners", key)),
+						"location":        llx.StringDataPtr(partner.Location),
+						"replicationRole": llx.StringDataPtr(stringEnumPtr(partner.ReplicationRole)),
+					})
+				if err != nil {
+					return nil, err
+				}
+				mqlPartner.(*mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner).cacheServerId = convert.ToValue(partner.ID)
+				partners = append(partners, mqlPartner)
+			}
+
+			readWriteListener := llx.NilData
+			if rw := orZero(fg.Properties).ReadWriteEndpoint; rw != nil {
+				const rwResource = "azure.subscription.sqlService.server.failoverGroup.readWriteEndpoint"
+				mqlRW, err := CreateResource(a.MqlRuntime, rwResource, map[string]*llx.RawData{
+					"__id":                                   llx.StringData(convert.ToValue(fg.ID) + "/readWriteEndpoint"),
+					"failoverPolicy":                         llx.StringDataPtr(stringEnumPtr(rw.FailoverPolicy)),
+					"failoverWithDataLossGracePeriodMinutes": llx.IntDataPtr(rw.FailoverWithDataLossGracePeriodMinutes),
+				})
+				if err != nil {
+					return nil, err
+				}
+				readWriteListener = llx.ResourceData(mqlRW, rwResource)
+			}
+
+			readOnlyListener := llx.NilData
+			if ro := orZero(fg.Properties).ReadOnlyEndpoint; ro != nil {
+				const roResource = "azure.subscription.sqlService.server.failoverGroup.readOnlyEndpoint"
+				mqlRO, err := CreateResource(a.MqlRuntime, roResource, map[string]*llx.RawData{
+					"__id":           llx.StringData(convert.ToValue(fg.ID) + "/readOnlyEndpoint"),
+					"failoverPolicy": llx.StringDataPtr(stringEnumPtr(ro.FailoverPolicy)),
+				})
+				if err != nil {
+					return nil, err
+				}
+				readOnlyListener = llx.ResourceData(mqlRO, roResource)
+			}
+
 			mqlFG, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.failoverGroup",
 				map[string]*llx.RawData{
 					"id":                llx.StringDataPtr(fg.ID),
@@ -1778,8 +1851,11 @@ func (a *mqlAzureSubscriptionSqlServiceServer) failoverGroups() ([]any, error) {
 					"replicationRole":   llx.StringData(replicationRole),
 					"replicationState":  llx.StringData(replicationState),
 					"partnerServers":    llx.ArrayData(partnerServers, types.Dict),
+					"partners":          llx.ArrayData(partners, types.Resource("azure.subscription.sqlService.server.failoverGroup.partner")),
 					"readWriteEndpoint": llx.DictData(readWriteEndpoint),
+					"readWriteListener": readWriteListener,
 					"readOnlyEndpoint":  llx.DictData(readOnlyEndpoint),
+					"readOnlyListener":  readOnlyListener,
 				})
 			if err != nil {
 				return nil, err
@@ -1789,6 +1865,26 @@ func (a *mqlAzureSubscriptionSqlServiceServer) failoverGroups() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+type mqlAzureSubscriptionSqlServiceServerFailoverGroupPartnerInternal struct {
+	cacheServerId string
+}
+
+// server resolves the partner server. Null when the group reports a partner
+// without a resource id, which ARM should not produce but a group mid-creation
+// can.
+func (a *mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner) server() (*mqlAzureSubscriptionSqlServiceServer, error) {
+	if a.cacheServerId == "" {
+		a.Server.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.sqlService.server",
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheServerId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionSqlServiceServer), nil
 }
 
 func (a *mqlAzureSubscriptionSqlServiceServerFailoverGroup) databases() ([]any, error) {

@@ -87,6 +87,7 @@ func (a *mqlAzureSubscriptionSearchService) services() ([]any, error) {
 
 func searchServiceToMql(runtime *plugin.Runtime, svc *armsearch.Service) (*mqlAzureSubscriptionSearchServiceService, error) {
 	sku, err := convert.JsonToDict(svc.SKU)
+	svcSku := orZero(svc.SKU)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +167,7 @@ func searchServiceToMql(runtime *plugin.Runtime, svc *armsearch.Service) (*mqlAz
 		}
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.searchService.service", map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"id":                            llx.StringDataPtr(svc.ID),
 		"name":                          llx.StringDataPtr(svc.Name),
 		"location":                      llx.StringDataPtr(svc.Location),
@@ -192,7 +193,16 @@ func searchServiceToMql(runtime *plugin.Runtime, svc *armsearch.Service) (*mqlAz
 		"semanticSearch":              llx.StringDataPtr(semanticSearch),
 		"upgradeAvailable":            llx.StringDataPtr(upgradeAvailable),
 		"serviceUpgradedAt":           llx.TimeDataPtr(serviceUpgradedAt),
-	})
+	}
+	if err := setSkuData(runtime, args, skuName(svcSku.Name)); err != nil {
+		return nil, err
+	}
+	svcIdentity := orZero(svc.Identity)
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(svcIdentity.UserAssignedIdentities),
+		identityType(svcIdentity.Type), identityPrincipalId(svcIdentity.PrincipalID), identityTenantId(svcIdentity.TenantID)); err != nil {
+		return nil, err
+	}
+	res, err := CreateResource(runtime, "azure.subscription.searchService.service", args)
 	if err != nil {
 		return nil, err
 	}

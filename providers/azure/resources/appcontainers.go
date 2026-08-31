@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -740,6 +741,7 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 	httpsOnly := true
 	corsOrigins := []any{}
 	ipRules := []any{}
+	ingressIpRestrictions := []any{}
 	registries := []any{}
 	registryUsesIdentity := false
 	secretNames := []any{}
@@ -814,6 +816,29 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 						return nil, err
 					}
 					ipRules = d
+				}
+				for i, rule := range ing.IPSecurityRestrictions {
+					if rule == nil {
+						continue
+					}
+					// The rule name is unique within an app's ingress; the
+					// position covers a rule the API returned without one.
+					key := convert.ToValue(rule.Name)
+					if key == "" {
+						key = strconv.Itoa(i)
+					}
+					mqlRule, err := CreateResource(runtime, "azure.subscription.containerAppService.containerApp.ipRestriction",
+						map[string]*llx.RawData{
+							"__id":           llx.StringData(subResourceCacheID(nil, convert.ToValue(entry.ID), "ingressIpRestrictions", key)),
+							"name":           llx.StringDataPtr(rule.Name),
+							"description":    llx.StringDataPtr(rule.Description),
+							"ipAddressRange": llx.StringDataPtr(rule.IPAddressRange),
+							"action":         llx.StringDataPtr(stringEnumPtr(rule.Action)),
+						})
+					if err != nil {
+						return nil, err
+					}
+					ingressIpRestrictions = append(ingressIpRestrictions, mqlRule)
 				}
 			}
 			if len(cfg.Registries) > 0 {
@@ -914,6 +939,7 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 			"clientCertificateMode":    llx.StringData(clientCertMode),
 			"corsAllowedOrigins":       llx.ArrayData(corsOrigins, types.String),
 			"ipSecurityRestrictions":   llx.ArrayData(ipRules, types.Dict),
+			"ingressIpRestrictions":    llx.ArrayData(ingressIpRestrictions, types.Resource("azure.subscription.containerAppService.containerApp.ipRestriction")),
 			"workloadProfileName":      llx.StringData(workloadProfile),
 			"minReplicas":              llx.IntDataDefault(minReplicas, 0),
 			"maxReplicas":              llx.IntDataDefault(maxReplicas, 0),
@@ -1365,28 +1391,33 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 				identity = d
 			}
 
-			mqlJob, err := CreateResource(a.MqlRuntime, "azure.subscription.containerAppService.job",
-				map[string]*llx.RawData{
-					"id":                       llx.StringDataPtr(entry.ID),
-					"name":                     llx.StringDataPtr(entry.Name),
-					"location":                 llx.StringDataPtr(entry.Location),
-					"tags":                     llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"managedEnvironmentId":     llx.StringData(managedEnvId),
-					"provisioningState":        llx.StringData(provisioningState),
-					"eventStreamEndpoint":      llx.StringData(eventStreamEndpoint),
-					"triggerType":              llx.StringData(triggerType),
-					"cronExpression":           llx.StringData(cron),
-					"eventTriggerConfig":       llx.DictData(eventTrigger),
-					"replicaTimeoutSeconds":    llx.IntDataDefault(replicaTimeout, 0),
-					"replicaRetryLimit":        llx.IntDataDefault(replicaRetry, 0),
-					"identity":                 llx.DictData(identity),
-					"containers":               llx.ArrayData(containers, types.Dict),
-					"workloadProfileName":      llx.StringData(workloadProfile),
-					"registries":               llx.ArrayData(registries, types.Dict),
-					"registryAuthUsesIdentity": llx.BoolData(registryUsesIdentity),
-					"secretNames":              llx.ArrayData(secretNames, types.String),
-					"outboundIpAddresses":      llx.ArrayData(outboundIpAddresses, types.String),
-				})
+			jobArgs := map[string]*llx.RawData{
+				"id":                       llx.StringDataPtr(entry.ID),
+				"name":                     llx.StringDataPtr(entry.Name),
+				"location":                 llx.StringDataPtr(entry.Location),
+				"tags":                     llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+				"managedEnvironmentId":     llx.StringData(managedEnvId),
+				"provisioningState":        llx.StringData(provisioningState),
+				"eventStreamEndpoint":      llx.StringData(eventStreamEndpoint),
+				"triggerType":              llx.StringData(triggerType),
+				"cronExpression":           llx.StringData(cron),
+				"eventTriggerConfig":       llx.DictData(eventTrigger),
+				"replicaTimeoutSeconds":    llx.IntDataDefault(replicaTimeout, 0),
+				"replicaRetryLimit":        llx.IntDataDefault(replicaRetry, 0),
+				"identity":                 llx.DictData(identity),
+				"containers":               llx.ArrayData(containers, types.Dict),
+				"workloadProfileName":      llx.StringData(workloadProfile),
+				"registries":               llx.ArrayData(registries, types.Dict),
+				"registryAuthUsesIdentity": llx.BoolData(registryUsesIdentity),
+				"secretNames":              llx.ArrayData(secretNames, types.String),
+				"outboundIpAddresses":      llx.ArrayData(outboundIpAddresses, types.String),
+			}
+			jobIdentity := orZero(entry.Identity)
+			if err := setResourceIdentity(a.MqlRuntime, jobArgs, sortedUserAssignedIdentityIDs(jobIdentity.UserAssignedIdentities),
+				identityType(jobIdentity.Type), identityPrincipalId(jobIdentity.PrincipalID), identityTenantId(jobIdentity.TenantID)); err != nil {
+				return nil, err
+			}
+			mqlJob, err := CreateResource(a.MqlRuntime, "azure.subscription.containerAppService.job", jobArgs)
 			if err != nil {
 				return nil, err
 			}
@@ -1394,7 +1425,8 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlJob.(*mqlAzureSubscriptionContainerAppServiceJob).cacheSystemData = sysData
+			mqlJobRes := mqlJob.(*mqlAzureSubscriptionContainerAppServiceJob)
+			mqlJobRes.cacheSystemData = sysData
 			res = append(res, mqlJob)
 		}
 	}
