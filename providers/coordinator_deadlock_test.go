@@ -24,53 +24,76 @@ import (
 // connects a discovered child asset whose provider isn't running yet (A) —
 // e.g. a github org scan starting the k8s provider for a manifest found in
 // a repo. Once wedged, nothing times out; the job runs to its deadline.
+//
+// A is played out as its two lock steps rather than by calling
+// GetRunningProvider, so the interleaving is controlled instead of raced:
+// the test takes coordinator.mutex (what GetRunningProvider does first),
+// waits until B provably holds schema.sync, then calls schema.Add under
+// that mutex (what unsafeStartProvider does last). unsafeLoadAll calls
+// LoadSchema for every provider ListActive returns, and the builtins alone
+// are enough for that, so nothing needs to be installed on disk.
 func TestCoordinatorSchemaLockOrder(t *testing.T) {
-	active, err := ListActive()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(active) < 2 {
-		t.Skip("needs at least two installed providers for unsafeLoadAll to iterate")
-	}
-
 	c := newCoordinator()
-	// LoadSchema resolves names through c.providers; in production this is
-	// populated by the first unsafeStartProvider. Populating it here makes
-	// LoadSchema do the real (slow) LoadResources call under c.mutex.
-	c.providers = active
 
+	// A, step 1: GetRunningProvider takes coordinator.mutex before it starts
+	// the provider and registers its schema.
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	// B: a lookup that misses with lastRefreshed < LastProviderInstall runs
+	// unsafeLoadAll with schema.sync held.
 	bDone := make(chan struct{})
 	go func() {
 		defer close(bDone)
-		// Any miss with lastRefreshed < LastProviderInstall triggers unsafeLoadAll.
 		c.schema.Lookup("resource.that.does.not.exist")
 	}()
 
-	// Let B enter unsafeLoadAll (it holds schema.sync from here until it has
-	// called LoadSchema for every installed provider).
-	time.Sleep(20 * time.Millisecond)
+	// Wait until B holds schema.sync — TryLock succeeding means it isn't
+	// there yet, so give the lock straight back and poll again — or until B
+	// has finished, which it can only do if LoadSchema no longer needs
+	// coordinator.mutex (the fixed behavior).
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		select {
+		case <-bDone:
+		default:
+			if !c.schema.sync.TryLock() {
+				break
+			}
+			c.schema.sync.Unlock()
+			if time.Now().After(deadline) {
+				t.Fatal("schema.Lookup never took schema.sync")
+			}
+			time.Sleep(time.Millisecond)
+			continue
+		}
+		break
+	}
 
+	// A, step 2, still under coordinator.mutex: register the new provider's
+	// schema, which needs schema.sync.
 	aDone := make(chan struct{})
 	go func() {
 		defer close(aDone)
-		// Builtin provider: no plugin subprocess, but the same lock order —
-		// c.mutex held, then schema.Add wants schema.sync.
-		_, _ = c.GetRunningProvider(BuiltinCoreID, UpdateProvidersConfig{})
+		c.schema.Add(BuiltinCoreID, builtinProviders[BuiltinCoreID].Runtime.Schema)
 	}()
 
-	timeout := time.After(15 * time.Second)
-	for _, done := range []chan struct{}{aDone, bDone} {
-		select {
-		case <-done:
-		case <-timeout:
-			buf := make([]byte, 1<<20)
-			n := runtime.Stack(buf, true)
-			for _, g := range strings.Split(string(buf[:n]), "\n\n") {
-				if strings.Contains(g, "extensibleSchema") || strings.Contains(g, "coordinator)") {
-					t.Log(g)
-				}
+	select {
+	case <-aDone:
+	case <-time.After(15 * time.Second):
+		buf := make([]byte, 1<<20)
+		n := runtime.Stack(buf, true)
+		for _, g := range strings.Split(string(buf[:n]), "\n\n") {
+			if strings.Contains(g, "extensibleSchema") || strings.Contains(g, "coordinator)") {
+				t.Log(g)
 			}
-			t.Fatal("deadlock: GetRunningProvider and schema.Lookup never returned")
 		}
+		t.Fatal("deadlock: schema.Add (holding coordinator.mutex) and schema.Lookup (holding schema.sync) never returned")
+	}
+
+	select {
+	case <-bDone:
+	case <-time.After(15 * time.Second):
+		t.Fatal("schema.Lookup did not return after schema.Add completed")
 	}
 }
