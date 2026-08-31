@@ -69,8 +69,13 @@ func (a *mqlAwsSecretsmanagerSecret) isPublic() (bool, error) {
 	return resourceIsPublic(a.GetPolicyStatements())
 }
 
+// isPublic reports whether the file system policy grants a wildcard principal.
+// It routes through resourceIsPublicOrUnknown so that a policy that could not
+// be read reports null: a denied DescribeFileSystemPolicy used to collapse
+// into an empty statement list and a confident false on a file system that
+// grants ClientMount to everyone.
 func (a *mqlAwsEfsFilesystem) isPublic() (bool, error) {
-	return resourceIsPublic(a.GetPolicyStatements())
+	return resourceIsPublicOrUnknown(a.GetPolicyStatements(), &a.IsPublic)
 }
 
 func (a *mqlAwsBackupVault) isPublic() (bool, error) {

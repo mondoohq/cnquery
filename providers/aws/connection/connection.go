@@ -91,6 +91,15 @@ func NewMockConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 	}
 }
 
+// NewTestConnection builds a connection around a caller-supplied aws.Config.
+// It exists so that tests can hand the SDK clients a config carrying
+// APIOptions middleware and exercise a lister end to end without network or
+// credentials; cfg is unexported, so there is no other way to reach it from
+// outside this package.
+func NewTestConnection(cfg aws.Config) *AwsConnection {
+	return &AwsConnection{cfg: cfg}
+}
+
 func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AwsConnection, error) {
 	log.Debug().Msg("new aws connection")
 	// check flags for connection options
