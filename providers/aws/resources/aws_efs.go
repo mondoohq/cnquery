@@ -224,12 +224,20 @@ func initAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	return nil, nil, errors.New("efs filesystem does not exist")
 }
 
+// backupPolicy is the deprecated dict view of automaticBackup. It emits only
+// the documented shape, a `BackupPolicy` object carrying `Status`; serializing
+// the whole SDK output would also publish its ResultMetadata, which describes
+// the API call rather than the file system.
 func (a *mqlAwsEfsFilesystem) backupPolicy() (any, error) {
 	resp, err := a.fetchBackupPolicy()
-	if err != nil || resp == nil {
+	if err != nil || resp == nil || resp.BackupPolicy == nil {
 		return nil, err
 	}
-	return convert.JsonToDict(resp)
+	return map[string]any{
+		"BackupPolicy": map[string]any{
+			"Status": string(resp.BackupPolicy.Status),
+		},
+	}, nil
 }
 
 func (a *mqlAwsEfsFilesystem) automaticBackup() (*mqlAwsEfsBackupPolicy, error) {
@@ -263,10 +271,10 @@ func (a *mqlAwsEfsFilesystem) lifecycleConfiguration() (*mqlAwsEfsFilesystemLife
 		FileSystemId: &id,
 	})
 	if err != nil {
-		if Is400AccessDeniedError(err) {
-			a.LifecycleConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
-			return nil, nil
-		}
+		// A 404 establishes that the file system has no lifecycle
+		// configuration. A denial establishes nothing, and null would make a
+		// file system with no lifecycle policy and one nobody could check read
+		// identically, so it propagates.
 		var respErr *http.ResponseError
 		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
 			a.LifecycleConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
@@ -323,10 +331,9 @@ func (a *mqlAwsEfsFilesystem) replicationConfiguration() (*mqlAwsEfsFilesystemRe
 		FileSystemId: &id,
 	})
 	if err != nil {
-		if Is400AccessDeniedError(err) {
-			a.ReplicationConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
-			return nil, nil
-		}
+		// ReplicationConfigurationNotFound (404) establishes that the file
+		// system is not replicated. A denial does not, so an unreplicated file
+		// system and one nobody could check must not read the same way.
 		var respErr *http.ResponseError
 		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
 			a.ReplicationConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
@@ -473,19 +480,22 @@ func (a *mqlAwsEfsFilesystem) mountTargets() ([]any, error) {
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
-			if Is400AccessDeniedError(err) {
-				log.Warn().Str("region", region).Str("fileSystemId", id).Msg("error accessing EFS mount targets")
-				return res, nil
-			}
+			// A denial truncates the list without saying so. Returning the
+			// partial slice would let mountTargets.all(...) pass vacuously on a
+			// file system whose mount targets nobody could enumerate, so the
+			// failure propagates instead.
 			return nil, err
 		}
 
 		for _, mt := range page.MountTargets {
-			// Fetch security groups for this mount target
-			sgRes, err := svc.DescribeMountTargetSecurityGroups(ctx, &efs.DescribeMountTargetSecurityGroupsInput{
+			// A failed group read is carried on the mount target rather than
+			// failing the whole list: one unreadable mount target must not
+			// erase the rest, but its securityGroups field must not read as an
+			// empty list either.
+			sgRes, sgErr := svc.DescribeMountTargetSecurityGroups(ctx, &efs.DescribeMountTargetSecurityGroupsInput{
 				MountTargetId: mt.MountTargetId,
 			})
-			if err != nil {
+			if sgErr != nil {
 				log.Warn().Str("mountTargetId", convert.ToValue(mt.MountTargetId)).Msg("error fetching security groups for mount target")
 			}
 
@@ -506,9 +516,11 @@ func (a *mqlAwsEfsFilesystem) mountTargets() ([]any, error) {
 			mqlMountTarget.(*mqlAwsEfsMountTarget).cacheSubnetId = convert.ToValue(mt.SubnetId)
 			mqlMountTarget.(*mqlAwsEfsMountTarget).cacheNetworkInterfaceId = convert.ToValue(mt.NetworkInterfaceId)
 
-			// Cache the security group IDs for lazy loading
-			if sgRes != nil && len(sgRes.SecurityGroups) > 0 {
-				mqlMountTarget.(*mqlAwsEfsMountTarget).cacheSecurityGroupIDs = sgRes.SecurityGroups
+			// Cache the security group IDs, or the reason there are none.
+			mqlMt := mqlMountTarget.(*mqlAwsEfsMountTarget)
+			mqlMt.cacheSecurityGroupsErr = sgErr
+			if sgErr == nil && sgRes != nil {
+				mqlMt.cacheSecurityGroupIDs = sgRes.SecurityGroups
 			}
 
 			res = append(res, mqlMountTarget)
@@ -534,10 +546,9 @@ func (a *mqlAwsEfsFilesystem) accessPoints() ([]any, error) {
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
-			if Is400AccessDeniedError(err) {
-				log.Warn().Str("region", region).Str("fileSystemId", id).Msg("error accessing EFS access points")
-				return res, nil
-			}
+			// As with mount targets, a truncated list presented as complete is
+			// what makes an accessPoints.all(...) check pass on evidence that
+			// was never read.
 			return nil, err
 		}
 
@@ -616,6 +627,31 @@ func (a *mqlAwsEfsFilesystem) accessPoints() ([]any, error) {
 	return res, nil
 }
 
+// efsPolicyNotFound reports the answer EFS gives for a file system that
+// carries no resource policy at all: PolicyNotFound, HTTP 404.
+//
+// It is a statement about the file system, not a failure to read one, which is
+// why it is deliberately narrow. A denial (403) and a transport error both
+// leave the policy unknown, and neither may be folded in here: the empty
+// document they would produce is byte-identical to the one a file system with
+// no policy produces, and isPublic, which is derived from it, would then report
+// a file system open to the world as private.
+func efsPolicyNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	var respErr *http.ResponseError
+	if errors.As(err, &respErr) {
+		return respErr.HTTPStatusCode() == 404
+	}
+	return false
+}
+
+// fileSystemPolicy returns the file system's resource policy document. The
+// empty string means one thing only: the file system carries no policy. Any
+// error other than the 404 that establishes that propagates, so that
+// policyStatements and isPublic, both derived from this field, report an
+// unreadable policy as unreadable rather than as absent.
 func (a *mqlAwsEfsFilesystem) fileSystemPolicy() (string, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	id := a.Id.Data
@@ -628,13 +664,7 @@ func (a *mqlAwsEfsFilesystem) fileSystemPolicy() (string, error) {
 		FileSystemId: &id,
 	})
 	if err != nil {
-		if Is400AccessDeniedError(err) {
-			log.Warn().Str("region", region).Str("fileSystemId", id).Msg("error accessing EFS file system policy")
-			return "", nil
-		}
-		var respErr *http.ResponseError
-		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
-			// No policy exists
+		if efsPolicyNotFound(err) {
 			return "", nil
 		}
 		return "", err
@@ -653,11 +683,25 @@ type mqlAwsEfsMountTargetInternal struct {
 	cacheSubnetId           string
 	cacheNetworkInterfaceId string
 	cacheSecurityGroupIDs   []string
+	// cacheSecurityGroupsErr records why the group list could not be read, so
+	// the accessor can report the refusal instead of an empty list.
+	cacheSecurityGroupsErr error
 }
 
+// securityGroups returns the security groups attached to the mount target.
+//
+// EFS attaches at least one security group to every mount target, so an empty
+// list is never a reading the API produced: it means the group list was not
+// read. Reporting it as a list would make a
+// mountTargets.all(securityGroups.none(...)) check pass on a mount target
+// nobody could inspect, so an unread list is an error.
 func (a *mqlAwsEfsMountTarget) securityGroups() ([]any, error) {
+	if a.cacheSecurityGroupsErr != nil {
+		return nil, fmt.Errorf("could not read security groups for EFS mount target %s: %w",
+			a.MountTargetId.Data, a.cacheSecurityGroupsErr)
+	}
 	if len(a.cacheSecurityGroupIDs) == 0 {
-		return []any{}, nil
+		return nil, fmt.Errorf("no security groups were read for EFS mount target %s", a.MountTargetId.Data)
 	}
 
 	region := a.Region.Data

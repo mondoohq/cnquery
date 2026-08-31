@@ -1973,6 +1973,10 @@ private aws.efs.filesystem @defaults("name id region") {
   // Access points for the file system
   accessPoints() []aws.efs.accessPoint
   // Resource-based policy document (JSON)
+  //
+  // Empty only when the file system carries no policy at all. A policy that
+  // could not be read errors rather than reading as the empty document, so
+  // that an unread policy is never mistaken for an absent one.
   fileSystemPolicy() string
   // Parsed statements from the file system policy
   policyStatements() []aws.iam.policyStatement
@@ -2067,7 +2071,7 @@ private aws.efs.rootDirectory @defaults("path permissions") {
   ownerGid int
   // POSIX permission bits EFS applies when it creates the root directory
   //
-  // A three- or four-digit octal string, for example "0755". Empty when the
+  // A three- or four-digit octal string, for example "0755". Null when the
   // access point supplies no creation info.
   permissions string
 }
