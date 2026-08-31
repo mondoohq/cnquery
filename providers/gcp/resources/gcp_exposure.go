@@ -188,27 +188,45 @@ func policyRuleOpenIngress(action, direction string, disabled bool, srcIpRanges 
 // policyRuleTargetsInstance reports whether a policy rule's targeting applies to
 // an instance.
 //
-// targetResources holds network URLs, not tags: a policy rule scoped to one
-// network in a policy associated with several applies only to that network. An
-// empty targetResources means every network the policy is associated with, and
-// an empty targetServiceAccounts means every instance, so a rule with neither
-// applies to all of them. Networks are compared by trailing name so a full URL
-// and a partial reference match.
+// The two fields are independent axes and compose with AND, which is what makes
+// this different from the legacy rule above. targetResources holds network URLs
+// and picks WHICH NETWORK the rule lands on; targetServiceAccounts picks WHICH
+// INSTANCES within it. The API documents the composition on the sibling
+// targetSecureTags field: "If neither targetServiceAccounts nor targetSecureTag
+// are specified, the firewall rule applies to all instances on the specified
+// network" -- the specified network being targetResources.
+//
+// So a rule with targetResources=[net-A] and targetServiceAccounts=[sa-B]
+// applies only to instances in net-A running as sa-B. Treating the two as
+// alternatives would report an instance in net-A running as sa-C as covered.
+//
+// An empty list on either axis means "all", so a rule with neither applies to
+// every instance the policy reaches. Networks are compared by trailing name so a
+// full URL and a partial reference match.
+//
+// The legacy firewallTargetsInstance above stays an OR for a real reason rather
+// than an inconsistency: on a legacy VPC rule targetTags and
+// targetServiceAccounts are mutually exclusive ("targetServiceAccounts cannot be
+// used at the same time as targetTags"), so at most one is ever populated and
+// the two spellings agree.
 func policyRuleTargetsInstance(targetResources, targetServiceAccounts []any, instanceNetworks, instanceServiceAccounts map[string]bool) bool {
-	if len(targetResources) == 0 && len(targetServiceAccounts) == 0 {
-		return true
-	}
+	networkMatch := len(targetResources) == 0
 	for _, r := range targetResources {
 		if url, ok := r.(string); ok && instanceNetworks[networkNameFromUrl(url)] {
-			return true
+			networkMatch = true
+			break
 		}
 	}
+
+	accountMatch := len(targetServiceAccounts) == 0
 	for _, sa := range targetServiceAccounts {
 		if email, ok := sa.(string); ok && instanceServiceAccounts[email] {
-			return true
+			accountMatch = true
+			break
 		}
 	}
-	return false
+
+	return networkMatch && accountMatch
 }
 
 // policyAppliesToNetworks reports whether a firewall policy is associated with

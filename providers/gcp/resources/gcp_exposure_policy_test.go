@@ -55,47 +55,70 @@ func TestPolicyRuleOpenIngress(t *testing.T) {
 	})
 }
 
-// TestPolicyRuleTargetsInstance pins that targetResources are network URLs, not
-// tags. A rule scoped to one network inside a policy associated with several
-// applies only to that network, and reading the field as a tag list would make
-// every such rule apply to every instance.
+// TestPolicyRuleTargetsInstance pins two things.
+//
+// First, that targetResources are network URLs, not tags: a rule scoped to one
+// network inside a policy associated with several applies only to that network,
+// and reading the field as a tag list would make every such rule apply to every
+// instance.
+//
+// Second, that the two target fields compose with AND. They are independent
+// axes -- targetResources picks the network, targetServiceAccounts the
+// instances within it -- so a rule naming both applies only where both match.
+// Treating them as alternatives over-reports exposure.
 func TestPolicyRuleTargetsInstance(t *testing.T) {
 	networks := map[string]bool{"prod-vpc": true}
 	accounts := map[string]bool{"app@project.iam.gserviceaccount.com": true}
+
+	const (
+		prodURL = "https://www.googleapis.com/compute/v1/projects/p/global/networks/prod-vpc"
+		devURL  = "https://www.googleapis.com/compute/v1/projects/p/global/networks/dev-vpc"
+		otherSA = "other@project.iam.gserviceaccount.com"
+		ourSA   = "app@project.iam.gserviceaccount.com"
+	)
 
 	t.Run("no targeting applies to every instance", func(t *testing.T) {
 		assert.True(t, policyRuleTargetsInstance(nil, nil, networks, accounts))
 	})
 
-	t.Run("matches on the network, by full URL or short name", func(t *testing.T) {
-		assert.True(t, policyRuleTargetsInstance(
-			[]any{"https://www.googleapis.com/compute/v1/projects/p/global/networks/prod-vpc"},
-			nil, networks, accounts))
+	t.Run("network only, by full URL or short name", func(t *testing.T) {
+		assert.True(t, policyRuleTargetsInstance([]any{prodURL}, nil, networks, accounts))
 		assert.True(t, policyRuleTargetsInstance([]any{"prod-vpc"}, nil, networks, accounts))
 	})
 
 	t.Run("a rule scoped to another network does not apply", func(t *testing.T) {
-		assert.False(t, policyRuleTargetsInstance(
-			[]any{"https://www.googleapis.com/compute/v1/projects/p/global/networks/dev-vpc"},
-			nil, networks, accounts))
+		assert.False(t, policyRuleTargetsInstance([]any{devURL}, nil, networks, accounts))
 	})
 
-	t.Run("matches on the service account", func(t *testing.T) {
-		assert.True(t, policyRuleTargetsInstance(nil,
-			[]any{"app@project.iam.gserviceaccount.com"}, networks, accounts))
-		assert.False(t, policyRuleTargetsInstance(nil,
-			[]any{"other@project.iam.gserviceaccount.com"}, networks, accounts))
+	t.Run("service account only", func(t *testing.T) {
+		assert.True(t, policyRuleTargetsInstance(nil, []any{ourSA}, networks, accounts))
+		assert.False(t, policyRuleTargetsInstance(nil, []any{otherSA}, networks, accounts))
 	})
 
-	t.Run("either dimension matching is enough", func(t *testing.T) {
+	// The AND cases. Each one is a false positive under OR.
+	t.Run("both axes must match when both are named", func(t *testing.T) {
 		assert.True(t, policyRuleTargetsInstance(
-			[]any{"dev-vpc"},
-			[]any{"app@project.iam.gserviceaccount.com"},
-			networks, accounts))
+			[]any{prodURL}, []any{ourSA}, networks, accounts),
+			"our network and our service account")
+
+		assert.False(t, policyRuleTargetsInstance(
+			[]any{prodURL}, []any{otherSA}, networks, accounts),
+			"our network but another service account: the rule scopes to that account")
+
+		assert.False(t, policyRuleTargetsInstance(
+			[]any{devURL}, []any{ourSA}, networks, accounts),
+			"our service account but another network: the rule never reaches this network")
+
+		assert.False(t, policyRuleTargetsInstance(
+			[]any{devURL}, []any{otherSA}, networks, accounts),
+			"neither axis matches")
 	})
 
 	t.Run("non-string entries are skipped", func(t *testing.T) {
 		assert.False(t, policyRuleTargetsInstance([]any{42}, []any{nil}, networks, accounts))
+		// A non-string in one axis must not be read as a match for it, even
+		// when the other axis matches.
+		assert.False(t, policyRuleTargetsInstance([]any{42}, []any{ourSA}, networks, accounts))
 	})
 }
 
