@@ -27,8 +27,47 @@ import (
 	"go.mondoo.com/mql/types"
 )
 
+type mqlAwsIamInternal struct {
+	serverCertsFetched atomic.Bool
+	serverCertsCache   []iamtypes.ServerCertificateMetadata
+	serverCertsLock    sync.Mutex
+}
+
 func (a *mqlAwsIam) id() (string, error) {
 	return ResourceAwsIam, nil
+}
+
+// fetchServerCertificates pages ListServerCertificates once. Both
+// serverCertificates and tlsCertificates answer from it, so a query touching
+// the deprecated dict and its typed replacement together costs one walk of the
+// API rather than two.
+func (a *mqlAwsIam) fetchServerCertificates() ([]iamtypes.ServerCertificateMetadata, error) {
+	if a.serverCertsFetched.Load() {
+		return a.serverCertsCache, nil
+	}
+	a.serverCertsLock.Lock()
+	defer a.serverCertsLock.Unlock()
+	if a.serverCertsFetched.Load() {
+		return a.serverCertsCache, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	res := []iamtypes.ServerCertificateMetadata{}
+	paginator := iam.NewListServerCertificatesPaginator(svc, &iam.ListServerCertificatesInput{})
+	for paginator.HasMorePages() {
+		certsResp, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, certsResp.ServerCertificateMetadataList...)
+	}
+
+	a.serverCertsCache = res
+	a.serverCertsFetched.Store(true)
+	return res, nil
 }
 
 func (a *mqlAwsIam) accountAlias() (string, error) {
@@ -48,57 +87,37 @@ func (a *mqlAwsIam) accountAlias() (string, error) {
 }
 
 func (a *mqlAwsIam) serverCertificates() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Iam("")
-	ctx := context.Background()
-	res := []any{}
-	params := &iam.ListServerCertificatesInput{}
-	paginator := iam.NewListServerCertificatesPaginator(svc, params)
-	for paginator.HasMorePages() {
-		certsResp, err := paginator.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		if len(certsResp.ServerCertificateMetadataList) > 0 {
-			certs, err := convert.JsonToDictSlice(certsResp.ServerCertificateMetadataList)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, certs...)
-		}
+	certs, err := a.fetchServerCertificates()
+	if err != nil {
+		return nil, err
 	}
-	return res, nil
+	if len(certs) == 0 {
+		return []any{}, nil
+	}
+	return convert.JsonToDictSlice(certs)
 }
 
 func (a *mqlAwsIam) tlsCertificates() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Iam("")
-	ctx := context.Background()
+	certs, err := a.fetchServerCertificates()
+	if err != nil {
+		return nil, err
+	}
 	res := []any{}
-	paginator := iam.NewListServerCertificatesPaginator(svc, &iam.ListServerCertificatesInput{})
-	for paginator.HasMorePages() {
-		certsResp, err := paginator.NextPage(ctx)
+	for i := range certs {
+		cert := certs[i]
+		mqlCert, err := CreateResource(a.MqlRuntime, "aws.iam.serverCertificate", map[string]*llx.RawData{
+			"__id":       llx.StringDataPtr(cert.Arn),
+			"arn":        llx.StringDataPtr(cert.Arn),
+			"name":       llx.StringDataPtr(cert.ServerCertificateName),
+			"id":         llx.StringDataPtr(cert.ServerCertificateId),
+			"path":       llx.StringDataPtr(cert.Path),
+			"expiration": llx.TimeDataPtr(cert.Expiration),
+			"uploadedAt": llx.TimeDataPtr(cert.UploadDate),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for i := range certsResp.ServerCertificateMetadataList {
-			cert := certsResp.ServerCertificateMetadataList[i]
-			mqlCert, err := CreateResource(a.MqlRuntime, "aws.iam.serverCertificate", map[string]*llx.RawData{
-				"__id":       llx.StringDataPtr(cert.Arn),
-				"arn":        llx.StringDataPtr(cert.Arn),
-				"name":       llx.StringDataPtr(cert.ServerCertificateName),
-				"id":         llx.StringDataPtr(cert.ServerCertificateId),
-				"path":       llx.StringDataPtr(cert.Path),
-				"expiration": llx.TimeDataPtr(cert.Expiration),
-				"uploadedAt": llx.TimeDataPtr(cert.UploadDate),
-			})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlCert)
-		}
+		res = append(res, mqlCert)
 	}
 	return res, nil
 }
@@ -636,61 +655,73 @@ func (a *mqlAwsIamUser) permissionsBoundary() (*mqlAwsIamPolicy, error) {
 	return mqlPolicy.(*mqlAwsIamPolicy), nil
 }
 
-func (a *mqlAwsIamUser) mfaDevices() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Iam("")
-	ctx := context.Background()
-
-	userName := a.Name.Data
-	res := []any{}
-	params := &iam.ListMFADevicesInput{UserName: &userName}
-	paginator := iam.NewListMFADevicesPaginator(svc, params)
-	for paginator.HasMorePages() {
-		devices, err := paginator.NextPage(ctx)
-		if err != nil {
-			if Is400AccessDeniedError(err) {
-				return res, nil
-			}
-			return nil, err
-		}
-		dicts, err := convert.JsonToDictSlice(devices.MFADevices)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, dicts...)
+// fetchMfaDevices pages ListMFADevices once for the user. Both mfaDevices and
+// assignedMfaDevices answer from it, so querying the deprecated dict alongside
+// its typed replacement costs one call per user rather than two. An
+// access-denied response yields whatever pages were read, matching what the
+// individual accessors did before they shared this fetch.
+func (a *mqlAwsIamUser) fetchMfaDevices() ([]iamtypes.MFADevice, error) {
+	if a.mfaDevicesFetched.Load() {
+		return a.mfaDevicesCache, nil
 	}
-	return res, nil
-}
+	a.mfaDevicesLock.Lock()
+	defer a.mfaDevicesLock.Unlock()
+	if a.mfaDevicesFetched.Load() {
+		return a.mfaDevicesCache, nil
+	}
 
-func (a *mqlAwsIamUser) assignedMfaDevices() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Iam("")
 	ctx := context.Background()
-
 	userName := a.Name.Data
-	res := []any{}
+
+	res := []iamtypes.MFADevice{}
 	paginator := iam.NewListMFADevicesPaginator(svc, &iam.ListMFADevicesInput{UserName: &userName})
 	for paginator.HasMorePages() {
 		devices, err := paginator.NextPage(ctx)
 		if err != nil {
 			if Is400AccessDeniedError(err) {
-				return res, nil
+				break
 			}
 			return nil, err
 		}
-		for i := range devices.MFADevices {
-			device := devices.MFADevices[i]
-			mqlDevice, err := CreateResource(a.MqlRuntime, "aws.iam.user.mfaDevice", map[string]*llx.RawData{
-				"__id":         llx.StringDataPtr(device.SerialNumber),
-				"serialNumber": llx.StringDataPtr(device.SerialNumber),
-				"userName":     llx.StringDataPtr(device.UserName),
-				"enabledAt":    llx.TimeDataPtr(device.EnableDate),
-			})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlDevice)
+		res = append(res, devices.MFADevices...)
+	}
+
+	a.mfaDevicesCache = res
+	a.mfaDevicesFetched.Store(true)
+	return res, nil
+}
+
+func (a *mqlAwsIamUser) mfaDevices() ([]any, error) {
+	devices, err := a.fetchMfaDevices()
+	if err != nil {
+		return nil, err
+	}
+	if len(devices) == 0 {
+		return []any{}, nil
+	}
+	return convert.JsonToDictSlice(devices)
+}
+
+func (a *mqlAwsIamUser) assignedMfaDevices() ([]any, error) {
+	devices, err := a.fetchMfaDevices()
+	if err != nil {
+		return nil, err
+	}
+	res := []any{}
+	for i := range devices {
+		device := devices[i]
+		mqlDevice, err := CreateResource(a.MqlRuntime, "aws.iam.user.mfaDevice", map[string]*llx.RawData{
+			"__id":         llx.StringDataPtr(device.SerialNumber),
+			"serialNumber": llx.StringDataPtr(device.SerialNumber),
+			"userName":     llx.StringDataPtr(device.UserName),
+			"enabledAt":    llx.TimeDataPtr(device.EnableDate),
+		})
+		if err != nil {
+			return nil, err
 		}
+		res = append(res, mqlDevice)
 	}
 	return res, nil
 }
@@ -1296,6 +1327,10 @@ type mqlAwsIamUserInternal struct {
 	loginProfileFetched atomic.Bool
 	loginProfileCache   *mqlAwsIamLoginProfile
 	loginProfileLock    sync.Mutex
+
+	mfaDevicesFetched atomic.Bool
+	mfaDevicesCache   []iamtypes.MFADevice
+	mfaDevicesLock    sync.Mutex
 
 	permissionsBoundaryArn    string
 	permissionsBoundaryArnSet bool

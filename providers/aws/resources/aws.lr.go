@@ -93819,7 +93819,7 @@ func (c *mqlAwsKmsCustomKeyStore) GetXksProxyConfiguration() *plugin.TValue[any]
 type mqlAwsIam struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsIamInternal it will be used here
+	mqlAwsIamInternal
 	Users              plugin.TValue[[]any]
 	Roles              plugin.TValue[[]any]
 	Groups             plugin.TValue[[]any]
