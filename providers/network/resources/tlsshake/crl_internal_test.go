@@ -316,3 +316,61 @@ func TestFetchCRLReusesAListUntilItsNextUpdate(t *testing.T) {
 
 	assert.Equal(t, int32(1), server.hits.Load(), "the list should be downloaded once")
 }
+
+// staleCRL builds a signed list whose NextUpdate has already passed, the shape
+// an unattended or misconfigured distribution point serves.
+func (ca *testCA) staleCRL(t *testing.T, serials ...int64) []byte {
+	t.Helper()
+
+	entries := make([]x509.RevocationListEntry, 0, len(serials))
+	for _, serial := range serials {
+		entries = append(entries, x509.RevocationListEntry{
+			SerialNumber:   big.NewInt(serial),
+			RevocationTime: time.Now().Add(-48 * time.Hour),
+			ReasonCode:     1,
+		})
+	}
+
+	der, err := x509.CreateRevocationList(rand.Reader, &x509.RevocationList{
+		Number:                    big.NewInt(1),
+		ThisUpdate:                time.Now().Add(-48 * time.Hour),
+		NextUpdate:                time.Now().Add(-24 * time.Hour),
+		RevokedCertificateEntries: entries,
+	}, ca.cert, ca.key)
+	require.NoError(t, err)
+	return der
+}
+
+func TestFetchCRLDownloadsAStaleListOnceInsteadOfRetrying(t *testing.T) {
+	// A list that arrives already past its NextUpdate is not cached, since
+	// caching it would pin an expired answer for the rest of the run. Not
+	// caching it must not turn into re-fetching it: one call is one download,
+	// or a distribution point serving a stale list would see a request per
+	// loop for as long as the scan runs.
+	clearCRLCache(t)
+
+	ca := newTestCA(t, "test ca")
+	stale := ca.staleCRL(t, 42)
+
+	var hits atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Stop answering after a handful of requests, so a caller that did
+		// loop fails here in milliseconds instead of hanging until the test
+		// timeout.
+		if hits.Add(1) > 3 {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		_, _ = w.Write(stale)
+	}))
+	t.Cleanup(srv.Close)
+
+	cert := ca.issue(t, 42, srv.URL+"/crl")
+
+	determined, revocation, err := crlRevocation(cert, ca.cert)
+	require.NoError(t, err)
+	require.True(t, determined)
+	require.NotNil(t, revocation)
+
+	assert.Equal(t, int32(1), hits.Load(), "a stale list costs one download per call, not a retry loop")
+}
