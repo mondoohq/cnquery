@@ -100,7 +100,7 @@ func (p *pomProject) Transitive() languages.Packages {
 //
 // Both matter beyond tidiness. A version left as the literal "${jackson.version}"
 // produces a purl no advisory database and no package registry can match, so the
-// dependency is silently exempt from vulnerability correlation and from licence
+// dependency is silently exempt from vulnerability correlation and from license
 // lookup alike.
 func (p *pomProject) depToPackage(dep pomDependency) *languages.Package {
 	groupId := p.resolve(dep.GroupId)

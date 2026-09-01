@@ -161,7 +161,7 @@ func (s *mqlMacosSoftwareupdate) scheduleEnabled() (bool, error) {
 }
 
 // parseSoftwareUpdateSchedule reads the `softwareupdate --schedule` sentence.
-// Anything it does not recognise returns ok=false, so an unreadable schedule
+// Anything it does not recognize returns ok=false, so an unreadable schedule
 // surfaces as an error and never as a confident "automatic checking is off".
 func parseSoftwareUpdateSchedule(stdout string) (bool, bool) {
 	l := strings.ToLower(stdout)

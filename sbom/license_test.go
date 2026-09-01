@@ -22,14 +22,14 @@ func TestDeclaredLicensePlacesTheRightField(t *testing.T) {
 		{name: "an identifier with punctuation", value: "GPL-2.0-or-later", spdxID: "GPL-2.0-or-later"},
 		{name: "an identifier with a plus", value: "Apache-2.0+", spdxID: "Apache-2.0+"},
 		// Not on the SPDX list, but identifier-shaped. Rendering it as an id is
-		// right: this package must not drop a license it cannot recognise, and a
+		// right: this package must not drop a license it cannot recognize, and a
 		// consumer validating against the list says something more useful than a
 		// producer that silently downgraded it.
 		{name: "an unlisted identifier", value: "OurInternalTerms-1.0", spdxID: "OurInternalTerms-1.0"},
 		{name: "an OR expression", value: "MIT OR Apache-2.0", expression: "MIT OR Apache-2.0"},
 		{name: "an AND expression", value: "MIT AND BSD-3-Clause", expression: "MIT AND BSD-3-Clause"},
 		{name: "a WITH exception", value: "GPL-2.0-only WITH Classpath-exception-2.0", expression: "GPL-2.0-only WITH Classpath-exception-2.0"},
-		{name: "a parenthesised expression", value: "(MIT OR Apache-2.0)", expression: "(MIT OR Apache-2.0)"},
+		{name: "a parenthesized expression", value: "(MIT OR Apache-2.0)", expression: "(MIT OR Apache-2.0)"},
 		{name: "free text", value: "see the LICENSE file", licName: "see the LICENSE file"},
 		// Identifier-SHAPED but not on the SPDX list. It still goes in the id
 		// field: this package deliberately does not validate against the list,
@@ -85,7 +85,7 @@ func TestNoLicenseYieldsNoEntry(t *testing.T) {
 }
 
 // Grouping carries meaning -- AND binds tighter than OR -- so an expression is
-// stored exactly as written rather than normalised.
+// stored exactly as written rather than normalized.
 func TestExpressionGroupingSurvives(t *testing.T) {
 	const grouped = "(MIT OR Apache-2.0) AND BSD-3-Clause"
 	l := DeclaredLicense(grouped)
@@ -117,7 +117,7 @@ func TestConcludedLicense(t *testing.T) {
 	})
 
 	// A score above 1 is a producer bug rather than extra certainty, so it
-	// clamps to the top of the range instead of travelling as written, where a
+	// clamps to the top of the range instead of traveling as written, where a
 	// consumer ranking conclusions would read it as a real measurement.
 	t.Run("a score above 1 clamps to 1", func(t *testing.T) {
 		for _, in := range []float64{1.5, 42} {

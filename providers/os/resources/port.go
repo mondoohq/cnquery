@@ -686,7 +686,7 @@ var freebsdPortStates = map[string]string{
 }
 
 // freebsdPortState translates one sockstat CONN STATE token onto the canonical
-// TCP_STATES vocabulary. An unrecognised token passes through unchanged rather
+// TCP_STATES vocabulary. An unrecognized token passes through unchanged rather
 // than becoming "", so a state FreeBSD adds later is still visible instead of
 // silently reading as no state at all. udp rows carry no state and keep their
 // empty value.

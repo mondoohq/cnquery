@@ -19,7 +19,7 @@ type Ini struct {
 //	proxy_password = "p@ss#word"
 //
 // down to an unterminated `"p@ss`. Inline comments on unquoted values are
-// still honoured, which is what the callers of this parser have always relied
+// still honored, which is what the callers of this parser have always relied
 // on.
 func unquotedHashIndex(line string) int {
 	var quote byte

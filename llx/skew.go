@@ -29,7 +29,7 @@ func (e *ErrFieldNotFound) Error() string {
 // ErrResourceNotFound reports a resource the reader's schema does not define.
 // Typed for the same reason ErrFieldNotFound is: a whole resource the reader has
 // never heard of is skew in exactly the way a missing field is, and the two have
-// to degrade alike or the behaviour depends on how far into a chain the gap
+// to degrade alike or the behavior depends on how far into a chain the gap
 // happens to fall.
 type ErrResourceNotFound struct {
 	Resource string

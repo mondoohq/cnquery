@@ -24,8 +24,8 @@ different product codes:
 
 | Listing | Product code | Notes |
 |---|---|---|
-| CloudEOS Router (BYOL) | `3gruvlcso4s66wfg2mdzxg8z6` | needs a licence from Arista sales; the AMI *is* publicly listed |
-| CloudEOS Router (PAYG) | `8xzz74jx7agumduhohu7zful3` | hourly software charge, no licence needed |
+| CloudEOS Router (BYOL) | `3gruvlcso4s66wfg2mdzxg8z6` | needs a license from Arista sales; the AMI *is* publicly listed |
+| CloudEOS Router (PAYG) | `8xzz74jx7agumduhohu7zful3` | hourly software charge, no license needed |
 
 **The PAYG AMI is not discoverable from the CLI.** `describe-images` returns
 only the BYOL image, in every region, even when you are subscribed to PAYG:

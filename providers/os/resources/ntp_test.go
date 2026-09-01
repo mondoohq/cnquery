@@ -73,7 +73,7 @@ func TestNtpConfEmptyAndBareDirectives(t *testing.T) {
 
 	// A "server" line carrying no argument yields an empty value rather than
 	// being skipped. chrony.conf shares the helper and behaves the same way, so
-	// this pins the current behaviour rather than changing it; such a line is
+	// this pins the current behavior rather than changing it; such a line is
 	// malformed ntp.conf in the first place.
 	assert.Equal(t, []any{"", ""}, servers)
 }

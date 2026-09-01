@@ -65,7 +65,7 @@ func TestSplitIncludeArgs(t *testing.T) {
 }
 
 // Malformed quoting must not drop the directive entirely; fall back to the
-// plain split so behaviour is no worse than before.
+// plain split so behavior is no worse than before.
 func TestSplitIncludeArgsUnbalancedQuote(t *testing.T) {
 	got := splitIncludeArgs(`"/etc/ssh/unterminated.conf`)
 	require.NotEmpty(t, got)

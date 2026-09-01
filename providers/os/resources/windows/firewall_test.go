@@ -102,7 +102,7 @@ func TestParseWindowsFirewallRuleFiltersJoinsOnInstanceID(t *testing.T) {
 	assert.Equal(t, PSFlagList{"Any"}, dhcp.InterfaceType.InterfaceType)
 
 	// Every collection joins onto the same rule, and none of them bleeds
-	// into a neighbouring rule.
+	// into a neighboring rule.
 	rdp := filters["RemoteDesktop-UserMode-In-TCP"]
 	require.NotNil(t, rdp)
 	assert.Equal(t, PSStringArray{"3389"}, rdp.Port.LocalPort)
@@ -146,7 +146,7 @@ func TestParseWindowsFirewallRuleFiltersAbsentFilters(t *testing.T) {
 	assert.Nil(t, orphan.InterfaceType)
 
 	// An ICMP rule carries no application filter either, and its ICMP types
-	// are read while its neighbours' stay empty.
+	// are read while its neighbors' stay empty.
 	icmp := filters["CoreNet-ICMP4-DU-In"]
 	require.NotNil(t, icmp)
 	assert.Equal(t, PSStringArray{"3:4"}, icmp.Port.IcmpType)

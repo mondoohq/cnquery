@@ -185,16 +185,16 @@ func TestImportedConclusionReportsNoConfidence(t *testing.T) {
 	assert.Contains(t, cdx.String(), "AGPL-3.0-only")
 	assert.Contains(t, cdx.String(), `"acknowledgement": "concluded"`)
 
-	// The importer initialises Platform so the renderers have something to
+	// The importer initializes Platform so the renderers have something to
 	// dereference, which must not turn into a component: an operating system
-	// with no name is junk a consumer has to recognise and filter.
+	// with no name is junk a consumer has to recognize and filter.
 	assert.NotContains(t, cdx.String(), `"bom-ref": "os:"`)
 }
 
 // Platform is a pointer, and the CycloneDX renderer was the only one that
 // dereferenced it without checking: SPDX and the table both render a BOM
 // without one, and cnquery_bom.go guards the same field. Nothing in tree
-// reaches it now that the importer initialises Platform, which is exactly why
+// reaches it now that the importer initializes Platform, which is exactly why
 // it is worth a test -- the next producer to build a Sbom by hand would find it
 // the hard way.
 func TestRenderersHandleABomWithNoPlatform(t *testing.T) {

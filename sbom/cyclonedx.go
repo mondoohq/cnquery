@@ -72,7 +72,7 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 	// A scanned host always does. A document parsed from somebody else's SBOM
 	// often does not, because most SBOMs describe an application rather than a
 	// machine, and emitting the component anyway produced an operating system
-	// with no name -- `"bom-ref": "os:"` -- that a consumer has to recognise as
+	// with no name -- `"bom-ref": "os:"` -- that a consumer has to recognize as
 	// junk and filter.
 	//
 	// The nil check is not redundant with it. Platform is a pointer, and this
@@ -390,7 +390,7 @@ var familyMap = map[string][]string{
 //
 // A component's name is required by the schema, so a generator that names no
 // tool cannot be rendered as one: the entry would be a component called "",
-// which is the nameless-component shape a consumer has to recognise as junk and
+// which is the nameless-component shape a consumer has to recognize as junk and
 // filter. `tools` is optional, so leaving it out says the same thing honestly.
 // The reader already tolerates its absence.
 func cycloneDXTools(g *Generator) *cyclonedx.ToolsChoice {

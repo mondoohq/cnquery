@@ -148,7 +148,7 @@ const (
 	schannelClientMinKeyBitLength  = "ClientMinKeyBitLength"
 )
 
-// The well-known algorithm names Windows recognises under each SCHANNEL branch.
+// The well-known algorithm names Windows recognizes under each SCHANNEL branch.
 // Every one of these is reported whether or not the registry mentions it: a
 // list built only from the subkeys that happen to exist would make
 // `protocols.where(name == "TLS 1.0").all(...)` match nothing and pass

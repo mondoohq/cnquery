@@ -149,7 +149,7 @@ func TestClassifyIngestFailure(t *testing.T) {
 		{"deadline exceeded", &url.Error{Op: "Get", Err: context.DeadlineExceeded}, IngestFailureTimeout},
 		{"canceled", &url.Error{Op: "Get", Err: context.Canceled}, IngestFailureTimeout},
 		{"net timeout", &url.Error{Op: "Get", Err: timeoutError{}}, IngestFailureTimeout},
-		{"unrecognised", errors.New("boom"), IngestFailureOther},
+		{"unrecognized", errors.New("boom"), IngestFailureOther},
 	}
 
 	for _, tt := range tests {

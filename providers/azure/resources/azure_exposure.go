@@ -406,7 +406,7 @@ func ipv6ToBigInt(addr netip.Addr) *big.Int {
 // The rules are handed to firewallRangesAdmitInternet as a set rather than
 // tested one at a time: a rule list that partitions the address space between
 // its entries opens the server just as widely as a single catch-all, and
-// per-rule judgement reported it as closed.
+// per-rule judgment reported it as closed.
 func databaseInternetReachable(publicNetworkAccess string, firewallRanges [][2]string) bool {
 	if !publicNetworkAccessEnabled(publicNetworkAccess) {
 		return false
@@ -722,7 +722,7 @@ type exposureVerdict struct {
 }
 
 // exposureObservations is what the exposure walk actually observed, kept apart
-// from the verdicts so the judgement is a pure function of it.
+// from the verdicts so the judgment is a pure function of it.
 type exposureObservations struct {
 	// hasPublicIp is read from the resource's own interfaces and is always
 	// authoritative: the addresses are already cached on the VM.

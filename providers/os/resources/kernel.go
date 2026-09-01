@@ -174,11 +174,11 @@ var suseKernelSubpackages = map[string]bool{
 // Debian and Ubuntu ship a metapackage alongside the versioned images:
 // linux-image-cloud-amd64 on Debian, linux-image-aws on Ubuntu. Its only job
 // is to depend on the newest kernel, so it contains no kernel of its own and
-// listing it invents an installed kernel named after the flavour ("aws",
+// listing it invents an installed kernel named after the flavor ("aws",
 // "cloud-amd64") that is not on disk.
 //
 // A real image package always names a release, and a release always starts
-// with a digit. A flavour never does.
+// with a digit. A flavor never does.
 func debianImageKernelName(pkgName string) (string, bool) {
 	name, ok := strings.CutPrefix(pkgName, "linux-image-")
 	if !ok {
@@ -410,7 +410,7 @@ func suseKernelVersion(pkg kernelPackage, runningKernelVersion string) (KernelVe
 
 // archKernelVersion reads a pacman kernel package. The installed version
 // reads "7.1.9.arch1-2" while uname reports "7.1.8-arch1-3", so the running
-// comparison has to normalise the separator (archKernelMatchesRunning).
+// comparison has to normalize the separator (archKernelMatchesRunning).
 func archKernelVersion(pkg kernelPackage, runningKernelVersion string) (KernelVersion, bool) {
 	if !archKernelPackages[pkg.Name] {
 		return KernelVersion{}, false

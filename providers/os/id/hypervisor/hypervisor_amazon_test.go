@@ -110,7 +110,7 @@ func TestMapHypervisorDMIVendors(t *testing.T) {
 	}
 }
 
-// Several vendor strings contain more than one key. Go randomises map
+// Several vendor strings contain more than one key. Go randomizes map
 // iteration, so before ordering by key length the answer differed between
 // runs. The most specific match must win, every time.
 //

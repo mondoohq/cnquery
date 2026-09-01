@@ -265,7 +265,7 @@ func TestInitBackedResourcesCanSupplyACacheKey(t *testing.T) {
 // Three shapes count, and the third is why this is a heuristic rather than a
 // proof: an init that delegates (`return initFromServiceList(...)`) has its key
 // supplied by the callee, which an AST walk of this body cannot see. Delegation
-// is recognised wherever it appears, not only as the sole statement, so an init
+// is recognized wherever it appears, not only as the sole statement, so an init
 // that sets up a variable before delegating is still skipped. The cost is that
 // an init calling any single-result helper on a return path is treated as
 // delegating; the benefit is that the guard reports no false failures.

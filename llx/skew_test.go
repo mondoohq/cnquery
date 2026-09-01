@@ -199,7 +199,7 @@ func TestUnavailableFieldKeepsItsReasonUnderStrictMode(t *testing.T) {
 }
 
 // A whole resource the reader does not have degrades like a missing field.
-// Handling only fields would make the behaviour depend on how far into a chain
+// Handling only fields would make the behavior depend on how far into a chain
 // the version gap happens to fall.
 func TestUnavailableResourceDegradesLikeAField(t *testing.T) {
 	runtime := testutils.LinuxMock()

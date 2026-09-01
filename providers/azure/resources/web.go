@@ -102,7 +102,7 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 
 	siteIdentity := orZero(site.Identity)
 
-	// Both resources keep the raw identity dict, deprecated in favour of the
+	// Both resources keep the raw identity dict, deprecated in favor of the
 	// flattened members. appsite has no tenantId field of its own: it resolves
 	// the tenant through systemAssignedIdentity, off cacheIdentityTenantId.
 	if resourceType == ResourceAzureSubscriptionWebServiceAppslot {

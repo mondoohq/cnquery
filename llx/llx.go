@@ -777,7 +777,7 @@ func (b *blockExecutor) createResource(name string, binding uint64, f *Function,
 		// A resource this build has never heard of, in a bundle that already
 		// told us it was compiled against a newer provider, degrades exactly
 		// like a missing field does. Handling only the field case would make
-		// the behaviour depend on how far into a chain the gap falls.
+		// the behavior depend on how far into a chain the gap falls.
 		if data, degraded := b.degradeUnavailableResource(name, err); degraded {
 			b.cache.Store(ref, &stepCache{Result: data, IsStatic: true})
 			return data, 0, nil

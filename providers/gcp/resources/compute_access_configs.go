@@ -16,7 +16,7 @@ type mqlGcpProjectComputeServiceInstanceNetworkInterfaceAccessConfigInternal str
 // accessConfigIDSegment names the list an access config was read from. The IPv4
 // and IPv6 lists on a single NIC are allowed to reuse a name, so the segment has
 // to be part of the cache key or the two entries collide and the second one is
-// silently dropped in favour of the first.
+// silently dropped in favor of the first.
 const (
 	accessConfigIDSegment     = "accessConfig"
 	ipv6AccessConfigIDSegment = "ipv6AccessConfig"

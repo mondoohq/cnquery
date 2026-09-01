@@ -1189,13 +1189,13 @@ private oci.network.exposure @defaults("internetReachable hasPublicIp") {
   // Security attributes carried by the resource, keyed by namespace
   //
   // Deprecated in favor of appliedSecurityAttributes, which joins each
-  // labelling to the namespace behind it and so reports whether that namespace
+  // labeling to the namespace behind it and so reports whether that namespace
   // enforces or only audits. Each key is a security attribute namespace and
   // each value maps that namespace's attribute names to the resource's values.
   securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
-  // Each labelling as a row carrying its namespace, its definition and whether
+  // Each labeling as a row carrying its namespace, its definition and whether
   // that namespace enforces or only audits.
   appliedSecurityAttributes() []oci.securityAttributes.applied
   // Whether Zero Trust Packet Routing is enforcing on this resource
@@ -1368,7 +1368,7 @@ private oci.compute.instance @defaults("name") {
   // Security attributes applied to the instance, keyed by namespace
   //
   // Deprecated in favor of appliedSecurityAttributes, which joins each
-  // labelling to the namespace behind it and so reports whether that namespace
+  // labeling to the namespace behind it and so reports whether that namespace
   // enforces or only audits. Each key is a security attribute namespace and
   // each value maps that namespace's attribute names to this instance's
   // values.
@@ -1579,7 +1579,7 @@ private oci.compute.vnic @defaults("name") {
   // Security attributes applied to the VNIC, keyed by namespace
   //
   // Deprecated in favor of appliedSecurityAttributes, which joins each
-  // labelling to the namespace behind it and so reports whether that namespace
+  // labeling to the namespace behind it and so reports whether that namespace
   // enforces or only audits. A VNIC can carry attributes its instance does
   // not, so Zero Trust Packet Routing may govern one interface of a
   // multi-homed instance and not another.
@@ -1857,7 +1857,7 @@ private oci.network.vcn @defaults("name") {
   // Security attributes applied to the VCN, keyed by namespace
   //
   // Deprecated in favor of appliedSecurityAttributes, which joins each
-  // labelling to the namespace behind it and so reports whether that namespace
+  // labeling to the namespace behind it and so reports whether that namespace
   // enforces or only audits. Zero Trust Packet Routing statements can name a
   // whole VCN this way rather than naming the resources inside it.
   securityAttributes @maturity("deprecated") map[string]dict
@@ -3316,7 +3316,7 @@ private oci.fileStorage.mountTarget @defaults("name state availabilityDomain") {
   // Security attributes applied to the mount target, keyed by namespace
   //
   // Deprecated in favor of appliedSecurityAttributes, which joins each
-  // labelling to the namespace behind it and so reports whether that namespace
+  // labeling to the namespace behind it and so reports whether that namespace
   // enforces or only audits. Zero Trust Packet Routing authorizes traffic from
   // these rather than from the mount target's address.
   securityAttributes @maturity("deprecated") map[string]dict
@@ -4728,7 +4728,7 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
   // Security attributes applied to the load balancer, keyed by namespace
   //
   // Deprecated in favor of appliedSecurityAttributes, which joins each
-  // labelling to the namespace behind it and so reports whether that namespace
+  // labeling to the namespace behind it and so reports whether that namespace
   // enforces or only audits. Zero Trust Packet Routing decides what the load
   // balancer may talk to from these rather than from its address.
   securityAttributes @maturity("deprecated") map[string]dict
@@ -5198,7 +5198,7 @@ private oci.networkLoadBalancer.loadBalancer @defaults("name isPrivate state") {
   // Zero Trust Packet Routing security attributes applied to the load balancer
   //
   // Deprecated in favor of appliedSecurityAttributes, which joins each
-  // labelling to the namespace behind it and so reports whether that namespace
+  // labeling to the namespace behind it and so reports whether that namespace
   // enforces or only audits.
   securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
@@ -5618,12 +5618,12 @@ private oci.streaming.streamPool @defaults("name isPrivate state") {
   // Zero Trust Packet Routing security attributes applied to the pool
   //
   // Deprecated in favor of appliedSecurityAttributes, which joins each
-  // labelling to the namespace behind it and so reports whether that namespace
+  // labeling to the namespace behind it and so reports whether that namespace
   // enforces or only audits.
   securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
-  // Each labelling as a row carrying its namespace, its definition and whether
+  // Each labeling as a row carrying its namespace, its definition and whether
   // that namespace enforces or only audits.
   appliedSecurityAttributes() []oci.securityAttributes.applied
   // Lifecycle state (CREATING, ACTIVE, DELETING, DELETED, FAILED, UPDATING)
@@ -6284,12 +6284,12 @@ private oci.opensearch.cluster @defaults("name softwareVersion securityMode stat
   // Zero Trust Packet Routing security attributes applied to the cluster
   //
   // Deprecated in favor of appliedSecurityAttributes, which joins each
-  // labelling to the namespace behind it and so reports whether that namespace
+  // labeling to the namespace behind it and so reports whether that namespace
   // enforces or only audits.
   securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
-  // Each labelling as a row carrying its namespace, its definition and whether
+  // Each labeling as a row carrying its namespace, its definition and whether
   // that namespace enforces or only audits.
   appliedSecurityAttributes() []oci.securityAttributes.applied
   // Lifecycle state (CREATING, UPDATING, ACTIVE, DELETING, DELETED, FAILED)
@@ -6396,12 +6396,12 @@ private oci.goldenGate.deployment @defaults("name isPublic state") {
   // Zero Trust Packet Routing security attributes applied to the deployment
   //
   // Deprecated in favor of appliedSecurityAttributes, which joins each
-  // labelling to the namespace behind it and so reports whether that namespace
+  // labeling to the namespace behind it and so reports whether that namespace
   // enforces or only audits.
   securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
-  // Each labelling as a row carrying its namespace, its definition and whether
+  // Each labeling as a row carrying its namespace, its definition and whether
   // that namespace enforces or only audits.
   appliedSecurityAttributes() []oci.securityAttributes.applied
   // Lifecycle state
@@ -6673,7 +6673,7 @@ private oci.networkFirewall.firewall @defaults("name") {
   // Zero Trust Packet Routing security attributes enforced on the firewall
   //
   // Deprecated in favor of appliedSecurityAttributes, which joins each
-  // labelling to the namespace behind it and so reports whether that namespace
+  // labeling to the namespace behind it and so reports whether that namespace
   // enforces or only audits. Keyed by security-attribute namespace, each value
   // maps the attribute names within that namespace to their assigned values.
   securityAttributes @maturity("deprecated") map[string]dict
@@ -7264,7 +7264,7 @@ private oci.oke.cluster @defaults("name") {
   // Zero Trust Packet Routing security attributes on the cluster API endpoint
   //
   // Deprecated in favor of appliedSecurityAttributes, which joins each
-  // labelling to the namespace behind it and so reports whether that namespace
+  // labeling to the namespace behind it and so reports whether that namespace
   // enforces or only audits.
   securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
@@ -7538,7 +7538,7 @@ private oci.functions.application @defaults("name") {
 //
 // Whether the application emits traces and which Application Performance
 // Monitoring collector receives them. domainId stays an OCID because APM
-// domains are not modelled in this provider.
+// domains are not modeled in this provider.
 private oci.functions.applicationTraceConfig @defaults("isEnabled") {
   // Whether distributed tracing is enabled for the application
   isEnabled bool
@@ -8036,7 +8036,7 @@ private oci.database.dbSystem @defaults("name") {
   // Zero Trust Packet Routing security attributes applied to the DB system
   //
   // Deprecated in favor of appliedSecurityAttributes, which joins each
-  // labelling to the namespace behind it and so reports whether that namespace
+  // labeling to the namespace behind it and so reports whether that namespace
   // enforces or only audits. Each key is a security attribute namespace and
   // each value maps that namespace's attribute names to this DB system's
   // values.

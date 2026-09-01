@@ -94,7 +94,7 @@ func TestPostgresqlConfNoFileReturnsNull(t *testing.T) {
 }
 
 // The documented defaults are still correct when the file exists and simply
-// does not mention the directive. This is the behaviour the guard must not
+// does not mention the directive. This is the behavior the guard must not
 // break.
 func TestPostgresqlConfPresentButEmptyKeepsDefaults(t *testing.T) {
 	empty := map[string]any{}
@@ -202,7 +202,7 @@ func TestPostgresqlMajorSortIsNumericNotLexical(t *testing.T) {
 // An operator's backup copy under /etc/postgresql has no integer major.
 // It must be skipped, not parsed as major 0 and not blow up the search.
 func TestPostgresqlNonNumericDirectoryIsSkipped(t *testing.T) {
-	t.Run("skipped in favour of a real cluster", func(t *testing.T) {
+	t.Run("skipped in favor of a real cluster", func(t *testing.T) {
 		fs := pgFs(t,
 			"/etc/postgresql/backup/main/postgresql.conf",
 			"/etc/postgresql/16/main/postgresql.conf",

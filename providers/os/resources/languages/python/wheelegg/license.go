@@ -24,7 +24,7 @@ import (
 // one above it said nothing.
 //
 // Reading only the middle tier, which is what this package did before, is not a
-// small gap. PEP 639 deprecates the `License` field in favour of
+// small gap. PEP 639 deprecates the `License` field in favor of
 // `License-Expression` and forbids a distribution from carrying both, so a
 // wheel built by a current toolchain states its license in a field that was
 // never read — and reports no license at all, from a file already opened and

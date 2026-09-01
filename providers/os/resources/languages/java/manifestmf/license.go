@@ -141,7 +141,7 @@ func ParseBundleLicense(header string) string {
 // identifier: one token of the characters identifiers actually use.
 //
 // It deliberately does not check against the SPDX list. This package reports
-// what a manifest stated rather than what it recognises, and an unlisted
+// what a manifest stated rather than what it recognizes, and an unlisted
 // identifier is still an identifier; the question here is only whether the
 // comma separated two names or split one.
 func allIdentifierShaped(names []string) bool {

@@ -45,7 +45,7 @@ func TestParseOnOff(t *testing.T) {
 		"blockall on":    {"Firewall has block all state set to enabled.\n", true, true},
 		"blockall off":   {"Firewall has block all state set to disabled.\n", false, true},
 		"managed mac":    {"Firewall settings cannot be modified from command line on managed Mac computers.\n", false, false},
-		"unrecognised":   {"something else entirely\n", false, false},
+		"unrecognized":   {"something else entirely\n", false, false},
 		"empty is not a": {"", false, false},
 		// A bare "enabled."/"disabled." is not a toggle answer. The
 		// --getallowsigned reply ends that way, and a logging line can too, so
@@ -57,7 +57,7 @@ func TestParseOnOff(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			v, ok := parseOnOff(tt.stdout)
-			assert.Equal(t, tt.ok, ok, "recognised")
+			assert.Equal(t, tt.ok, ok, "recognized")
 			if tt.ok {
 				assert.Equal(t, tt.want, v)
 			}

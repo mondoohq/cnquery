@@ -116,7 +116,7 @@ func (a *mqlApt) sourceFiles() ([]*mqlFile, error) {
 }
 
 // isAptSourceFile reports whether a path under sources.list.d is one apt would
-// read. apt honours exactly two extensions: .list for the one-line format and
+// read. apt honors exactly two extensions: .list for the one-line format and
 // .sources for deb822. Everything else in the directory, notably the .save and
 // .distUpgrade backups apt itself leaves behind, is ignored.
 func isAptSourceFile(path string) bool {
