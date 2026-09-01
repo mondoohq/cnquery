@@ -45,6 +45,8 @@ permissions:
 
 jobs:
   goreleaser:
+    outputs:
+      skip-publish: ${{ steps.skip-publish.outputs.skip-publish }}
     permissions:
       # Add "contents" to write release
       contents: "write"
@@ -243,3 +245,28 @@ jobs:
           client-payload: '{
             "version": "${{  github.ref_name }}"
             }'
+
+  # For pre-release tags (-alpha, -beta, -pre, -rc) the installer chain
+  # doesn't fire (Trigger mql bump in cnspec above is gated on skip-publish),
+  # so nothing normally copies the artifacts to releases.mondoo.com. Call
+  # releasr's github_copy workflow explicitly so the deb/rpm/tarball assets
+  # from the GH pre-release show up at releases.mondoo.com/mql/<version>/
+  # -- without repointing apt/yum "latest" to the pre-release (that's what
+  # include-prereleases: false in releasr's `idx` step guarantees).
+  copy-prerelease-to-releases-mondoo-com:
+    name: Copy pre-release to releases.mondoo.com
+    if: ${{ needs.goreleaser.outputs.skip-publish == 'true' }}
+    needs: goreleaser
+    # id-token: write lets the called workflow auth to GCP via WIF.
+    # contents: read is required to download the releasr binary.
+    permissions:
+      contents: read
+      id-token: write
+    uses: mondoohq/releasr/.github/workflows/github_copy.yaml@main
+    with:
+      repository: mql
+      version: ${{ github.ref_name }}
+      bucket: releases-us.mondoo.io
+      include-prereleases: false
+      update-parent: true
+    secrets: inherit
