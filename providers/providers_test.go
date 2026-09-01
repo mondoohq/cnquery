@@ -7,12 +7,14 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"syscall"
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -176,4 +178,108 @@ func TestInstallIO(t *testing.T) {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "cannot find testp.json")
 	})
+}
+
+// fakeRegistry serves provider archives from memory so the install paths can
+// be exercised without reaching releases.mondoo.com.
+type fakeRegistry struct {
+	latest      string
+	archive     []byte
+	confJSON    []byte
+	schemaJSON  []byte
+	downloadErr error
+	downloads   int
+}
+
+func (r *fakeRegistry) GetLatestVersion(ctx context.Context, name string) (string, error) {
+	return r.latest, nil
+}
+
+func (r *fakeRegistry) DownloadProvider(ctx context.Context, name, version, os, arch string) (io.ReadCloser, error) {
+	r.downloads++
+	if r.downloadErr != nil {
+		return nil, r.downloadErr
+	}
+	return io.NopCloser(bytes.NewReader(r.archive)), nil
+}
+
+func (r *fakeRegistry) DownloadProviderMetadata(ctx context.Context, name, version string) ([]byte, []byte, error) {
+	if r.downloadErr != nil {
+		return nil, nil, r.downloadErr
+	}
+	return r.confJSON, r.schemaJSON, nil
+}
+
+// useTestProviderPath installs into a temp directory and serves downloads from
+// the given registry, restoring the globals it swaps when the test ends.
+func useTestProviderPath(t *testing.T, reg ProviderRegistry) string {
+	t.Helper()
+	dir := t.TempDir()
+
+	origDefault, origCustom := DefaultPath, CustomProviderPath
+	origRegistry, origCache := registry, CachedProviders
+
+	// DefaultPath is where installs land; CustomProviderPath is what ListAll
+	// reads, and setting it makes ListAll ignore the system and home paths, so
+	// the test never sees the machine's real providers.
+	DefaultPath = dir
+	CustomProviderPath = dir
+	SetProviderRegistry(reg)
+	CachedProviders = nil
+
+	t.Cleanup(func() {
+		DefaultPath, CustomProviderPath = origDefault, origCustom
+		SetProviderRegistry(origRegistry)
+		CachedProviders = origCache
+	})
+	return dir
+}
+
+func TestTryProviderUpdateCompletesSchemaOnlyInstall(t *testing.T) {
+	const name = "testp"
+	const version = "1.2.3"
+	confJSON := []byte(`{"Name":"testp","ID":"testp","Version":"1.2.3"}`)
+	schemaJSON := []byte(`{"resources":{}}`)
+
+	archive, err := buildTarXz(map[string][]byte{
+		name:                     []byte(`fake-binary`),
+		name + ".json":           confJSON,
+		name + ".resources.json": schemaJSON,
+	})
+	require.NoError(t, err)
+
+	reg := &fakeRegistry{latest: version, archive: archive, confJSON: confJSON, schemaJSON: schemaJSON}
+	dir := useTestProviderPath(t, reg)
+	binPath := filepath.Join(dir, name, name)
+
+	schemaOnly, err := InstallSchemaOnly(name, version)
+	require.NoError(t, err)
+	require.False(t, schemaOnly.HasBinary, "a schema-only install has no binary")
+	require.NoFileExists(t, binPath)
+
+	// The schema is already current, so without the HasBinary check the
+	// refresh logic would report the provider as up to date and return it
+	// unchanged — still unusable.
+	completed, err := TryProviderUpdate(schemaOnly, UpdateProvidersConfig{Enabled: true})
+	require.NoError(t, err)
+
+	assert.True(t, completed.HasBinary, "the install must be completed with its binary")
+	assert.Equal(t, version, completed.Version, "the pinned version must be kept")
+	assert.FileExists(t, binPath)
+	assert.Equal(t, 1, reg.downloads)
+}
+
+func TestTryProviderUpdateSchemaOnlyDownloadFails(t *testing.T) {
+	reg := &fakeRegistry{latest: "1.2.3", downloadErr: errors.New("registry is down")}
+	dir := useTestProviderPath(t, reg)
+
+	schemaOnly := &Provider{
+		Provider:  &plugin.Provider{Name: "testp", ID: "testp", Version: "1.2.3"},
+		Path:      filepath.Join(dir, "testp"),
+		HasBinary: false,
+	}
+
+	_, err := TryProviderUpdate(schemaOnly, UpdateProvidersConfig{Enabled: true})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "registry is down")
 }

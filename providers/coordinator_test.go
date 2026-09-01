@@ -5,9 +5,12 @@ package providers
 
 import (
 	"fmt"
+	"path/filepath"
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/mql/providers-sdk/v1/plugin"
 	gomock "go.uber.org/mock/gomock"
@@ -293,4 +296,46 @@ func TestRemoveRuntime_UsedProvider(t *testing.T) {
 
 	// Verify that the first provider is stopped
 	assert.Contains(t, c.runningByID, "provider1")
+}
+
+func TestUnsafeStartProviderSchemaOnly(t *testing.T) {
+	schemaOnlyProvider := func(path string) *Provider {
+		return &Provider{
+			Provider:  &pp.Provider{Name: "testp", ID: "testp", Version: "1.2.3"},
+			Path:      path,
+			HasBinary: false,
+		}
+	}
+
+	newCoordinator := func(p *Provider) *coordinator {
+		c := &coordinator{
+			runningByID: map[string]*RunningProvider{},
+			runtimes:    map[string]*Runtime{},
+		}
+		c.SetProviders(Providers{p.ID: p})
+		return c
+	}
+
+	// Without these checks the exec below them fails with an obscure
+	// "fork/exec ...: no such file or directory" instead of saying what is
+	// actually wrong with the installation.
+	t.Run("auto-update disabled", func(t *testing.T) {
+		dir := useTestProviderPath(t, &fakeRegistry{latest: "1.2.3"})
+		c := newCoordinator(schemaOnlyProvider(filepath.Join(dir, "testp")))
+
+		_, err := c.unsafeStartProvider("testp", UpdateProvidersConfig{Enabled: false})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "installed schema-only and has no binary to run")
+	})
+
+	t.Run("auto-update on but the completing download fails", func(t *testing.T) {
+		reg := &fakeRegistry{latest: "1.2.3", downloadErr: errors.New("registry is down")}
+		dir := useTestProviderPath(t, reg)
+		c := newCoordinator(schemaOnlyProvider(filepath.Join(dir, "testp")))
+
+		_, err := c.unsafeStartProvider("testp", UpdateProvidersConfig{Enabled: true})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "completing its installation failed")
+		assert.Equal(t, 1, reg.downloads, "it must have tried to complete the install")
+	})
 }
