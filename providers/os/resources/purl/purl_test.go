@@ -171,6 +171,27 @@ func TestPackageURLString(t *testing.T) {
 		assert.Equal(t, expected, p.String())
 	})
 
+	// Regression guard for packageurl-go v0.1.6, which stopped percent-encoding
+	// RFC 3986 sub-delimiters in the name and version path segments and emitted
+	// "pkg:windows/windows/... Redistributable (x64)@..." instead of the
+	// spec-compliant "%28x64%29". We pinned to v0.1.5 until the upstream fix
+	// (package-url/packageurl-go#93) shipped in v0.1.7. These cases fail on
+	// v0.1.6, so they catch a downgrade or a repeat of the same regression.
+	t.Run("Sub-delimiters in name and version are percent-encoded", func(t *testing.T) {
+		t.Run("Every RFC 3986 sub-delimiter", func(t *testing.T) {
+			p := purl.NewPackageURL(nil, purl.TypeGeneric, "a!b$c&d'e(f)g*h+i,j;k=l", "1;2=3")
+			expected := "pkg:generic/a%21b%24c%26d%27e%28f%29g%2Ah%2Bi%2Cj%3Bk%3Dl@1%3B2%3D3"
+			assert.Equal(t, expected, p.String())
+		})
+
+		t.Run("Windows display name with parentheses", func(t *testing.T) {
+			p := purl.NewPackageURL(nil, purl.TypeWindows,
+				"Microsoft Visual C++ 2015-2022 Redistributable (x64)", "14.38.33130.0")
+			expected := "pkg:windows/Microsoft%20Visual%20C%2B%2B%202015-2022%20Redistributable%20%28x64%29@14.38.33130.0"
+			assert.Equal(t, expected, p.String())
+		})
+	})
+
 	t.Run("Empty name and version", func(t *testing.T) {
 		p := purl.NewPackageURL(nil, purl.TypeGeneric, "", "")
 		assert.Equal(t, purl.TypeGeneric, p.Type)
