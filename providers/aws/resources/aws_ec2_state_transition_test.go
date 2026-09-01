@@ -37,7 +37,7 @@ func TestParseStateTransitionTime(t *testing.T) {
 			want:   timePtr(time.Date(2026, 5, 31, 4, 36, 20, 0, time.UTC)),
 		},
 		{
-			name:   "a reason with no parenthesised timestamp is null",
+			name:   "a reason with no parenthesized timestamp is null",
 			reason: "Client.InstanceInitiatedShutdown: Instance initiated shutdown",
 			want:   nil,
 		},

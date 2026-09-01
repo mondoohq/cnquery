@@ -118,7 +118,7 @@ func TestIsMacieNotEnabledError(t *testing.T) {
 	// The regression. Macie writes this message with U+2019, not the ASCII
 	// apostrophe, so a guard spelled with a plain quote never matched it and
 	// ListAllowLists reported a failure in every account without Macie. The
-	// literals below are deliberately the curly form - normalising them to
+	// literals below are deliberately the curly form - normalizing them to
 	// ASCII here would test nothing.
 	t.Run("403 with a typographic apostrophe", func(t *testing.T) {
 		assert.True(t, IsMacieNotEnabledError(macieHTTPError(403,

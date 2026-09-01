@@ -34,7 +34,7 @@ func clickhousedbConnection(runtime *plugin.Runtime) *connection.ClickhousedbCon
 // reaching a verdict. Scanning into any and flattening here keeps one code path
 // across both schemas without a server-version check.
 //
-// An unrecognised shape is an error rather than an empty list. Callers read
+// An unrecognized shape is an error rather than an empty list. Callers read
 // these lists to decide whether an account is reachable without a credential,
 // and requiresCredential treats an empty list as requiring one -- so swallowing
 // a shape we do not understand would report a password-less account as secure.

@@ -24,7 +24,7 @@ const (
 // itself. Both document formats have to put a name somewhere -- SPDX's document
 // name is mandatory, and a CycloneDX component's name is required by the schema
 // -- so the choice is between this and a nameless entry a consumer has to
-// recognise as junk. Shared so that the SPDX and CycloneDX renderings of one
+// recognize as junk. Shared so that the SPDX and CycloneDX renderings of one
 // BOM do not disagree about what its subject is called.
 const unnamedSubject = "sbom"
 

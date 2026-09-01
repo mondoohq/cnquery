@@ -328,7 +328,7 @@ not-measured rendering in `cli/printer`.
 
 ### Part 6: degradation compiled into the bundle
 
-Parts 1-4 handle a gap the reader can *recognise*: a name it does not have. That
+Parts 1-4 handle a gap the reader can *recognize*: a name it does not have. That
 inference only works for additive change. When a field's **type** changes, the
 name exists on both sides and nothing fires - measured on a field flipped from
 `[]string` to `string`:

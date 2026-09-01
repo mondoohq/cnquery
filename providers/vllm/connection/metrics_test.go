@@ -90,14 +90,14 @@ func TestParseMetricLine(t *testing.T) {
 		ok     bool
 	}{
 		{
-			name:   "labelled sample",
+			name:   "labeled sample",
 			line:   `vllm:x{a="1",b="two"} 3.0`,
 			metric: "vllm:x",
 			labels: map[string]string{"a": "1", "b": "two"},
 			ok:     true,
 		},
 		{
-			name:   "unlabelled sample",
+			name:   "unlabeled sample",
 			line:   `vllm:y 4.0`,
 			metric: "vllm:y",
 			labels: map[string]string{},

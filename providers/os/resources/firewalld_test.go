@@ -226,7 +226,7 @@ func TestIsFirewalldAuthzError(t *testing.T) {
 	}
 	for _, s := range authz {
 		t.Run("authz/"+s[:min(len(s), 28)], func(t *testing.T) {
-			assert.True(t, isFirewalldAuthzError(s), "should be recognised as an authorization failure")
+			assert.True(t, isFirewalldAuthzError(s), "should be recognized as an authorization failure")
 		})
 	}
 

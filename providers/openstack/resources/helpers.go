@@ -21,7 +21,7 @@ func conn(runtime *plugin.Runtime) *connection.OpenstackConnection {
 }
 
 // userOptionBool reads a Keystone user option key as a bool. Absent or
-// non-bool values resolve to false, matching Keystone's default behaviour
+// non-bool values resolve to false, matching Keystone's default behavior
 // when an option is unset.
 func userOptionBool(options map[string]any, key string) bool {
 	if options == nil {

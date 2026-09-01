@@ -186,7 +186,7 @@ func (r *mqlAlicloudCs) grantSweep() ([]any, error) {
 }
 
 // ramPrincipals lists the RAM users and roles to ask about, reusing the
-// alicloud.ram resources so the identities are the ones already modelled.
+// alicloud.ram resources so the identities are the ones already modeled.
 func (r *mqlAlicloudCs) ramPrincipals() ([]csPrincipal, error) {
 	ram, err := CreateResource(r.MqlRuntime, "alicloud.ram", map[string]*llx.RawData{})
 	if err != nil {

@@ -1000,7 +1000,7 @@ func TestCreatePackage(t *testing.T) {
 		// Final guard: the projected fields together must serialize to a
 		// JSON object Go's encoding/json can decode back. That's the
 		// shape the server's convertPackages call would see.
-		marshalled, err := json.Marshal(map[string]string{
+		marshaled, err := json.Marshal(map[string]string{
 			"name":            pkg.Name,
 			"version":         pkg.Version,
 			"vendor":          pkg.Vendor,
@@ -1008,7 +1008,7 @@ func TestCreatePackage(t *testing.T) {
 		})
 		require.NoError(t, err)
 		var roundtrip map[string]string
-		require.NoError(t, json.Unmarshal(marshalled, &roundtrip),
+		require.NoError(t, json.Unmarshal(marshaled, &roundtrip),
 			"the SBOM-shape JSON object must decode cleanly")
 		assert.Equal(t, "SomeApp", roundtrip["name"])
 		assert.Equal(t, "Acme Corp", roundtrip["vendor"])

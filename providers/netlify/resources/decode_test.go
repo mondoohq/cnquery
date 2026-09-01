@@ -487,7 +487,7 @@ func TestStrSliceToAny(t *testing.T) {
 	}
 }
 
-// The site password is a secret and is never modelled. Its presence is the
+// The site password is a secret and is never modeled. Its presence is the
 // finding, so the derivation has to survive every form the API may report the
 // value in, and an unreported key must stay null rather than becoming a
 // confident "not protected".

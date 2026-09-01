@@ -26849,7 +26849,7 @@ private aws.msk.replicator.consumerGroupReplication @defaults("synchroniseConsum
   consumerGroupsToReplicate []string
   // Regular expression patterns of consumer groups to exclude from replication
   consumerGroupsToExclude []string
-  // Whether consumer group offsets are synchronised to the target cluster
+  // Whether consumer group offsets are synchronized to the target cluster
   synchroniseConsumerGroupOffsets bool
   // Whether new consumer groups are detected and copied
   detectAndCopyNewConsumerGroups bool

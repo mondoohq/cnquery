@@ -254,7 +254,7 @@ func TestPowerBiGet(t *testing.T) {
 }
 
 // workspacePageServer serves `total` workspaces through the admin groups
-// endpoint, honouring $top and $skip the way the real API does.
+// endpoint, honoring $top and $skip the way the real API does.
 func workspacePageServer(t *testing.T, total int, requests *[]string) *httptest.Server {
 	t.Helper()
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

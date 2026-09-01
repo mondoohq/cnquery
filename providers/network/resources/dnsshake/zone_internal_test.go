@@ -72,7 +72,7 @@ func zoneFixture(t *testing.T) *dns.ClientConfig {
 	host, port, err := net.SplitHostPort(pc.LocalAddr().String())
 	require.NoError(t, err)
 
-	// Attempts is honoured by queryNS; Timeout is not, because queryDnsTypeAt
+	// Attempts is honored by queryNS; Timeout is not, because queryDnsTypeAt
 	// builds a dns.Client with the library default and never reads it.
 	return &dns.ClientConfig{Servers: []string{host}, Port: port, Attempts: 1}
 }

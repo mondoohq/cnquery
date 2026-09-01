@@ -99,7 +99,7 @@ func TestNewMqlDeployKey_TakesTheRepositoryFromItsCaller(t *testing.T) {
 	assert.Same(t, repo, dk.Repository.Data, "must hand back the caller's repository, not refetch it")
 }
 
-// A caller without the repository keeps the old behaviour: the field stays
+// A caller without the repository keeps the old behavior: the field stays
 // unset so repository() can fetch it.
 func TestNewMqlDeployKey_WithoutARepositoryFallsBack(t *testing.T) {
 	runtime := prefetchRuntime()

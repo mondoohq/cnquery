@@ -73,7 +73,7 @@ func TestLoadExports_MissingFilesReturnEmpty(t *testing.T) {
 }
 
 func TestLoadExports_NonLinuxSkipsFragments(t *testing.T) {
-	// FreeBSD/macOS/AIX don't honour /etc/exports.d/; the fragments
+	// FreeBSD/macOS/AIX don't honor /etc/exports.d/; the fragments
 	// there should be ignored even if present.
 	fs := afero.NewMemMapFs()
 	mustWrite(t, fs, "/etc/exports", "/data -ro host1\n")

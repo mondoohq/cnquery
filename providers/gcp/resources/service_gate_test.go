@@ -172,7 +172,7 @@ func isResolveEnabledForwarder(fn *ast.FuncDecl) bool {
 //
 // Scope is deliberately narrow. Only resources whose Internal struct embeds
 // serviceGate are checked -- those are the ones that opted in, so there is no
-// judgement call about which services ought to be gated and no false failure on
+// judgment call about which services ought to be gated and no false failure on
 // one that should not be.
 func TestGatedServiceCollectionsConsultTheGate(t *testing.T) {
 	paths, err := filepath.Glob("*.go")

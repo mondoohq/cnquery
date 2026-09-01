@@ -261,7 +261,7 @@ func TestImmutableReleaseSettingsDecoding(t *testing.T) {
 }
 
 // A Dependabot secret carries no value, only the metadata below. The
-// timestamps are modelled by value, so an omitted one decodes to the zero time
+// timestamps are modeled by value, so an omitted one decodes to the zero time
 // and has to be nulled before it reaches a field.
 func TestDependabotSecretDecoding(t *testing.T) {
 	var secret github.Secret

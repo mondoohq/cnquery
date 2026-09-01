@@ -4,7 +4,7 @@
 package resources
 
 // this package creates a copy of the msgraph object that we use for embedded struct. This is required since microsoft
-// defines structs with lower case and does not attach json tags or implements the standard marshalling function
+// defines structs with lower case and does not attach json tags or implements the standard marshaling function
 
 import (
 	"encoding/json"

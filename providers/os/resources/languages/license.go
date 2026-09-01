@@ -52,7 +52,7 @@ const (
 // installed.json use a JSON array, npm's lockfile accepts either a string or an
 // array. In every one of them the list means a CHOICE: the package is offered
 // under any of these, and the consumer picks. That is SPDX's OR, so the members
-// are OR-joined and parenthesised, which keeps the result a valid expression
+// are OR-joined and parenthesized, which keeps the result a valid expression
 // when it is embedded in a larger one.
 //
 // A single license passes through untouched, which is the overwhelmingly common

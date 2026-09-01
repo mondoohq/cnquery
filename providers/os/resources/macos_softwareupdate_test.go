@@ -295,7 +295,7 @@ func TestParseSoftwareUpdateSchedule(t *testing.T) {
 	}{
 		"on":           {"Automatic checking for updates is turned on\n", true, true},
 		"off":          {"Automatic checking for updates is turned off\n", false, true},
-		"unrecognised": {"softwareupdate: unknown option\n", false, false},
+		"unrecognized": {"softwareupdate: unknown option\n", false, false},
 		"empty":        {"", false, false},
 	} {
 		t.Run(name, func(t *testing.T) {

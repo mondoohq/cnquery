@@ -61,7 +61,7 @@ func TestFirewallRuleAllowsAnyInternetIPv6(t *testing.T) {
 
 // TestFirewallRuleAllowsAnyInternetIPv4Unchanged re-pins the IPv4 answers after
 // the function grew a family switch, so the widened check cannot regress the
-// behaviour it already had.
+// behavior it already had.
 func TestFirewallRuleAllowsAnyInternetIPv4Unchanged(t *testing.T) {
 	assert.True(t, firewallRuleAllowsAnyInternet("0.0.0.0", "255.255.255.255"))
 	assert.True(t, firewallRuleAllowsAnyInternet("0.0.0.0", "128.255.255.255"))
@@ -69,7 +69,7 @@ func TestFirewallRuleAllowsAnyInternetIPv4Unchanged(t *testing.T) {
 	assert.False(t, firewallRuleAllowsAnyInternet("203.0.113.1", "203.0.113.10"))
 }
 
-// TestDatabaseInternetReachableIPv6 covers the combined judgement: an IPv6 rule
+// TestDatabaseInternetReachableIPv6 covers the combined judgment: an IPv6 rule
 // alone is enough to make a server internet-reachable, and the
 // publicNetworkAccess gate still overrides it.
 func TestDatabaseInternetReachableIPv6(t *testing.T) {

@@ -306,7 +306,7 @@ func (m *mqlMacosFirewall) applications() ([]any, error) {
 // mdmFirewallPayloadType is the Configuration Profile payload type that
 // Apple defines for the application firewall. A profile carrying this
 // payload (typically delivered via MDM) declares enable state, stealth
-// mode, blocking behaviour, and per-app rules for the firewall.
+// mode, blocking behavior, and per-app rules for the firewall.
 const mdmFirewallPayloadType = "com.apple.security.firewall"
 
 func (m *mqlMacosFirewall) managedByMDM() (bool, error) {

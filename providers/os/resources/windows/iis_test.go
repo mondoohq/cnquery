@@ -250,7 +250,7 @@ func TestParseIisConfigurationServerScopeFromCapture(t *testing.T) {
 	// sslFlags now arrives as the **name** "None" rather than as the number 0,
 	// because the schema lookup resolves it like any other flags attribute.
 	// ParseIisSslFlags accepted both forms already, which is the only reason
-	// this field did not change behaviour; the test pins that it still does.
+	// this field did not change behavior; the test pins that it still does.
 	require.Empty(t, config.SslFlags)
 
 	require.Equal(t, "ASP.NET", config.CustomHeaders["X-Powered-By"])

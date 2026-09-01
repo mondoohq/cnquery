@@ -179,7 +179,7 @@ func initOciIdentityUser(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	return args, res, nil
 }
 
-// findOciIdentityUser locates a user by OCID by materialising the tenancy's
+// findOciIdentityUser locates a user by OCID by materializing the tenancy's
 // user list and filtering. We accept the list cost (typically small) to avoid
 // duplicating the ListUsers/pagination/region-fanout logic.
 func findOciIdentityUser(runtime *plugin.Runtime, id string) (plugin.Resource, error) {

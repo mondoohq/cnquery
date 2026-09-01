@@ -29,8 +29,8 @@ func TestAzureStorageDataPlaneURL(t *testing.T) {
 
 	// The regression this guards: the account name lands in the host, where
 	// percent-escaping does not apply. Escaping it there would look like a
-	// defence and not be one -- a name carrying a "/" is not encoded away, it
-	// moves the request to a different host. Rejecting the name is the defence.
+	// defense and not be one -- a name carrying a "/" is not encoded away, it
+	// moves the request to a different host. Rejecting the name is the defense.
 	t.Run("an account name that is not a valid account name is refused", func(t *testing.T) {
 		for _, account := range []string{
 			"",

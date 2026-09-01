@@ -150,7 +150,7 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 			// direction they cannot.
 			//
 			// What makes the overstatement safe to keep is that it no longer
-			// survives a round trip: readSpdxPackageLicensing recognises a
+			// survives a round trip: readSpdxPackageLicensing recognizes a
 			// concluded value equal to the declared one as this echo and does
 			// not import it as a determination.
 			concluded = declared

@@ -163,7 +163,7 @@ func TestQueryNSWithoutAResolverIsAnError(t *testing.T) {
 	require.Error(t, err, "no configured resolver cannot silently mean no zone")
 }
 
-// TestAuthoritativeNameserversEndsTheWalkOnAQueryFailure pins the behaviour
+// TestAuthoritativeNameserversEndsTheWalkOnAQueryFailure pins the behavior
 // change #10542 made to a shipped field. Before it, a lost reply at the queried
 // name climbed to the parent and returned the parent's nameservers, which answer
 // referrals rather than the records the caller wanted. It is an error now, and

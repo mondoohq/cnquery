@@ -27,7 +27,7 @@ type mqlZoomUserInternal struct {
 const usersPageSize = 300
 
 // zoomSsoLoginType is the login type Zoom reports for users who authenticate
-// through the account's SSO configuration. Note that the neighbouring value
+// through the account's SSO configuration. Note that the neighboring value
 // 100 is Zoom Work email, which is not SSO.
 const zoomSsoLoginType = 101
 

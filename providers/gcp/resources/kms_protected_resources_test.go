@@ -121,7 +121,7 @@ func TestProtectedResourcesArgs(t *testing.T) {
 		})
 
 		assert.Equal(t, int64(42), args["resourceCount"].Value)
-		// The cross-project blast radius: the reason projectCount is modelled
+		// The cross-project blast radius: the reason projectCount is modeled
 		// separately from resourceCount.
 		assert.Equal(t, int64(3), args["projectCount"].Value)
 		assert.Equal(t, map[string]any{"Compute Engine": "40", "Cloud Storage": "2"}, args["cloudProducts"].Value)

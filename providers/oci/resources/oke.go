@@ -472,7 +472,7 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 			cyclingMaximumSurge = stringValue(c.MaximumSurge)
 		}
 
-		// nodeImageName and nodeImageId are both deprecated in the SDK in favour
+		// nodeImageName and nodeImageId are both deprecated in the SDK in favor
 		// of nodeSourceDetails, and OCI leaves them empty on node pools created
 		// through the modern path - which is every Terraform-provisioned pool.
 		// Read the image from nodeSourceDetails so "which image do the workers

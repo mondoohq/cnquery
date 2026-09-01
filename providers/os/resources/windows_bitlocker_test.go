@@ -278,7 +278,7 @@ func TestComputeBitlockerDrive_AllAbsentAreNull(t *testing.T) {
 // null, it could not be used to guard the query that does error.
 //
 // The memo is seeded directly so both outcomes are exercised without a live
-// connection; the live behaviour is covered by verification against Windows
+// connection; the live behavior is covered by verification against Windows
 // Server 2016, 2019, 2022 and 2025, where the WMI namespace is absent and
 // available reports false.
 func TestBitlockerAvailableNeverFails(t *testing.T) {

@@ -22,7 +22,7 @@ func license(t *testing.T, content string) string {
 }
 
 // The case that motivated this: a wheel built by a current toolchain. PEP 639
-// deprecates `License` in favour of `License-Expression` and forbids carrying
+// deprecates `License` in favor of `License-Expression` and forbids carrying
 // both, so this document is the whole of what such a distribution says — and it
 // previously reported no license at all.
 func TestLicenseExpressionIsRead(t *testing.T) {
@@ -73,7 +73,7 @@ Classifier: Programming Language :: Python
 }
 
 // Several license classifiers are a choice among them — dual licensing, as this
-// vocabulary spells it — so they are OR-joined and parenthesised.
+// vocabulary spells it — so they are OR-joined and parenthesized.
 func TestSeveralClassifiersAreAChoice(t *testing.T) {
 	assert.Equal(t, "(MIT License OR Apache Software License)", license(t, `Metadata-Version: 2.1
 Name: dual

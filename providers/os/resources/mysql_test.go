@@ -310,7 +310,7 @@ func TestMysqlConf_Sections(t *testing.T) {
 	assert.Equal(t, "/var/run/mysqld/mysqld.sock", byName["client"].Options.Data["socket"])
 }
 
-// [mysqld_safe] and [mysqldump] are prefix neighbours of [mysqld], and the
+// [mysqld_safe] and [mysqldump] are prefix neighbors of [mysqld], and the
 // server reads neither as server scope.
 func TestMariadbConf_MysqldSafeIsItsOwnSection(t *testing.T) {
 	conf := mariadbConf(t, "mysql_debian13_mariadb.toml")

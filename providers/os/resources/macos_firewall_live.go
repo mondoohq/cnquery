@@ -82,7 +82,7 @@ var (
 )
 
 // parseOnOff reads a socketfilterfw toggle sentence. It returns ok=false for
-// anything it does not recognise -- notably the "settings cannot be modified
+// anything it does not recognize -- notably the "settings cannot be modified
 // from command line on managed Mac computers" reply -- so an unreadable
 // setting surfaces as an error and never as a confident false.
 func parseOnOff(stdout string) (bool, bool) {

@@ -333,7 +333,7 @@ func (g *mqlGcpProjectGkeServiceCluster) networkPolicy() (*mqlGcpProjectGkeServi
 	// id() method, so without an "__id" argument every cluster's network
 	// policy is stored under the same empty key, and CreateResource returns
 	// the first resource stored under a key -- so a cluster with network
-	// policy switched off reports the enabled neighbour's answer.
+	// policy switched off reports the enabled neighbor's answer.
 	key := gkeNetworkPolicyCacheKey(clusterId)
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster.networkPolicy", map[string]*llx.RawData{
 		"__id":     llx.StringData(key),

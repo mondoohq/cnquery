@@ -50,7 +50,7 @@ func (m *ebsMetadata) RawMetadata() (any, error) {
 		return m.metadataFromEC2Instance(instance)
 	}
 
-	// Inspect the mounted volume and try to collecta instance metadata
+	// Inspect the mounted volume and try to collect instance metadata
 	switch {
 	case m.platform.IsFamily(inventory.FAMILY_UNIX):
 		return m.unixMetadata()

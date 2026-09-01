@@ -37,7 +37,7 @@ type azureListService interface {
 // has usually been fetched already, because discovery itself walks the same
 // list to find the assets. Worse, NewResource runs the init *before* it
 // consults the resource cache, so a Get here is spent even when the resource is
-// already built, and its result is then thrown away in favour of the cached
+// already built, and its result is then thrown away in favor of the cached
 // one.
 //
 // This mirrors the k8s provider's initNamespacedResource.
@@ -121,7 +121,7 @@ func initFromServiceList[S azureListService](
 //
 // NewResource consults the cache only *after* the init has returned, so an init
 // that fetches unconditionally pays for a resource the runtime is holding and
-// then has its result discarded in favour of the cached one. Calling this first
+// then has its result discarded in favor of the cached one. Calling this first
 // makes a reference cost one fetch for the whole scan rather than one per
 // reference.
 //

@@ -94,7 +94,7 @@ func TestOciLoadBalancerHasPublicIp(t *testing.T) {
 			ip("203.0.113.10", true),
 		}, true, false},
 
-		// The regression: the network load balancer marshalled the SDK slice
+		// The regression: the network load balancer marshaled the SDK slice
 		// straight to JSON, so an optional isPublic arrived as null. Reading
 		// that back as "not public" cleared the balancer entirely.
 		{"null isPublic on a public balancer", []any{nullIp("203.0.113.10")}, false, true},

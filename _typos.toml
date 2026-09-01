@@ -1,6 +1,12 @@
 # Configuration for the `typos` spell checker (https://github.com/crate-ci/typos).
 # Run locally with `typos` (and `typos --write-changes` to auto-fix).
 
+[default]
+# Enforce US English. Every British-spelling variant in the tree was converted
+# when this was turned on; the identifiers that upstream APIs, SDKs, or already
+# shipped MQL schema fields spell the British way are exempted below.
+locale = "en-us"
+
 [files]
 extend-exclude = [
   # Generated code — owned by code generators, not hand-edited.
@@ -48,7 +54,6 @@ anc = "anc"
 aso = "aso"
 ba = "ba"
 caf = "caf"
-cound = "cound"
 cpy = "cpy"
 daa = "daa"
 ded = "ded"
@@ -75,6 +80,15 @@ ue = "ue"
 # It appears verbatim in every Tomcat logging.properties and in the jar name
 # bin/tomcat-juli.jar, so references to it cannot be respelled.
 juli = "juli"
+# MITRE (as in MITRE ATT&CK) reads as a misspelling of "miter" under the en-us
+# locale. It is a proper noun in prose, in the mitreTechniques MQL field, and in
+# Graph's GetMitreTechniques accessor.
+mitre = "mitre"
+# Spectre, the CPU side-channel vulnerability, as reported by /proc/cpuinfo in
+# the bug names spectre_v1 and spectre_v2.
+spectre = "spectre"
+# EndeavourOS, an Arch-based Linux distribution, detected by the os provider.
+endeavour = "endeavour"
 # Company name.
 automattic = "automattic"
 # Python package on PyPI providing Mozilla's CA bundle. The project spells it
@@ -133,11 +147,8 @@ valueable = "valueable"
 accessable = "accessable"
 policys = "policys"
 inable = "inable"
-compleated = "compleated"
-deliminated = "deliminated"
 datas = "datas"
 childs = "childs"
-setings = "setings"
 softwares = "softwares"
 splitted = "splitted"
 
@@ -153,3 +164,23 @@ TouPromptDisabled = "TouPromptDisabled"
 # the name must stay verbatim to match the variable the daemon actually looks
 # up.
 HSA_OVERRIDE_GFX_VERSION = "HSA_OVERRIDE_GFX_VERSION"
+# Upstream API and SDK spellings, and the MQL fields derived from them. Renaming
+# any of these would either break the wire contract or break the schema, so only
+# the exact identifier is exempted -- the same word stays flagged in prose.
+AnalyseAsset = "AnalyseAsset"
+AnalyseAssetRequest = "AnalyseAssetRequest"
+AnalyseIncognitoAssetInput = "AnalyseIncognitoAssetInput"
+analyseIncognitoAssetVulnerabilities = "analyseIncognitoAssetVulnerabilities"
+ContentSynchronisation = "ContentSynchronisation"
+contentSynchronisation = "contentSynchronisation"
+ContentSynchronisationEnabled = "ContentSynchronisationEnabled"
+contentSynchronisationEnabled = "contentSynchronisationEnabled"
+FixVersionDependant = "FixVersionDependant"
+fixVersionDependant = "fixVersionDependant"
+fix_version_dependant = "fix_version_dependant"
+SynchroniseConsumerGroupOffsets = "SynchroniseConsumerGroupOffsets"
+synchroniseConsumerGroupOffsets = "synchroniseConsumerGroupOffsets"
+AllowQueueing = "AllowQueueing"
+allowQueueing = "allowQueueing"
+GetBehaviourOk = "GetBehaviourOk"
+FixKustomizationPreMarshalling = "FixKustomizationPreMarshalling"

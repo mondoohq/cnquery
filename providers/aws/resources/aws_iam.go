@@ -1989,7 +1989,7 @@ func (a *mqlAwsIamPolicyversion) document() (any, error) {
 	}
 	// Decode to the document's own JSON rather than round-tripping through
 	// awspolicy.IamPolicyDocument. That struct has no Condition field, so
-	// re-marshalling it dropped every condition block, and its statementSection
+	// re-marshaling it dropped every condition block, and its statementSection
 	// flattens a principal map to a list of quoted values, turning
 	// {"AWS": "*"} into ["\"*\""]. The schema calls this field the raw policy
 	// JSON, so hand back what IAM actually returned.

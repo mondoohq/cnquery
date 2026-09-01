@@ -219,12 +219,12 @@ id. A user with no registration record is a legitimate state (the report omits
 people who never registered a method) and now returns null rather than a 404.
 Measured: 58 → 10 calls, 47s → 18s, the same 24 ids byte-identical, and both 404s
 gone. Unlike vSphere this is a real wall-clock win — these requests were
-serialised, not parallelised. (#10055.)
+serialized, not parallelized. (#10055.)
 
 ms365 is structurally among the healthiest: no init adopts the scanned
 asset's identity, so root cause 3 cannot occur, and only 3 of its 23 inits reach
 the API at all. Several patterns that looked like N+1s turned out to be already
-optimised — `user.job`/`user.contact` are selected in bulk on the users list,
+optimized — `user.job`/`user.contact` are selected in bulk on the users list,
 `application.owners()` uses `$select` to avoid a second-level N+1, and `mfaEnabled`
 fetches tenant-wide behind a `sync.Once`.
 
@@ -233,7 +233,7 @@ fetches tenant-wide behind a `sync.Once`.
 `loadMfaResp()` still reads the same registration report through the **beta**
 client, keeping only `IsMfaRegistered` for `mfaEnabled`, while the fix above reads
 it through v1. Unifying them means moving a shipped field's data source from beta
-to v1 — a behaviour change that deserves its own change rather than riding along
+to v1 — a behavior change that deserves its own change rather than riding along
 with a performance fix.
 
 Reaching that path at all needed a dedicated app registration with **application**
@@ -417,9 +417,9 @@ helpers built a fresh one per command; `esxiClient()` returned a new client per
 accessor call on top. That was 275 executor constructions — 550 setup calls, 36%
 of the scan's traffic.
 
-The reason it is not simply a win: the calls were already heavily parallelised,
+The reason it is not simply a win: the calls were already heavily parallelized,
 so removing 834 of them changed no timings, and `Executor.Run` mutates a shared
-`CommandInfo` map, so sharing an executor required a mutex that serialises
+`CommandInfo` map, so sharing an executor required a mutex that serializes
 esxcli commands within a host. Fewer calls, less concurrency, same duration.
 Worth deciding against a larger inventory than the four-asset one available.
 

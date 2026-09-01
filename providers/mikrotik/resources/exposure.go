@@ -12,7 +12,7 @@ import (
 
 // singletonAccessor reads a menu that holds a single settings record and
 // creates the resource from it, or reports the menu as absent. Every RouterOS
-// settings menu modelled here can be missing on some build or package, and an
+// settings menu modeled here can be missing on some build or package, and an
 // absent menu must leave the resource null rather than produce one whose flags
 // all read false.
 func singletonAccessor[T plugin.Resource](

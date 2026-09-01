@@ -633,7 +633,7 @@ func fetchXrayIgnoreRules(ctx context.Context, conn *connection.ArtifactoryConne
 		// The marker covers the identifiers in order, so it also catches a
 		// page of records the platform reports without one. Deduplicating on
 		// the identifier alone would not: a record with no identifier can
-		// never be recognised as seen, so it would count as new on every page
+		// never be recognized as seen, so it would count as new on every page
 		// and the walk would run to the page cap.
 		marker := pageMarker(response.Data)
 		if marker == previousPage {
@@ -665,7 +665,7 @@ func fetchXrayIgnoreRules(ctx context.Context, conn *connection.ArtifactoryConne
 	return records, nil
 }
 
-// pageMarker summarises a page by the identifiers it carries, in order. A page
+// pageMarker summarizes a page by the identifiers it carries, in order. A page
 // that repeats it is the same page served again. Both sides are values this
 // walk produced from the response, so a plain comparison is what is wanted.
 func pageMarker(records []xrayIgnoreRuleRecord) string {

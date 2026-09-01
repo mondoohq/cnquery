@@ -126,7 +126,7 @@ var serviceRules = map[string][]dispositionRule{
 	// GetAdministratorAccount, GetAutomatedDiscoveryConfiguration) answer
 	// not-found when the feature has never been configured in the region, so
 	// for these a bare not-found is an empty result. The list endpoints get no
-	// such licence: a not-found there is a resource that vanished mid-read,
+	// such license: a not-found there is a resource that vanished mid-read,
 	// which the caller must see.
 	"macie2/config": {
 		{

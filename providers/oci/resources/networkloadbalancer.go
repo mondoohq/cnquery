@@ -56,9 +56,9 @@ func (o *mqlOciNetworkLoadBalancer) newNetworkLoadBalancers(nlbs []networkloadba
 	for i := range nlbs {
 		nlb := nlbs[i]
 
-		// Built by hand rather than marshalled from the SDK slice: isPublic is
+		// Built by hand rather than marshaled from the SDK slice: isPublic is
 		// optional on the model, and exposure() reads these addresses to decide
-		// internet reachability. A marshalled nil arrives as JSON null, which
+		// internet reachability. A marshaled nil arrives as JSON null, which
 		// reads as "not public" and clears a genuinely internet-facing
 		// balancer. This mirrors the classic load balancer.
 		addresses := make([]any, 0, len(nlb.IpAddresses))

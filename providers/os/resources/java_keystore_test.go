@@ -62,7 +62,7 @@ func TestReadableDERKeepsTheStoreUsable(t *testing.T) {
 	// trust store, whose serial number is negative — legal when it was issued
 	// in 2003 and rejected by the parser now. It is one entry out of 133, and
 	// before this it took the other 132 down with it. Using the real
-	// certificate rather than a synthesised one matters because Go will not
+	// certificate rather than a synthesized one matters because Go will not
 	// even create such a certificate today, so a synthetic version could not
 	// reproduce the case.
 	t.Run("a negative serial number is skipped and counted", func(t *testing.T) {

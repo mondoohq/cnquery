@@ -19,7 +19,7 @@ A full run — launch, configure, sweep every resource, tear down — takes abou
 
 ### Licensing
 
-CHR is **BYOL on Marketplace, with no software charge**, and its free licence
+CHR is **BYOL on Marketplace, with no software charge**, and its free license
 level runs indefinitely: 1 Mbps per interface, every other feature unrestricted.
 That cap is irrelevant for provider work, since the provider only reads
 configuration over the RouterOS API and never passes traffic. You pay for EC2

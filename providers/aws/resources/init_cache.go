@@ -14,7 +14,7 @@ import (
 // it has to, because the cache key is the resolved resource's MqlID, which for
 // a resource whose identity is computed during init is not knowable in advance.
 // An init that fetches unconditionally therefore pays once per referring
-// resource and then has its result discarded in favour of the cached instance:
+// resource and then has its result discarded in favor of the cached instance:
 // four EC2 instances in one VPC cost four DescribeVpcs calls for the one VPC,
 // and the fan-in on aws.iam.role reaches 94 referring call sites.
 //

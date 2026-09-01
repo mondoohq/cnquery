@@ -25,7 +25,7 @@ func TestDebianImageKernelName(t *testing.T) {
 		{"linux-image-6.12.101+deb13-cloud-amd64", "6.12.101+deb13-cloud-amd64", true, "debian 13"},
 
 		// The metapackages. These are the regression: each one used to be
-		// reported as an installed kernel named after the flavour.
+		// reported as an installed kernel named after the flavor.
 		{"linux-image-aws", "", false, "ubuntu metapackage"},
 		{"linux-image-cloud-amd64", "", false, "debian metapackage"},
 		{"linux-image-amd64", "", false, "debian generic metapackage"},
@@ -40,7 +40,7 @@ func TestDebianImageKernelName(t *testing.T) {
 		{"linux-image-unsigned-6.17.0-1019-aws", "6.17.0-1019-aws", true, "ubuntu unsigned"},
 		{"linux-image-5.10.0-46-cloud-amd64-unsigned", "5.10.0-46-cloud-amd64-unsigned", true, "debian unsigned"},
 
-		// Neighbours that share the prefix but hold no kernel.
+		// Neighbors that share the prefix but hold no kernel.
 		{"linux-image-extra-virtual", "", false, "extra metapackage"},
 		{"linux-headers-6.17.0-1019-aws", "", false, "headers, not an image"},
 		{"linux-modules-6.17.0-1019-aws", "", false, "modules, not an image"},
@@ -221,7 +221,7 @@ blacklist cramfs
 	}
 }
 
-// TestStripModprobeComment guards the modprobe-flavoured comment stripper
+// TestStripModprobeComment guards the modprobe-flavored comment stripper
 // against drift toward rsyslog's quote-aware shape — modprobe has no
 // string literals, so `#` always introduces a comment.
 func TestStripModprobeComment(t *testing.T) {
@@ -886,7 +886,7 @@ func TestKernelFilters(t *testing.T) {
 
 		// --- oraclelinux (regression) ---
 		{
-			name:          "oraclelinux: the UEK kernel is recognised",
+			name:          "oraclelinux: the UEK kernel is recognized",
 			filter:        oracleKernelVersion,
 			pkg:           kernelPackage{Name: "kernel-uek", Version: "1:6.12.0-105.51.5.el9uek", Arch: "x86_64"},
 			runningKernel: "6.12.0-105.51.5.el9uek.x86_64",
@@ -911,7 +911,7 @@ func TestKernelFilters(t *testing.T) {
 
 		// --- photon (regression) ---
 		{
-			name:          "photon: the esx flavor is recognised and marked running",
+			name:          "photon: the esx flavor is recognized and marked running",
 			filter:        photonKernelVersion,
 			pkg:           kernelPackage{Name: "linux-esx", Version: "4.19.97-1.ph3"},
 			runningKernel: "4.19.97-1.ph3-esx",
@@ -919,7 +919,7 @@ func TestKernelFilters(t *testing.T) {
 			want:          KernelVersion{Name: "linux-esx", Version: "4.19.97-1.ph3-esx", Running: true},
 		},
 		{
-			name:          "photon: the bare linux package is recognised",
+			name:          "photon: the bare linux package is recognized",
 			filter:        photonKernelVersion,
 			pkg:           kernelPackage{Name: "linux", Version: "4.19.97-1.ph3"},
 			runningKernel: "4.19.97-1.ph3",
@@ -936,7 +936,7 @@ func TestKernelFilters(t *testing.T) {
 
 		// --- suse (regression) ---
 		{
-			name:          "suse: kernel-default is recognised and marked running",
+			name:          "suse: kernel-default is recognized and marked running",
 			filter:        suseKernelVersion,
 			pkg:           kernelPackage{Name: "kernel-default", Version: "4.12.14-122.23.1"},
 			runningKernel: "4.12.14-122.23-default",

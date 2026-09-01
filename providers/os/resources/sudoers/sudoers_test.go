@@ -832,7 +832,7 @@ func TestParseUserSpecs_TabSeparators(t *testing.T) {
 			commands:    []string{"ALL"},
 		},
 		{
-			// guards the pre-existing space-separated behaviour against a fix
+			// guards the pre-existing space-separated behavior against a fix
 			// that swaps ' ' for '\t' instead of accepting both
 			name:       "space separated still parses",
 			line:       "root ALL=(ALL) ALL",

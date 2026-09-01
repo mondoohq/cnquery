@@ -132,7 +132,7 @@ type apacheLayout struct {
 	// root is HTTPD_ROOT, the directory relative paths resolve against.
 	root string
 	// conf is SERVER_CONFIG_FILE. Every vendor build observed states it
-	// relative to root, but an absolute value is legal and is honoured.
+	// relative to root, but an absolute value is legal and is honored.
 	conf string
 }
 

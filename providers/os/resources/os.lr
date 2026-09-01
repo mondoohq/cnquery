@@ -18467,7 +18467,7 @@ private qwen.code.skill @defaults("name") @maturity("preview") {
 // physicalFunctions field lists every SR-IOV capable interface with the number
 // of virtual functions it has enabled against the number it supports, and
 // virtualFunctions flattens every virtual function across all of them. This is
-// the realised hardware inventory, so it shows the PCI address, the bound
+// the realized hardware inventory, so it shows the PCI address, the bound
 // driver, and the per-device link settings that a Kubernetes device plugin
 // only reports as an aggregate count. Empty on hosts with no SR-IOV capable
 // interface.
@@ -18600,7 +18600,7 @@ ovs {
 // One bridge of the local switch, selected by name. The failMode field decides
 // what the bridge does when it loses its controller: `secure` keeps the
 // installed flows and forwards nothing new, `standalone` falls back to acting
-// as a learning switch, which forwards traffic no policy authorised. The
+// as a learning switch, which forwards traffic no policy authorized. The
 // datapathType, protocols, stpEnabled, and rstpEnabled fields report how the
 // bridge switches, and externalIds carries the tags the CNI plugin or the
 // operator wrote. The ports field returns the ports attached to the bridge.
@@ -18611,7 +18611,7 @@ private ovs.bridge @defaults("name datapathType failMode") {
   uuid string
   // Datapath the bridge runs on (system, netdev)
   datapathType string
-  // Behaviour when the bridge has no controller connection
+  // Behavior when the bridge has no controller connection
   //
   // `secure` keeps the installed flows, `standalone` falls back to a learning
   // switch. Empty when no fail mode is set, which the switch treats as

@@ -84,7 +84,7 @@ type DeviceCapacity struct {
 
 // Quantity is a Kubernetes resource quantity such as "8" or "1Gi".
 //
-// The API server serialises a quantity as a string. A number is accepted as
+// The API server serializes a quantity as a string. A number is accepted as
 // well, so a driver that publishes a bare JSON number does not fail the decode
 // of the whole slice.
 type Quantity string
@@ -170,7 +170,7 @@ type AllocatedDevStatus struct {
 	NetworkData *NetworkDeviceData `json:"networkData"`
 }
 
-// NetworkDeviceData is the realised network state of a prepared device.
+// NetworkDeviceData is the realized network state of a prepared device.
 type NetworkDeviceData struct {
 	InterfaceName   string   `json:"interfaceName"`
 	IPs             []string `json:"ips"`
@@ -209,7 +209,7 @@ type ObjectMeta struct {
 // Decode reads a Kubernetes object into one of the types above.
 //
 // The input is anything the k8s connection returns, typed or unstructured. It
-// is marshalled to JSON first so the same reader serves every served version.
+// is marshaled to JSON first so the same reader serves every served version.
 func Decode[T any](object any) (*T, error) {
 	raw, err := json.Marshal(object)
 	if err != nil {
@@ -233,7 +233,7 @@ func (s ResourceSliceSpec) DeviceNames() []string {
 
 // StringAttributes returns the device attributes as strings, keyed by name.
 //
-// Attributes with no recognised value member are dropped, so an unreadable
+// Attributes with no recognized value member are dropped, so an unreadable
 // attribute is absent rather than reported as an empty string.
 func (d Device) StringAttributes() map[string]string {
 	if len(d.Attributes) == 0 {

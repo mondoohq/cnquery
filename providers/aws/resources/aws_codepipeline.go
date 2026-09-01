@@ -348,7 +348,7 @@ func newMqlAwsCodepipelineWebhook(runtime *plugin.Runtime, region string, wh cpt
 
 	id := arn
 	if id == "" {
-		// Fallback when ARN is missing: synthesise a stable ID per region/name.
+		// Fallback when ARN is missing: synthesize a stable ID per region/name.
 		id = fmt.Sprintf("aws.codepipeline.webhook/%s/%s", region, name)
 	}
 

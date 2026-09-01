@@ -41,7 +41,7 @@ func (avc ClientVaultConfig) Get(key string) (vault.VaultConfiguration, error) {
 }
 
 // SecretData returns the marshaled data, it is compatible with vault.New
-// In case the data structure cannot be marshalled, the function will panic
+// In case the data structure cannot be marshaled, the function will panic
 func (avc ClientVaultConfig) SecretData() []byte {
 	data, err := json.Marshal(avc)
 	if err != nil {

@@ -2426,9 +2426,9 @@ func (a *mqlAwsMskReplicator) replicationInfoList() ([]any, error) {
 			for _, t := range ri.ConsumerGroupReplication.ConsumerGroupsToExclude {
 				toExclude = append(toExclude, t)
 			}
-			synchronise := false
+			synchronize := false
 			if ri.ConsumerGroupReplication.SynchroniseConsumerGroupOffsets != nil {
-				synchronise = *ri.ConsumerGroupReplication.SynchroniseConsumerGroupOffsets
+				synchronize = *ri.ConsumerGroupReplication.SynchroniseConsumerGroupOffsets
 			}
 			detectNew := false
 			if ri.ConsumerGroupReplication.DetectAndCopyNewConsumerGroups != nil {
@@ -2439,7 +2439,7 @@ func (a *mqlAwsMskReplicator) replicationInfoList() ([]any, error) {
 					"__id":                            llx.StringData(a.Arn.Data + "/" + srcAlias + "/" + tgtAlias + "/consumerGroupReplication"),
 					"consumerGroupsToReplicate":       llx.ArrayData(toReplicate, types.String),
 					"consumerGroupsToExclude":         llx.ArrayData(toExclude, types.String),
-					"synchroniseConsumerGroupOffsets": llx.BoolData(synchronise),
+					"synchroniseConsumerGroupOffsets": llx.BoolData(synchronize),
 					"detectAndCopyNewConsumerGroups":  llx.BoolData(detectNew),
 					"offsetSyncMode":                  llx.StringData(string(ri.ConsumerGroupReplication.ConsumerGroupOffsetSyncMode)),
 				})

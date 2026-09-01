@@ -1659,7 +1659,7 @@ func (a *mqlAwsEcsTaskDefinition) fetchDetail() error {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	arnVal := a.Arn.Data
 
-	// When the resource is initialised with only an ARN (e.g. from a typed-ref
+	// When the resource is initialized with only an ARN (e.g. from a typed-ref
 	// accessor in another resource), Region.Data is empty. Fall back to the
 	// region encoded in the ARN so DescribeTaskDefinition has a valid endpoint.
 	region := a.Region.Data

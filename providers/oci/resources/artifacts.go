@@ -577,7 +577,7 @@ func (o *mqlOciArtifacts) repositories() ([]any, error) {
 // ociArtifactRepositoryFields flattens one member of the RepositorySummary
 // union into resource fields.
 //
-// GENERIC is the only member the service offers today. An unrecognised one is
+// GENERIC is the only member the service offers today. An unrecognized one is
 // an error rather than a skip: dropping a repository would leave its artifacts
 // unreachable and the tenancy looking like it stores less than it does.
 func ociArtifactRepositoryFields(summary artifacts.RepositorySummary) (map[string]*llx.RawData, error) {

@@ -20,7 +20,7 @@ const zypperRebootNeededExit = 103
 // the machine restarted.
 //
 // The rpm-newest-kernel comparison the redhat family uses does not carry over:
-// SUSE names the kernel package for its flavour (kernel-default,
+// SUSE names the kernel package for its flavor (kernel-default,
 // kernel-azure, ...), so `rpm -q kernel` reports nothing installed and the
 // comparison would answer "no reboot pending" on every SUSE host.
 type ZypperNeedsRebooting struct {

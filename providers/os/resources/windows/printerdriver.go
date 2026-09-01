@@ -125,7 +125,7 @@ func ParsePrinterDrivers(r io.Reader) ([]PrinterDriver, error) {
 // purlToken reduces a driver or vendor string to a PURL token: lowercase, with
 // anything outside [a-z0-9.+] folded to a single "-".
 //
-// The same normalisation both sides of a match must agree on, so it is written
+// The same normalization both sides of a match must agree on, so it is written
 // once here rather than at each call site.
 func purlToken(s string) string {
 	var b strings.Builder

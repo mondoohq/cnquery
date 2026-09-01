@@ -110,7 +110,7 @@ type mqlPostgresqlConfInternal struct {
 	// outcome was data, empty, or an error). It's a dedicated flag rather
 	// than overloading `s.Params.State` because the empty- and error-paths
 	// set extra state bits (StateIsNull) that the previous equality guard
-	// failed to recognise as "already parsed", causing infinite re-parses.
+	// failed to recognize as "already parsed", causing infinite re-parses.
 	parsed bool
 }
 

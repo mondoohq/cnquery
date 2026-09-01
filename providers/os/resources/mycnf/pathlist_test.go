@@ -84,7 +84,7 @@ func TestSplitPathList(t *testing.T) {
 	}
 }
 
-// SplitList must keep its comma/space behaviour: it still backs tls_version,
+// SplitList must keep its comma/space behavior: it still backs tls_version,
 // sql_mode and friends, where ':' is not a delimiter.
 func TestSplitListUnchangedForCommaLists(t *testing.T) {
 	assert.Equal(t, []string{"TLSv1.2", "TLSv1.3"}, SplitList("TLSv1.2,TLSv1.3"))

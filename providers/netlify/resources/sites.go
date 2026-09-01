@@ -77,7 +77,7 @@ type siteRecord struct {
 // sitePasswordProtected reports whether a site is gated behind a visitor
 // password, from the raw password value the API returned.
 //
-// The password itself is a secret and is never modelled. Only its presence is
+// The password itself is a secret and is never modeled. Only its presence is
 // the finding, and presence survives every form the API may report the value
 // in: a literal password, a redacted placeholder such as "****", or a
 // boolean-ish marker. A key the API did not return at all yields nil, which

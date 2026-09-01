@@ -42,7 +42,7 @@ func TestProjectConfigFieldsID(t *testing.T) {
 	assert.Equal(t, "mongodbatlas.projectConfig/p1", got["__id"].Value)
 }
 
-// TestProjectConfigFieldsUnreported pins the behaviour that a flag Atlas did not
+// TestProjectConfigFieldsUnreported pins the behavior that a flag Atlas did not
 // report stays null instead of becoming a fabricated false. Reading the flags
 // through the SDK's Get accessors instead of the pointer fields regresses this:
 // the accessors dereference a *bool and return the zero value when it is nil, so

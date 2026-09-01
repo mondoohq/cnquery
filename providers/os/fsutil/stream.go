@@ -62,7 +62,7 @@ const maxTarEntryPrealloc = 64 << 20
 // size. The size is only trusted up to maxTarEntryPrealloc.
 //
 // The loop reads the whole stream and concatenates every entry that carries the path. That
-// keeps the behaviour of the earlier implementation for a tar that repeats a name.
+// keeps the behavior of the earlier implementation for a tar that repeats a name.
 func ExtractFileFromTarStream(path string, tarReader io.Reader) (io.Reader, error) {
 	log.Debug().Str("path", path).Msg("fsutil> extract file from tar")
 	var content []byte

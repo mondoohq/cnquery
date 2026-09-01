@@ -55,7 +55,7 @@ func TestParseConf_Syntax(t *testing.T) {
 		return "" +
 			"port 5432\n" + // no '=' separator
 			"max_connections\t=\t100\n" + // tab around '='
-			"Work_Mem = 4MB\n" + // mixed-case key normalises to lower
+			"Work_Mem = 4MB\n" + // mixed-case key normalizes to lower
 			"log_line_prefix = '%m [%p] user=%u db=%d'\n" + // value contains '='
 			"archive_command = 'test ! -f /mnt/%f'\n" + // value contains '!' and spaces
 			"password_encryption = scram-sha-256\n" + // bare (unquoted) enum value

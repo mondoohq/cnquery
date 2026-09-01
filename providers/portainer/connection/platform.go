@@ -53,7 +53,7 @@ const (
 	// (endpoint) discovered from the Portainer instance.
 	OptionEnvironmentID = "environment-id"
 	// OptionEnvironmentType carries the Portainer endpoint type of a discovered
-	// environment so the sub-asset platform can be labelled correctly.
+	// environment so the sub-asset platform can be labeled correctly.
 	OptionEnvironmentType = "environment-type"
 )
 

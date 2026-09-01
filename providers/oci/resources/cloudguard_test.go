@@ -96,7 +96,7 @@ func TestOciReferentGone(t *testing.T) {
 		{
 			// An ONS topic is resolved by scanning the listing, not by a GET, so
 			// its absence arrives as a sentinel with no HTTP status attached.
-			// Before this was recognised, one connector pointing at a deleted
+			// Before this was recognized, one connector pointing at a deleted
 			// topic failed the whole connector listing.
 			name: "ons topic sentinel",
 			err:  fmt.Errorf("%w: %s", errOciOnsTopicNotFound, "ocid1.onstopic.oc1.phx.example"),

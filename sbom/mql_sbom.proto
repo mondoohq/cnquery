@@ -316,7 +316,7 @@ message Package {
   // is the case a compliance document must not flatten, and the scalar has no
   // room for both values.
   //
-  // The scalar is deprecated in favour of this field. A producer adopting this
+  // The scalar is deprecated in favor of this field. A producer adopting this
   // list should keep the scalar set to its first declared entry so consumers
   // can migrate without a flag day — the renderers fall back to the scalar, but
   // nothing populates it from here.

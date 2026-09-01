@@ -95,7 +95,7 @@ func mapHypervisor(info string) (string, bool) {
 
 	// Longest key first. Several vendor strings contain more than one key --
 	// "Oracle VM VirtualBox" holds both "oracle" and "virtualbox" -- and Go
-	// randomises map iteration, so picking whichever came first made the answer
+	// randomizes map iteration, so picking whichever came first made the answer
 	// differ between runs. The longest match is the most specific one.
 	for _, key := range hypervisorKeysByLength() {
 		if exactMatchHypervisors[key] {
@@ -118,7 +118,7 @@ func mapHypervisor(info string) (string, bool) {
 // as the whole string. As a substring it is far too broad: "Oracle
 // Corporation" is a DMI vendor that has nothing to do with VirtualBox, and any
 // future Oracle Cloud vendor string carrying the word would be mislabelled.
-// VirtualBox is still recognised by DMI through the "virtualbox" key, which
+// VirtualBox is still recognized by DMI through the "virtualbox" key, which
 // its product_name carries.
 var exactMatchHypervisors = map[string]bool{
 	"oracle": true,

@@ -272,7 +272,7 @@ atlassian.jira {
 // Jira saved filter
 //
 // Saved JQL filter with its identity, the JQL it runs, the owning
-// account, the view URL, the favourite count, the share-permission entries,
+// account, the view URL, the favorite count, the share-permission entries,
 // and any email subscriptions attached to it. Filters are a common
 // data-disclosure surface: a filter shared with `loggedin` or `global`
 // effectively exposes its results to every authenticated user, and
@@ -499,7 +499,7 @@ atlassian.jira.applicationRole @defaults("name") {
   groups() []string
   // Groups a newly invited user is added to when granted this role
   //
-  // Membership of any of these groups carries the product licence, and with
+  // Membership of any of these groups carries the product license, and with
   // it a login, without a separate grant. A broad or externally-synced group
   // listed here hands product access to everyone it contains.
   defaultGroups() []string

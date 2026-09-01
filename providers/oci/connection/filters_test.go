@@ -209,7 +209,7 @@ func TestOciTagLookupFreeformWinsCollision(t *testing.T) {
 func TestOciTagLookupRendersNonStringValues(t *testing.T) {
 	// Defined tag values arrive as any because the API allows numbers. They
 	// have to render to the string a user would type on the command line, or a
-	// numeric cost centre could never be filtered on.
+	// numeric cost center could never be filtered on.
 	lookup := ociTagLookup(nil, map[string]map[string]any{
 		"Operations": {"CostCenter": 42, "Ratio": 1.5, "Missing": nil},
 	})

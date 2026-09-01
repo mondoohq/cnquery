@@ -17,7 +17,7 @@ import (
 
 // TestApplicationRoleDecoding pins the JSON field names of an application role.
 // defaultGroups and selectedByDefault are the pair that silently hands a product
-// licence, and therefore a login, to every member of a group on invite: a
+// license, and therefore a login, to every member of a group on invite: a
 // mistyped tag on either would read as "no default groups, not selected", which
 // is the answer an audit wants to see and would therefore never question.
 func TestApplicationRoleDecoding(t *testing.T) {
@@ -50,7 +50,7 @@ func TestApplicationRoleDecoding(t *testing.T) {
 }
 
 // TestApplicationRoleUnlimitedSeats records what an unlimited-seat plan reports,
-// so -1 is passed through rather than normalised into something that reads as a
+// so -1 is passed through rather than normalized into something that reads as a
 // real seat count.
 func TestApplicationRoleUnlimitedSeats(t *testing.T) {
 	var role models.ApplicationRoleScheme

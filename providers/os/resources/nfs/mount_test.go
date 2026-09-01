@@ -64,7 +64,7 @@ func TestNFSVersion(t *testing.T) {
 	}{
 		{"vers from option", map[string]string{"vers": "4.1"}, "nfs", "4.1"},
 		{"nfsvers wins ahead of fallback", map[string]string{"nfsvers": "3"}, "nfs4", "3"},
-		{"version key honoured", map[string]string{"version": "4"}, "nfs", "4"},
+		{"version key honored", map[string]string{"version": "4"}, "nfs", "4"},
 		{"fallback from fstype nfs4", map[string]string{}, "nfs4", "4"},
 		{"fallback from fstype nfsv4", map[string]string{}, "nfsv4", "4"},
 		{"plain nfs no version", map[string]string{}, "nfs", ""},

@@ -53,7 +53,7 @@ func TestTranslateHcloudError(t *testing.T) {
 
 	t.Run("wrapped hcloud error is still classified", func(t *testing.T) {
 		// errors.As must unwrap through wrapping, so a wrapped denial is
-		// recognised as a denial and propagates like a bare one.
+		// recognized as a denial and propagates like a bare one.
 		inner := hcloud.Error{Code: hcloud.ErrorCodeUnauthorized}
 		wrapped := errors.Join(errors.New("context"), inner)
 		assert.Error(t, translateHcloudError(wrapped))

@@ -741,7 +741,7 @@ func TestMergeIPv6RangesSkipsNilBounds(t *testing.T) {
 		})
 	}
 
-	// A malformed neighbour must not swallow a range that is genuinely there:
+	// A malformed neighbor must not swallow a range that is genuinely there:
 	// the full-space range still has to be merged and still has to read as open.
 	merged := mergeIPv6Ranges([]ipv6Range{{}, full})
 	require.Len(t, merged, 1)

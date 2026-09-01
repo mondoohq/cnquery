@@ -207,7 +207,7 @@ message Platform {
   map<string, string> metadata = 23;
 }
 
-// NOTE: the k8s types are apache 2 licenced and copied from
+// NOTE: the k8s types are apache 2 licensed and copied from
 // https://github.com/kubernetes/apimachinery
 
 // TypeMeta describes an individual object in an API response or request

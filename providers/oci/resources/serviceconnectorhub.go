@@ -358,7 +358,7 @@ func (o *mqlOciServiceConnectorHubConnector) tasks() ([]any, error) {
 // ociConnectorSourceKind names the source end of a connector.
 //
 // The discriminator is derived from the concrete Go type rather than read back
-// out of the marshalled JSON: the SDK models these as an interface, and a type
+// out of the marshaled JSON: the SDK models these as an interface, and a type
 // switch cannot silently disagree with what was actually deserialized the way a
 // string lookup could.
 func ociConnectorSourceKind(source sch.SourceDetailsResponse) string {

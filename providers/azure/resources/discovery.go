@@ -990,7 +990,7 @@ func subToAsset(subWithConfig subWithConfig, cloneOpts ...inventory.CloneOption)
 	}
 	// ARM omits displayName for subscriptions in some states -- deleted,
 	// disabled, and cross-tenant entries projected in by Lighthouse. The
-	// neighbouring TenantID is guarded for the same reason; this one was not, so
+	// neighboring TenantID is guarded for the same reason; this one was not, so
 	// one such subscription in a tenant panicked the whole scan before any asset
 	// was returned. Fall back to the id, which is always present here.
 	subID := convert.ToValue(sub.SubscriptionID)

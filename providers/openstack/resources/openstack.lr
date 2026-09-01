@@ -2210,7 +2210,7 @@ private openstack.objectstorage.container @defaults("name objectCount bytes publ
   hasTempUrlKey() bool
   // Whether a second temporary-URL signing key is configured (X-Container-Meta-Temp-URL-Key-2)
   //
-  // The second slot used while rotating temp-URL keys. URLs signed with it are honoured just
+  // The second slot used while rotating temp-URL keys. URLs signed with it are honored just
   // as those signed with the first key are. Reports presence only.
   hasTempUrlKey2() bool
   // Free-form container metadata (X-Container-Meta-* headers, without the prefix)

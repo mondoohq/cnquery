@@ -53,7 +53,7 @@ func newMqlHetznerServerType(runtime *plugin.Runtime, t *hcloud.ServerType) (*mq
 		"architecture": llx.StringData(string(t.Architecture)),
 		"deprecated":   llx.BoolData(t.IsDeprecated()),
 		// hcloud marks ServerType.DeprecatableResource as phasing out in
-		// favour of the per-location schedule, which locations() already
+		// favor of the per-location schedule, which locations() already
 		// carries. The type-wide schedule is kept because the shipped
 		// `deprecated` bool reads from the same struct and says only that a
 		// type is going away, never by when.

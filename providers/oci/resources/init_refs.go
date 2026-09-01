@@ -14,7 +14,7 @@ import (
 	"go.mondoo.com/mql/providers/oci/connection"
 )
 
-// ociResolveByID matches an OCID against an already modelled collection and
+// ociResolveByID matches an OCID against an already modeled collection and
 // returns the populated resource, or a not-found error.
 //
 // The error matters. Without an Init, NewResource falls straight through to
