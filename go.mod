@@ -70,6 +70,7 @@ require (
 	github.com/muesli/termenv v0.16.0
 	github.com/olekukonko/tablewriter v1.1.4
 	github.com/opencontainers/image-spec v1.1.1
+	// encoding guard: providers/os/resources/purl TestPackageURLEncoding
 	github.com/package-url/packageurl-go v0.1.7
 	github.com/pandatix/go-cvss v0.6.4
 	github.com/patrickmn/go-cache v2.1.0+incompatible

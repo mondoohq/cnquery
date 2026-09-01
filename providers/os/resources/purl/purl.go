@@ -4,6 +4,7 @@
 package purl
 
 import (
+	"maps"
 	"sort"
 	"strings"
 
@@ -112,7 +113,11 @@ func NewPackageURL(pf *inventory.Platform, t Type, name, version string, modifie
 }
 
 func (purl PackageURL) String() string {
-	qualifiers := purl.Qualifiers
+	// Clone before adding the derived qualifiers. The caller still owns the
+	// map it passed to WithQualifiers, and writing arch/epoch/distro into it
+	// would leak this package's platform into anything else rendered from the
+	// same map -- silently, as extra qualifiers on a purl that never had them.
+	qualifiers := maps.Clone(purl.Qualifiers)
 	if qualifiers == nil {
 		qualifiers = map[string]string{}
 	}
