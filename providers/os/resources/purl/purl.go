@@ -4,6 +4,7 @@
 package purl
 
 import (
+	"maps"
 	"sort"
 	"strings"
 
@@ -112,10 +113,13 @@ func NewPackageURL(pf *inventory.Platform, t Type, name, version string, modifie
 }
 
 func (purl PackageURL) String() string {
-	qualifiers := purl.Qualifiers
-	if qualifiers == nil {
-		qualifiers = map[string]string{}
-	}
+	// Render into a fresh map. arch/epoch/distro below are derived from the
+	// platform, and writing them into purl.Qualifiers would mean a second
+	// String() call, or a second package sharing the map, silently inherited
+	// this package's platform. Sized for the three derived keys; maps.Copy
+	// from a nil source is a no-op, so no nil branch is needed.
+	qualifiers := make(map[string]string, len(purl.Qualifiers)+3)
+	maps.Copy(qualifiers, purl.Qualifiers)
 
 	if purl.Arch != "" {
 		qualifiers[QualifierArch] = purl.Arch
@@ -183,8 +187,16 @@ func WithNamespace(namespace string) Modifier {
 	}
 }
 
+// WithQualifiers sets the purl's qualifiers, copying the map so the PackageURL
+// does not alias storage the caller still holds. Without the copy a caller
+// editing its map after construction would silently change an
+// already-constructed purl, and purl.Qualifiers would write back into it.
+//
+// Note this replaces any qualifiers already set rather than merging, so two
+// WithQualifiers modifiers on one call discard the first.
 func WithQualifiers(qualifiers map[string]string) Modifier {
 	return func(purl *PackageURL) {
-		purl.Qualifiers = qualifiers
+		purl.Qualifiers = make(map[string]string, len(qualifiers))
+		maps.Copy(purl.Qualifiers, qualifiers)
 	}
 }
