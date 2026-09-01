@@ -363,7 +363,9 @@ func (e *AssetExplorer) discoverChildren(parent *TrackedAsset) {
 // fleet after the scan as a whole. This is v12's `len(Assets) == 1` rule, asked one
 // level at a time because children are discovered lazily rather than all up front.
 //
-// Mutates tracked assets, so callers must hold e.mu (both already do).
+// Mutates tracked assets, so callers must hold e.mu or otherwise guarantee that
+// nothing else can reach the explorer: Connect holds the lock, and the constructor
+// runs before the explorer is returned to anyone.
 func handDownRequestedName(node *TrackedAsset, requested string) {
 	if requested == "" || node == nil {
 		return

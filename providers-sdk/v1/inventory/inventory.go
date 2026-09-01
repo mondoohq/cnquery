@@ -64,17 +64,28 @@ func InventoryFromYAML(data []byte) (*Inventory, error) {
 		return res, err
 	}
 
-	// A `name:` written into an inventory file is a name the author chose for that
-	// asset, so it outranks whatever a provider detects after connecting. Mark it:
-	// by the time discovery sees the asset, a requested name and a name a provider
-	// filled in during ParseCLI are the same string in the same field.
-	for _, asset := range res.GetSpec().GetAssets() {
+	res.MarkRequestedNames()
+
+	return res, nil
+}
+
+// MarkRequestedNames marks every named asset in the inventory as carrying a name
+// its author chose, so the name outranks whatever a provider detects after
+// connecting.
+//
+// By the time discovery sees an asset, a name an author wrote down and a name a
+// provider filled in during its own ParseCLI are the same string in the same
+// field; only the marker tells them apart. Call this from every loader that reads
+// assets out of a file whose names the user wrote -- a mondoo inventory `name:`,
+// an ansible inventory host key -- and not from one that merely copies the
+// connection target into the name, where a provider's normalized name is the
+// better answer.
+func (p *Inventory) MarkRequestedNames() {
+	for _, asset := range p.GetSpec().GetAssets() {
 		if asset.GetName() != "" {
 			asset.NameOverride = true
 		}
 	}
-
-	return res, nil
 }
 
 // InventoryFromFile loads an inventory from file system
