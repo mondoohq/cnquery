@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -187,9 +188,21 @@ func writeViaFileSystem(conn shared.Connection, path, script string) error {
 	if fs == nil {
 		return errors.New("connection has no filesystem")
 	}
+	// Clear a leftover from an interrupted scan, then create the file rather
+	// than open whatever is at the path. The staging directory is writable by
+	// every local user and the name is derived from the script, so the path is
+	// knowable before a scan runs; O_EXCL makes a file that is already there a
+	// failure instead of something this write goes through. Nothing is lost by
+	// failing: the caller falls back to the chunked write, which creates the
+	// file the same way.
+	if err := fs.Remove(path); err != nil && !os.IsNotExist(err) {
+		log.Debug().Err(err).Str("path", path).
+			Msg("powershell> could not clear the staging path before writing")
+	}
+
 	// PowerShell reads a BOM-less UTF-8 file fine, and every script staged this
 	// way is ASCII in practice. CRLF is not required by -File.
-	f, err := fs.Create(path)
+	f, err := fs.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
 	if err != nil {
 		return err
 	}
@@ -216,13 +229,16 @@ func writeViaCommand(conn shared.Connection, path, script string) error {
 	tmp := path + ".b64"
 
 	// Fresh file per run: an interrupted earlier scan could otherwise leave a
-	// partial payload that this one silently appends to. The hashed name makes
-	// that unlikely rather than impossible.
+	// partial payload that this one silently appends to. New-Item without
+	// -Force is the exclusive create - it fails rather than reusing whatever is
+	// at the path, which matters because the staging directory is writable by
+	// every local user and the name is derived from the script. The attribute
+	// test is 0x400, FILE_ATTRIBUTE_REPARSE_POINT: a link at the path would
+	// otherwise send the chunks somewhere else entirely.
 	if err := runOne(conn, psCommand(
-		fmt.Sprintf("Remove-Item -Force -ErrorAction SilentlyContinue '%s','%s'", tmp, path),
-		// Success is the absence of both files, which is also the state a fresh
-		// target is already in.
-		fmt.Sprintf("-not (Test-Path '%s') -and -not (Test-Path '%s')", tmp, path))); err != nil {
+		fmt.Sprintf("Remove-Item -Force -ErrorAction SilentlyContinue '%s','%s'; New-Item -ItemType File -Path '%s' -ErrorAction Stop | Out-Null", tmp, path, tmp),
+		// Success is an empty file this command created, and no final file yet.
+		fmt.Sprintf("(Test-Path '%s') -and -not (Test-Path '%s') -and (((Get-Item '%s' -Force -ErrorAction Stop).Attributes -band 1024) -eq 0)", tmp, path, tmp))); err != nil {
 		return err
 	}
 
@@ -242,8 +258,8 @@ func writeViaCommand(conn shared.Connection, path, script string) error {
 	// Decode on the target rather than shipping the plain text: this is the one
 	// step whose size does not depend on the script.
 	if err := runOne(conn, psCommand(
-		fmt.Sprintf("[IO.File]::WriteAllBytes('%s',[Convert]::FromBase64String((Get-Content -Raw '%s' -ErrorAction Stop))); Remove-Item -Force -ErrorAction SilentlyContinue '%s'",
-			path, tmp, tmp),
+		fmt.Sprintf("New-Item -ItemType File -Path '%s' -ErrorAction Stop | Out-Null; [IO.File]::WriteAllBytes('%s',[Convert]::FromBase64String((Get-Content -Raw '%s' -ErrorAction Stop))); Remove-Item -Force -ErrorAction SilentlyContinue '%s'",
+			path, path, tmp, tmp),
 		fmt.Sprintf("(Get-Item '%s' -ErrorAction Stop).Length -eq %d", path, len(script)))); err != nil {
 		return err
 	}

@@ -6,6 +6,7 @@ package powershell_test
 import (
 	"bytes"
 	"errors"
+	"os"
 	"strings"
 	"testing"
 
@@ -24,6 +25,10 @@ import (
 type readOnlyFs struct{ afero.Fs }
 
 func (readOnlyFs) Create(string) (afero.File, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (readOnlyFs) OpenFile(string, int, os.FileMode) (afero.File, error) {
 	return nil, errors.New("not implemented")
 }
 
@@ -234,4 +239,62 @@ func TestStagedWindowsPathMatchesStage(t *testing.T) {
 	assert.Equal(t, staged.Path, powershell.StagedWindowsPath("iis", script))
 	assert.Equal(t, staged.Command,
 		powershell.StagedCommand(powershell.StagedWindowsPath("iis", script)))
+}
+
+// The staging directory is writable by every local user and the file name is
+// derived from the script, so the path can be occupied before a scan starts.
+// Staging must create its own file rather than write through one that is
+// already there.
+func TestStageWillNotWriteThroughAnExistingFile(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	script := "ConvertTo-Json @{ a = 1 }\n"
+	path := powershell.StagedWindowsPath("iis", script)
+	require.NoError(t, afero.WriteFile(fs, path, []byte("planted"), 0o644))
+
+	// no RunCommand fallback available, so a refused write is the whole result
+	conn := &fakeConn{
+		connType: shared.Type_SSH, platform: windowsPlatform(),
+		fs: existingFileFs{fs}, caps: shared.Capability_File,
+	}
+
+	_, err := powershell.Stage(conn, "iis", script)
+	require.Error(t, err)
+
+	body, readErr := afero.ReadFile(fs, path)
+	require.NoError(t, readErr)
+	assert.Equal(t, "planted", string(body), "staging overwrote a file it did not create")
+}
+
+// existingFileFs keeps Remove from clearing the path, standing in for a file
+// the scanner is not permitted to delete.
+type existingFileFs struct{ afero.Fs }
+
+func (existingFileFs) Remove(string) error { return errors.New("permission denied") }
+
+// The chunked write is the path every read-only connection takes, so it needs
+// the same guarantee: create the file, do not adopt one.
+func TestChunkedStagingCreatesItsOwnFiles(t *testing.T) {
+	conn := &fakeConn{
+		connType: shared.Type_Winrm, platform: windowsPlatform(),
+		fs:   readOnlyFs{afero.NewMemMapFs()},
+		caps: shared.Capability_RunCommand | shared.Capability_File,
+	}
+	_, err := powershell.Stage(conn, "iis", "ConvertTo-Json @{ a = 1 }\n"+strings.Repeat("#x\n", 50))
+	require.NoError(t, err)
+	require.Greater(t, len(conn.commands), 2)
+
+	first := conn.commands[0]
+	last := conn.commands[len(conn.commands)-1]
+
+	// New-Item without -Force fails on an existing item, which is the
+	// exclusive create; -Force would silently reuse whatever is there
+	assert.Contains(t, first, "New-Item -ItemType File")
+	assert.NotContains(t, first, "New-Item -ItemType File -Path -Force")
+	assert.Contains(t, last, "New-Item -ItemType File")
+
+	// 0x400 is FILE_ATTRIBUTE_REPARSE_POINT: a link at the path would send the
+	// payload somewhere else
+	assert.Contains(t, first, "-band 1024")
+
+	assertStagingCommandShape(t, conn.commands)
 }
