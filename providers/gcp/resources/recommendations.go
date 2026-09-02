@@ -12,6 +12,7 @@ import (
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/gcp/connection"
+	"go.mondoo.com/mql/types"
 
 	recommender "cloud.google.com/go/recommender/apiv1"
 	"cloud.google.com/go/recommender/apiv1/recommenderpb"
@@ -62,7 +63,7 @@ func newMqlRecommendation(runtime *plugin.Runtime, item *recommenderpb.Recommend
 		"name":             llx.StringData(item.Description),
 		"recommender":      llx.StringData(values[5]),
 		"primaryImpact":    llx.DictData(primaryImpact),
-		"additionalImpact": llx.DictData(additionalImpact),
+		"additionalImpact": llx.ArrayData(additionalImpact, types.Dict),
 		"content":          llx.DictData(content),
 		"category":         llx.StringData(category),
 		"priority":         llx.StringData(priority),

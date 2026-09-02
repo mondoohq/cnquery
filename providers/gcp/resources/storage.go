@@ -517,11 +517,11 @@ func initGcpProjectStorageServiceBucket(runtime *plugin.Runtime, args map[string
 	// connection profile pointing at a GCS bucket).
 	nameRaw, ok := args["name"]
 	if !ok || nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.storageService.bucket requires a "name" argument`)
 	}
 	name, ok := nameRaw.Value.(string)
 	if !ok || name == "" {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.storageService.bucket requires a non-empty "name" argument`)
 	}
 
 	conn, ok := runtime.Connection.(*connection.GcpConnection)

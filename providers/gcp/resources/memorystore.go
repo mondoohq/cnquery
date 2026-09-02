@@ -293,9 +293,12 @@ func initGcpProjectMemorystoreServiceInstance(runtime *plugin.Runtime, args map[
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.memorystoreService.instance requires a "name" argument`)
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return nil, nil, errors.New(`gcp.project.memorystoreService.instance requires a non-empty "name" argument`)
+	}
 
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
 	if !ok {
@@ -324,8 +327,9 @@ func initGcpProjectMemorystoreServiceInstance(runtime *plugin.Runtime, args map[
 		if locRaw == nil || projRaw == nil {
 			return nil, nil, errors.New("memorystore instance init: projectId and location required when name is not a full resource path")
 		}
-		projectId = projRaw.Value.(string)
-		fullName = fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, locRaw.Value.(string), name)
+		projectId, _ = projRaw.Value.(string)
+		location, _ := locRaw.Value.(string)
+		fullName = fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, location, name)
 	}
 
 	// Ask whether the API is on before paying for a Get that cannot succeed
@@ -637,9 +641,12 @@ func initGcpProjectMemorystoreServiceBackupCollection(runtime *plugin.Runtime, a
 	}
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.memorystoreService.backupCollection requires a "name" argument`)
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return nil, nil, errors.New(`gcp.project.memorystoreService.backupCollection requires a non-empty "name" argument`)
+	}
 
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
 	if !ok {

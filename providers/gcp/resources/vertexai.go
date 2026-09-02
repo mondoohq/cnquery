@@ -1160,9 +1160,12 @@ func initGcpProjectVertexaiServiceCustomJob(runtime *plugin.Runtime, args map[st
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.vertexaiService.customJob requires a "name" argument`)
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return nil, nil, errors.New(`gcp.project.vertexaiService.customJob requires a non-empty "name" argument`)
+	}
 
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
 	if !ok {
@@ -1182,8 +1185,8 @@ func initGcpProjectVertexaiServiceCustomJob(runtime *plugin.Runtime, args map[st
 		if locRaw == nil || projRaw == nil {
 			return nil, nil, errors.New("vertexai custom job init: projectId and location required when name is not a full resource path")
 		}
-		region = locRaw.Value.(string)
-		projectId = projRaw.Value.(string)
+		region, _ = locRaw.Value.(string)
+		projectId, _ = projRaw.Value.(string)
 		fullName = fmt.Sprintf("projects/%s/locations/%s/customJobs/%s", projectId, region, name)
 	}
 
@@ -1244,9 +1247,12 @@ func initGcpProjectVertexaiServiceEndpoint(runtime *plugin.Runtime, args map[str
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.vertexaiService.endpoint requires a "name" argument`)
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return nil, nil, errors.New(`gcp.project.vertexaiService.endpoint requires a non-empty "name" argument`)
+	}
 
 	region := vertexaiRegionFromName(name)
 	if region == "" {
@@ -1314,9 +1320,12 @@ func initGcpProjectVertexaiServicePipelineJob(runtime *plugin.Runtime, args map[
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.vertexaiService.pipelineJob requires a "name" argument`)
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return nil, nil, errors.New(`gcp.project.vertexaiService.pipelineJob requires a non-empty "name" argument`)
+	}
 
 	region := vertexaiRegionFromName(name)
 	if region == "" {
@@ -1384,9 +1393,12 @@ func initGcpProjectVertexaiServiceNotebookRuntimeTemplate(runtime *plugin.Runtim
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.vertexaiService.notebookRuntimeTemplate requires a "name" argument`)
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return nil, nil, errors.New(`gcp.project.vertexaiService.notebookRuntimeTemplate requires a non-empty "name" argument`)
+	}
 
 	region := vertexaiRegionFromName(name)
 	if region == "" {
@@ -2646,11 +2658,11 @@ func initGcpProjectVertexaiServiceSchedule(runtime *plugin.Runtime, args map[str
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.vertexaiService.schedule requires a "name" argument`)
 	}
 	name, ok := nameRaw.Value.(string)
 	if !ok || name == "" {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.vertexaiService.schedule requires a non-empty "name" argument`)
 	}
 
 	region := vertexaiRegionFromName(name)

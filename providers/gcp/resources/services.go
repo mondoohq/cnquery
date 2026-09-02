@@ -166,25 +166,30 @@ func initGcpService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.service requires a "name" argument`)
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return nil, nil, errors.New(`gcp.service requires a non-empty "name" argument`)
+	}
 
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
 	}
+	// Check the arguments before building credentials, so an unusable one is
+	// reported as itself rather than as whatever the credential lookup says.
+	projectId := conn.ResourceID()
+	if projectIdRaw := args["projectId"]; projectIdRaw != nil {
+		projectId, ok = projectIdRaw.Value.(string)
+		if !ok || projectId == "" {
+			return nil, nil, errors.New(`gcp.service requires a non-empty "projectId" argument`)
+		}
+	}
+
 	credentials, err := conn.Credentials(serviceusage.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, nil, err
-	}
-
-	var projectId string
-	projectIdRaw := args["projectId"]
-	if projectIdRaw != nil {
-		projectId = projectIdRaw.Value.(string)
-	} else {
-		projectId = conn.ResourceID()
 	}
 
 	ctx := context.Background()
