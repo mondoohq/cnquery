@@ -114,7 +114,8 @@ func (f *File) Readdir(count int) (res []os.FileInfo, err error) {
 func (f *File) Readdirnames(n int) (names []string, err error) {
 	// TODO: input n is ignored
 
-	cmd, err := f.catfs.commandRunner.RunCommand("ls -1 '" + f.path + "'")
+	// we need shellquote to escape directory names with spaces or quotes
+	cmd, err := f.catfs.commandRunner.RunCommand(shellquote.Join("ls", "-1", f.path))
 	if err != nil {
 		return nil, err
 	}
