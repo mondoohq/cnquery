@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"os"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
@@ -282,4 +283,57 @@ func TestTryProviderUpdateSchemaOnlyDownloadFails(t *testing.T) {
 	_, err := TryProviderUpdate(schemaOnly, UpdateProvidersConfig{Enabled: true})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "registry is down")
+}
+
+func TestArchiveFileName(t *testing.T) {
+	tests := []struct {
+		name     string
+		entry    string
+		expected string
+		wantErr  bool
+	}{
+		{"plain binary", "aws", "aws", false},
+		{"windows binary", "aws.exe", "aws.exe", false},
+		{"config", "aws.json", "aws.json", false},
+		{"schema", "aws.resources.json", "aws.resources.json", false},
+		{"leading dot slash", "./aws.json", "aws.json", false},
+		{"parent directory", "../aws.json", "", true},
+		{"nested parent directory", "../../etc/cron.d/mondoo", "", true},
+		{"subdirectory", "nested/aws.json", "", true},
+		{"absolute path", "/etc/cron.d/mondoo", "", true},
+		{"parent only", "..", "", true},
+		{"current directory", ".", "", true},
+		{"empty", "", "", true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			res, err := archiveFileName(test.entry)
+			if test.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, test.expected, res)
+		})
+	}
+}
+
+func TestInstallIORejectsPathsOutsideDestination(t *testing.T) {
+	// the unpack directory is created inside Dst, so an entry has to climb
+	// two levels to land outside of it
+	root := t.TempDir()
+	dst := filepath.Join(root, "providers")
+	escapee := filepath.Join(root, "escaped.json")
+
+	archive, err := buildTarXz(map[string][]byte{
+		"../../escaped.json": []byte(`{"name":"escaped"}`),
+	})
+	require.NoError(t, err)
+
+	_, err = InstallIO(io.NopCloser(bytes.NewReader(archive)), InstallConf{Dst: dst})
+	require.Error(t, err)
+
+	_, err = os.Stat(escapee)
+	assert.True(t, os.IsNotExist(err), "archive wrote outside the destination directory")
 }
