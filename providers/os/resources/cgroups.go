@@ -4,45 +4,55 @@
 package resources
 
 import (
-	"bufio"
+	"fmt"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 
+	"github.com/spf13/afero"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/types"
 )
 
-// cgroupV2Probe determines what cgroup mode the host is running in by
-// looking for the v2 unified-hierarchy marker file and falling back to
-// v1's per-controller directories. The output is one of `V2`, `V1`, or
-// `NONE`.
-const cgroupV2Probe = `if [ -r /sys/fs/cgroup/cgroup.controllers ]; then echo V2; elif [ -d /sys/fs/cgroup/memory ]; then echo V1; else echo NONE; fi`
+const (
+	cgroupRoot = "/sys/fs/cgroup"
 
-// cgroupV2Walk dumps the entire v2 cgroup tree in a single shell call.
-// Each cgroup directory is separated by a `===CGROUP===<path>` line,
-// followed by `key=value` pairs for the interesting attribute files.
-// `-maxdepth 4` bounds traversal on busy hosts (e.g., K8s nodes with
-// thousands of pod cgroups); the typical layout is
-// `slice/sub-slice/unit`, which fits comfortably within four levels.
-// The `tr '\n' ' '` collapses multi-line values (notably cgroup.procs,
-// which is one PID per line) into a single space-separated string; the
-// parser trims the trailing space that `tr` leaves behind.
-const cgroupV2Walk = `find /sys/fs/cgroup -maxdepth 4 -name cgroup.controllers 2>/dev/null | while read f; do
-  d="${f%/cgroup.controllers}"
-  echo "===CGROUP===$d"
-  for n in cgroup.controllers cgroup.type memory.max memory.current memory.high memory.swap.max cpu.max cpu.weight pids.max pids.current cgroup.procs; do
-    if [ -r "$d/$n" ]; then
-      printf '%s=' "$n"
-      tr '\n' ' ' < "$d/$n" 2>/dev/null
-      echo
-    fi
-  done
-done`
+	// cgroupControllersFile marks a directory as a cgroup v2 node. Its
+	// presence at the mount point also identifies the unified hierarchy.
+	cgroupControllersFile = "cgroup.controllers"
 
-const cgroupRoot = "/sys/fs/cgroup"
+	// cgroupV1MemoryDir is the per-controller hierarchy that only exists
+	// under cgroup v1.
+	cgroupV1MemoryDir = "memory"
+
+	// cgroupWalkMaxDepth bounds how far below the cgroup root the walk
+	// descends. Busy hosts (e.g. K8s nodes with thousands of pod
+	// cgroups) would otherwise cost one directory listing per pod
+	// container; the typical layout is `slice/sub-slice/unit`, which
+	// fits comfortably within three levels below the root.
+	cgroupWalkMaxDepth = 3
+)
+
+// cgroupAttrFiles are the v2 attribute files read for every cgroup, in
+// addition to cgroupControllersFile. Files that are absent (the
+// controller is not enabled on that cgroup) are skipped, and the
+// builder falls back to the documented default for the field.
+var cgroupAttrFiles = []string{
+	"cgroup.type",
+	"memory.max",
+	"memory.current",
+	"memory.high",
+	"memory.swap.max",
+	"cpu.max",
+	"cpu.weight",
+	"pids.max",
+	"pids.current",
+	"cgroup.procs",
+}
 
 type mqlCgroupsInternal struct {
 	lock     sync.Mutex
@@ -83,37 +93,22 @@ func (c *mqlCgroups) probe() (*cgroupDetection, error) {
 func (c *mqlCgroups) doProbe() (*cgroupDetection, error) {
 	det := &cgroupDetection{controllers: []string{}, flat: []*mqlCgroup{}}
 
-	probe, ok, err := runShellCmd(c.MqlRuntime, cgroupV2Probe)
+	conn, ok := c.MqlRuntime.Connection.(shared.Connection)
+	if !ok {
+		return det, fmt.Errorf("cgroups requires a filesystem connection, got %T", c.MqlRuntime.Connection)
+	}
+	fs := conn.FileSystem()
+
+	det.version = detectCgroupVersion(fs)
+	if det.version != 2 {
+		// v1's per-controller hierarchies are intentionally unmodeled,
+		// and version 0 means there is no cgroup mount to walk.
+		return det, nil
+	}
+
+	parsed, err := walkCgroupFS(fs)
 	if err != nil {
 		return det, err
-	}
-	if !ok {
-		return det, nil
-	}
-
-	switch strings.TrimSpace(probe) {
-	case "V2":
-		det.version = 2
-	case "V1":
-		det.version = 1
-		// v1's per-controller hierarchies are intentionally unmodeled.
-		return det, nil
-	default:
-		det.version = 0
-		return det, nil
-	}
-
-	stdout, ok, err := runShellCmd(c.MqlRuntime, cgroupV2Walk)
-	if err != nil {
-		return det, err
-	}
-	if !ok {
-		return det, nil
-	}
-
-	parsed := parseCgroupWalk(stdout)
-	if len(parsed) == 0 {
-		return det, nil
 	}
 
 	byPath := make(map[string]*mqlCgroup, len(parsed))
@@ -128,9 +123,9 @@ func (c *mqlCgroups) doProbe() (*cgroupDetection, error) {
 	}
 
 	// Link parents -> children. Root's parent is itself; skip self-links.
-	for path, cg := range byPath {
-		parent := parentCgroupPath(path)
-		if parent == path {
+	for cgPath, cg := range byPath {
+		parent := parentCgroupPath(cgPath)
+		if parent == cgPath {
 			continue
 		}
 		if p, ok := byPath[parent]; ok {
@@ -159,6 +154,100 @@ func (c *mqlCgroups) doProbe() (*cgroupDetection, error) {
 		det.version = 0
 	}
 	return det, nil
+}
+
+// detectCgroupVersion reports what cgroup mode the target is running in
+// by looking for the v2 unified-hierarchy marker file and falling back
+// to v1's per-controller directories. It returns 2, 1, or 0.
+func detectCgroupVersion(fs afero.Fs) int64 {
+	// Open rather than Stat: an unreadable marker file is not a usable
+	// unified hierarchy, and the v1 fallback may still apply.
+	if f, err := fs.Open(path.Join(cgroupRoot, cgroupControllersFile)); err == nil {
+		f.Close()
+		return 2
+	}
+	if fi, err := fs.Stat(path.Join(cgroupRoot, cgroupV1MemoryDir)); err == nil && fi.IsDir() {
+		return 1
+	}
+	return 0
+}
+
+// walkCgroupFS collects every cgroup v2 node under the cgroup root,
+// depth-first and in directory order, starting with the root itself.
+// A root that cannot be read is an error rather than an empty result:
+// reporting "v2 with no controllers" would assert something false about
+// the target.
+func walkCgroupFS(fs afero.Fs) ([]parsedCgroup, error) {
+	root, ok := readCgroupDir(fs, cgroupRoot)
+	if !ok {
+		return nil, fmt.Errorf("cannot read the cgroup v2 root at %s", cgroupRoot)
+	}
+	out := []parsedCgroup{root}
+
+	entries, err := afero.ReadDir(fs, cgroupRoot)
+	if err != nil {
+		return nil, fmt.Errorf("cannot list the cgroup v2 root at %s: %w", cgroupRoot, err)
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			walkCgroupDir(fs, path.Join(cgroupRoot, entry.Name()), 1, &out)
+		}
+	}
+	return out, nil
+}
+
+// walkCgroupDir appends dir (when it is a cgroup) and recurses into its
+// subdirectories up to cgroupWalkMaxDepth. Unreadable subtrees are
+// skipped: a single delegated cgroup the scanner cannot enter must not
+// discard the rest of the tree.
+func walkCgroupDir(fs afero.Fs, dir string, depth int, out *[]parsedCgroup) {
+	cg, ok := readCgroupDir(fs, dir)
+	if ok {
+		*out = append(*out, cg)
+	}
+	if depth >= cgroupWalkMaxDepth {
+		return
+	}
+	entries, err := afero.ReadDir(fs, dir)
+	if err != nil {
+		return
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			walkCgroupDir(fs, path.Join(dir, entry.Name()), depth+1, out)
+		}
+	}
+}
+
+// readCgroupDir reads one cgroup directory's attribute files. A
+// directory without a readable cgroup.controllers is not a cgroup node
+// and reports false.
+func readCgroupDir(fs afero.Fs, dir string) (parsedCgroup, bool) {
+	controllers, err := afero.ReadFile(fs, path.Join(dir, cgroupControllersFile))
+	if err != nil {
+		return parsedCgroup{}, false
+	}
+
+	cg := parsedCgroup{
+		rawPath: dir,
+		attrs:   map[string]string{cgroupControllersFile: flattenCgroupAttr(controllers)},
+	}
+	for _, name := range cgroupAttrFiles {
+		data, err := afero.ReadFile(fs, path.Join(dir, name))
+		if err != nil {
+			continue
+		}
+		cg.attrs[name] = flattenCgroupAttr(data)
+	}
+	return cg, true
+}
+
+// flattenCgroupAttr collapses a cgroup attribute file into the
+// single-line form the resource builder expects. cgroup.procs is one
+// PID per line and callers split it on whitespace, so newlines become
+// spaces and the surrounding whitespace is trimmed.
+func flattenCgroupAttr(data []byte) string {
+	return strings.TrimSpace(strings.ReplaceAll(string(data), "\n", " "))
 }
 
 func (c *mqlCgroups) version() (int64, error) {
@@ -216,45 +305,12 @@ func (cg *mqlCgroup) children() ([]any, error) {
 	return cg.childResources, nil
 }
 
-// parsedCgroup is the raw key/value capture from one cgroup directory's
-// section of the walk output. Conversion to numeric fields happens in
-// buildCgroupResource so the parser stays a flat string-to-string map.
+// parsedCgroup is the raw key/value capture from one cgroup directory.
+// Conversion to numeric fields happens in buildCgroupResource so the
+// walk stays a flat string-to-string map.
 type parsedCgroup struct {
 	rawPath string
 	attrs   map[string]string
-}
-
-func parseCgroupWalk(stdout string) []parsedCgroup {
-	var out []parsedCgroup
-	var cur *parsedCgroup
-
-	scanner := bufio.NewScanner(strings.NewReader(stdout))
-	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.HasPrefix(line, "===CGROUP===") {
-			if cur != nil {
-				out = append(out, *cur)
-			}
-			cur = &parsedCgroup{
-				rawPath: strings.TrimPrefix(line, "===CGROUP==="),
-				attrs:   map[string]string{},
-			}
-			continue
-		}
-		if cur == nil {
-			continue
-		}
-		idx := strings.IndexByte(line, '=')
-		if idx <= 0 {
-			continue
-		}
-		cur.attrs[line[:idx]] = strings.TrimSpace(line[idx+1:])
-	}
-	if cur != nil {
-		out = append(out, *cur)
-	}
-	return out
 }
 
 func buildCgroupResource(runtime *plugin.Runtime, relPath string, p parsedCgroup) (*mqlCgroup, error) {
