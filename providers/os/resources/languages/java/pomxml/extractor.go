@@ -17,7 +17,18 @@ var (
 )
 
 // Extractor parses Maven pom.xml files to extract project dependencies.
-type Extractor struct{}
+type Extractor struct {
+	// Parents, when set, supplies the parent and imported-BOM POMs whose
+	// <properties> and <dependencyManagement> a project inherits its versions
+	// from. Declaring a dependency without a <version> and inheriting it is the
+	// standard Spring Boot layout, and reading the pom.xml alone leaves those
+	// dependencies with no version — hence no matchable purl (see inherit.go).
+	//
+	// Left nil the parser stays hermetic and behaves exactly as before: only
+	// this POM's own dependencyManagement is consulted, and a version it does
+	// not state stays empty.
+	Parents ParentResolver
+}
 
 func (e *Extractor) Name() string {
 	return "pomxml"
@@ -28,6 +39,11 @@ func (e *Extractor) Parse(r io.Reader, filename string) (languages.Bom, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Before any version is read: depToPackage and effectiveScope both resolve
+	// against the property bag and management list, so what is inherited has to
+	// be in place first.
+	project.inherit(e.Parents)
 
 	if filename != "" {
 		project.evidence = append(project.evidence, filename)
