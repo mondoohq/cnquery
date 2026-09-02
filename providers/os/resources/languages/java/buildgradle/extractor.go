@@ -24,14 +24,27 @@ var (
 // plain Gradle project reporting no dependencies at all: not a partial
 // inventory, an empty one. The build script is what those projects actually
 // have, and its declarations are the direct dependencies.
-type Extractor struct{}
+type Extractor struct {
+	// Properties supplies version properties declared OUTSIDE the script being
+	// parsed — a gradle.properties, a root project's `ext` block, or a shared
+	// script applied into the build. Gradle resolves a version reference
+	// against the whole project's property scope, and most real projects
+	// declare their versions once, away from the module that uses them:
+	// ExoPlayer keeps every version in a root `constants.gradle`. Without them
+	// a reference resolves to nothing and the dependency is inventoried with no
+	// version, which no advisory can match.
+	//
+	// The script's own declarations take precedence, as they do in Gradle.
+	// Optional: a nil map parses the file alone.
+	Properties map[string]string
+}
 
 func (e *Extractor) Name() string {
 	return "buildgradle"
 }
 
 func (e *Extractor) Parse(r io.Reader, filename string) (languages.Bom, error) {
-	build, err := parseBuildGradle(r)
+	build, err := parseBuildGradle(r, e.Properties)
 	if err != nil {
 		return nil, err
 	}

@@ -93,7 +93,7 @@ var devConfigurations = map[string]bool{
 // assembled at configuration time (a version catalog accessor, a coordinate
 // built from a function call) is not recoverable without running Gradle. An
 // unreadable declaration is therefore omitted rather than guessed at.
-func parseBuildGradle(r io.Reader) (*gradleBuild, error) {
+func parseBuildGradle(r io.Reader, external map[string]string) (*gradleBuild, error) {
 	var lines []string
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
@@ -107,6 +107,13 @@ func parseBuildGradle(r io.Reader) (*gradleBuild, error) {
 	// Variables are collected over the whole file first: a version property is
 	// as often declared below the dependencies block as above it.
 	vars := collectVars(lines)
+	// Properties from elsewhere in the project fill what this file does not
+	// declare. The file's own declarations win, as they do in Gradle.
+	for k, v := range external {
+		if _, ok := vars[k]; !ok {
+			vars[k] = v
+		}
+	}
 
 	build := &gradleBuild{}
 	depth := 0
