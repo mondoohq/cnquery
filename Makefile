@@ -226,6 +226,7 @@ PROVIDERS := \
 	gitlab \
 	grafana \
 	google-workspace \
+	gusto \
 	hcp \
 	helm \
 	hetzner \
