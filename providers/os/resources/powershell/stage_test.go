@@ -287,10 +287,21 @@ func TestChunkedStagingCreatesItsOwnFiles(t *testing.T) {
 	last := conn.commands[len(conn.commands)-1]
 
 	// New-Item without -Force fails on an existing item, which is the
-	// exclusive create; -Force would silently reuse whatever is there
-	assert.Contains(t, first, "New-Item -ItemType File")
-	assert.NotContains(t, first, "New-Item -ItemType File -Path -Force")
-	assert.Contains(t, last, "New-Item -ItemType File")
+	// exclusive create; -Force would silently reuse whatever is there. The
+	// path sits between -Path and any -Force, so the two have to be checked
+	// per statement rather than as one substring.
+	for _, cmd := range []string{first, last} {
+		creates := 0
+		for _, stmt := range strings.Split(cmd, ";") {
+			if !strings.Contains(stmt, "New-Item") {
+				continue
+			}
+			creates++
+			assert.NotContains(t, stmt, "-Force",
+				"New-Item has to fail on an existing item, so it cannot take -Force: %s", stmt)
+		}
+		assert.Equal(t, 1, creates, "expected one exclusive create in %q", cmd)
+	}
 
 	// 0x400 is FILE_ATTRIBUTE_REPARSE_POINT: a link at the path would send the
 	// payload somewhere else
