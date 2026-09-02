@@ -410,3 +410,50 @@ func TestInheritManagedScopeIsInherited(t *testing.T) {
 			"an inherited test scope must keep the dependency out of the production set")
 	}
 }
+
+// TestInheritMalformedImportKeepsItsManagedVersion covers the entry that says
+// <scope>import</scope> without <type>pom</type>.
+//
+// Maven honours import only for type pom (the default type is jar), so such an
+// entry is malformed. Treating it as a BOM would skip it from the management
+// merge and look it up as a POM it is not — and when that lookup fails, as it
+// does here, the version it states is lost. Read strictly it stays an ordinary
+// management entry and the version survives.
+func TestInheritMalformedImportKeepsItsManagedVersion(t *testing.T) {
+	pom := `<project>
+  <groupId>com.example</groupId>
+  <artifactId>app</artifactId>
+  <version>1.0.0</version>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <version>2.4.240</version>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+    </dependency>
+  </dependencies>
+</project>`
+	r := &mapResolver{poms: map[string]string{}} // the bogus "BOM" resolves to nothing
+
+	got := parseWith(t, pom, r)
+	assert.Equal(t, "2.4.240", versionOf(t, got, "com.h2database:h2"),
+		"an import entry without type=pom is not a BOM; its managed version must survive")
+	assert.Empty(t, r.calls, "a non-pom entry must not be fetched as a POM")
+}
+
+// TestInheritBomImportRequiresTypePom is the positive half of the same rule: a
+// well-formed BOM import (scope import AND type pom) is still followed.
+func TestInheritBomImportRequiresTypePom(t *testing.T) {
+	assert.True(t, isBomImport(pomDependency{Scope: "import", Type: "pom"}))
+	assert.False(t, isBomImport(pomDependency{Scope: "import"}), "default type is jar, not pom")
+	assert.False(t, isBomImport(pomDependency{Scope: "import", Type: "jar"}))
+	assert.False(t, isBomImport(pomDependency{Scope: "compile", Type: "pom"}))
+}

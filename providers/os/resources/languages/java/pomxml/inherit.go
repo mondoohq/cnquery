@@ -194,8 +194,21 @@ func (p *pomProject) bomImports() []pomDependency {
 	return out
 }
 
+// isBomImport reports whether a <dependencyManagement> entry is an instruction
+// to read another POM's managed versions.
+//
+// Maven honours `<scope>import</scope>` ONLY for `<type>pom</type>`, and the
+// default type is jar — so an entry that says import without saying pom is not
+// a BOM import, it is malformed, and Maven fails the build on it.
+//
+// Matching strictly is also the safer of the two readings, because the mistakes
+// are not symmetric. An entry wrongly treated as a BOM is skipped from the
+// management merge AND looked up as a POM it is not, so if that lookup fails its
+// version is lost entirely. An entry wrongly treated as ordinary management
+// merely keeps its version available. Strict costs nothing when the POM is
+// well-formed and loses nothing when it is not.
 func isBomImport(d pomDependency) bool {
-	return d.Scope == "import"
+	return strings.TrimSpace(d.Scope) == "import" && strings.TrimSpace(d.Type) == "pom"
 }
 
 func coordKey(groupID, artifactID, version string) string {
