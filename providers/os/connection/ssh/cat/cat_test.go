@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kballard/go-shellquote"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/llx"
@@ -100,6 +101,31 @@ func TestCatFsReusesStatHelper(t *testing.T) {
 	require.NoError(t, f.Close())
 
 	assert.Equal(t, 1, countCommands(cw.commands, "sudo uname -s"))
+}
+
+func TestCatFsReaddirnamesQuotesPath(t *testing.T) {
+	fixture, _ := filepath.Abs("./testdata/cat.toml")
+	p, err := mock.New(0, &inventory.Asset{}, mock.WithPath(fixture))
+	require.NoError(t, err)
+
+	cw := &CommandWrapper{
+		commandRunner: p,
+		sudo:          shared.ParseSudo(map[string]*llx.Primitive{"sudo": llx.BoolPrimitive(true)}),
+	}
+
+	// directory names are read off the target and fed back into the listing
+	// command, so they have to survive as a single argument no matter what
+	// characters they contain
+	dir := `/home/vagrant/.ssh/od'd dir$(x)`
+
+	f := cat.NewFile(cat.New(cw), dir, false)
+	_, err = f.Readdirnames(-1)
+	require.NoError(t, err)
+
+	require.Len(t, cw.commands, 1)
+	args, err := shellquote.Split(cw.commands[0])
+	require.NoError(t, err)
+	assert.Equal(t, []string{"sudo", "ls", "-1", dir}, args)
 }
 
 func countCommands(commands []string, target string) int {
