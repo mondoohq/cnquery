@@ -107,3 +107,24 @@ func TestVersionlessInstalledPort(t *testing.T) {
 func TestName(t *testing.T) {
 	assert.Equal(t, "vcpkg-installed", (&Extractor{}).Name())
 }
+
+// TestParseStatusIsBoundedByLines pins the read bound against the shape that
+// defeated the previous one: a file with NO blank line in it. The old counter
+// only advanced on a blank-line separator, so such a file was read to the end
+// however large it was.
+//
+// The sentinel stanza sits past the cap, so it is reported only if the reader
+// ran past it.
+func TestParseStatusIsBoundedByLines(t *testing.T) {
+	var b strings.Builder
+	b.WriteString("Package: real\nVersion: 1.0\nArchitecture: x64-linux\nStatus: install ok installed\n\n")
+	for i := 0; i < maxLines+10; i++ {
+		b.WriteString("Description: filler with no blank line\n")
+	}
+	b.WriteString("\nPackage: past-the-cap\nVersion: 9.9\nStatus: install ok installed\n\n")
+
+	pkgs := parse(t, b.String())
+	require.Len(t, pkgs, 1)
+	assert.Equal(t, "real", pkgs[0].Name)
+	assert.Nil(t, pkgs.Find("past-the-cap"), "the reader ran past its line bound")
+}

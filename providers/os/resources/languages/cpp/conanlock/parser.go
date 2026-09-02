@@ -3,7 +3,10 @@
 
 package conanlock
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 // conanLock represents a parsed conan.lock file.
 type conanLock struct {
@@ -40,10 +43,28 @@ type conanGraphNode struct {
 }
 
 // isV2 returns true if this is a v2 format lockfile (version >= 0.5).
+//
+// Compared component-wise rather than as a float. Conan has shipped "0.4" and
+// "0.5", both of which parse as floats, but a lockfile version is a dotted
+// version and not a number: a future "0.5.1" fails ParseFloat, and the error
+// path selected the V1 PARSER for a v2 lockfile — which reports nothing at all
+// rather than failing, since a v2 file has no graph_lock to walk. Reading the
+// components keeps a later patch release working.
 func (l *conanLock) isV2() bool {
-	v, err := strconv.ParseFloat(l.Version, 64)
+	fields := strings.Split(strings.TrimSpace(l.Version), ".")
+	major, err := strconv.Atoi(fields[0])
 	if err != nil {
 		return false
 	}
-	return v >= 0.5
+	if major > 0 {
+		return true
+	}
+	if len(fields) < 2 {
+		return false
+	}
+	minor, err := strconv.Atoi(fields[1])
+	if err != nil {
+		return false
+	}
+	return minor >= 5
 }

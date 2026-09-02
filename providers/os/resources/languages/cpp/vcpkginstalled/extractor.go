@@ -67,9 +67,15 @@ type statusEntry struct {
 	installed bool
 }
 
-// maxStanzas bounds the read. The status file is machine-written, but it is
-// still input from the scanned tree.
-const maxStanzas = 100000
+// maxLines bounds the read. The status file is machine-written, but it is still
+// input from the scanned tree.
+//
+// Lines, not stanzas. A stanza counter only advances on a blank-line separator,
+// so a file containing no blank line at all — which is exactly the shape a
+// hostile tree would use — never advanced it and was read to the end however
+// large it was. A line bound implies a stanza bound, since a stanza is at least
+// one line.
+const maxLines = 200000
 
 // parse reads the status file's Debian-control-style stanzas: `Key: value`
 // lines, one stanza per package, separated by a blank line.
@@ -87,11 +93,10 @@ func (db *statusDB) parse(r io.Reader) error {
 		cur = statusEntry{}
 	}
 
-	for n := 0; scanner.Scan() && n < maxStanzas; {
+	for n := 0; scanner.Scan() && n < maxLines; n++ {
 		line := scanner.Text()
 		if strings.TrimSpace(line) == "" {
 			flush()
-			n++
 			continue
 		}
 		key, value, ok := strings.Cut(line, ":")

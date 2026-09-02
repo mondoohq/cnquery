@@ -136,3 +136,31 @@ func names(pkgs languages.Packages) []string {
 	}
 	return out
 }
+
+// TestIsV2VersionParsing pins the format detection against a dotted version.
+// A lockfile version is not a number: "0.5.1" failed ParseFloat, and the error
+// path chose the V1 parser for a v2 file — which reports nothing at all, since
+// a v2 lockfile has no graph_lock to walk.
+func TestIsV2VersionParsing(t *testing.T) {
+	tests := map[string]bool{
+		"0.3": false, "0.4": false, // v1 graph_lock formats
+		"0.5": true, "0.6": true, // v2
+		"0.5.1": true, "0.10": true, "1.0": true, "1.2.3": true,
+		"": false, "abc": false, "0": false,
+	}
+	for version, wantV2 := range tests {
+		l := &conanLock{Version: version}
+		assert.Equal(t, wantV2, l.isV2(), "version %q", version)
+	}
+}
+
+// TestV2LockWithPatchVersionStillParses is the consequence the unit above
+// guards, end to end: a v2 lockfile at a patch version reported no packages.
+func TestV2LockWithPatchVersionStillParses(t *testing.T) {
+	bom, err := (&Extractor{}).Parse(strings.NewReader(
+		`{"version":"0.5.1","requires":["zlib/1.3.1"]}`), "conan.lock")
+	require.NoError(t, err)
+	pkgs := bom.Direct()
+	require.Len(t, pkgs, 1)
+	assert.Equal(t, "zlib", pkgs[0].Name)
+}
