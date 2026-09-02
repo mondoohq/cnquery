@@ -303,7 +303,16 @@ func (a *mqlAwsSqsQueue) policyStatements() ([]any, error) {
 }
 
 func (a *mqlAwsEcrRepository) policyStatements() ([]any, error) {
-	return policyStatementsFromDict(a.MqlRuntime, a.Arn.Data, a.GetPolicy())
+	// GetPolicy has to run first: it is what decides whether the policy was
+	// read at all, and policyUnreadable is only meaningful afterwards.
+	policy := a.GetPolicy()
+	if a.policyUnreadable {
+		// An empty statement list is an assertion that the policy grants
+		// nothing. A policy the scan could not read supports no such claim.
+		a.PolicyStatements.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return policyStatementsFromDict(a.MqlRuntime, a.Arn.Data, policy)
 }
 
 func (a *mqlAwsLambdaFunction) policyStatements() ([]any, error) {
@@ -404,6 +413,14 @@ func resourceIsPublic(statements *plugin.TValue[[]any]) (bool, error) {
 // A statement list that was read and is merely empty still answers false. The
 // distinction is three-way, and collapsing the first case into the second is
 // how a denied read became a confident isPublic:false.
+//
+// Not every caller is migrated yet. resourceIsPublic above still collapses an
+// unread policy into false for sns.topic, sqs.queue, lambda.function,
+// s3.bucket, secretsmanager.secret, backup.vault, es.domain, opensearch.domain,
+// apigatewayv2.route, sagemaker.modelPackageGroup, the bedrock resources and
+// the snapshot resources. Those are the same defect and want the same helper;
+// each needs its policy accessor to null a denied read first, or the null never
+// reaches here.
 func resourceIsPublicOrUnknown(statements *plugin.TValue[[]any], field *plugin.TValue[bool]) (bool, error) {
 	if statements.Error != nil {
 		return false, statements.Error
@@ -428,7 +445,7 @@ func (a *mqlAwsSqsQueue) isPublic() (bool, error) {
 }
 
 func (a *mqlAwsEcrRepository) isPublic() (bool, error) {
-	return resourceIsPublic(a.GetPolicyStatements())
+	return resourceIsPublicOrUnknown(a.GetPolicyStatements(), &a.IsPublic)
 }
 
 // isPublic reports whether the function is exposed publicly — either its
