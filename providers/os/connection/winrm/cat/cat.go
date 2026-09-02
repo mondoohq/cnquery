@@ -5,7 +5,6 @@ package cat
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"os"
 	"time"
@@ -34,9 +33,23 @@ func (cat *Fs) Name() string {
 	return "Winrm Cat FS"
 }
 
+// The two scripts below are handed to powershell as an encoded command
+// rather than as a quoted command line. A plain `powershell -c "... '<name>'"`
+// nests two parsers, the command line and then powershell itself, so a name
+// has to survive both. Encoding removes the outer layer entirely and
+// SingleQuote covers the inner one.
+
+func getContentScript(name string) string {
+	return powershell.Encode("Get-Content -LiteralPath " + powershell.SingleQuote(name))
+}
+
+func getItemScript(name string) string {
+	return powershell.Encode("Get-Item -LiteralPath " + powershell.SingleQuote(name) + " | ConvertTo-JSON")
+}
+
 func (cat *Fs) Open(name string) (afero.File, error) {
 	// NOTE: do not use type here since it does not work well with file names like 'C:\Program Files\New Text Document.txt'
-	cmd, err := cat.commandRunner.RunCommand(fmt.Sprintf("powershell -c \"Get-Content '%s'\"", name))
+	cmd, err := cat.commandRunner.RunCommand(getContentScript(name))
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +67,7 @@ func (cat *Fs) Open(name string) (afero.File, error) {
 }
 
 func (cat *Fs) Stat(name string) (os.FileInfo, error) {
-	cmd, err := cat.commandRunner.RunCommand(fmt.Sprintf("powershell -c \"Get-Item -LiteralPath '%s' | ConvertTo-JSON\"", name))
+	cmd, err := cat.commandRunner.RunCommand(getItemScript(name))
 	if err != nil {
 		return nil, err
 	}

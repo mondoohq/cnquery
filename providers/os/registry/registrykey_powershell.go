@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+
+	"go.mondoo.com/mql/providers/os/resources/powershell"
 )
 
 // isEmptyPowershellList reports whether the collection scripts produced no
@@ -50,7 +52,7 @@ func ParsePowershellRegistryKeyChildren(r io.Reader) ([]RegistryKeyChild, error)
 
 // RegistryKeyItem represents a registry key item and its properties
 const getRegistryKeyItemScript = `
-$path = '%s'
+$path = %s
 $reg = Get-Item ('Registry::' + $path)
 if ($reg -eq $null) {
   Write-Error "Could not find registry key"
@@ -78,12 +80,12 @@ ConvertTo-Json -Depth 3 -Compress $properties
 `
 
 func GetRegistryKeyItemScript(path string) string {
-	return fmt.Sprintf(getRegistryKeyItemScript, path)
+	return fmt.Sprintf(getRegistryKeyItemScript, powershell.SingleQuote(path))
 }
 
 // getRegistryKeyChildItemsScript represents a registry key item and its children
 const getRegistryKeyChildItemsScript = `
-$path = '%s'
+$path = %s
 $children = Get-ChildItem -Path ('Registry::' + $path) -rec -ea SilentlyContinue
 
 $properties = @()
@@ -100,5 +102,5 @@ ConvertTo-Json -compress $properties
 `
 
 func GetRegistryKeyChildItemsScript(path string) string {
-	return fmt.Sprintf(getRegistryKeyChildItemsScript, path)
+	return fmt.Sprintf(getRegistryKeyChildItemsScript, powershell.SingleQuote(path))
 }

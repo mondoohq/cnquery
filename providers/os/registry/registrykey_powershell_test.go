@@ -95,3 +95,48 @@ func TestWindowsRegistryEmptyListParsers(t *testing.T) {
 	_, err = ParsePowershellRegistryKeyChildren(strings.NewReader("{not json"))
 	assert.Error(t, err)
 }
+
+// pathAssignment returns the `$path = ...` line of a generated script.
+func pathAssignment(t *testing.T, script string) string {
+	t.Helper()
+	for _, line := range strings.Split(script, "\n") {
+		if strings.HasPrefix(line, "$path = ") {
+			return line
+		}
+	}
+	t.Fatalf("script has no $path assignment:\n%s", script)
+	return ""
+}
+
+func TestRegistryScriptsQuoteThePath(t *testing.T) {
+	tests := []struct {
+		name     string
+		path     string
+		expected string
+	}{
+		{
+			name:     "plain key",
+			path:     `HKLM\Software\Mondoo`,
+			expected: `$path = 'HKLM\Software\Mondoo'`,
+		},
+		{
+			// subkey names are read off the target and fed back into the
+			// next script, and a registry key name may contain a quote
+			name:     "key name with a quote",
+			path:     `HKLM\Software\od'd`,
+			expected: `$path = 'HKLM\Software\od''d'`,
+		},
+		{
+			name:     "quote followed by a statement separator",
+			path:     `HKLM\x'; whoami; '`,
+			expected: `$path = 'HKLM\x''; whoami; '''`,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected, pathAssignment(t, GetRegistryKeyItemScript(test.path)))
+			assert.Equal(t, test.expected, pathAssignment(t, GetRegistryKeyChildItemsScript(test.path)))
+		})
+	}
+}
