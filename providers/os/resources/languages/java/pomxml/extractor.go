@@ -6,6 +6,7 @@ package pomxml
 import (
 	"encoding/xml"
 	"io"
+	"strings"
 
 	"go.mondoo.com/mql/providers/os/resources/languages"
 	"go.mondoo.com/mql/providers/os/resources/languages/java"
@@ -135,9 +136,15 @@ func (p *pomProject) depToPackage(dep pomDependency) *languages.Package {
 		name = groupId + ":" + artifactId
 	}
 
+	// <optional>true</optional> is read through the same property resolution as
+	// every other field: a POM may state it as ${some.flag}, and an unresolved
+	// one is not optional.
+	optional := strings.EqualFold(strings.TrimSpace(p.resolve(dep.Optional)), "true")
+
 	return &languages.Package{
 		Name:         name,
 		Version:      version,
+		Optional:     optional,
 		Purl:         java.NewPackageUrl(groupId, artifactId, version),
 		Cpes:         java.NewCpes(groupId, artifactId, version),
 		EvidenceList: java.NewEvidenceList(p.evidence),

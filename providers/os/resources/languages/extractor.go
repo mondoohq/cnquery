@@ -75,6 +75,22 @@ type Package struct {
 	// Lets a consumer rank a CVE in a dev-only tool differently from a runtime
 	// one. Populated by parsers whose lockfile carries the flag (npm today).
 	Scope string `json:"scope,omitempty"`
+	// Optional reports that a dependent may be built and run WITHOUT this
+	// package: Maven's <optional>true</optional>, and the same idea in npm's
+	// optionalDependencies and Cargo's optional features.
+	//
+	// It is a second axis, independent of Scope. A package can be production
+	// scope and still optional — the declaring project ships it only if you ask
+	// for the feature it enables.
+	//
+	// The distinction that makes it worth a field: an optional dependency is NOT
+	// inherited by whoever depends on the declaring package. Maven and Gradle
+	// both stop there, so anything walking a dependency graph has to know, and
+	// a walk that does not is not slightly over-broad but wrong by a factor —
+	// log4j-core alone declares 16 optional dependencies (jackson, kafka-clients,
+	// jeromq, javax.mail…), none of which a project using log4j-core depends on.
+	// Populated by parsers whose manifest carries the flag (Maven today).
+	Optional bool `json:"optional,omitempty"`
 	// Hashes are the package's integrity digests — the declared checksums a
 	// lockfile records for tamper-evidence (npm's Subresource-Integrity
 	// `integrity`, `dist.shasum`; …). Populated by parsers whose lockfile carries
