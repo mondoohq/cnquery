@@ -130,7 +130,7 @@ func (c *catalog) library(v any) (group, artifact, version string, ok bool) {
 func (c *catalog) version(v any) string {
 	switch ver := v.(type) {
 	case string:
-		return concreteVersion(ver)
+		return java.ConcreteVersion(ver)
 	case map[string]any:
 		if ref, isStr := ver["ref"].(string); isStr {
 			return c.resolveRef(ref)
@@ -145,7 +145,7 @@ func (c *catalog) version(v any) string {
 func (c *catalog) resolveRef(ref string) string {
 	switch v := c.Versions[ref].(type) {
 	case string:
-		return concreteVersion(v)
+		return java.ConcreteVersion(v)
 	case map[string]any:
 		return constraintVersion(v)
 	}
@@ -158,26 +158,12 @@ func (c *catalog) resolveRef(ref string) string {
 func constraintVersion(m map[string]any) string {
 	for _, key := range []string{"require", "prefer", "strictly"} {
 		if s, ok := m[key].(string); ok {
-			if v := concreteVersion(s); v != "" {
+			if v := java.ConcreteVersion(s); v != "" {
 				return v
 			}
 		}
 	}
 	return ""
-}
-
-// concreteVersion accepts a version that names one release and rejects a range.
-//
-// A Gradle constraint may be a range ("[1.0, 2.0[", "1.+", "latest.release"),
-// which names a set of versions rather than a version. Recording one as if it
-// were a version produces a purl that matches no release, and it would be read
-// downstream as a definite claim about which version is present.
-func concreteVersion(s string) string {
-	s = strings.TrimSpace(s)
-	if s == "" || strings.ContainsAny(s, "[],()") || strings.HasSuffix(s, "+") || strings.Contains(s, "latest") {
-		return ""
-	}
-	return s
 }
 
 // splitModule parses "group:artifact" or "group:artifact:version".
@@ -187,7 +173,7 @@ func splitModule(s string) (group, artifact, version string, ok bool) {
 		return "", "", "", false
 	}
 	if len(parts) >= 3 {
-		version = concreteVersion(parts[2])
+		version = java.ConcreteVersion(parts[2])
 	}
 	return parts[0], parts[1], version, true
 }

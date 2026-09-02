@@ -8,6 +8,8 @@ import (
 	"io"
 	"regexp"
 	"strings"
+
+	"go.mondoo.com/mql/providers/os/resources/languages/java"
 )
 
 // gradleBuild is the dependency declarations read out of a Gradle build script.
@@ -97,7 +99,9 @@ func parseBuildGradle(r io.Reader, external map[string]string) (*gradleBuild, er
 	var lines []string
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
-	for scanner.Scan() {
+	// Bounded like the property collectors: a build script is small by nature,
+	// and the file comes from scanned repository content rather than from us.
+	for scanner.Scan() && len(lines) < maxPropertyLines {
 		lines = append(lines, scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
@@ -142,7 +146,7 @@ func parseBuildGradle(r io.Reader, external map[string]string) (*gradleBuild, er
 			buildscriptDepth = depth
 		}
 
-		depth += strings.Count(line, "{") - strings.Count(line, "}")
+		depth += braceDelta(line)
 
 		if depsDepth >= 0 && depth <= depsDepth {
 			depsDepth = -1
@@ -189,6 +193,40 @@ func stripComment(line string) string {
 	return line
 }
 
+// braceDelta is the net block nesting a line opens, counting only braces
+// outside string literals.
+//
+// Counting the whole line lets a brace inside a string move the tracker: a
+// `def s = "{"` anywhere in a build script pushes the depth up by one, and
+// every declaration after it then sits one level deeper than the dependencies
+// block it is actually in -- so it is read as a trailing configuration closure
+// and dropped. That is a dependency silently missing from the inventory, which
+// is the failure this extractor exists to remove rather than reproduce.
+//
+// A GString like "${'{'}" is balanced by luck and survived the old count; an
+// unbalanced one did not. Quotes are tracked the same way stripComment tracks
+// them, so the two agree about what is inside a string.
+func braceDelta(line string) int {
+	depth := 0
+	var quote byte
+	for i := 0; i < len(line); i++ {
+		c := line[i]
+		switch {
+		case quote != 0:
+			if c == quote {
+				quote = 0
+			}
+		case c == '\'' || c == '"':
+			quote = c
+		case c == '{':
+			depth++
+		case c == '}':
+			depth--
+		}
+	}
+	return depth
+}
+
 // afterFirstBrace returns what follows the first "{" on a line, trimmed of a
 // trailing "}".
 func afterFirstBrace(line string) string {
@@ -203,6 +241,16 @@ func afterFirstBrace(line string) string {
 // literal it extends, so that `'g:a:' + fooVersion` reads as `'g:a:1.2.3'`.
 // A variable that does not resolve is left alone: the coordinate then states no
 // version, which is the truth about it.
+//
+// The rewrite is deliberately partial, and coupled to quotedRe -- change one
+// and check the other. concatRe matches the CLOSING quote of the left-hand
+// literal plus the variable, and the replacement puts the variable's value
+// first and that quote after it. So `'g:a:' + fooVersion` becomes
+// `'g:a:1.2.3'`: the quote that used to close the literal early now closes it
+// after the version, and quotedRe reads the whole coordinate out from the
+// original opening quote. No complete token is ever built -- the two regexes
+// meet in the middle, and a change to either that alters where the quote lands
+// silently stops coordinates resolving.
 func inlineConcat(s string, vars map[string]string) string {
 	return concatRe.ReplaceAllStringFunc(s, func(m string) string {
 		sub := concatRe.FindStringSubmatch(m)
@@ -260,7 +308,7 @@ func parseDepLine(line string, vars map[string]string, inBuildscript bool) []gra
 	return []gradleDep{{
 		GroupId:       group,
 		ArtifactId:    name,
-		Version:       resolveInterp(firstSubmatch(mapVersionRe, rest), vars),
+		Version:       java.ConcreteVersion(resolveInterp(firstSubmatch(mapVersionRe, rest), vars)),
 		Configuration: config,
 		IsTest:        isTest,
 	}}
@@ -293,9 +341,13 @@ func parseCoordinate(s string, vars map[string]string) (gradleDep, bool) {
 	if !validCoordinatePart(group) || !validCoordinatePart(artifact) {
 		return gradleDep{}, false
 	}
+	// A dynamic version or a range names a set of releases rather than one, and
+	// is refused here for the reason the version catalog refuses it: a purl
+	// carrying "1.+" matches nothing while reading as a definite claim. The
+	// artifact is still inventoried, with the version unknown.
 	var version string
 	if len(parts) >= 3 {
-		version = resolveInterp(strings.TrimSpace(parts[2]), vars)
+		version = java.ConcreteVersion(resolveInterp(strings.TrimSpace(parts[2]), vars))
 	}
 	return gradleDep{GroupId: group, ArtifactId: artifact, Version: version}, true
 }

@@ -119,6 +119,16 @@ func (l *gradleLockfile) Transitive() languages.Packages {
 		// entry resolved only by test configurations is a test-only dependency
 		// — the same fact an npm devDependency states. Reporting it as prod
 		// ranks a CVE in a test harness alongside one in the shipped runtime.
+		//
+		// This is narrower than buildgradle's isDevConfiguration, which also
+		// treats annotationProcessor and kapt as dev, and the difference is
+		// intended. A lockfile states the configurations that actually resolved
+		// an artifact, so an entry naming only annotationProcessor is genuinely
+		// on no runtime classpath — but it names them exactly, and widening the
+		// match to configuration names seen in a build script would classify on
+		// a heuristic where an exact fact is available. Extend this list when a
+		// lockfile is observed carrying such a name, not on the strength of the
+		// other parser's list.
 		scope := languages.PackageScopeProd
 		if entry.IsTest {
 			scope = languages.PackageScopeDev

@@ -62,7 +62,7 @@ func CollectPropertiesFile(r io.Reader) map[string]string {
 		}
 		key = strings.TrimSpace(key)
 		value = strings.TrimSpace(value)
-		if key == "" || value == "" || !isVersionProperty(key) {
+		if key == "" || value == "" || !isVersionProperty(key, value) {
 			continue
 		}
 		out[key] = value
@@ -70,14 +70,44 @@ func CollectPropertiesFile(r io.Reader) map[string]string {
 	return out
 }
 
-// isVersionProperty reports whether a property name reads as a version.
+// isVersionProperty reports whether a gradle.properties entry can be a version
+// a script interpolates.
 //
 // A dotted name is always a build setting: Gradle's own settings are namespaced
 // (`org.gradle.*`, `android.*`), and a script interpolating `$x` cannot name a
 // dotted property that way regardless.
-func isVersionProperty(key string) bool {
+//
+// Beyond that the VALUE decides, not the name. Requiring "version" in the key
+// was the obvious rule and the wrong one: real projects name version properties
+// `kotlinCoroutines`, `okhttpRelease`, `agp` and `composeBom`, and dropping
+// those leaves exactly the versionless coordinates this collector exists to
+// fill in. What has to be excluded is a build setting sharing the namespace --
+// `useAndroidX=true`, `jvmargs=-Xmx2g` -- and those are told apart by their
+// values, which do not look like versions.
+//
+// A value that does look like one is kept whatever the key is called. If a
+// script interpolates it into a coordinate, that is the string Gradle would
+// substitute there too, so keeping it reports what the build does.
+func isVersionProperty(key, value string) bool {
 	if strings.Contains(key, ".") {
 		return false
 	}
-	return strings.Contains(strings.ToLower(key), "version")
+	return looksLikeVersion(value)
+}
+
+// looksLikeVersion reports whether a value could be a version: it starts with a
+// digit, or a "v" before one, and carries none of the characters that mark a
+// path, a flag, a list or a sentence.
+func looksLikeVersion(v string) bool {
+	if v == "" {
+		return false
+	}
+	first := v[0]
+	if (first == 'v' || first == 'V') && len(v) > 1 {
+		first = v[1]
+	}
+	if first < '0' || first > '9' {
+		return false
+	}
+	return !strings.ContainsAny(v, " \t\"'\\/=,;")
 }

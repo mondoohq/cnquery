@@ -93,13 +93,3 @@ func TestVersionCatalogDirectIsEveryLibrary(t *testing.T) {
 	// A catalog entry is a coordinate the project wrote down for itself.
 	assert.Equal(t, len(bom.Transitive()), len(bom.Direct()))
 }
-
-func TestConcreteVersion(t *testing.T) {
-	assert.Equal(t, "1.2.3", concreteVersion("1.2.3"))
-	assert.Equal(t, "1.2.3", concreteVersion(" 1.2.3 "))
-	// Each of these names a set of releases rather than a release.
-	assert.Empty(t, concreteVersion("1.+"))
-	assert.Empty(t, concreteVersion("[1.0, 2.0["))
-	assert.Empty(t, concreteVersion("latest.release"))
-	assert.Empty(t, concreteVersion(""))
-}

@@ -147,7 +147,12 @@ func TestIsDevConfiguration(t *testing.T) {
 
 	assert.False(t, isDevConfiguration("implementation", false))
 	assert.False(t, isDevConfiguration("api", false))
-	assert.False(t, isDevConfiguration("compileOnly", false), "provided at runtime, so it ships")
+	// compileOnly is on the compile classpath and NOT the runtime one, so it
+	// often does not ship. It counts as prod anyway: whether the artifact
+	// reaches production is a packaging question this parser cannot answer, and
+	// scoping a shipped dependency as dev hides a real CVE, where the reverse
+	// merely reports one that may not apply.
+	assert.False(t, isDevConfiguration("compileOnly", false))
 	assert.False(t, isDevConfiguration("runtimeOnly", false))
 }
 
@@ -170,4 +175,74 @@ func countNamed(deps languages.Packages, name string) int {
 		}
 	}
 	return n
+}
+
+// Brace depth decides whether a declaration sits in the dependencies block or
+// inside a trailing configuration closure, so a brace inside a string literal
+// used to move every later declaration a level deeper and drop it — a
+// dependency silently missing, which is the failure this extractor removes.
+func TestBraceInsideAStringDoesNotHideDependencies(t *testing.T) {
+	for _, c := range []struct{ name, script string }{
+		{"unbalanced open brace in a string", `
+dependencies {
+    def placeholder = "{"
+    implementation 'com.example:kept:1.0'
+}
+`},
+		{"unbalanced close brace in a string", `
+dependencies {
+    def placeholder = "}"
+    implementation 'com.example:kept:1.0'
+}
+`},
+		{"brace in a string before the block", `
+def marker = "{"
+dependencies {
+    implementation 'com.example:kept:1.0'
+}
+`},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			bom, err := (&Extractor{}).Parse(strings.NewReader(c.script), "build.gradle")
+			require.NoError(t, err)
+			require.NotNil(t, bom.Direct().Find("com.example:kept"))
+		})
+	}
+
+	// And the closure it protects still works: an exclude is a dependency being
+	// removed, not one being added.
+	t.Run("an exclude closure is still not a declaration", func(t *testing.T) {
+		bom, err := (&Extractor{}).Parse(strings.NewReader(`
+dependencies {
+    implementation('com.example:kept:1.0') {
+        exclude group: 'com.evil', module: 'badlib'
+    }
+}
+`), "build.gradle")
+		require.NoError(t, err)
+		assert.NotNil(t, bom.Direct().Find("com.example:kept"))
+		assert.Nil(t, bom.Direct().Find("com.evil:badlib"), "an exclude removes a dependency")
+	})
+}
+
+// A dynamic version names a set of releases, so it is not recorded as one: the
+// artifact is inventoried with its version unknown, the same treatment the
+// version catalog gives it.
+func TestDynamicVersionsAreNotRecordedAsVersions(t *testing.T) {
+	bom, err := (&Extractor{}).Parse(strings.NewReader(`
+dependencies {
+    implementation 'com.example:pinned:1.2.3'
+    implementation 'com.example:dynamic:1.+'
+    implementation 'com.example:ranged:[1.0, 2.0['
+    implementation 'com.example:newest:latest.release'
+}
+`), "build.gradle")
+	require.NoError(t, err)
+
+	assert.Equal(t, "1.2.3", bom.Direct().Find("com.example:pinned").Version)
+	for _, name := range []string{"com.example:dynamic", "com.example:ranged", "com.example:newest"} {
+		p := bom.Direct().Find(name)
+		require.NotNil(t, p, "%s is still inventoried", name)
+		assert.Empty(t, p.Version, "%s names a set of releases, not a release", name)
+	}
 }
