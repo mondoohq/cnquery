@@ -92,6 +92,15 @@ func SplitInvocation(cmd string) (argv []string, ok bool) {
 	return nil, false
 }
 
+// SingleQuote renders a value as a PowerShell single quoted string.
+// Single quoting is what makes a Windows path safe to interpolate: no escape
+// sequence is recognized inside it, so a backslash stays a backslash and a $
+// is not expanded. Only the quote character itself needs escaping, by
+// doubling it.
+func SingleQuote(v string) string {
+	return "'" + strings.ReplaceAll(v, "'", "''") + "'"
+}
+
 // Encode encodes a long powershell script as base64 and returns the wrapped command
 //
 // wraps a script to deactivate progress listener

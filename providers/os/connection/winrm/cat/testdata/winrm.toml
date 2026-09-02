@@ -15,12 +15,14 @@ stdout="""
 [commands."powershell -c \"Get-WmiObject Win32_ComputerSystemProduct  | Select-Object -ExpandProperty UUID\""]
 stdout="EC2670D2-3D6E-2F4A-5C32-42C5931E1E1E"
 
-[commands."powershell -c \"Get-Content 'C:\\test.txt'\""]
+# Get-Content -LiteralPath 'C:\test.txt'
+[commands."powershell.exe -NoProfile -EncodedCommand JABQAHIAbwBnAHIAZQBzAHMAUAByAGUAZgBlAHIAZQBuAGMAZQA9ACcAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAnADsARwBlAHQALQBDAG8AbgB0AGUAbgB0ACAALQBMAGkAdABlAHIAYQBsAFAAYQB0AGgAIAAnAEMAOgBcAHQAZQBzAHQALgB0AHgAdAAnAA=="]
 stdout="""
 hi
 """
 
-[commands."powershell -c \"Get-Item -LiteralPath 'C:\\test.txt' | ConvertTo-JSON\""]
+# Get-Item -LiteralPath 'C:\test.txt' | ConvertTo-JSON
+[commands."powershell.exe -NoProfile -EncodedCommand JABQAHIAbwBnAHIAZQBzAHMAUAByAGUAZgBlAHIAZQBuAGMAZQA9ACcAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAnADsARwBlAHQALQBJAHQAZQBtACAALQBMAGkAdABlAHIAYQBsAFAAYQB0AGgAIAAnAEMAOgBcAHQAZQBzAHQALgB0AHgAdAAnACAAfAAgAEMAbwBuAHYAZQByAHQAVABvAC0ASgBTAE8ATgA="]
 stdout="""
 {
   "Name": "test.txt",
@@ -118,7 +120,8 @@ stdout="""
 }
 """
 
-[commands."powershell -c \"Get-Item -LiteralPath 'C:\\Windows' | ConvertTo-JSON\""]
+# Get-Item -LiteralPath 'C:\Windows' | ConvertTo-JSON
+[commands."powershell.exe -NoProfile -EncodedCommand JABQAHIAbwBnAHIAZQBzAHMAUAByAGUAZgBlAHIAZQBuAGMAZQA9ACcAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAnADsARwBlAHQALQBJAHQAZQBtACAALQBMAGkAdABlAHIAYQBsAFAAYQB0AGgAIAAnAEMAOgBcAFcAaQBuAGQAbwB3AHMAJwAgAHwAIABDAG8AbgB2AGUAcgB0AFQAbwAtAEoAUwBPAE4A"]
 stdout="""
 {
   "Name": "Windows",

@@ -9,6 +9,8 @@ import (
 	"errors"
 	"io"
 	"strings"
+
+	"go.mondoo.com/mql/providers/os/resources/powershell"
 )
 
 // errEmptyEventLogChannel is returned when the command produced no object at
@@ -40,7 +42,7 @@ var errEmptyEventLogChannel = errors.New("no Event Log channel information was r
 // disabled".
 func EventLogChannelScript(name string) string {
 	return `$ErrorActionPreference='Stop'
-$l=Get-WinEvent -ListLog ` + quotePowerShellString(name) + ` -ErrorAction Stop
+$l=Get-WinEvent -ListLog ` + powershell.SingleQuote(name) + ` -ErrorAction Stop
 [ordered]@{
 LogName=[string]$l.LogName
 IsEnabled=[bool]$l.IsEnabled

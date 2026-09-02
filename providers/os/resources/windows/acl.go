@@ -8,6 +8,8 @@ import (
 	"io"
 	"strconv"
 	"strings"
+
+	"go.mondoo.com/mql/providers/os/resources/powershell"
 )
 
 // AclScript builds the PowerShell that reads a filesystem object's
@@ -22,7 +24,7 @@ import (
 // [uint32] refuses outright with "Value was either too large or too small".
 func AclScript(path string) string {
 	return `$ErrorActionPreference='Stop'
-$p=` + quotePowerShellString(path) + `
+$p=` + powershell.SingleQuote(path) + `
 $a=Get-Acl -LiteralPath $p
 [ordered]@{
 Path=$p;Owner=[string]$a.Owner;Group=[string]$a.Group;Sddl=[string]$a.Sddl;Protected=$a.AreAccessRulesProtected
@@ -31,15 +33,6 @@ Access=@($a.Access|ForEach-Object{
 $s='';try{$s=[string]$_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value}catch{}
 [ordered]@{Identity=[string]$_.IdentityReference;Sid=$s;Type=[string]$_.AccessControlType;Rights=[string]$_.FileSystemRights;Mask=[int64][System.BitConverter]::ToUInt32([System.BitConverter]::GetBytes([int]$_.FileSystemRights),0);Inherited=$_.IsInherited;InheritanceFlags=[string]$_.InheritanceFlags;PropagationFlags=[string]$_.PropagationFlags}})
 }|ConvertTo-Json -Depth 5 -Compress`
-}
-
-// quotePowerShellString renders a value as a PowerShell single quoted string.
-// Single quoting is what makes a Windows path safe to interpolate: no escape
-// sequence is recognized inside it, so a backslash stays a backslash and a $
-// is not expanded. Only the quote character itself needs escaping, by
-// doubling it.
-func quotePowerShellString(v string) string {
-	return "'" + strings.ReplaceAll(v, "'", "''") + "'"
 }
 
 // Windows file access rights, as defined by the FileSystemRights enumeration
@@ -228,7 +221,7 @@ func ParseWindowsAcl(input io.Reader) (*WindowsAcl, error) {
 // generic bits is a negative number that [uint32] refuses outright.
 func AclAuditScript(path string) string {
 	return `$ErrorActionPreference='Stop'
-$p=` + quotePowerShellString(path) + `
+$p=` + powershell.SingleQuote(path) + `
 $a=Get-Acl -LiteralPath $p -Audit
 [ordered]@{
 Path=$p
