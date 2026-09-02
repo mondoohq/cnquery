@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/kballard/go-shellquote"
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 	"github.com/spf13/afero"
@@ -87,8 +88,16 @@ func (f *File) Readdir(count int) (res []os.FileInfo, err error) {
 	return f.catFs.ReadDir(f.path)
 }
 
+// listDirsCommand builds the command that lists the immediate subdirectories
+// of path. The container runs it through /bin/sh, so the path has to arrive
+// as a single argument whatever characters a directory name in the image
+// happens to contain.
+func listDirsCommand(path string) string {
+	return shellquote.Join("find", path, "-maxdepth", "1", "-type", "d")
+}
+
 func (f *File) Readdirnames(n int) ([]string, error) {
-	c, err := f.connection.RunCommand(fmt.Sprintf("find %s -maxdepth 1 -type d", f.path))
+	c, err := f.connection.RunCommand(listDirsCommand(f.path))
 	if err != nil {
 		return []string{}, err
 	}
