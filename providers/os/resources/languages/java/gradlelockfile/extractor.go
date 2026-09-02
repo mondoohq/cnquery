@@ -115,9 +115,18 @@ func (l *gradleLockfile) Transitive() languages.Packages {
 	var packages languages.Packages
 	for _, entry := range l.Entries {
 		name := entry.GroupId + ":" + entry.ArtifactId
+		// A lockfile entry names the configurations that resolved it, and an
+		// entry resolved only by test configurations is a test-only dependency
+		// — the same fact an npm devDependency states. Reporting it as prod
+		// ranks a CVE in a test harness alongside one in the shipped runtime.
+		scope := languages.PackageScopeProd
+		if entry.IsTest {
+			scope = languages.PackageScopeDev
+		}
 		packages = append(packages, &languages.Package{
 			Name:         name,
 			Version:      entry.Version,
+			Scope:        scope,
 			Purl:         java.NewPackageUrl(entry.GroupId, entry.ArtifactId, entry.Version),
 			Cpes:         java.NewCpes(entry.GroupId, entry.ArtifactId, entry.Version),
 			EvidenceList: java.NewEvidenceList(l.evidence),
