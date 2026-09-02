@@ -784,9 +784,13 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 	log.Debug().Str("path", tmpdir).Msg("unpacking providers")
 	files := map[string]struct{}{}
 	err = walkTarXz(reader, func(reader *tar.Reader, header *tar.Header) error {
-		files[header.Name] = struct{}{}
-		dst := filepath.Join(tmpdir, header.Name)
-		log.Debug().Str("name", header.Name).Str("dest", dst).Msg("unpacking file")
+		name, err := archiveFileName(header.Name)
+		if err != nil {
+			return err
+		}
+		files[name] = struct{}{}
+		dst := filepath.Join(tmpdir, name)
+		log.Debug().Str("name", name).Str("dest", dst).Msg("unpacking file")
 		writer, err := os.Create(dst)
 		if err != nil {
 			return err
@@ -924,6 +928,20 @@ func syncDir(path string) {
 	if err := dir.Sync(); err != nil {
 		log.Warn().Err(err).Str("path", path).Msg("failed to sync provider directory")
 	}
+}
+
+// archiveFileName returns the file name to unpack an archive entry to.
+// Provider archives are flat: the binary, the config and the schema all sit
+// at the top level, so every entry has to be a plain file name. Anything
+// carrying a directory component would let the archive pick where its
+// contents land, so it is rejected instead of unpacked.
+func archiveFileName(name string) (string, error) {
+	clean := filepath.Clean(filepath.FromSlash(name))
+	base := filepath.Base(clean)
+	if clean != base || base == "." || base == ".." || base == string(filepath.Separator) {
+		return "", errors.New("provider archive contains an unexpected file name: " + name)
+	}
+	return base, nil
 }
 
 func walkTarXz(reader io.Reader, callback func(reader *tar.Reader, header *tar.Header) error) error {
