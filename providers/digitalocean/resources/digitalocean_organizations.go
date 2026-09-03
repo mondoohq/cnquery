@@ -11,6 +11,7 @@ import (
 	"github.com/digitalocean/godo"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/digitalocean/connection"
 )
 
@@ -45,12 +46,13 @@ type organizationTeamsRoot struct {
 }
 
 // noOrganizationContext reports the answers that mean this token has no
-// organization to enumerate, rather than that the read failed.
+// organization context, so the teams cannot be enumerated.
 //
-// The endpoint "must be called in an organization context", so a token scoped
-// to a plain account is not a failure to report: it is an account with no
-// teams. A 401 is deliberately excluded, since a rejected token is a real
-// problem and must not be laundered into an empty list.
+// The endpoint "must be called in an organization context". A token without
+// that context does not establish that the organization has no teams - only
+// that this token may not read them, which is a different fact and must not be
+// reported as an empty list. A 401 is excluded because a rejected token is a
+// plain failure that should surface as an error.
 func noOrganizationContext(err error) bool {
 	var er *godo.ErrorResponse
 	if !errors.As(err, &er) || er.Response == nil {
@@ -80,8 +82,20 @@ func (r *mqlDigitalocean) teams() ([]interface{}, error) {
 	root := new(organizationTeamsRoot)
 	if _, err := client.Do(ctx, req, root); err != nil {
 		if noOrganizationContext(err) {
-			log.Debug().Err(err).Msg("digitalocean> token is not scoped to an organization; reporting no teams")
-			return []interface{}{}, nil
+			// Null, not an empty list. An empty list is an answer - "this
+			// organization has no teams" - and `.none()` / `.all()` over it
+			// pass vacuously, so a token that may not read the teams would
+			// silently satisfy every assertion about them. Null carries no
+			// answer and fails those assertions closed.
+			//
+			// Setting the state proactively is required: returning nil from a
+			// list accessor still serializes as [], because the runtime cannot
+			// tell a nil slice from an empty one. plugin.GetOrCompute only
+			// keeps this value because IsSet() is checked after the accessor
+			// runs.
+			log.Debug().Err(err).Msg("digitalocean> token is not scoped to an organization; teams are unknown")
+			r.Teams.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}

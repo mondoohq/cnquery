@@ -20,19 +20,20 @@ func doErr(status int) error {
 	}
 }
 
-// The teams endpoint must be called in an organization context, so a token
-// scoped to a plain account has no teams to enumerate rather than a failed
-// read. A rejected token is a different thing entirely and must not be
-// laundered into an empty list.
+// The teams endpoint must be called in an organization context. A token
+// without that context cannot read the teams, which the accessor reports as
+// null rather than as an empty list - an empty list is an answer, and
+// `.none()` over it passes vacuously. A rejected token (401) is a plain
+// failure and stays an error.
 func TestNoOrganizationContext(t *testing.T) {
 	for _, tc := range []struct {
 		name string
 		err  error
 		want bool
 	}{
-		{"forbidden means no organization", doErr(http.StatusForbidden), true},
-		{"not found means no organization", doErr(http.StatusNotFound), true},
-		{"precondition failed means no organization", doErr(http.StatusPreconditionFailed), true},
+		{"forbidden means the teams are unreadable", doErr(http.StatusForbidden), true},
+		{"not found means the teams are unreadable", doErr(http.StatusNotFound), true},
+		{"precondition failed means the teams are unreadable", doErr(http.StatusPreconditionFailed), true},
 
 		{"an unauthorized token is a real problem", doErr(http.StatusUnauthorized), false},
 		{"a rate limit is transient", doErr(http.StatusTooManyRequests), false},

@@ -101,6 +101,10 @@ digitalocean {
   // Account billing balance and month-to-date usage
   billing() digitalocean.billing
   // Teams belonging to the organization the token is scoped to
+  //
+  // Null when the token carries no organization context, since that
+  // establishes only that the teams cannot be read, not that there are
+  // none. An empty list means the organization was read and has no teams.
   teams() []digitalocean.team
 }
 
