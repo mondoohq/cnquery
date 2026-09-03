@@ -187,8 +187,6 @@ func (a *mqlAzureSubscriptionSynapseService) workspaces() ([]any, error) {
 					"properties":                  llx.DictData(properties),
 					"identity":                    llx.DictData(identity),
 					"resourceIdentity":            resourceIdentity,
-					"principalId":                 llx.StringDataPtr(wsIdentity.PrincipalID),
-					"tenantId":                    llx.StringDataPtr(wsIdentity.TenantID),
 					"managedVirtualNetwork":       llx.StringData(managedVirtualNetwork),
 					"publicNetworkAccess":         llx.StringData(publicNetworkAccess),
 					"encryption":                  llx.DictData(encryption),

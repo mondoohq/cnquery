@@ -278,8 +278,6 @@ func createElasticSanVolumeGroupResource(runtime *plugin.Runtime, group *armelas
 			"enforceDataIntegrityCheckForIscsi":      llx.BoolDataPtr(props.EnforceDataIntegrityCheckForIscsi),
 			"identity":                               llx.DictData(identity),
 			"resourceIdentity":                       resourceIdentity,
-			"principalId":                            llx.StringDataPtr(groupIdentity.PrincipalID),
-			"tenantId":                               llx.StringDataPtr(groupIdentity.TenantID),
 			"keyName":                                llx.StringData(keyName),
 			"keyVaultUri":                            llx.StringData(keyVaultUri),
 			"keyVersion":                             llx.StringData(keyVersion),

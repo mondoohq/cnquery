@@ -150,8 +150,6 @@ func createNetAppAccountResource(runtime *plugin.Runtime, account *armnetapp.Acc
 			"provisioningState": llx.StringDataPtr(props.ProvisioningState),
 			"identity":          llx.DictData(identity),
 			"resourceIdentity":  resourceIdentity,
-			"principalId":       llx.StringDataPtr(accountIdentity.PrincipalID),
-			"tenantId":          llx.StringDataPtr(accountIdentity.TenantID),
 			"nfsV4IdDomain":     llx.StringDataPtr(props.NfsV4IDDomain),
 			// The API documents null as false here, so the absence is not a
 			// missing reading: showmount is on unless it was turned off.

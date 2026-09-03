@@ -153,8 +153,6 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 					"publicNetworkAccess": llx.StringData(publicNetworkAccess),
 					"identity":            llx.DictData(identity),
 					"resourceIdentity":    resourceIdentity,
-					"principalId":         llx.StringDataPtr(factoryIdentity.PrincipalID),
-					"tenantId":            llx.StringDataPtr(factoryIdentity.TenantID),
 					"provisioningState":   llx.StringData(provisioningState),
 					"version":             llx.StringData(version),
 					"repoConfiguration":   llx.DictData(repoConfig),
