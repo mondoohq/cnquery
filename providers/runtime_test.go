@@ -937,3 +937,61 @@ func TestSyncAssetMetadata(t *testing.T) {
 		assert.Equal(t, "true", same.Annotations[key])
 	})
 }
+
+func TestDeclaresPeer(t *testing.T) {
+	r := &Runtime{}
+	caller := &RunningProvider{
+		Name: "os",
+		ID:   "go.mondoo.com/mql/providers/os",
+		Requires: []plugin.ProviderDep{
+			{ID: "go.mondoo.com/mql/providers/network", Name: "network", MinVersion: "13.0.0"},
+		},
+	}
+
+	t.Run("declared by id", func(t *testing.T) {
+		min, ok := r.declaresPeer(caller, "go.mondoo.com/mql/providers/network")
+		assert.True(t, ok)
+		assert.Equal(t, "13.0.0", min)
+	})
+
+	// A v14 caller against an installed pre-v14 peer: the peer reports its old
+	// ID, which no normalized declaration names. Both legacy forms must match,
+	// or a correctly-declared call gets logged as legacy-only and the whitelist
+	// retirement signal never converges.
+	for _, legacyID := range []string{
+		"go.mondoo.com/cnquery/providers/network",
+		"go.mondoo.com/cnquery/v9/providers/network",
+	} {
+		t.Run("declared by name when the peer reports "+legacyID, func(t *testing.T) {
+			min, ok := r.declaresPeer(caller, legacyID)
+			assert.True(t, ok)
+			assert.Equal(t, "13.0.0", min)
+		})
+	}
+
+	t.Run("self is always allowed", func(t *testing.T) {
+		_, ok := r.declaresPeer(caller, "go.mondoo.com/mql/providers/os")
+		assert.True(t, ok)
+	})
+
+	t.Run("undeclared", func(t *testing.T) {
+		_, ok := r.declaresPeer(caller, "go.mondoo.com/mql/providers/aws")
+		assert.False(t, ok)
+	})
+}
+
+func TestCheckPeerVersion(t *testing.T) {
+	peer := func(v string) *RunningProvider {
+		return &RunningProvider{Name: "network", Version: v}
+	}
+
+	assert.NoError(t, checkPeerVersion(peer("13.3.0"), "13.0.0"), "newer peer satisfies the floor")
+	assert.NoError(t, checkPeerVersion(peer("13.0.0"), "13.0.0"), "exact match satisfies the floor")
+	assert.NoError(t, checkPeerVersion(peer("13.3.0"), ""), "no declared floor is no constraint")
+	assert.NoError(t, checkPeerVersion(peer(""), "13.0.0"), "unknown peer version is not evidence of a mismatch")
+	assert.NoError(t, checkPeerVersion(peer("not-a-version"), "13.0.0"), "unparseable version must not break the call")
+
+	err := checkPeerVersion(peer("12.9.0"), "13.0.0")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "older than the required 13.0.0")
+}

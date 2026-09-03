@@ -25,8 +25,15 @@ func Schema(ast *LR) (*resources.Schema, error) {
 		Dependencies: make(map[string]*resources.ProviderInfo, 0),
 	}
 
+	// Every declared peer is recorded, including core. Core used to be excluded
+	// here because it is built into every executor and must never be downloaded
+	// as a separate binary -- but that is a fact about *installing* a provider,
+	// not about whether the dependency exists, and it belongs at the install
+	// decision (see installDependencies) rather than as a name in this loop.
+	// Excluding it here also cost core the one thing a declaration carries: a
+	// version floor.
 	for dep := range ast.imports {
-		if !strings.HasSuffix(provider, dep) && dep != "core" {
+		if !strings.HasSuffix(provider, dep) {
 			res.Dependencies[dep] = &resources.ProviderInfo{
 				Id:   ast.packProviders[dep],
 				Name: dep,

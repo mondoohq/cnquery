@@ -16,6 +16,10 @@ var Config = plugin.Provider{
 	Name:    "os",
 	ID:      "go.mondoo.com/mql/providers/os",
 	Version: "13.40.9",
+	Requires: []plugin.ProviderDep{
+		{ID: "go.mondoo.com/mql/providers/core", Name: "core", MinVersion: "13.0.0"},
+		{ID: "go.mondoo.com/mql/providers/network", Name: "network", MinVersion: "13.0.0"},
+	},
 	ConnectionTypes: []string{
 		shared.Type_Local.String(),
 		shared.Type_SSH.String(),

@@ -73,6 +73,13 @@ mql/generate: clean/proto llx/generate shared/generate sbom/generate reporter/ge
 
 mql/generate/core: clean/proto llx/generate shared/generate providers/proto providers/build/mock providers/build/core sbom/generate reporter/generate
 
+# ADR 042 step 4: fail the build when a provider's declared peer dependencies
+# disagree with what its code actually references -- an undeclared cross-provider
+# call, or a declared floor below what the references need. Every provider passes
+# today, so this is on by default; set LR_DEP_FLAGS= to disable it locally while
+# mid-change.
+LR_DEP_FLAGS ?= --fail-on-dep-drift
+
 define buildProvider
 	$(eval $@_HOME = $(1))
 	$(eval $@_NAME = $(shell basename ${$@_HOME}))
@@ -80,7 +87,7 @@ define buildProvider
 	$(eval $@_DIST_BIN = "./dist/${$@_NAME}")
 	$(eval $@_BIN = "${$@_DIST}"/"${$@_NAME}")
 	echo "--> [${$@_NAME}] process resources"
-	./lr go ${$@_HOME}/resources/${$@_NAME}.lr --dist ${$@_DIST}
+	./lr go ${$@_HOME}/resources/${$@_NAME}.lr --dist ${$@_DIST} $(LR_DEP_FLAGS)
 	./lr versions ${$@_HOME}/resources/${$@_NAME}.lr
 	echo "--> [${$@_NAME}] generate CLI json"
 	cd ${$@_HOME} && go run ./gen/main.go .
@@ -103,7 +110,7 @@ define buildProviderDist
 	$(eval $@_DIST_BIN = "./dist/${$@_NAME}")
 	$(eval $@_BIN = "${$@_DIST}"/"${$@_NAME}")
 	echo "--> [${$@_NAME}] process resources"
-	./lr go ${$@_HOME}/resources/${$@_NAME}.lr --dist ${$@_DIST}
+	./lr go ${$@_HOME}/resources/${$@_NAME}.lr --dist ${$@_DIST} $(LR_DEP_FLAGS)
 	./lr versions ${$@_HOME}/resources/${$@_NAME}.lr
 	echo "--> [${$@_NAME}] generate CLI json"
 	cd ${$@_HOME} && go run ./gen/main.go .

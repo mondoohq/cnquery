@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -21,6 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/cli/config"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
 )
 
 type testPlugin struct {
@@ -336,4 +338,66 @@ func TestInstallIORejectsPathsOutsideDestination(t *testing.T) {
 
 	_, err = os.Stat(escapee)
 	assert.True(t, os.IsNotExist(err), "archive wrote outside the destination directory")
+}
+
+// A builtin provider ships inside the executor, so a dependency on one must
+// never reach the installer. `os` and `vsphere` declare `import core`, which
+// records core in Schema.Dependencies (ADR 042); before the guard in
+// installDependencies that reached Install("core") and tried to download a
+// provider that is compiled in.
+func TestInstallDependenciesSkipsBuiltins(t *testing.T) {
+	coreID := ""
+	for id := range builtinProviders {
+		if strings.HasSuffix(id, "/core") {
+			coreID = id
+			break
+		}
+	}
+	require.NotEmpty(t, coreID, "core must be registered as a builtin")
+
+	provider := &Provider{
+		Provider: &plugin.Provider{Name: "os", ID: "go.mondoo.com/mql/providers/os"},
+		Schema: &resources.Schema{
+			Dependencies: map[string]*resources.ProviderInfo{
+				"core": {Id: coreID, Name: "core"},
+			},
+		},
+	}
+
+	// deliberately empty: this is the embedder case, where ListAll returns
+	// without builtins because no provider paths are configured. The guard has
+	// to hold from the dependency's own identity, not from what is installed.
+	existing := Providers{}
+
+	require.NoError(t, installDependencies(provider, existing))
+	assert.Empty(t, existing, "no provider should have been installed")
+}
+
+func TestValidateDeclaredPeers(t *testing.T) {
+	caller := &Provider{
+		Provider: &plugin.Provider{
+			Name: "os", ID: "go.mondoo.com/mql/providers/os",
+			Requires: []plugin.ProviderDep{
+				{ID: "go.mondoo.com/mql/providers/network", Name: "network", MinVersion: "13.0.0"},
+			},
+		},
+	}
+	peer := func(v string) Providers {
+		return Providers{"n": {Provider: &plugin.Provider{
+			Name: "network", ID: "go.mondoo.com/mql/providers/network", Version: v,
+		}}}
+	}
+
+	assert.NoError(t, validateDeclaredPeers(caller, peer("13.3.0")))
+	assert.NoError(t, validateDeclaredPeers(caller, peer("13.0.0")))
+
+	// not installed: not reported here, it fails later when something needs it
+	assert.NoError(t, validateDeclaredPeers(caller, Providers{}))
+	// unknown version is not evidence of a mismatch
+	assert.NoError(t, validateDeclaredPeers(caller, peer("")))
+
+	err := validateDeclaredPeers(caller, peer("12.4.0"))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "requires network >= 13.0.0")
+	assert.Contains(t, err.Error(), "12.4.0 is installed")
 }

@@ -5,6 +5,7 @@ package providers
 
 import (
 	"errors"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -18,6 +19,7 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/recording"
 	"go.mondoo.com/mql/providers-sdk/v1/resources"
 	"go.mondoo.com/mql/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/providers/core/resources/versions/semver"
 	"go.mondoo.com/mql/types"
 	"go.mondoo.com/mql/utils/multierr"
 	"go.mondoo.com/mql/utils/stringx"
@@ -217,11 +219,12 @@ func (r *Runtime) UseInProcessProvider(config plugin.Provider, schema resources.
 	}
 
 	running := &RunningProvider{
-		Name:    config.Name,
-		ID:      config.ID,
-		Version: config.Version,
-		Plugin:  plug,
-		Schema:  schema,
+		Name:     config.Name,
+		ID:       config.ID,
+		Version:  config.Version,
+		Plugin:   plug,
+		Schema:   schema,
+		Requires: config.Requires,
 	}
 	connected := &ConnectedProvider{Instance: running}
 
@@ -1090,14 +1093,31 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 		// ^^
 	}
 
-	if info.Provider != providerConn && !stringx.Contains(crossProviderList, info.Provider) {
+	// ADR 042 step 3: the gate accepts a declared dependency OR the legacy
+	// whitelist, and logs when only the legacy path matched. Every remaining
+	// legacy-only hit is a missing declaration; when that log goes quiet for a
+	// release, the whitelist can be deleted (step 5, v15).
+	minVersion, declared := r.declaresPeer(r.Provider.Instance, info.Provider)
+	legacy := stringx.Contains(crossProviderList, info.Provider)
+
+	if !declared && !legacy {
 		log.Debug().Str("infoProvider", info.Provider).Str("connectionProvider", providerConn).Msg("mismatch between expected and received provider, ignoring provider")
 		return nil, nil, errors.New("incorrect provider for asset, not adding " + info.Provider)
+	}
+	if !declared && legacy {
+		log.Warn().
+			Str("caller", providerConn).
+			Str("peer", info.Provider).
+			Msg("undeclared cross-provider call, allowed by the legacy whitelist; add it to Requires in the caller's config.go (ADR 042)")
 	}
 
 	res, err := r.addProvider(info.Provider)
 	if err != nil {
 		return nil, nil, multierr.Wrap(err, "failed to start provider '"+info.Provider+"'")
+	}
+
+	if err := checkPeerVersion(res.Instance, minVersion); err != nil {
+		return nil, nil, err
 	}
 
 	res.Connection, res.ConnectionError = res.Instance.Plugin.Connect(&plugin.ConnectReq{
@@ -1241,6 +1261,20 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 		return provider, resourceInfo, fieldInfo, provider.ConnectionError
 	}
 
+	// ADR 042 step 3: the same predicate as the resource path, but **log-only**
+	// here. This path allows everything today -- it is how GetSharedData and
+	// every query-driven field access reach a foreign provider -- so enforcing
+	// it now would break callers that the resource-path gate never saw. The log
+	// measures the population first; v15 turns it into the same check.
+	if _, declared := r.declaresPeer(r.Provider.Instance, fieldInfo.Provider); !declared {
+		log.Warn().
+			Str("caller", r.Provider.Instance.ID).
+			Str("peer", fieldInfo.Provider).
+			Str("resource", resource).
+			Str("field", field).
+			Msg("undeclared cross-provider field access, allowed for now; add it to Requires in the caller's config.go (ADR 042)")
+	}
+
 	res, err := r.addProvider(fieldInfo.Provider)
 	if err != nil {
 		return nil, nil, nil, multierr.Wrap(err, "failed to start provider '"+fieldInfo.Provider+"'")
@@ -1297,4 +1331,74 @@ func (r *Runtime) asset() *inventory.Asset {
 		return nil
 	}
 	return r.Provider.Connection.Asset
+}
+
+// declaresPeer reports whether the calling provider declares a dependency on
+// the target provider, and the floor it declared (ADR 042 step 3).
+//
+// The declaration of record is `Requires` in the caller's own config.go,
+// carried into its manifest. Matching is by ID first and name second.
+//
+// The name fallback is not laziness about identity. Every provider built from
+// this tree uses the version-less `go.mondoo.com/mql/providers/<name>` ID, but
+// providers are installed and versioned independently of the engine, so a v14
+// caller routinely runs against a peer binary released before that change,
+// which reports `go.mondoo.com/cnquery[/v9]/providers/<name>` from its own
+// <name>.json. A declaration naming the normalized ID would not match it.
+//
+// Getting that wrong would not merely reject a call -- the legacy whitelist
+// would still allow it -- it would log a correctly-declared call as
+// "legacy-only". That log is the retirement signal for the whitelist itself
+// (ADR 042 step 5: delete it after a release with zero legacy-only hits), so
+// false positives from mixed installs would keep the condition from ever being
+// met. The fallback retires with the whitelist, not before.
+func (r *Runtime) declaresPeer(caller *RunningProvider, targetProviderID string) (string, bool) {
+	if caller == nil {
+		return "", false
+	}
+	if caller.ID == targetProviderID {
+		return "", true
+	}
+
+	targetName := path.Base(targetProviderID)
+	for _, dep := range caller.Requires {
+		if dep.ID == targetProviderID || (dep.Name != "" && dep.Name == targetName) {
+			return dep.MinVersion, true
+		}
+	}
+	return "", false
+}
+
+// checkPeerVersion reports whether a started peer satisfies the floor the
+// caller declared.
+//
+// This is the runtime half of the split in ADR 042: the build checks that a
+// referenced resource *exists* in the peer's schema, because mid-PR the peer's
+// config.go still carries the pre-release version and a build-time comparison
+// would fail with the resource sitting right there. The version is checked
+// here, against the peer that is actually installed -- the only place the two
+// can genuinely disagree.
+//
+// A mismatch fails the call rather than warning, which is safe because the
+// declared floor and the support boundary are the same number: floors start at
+// lrcore.SupportedBaseline (13.0.0), and v14 deprecates everything below
+// v13.0.0, so a refused peer is one that is already out of support. A floor
+// above the baseline only ever comes from referencing a field that peer version
+// genuinely does not have, where proceeding would produce a null that reads as
+// a passing check.
+func checkPeerVersion(peer *RunningProvider, minVersion string) error {
+	if minVersion == "" || peer == nil || peer.Version == "" {
+		return nil
+	}
+	diff, err := (semver.Parser{}).Compare(peer.Version, minVersion)
+	if err != nil {
+		// An unparseable version on either side is not evidence of a mismatch;
+		// reporting one would break a call over a formatting problem.
+		return nil
+	}
+	if diff < 0 {
+		return errors.New("provider " + peer.Name + " " + peer.Version +
+			" is older than the required " + minVersion)
+	}
+	return nil
 }

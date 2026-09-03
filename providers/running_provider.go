@@ -389,6 +389,11 @@ type RunningProvider struct {
 	Version string
 	Plugin  pp.ProviderPlugin
 	Schema  resources.ResourcesSchema
+	// Requires are the peers this provider declares (ADR 042). Carried on the
+	// running provider so the cross-provider gate can read the caller's own
+	// declarations without asking the coordinator for a cloned provider map on
+	// every foreign field access.
+	Requires []pp.ProviderDep
 
 	// isClosed is true for any provider that is not running anymore,
 	// either via shutdown or via crash

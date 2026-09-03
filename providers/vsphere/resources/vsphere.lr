@@ -1,7 +1,7 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
-import "../../core/resources/core.lr"
+import core
 
 option provider = "go.mondoo.com/mql/providers/vsphere"
 option go_package = "go.mondoo.com/mql/providers/vsphere/resources"

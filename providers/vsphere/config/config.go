@@ -12,9 +12,12 @@ import (
 )
 
 var Config = plugin.Provider{
-	Name:            "vsphere",
-	ID:              "go.mondoo.com/mql/providers/vsphere",
-	Version:         "13.7.7",
+	Name:    "vsphere",
+	ID:      "go.mondoo.com/mql/providers/vsphere",
+	Version: "13.7.7",
+	Requires: []plugin.ProviderDep{
+		{ID: "go.mondoo.com/mql/providers/core", Name: "core", MinVersion: "13.0.0"},
+	},
 	ConnectionTypes: []string{provider.ConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
