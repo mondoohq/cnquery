@@ -11,9 +11,13 @@ import (
 )
 
 var Config = plugin.Provider{
-	Name:            "k8s",
-	ID:              "go.mondoo.com/mql/providers/k8s",
-	Version:         "13.10.0",
+	Name:    "k8s",
+	ID:      "go.mondoo.com/mql/providers/k8s",
+	Version: "13.10.0",
+	Requires: []plugin.ProviderDep{
+		{ID: "go.mondoo.com/mql/providers/network", Name: "network", MinVersion: "13.0.0"},
+		{ID: "go.mondoo.com/mql/providers/os", Name: "os", MinVersion: "13.0.0"},
+	},
 	ConnectionTypes: []string{provider.ConnectionType},
 	Platforms:       resources.Platforms,
 	// The client-go rate limiter is already raised well above its defaults, so

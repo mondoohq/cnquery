@@ -1,8 +1,8 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
-import "../../core/resources/core.lr"
-import "../../network/resources/network.lr"
+import core
+import network
 
 option provider = "go.mondoo.com/mql/providers/os"
 option go_package = "go.mondoo.com/mql/providers/os/resources"

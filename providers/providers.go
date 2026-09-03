@@ -653,6 +653,20 @@ func installDependencies(provider *Provider, existing Providers) error {
 	}
 
 	for _, dependency := range provider.Schema.AllDependencies() {
+		// A builtin ships inside this executor; there is no separate binary to
+		// download, and asking the installer for one would fail (or worse,
+		// fetch something) for a provider that is already loaded. This is the
+		// rule the schema generator used to approximate by excluding the name
+		// "core", which also covers `mock` and `sbom` and anything built in
+		// later.
+		//
+		// Checked here rather than against `existing`, because ListAll returns
+		// early without builtins when no provider paths are configured -- the
+		// embedder case -- and the guard has to hold there too.
+		if _, isBuiltin := builtinProviders[dependency.Id]; isBuiltin {
+			continue
+		}
+
 		dependencyLookup := ProviderLookup{
 			ID:           dependency.Id,
 			ProviderName: dependency.Name,
@@ -678,6 +692,40 @@ func installDependencies(provider *Provider, existing Providers) error {
 		PrintInstallResults([]*Provider{depProvider})
 	}
 
+	return validateDeclaredPeers(provider, existing)
+}
+
+// validateDeclaredPeers checks each declared peer that is already installed
+// against the floor the provider declares (ADR 042).
+//
+// Eager, at the point dependencies are ensured, rather than lazily when the
+// first cross-call happens: a version mismatch is a property of the install,
+// not of the query that happened to trip over it, and surfacing it mid-query
+// makes it look like a query problem. Peers that are not installed are not
+// reported here -- they fail later, when something actually needs them.
+func validateDeclaredPeers(provider *Provider, existing Providers) error {
+	if provider.Provider == nil {
+		return nil
+	}
+
+	for _, dep := range provider.Requires {
+		if dep.MinVersion == "" {
+			continue
+		}
+		peer := existing.Lookup(ProviderLookup{ID: dep.ID, ProviderName: dep.Name})
+		if peer == nil || peer.Provider == nil || peer.Version == "" {
+			continue
+		}
+		diff, err := (semver.Parser{}).Compare(peer.Version, dep.MinVersion)
+		if err != nil {
+			// unparseable on either side is not evidence of a mismatch
+			continue
+		}
+		if diff < 0 {
+			return errors.Newf("provider %s requires %s >= %s, but %s is installed",
+				provider.Name, dep.Name, dep.MinVersion, peer.Version)
+		}
+	}
 	return nil
 }
 

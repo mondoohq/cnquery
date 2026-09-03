@@ -6,6 +6,7 @@ package lrcore
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -697,7 +698,11 @@ func TestParseLR(t *testing.T) {
 				if err != nil {
 					t.Fatal("failed to load " + path + ":" + err.Error())
 				}
-				if bytes.Contains(raw, []byte("import \"")) {
+				// matches both import forms: `import network` and the legacy
+				// `import "../../network/resources/network.lr"`. Keying on the
+				// quote alone stopped matching when the imports migrated to
+				// names, which silently skipped the assertion below.
+				if bytes.Contains(raw, []byte("\nimport ")) {
 					hasImports = true
 				}
 				return raw, err
@@ -770,6 +775,206 @@ func TestGetDuplicates(t *testing.T) {
 
 	dups := lr.GetDuplicates()
 	assert.Equal(t, []string{"res1.res2"}, dups)
+}
+
+// coreFixture stands in for providers/core/resources/core.lr. Only a schema
+// that actually names a core type loads it, so most fixtures deliberately do
+// NOT supply it: their readFile fails the test on an unexpected read, which is
+// what proves core is left alone when nothing references it.
+// coreFixture stands in for providers/core/resources/core.lr. Its resources are
+// named `asset` and `cpe`, NOT `core.asset` / `core.cpe`: the `core.` in a
+// reference is the pack qualifier, and getting that wrong in the fixture is
+// what would make these tests pass without resolving anything.
+const coreFixture = `
+option provider = "go.mondoo.com/mql/providers/core"
+option go_package = "go.mondoo.com/mql/providers/core/resources"
+
+asset {
+  name string
+}
+
+cpe {
+  uri string
+}
+`
+
+func TestImportForms(t *testing.T) {
+	const peer = `
+option provider = "go.mondoo.com/mql/providers/network"
+option go_package = "go.mondoo.com/mql/providers/network/resources"
+
+network.certificate {
+  pem string
+}
+`
+	files := map[string]string{
+		"providers/network/resources/network.lr": peer,
+	}
+
+	for _, tc := range []struct {
+		name     string
+		imports  string
+		packName string
+	}{
+		{"by name", "import network", "network"},
+		{"by path", `import "../../network/resources/network.lr"`, "network"},
+		{"aliased", `import nw1 from "go.mondoo.com/mql/providers/network"`, "nw1"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			src := tc.imports + `
+option provider = "go.mondoo.com/mql/providers/os"
+option go_package = "go.mondoo.com/mql/providers/os/resources"
+
+os.host {
+  addr string
+}
+`
+			local := map[string]string{"providers/os/resources/os.lr": src}
+			for k, v := range files {
+				local[k] = v
+			}
+
+			res, err := Resolve("providers/os/resources/os.lr", func(path string) ([]byte, error) {
+				raw, ok := local[path]
+				require.Truef(t, ok, "unexpected read of %q", path)
+				return []byte(raw), nil
+			})
+			require.NoError(t, err)
+
+			schema, err := Schema(res)
+			require.NoError(t, err)
+
+			// whichever form was used, the peer lands under the pack name and
+			// carries the peer's own provider ID
+			dep, ok := schema.Dependencies[tc.packName]
+			require.Truef(t, ok, "expected dependency %q, got %v", tc.packName, schema.Dependencies)
+			assert.Equal(t, "go.mondoo.com/mql/providers/network", dep.Id)
+		})
+	}
+}
+
+func TestImportAliasIDMustMatchPeer(t *testing.T) {
+	// The alias form names the peer's provider ID. If the peer disagrees, the
+	// build has to say so: a declaration nobody checks is how the old
+	// CrossProviderTypes list came to name providers that did not exist.
+	files := map[string]string{
+		"providers/os/resources/os.lr": `
+import nw1 from "go.mondoo.com/mql/providers/not-network"
+
+option provider = "go.mondoo.com/mql/providers/os"
+option go_package = "go.mondoo.com/mql/providers/os/resources"
+
+os.host {
+  addr string
+}
+`,
+		"providers/not-network/resources/not-network.lr": `
+option provider = "go.mondoo.com/mql/providers/network"
+option go_package = "go.mondoo.com/mql/providers/network/resources"
+
+network {
+  ip string
+}
+`,
+	}
+
+	_, err := Resolve("providers/os/resources/os.lr", func(path string) ([]byte, error) {
+		raw, ok := files[path]
+		require.Truef(t, ok, "unexpected read of %q", path)
+		return []byte(raw), nil
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "declares provider")
+}
+
+func TestCoreIsNeverLoadedWithoutAnImport(t *testing.T) {
+	// core has no privileged status: without `import core` it is not read at
+	// all, exactly like any other peer. The readFile fails the test on an
+	// unexpected read, so this asserts the absence of the old magic.
+	files := map[string]string{
+		"providers/demo/resources/demo.lr": `
+option provider = "go.mondoo.com/mql/providers/demo"
+option go_package = "go.mondoo.com/mql/providers/demo/resources"
+
+demo.thing {
+  name string
+  parts []demo.part
+}
+
+demo.part {
+  id string
+}
+`,
+	}
+
+	_, err := Resolve("providers/demo/resources/demo.lr", func(path string) ([]byte, error) {
+		raw, ok := files[path]
+		require.Truef(t, ok, "unexpected read of %q", path)
+		return []byte(raw), nil
+	})
+	require.NoError(t, err)
+}
+
+func TestCoreTypeNeedsItsImport(t *testing.T) {
+	// The cost of dropping the implicit load: a `core.cpe` with no import used
+	// to be silently fixed up. It must now be reported, because the fallback is
+	// to treat the whole dotted string as a resource name and emit
+	// types.Resource("core.cpe") for a resource actually called `cpe`.
+	files := map[string]string{
+		"providers/demo/resources/demo.lr": `
+option provider = "go.mondoo.com/mql/providers/demo"
+option go_package = "go.mondoo.com/mql/providers/demo/resources"
+
+demo.thing {
+  cpes []core.cpe
+}
+`,
+	}
+
+	res, err := Resolve("providers/demo/resources/demo.lr", func(path string) ([]byte, error) {
+		raw, ok := files[path]
+		require.Truef(t, ok, "unexpected read of %q", path)
+		return []byte(raw), nil
+	})
+	require.NoError(t, err)
+
+	// NewCollector scans the .lr's directory for Go files, so it needs a real
+	// one; an empty temp dir contributes nothing and keeps the test hermetic.
+	_, err = Go("resources", res, NewCollector(filepath.Join(t.TempDir(), "demo.lr")), nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot find resource core.cpe")
+	assert.Contains(t, err.Error(), "import core")
+}
+
+func TestCoreImportedResolves(t *testing.T) {
+	// and with the import present it resolves like any other peer
+	files := map[string]string{
+		"providers/demo/resources/demo.lr": `
+import core
+
+option provider = "go.mondoo.com/mql/providers/demo"
+option go_package = "go.mondoo.com/mql/providers/demo/resources"
+
+demo.thing {
+  cpes []core.cpe
+}
+`,
+		"providers/core/resources/core.lr": coreFixture,
+	}
+
+	res, err := Resolve("providers/demo/resources/demo.lr", func(path string) ([]byte, error) {
+		raw, ok := files[path]
+		require.Truef(t, ok, "unexpected read of %q", path)
+		return []byte(raw), nil
+	})
+	require.NoError(t, err)
+
+	// through Go(), which is where the pack qualifier is resolved and where the
+	// missing-import case is reported
+	out, err := Go("resources", res, NewCollector(filepath.Join(t.TempDir(), "demo.lr")), nil)
+	require.NoError(t, err)
+	assert.Contains(t, out, `types.Resource("cpe")`, "core.cpe must resolve to the bare resource name")
+	assert.NotContains(t, out, `types.Resource("core.cpe")`)
 }
 
 func TestSchemaDependencyID(t *testing.T) {
@@ -850,4 +1055,66 @@ network {
 	})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "provider")
+}
+
+func resolveFixture(t *testing.T, files map[string]string, entry string) (*LR, error) {
+	t.Helper()
+	return Resolve(entry, func(path string) ([]byte, error) {
+		raw, ok := files[path]
+		require.Truef(t, ok, "unexpected read of %q", path)
+		return []byte(raw), nil
+	})
+}
+
+func TestExtendQualified(t *testing.T) {
+	res, err := resolveFixture(t, map[string]string{
+		"providers/demo/resources/demo.lr": `
+import core
+
+option provider = "go.mondoo.com/mql/providers/demo"
+option go_package = "go.mondoo.com/mql/providers/demo/resources"
+
+extend core.asset {
+  extra string
+}
+`,
+		"providers/core/resources/core.lr": coreFixture,
+	}, "providers/demo/resources/demo.lr")
+	require.NoError(t, err)
+	require.Len(t, res.Resources, 1)
+	assert.True(t, res.Resources[0].IsExtension)
+	assert.Equal(t, "asset", res.Resources[0].ID, "pack qualifier must be stripped")
+}
+
+func TestExtendBareStillWorks(t *testing.T) {
+	res, err := resolveFixture(t, map[string]string{
+		"providers/demo/resources/demo.lr": `
+option provider = "go.mondoo.com/mql/providers/demo"
+option go_package = "go.mondoo.com/mql/providers/demo/resources"
+
+extend asset {
+  extra string
+}
+`,
+	}, "providers/demo/resources/demo.lr")
+	require.NoError(t, err)
+	assert.Equal(t, "asset", res.Resources[0].ID)
+}
+
+func TestExtendQualifiedUnknownResource(t *testing.T) {
+	_, err := resolveFixture(t, map[string]string{
+		"providers/demo/resources/demo.lr": `
+import core
+
+option provider = "go.mondoo.com/mql/providers/demo"
+option go_package = "go.mondoo.com/mql/providers/demo/resources"
+
+extend core.doesNotExist {
+  extra string
+}
+`,
+		"providers/core/resources/core.lr": coreFixture,
+	}, "providers/demo/resources/demo.lr")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `has no resource "doesNotExist"`)
 }

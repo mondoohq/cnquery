@@ -31,8 +31,8 @@ They meet at one point, and this ADR owns it. ADR 031 originally carried a
 v14/v15 rule deprecating "undeclared cross-provider calls," but supplied only
 one declaration form: the typed field forward-reference (`running
 asset<mcp>`), which covers cross-asset references only. That left every
-same-asset `CreateSharedResource` call — 35 sites across `os`, `k8s`, `aws`,
-and `vsphere` — inside the scope of an enforcement rule with no declaration
+same-asset `CreateSharedResource` call — 37 sites across `os`, `k8s`, `aws`,
+`oci`, and `vsphere` — inside the scope of an enforcement rule with no declaration
 form available to satisfy it. **This ADR is therefore the authority on
 cross-provider call legality**: it defines the declaration form for same-asset
 calls, and carries the v14/v15 enforcement timeline for both forms (see
@@ -50,31 +50,31 @@ A provider calls, on its SDK-side runtime, one of:
 Neither call names a provider or a connection. The request round-trips over
 gRPC back to the coordinator process
 (`providers-sdk/v1/plugin/runtime.go:150`), lands in
-`providerCallbacks.GetData` (`providers/runtime.go:824`), and the coordinator
+`providerCallbacks.GetData` (`providers/runtime.go:828`), and the coordinator
 `Runtime` resolves it:
 
 1. `lookupResource` asks the aggregated schema which provider owns the name:
-   `coordinator.Schema().Lookup(name)` (`providers/runtime.go:1042`,
+   `coordinator.Schema().Lookup(name)` (`providers/runtime.go:1018`,
    `providers-sdk/v1/resources/schema.go:125`). Every `ResourceInfo` carries a
    `Provider` string, plus `Others` for names defined by more than one
    provider.
 2. If the owning provider is not already connected, the coordinator lazily
    starts it and calls `Connect` with a **clone of the primary provider's
-   asset** (`crossProviderAsset()`, `providers/runtime.go:264`).
+   asset** (`crossProviderAsset()`, `providers/runtime.go:268`).
 3. It dispatches `GetData` to that provider's connection.
 
 The two calls take **different paths**, and only one of them is gated:
 `CreateSharedResource` goes through `lookupResourceProvider`
-(`providers/runtime.go:955`), which checks the whitelist at `:1020`.
+(`providers/runtime.go:1018`), which checks the whitelist at `:1095`.
 `GetSharedData` and every query-driven field access go through
-`lookupFieldProvider` (`:1066`), which starts a foreign provider at `:1173`
+`lookupFieldProvider` (`:1142`), which starts a foreign provider at `:1244`
 with **no check at all**.
 
 ### What we want to remove
 
 **1. The hardcoded whitelist.** Before step 2, the coordinator gates the
 lookup against a literal slice baked into core
-(`providers/runtime.go:986`):
+(`providers/runtime.go:1049`):
 
 ```go
 crossProviderList := []string{
@@ -175,10 +175,14 @@ exist" but "which provider answers for it, is it installed, and is it new
 enough."
 
 This is deliberately scoped to peers that are present in the build environment.
-Every cross-provider reference today satisfies that: all 35 call sites are
-in-repo (`os`, `k8s`, `aws`, `vsphere`), and the enterprise repo has **no live
-cross-provider calls at all** (`yara`'s two `CreateSharedResource("file")` calls
-are commented out, above a `TODO` recording that they never worked). Resolving a
+Every cross-provider reference today satisfies that: all 37 call sites are
+in-repo (`os` 18, `k8s` 2, `aws` 1, `oci` 1, `vsphere` 1), and the enterprise
+repo has **no live cross-provider calls at all** -- no `.lr` imports, no
+qualified peer type references, and `yara`'s two `CreateSharedResource("file")`
+calls commented out above a `TODO` recording that they never worked. Its only
+cross-provider surface is four `extend asset` blocks (`junos`, `fortios`,
+`panos`, `networkdevices`), and `extend` resolves without loading the extended
+resource's schema at all. Resolving a
 peer that is not in the build environment is therefore not a use case we have,
 and is left out until it is one.
 
@@ -217,16 +221,22 @@ downstream keys on that name. Dropping the path deletes a derivation step rather
 than adding a mechanism, and `Resolve`'s injected `readFile` is already the seam
 where resolution plugs in.
 
+The providers root a name resolves against is derived from the importing file's
+own location — `providers/<name>/resources/<name>.lr` sits two levels below it —
+so nothing needs configuring in the normal case. A tree that does not follow that
+layout passes `--providers-root` to `mqlr generate`.
+
 Where two providers share a name, the import binds a local alias:
 
 ```
-import nw1 from 'go.mondoo.com/mql/providers/network'
+import nw1 from "go.mondoo.com/mql/providers/network"
 ```
 
 Usage is then normal (`nw1.certificate`). An import name that collides with a
 local top-level resource namespace is a **build error** pointing at the alias
 form; silent shadowing in either direction is worse than a one-line fix. No
-collision exists today across the seven current importer/import pairs.
+collision exists today across the six current importer/import pairs
+(`aws`, `oci`, `mondoo`, `os` -> `network`; `k8s` -> `os` and `network`).
 
 **In `config.go`, for execution** — the declaration of record:
 
@@ -245,15 +255,43 @@ reason the two declarations can coexist without drifting — the failure mode th
 killed `CrossProviderTypes`, whose `network` entry has named three non-existent
 provider IDs for two major versions because nothing ever compared it to reality.
 
-**`core` stays implicit.** It is already excluded from schema dependencies
-(`providers-sdk/v1/mqlr/lrcore/schema.go:29`) and remains the one globally
-available provider. `import core` disappears from `os.lr`, `vsphere.lr`, and
-`mondoo.lr`.
+**`core` is declared like any other peer.** It is not a special provider at
+build time, and it does not get an implicit import: a schema that names a core
+type writes `import core`, and one that does not never loads core at all.
 
-**The import is the declaration even with no type reference in the `.lr`.**
-`os.lr` references `cpe` as a type zero times, yet `os` makes 14 Go-side
-`CreateSharedResource("cpe")` calls. `import core` is what licenses them today,
-and the same holds for any peer used only from Go.
+That is a smaller change than it sounds. Only two providers reference core types
+-- `os` (13 `core.cpe`) and `vsphere` (1) -- so the whole migration is two lines.
+`mondoo`'s `import core` was dead and is removed rather than converted.
+
+The alternative, loading core whenever a schema happens to mention it, was
+built and discarded. It made 79 providers pay for two, and it broke providers
+built outside this tree, which have no `core.lr` under their own providers root
+and no reason to want one. Worse, it hid a real error: the import is what tells
+codegen that the `core.` in `core.cpe` is a pack qualifier rather than part of
+the name, so a missing import silently emits `types.Resource("core.cpe")` for a
+resource actually called `cpe`. Auto-supplying the import conceals that; an
+explicit one makes it a build error naming the missing import.
+
+Core's **runtime** globality is untouched and is a separate question: its
+resources stay resolvable everywhere, which is the namespace rule ADR 031
+keeps. Only the build-time declaration becomes explicit.
+
+**Extensions may name the peer too.** `extend core.asset` is the qualified form
+of `extend asset`. The qualifier is checked against the peer's resource list and
+then stripped, so the result is byte-identical to the bare form. The bare form
+stays legal and unchecked -- it is what every extension in this repo and in the
+enterprise providers uses -- but it is also unverifiable: `extend asset` with a
+typo silently defines a new resource, where the qualified form fails the build.
+Naming the peer is what makes the check possible.
+
+**The import is the declaration for both kinds of use.** A peer is reached two
+ways -- as a type in the `.lr`, and as a string literal in Go -- and one import
+licenses both. `os` uses `core` in both directions at once: it names `core.cpe`
+as a type 13 times in `os.lr` *and* makes 14 Go-side `CreateSharedResource("cpe")`
+/ `GetSharedData("cpe")` calls. Neither kind of use implies the other, so a peer
+called only from Go still needs the import even though nothing in the `.lr`
+mentions it, and the reference scan that derives version minimums has to read
+both sources (see Version constraints).
 
 #### Fix the dependency ID while we are here
 
@@ -325,9 +363,22 @@ a version can genuinely disagree with reality.
 
 The co-evolution case then resolves correctly through the rules above: detected
 min (`13.4.0`) exceeds the declared min, so the build raises `os` to `13.4.0`,
-which is right — `os` really does need it. **The consequence for the release
-flow is that `network` must be released at or before `os`.** Between merge and
-that release, `os` declares a floor no one can install yet.
+which is right — `os` really does need it.
+
+**This imposes no release ordering.** Providers ship together:
+`release-providers.yml` defaults to `providers/*/` under one concurrency group
+and runs `version update --increment=patch` across all of them in a single PR,
+triggered on release publish. The arithmetic closes exactly — a new `network`
+resource is recorded in `.lr.versions` at the next patch (`13.3.1`), the build
+writes `os` that same floor, and the release bumps `network` by one patch to
+`13.3.1` — so the floor equals the released version and both are published in
+the same event. Nothing is released during the merge-to-release window, so
+there is no interval in which a shipped `os` names an uninstallable `network`.
+
+The one case that does break is a **manually dispatched partial release** that
+names `os` and omits `network`. That is not an ordering constraint but a
+subset-selection hazard, and the release tooling can check it: refuse a
+provider set that leaves a declared floor unsatisfiable.
 
 Two edges. A namespace-only root such as `openpgp` or `pkix` carries no version
 because it has no fields, and must be treated as **not a valid reference
@@ -374,9 +425,9 @@ One predicate, used by **both** dispatch paths:
 func (r *Runtime) allowsCrossCall(owner string, resource string) (declared bool, legacy bool)
 ```
 
-- `providers/runtime.go:1020` — replaces the
+- `providers/runtime.go:1095` — replaces the
   `stringx.Contains(crossProviderList, …)` test.
-- `providers/runtime.go:1173` — the same predicate in `lookupFieldProvider`,
+- `providers/runtime.go:1244` — the same predicate in `lookupFieldProvider`,
   which has no check today.
 
 **Matching is on provider ID**, and works precisely because of the ID fix above.
@@ -469,12 +520,12 @@ to work unchanged.
 ### Enforcement timeline (v14 → v15)
 
 Moved here from ADR 031 point 5, because the rule is enforced at the
-coordinator gate (`providers/runtime.go:1020`) — this ADR's surface — and
+coordinator gate (`providers/runtime.go:1095`) — this ADR's surface — and
 because it is unenforceable without the declaration form defined above.
 
 - **v14:** an undeclared cross-provider call still resolves, but warns. The
   gate accepts a declared dependency **or** the legacy whitelist, and logs when
-  only the legacy path matched. On the field path (`:1173`), which allows
+  only the legacy path matched. On the field path (`:1244`), which allows
   everything today, the predicate is **log-only**. This surfaces every missing
   declaration without breaking a single user.
 - **v15:** undeclared cross-provider calls no longer resolve, on both paths. The
@@ -489,9 +540,12 @@ because it is unenforceable without the declaration form defined above.
 All declaration forms share one enforcement date, so the v15 cutover must not
 land until every cross-called provider carries one. That set is smaller than it
 looks: the enterprise repo has **no live cross-provider calls** and its four
-`extend` blocks all target `asset`, which is `core`'s and therefore implicit.
-The whitelist can retire from `mql` alone; what the enterprise providers need is
-root extensions for population 2, not peer declarations.
+`extend` blocks all use the bare `extend asset` form, which needs no import and
+does not load the extended resource's schema. They keep working untouched; they
+would only need `import core` if they moved to the qualified `extend core.asset`
+form or started naming a core type. The whitelist can retire from `mql` alone;
+what the enterprise providers need is root extensions for population 2, not peer
+declarations.
 
 ADR 031 keeps the **namespace** half of its original point 5: the global
 namespace narrows to `core` and everything else chains off a typed root. That
@@ -525,8 +579,12 @@ migration is 031's to sequence, and population 2 rides it.
 **Negative / risks**
 
 - **`.lr` grammar change.** The import form changes for every provider that has
-  one, and `resource2goname`'s existence check (`lrcore/go.go:579`) must be
-  rebuilt against a peer schema resolved by name rather than by path.
+  one. In practice the peer schema is loaded the same way whichever form named
+  it, so the existence checks in `lrcore/go.go` needed no rebuild -- but they did
+  need extending: an unknown pack qualifier previously fell through to treating
+  the whole dotted name as a local resource, which is what let a missing import
+  emit `types.Resource("core.cpe")` silently. Two `TODO`s in that file recorded
+  the gap.
 - **Peers must be in the build environment.** Resolution reads the peer's `.lr`
   directly, so a provider outside the build tree cannot be depended on. No such
   case exists today, and supporting one means shipping a resolvable schema
@@ -549,20 +607,102 @@ migration is 031's to sequence, and population 2 rides it.
 - A missing declaration turns a working cross-call into a runtime error at v15.
   Mitigated by the v14 warn window and the CI check.
 
+## Implementation status
+
+**Steps 1-4 of 5 have landed; step 5 is the v15 cutover and is deliberately
+not done.** What exists today:
+
+**Declaration, build side (step 1).**
+
+- The `.lr` grammar accepts all three import forms (name, aliased-by-provider-ID,
+  legacy path), resolved by name under a providers root derived from the
+  importing file, with `--providers-root` to override.
+- The six in-tree imports use the name form. `core` is an ordinary declared peer.
+  Qualified `extend <pack>.<resource>` is supported and checked; the bare form
+  stays legal and unchecked.
+- An unresolvable pack-qualified type is a build error naming the missing import,
+  closing the hole where a missing import silently emitted
+  `types.Resource("core.cpe")`.
+- `Schema.Dependencies[].Id` records the peer's `option provider` (landed earlier,
+  with the v14 provider-ID change), and now records `core` like any other peer.
+  The guard that keeps a builtin from being downloaded moved to the install
+  decision, where it applies to every builtin rather than to the name `core`.
+
+**Declaration, execution side (step 2).**
+
+- `Requires []ProviderDep{ID, Name, MinVersion, MaxVersion}` on the manifest.
+- Detection derives each peer's floor from its `.lr.versions`, reading both `.lr`
+  type references and Go `CreateSharedResource`/`GetSharedData` literals -- the
+  largest call group (`os` -> `cpe`) exists only in Go.
+- Reconciliation against `config.go` (parsed with go/ast) yields create / raise /
+  accept / unused. Reported by `mqlr generate`, gated by `--fail-on-dep-drift`,
+  which every provider passes today.
+- Declared floors sit at `lrcore.SupportedBaseline` (`13.0.0`) rather than at the
+  raw introduction versions, which are all `9.x`.
+- `os`, `k8s`, `aws`, `oci` and `vsphere` carry declarations; `mondoo`'s
+  `import network` was dead and was removed.
+
+**Enforcement (step 3).**
+
+- The resource-path gate is `declared || legacy`, and logs every call that only
+  the legacy whitelist allowed. Each of those is a missing declaration; when the
+  log goes quiet for a release the whitelist can go.
+- The field path carries the same predicate as a warning only. It allows
+  everything today, so enforcing it now would break callers the resource-path
+  gate never saw; the log measures that population first.
+- A started peer is checked against the caller's declared floor. This is the
+  runtime half of the split: the build checks a referenced resource *exists*,
+  the runtime checks the installed peer is *new enough*.
+- Declarations ride on `RunningProvider`, so neither gate pays a coordinator
+  lookup per call.
+
+**Checks (step 4).**
+
+- `--fail-on-dep-drift` fails a provider build on an undeclared peer, a floor
+  below what the references need, or an import nothing references. It is on by
+  default through `LR_DEP_FLAGS`, so every provider build in CI enforces it;
+  `LR_DEP_FLAGS=` disables it locally mid-change.
+- A call naming a resource that is neither this provider's nor a declared
+  peer's is attributed against the whole tree and reported with the import it
+  needs. Attribution parses every provider, so it runs only when there is
+  something to attribute -- which today there never is.
+- Declared floors are validated eagerly when dependencies are ensured, so a
+  version mismatch surfaces as an install problem rather than mid-query.
+
+What does **not** exist yet:
+
+- **The whitelist still exists.** Both gates now consult declarations, but the
+  legacy whitelist remains a valid way to pass the resource-path gate, and the
+  field path only logs. Deleting the whitelist and enforcing the field path is
+  the v15 cutover (step 5).
+- **v15 cutover** -- deleting the whitelist, and sequencing with ADR 031's typed
+  fields and the enterprise providers -- is untouched (step 5).
+
 ## Migration plan
 
-1. Add the name-based `import` form and the alias form to the `.lr` grammar,
-   alongside the existing path form. Migrate the seven existing imports, and fix
-   `Schema.Dependencies[].Id` to read the peer's `option provider`.
+1. **Done.** Added the name-based `import` form and the alias form to the `.lr`
+   grammar, alongside the existing path form, and migrated the six existing
+   imports. Made `core` an ordinary declared peer (`import core` in `os.lr` and
+   `vsphere.lr`; `mondoo`'s was dead and went away), added the qualified
+   `extend <pack>.<resource>` form, and made an unresolvable pack-qualified type
+   a build error instead of a silently mis-named resource. `Schema.Dependencies[].Id`
+   was fixed earlier, alongside the v14 provider-ID change.
 2. Add `Requires` to the manifest, plus the build step that detects each peer's
    minimum from `.lr.versions` and reconciles it with `config.go` (create when
    missing, fix when low, accept when high). Add the `option provider` vs
    declared-ID cross-check.
-3. Change both gates to `declared || legacy`, logging when only the legacy path
-   matched. Field path is log-only.
-4. Add the CI check: diff the reference scan against declared imports, failing
-   on a call with no import and on an import with no call. Add the
-   pre-install-all-peers flag.
+3. **Done.** The resource-path gate accepts `declared || legacy` and warns when
+   only the legacy path matched; the field path carries the same predicate but
+   is log-only, since it allows everything today. A started peer is checked
+   against the caller's declared floor (`checkPeerVersion`), which is the
+   runtime half of the build-checks-existence split. Declarations are carried on
+   `RunningProvider` so the check costs no coordinator lookup on the field path.
+4. **Done.** `--fail-on-dep-drift` covers both halves -- a call with no import
+   and an import with no call -- and runs on every provider build via
+   `LR_DEP_FLAGS` in the Makefile, so CI gets it without a separate job.
+   Declared floors are validated eagerly for peers that are already installed
+   (`validateDeclaredPeers`), which is the mitigation named under Late
+   constraint failure.
 5. After one release with zero "legacy-only" log hits, delete the hardcoded
    whitelist and `CrossProviderTypes`. This is the v15 cutover, and it must be
    sequenced with ADR 031's typed-field declarations and with the enterprise
@@ -585,7 +725,7 @@ Linux virtual package, and it is what lets a policy ask for `certificate`
 without caring who supplies it.
 
 **Reverse calls.** A lazily-started peer is currently connected with a `nil`
-callback (`providers/runtime.go:1034` and `:1174`), so it physically cannot call
+callback (`providers/runtime.go:1107` and `:1253`), so it physically cannot call
 back into the coordinator. Provider-level dependency cycles are legitimate and
 expected; what must be guarded is re-entering the **same resource instance** —
 the `(resource, __id)` pair that already forms the runtime cache key. Passing a

@@ -11,9 +11,12 @@ import (
 )
 
 var Config = plugin.Provider{
-	Name:            "oci",
-	ID:              "go.mondoo.com/mql/providers/oci",
-	Version:         "13.21.0",
+	Name:    "oci",
+	ID:      "go.mondoo.com/mql/providers/oci",
+	Version: "13.21.0",
+	Requires: []plugin.ProviderDep{
+		{ID: "go.mondoo.com/mql/providers/network", Name: "network", MinVersion: "13.0.0"},
+	},
 	ConnectionTypes: []string{provider.ConnectionType},
 	Platforms:       resources.Platforms,
 	Connectors: []plugin.Connector{

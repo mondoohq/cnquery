@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"path"
 	"strings"
 	"text/scanner"
 	"unicode/utf8"
@@ -70,11 +71,49 @@ type Alias struct {
 	Type       SimpleType `'=' @@`
 }
 
+// Import is a single `import` statement. Three forms are accepted (ADR 042):
+//
+//	import network                                          // by name
+//	import nw1 from "go.mondoo.com/mql/providers/network"    // aliased, by provider ID
+//	import "../../network/resources/network.lr"              // legacy, by path
+//
+// The name form is canonical. The peer is found by name under the providers
+// root, so the import no longer has to spell out a filesystem path that only
+// ever got reduced back to that name. The aliased form binds a different local
+// namespace, for the day two peers share a name; the provider ID it names is
+// cross-checked against the peer's own `option provider`.
+//
+// nolint: govet
+type Import struct {
+	Path string `"import" ( @String`
+	Name string `          | @Ident`
+	From string `            [ "from" @(String | Char) ] )`
+}
+
+// PackName is the namespace this import binds inside the importing file, i.e.
+// the `network` in `[]network.certificate`.
+func (i *Import) PackName() string {
+	if i.Name != "" {
+		return i.Name
+	}
+	return strings.TrimSuffix(path.Base(i.Path), ".lr")
+}
+
+// PeerName is the provider this import resolves to. It differs from PackName
+// only in the aliased form, where the local namespace is the alias and the peer
+// is the last segment of the declared provider ID.
+func (i *Import) PeerName() string {
+	if i.From != "" {
+		return path.Base(i.From)
+	}
+	return i.PackName()
+}
+
 // LR are MQL resources parsed into an AST
 // nolint: govet
 type LR struct {
 	Comments  []CommentToken `{ @@ }`
-	Imports   []string       `{ "import" @String }`
+	Imports   []*Import      `{ @@ }`
 	Options   Map            `{ "option" @(Ident '=' String) }`
 	Aliases   []Alias        `{ "alias" @@ }`
 	Resources []*Resource    `{ @@ }`

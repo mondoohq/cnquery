@@ -39,6 +39,33 @@ type Provider struct {
 	// declared here by the CPUs available on the machine, so this is a
 	// statement about the target, not about the host running the scan.
 	DefaultParallelism int `json:",omitempty"`
+	// Requires are the other providers this one calls into, declared by the
+	// consumer (ADR 042). The `.lr` import is the build-time half of the same
+	// declaration; this is the half the runtime can act on, because by then the
+	// question is not "does this resource exist" but "which provider answers for
+	// it, is it installed, and is it new enough."
+	//
+	// Derived at build from the peer's `.lr.versions` and reconciled with what
+	// the author declared, so it cannot drift the way the old hardcoded
+	// whitelist did.
+	Requires []ProviderDep `json:",omitempty"`
+}
+
+// ProviderDep is one declared dependency on another provider.
+//
+// Both ID and Name are carried because both are used: the runtime matches a
+// peer by ID, and the installer resolves it by name. MinVersion is the lowest
+// peer version that has every resource and field this provider references.
+type ProviderDep struct {
+	ID   string
+	Name string
+	// MinVersion is a semver string, e.g. "13.3.1". Empty means no floor is
+	// known, which is treated as no constraint rather than as version zero.
+	MinVersion string `json:",omitempty"`
+	// MaxVersion is optional and usually unset: we have no good rules yet for
+	// predicting where a peer's API will break, so it is authored only when
+	// someone has a specific reason.
+	MaxVersion string `json:",omitempty"`
 }
 
 // PlatformInfo is the static, pre-declarable description of one platform a

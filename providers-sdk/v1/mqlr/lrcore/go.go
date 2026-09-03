@@ -664,6 +664,15 @@ func resource2goname(s string, b *goBuilder) string {
 		}
 	}
 	if name == "" {
+		// A dotted name that is not a known pack is normally just a local
+		// resource (`os.unix.sshd`). If it is not local either, the first
+		// segment was meant as a pack qualifier and the import is missing --
+		// which otherwise passes silently and emits types.Resource("core.cpe")
+		// for a resource actually called `cpe`.
+		if pack[0] != s && !b.ast.hasLocalResource(s) {
+			b.errors.Add(errors.New("cannot find resource " + s +
+				"; if " + pack[0] + " is another provider, add `import " + pack[0] + "`"))
+		}
 		name = caser.String(string(
 			reMethodName.ReplaceAllFunc([]byte(s), capitalizeDot),
 		))
@@ -829,11 +838,17 @@ func (t *SimpleType) mondooTypeItems(b *goBuilder) string {
 		if name, ok := b.importName(t.Type); ok {
 			return "types.Resource(\"" + name + "\")"
 		}
+		// A dotted name that is not a known pack is normally a local resource
+		// (`os.unix.sshd`). If it is not local either, the leading segment was
+		// meant as a pack qualifier and the import is missing. Without this the
+		// qualifier silently becomes part of the name, emitting
+		// types.Resource("core.cpe") for a resource actually called `cpe`.
+		if pack, _, dotted := strings.Cut(t.Type, "."); dotted && !b.ast.hasLocalResource(t.Type) {
+			b.errors.Add(errors.New("cannot find resource " + t.Type +
+				"; if " + pack + " is another provider, add `import " + pack + "`"))
+		}
 		return "types.Resource(\"" + t.Type + "\")"
 	}
-
-	// TODO: check that this type if a proper resource
-	// panic("Cannot convert type '" + t.Type + "' to mondoo type")
 }
 
 func (t *Type) containsResource(b *goBuilder) bool {
