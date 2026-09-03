@@ -50,6 +50,24 @@ func sqsQueueName(queueURL string) string {
 // "sqs-fips.<region>.amazonaws.com" variant, and the legacy
 // "<region>.queue.amazonaws.com" host. It returns "" when the host carries no
 // region, such as the region-less legacy "queue.amazonaws.com".
+func regionFromSqsQueueURL(queueURL string) string {
+	u, err := url.Parse(queueURL)
+	if err != nil {
+		return ""
+	}
+	parts := strings.Split(u.Hostname(), ".")
+	if len(parts) < 3 {
+		return ""
+	}
+	switch {
+	case parts[0] == "sqs" || parts[0] == "sqs-fips":
+		return parts[1]
+	case parts[1] == "queue":
+		return parts[0]
+	}
+	return ""
+}
+
 // resolvedSqsQueueByArn returns the queue this ARN names out of the account's
 // queue list, or nil.
 //
@@ -89,24 +107,6 @@ func resolvedSqsQueueByArn(runtime *plugin.Runtime, queueArn arn.ARN) *mqlAwsSqs
 		return q
 	}
 	return nil
-}
-
-func regionFromSqsQueueURL(queueURL string) string {
-	u, err := url.Parse(queueURL)
-	if err != nil {
-		return ""
-	}
-	parts := strings.Split(u.Hostname(), ".")
-	if len(parts) < 3 {
-		return ""
-	}
-	switch {
-	case parts[0] == "sqs" || parts[0] == "sqs-fips":
-		return parts[1]
-	case parts[1] == "queue":
-		return parts[0]
-	}
-	return ""
 }
 
 // initAwsSqsQueue resolves a single SQS queue. Queues are keyed by their URL,
