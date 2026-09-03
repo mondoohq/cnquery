@@ -4,6 +4,7 @@
 package pomxml
 
 import (
+	"bytes"
 	"encoding/xml"
 	"io"
 	"os"
@@ -594,4 +595,57 @@ func TestOptionalIsIndependentOfScope(t *testing.T) {
 	p := bom.Direct().Find("com.example:compile-optional")
 	require.NotNil(t, p, "an optional compile dependency is still declared by this project")
 	assert.True(t, p.Optional)
+}
+
+// TestNonUTF8PomParses — a POM is not always UTF-8, and Go's encoding/xml
+// refuses a declared non-UTF-8 encoding outright rather than falling back. The
+// cost is not a mangled character: the whole parse fails, so a project whose
+// pom.xml carries an ISO-8859-1 header reports NO dependencies at all.
+//
+// hamcrest-core-1.3 ships exactly this header, and a generation of artifacts
+// published alongside it do too.
+func TestNonUTF8PomParses(t *testing.T) {
+	// "Café" in ISO-8859-1: the é is a single 0xE9 byte, which is not valid
+	// UTF-8, so a decoder that ignored the declared encoding would also fail.
+	iso := append([]byte(`<?xml version="1.0" encoding="ISO-8859-1"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.hamcrest</groupId>
+  <artifactId>hamcrest-core</artifactId>
+  <version>1.3</version>
+  <name>Caf`), 0xE9)
+	iso = append(iso, []byte(`</name>
+  <dependencies>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-parent</artifactId>
+      <version>1.3</version>
+    </dependency>
+  </dependencies>
+</project>`)...)
+
+	bom, err := (&Extractor{}).Parse(bytes.NewReader(iso), "pom.xml")
+	require.NoError(t, err, "a non-UTF-8 POM must parse; failing it reports zero dependencies for the whole project")
+
+	root := bom.Root()
+	require.NotNil(t, root)
+	assert.Equal(t, "org.hamcrest:hamcrest-core", root.Name)
+
+	dep := bom.Transitive().Find("org.hamcrest:hamcrest-parent")
+	require.NotNil(t, dep, "the dependency list must survive the encoding")
+	assert.Equal(t, "1.3", dep.Version)
+}
+
+// TestUTF8PomStillParses is the control: adding a CharsetReader must not change
+// the ordinary case.
+func TestUTF8PomStillParses(t *testing.T) {
+	bom, err := (&Extractor{}).Parse(strings.NewReader(`<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <groupId>com.example</groupId><artifactId>demo</artifactId><version>1.0.0</version>
+  <dependencies>
+    <dependency><groupId>com.google.guava</groupId><artifactId>guava</artifactId><version>31.1-jre</version></dependency>
+  </dependencies>
+</project>`), "pom.xml")
+	require.NoError(t, err)
+	assert.Equal(t, "31.1-jre", bom.Transitive().Find("com.google.guava:guava").Version)
 }

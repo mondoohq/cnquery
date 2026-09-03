@@ -8,6 +8,8 @@ import (
 	"io"
 	"strings"
 
+	"golang.org/x/net/html/charset"
+
 	"go.mondoo.com/mql/providers/os/resources/languages"
 	"go.mondoo.com/mql/providers/os/resources/languages/java"
 )
@@ -54,9 +56,18 @@ func (e *Extractor) Parse(r io.Reader, filename string) (languages.Bom, error) {
 }
 
 // parsePomXml reads and parses a Maven pom.xml file.
+//
+// The decoder is given a CharsetReader because a POM is not always UTF-8 and
+// Go's encoding/xml refuses a declared non-UTF-8 encoding outright rather than
+// falling back. Without one, `<?xml version="1.0" encoding="ISO-8859-1"?>` — the
+// header on hamcrest-core and a generation of artifacts published with it —
+// fails the whole parse, and a project whose pom.xml carries it reports NO
+// dependencies at all. That is the silent-empty-inventory failure, arriving
+// through the character encoding rather than through a missing manifest.
 func parsePomXml(r io.Reader) (*pomProject, error) {
 	var project pomProject
 	decoder := xml.NewDecoder(r)
+	decoder.CharsetReader = charset.NewReaderLabel
 	if err := decoder.Decode(&project); err != nil {
 		return nil, err
 	}
