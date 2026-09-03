@@ -105,7 +105,7 @@ func (i *mqlIis) runCollection() (*windows.IisData, error) {
 	}
 
 	// The collection script is far too long to travel on a command line:
-	// 13,849 characters, 37,078 once Encode has widened it to UTF-16 and base64
+	// 18,545 characters, 49,554 once Encode has widened it to UTF-16 and base64
 	// encoded it, against a ceiling of about 32k over SSH and 8,191 over WinRM.
 	// Passed as an encoded command it is rejected by the target before
 	// PowerShell runs, and the non-zero exit with empty stdout reads as "IIS is
