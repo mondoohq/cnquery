@@ -48,7 +48,9 @@ What we have is close but wrong for the job:
 - `CodeBundle.Version` is set to `mql.APIVersion()` (`mqlc/mqlc.go:2267`) — a
   *writer* stamp (which engine compiled it), **not a minimum** and **not a schema
   identity**.
-- `CodeBundle.min_mondoo_version` (proto field 22) is **never set by the engine**.
+- `CodeBundle.min_mondoo_version` (proto field 22) was **never set by the
+  engine** before this ADR; it is now stamped, and still read by nothing in mql
+  (see Implementation status).
 - Per resource/field, `min_provider_version` is populated
   (`providers-sdk/v1/mqlr/lrcore/versions.go:78-115`) but **read by nothing at
   runtime**, and it only covers the *provider-schema* axis.
@@ -241,8 +243,15 @@ Phase 1 has landed. What exists now:
   introspection can tell you. Its first entry is ADR 043 strict mode at
   **14.0.0** — an engine predating the nullability marker reads it as
   `UNSPECIFIED` and runs the bundle *non-strict*, so it does not fail, it
-  silently verifies less. That is the one case where declaring an engine floor is
-  strictly better than degrading.
+  verifies less.
+
+  The floor is **declared, not enforced here**. mql stamps it and nothing in mql
+  branches on it: `UnmetRequirements` answers for the provider axis only. The
+  consumer is cnspec, which attaches a minimum version requirement to a policy
+  that declares strict mode. A version number is a poor proxy for what is really
+  being asked — whether a reader understands a language feature — and
+  [the language-versioning draft](draft-mql-language-versioning.md) carries that
+  question, which v15 has to answer.
 
 ### Part 4: what the code actually did
 
