@@ -195,8 +195,6 @@ func createAmlFilesystemResource(runtime *plugin.Runtime, fs *armstoragecache.Am
 			"provisioningState":             llx.StringData(enumString(props.ProvisioningState)),
 			"identity":                      llx.DictData(identity),
 			"resourceIdentity":              resourceIdentity,
-			"principalId":                   llx.StringDataPtr(fsIdentity.PrincipalID),
-			"tenantId":                      llx.StringDataPtr(fsIdentity.TenantID),
 			"storageCapacityTiB":            llx.FloatDataPtr(props.StorageCapacityTiB),
 			"currentStorageCapacityTiB":     llx.FloatDataPtr(props.CurrentStorageCapacityTiB),
 			"throughputProvisionedMbps":     llx.IntDataPtr(props.ThroughputProvisionedMBps),

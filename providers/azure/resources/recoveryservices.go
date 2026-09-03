@@ -384,8 +384,6 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 			"tags":                                llx.MapData(convert.PtrMapStrToInterface(vault.Tags), types.String),
 			"identity":                            llx.DictData(identity),
 			"resourceIdentity":                    resourceIdentity,
-			"principalId":                         llx.StringDataPtr(vaultIdentity.PrincipalID),
-			"tenantId":                            llx.StringDataPtr(vaultIdentity.TenantID),
 			"skuName":                             llx.StringData(skuName),
 			"provisioningState":                   llx.StringData(provisioningState),
 			"publicNetworkAccess":                 llx.StringData(publicNetworkAccess),
