@@ -47,6 +47,25 @@ func TestUnmetRequirements(t *testing.T) {
 		assert.Equal(t, "requires the os provider >= 13.16.9 (13.10.1 is installed)", got[0].Error())
 	})
 
+	// An unstamped build reports its line with `rolling` as build metadata
+	// (mql.GetVersion). Reading that as an older line would withhold content
+	// from every developer running from source.
+	t.Run("a source build satisfies its own floor", func(t *testing.T) {
+		assert.Empty(t, mqlc.UnmetRequirements(bundle, map[string]string{
+			osProvider:   "v13.16.9+rolling",
+			coreProvider: "v9.0.0+rolling",
+		}))
+	})
+
+	t.Run("a source build of an older line is still too old", func(t *testing.T) {
+		got := mqlc.UnmetRequirements(bundle, map[string]string{
+			osProvider:   "v13.10.1+rolling",
+			coreProvider: "9.0.0",
+		})
+		require.Len(t, got, 1)
+		assert.Equal(t, "v13.10.1+rolling", got[0].Installed)
+	})
+
 	t.Run("comparison is semver, not lexical", func(t *testing.T) {
 		// "13.9.0" > "13.16.9" as strings, but is older as a version.
 		got := mqlc.UnmetRequirements(bundle, map[string]string{
