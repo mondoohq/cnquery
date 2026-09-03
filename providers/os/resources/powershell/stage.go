@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -69,6 +70,9 @@ type StagedScript struct {
 
 	conn    shared.Connection
 	written bool
+	// viaFS records that the write went through the connection's filesystem,
+	// which is also the cheapest way to take it off again.
+	viaFS bool
 }
 
 // stagedDir picks the staging directory from the asset's platform.
@@ -157,6 +161,7 @@ func Stage(conn shared.Connection, name, script string) (*StagedScript, error) {
 
 	if err := writeViaFileSystem(conn, path, script); err == nil {
 		staged.written = true
+		staged.viaFS = true
 		return staged, nil
 	} else {
 		log.Debug().Err(err).Str("path", path).
@@ -187,12 +192,44 @@ func writeViaFileSystem(conn shared.Connection, path, script string) error {
 	if fs == nil {
 		return errors.New("connection has no filesystem")
 	}
-	// PowerShell reads a BOM-less UTF-8 file fine, and every script staged this
-	// way is ASCII in practice. CRLF is not required by -File.
-	f, err := fs.Create(path)
+	// Create the file rather than open whatever is at the path. The staging
+	// directory is writable by every local user and the name is derived from the
+	// script, so the path is knowable before a scan runs; O_EXCL makes a file
+	// that is already there a failure instead of something this write goes
+	// through. Nothing is lost by failing: the caller falls back to the chunked
+	// write, which creates the file the same way.
+	//
+	// The create comes first and the delete only after it fails, rather than the
+	// other way around, because the path is free on every scan that was not
+	// interrupted. Over sftp clearing it first would spend two round trips
+	// deleting nothing: pkg/sftp's Remove tries the file, then the directory,
+	// before it can say the path does not exist.
+	//
+	// The retry is deliberately not gated on the error meaning "already exists".
+	// Over sftp that gate would never open: SFTP v3 has no status code for it,
+	// so a server answers EEXIST with SSH_FX_FAILURE and pkg/sftp passes it
+	// through untranslated, leaving os.IsExist false on the one transport this
+	// matters for. A failure that deleting cannot fix simply fails the second
+	// create too. Re-planting the path between the two is not a way in
+	// either — that is what the second O_EXCL is for.
+	f, err := fs.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	if err != nil {
+		if rmErr := fs.Remove(path); rmErr != nil {
+			// Report why the create failed, not why the speculative delete did.
+			return err
+		}
+		f, err = fs.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	}
 	if err != nil {
 		return err
 	}
+
+	// No BOM and no CRLF: -File needs neither, and every byte a staged script
+	// puts in a *value* is ASCII today. That last part is a constraint, not an
+	// observation — PowerShell 5.1 decodes a BOM-less file with the ANSI
+	// codepage, so a non-ASCII character in an emitted string would arrive
+	// mangled where the -EncodedCommand path would have carried it intact. The
+	// em dashes in iis.ps1 are all inside comments, where that does not show.
 	if _, err := f.Write([]byte(script)); err != nil {
 		f.Close()
 		return err
@@ -216,13 +253,16 @@ func writeViaCommand(conn shared.Connection, path, script string) error {
 	tmp := path + ".b64"
 
 	// Fresh file per run: an interrupted earlier scan could otherwise leave a
-	// partial payload that this one silently appends to. The hashed name makes
-	// that unlikely rather than impossible.
+	// partial payload that this one silently appends to. New-Item without
+	// -Force is the exclusive create - it fails rather than reusing whatever is
+	// at the path, which matters because the staging directory is writable by
+	// every local user and the name is derived from the script. The attribute
+	// test is 0x400, FILE_ATTRIBUTE_REPARSE_POINT: a link at the path would
+	// otherwise send the chunks somewhere else entirely.
 	if err := runOne(conn, psCommand(
-		fmt.Sprintf("Remove-Item -Force -ErrorAction SilentlyContinue '%s','%s'", tmp, path),
-		// Success is the absence of both files, which is also the state a fresh
-		// target is already in.
-		fmt.Sprintf("-not (Test-Path '%s') -and -not (Test-Path '%s')", tmp, path))); err != nil {
+		fmt.Sprintf("Remove-Item -Force -ErrorAction SilentlyContinue '%s','%s'; New-Item -ItemType File -Path '%s' -ErrorAction Stop | Out-Null", tmp, path, tmp),
+		// Success is an empty file this command created, and no final file yet.
+		fmt.Sprintf("(Test-Path '%s') -and -not (Test-Path '%s') -and (((Get-Item '%s' -Force -ErrorAction Stop).Attributes -band 1024) -eq 0)", tmp, path, tmp))); err != nil {
 		return err
 	}
 
@@ -242,8 +282,8 @@ func writeViaCommand(conn shared.Connection, path, script string) error {
 	// Decode on the target rather than shipping the plain text: this is the one
 	// step whose size does not depend on the script.
 	if err := runOne(conn, psCommand(
-		fmt.Sprintf("[IO.File]::WriteAllBytes('%s',[Convert]::FromBase64String((Get-Content -Raw '%s' -ErrorAction Stop))); Remove-Item -Force -ErrorAction SilentlyContinue '%s'",
-			path, tmp, tmp),
+		fmt.Sprintf("New-Item -ItemType File -Path '%s' -ErrorAction Stop | Out-Null; [IO.File]::WriteAllBytes('%s',[Convert]::FromBase64String((Get-Content -Raw '%s' -ErrorAction Stop))); Remove-Item -Force -ErrorAction SilentlyContinue '%s'",
+			path, path, tmp, tmp),
 		fmt.Sprintf("(Get-Item '%s' -ErrorAction Stop).Length -eq %d", path, len(script)))); err != nil {
 		return err
 	}
@@ -307,6 +347,22 @@ func (s *StagedScript) Remove() {
 		return
 	}
 	s.written = false
+
+	// A script that went on through the filesystem comes off the same way. The
+	// command below starts a powershell.exe on the target, which is the most
+	// expensive single step in staging, to delete a file the connection can
+	// unlink in one request.
+	if s.viaFS {
+		if fs := s.conn.FileSystem(); fs != nil {
+			err := fs.Remove(s.Path)
+			if err == nil {
+				return
+			}
+			log.Debug().Err(err).Str("path", s.Path).
+				Msg("powershell> could not unlink the staged script, falling back to a command")
+		}
+	}
+
 	err := runOne(s.conn, psCommand(
 		fmt.Sprintf("Remove-Item -Force -ErrorAction SilentlyContinue '%s'", s.Path),
 		fmt.Sprintf("-not (Test-Path '%s')", s.Path)))

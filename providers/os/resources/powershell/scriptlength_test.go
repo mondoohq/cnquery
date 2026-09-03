@@ -61,11 +61,12 @@ var knownOverCap = map[string]string{
 // passed to powershell.Stage somewhere in the tree. The last one is the point:
 // it makes the exemption a statement about code rather than a note.
 var stagedScripts = map[string]string{
-	// 13,849 characters, 37,078 encoded — over both ceilings and not
-	// compactable: the shared prelude alone (install guard, section lists,
-	// ConvertTo-PlainElement, Get-SectionMap) is 7,060 characters, so splitting
-	// it into round trips leaves every one of them over the WinRM cap. It is
-	// staged by providers/os/resources/iis.go and run with -File.
+	// 18,545 characters, 49,554 encoded — over both ceilings and not
+	// compactable: the prelude every scope needs (install guard, section lists
+	// and helpers, everything above Get-ScopeConfiguration) is 11,553 characters
+	// on its own, so splitting the script into round trips leaves every one of
+	// them over the WinRM cap. It is staged by providers/os/resources/iis.go and
+	// run with -File.
 	"providers/os/resources/windows/iis.go:IIS_CONFIGURATION": "staged as a file by the iis resource and run with -File",
 }
 
