@@ -31,12 +31,6 @@ import (
 // being absent — an empty answer rather than an error — which is how these
 // shipped unnoticed.
 var knownOverCap = map[string]string{
-	// Sent to the target with powershell.Encode over the same path as
-	// SCHEDULED_TASKS, so this is broken on Windows targets today. Needs a
-	// Windows host to verify any rewrite: it walks the ProfileList registry
-	// hive and the IdentityStore cache.
-	"providers/os/resources/users/ps1getlocalusers.go:getLocalUsersScript": "tracked separately; needs a Windows host to verify a rewrite",
-
 	// Runs on the *scanner* host, not a remote target, and only as a fallback
 	// when the Exchange admin REST endpoint is unavailable. On a Linux or macOS
 	// scanner the shell is `sh -c`, where ARG_MAX is megabytes and the cap does
@@ -68,6 +62,13 @@ var stagedScripts = map[string]string{
 	// them over the WinRM cap. It is staged by providers/os/resources/iis.go and
 	// run with -File.
 	"providers/os/resources/windows/iis.go:IIS_CONFIGURATION": "staged as a file by the iis resource and run with -File",
+
+	// 5,294 characters, 14,266 encoded. It walks the ProfileList registry hive
+	// and the IdentityStore cache, so it is not meaningfully compactable, and
+	// splitting it into round trips would still leave the union logic over the
+	// cap. Staged by WindowsUserManager.List and run with -File. Verified
+	// against a live Windows 11 25H2 host over WinRM.
+	"providers/os/resources/users/ps1getlocalusers.go:getLocalUsersScript": "staged as a file by the windows user manager and run with -File",
 }
 
 // psMarkers identify a string literal as a PowerShell script.

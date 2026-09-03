@@ -207,7 +207,22 @@ func (s *WindowsUserManager) User(id string) (*User, error) {
 }
 
 func (s *WindowsUserManager) List() ([]*User, error) {
-	c, err := s.conn.RunCommand(powershell.Encode(getLocalUsersScript))
+	// getLocalUsersScript is 5,294 characters, about 14,000 once Encode has
+	// widened it to UTF-16 and base64 encoded it, well past MaxCommandLength.
+	// Over WinRM the command is routed through cmd.exe and rejected before
+	// PowerShell ever runs, so the caller got a non-zero exit with empty stdout
+	// and users.list failed with "unexpected end of JSON input". Staging writes
+	// the script to the target and runs it with -File, so the command line
+	// carries a path rather than the whole program; see powershell.Stage.
+	staged, err := powershell.Stage(s.conn, "users", getLocalUsersScript)
+	if err != nil {
+		return nil, err
+	}
+	// On the error path too: a scan that dies between the write and the run
+	// would otherwise leave the file behind.
+	defer staged.Remove()
+
+	c, err := s.conn.RunCommand(staged.Command)
 	if err != nil {
 		return nil, err
 	}
