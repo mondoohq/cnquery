@@ -500,3 +500,98 @@ func TestPomXmlManagedScopeUsesTheFullKey(t *testing.T) {
 		"a managed test scope on the test-jar must keep it out of the production set")
 	assert.Equal(t, "2.0", packagesByName(p.Transitive())["g:a"].Version)
 }
+
+// TestOptionalDependenciesAreMarked — an optional dependency is not inherited
+// by whoever depends on the declaring package, so anything walking a dependency
+// graph has to know. A walk that does not is not slightly over-broad but wrong
+// by a factor: log4j-core alone declares 16 optional dependencies, and a
+// prototype closure walk that ignored the flag reached 28 packages on a project
+// whose real closure is 16.
+func TestOptionalDependenciesAreMarked(t *testing.T) {
+	bom, err := (&Extractor{}).Parse(strings.NewReader(`<project>
+  <groupId>com.example</groupId>
+  <artifactId>demo</artifactId>
+  <version>1.0.0</version>
+  <properties>
+    <opt.flag>true</opt.flag>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>2.14.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.12.2</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>com.lmax</groupId>
+      <artifactId>disruptor</artifactId>
+      <version>3.4.2</version>
+      <optional>${opt.flag}</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.zeromq</groupId>
+      <artifactId>jeromq</artifactId>
+      <version>0.4.3</version>
+      <optional>false</optional>
+    </dependency>
+  </dependencies>
+</project>`), "pom.xml")
+	require.NoError(t, err)
+	deps := bom.Transitive()
+
+	require.NotNil(t, deps.Find("com.fasterxml.jackson.core:jackson-databind"))
+	assert.True(t, deps.Find("com.fasterxml.jackson.core:jackson-databind").Optional)
+	// Read through the same property resolution as every other field.
+	assert.True(t, deps.Find("com.lmax:disruptor").Optional, "${opt.flag} resolving to true is optional")
+
+	assert.False(t, deps.Find("org.apache.logging.log4j:log4j-api").Optional, "no <optional> element")
+	assert.False(t, deps.Find("org.zeromq:jeromq").Optional, "<optional>false</optional>")
+}
+
+// TestUnresolvedOptionalIsNotOptional — a flag that stays a literal
+// "${some.flag}" says nothing, and reading it as true would drop a real
+// dependency out of a dependent's closure. The safe reading of "unknown" here
+// is "inherited", which is what Maven does for a dependency with no <optional>.
+func TestUnresolvedOptionalIsNotOptional(t *testing.T) {
+	bom, err := (&Extractor{}).Parse(strings.NewReader(`<project>
+  <groupId>com.example</groupId><artifactId>demo</artifactId><version>1.0.0</version>
+  <dependencies>
+    <dependency>
+      <groupId>com.example</groupId><artifactId>thing</artifactId><version>1.0</version>
+      <optional>${nowhere.defined}</optional>
+    </dependency>
+  </dependencies>
+</project>`), "pom.xml")
+	require.NoError(t, err)
+
+	p := bom.Transitive().Find("com.example:thing")
+	require.NotNil(t, p)
+	assert.False(t, p.Optional, "an unresolved flag is not an assertion that the dependency is optional")
+}
+
+// TestOptionalIsIndependentOfScope pins the two axes apart. A production-scope
+// dependency can be optional — the declaring project ships it only if you ask
+// for the feature it enables — so neither field can be derived from the other.
+func TestOptionalIsIndependentOfScope(t *testing.T) {
+	bom, err := (&Extractor{}).Parse(strings.NewReader(`<project>
+  <groupId>com.example</groupId><artifactId>demo</artifactId><version>1.0.0</version>
+  <dependencies>
+    <dependency>
+      <groupId>com.example</groupId><artifactId>compile-optional</artifactId><version>1.0</version>
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
+</project>`), "pom.xml")
+	require.NoError(t, err)
+
+	// It is compile scope, so it stays in Direct() — the existing production
+	// filter is unchanged by this field.
+	p := bom.Direct().Find("com.example:compile-optional")
+	require.NotNil(t, p, "an optional compile dependency is still declared by this project")
+	assert.True(t, p.Optional)
+}
