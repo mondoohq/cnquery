@@ -1109,12 +1109,12 @@ import core
 option provider = "go.mondoo.com/mql/providers/demo"
 option go_package = "go.mondoo.com/mql/providers/demo/resources"
 
-extend core.assset {
+extend core.doesNotExist {
   extra string
 }
 `,
 		"providers/core/resources/core.lr": coreFixture,
 	}, "providers/demo/resources/demo.lr")
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), `has no resource "assset"`)
+	assert.Contains(t, err.Error(), `has no resource "doesNotExist"`)
 }

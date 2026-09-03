@@ -281,7 +281,7 @@ of `extend asset`. The qualifier is checked against the peer's resource list and
 then stripped, so the result is byte-identical to the bare form. The bare form
 stays legal and unchecked -- it is what every extension in this repo and in the
 enterprise providers uses -- but it is also unverifiable: `extend asset` with a
-typo silently defines a new resource, where `extend core.assset` fails the build.
+typo silently defines a new resource, where the qualified form fails the build.
 Naming the peer is what makes the check possible.
 
 **The import is the declaration for both kinds of use.** A peer is reached two
