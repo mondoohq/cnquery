@@ -132,13 +132,14 @@ func TestStageWritesThroughAWritableFilesystem(t *testing.T) {
 	assert.Equal(t, script, string(body))
 	assert.Empty(t, conn.commands, "the filesystem path must not shell out")
 
+	// The script went on through the filesystem, so the cleanup goes back through
+	// it. Launching powershell.exe to delete a file the connection can unlink
+	// itself costs a whole process start on the target for nothing.
 	staged.Remove()
-	require.Len(t, conn.commands, 1)
-	assert.Contains(t, conn.commands[0], "Remove-Item")
-	assert.Contains(t, conn.commands[0], staged.Path)
-	// The removal is the command most likely to break unnoticed: it runs after
-	// the answer has already been produced, and its failure only logs at debug.
-	assertStagingCommandShape(t, conn.commands)
+	assert.Empty(t, conn.commands, "the filesystem path must not shell out to clean up")
+	left, err := afero.Exists(fs, staged.Path)
+	require.NoError(t, err)
+	assert.False(t, left, "the staged script was left on the target")
 }
 
 // winrm and `ssh --sudo`: the filesystem is there and refuses to write, so the
@@ -254,7 +255,7 @@ func TestStageWillNotWriteThroughAnExistingFile(t *testing.T) {
 	// no RunCommand fallback available, so a refused write is the whole result
 	conn := &fakeConn{
 		connType: shared.Type_SSH, platform: windowsPlatform(),
-		fs: existingFileFs{fs}, caps: shared.Capability_File,
+		fs: undeletableFs{fs}, caps: shared.Capability_File,
 	}
 
 	_, err := powershell.Stage(conn, "iis", script)
@@ -265,11 +266,24 @@ func TestStageWillNotWriteThroughAnExistingFile(t *testing.T) {
 	assert.Equal(t, "planted", string(body), "staging overwrote a file it did not create")
 }
 
-// existingFileFs keeps Remove from clearing the path, standing in for a file
-// the scanner is not permitted to delete.
-type existingFileFs struct{ afero.Fs }
+// undeletableFs stands in for a file the scanner is not permitted to delete:
+// a write may succeed, the removal never does.
+type undeletableFs struct{ afero.Fs }
 
-func (existingFileFs) Remove(string) error { return errors.New("permission denied") }
+func (undeletableFs) Remove(string) error { return errors.New("permission denied") }
+
+// countingFs records the calls staging makes on the filesystem. It is the only
+// way to observe a round trip that is *not* there: over sftp every Remove is a
+// request to the target, and on the common path there is nothing to delete.
+type countingFs struct {
+	afero.Fs
+	removes int
+}
+
+func (c *countingFs) Remove(name string) error {
+	c.removes++
+	return c.Fs.Remove(name)
+}
 
 // The chunked write is the path every read-only connection takes, so it needs
 // the same guarantee: create the file, do not adopt one.
@@ -307,5 +321,91 @@ func TestChunkedStagingCreatesItsOwnFiles(t *testing.T) {
 	// payload somewhere else
 	assert.Contains(t, first, "-band 1024")
 
+	assertStagingCommandShape(t, conn.commands)
+}
+
+// The staging path is free on every scan that cleaned up after itself, which is
+// every scan that was not interrupted. Deleting it first spends a round trip -
+// two, over sftp, where Remove tries the file and then the directory - to
+// delete nothing. Create first, and clear only when the create says something
+// is in the way.
+func TestStageDoesNotDeleteAPathThatIsFree(t *testing.T) {
+	fs := &countingFs{Fs: afero.NewMemMapFs()}
+	conn := &fakeConn{
+		connType: shared.Type_SSH, platform: windowsPlatform(),
+		fs: fs, caps: shared.Capability_RunCommand | shared.Capability_File,
+	}
+
+	script := "ConvertTo-Json @{ a = 1 }\n"
+	staged, err := powershell.Stage(conn, "iis", script)
+	require.NoError(t, err)
+	assert.Zero(t, fs.removes, "staging deleted a file that was not there")
+
+	body, err := afero.ReadFile(fs, staged.Path)
+	require.NoError(t, err)
+	assert.Equal(t, script, string(body))
+}
+
+// A scan that died between the write and the run leaves its file behind. The
+// next one has to clear it rather than degrade to the chunked write, and what
+// it runs has to be its own script and not the leftover.
+func TestStageClearsALeftoverFromAnInterruptedScan(t *testing.T) {
+	fs := &countingFs{Fs: afero.NewMemMapFs()}
+	script := "ConvertTo-Json @{ a = 1 }\n"
+	path := powershell.StagedWindowsPath("iis", script)
+	require.NoError(t, afero.WriteFile(fs, path, []byte("leftover"), 0o600))
+
+	conn := &fakeConn{
+		connType: shared.Type_SSH, platform: windowsPlatform(),
+		fs: fs, caps: shared.Capability_RunCommand | shared.Capability_File,
+	}
+	staged, err := powershell.Stage(conn, "iis", script)
+	require.NoError(t, err)
+	assert.Equal(t, 1, fs.removes, "the leftover has to be cleared exactly once")
+	assert.Empty(t, conn.commands,
+		"clearing a leftover must not cost the chunked write's round trips")
+
+	body, err := afero.ReadFile(fs, staged.Path)
+	require.NoError(t, err)
+	assert.Equal(t, script, string(body))
+}
+
+// The chunked path has no filesystem to remove through, so its cleanup is still
+// a command - and it is the command most likely to break unnoticed, since it
+// runs after the answer has been produced and only logs at debug.
+func TestChunkedStagingRemovesOverTheCommandPath(t *testing.T) {
+	conn := &fakeConn{
+		connType: shared.Type_Winrm, platform: windowsPlatform(),
+		fs:   readOnlyFs{afero.NewMemMapFs()},
+		caps: shared.Capability_RunCommand | shared.Capability_File,
+	}
+	staged, err := powershell.Stage(conn, "iis",
+		"ConvertTo-Json @{ a = 1 }\n"+strings.Repeat("#x\n", 50))
+	require.NoError(t, err)
+	written := len(conn.commands)
+
+	staged.Remove()
+	require.Len(t, conn.commands, written+1, "the chunked path still has to remove by command")
+	assert.Contains(t, conn.commands[written], "Remove-Item")
+	assert.Contains(t, conn.commands[written], staged.Path)
+	assertStagingCommandShape(t, conn.commands)
+}
+
+// A filesystem that took the write and then refuses the delete must not leave
+// the script on the target: the command path is still there to fall back on.
+func TestFilesystemRemovalFallsBackToTheCommand(t *testing.T) {
+	conn := &fakeConn{
+		connType: shared.Type_SSH, platform: windowsPlatform(),
+		fs:   undeletableFs{afero.NewMemMapFs()},
+		caps: shared.Capability_RunCommand | shared.Capability_File,
+	}
+	staged, err := powershell.Stage(conn, "iis", "ConvertTo-Json @{ a = 1 }\n")
+	require.NoError(t, err)
+	require.Empty(t, conn.commands, "the write itself goes over the filesystem")
+
+	staged.Remove()
+	require.Len(t, conn.commands, 1, "a refused unlink has to fall back to the command")
+	assert.Contains(t, conn.commands[0], "Remove-Item")
+	assert.Contains(t, conn.commands[0], staged.Path)
 	assertStagingCommandShape(t, conn.commands)
 }
