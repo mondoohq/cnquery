@@ -391,6 +391,16 @@ func TestValidateDeclaredPeers(t *testing.T) {
 	assert.NoError(t, validateDeclaredPeers(caller, peer("13.3.0")))
 	assert.NoError(t, validateDeclaredPeers(caller, peer("13.0.0")))
 
+	// An unstamped build reports its line with `rolling` as build metadata
+	// (mql.GetVersion), which orders equal to the bare release. It used to be
+	// spelled `-rolling`, which orders *behind* the release, so every developer
+	// running from source hit "requires core >= 13.0.0, but v13.0.0-rolling is
+	// installed" for a build of the very tree that declares the floor.
+	assert.NoError(t, validateDeclaredPeers(caller, peer("v13.0.0+rolling")))
+	assert.NoError(t, validateDeclaredPeers(caller, peer("v13.4.0+rolling")))
+	// still an older line, marker or not
+	assert.Error(t, validateDeclaredPeers(caller, peer("v12.9.9+rolling")))
+
 	// not installed: not reported here, it fails later when something needs it
 	assert.NoError(t, validateDeclaredPeers(caller, Providers{}))
 	// unknown version is not evidence of a mismatch

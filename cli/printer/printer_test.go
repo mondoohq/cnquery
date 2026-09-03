@@ -88,7 +88,7 @@ func TestPrinter(t *testing.T) {
 			"if ( mondoo.version != null ) { mondoo.build }",
 			"", // ignore
 			[]string{
-				"mondoo.version: \"v13.0.0-rolling\"",
+				"mondoo.version: \"v14.0.0+rolling\"",
 				"if: {\n" +
 					"  mondoo.build: \"development\"\n" +
 					"}",
@@ -133,14 +133,14 @@ func TestPrinter(t *testing.T) {
 			"mondoo { version }",
 			"-> block 1\n   entrypoints: [<1,2>]\n   1: mondoo \n   2: {} bind: <1,1> type:block (=> <2,0>)\n-> block 2\n   entrypoints: [<2,2>]\n   1: context\n   2: version bind: <2,1> type:string\n",
 			[]string{
-				"mondoo: {\n  version: \"v13.0.0-rolling\"\n}",
+				"mondoo: {\n  version: \"v14.0.0+rolling\"\n}",
 			},
 		},
 		{
 			"mondoo { _.version }",
 			"-> block 1\n   entrypoints: [<1,2>]\n   1: mondoo \n   2: {} bind: <1,1> type:block (=> <2,0>)\n-> block 2\n   entrypoints: [<2,2>]\n   1: context\n   2: version bind: <2,1> type:string\n",
 			[]string{
-				"mondoo: {\n  version: \"v13.0.0-rolling\"\n}",
+				"mondoo: {\n  version: \"v14.0.0+rolling\"\n}",
 			},
 		},
 		{
@@ -159,7 +159,7 @@ func TestPrinter(t *testing.T) {
 			"mondoo",
 			"", // ignore
 			[]string{
-				"mondoo: version=\"v13.0.0-rolling\"",
+				"mondoo: version=\"v14.0.0+rolling\"",
 			},
 		},
 		{
@@ -234,7 +234,7 @@ func TestPrinter_Assessment(t *testing.T) {
 				"  [failed] mondoo.build == 1",
 				"    expected: == 1",
 				"    actual:   \"development\"",
-				"  [ok] value: \"v13.0.0-rolling\"",
+				"  [ok] value: \"v14.0.0+rolling\"",
 				"",
 			}, "\n"),
 		},
@@ -273,13 +273,13 @@ func TestPrinter_Assessment(t *testing.T) {
 			}, "\n"),
 		},
 		{
-			"mondoo.build == 1;mondoo.version =='v13.0.0-rolling';",
+			"mondoo.build == 1;mondoo.version =='v14.0.0+rolling';",
 			strings.Join([]string{
-				"[failed] mondoo.build == 1;mondoo.version =='v13.0.0-rolling';",
+				"[failed] mondoo.build == 1;mondoo.version =='v14.0.0+rolling';",
 				"  [failed] mondoo.build == 1",
 				"    expected: == 1",
 				"    actual:   \"development\"",
-				"  [ok] value: \"v13.0.0-rolling\"",
+				"  [ok] value: \"v14.0.0+rolling\"",
 				"",
 			}, "\n"),
 		},
@@ -582,7 +582,7 @@ func TestPrinter_Buggy(t *testing.T) {
 			"mondoo",
 			"", // ignore
 			[]string{
-				"mondoo: version=\"v13.0.0-rolling\"",
+				"mondoo: version=\"v14.0.0+rolling\"",
 			},
 		},
 	})

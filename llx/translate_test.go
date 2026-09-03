@@ -139,6 +139,10 @@ func TestDowngradePatchSkippedWhenReaderIsCurrent(t *testing.T) {
 	}{
 		{"reader is newer", map[string]string{osProviderID: "99.0.1"}},
 		{"reader is exactly at the change", map[string]string{osProviderID: "99.0.0"}},
+		// A source build of the line that introduced the field has the field.
+		// It satisfies a floor of 99.0.0, so it must not also be told it is
+		// below 99.0.0 and handed the downgrade path.
+		{"reader is a source build of that version", map[string]string{osProviderID: "v99.0.0+rolling"}},
 		// Not knowing a version is not evidence a translation applies. Guessing
 		// would rewrite code that was going to run correctly.
 		{"reader version unknown", map[string]string{}},
