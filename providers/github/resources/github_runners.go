@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v90/github"
+	"github.com/google/go-github/v91/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -17,8 +17,8 @@ import (
 	"go.mondoo.com/mql/types"
 )
 
-// ghRunnerExt mirrors the Runner JSON returned by GitHub plus fields that
-// go-github v85 doesn't expose on its Runner struct (ephemeral, architecture).
+// ghRunnerExt mirrors the Runner JSON returned by GitHub plus architecture,
+// which go-github does not expose on its Runner struct.
 type ghRunnerExt struct {
 	ID           *int64                 `json:"id,omitempty"`
 	Name         *string                `json:"name,omitempty"`
@@ -44,7 +44,7 @@ type ghRunnersListResp struct {
 }
 
 // listRunnersRaw paginates through a self-hosted runners endpoint (org or repo)
-// using the raw API so we can read fields go-github v85 doesn't expose.
+// using the raw API so we can read architecture, which go-github does not expose.
 func listRunnersRaw(ctx context.Context, client *github.Client, basePath string) ([]*ghRunnerExt, error) {
 	var all []*ghRunnerExt
 	page := 1
