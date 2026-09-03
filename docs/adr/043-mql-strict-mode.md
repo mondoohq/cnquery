@@ -283,26 +283,41 @@ Three consequences follow, and each is load-bearing:
 `CodeBundle` may carry an informational `strict` bit for reporters and
 decompilation, excluded from all checksums. The semantic truth is per-chunk.
 
-### 5. Old executors are the dangerous direction
+### 5. Old executors are the permissive direction
 
 An executor built before this field ignores it and runs everything leniently. A
-strict bundle then returns null exactly where it was supposed to error — a silent
+strict bundle then returns null exactly where it was supposed to error — a
 downgrade **in the permissive direction**, which can turn a strict check green on
-an old node. Everywhere else in this design a mismatch should fail soft; here it
-must not.
+an old node.
 
-`?` is safe on this axis, which is the point of having waited: any client that
-understands `[]?` predates the strict rollout, so optional-marked content already
-runs correctly on the installed base. `REQUIRED` is the new information, and it is
-the direction that fails silently.
+Two things bound that risk, and together they are why strict content can ship
+without an engine-side gate.
 
-`CodeBundle.min_mondoo_version` exists on the wire (`llx/llx.proto:117`) but
-**nothing in this repository sets or reads it** — it is currently a cnspec/upstream
-concern. Strict compilation is the first thing in mql that genuinely needs it. The
-gate hangs off [ADR 040](040-cross-version-type-migration.md)'s min-MQL-version
-axis: a bundle with any `NULLABILITY_REQUIRED` chunk declares a v14 floor, and an
-executor below it refuses the bundle rather than running it leniently. Shipping
-strict mode without that check is not acceptable.
+**The syntax is already understood across the supported window.** `?` has parsed
+and compiled since [#6633][pr6633] in v13, and MQL support is retired every two
+majors, so the oldest engine that can receive content is v13. Optional-marked
+content is accepted everywhere in that window — it compiles, it runs, and it
+returns the same values. Only the *enforcement* is new, and enforcement is what
+v14 adds.
+
+**What an old executor loses is verification, not correctness.** A v13 node runs a
+strict bundle non-strict: every result it produces is a result it would have
+produced anyway. Nothing breaks, nothing is misreported as a value; the check
+simply verifies less than the policy claims. That is a reason to know which nodes
+ran it, not a reason for the engine to refuse the bundle.
+
+So the minimum version is **declared, not enforced by the engine**. A bundle
+containing `NULLABILITY_REQUIRED` chunks records a v14 floor in
+`CodeBundle.min_mondoo_version` (`llx/llx.proto:138`), stamped from the language
+feature table in [ADR 040](040-cross-version-type-migration.md)'s min-MQL-version
+axis. mql itself does not branch on it — see
+[the language-versioning draft](draft-mql-language-versioning.md) for why a
+version floor is the wrong instrument for a capability question.
+
+**The consumer is cnspec.** A policy that declares strict mode has to carry a
+corresponding minimum version requirement, so the platform does not hand it to a
+node that would run it non-strict. That is a policy-authoring concern, where the
+declaration already lives (§6), not an executor concern.
 
 ### 6. The switch: per-content opt-in, config default underneath
 
@@ -426,10 +441,14 @@ that recompiles a query has to keep going through `Mquery.Compile`.
 
 Not yet done:
 
-9. **The min-version gate** (§5). Nothing sets or reads
-   `CodeBundle.min_mondoo_version` yet, so a strict bundle on an old executor
-   still degrades silently in the permissive direction. This must land before
-   strict content ships anywhere it could reach an older node.
+9. **cnspec declares the minimum version for a strict policy** (§5). mql stamps
+   the v14 floor into `CodeBundle.min_mondoo_version` (`mqlc/provenance.go`, from
+   the feature table in `mqlc/engine_version.go`) and deliberately does not act
+   on it. What is missing is the other end: a policy that declares strict mode
+   has to carry a matching minimum version requirement, so the platform does not
+   hand it to a v13 node that would run it non-strict. This does not block
+   shipping strict content — a v13 node runs it, and runs it leniently — it
+   decides whether we can tell that apart from a node that verified it.
 10. **Asset filters follow the bundle default, not the policy.** Filters are
     deduplicated across policies by code id, so compiling one two ways would
     split matching rather than just change the mode. They are predicates over
