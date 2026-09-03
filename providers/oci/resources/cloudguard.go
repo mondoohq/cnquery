@@ -567,16 +567,14 @@ func (o *mqlOciCloudGuard) detectorRecipes() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlRecipe := mqlInstance.(*mqlOciCloudGuardDetectorRecipe)
-		mqlRecipe.cacheCompartmentID = stringValue(recipe.CompartmentId)
-		res = append(res, mqlRecipe)
+		res = append(res, mqlInstance)
 	}
 
 	return res, nil
 }
 
 type mqlOciCloudGuardDetectorRecipeInternal struct {
-	cacheCompartmentID string
+	ociCompartmentRef
 }
 
 func (o *mqlOciCloudGuard) securityZones() ([]any, error) {

@@ -250,3 +250,92 @@ func TestOciCompartmentLookup(t *testing.T) {
 	assert.Nil(t, ociCompartmentLookup(nil))
 	assert.Nil(t, ociCompartmentLookup(&plugin.Runtime{}))
 }
+
+// TestHelperTargetsEmbedCompartmentRef pins the invariant that
+// createOciResourceInCompartment depends on: every resource it creates must
+// embed ociCompartmentRef so it satisfies ociCompartmentSetter.
+//
+// A resource that declares its own cacheCompartmentID field instead of
+// embedding compiles fine and reads fine, but the helper rejects it at
+// runtime and the WHOLE list fails with "<name> does not embed
+// ociCompartmentRef" - the caller gets an error string where the data should
+// be. oci.cloudGuard.detectorRecipe shipped that way and returned nothing at
+// all until it was fixed.
+//
+// These are compile-time assertions, so adding a resource to the helper
+// without the embed breaks the build here rather than in a customer's scan.
+func TestHelperTargetsEmbedCompartmentRef(t *testing.T) {
+	var _ ociCompartmentSetter = (*mqlOciApigatewayCertificate)(nil)            // oci.apigateway.certificate
+	var _ ociCompartmentSetter = (*mqlOciApigatewayDeployment)(nil)             // oci.apigateway.deployment
+	var _ ociCompartmentSetter = (*mqlOciApigatewayGateway)(nil)                // oci.apigateway.gateway
+	var _ ociCompartmentSetter = (*mqlOciBastionInstance)(nil)                  // oci.bastion.instance
+	var _ ociCompartmentSetter = (*mqlOciCertificatesCaBundle)(nil)             // oci.certificates.caBundle
+	var _ ociCompartmentSetter = (*mqlOciCertificatesCertificate)(nil)          // oci.certificates.certificate
+	var _ ociCompartmentSetter = (*mqlOciCertificatesCertificateAuthority)(nil) // oci.certificates.certificateAuthority
+	var _ ociCompartmentSetter = (*mqlOciCloudGuardDetectorRecipe)(nil)         // oci.cloudGuard.detectorRecipe
+	var _ ociCompartmentSetter = (*mqlOciCloudGuardSecurityPolicy)(nil)         // oci.cloudGuard.securityPolicy
+	var _ ociCompartmentSetter = (*mqlOciCloudGuardSecurityZone)(nil)           // oci.cloudGuard.securityZone
+	var _ ociCompartmentSetter = (*mqlOciCloudGuardSecurityZoneRecipe)(nil)     // oci.cloudGuard.securityZoneRecipe
+	var _ ociCompartmentSetter = (*mqlOciCloudGuardTarget)(nil)                 // oci.cloudGuard.target
+	var _ ociCompartmentSetter = (*mqlOciComputeBlockVolume)(nil)               // oci.compute.blockVolume
+	var _ ociCompartmentSetter = (*mqlOciComputeBootVolume)(nil)                // oci.compute.bootVolume
+	var _ ociCompartmentSetter = (*mqlOciComputeVnic)(nil)                      // oci.compute.vnic
+	var _ ociCompartmentSetter = (*mqlOciContainerInstancesContainer)(nil)      // oci.containerInstances.container
+	var _ ociCompartmentSetter = (*mqlOciContainerInstancesInstance)(nil)       // oci.containerInstances.instance
+	var _ ociCompartmentSetter = (*mqlOciDataSafeConfiguration)(nil)            // oci.dataSafe.configuration
+	var _ ociCompartmentSetter = (*mqlOciDataSafeMaskingPolicy)(nil)            // oci.dataSafe.maskingPolicy
+	var _ ociCompartmentSetter = (*mqlOciDataSafeSecurityAssessment)(nil)       // oci.dataSafe.securityAssessment
+	var _ ociCompartmentSetter = (*mqlOciDataSafeSensitiveDataModel)(nil)       // oci.dataSafe.sensitiveDataModel
+	var _ ociCompartmentSetter = (*mqlOciDataSafeSensitiveType)(nil)            // oci.dataSafe.sensitiveType
+	var _ ociCompartmentSetter = (*mqlOciDataSafeTargetDatabase)(nil)           // oci.dataSafe.targetDatabase
+	var _ ociCompartmentSetter = (*mqlOciDataSafeUserAssessment)(nil)           // oci.dataSafe.userAssessment
+	var _ ociCompartmentSetter = (*mqlOciDatabaseAutonomousDatabase)(nil)       // oci.database.autonomousDatabase
+	var _ ociCompartmentSetter = (*mqlOciDatabaseAutonomousDatabaseBackup)(nil) // oci.database.autonomousDatabaseBackup
+	var _ ociCompartmentSetter = (*mqlOciDatabaseBackup)(nil)                   // oci.database.backup
+	var _ ociCompartmentSetter = (*mqlOciDatabaseDbSystem)(nil)                 // oci.database.dbSystem
+	var _ ociCompartmentSetter = (*mqlOciEventsRule)(nil)                       // oci.events.rule
+	var _ ociCompartmentSetter = (*mqlOciFileStorageFileSystem)(nil)            // oci.fileStorage.fileSystem
+	var _ ociCompartmentSetter = (*mqlOciFunctionsApplication)(nil)             // oci.functions.application
+	var _ ociCompartmentSetter = (*mqlOciFunctionsFunction)(nil)                // oci.functions.function
+	var _ ociCompartmentSetter = (*mqlOciIdentityDynamicGroup)(nil)             // oci.identity.dynamicGroup
+	var _ ociCompartmentSetter = (*mqlOciIdentityGroup)(nil)                    // oci.identity.group
+	var _ ociCompartmentSetter = (*mqlOciIdentityIdentityProvider)(nil)         // oci.identity.identityProvider
+	var _ ociCompartmentSetter = (*mqlOciIdentityNetworkSource)(nil)            // oci.identity.networkSource
+	var _ ociCompartmentSetter = (*mqlOciIdentityOauth2ClientCredential)(nil)   // oci.identity.oauth2ClientCredential
+	var _ ociCompartmentSetter = (*mqlOciIdentityPolicy)(nil)                   // oci.identity.policy
+	var _ ociCompartmentSetter = (*mqlOciIdentityUser)(nil)                     // oci.identity.user
+	var _ ociCompartmentSetter = (*mqlOciKmsKey)(nil)                           // oci.kms.key
+	var _ ociCompartmentSetter = (*mqlOciKmsKeyVersion)(nil)                    // oci.kms.keyVersion
+	var _ ociCompartmentSetter = (*mqlOciKmsVault)(nil)                         // oci.kms.vault
+	var _ ociCompartmentSetter = (*mqlOciLoadBalancerLoadBalancer)(nil)         // oci.loadBalancer.loadBalancer
+	var _ ociCompartmentSetter = (*mqlOciLoggingLogGroup)(nil)                  // oci.logging.logGroup
+	var _ ociCompartmentSetter = (*mqlOciMonitoringAlarm)(nil)                  // oci.monitoring.alarm
+	var _ ociCompartmentSetter = (*mqlOciNetworkCpe)(nil)                       // oci.network.cpe
+	var _ ociCompartmentSetter = (*mqlOciNetworkCrossConnect)(nil)              // oci.network.crossConnect
+	var _ ociCompartmentSetter = (*mqlOciNetworkDrg)(nil)                       // oci.network.drg
+	var _ ociCompartmentSetter = (*mqlOciNetworkDrgAttachment)(nil)             // oci.network.drgAttachment
+	var _ ociCompartmentSetter = (*mqlOciNetworkInternetGateway)(nil)           // oci.network.internetGateway
+	var _ ociCompartmentSetter = (*mqlOciNetworkIpsecConnection)(nil)           // oci.network.ipsecConnection
+	var _ ociCompartmentSetter = (*mqlOciNetworkIpsecConnectionTunnel)(nil)     // oci.network.ipsecConnectionTunnel
+	var _ ociCompartmentSetter = (*mqlOciNetworkLocalPeeringGateway)(nil)       // oci.network.localPeeringGateway
+	var _ ociCompartmentSetter = (*mqlOciNetworkNatGateway)(nil)                // oci.network.natGateway
+	var _ ociCompartmentSetter = (*mqlOciNetworkNetworkSecurityGroup)(nil)      // oci.network.networkSecurityGroup
+	var _ ociCompartmentSetter = (*mqlOciNetworkPublicIp)(nil)                  // oci.network.publicIp
+	var _ ociCompartmentSetter = (*mqlOciNetworkRemotePeeringConnection)(nil)   // oci.network.remotePeeringConnection
+	var _ ociCompartmentSetter = (*mqlOciNetworkRouteTable)(nil)                // oci.network.routeTable
+	var _ ociCompartmentSetter = (*mqlOciNetworkSecurityList)(nil)              // oci.network.securityList
+	var _ ociCompartmentSetter = (*mqlOciNetworkServiceGateway)(nil)            // oci.network.serviceGateway
+	var _ ociCompartmentSetter = (*mqlOciNetworkSubnet)(nil)                    // oci.network.subnet
+	var _ ociCompartmentSetter = (*mqlOciNetworkVcn)(nil)                       // oci.network.vcn
+	var _ ociCompartmentSetter = (*mqlOciNetworkVirtualCircuit)(nil)            // oci.network.virtualCircuit
+	var _ ociCompartmentSetter = (*mqlOciNetworkFirewallFirewall)(nil)          // oci.networkFirewall.firewall
+	var _ ociCompartmentSetter = (*mqlOciNetworkFirewallPolicy)(nil)            // oci.networkFirewall.policy
+	var _ ociCompartmentSetter = (*mqlOciObjectStorageBucket)(nil)              // oci.objectStorage.bucket
+	var _ ociCompartmentSetter = (*mqlOciOkeCluster)(nil)                       // oci.oke.cluster
+	var _ ociCompartmentSetter = (*mqlOciOkeNodePool)(nil)                      // oci.oke.nodePool
+	var _ ociCompartmentSetter = (*mqlOciOnsTopic)(nil)                         // oci.ons.topic
+	var _ ociCompartmentSetter = (*mqlOciRedisCluster)(nil)                     // oci.redis.cluster
+	var _ ociCompartmentSetter = (*mqlOciVaultSecret)(nil)                      // oci.vault.secret
+	var _ ociCompartmentSetter = (*mqlOciWafFirewall)(nil)                      // oci.waf.firewall
+	var _ ociCompartmentSetter = (*mqlOciWafPolicy)(nil)                        // oci.waf.policy
+}
