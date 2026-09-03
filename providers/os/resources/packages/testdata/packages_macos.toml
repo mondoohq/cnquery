@@ -185,6 +185,78 @@ stdout = """<?xml version="1.0" encoding="UTF-8"?>
 				<key>version</key>
 				<string>1.0.16</string>
 			</dict>
+			<dict>
+				<key>_name</key>
+				<string>Docker</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>obtained_from</key>
+				<string>identified_developer</string>
+				<key>path</key>
+				<string>/Applications/Docker.app</string>
+				<key>version</key>
+				<string>4.89.0</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>Docker.app</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>obtained_from</key>
+				<string>identified_developer</string>
+				<key>path</key>
+				<string>/Applications/Docker.app.back</string>
+				<key>version</key>
+				<string>4.88.1</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>Docker Desktop</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>obtained_from</key>
+				<string>identified_developer</string>
+				<key>path</key>
+				<string>/Applications/Docker.app.back/Contents/MacOS/Docker Desktop.app</string>
+				<key>version</key>
+				<string>4.88.1</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>DockerHelper</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>obtained_from</key>
+				<string>identified_developer</string>
+				<key>path</key>
+				<string>/Applications/Docker.app.back/Contents/Library/LoginItems/DockerHelper.app</string>
+				<key>version</key>
+				<string>1.0.1</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>AirDrop</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>obtained_from</key>
+				<string>apple</string>
+				<key>path</key>
+				<string>/System/Library/CoreServices/Finder.app/Contents/Applications/AirDrop.app</string>
+				<key>version</key>
+				<string>26.4</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>Spotlight</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>obtained_from</key>
+				<string>apple</string>
+				<key>path</key>
+				<string>/System/Library/Services/Spotlight.service</string>
+				<key>version</key>
+				<string>3.0</string>
+			</dict>
 		</array>
 		<key>_parentDataType</key>
 		<string>SPSoftwareDataType</string>
