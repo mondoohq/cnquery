@@ -49,6 +49,10 @@ type pomProject struct {
 
 	// evidence is a list of file paths where the pom.xml was found.
 	evidence []string `json:"-"`
+	// closure is the resolved dependency tree, when a ParentResolver supplied
+	// the POMs to resolve it from. Nil means it was not resolved -- never that
+	// the project has no transitive dependencies (closure.go).
+	closure []*closureNode `json:"-"`
 }
 
 // pomProperties decodes <properties> as arbitrary child elements, which is what
@@ -269,6 +273,21 @@ type pomDependency struct {
 	// Matching without these picks whichever entry comes first.
 	Type       string `xml:"type"`
 	Classifier string `xml:"classifier"`
+	// Exclusions are the coordinates this dependency's own subtree must not
+	// contribute. Maven honours them for the whole subtree beneath the
+	// dependency, not just its immediate children, which is how a project drops
+	// a conflicting logging backend or an artifact it replaces. Read only when
+	// the closure is resolved (closure.go); the declared-only reading has no
+	// subtree for them to apply to.
+	Exclusions []pomExclusion `xml:"exclusions>exclusion"`
+}
+
+// pomExclusion is one <exclusion>. Maven keys it on groupId:artifactId only --
+// an exclusion names an artifact, never a version, because the point is to keep
+// it out whatever version the tree would otherwise pick.
+type pomExclusion struct {
+	GroupId    string `xml:"groupId"`
+	ArtifactId string `xml:"artifactId"`
 }
 
 // defaultDependencyType is the type Maven assumes when a dependency states

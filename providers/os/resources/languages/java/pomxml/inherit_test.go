@@ -49,6 +49,21 @@ func parseWith(t *testing.T, pom string, r ParentResolver) *pomProject {
 	return bom.(*pomProject)
 }
 
+// inheritOnly runs the parent/BOM resolution WITHOUT the closure walk, for the
+// tests that assert on which artifacts the resolver was asked for.
+//
+// The full Parse also reads each declared dependency's POM to resolve the tree
+// below it (closure.go), which is a second and entirely legitimate reason to
+// call the resolver. A test about what the parent chain fetches has to exclude
+// it, or it asserts on the sum of two mechanisms and fails for the wrong one.
+func inheritOnly(t *testing.T, pom string, r ParentResolver) *pomProject {
+	t.Helper()
+	p, err := parsePomXml(strings.NewReader(pom))
+	require.NoError(t, err)
+	p.inherit(r)
+	return p
+}
+
 // childPom is the shape this whole file is about: a dependency declared with no
 // <version> at all, which is the standard Spring Boot layout.
 const childPom = `<project>
@@ -443,7 +458,7 @@ func TestInheritMalformedImportKeepsItsManagedVersion(t *testing.T) {
 </project>`
 	r := &mapResolver{poms: map[string]string{}} // the bogus "BOM" resolves to nothing
 
-	got := parseWith(t, pom, r)
+	got := inheritOnly(t, pom, r)
 	assert.Equal(t, "2.4.240", versionOf(t, got, "com.h2database:h2"),
 		"an import entry without type=pom is not a BOM; its managed version must survive")
 	assert.Empty(t, r.calls, "a non-pom entry must not be fetched as a POM")

@@ -6,7 +6,6 @@ package pomxml
 import (
 	"encoding/xml"
 	"io"
-	"strings"
 
 	"golang.org/x/net/html/charset"
 
@@ -47,6 +46,12 @@ func (e *Extractor) Parse(r io.Reader, filename string) (languages.Bom, error) {
 	// against the property bag and management list, so what is inherited has to
 	// be in place first.
 	project.inherit(e.Parents)
+
+	// Then the tree below: with the parent chain merged, every declared
+	// dependency has the version its POM can be looked up by. A nil resolver
+	// leaves closure nil and Transitive() reports the declared list, exactly as
+	// before (closure.go).
+	project.closure = project.resolveClosure(e.Parents)
 
 	if filename != "" {
 		project.evidence = append(project.evidence, filename)
@@ -112,9 +117,21 @@ func (p *pomProject) Direct() languages.Packages {
 	return direct
 }
 
-// Transitive returns all declared dependencies (direct only — pom.xml does not
-// resolve transitives without downloading the full dependency tree).
+// Transitive returns every dependency the project carries.
+//
+// With a resolver supplied it is the RESOLVED TREE: the declared dependencies
+// and everything they in turn pull in, which for a real application is most of
+// what it ships (closure.go). Without one it is the declared list alone, because
+// a pom.xml states what the project asked for and the rest lives in the POMs of
+// the artifacts it asked for.
 func (p *pomProject) Transitive() languages.Packages {
+	if p.closure != nil {
+		all := make(languages.Packages, 0, len(p.closure))
+		for _, n := range p.closure {
+			all = append(all, n.pkg)
+		}
+		return all
+	}
 	var all languages.Packages
 	for _, dep := range p.Dependencies {
 		all = append(all, p.depToPackage(dep))
@@ -150,7 +167,7 @@ func (p *pomProject) depToPackage(dep pomDependency) *languages.Package {
 	// <optional>true</optional> is read through the same property resolution as
 	// every other field: a POM may state it as ${some.flag}, and an unresolved
 	// one is not optional.
-	optional := strings.EqualFold(strings.TrimSpace(p.resolve(dep.Optional)), "true")
+	optional := p.isOptional(dep)
 
 	return &languages.Package{
 		Name:         name,
