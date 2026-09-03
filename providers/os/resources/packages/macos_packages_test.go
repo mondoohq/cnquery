@@ -31,7 +31,7 @@ func TestMacOsXPackageParser(t *testing.T) {
 	}
 	m, err := packages.ParseMacOSPackages(mock, pf, c.Stdout)
 	assert.Nil(t, err)
-	assert.Equal(t, 6, len(m), "detected the right amount of packages")
+	assert.Equal(t, 8, len(m), "detected the right amount of packages")
 
 	assert.Equal(t, "Preview", m[0].Name, "pkg name detected")
 	assert.Equal(t, "10.0", m[0].Version, "pkg version detected")
@@ -75,6 +75,16 @@ func TestMacOsXPackageParser(t *testing.T) {
 	assert.Equal(t, "3.2.1", m[5].Version, "version reported by system_profiler")
 	assert.Equal(t, "pkg:macos/macos/Victory@3.2.1?arch=x86_64", m[5].PUrl)
 
+	// A backup copy of an application is enumerated by system_profiler at the
+	// version it held when it was set aside, and it is the only Docker entry
+	// that survives if the newer real install is filtered by mistake. Assert
+	// the installed version, not just the name: reporting 4.88.1 here is the
+	// customer-visible bug (findings pinned to a version that is not on the
+	// machine and that no upgrade can clear).
+	assert.Equal(t, "Docker", m[7].Name, "real application kept")
+	assert.Equal(t, "4.89.0", m[7].Version, "version of the installed bundle, not of the backup")
+	assert.Equal(t, []packages.FileRecord{{Path: "/Applications/Docker.app"}}, m[7].Files)
+
 	// system_profiler enumerates every path carrying a bundle-like extension,
 	// not just application bundles. Entries with no version and no
 	// Contents/Info.plist are not installed applications and are dropped
@@ -83,6 +93,18 @@ func TestMacOsXPackageParser(t *testing.T) {
 		"liquiddetectiond",     // bare .app directory holding a daemon
 		"https+++bsky",         // Firefox origin storage directory
 		"group.is.workflow.my", // app-group script container
+	} {
+		assert.NotContains(t, names(m), dropped, "non-application entry dropped")
+	}
+
+	// Paths that are not an installed application bundle are dropped whatever
+	// version they report, so a stale copy on disk cannot keep a fixed CVE open.
+	for _, dropped := range []string{
+		"Docker.app",     // /Applications/Docker.app.back, named by stripping .back
+		"Docker Desktop", // helper bundle inside the backup's Contents/
+		"DockerHelper",   // login item inside the backup's Contents/
+		"AirDrop",        // ships inside Finder.app, patched with Finder
+		"Spotlight",      // a .service bundle, not an application
 	} {
 		assert.NotContains(t, names(m), dropped, "non-application entry dropped")
 	}

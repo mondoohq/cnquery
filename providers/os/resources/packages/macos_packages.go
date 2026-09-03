@@ -66,22 +66,28 @@ func ParseMacOSPackages(conn shared.Connection, platform *inventory.Platform, in
 
 	pkgs := make([]Package, 0, len(data[0].Items))
 	for _, entry := range data[0].Items {
+		if !isApplicationBundlePath(entry.Path) {
+			log.Debug().
+				Str("name", entry.Name).
+				Str("path", entry.Path).
+				Msg("skipping entry that is not an installed application bundle")
+			continue
+		}
+
 		// system_profiler only surfaces CFBundleShortVersionString as the
 		// version. Some bundles (e.g. PWAs) ship a version only in
 		// CFBundleVersion, so fall back to the bundle's Info.plist when
 		// system_profiler reports no version.
 		version := entry.Version
 		if version == "" {
-			// system_profiler lists every path carrying a bundle-like
-			// extension, not only application bundles: Firefox origin storage
-			// (https+++example.app), app-group script containers
-			// (group.is.workflow.my.app) and daemon directories all show up. It
-			// names them after the basename minus its final dot component, so a
-			// reverse-DNS directory collapses into a fragment like "com" or
-			// "org.eclipse". An application bundle always carries a
-			// Contents/Info.plist, so its absence means this is not an installed
-			// application: drop the entry instead of reporting it with a
-			// versionless purl that can never match advisory data.
+			// Plenty of directories genuinely end in .app without being
+			// applications: Firefox origin storage (https+++example.app),
+			// app-group script containers (group.is.workflow.my.app) and bare
+			// daemon directories all pass the path check above. An application
+			// bundle always carries a Contents/Info.plist, so its absence means
+			// this is not an installed application: drop the entry instead of
+			// reporting it with a versionless purl that can never match
+			// advisory data.
 			//
 			// Entries that do report a version are never checked, because some
 			// real applications have no Contents/Info.plist. Wrapped iOS apps
@@ -153,6 +159,47 @@ func (mpm *MacOSPkgManager) Available() (map[string]PackageUpdate, error) {
 func (mpm *MacOSPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
 	// nothing extra to be done here since the list is already included in the package list
 	return nil, nil
+}
+
+// isApplicationBundlePath reports whether a path system_profiler listed is an
+// application someone installed, as opposed to a directory that merely looks
+// like a bundle or a helper that ships inside another application.
+//
+// system_profiler does not answer that question itself. It walks the
+// filesystem, reports anything bundle-shaped it meets, and names each entry
+// after the basename minus its final dot component. Two shapes come out of
+// that, and both produce inventory rows that no upgrade can ever clear.
+//
+// A renamed bundle such as /Applications/Docker.app.back is still enumerated,
+// under the name "Docker.app" and at whatever version was current when it was
+// set aside. Reported as installed software it pins findings to a version that
+// is not on the machine, and reinstalling the application does not touch the
+// backup directory. An application bundle always ends in .app, so the
+// extension of the final path segment settles it.
+//
+// Renaming also stops macOS treating the directory as one opaque bundle, so
+// every helper bundle nested inside it gets walked and reported separately.
+// Nested bundles are not separately installed in any case: an XPC service
+// under a framework's Contents/, Finder's Contents/Applications/AirDrop.app,
+// and an application's own login-item helper all ship with, and are patched
+// by, whatever contains them. A Contents directory anywhere above the bundle
+// marks that containment.
+func isApplicationBundlePath(path string) bool {
+	if path == "" {
+		return false
+	}
+
+	path = filepath.Clean(path)
+
+	// macOS filesystems are case-insensitive by default, so a bundle stored as
+	// .APP is a working application and must not be dropped.
+	if !strings.EqualFold(filepath.Ext(path), ".app") {
+		return false
+	}
+
+	// The surrounding separators make this a whole-segment match: a directory
+	// named "Contents" matches, one named "TableOfContents" does not.
+	return !strings.Contains(path, "/Contents/")
 }
 
 // bundleVersionFromInfoPlist recovers an app's version from its
