@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/v13/llx"
 )
 
 // socketfilterfw is Apple's command line front end for the application
