@@ -19,6 +19,10 @@ type ResourcesSchema interface {
 	// contributed to this schema, keyed by provider id. See
 	// Schema.provider_versions.
 	AllProviderVersions() map[string]string
+	// AllProviderRoots returns the root resource every provider that
+	// contributed to this schema declares for its assets, keyed by provider id.
+	// See Schema.provider_roots and ADR 031.
+	AllProviderRoots() map[string]string
 }
 
 // cloneField returns a copy of a field for insertion into an aggregate schema.
@@ -179,6 +183,16 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 		s.ProviderVersions[k] = v
 	}
 
+	for k, v := range other.AllProviderRoots() {
+		if v == "" {
+			continue
+		}
+		if s.ProviderRoots == nil {
+			s.ProviderRoots = make(map[string]string)
+		}
+		s.ProviderRoots[k] = v
+	}
+
 	return s
 }
 
@@ -252,6 +266,13 @@ func (s *Schema) AllDependencies() map[string]*ProviderInfo {
 
 func (s *Schema) AllProviderVersions() map[string]string {
 	return s.ProviderVersions
+}
+
+func (s *Schema) AllProviderRoots() map[string]string {
+	if s == nil {
+		return nil
+	}
+	return s.ProviderRoots
 }
 
 // ProviderKey reduces a provider id to the stable name people type on the

@@ -138,6 +138,7 @@ type Resource struct {
 	Defaults    string         ` ( '@' "defaults" '(' @String ')' )? `
 	Context     string         ` ( '@' "context" '(' @String ')' )? `
 	Maturity    string         ` ( '@' "maturity" '(' @String ')' )? `
+	IsGlobal    bool           ` ( '@' @"global" )? `
 	ListType    *SimplListType `[ '{' [ @@ ]`
 	Body        *ResourceDef   `@@ '}' ]`
 	title       string
@@ -572,6 +573,7 @@ func Parse(input string) (*LR, error) {
 	validationErrs = append(validationErrs, res.validateTypeParameters()...)
 	validationErrs = append(validationErrs, res.validateAliases()...)
 	validationErrs = append(validationErrs, res.validateEmbedAmbiguity()...)
+	validationErrs = append(validationErrs, res.validateRootMembers()...)
 
 	if len(validationErrs) > 0 {
 		return res, errors.Join(append([]error{err}, validationErrs...)...)
@@ -656,6 +658,77 @@ func (lr *LR) validateAliases() []error {
 		if declared[name] {
 			errs = append(errs, errors.New("alias "+name+" has the same name as a resource; "+
 				"the alias silently replaces it"))
+		}
+	}
+	return errs
+}
+
+// reservedIdentifiers are the names the compiler answers itself: language
+// constructs, and the type conversions. A query is a block on the asset root
+// (ADR 031 point 7), and a bound identifier is resolved before any of these, so
+// a root member carrying one of these names would shadow the language.
+//
+// This only constrains members of a root. Any other resource may still have a
+// `version` or `string` field - nothing binds it implicitly.
+var reservedIdentifiers = map[string]struct{}{
+	"props": {}, "if": {}, "else": {}, "expect": {}, "switch": {}, "return": {},
+	"_": {}, "bool": {}, "int": {}, "float": {}, "string": {}, "regex": {},
+	"dict": {}, "ip": {}, "semver": {}, "version": {},
+}
+
+// validateRootMembers checks the resource named by `option root`, which is what
+// every bare identifier resolves against once the root is the namespace.
+//
+// Two ways a member breaks that: it shadows the language (see
+// reservedIdentifiers), or it shadows a *different* global resource. The second
+// is what keeps the v14 and v15 namespace precedences agreeing - a member that
+// is an alias of the resource of the same name is the normal case and is fine;
+// one that means something else under a taken name would change meaning when the
+// precedence flips. See ADR 031 point 3.
+func (lr *LR) validateRootMembers() []error {
+	root, ok := lr.Options["root"]
+	if !ok || root == "" {
+		return nil
+	}
+
+	byID := map[string]*Resource{}
+	for _, r := range lr.Resources {
+		if r != nil {
+			byID[r.ID] = r
+		}
+	}
+	if _, ok := byID[root]; !ok {
+		// The root may be declared by a resource this file does not define; the
+		// members are then not knowable here.
+		return nil
+	}
+
+	aliased := map[string]string{}
+	for _, a := range lr.Aliases {
+		aliased[a.Definition.Type] = a.Type.Type
+	}
+
+	var errs []error
+	for name, typ := range lr.exposedMembers(byID, root, 0) {
+		if _, reserved := reservedIdentifiers[name]; reserved {
+			errs = append(errs, errors.New("root "+root+" has a member named "+name+
+				", which the compiler answers itself; a bare identifier would never reach it"))
+			continue
+		}
+
+		other, exists := byID[name]
+		if !exists {
+			continue
+		}
+		// An alias of the resource of the same name is the same thing reached
+		// two ways, which is the point of attaching a surface to a root.
+		if aliased[root+"."+name] == name {
+			continue
+		}
+		if typ != types.Resource(other.ID) {
+			errs = append(errs, errors.New("root "+root+" has a member "+name+" of type "+
+				typ.Label()+", but "+name+" is also a resource; a bare `"+name+
+				"` would mean different things depending on the namespace"))
 		}
 	}
 	return errs

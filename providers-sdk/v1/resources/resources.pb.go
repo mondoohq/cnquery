@@ -53,8 +53,15 @@ type Schema struct {
 	// reader actually has, so the two together decide whether a name that failed
 	// to resolve is a typo or a version gap.
 	ProviderVersions map[string]string `protobuf:"bytes,5,rep,name=provider_versions,json=providerVersions,proto3" json:"provider_versions,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// The root resource each provider declares for the assets it connects (ADR
+	// 031), keyed the same way provider_versions is. A compile with a live
+	// connection learns the *concrete* root from the connection; this is what a
+	// compile with no connection has - a policy bundle, a lint, an editor - and it
+	// is what tells such a compile whether a name is reachable from the asset's
+	// tree at all.
+	ProviderRoots map[string]string `protobuf:"bytes,6,rep,name=provider_roots,json=providerRoots,proto3" json:"provider_roots,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Schema) Reset() {
@@ -104,6 +111,13 @@ func (x *Schema) GetDependencies() map[string]*ProviderInfo {
 func (x *Schema) GetProviderVersions() map[string]string {
 	if x != nil {
 		return x.ProviderVersions
+	}
+	return nil
+}
+
+func (x *Schema) GetProviderRoots() map[string]string {
+	if x != nil {
+		return x.ProviderRoots
 	}
 	return nil
 }
@@ -340,8 +354,14 @@ type ResourceInfo struct {
 	// Note: Please do not use this field, it is only temporary and will be
 	// removed in the future once binding resources are mandatory for all
 	// executions.
-	Others        []*ResourceInfo `protobuf:"bytes,29,rep,name=others,proto3" json:"others,omitempty"`
-	Maturity      string          `protobuf:"bytes,32,opt,name=maturity,proto3" json:"maturity,omitempty"`
+	Others   []*ResourceInfo `protobuf:"bytes,29,rep,name=others,proto3" json:"others,omitempty"`
+	Maturity string          `protobuf:"bytes,32,opt,name=maturity,proto3" json:"maturity,omitempty"`
+	// Whether this resource is reachable without an asset root (ADR 031).
+	// Everything else is expected to hang off the root of the asset it describes;
+	// a handful of resources genuinely do not - `time`, `regex`, `asset` - and say
+	// so with `@global` in their schema. Unmarked and non-rooted is what the
+	// compiler notes on a bundle as reaching outside the asset's tree.
+	Global        bool `protobuf:"varint,33,opt,name=global,proto3" json:"global,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -479,6 +499,13 @@ func (x *ResourceInfo) GetMaturity() string {
 		return x.Maturity
 	}
 	return ""
+}
+
+func (x *ResourceInfo) GetGlobal() bool {
+	if x != nil {
+		return x.Global
+	}
+	return false
 }
 
 type Field struct {
@@ -630,11 +657,12 @@ var File_resources_proto protoreflect.FileDescriptor
 
 const file_resources_proto_rawDesc = "" +
 	"\n" +
-	"\x0fresources.proto\x12\x10mondoo.resources\"\x80\x04\n" +
+	"\x0fresources.proto\x12\x10mondoo.resources\"\x96\x05\n" +
 	"\x06Schema\x12E\n" +
 	"\tresources\x18\x03 \x03(\v2'.mondoo.resources.Schema.ResourcesEntryR\tresources\x12N\n" +
 	"\fdependencies\x18\x04 \x03(\v2*.mondoo.resources.Schema.DependenciesEntryR\fdependencies\x12[\n" +
-	"\x11provider_versions\x18\x05 \x03(\v2..mondoo.resources.Schema.ProviderVersionsEntryR\x10providerVersions\x1a\\\n" +
+	"\x11provider_versions\x18\x05 \x03(\v2..mondoo.resources.Schema.ProviderVersionsEntryR\x10providerVersions\x12R\n" +
+	"\x0eprovider_roots\x18\x06 \x03(\v2+.mondoo.resources.Schema.ProviderRootsEntryR\rproviderRoots\x1a\\\n" +
 	"\x0eResourcesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x124\n" +
 	"\x05value\x18\x02 \x01(\v2\x1e.mondoo.resources.ResourceInfoR\x05value:\x028\x01\x1a_\n" +
@@ -642,6 +670,9 @@ const file_resources_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x124\n" +
 	"\x05value\x18\x02 \x01(\v2\x1e.mondoo.resources.ProviderInfoR\x05value:\x028\x01\x1aC\n" +
 	"\x15ProviderVersionsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1a@\n" +
+	"\x12ProviderRootsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"2\n" +
 	"\fProviderInfo\x12\x0e\n" +
@@ -656,7 +687,7 @@ const file_resources_proto_rawDesc = "" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12\x1a\n" +
 	"\boptional\x18\x03 \x01(\bR\boptional\"6\n" +
 	"\x04Init\x12.\n" +
-	"\x04args\x18\x01 \x03(\v2\x1a.mondoo.resources.TypedArgR\x04args\"\xec\x04\n" +
+	"\x04args\x18\x01 \x03(\v2\x1a.mondoo.resources.TypedArgR\x04args\"\x84\x05\n" +
 	"\fResourceInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12B\n" +
@@ -672,7 +703,8 @@ const file_resources_proto_rawDesc = "" +
 	"\acontext\x18\x1e \x01(\tR\acontext\x12\x1a\n" +
 	"\bprovider\x18\x1b \x01(\tR\bprovider\x126\n" +
 	"\x06others\x18\x1d \x03(\v2\x1e.mondoo.resources.ResourceInfoR\x06others\x12\x1a\n" +
-	"\bmaturity\x18  \x01(\tR\bmaturity\x1aR\n" +
+	"\bmaturity\x18  \x01(\tR\bmaturity\x12\x16\n" +
+	"\x06global\x18! \x01(\bR\x06global\x1aR\n" +
 	"\vFieldsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
 	"\x05value\x18\x02 \x01(\v2\x17.mondoo.resources.FieldR\x05value:\x028\x01J\x04\b\x19\x10\x1aR\x12min_mondoo_version\"\xb7\x03\n" +
@@ -705,7 +737,7 @@ func file_resources_proto_rawDescGZIP() []byte {
 	return file_resources_proto_rawDescData
 }
 
-var file_resources_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_resources_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_resources_proto_goTypes = []any{
 	(*Schema)(nil),       // 0: mondoo.resources.Schema
 	(*ProviderInfo)(nil), // 1: mondoo.resources.ProviderInfo
@@ -717,25 +749,27 @@ var file_resources_proto_goTypes = []any{
 	nil,                  // 7: mondoo.resources.Schema.ResourcesEntry
 	nil,                  // 8: mondoo.resources.Schema.DependenciesEntry
 	nil,                  // 9: mondoo.resources.Schema.ProviderVersionsEntry
-	nil,                  // 10: mondoo.resources.ResourceInfo.FieldsEntry
+	nil,                  // 10: mondoo.resources.Schema.ProviderRootsEntry
+	nil,                  // 11: mondoo.resources.ResourceInfo.FieldsEntry
 }
 var file_resources_proto_depIdxs = []int32{
 	7,  // 0: mondoo.resources.Schema.resources:type_name -> mondoo.resources.Schema.ResourcesEntry
 	8,  // 1: mondoo.resources.Schema.dependencies:type_name -> mondoo.resources.Schema.DependenciesEntry
 	9,  // 2: mondoo.resources.Schema.provider_versions:type_name -> mondoo.resources.Schema.ProviderVersionsEntry
-	3,  // 3: mondoo.resources.Init.args:type_name -> mondoo.resources.TypedArg
-	10, // 4: mondoo.resources.ResourceInfo.fields:type_name -> mondoo.resources.ResourceInfo.FieldsEntry
-	4,  // 5: mondoo.resources.ResourceInfo.init:type_name -> mondoo.resources.Init
-	5,  // 6: mondoo.resources.ResourceInfo.others:type_name -> mondoo.resources.ResourceInfo
-	6,  // 7: mondoo.resources.Field.others:type_name -> mondoo.resources.Field
-	5,  // 8: mondoo.resources.Schema.ResourcesEntry.value:type_name -> mondoo.resources.ResourceInfo
-	1,  // 9: mondoo.resources.Schema.DependenciesEntry.value:type_name -> mondoo.resources.ProviderInfo
-	6,  // 10: mondoo.resources.ResourceInfo.FieldsEntry.value:type_name -> mondoo.resources.Field
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	10, // 3: mondoo.resources.Schema.provider_roots:type_name -> mondoo.resources.Schema.ProviderRootsEntry
+	3,  // 4: mondoo.resources.Init.args:type_name -> mondoo.resources.TypedArg
+	11, // 5: mondoo.resources.ResourceInfo.fields:type_name -> mondoo.resources.ResourceInfo.FieldsEntry
+	4,  // 6: mondoo.resources.ResourceInfo.init:type_name -> mondoo.resources.Init
+	5,  // 7: mondoo.resources.ResourceInfo.others:type_name -> mondoo.resources.ResourceInfo
+	6,  // 8: mondoo.resources.Field.others:type_name -> mondoo.resources.Field
+	5,  // 9: mondoo.resources.Schema.ResourcesEntry.value:type_name -> mondoo.resources.ResourceInfo
+	1,  // 10: mondoo.resources.Schema.DependenciesEntry.value:type_name -> mondoo.resources.ProviderInfo
+	6,  // 11: mondoo.resources.ResourceInfo.FieldsEntry.value:type_name -> mondoo.resources.Field
+	12, // [12:12] is the sub-list for method output_type
+	12, // [12:12] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_resources_proto_init() }
@@ -749,7 +783,7 @@ func file_resources_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_resources_proto_rawDesc), len(file_resources_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -95,6 +95,18 @@ func (x *extensibleSchema) AllProviderVersions() map[string]string {
 	return x.roAggregate.ProviderVersions
 }
 
+func (x *extensibleSchema) AllProviderRoots() map[string]string {
+	x.sync.Lock()
+	defer x.sync.Unlock()
+
+	if x.lastRefreshed < LastProviderInstall {
+		x.unsafeLoadAll()
+		x.unsafeRefresh()
+	}
+
+	return x.roAggregate.ProviderRoots
+}
+
 func (x *extensibleSchema) Close() {
 	x.sync.Lock()
 	x.loaded = map[string]resources.ResourcesSchema{}

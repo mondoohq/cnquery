@@ -1641,6 +1641,11 @@ func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*pa
 	if resource == nil {
 		return false, nil, types.Nil, nil
 	}
+	// Checked on the name that entered the namespace, before the dotted walk
+	// below: `sshd.config.params` reaches the namespace as `sshd`, and whether
+	// *that* hangs off the root is the question. The leaf never does - a root
+	// carries `sshd`, not `sshd.config`.
+	c.noteIfUnrooted(resource)
 
 	for len(calls) > 0 && calls[0].Ident != nil {
 		field := *calls[0].Ident
@@ -1666,6 +1671,43 @@ func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*pa
 
 	typ, err := c.addResource(id, resource, call)
 	return true, calls, typ, err
+}
+
+// noteIfUnrooted records a resource that this bundle reaches through the global
+// namespace and that has no home in an asset's tree (ADR 031 point 7).
+//
+// Three ways to be fine: the resource says `@global`, its provider declares no
+// root yet (nothing to be outside of, so the question is not answerable), or it
+// is reachable from that provider's root and the global name is just the other
+// spelling. What is left is what stops resolving when the root becomes the
+// namespace, which is exactly what is worth counting before that happens.
+func (c *compiler) noteIfUnrooted(resource *resources.ResourceInfo) {
+	if resource == nil || resource.GetGlobal() || c.Schema == nil || c.Result == nil {
+		return
+	}
+
+	root := c.Schema.AllProviderRoots()[resource.GetProvider()]
+	if root == "" {
+		return
+	}
+	rootInfo := c.Schema.Lookup(root)
+	if rootInfo == nil {
+		return
+	}
+	if _, _, ok := c.Schema.FindField(rootInfo, resource.Id); ok {
+		return
+	}
+
+	for _, existing := range c.Result.UnrootedResources {
+		if existing == resource.Id {
+			return
+		}
+	}
+	c.Result.UnrootedResources = append(c.Result.UnrootedResources, resource.Id)
+	log.Warn().
+		Str("resource", resource.Id).
+		Str("root", root).
+		Msg("mqlc> resource is reached globally and does not hang off the asset root; it will not resolve once the root is the namespace")
 }
 
 func (c *compiler) addResource(id string, resource *resources.ResourceInfo, call *parser.Call) (types.Type, error) {

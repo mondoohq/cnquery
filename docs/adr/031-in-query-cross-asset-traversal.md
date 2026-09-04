@@ -396,12 +396,24 @@ global-first.
 **Marked globals.** A resource reachable without a root is marked `@global` in its
 `.lr`. Core's resources carry the marking explicitly rather than being global by
 provider, so the rule reads the same everywhere and nothing is global by accident
-of where it lives. Everything unmarked is expected to be rooted.
+of where it lives: `asset`, `time`, `regex`, `parse`, `mondoo`, `uuid`, `cpe`,
+`product`, `unicode` and `vulnerability.exchange`. Everything unmarked is expected
+to be rooted.
+
+**The declared root travels with the schema.** `option root` in the `.lr` is
+recorded as `Schema.ProviderRoots` at generate time, so a compile holding only the
+schema file — a policy bundle, a lint, an editor — can answer "does this hang off
+the asset's tree" without a runtime. The coordinator stamps the same map from the
+provider config for schemas that predate the option.
 
 **The non-rooted note.** Whenever v14 resolves a name globally that is not
 reachable from the root and is not `@global`, the compiler records it on the
-bundle — a list beside `MinProviderVersions`, not a log line, so tooling can show
-which parts of a bundle reach outside the asset's tree. That is the same statement
+bundle as `unrooted_resources` — a list beside `MinProviderVersions`, so tooling
+can show which parts of a bundle reach outside the asset's tree. The check runs on
+the name that entered the namespace, not the leaf of a dotted path:
+`sshd.config.params` enters as `sshd`, and a root carries `sshd`, never
+`sshd.config`. A provider whose surface is fully attached produces an empty list,
+which is what `os` does today. That is the same statement
 [ADR 042](042-cross-provider-invocation.md) makes from the other side: the typed
 field (`running asset<mcp>`) and the declared peer `import` declare a reach beyond
 the asset tree at the schema level; this observes it at the query level. The note

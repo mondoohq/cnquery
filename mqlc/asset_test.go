@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/mql"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/mqlc"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
 	"go.mondoo.com/mql/providers-sdk/v1/testutils"
 	"go.mondoo.com/mql/types"
 )
@@ -330,4 +331,65 @@ func TestRootedFallbackDoesNotChangeExistingBundles(t *testing.T) {
 				"a root must not change the compilation of a name the global namespace already answers")
 		})
 	}
+}
+
+// A bundle records the resources it reaches globally that have no home in an
+// asset's tree, so the v15 cutover is measurable rather than guessed (ADR 031
+// point 7). A resource is fine three ways: marked `@global`, reachable from its
+// provider's root, or belonging to a provider with no root yet.
+func TestUnrootedResourcesAreRecorded(t *testing.T) {
+	conf := mqlc.NewConfig(core_schema.Add(os_schema), mql.Features{byte(mql.ResourceContext)})
+
+	t.Run("core resources are marked global", func(t *testing.T) {
+		res, err := mqlc.Compile("asset.platform", nil, conf)
+		require.NoError(t, err)
+		assert.Empty(t, res.UnrootedResources)
+
+		res, err = mqlc.Compile("time.now.unix", nil, conf)
+		require.NoError(t, err)
+		assert.Empty(t, res.UnrootedResources)
+	})
+
+	// The os provider attaches its whole surface to its roots, so nothing it
+	// exposes is left outside the tree. This asserts that state rather than the
+	// mechanism - it is the check that catches a resource added later without a
+	// placement.
+	// The mechanism itself: pin the provider to a root that deliberately does
+	// not carry everything, and the resources outside it get recorded. This is
+	// what a half-migrated provider looks like.
+	t.Run("records what the root does not carry", func(t *testing.T) {
+		schema := core_schema.Add(os_schema)
+		narrow := mqlc.NewConfig(schema, mql.Features{byte(mql.ResourceContext)})
+		s, ok := schema.(*resources.Schema)
+		require.True(t, ok, "expected a *resources.Schema")
+		// Add merges in place, so this is the shared schema every other test
+		// compiles against - put it back.
+		original := s.ProviderRoots
+		defer func() { s.ProviderRoots = original }()
+		s.ProviderRoots = map[string]string{"go.mondoo.com/mql/providers/os": "os.linux"}
+
+		// registrykey lives on os.windows, so a Linux root does not carry it.
+		res, err := mqlc.Compile("registrykey", nil, narrow)
+		require.NoError(t, err)
+		assert.Equal(t, []string{"registrykey"}, res.UnrootedResources)
+
+		// while a member of the Linux root stays unrecorded
+		res, err = mqlc.Compile("selinux.mode", nil, narrow)
+		require.NoError(t, err)
+		assert.Empty(t, res.UnrootedResources)
+	})
+
+	t.Run("the os surface is fully rooted", func(t *testing.T) {
+		for _, q := range []string{
+			"packages.list.length",
+			"sshd.config.params",
+			"users.list { name }",
+			"selinux.mode",
+			`file("/etc/hostname").exists`,
+		} {
+			res, err := mqlc.Compile(q, nil, conf)
+			require.NoError(t, err, q)
+			assert.Empty(t, res.UnrootedResources, q)
+		}
+	})
 }

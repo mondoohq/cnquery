@@ -12,7 +12,7 @@ option go_package = "go.mondoo.com/mql/providers/core/resources"
 // `jobEnvironment` dict describing the execution context the agent
 // detected (a local Mondoo Client shell, or a CI/CD system such as
 // GitHub Actions, GitLab CI, AWS CodeBuild, or Azure Pipelines).
-mondoo @defaults("version") {
+mondoo @defaults("version") @global {
   // Version of the client running on the asset
   version() string
   // Build identifier of the client (e.g., production, development, or commit hash)
@@ -41,7 +41,7 @@ mondoo @defaults("version") {
 // podman-container, aws-ec2-instance, and so on). This is the root
 // context most audits branch from, so you can scope checks by
 // platform, kind, or runtime before querying deeper resources.
-asset @defaults("name platform version") {
+asset @defaults("name platform version") @global {
   // Human readable name of the asset
   name string
   // All identifiers for this asset
@@ -93,7 +93,7 @@ asset.eol @defaults("date") {
 // current local time; `today` and `tomorrow` return midnight on those
 // days; `second`, `minute`, `hour`, and `day` are unit constants used
 // when computing durations.
-time {
+time @global {
   // The current time on the local system
   now() time
   // One second, used for durations
@@ -117,7 +117,7 @@ time {
 // Covers IPv4 / IPv6 addresses, HTTP/HTTPS URLs, email addresses, MAC
 // addresses, hyphen-delimited UUIDs, emoji code points, semantic
 // version numbers, and credit card numbers.
-regex {
+regex @global {
   // Matches IPv4 addresses
   ipv4() regex
   // Matches IPv6 addresses
@@ -146,7 +146,7 @@ regex {
 // '2006/01/02')`, or a named layout like `rfc3339` or `ansic`), and
 // `parse.duration(value)` converts a duration string into a `time`
 // interval.
-parse {
+parse @global {
   // Built-in functions:
   // date(value, format) time
   // duration(value) time
@@ -158,7 +158,7 @@ parse {
 // Initialize with `uuid(value: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")`
 // to read the canonical string representation, the URN form
 // (`urn:uuid:...`), the version (1, 4, 5, and so on), and the variant.
-uuid @defaults("value") {
+uuid @defaults("value") @global {
   init(value string)
   // Canonical string representation xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
   value string
@@ -181,7 +181,7 @@ uuid @defaults("value") {
 // product, version, update, edition, language, software edition,
 // target software, target hardware, and miscellaneous fields, so you
 // can correlate an asset against vulnerability advisories keyed by CPE.
-cpe @defaults("uri") {
+cpe @defaults("uri") @global {
   init(uri string)
   // URI binding of the CPE
   uri string
@@ -218,7 +218,7 @@ cpe @defaults("uri") {
 // dates, end of active support, end of life, and end of extended
 // support. Useful for flagging assets that run unsupported or
 // soon-to-be-unsupported software.
-product {
+product @global {
   // Product name
   name string
   // Product version
@@ -258,7 +258,7 @@ private product.releaseCycleInformation {
 // many characters fall into each Unicode general category. Useful for
 // detecting homoglyph or hidden-character attacks in identifiers,
 // filenames, and configuration values.
-unicode @maturity("preview") {
+unicode @maturity("preview") @global {
   init(input string)
   // Input text
   input string
@@ -321,7 +321,7 @@ private unicode.category @defaults("category count") {
 // CVE-2025-12345) and `source` names the registry that published the
 // record (such as NVD or GHSA). Use it to reference a specific
 // advisory when correlating security findings across feeds.
-vulnerability.exchange @defaults("id source") @maturity("experimental") {
+vulnerability.exchange @defaults("id source") @maturity("experimental") @global {
   // Vulnerability ID, eg. CVE-2025-12345
   id string
   // Source/registry that published the vulnerability record (e.g., NVD, GHSA)

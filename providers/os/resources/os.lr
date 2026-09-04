@@ -6,6 +6,7 @@ import network
 
 option provider = "go.mondoo.com/mql/providers/os"
 option go_package = "go.mondoo.com/mql/providers/os/resources"
+option root = "os.any"
 
 alias os.base.command = command
 alias os.base.user = user

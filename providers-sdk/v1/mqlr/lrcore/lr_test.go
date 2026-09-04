@@ -1296,3 +1296,93 @@ os.any {
 		require.NoError(t, err)
 	})
 }
+
+// Every bare identifier resolves against the root once the root is the
+// namespace, so a root member that shadows something the compiler answers itself
+// would be unreachable, and one that shadows a different resource would change
+// meaning when the namespace precedence flips. See ADR 031.
+func TestRootMemberGuards(t *testing.T) {
+	schema := func(body string) string {
+		return `
+option provider = "go.mondoo.com/mql/providers/demo"
+option root = "demo.any"
+` + body
+	}
+
+	t.Run("a member may not shadow the language", func(t *testing.T) {
+		_, err := Parse(schema(`
+// Any
+//
+// the root.
+demo.any {
+  version() string
+}
+`))
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "which the compiler answers itself")
+	})
+
+	t.Run("a member may not shadow a different resource", func(t *testing.T) {
+		_, err := Parse(schema(`
+// Packages
+//
+// packages.
+packages {
+  count() int
+}
+
+// Any
+//
+// the root.
+demo.any {
+  packages() string
+}
+`))
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "would mean different things")
+	})
+
+	// Attaching a resource to the root under its own name is the whole point of
+	// the alias block, so it has to stay legal.
+	t.Run("an alias of the same resource is fine", func(t *testing.T) {
+		_, err := Parse(schema(`
+alias demo.any.packages = packages
+
+// Packages
+//
+// packages.
+packages {
+  count() int
+}
+
+// Any
+//
+// the root.
+demo.any {
+  name() string
+}
+`))
+		require.NoError(t, err)
+	})
+
+	// Members reached through an embed are members of the root too.
+	t.Run("embedded members are checked", func(t *testing.T) {
+		_, err := Parse(schema(`
+// Base
+//
+// the base.
+demo.base {
+  expect() string
+}
+
+// Any
+//
+// the root.
+demo.any {
+  embed demo.base as base
+}
+`))
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "which the compiler answers itself")
+	})
+}

@@ -25,6 +25,14 @@ func Schema(ast *LR) (*resources.Schema, error) {
 		Dependencies: make(map[string]*resources.ProviderInfo, 0),
 	}
 
+	// `option root` travels in the generated schema, so a compile that only has
+	// the schema file - a policy bundle, a lint, an editor - can still tell what
+	// hangs off the asset's tree. A connected compile learns the concrete root
+	// from the connection instead; this is the declaration. See ADR 031.
+	if root, ok := ast.Options["root"]; ok && root != "" {
+		res.ProviderRoots = map[string]string{provider: root}
+	}
+
 	// Every declared peer is recorded, including core. Core used to be excluded
 	// here because it is built into every executor and must never be downloaded
 	// as a separate binary -- but that is a fact about *installing* a provider,
@@ -270,6 +278,7 @@ func resourceSchema(r *Resource, ast *LR) (*resources.ResourceInfo, error) {
 		Defaults:    r.Defaults,
 		Context:     r.Context,
 		Maturity:    r.Maturity,
+		Global:      r.IsGlobal,
 	}
 
 	if r.ListType != nil {
