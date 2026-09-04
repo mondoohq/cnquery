@@ -126,6 +126,64 @@ func (c *compiler) skewHint(provider string, what string) string {
 		" is installed; this " + what + " may require a newer one)"
 }
 
+// missingFieldHint explains a failed field access with whatever the schema can
+// actually attribute it to.
+//
+// A field missing from an asset root is usually a platform mismatch, not version
+// skew: `_.registrykey` on a Linux host fails because the asset is rooted at
+// `os.linux` and the registry lives on `os.windows` (ADR 031). Saying "the
+// provider may need to be newer" there sends the reader after an upgrade that
+// cannot help, so a sibling root that does carry the field is reported instead.
+// With no sibling to name, this falls back to the version-skew lead.
+func (c *compiler) missingFieldHint(typ types.Type, id string) string {
+	if hint := c.rootScopeHint(typ, id); hint != "" {
+		return hint
+	}
+	return c.fieldSkewHint(typ)
+}
+
+// rootScopeHint names the roots that do carry a field the current root lacks.
+//
+// Roots are the resources sharing the asset root's namespace (`os.windows` and
+// `os.macos` alongside `os.linux`), which is as much as the compiler can know:
+// which resource is a root is decided by the connection, not by the schema.
+func (c *compiler) rootScopeHint(typ types.Type, id string) string {
+	if c.AssetRoot == "" || c.Schema == nil || !typ.IsResource() {
+		return ""
+	}
+	current := typ.ResourceName()
+	namespace, _, ok := strings.Cut(c.AssetRoot, ".")
+	if !ok || !strings.HasPrefix(current, namespace+".") {
+		return ""
+	}
+
+	var found []string
+	for name, info := range c.Schema.AllResources() {
+		if name == current || info == nil || !strings.HasPrefix(name, namespace+".") {
+			continue
+		}
+		// Only siblings, so `os.windows` counts and `os.windows.registrykey`
+		// does not: a root is one segment below the namespace.
+		if strings.Count(name, ".") != 1 {
+			continue
+		}
+		// The declared root is the union of every platform's members, so it
+		// always has the field and never answers "which platform has this".
+		if name == c.DeclaredAssetRoot {
+			continue
+		}
+		if _, ok := info.Fields[id]; ok {
+			found = append(found, name)
+		}
+	}
+	if len(found) == 0 {
+		return ""
+	}
+	sort.Strings(found)
+	return " (this asset is rooted at " + current + "; " + id + " is available on " +
+		strings.Join(found, ", ") + ")"
+}
+
 // fieldSkewHint attributes a failed field access to the provider owning the
 // resource it was attempted on.
 func (c *compiler) fieldSkewHint(typ types.Type) string {
@@ -265,6 +323,12 @@ type CompilerConfig struct {
 	// root to name, and guessing one would answer with a resource that only
 	// partly covers the asset.
 	AssetRoot string
+
+	// DeclaredAssetRoot is the root the provider declares statically, which for
+	// a multi-platform provider is the union of its roots. Only diagnostics use
+	// it: the union is a compile-time receiver, not a platform, so it must not
+	// be offered as the place a missing field is available.
+	DeclaredAssetRoot string
 }
 
 func (c *CompilerConfig) EnableStats() {
@@ -298,6 +362,7 @@ func NewConfigFrom(runtime llx.Runtime, features mql.Features) CompilerConfig {
 	}
 	if src, ok := runtime.(llx.AssetRootSource); ok {
 		conf.AssetRoot = src.AssetRoot()
+		conf.DeclaredAssetRoot = src.DeclaredAssetRoot()
 	}
 	return conf
 }
@@ -2046,7 +2111,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 				// native internal operators)
 				if (typ != types.Dict && !typ.IsMap()) || !reAccessor.MatchString(id) {
 					addFieldSuggestions(availableFields(c, typ), id, c.Result)
-					return nil, errors.New("cannot find field '" + id + "' in " + typ.Label() + c.fieldSkewHint(typ))
+					return nil, errors.New("cannot find field '" + id + "' in " + typ.Label() + c.missingFieldHint(typ, id))
 				}
 
 				// Support easy accessors for dicts and maps, e.g:

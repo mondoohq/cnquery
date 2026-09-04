@@ -137,10 +137,25 @@ the separate, pre-existing "provider not installed" failure, out of scope here.
 ### 3. Root taxonomy
 
 The root is grounded in the **connection**, not the platform: different connection
-types expose different roots. It is declared as `Root string` on
-**`plugin.Provider`** (`providers-sdk/v1/plugin/start.go`), so it lands in the
-provider's `<name>.json` and is readable from the coordinator **without starting
-the provider or connecting** — which one of its consumers needs (point 6).
+types expose different roots. It is declared twice, because the two consumers ask
+at different times:
+
+- **Statically**, as `Root string` on **`plugin.Provider`**
+  (`providers-sdk/v1/plugin/start.go`), so it lands in the provider's
+  `<name>.json` and is readable from the coordinator **without starting the
+  provider or connecting**. For a provider serving several platforms this can
+  only be the union (`os.any`), and it is what a disconnected compile gets.
+- **By the connection**, as `ConnectRes.Root`, which is what the connection
+  actually exposed. Only connecting reveals the platform, so only the connection
+  can say `os.linux` rather than the union. `Runtime.AssetRoot()` prefers it and
+  falls back to the declaration.
+
+The connection's answer is a **refinement**, not a disagreement: the concrete
+root is a member of the declared union. That is why `mql shell local` bounds a
+query by the platform it is actually on — `_.registrykey` fails to compile with
+`this asset is rooted at os.linux; registrykey is available on os.windows`
+instead of answering with an unset field. A disagreement means a root outside the
+union, which is the cross-asset case in point 5 and is an error there.
 
 Not on `Connector`, which is where this ADR first put it: the runtime resolves the
 root from the connection *type* it holds (`conf.Type`), and types do not map onto
@@ -413,7 +428,9 @@ itself `asset<…>` resolves through the *target* runtime's own resolver.
    receiver; the surface attached per root by alias; flat `os` deprecated;
    build-time guard on member/type collisions across roots.
 4. **Root narrowing.** Compile `_` against the union, record the narrowed
-   requirement on the bundle, skip assets that do not satisfy it.
+   requirement on the bundle, skip assets that do not satisfy it. Needed for the
+   **disconnected** compile; a connected one already gets the concrete root from
+   `ConnectRes` and is bounded exactly. **Landed for the connected path.**
 5. **Recording-backed cross-asset resolution.** `providers.Runtime` implements
    `AssetResolver`; the target asset is found from the reverse edge and connected
    with a `mock` connection, including the `providers/mock.go:182` asset-selection
@@ -473,10 +490,16 @@ they land with the resolution they guard, in phase 5.
 
 ## Resolved (from review)
 
-- **Root declaration → on `plugin.Provider`, read without connecting.** Moved off
-  `Connector` during implementation: connection types do not map onto connectors
-  (8 connectors, 14 types in `os`), so a per-connector field is not resolvable from
-  what the runtime holds.
+- **Root declaration → statically on `plugin.Provider`, refined by
+  `ConnectRes.Root`.** Moved off `Connector` during implementation: connection
+  types do not map onto connectors (8 connectors, 14 types in `os`), so a
+  per-connector field is not resolvable from what the runtime holds. The static
+  declaration serves the disconnected compile; the connection's answer bounds an
+  interactive query by the platform it reached.
+- **A missing member of a platform root is diagnosed as a platform mismatch**,
+  naming the root that carries it, rather than as version skew. The union root is
+  never offered as that alternative: it holds every platform's members, so it
+  answers nothing.
 - **Compile-time absence → degrade + warn**, with member checking deferred to the
   executing runtime.
 - **Static vs. dynamic root → static, with the connection as the authority.** The

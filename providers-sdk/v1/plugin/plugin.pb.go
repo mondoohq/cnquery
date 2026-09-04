@@ -216,7 +216,18 @@ type ConnectRes struct {
 	// the connected asset with additional information from this connection
 	Asset *inventory.Asset `protobuf:"bytes,3,opt,name=asset,proto3" json:"asset,omitempty"`
 	// inventory of other discovered assets
-	Inventory     *inventory.Inventory `protobuf:"bytes,4,opt,name=inventory,proto3" json:"inventory,omitempty"`
+	Inventory *inventory.Inventory `protobuf:"bytes,4,opt,name=inventory,proto3" json:"inventory,omitempty"`
+	// The resource that roots this asset's tree, as decided by the connection
+	// (ADR 031). The provider's static `Root` says what it can expose in general;
+	// this says what this connection actually exposed, which is what `_` resolves
+	// to. Empty means the connection has nothing more specific to say and the
+	// static declaration stands.
+	//
+	// It has to be reported here rather than declared statically because it can
+	// depend on what connecting found: the `os` provider serves Linux, Windows
+	// and macOS through one set of connectors, so only the platform detected
+	// during Connect decides between `os.linux`, `os.windows` and `os.macos`.
+	Root          string `protobuf:"bytes,5,opt,name=root,proto3" json:"root,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -277,6 +288,13 @@ func (x *ConnectRes) GetInventory() *inventory.Inventory {
 		return x.Inventory
 	}
 	return nil
+}
+
+func (x *ConnectRes) GetRoot() string {
+	if x != nil {
+		return x.Root
+	}
+	return ""
 }
 
 type ShutdownReq struct {
@@ -1022,13 +1040,14 @@ const file_plugin_proto_rawDesc = "" +
 	"\x05asset\x18\x03 \x01(\v2\x1b.cnquery.providers.v1.AssetR\x05asset\x12#\n" +
 	"\rhas_recording\x18\x14 \x01(\bR\fhasRecording\x12'\n" +
 	"\x0fcallback_server\x18\x15 \x01(\rR\x0ecallbackServer\x12B\n" +
-	"\bupstream\x18\x16 \x01(\v2&.mondoo.mql.upstream.v1.UpstreamConfigR\bupstream\"\xa2\x01\n" +
+	"\bupstream\x18\x16 \x01(\v2&.mondoo.mql.upstream.v1.UpstreamConfigR\bupstream\"\xb6\x01\n" +
 	"\n" +
 	"ConnectRes\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\rR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x121\n" +
 	"\x05asset\x18\x03 \x01(\v2\x1b.cnquery.providers.v1.AssetR\x05asset\x12=\n" +
-	"\tinventory\x18\x04 \x01(\v2\x1f.cnquery.providers.v1.InventoryR\tinventory\"\r\n" +
+	"\tinventory\x18\x04 \x01(\v2\x1f.cnquery.providers.v1.InventoryR\tinventory\x12\x12\n" +
+	"\x04root\x18\x05 \x01(\tR\x04root\"\r\n" +
 	"\vShutdownReq\"\r\n" +
 	"\vShutdownRes\"\x86\x02\n" +
 	"\aDataReq\x12\x1e\n" +

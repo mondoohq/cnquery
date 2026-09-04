@@ -336,6 +336,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		Name:      conn.Name(),
 		Asset:     req.Asset,
 		Inventory: inv,
+		Root:      assetRoot(req.Asset.GetPlatform()),
 	}, nil
 }
 
@@ -366,6 +367,7 @@ func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCa
 		Id:    uint32(conn.ID()),
 		Name:  conn.Name(),
 		Asset: asset,
+		Root:  assetRoot(asset.GetPlatform()),
 	}, nil
 }
 

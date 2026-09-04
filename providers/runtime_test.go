@@ -942,11 +942,30 @@ func TestSyncAssetMetadata(t *testing.T) {
 // from the main provider without consulting the coordinator, and it has to
 // answer at all before anything is connected. See ADR 031.
 func TestAssetRoot(t *testing.T) {
+	t.Run("the connection's answer wins", func(t *testing.T) {
+		r := &Runtime{Provider: &ConnectedProvider{
+			Instance:   &RunningProvider{Name: "os", Root: "os.any"},
+			Connection: &plugin.ConnectRes{Root: "os.linux"},
+		}}
+		assert.Equal(t, "os.linux", r.AssetRoot(), "the connection knows which platform it reached")
+		assert.Equal(t, "os.any", r.DeclaredAssetRoot(), "the declaration stays the union")
+	})
+
+	// Every provider that has not implemented the ConnectRes field yet, which
+	// is all of them but os.
+	t.Run("falls back to the declaration", func(t *testing.T) {
+		r := &Runtime{Provider: &ConnectedProvider{
+			Instance:   &RunningProvider{Name: "os", Root: "os.any"},
+			Connection: &plugin.ConnectRes{},
+		}}
+		assert.Equal(t, "os.any", r.AssetRoot())
+	})
+
 	t.Run("from the main provider", func(t *testing.T) {
 		r := &Runtime{Provider: &ConnectedProvider{
-			Instance: &RunningProvider{Name: "os", Root: "os"},
+			Instance: &RunningProvider{Name: "os", Root: "os.any"},
 		}}
-		assert.Equal(t, "os", r.AssetRoot())
+		assert.Equal(t, "os.any", r.AssetRoot())
 	})
 
 	// A provider that declares no root leaves `_` failing, which is the state

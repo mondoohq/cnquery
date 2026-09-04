@@ -233,3 +233,42 @@ func TestOsRootAttachments(t *testing.T) {
 		})
 	}
 }
+
+// A field missing from a platform root is a platform mismatch, not version
+// skew, so the diagnostic has to say which root does carry it instead of
+// suggesting a provider upgrade that cannot help. See ADR 031.
+func TestMissingFieldOnAPlatformRoot(t *testing.T) {
+	conf := mqlc.NewConfig(core_schema.Add(os_schema), mql.Features{byte(mql.ResourceContext)})
+	conf.AssetRoot = "os.linux"
+	conf.DeclaredAssetRoot = "os.any"
+
+	t.Run("names the root that has it", func(t *testing.T) {
+		_, err := mqlc.Compile("_.registrykey", nil, conf)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "rooted at os.linux")
+		assert.Contains(t, err.Error(), "available on os.windows")
+		// The union carries every platform's members, so offering it as the
+		// place to find one answers nothing.
+		assert.NotContains(t, err.Error(), "os.any")
+		// And this is not a version problem.
+		assert.NotContains(t, err.Error(), "may require a newer one")
+	})
+
+	// A name no root carries gets no platform hint - there is no platform to
+	// point at - and falls through to the version-skew lead, which needs
+	// provider versions in the schema to render (it does live, where the
+	// coordinator supplies them).
+	t.Run("no platform hint when no root has it", func(t *testing.T) {
+		_, err := mqlc.Compile("_.nosuchthing", nil, conf)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "cannot find field 'nosuchthing' in os.linux")
+		assert.NotContains(t, err.Error(), "available on")
+	})
+
+	t.Run("the platform's own members still resolve", func(t *testing.T) {
+		for _, q := range []string{"_.iptables", "_.selinux.mode", "_.hostname", "_.packages.list.length"} {
+			_, err := mqlc.Compile(q, nil, conf)
+			assert.NoError(t, err, q)
+		}
+	})
+}
