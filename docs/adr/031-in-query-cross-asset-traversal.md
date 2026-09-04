@@ -221,9 +221,21 @@ resource with `embed os.base` and `embed os.live` parses and carries both). A
 third, non-orthogonal axis (privilege, connection capability) would be a redesign;
 none is foreseen.
 
-**Build-time guard:** one member name shared across roots must carry one type,
-enforced in `lrcore` at generate time next to `validateTypeParameters`. Generation
-stops; a provider that violates it cannot be published.
+**Build-time guards**, enforced in `lrcore` at generate time next to
+`validateTypeParameters`. Each stops generation, so a provider that violates one
+cannot be published:
+
+- **One member name across roots carries one type.** Otherwise the union cannot
+  type it.
+- **A root member does not shadow a different global resource.** A root member
+  that is an alias of the global of the same name is the normal case and is fine;
+  a root member that means something *else* under a global's name is what makes
+  the two namespace precedences in point 7 disagree. Forbidding it is what lets
+  v15 flip the precedence without changing what any query means.
+- **A root member is not named like a language construct** (`props`, `if`,
+  `switch`, `return`, `_`, …). With a binding in place the bound identifier is
+  tried before those, so such a member would shadow the language itself. Applies
+  to root resources only; an ordinary resource may still carry such a field.
 
 ### 4. Root narrowing
 
@@ -320,16 +332,80 @@ further wiring, and the result is labeled with the root it resolved to. Where th
 provider declares no root, `_` keeps failing, with a message that says the
 connection declares no root rather than pretending `_` is a resource name.
 
-### 7. Namespace evolution (v14 → v15)
+This is the shape the next point generalizes: `_` is an explicit way to say "the
+root", and binding the root implicitly makes every bare identifier say it too, at
+which point `_` needs no handling of its own.
 
-- **v14:** collect and **warn** when a resource is used from the global namespace in
-  a way that isn't expected — `time`/`regex` (core) are fine; calling `aws` from
-  inside the `os` provider is not.
-- **v15:** the model is root-chaining with only `core` global.
-- **Stays legal (both versions):** providers **extending** each other's resources
-  with new fields. This ADR is what makes it *explicit* when a resource in a tree
-  points at another provider: the typed field forward-reference
-  (`running asset<mcp>`) **is** the declaration for a cross-asset reference.
+### 7. Namespace evolution: every query is rooted
+
+A query is really a block on the asset root — `assetRoot { …query… }` — and the
+namespace it resolves against follows from that. This is what the flat namespace
+has always been missing: `_.hostname` resolves and bare `hostname` does not
+(`cannot find resource for identifier 'hostname'`), because `hostname` is a member
+of the root and nothing binds the root. Binding it is the whole fix, and it needs
+no new machinery: the compiler already tries the binding's members before the
+global namespace inside a block (`compileIdentifier`), so this is setting
+`c.Binding` at the top level. It also subsumes the special case for `_` in point
+6 — with a binding present, `_` *is* the binding.
+
+**v14 (default): global-first, root-fallback.** Resolve a bare identifier against
+the global namespace exactly as today; only when it is not a global resource,
+resolve it against the asset root. Three properties, all required:
+
+- **Bit-identical bundles for content that compiles today.** Root-first would
+  recompile `packages.list.length` as `os.linux` + field `packages` + …, a
+  different chunk sequence and therefore a different checksum — and cnspec keys
+  scoring continuity on that. Global-first changes nothing that already resolves.
+- **Compile-once-run-many keeps working.** cnspec caches a resolved policy by
+  `(policyMrn, assetFilterChecksum)` (`policy/datalake.go:85`), so one compiled
+  bundle serves every matching asset. Root-first would bake one platform into a
+  shared bundle.
+- **`hostname` starts working.** It fails today, so nothing can depend on the old
+  behavior.
+
+**v14 with `RootedNamespace`: v15 semantics, early.** The feature flag compiles
+rooted only: bare identifiers resolve against the asset root, and the global
+namespace is available only through resources marked `@global`. It exists so the
+v15 model can be run and tested for the months before it becomes the default,
+rather than arriving as a flag day.
+
+**v15: rooted by default.** The flag becomes the default and the fallback is
+removed. A root is then required rather than optional, which is also when
+supplying one becomes the caller's job (see below).
+
+**Rooted bundles run on a v14 engine.** Code compiled under the flag (or by v15)
+is ordinary resource-and-field chunks — `os.linux` then `packages` — and execution
+resolves field types from the runtime's own schema, so a v14 engine runs it
+unchanged. Verified: `os.linux.packages.list.length` and
+`os.linux.file("/etc/hostname").exists` resolve today. The dependency is the
+provider that ships the roots, not the engine: a v13 provider has `os.linux`
+without the attached surface, which is precisely why v14's default stays
+global-first.
+
+**Where the root comes from**, in order:
+
+1. The **connection** reports it (`ConnectRes.Root`) — the concrete platform root.
+2. The **caller supplies** one. cnspec will, so a policy can state the root it
+   targets; that replaces much of what platform filters express by hand today.
+3. The provider's **declared union**, carried in the resources schema so a compile
+   with no runtime can still reach it.
+4. Nothing — and then v14 compiles against the global namespace as it always has.
+   Under `RootedNamespace`, and in v15, this case is an error instead: rooted
+   compilation without a root has nothing to resolve against.
+
+**Marked globals.** A resource reachable without a root is marked `@global` in its
+`.lr`. Core's resources carry the marking explicitly rather than being global by
+provider, so the rule reads the same everywhere and nothing is global by accident
+of where it lives. Everything unmarked is expected to be rooted.
+
+**The non-rooted note.** Whenever v14 resolves a name globally that is not
+reachable from the root and is not `@global`, the compiler records it on the
+bundle — a list beside `MinProviderVersions`, not a log line, so tooling can show
+which parts of a bundle reach outside the asset's tree. That is the same statement
+[ADR 042](042-cross-provider-invocation.md) makes from the other side: the typed
+field (`running asset<mcp>`) and the declared peer `import` declare a reach beyond
+the asset tree at the schema level; this observes it at the query level. The note
+is what makes the v15 cutover measurable instead of a guess.
 
 **The flat `os` resource is deprecated on this line.** Its 13 fields (`name`,
 `env`, `path`, `uptime`, `updates`, `lastUpdate`, `lastUpdateAge`,
@@ -340,6 +416,9 @@ catalogs use six of them (`os.path` in 49 files, `os.machineid` in 18, `os.uptim
 in 14, `os.date` in 12, `os.hostname` in 10, `os.env` in 3, across cnspec content
 and the policy repos). v15 migrates the policies, removes the fields, and leaves
 `os` as the empty namespace node.
+
+**Stays legal in both versions:** providers **extending** each other's resources
+with new fields.
 
 **Cross-provider call legality is not decided here.** Whether an undeclared
 cross-provider call still resolves — and the v14-warn / v15-enforce timeline — is
@@ -427,27 +506,37 @@ itself `asset<…>` resolves through the *target* runtime's own resolver.
    (`os.unix`, `os.linux`, `os.windows`, `os.macos`) and the `os.any` union
    receiver; the surface attached per root by alias; flat `os` deprecated;
    build-time guard on member/type collisions across roots.
-4. **Root narrowing.** Compile `_` against the union, record the narrowed
+4. **Implicit root binding, v14 semantics.** Bind the asset root at the top level
+   so bare members of the root resolve (`hostname`), with the global namespace
+   tried first so every bundle that compiles today compiles identically. Carry the
+   declared root in the resources schema so a compile with no runtime has one.
+   Record the non-rooted note on the bundle. Add the shadowing and
+   language-construct guards, and `@global`, starting with core.
+5. **`RootedNamespace` feature flag.** The v15 semantics behind a flag: rooted
+   only, `@global` for the exceptions, no fallback, a root required. Runnable
+   against real content for the months before it becomes the default.
+6. **Root narrowing.** Compile `_` against the union, record the narrowed
    requirement on the bundle, skip assets that do not satisfy it. Needed for the
    **disconnected** compile; a connected one already gets the concrete root from
    `ConnectRes` and is bounded exactly. **Landed for the connected path.**
-5. **Recording-backed cross-asset resolution.** `providers.Runtime` implements
+7. **Recording-backed cross-asset resolution.** `providers.Runtime` implements
    `AssetResolver`; the target asset is found from the reverse edge and connected
    with a `mock` connection, including the `providers/mock.go:182` asset-selection
    fix. Testable in-repo from a recording fixture; no live connect.
-6. **Live-connect backend.** The same `RuntimeFor` + `Connect` path with the
+8. **Live-connect backend.** The same `RuntimeFor` + `Connect` path with the
    target's real connection; the target stub on the value; sub-runtime lifecycle and
    timeouts. Interactive verification: `…running.tools` against the installed `ai`
    provider plus the dummy server. Also fixes `docker.container.os`, which today
    answers with the host. Exposes the imperative SDK-side wrapper for Go callers
    that spawn a new asset over this same path.
-7. **Namespace migration + other providers.** Roots for the remaining providers,
-   `os`'s deprecated fields removed in v15, global names retired.
-8. **Secrets for live connect:** vault/credential provisioning keyed to the asset
+9. **Namespace migration + other providers.** Roots for the remaining providers,
+   `os`'s deprecated fields removed in v15, global names retired, `RootedNamespace`
+   becomes the default.
+10. **Secrets for live connect:** vault/credential provisioning keyed to the asset
    (no `--env` inside a traversal).
 
 Guards (anchor-keyed cache, parent-owned sub-runtimes, depth limit) are not a phase;
-they land with the resolution they guard, in phase 5.
+they land with the resolution they guard, in phase 7.
 
 ## Consequences
 
@@ -463,6 +552,10 @@ they land with the resolution they guard, in phase 5.
   `inventory.Asset.Relationships`, which today is written by MCP discovery and read
   by nothing. That makes ADR 030's forward/reverse parity invariant load-bearing at
   runtime rather than only at correlation time.
+- v14 changes no compiled bundle: global-first resolution means every query that
+  compiles today compiles to the same chunks, so checksums, scoring continuity and
+  cnspec's shared resolved-policy cache are untouched. The new behavior is
+  additive - names that used to fail now resolve through the root.
 - Autocomplete offers both the global and the rooted path for every attached
   resource during the migration window. Transitional by design; consumers can
   already tell an alias from a resource by comparing the schema key against `id`.
@@ -516,6 +609,12 @@ they land with the resolution they guard, in phase 5.
   target asset instead; that is why resolution goes through `RuntimeFor`.
 - **Target stub on the value → yes**, populated from the same builder discovery
   uses; lands with phase 6.
+- **Namespace precedence → global-first in v14, rooted under `RootedNamespace`,
+  rooted by default in v15.** Root-first in v14 would change every bundle's
+  checksum and bake a platform into a bundle that cnspec shares across assets.
+  The shadowing guard makes the eventual flip semantically free.
+- **Globals → explicitly marked `@global`**, in core as well, so nothing is global
+  by accident of which provider defines it.
 - **Secrets → explicit, never implicit** (consistent with the `--env` decision).
 
 ## Follow-ups
@@ -531,8 +630,9 @@ they land with the resolution they guard, in phase 5.
   that today; the local recording answers it from the reverse edge because it holds
   both assets. A platform-side dependency, and the reason the local leg lands first.
 - **Derived applicability replaces explicit policy filters** in cnspec's resolved
-  policy. Targeted within the v14 lifetime; explicit filters are the fallback until
-  then.
+  policy, from two directions: the root a policy states (point 7) and the
+  requirement narrowing derives from what a query touches (point 4). Targeted
+  within the v14 lifetime; explicit filters are the fallback until then.
 - **Asset-kind roots.** The family axis lands first; the kind axis (host /
   container / image / filesystem) composes onto it with multi-embed when a container
   image's surface is worth bounding separately.
