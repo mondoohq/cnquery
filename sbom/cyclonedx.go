@@ -371,7 +371,54 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 		}
 	}
 
+	sbom.Dependencies = cycloneDXDependencies(bom)
+
 	return sbom, nil
+}
+
+// cycloneDXDependencies reads the document's package -> package edge graph.
+//
+// The renderer has always WRITTEN `dependencies`/`dependsOn`; the reader
+// discarded it, so Sbom.Dependencies came back empty from Parse and a
+// render/parse round-trip silently lost the whole graph. That graph is the only
+// thing that distinguishes a transitive dependency something reaches from one
+// nothing reaches, so losing it costs a consumer the distinction entirely.
+//
+// Edges are kept as the document states them, with two exceptions. A self-edge
+// is dropped: it is a no-op that some producers emit, and carrying it invites a
+// consumer's traversal to loop. An entry with no targets is dropped rather than
+// stored as an empty list, because CycloneDX uses it to say "this component was
+// considered and depends on nothing", which is the absence of edges rather than
+// an edge.
+//
+// Refs are NOT validated against the component set here. A dangling ref is a
+// producer bug, but which components exist is the caller's question and a
+// reader that silently drops edges would hide it.
+func cycloneDXDependencies(bom *cyclonedx.BOM) []*Dependency {
+	if bom.Dependencies == nil || len(*bom.Dependencies) == 0 {
+		return nil
+	}
+	out := make([]*Dependency, 0, len(*bom.Dependencies))
+	for _, d := range *bom.Dependencies {
+		if d.Ref == "" || d.Dependencies == nil {
+			continue
+		}
+		refs := make([]string, 0, len(*d.Dependencies))
+		for _, r := range *d.Dependencies {
+			if r == "" || r == d.Ref {
+				continue
+			}
+			refs = append(refs, r)
+		}
+		if len(refs) == 0 {
+			continue
+		}
+		out = append(out, &Dependency{Ref: d.Ref, DependencyRefs: refs})
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
 }
 
 var familyMap = map[string][]string{
