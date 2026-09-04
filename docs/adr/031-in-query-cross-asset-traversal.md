@@ -326,9 +326,10 @@ asset, `_` is the root of *this* one.
 
 The root reaches `mqlc` the way the downgrade catalog does: an optional interface on
 the runtime (`llx.AssetRootSource`), type-asserted in `NewConfigFrom` — the same
-shape as `llx.TranslationSource`. `_` compiles **by name**, as if the author had
-typed the root resource, so blocks, `where`, labels and entrypoints work with no
-further wiring, and the result is labeled with the root it resolved to. Where the
+shape as `llx.TranslationSource`. `_` compiles as the root resource itself, so
+blocks, `where` and entrypoints work with no further wiring. It must not compile
+by feeding the root's *name* back through identifier resolution: under a rooted
+namespace that asks whether the root is a member of itself. Where the
 provider declares no root, `_` keeps failing, with a message that says the
 connection declares no root rather than pretending `_` is a resource name.
 
@@ -413,6 +414,14 @@ recorded as `Schema.ProviderRoots` at generate time, so a compile holding only t
 schema file — a policy bundle, a lint, an editor — can answer "does this hang off
 the asset's tree" without a runtime. The coordinator stamps the same map from the
 provider config for schemas that predate the option.
+
+**A label is what the author wrote.** Reaching a member of the root costs chunks
+nobody typed — the root, and one hop per embed — so none of them appear:
+`hostname` is `hostname`, not `os.linux.unix.base.hostname`, exactly as `sshd` is
+`sshd` whether or not `_` was spelled out. The root is labeled only when it is
+itself the answer (`_`). The bundle records which root it was compiled against
+(`asset_root`), which is what lets a reader tell an inserted chunk from an
+authored one, and the global spellings label exactly as they did before.
 
 **The non-rooted note.** Whenever v14 resolves a name globally that is not
 reachable from the root and is not `@global`, the compiler records it on the

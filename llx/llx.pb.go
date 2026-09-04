@@ -904,8 +904,13 @@ type CodeBundle struct {
 	// Empty when every name resolved is either rooted or marked global, which is
 	// the state a fully migrated provider produces.
 	UnrootedResources []string `protobuf:"bytes,29,rep,name=unrooted_resources,json=unrootedResources,proto3" json:"unrooted_resources,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	// The asset root this bundle was compiled against (ADR 031), empty when it
+	// was compiled without one. Provenance - what the query was bounded by - and
+	// what lets a reader tell the chunks the compiler inserted to reach the root
+	// from the ones the author wrote.
+	AssetRoot     string `protobuf:"bytes,30,opt,name=asset_root,json=assetRoot,proto3" json:"asset_root,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CodeBundle) Reset() {
@@ -1034,6 +1039,13 @@ func (x *CodeBundle) GetUnrootedResources() []string {
 		return x.UnrootedResources
 	}
 	return nil
+}
+
+func (x *CodeBundle) GetAssetRoot() string {
+	if x != nil {
+		return x.AssetRoot
+	}
+	return ""
 }
 
 // TranslationRef points one call that an older reader cannot make at a block
@@ -1680,7 +1692,7 @@ const file_llx_proto_rawDesc = "" +
 	"\x05field\x18\x01 \x01(\tR\x05field\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x12\n" +
 	"\x04desc\x18\x03 \x01(\tR\x04desc\x12\x1a\n" +
-	"\bprovider\x18\x04 \x01(\tR\bprovider\"\xb4\t\n" +
+	"\bprovider\x18\x04 \x01(\tR\bprovider\"\xd3\t\n" +
 	"\n" +
 	"CodeBundle\x12(\n" +
 	"\acode_v2\x18\x06 \x01(\v2\x0f.mql.llx.CodeV2R\x06codeV2\x128\n" +
@@ -1699,7 +1711,9 @@ const file_llx_proto_rawDesc = "" +
 	"\x10provider_schemas\x18\x1a \x03(\v2(.mql.llx.CodeBundle.ProviderSchemasEntryR\x0fproviderSchemas\x12`\n" +
 	"\x15min_provider_versions\x18\x1b \x03(\v2,.mql.llx.CodeBundle.MinProviderVersionsEntryR\x13minProviderVersions\x12;\n" +
 	"\ftranslations\x18\x1c \x03(\v2\x17.mql.llx.TranslationRefR\ftranslations\x12-\n" +
-	"\x12unrooted_resources\x18\x1d \x03(\tR\x11unrootedResources\x1a8\n" +
+	"\x12unrooted_resources\x18\x1d \x03(\tR\x11unrootedResources\x12\x1d\n" +
+	"\n" +
+	"asset_root\x18\x1e \x01(\tR\tassetRoot\x1a8\n" +
 	"\n" +
 	"PropsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +

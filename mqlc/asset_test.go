@@ -471,3 +471,43 @@ func TestRootedNamespace(t *testing.T) {
 		assert.NoError(t, err, "the global namespace still answers in v14")
 	})
 }
+
+// A label is what the author wrote. Reaching a member of the asset root costs
+// chunks the author never typed - the root itself, and one hop per embed - and
+// none of them belong in the label: `hostname` is `hostname`, the same way
+// `sshd` is `sshd` whether or not `_` was spelled out. Asking for the root
+// itself still labels it, because then it is the answer. See ADR 031.
+func TestRootedLabels(t *testing.T) {
+	conf := mqlc.NewConfig(core_schema.Add(os_schema), mql.Features{byte(mql.ResourceContext)})
+	conf.AssetRoot = "os.linux"
+
+	labelOf := func(t *testing.T, q string) string {
+		t.Helper()
+		res, err := mqlc.Compile(q, nil, conf)
+		require.NoError(t, err, q)
+		require.Len(t, res.CodeV2.Entrypoints(), 1, q)
+		checksum := res.CodeV2.Checksums[res.CodeV2.Entrypoints()[0]]
+		return res.Labels.Labels[checksum]
+	}
+
+	for _, test := range []struct{ query, expected string }{
+		// through the embed chain: os.linux -> unix -> base -> hostname
+		{"hostname", "hostname"},
+		{"_.hostname", "hostname"},
+		{"uptime", "uptime"},
+		// through an alias attached to a root, which compiles as a resource
+		{"sshd.config.params.length", "sshd.config.params.length"},
+		{"_.sshd.config.params.length", "sshd.config.params.length"},
+		{"_.packages.list.length", "packages.list.length"},
+		// the global spelling is unchanged, which is what keeps v14 output stable
+		{"packages.list.length", "packages.list.length"},
+		{"os.hostname", "os.hostname"},
+		{"asset.platform", "asset.platform"},
+		// and the root itself is still named when it is what was asked for
+		{"_", "os.linux"},
+	} {
+		t.Run(test.query, func(t *testing.T) {
+			assert.Equal(t, test.expected, labelOf(t, test.query))
+		})
+	}
+}

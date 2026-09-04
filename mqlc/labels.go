@@ -55,9 +55,19 @@ func createLabel(res *llx.CodeBundle, ref uint64, schema resources.ResourcesSche
 			if err != nil {
 				return "", err
 			}
+			if isSynthesizedRoot(res, ref) {
+				parentLabel = ""
+			}
 		}
 	} else if chunk.Function.Binding != 0 {
 		parentLabel, err = createLabel(res, chunk.Function.Binding, schema)
+		if err == nil && isSynthesizedRoot(res, chunk.Function.Binding) {
+			// The asset root a rooted query starts from is not something the
+			// author wrote - `hostname` is what they typed - so it does not
+			// appear in the label. Asking for the root itself (`_`) still labels
+			// it, because then it is the answer rather than the path to one.
+			parentLabel = ""
+		}
 		if err != nil {
 			return "", err
 		}
@@ -109,17 +119,22 @@ func createLabel(res *llx.CodeBundle, ref uint64, schema resources.ResourcesSche
 		label = parentLabel
 	case "createResource":
 		typeName := string(chunk.Type())
+		// Only use the last segment of the resource type to avoid duplicating
+		// the parent path in the label (e.g. prevent
+		// "gcp.project.pubsub.gcp.project.pubsubService.topic").
+		short := typeName
+		if idx := strings.LastIndex(typeName, "."); idx >= 0 {
+			short = typeName[idx+1:]
+		}
+		// The only emitter of this chunk reaches a resource *through* a binding
+		// (mqlc.go, the implicit-resource branch), so the author always wrote
+		// just the last segment. An empty parent label means that binding is
+		// itself unnamed - the asset root, or the resource a block is bound to -
+		// and the segment stands alone.
 		if parentLabel != "" {
-			// Only use the last segment of the resource type to avoid
-			// duplicating the parent path in the label (e.g. prevent
-			// "gcp.project.pubsub.gcp.project.pubsubService.topic").
-			if idx := strings.LastIndex(typeName, "."); idx >= 0 {
-				label = parentLabel + typeName[idx:]
-			} else {
-				label = parentLabel + "." + typeName
-			}
+			label = parentLabel + "." + short
 		} else {
-			label = typeName
+			label = short
 		}
 	case "if":
 		label = "if"
@@ -127,6 +142,11 @@ func createLabel(res *llx.CodeBundle, ref uint64, schema resources.ResourcesSche
 		if x, ok := llx.ComparableLabel(id); ok {
 			arg := chunk.Function.Args[0].LabelV2(code)
 			label = parentLabel + " " + x + " " + arg
+		} else if isEmbedTraversal(code, chunk, schema) {
+			// Reaching a field through an embedded resource costs a chunk per
+			// hop (`os.linux` -> `unix` -> `base` -> `hostname`), and the author
+			// wrote none of them. The label is the field they asked for.
+			label = parentLabel
 		} else if parentLabel == "" {
 			label = id
 		} else {
@@ -136,6 +156,41 @@ func createLabel(res *llx.CodeBundle, ref uint64, schema resources.ResourcesSche
 
 	// TODO: figure out why this string includes control characters in the first place
 	return stripCtlAndExtFromUnicode(label), nil
+}
+
+// isSynthesizedRoot reports whether a chunk is the asset root the compiler
+// inserted to resolve a rooted query, rather than a resource the author named.
+// It is the root of this bundle, taken as an operand (binding 0), which is
+// exactly the shape `hostname` compiles to and never the shape `os.linux.foo`
+// does - there the author named it and gets it back in the label.
+func isSynthesizedRoot(res *llx.CodeBundle, ref uint64) bool {
+	if res.AssetRoot == "" {
+		return false
+	}
+	chunk := res.CodeV2.Chunk(ref)
+	if chunk == nil || chunk.Call != llx.Chunk_FUNCTION || chunk.Id != res.AssetRoot {
+		return false
+	}
+	return chunk.Function == nil || chunk.Function.Binding == 0
+}
+
+// isEmbedTraversal reports whether a field chunk is one hop of an embed chain
+// rather than the field the author asked for. Embedded fields are reachable
+// directly on the embedding resource, so the path to them is machinery.
+func isEmbedTraversal(code *llx.CodeV2, chunk *llx.Chunk, schema resources.ResourcesSchema) bool {
+	if schema == nil || chunk.Function == nil || chunk.Function.Binding == 0 {
+		return false
+	}
+	binding := code.Chunk(chunk.Function.Binding)
+	if binding == nil {
+		return false
+	}
+	typ := binding.DereferencedTypeV2(code)
+	if !typ.IsResource() {
+		return false
+	}
+	_, field := schema.LookupField(typ.ResourceName(), chunk.Id)
+	return field.GetIsEmbedded()
 }
 
 var reAccessor = regexp.MustCompile(`^[\p{L}\d_]+$`)

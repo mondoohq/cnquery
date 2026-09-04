@@ -1702,6 +1702,12 @@ func (c *compiler) noteIfUnrooted(resource *resources.ResourceInfo) {
 	if resource.Id == root || resource.Id == c.AssetRoot {
 		return
 	}
+	// Bridging nodes (`os` for `os.linux`) are namespace segments the schema
+	// builder creates, not resources anything resolves to, so they are not a
+	// thing that can be inside or outside a tree.
+	if resource.GetIsExtension() {
+		return
+	}
 	rootInfo := c.Schema.Lookup(root)
 	if rootInfo == nil {
 		return
@@ -2980,6 +2986,8 @@ func compile(input string, props PropsHandler, compilerConf CompilerConfig) (*ll
 	if err != nil {
 		return res, err
 	}
+
+	res.AssetRoot = conf.AssetRoot
 
 	err = UpdateLabels(res, conf.Schema)
 	if err != nil {

@@ -190,6 +190,12 @@ message CodeBundle {
   // Empty when every name resolved is either rooted or marked global, which is
   // the state a fully migrated provider produces.
   repeated string unrooted_resources = 29;
+
+  // The asset root this bundle was compiled against (ADR 031), empty when it
+  // was compiled without one. Provenance - what the query was bounded by - and
+  // what lets a reader tell the chunks the compiler inserted to reach the root
+  // from the ones the author wrote.
+  string asset_root = 30;
 }
 
 // TranslationRef points one call that an older reader cannot make at a block
