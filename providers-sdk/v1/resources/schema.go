@@ -115,6 +115,13 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 			if v.Maturity != "" {
 				existing.Maturity = v.Maturity
 			}
+			// Reachability without a root is a property of the resource, not of
+			// which schema happened to be merged last, so one contributor
+			// claiming it is enough. Dropping it here made `asset` - which os
+			// extends - look non-global to a rooted compile. See ADR 031.
+			if v.Global {
+				existing.Global = true
+			}
 
 			if existing.Fields == nil {
 				existing.Fields = map[string]*Field{}
@@ -148,6 +155,9 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 				// and diagnostics and the ADR 040 reconciliation step both read
 				// it off the merged schema, not off the per-provider one.
 				MinProviderVersion: v.MinProviderVersion,
+				// So does reachability without a root, for the same reason: a
+				// rooted compile reads it off the merged schema (ADR 031).
+				Global: v.Global,
 			}
 			for k, v := range v.Fields {
 				ri.Fields[k] = cloneField(v)

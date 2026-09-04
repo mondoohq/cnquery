@@ -393,3 +393,62 @@ func TestUnrootedResourcesAreRecorded(t *testing.T) {
 		}
 	})
 }
+
+// RootedNamespace is the v15 model available early (ADR 031 point 7): the root
+// is the namespace, the global namespace is reachable only through `@global`,
+// and a compile without a root is an error rather than a silent fall back.
+func TestRootedNamespace(t *testing.T) {
+	rooted := mqlc.NewConfig(core_schema.Add(os_schema),
+		mql.Features{byte(mql.ResourceContext), byte(mql.RootedNamespace)})
+	rooted.AssetRoot = "os.linux"
+
+	t.Run("members of the root resolve", func(t *testing.T) {
+		for _, q := range []string{
+			"hostname",
+			"uptime",
+			"packages.list.length",
+			"users.list { name }",
+			"selinux.mode",
+			`file("/etc/hostname").exists`,
+			"sshd.config.params",
+		} {
+			_, err := mqlc.Compile(q, nil, rooted)
+			assert.NoError(t, err, q)
+		}
+	})
+
+	// Core marks itself `@global`, which is the only way out of the tree.
+	t.Run("marked globals still resolve", func(t *testing.T) {
+		for _, q := range []string{"asset.platform", "time.now.unix", `regex.ipv4`} {
+			_, err := mqlc.Compile(q, nil, rooted)
+			assert.NoError(t, err, q)
+		}
+	})
+
+	// The point of the mode: a resource outside this asset's tree stops
+	// resolving instead of answering with an unset field.
+	t.Run("off-tree resources are rejected", func(t *testing.T) {
+		_, err := mqlc.Compile("registrykey", nil, rooted)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "not part of this asset's tree")
+	})
+
+	// A root is no longer optional, so its absence is reported rather than
+	// quietly resolving against the globals.
+	t.Run("a root is required", func(t *testing.T) {
+		noRoot := mqlc.NewConfig(core_schema.Add(os_schema),
+			mql.Features{byte(mql.ResourceContext), byte(mql.RootedNamespace)})
+		_, err := mqlc.Compile("packages.list.length", nil, noRoot)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "needs an asset root")
+	})
+
+	// Without the feature the same queries keep v14 behavior, which is what
+	// makes the flag a way to try v15 rather than a switch that strands content.
+	t.Run("v14 is unaffected", func(t *testing.T) {
+		v14 := mqlc.NewConfig(core_schema.Add(os_schema), mql.Features{byte(mql.ResourceContext)})
+		v14.AssetRoot = "os.linux"
+		_, err := mqlc.Compile("registrykey", nil, v14)
+		assert.NoError(t, err, "the global namespace still answers in v14")
+	})
+}

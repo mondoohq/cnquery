@@ -30,11 +30,12 @@ func _() {
 	_ = x[ScanContentModeClientCompare-20]
 	_ = x[ScanContentModeNoCompare-21]
 	_ = x[UploadResourcesData-22]
+	_ = x[RootedNamespace-23]
 }
 
-const _Feature_name = "MassQueriesPiperCodeBoolAssertionsK8sNodeDiscoveryMQLAssetContextErrorsAsFailuresStoreResourcesDataFineGrainedAssetsSerialNumberAsIDForceShellCompletionResourceContextFailIfNoEntryPointsUploadResultsV2AutoUpdateEngineBiosUUIDAsIDExchangeTokenForTokenTerraformResolveVarsScanContentModeShadowScanContentModeServerCompareScanContentModeClientCompareScanContentModeNoCompareUploadResourcesData"
+const _Feature_name = "MassQueriesPiperCodeBoolAssertionsK8sNodeDiscoveryMQLAssetContextErrorsAsFailuresStoreResourcesDataFineGrainedAssetsSerialNumberAsIDForceShellCompletionResourceContextFailIfNoEntryPointsUploadResultsV2AutoUpdateEngineBiosUUIDAsIDExchangeTokenForTokenTerraformResolveVarsScanContentModeShadowScanContentModeServerCompareScanContentModeClientCompareScanContentModeNoCompareUploadResourcesDataRootedNamespace"
 
-var _Feature_index = [...]uint16{0, 11, 20, 34, 50, 65, 81, 99, 116, 132, 152, 167, 186, 201, 217, 229, 250, 270, 291, 319, 347, 371, 390}
+var _Feature_index = [...]uint16{0, 11, 20, 34, 50, 65, 81, 99, 116, 132, 152, 167, 186, 201, 217, 229, 250, 270, 291, 319, 347, 371, 390, 405}
 
 func (i Feature) String() string {
 	idx := int(i) - 1

@@ -221,6 +221,7 @@ func (x *extensibleSchema) unsafeRefresh() {
 		Resources:        map[string]*resources.ResourceInfo{},
 		Dependencies:     map[string]*resources.ProviderInfo{},
 		ProviderVersions: map[string]string{},
+		ProviderRoots:    map[string]string{},
 	}
 
 	for _, schema := range x.loaded {
@@ -233,5 +234,8 @@ func (x *extensibleSchema) unsafeRefresh() {
 		Resources:        res.Resources,
 		Dependencies:     res.Dependencies,
 		ProviderVersions: res.ProviderVersions,
+		// Each provider's declared asset root, so a compile that reads the
+		// aggregate can tell what hangs off an asset's tree (ADR 031).
+		ProviderRoots: res.ProviderRoots,
 	}
 }

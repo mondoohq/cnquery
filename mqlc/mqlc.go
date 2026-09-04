@@ -329,6 +329,13 @@ type CompilerConfig struct {
 	// it: the union is a compile-time receiver, not a platform, so it must not
 	// be offered as the place a missing field is available.
 	DeclaredAssetRoot string
+
+	// RootedNamespace resolves bare identifiers against the asset root instead
+	// of the global namespace, which is the v15 model (ADR 031 point 7). Set
+	// from the feature of the same name. With it on, the global namespace is
+	// reachable only through resources marked `@global`, and a compile without a
+	// root is an error rather than a silent fall back to global resolution.
+	RootedNamespace bool
 }
 
 func (c *CompilerConfig) EnableStats() {
@@ -371,6 +378,7 @@ func NewConfig(schema resources.ResourcesSchema, features mql.Features) Compiler
 	return CompilerConfig{
 		Schema:          schema,
 		UseAssetContext: features.IsActive(mql.MQLAssetContext),
+		RootedNamespace: features.IsActive(mql.RootedNamespace),
 		Stats:           compilerStatsNull{},
 		Features:        features,
 	}
@@ -1876,6 +1884,25 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 		}
 	}
 
+	// Rooted namespace (ADR 031 point 7): the root is the namespace, so a bare
+	// identifier resolves as a member of it and the global namespace is left to
+	// what marks itself `@global`. This is the v15 model; the fallback below is
+	// what v14 keeps.
+	if c.RootedNamespace && callBinding == nil {
+		if c.AssetRoot == "" {
+			return nil, types.Nil, errors.New("cannot resolve '" + id +
+				"': rooted compilation needs an asset root, and none was supplied")
+		}
+		if found, restCalls, typ, err := c.compileRootMember(id, calls); found {
+			return restCalls, typ, err
+		}
+		if info := c.Schema.Lookup(id); info != nil && !info.GetGlobal() {
+			addFieldSuggestions(availableFields(c, types.Resource(c.AssetRoot)), id, c.Result)
+			return nil, types.Nil, errors.New("cannot find '" + id + "' in " + c.AssetRoot +
+				"; it is not part of this asset's tree and is not a global resource")
+		}
+	}
+
 	found, restCalls, typ, err = c.compileResource(id, calls)
 	if found {
 		return restCalls, typ, err
@@ -1910,8 +1937,9 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 	// the asset root: a query is a block on that root, so `hostname` means
 	// `assetRoot.hostname` (ADR 031 point 7). Tried after the global namespace,
 	// so nothing that compiles today compiles differently - only names that used
-	// to fail start resolving.
-	if callBinding == nil {
+	// to fail start resolving. Under RootedNamespace the root was already tried,
+	// first.
+	if callBinding == nil && !c.RootedNamespace {
 		if found, restCalls, typ, err := c.compileRootMember(id, calls); found {
 			return restCalls, typ, err
 		}

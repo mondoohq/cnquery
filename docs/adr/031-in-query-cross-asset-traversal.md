@@ -363,11 +363,19 @@ resolve it against the asset root. Three properties, all required:
 - **`hostname` starts working.** It fails today, so nothing can depend on the old
   behavior.
 
-**v14 with `RootedNamespace`: v15 semantics, early.** The feature flag compiles
-rooted only: bare identifiers resolve against the asset root, and the global
-namespace is available only through resources marked `@global`. It exists so the
-v15 model can be run and tested for the months before it becomes the default,
-rather than arriving as a flag day.
+**v14 with `RootedNamespace`: v15 semantics, early.** The feature flag (feature 23)
+compiles rooted only: bare identifiers resolve against the asset root, the global
+namespace is available only through resources marked `@global`, and a compile
+without a root is an error rather than a silent fall back. It exists so the v15
+model can be run and tested for the months before it becomes the default, rather
+than arriving as a flag day. `MONDOO_FEATURES=RootedNamespace mql run local -c
+"hostname"` answers, `registrykey` is rejected as not part of the tree, and
+`time.now` still resolves because core marks it.
+
+The mode also rejects a resource addressed by a global path that is not a root
+member, `os.linux.packages` included: the root is the namespace, so a name is
+reached through it or through `@global`, and finding what that breaks is what the
+flag is for.
 
 **v15: rooted by default.** The flag becomes the default and the fallback is
 removed. A root is then required rather than optional, which is also when
@@ -523,10 +531,10 @@ itself `asset<…>` resolves through the *target* runtime's own resolver.
    tried first so every bundle that compiles today compiles identically. Carry the
    declared root in the resources schema so a compile with no runtime has one.
    Record the non-rooted note on the bundle. Add the shadowing and
-   language-construct guards, and `@global`, starting with core.
+   language-construct guards, and `@global`, starting with core. **Landed.**
 5. **`RootedNamespace` feature flag.** The v15 semantics behind a flag: rooted
    only, `@global` for the exceptions, no fallback, a root required. Runnable
-   against real content for the months before it becomes the default.
+   against real content for the months before it becomes the default. **Landed.**
 6. **Root narrowing.** Compile `_` against the union, record the narrowed
    requirement on the bundle, skip assets that do not satisfy it. Needed for the
    **disconnected** compile; a connected one already gets the concrete root from
