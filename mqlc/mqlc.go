@@ -1698,6 +1698,10 @@ func (c *compiler) noteIfUnrooted(resource *resources.ResourceInfo) {
 	if root == "" {
 		return
 	}
+	// A root is what everything else hangs off; it does not hang off itself.
+	if resource.Id == root || resource.Id == c.AssetRoot {
+		return
+	}
 	rootInfo := c.Schema.Lookup(root)
 	if rootInfo == nil {
 		return
@@ -1839,7 +1843,15 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 		if c.AssetRoot == "" || c.AssetRoot == "_" {
 			return nil, types.Nil, errors.New("cannot resolve `_`: this connection declares no root resource")
 		}
-		return c.compileIdentifier(c.AssetRoot, nil, calls)
+		// Compiled as the root resource itself, not by feeding its name back
+		// through identifier resolution: under a rooted namespace that would ask
+		// whether the root is a member of itself, and answer no.
+		found, restCalls, typ, err := c.compileResource(c.AssetRoot, calls)
+		if !found {
+			return nil, types.Nil, errors.New("cannot resolve `_`: this connection declares the root '" +
+				c.AssetRoot + "', which is not in the schema")
+		}
+		return restCalls, typ, err
 	}
 
 	if id == "props" {

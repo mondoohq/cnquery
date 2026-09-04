@@ -427,6 +427,25 @@ func TestRootedNamespace(t *testing.T) {
 
 	// The point of the mode: a resource outside this asset's tree stops
 	// resolving instead of answering with an unset field.
+	// `_` names the root itself. Compiling it by feeding the root's name back
+	// through identifier resolution asked whether the root is a member of
+	// itself, which under this mode is answered with "not part of this asset's
+	// tree" - so `_.sshd` failed while bare `sshd` worked.
+	t.Run("`_` is the root, not a name to resolve", func(t *testing.T) {
+		for _, q := range []string{"_", "_.hostname", "_.sshd.config.params", "_ { hostname }"} {
+			_, err := mqlc.Compile(q, nil, rooted)
+			assert.NoError(t, err, q)
+		}
+	})
+
+	// The root is what everything else hangs off, so it is never itself
+	// recorded as reaching outside the tree.
+	t.Run("the root is not noted as unrooted", func(t *testing.T) {
+		res, err := mqlc.Compile("_.hostname", nil, rooted)
+		require.NoError(t, err)
+		assert.Empty(t, res.UnrootedResources)
+	})
+
 	t.Run("off-tree resources are rejected", func(t *testing.T) {
 		_, err := mqlc.Compile("registrykey", nil, rooted)
 		require.Error(t, err)
