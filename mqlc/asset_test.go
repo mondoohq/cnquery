@@ -272,3 +272,62 @@ func TestMissingFieldOnAPlatformRoot(t *testing.T) {
 		}
 	})
 }
+
+// A query is a block on the asset root, so a bare member of the root resolves:
+// `hostname` means `assetRoot.hostname` (ADR 031 point 7). Before this, only
+// `_.hostname` worked and `hostname` failed outright.
+func TestBareRootMembers(t *testing.T) {
+	rooted := mqlc.NewConfig(core_schema.Add(os_schema), mql.Features{byte(mql.ResourceContext)})
+	rooted.AssetRoot = "os.linux"
+	unrooted := mqlc.NewConfig(core_schema.Add(os_schema), mql.Features{byte(mql.ResourceContext)})
+
+	// Members of the root, reached through its embed chain (os.linux -> os.unix
+	// -> os.base) and through aliases attached to it.
+	for _, q := range []string{"hostname", "uptime", "machineid", "date.timezone", "env.length"} {
+		t.Run(q, func(t *testing.T) {
+			_, err := mqlc.Compile(q, nil, rooted)
+			assert.NoError(t, err, "resolves as a member of the root")
+
+			_, err = mqlc.Compile(q, nil, unrooted)
+			assert.Error(t, err, "without a root there is nothing to resolve it against")
+		})
+	}
+
+	// A name that is neither a global resource nor a root member fails the way
+	// it always did - the fallback must not change what an unknown name says.
+	t.Run("unknown name", func(t *testing.T) {
+		_, err := mqlc.Compile("nosuchthing", nil, rooted)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "cannot find resource for identifier 'nosuchthing'")
+	})
+}
+
+// The v14 rule is global-first, root-fallback, and this is what it buys: every
+// query that compiles today compiles to the *same code*. Root-first would
+// recompile `packages.list.length` through the root, changing its checksum -
+// which cnspec keys scoring continuity on, and which would bake one platform
+// into a bundle it shares across assets. See ADR 031 point 7.
+func TestRootedFallbackDoesNotChangeExistingBundles(t *testing.T) {
+	rooted := mqlc.NewConfig(core_schema.Add(os_schema), mql.Features{byte(mql.ResourceContext)})
+	rooted.AssetRoot = "os.linux"
+	unrooted := mqlc.NewConfig(core_schema.Add(os_schema), mql.Features{byte(mql.ResourceContext)})
+
+	for _, q := range []string{
+		"packages.list.length",
+		"users.list { name }",
+		"sshd.config.params",
+		`file("/etc/hostname").exists`,
+		"asset.platform",
+		"services.where(running).length",
+	} {
+		t.Run(q, func(t *testing.T) {
+			with, err := mqlc.Compile(q, nil, rooted)
+			require.NoError(t, err)
+			without, err := mqlc.Compile(q, nil, unrooted)
+			require.NoError(t, err)
+
+			assert.Equal(t, without.CodeV2.Id, with.CodeV2.Id,
+				"a root must not change the compilation of a name the global namespace already answers")
+		})
+	}
+}

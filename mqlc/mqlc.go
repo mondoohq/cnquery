@@ -1595,6 +1595,47 @@ func (c *compiler) prefersFieldOverResource(owner *resources.ResourceInfo, targe
 
 // compile a resource from an identifier, trying to find the longest matching resource
 // and execute all call functions if there are any
+// compileRootMember resolves an identifier as a member of the connected asset's
+// root, which is what makes a query behave like `assetRoot { ... }` (ADR 031
+// point 7). It emits the root resource and then the member on top of it, so
+// `hostname` compiles exactly as `os.linux.hostname` would.
+//
+// Reports false when there is no root, or the root does not carry the member, so
+// the caller falls through to its own not-found handling and the message stays
+// about the identifier the user typed.
+func (c *compiler) compileRootMember(id string, calls []*parser.Call) (bool, []*parser.Call, types.Type, error) {
+	if c.AssetRoot == "" {
+		return false, nil, types.Nil, nil
+	}
+	root := c.Schema.Lookup(c.AssetRoot)
+	if root == nil {
+		return false, nil, types.Nil, nil
+	}
+	// FindField walks embedded resources, which is how a member of `os.base`
+	// is reachable on the `os.linux` root.
+	if _, _, ok := c.Schema.FindField(root, id); !ok {
+		return false, nil, types.Nil, nil
+	}
+
+	rootType, err := c.addResource(c.AssetRoot, root, nil)
+	if err != nil {
+		return true, nil, types.Nil, err
+	}
+	binding := &variable{typ: rootType, ref: c.tailRef()}
+
+	var call *parser.Call
+	if len(calls) > 0 && calls[0].Function != nil {
+		call = calls[0]
+		calls = calls[1:]
+	}
+
+	found, typ, err := c.compileBoundIdentifier(id, binding, call)
+	if !found && err == nil {
+		err = errors.New("cannot find field '" + id + "' in " + c.AssetRoot)
+	}
+	return true, calls, typ, err
+}
+
 func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*parser.Call, types.Type, error) {
 	resource := c.Schema.Lookup(id)
 	if resource == nil {
@@ -1821,6 +1862,17 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 		})
 		c.standalone = false
 		return restCalls, callBinding.typ, err
+	}
+
+	// A bare identifier that is not a global resource may still be a member of
+	// the asset root: a query is a block on that root, so `hostname` means
+	// `assetRoot.hostname` (ADR 031 point 7). Tried after the global namespace,
+	// so nothing that compiles today compiles differently - only names that used
+	// to fail start resolving.
+	if callBinding == nil {
+		if found, restCalls, typ, err := c.compileRootMember(id, calls); found {
+			return restCalls, typ, err
+		}
 	}
 
 	// suggestions
