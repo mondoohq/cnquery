@@ -42,9 +42,13 @@ func (p *mqlPorts) list() ([]any, error) {
 	case pf.IsFamily("windows"):
 		return p.listWindows()
 
-	case pf.IsFamily("darwin") || pf.Name == "freebsd":
-		// both macOS and FreeBSD support lsof
-		// FreeBSD may need an installation via `pkg install sysutils/lsof`
+	case pf.Name == "freebsd":
+		// sockstat ships in the FreeBSD base system. lsof does not, and when it
+		// is absent the lsof path returns an empty list rather than an error,
+		// so a host with listening sockets reported none at all.
+		return p.listFreebsd()
+
+	case pf.IsFamily("darwin"):
 		return p.listMacos()
 
 	case pf.Name == "aix":
@@ -658,6 +662,127 @@ func (p *mqlPorts) listMacos() ([]any, error) {
 
 			res = append(res, obj)
 		}
+	}
+
+	return res, nil
+}
+
+// freebsdPortStates maps sockstat's CONN STATE column onto the canonical
+// TCP_STATES vocabulary, so `state == "listen"` behaves the same on FreeBSD as
+// everywhere else. udp rows carry no state and keep an empty value rather than
+// having one invented for them.
+var freebsdPortStates = map[string]string{
+	"LISTEN":      TCP_STATES[10],
+	"ESTABLISHED": TCP_STATES[1],
+	"SYN_SENT":    TCP_STATES[2],
+	"SYN_RCVD":    TCP_STATES[3],
+	"FIN_WAIT_1":  TCP_STATES[4],
+	"FIN_WAIT_2":  TCP_STATES[5],
+	"TIME_WAIT":   TCP_STATES[6],
+	"CLOSED":      TCP_STATES[7],
+	"CLOSE_WAIT":  TCP_STATES[8],
+	"LAST_ACK":    TCP_STATES[9],
+	"CLOSING":     TCP_STATES[11],
+}
+
+// freebsdPortState translates one sockstat CONN STATE token onto the canonical
+// TCP_STATES vocabulary. An unrecognised token passes through unchanged rather
+// than becoming "", so a state FreeBSD adds later is still visible instead of
+// silently reading as no state at all. udp rows carry no state and keep their
+// empty value.
+func freebsdPortState(raw string) string {
+	if raw == "" {
+		return ""
+	}
+	if state, ok := freebsdPortStates[raw]; ok {
+		return state
+	}
+	return raw
+}
+
+// listFreebsd reads sockets from sockstat, which is part of the base system.
+func (p *mqlPorts) listFreebsd() ([]any, error) {
+	users, err := p.users()
+	if err != nil {
+		return nil, err
+	}
+
+	processes, err := p.processesByPid()
+	if err != nil {
+		return nil, err
+	}
+
+	conn := p.MqlRuntime.Connection.(shared.Connection)
+	executedCmd, err := conn.RunCommand("sockstat -46 -s")
+	if err != nil {
+		return nil, err
+	}
+	if executedCmd.ExitStatus != 0 {
+		// -s is not available on every release; the listing without it still
+		// carries every socket, only without the state column.
+		executedCmd, err = conn.RunCommand("sockstat -46")
+		if err != nil {
+			return nil, err
+		}
+		if executedCmd.ExitStatus != 0 {
+			return nil, errors.New("could not list ports: sockstat failed")
+		}
+	}
+
+	entries, err := ports.ParseSockstat(executedCmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	// sockstat names the owning user, while the users map is keyed by uid.
+	// Index once: scanning per socket is O(sockets x users).
+	usersByName := make(map[string]*mqlUser, len(users))
+	for uid := range users {
+		u := users[uid]
+		if u != nil {
+			usersByName[u.Name.Data] = u
+		}
+	}
+
+	res := []any{}
+	for i := range entries {
+		entry := entries[i]
+
+		state := freebsdPortState(entry.State)
+
+		args := map[string]*llx.RawData{
+			"protocol":      llx.StringData(entry.Protocol),
+			"port":          llx.IntData(entry.LocalPort),
+			"address":       llx.StringData(entry.LocalAddress),
+			"state":         llx.StringData(state),
+			"remoteAddress": llx.StringData(entry.RemoteAddress),
+			"remotePort":    llx.IntData(entry.RemotePort),
+		}
+
+		mqlUser := usersByName[entry.User]
+		if mqlUser != nil {
+			args["user"] = llx.ResourceData(mqlUser, "user")
+		}
+
+		mqlProcess := processes[entry.Pid]
+		if mqlProcess != nil {
+			args["process"] = llx.ResourceData(mqlProcess, "process")
+		}
+
+		obj, err := CreateResource(p.MqlRuntime, "port", args)
+		if err != nil {
+			return nil, err
+		}
+
+		portObj := obj.(*mqlPort)
+		if mqlProcess == nil {
+			portObj.Process.State = plugin.StateIsSet | plugin.StateIsNull
+		}
+		if mqlUser == nil {
+			portObj.User.State = plugin.StateIsSet | plugin.StateIsNull
+		}
+
+		res = append(res, obj)
 	}
 
 	return res, nil

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers/os/connection/mock"
 )
@@ -926,6 +927,17 @@ func TestSolaris11Detector(t *testing.T) {
 	assert.Equal(t, "solaris", di.Name, "os name should be identified")
 	assert.Equal(t, "Oracle Solaris", di.Title, "os title should be identified")
 	assert.Equal(t, "11.1", di.Version, "os version should be identified")
+	assert.Equal(t, "i86pc", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"unix", "os"}, di.Family)
+}
+
+// uname already proves the host is SunOS, so an unreadable /etc/release must
+// still detect solaris - just without a title and version.
+func TestSolarisDetectorWithoutReleaseFile(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-solaris11-no-release.toml")
+	require.NoError(t, err, "platform is still detected without /etc/release")
+
+	assert.Equal(t, "solaris", di.Name, "os name should be identified")
 	assert.Equal(t, "i86pc", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"unix", "os"}, di.Family)
 }

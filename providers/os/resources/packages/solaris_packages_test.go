@@ -151,3 +151,21 @@ func TestSolaris114Manager(t *testing.T) {
 	}
 	assert.Contains(t, pkgList, p, "pkg detected")
 }
+
+// A failing or unavailable `pkg` must surface an error. Reporting an empty list
+// would read as "this system has no packages installed".
+func TestSolarisPkgManagerCommandFailure(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithData(&mock.TomlData{
+		Commands: map[string]*mock.Command{
+			"pkg list -Hv": {
+				Stderr:     "bash: pkg: command not found",
+				ExitStatus: 127,
+			},
+		},
+	}))
+	require.NoError(t, err)
+
+	pkgs, err := (&SolarisPkgManager{conn: conn}).List()
+	require.Error(t, err)
+	assert.Empty(t, pkgs)
+}

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -325,6 +326,30 @@ func getCpuInfoAIX(conn shared.Connection) (*cpuInfo, error) {
 	return info, nil
 }
 
+// psrinfo reports the core count only when the socket has more than one, and
+// uses the singular "core" for exactly one. A socket line without a core count
+// therefore describes a single-core package.
+//
+//	The physical processor has 4 cores and 8 virtual processors (0-7)
+//	The physical processor has 1 core and 2 virtual processors (0 1)
+//	The physical processor has 1 virtual processor (0)
+var solarisCoreCountRegex = regexp.MustCompile(`\bhas (\d+) cores?\b`)
+
+// solarisSocketCores returns the number of physical cores described by a single
+// "The physical processor has ..." line from psrinfo -pv.
+func solarisSocketCores(line string) int64 {
+	m := solarisCoreCountRegex.FindStringSubmatch(line)
+	if m == nil {
+		// no core count printed => the socket has a single core
+		return 1
+	}
+	n, err := strconv.ParseInt(m[1], 10, 64)
+	if err != nil {
+		return 1
+	}
+	return n
+}
+
 func getCpuInfoSolaris(conn shared.Connection) (*cpuInfo, error) {
 	// psrinfo -pv gives per-physical-processor details including model.
 	// Example output:
@@ -355,17 +380,7 @@ func getCpuInfoSolaris(conn shared.Connection) (*cpuInfo, error) {
 		// "The physical processor has N cores and M virtual processors (...)"
 		if strings.HasPrefix(trimmed, "The physical processor has") {
 			sockets++
-			// Extract core count
-			if idx := strings.Index(trimmed, " cores"); idx > 0 {
-				// Find the number before " cores"
-				prefix := trimmed[:idx]
-				parts := strings.Fields(prefix)
-				if len(parts) > 0 {
-					if n, err := strconv.ParseInt(parts[len(parts)-1], 10, 64); err == nil {
-						totalCores += n
-					}
-				}
-			}
+			totalCores += solarisSocketCores(trimmed)
 		}
 
 		// The indented model line (deepest indent, no parens) e.g.:

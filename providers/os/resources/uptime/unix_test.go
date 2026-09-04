@@ -204,3 +204,34 @@ func TestFreebsdUptime(t *testing.T) {
 	}, duration)
 	assert.Equal(t, "24m0s", time.Duration(duration.Duration).String())
 }
+
+// Solaris pluralizes with "(s)" rather than a bare "s". Verbatim output from an
+// Oracle Solaris 11.4.86 host.
+func TestSolarisUptimeMinutes(t *testing.T) {
+	data := "  7:28am  up 27 min(s),  0 users,  load average: 0.02, 0.01, 0.03"
+	duration, err := uptime.ParseUnixUptime(data)
+	assert.Nil(t, err)
+	assert.Equal(t, &uptime.UnixUptimeResult{
+		Duration:           int64(27 * time.Minute),
+		Users:              0,
+		LoadOneMinute:      float64(0.02),
+		LoadFiveMinutes:    float64(0.01),
+		LoadFifteenMinutes: float64(0.03),
+	}, duration)
+	assert.Equal(t, "27m0s", time.Duration(duration.Duration).String())
+}
+
+func TestSolarisUptimeDaysAndClock(t *testing.T) {
+	data := " 10:47am  up 5 day(s), 21:03,  1 user,  load average: 0.10, 0.20, 0.30"
+	duration, err := uptime.ParseUnixUptime(data)
+	assert.Nil(t, err)
+	assert.Equal(t, "141h3m0s", time.Duration(duration.Duration).String())
+	assert.Equal(t, 1, duration.Users)
+}
+
+func TestSolarisUptimeHours(t *testing.T) {
+	data := " 10:47am  up 2 hr(s), 15 min(s),  3 users,  load average: 0.10, 0.20, 0.30"
+	duration, err := uptime.ParseUnixUptime(data)
+	assert.Nil(t, err)
+	assert.Equal(t, "2h15m0s", time.Duration(duration.Duration).String())
+}
