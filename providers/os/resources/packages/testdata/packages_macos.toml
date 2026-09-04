@@ -115,6 +115,148 @@ stdout = """<?xml version="1.0" encoding="UTF-8"?>
 				<key>path</key>
 				<string>/System/Library/CoreServices/liquiddetectiond.app</string>
 			</dict>
+			<dict>
+				<key>_name</key>
+				<string>https+++bsky</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>lastModified</key>
+				<date>2026-05-21T08:57:02Z</date>
+				<key>obtained_from</key>
+				<string>unknown</string>
+				<key>path</key>
+				<string>/Users/user/Library/Application Support/Firefox/Profiles/abcd1234.default-release/storage/default/https+++bsky.app</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>group.is.workflow.my</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>lastModified</key>
+				<date>2026-05-21T08:57:02Z</date>
+				<key>obtained_from</key>
+				<string>unknown</string>
+				<key>path</key>
+				<string>/Users/user/Library/Application Scripts/group.is.workflow.my.app</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>qFlipper</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>lastModified</key>
+				<date>2026-05-21T08:57:02Z</date>
+				<key>obtained_from</key>
+				<string>identified_developer</string>
+				<key>path</key>
+				<string>/Applications/qFlipper.app</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>Victory</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>lastModified</key>
+				<date>2026-05-21T08:57:02Z</date>
+				<key>obtained_from</key>
+				<string>mac_app_store</string>
+				<key>path</key>
+				<string>/Applications/Victory.app</string>
+				<key>version</key>
+				<string>3.2.1</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>WireGuard</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>lastModified</key>
+				<date>2026-05-21T08:57:02Z</date>
+				<key>obtained_from</key>
+				<string>mac_app_store</string>
+				<key>path</key>
+				<string>/Applications/WireGuard.app</string>
+				<key>signed_by</key>
+				<array>
+					<string>Apple Mac OS Application Signing</string>
+					<string>Apple Worldwide Developer Relations Certification Authority</string>
+					<string>Apple Root CA</string>
+				</array>
+				<key>version</key>
+				<string>1.0.16</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>Docker</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>obtained_from</key>
+				<string>identified_developer</string>
+				<key>path</key>
+				<string>/Applications/Docker.app</string>
+				<key>version</key>
+				<string>4.89.0</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>Docker.app</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>obtained_from</key>
+				<string>identified_developer</string>
+				<key>path</key>
+				<string>/Applications/Docker.app.back</string>
+				<key>version</key>
+				<string>4.88.1</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>Docker Desktop</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>obtained_from</key>
+				<string>identified_developer</string>
+				<key>path</key>
+				<string>/Applications/Docker.app.back/Contents/MacOS/Docker Desktop.app</string>
+				<key>version</key>
+				<string>4.88.1</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>DockerHelper</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>obtained_from</key>
+				<string>identified_developer</string>
+				<key>path</key>
+				<string>/Applications/Docker.app.back/Contents/Library/LoginItems/DockerHelper.app</string>
+				<key>version</key>
+				<string>1.0.1</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>AirDrop</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>obtained_from</key>
+				<string>apple</string>
+				<key>path</key>
+				<string>/System/Library/CoreServices/Finder.app/Contents/Applications/AirDrop.app</string>
+				<key>version</key>
+				<string>26.4</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>Spotlight</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>obtained_from</key>
+				<string>apple</string>
+				<key>path</key>
+				<string>/System/Library/Services/Spotlight.service</string>
+				<key>version</key>
+				<string>3.0</string>
+			</dict>
 		</array>
 		<key>_parentDataType</key>
 		<string>SPSoftwareDataType</string>
@@ -166,4 +308,19 @@ ServerURL=https://crash-reports.mozilla.com/submit?id={ec8030f7-c20a-464f-9b0e-1
 
 [AppUpdate]
 URL=https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml
+"""
+
+[files."/Applications/qFlipper.app/Contents/Info.plist"]
+content = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleExecutable</key>
+	<string>qFlipper</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.yourcompany.qFlipper</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+</dict>
+</plist>
 """

@@ -64,10 +64,15 @@ func ParseMacOSPackages(conn shared.Connection, platform *inventory.Platform, in
 		return nil, errors.New("format not supported")
 	}
 
-	pkgs := make([]Package, len(data[0].Items))
-	for i, entry := range data[0].Items {
-		// We need a special handling for Firefox to determine ESR installations
-		purlQualifiers := getPurlQualifiers(conn, entry)
+	pkgs := make([]Package, 0, len(data[0].Items))
+	for _, entry := range data[0].Items {
+		if !isApplicationBundlePath(entry.Path) {
+			log.Debug().
+				Str("name", entry.Name).
+				Str("path", entry.Path).
+				Msg("skipping entry that is not an installed application bundle")
+			continue
+		}
 
 		// system_profiler only surfaces CFBundleShortVersionString as the
 		// version. Some bundles (e.g. PWAs) ship a version only in
@@ -75,24 +80,50 @@ func ParseMacOSPackages(conn shared.Connection, platform *inventory.Platform, in
 		// system_profiler reports no version.
 		version := entry.Version
 		if version == "" {
-			version = bundleVersionFromInfoPlist(conn, entry.Path)
+			// Plenty of directories genuinely end in .app without being
+			// applications: Firefox origin storage (https+++example.app),
+			// app-group script containers (group.is.workflow.my.app) and bare
+			// daemon directories all pass the path check above. An application
+			// bundle always carries a Contents/Info.plist, so its absence means
+			// this is not an installed application: drop the entry instead of
+			// reporting it with a versionless purl that can never match
+			// advisory data.
+			//
+			// Entries that do report a version are never checked, because some
+			// real applications have no Contents/Info.plist. Wrapped iOS apps
+			// keep theirs under Wrapper/ and would otherwise be lost.
+			bundleVersion, isBundle := bundleVersionFromInfoPlist(conn, entry.Path)
+			if !isBundle {
+				log.Debug().
+					Str("name", entry.Name).
+					Str("path", entry.Path).
+					Msg("skipping entry that is not an application bundle")
+				continue
+			}
+			version = bundleVersion
 		}
 
-		pkgs[i].Name = entry.Name
-		pkgs[i].Version = version
-		pkgs[i].Format = MacosPkgFormat
-		pkgs[i].FilesAvailable = PkgFilesIncluded
-		pkgs[i].Arch = platform.Arch
-		pkgs[i].PUrl = purl.NewPackageURL(
-			platform, purl.TypeMacos, entry.Name, version, purl.WithQualifiers(purlQualifiers),
-		).String()
+		// We need a special handling for Firefox to determine ESR installations
+		purlQualifiers := getPurlQualifiers(conn, entry)
+
+		pkg := Package{
+			Name:           entry.Name,
+			Version:        version,
+			Format:         MacosPkgFormat,
+			FilesAvailable: PkgFilesIncluded,
+			Arch:           platform.Arch,
+			PUrl: purl.NewPackageURL(
+				platform, purl.TypeMacos, entry.Name, version, purl.WithQualifiers(purlQualifiers),
+			).String(),
+		}
 		if entry.Path != "" {
-			pkgs[i].Files = []FileRecord{
+			pkg.Files = []FileRecord{
 				{
 					Path: entry.Path,
 				},
 			}
 		}
+		pkgs = append(pkgs, pkg)
 	}
 
 	return pkgs, nil
@@ -130,40 +161,88 @@ func (mpm *MacOSPkgManager) Files(name string, version string, arch string) ([]F
 	return nil, nil
 }
 
+// isApplicationBundlePath reports whether a path system_profiler listed is an
+// application someone installed, as opposed to a directory that merely looks
+// like a bundle or a helper that ships inside another application.
+//
+// system_profiler does not answer that question itself. It walks the
+// filesystem, reports anything bundle-shaped it meets, and names each entry
+// after the basename minus its final dot component. Two shapes come out of
+// that, and both produce inventory rows that no upgrade can ever clear.
+//
+// A renamed bundle such as /Applications/Docker.app.back is still enumerated,
+// under the name "Docker.app" and at whatever version was current when it was
+// set aside. Reported as installed software it pins findings to a version that
+// is not on the machine, and reinstalling the application does not touch the
+// backup directory. An application bundle always ends in .app, so the
+// extension of the final path segment settles it.
+//
+// Renaming also stops macOS treating the directory as one opaque bundle, so
+// every helper bundle nested inside it gets walked and reported separately.
+// Nested bundles are not separately installed in any case: an XPC service
+// under a framework's Contents/, Finder's Contents/Applications/AirDrop.app,
+// and an application's own login-item helper all ship with, and are patched
+// by, whatever contains them. A Contents directory anywhere above the bundle
+// marks that containment.
+func isApplicationBundlePath(path string) bool {
+	if path == "" {
+		return false
+	}
+
+	path = filepath.Clean(path)
+
+	// macOS filesystems are case-insensitive by default, so a bundle stored as
+	// .APP is a working application and must not be dropped.
+	if !strings.EqualFold(filepath.Ext(path), ".app") {
+		return false
+	}
+
+	// The surrounding separators make this a whole-segment match: a directory
+	// named "Contents" matches, one named "TableOfContents" does not.
+	return !strings.Contains(path, "/Contents/")
+}
+
 // bundleVersionFromInfoPlist recovers an app's version from its
 // Contents/Info.plist when system_profiler did not report one. It prefers
 // CFBundleShortVersionString (the user-facing version) and falls back to
-// CFBundleVersion (the build version). Returns an empty string when no bundle
-// Info.plist exists (e.g. bare ".app" daemons) or it carries no version.
-func bundleVersionFromInfoPlist(conn shared.Connection, path string) string {
+// CFBundleVersion (the build version).
+//
+// The second return value reports whether the path is an application bundle at
+// all, which is true whenever a Contents/Info.plist could be read. Callers use
+// it to tell a real application that simply carries no version (some Apple
+// CoreServices apps ship neither version key) from a directory that merely has
+// a bundle-like extension.
+func bundleVersionFromInfoPlist(conn shared.Connection, path string) (string, bool) {
 	if path == "" {
-		return ""
+		return "", false
 	}
 
 	infoPath := filepath.Join(path, "Contents", "Info.plist")
 	f, err := conn.FileSystem().Open(infoPath)
 	if err != nil {
 		log.Debug().Err(err).Str("path", infoPath).Msg("could not open Info.plist")
-		return ""
+		return "", false
 	}
 	defer f.Close()
 
 	content, err := io.ReadAll(f)
 	if err != nil {
 		log.Debug().Err(err).Str("path", infoPath).Msg("could not read Info.plist")
-		return ""
+		return "", false
 	}
 
+	// The Info.plist is there, so this is a bundle even if we cannot read a
+	// version out of it.
 	var info infoPlist
 	if _, err := plist.Unmarshal(content, &info); err != nil {
 		log.Debug().Err(err).Str("path", infoPath).Msg("could not parse Info.plist")
-		return ""
+		return "", true
 	}
 
 	if info.ShortVersion != "" {
-		return info.ShortVersion
+		return info.ShortVersion, true
 	}
-	return info.BundleVersion
+	return info.BundleVersion, true
 }
 
 func getPurlQualifiers(conn shared.Connection, entry sysProfilerItem) map[string]string {

@@ -123,3 +123,28 @@ func TestAixPortStatesAreCanonical(t *testing.T) {
 			"AIX state %q maps to %q which is not in TCP_STATES", aix, mapped)
 	}
 }
+
+// A wildcard bind is reachable from the network. It used to be rewritten to
+// loopback, which reported every exposed listener as local-only and quietly
+// passed any check looking for internet-facing ports.
+func TestExpandLsofWildcardAddress(t *testing.T) {
+	for _, tt := range []struct {
+		address  string
+		protocol string
+		want     string
+	}{
+		{"*", "tcp4", "0.0.0.0"},
+		{"*", "udp4", "0.0.0.0"},
+		{"*", "tcp6", "::"},
+		{"*", "udp6", "::"},
+		// concrete binds are passed through untouched
+		{"127.0.0.1", "tcp4", "127.0.0.1"},
+		{"::1", "tcp6", "::1"},
+		{"172.16.1.129", "tcp4", "172.16.1.129"},
+		{"", "tcp4", ""},
+	} {
+		t.Run(tt.protocol+"/"+tt.address, func(t *testing.T) {
+			assert.Equal(t, tt.want, expandLsofWildcardAddress(tt.address, tt.protocol))
+		})
+	}
+}

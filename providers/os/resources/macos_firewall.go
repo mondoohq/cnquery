@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 
@@ -69,7 +68,12 @@ func (m *mqlMacosFirewall) fetchConfig() (plist.Data, error) {
 	}
 
 	if plistLocation == "" {
-		return nil, errors.New("ALF configuration not found")
+		// No preferences file. Modern macOS stops writing one; the live state
+		// is read from socketfilterfw instead. Cache the empty result so the
+		// lookup is not repeated per field.
+		m.fetched = true
+		m.config = nil
+		return nil, nil
 	}
 
 	f, err := fs.Open(plistLocation)
@@ -93,11 +97,18 @@ func (m *mqlMacosFirewall) globalState() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	v, err := alfConfigFloat(config, "globalstate")
+	if v, err := alfConfigFloat(config, "globalstate"); err == nil {
+		return int64(v), nil
+	}
+
+	stdout, err := m.runSocketfilterfw("--getglobalstate")
 	if err != nil {
 		return 0, err
 	}
-	return int64(v), nil
+	if v, ok := parseGlobalState(stdout); ok {
+		return v, nil
+	}
+	return 0, errFirewallStateUnavailable
 }
 
 func (m *mqlMacosFirewall) enabled() (bool, error) {
@@ -121,11 +132,18 @@ func (m *mqlMacosFirewall) stealthEnabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	v, err := alfConfigFloat(config, "stealthenabled")
+	if v, err := alfConfigFloat(config, "stealthenabled"); err == nil {
+		return int64(v) != 0, nil
+	}
+
+	stdout, err := m.runSocketfilterfw("--getstealthmode")
 	if err != nil {
 		return false, err
 	}
-	return int64(v) != 0, nil
+	if v, ok := parseOnOff(stdout); ok {
+		return v, nil
+	}
+	return false, errFirewallStateUnavailable
 }
 
 func (m *mqlMacosFirewall) loggingEnabled() (bool, error) {
@@ -133,11 +151,18 @@ func (m *mqlMacosFirewall) loggingEnabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	v, err := alfConfigFloat(config, "loggingenabled")
+	if v, err := alfConfigFloat(config, "loggingenabled"); err == nil {
+		return int64(v) != 0, nil
+	}
+
+	stdout, err := m.runSocketfilterfw("--getloggingmode")
 	if err != nil {
 		return false, err
 	}
-	return int64(v) != 0, nil
+	if v, ok := parseOnOff(stdout); ok {
+		return v, nil
+	}
+	return false, errFirewallStateUnavailable
 }
 
 func (m *mqlMacosFirewall) loggingDetail() (string, error) {
@@ -164,27 +189,37 @@ func (m *mqlMacosFirewall) loggingDetail() (string, error) {
 }
 
 func (m *mqlMacosFirewall) allowSignedApps() (bool, error) {
-	config, err := m.fetchConfig()
-	if err != nil {
-		return false, err
-	}
-	v, err := alfConfigFloat(config, "allowsignedenabled")
-	if err != nil {
-		return false, err
-	}
-	return int64(v) != 0, nil
+	return m.signedAppsFlag("allowsignedenabled", false)
 }
 
 func (m *mqlMacosFirewall) allowDownloadSignedApps() (bool, error) {
+	return m.signedAppsFlag("allowdownloadsignedenabled", true)
+}
+
+// signedAppsFlag reads one of the two auto-allow toggles. socketfilterfw
+// reports both in a single --getallowsigned reply, so `downloaded` picks the
+// line rather than the command.
+func (m *mqlMacosFirewall) signedAppsFlag(plistKey string, downloaded bool) (bool, error) {
 	config, err := m.fetchConfig()
 	if err != nil {
 		return false, err
 	}
-	v, err := alfConfigFloat(config, "allowdownloadsignedenabled")
+	if v, err := alfConfigFloat(config, plistKey); err == nil {
+		return int64(v) != 0, nil
+	}
+
+	stdout, err := m.runSocketfilterfw("--getallowsigned")
 	if err != nil {
 		return false, err
 	}
-	return int64(v) != 0, nil
+	builtin, download, ok := parseAllowSigned(stdout)
+	if !ok {
+		return false, errFirewallStateUnavailable
+	}
+	if downloaded {
+		return download, nil
+	}
+	return builtin, nil
 }
 
 func (m *mqlMacosFirewall) version() (string, error) {
