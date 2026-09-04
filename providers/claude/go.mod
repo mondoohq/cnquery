@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/claude
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.6
+go 1.26.8
 
 require (
 	github.com/anthropics/anthropic-sdk-go v1.68.0

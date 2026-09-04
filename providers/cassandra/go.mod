@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/cassandra
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.6
+go 1.26.8
 
 require (
 	github.com/gocql/gocql v1.7.0

@@ -1,6 +1,6 @@
 module go.mondoo.com/mql/providers/ansible
 
-go 1.26.6
+go 1.26.8
 
 replace go.mondoo.com/mql => ../..
 

@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/databricks
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.6
+go 1.26.8
 
 require (
 	github.com/databricks/databricks-sdk-go v0.177.0

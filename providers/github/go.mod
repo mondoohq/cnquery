@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/github
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.6
+go 1.26.8
 
 require (
 	github.com/bradleyfalzon/ghinstallation/v2 v2.19.0
