@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/redisdb
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.6
+go 1.26.8
 
 require (
 	github.com/redis/go-redis/v9 v9.22.0

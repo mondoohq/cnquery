@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/auth0
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.6
+go 1.26.8
 
 require (
 	github.com/auth0/go-auth0 v1.48.0

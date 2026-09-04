@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/neon
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.6
+go 1.26.8
 
 require (
 	github.com/rs/zerolog v1.35.1

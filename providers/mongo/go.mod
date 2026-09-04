@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/mongo
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.6
+go 1.26.8
 
 require (
 	go.mondoo.com/mql v0.0.0-20260831061709-d8437f66ebc6

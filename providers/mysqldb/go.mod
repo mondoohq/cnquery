@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/mysqldb
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.6
+go 1.26.8
 
 require (
 	github.com/go-sql-driver/mysql v1.10.0

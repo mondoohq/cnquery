@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/alicloud
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.6
+go 1.26.8
 
 require (
 	github.com/alibabacloud-go/actiontrail-20200706/v3 v3.5.0

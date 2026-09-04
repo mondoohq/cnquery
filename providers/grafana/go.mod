@@ -1,6 +1,6 @@
 module go.mondoo.com/mql/providers/grafana
 
-go 1.26.6
+go 1.26.8
 
 require (
 	github.com/hashicorp/go-retryablehttp v0.7.8
