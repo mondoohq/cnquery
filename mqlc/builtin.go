@@ -395,6 +395,19 @@ func availableGlobFields(c *compiler, typ types.Type, descend bool) map[string]l
 func availableFields(c *compiler, typ types.Type) map[string]llx.Documentation {
 	var res map[string]llx.Documentation
 
+	// An asset reference offers the fields of the resource that roots the
+	// referenced asset, since that is what chaining off it reaches. Nothing is
+	// offered when that schema is not loaded here — the root is known by name
+	// only, so there are no fields to name (ADR 031).
+	if typ.IsAsset() {
+		if root := typ.AssetRootName(); root != "" {
+			if info := c.Schema.Lookup(root); info != nil {
+				return publicFieldsInfo(c, info)
+			}
+		}
+		return nil
+	}
+
 	// resources maintain their own fields and may be list resources
 	if typ.IsResource() {
 		resourceInfo := c.Schema.Lookup(typ.ResourceName())

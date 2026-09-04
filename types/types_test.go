@@ -34,6 +34,9 @@ func TestTypes(t *testing.T) {
 		{T: Array(String), ExpectedLabel: "[]string"},
 		{T: Map(String, String), ExpectedLabel: "map[string]string"},
 		{T: Resource("mockresource"), ExpectedLabel: "mockresource"},
+		{T: AssetLike, ExpectedLabel: "asset"},
+		{T: Asset("mcp"), ExpectedLabel: "asset<mcp>"},
+		{T: Array(Asset("mcp")), ExpectedLabel: "[]asset<mcp>"},
 		{T: Function('f', []Type{String, Int}), ExpectedLabel: "func()"},
 	}
 
@@ -102,4 +105,28 @@ func TestCoalesceArrays(t *testing.T) {
 			assert.Equal(t, cur.expected, CoalesceArrays(cur.left, cur.right))
 		})
 	}
+}
+
+// TestAssetRoot covers the type parameter that makes chaining off an asset
+// reference possible: the root has to survive on the type, and an asset type
+// still has to dispatch as an asset so the builtins registered on AssetLike
+// (the nil comparisons) keep applying to a typed asset. See ADR 031.
+func TestAssetRoot(t *testing.T) {
+	typed := Asset("mcp")
+	assert.True(t, typed.IsAsset())
+	assert.Equal(t, "mcp", typed.AssetRootName())
+	assert.Equal(t, AssetLike, typed.Underlying())
+	assert.False(t, typed.IsResource())
+	assert.False(t, typed.ContainsResource())
+
+	bare := Asset("")
+	assert.Equal(t, AssetLike, bare)
+	assert.True(t, bare.IsAsset())
+	assert.Equal(t, "", bare.AssetRootName())
+
+	// A root with dots is a resource name like any other.
+	assert.Equal(t, "aws.ec2.instance", Asset("aws.ec2.instance").AssetRootName())
+
+	assert.False(t, NoType.IsAsset(), "an unset type is not an asset")
+	assert.Panics(t, func() { String.AssetRootName() })
 }

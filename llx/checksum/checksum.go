@@ -226,13 +226,17 @@ func canonPrimitive(h *Hasher, p *llx.Primitive, depth int) error {
 	}
 	h.Str(p.Type)
 
-	switch types.Type(p.Type) {
-	case types.Nil:
+	// Matched with predicates rather than as an exact switch: an asset type
+	// carries its root (`asset<mcp>`), so an equality case would miss every
+	// typed asset and hash its payload as opaque bytes.
+	typ := types.Type(p.Type)
+	switch {
+	case typ == types.Nil:
 		// Explicit sentinel: a Nil primitive's Value bytes are not content,
 		// and must never become content by accident if a future encoder
 		// stores something there.
 		h.Str("nil")
-	case types.Dict:
+	case typ == types.Dict:
 		if len(p.Value) > 0 {
 			inner := &llx.Primitive{}
 			if err := inner.UnmarshalVT(p.Value); err != nil {
@@ -245,7 +249,7 @@ func canonPrimitive(h *Hasher, p *llx.Primitive, depth int) error {
 		} else {
 			h.Str("dict:empty")
 		}
-	case types.Asset:
+	case typ.IsAsset():
 		if len(p.Value) > 0 {
 			av := &llx.AssetValue{}
 			if err := av.UnmarshalVT(p.Value); err != nil {

@@ -42,6 +42,9 @@ const (
 	ResourceOsBase                                        string = "os.base"
 	ResourceOsUnix                                        string = "os.unix"
 	ResourceOsLinux                                       string = "os.linux"
+	ResourceOsWindows                                     string = "os.windows"
+	ResourceOsMacos                                       string = "os.macos"
+	ResourceOsAny                                         string = "os.any"
 	ResourceOsRootCertificates                            string = "os.rootCertificates"
 	ResourceCommand                                       string = "command"
 	ResourcePowershell                                    string = "powershell"
@@ -738,6 +741,18 @@ func init() {
 		"os.linux": {
 			// to override args, implement: initOsLinux(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOsLinux,
+		},
+		"os.windows": {
+			// to override args, implement: initOsWindows(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOsWindows,
+		},
+		"os.macos": {
+			// to override args, implement: initOsMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOsMacos,
+		},
+		"os.any": {
+			// to override args, implement: initOsAny(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOsAny,
 		},
 		"os.rootCertificates": {
 			Init:   initOsRootCertificates,
@@ -3464,6 +3479,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"os.base.machine": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsBase).GetMachine()).ToDataRes(types.Resource("machine"))
 	},
+	"os.base.hypervisor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsBase).GetHypervisor()).ToDataRes(types.String)
+	},
+	"os.base.machineid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsBase).GetMachineid()).ToDataRes(types.String)
+	},
+	"os.base.date": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsBase).GetDate()).ToDataRes(types.Resource("os.date"))
+	},
 	"os.base.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsBase).GetName()).ToDataRes(types.String)
 	},
@@ -3526,6 +3550,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"os.linux.apparmor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetApparmor()).ToDataRes(types.Resource("apparmor"))
+	},
+	"os.windows.base": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsWindows).GetBase()).ToDataRes(types.Resource("os.base"))
+	},
+	"os.macos.unix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsMacos).GetUnix()).ToDataRes(types.Resource("os.unix"))
+	},
+	"os.any.base": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsAny).GetBase()).ToDataRes(types.Resource("os.base"))
 	},
 	"os.rootCertificates.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsRootCertificates).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
@@ -15567,7 +15600,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlClaudeCodeMcpServer).GetLastChecked()).ToDataRes(types.String)
 	},
 	"claude.code.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlClaudeCodeMcpServer).GetRunning()).ToDataRes(types.Asset)
+		return (r.(*mqlClaudeCodeMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
 	},
 	"openai.codex.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodex).GetConfigPath()).ToDataRes(types.String)
@@ -15681,7 +15714,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlOpenaiCodexMcpServer).GetPlugin()).ToDataRes(types.String)
 	},
 	"openai.codex.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenaiCodexMcpServer).GetRunning()).ToDataRes(types.Asset)
+		return (r.(*mqlOpenaiCodexMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
 	},
 	"openai.codex.connector.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodexConnector).GetName()).ToDataRes(types.String)
@@ -15768,7 +15801,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlCursorMcpServer).GetHasEnv()).ToDataRes(types.Bool)
 	},
 	"cursor.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCursorMcpServer).GetRunning()).ToDataRes(types.Asset)
+		return (r.(*mqlCursorMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
 	},
 	"cursor.rule.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCursorRule).GetName()).ToDataRes(types.String)
@@ -15846,7 +15879,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGithubCopilotMcpServer).GetHasEnv()).ToDataRes(types.Bool)
 	},
 	"github.copilot.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubCopilotMcpServer).GetRunning()).ToDataRes(types.Asset)
+		return (r.(*mqlGithubCopilotMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
 	},
 	"github.copilot.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCopilotSkill).GetName()).ToDataRes(types.String)
@@ -15981,7 +16014,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGeminiMcpServer).GetHasEnv()).ToDataRes(types.Bool)
 	},
 	"gemini.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGeminiMcpServer).GetRunning()).ToDataRes(types.Asset)
+		return (r.(*mqlGeminiMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
 	},
 	"gemini.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGeminiSkill).GetName()).ToDataRes(types.String)
@@ -16074,7 +16107,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindsurfMcpServer).GetHasEnv()).ToDataRes(types.Bool)
 	},
 	"windsurf.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindsurfMcpServer).GetRunning()).ToDataRes(types.Asset)
+		return (r.(*mqlWindsurfMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
 	},
 	"windsurf.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindsurfSkill).GetName()).ToDataRes(types.String)
@@ -17555,6 +17588,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOsBase).Machine, ok = plugin.RawToTValue[*mqlMachine](v.Value, v.Error)
 		return
 	},
+	"os.base.hypervisor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsBase).Hypervisor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"os.base.machineid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsBase).Machineid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"os.base.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsBase).Date, ok = plugin.RawToTValue[*mqlOsDate](v.Value, v.Error)
+		return
+	},
 	"os.base.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsBase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -17645,6 +17690,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"os.linux.apparmor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsLinux).Apparmor, ok = plugin.RawToTValue[*mqlApparmor](v.Value, v.Error)
+		return
+	},
+	"os.windows.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsWindows).__id, ok = v.Value.(string)
+		return
+	},
+	"os.windows.base": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsWindows).Base, ok = plugin.RawToTValue[*mqlOsBase](v.Value, v.Error)
+		return
+	},
+	"os.macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsMacos).__id, ok = v.Value.(string)
+		return
+	},
+	"os.macos.unix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsMacos).Unix, ok = plugin.RawToTValue[*mqlOsUnix](v.Value, v.Error)
+		return
+	},
+	"os.any.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsAny).__id, ok = v.Value.(string)
+		return
+	},
+	"os.any.base": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsAny).Base, ok = plugin.RawToTValue[*mqlOsBase](v.Value, v.Error)
 		return
 	},
 	"os.rootCertificates.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39669,6 +39738,9 @@ type mqlOsBase struct {
 	__id       string
 	mqlOsBaseInternal
 	Machine          plugin.TValue[*mqlMachine]
+	Hypervisor       plugin.TValue[string]
+	Machineid        plugin.TValue[string]
+	Date             plugin.TValue[*mqlOsDate]
 	Name             plugin.TValue[string]
 	Env              plugin.TValue[map[string]any]
 	Path             plugin.TValue[[]any]
@@ -39733,6 +39805,34 @@ func (c *mqlOsBase) GetMachine() *plugin.TValue[*mqlMachine] {
 		}
 
 		return c.machine()
+	})
+}
+
+func (c *mqlOsBase) GetHypervisor() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Hypervisor, func() (string, error) {
+		return c.hypervisor()
+	})
+}
+
+func (c *mqlOsBase) GetMachineid() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Machineid, func() (string, error) {
+		return c.machineid()
+	})
+}
+
+func (c *mqlOsBase) GetDate() *plugin.TValue[*mqlOsDate] {
+	return plugin.GetOrCompute[*mqlOsDate](&c.Date, func() (*mqlOsDate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.base", c.__id, "date")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOsDate), nil
+			}
+		}
+
+		return c.date()
 	})
 }
 
@@ -40081,6 +40181,189 @@ func (c *mqlOsLinux) GetApparmor() *plugin.TValue[*mqlApparmor] {
 		}
 
 		return c.apparmor()
+	})
+}
+
+// mqlOsWindows for the os.windows resource
+type mqlOsWindows struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOsWindowsInternal it will be used here
+	Base plugin.TValue[*mqlOsBase]
+}
+
+// createOsWindows creates a new instance of this resource
+func createOsWindows(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOsWindows{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("os.windows", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOsWindows) MqlName() string {
+	return "os.windows"
+}
+
+func (c *mqlOsWindows) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOsWindows) GetBase() *plugin.TValue[*mqlOsBase] {
+	return plugin.GetOrCompute[*mqlOsBase](&c.Base, func() (*mqlOsBase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.windows", c.__id, "base")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOsBase), nil
+			}
+		}
+
+		return c.base()
+	})
+}
+
+// mqlOsMacos for the os.macos resource
+type mqlOsMacos struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOsMacosInternal it will be used here
+	Unix plugin.TValue[*mqlOsUnix]
+}
+
+// createOsMacos creates a new instance of this resource
+func createOsMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOsMacos{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("os.macos", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOsMacos) MqlName() string {
+	return "os.macos"
+}
+
+func (c *mqlOsMacos) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOsMacos) GetUnix() *plugin.TValue[*mqlOsUnix] {
+	return plugin.GetOrCompute[*mqlOsUnix](&c.Unix, func() (*mqlOsUnix, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.macos", c.__id, "unix")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOsUnix), nil
+			}
+		}
+
+		return c.unix()
+	})
+}
+
+// mqlOsAny for the os.any resource
+type mqlOsAny struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOsAnyInternal it will be used here
+	Base plugin.TValue[*mqlOsBase]
+}
+
+// createOsAny creates a new instance of this resource
+func createOsAny(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOsAny{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("os.any", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOsAny) MqlName() string {
+	return "os.any"
+}
+
+func (c *mqlOsAny) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOsAny) GetBase() *plugin.TValue[*mqlOsBase] {
+	return plugin.GetOrCompute[*mqlOsBase](&c.Base, func() (*mqlOsBase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.any", c.__id, "base")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOsBase), nil
+			}
+		}
+
+		return c.base()
 	})
 }
 

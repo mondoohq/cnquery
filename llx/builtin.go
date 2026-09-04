@@ -456,11 +456,12 @@ func init() {
 			string("unix"):    {f: timeUnixV2, Label: "unix"},
 			string("inRange"): {f: timeInRange, Label: "inRange"},
 		},
-		types.Asset: {
+		types.AssetLike: {
 			string("==" + types.Nil):   {f: assetCmpNilV2, Label: "=="},
 			string("!=" + types.Nil):   {f: assetNotNilV2, Label: "!="},
 			string("==" + types.Empty): {f: assetCmpNilV2, Label: "=="},
 			string("!=" + types.Empty): {f: assetNotNilV2, Label: "!="},
+			AssetRootChunkID:           {f: runAssetRoot, Label: AssetRootChunkID},
 		},
 		types.Dict: {
 			string("==" + types.Nil):                 {f: dictCmpNilV2, Label: "=="},

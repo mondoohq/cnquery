@@ -751,7 +751,7 @@ func (t *SimpleType) typeItems(ast *LR) types.Type {
 	case "range":
 		return types.Range
 	case "asset":
-		return types.Asset
+		return types.Asset(t.Root)
 	case "any":
 		return types.Any
 	default:
@@ -825,7 +825,7 @@ func (t *SimpleType) mondooTypeItems(b *goBuilder) string {
 	case "range":
 		return "types.Range"
 	case "asset":
-		return "types.Asset"
+		return "types.Asset(\"" + t.Root + "\")"
 	case "dict":
 		return "types.Dict"
 	case "version":

@@ -686,10 +686,13 @@ func ResourceData(v Resource, name string) *RawData {
 	}
 }
 
-// AssetData creates a rawdata struct from a native asset reference value
-func AssetData(v *AssetValue) *RawData {
+// AssetData creates a rawdata struct from a native asset reference value. The
+// root is the resource type that roots the referenced asset's tree, i.e. what
+// fields may be chained off this value; empty for a reference that declares
+// none. See ADR 031.
+func AssetData(v *AssetValue, root string) *RawData {
 	return &RawData{
-		Type:  types.Asset,
+		Type:  types.Asset(root),
 		Value: v,
 	}
 }

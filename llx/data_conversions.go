@@ -47,7 +47,7 @@ func init() {
 		types.ResourceLike: resource2result,
 		types.FunctionLike: function2result,
 		types.Range:        range2result,
-		types.Asset:        asset2result,
+		types.AssetLike:    asset2result,
 	}
 
 	primitiveConverters = map[types.Type]primitiveConverter{
@@ -71,7 +71,7 @@ func init() {
 		types.FunctionLike: pfunction2raw,
 		types.Ref:          pref2raw,
 		types.Range:        prange2raw,
-		types.Asset:        passet2raw,
+		types.AssetLike:    passet2raw,
 	}
 }
 
@@ -221,33 +221,37 @@ func dict2result(value any, typ types.Type) (*Primitive, error) {
 	return &Primitive{Type: string(types.Dict), Value: raw}, nil
 }
 
+// The primitive keeps the full asset type, root and all: `asset<mcp>` is what
+// lets the reader chain off the value, so dropping the parameter here would turn
+// every asset that crosses the wire back into an unchainable bare reference.
 func asset2result(value any, typ types.Type) (*Primitive, error) {
 	if value == nil {
-		return &Primitive{Type: string(types.Asset)}, nil
+		return &Primitive{Type: string(typ)}, nil
 	}
 	v, ok := value.(*AssetValue)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
 	}
 	if v == nil {
-		return &Primitive{Type: string(types.Asset)}, nil
+		return &Primitive{Type: string(typ)}, nil
 	}
 	raw, err := proto.MarshalOptions{Deterministic: true}.Marshal(v)
 	if err != nil {
 		return nil, err
 	}
-	return &Primitive{Type: string(types.Asset), Value: raw}, nil
+	return &Primitive{Type: string(typ), Value: raw}, nil
 }
 
 func passet2raw(p *Primitive) *RawData {
+	typ := types.Type(p.Type)
 	if len(p.Value) == 0 {
-		return &RawData{Type: types.Asset, Value: (*AssetValue)(nil)}
+		return &RawData{Type: typ, Value: (*AssetValue)(nil)}
 	}
 	v := AssetValue{}
 	if err := proto.Unmarshal(p.Value, &v); err != nil {
-		return &RawData{Error: err, Type: types.Asset}
+		return &RawData{Error: err, Type: typ}
 	}
-	return &RawData{Type: types.Asset, Value: &v}
+	return &RawData{Type: typ, Value: &v}
 }
 
 func score2result(value any, typ types.Type) (*Primitive, error) {

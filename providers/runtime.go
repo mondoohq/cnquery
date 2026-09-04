@@ -225,6 +225,7 @@ func (r *Runtime) UseInProcessProvider(config plugin.Provider, schema resources.
 		Plugin:   plug,
 		Schema:   schema,
 		Requires: config.Requires,
+		Root:     config.Root,
 	}
 	connected := &ConnectedProvider{Instance: running}
 
@@ -1294,6 +1295,19 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 
 func (r *Runtime) Schema() resources.ResourcesSchema {
 	return r.coordinator.Schema()
+}
+
+// AssetRoot implements llx.AssetRootSource: the root of the connected asset's
+// tree, as declared by the provider serving the main connection (ADR 031).
+//
+// Only the main provider is consulted. A runtime can have several providers
+// attached - a cross-provider call adds one - but they are all answering about
+// the same asset, and the asset is rooted where the connection put it.
+func (r *Runtime) AssetRoot() string {
+	if r.Provider == nil || r.Provider.Instance == nil {
+		return ""
+	}
+	return r.Provider.Instance.Root
 }
 
 // TranslationsFor implements llx.TranslationSource, so a compile that has a

@@ -255,6 +255,16 @@ type CompilerConfig struct {
 	// than the default window, or clear it to emit nothing.
 	Translations   llx.TranslationSource
 	DowngradeFloor map[string]string
+
+	// AssetRoot is the resource that roots the connected asset's tree, which is
+	// what `_` resolves to at the top level of a query (ADR 031). Supplied by
+	// the caller for the same reason as Schema; NewConfigFrom fills it in from
+	// the runtime.
+	//
+	// Empty leaves `_` failing at the top level, as it always did: there is no
+	// root to name, and guessing one would answer with a resource that only
+	// partly covers the asset.
+	AssetRoot string
 }
 
 func (c *CompilerConfig) EnableStats() {
@@ -285,6 +295,9 @@ func NewConfigFrom(runtime llx.Runtime, features mql.Features) CompilerConfig {
 	}
 	if schema := runtime.Schema(); schema != nil {
 		conf.DowngradeFloor = DefaultDowngradeFloor(schema.AllProviderVersions())
+	}
+	if src, ok := runtime.(llx.AssetRootSource); ok {
+		conf.AssetRoot = src.AssetRoot()
 	}
 	return conf
 }
@@ -576,11 +589,19 @@ func findFuzzy(name string, names []string) fuzzy.Ranks {
 
 func addResourceSuggestions(schema resources.ResourcesSchema, name string, res *llx.CodeBundle) {
 	resourceInfos := schema.AllResources()
-	names := make([]string, len(resourceInfos))
-	i := 0
-	for key := range resourceInfos {
-		names[i] = key
-		i++
+	names := make([]string, 0, len(resourceInfos))
+	for key, info := range resourceInfos {
+		// Aliases are a second name for a resource that is already in this
+		// pool under its own name (the schema marks one by a map key that
+		// differs from the entry's id), so suggesting both is redundant by
+		// construction. It also drowns the pool: a provider that attaches its
+		// whole surface to its asset roots (ADR 031) contributes one rooted
+		// alias per resource, and the longer names widen every fuzzy match -
+		// `ssh` starts suggesting `os.base.apache2`.
+		if info != nil && info.Id != "" && info.Id != key {
+			continue
+		}
+		names = append(names, key)
 	}
 
 	suggested := findFuzzy(name, names)
@@ -1039,6 +1060,25 @@ func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.
 		return c.blockOnResource(expressions, typ.Child(), binding, bindingName)
 	}
 
+	// A block on an asset reference runs against the root resource of the
+	// referenced asset, so the deref happens once here rather than once per
+	// field inside the block.
+	if typ.IsAsset() {
+		rootBinding, err := c.compileAssetRoot(&variable{typ: typ, ref: binding})
+		if err != nil {
+			return blockRefs{}, err
+		}
+		if c.Schema.Lookup(rootBinding.typ.ResourceName()) == nil {
+			// Without the root's schema there is no type to compile a block
+			// against. A single field still works (it defers its type to the
+			// executing runtime), a block does not. See ADR 031 decision 2.
+			return blockRefs{}, errors.New("cannot open a block on asset root '" +
+				rootBinding.typ.ResourceName() + "': its schema is not loaded here")
+		}
+		typ = rootBinding.typ
+		binding = rootBinding.ref
+	}
+
 	// when calling a block {} on an array resource, we expand it to all its list
 	// items and apply the block to those only
 	if typ.IsResource() {
@@ -1384,7 +1424,79 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 		return true, typ, err
 	}
 
+	// `asset<root>.field` chains into the referenced asset's tree. Tried after
+	// the builtins, so the nil comparisons registered on the asset type keep
+	// winning over a same-named field of the root.
+	if typ.IsAsset() {
+		return c.compileAssetRootField(id, binding, call)
+	}
+
 	return false, types.Nil, nil
+}
+
+// compileAssetRootField compiles a field read on the resource that roots the
+// asset a typed `asset<root>` value points at (ADR 031).
+//
+// The asset is dereferenced into its root resource by its own chunk, so
+// everything above it is an ordinary resource chain: blocks, `where`, labels and
+// recording all see a resource and need to know nothing about assets.
+func (c *compiler) compileAssetRootField(id string, binding *variable, call *parser.Call) (bool, types.Type, error) {
+	rootBinding, err := c.compileAssetRoot(binding)
+	if err != nil {
+		return true, types.Nil, err
+	}
+
+	if c.Schema.Lookup(rootBinding.typ.ResourceName()) == nil {
+		// The root's schema is not loaded here, so the member cannot be checked.
+		// This is the compile-here / run-there case (a bundle compiled where the
+		// referenced provider is not installed), so the field is emitted untyped
+		// and its type resolves from the executing runtime's schema. See ADR 031
+		// decision 2.
+		// Arguments would have to be checked against an init signature this
+		// compile cannot see, so they are refused rather than passed on
+		// unchecked.
+		if call != nil && len(call.Function) > 0 {
+			return true, types.Nil, errors.New("cannot call '" + id + "' with arguments: the schema for asset root '" +
+				rootBinding.typ.ResourceName() + "' is not loaded")
+		}
+
+		log.Warn().
+			Str("root", rootBinding.typ.ResourceName()).
+			Str("field", id).
+			Msg("mqlc> cannot type-check a field of an asset root that no loaded schema defines; deferring it to runtime")
+
+		c.addChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   id,
+			Function: &llx.Function{
+				Type:    string(types.Any),
+				Binding: rootBinding.ref,
+			},
+		})
+		return true, types.Any, nil
+	}
+
+	return c.compileBoundIdentifierWithMqlCtx(id, rootBinding, call)
+}
+
+// compileAssetRoot emits the chunk that turns an `asset<root>` value into the
+// root resource of the asset it points at, and returns the binding for it.
+func (c *compiler) compileAssetRoot(binding *variable) (*variable, error) {
+	root := binding.typ.AssetRootName()
+	if root == "" {
+		return nil, errors.New("cannot resolve into an asset reference that declares no root type")
+	}
+
+	typ := types.Resource(root)
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   llx.AssetRootChunkID,
+		Function: &llx.Function{
+			Type:    string(typ),
+			Binding: binding.ref,
+		},
+	})
+	return &variable{typ: typ, ref: c.tailRef()}, nil
 }
 
 // prefersFieldOverResource reports whether the dotted path `owner`.`field`
@@ -1557,6 +1669,22 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 			}
 		}
 	} // end bound functions
+
+	// `_` at the top level of a query is the connected asset's root resource
+	// (ADR 031 decision 6). Inside a block it is the block's binding, handled
+	// above; at the top level there is no binding, so before roots existed this
+	// fell through to the resource lookup and failed with "cannot find resource
+	// for identifier '_'".
+	//
+	// Compiled by name, as if the user had typed the root resource: everything
+	// that works on that resource - fields, blocks, `where` - then works on `_`
+	// with no further wiring.
+	if id == "_" && callBinding == nil {
+		if c.AssetRoot == "" || c.AssetRoot == "_" {
+			return nil, types.Nil, errors.New("cannot resolve `_`: this connection declares no root resource")
+		}
+		return c.compileIdentifier(c.AssetRoot, nil, calls)
+	}
 
 	if id == "props" {
 		return c.compileProps(call, restCalls, c.Result)
@@ -1811,7 +1939,11 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 		}
 
 		ref = c.tailRef()
-		if id == "_" && len(orgcalls) == 0 {
+		// A bare `_` in a block adds no chunk of its own - it *is* the binding -
+		// so the operand's value is the binding's ref. At the top level there is
+		// no binding: `_` compiled to the asset's root resource, which did emit
+		// a chunk, so the tail ref is already the right answer (ADR 031).
+		if id == "_" && len(orgcalls) == 0 && c.Binding != nil {
 			ref = c.Binding.ref
 		}
 

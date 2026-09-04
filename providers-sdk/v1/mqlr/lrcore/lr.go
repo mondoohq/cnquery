@@ -15,6 +15,7 @@ import (
 
 	"github.com/alecthomas/participle"
 	"github.com/alecthomas/participle/lexer"
+	"go.mondoo.com/mql/types"
 )
 
 // Int number type
@@ -188,6 +189,12 @@ type MapType struct {
 // nolint: govet
 type SimpleType struct {
 	Type string `@Ident { @'.' @Ident }`
+	// Root is the type parameter of an `asset<root>` type: the resource that
+	// roots the referenced asset's tree, i.e. what may be chained off the
+	// value. It is a forward reference, so the named resource does not have to
+	// exist in this schema (or in any schema present at build time). Only
+	// `asset` accepts it; see validateTypeParameters. See ADR 031.
+	Root string `[ '<' @Ident { @'.' @Ident } '>' ]`
 }
 
 // ResourceDef carrying the definition of the resource
@@ -491,7 +498,7 @@ func Parse(input string) (*LR, error) {
 			field := &BasicField{
 				ID:   "list",
 				Args: args,
-				Type: Type{ListType: &ListType{Type: Type{SimpleType: &SimpleType{t}}}},
+				Type: Type{ListType: &ListType{Type: Type{SimpleType: &SimpleType{Type: t}}}},
 			}
 
 			resource.Body.Fields = append(resource.Body.Fields, &Field{BasicField: field})
@@ -538,7 +545,7 @@ func Parse(input string) (*LR, error) {
 				Comments: f.Comments,
 				BasicField: &BasicField{
 					ID:         name,
-					Type:       Type{SimpleType: &SimpleType{f.Embeddable.Type}},
+					Type:       Type{SimpleType: &SimpleType{Type: f.Embeddable.Type}},
 					Args:       &FieldArgs{},
 					isEmbedded: true,
 				},
@@ -555,17 +562,190 @@ func Parse(input string) (*LR, error) {
 				BasicField: &BasicField{
 					ID:         CONTEXT_FIELD,
 					Args:       &FieldArgs{},
-					Type:       Type{SimpleType: &SimpleType{resource.Context}},
+					Type:       Type{SimpleType: &SimpleType{Type: resource.Context}},
 					isEmbedded: false,
 				},
 			})
 		}
 	}
 
+	validationErrs = append(validationErrs, res.validateTypeParameters()...)
+	validationErrs = append(validationErrs, res.validateAliases()...)
+	validationErrs = append(validationErrs, res.validateEmbedAmbiguity()...)
+
 	if len(validationErrs) > 0 {
 		return res, errors.Join(append([]error{err}, validationErrs...)...)
 	}
 	return res, err
+}
+
+// validateTypeParameters rejects a `<root>` parameter on any type but `asset`.
+// The grammar accepts it anywhere a type appears, because participle has no way
+// to make the group conditional on the type name; without this check
+// `name<mcp> string` would parse and then silently drop the parameter.
+func (lr *LR) validateTypeParameters() []error {
+	var errs []error
+
+	var check func(context string, t *Type)
+	check = func(context string, t *Type) {
+		if t == nil {
+			return
+		}
+		switch {
+		case t.SimpleType != nil:
+			if t.SimpleType.Root != "" && t.SimpleType.Type != "asset" {
+				errs = append(errs, errors.New(context+": only `asset` takes a type parameter, got `"+
+					t.SimpleType.Type+"<"+t.SimpleType.Root+">`"))
+			}
+		case t.ListType != nil:
+			// a list of assets is legal: []asset<mcp>
+			check(context, &t.ListType.Type)
+		case t.MapType != nil:
+			if t.MapType.Key.Root != "" {
+				errs = append(errs, errors.New(context+": map keys take no type parameter"))
+			}
+			check(context, &t.MapType.Value)
+		}
+	}
+
+	for _, resource := range lr.Resources {
+		if resource.Body == nil {
+			continue
+		}
+		for _, field := range resource.Body.Fields {
+			if field.BasicField == nil {
+				continue
+			}
+			t := field.BasicField.Type
+			check("resource "+resource.ID+", field "+field.BasicField.ID, &t)
+		}
+	}
+	return errs
+}
+
+// validateAliases rejects an alias name that would silently replace something.
+//
+// Both the AST's alias map (`resolve.go`) and the schema's resource map
+// (`schema.go`) are keyed by the alias name and assigned without a presence
+// check, so a repeated name overwrites the earlier entry and a name that
+// collides with a declared resource overwrites the resource. Neither says
+// anything at build time, and the result is a resource that resolves to
+// something other than what the schema reads like. That matters most where
+// aliases are generated in bulk, e.g. attaching a provider's surface to its
+// asset roots (ADR 031).
+func (lr *LR) validateAliases() []error {
+	var errs []error
+
+	declared := map[string]bool{}
+	for _, r := range lr.Resources {
+		if r != nil {
+			declared[r.ID] = true
+		}
+	}
+
+	seen := map[string]bool{}
+	for _, a := range lr.Aliases {
+		name := a.Definition.Type
+		if seen[name] {
+			errs = append(errs, errors.New("alias "+name+" is declared more than once; "+
+				"the later one silently replaces the earlier"))
+			continue
+		}
+		seen[name] = true
+
+		if declared[name] {
+			errs = append(errs, errors.New("alias "+name+" has the same name as a resource; "+
+				"the alias silently replaces it"))
+		}
+	}
+	return errs
+}
+
+// validateEmbedAmbiguity rejects a resource whose embeds expose the same member
+// under conflicting types.
+//
+// Embedded members are reachable directly on the embedding resource
+// (`docker.container.hostname` reads through `os.linux` → `os.unix` → `os.base`),
+// so two embeds that both carry a `foo` leave the lookup with two answers. One
+// type is fine - the same member reached two ways is still that member - but two
+// types is a schema that cannot be compiled against, and it surfaces as a
+// confusing type error in whatever query first touches it rather than here.
+//
+// This is what bounds composing asset roots from mixins (ADR 031): a union root
+// may embed several family roots only while their members agree.
+func (lr *LR) validateEmbedAmbiguity() []error {
+	byID := map[string]*Resource{}
+	for _, r := range lr.Resources {
+		if r != nil {
+			byID[r.ID] = r
+		}
+	}
+
+	var errs []error
+	for _, r := range lr.Resources {
+		if r == nil || r.Body == nil {
+			continue
+		}
+
+		// Parse rewrites every `embed X` into a BasicField carrying isEmbedded,
+		// so that - not f.Embeddable - is what an embed looks like by the time
+		// validation runs.
+		var embeds []string
+		for _, f := range r.Body.Fields {
+			if f.BasicField != nil && f.BasicField.isEmbedded && f.BasicField.Type.SimpleType != nil {
+				embeds = append(embeds, f.BasicField.Type.SimpleType.Type)
+			}
+		}
+		if len(embeds) < 2 {
+			continue
+		}
+
+		// name -> type, plus which embed contributed it
+		types := map[string]types.Type{}
+		origin := map[string]string{}
+		for _, e := range embeds {
+			for name, typ := range lr.exposedMembers(byID, e, 0) {
+				prev, ok := types[name]
+				if ok && prev != typ {
+					errs = append(errs, errors.New("resource "+r.ID+" embeds both "+origin[name]+
+						" and "+e+", which expose "+name+" with different types ("+
+						prev.Label()+" and "+typ.Label()+")"))
+					continue
+				}
+				types[name] = typ
+				origin[name] = e
+			}
+		}
+	}
+	return errs
+}
+
+// exposedMembers returns the members a resource offers by name, following its
+// own embeds. An embed of a resource this schema does not define (an imported
+// one) contributes nothing, because its members are not knowable here.
+func (lr *LR) exposedMembers(byID map[string]*Resource, id string, depth int) map[string]types.Type {
+	res := map[string]types.Type{}
+	if depth > 10 {
+		return res
+	}
+	r, ok := byID[id]
+	if !ok || r.Body == nil {
+		return res
+	}
+
+	for _, f := range r.Body.Fields {
+		if f.BasicField == nil {
+			continue
+		}
+		if f.BasicField.isEmbedded && f.BasicField.Type.SimpleType != nil {
+			for name, typ := range lr.exposedMembers(byID, f.BasicField.Type.SimpleType.Type, depth+1) {
+				res[name] = typ
+			}
+			continue
+		}
+		res[f.BasicField.ID] = f.BasicField.Type.Type(lr)
+	}
+	return res
 }
 
 // returns duplicate resources where duplicate means that one path leads to more than one field

@@ -914,7 +914,7 @@ func (print *Printer) data(typ types.Type, data any, checksum string, indent str
 			return "<bad range>"
 		}
 
-	case types.Asset:
+	case types.AssetLike:
 		v, ok := data.(*llx.AssetValue)
 		if !ok || v == nil {
 			return "null"

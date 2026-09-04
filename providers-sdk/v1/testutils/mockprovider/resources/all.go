@@ -21,6 +21,13 @@ func (c *mqlMuser) running() (*llx.AssetValue, error) {
 	}, nil
 }
 
+func (c *mqlMuser) runningUnknown() (*llx.AssetValue, error) {
+	return &llx.AssetValue{
+		ResourceType: c.MqlName(),
+		ResourceId:   c.MqlID(),
+	}, nil
+}
+
 func (c *mqlMuser) group() (*mqlMgroup, error) {
 	o, err := CreateResource(c.MqlRuntime, "mgroup", map[string]*llx.RawData{
 		"name": llx.StringData("group one"),

@@ -452,6 +452,7 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 	}
 	res.Version = provider.Version
 	res.Requires = provider.Requires
+	res.Root = provider.Root
 	res.crashLog = crashLog
 	res.proc = procTracker
 	c.runningByID[res.ID] = res

@@ -102,6 +102,11 @@ func createLabel(res *llx.CodeBundle, ref uint64, schema resources.ResourcesSche
 		}
 	case "{}", "${}":
 		label = parentLabel
+	case llx.AssetRootChunkID:
+		// Dereferencing into the referenced asset is not a step the user wrote,
+		// so the label stays whatever produced the asset (`…running.tools`, not
+		// `…running.$assetRoot.tools`).
+		label = parentLabel
 	case "createResource":
 		typeName := string(chunk.Type())
 		if parentLabel != "" {

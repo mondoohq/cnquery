@@ -938,6 +938,30 @@ func TestSyncAssetMetadata(t *testing.T) {
 	})
 }
 
+// AssetRoot is read on every compile (mqlc.NewConfigFrom), so it has to answer
+// from the main provider without consulting the coordinator, and it has to
+// answer at all before anything is connected. See ADR 031.
+func TestAssetRoot(t *testing.T) {
+	t.Run("from the main provider", func(t *testing.T) {
+		r := &Runtime{Provider: &ConnectedProvider{
+			Instance: &RunningProvider{Name: "os", Root: "os"},
+		}}
+		assert.Equal(t, "os", r.AssetRoot())
+	})
+
+	// A provider that declares no root leaves `_` failing, which is the state
+	// every provider starts in.
+	t.Run("provider declares none", func(t *testing.T) {
+		r := &Runtime{Provider: &ConnectedProvider{Instance: &RunningProvider{Name: "aws"}}}
+		assert.Equal(t, "", r.AssetRoot())
+	})
+
+	t.Run("no provider yet", func(t *testing.T) {
+		assert.Equal(t, "", (&Runtime{}).AssetRoot())
+		assert.Equal(t, "", (&Runtime{Provider: &ConnectedProvider{}}).AssetRoot())
+	})
+}
+
 func TestDeclaresPeer(t *testing.T) {
 	r := &Runtime{}
 	caller := &RunningProvider{

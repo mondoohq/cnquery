@@ -454,7 +454,7 @@ func rawDataJSON(typ types.Type, data any, codeID string, bundle *CodeBundle, bu
 		buf.WriteString(str)
 		return nil
 
-	case types.Asset:
+	case types.AssetLike:
 		v, ok := data.(*AssetValue)
 		if !ok || v == nil {
 			buf.WriteString("null")

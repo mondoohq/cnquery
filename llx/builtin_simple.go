@@ -764,6 +764,31 @@ func assetNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return rawboolNotOpV2(e, bind, chunk, ref, opAssetCmpNil)
 }
 
+// AssetRootChunkID is the chunk that turns an `asset<root>` value into the root
+// resource of the asset it points at. The compiler emits it for every chain that
+// resolves into another asset, so the chunks above it are an ordinary resource
+// chain. See ADR 031.
+const AssetRootChunkID = "$assetRoot"
+
+// runAssetRoot resolves the asset reference it is bound to into that asset's
+// root resource.
+//
+// Resolution itself is not implemented yet: it has to run host-side, where the
+// coordinator and the recording layer are, and llx can reach neither (see ADR
+// 031). Until that lands, a chain that reaches another asset fails here with the
+// reason rather than with a missing-function error from the dispatch table.
+func runAssetRoot(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return NilData, 0, nil
+	}
+	v, ok := bind.Value.(*AssetValue)
+	if !ok || v == nil {
+		return NilData, 0, nil
+	}
+	return nil, 0, errors.New("cannot resolve into asset " + v.ResourceType + " (id " + v.ResourceId +
+		"): cross-asset resolution is not implemented yet")
+}
+
 // string </>/<=/>= string
 
 func stringLTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {

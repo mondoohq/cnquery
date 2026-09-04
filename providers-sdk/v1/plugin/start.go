@@ -49,6 +49,24 @@ type Provider struct {
 	// the author declared, so it cannot drift the way the old hardcoded
 	// whitelist did.
 	Requires []ProviderDep `json:",omitempty"`
+	// Root is the resource that roots the tree of an asset this provider
+	// connects (ADR 031): the `os` provider's asset is rooted at `os`, the `ai`
+	// provider's MCP connection at `mcp`. It is what `_` resolves to at the top
+	// level of a query, and what an `asset<root>` chain resolves into.
+	//
+	// Declared here, and not on Connector, because the runtime resolves it from
+	// the connection *type* it holds, and types do not map onto connectors: the
+	// `os` provider ships 8 connectors covering 14 connection types
+	// (`docker-image`, `tar`, `registry-image` have no connector of their own).
+	// Every one of them exposes the same tree, so one declaration per provider
+	// is the honest granularity. A provider that grows two roots gets a
+	// per-type override, which is additive to this field.
+	//
+	// Empty means the provider declares no root, and `_` keeps failing for its
+	// assets - which is the state every provider starts in. Do not name a
+	// resource that only partly covers the asset just to make `_` answer
+	// something.
+	Root string `json:",omitempty"`
 }
 
 // ProviderDep is one declared dependency on another provider.
