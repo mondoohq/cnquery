@@ -255,7 +255,7 @@ func (s *mqlOs) hostname() (string, error) {
 	return "", errors.New("cannot determine hostname")
 }
 
-func (s *mqlOs) hypervisor() (string, error) {
+func (s *mqlOsBase) hypervisor() (string, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
 
@@ -264,6 +264,34 @@ func (s *mqlOs) hypervisor() (string, error) {
 	}
 	s.Hypervisor = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
 	return "", nil
+}
+
+// The deprecated `os` fields that also exist on the universal root forward to
+// it, so the logic has one home while the old name lives out the v14 line.
+func (s *mqlOs) hypervisor() (string, error) {
+	base, err := osBase(s.MqlRuntime)
+	if err != nil {
+		return "", err
+	}
+	v := base.GetHypervisor()
+	if v.Error != nil {
+		return "", v.Error
+	}
+	if v.State&plugin.StateIsNull != 0 {
+		s.Hypervisor = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return "", nil
+	}
+	return v.Data, nil
+}
+
+// osBase returns the universal OS root, which the deprecated `os` accessors
+// read through.
+func osBase(runtime *plugin.Runtime) (*mqlOsBase, error) {
+	res, err := CreateResource(runtime, "os.base", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOsBase), nil
 }
 
 func (p *mqlOs) name() (string, error) {
@@ -335,8 +363,20 @@ func (p *mqlOs) name() (string, error) {
 	return "", errors.New("your platform is not supported by operating system resource")
 }
 
-// returns the OS native machine UUID/GUID
 func (s *mqlOs) machineid() (string, error) {
+	base, err := osBase(s.MqlRuntime)
+	if err != nil {
+		return "", err
+	}
+	v := base.GetMachineid()
+	if v.Error != nil {
+		return "", v.Error
+	}
+	return v.Data, nil
+}
+
+// returns the OS native machine UUID/GUID
+func (s *mqlOsBase) machineid() (string, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
 
@@ -687,6 +727,50 @@ func (s *mqlOsLinux) unix() (*mqlOsUnix, error) {
 		return nil, err
 	}
 	return res.(*mqlOsUnix), nil
+}
+
+// The family roots and the union receiver identify the asset they describe, the
+// same way os.unix and os.linux do, and reach their embedded parent through an
+// accessor rather than holding a copy of it. See ADR 031.
+func (s *mqlOsWindows) id() (string, error) {
+	return rootID(s.MqlRuntime, "os.windows")
+}
+
+func (s *mqlOsWindows) base() (*mqlOsBase, error) {
+	return osBase(s.MqlRuntime)
+}
+
+func (s *mqlOsMacos) id() (string, error) {
+	return rootID(s.MqlRuntime, "os.macos")
+}
+
+func (s *mqlOsMacos) unix() (*mqlOsUnix, error) {
+	res, err := CreateResource(s.MqlRuntime, "os.unix", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOsUnix), nil
+}
+
+func (s *mqlOsAny) id() (string, error) {
+	return rootID(s.MqlRuntime, "os.any")
+}
+
+func (s *mqlOsAny) base() (*mqlOsBase, error) {
+	return osBase(s.MqlRuntime)
+}
+
+// rootID names a root after the asset it describes, so two assets in one scan
+// never share a root instance in the resource cache.
+func rootID(runtime *plugin.Runtime, root string) (string, error) {
+	conn := runtime.Connection.(shared.Connection)
+	asset := conn.Asset()
+
+	ident := asset.GetMrn()
+	if ident == "" {
+		ident = strings.Join(asset.GetPlatformIds(), ",")
+	}
+	return root + "(" + ident + ")", nil
 }
 
 func (s *mqlOsLinux) iptables() (*mqlIptables, error) {

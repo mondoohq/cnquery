@@ -241,20 +241,26 @@ func TestMalformedElementKeepsCollection(t *testing.T) {
 }
 
 // TestAssetValueRoundTrip proves the native `asset` primitive payload survives
-// the RawData -> Primitive -> RawData (gRPC-boundary) encoding. See ADR 030.
+// the RawData -> Primitive -> RawData (gRPC-boundary) encoding, and that the
+// root the type is parameterized with survives with it: a value that arrives as
+// a bare `asset` cannot be chained off, so dropping the root anywhere along this
+// path would silently disable cross-asset traversal for every provider-supplied
+// value. See ADR 030 and ADR 031.
 func TestAssetValueRoundTrip(t *testing.T) {
 	t.Run("populated", func(t *testing.T) {
 		rd := llx.AssetData(&llx.AssetValue{
 			ResourceType: "claude.code.mcpServer",
 			ResourceId:   "claude.code.mcpServer/context7",
-		})
-		assert.Equal(t, types.Asset, rd.Type)
+		}, "mcp")
+		assert.Equal(t, types.Asset("mcp"), rd.Type)
 
 		prim := rd.Result().Data
-		require.Equal(t, string(types.Asset), prim.Type)
+		require.Equal(t, string(types.Asset("mcp")), prim.Type)
 
 		back := prim.RawData()
 		require.NoError(t, back.Error)
+		assert.Equal(t, types.Asset("mcp"), back.Type)
+		assert.Equal(t, "mcp", back.Type.AssetRootName())
 		av, ok := back.Value.(*llx.AssetValue)
 		require.True(t, ok)
 		require.NotNil(t, av)
@@ -262,12 +268,21 @@ func TestAssetValueRoundTrip(t *testing.T) {
 		assert.Equal(t, "claude.code.mcpServer/context7", av.ResourceId)
 	})
 
-	t.Run("nil value", func(t *testing.T) {
-		prim := llx.AssetData(nil).Result().Data
-		require.Equal(t, string(types.Asset), prim.Type)
+	t.Run("nil value keeps its root", func(t *testing.T) {
+		prim := llx.AssetData(nil, "mcp").Result().Data
+		require.Equal(t, string(types.Asset("mcp")), prim.Type)
 		back := prim.RawData()
 		require.NoError(t, back.Error)
+		assert.Equal(t, types.Asset("mcp"), back.Type)
 		av, _ := back.Value.(*llx.AssetValue)
 		assert.Nil(t, av)
+	})
+
+	t.Run("no root", func(t *testing.T) {
+		rd := llx.AssetData(&llx.AssetValue{ResourceType: "muser", ResourceId: "u1"}, "")
+		assert.Equal(t, types.AssetLike, rd.Type)
+		back := rd.Result().Data.RawData()
+		require.NoError(t, back.Error)
+		assert.Equal(t, "", back.Type.AssetRootName())
 	})
 }

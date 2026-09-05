@@ -890,7 +890,25 @@ type CodeBundle struct {
 	// Patching rewrites one chunk in place and never touches the checksum map, so
 	// a downgraded reader reports under exactly the checksums the producer
 	// shipped and scoring does not fork across versions.
-	Translations  []*TranslationRef `protobuf:"bytes,28,rep,name=translations,proto3" json:"translations,omitempty"`
+	Translations []*TranslationRef `protobuf:"bytes,28,rep,name=translations,proto3" json:"translations,omitempty"`
+	// Resources this bundle reached through the global namespace that do not hang
+	// off an asset root and are not marked `@global` (ADR 031 point 7).
+	//
+	// In v14 a bare name resolves globally first and falls back to the asset root,
+	// so both spellings work. In v15 the root is the namespace, and a name that is
+	// neither rooted nor global stops resolving. This list is what makes that
+	// cutover measurable: it is the set of names in this bundle that have no home
+	// in the asset's tree, recorded rather than logged so tooling can show which
+	// parts of a bundle reach outside it.
+	//
+	// Empty when every name resolved is either rooted or marked global, which is
+	// the state a fully migrated provider produces.
+	UnrootedResources []string `protobuf:"bytes,29,rep,name=unrooted_resources,json=unrootedResources,proto3" json:"unrooted_resources,omitempty"`
+	// The asset root this bundle was compiled against (ADR 031), empty when it
+	// was compiled without one. Provenance - what the query was bounded by - and
+	// what lets a reader tell the chunks the compiler inserted to reach the root
+	// from the ones the author wrote.
+	AssetRoot     string `protobuf:"bytes,30,opt,name=asset_root,json=assetRoot,proto3" json:"asset_root,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1014,6 +1032,20 @@ func (x *CodeBundle) GetTranslations() []*TranslationRef {
 		return x.Translations
 	}
 	return nil
+}
+
+func (x *CodeBundle) GetUnrootedResources() []string {
+	if x != nil {
+		return x.UnrootedResources
+	}
+	return nil
+}
+
+func (x *CodeBundle) GetAssetRoot() string {
+	if x != nil {
+		return x.AssetRoot
+	}
+	return ""
 }
 
 // TranslationRef points one call that an older reader cannot make at a block
@@ -1660,7 +1692,7 @@ const file_llx_proto_rawDesc = "" +
 	"\x05field\x18\x01 \x01(\tR\x05field\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x12\n" +
 	"\x04desc\x18\x03 \x01(\tR\x04desc\x12\x1a\n" +
-	"\bprovider\x18\x04 \x01(\tR\bprovider\"\x85\t\n" +
+	"\bprovider\x18\x04 \x01(\tR\bprovider\"\xd3\t\n" +
 	"\n" +
 	"CodeBundle\x12(\n" +
 	"\acode_v2\x18\x06 \x01(\v2\x0f.mql.llx.CodeV2R\x06codeV2\x128\n" +
@@ -1678,7 +1710,10 @@ const file_llx_proto_rawDesc = "" +
 	"\x04vars\x18\x19 \x03(\v2\x1d.mql.llx.CodeBundle.VarsEntryR\x04vars\x12S\n" +
 	"\x10provider_schemas\x18\x1a \x03(\v2(.mql.llx.CodeBundle.ProviderSchemasEntryR\x0fproviderSchemas\x12`\n" +
 	"\x15min_provider_versions\x18\x1b \x03(\v2,.mql.llx.CodeBundle.MinProviderVersionsEntryR\x13minProviderVersions\x12;\n" +
-	"\ftranslations\x18\x1c \x03(\v2\x17.mql.llx.TranslationRefR\ftranslations\x1a8\n" +
+	"\ftranslations\x18\x1c \x03(\v2\x17.mql.llx.TranslationRefR\ftranslations\x12-\n" +
+	"\x12unrooted_resources\x18\x1d \x03(\tR\x11unrootedResources\x12\x1d\n" +
+	"\n" +
+	"asset_root\x18\x1e \x01(\tR\tassetRoot\x1a8\n" +
 	"\n" +
 	"PropsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +

@@ -19,12 +19,24 @@ type mqlOsDateInternal struct {
 	result  *date.Result
 }
 
-func (p *mqlOs) date() (*mqlOsDate, error) {
+func (p *mqlOsBase) date() (*mqlOsDate, error) {
 	o, err := CreateResource(p.MqlRuntime, "os.date", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
 	return o.(*mqlOsDate), nil
+}
+
+func (p *mqlOs) date() (*mqlOsDate, error) {
+	base, err := osBase(p.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	v := base.GetDate()
+	if v.Error != nil {
+		return nil, v.Error
+	}
+	return v.Data, nil
 }
 
 func (d *mqlOsDate) id() (string, error) {

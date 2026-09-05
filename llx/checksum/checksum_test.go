@@ -106,7 +106,7 @@ func TestAssetValueIsExplicit(t *testing.T) {
 	asset := func(rt, id string) *llx.Result {
 		raw, err := (&llx.AssetValue{ResourceType: rt, ResourceId: id}).MarshalVT()
 		require.NoError(t, err)
-		return &llx.Result{Data: &llx.Primitive{Type: string(types.Asset), Value: raw}}
+		return &llx.Result{Data: &llx.Primitive{Type: string(types.Asset("mcp")), Value: raw}}
 	}
 
 	d1, err := HashDataRow("k", asset("aws.instance", "i-1"))
@@ -165,7 +165,7 @@ func TestDeterminismPerType(t *testing.T) {
 	mustAsset := func(av *llx.AssetValue) *llx.Primitive {
 		raw, err := proto.Marshal(av)
 		require.NoError(t, err)
-		return &llx.Primitive{Type: string(types.Asset), Value: raw}
+		return &llx.Primitive{Type: string(types.Asset("mcp")), Value: raw}
 	}
 	mustDict := func(inner *llx.Primitive) *llx.Primitive {
 		raw, err := inner.MarshalVT()

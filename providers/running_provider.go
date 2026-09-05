@@ -394,6 +394,10 @@ type RunningProvider struct {
 	// declarations without asking the coordinator for a cloned provider map on
 	// every foreign field access.
 	Requires []pp.ProviderDep
+	// Root is the resource that roots this provider's asset tree (ADR 031),
+	// carried here for the same reason as Requires: the compiler asks for it on
+	// every compile, and it must not cost a coordinator lookup.
+	Root string
 
 	// isClosed is true for any provider that is not running anymore,
 	// either via shutdown or via crash

@@ -20,6 +20,17 @@ var Config = plugin.Provider{
 		{ID: "go.mondoo.com/mql/providers/core", Name: "core", MinVersion: "13.0.0"},
 		{ID: "go.mondoo.com/mql/providers/network", Name: "network", MinVersion: "13.0.0"},
 	},
+	// Every connection this provider serves - a host over SSH, a container
+	// image, a mounted filesystem - exposes an OS, so `_` answers with the
+	// operating system of whatever the query runs against (ADR 031).
+	//
+	// The root is `os.any`, the union of the OS roots, because the platform is
+	// only known after connecting while this declaration is read at compile
+	// time. The universal surface arrives through the embedded `os.base` and
+	// the family-specific surface through aliases on the union, so a query
+	// compiles against any platform and the compiler narrows the requirement to
+	// the roots it actually touched.
+	Root: "os.any",
 	ConnectionTypes: []string{
 		shared.Type_Local.String(),
 		shared.Type_SSH.String(),

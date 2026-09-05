@@ -225,6 +225,7 @@ func (r *Runtime) UseInProcessProvider(config plugin.Provider, schema resources.
 		Plugin:   plug,
 		Schema:   schema,
 		Requires: config.Requires,
+		Root:     config.Root,
 	}
 	connected := &ConnectedProvider{Instance: running}
 
@@ -1294,6 +1295,44 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 
 func (r *Runtime) Schema() resources.ResourcesSchema {
 	return r.coordinator.Schema()
+}
+
+// AssetRoot implements llx.AssetRootSource: the root of the connected asset's
+// tree (ADR 031).
+//
+// The connection's answer wins. A provider's static declaration has to cover
+// every platform it serves, so for `os` it is the `os.any` union; the connection
+// knows which family it actually reached and says so in ConnectRes. Preferring
+// it is what makes `_` on a Linux host mean `os.linux`, so the query is bounded
+// by what that platform has rather than by the union of every platform. The
+// concrete root is a member of the declared union, so this is a refinement of
+// the declaration and not a disagreement with it.
+//
+// Falls back to the static declaration when the connection says nothing, which
+// is every provider that has not implemented this yet, and to "" when there is
+// no root at all - where `_` keeps failing.
+//
+// Only the main provider is consulted. A runtime can have several providers
+// attached - a cross-provider call adds one - but they are all answering about
+// the same asset, and the asset is rooted where its own connection put it.
+func (r *Runtime) AssetRoot() string {
+	if r.Provider == nil {
+		return ""
+	}
+	if root := r.Provider.Connection.GetRoot(); root != "" {
+		return root
+	}
+	return r.DeclaredAssetRoot()
+}
+
+// DeclaredAssetRoot implements llx.AssetRootSource: the root the provider
+// declares statically, which for a multi-platform provider is the union of its
+// roots.
+func (r *Runtime) DeclaredAssetRoot() string {
+	if r.Provider == nil || r.Provider.Instance == nil {
+		return ""
+	}
+	return r.Provider.Instance.Root
 }
 
 // TranslationsFor implements llx.TranslationSource, so a compile that has a

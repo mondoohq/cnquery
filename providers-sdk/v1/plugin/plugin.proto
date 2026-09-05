@@ -37,6 +37,17 @@ message ConnectRes {
   Asset asset = 3;
   // inventory of other discovered assets
   Inventory inventory = 4;
+  // The resource that roots this asset's tree, as decided by the connection
+  // (ADR 031). The provider's static `Root` says what it can expose in general;
+  // this says what this connection actually exposed, which is what `_` resolves
+  // to. Empty means the connection has nothing more specific to say and the
+  // static declaration stands.
+  //
+  // It has to be reported here rather than declared statically because it can
+  // depend on what connecting found: the `os` provider serves Linux, Windows
+  // and macOS through one set of connectors, so only the platform detected
+  // during Connect decides between `os.linux`, `os.windows` and `os.macos`.
+  string root = 5;
 }
 
 message ShutdownReq {

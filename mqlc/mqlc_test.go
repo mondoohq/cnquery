@@ -2290,9 +2290,15 @@ func TestSuggestions(t *testing.T) {
 			nil,
 		},
 		{
-			// resource suggestions
+			// Resource suggestions. Aliases are left out: an alias is a second
+			// name for a resource that is already suggested under its own name,
+			// so offering both is redundant. `os.unix.sshd` used to appear here
+			// and `sshd` covers it. Without that filter, attaching the os
+			// surface to its asset roots (ADR 031) put one rooted alias per
+			// resource in the pool and `ssh` started suggesting
+			// `os.base.apache2`.
 			"ssh",
-			[]string{"macos.sharing", "os.unix.sshd", "postgresql.hba", "sshd", "sshd.config", "windows.powershell", "windows.schannel", "windows.security.health"},
+			[]string{"macos.sharing", "postgresql.hba", "sshd", "sshd.config", "windows.powershell", "windows.schannel", "windows.security.health"},
 			errors.New("cannot find resource for identifier 'ssh'"),
 			nil,
 		},

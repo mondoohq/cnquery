@@ -139,7 +139,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMuser).GetError()).ToDataRes(types.String)
 	},
 	"muser.running": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMuser).GetRunning()).ToDataRes(types.Asset)
+		return (r.(*mqlMuser).GetRunning()).ToDataRes(types.Asset("mgroup"))
+	},
+	"muser.runningUnknown": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMuser).GetRunningUnknown()).ToDataRes(types.Asset("mcp"))
 	},
 	"mgroup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMgroup).GetName()).ToDataRes(types.String)
@@ -202,6 +205,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"muser.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMuser).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
+		return
+	},
+	"muser.runningUnknown": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMuser).RunningUnknown, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
 		return
 	},
 	"mgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -269,14 +276,15 @@ type mqlMuser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMuserInternal it will be used here
-	Name       plugin.TValue[string]
-	Group      plugin.TValue[*mqlMgroup]
-	Nullgroup  plugin.TValue[*mqlMgroup]
-	Nullstring plugin.TValue[string]
-	Groups     plugin.TValue[[]any]
-	Dict       plugin.TValue[any]
-	Error      plugin.TValue[string]
-	Running    plugin.TValue[*llx.AssetValue]
+	Name           plugin.TValue[string]
+	Group          plugin.TValue[*mqlMgroup]
+	Nullgroup      plugin.TValue[*mqlMgroup]
+	Nullstring     plugin.TValue[string]
+	Groups         plugin.TValue[[]any]
+	Dict           plugin.TValue[any]
+	Error          plugin.TValue[string]
+	Running        plugin.TValue[*llx.AssetValue]
+	RunningUnknown plugin.TValue[*llx.AssetValue]
 }
 
 // createMuser creates a new instance of this resource
@@ -389,6 +397,12 @@ func (c *mqlMuser) GetError() *plugin.TValue[string] {
 func (c *mqlMuser) GetRunning() *plugin.TValue[*llx.AssetValue] {
 	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
 		return c.running()
+	})
+}
+
+func (c *mqlMuser) GetRunningUnknown() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.RunningUnknown, func() (*llx.AssetValue, error) {
+		return c.runningUnknown()
 	})
 }
 

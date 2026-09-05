@@ -2911,14 +2911,19 @@ openhands.skill.sha256 13.13.1
 openhands.skill.source 13.13.1
 openhands.skills 13.13.1
 os 9.0.0
+os.any 13.40.10
+os.any.base 13.40.10
 os.base 9.0.0
+os.base.date 13.40.10
 os.base.env 9.0.0
 os.base.groups 9.0.0
 os.base.hostname 9.0.0
+os.base.hypervisor 13.40.10
 os.base.lastUpdate 13.40.10
 os.base.lastUpdateAge 13.40.10
 os.base.lastUpdateSource 13.40.10
 os.base.machine 9.0.0
+os.base.machineid 13.40.10
 os.base.name 9.0.0
 os.base.path 9.0.0
 os.base.rebootpending 9.0.0
@@ -2944,6 +2949,8 @@ os.linux.nftables 11.8.14
 os.linux.ufw 13.2.8
 os.linux.unix 9.0.0
 os.machineid 9.0.0
+os.macos 13.40.10
+os.macos.unix 13.40.10
 os.name 9.0.0
 os.path 9.0.0
 os.rebootpending 9.0.0
@@ -2962,6 +2969,8 @@ os.update.restart 9.0.0
 os.update.severity 9.0.0
 os.updates 9.0.0
 os.uptime 9.0.0
+os.windows 13.40.10
+os.windows.base 13.40.10
 ovs 13.40.8
 ovs.bridge 13.40.8
 ovs.bridge.datapathType 13.40.8

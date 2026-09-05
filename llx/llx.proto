@@ -176,6 +176,26 @@ message CodeBundle {
   // a downgraded reader reports under exactly the checksums the producer
   // shipped and scoring does not fork across versions.
   repeated TranslationRef translations = 28;
+
+  // Resources this bundle reached through the global namespace that do not hang
+  // off an asset root and are not marked `@global` (ADR 031 point 7).
+  //
+  // In v14 a bare name resolves globally first and falls back to the asset
+  // root, so both spellings work. In v15 the root is the namespace, and a name
+  // that is neither rooted nor global stops resolving. This list is what makes
+  // cutover measurable: it is the set of names in this bundle that have no home
+  // in the asset's tree, recorded rather than logged so tooling can show which
+  // parts of a bundle reach outside it.
+  //
+  // Empty when every name resolved is either rooted or marked global, which is
+  // the state a fully migrated provider produces.
+  repeated string unrooted_resources = 29;
+
+  // The asset root this bundle was compiled against (ADR 031), empty when it
+  // was compiled without one. Provenance - what the query was bounded by - and
+  // what lets a reader tell the chunks the compiler inserted to reach the root
+  // from the ones the author wrote.
+  string asset_root = 30;
 }
 
 // TranslationRef points one call that an older reader cannot make at a block

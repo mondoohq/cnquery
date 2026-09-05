@@ -12,7 +12,10 @@ muser {
   groups() []mgroup
   dict() dict
   error() string
-  running() asset
+  // Asset typed to a root this schema defines, so chaining type-checks (ADR 031)
+  running() asset<mgroup>
+  // Asset typed to a root no loaded schema defines: the degrade path (ADR 031)
+  runningUnknown() asset<mcp>
 }
 
 mgroup {

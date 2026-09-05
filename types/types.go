@@ -118,10 +118,9 @@ const (
 	// efficient storage and transmission structure.
 	Range = Type(rune(byteRange))
 
-	// Asset is a native value pointing at another asset by the resource that
-	// anchors it in the current asset's resource tree. Its payload is an
-	// llx.AssetValue holding the anchor `(resourceType, resourceId)`. See ADR 030.
-	Asset = Type(rune(byteAsset))
+	// AssetLike is the underlying type of all asset references. A bare
+	// AssetLike carries no root, i.e. nothing can be chained off it.
+	AssetLike = Type(rune(byteAsset))
 )
 
 // All returns a list of all types available
@@ -147,7 +146,7 @@ func All() []Type {
 		MapLike,
 		ResourceLike,
 		FunctionLike,
-		Asset,
+		AssetLike,
 	}
 }
 
@@ -190,6 +189,20 @@ func (typ Type) IsResource() bool {
 		return false
 	}
 	return typ[0] == byteResource
+}
+
+// Asset is a native value pointing at another asset by the resource that anchors
+// it in the current asset's resource tree. Its payload is an llx.AssetValue
+// holding the anchor `(resourceType, resourceId)`. See ADR 030.
+//
+// It is parameterized by the resource type that is the root of the referenced
+// asset's tree, which is what makes chaining off it type-check: `asset<mcp>`
+// resolves `.tools` against the `mcp` schema. The root is a *name*, referenced
+// without the referenced schema being present (a forward reference), so a
+// provider can declare `running asset<mcp>` without depending on the provider
+// that defines `mcp`. See ADR 031.
+func Asset(root string) Type {
+	return AssetLike + Type(root)
 }
 
 // IsAsset checks if this type is a native asset reference
@@ -313,6 +326,16 @@ func (typ Type) ResourceName() string {
 	panic("cannot determine type name of " + typ.Label())
 }
 
+// AssetRootName returns the name of the resource that roots the referenced
+// asset's tree, or an empty string for a bare asset reference that declares no
+// root. Has to be an asset type, otherwise this call panics.
+func (typ Type) AssetRootName() string {
+	if typ[0] == byteAsset {
+		return string(typ[1:])
+	}
+	panic("cannot determine asset root of " + typ.Label())
+}
+
 var labels = map[byte]string{
 	byteUnset:       "unset",
 	byteAny:         "any",
@@ -332,7 +355,6 @@ var labels = map[byte]string{
 	byteIP:          "ip",
 	byteStringSlice: "stringslice",
 	byteRange:       "range",
-	byteAsset:       "asset",
 }
 
 var labelfun map[byte]func(Type) string
@@ -358,6 +380,12 @@ func init() {
 			return string(s)
 		},
 		byteFunction: func(f Type) string { return "func()" },
+		byteAsset: func(s Type) string {
+			if s == "" {
+				return "asset"
+			}
+			return "asset<" + string(s) + ">"
+		},
 	}
 }
 

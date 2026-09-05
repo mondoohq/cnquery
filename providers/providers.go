@@ -1250,6 +1250,7 @@ func (p *Provider) LoadResources() error {
 	// the config rather than from the serialized schema, which predates this
 	// field and will not carry it for a while yet.
 	stampProviderVersion(&schema, p.ID, p.Version)
+	stampProviderRoot(&schema, p.ID, p.Root)
 
 	p.Schema = &schema
 	return nil
@@ -1269,6 +1270,23 @@ func stampProviderVersion(schema *resources.Schema, id string, version string) {
 	}
 	if _, ok := schema.ProviderVersions[id]; !ok {
 		schema.ProviderVersions[id] = version
+	}
+}
+
+// stampProviderRoot records the root a provider declares for its assets, keyed
+// like ProviderVersions. It travels with the schema so a compile that has no
+// runtime - a policy bundle, a lint, an editor - can still tell a resource that
+// hangs off the asset's tree from one that does not. Same never-clobber rule:
+// a schema that carries its own is more specific than the installed binary.
+func stampProviderRoot(schema *resources.Schema, id string, root string) {
+	if schema == nil || id == "" || root == "" {
+		return
+	}
+	if schema.ProviderRoots == nil {
+		schema.ProviderRoots = map[string]string{}
+	}
+	if _, ok := schema.ProviderRoots[id]; !ok {
+		schema.ProviderRoots[id] = root
 	}
 }
 

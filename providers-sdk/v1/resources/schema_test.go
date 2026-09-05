@@ -133,3 +133,47 @@ func TestAddMergesProviderVersions(t *testing.T) {
 		"go.mondoo.com/mql/providers/gcp": "12.1.0",
 	}, agg.AllProviderVersions())
 }
+
+// Aggregating schemas must not lose a resource's reachability-without-a-root
+// flag or the roots providers declare: a rooted compile reads both off the
+// merged schema, never off the per-provider one (ADR 031). Both were dropped -
+// `asset`, which the os provider extends, came out of the merge looking
+// non-global, so `asset.platform` stopped resolving under a rooted namespace.
+func TestAggregationKeepsRootMetadata(t *testing.T) {
+	core := &Schema{
+		Resources: map[string]*ResourceInfo{
+			"time":  {Id: "time", Name: "time", Global: true, Provider: "core"},
+			"asset": {Id: "asset", Name: "asset", Global: true, Provider: "core"},
+		},
+		ProviderRoots: map[string]string{"core": ""},
+	}
+	os := &Schema{
+		Resources: map[string]*ResourceInfo{
+			// os extends asset, which is what forces the merge path
+			"asset":    {Id: "asset", Name: "asset", IsExtension: true, Provider: "os"},
+			"packages": {Id: "packages", Name: "packages", Provider: "os"},
+		},
+		ProviderRoots: map[string]string{"os": "os.any"},
+	}
+
+	aggregate := &Schema{Resources: map[string]*ResourceInfo{}}
+	aggregate.Add(core)
+	aggregate.Add(os)
+
+	t.Run("global survives a fresh insert", func(t *testing.T) {
+		assert.True(t, aggregate.Lookup("time").GetGlobal())
+	})
+
+	t.Run("global survives a merge with an extension", func(t *testing.T) {
+		assert.True(t, aggregate.Lookup("asset").GetGlobal(),
+			"one contributor claiming it is enough; extending a resource does not un-global it")
+	})
+
+	t.Run("a resource that claims nothing stays non-global", func(t *testing.T) {
+		assert.False(t, aggregate.Lookup("packages").GetGlobal())
+	})
+
+	t.Run("declared roots survive", func(t *testing.T) {
+		assert.Equal(t, "os.any", aggregate.AllProviderRoots()["os"])
+	})
+}

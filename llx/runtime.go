@@ -23,6 +23,29 @@ type Runtime interface {
 	AssetUpdated(asset *inventory.Asset)
 }
 
+// AssetRootSource reports the resource that roots the connected asset's tree
+// (ADR 031). It is an optional interface, checked by mqlc.NewConfigFrom, so a
+// runtime that has no notion of a connection - a mock, an embedder's own - is
+// unaffected.
+//
+// It is read at compile time, which is why the root is a static declaration on
+// the provider rather than something the connection answers after connecting:
+// content compiled where nothing is connected (a policy bundle built upstream)
+// still has to compile, and there `_` degrades to the error it always was.
+type AssetRootSource interface {
+	// AssetRoot returns the root resource name the query should be bounded by,
+	// or "" when the connected provider declares none. This is what the
+	// connection reported, so on a Linux host it is the Linux root and not the
+	// provider's catch-all.
+	AssetRoot() string
+	// DeclaredAssetRoot returns the root the provider declares statically. For a
+	// provider serving several platforms that is the union of its roots, which
+	// is a compile-time receiver rather than a platform, so it is worth telling
+	// apart from the effective root: a diagnostic that offers the union as an
+	// alternative platform is offering nothing.
+	DeclaredAssetRoot() string
+}
+
 // Allows looking up data for assets, based on different asset identifiers.
 // If set, Mrn is preferred, followed by PlatformIds, and lastly ConnectionId.
 type AssetRecordingLookup struct {

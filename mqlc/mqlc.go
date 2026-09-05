@@ -126,6 +126,64 @@ func (c *compiler) skewHint(provider string, what string) string {
 		" is installed; this " + what + " may require a newer one)"
 }
 
+// missingFieldHint explains a failed field access with whatever the schema can
+// actually attribute it to.
+//
+// A field missing from an asset root is usually a platform mismatch, not version
+// skew: `_.registrykey` on a Linux host fails because the asset is rooted at
+// `os.linux` and the registry lives on `os.windows` (ADR 031). Saying "the
+// provider may need to be newer" there sends the reader after an upgrade that
+// cannot help, so a sibling root that does carry the field is reported instead.
+// With no sibling to name, this falls back to the version-skew lead.
+func (c *compiler) missingFieldHint(typ types.Type, id string) string {
+	if hint := c.rootScopeHint(typ, id); hint != "" {
+		return hint
+	}
+	return c.fieldSkewHint(typ)
+}
+
+// rootScopeHint names the roots that do carry a field the current root lacks.
+//
+// Roots are the resources sharing the asset root's namespace (`os.windows` and
+// `os.macos` alongside `os.linux`), which is as much as the compiler can know:
+// which resource is a root is decided by the connection, not by the schema.
+func (c *compiler) rootScopeHint(typ types.Type, id string) string {
+	if c.AssetRoot == "" || c.Schema == nil || !typ.IsResource() {
+		return ""
+	}
+	current := typ.ResourceName()
+	namespace, _, ok := strings.Cut(c.AssetRoot, ".")
+	if !ok || !strings.HasPrefix(current, namespace+".") {
+		return ""
+	}
+
+	var found []string
+	for name, info := range c.Schema.AllResources() {
+		if name == current || info == nil || !strings.HasPrefix(name, namespace+".") {
+			continue
+		}
+		// Only siblings, so `os.windows` counts and `os.windows.registrykey`
+		// does not: a root is one segment below the namespace.
+		if strings.Count(name, ".") != 1 {
+			continue
+		}
+		// The declared root is the union of every platform's members, so it
+		// always has the field and never answers "which platform has this".
+		if name == c.DeclaredAssetRoot {
+			continue
+		}
+		if _, ok := info.Fields[id]; ok {
+			found = append(found, name)
+		}
+	}
+	if len(found) == 0 {
+		return ""
+	}
+	sort.Strings(found)
+	return " (this asset is rooted at " + current + "; " + id + " is available on " +
+		strings.Join(found, ", ") + ")"
+}
+
 // fieldSkewHint attributes a failed field access to the provider owning the
 // resource it was attempted on.
 func (c *compiler) fieldSkewHint(typ types.Type) string {
@@ -255,6 +313,29 @@ type CompilerConfig struct {
 	// than the default window, or clear it to emit nothing.
 	Translations   llx.TranslationSource
 	DowngradeFloor map[string]string
+
+	// AssetRoot is the resource that roots the connected asset's tree, which is
+	// what `_` resolves to at the top level of a query (ADR 031). Supplied by
+	// the caller for the same reason as Schema; NewConfigFrom fills it in from
+	// the runtime.
+	//
+	// Empty leaves `_` failing at the top level, as it always did: there is no
+	// root to name, and guessing one would answer with a resource that only
+	// partly covers the asset.
+	AssetRoot string
+
+	// DeclaredAssetRoot is the root the provider declares statically, which for
+	// a multi-platform provider is the union of its roots. Only diagnostics use
+	// it: the union is a compile-time receiver, not a platform, so it must not
+	// be offered as the place a missing field is available.
+	DeclaredAssetRoot string
+
+	// RootedNamespace resolves bare identifiers against the asset root instead
+	// of the global namespace, which is the v15 model (ADR 031 point 7). Set
+	// from the feature of the same name. With it on, the global namespace is
+	// reachable only through resources marked `@global`, and a compile without a
+	// root is an error rather than a silent fall back to global resolution.
+	RootedNamespace bool
 }
 
 func (c *CompilerConfig) EnableStats() {
@@ -286,6 +367,10 @@ func NewConfigFrom(runtime llx.Runtime, features mql.Features) CompilerConfig {
 	if schema := runtime.Schema(); schema != nil {
 		conf.DowngradeFloor = DefaultDowngradeFloor(schema.AllProviderVersions())
 	}
+	if src, ok := runtime.(llx.AssetRootSource); ok {
+		conf.AssetRoot = src.AssetRoot()
+		conf.DeclaredAssetRoot = src.DeclaredAssetRoot()
+	}
 	return conf
 }
 
@@ -293,6 +378,7 @@ func NewConfig(schema resources.ResourcesSchema, features mql.Features) Compiler
 	return CompilerConfig{
 		Schema:          schema,
 		UseAssetContext: features.IsActive(mql.MQLAssetContext),
+		RootedNamespace: features.IsActive(mql.RootedNamespace),
 		Stats:           compilerStatsNull{},
 		Features:        features,
 	}
@@ -576,11 +662,19 @@ func findFuzzy(name string, names []string) fuzzy.Ranks {
 
 func addResourceSuggestions(schema resources.ResourcesSchema, name string, res *llx.CodeBundle) {
 	resourceInfos := schema.AllResources()
-	names := make([]string, len(resourceInfos))
-	i := 0
-	for key := range resourceInfos {
-		names[i] = key
-		i++
+	names := make([]string, 0, len(resourceInfos))
+	for key, info := range resourceInfos {
+		// Aliases are a second name for a resource that is already in this
+		// pool under its own name (the schema marks one by a map key that
+		// differs from the entry's id), so suggesting both is redundant by
+		// construction. It also drowns the pool: a provider that attaches its
+		// whole surface to its asset roots (ADR 031) contributes one rooted
+		// alias per resource, and the longer names widen every fuzzy match -
+		// `ssh` starts suggesting `os.base.apache2`.
+		if info != nil && info.Id != "" && info.Id != key {
+			continue
+		}
+		names = append(names, key)
 	}
 
 	suggested := findFuzzy(name, names)
@@ -1039,6 +1133,25 @@ func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.
 		return c.blockOnResource(expressions, typ.Child(), binding, bindingName)
 	}
 
+	// A block on an asset reference runs against the root resource of the
+	// referenced asset, so the deref happens once here rather than once per
+	// field inside the block.
+	if typ.IsAsset() {
+		rootBinding, err := c.compileAssetRoot(&variable{typ: typ, ref: binding})
+		if err != nil {
+			return blockRefs{}, err
+		}
+		if c.Schema.Lookup(rootBinding.typ.ResourceName()) == nil {
+			// Without the root's schema there is no type to compile a block
+			// against. A single field still works (it defers its type to the
+			// executing runtime), a block does not. See ADR 031 decision 2.
+			return blockRefs{}, errors.New("cannot open a block on asset root '" +
+				rootBinding.typ.ResourceName() + "': its schema is not loaded here")
+		}
+		typ = rootBinding.typ
+		binding = rootBinding.ref
+	}
+
 	// when calling a block {} on an array resource, we expand it to all its list
 	// items and apply the block to those only
 	if typ.IsResource() {
@@ -1384,7 +1497,79 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 		return true, typ, err
 	}
 
+	// `asset<root>.field` chains into the referenced asset's tree. Tried after
+	// the builtins, so the nil comparisons registered on the asset type keep
+	// winning over a same-named field of the root.
+	if typ.IsAsset() {
+		return c.compileAssetRootField(id, binding, call)
+	}
+
 	return false, types.Nil, nil
+}
+
+// compileAssetRootField compiles a field read on the resource that roots the
+// asset a typed `asset<root>` value points at (ADR 031).
+//
+// The asset is dereferenced into its root resource by its own chunk, so
+// everything above it is an ordinary resource chain: blocks, `where`, labels and
+// recording all see a resource and need to know nothing about assets.
+func (c *compiler) compileAssetRootField(id string, binding *variable, call *parser.Call) (bool, types.Type, error) {
+	rootBinding, err := c.compileAssetRoot(binding)
+	if err != nil {
+		return true, types.Nil, err
+	}
+
+	if c.Schema.Lookup(rootBinding.typ.ResourceName()) == nil {
+		// The root's schema is not loaded here, so the member cannot be checked.
+		// This is the compile-here / run-there case (a bundle compiled where the
+		// referenced provider is not installed), so the field is emitted untyped
+		// and its type resolves from the executing runtime's schema. See ADR 031
+		// decision 2.
+		// Arguments would have to be checked against an init signature this
+		// compile cannot see, so they are refused rather than passed on
+		// unchecked.
+		if call != nil && len(call.Function) > 0 {
+			return true, types.Nil, errors.New("cannot call '" + id + "' with arguments: the schema for asset root '" +
+				rootBinding.typ.ResourceName() + "' is not loaded")
+		}
+
+		log.Warn().
+			Str("root", rootBinding.typ.ResourceName()).
+			Str("field", id).
+			Msg("mqlc> cannot type-check a field of an asset root that no loaded schema defines; deferring it to runtime")
+
+		c.addChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   id,
+			Function: &llx.Function{
+				Type:    string(types.Any),
+				Binding: rootBinding.ref,
+			},
+		})
+		return true, types.Any, nil
+	}
+
+	return c.compileBoundIdentifierWithMqlCtx(id, rootBinding, call)
+}
+
+// compileAssetRoot emits the chunk that turns an `asset<root>` value into the
+// root resource of the asset it points at, and returns the binding for it.
+func (c *compiler) compileAssetRoot(binding *variable) (*variable, error) {
+	root := binding.typ.AssetRootName()
+	if root == "" {
+		return nil, errors.New("cannot resolve into an asset reference that declares no root type")
+	}
+
+	typ := types.Resource(root)
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   llx.AssetRootChunkID,
+		Function: &llx.Function{
+			Type:    string(typ),
+			Binding: binding.ref,
+		},
+	})
+	return &variable{typ: typ, ref: c.tailRef()}, nil
 }
 
 // prefersFieldOverResource reports whether the dotted path `owner`.`field`
@@ -1418,11 +1603,57 @@ func (c *compiler) prefersFieldOverResource(owner *resources.ResourceInfo, targe
 
 // compile a resource from an identifier, trying to find the longest matching resource
 // and execute all call functions if there are any
+// compileRootMember resolves an identifier as a member of the connected asset's
+// root, which is what makes a query behave like `assetRoot { ... }` (ADR 031
+// point 7). It emits the root resource and then the member on top of it, so
+// `hostname` compiles exactly as `os.linux.hostname` would.
+//
+// Reports false when there is no root, or the root does not carry the member, so
+// the caller falls through to its own not-found handling and the message stays
+// about the identifier the user typed.
+func (c *compiler) compileRootMember(id string, calls []*parser.Call) (bool, []*parser.Call, types.Type, error) {
+	if c.AssetRoot == "" {
+		return false, nil, types.Nil, nil
+	}
+	root := c.Schema.Lookup(c.AssetRoot)
+	if root == nil {
+		return false, nil, types.Nil, nil
+	}
+	// FindField walks embedded resources, which is how a member of `os.base`
+	// is reachable on the `os.linux` root.
+	if _, _, ok := c.Schema.FindField(root, id); !ok {
+		return false, nil, types.Nil, nil
+	}
+
+	rootType, err := c.addResource(c.AssetRoot, root, nil)
+	if err != nil {
+		return true, nil, types.Nil, err
+	}
+	binding := &variable{typ: rootType, ref: c.tailRef()}
+
+	var call *parser.Call
+	if len(calls) > 0 && calls[0].Function != nil {
+		call = calls[0]
+		calls = calls[1:]
+	}
+
+	found, typ, err := c.compileBoundIdentifier(id, binding, call)
+	if !found && err == nil {
+		err = errors.New("cannot find field '" + id + "' in " + c.AssetRoot)
+	}
+	return true, calls, typ, err
+}
+
 func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*parser.Call, types.Type, error) {
 	resource := c.Schema.Lookup(id)
 	if resource == nil {
 		return false, nil, types.Nil, nil
 	}
+	// Checked on the name that entered the namespace, before the dotted walk
+	// below: `sshd.config.params` reaches the namespace as `sshd`, and whether
+	// *that* hangs off the root is the question. The leaf never does - a root
+	// carries `sshd`, not `sshd.config`.
+	c.noteIfUnrooted(resource)
 
 	for len(calls) > 0 && calls[0].Ident != nil {
 		field := *calls[0].Ident
@@ -1448,6 +1679,53 @@ func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*pa
 
 	typ, err := c.addResource(id, resource, call)
 	return true, calls, typ, err
+}
+
+// noteIfUnrooted records a resource that this bundle reaches through the global
+// namespace and that has no home in an asset's tree (ADR 031 point 7).
+//
+// Three ways to be fine: the resource says `@global`, its provider declares no
+// root yet (nothing to be outside of, so the question is not answerable), or it
+// is reachable from that provider's root and the global name is just the other
+// spelling. What is left is what stops resolving when the root becomes the
+// namespace, which is exactly what is worth counting before that happens.
+func (c *compiler) noteIfUnrooted(resource *resources.ResourceInfo) {
+	if resource == nil || resource.GetGlobal() || c.Schema == nil || c.Result == nil {
+		return
+	}
+
+	root := c.Schema.AllProviderRoots()[resource.GetProvider()]
+	if root == "" {
+		return
+	}
+	// A root is what everything else hangs off; it does not hang off itself.
+	if resource.Id == root || resource.Id == c.AssetRoot {
+		return
+	}
+	// Bridging nodes (`os` for `os.linux`) are namespace segments the schema
+	// builder creates, not resources anything resolves to, so they are not a
+	// thing that can be inside or outside a tree.
+	if resource.GetIsExtension() {
+		return
+	}
+	rootInfo := c.Schema.Lookup(root)
+	if rootInfo == nil {
+		return
+	}
+	if _, _, ok := c.Schema.FindField(rootInfo, resource.Id); ok {
+		return
+	}
+
+	for _, existing := range c.Result.UnrootedResources {
+		if existing == resource.Id {
+			return
+		}
+	}
+	c.Result.UnrootedResources = append(c.Result.UnrootedResources, resource.Id)
+	log.Warn().
+		Str("resource", resource.Id).
+		Str("root", root).
+		Msg("mqlc> resource is reached globally and does not hang off the asset root; it will not resolve once the root is the namespace")
 }
 
 func (c *compiler) addResource(id string, resource *resources.ResourceInfo, call *parser.Call) (types.Type, error) {
@@ -1558,6 +1836,30 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 		}
 	} // end bound functions
 
+	// `_` at the top level of a query is the connected asset's root resource
+	// (ADR 031 decision 6). Inside a block it is the block's binding, handled
+	// above; at the top level there is no binding, so before roots existed this
+	// fell through to the resource lookup and failed with "cannot find resource
+	// for identifier '_'".
+	//
+	// Compiled by name, as if the user had typed the root resource: everything
+	// that works on that resource - fields, blocks, `where` - then works on `_`
+	// with no further wiring.
+	if id == "_" && callBinding == nil {
+		if c.AssetRoot == "" || c.AssetRoot == "_" {
+			return nil, types.Nil, errors.New("cannot resolve `_`: this connection declares no root resource")
+		}
+		// Compiled as the root resource itself, not by feeding its name back
+		// through identifier resolution: under a rooted namespace that would ask
+		// whether the root is a member of itself, and answer no.
+		found, restCalls, typ, err := c.compileResource(c.AssetRoot, calls)
+		if !found {
+			return nil, types.Nil, errors.New("cannot resolve `_`: this connection declares the root '" +
+				c.AssetRoot + "', which is not in the schema")
+		}
+		return restCalls, typ, err
+	}
+
 	if id == "props" {
 		return c.compileProps(call, restCalls, c.Result)
 	}
@@ -1600,6 +1902,25 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 		}
 	}
 
+	// Rooted namespace (ADR 031 point 7): the root is the namespace, so a bare
+	// identifier resolves as a member of it and the global namespace is left to
+	// what marks itself `@global`. This is the v15 model; the fallback below is
+	// what v14 keeps.
+	if c.RootedNamespace && callBinding == nil {
+		if c.AssetRoot == "" {
+			return nil, types.Nil, errors.New("cannot resolve '" + id +
+				"': rooted compilation needs an asset root, and none was supplied")
+		}
+		if found, restCalls, typ, err := c.compileRootMember(id, calls); found {
+			return restCalls, typ, err
+		}
+		if info := c.Schema.Lookup(id); info != nil && !info.GetGlobal() {
+			addFieldSuggestions(availableFields(c, types.Resource(c.AssetRoot)), id, c.Result)
+			return nil, types.Nil, errors.New("cannot find '" + id + "' in " + c.AssetRoot +
+				"; it is not part of this asset's tree and is not a global resource")
+		}
+	}
+
 	found, restCalls, typ, err = c.compileResource(id, calls)
 	if found {
 		return restCalls, typ, err
@@ -1628,6 +1949,18 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 		})
 		c.standalone = false
 		return restCalls, callBinding.typ, err
+	}
+
+	// A bare identifier that is not a global resource may still be a member of
+	// the asset root: a query is a block on that root, so `hostname` means
+	// `assetRoot.hostname` (ADR 031 point 7). Tried after the global namespace,
+	// so nothing that compiles today compiles differently - only names that used
+	// to fail start resolving. Under RootedNamespace the root was already tried,
+	// first.
+	if callBinding == nil && !c.RootedNamespace {
+		if found, restCalls, typ, err := c.compileRootMember(id, calls); found {
+			return restCalls, typ, err
+		}
 	}
 
 	// suggestions
@@ -1811,7 +2144,11 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 		}
 
 		ref = c.tailRef()
-		if id == "_" && len(orgcalls) == 0 {
+		// A bare `_` in a block adds no chunk of its own - it *is* the binding -
+		// so the operand's value is the binding's ref. At the top level there is
+		// no binding: `_` compiled to the asset's root resource, which did emit
+		// a chunk, so the tail ref is already the right answer (ADR 031).
+		if id == "_" && len(orgcalls) == 0 && c.Binding != nil {
 			ref = c.Binding.ref
 		}
 
@@ -1914,7 +2251,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 				// native internal operators)
 				if (typ != types.Dict && !typ.IsMap()) || !reAccessor.MatchString(id) {
 					addFieldSuggestions(availableFields(c, typ), id, c.Result)
-					return nil, errors.New("cannot find field '" + id + "' in " + typ.Label() + c.fieldSkewHint(typ))
+					return nil, errors.New("cannot find field '" + id + "' in " + typ.Label() + c.missingFieldHint(typ, id))
 				}
 
 				// Support easy accessors for dicts and maps, e.g:
@@ -2649,6 +2986,8 @@ func compile(input string, props PropsHandler, compilerConf CompilerConfig) (*ll
 	if err != nil {
 		return res, err
 	}
+
+	res.AssetRoot = conf.AssetRoot
 
 	err = UpdateLabels(res, conf.Schema)
 	if err != nil {

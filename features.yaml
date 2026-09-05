@@ -124,3 +124,8 @@ Features:
   idx: 22
   start: v14.x
   status: new
+- id: RootedNamespace
+  desc: "Compile queries against the asset root instead of the global namespace (ADR 031). A bare identifier resolves as a member of the connected asset's root, the global namespace is reachable only through resources marked @global, and a compile without a root is an error. This is the v15 model, available early so content and providers can be moved onto it before it becomes the default."
+  idx: 23
+  start: v14.x
+  status: new

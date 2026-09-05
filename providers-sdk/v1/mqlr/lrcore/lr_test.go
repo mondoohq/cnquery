@@ -12,6 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/types"
 )
 
 func parse(t *testing.T, cmd string) *LR {
@@ -89,7 +90,7 @@ func TestParse(t *testing.T) {
 				BasicField: &BasicField{
 					ID:       "field",
 					Maturity: "deprecated",
-					Type:     Type{SimpleType: &SimpleType{"string"}},
+					Type:     Type{SimpleType: &SimpleType{Type: "string"}},
 				},
 			},
 		}
@@ -134,7 +135,7 @@ func TestParse(t *testing.T) {
 		assert.Equal(t, &BasicField{
 			ID:   "field",
 			Args: nil,
-			Type: Type{SimpleType: &SimpleType{"type"}},
+			Type: Type{SimpleType: &SimpleType{Type: "type"}},
 		}, f.BasicField)
 		require.Len(t, f.Comments, 1)
 		assert.Equal(t, "// field docs...", f.Comments[0].Text)
@@ -502,7 +503,7 @@ name {
 				BasicField: &BasicField{
 					ID:   "field",
 					Args: nil,
-					Type: Type{ListType: &ListType{Type{SimpleType: &SimpleType{"type"}}}},
+					Type: Type{ListType: &ListType{Type{SimpleType: &SimpleType{Type: "type"}}}},
 				},
 			},
 		}
@@ -515,7 +516,7 @@ name {
 		f := []*Field{
 			{
 				BasicField: &BasicField{ID: "field", Args: nil, Type: Type{
-					MapType: &MapType{SimpleType{"a"}, Type{SimpleType: &SimpleType{"b"}}},
+					MapType: &MapType{SimpleType{Type: "a"}, Type{SimpleType: &SimpleType{Type: "b"}}},
 				}},
 			},
 		}
@@ -526,7 +527,7 @@ name {
 	t.Run("resource with a dependent field, no args", func(t *testing.T) {
 		res := parse(t, "name {\nfield() type\n}")
 		f := []*Field{
-			{BasicField: &BasicField{ID: "field", Args: &FieldArgs{}, Type: Type{SimpleType: &SimpleType{"type"}}}},
+			{BasicField: &BasicField{ID: "field", Args: &FieldArgs{}, Type: Type{SimpleType: &SimpleType{Type: "type"}}}},
 		}
 		assert.Equal(t, "name", res.Resources[0].ID)
 		assert.Equal(t, f, res.Resources[0].Body.Fields)
@@ -535,8 +536,8 @@ name {
 	t.Run("resource with a dependent field, with args", func(t *testing.T) {
 		res := parse(t, "name {\nfield(one, two.three) type\n}")
 		f := []*Field{
-			{BasicField: &BasicField{ID: "field", Type: Type{SimpleType: &SimpleType{"type"}}, Args: &FieldArgs{
-				List: []SimpleType{{"one"}, {"two.three"}},
+			{BasicField: &BasicField{ID: "field", Type: Type{SimpleType: &SimpleType{Type: "type"}}, Args: &FieldArgs{
+				List: []SimpleType{{Type: "one"}, {Type: "two.three"}},
 			}}},
 		}
 		assert.Equal(t, "name", res.Resources[0].ID)
@@ -548,8 +549,8 @@ name {
 		f := []*Field{
 			{Init: &Init{
 				Args: []TypedArg{
-					{ID: "one", Type: Type{SimpleType: &SimpleType{"int"}}},
-					{ID: "two", Type: Type{SimpleType: &SimpleType{"string"}}, Optional: true},
+					{ID: "one", Type: Type{SimpleType: &SimpleType{Type: "int"}}},
+					{ID: "two", Type: Type{SimpleType: &SimpleType{Type: "string"}}, Optional: true},
 				},
 			}},
 		}
@@ -559,7 +560,7 @@ name {
 
 	t.Run("resource which is a list type", func(t *testing.T) {
 		res := parse(t, "name {\n[]base\n}")
-		lt := &SimplListType{Type: SimpleType{"base"}}
+		lt := &SimplListType{Type: SimpleType{Type: "base"}}
 		assert.Equal(t, "name", res.Resources[0].ID)
 		assert.Equal(t, lt, res.Resources[0].ListType)
 	})
@@ -567,7 +568,7 @@ name {
 	t.Run("resource which is a list type, with args", func(t *testing.T) {
 		res := parse(t, "name {\n[]base(content)\ncontent string\n}")
 		lt := &SimplListType{
-			Type: SimpleType{"base"},
+			Type: SimpleType{Type: "base"},
 			Args: &FieldArgs{
 				List: []SimpleType{{Type: "content"}},
 			},
@@ -578,7 +579,7 @@ name {
 
 	t.Run("resource which is a list type based on resource chain", func(t *testing.T) {
 		res := parse(t, "name {\n[]base.type.name\n}")
-		lt := &SimplListType{Type: SimpleType{"base.type.name"}}
+		lt := &SimplListType{Type: SimpleType{Type: "base.type.name"}}
 		assert.Equal(t, "name", res.Resources[0].ID)
 		assert.Equal(t, lt, res.Resources[0].ListType)
 	})
@@ -631,16 +632,16 @@ name {
 	}`)
 		fields := []*Field{
 			{Init: &Init{Args: []TypedArg{
-				{ID: "i1", Type: Type{SimpleType: &SimpleType{"string"}}},
-				{ID: "i2", Type: Type{MapType: &MapType{SimpleType{"int"}, Type{SimpleType: &SimpleType{"int"}}}}},
+				{ID: "i1", Type: Type{SimpleType: &SimpleType{Type: "string"}}},
+				{ID: "i2", Type: Type{MapType: &MapType{SimpleType{Type: "int"}, Type{SimpleType: &SimpleType{Type: "int"}}}}},
 			}}},
-			{BasicField: &BasicField{ID: "field", Type: Type{MapType: &MapType{Key: SimpleType{"string"}, Value: Type{SimpleType: &SimpleType{"int"}}}}}},
+			{BasicField: &BasicField{ID: "field", Type: Type{MapType: &MapType{Key: SimpleType{Type: "string"}, Value: Type{SimpleType: &SimpleType{Type: "int"}}}}}},
 			{
 				BasicField: &BasicField{
 					ID:   "call",
-					Type: Type{ListType: &ListType{Type: Type{SimpleType: &SimpleType{"int"}}}},
+					Type: Type{ListType: &ListType{Type: Type{SimpleType: &SimpleType{Type: "int"}}}},
 					Args: &FieldArgs{
-						List: []SimpleType{{"resource.field"}},
+						List: []SimpleType{{Type: "resource.field"}},
 					},
 				},
 			},
@@ -667,13 +668,13 @@ name {
 		f0 := res.Resources[0].Body.Fields[0]
 		assert.Equal(t, &BasicField{
 			ID:   "field",
-			Type: Type{MapType: &MapType{Key: SimpleType{"string"}, Value: Type{SimpleType: &SimpleType{"int"}}}},
+			Type: Type{MapType: &MapType{Key: SimpleType{Type: "string"}, Value: Type{SimpleType: &SimpleType{Type: "int"}}}},
 		}, f0.BasicField)
 
 		f1 := res.Resources[0].Body.Fields[1]
 		assert.Equal(t, &BasicField{
 			ID:   "context",
-			Type: Type{SimpleType: &SimpleType{"file.context"}},
+			Type: Type{SimpleType: &SimpleType{Type: "file.context"}},
 			Args: &FieldArgs{},
 		}, f1.BasicField)
 		require.Len(t, f1.Comments, 1)
@@ -738,10 +739,10 @@ func TestGetFieldPaths(t *testing.T) {
 		ID: "name",
 		Body: &ResourceDef{
 			Fields: []*Field{
-				{BasicField: &BasicField{ID: "field1", Type: Type{SimpleType: &SimpleType{"string"}}}},
-				{BasicField: &BasicField{ID: "field2", Type: Type{SimpleType: &SimpleType{"int"}}}},
+				{BasicField: &BasicField{ID: "field1", Type: Type{SimpleType: &SimpleType{Type: "string"}}}},
+				{BasicField: &BasicField{ID: "field2", Type: Type{SimpleType: &SimpleType{Type: "int"}}}},
 				{Embeddable: &Embeddable{Type: "os.any"}},
-				{Init: &Init{Args: []TypedArg{{ID: "arg1", Type: Type{SimpleType: &SimpleType{"string"}}}}}},
+				{Init: &Init{Args: []TypedArg{{ID: "arg1", Type: Type{SimpleType: &SimpleType{Type: "string"}}}}}},
 			},
 		},
 	}
@@ -754,10 +755,10 @@ func TestGetDuplicates(t *testing.T) {
 		ID: "res1",
 		Body: &ResourceDef{
 			Fields: []*Field{
-				{BasicField: &BasicField{ID: "res2", Type: Type{SimpleType: &SimpleType{"resource"}}}},
-				{BasicField: &BasicField{ID: "field2", Type: Type{SimpleType: &SimpleType{"int"}}}},
+				{BasicField: &BasicField{ID: "res2", Type: Type{SimpleType: &SimpleType{Type: "resource"}}}},
+				{BasicField: &BasicField{ID: "field2", Type: Type{SimpleType: &SimpleType{Type: "int"}}}},
 				{Embeddable: &Embeddable{Type: "os.any"}},
-				{Init: &Init{Args: []TypedArg{{ID: "arg1", Type: Type{SimpleType: &SimpleType{"string"}}}}}},
+				{Init: &Init{Args: []TypedArg{{ID: "arg1", Type: Type{SimpleType: &SimpleType{Type: "string"}}}}}},
 			},
 		},
 	}
@@ -765,7 +766,7 @@ func TestGetDuplicates(t *testing.T) {
 		ID: "res1.res2",
 		Body: &ResourceDef{
 			Fields: []*Field{
-				{BasicField: &BasicField{ID: "value", Type: Type{SimpleType: &SimpleType{"string"}}}},
+				{BasicField: &BasicField{ID: "value", Type: Type{SimpleType: &SimpleType{Type: "string"}}}},
 			},
 		},
 	}
@@ -1117,4 +1118,271 @@ extend core.doesNotExist {
 	}, "providers/demo/resources/demo.lr")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), `has no resource "doesNotExist"`)
+}
+
+// TestAssetRootType covers the `asset<root>` type form: the root is a forward
+// reference (the named resource is defined by another provider, and does not
+// have to exist in any schema present at build time), and it is the only place
+// a type parameter is accepted. See ADR 031.
+func TestAssetRootType(t *testing.T) {
+	res, err := Parse(`
+// Thing
+//
+// A thing.
+thing {
+  // Running server
+  running() asset<mcp>
+  // Servers
+  servers() []asset<mcp>
+  // Reference with no root
+  plain() asset
+  // A name
+  name string
+}
+`)
+	require.NoError(t, err)
+	require.Len(t, res.Resources, 1)
+
+	fields := map[string]*BasicField{}
+	for _, f := range res.Resources[0].Body.Fields {
+		if f.BasicField != nil {
+			fields[f.BasicField.ID] = f.BasicField
+		}
+	}
+
+	require.NotNil(t, fields["running"])
+	assert.Equal(t, "asset", fields["running"].Type.SimpleType.Type)
+	assert.Equal(t, "mcp", fields["running"].Type.SimpleType.Root)
+	assert.Equal(t, types.Asset("mcp"), fields["running"].Type.Type(res))
+
+	require.NotNil(t, fields["servers"])
+	assert.Equal(t, types.Array(types.Asset("mcp")), fields["servers"].Type.Type(res))
+
+	require.NotNil(t, fields["plain"])
+	assert.Equal(t, "", fields["plain"].Type.SimpleType.Root)
+	assert.Equal(t, types.AssetLike, fields["plain"].Type.Type(res))
+
+	require.NotNil(t, fields["name"])
+	assert.Equal(t, types.String, fields["name"].Type.Type(res))
+}
+
+// TestTypeParameterOnlyOnAsset: the grammar accepts `<root>` after any type
+// name, because participle cannot make the group conditional on the name. Every
+// other type has to be rejected during parsing, or the parameter would be
+// silently dropped and the field would compile as if it had never been written.
+func TestTypeParameterOnlyOnAsset(t *testing.T) {
+	for _, field := range []string{
+		"nope string<mcp>",
+		"nope []string<mcp>",
+		"nope map[string<mcp>]string",
+		"nope map[string]string<mcp>",
+		"nope other.resource<mcp>",
+	} {
+		t.Run(field, func(t *testing.T) {
+			_, err := Parse("// Thing\n//\n// A thing.\nthing {\n  // Nope\n  " + field + "\n}\n")
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "type parameter")
+		})
+	}
+}
+
+// An alias name that repeats, or that collides with a declared resource, is
+// assigned into a map without a presence check in both resolve.go and
+// schema.go, so it silently replaces what was there. Generating aliases in bulk
+// (attaching a provider's surface to its asset roots) makes that a live hazard.
+func TestAliasCollisions(t *testing.T) {
+	t.Run("duplicate alias", func(t *testing.T) {
+		_, err := Parse(`
+alias os.base.packages = packages
+alias os.base.packages = shadow
+
+// Packages
+//
+// packages.
+packages {
+  count() int
+}
+
+// Shadow
+//
+// shadow.
+shadow {
+  count() int
+}
+`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "declared more than once")
+	})
+
+	t.Run("alias shadows a resource", func(t *testing.T) {
+		_, err := Parse(`
+alias os.base = packages
+
+// Packages
+//
+// packages.
+packages {
+  count() int
+}
+
+// Base
+//
+// the universal root.
+os.base {
+  hostname() string
+}
+`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "same name as a resource")
+	})
+
+	t.Run("distinct aliases are fine", func(t *testing.T) {
+		_, err := Parse(`
+alias os.base.packages = packages
+alias os.any.packages = packages
+
+// Packages
+//
+// packages.
+packages {
+  count() int
+}
+`)
+		require.NoError(t, err)
+	})
+}
+
+// Embedded members are reachable directly on the embedding resource, so a
+// resource that embeds two others which both expose the same member under
+// different types has an unanswerable lookup. This is what bounds composing
+// asset roots out of mixins (ADR 031).
+func TestEmbedAmbiguity(t *testing.T) {
+	schema := func(secondType string) string {
+		return `
+// Left
+//
+// left.
+os.left {
+  shared() ` + `string
+}
+
+// Right
+//
+// right.
+os.right {
+  shared() ` + secondType + `
+}
+
+// Union
+//
+// union of both.
+os.any {
+  embed os.left as left
+  embed os.right as right
+}
+`
+	}
+
+	t.Run("conflicting types are rejected", func(t *testing.T) {
+		_, err := Parse(schema("int"))
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "expose shared with different types")
+	})
+
+	// The same member reached two ways is still that member; only a type
+	// disagreement makes the lookup unanswerable.
+	t.Run("agreeing types are accepted", func(t *testing.T) {
+		_, err := Parse(schema("string"))
+		require.NoError(t, err)
+	})
+}
+
+// Every bare identifier resolves against the root once the root is the
+// namespace, so a root member that shadows something the compiler answers itself
+// would be unreachable, and one that shadows a different resource would change
+// meaning when the namespace precedence flips. See ADR 031.
+func TestRootMemberGuards(t *testing.T) {
+	schema := func(body string) string {
+		return `
+option provider = "go.mondoo.com/mql/providers/demo"
+option root = "demo.any"
+` + body
+	}
+
+	t.Run("a member may not shadow the language", func(t *testing.T) {
+		_, err := Parse(schema(`
+// Any
+//
+// the root.
+demo.any {
+  version() string
+}
+`))
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "which the compiler answers itself")
+	})
+
+	t.Run("a member may not shadow a different resource", func(t *testing.T) {
+		_, err := Parse(schema(`
+// Packages
+//
+// packages.
+packages {
+  count() int
+}
+
+// Any
+//
+// the root.
+demo.any {
+  packages() string
+}
+`))
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "would mean different things")
+	})
+
+	// Attaching a resource to the root under its own name is the whole point of
+	// the alias block, so it has to stay legal.
+	t.Run("an alias of the same resource is fine", func(t *testing.T) {
+		_, err := Parse(schema(`
+alias demo.any.packages = packages
+
+// Packages
+//
+// packages.
+packages {
+  count() int
+}
+
+// Any
+//
+// the root.
+demo.any {
+  name() string
+}
+`))
+		require.NoError(t, err)
+	})
+
+	// Members reached through an embed are members of the root too.
+	t.Run("embedded members are checked", func(t *testing.T) {
+		_, err := Parse(schema(`
+// Base
+//
+// the base.
+demo.base {
+  expect() string
+}
+
+// Any
+//
+// the root.
+demo.any {
+  embed demo.base as base
+}
+`))
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "which the compiler answers itself")
+	})
 }

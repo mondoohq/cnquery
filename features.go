@@ -123,9 +123,14 @@ const (
 	// status: new
 	UploadResourcesData Feature = 22
 
+	// Compile queries against the asset root instead of the global namespace (ADR 031). A bare identifier resolves as a member of the connected asset's root, the global namespace is reachable only through resources marked @global, and a compile without a root is an error. This is the v15 model, available early so content and providers can be moved onto it before it becomes the default.
+	// start:  v14.x
+	// status: new
+	RootedNamespace Feature = 23
+
 	// Placeholder to indicate how many feature flags exist. This number
 	// is changing with every new feature and cannot be used as a featureflag itself.
-	MAX_FEATURES byte = 23
+	MAX_FEATURES byte = 24
 )
 
 var FeaturesValue = map[string]Feature{
@@ -151,6 +156,7 @@ var FeaturesValue = map[string]Feature{
 	"ScanContentModeClientCompare": ScanContentModeClientCompare,
 	"ScanContentModeNoCompare":     ScanContentModeNoCompare,
 	"UploadResourcesData":          UploadResourcesData,
+	"RootedNamespace":              RootedNamespace,
 }
 
 // DefaultFeatures are a set of default flags that are active
@@ -173,4 +179,5 @@ var AvailableFeatures = Features{
 	byte(ScanContentModeClientCompare),
 	byte(ScanContentModeNoCompare),
 	byte(UploadResourcesData),
+	byte(RootedNamespace),
 }
