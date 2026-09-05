@@ -473,6 +473,17 @@ in 14, `os.date` in 12, `os.hostname` in 10, `os.env` in 3, across cnspec conten
 and the policy repos). v15 migrates the policies, removes the fields, and leaves
 `os` as the empty namespace node.
 
+Each of them also carries `@replaced_by("os.base.<field>")`, which is the same
+migration target as data rather than prose
+([ADR 040](040-cross-version-type-migration.md#2-migrations-are-composable-directional-lenses--not-aliases)).
+The compiler records every deprecated name a bundle reads on
+`CodeBundle.deprecated_uses` and the CLI renders it against the root the query
+compiled with, so someone running `os.hostname` on a connected asset is told
+`os.hostname has migrated to hostname` - the spelling that works here - rather
+than the schema path. That is the whole mechanism: no lens, no alias, nothing
+that changes how `os.hostname` resolves. It resolves because the field is still
+there, and in v15 it stops because the field is gone.
+
 **Stays legal in both versions:** providers **extending** each other's resources
 with new fields.
 

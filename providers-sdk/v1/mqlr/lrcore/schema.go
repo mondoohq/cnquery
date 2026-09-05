@@ -167,6 +167,10 @@ func Schema(ast *LR) (*resources.Schema, error) {
 		}
 	}
 
+	if err := validateReplacedBy(res); err != nil {
+		return nil, err
+	}
+
 	if len(schemaErrs) > 0 {
 		return res, errors.Join(schemaErrs...)
 	}
@@ -243,6 +247,7 @@ func resourceFields(r *Resource, ast *LR) (map[string]*resources.Field, error) {
 			Refs:        refs,
 			IsEmbedded:  f.BasicField.isEmbedded,
 			Maturity:    f.BasicField.Maturity,
+			ReplacedBy:  f.BasicField.ReplacedBy,
 		}
 	}
 
@@ -280,6 +285,7 @@ func resourceSchema(r *Resource, ast *LR) (*resources.ResourceInfo, error) {
 		Maturity:    r.Maturity,
 		Global:      r.IsGlobal,
 		Root:        r.IsRoot,
+		ReplacedBy:  r.ReplacedBy,
 	}
 
 	if r.ListType != nil {
@@ -287,4 +293,69 @@ func resourceSchema(r *Resource, ast *LR) (*resources.ResourceInfo, error) {
 	}
 
 	return res, fieldsErr
+}
+
+// validateReplacedBy checks that every `@replaced_by` names something that
+// exists in this schema. The annotation carries the *schema* path of the
+// replacement (`os.base.hostname`), not the spelling a user types - the
+// relative form is rendered later against whatever root the query compiles
+// with - so a typo here would otherwise survive all the way to a message that
+// points a user at nothing. See ADR 040.
+func validateReplacedBy(res *resources.Schema) error {
+	var errs []error
+
+	// The owner of the target - the target itself when it names a resource -
+	// has to survive the v15 cutover, or the notice points a user at something
+	// that will not compile by the time they read it. Checking it here means
+	// checking it once, when the provider is built, instead of discovering it
+	// from a confused user.
+	reachable := func(what string, name string) {
+		if resources.RootReachable(res, name) {
+			return
+		}
+		errs = append(errs, fmt.Errorf("%s: @replaced_by target %q cannot be reached from any asset root, so it stops resolving in v15", what, name))
+	}
+
+	check := func(what string, target string) {
+		if target == "" {
+			return
+		}
+		if _, ok := res.Resources[target]; ok {
+			reachable(what, target)
+			return
+		}
+		// Not a resource, so it has to be a field on one. Only the last segment
+		// can be the field name; everything before it is the owning resource,
+		// which is itself dotted.
+		if idx := strings.LastIndex(target, "."); idx > 0 {
+			owner, field := target[:idx], target[idx+1:]
+			if ri, ok := res.Resources[owner]; ok {
+				if _, ok := ri.Fields[field]; ok {
+					reachable(what, owner)
+					return
+				}
+				errs = append(errs, fmt.Errorf("%s: @replaced_by(%q) - resource %q has no field %q", what, target, owner, field))
+				return
+			}
+		}
+		errs = append(errs, fmt.Errorf("%s: @replaced_by(%q) does not name a resource or field in this schema", what, target))
+	}
+
+	for name, ri := range res.Resources {
+		if ri.ReplacedBy == name {
+			errs = append(errs, fmt.Errorf("resource %s: @replaced_by points at itself", name))
+		} else {
+			check("resource "+name, ri.ReplacedBy)
+		}
+		for fname, f := range ri.Fields {
+			if f.ReplacedBy == name+"."+fname {
+				errs = append(errs, fmt.Errorf("resource %s field %s: @replaced_by points at itself", name, fname))
+				continue
+			}
+			check("resource "+name+" field "+fname, f.ReplacedBy)
+		}
+	}
+
+	slices.SortFunc(errs, func(a, b error) int { return strings.Compare(a.Error(), b.Error()) })
+	return errors.Join(errs...)
 }

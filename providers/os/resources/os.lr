@@ -485,63 +485,63 @@ machine.secureboot @defaults("enabled") {
 // `os.base.hostname` reads what `os.hostname` used to. The fields here keep
 // working for the whole v14 line and are removed in v15; nothing else is
 // attached to `os`, which is only the namespace the roots hang under.
-os @maturity("deprecated") {
+os @maturity("deprecated") @replaced_by("os.base") {
   // Pretty hostname on macOS/Linux or device name on Windows
   //
   // Deprecated in favor of os.base.name, reachable as `_.name`.
-  name() @maturity("deprecated") string
+  name() @maturity("deprecated") @replaced_by("os.base.name") string
   // ENV variable contents
   //
   // Deprecated in favor of os.base.env, reachable as `_.env`.
-  env() @maturity("deprecated") map[string]string
+  env() @maturity("deprecated") @replaced_by("os.base.env") map[string]string
   // PATH variable contents
   //
   // Deprecated in favor of os.base.path, reachable as `_.path`.
-  path(env) @maturity("deprecated") []string
+  path(env) @maturity("deprecated") @replaced_by("os.base.path") []string
   // Current uptime
   //
   // Deprecated in favor of os.base.uptime, reachable as `_.uptime`.
-  uptime() @maturity("deprecated") time
+  uptime() @maturity("deprecated") @replaced_by("os.base.uptime") time
   // List of available OS updates
   //
   // Deprecated in favor of os.base.updates, reachable as `_.updates`.
-  updates() @maturity("deprecated") []os.update
+  updates() @maturity("deprecated") @replaced_by("os.base.updates") []os.update
   // Time the most recent operating system update was installed
   //
   // Deprecated in favor of os.base.lastUpdate, reachable as `_.lastUpdate`,
   // which documents what the timestamp does and does not cover.
-  lastUpdate() @maturity("deprecated") time
+  lastUpdate() @maturity("deprecated") @replaced_by("os.base.lastUpdate") time
   // Time since the most recent operating system update was installed
   //
   // Deprecated in favor of os.base.lastUpdateAge, reachable as
   // `_.lastUpdateAge`.
-  lastUpdateAge() @maturity("deprecated") time
+  lastUpdateAge() @maturity("deprecated") @replaced_by("os.base.lastUpdateAge") time
   // Record the last-update timestamp was read from
   //
   // Deprecated in favor of os.base.lastUpdateSource, reachable as
   // `_.lastUpdateSource`.
-  lastUpdateSource() @maturity("deprecated") string
+  lastUpdateSource() @maturity("deprecated") @replaced_by("os.base.lastUpdateSource") string
   // Whether a reboot is pending
   //
   // Deprecated in favor of os.base.rebootpending, reachable as
   // `_.rebootpending`.
-  rebootpending() @maturity("deprecated") bool
+  rebootpending() @maturity("deprecated") @replaced_by("os.base.rebootpending") bool
   // Hostname for this OS
   //
   // Deprecated in favor of os.base.hostname, reachable as `_.hostname`.
-  hostname() @maturity("deprecated") string
+  hostname() @maturity("deprecated") @replaced_by("os.base.hostname") string
   // Hypervisor for this OS
   //
   // Deprecated in favor of os.base.hypervisor, reachable as `_.hypervisor`.
-  hypervisor() @maturity("deprecated") string
+  hypervisor() @maturity("deprecated") @replaced_by("os.base.hypervisor") string
   // Machine ID for this OS
   //
   // Deprecated in favor of os.base.machineid, reachable as `_.machineid`.
-  machineid() @maturity("deprecated") string
+  machineid() @maturity("deprecated") @replaced_by("os.base.machineid") string
   // Current date and timezone of the system
   //
   // Deprecated in favor of os.base.date, reachable as `_.date`.
-  date() @maturity("deprecated") os.date
+  date() @maturity("deprecated") @replaced_by("os.base.date") os.date
 }
 
 // Operating system date and timezone information

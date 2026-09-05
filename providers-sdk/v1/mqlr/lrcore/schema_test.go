@@ -174,3 +174,144 @@ func TestDetermnisticSchema(t *testing.T) {
 		require.Equal(t, schema, newSchema)
 	}
 }
+
+func TestReplacedBy(t *testing.T) {
+	// The annotation is a pointer with no runtime behavior (ADR 040): what it
+	// buys is a deprecation notice that names a real destination, so the only
+	// thing that can go wrong is the destination not existing.
+	schemaWithErr := func(t *testing.T, s string) error {
+		ast := parse(t, s)
+		ast.Options = map[string]string{"provider": provider}
+		_, err := Schema(ast)
+		return err
+	}
+
+	t.Run("field target", func(t *testing.T) {
+		res := schemaFor(t, `
+			os @maturity("deprecated") @replaced_by("os.base") {
+				hostname() @maturity("deprecated") @replaced_by("os.base.hostname") string
+			}
+			os.base @root {
+				hostname() string
+			}
+		`)
+		assert.Equal(t, "os.base", res.Resources["os"].ReplacedBy)
+		assert.Equal(t, "os.base.hostname", res.Resources["os"].Fields["hostname"].ReplacedBy)
+		// The target itself carries nothing; only the deprecated side points.
+		assert.Empty(t, res.Resources["os.base"].ReplacedBy)
+		assert.Empty(t, res.Resources["os.base"].Fields["hostname"].ReplacedBy)
+	})
+
+	t.Run("unknown resource target", func(t *testing.T) {
+		err := schemaWithErr(t, `
+			os @maturity("deprecated") @replaced_by("osbase") {
+				hostname() string
+			}
+		`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), `@replaced_by("osbase") does not name a resource or field`)
+	})
+
+	t.Run("dotted target falls back to the field reading", func(t *testing.T) {
+		// `os.nope` is ambiguous on its face: it could be a resource we do not
+		// have, or a field on one we do. The resource lookup misses and the
+		// field lookup hits an owner that exists, so the specific message wins.
+		err := schemaWithErr(t, `
+			os @maturity("deprecated") @replaced_by("os.nope") {
+				hostname() string
+			}
+		`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), `resource "os" has no field "nope"`)
+	})
+
+	t.Run("unknown field on a known resource", func(t *testing.T) {
+		err := schemaWithErr(t, `
+			os @maturity("deprecated") {
+				hostname() @replaced_by("os.base.hostnaem") string
+			}
+			os.base @root {
+				hostname() string
+			}
+		`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), `resource "os.base" has no field "hostnaem"`)
+	})
+
+	t.Run("self reference", func(t *testing.T) {
+		err := schemaWithErr(t, `
+			os {
+				hostname() @replaced_by("os.hostname") string
+			}
+		`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "points at itself")
+	})
+}
+
+// Existence is not enough: the replacement has to still be addressable once the
+// root is the namespace (ADR 031 v15). Catching it when the provider is built
+// is the whole point - the alternative is a user reading a notice that points
+// at something they cannot type.
+func TestReplacedByReachability(t *testing.T) {
+	schemaWithErr := func(t *testing.T, s string) error {
+		ast := parse(t, s)
+		ast.Options = map[string]string{"provider": provider}
+		_, err := Schema(ast)
+		return err
+	}
+
+	t.Run("reached through a member, not an embed", func(t *testing.T) {
+		// `sshd.config` hangs off no embed chain, but `_.sshd.config` resolves,
+		// so it survives the cutover and is a legal target.
+		ast := parse(t, `
+			os @maturity("deprecated") @replaced_by("sshd.config.params") {
+				sshd() @maturity("deprecated") string
+			}
+			os.base @root {
+				sshd() sshd
+			}
+			sshd {
+				config() sshd.config
+			}
+			sshd.config {
+				params() string
+			}
+		`)
+		ast.Options = map[string]string{"provider": provider}
+		_, err := Schema(ast)
+		require.NoError(t, err)
+	})
+
+	t.Run("target hanging off nothing", func(t *testing.T) {
+		err := schemaWithErr(t, `
+			os @maturity("deprecated") @replaced_by("orphan.thing") {
+				hostname() string
+			}
+			os.base @root {
+				hostname() string
+			}
+			orphan.thing {
+				name() string
+			}
+		`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), `@replaced_by target "orphan.thing" cannot be reached from any asset root`)
+	})
+
+	t.Run("a provider with no roots is not asked the question", func(t *testing.T) {
+		// Nothing to be outside of yet. Rejecting here would block every
+		// provider that has not been rooted from recording a replacement.
+		ast := parse(t, `
+			thing @maturity("deprecated") @replaced_by("other.name") {
+				name() string
+			}
+			other {
+				name string
+			}
+		`)
+		ast.Options = map[string]string{"provider": provider}
+		_, err := Schema(ast)
+		require.NoError(t, err)
+	})
+}

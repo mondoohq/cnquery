@@ -368,7 +368,14 @@ type ResourceInfo struct {
 	// universal base, the platform variants that embed it, and the union a
 	// disconnected compile targets - and knowing which resources are roots is
 	// what lets the compiler narrow a query to the ones that can run it.
-	Root          bool `protobuf:"varint,34,opt,name=root,proto3" json:"root,omitempty"`
+	Root bool `protobuf:"varint,34,opt,name=root,proto3" json:"root,omitempty"`
+	// Where this resource moved to, when it is deprecated in favor of another
+	// one (ADR 040). Holds the full schema path of the replacement, e.g.
+	// `os.base`; what a user is shown is rendered from that against the root
+	// their query is compiled with. A pointer only: it changes nothing about
+	// how this resource resolves, and every migration that has to transform
+	// rather than redirect is a lens in Go, not this field.
+	ReplacedBy    string `protobuf:"bytes,35,opt,name=replaced_by,json=replacedBy,proto3" json:"replaced_by,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -522,6 +529,13 @@ func (x *ResourceInfo) GetRoot() bool {
 	return false
 }
 
+func (x *ResourceInfo) GetReplacedBy() string {
+	if x != nil {
+		return x.ReplacedBy
+	}
+	return ""
+}
+
 type Field struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	Name               string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -541,7 +555,11 @@ type Field struct {
 	// Note: Please do not use this field, it is only temporary and will be
 	// removed in the future once binding resources are mandatory for all
 	// executions.
-	Others        []*Field `protobuf:"bytes,29,rep,name=others,proto3" json:"others,omitempty"`
+	Others []*Field `protobuf:"bytes,29,rep,name=others,proto3" json:"others,omitempty"`
+	// Where this field moved to, when it is deprecated in favor of another one
+	// (ADR 040). Holds the full schema path of the replacement, e.g.
+	// `os.base.hostname`. See ResourceInfo.replaced_by.
+	ReplacedBy    string `protobuf:"bytes,31,opt,name=replaced_by,json=replacedBy,proto3" json:"replaced_by,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -667,6 +685,13 @@ func (x *Field) GetOthers() []*Field {
 	return nil
 }
 
+func (x *Field) GetReplacedBy() string {
+	if x != nil {
+		return x.ReplacedBy
+	}
+	return ""
+}
+
 var File_resources_proto protoreflect.FileDescriptor
 
 const file_resources_proto_rawDesc = "" +
@@ -701,7 +726,7 @@ const file_resources_proto_rawDesc = "" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12\x1a\n" +
 	"\boptional\x18\x03 \x01(\bR\boptional\"6\n" +
 	"\x04Init\x12.\n" +
-	"\x04args\x18\x01 \x03(\v2\x1a.mondoo.resources.TypedArgR\x04args\"\x98\x05\n" +
+	"\x04args\x18\x01 \x03(\v2\x1a.mondoo.resources.TypedArgR\x04args\"\xb9\x05\n" +
 	"\fResourceInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12B\n" +
@@ -719,10 +744,12 @@ const file_resources_proto_rawDesc = "" +
 	"\x06others\x18\x1d \x03(\v2\x1e.mondoo.resources.ResourceInfoR\x06others\x12\x1a\n" +
 	"\bmaturity\x18  \x01(\tR\bmaturity\x12\x16\n" +
 	"\x06global\x18! \x01(\bR\x06global\x12\x12\n" +
-	"\x04root\x18\" \x01(\bR\x04root\x1aR\n" +
+	"\x04root\x18\" \x01(\bR\x04root\x12\x1f\n" +
+	"\vreplaced_by\x18# \x01(\tR\n" +
+	"replacedBy\x1aR\n" +
 	"\vFieldsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
-	"\x05value\x18\x02 \x01(\v2\x17.mondoo.resources.FieldR\x05value:\x028\x01J\x04\b\x19\x10\x1aR\x12min_mondoo_version\"\xb7\x03\n" +
+	"\x05value\x18\x02 \x01(\v2\x17.mondoo.resources.FieldR\x05value:\x028\x01J\x04\b\x19\x10\x1aR\x12min_mondoo_version\"\xd8\x03\n" +
 	"\x05Field\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12!\n" +
@@ -738,7 +765,9 @@ const file_resources_proto_rawDesc = "" +
 	"\vis_embedded\x18\x19 \x01(\bR\n" +
 	"isEmbedded\x12\x1a\n" +
 	"\bmaturity\x18\x1a \x01(\tR\bmaturity\x12/\n" +
-	"\x06others\x18\x1d \x03(\v2\x17.mondoo.resources.FieldR\x06othersJ\x04\b\x17\x10\x18R\x12min_mondoo_versionB.Z,go.mondoo.com/mql/providers-sdk/v1/resourcesb\x06proto3"
+	"\x06others\x18\x1d \x03(\v2\x17.mondoo.resources.FieldR\x06others\x12\x1f\n" +
+	"\vreplaced_by\x18\x1f \x01(\tR\n" +
+	"replacedByJ\x04\b\x17\x10\x18R\x12min_mondoo_versionB.Z,go.mondoo.com/mql/providers-sdk/v1/resourcesb\x06proto3"
 
 var (
 	file_resources_proto_rawDescOnce sync.Once

@@ -921,8 +921,16 @@ type CodeBundle struct {
 	// it: the same job a hand-written platform filter does today, computed from
 	// what the code actually reads.
 	CompatibleRoots []string `protobuf:"bytes,31,rep,name=compatible_roots,json=compatibleRoots,proto3" json:"compatible_roots,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// Names this bundle uses that are deprecated and say where they moved to
+	// (ADR 040). Recorded, never logged: the compiler is called per keystroke by
+	// autocomplete, so the decision to show a notice belongs to whoever is
+	// driving it.
+	//
+	// Only uses with a `@replaced_by` target land here. A deprecation with no
+	// destination has nothing actionable to tell a user, so it stays silent.
+	DeprecatedUses []*DeprecatedUse `protobuf:"bytes,32,rep,name=deprecated_uses,json=deprecatedUses,proto3" json:"deprecated_uses,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *CodeBundle) Reset() {
@@ -1067,6 +1075,71 @@ func (x *CodeBundle) GetCompatibleRoots() []string {
 	return nil
 }
 
+func (x *CodeBundle) GetDeprecatedUses() []*DeprecatedUse {
+	if x != nil {
+		return x.DeprecatedUses
+	}
+	return nil
+}
+
+// DeprecatedUse is one deprecated name a bundle reads, and its replacement.
+type DeprecatedUse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The deprecated name as it exists in the schema, e.g. `os.hostname`.
+	From string `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`
+	// Where it moved to, as a full schema path, e.g. `os.base.hostname`. What a
+	// user is shown is rendered from this against the root the query compiled
+	// with, so the same entry reads as `hostname` in a rooted shell and as
+	// `os.base.hostname` where there is no root to shorten it against.
+	To            string `protobuf:"bytes,2,opt,name=to,proto3" json:"to,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeprecatedUse) Reset() {
+	*x = DeprecatedUse{}
+	mi := &file_llx_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeprecatedUse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeprecatedUse) ProtoMessage() {}
+
+func (x *DeprecatedUse) ProtoReflect() protoreflect.Message {
+	mi := &file_llx_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeprecatedUse.ProtoReflect.Descriptor instead.
+func (*DeprecatedUse) Descriptor() ([]byte, []int) {
+	return file_llx_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *DeprecatedUse) GetFrom() string {
+	if x != nil {
+		return x.From
+	}
+	return ""
+}
+
+func (x *DeprecatedUse) GetTo() string {
+	if x != nil {
+		return x.To
+	}
+	return ""
+}
+
 // TranslationRef points one call that an older reader cannot make at a block
 // that computes the same value out of vocabulary it does have.
 type TranslationRef struct {
@@ -1088,7 +1161,7 @@ type TranslationRef struct {
 
 func (x *TranslationRef) Reset() {
 	*x = TranslationRef{}
-	mi := &file_llx_proto_msgTypes[11]
+	mi := &file_llx_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1100,7 +1173,7 @@ func (x *TranslationRef) String() string {
 func (*TranslationRef) ProtoMessage() {}
 
 func (x *TranslationRef) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[11]
+	mi := &file_llx_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1113,7 +1186,7 @@ func (x *TranslationRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TranslationRef.ProtoReflect.Descriptor instead.
 func (*TranslationRef) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{11}
+	return file_llx_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *TranslationRef) GetRef() uint64 {
@@ -1155,7 +1228,7 @@ type Result struct {
 
 func (x *Result) Reset() {
 	*x = Result{}
-	mi := &file_llx_proto_msgTypes[12]
+	mi := &file_llx_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1167,7 +1240,7 @@ func (x *Result) String() string {
 func (*Result) ProtoMessage() {}
 
 func (x *Result) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[12]
+	mi := &file_llx_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1180,7 +1253,7 @@ func (x *Result) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Result.ProtoReflect.Descriptor instead.
 func (*Result) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{12}
+	return file_llx_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *Result) GetData() *Primitive {
@@ -1217,7 +1290,7 @@ type ResourceRecording struct {
 
 func (x *ResourceRecording) Reset() {
 	*x = ResourceRecording{}
-	mi := &file_llx_proto_msgTypes[13]
+	mi := &file_llx_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1229,7 +1302,7 @@ func (x *ResourceRecording) String() string {
 func (*ResourceRecording) ProtoMessage() {}
 
 func (x *ResourceRecording) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[13]
+	mi := &file_llx_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1242,7 +1315,7 @@ func (x *ResourceRecording) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceRecording.ProtoReflect.Descriptor instead.
 func (*ResourceRecording) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{13}
+	return file_llx_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ResourceRecording) GetResource() string {
@@ -1294,7 +1367,7 @@ type Rating struct {
 
 func (x *Rating) Reset() {
 	*x = Rating{}
-	mi := &file_llx_proto_msgTypes[14]
+	mi := &file_llx_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1306,7 +1379,7 @@ func (x *Rating) String() string {
 func (*Rating) ProtoMessage() {}
 
 func (x *Rating) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[14]
+	mi := &file_llx_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1319,7 +1392,7 @@ func (x *Rating) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Rating.ProtoReflect.Descriptor instead.
 func (*Rating) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{14}
+	return file_llx_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *Rating) GetId() string {
@@ -1383,7 +1456,7 @@ type AssessmentItem struct {
 
 func (x *AssessmentItem) Reset() {
 	*x = AssessmentItem{}
-	mi := &file_llx_proto_msgTypes[15]
+	mi := &file_llx_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1395,7 +1468,7 @@ func (x *AssessmentItem) String() string {
 func (*AssessmentItem) ProtoMessage() {}
 
 func (x *AssessmentItem) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[15]
+	mi := &file_llx_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1408,7 +1481,7 @@ func (x *AssessmentItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssessmentItem.ProtoReflect.Descriptor instead.
 func (*AssessmentItem) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{15}
+	return file_llx_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *AssessmentItem) GetSuccess() bool {
@@ -1500,7 +1573,7 @@ type Assessment struct {
 
 func (x *Assessment) Reset() {
 	*x = Assessment{}
-	mi := &file_llx_proto_msgTypes[16]
+	mi := &file_llx_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1512,7 +1585,7 @@ func (x *Assessment) String() string {
 func (*Assessment) ProtoMessage() {}
 
 func (x *Assessment) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[16]
+	mi := &file_llx_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1525,7 +1598,7 @@ func (x *Assessment) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Assessment.ProtoReflect.Descriptor instead.
 func (*Assessment) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{16}
+	return file_llx_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *Assessment) GetChecksum() string {
@@ -1567,7 +1640,7 @@ type IP struct {
 
 func (x *IP) Reset() {
 	*x = IP{}
-	mi := &file_llx_proto_msgTypes[17]
+	mi := &file_llx_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1579,7 +1652,7 @@ func (x *IP) String() string {
 func (*IP) ProtoMessage() {}
 
 func (x *IP) ProtoReflect() protoreflect.Message {
-	mi := &file_llx_proto_msgTypes[17]
+	mi := &file_llx_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1592,7 +1665,7 @@ func (x *IP) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IP.ProtoReflect.Descriptor instead.
 func (*IP) Descriptor() ([]byte, []int) {
-	return file_llx_proto_rawDescGZIP(), []int{17}
+	return file_llx_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *IP) GetAddress() []byte {
@@ -1711,7 +1784,8 @@ const file_llx_proto_rawDesc = "" +
 	"\x05field\x18\x01 \x01(\tR\x05field\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x12\n" +
 	"\x04desc\x18\x03 \x01(\tR\x04desc\x12\x1a\n" +
-	"\bprovider\x18\x04 \x01(\tR\bprovider\"\xfe\t\n" +
+	"\bprovider\x18\x04 \x01(\tR\bprovider\"\xbf\n" +
+	"\n" +
 	"\n" +
 	"CodeBundle\x12(\n" +
 	"\acode_v2\x18\x06 \x01(\v2\x0f.mql.llx.CodeV2R\x06codeV2\x128\n" +
@@ -1733,7 +1807,8 @@ const file_llx_proto_rawDesc = "" +
 	"\x12unrooted_resources\x18\x1d \x03(\tR\x11unrootedResources\x12\x1d\n" +
 	"\n" +
 	"asset_root\x18\x1e \x01(\tR\tassetRoot\x12)\n" +
-	"\x10compatible_roots\x18\x1f \x03(\tR\x0fcompatibleRoots\x1a8\n" +
+	"\x10compatible_roots\x18\x1f \x03(\tR\x0fcompatibleRoots\x12?\n" +
+	"\x0fdeprecated_uses\x18  \x03(\v2\x16.mql.llx.DeprecatedUseR\x0edeprecatedUses\x1a8\n" +
 	"\n" +
 	"PropsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
@@ -1752,7 +1827,10 @@ const file_llx_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aF\n" +
 	"\x18MinProviderVersionsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01J\x04\b\x01\x10\x02J\x04\b\x15\x10\x16\"\x80\x01\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01J\x04\b\x01\x10\x02J\x04\b\x15\x10\x16\"3\n" +
+	"\rDeprecatedUse\x12\x12\n" +
+	"\x04from\x18\x01 \x01(\tR\x04from\x12\x0e\n" +
+	"\x02to\x18\x02 \x01(\tR\x02to\"\x80\x01\n" +
 	"\x0eTranslationRef\x12\x10\n" +
 	"\x03ref\x18\x01 \x01(\x04R\x03ref\x12\x1a\n" +
 	"\bprovider\x18\x02 \x01(\tR\bprovider\x12#\n" +
@@ -1817,7 +1895,7 @@ func file_llx_proto_rawDescGZIP() []byte {
 }
 
 var file_llx_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_llx_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
+var file_llx_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
 var file_llx_proto_goTypes = []any{
 	(Function_Nullability)(0), // 0: mql.llx.Function.Nullability
 	(Chunk_Call)(0),           // 1: mql.llx.Chunk.Call
@@ -1832,70 +1910,72 @@ var file_llx_proto_goTypes = []any{
 	(*Labels)(nil),            // 10: mql.llx.Labels
 	(*Documentation)(nil),     // 11: mql.llx.Documentation
 	(*CodeBundle)(nil),        // 12: mql.llx.CodeBundle
-	(*TranslationRef)(nil),    // 13: mql.llx.TranslationRef
-	(*Result)(nil),            // 14: mql.llx.Result
-	(*ResourceRecording)(nil), // 15: mql.llx.ResourceRecording
-	(*Rating)(nil),            // 16: mql.llx.Rating
-	(*AssessmentItem)(nil),    // 17: mql.llx.AssessmentItem
-	(*Assessment)(nil),        // 18: mql.llx.Assessment
-	(*IP)(nil),                // 19: mql.llx.IP
-	nil,                       // 20: mql.llx.Primitive.MapEntry
-	nil,                       // 21: mql.llx.CodeV1.ChecksumsEntry
-	nil,                       // 22: mql.llx.CodeV1.AssertionsEntry
-	nil,                       // 23: mql.llx.CodeV2.ChecksumsEntry
-	nil,                       // 24: mql.llx.CodeV2.AssertionsEntry
-	nil,                       // 25: mql.llx.Labels.LabelsEntry
-	nil,                       // 26: mql.llx.CodeBundle.PropsEntry
-	nil,                       // 27: mql.llx.CodeBundle.AssertionsEntry
-	nil,                       // 28: mql.llx.CodeBundle.AutoExpandEntry
-	nil,                       // 29: mql.llx.CodeBundle.VarsEntry
-	nil,                       // 30: mql.llx.CodeBundle.ProviderSchemasEntry
-	nil,                       // 31: mql.llx.CodeBundle.MinProviderVersionsEntry
-	nil,                       // 32: mql.llx.ResourceRecording.FieldsEntry
+	(*DeprecatedUse)(nil),     // 13: mql.llx.DeprecatedUse
+	(*TranslationRef)(nil),    // 14: mql.llx.TranslationRef
+	(*Result)(nil),            // 15: mql.llx.Result
+	(*ResourceRecording)(nil), // 16: mql.llx.ResourceRecording
+	(*Rating)(nil),            // 17: mql.llx.Rating
+	(*AssessmentItem)(nil),    // 18: mql.llx.AssessmentItem
+	(*Assessment)(nil),        // 19: mql.llx.Assessment
+	(*IP)(nil),                // 20: mql.llx.IP
+	nil,                       // 21: mql.llx.Primitive.MapEntry
+	nil,                       // 22: mql.llx.CodeV1.ChecksumsEntry
+	nil,                       // 23: mql.llx.CodeV1.AssertionsEntry
+	nil,                       // 24: mql.llx.CodeV2.ChecksumsEntry
+	nil,                       // 25: mql.llx.CodeV2.AssertionsEntry
+	nil,                       // 26: mql.llx.Labels.LabelsEntry
+	nil,                       // 27: mql.llx.CodeBundle.PropsEntry
+	nil,                       // 28: mql.llx.CodeBundle.AssertionsEntry
+	nil,                       // 29: mql.llx.CodeBundle.AutoExpandEntry
+	nil,                       // 30: mql.llx.CodeBundle.VarsEntry
+	nil,                       // 31: mql.llx.CodeBundle.ProviderSchemasEntry
+	nil,                       // 32: mql.llx.CodeBundle.MinProviderVersionsEntry
+	nil,                       // 33: mql.llx.ResourceRecording.FieldsEntry
 }
 var file_llx_proto_depIdxs = []int32{
 	2,  // 0: mql.llx.Primitive.array:type_name -> mql.llx.Primitive
-	20, // 1: mql.llx.Primitive.map:type_name -> mql.llx.Primitive.MapEntry
+	21, // 1: mql.llx.Primitive.map:type_name -> mql.llx.Primitive.MapEntry
 	2,  // 2: mql.llx.Function.args:type_name -> mql.llx.Primitive
 	0,  // 3: mql.llx.Function.nullability:type_name -> mql.llx.Function.Nullability
 	1,  // 4: mql.llx.Chunk.call:type_name -> mql.llx.Chunk.Call
 	2,  // 5: mql.llx.Chunk.primitive:type_name -> mql.llx.Primitive
 	4,  // 6: mql.llx.Chunk.function:type_name -> mql.llx.Function
 	5,  // 7: mql.llx.CodeV1.code:type_name -> mql.llx.Chunk
-	21, // 8: mql.llx.CodeV1.checksums:type_name -> mql.llx.CodeV1.ChecksumsEntry
+	22, // 8: mql.llx.CodeV1.checksums:type_name -> mql.llx.CodeV1.ChecksumsEntry
 	7,  // 9: mql.llx.CodeV1.functions:type_name -> mql.llx.CodeV1
-	22, // 10: mql.llx.CodeV1.assertions:type_name -> mql.llx.CodeV1.AssertionsEntry
+	23, // 10: mql.llx.CodeV1.assertions:type_name -> mql.llx.CodeV1.AssertionsEntry
 	5,  // 11: mql.llx.Block.chunks:type_name -> mql.llx.Chunk
 	8,  // 12: mql.llx.CodeV2.blocks:type_name -> mql.llx.Block
-	23, // 13: mql.llx.CodeV2.checksums:type_name -> mql.llx.CodeV2.ChecksumsEntry
-	24, // 14: mql.llx.CodeV2.assertions:type_name -> mql.llx.CodeV2.AssertionsEntry
-	25, // 15: mql.llx.Labels.labels:type_name -> mql.llx.Labels.LabelsEntry
+	24, // 13: mql.llx.CodeV2.checksums:type_name -> mql.llx.CodeV2.ChecksumsEntry
+	25, // 14: mql.llx.CodeV2.assertions:type_name -> mql.llx.CodeV2.AssertionsEntry
+	26, // 15: mql.llx.Labels.labels:type_name -> mql.llx.Labels.LabelsEntry
 	9,  // 16: mql.llx.CodeBundle.code_v2:type_name -> mql.llx.CodeV2
 	11, // 17: mql.llx.CodeBundle.suggestions:type_name -> mql.llx.Documentation
 	10, // 18: mql.llx.CodeBundle.labels:type_name -> mql.llx.Labels
-	26, // 19: mql.llx.CodeBundle.props:type_name -> mql.llx.CodeBundle.PropsEntry
-	27, // 20: mql.llx.CodeBundle.assertions:type_name -> mql.llx.CodeBundle.AssertionsEntry
-	28, // 21: mql.llx.CodeBundle.auto_expand:type_name -> mql.llx.CodeBundle.AutoExpandEntry
-	29, // 22: mql.llx.CodeBundle.vars:type_name -> mql.llx.CodeBundle.VarsEntry
-	30, // 23: mql.llx.CodeBundle.provider_schemas:type_name -> mql.llx.CodeBundle.ProviderSchemasEntry
-	31, // 24: mql.llx.CodeBundle.min_provider_versions:type_name -> mql.llx.CodeBundle.MinProviderVersionsEntry
-	13, // 25: mql.llx.CodeBundle.translations:type_name -> mql.llx.TranslationRef
-	2,  // 26: mql.llx.Result.data:type_name -> mql.llx.Primitive
-	32, // 27: mql.llx.ResourceRecording.fields:type_name -> mql.llx.ResourceRecording.FieldsEntry
-	2,  // 28: mql.llx.AssessmentItem.expected:type_name -> mql.llx.Primitive
-	2,  // 29: mql.llx.AssessmentItem.actual:type_name -> mql.llx.Primitive
-	2,  // 30: mql.llx.AssessmentItem.data:type_name -> mql.llx.Primitive
-	17, // 31: mql.llx.Assessment.results:type_name -> mql.llx.AssessmentItem
-	2,  // 32: mql.llx.Primitive.MapEntry.value:type_name -> mql.llx.Primitive
-	6,  // 33: mql.llx.CodeV1.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
-	6,  // 34: mql.llx.CodeV2.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
-	6,  // 35: mql.llx.CodeBundle.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
-	14, // 36: mql.llx.ResourceRecording.FieldsEntry.value:type_name -> mql.llx.Result
-	37, // [37:37] is the sub-list for method output_type
-	37, // [37:37] is the sub-list for method input_type
-	37, // [37:37] is the sub-list for extension type_name
-	37, // [37:37] is the sub-list for extension extendee
-	0,  // [0:37] is the sub-list for field type_name
+	27, // 19: mql.llx.CodeBundle.props:type_name -> mql.llx.CodeBundle.PropsEntry
+	28, // 20: mql.llx.CodeBundle.assertions:type_name -> mql.llx.CodeBundle.AssertionsEntry
+	29, // 21: mql.llx.CodeBundle.auto_expand:type_name -> mql.llx.CodeBundle.AutoExpandEntry
+	30, // 22: mql.llx.CodeBundle.vars:type_name -> mql.llx.CodeBundle.VarsEntry
+	31, // 23: mql.llx.CodeBundle.provider_schemas:type_name -> mql.llx.CodeBundle.ProviderSchemasEntry
+	32, // 24: mql.llx.CodeBundle.min_provider_versions:type_name -> mql.llx.CodeBundle.MinProviderVersionsEntry
+	14, // 25: mql.llx.CodeBundle.translations:type_name -> mql.llx.TranslationRef
+	13, // 26: mql.llx.CodeBundle.deprecated_uses:type_name -> mql.llx.DeprecatedUse
+	2,  // 27: mql.llx.Result.data:type_name -> mql.llx.Primitive
+	33, // 28: mql.llx.ResourceRecording.fields:type_name -> mql.llx.ResourceRecording.FieldsEntry
+	2,  // 29: mql.llx.AssessmentItem.expected:type_name -> mql.llx.Primitive
+	2,  // 30: mql.llx.AssessmentItem.actual:type_name -> mql.llx.Primitive
+	2,  // 31: mql.llx.AssessmentItem.data:type_name -> mql.llx.Primitive
+	18, // 32: mql.llx.Assessment.results:type_name -> mql.llx.AssessmentItem
+	2,  // 33: mql.llx.Primitive.MapEntry.value:type_name -> mql.llx.Primitive
+	6,  // 34: mql.llx.CodeV1.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
+	6,  // 35: mql.llx.CodeV2.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
+	6,  // 36: mql.llx.CodeBundle.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
+	15, // 37: mql.llx.ResourceRecording.FieldsEntry.value:type_name -> mql.llx.Result
+	38, // [38:38] is the sub-list for method output_type
+	38, // [38:38] is the sub-list for method input_type
+	38, // [38:38] is the sub-list for extension type_name
+	38, // [38:38] is the sub-list for extension extendee
+	0,  // [0:38] is the sub-list for field type_name
 }
 
 func init() { file_llx_proto_init() }
@@ -1909,7 +1989,7 @@ func file_llx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_llx_proto_rawDesc), len(file_llx_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   31,
+			NumMessages:   32,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

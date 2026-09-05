@@ -130,6 +130,9 @@ func diffResource(before *resources.ResourceInfo, after *resources.ResourceInfo,
 	if before.Maturity != after.Maturity {
 		add(ChangeAdditive, name, "maturity changed from %q to %q", before.Maturity, after.Maturity)
 	}
+	if before.ReplacedBy != after.ReplacedBy {
+		add(ChangeAdditive, name, "replacement changed from %q to %q", before.ReplacedBy, after.ReplacedBy)
+	}
 
 	diffInit(before.Init, after.Init, name, add)
 
@@ -165,6 +168,9 @@ func diffResource(before *resources.ResourceInfo, after *resources.ResourceInfo,
 		}
 		if bf.Maturity != af.Maturity {
 			add(ChangeAdditive, path, "maturity changed from %q to %q", bf.Maturity, af.Maturity)
+		}
+		if bf.ReplacedBy != af.ReplacedBy {
+			add(ChangeAdditive, path, "replacement changed from %q to %q", bf.ReplacedBy, af.ReplacedBy)
 		}
 	}
 

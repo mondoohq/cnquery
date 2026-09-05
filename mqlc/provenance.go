@@ -19,6 +19,9 @@ import (
 //   - min_provider_versions: the highest min_provider_version over every
 //     resource and field the bundle actually touches. A requirement - the
 //     oldest provider that can still resolve every name in it.
+//   - deprecated_uses: the deprecated names it reads that say where they moved
+//     to. Also what the writer saw, and it rides along on the same walk for the
+//     same reason.
 //
 // Both are derived from the finished bytecode rather than recorded during
 // compilation on purpose. Name resolution happens at eighteen call sites spread
@@ -36,6 +39,7 @@ func stampProvenance(res *llx.CodeBundle, schema resources.ResourcesSchema) {
 		versions:       semver.Parser{},
 		schemas:        map[string]string{},
 		minimums:       map[string]string{},
+		deprecatedSeen: map[string]struct{}{},
 	}
 	p.walk()
 
@@ -44,6 +48,9 @@ func stampProvenance(res *llx.CodeBundle, schema resources.ResourcesSchema) {
 	}
 	if len(p.minimums) > 0 {
 		res.MinProviderVersions = p.minimums
+	}
+	if len(p.deprecated) > 0 {
+		res.DeprecatedUses = p.deprecated
 	}
 	if v := minMqlVersion(res); v != "" {
 		res.MinMondooVersion = v
@@ -60,6 +67,10 @@ type provenance struct {
 	versions       semver.Parser
 	schemas        map[string]string
 	minimums       map[string]string
+	// deprecated keeps first-use order rather than being sorted at the end, so
+	// a notice reads in the order the query does.
+	deprecated     []*llx.DeprecatedUse
+	deprecatedSeen map[string]struct{}
 }
 
 func (p *provenance) walk() {
@@ -115,7 +126,11 @@ func (p *provenance) chunkAt(ref uint64) *llx.Chunk {
 
 func (p *provenance) recordResource(name string) {
 	info := p.schema.Lookup(name)
-	if info == nil || info.Provider == "" {
+	if info == nil {
+		return
+	}
+	p.noteReplacement(name, info.ReplacedBy)
+	if info.Provider == "" {
 		return
 	}
 	p.noteProvider(info.Provider)
@@ -133,6 +148,7 @@ func (p *provenance) recordField(resource string, field string) {
 	if f == nil {
 		return
 	}
+	p.noteReplacement(resource+"."+field, f.ReplacedBy)
 	// A field's provider differs from its resource's when one provider extends
 	// another's resource, and then the version belongs to the extending one.
 	owner := f.Provider
@@ -141,6 +157,25 @@ func (p *provenance) recordField(resource string, field string) {
 	}
 	p.noteProvider(owner)
 	p.raiseMinimum(owner, f.MinProviderVersion)
+}
+
+// noteReplacement records that the bundle reads a deprecated name which says
+// where it went. A deprecation with no target is skipped: there is nothing to
+// tell a user beyond "this is old", and 431 of the 444 deprecations in the tree
+// carry a target, so the ones that do not are the ones with nothing to say.
+//
+// This records; it never logs. The compiler runs per keystroke behind
+// autocomplete, and a message printed from here lands in the middle of the line
+// the user is typing.
+func (p *provenance) noteReplacement(from string, to string) {
+	if to == "" || from == "" {
+		return
+	}
+	if _, ok := p.deprecatedSeen[from]; ok {
+		return
+	}
+	p.deprecatedSeen[from] = struct{}{}
+	p.deprecated = append(p.deprecated, &llx.DeprecatedUse{From: from, To: to})
 }
 
 // noteProvider records the writer-schema version for a provider. Both the map

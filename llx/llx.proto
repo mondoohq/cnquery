@@ -209,6 +209,26 @@ message CodeBundle {
   // it: the same job a hand-written platform filter does today, computed from
   // what the code actually reads.
   repeated string compatible_roots = 31;
+
+  // Names this bundle uses that are deprecated and say where they moved to
+  // (ADR 040). Recorded, never logged: the compiler is called per keystroke by
+  // autocomplete, so the decision to show a notice belongs to whoever is
+  // driving it.
+  //
+  // Only uses with a `@replaced_by` target land here. A deprecation with no
+  // destination has nothing actionable to tell a user, so it stays silent.
+  repeated DeprecatedUse deprecated_uses = 32;
+}
+
+// DeprecatedUse is one deprecated name a bundle reads, and its replacement.
+message DeprecatedUse {
+  // The deprecated name as it exists in the schema, e.g. `os.hostname`.
+  string from = 1;
+  // Where it moved to, as a full schema path, e.g. `os.base.hostname`. What a
+  // user is shown is rendered from this against the root the query compiled
+  // with, so the same entry reads as `hostname` in a rooted shell and as
+  // `os.base.hostname` where there is no root to shorten it against.
+  string to = 2;
 }
 
 // TranslationRef points one call that an older reader cannot make at a block
