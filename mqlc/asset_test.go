@@ -4,7 +4,11 @@
 package mqlc_test
 
 import (
+	"bytes"
 	"testing"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -243,6 +247,16 @@ func TestMissingFieldOnAPlatformRoot(t *testing.T) {
 	conf := mqlc.NewConfig(core_schema.Add(os_schema), mql.Features{byte(mql.ResourceContext)})
 	conf.AssetRoot = "os.linux"
 	conf.DeclaredAssetRoot = "os.any"
+
+	// Only roots are alternatives. `os.date` shares the namespace and has a
+	// `timezone` field, but no asset is ever rooted there, so offering it
+	// answers nothing - which the namespace-shaped guess this replaced did.
+	t.Run("offers roots, not neighbours", func(t *testing.T) {
+		_, err := mqlc.Compile("_.timezone", nil, conf)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "cannot find field 'timezone' in os.linux")
+		assert.NotContains(t, err.Error(), "os.date")
+	})
 
 	t.Run("names the root that has it", func(t *testing.T) {
 		_, err := mqlc.Compile("_.registrykey", nil, conf)
@@ -640,4 +654,25 @@ func TestSupportsRoot(t *testing.T) {
 		assert.True(t, mqlc.SupportsRoot(narrowed, ""),
 			"not knowing the root is not evidence of a mismatch")
 	})
+}
+
+// Completion compiles the partial input on every keystroke, so anything the
+// compiler prints lands in the middle of the shell UI. Typing `os` used to be
+// enough: it resolves the deprecated `os` resource, which hangs off no root, and
+// the note about that was logged as well as recorded. The note belongs on the
+// bundle - what to show, and when, is the caller's call.
+func TestUnrootedNoteIsRecordedNotLogged(t *testing.T) {
+	conf := mqlc.NewConfig(core_schema.Add(os_schema), mql.Features{byte(mql.ResourceContext)})
+	conf.AssetRoot = "os.linux"
+
+	var logged bytes.Buffer
+	previous := log.Logger
+	log.Logger = zerolog.New(&logged).Level(zerolog.DebugLevel)
+	defer func() { log.Logger = previous }()
+
+	res, err := mqlc.Compile("os", nil, conf)
+	require.NoError(t, err)
+
+	assert.Equal(t, []string{"os"}, res.UnrootedResources, "the note is on the bundle")
+	assert.Empty(t, logged.String(), "and nothing was written to the log while compiling it")
 }

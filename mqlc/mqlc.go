@@ -144,36 +144,34 @@ func (c *compiler) missingFieldHint(typ types.Type, id string) string {
 
 // rootScopeHint names the roots that do carry a field the current root lacks.
 //
-// Roots are the resources sharing the asset root's namespace (`os.windows` and
-// `os.macos` alongside `os.linux`), which is as much as the compiler can know:
-// which resource is a root is decided by the connection, not by the schema.
+// Only roots are offered as alternatives, read from the schema's `@root`
+// marking rather than guessed from the shape of a name: `os.date` sits in the
+// same namespace and has a `timezone` field, but "timezone is available on
+// os.date" answers nothing - no asset is ever rooted there. Membership is
+// checked the way resolution checks it, through embeds, so a member inherited
+// from a universal root is reported on every root that inherits it.
 func (c *compiler) rootScopeHint(typ types.Type, id string) string {
 	if c.AssetRoot == "" || c.Schema == nil || !typ.IsResource() {
 		return ""
 	}
 	current := typ.ResourceName()
-	namespace, _, ok := strings.Cut(c.AssetRoot, ".")
-	if !ok || !strings.HasPrefix(current, namespace+".") {
+	if info := c.Schema.Lookup(current); info == nil || !info.GetRoot() {
+		// Failing on something other than a root says nothing about platforms.
 		return ""
 	}
 
+	top := c
+	for top.parent != nil {
+		top = top.parent
+	}
+
 	var found []string
-	for name, info := range c.Schema.AllResources() {
-		if name == current || info == nil || !strings.HasPrefix(name, namespace+".") {
+	for _, root := range top.rootIdx().roots {
+		if root.Id == current {
 			continue
 		}
-		// Only siblings, so `os.windows` counts and `os.windows.registrykey`
-		// does not: a root is one segment below the namespace.
-		if strings.Count(name, ".") != 1 {
-			continue
-		}
-		// The declared root is the union of every platform's members, so it
-		// always has the field and never answers "which platform has this".
-		if name == c.DeclaredAssetRoot {
-			continue
-		}
-		if _, ok := info.Fields[id]; ok {
-			found = append(found, name)
+		if _, _, ok := c.Schema.FindField(root, id); ok {
+			found = append(found, root.Id)
 		}
 	}
 	if len(found) == 0 {
@@ -1543,7 +1541,7 @@ func (c *compiler) compileAssetRootField(id string, binding *variable, call *par
 				rootBinding.typ.ResourceName() + "' is not loaded")
 		}
 
-		log.Warn().
+		log.Debug().
 			Str("root", rootBinding.typ.ResourceName()).
 			Str("field", id).
 			Msg("mqlc> cannot type-check a field of an asset root that no loaded schema defines; deferring it to runtime")
@@ -1825,6 +1823,11 @@ func (idx *rootIndex) carriersOf(schema resources.ResourcesSchema, field string)
 // noteIfUnrooted records a resource that this bundle reaches through the global
 // namespace and that has no home in an asset's tree (ADR 031 point 7).
 //
+// Recorded on the bundle and never logged. Compilation runs on every keystroke
+// behind shell autocomplete, so anything the compiler prints lands in the middle
+// of the terminal UI - typing `os` was enough to garble it. What to show a user,
+// and when, is the caller's decision to make from `unrooted_resources`.
+//
 // Three ways to be fine: the resource says `@global`, its provider declares no
 // root yet (nothing to be outside of, so the question is not answerable), or it
 // is reachable from that provider's root and the global name is just the other
@@ -1863,10 +1866,6 @@ func (c *compiler) noteIfUnrooted(resource *resources.ResourceInfo) {
 		}
 	}
 	c.Result.UnrootedResources = append(c.Result.UnrootedResources, resource.Id)
-	log.Warn().
-		Str("resource", resource.Id).
-		Str("root", root).
-		Msg("mqlc> resource is reached globally and does not hang off the asset root; it will not resolve once the root is the namespace")
 }
 
 func (c *compiler) addResource(id string, resource *resources.ResourceInfo, call *parser.Call) (types.Type, error) {
