@@ -1966,6 +1966,12 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 	// suggestions
 	if callBinding == nil {
 		addResourceSuggestions(c.Schema, id, c.Result)
+		// A bare name can also be a member of the asset root (`hostname`), so
+		// the root's members are offered alongside the global resources. Without
+		// this the shell suggests a different set of names than it accepts.
+		if c.AssetRoot != "" {
+			addFieldSuggestions(availableFields(c, types.Resource(c.AssetRoot)), id, c.Result)
+		}
 		return nil, types.Nil, c.notFound(id, nil)
 	}
 	addFieldSuggestions(availableFields(c, callBinding.typ), id, c.Result)

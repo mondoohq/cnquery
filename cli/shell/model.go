@@ -128,7 +128,7 @@ func newShellModel(runtime llx.Runtime, theme *ShellTheme, features mql.Features
 	// show resources from connected providers in autocomplete
 	schema := runtime.Schema()
 	theme.PolicyPrinter.SetSchema(schema)
-	completer := NewCompleter(schema, features, strict, connectedProviderIDs)
+	completer := NewCompleter(runtime, features, strict, connectedProviderIDs)
 
 	// Create spinner for query execution
 	sp := spinner.New()

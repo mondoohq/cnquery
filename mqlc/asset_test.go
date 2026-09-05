@@ -512,3 +512,56 @@ func TestRootedLabels(t *testing.T) {
 		})
 	}
 }
+
+// The shell suggests what it accepts. A bare member of the asset root compiles
+// (`hostname`), so it has to be offered too - and reaching it through the root's
+// embed chain must not hide it, which is what the asset-context gate on embedded
+// fields used to do. See ADR 031.
+func TestRootMemberSuggestions(t *testing.T) {
+	conf := mqlc.NewConfig(core_schema.Add(os_schema), mql.Features{byte(mql.ResourceContext)})
+	conf.AssetRoot = "os.linux"
+
+	suggestionsFor := func(t *testing.T, q string) []string {
+		t.Helper()
+		res, err := mqlc.Compile(q, nil, conf)
+		require.Error(t, err, "a partial name does not compile; it is the suggestion case")
+		out := []string{}
+		for _, s := range res.GetSuggestions() {
+			out = append(out, s.Field)
+		}
+		return out
+	}
+
+	// through the root's embed chain: os.linux -> os.unix -> os.base
+	t.Run("inherited members", func(t *testing.T) {
+		assert.Equal(t, []string{"hostname"}, suggestionsFor(t, "host"))
+		assert.Equal(t, []string{"uptime"}, suggestionsFor(t, "upti"))
+		assert.Equal(t, []string{"machineid"}, suggestionsFor(t, "mach"))
+	})
+
+	// through an alias attached to a root
+	t.Run("attached resources", func(t *testing.T) {
+		assert.Contains(t, suggestionsFor(t, "pack"), "packages")
+	})
+
+	// listing the root's members outright, which is what `_.<tab>` does
+	t.Run("the whole root", func(t *testing.T) {
+		all := suggestionsFor(t, "_.")
+		assert.Contains(t, all, "hostname", "inherited from os.base")
+		assert.Contains(t, all, "iptables", "declared on os.linux")
+		assert.Contains(t, all, "packages", "attached by alias")
+	})
+
+	// Without a root there is nothing to inherit from, so the global namespace
+	// answers alone - which is what every provider that declares no root gets.
+	t.Run("no root, no root members", func(t *testing.T) {
+		noRoot := mqlc.NewConfig(core_schema.Add(os_schema), mql.Features{byte(mql.ResourceContext)})
+		res, err := mqlc.Compile("host", nil, noRoot)
+		require.Error(t, err)
+		out := []string{}
+		for _, s := range res.GetSuggestions() {
+			out = append(out, s.Field)
+		}
+		assert.NotContains(t, out, "hostname")
+	})
+}

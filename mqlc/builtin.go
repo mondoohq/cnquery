@@ -315,22 +315,33 @@ func (c *compiler) compileImplicitBuiltin(typ types.Type, id string) (*compileHa
 }
 
 func publicFieldsInfo(c *compiler, resourceInfo *resources.ResourceInfo) map[string]llx.Documentation {
+	return publicFieldsInfoFlat(c, resourceInfo, c.UseAssetContext)
+}
+
+// publicFieldsInfoFlat is publicFieldsInfo with control over whether embedded
+// resources are flattened into the answer.
+//
+// An asset root always flattens, regardless of the asset-context feature: its
+// embed chain (`os.linux` -> `os.unix` -> `os.base`) is the taxonomy, so not
+// descending it hides `hostname` and most of the surface - names that compile
+// fine, which is what made the shell suggest a different set than it accepts.
+func publicFieldsInfoFlat(c *compiler, resourceInfo *resources.ResourceInfo, flattenEmbedded bool) map[string]llx.Documentation {
 	res := map[string]llx.Documentation{}
 	for k, v := range resourceInfo.Fields {
 		if v.IsPrivate {
 			continue
 		}
-		if v.IsEmbedded && !c.UseAssetContext {
+		if v.IsEmbedded && !flattenEmbedded {
 			continue
 		}
 
-		if v.IsEmbedded && c.UseAssetContext {
+		if v.IsEmbedded && flattenEmbedded {
 			name := types.Type(v.Type).ResourceName()
 			child := c.Schema.Lookup(name)
 			if child == nil {
 				continue
 			}
-			childFields := publicFieldsInfo(c, child)
+			childFields := publicFieldsInfoFlat(c, child, flattenEmbedded)
 			for k, v := range childFields {
 				res[k] = v
 			}
@@ -411,7 +422,8 @@ func availableFields(c *compiler, typ types.Type) map[string]llx.Documentation {
 	// resources maintain their own fields and may be list resources
 	if typ.IsResource() {
 		resourceInfo := c.Schema.Lookup(typ.ResourceName())
-		res = publicFieldsInfo(c, resourceInfo)
+		res = publicFieldsInfoFlat(c, resourceInfo,
+			c.UseAssetContext || typ.ResourceName() == c.AssetRoot)
 
 		_, err := listResource(c, typ)
 		if err == nil {
