@@ -894,9 +894,9 @@ type CodeBundle struct {
 	// Resources this bundle reached through the global namespace that do not hang
 	// off an asset root and are not marked `@global` (ADR 031 point 7).
 	//
-	// In v14 a bare name resolves globally first and falls back to the asset root,
-	// so both spellings work. In v15 the root is the namespace, and a name that is
-	// neither rooted nor global stops resolving. This list is what makes that
+	// In v14 a bare name resolves globally first and falls back to the asset
+	// root, so both spellings work. In v15 the root is the namespace, and a name
+	// that is neither rooted nor global stops resolving. This list is what makes
 	// cutover measurable: it is the set of names in this bundle that have no home
 	// in the asset's tree, recorded rather than logged so tooling can show which
 	// parts of a bundle reach outside it.
@@ -908,9 +908,21 @@ type CodeBundle struct {
 	// was compiled without one. Provenance - what the query was bounded by - and
 	// what lets a reader tell the chunks the compiler inserted to reach the root
 	// from the ones the author wrote.
-	AssetRoot     string `protobuf:"bytes,30,opt,name=asset_root,json=assetRoot,proto3" json:"asset_root,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	AssetRoot string `protobuf:"bytes,30,opt,name=asset_root,json=assetRoot,proto3" json:"asset_root,omitempty"`
+	// The asset roots that can execute this bundle (ADR 031), narrowed from what
+	// it touched: a query reading only universal members is satisfied by every
+	// root, one reading `iptables` only by the Linux root and the union above it.
+	//
+	// Empty means no requirement was derived - nothing was reached through a
+	// root, which is every bundle compiled before this existed and every one that
+	// only uses the global namespace. A reader treats empty as "runs anywhere".
+	//
+	// This is applicability derived from the query rather than declared beside
+	// it: the same job a hand-written platform filter does today, computed from
+	// what the code actually reads.
+	CompatibleRoots []string `protobuf:"bytes,31,rep,name=compatible_roots,json=compatibleRoots,proto3" json:"compatible_roots,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *CodeBundle) Reset() {
@@ -1046,6 +1058,13 @@ func (x *CodeBundle) GetAssetRoot() string {
 		return x.AssetRoot
 	}
 	return ""
+}
+
+func (x *CodeBundle) GetCompatibleRoots() []string {
+	if x != nil {
+		return x.CompatibleRoots
+	}
+	return nil
 }
 
 // TranslationRef points one call that an older reader cannot make at a block
@@ -1692,7 +1711,7 @@ const file_llx_proto_rawDesc = "" +
 	"\x05field\x18\x01 \x01(\tR\x05field\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x12\n" +
 	"\x04desc\x18\x03 \x01(\tR\x04desc\x12\x1a\n" +
-	"\bprovider\x18\x04 \x01(\tR\bprovider\"\xd3\t\n" +
+	"\bprovider\x18\x04 \x01(\tR\bprovider\"\xfe\t\n" +
 	"\n" +
 	"CodeBundle\x12(\n" +
 	"\acode_v2\x18\x06 \x01(\v2\x0f.mql.llx.CodeV2R\x06codeV2\x128\n" +
@@ -1713,7 +1732,8 @@ const file_llx_proto_rawDesc = "" +
 	"\ftranslations\x18\x1c \x03(\v2\x17.mql.llx.TranslationRefR\ftranslations\x12-\n" +
 	"\x12unrooted_resources\x18\x1d \x03(\tR\x11unrootedResources\x12\x1d\n" +
 	"\n" +
-	"asset_root\x18\x1e \x01(\tR\tassetRoot\x1a8\n" +
+	"asset_root\x18\x1e \x01(\tR\tassetRoot\x12)\n" +
+	"\x10compatible_roots\x18\x1f \x03(\tR\x0fcompatibleRoots\x1a8\n" +
 	"\n" +
 	"PropsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +

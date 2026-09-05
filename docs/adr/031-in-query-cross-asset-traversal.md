@@ -240,13 +240,40 @@ cannot be published:
 ### 4. Root narrowing
 
 `_` compiles against `os.any`, and the compiler **narrows** as members are
-accessed: touch only universals and the requirement stays `os.base`; touch
-`iptables` and it becomes `os.linux`. The narrowed requirement is recorded on the
-bundle beside `MinProviderVersions`, by the same accumulator pattern
-`mqlc/provenance.go` already uses (`raiseMinimum` narrows a lattice as members are
-touched). At run time an asset whose root does not satisfy the requirement is
-**skipped as unsupported**, the way `mqlc.UnmetRequirements` already withholds
-content.
+accessed: reading only universals leaves every root compatible, reading
+`iptables` leaves `os.linux`. The narrowed set is recorded on the bundle as
+`compatible_roots`, by the same accumulator pattern `mqlc/provenance.go` already
+uses (`raiseMinimum` narrows a lattice as members are touched). At run time
+`mqlc.SupportsRoot` answers whether an asset can execute it, and `ExecuteCode`
+refuses one that cannot with `ErrRootMismatch` — a scoping answer the caller can
+recognize, not a failure.
+
+**Refusing is opt-in**, under `RootedNamespace` or by a caller asking
+`SupportsRoot` itself. "Not applicable to this asset" and "this check failed" are
+different answers, and a caller that cannot yet tell them apart would report the
+first as the second; the scanner-side handling that skips the asset instead lands
+with the cnspec work that consumes `compatible_roots`. Until then v14 execution is
+unchanged and a mismatched member degrades as it does today.
+
+Which resources are roots is stated in the schema by `@root`, the same way
+`@global` states reachability without one. Narrowing needs the root *family*, not
+just the declared union, and a diagnostic that names "the root that does carry
+this" needs it too.
+
+Three rules keep it honest:
+
+- **Only members read off a root narrow anything.** A member of an ordinary
+  resource says nothing about which asset a query is about, and neither does the
+  global namespace — so v14 content that never touches a root records no
+  requirement and runs everywhere, exactly as before.
+- **The union is never in the set.** It carries every member by construction, so
+  counting it would make every intersection non-empty. A bundle compiled against
+  the union is still compatible with an asset that reports it, which is what a
+  provider does before it refines its root per connection.
+- **An empty intersection records nothing.** Content that deliberately spans
+  platforms — one branch per platform — has no single root carrying all of it.
+  Refusing it, or marking it runnable nowhere, would break that pattern, so it
+  runs and each member degrades where it does not apply.
 
 This is single pass. The chunk stays typed `os.any` and is never patched — which
 matters, because checksums are computed incrementally as chunks are added, so
@@ -544,10 +571,10 @@ itself `asset<…>` resolves through the *target* runtime's own resolver.
 5. **`RootedNamespace` feature flag.** The v15 semantics behind a flag: rooted
    only, `@global` for the exceptions, no fallback, a root required. Runnable
    against real content for the months before it becomes the default. **Landed.**
-6. **Root narrowing.** Compile `_` against the union, record the narrowed
-   requirement on the bundle, skip assets that do not satisfy it. Needed for the
+6. **Root narrowing.** Compile `_` against the union, record the narrowed set on
+   the bundle, refuse assets that do not satisfy it. Needed for the
    **disconnected** compile; a connected one already gets the concrete root from
-   `ConnectRes` and is bounded exactly. **Landed for the connected path.**
+   `ConnectRes` and is bounded exactly. **Landed.**
 7. **Recording-backed cross-asset resolution.** `providers.Runtime` implements
    `AssetResolver`; the target asset is found from the reverse edge and connected
    with a `mock` connection, including the `providers/mock.go:182` asset-selection

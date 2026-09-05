@@ -106,6 +106,13 @@ message ResourceInfo {
   // non-rooted is what the compiler notes on a bundle as reaching outside the
   // asset's tree.
   bool global = 33;
+
+  // Whether this resource is an asset root (ADR 031): a type a connection can
+  // expose as the thing a query is bounded by. Roots form a family - a
+  // universal base, the platform variants that embed it, and the union a
+  // disconnected compile targets - and knowing which resources are roots is
+  // what lets the compiler narrow a query to the ones that can run it.
+  bool root = 34;
 }
 
 message Field {

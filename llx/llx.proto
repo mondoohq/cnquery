@@ -196,6 +196,19 @@ message CodeBundle {
   // what lets a reader tell the chunks the compiler inserted to reach the root
   // from the ones the author wrote.
   string asset_root = 30;
+
+  // The asset roots that can execute this bundle (ADR 031), narrowed from what
+  // it touched: a query reading only universal members is satisfied by every
+  // root, one reading `iptables` only by the Linux root and the union above it.
+  //
+  // Empty means no requirement was derived - nothing was reached through a
+  // root, which is every bundle compiled before this existed and every one that
+  // only uses the global namespace. A reader treats empty as "runs anywhere".
+  //
+  // This is applicability derived from the query rather than declared beside
+  // it: the same job a hand-written platform filter does today, computed from
+  // what the code actually reads.
+  repeated string compatible_roots = 31;
 }
 
 // TranslationRef points one call that an older reader cannot make at a block

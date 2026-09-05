@@ -122,6 +122,9 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 			if v.Global {
 				existing.Global = true
 			}
+			if v.Root {
+				existing.Root = true
+			}
 
 			if existing.Fields == nil {
 				existing.Fields = map[string]*Field{}
@@ -158,6 +161,7 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 				// So does reachability without a root, for the same reason: a
 				// rooted compile reads it off the merged schema (ADR 031).
 				Global: v.Global,
+				Root:   v.Root,
 			}
 			for k, v := range v.Fields {
 				ri.Fields[k] = cloneField(v)

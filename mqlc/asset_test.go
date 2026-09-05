@@ -565,3 +565,79 @@ func TestRootMemberSuggestions(t *testing.T) {
 		assert.NotContains(t, out, "hostname")
 	})
 }
+
+// Narrowing derives applicability from what a query reads (ADR 031 point 4):
+// compiled against the union of roots, the bundle records which of them can
+// actually run it. That is the job a hand-written platform filter does today.
+func TestRootNarrowing(t *testing.T) {
+	union := mqlc.NewConfig(core_schema.Add(os_schema), mql.Features{byte(mql.ResourceContext)})
+	union.AssetRoot = "os.any"
+
+	rootsFor := func(t *testing.T, q string) []string {
+		t.Helper()
+		res, err := mqlc.Compile(q, nil, union)
+		require.NoError(t, err, q)
+		return res.CompatibleRoots
+	}
+
+	t.Run("universal members stay portable", func(t *testing.T) {
+		assert.Equal(t,
+			[]string{"os.base", "os.linux", "os.macos", "os.unix", "os.windows"},
+			rootsFor(t, "_.hostname"),
+			"the union is not listed: no connection reports it, and it carries everything")
+	})
+
+	t.Run("a platform member narrows to its family", func(t *testing.T) {
+		assert.Equal(t, []string{"os.linux"}, rootsFor(t, "_.iptables.output"))
+		assert.Equal(t, []string{"os.windows"}, rootsFor(t, "_.registrykey"))
+		assert.Equal(t, []string{"os.macos"}, rootsFor(t, "_.launchd"))
+		// sshd is a unix-family facility, so macOS qualifies and Windows does not
+		assert.Equal(t, []string{"os.linux", "os.macos", "os.unix"},
+			rootsFor(t, "_.sshd.config.params"))
+	})
+
+	t.Run("the narrowest member wins", func(t *testing.T) {
+		assert.Equal(t, []string{"os.linux"},
+			rootsFor(t, "_ { hostname iptables.output }"), "reads inside a block narrow too")
+	})
+
+	// The global namespace says nothing about which asset a query is about, so
+	// v14 content that never touches a root carries no requirement and keeps
+	// running everywhere.
+	t.Run("global reads derive nothing", func(t *testing.T) {
+		assert.Empty(t, rootsFor(t, "packages.list.length"))
+		assert.Empty(t, rootsFor(t, "asset.platform"))
+	})
+
+	// Deliberately cross-platform content - one branch per platform - has no
+	// single root that carries everything. Refusing it, or marking it runnable
+	// nowhere, would break that pattern, so it records no requirement and each
+	// member degrades on the platform that lacks it.
+	t.Run("content spanning platforms records no requirement", func(t *testing.T) {
+		assert.Empty(t, rootsFor(t, "_ { iptables.output registrykey }"))
+	})
+}
+
+// SupportsRoot is the other half: it turns the recorded set into a decision
+// about one asset, and it does not withhold on weak evidence.
+func TestSupportsRoot(t *testing.T) {
+	narrowed := &llx.CodeBundle{AssetRoot: "os.any", CompatibleRoots: []string{"os.linux"}}
+
+	assert.True(t, mqlc.SupportsRoot(narrowed, "os.linux"))
+	assert.False(t, mqlc.SupportsRoot(narrowed, "os.windows"))
+
+	t.Run("no requirement runs anywhere", func(t *testing.T) {
+		assert.True(t, mqlc.SupportsRoot(&llx.CodeBundle{}, "os.windows"))
+	})
+
+	// A provider that has not refined its root per connection reports the union
+	// it declared, which is what the content was compiled against.
+	t.Run("the compile-time root is always compatible", func(t *testing.T) {
+		assert.True(t, mqlc.SupportsRoot(narrowed, "os.any"))
+	})
+
+	t.Run("an unknown root is not refused", func(t *testing.T) {
+		assert.True(t, mqlc.SupportsRoot(narrowed, ""),
+			"not knowing the root is not evidence of a mismatch")
+	})
+}
