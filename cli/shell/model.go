@@ -256,6 +256,9 @@ func (m *shellModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Println(output)
 		}
 		output := m.formatResults(msg.code, msg.results)
+		if notices := m.deprecationNotices(msg.code); notices != "" {
+			output = notices + "\n" + output
+		}
 		return m, tea.Println(output)
 
 	case spinner.TickMsg:
@@ -1218,4 +1221,25 @@ func (m *shellModel) compilerConfig() mqlc.CompilerConfig {
 	conf := mqlc.NewConfigFrom(m.runtime, m.features)
 	conf.Strict = m.strict
 	return conf
+}
+
+// deprecationNotices renders what the bundle recorded about deprecated names it
+// reads (ADR 040). The compiler only records - it runs on every keystroke
+// behind autocomplete, so a message printed from there lands in the middle of
+// the line being typed - and this is the moment a user is actually reading
+// output.
+//
+// Spellings are relative to the root this session connected to, so the notice
+// tells them what to type here rather than where the field lives in the schema.
+func (m *shellModel) deprecationNotices(code *llx.CodeBundle) string {
+	notices := mqlc.DeprecationNotices(code, m.runtime.Schema())
+	if len(notices) == 0 {
+		return ""
+	}
+	var out strings.Builder
+	for _, n := range notices {
+		out.WriteString(m.theme.Secondary.Render("deprecated: " + n))
+		out.WriteString("\n")
+	}
+	return strings.TrimRight(out.String(), "\n")
 }

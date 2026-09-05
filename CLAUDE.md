@@ -695,6 +695,14 @@ for {
   private cloudflare.zone.plan @defaults("name") @maturity("deprecated") { ... }
   ```
   Keep the existing `.lr.versions` entry at its original version — deprecation does not bump the version.
+- **Name the replacement with `@replaced_by` when there is one.** The description says it in prose for a human reading the schema; `@replaced_by` says it as data so the CLI can tell a user at the moment they run the old name. Give it the **full schema path** of the replacement — the compiler renders the spelling the user's root actually accepts (`os.base.hostname` is shown as `hostname` in a rooted shell). Annotation order is fixed by the grammar: `@defaults` → `@context` → `@maturity` → `@replaced_by` → `@global` → `@root`.
+  ```
+  // Hostname for this OS
+  //
+  // Deprecated in favor of os.base.hostname, reachable as `_.hostname`.
+  hostname() @maturity("deprecated") @replaced_by("os.base.hostname") string
+  ```
+  Generation fails if the target does not name a resource or field in the schema, or if it cannot be reached from any asset root (so it would stop resolving in v15). Both checks run once, when the provider is built, so a target that would send a user somewhere useless cannot ship. The annotation is a **pointer, not a transform**: it changes nothing about how the deprecated name resolves (it keeps working until the field is deleted), and any migration that has to restructure a value, resolve an id, or call an API is a Go lens instead — see [ADR 040](docs/adr/040-cross-version-type-migration.md). Omit it when there is no single destination; a deprecation with no target prints nothing rather than something unhelpful.
 
 ### Provider Modules & Dependencies
 - Each provider in `providers/` has its own `go.mod` for isolation, keeping binaries smaller and dependency trees separate (core mql has deps providers don't need, and vice versa)

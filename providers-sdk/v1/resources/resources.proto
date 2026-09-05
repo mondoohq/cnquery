@@ -113,6 +113,14 @@ message ResourceInfo {
   // disconnected compile targets - and knowing which resources are roots is
   // what lets the compiler narrow a query to the ones that can run it.
   bool root = 34;
+
+  // Where this resource moved to, when it is deprecated in favor of another
+  // one (ADR 040). Holds the full schema path of the replacement, e.g.
+  // `os.base`; what a user is shown is rendered from that against the root
+  // their query is compiled with. A pointer only: it changes nothing about
+  // how this resource resolves, and every migration that has to transform
+  // rather than redirect is a lens in Go, not this field.
+  string replaced_by = 35;
 }
 
 message Field {
@@ -138,4 +146,9 @@ message Field {
   // removed in the future once binding resources are mandatory for all
   // executions.
   repeated Field others = 29;
+
+  // Where this field moved to, when it is deprecated in favor of another one
+  // (ADR 040). Holds the full schema path of the replacement, e.g.
+  // `os.base.hostname`. See ResourceInfo.replaced_by.
+  string replaced_by = 31;
 }

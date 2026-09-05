@@ -138,6 +138,7 @@ type Resource struct {
 	Defaults    string         ` ( '@' "defaults" '(' @String ')' )? `
 	Context     string         ` ( '@' "context" '(' @String ')' )? `
 	Maturity    string         ` ( '@' "maturity" '(' @String ')' )? `
+	ReplacedBy  string         ` ( '@' "replaced_by" '(' @String ')' )? `
 	IsGlobal    bool           ` ( '@' @"global" )? `
 	IsRoot      bool           ` ( '@' @"root" )? `
 	ListType    *SimplListType `[ '{' [ @@ ]`
@@ -234,6 +235,7 @@ type BasicField struct {
 	ID         string     `@Ident?`
 	Args       *FieldArgs `[ '(' @@ ')' ]`
 	Maturity   string     ` ( '@' "maturity" '(' @String ')' )? `
+	ReplacedBy string     ` ( '@' "replaced_by" '(' @String ')' )? `
 	Type       Type       `[ @@ ]`
 	isEmbedded bool
 }

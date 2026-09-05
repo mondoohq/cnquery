@@ -49,6 +49,7 @@ func cloneField(fv *Field) *Field {
 		IsImplicitResource: fv.IsImplicitResource,
 		IsEmbedded:         fv.IsEmbedded,
 		Maturity:           fv.Maturity,
+		ReplacedBy:         fv.ReplacedBy,
 	}
 	if fv.Refs != nil {
 		f.Refs = make([]string, len(fv.Refs))
@@ -115,6 +116,9 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 			if v.Maturity != "" {
 				existing.Maturity = v.Maturity
 			}
+			if v.ReplacedBy != "" {
+				existing.ReplacedBy = v.ReplacedBy
+			}
 			// Reachability without a root is a property of the resource, not of
 			// which schema happened to be merged last, so one contributor
 			// claiming it is enough. Dropping it here made `asset` - which os
@@ -162,6 +166,9 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 				// rooted compile reads it off the merged schema (ADR 031).
 				Global: v.Global,
 				Root:   v.Root,
+				// And so does the replacement pointer, which is what a
+				// deprecation notice is rendered from (ADR 040).
+				ReplacedBy: v.ReplacedBy,
 			}
 			for k, v := range v.Fields {
 				ri.Fields[k] = cloneField(v)

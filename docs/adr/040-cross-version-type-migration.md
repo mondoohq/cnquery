@@ -140,6 +140,40 @@ load-bearing ones are structural:
 - `vpcId string → vpc() aws.vpc` — resolve the id to a typed resource.
 - hoist/flatten (`linuxParameters.maxSwap → linuxMaxSwap`), split, merge.
 
+**The degenerate case gets a declarative shortcut.** A pure move — a field that
+now lives somewhere else, unchanged — is declared in the schema as
+`@replaced_by("os.base.hostname")` rather than written as a no-op Go lens. 444
+deprecations in the tree carry that information as prose today, 431 of them
+naming a target; as data it drives the notice a user sees while the old name
+still works.
+
+Note what moment that is. `@maturity("deprecated")` changes no behavior — it
+decorates suggestions and nothing else — so through the whole deprecation window
+both spellings resolve, in one schema, on one engine. There is no version skew to
+bridge, which is why this case needs no lens: the old field is its own
+compatibility. `@replaced_by` only makes the deprecation directed instead of
+silent. When the field is finally deleted, the annotation is deleted with it;
+nothing revives the old name and nothing narrates it, because a full major of
+warnings was the migration. It also does not pre-authorize that deletion — the
+removal still surfaces in the part-5 schema diff as breaking and still gets an
+explicit decision.
+
+**It does not replace or shadow the Go lens path, and must not grow toward it.**
+The annotation carries no code, so it can express exactly one thing: this name is
+now that name. Every migration that has to *act* — resolve an id to a resource,
+restructure a value, split, merge, call an API, coerce at the data boundary — is
+a lens in Go, and that is the general path. Giving the annotation a mapping
+expression would rebuild the restricted DSL this ADR rejected on purpose; when
+the shortcut doesn't suffice, you write the lens.
+
+**It records the schema path and renders the spelling.** The stored value is
+where the field lives (`os.base.hostname`); what a user is told is what they can
+type (`hostname`), computed against whatever root the compile has — from the
+connection in `shell`/`run`, or supplied by a caller compiling against a stated
+root. The two differ once queries are rooted (ADR 031), and storing the typable
+form would leave the annotation useless to any lens, which works
+schema-to-schema.
+
 Lenses **compose along the chain** (`v3→v4→…→v7`) so an arbitrary A→B is bridged
 by traversing intermediate steps, and where a lens is invertible it also runs
 backward (needed for part 3). A lens adapts the *plan/AST* (rewrite chunks into

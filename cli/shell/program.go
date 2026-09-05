@@ -202,6 +202,13 @@ func (s *ShellProgram) PrintResults(code *llx.CodeBundle, results map[string]*ll
 	}
 
 	fmt.Fprint(s.out, "\r")
+	// Deprecated names the bundle recorded, spelled the way this run's root
+	// spells them (ADR 040). The compiler records and never prints; this is the
+	// moment someone is reading. The JSON path does not come through here, so
+	// machine-consumed output stays clean.
+	for _, notice := range mqlc.DeprecationNotices(code, s.runtime.Schema()) {
+		fmt.Fprintln(s.out, s.printTheme.Secondary("deprecated: "+notice))
+	}
 	fmt.Fprintln(s.out, printedResult)
 }
 
