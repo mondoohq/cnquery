@@ -1737,6 +1737,12 @@ func (c *compiler) narrowRoots(resource *resources.ResourceInfo, field string) {
 		}
 		return
 	}
+	// Intersecting can empty the set, and an empty *non-nil* set is meaningful:
+	// members were read off a root, and no single root carries all of them. It
+	// stays distinct from nil (nothing was read off a root at all) only until
+	// recordCompatibleRoots, which deliberately treats both as "no requirement".
+	// Do not add a `!= nil` test to that decision without reading the reasoning
+	// there first - the two states differ in provenance, not in verdict.
 	for name := range top.compatibleRoots {
 		if _, ok := carriers[name]; !ok {
 			delete(top.compatibleRoots, name)

@@ -90,12 +90,22 @@ func ExecuteCode(runtime llx.Runtime, codeBundle *llx.CodeBundle, props map[stri
 	// Content narrowed to a set of asset roots says which assets it is about
 	// (ADR 031). Running it against an asset outside that set produces answers
 	// about a platform the content was never written for - nulls that read as
-	// facts - so it is refused with an error the caller can recognize and treat
-	// as "not applicable" rather than as a failure.
-	if src, ok := runtime.(llx.AssetRootSource); ok {
-		if root := src.AssetRoot(); !mqlc.SupportsRoot(codeBundle, root) {
-			return nil, fmt.Errorf("%w: this asset is rooted at %s, the content targets %s",
-				mqlc.ErrRootMismatch, root, strings.Join(codeBundle.CompatibleRoots, ", "))
+	// facts - so it is refused with an error the caller can recognize.
+	//
+	// Only under RootedNamespace, which is the opt-in to this model. Refusing by
+	// default would turn "not applicable to this asset" into a hard failure for
+	// every caller that does not yet tell the two apart, and no caller does yet:
+	// the scanner-side handling that skips such an asset instead of failing the
+	// check lives in cnspec and lands with the work that consumes
+	// compatible_roots. Until then a caller opts in either by that feature or by
+	// asking mqlc.SupportsRoot itself, and v14 execution is unchanged - a
+	// mismatched member degrades exactly as it does today.
+	if features.IsActive(mql.RootedNamespace) {
+		if src, ok := runtime.(llx.AssetRootSource); ok {
+			if root := src.AssetRoot(); !mqlc.SupportsRoot(codeBundle, root) {
+				return nil, fmt.Errorf("%w: this asset is rooted at %s, the content targets %s",
+					mqlc.ErrRootMismatch, root, strings.Join(codeBundle.CompatibleRoots, ", "))
+			}
 		}
 	}
 

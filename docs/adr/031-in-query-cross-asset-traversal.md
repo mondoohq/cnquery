@@ -248,6 +248,13 @@ uses (`raiseMinimum` narrows a lattice as members are touched). At run time
 refuses one that cannot with `ErrRootMismatch` — a scoping answer the caller can
 recognize, not a failure.
 
+**Refusing is opt-in**, under `RootedNamespace` or by a caller asking
+`SupportsRoot` itself. "Not applicable to this asset" and "this check failed" are
+different answers, and a caller that cannot yet tell them apart would report the
+first as the second; the scanner-side handling that skips the asset instead lands
+with the cnspec work that consumes `compatible_roots`. Until then v14 execution is
+unchanged and a mismatched member degrades as it does today.
+
 Which resources are roots is stated in the schema by `@root`, the same way
 `@global` states reachability without one. Narrowing needs the root *family*, not
 just the declared union, and a diagnostic that names "the root that does carry
