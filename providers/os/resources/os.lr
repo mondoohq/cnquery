@@ -593,7 +593,7 @@ os.update @defaults("name")  {
 // `alias os.<root>.<resource>` block at the top of this schema is the platform
 // classification: to add a resource you have to place it. Those aliases have to
 // stay contiguous, a comment between two of them fails the parse.
-os.base {
+os.base @root {
   embed machine
 
   // Hypervisor for this OS
@@ -686,7 +686,7 @@ os.base {
 // and similar), carrying the facilities that family provides and Windows does
 // not: `sshd`, `crontab`, `sudo`/`sudoers`, the mount table, the kernel, NFS,
 // ZFS, the classic daemons (`inetd`, `snmpd`, `postfix`, `exim`) and `aide`.
-os.unix {
+os.unix @root {
   embed os.base as base
 }
 
@@ -697,7 +697,7 @@ os.unix {
 // `ufw`, `firewalld`), the `/etc/fstab` mount table, and the AppArmor
 // mandatory-access-control namespace. Use it to write Linux-specific audits
 // without reaching out to global resource handles.
-os.linux {
+os.linux @root {
   embed os.unix as unix
 
   // iptables firewall for IPv4
@@ -721,7 +721,7 @@ os.linux {
 // Extends `os.base` with the facilities only Windows provides: the `windows`
 // surface itself (hotfixes, features, firewall profiles, and the rest), the
 // registry, local security and audit policy, and IIS.
-os.windows {
+os.windows @root {
   embed os.base as base
 }
 
@@ -730,7 +730,7 @@ os.windows {
 // Extends `os.unix` (and through it, `os.base`) with the facilities only macOS
 // provides: the `macos` surface itself, Safari, `launchd` and the OpenBSM audit
 // subsystem.
-os.macos {
+os.macos @root {
   embed os.unix as unix
 }
 
@@ -745,7 +745,7 @@ os.macos {
 // compiler narrows the root as members are accessed, so touching only universal
 // members keeps the query portable while touching `iptables` requires a Linux
 // root. See ADR 031.
-os.any {
+os.any @root {
   embed os.base as base
 }
 

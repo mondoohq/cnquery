@@ -139,6 +139,7 @@ type Resource struct {
 	Context     string         ` ( '@' "context" '(' @String ')' )? `
 	Maturity    string         ` ( '@' "maturity" '(' @String ')' )? `
 	IsGlobal    bool           ` ( '@' @"global" )? `
+	IsRoot      bool           ` ( '@' @"root" )? `
 	ListType    *SimplListType `[ '{' [ @@ ]`
 	Body        *ResourceDef   `@@ '}' ]`
 	title       string

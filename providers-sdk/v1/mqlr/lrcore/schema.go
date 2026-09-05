@@ -279,6 +279,7 @@ func resourceSchema(r *Resource, ast *LR) (*resources.ResourceInfo, error) {
 		Context:     r.Context,
 		Maturity:    r.Maturity,
 		Global:      r.IsGlobal,
+		Root:        r.IsRoot,
 	}
 
 	if r.ListType != nil {

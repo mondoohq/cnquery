@@ -4,6 +4,7 @@
 package mqlc
 
 import (
+	"errors"
 	"sort"
 	"strings"
 
@@ -111,4 +112,41 @@ func FormatRequirements(reqs []Requirement) string {
 		parts[i] = reqs[i].Error()
 	}
 	return strings.Join(parts, "; ")
+}
+
+// ErrRootMismatch identifies a bundle that cannot run on an asset because the
+// asset's root is not one the bundle was narrowed to. Match it with errors.Is to
+// tell "this asset is not what the content targets" apart from a failure: the
+// first is a scoping answer, the second is a problem.
+var ErrRootMismatch = errors.New("asset root not supported by this content")
+
+// SupportsRoot reports whether an asset rooted at `root` can execute this
+// bundle (ADR 031 point 4).
+//
+// The bundle carries the roots it was narrowed to while compiling - a query
+// reading `iptables` is satisfied only by the Linux root, one reading `hostname`
+// by every root. This is the check that turns that into applicability, replacing
+// a hand-written platform filter with what the code actually reads.
+//
+// Two ways to be supported without matching: a bundle that derived no
+// requirement runs anywhere, and an asset whose root we do not know is not
+// refused - not knowing is not evidence of a mismatch, the same rule the version
+// requirements above follow.
+func SupportsRoot(bundle *llx.CodeBundle, root string) bool {
+	if bundle == nil || len(bundle.CompatibleRoots) == 0 || root == "" {
+		return true
+	}
+	// An asset rooted at exactly what the content was compiled against is
+	// trivially compatible. That is the union for a disconnected compile, which
+	// is also what a provider reports before it refines its root per connection
+	// - refusing those would withhold every narrowed bundle during a rollout.
+	if root == bundle.AssetRoot {
+		return true
+	}
+	for _, candidate := range bundle.CompatibleRoots {
+		if candidate == root {
+			return true
+		}
+	}
+	return false
 }

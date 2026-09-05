@@ -56,9 +56,9 @@ type Schema struct {
 	// The root resource each provider declares for the assets it connects (ADR
 	// 031), keyed the same way provider_versions is. A compile with a live
 	// connection learns the *concrete* root from the connection; this is what a
-	// compile with no connection has - a policy bundle, a lint, an editor - and it
-	// is what tells such a compile whether a name is reachable from the asset's
-	// tree at all.
+	// compile with no connection has - a policy bundle, a lint, an editor - and
+	// it is what tells such a compile whether a name is reachable from the
+	// asset's tree at all.
 	ProviderRoots map[string]string `protobuf:"bytes,6,rep,name=provider_roots,json=providerRoots,proto3" json:"provider_roots,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -357,11 +357,18 @@ type ResourceInfo struct {
 	Others   []*ResourceInfo `protobuf:"bytes,29,rep,name=others,proto3" json:"others,omitempty"`
 	Maturity string          `protobuf:"bytes,32,opt,name=maturity,proto3" json:"maturity,omitempty"`
 	// Whether this resource is reachable without an asset root (ADR 031).
-	// Everything else is expected to hang off the root of the asset it describes;
-	// a handful of resources genuinely do not - `time`, `regex`, `asset` - and say
-	// so with `@global` in their schema. Unmarked and non-rooted is what the
-	// compiler notes on a bundle as reaching outside the asset's tree.
-	Global        bool `protobuf:"varint,33,opt,name=global,proto3" json:"global,omitempty"`
+	// Everything else is expected to hang off the root of the asset it
+	// describes; a handful of resources genuinely do not - `time`, `regex`,
+	// `asset` - and say so with `@global` in their schema. Unmarked and
+	// non-rooted is what the compiler notes on a bundle as reaching outside the
+	// asset's tree.
+	Global bool `protobuf:"varint,33,opt,name=global,proto3" json:"global,omitempty"`
+	// Whether this resource is an asset root (ADR 031): a type a connection can
+	// expose as the thing a query is bounded by. Roots form a family - a
+	// universal base, the platform variants that embed it, and the union a
+	// disconnected compile targets - and knowing which resources are roots is
+	// what lets the compiler narrow a query to the ones that can run it.
+	Root          bool `protobuf:"varint,34,opt,name=root,proto3" json:"root,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -504,6 +511,13 @@ func (x *ResourceInfo) GetMaturity() string {
 func (x *ResourceInfo) GetGlobal() bool {
 	if x != nil {
 		return x.Global
+	}
+	return false
+}
+
+func (x *ResourceInfo) GetRoot() bool {
+	if x != nil {
+		return x.Root
 	}
 	return false
 }
@@ -687,7 +701,7 @@ const file_resources_proto_rawDesc = "" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12\x1a\n" +
 	"\boptional\x18\x03 \x01(\bR\boptional\"6\n" +
 	"\x04Init\x12.\n" +
-	"\x04args\x18\x01 \x03(\v2\x1a.mondoo.resources.TypedArgR\x04args\"\x84\x05\n" +
+	"\x04args\x18\x01 \x03(\v2\x1a.mondoo.resources.TypedArgR\x04args\"\x98\x05\n" +
 	"\fResourceInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12B\n" +
@@ -704,7 +718,8 @@ const file_resources_proto_rawDesc = "" +
 	"\bprovider\x18\x1b \x01(\tR\bprovider\x126\n" +
 	"\x06others\x18\x1d \x03(\v2\x1e.mondoo.resources.ResourceInfoR\x06others\x12\x1a\n" +
 	"\bmaturity\x18  \x01(\tR\bmaturity\x12\x16\n" +
-	"\x06global\x18! \x01(\bR\x06global\x1aR\n" +
+	"\x06global\x18! \x01(\bR\x06global\x12\x12\n" +
+	"\x04root\x18\" \x01(\bR\x04root\x1aR\n" +
 	"\vFieldsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
 	"\x05value\x18\x02 \x01(\v2\x17.mondoo.resources.FieldR\x05value:\x028\x01J\x04\b\x19\x10\x1aR\x12min_mondoo_version\"\xb7\x03\n" +

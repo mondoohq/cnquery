@@ -429,6 +429,11 @@ type compiler struct {
 	// compiler.translationBlock.
 	translationBlocks map[string]uint64
 
+	// compatibleRoots is the running intersection of the asset roots that can
+	// execute this code, narrowed by every member read off a root. Nil until the
+	// first such read, which is what "no requirement" looks like.
+	compatibleRoots map[string]struct{}
+
 	// a standalone code is one that doesn't call any of its bindings
 	// examples:
 	//   file(xyz).content          is standalone
@@ -1416,6 +1421,7 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 
 		fieldPath, fieldinfos, ok := c.Schema.FindField(resource, id)
 		if ok {
+			c.narrowRoots(resource, id)
 			fieldinfo := fieldinfos[len(fieldinfos)-1]
 			c.Stats.CallField(resource.Name, fieldinfo)
 
@@ -1665,6 +1671,11 @@ func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*pa
 		if c.prefersFieldOverResource(resource, nuResource, field) {
 			break
 		}
+		// Extending a root by one segment is a member read off that root, the
+		// same as a field access: `_.iptables` reaches the resource by its
+		// rooted name because the alias made one, and it narrows what can run
+		// this bundle just as `_ { iptables }` does.
+		c.narrowRoots(resource, field)
 		resource, id = nuResource, nuID
 		calls = calls[1:]
 	}
@@ -1679,6 +1690,84 @@ func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*pa
 
 	typ, err := c.addResource(id, resource, call)
 	return true, calls, typ, err
+}
+
+// narrowRoots keeps track of which asset roots can execute this bundle, by
+// intersecting - for every member read off a root - the roots that carry it
+// (ADR 031 point 4).
+//
+// A query reading only universal members stays satisfied by every root; one
+// reading `iptables` narrows to the Linux root and the union above it. That is
+// applicability derived from what the code reads, rather than declared next to
+// it by hand.
+//
+// Only members read off a *root* count. A member of an ordinary resource says
+// nothing about which asset can run the query, and the global namespace says
+// nothing either - which is why a v14 bundle that never touches a root records
+// no requirement and runs everywhere, exactly as before.
+func (c *compiler) narrowRoots(resource *resources.ResourceInfo, field string) {
+	if resource == nil || !resource.GetRoot() || c.Schema == nil {
+		return
+	}
+
+	// The provider's declared root is the union of its roots, a compile-time
+	// receiver no connection ever reports. It carries every member by
+	// construction, so counting it would make every intersection non-empty and
+	// leave deliberately cross-platform content narrowed to a root no asset has.
+	unions := c.Schema.AllProviderRoots()
+
+	carriers := map[string]struct{}{}
+	for name, info := range c.Schema.AllResources() {
+		if info == nil || !info.GetRoot() || name != info.Id {
+			continue
+		}
+		if unions[info.GetProvider()] == name {
+			continue
+		}
+		if _, _, ok := c.Schema.FindField(info, field); ok {
+			carriers[name] = struct{}{}
+		}
+	}
+	if len(carriers) == 0 {
+		return
+	}
+
+	// Blocks compile in their own compiler, so the intersection lives on the
+	// one at the top - a member read inside `_ { ... }` narrows the same bundle
+	// as one read outside it.
+	top := c
+	for top.parent != nil {
+		top = top.parent
+	}
+
+	if top.compatibleRoots == nil {
+		top.compatibleRoots = carriers
+		return
+	}
+	for name := range top.compatibleRoots {
+		if _, ok := carriers[name]; !ok {
+			delete(top.compatibleRoots, name)
+		}
+	}
+}
+
+// recordCompatibleRoots writes the narrowed set onto the bundle.
+//
+// An empty intersection is recorded as no requirement rather than as
+// "unsatisfiable". A query that reads a Linux-only and a Windows-only member is
+// usually a deliberately cross-platform one - `if ... else ...` over both - and
+// it should still run, with each member degrading on the platform that lacks
+// it. Refusing it, or marking it runnable nowhere, would break that pattern.
+func (c *compiler) recordCompatibleRoots() {
+	if len(c.compatibleRoots) == 0 {
+		return
+	}
+	roots := make([]string, 0, len(c.compatibleRoots))
+	for name := range c.compatibleRoots {
+		roots = append(roots, name)
+	}
+	sort.Strings(roots)
+	c.Result.CompatibleRoots = roots
 }
 
 // noteIfUnrooted records a resource that this bundle reaches through the global
@@ -2964,7 +3053,9 @@ func CompileAST(ast *parser.AST, props PropsHandler, conf CompilerConfig) (*llx.
 		valueBodyBlocks: map[uint64]struct{}{},
 	}
 
-	return c.Result, c.CompileParsed(ast)
+	err := c.CompileParsed(ast)
+	c.recordCompatibleRoots()
+	return c.Result, err
 }
 
 // Compile a code piece against a schema into chunky code

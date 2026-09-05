@@ -5,6 +5,8 @@ package exec
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql"
@@ -85,6 +87,18 @@ func ExecStrict(query string, runtime llx.Runtime, features mql.Features, props 
 }
 
 func ExecuteCode(runtime llx.Runtime, codeBundle *llx.CodeBundle, props map[string]*llx.Primitive, features mql.Features) (map[string]*llx.RawResult, error) {
+	// Content narrowed to a set of asset roots says which assets it is about
+	// (ADR 031). Running it against an asset outside that set produces answers
+	// about a platform the content was never written for - nulls that read as
+	// facts - so it is refused with an error the caller can recognize and treat
+	// as "not applicable" rather than as a failure.
+	if src, ok := runtime.(llx.AssetRootSource); ok {
+		if root := src.AssetRoot(); !mqlc.SupportsRoot(codeBundle, root) {
+			return nil, fmt.Errorf("%w: this asset is rooted at %s, the content targets %s",
+				mqlc.ErrRootMismatch, root, strings.Join(codeBundle.CompatibleRoots, ", "))
+		}
+	}
+
 	// Install any downgrade translations this reader needs (ADR 040 part 6).
 	//
 	// Patch returns the code to execute rather than editing in place, so the
