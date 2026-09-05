@@ -10,7 +10,6 @@ import (
 	"go.mondoo.com/mql"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/mqlc"
-	"go.mondoo.com/mql/providers-sdk/v1/resources"
 	"go.mondoo.com/mql/utils/stringx"
 )
 
@@ -22,18 +21,25 @@ type Suggestion struct {
 
 // Completer is an auto-complete helper for the shell
 type Completer struct {
-	schema   resources.ResourcesSchema
+	runtime  llx.Runtime
 	features mql.Features
 	strict   bool
 	sortFn   func(a, b *llx.Documentation) int
 }
 
-// NewCompleter creates a new Mondoo completer object
-func NewCompleter(schema resources.ResourcesSchema, features mql.Features, strict bool, connectedProviders []string) *Completer {
+// NewCompleter creates a new Mondoo completer object.
+//
+// It takes the runtime rather than a schema because completion compiles the
+// partial input, and a compile is configured from a runtime: that is where the
+// asset root comes from (ADR 031), along with the downgrade catalog and
+// everything else NewConfigFrom carries. Building the config from a bare schema
+// is what made the shell suggest a different set of names than it accepts -
+// `hostname` ran but never completed.
+func NewCompleter(runtime llx.Runtime, features mql.Features, strict bool, connectedProviders []string) *Completer {
 	sortFn := byProviderSortFn(connectedProviders)
 
 	return &Completer{
-		schema:   schema,
+		runtime:  runtime,
 		features: features,
 		strict:   strict,
 		sortFn:   sortFn,
@@ -94,7 +100,7 @@ func byProviderSortFn(connectedProviders []string) func(a, b *llx.Documentation)
 }
 
 func (c *Completer) compilerConfig() mqlc.CompilerConfig {
-	conf := mqlc.NewConfig(c.schema, c.features)
+	conf := mqlc.NewConfigFrom(c.runtime, c.features)
 	conf.Strict = c.strict
 	return conf
 }
