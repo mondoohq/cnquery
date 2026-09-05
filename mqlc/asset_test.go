@@ -101,9 +101,10 @@ func TestAssetChain(t *testing.T) {
 
 	// The fields reachable through a reference are the root's fields, so they
 	// are what gets offered - for the error above, and for shell completion,
-	// which reads the same list.
+	// which reads the same list. A trailing dot is the "which fields are here"
+	// question in its plainest form.
 	t.Run("suggestions come from the root", func(t *testing.T) {
-		res, err := mqlc.Compile("muser.running.nam", nil, assetConf)
+		res, err := mqlc.Compile("muser.running.", nil, assetConf)
 		require.Error(t, err)
 		suggestions := []string{}
 		for _, s := range res.GetSuggestions() {
@@ -115,8 +116,8 @@ func TestAssetChain(t *testing.T) {
 	// Nothing can be offered for a root this compile cannot see, and guessing
 	// from the asset's own type would offer fields of the wrong resource.
 	t.Run("no suggestions for an unloaded root", func(t *testing.T) {
-		res, err := mqlc.Compile("muser.runningUnknown.nam", nil, assetConf)
-		require.NoError(t, err, "an unchecked member compiles, it is not a suggestion case")
+		res, err := mqlc.Compile("muser.runningUnknown.", nil, assetConf)
+		require.Error(t, err)
 		assert.Empty(t, res.GetSuggestions())
 	})
 }

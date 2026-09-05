@@ -42,9 +42,9 @@ message Schema {
   // The root resource each provider declares for the assets it connects (ADR
   // 031), keyed the same way provider_versions is. A compile with a live
   // connection learns the *concrete* root from the connection; this is what a
-  // compile with no connection has - a policy bundle, a lint, an editor - and it
-  // is what tells such a compile whether a name is reachable from the asset's
-  // tree at all.
+  // compile with no connection has - a policy bundle, a lint, an editor - and
+  // it is what tells such a compile whether a name is reachable from the
+  // asset's tree at all.
   map<string, string> provider_roots = 6;
 }
 
@@ -100,10 +100,11 @@ message ResourceInfo {
   string maturity = 32;
 
   // Whether this resource is reachable without an asset root (ADR 031).
-  // Everything else is expected to hang off the root of the asset it describes;
-  // a handful of resources genuinely do not - `time`, `regex`, `asset` - and say
-  // so with `@global` in their schema. Unmarked and non-rooted is what the
-  // compiler notes on a bundle as reaching outside the asset's tree.
+  // Everything else is expected to hang off the root of the asset it
+  // describes; a handful of resources genuinely do not - `time`, `regex`,
+  // `asset` - and say so with `@global` in their schema. Unmarked and
+  // non-rooted is what the compiler notes on a bundle as reaching outside the
+  // asset's tree.
   bool global = 33;
 }
 

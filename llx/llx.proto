@@ -180,9 +180,9 @@ message CodeBundle {
   // Resources this bundle reached through the global namespace that do not hang
   // off an asset root and are not marked `@global` (ADR 031 point 7).
   //
-  // In v14 a bare name resolves globally first and falls back to the asset root,
-  // so both spellings work. In v15 the root is the namespace, and a name that is
-  // neither rooted nor global stops resolving. This list is what makes that
+  // In v14 a bare name resolves globally first and falls back to the asset
+  // root, so both spellings work. In v15 the root is the namespace, and a name
+  // that is neither rooted nor global stops resolving. This list is what makes
   // cutover measurable: it is the set of names in this bundle that have no home
   // in the asset's tree, recorded rather than logged so tooling can show which
   // parts of a bundle reach outside it.
