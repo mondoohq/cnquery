@@ -541,7 +541,7 @@ func TestRootMemberSuggestions(t *testing.T) {
 
 	// through an alias attached to a root
 	t.Run("attached resources", func(t *testing.T) {
-		assert.Contains(t, suggestionsFor(t, "packag"), "packages")
+		assert.Contains(t, suggestionsFor(t, "pack"), "packages")
 	})
 
 	// listing the root's members outright, which is what `_.<tab>` does
