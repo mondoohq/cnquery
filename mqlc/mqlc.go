@@ -434,6 +434,10 @@ type compiler struct {
 	// first such read, which is what "no requirement" looks like.
 	compatibleRoots map[string]struct{}
 
+	// roots indexes the schema's asset roots for narrowing. Held only on the
+	// top-level compiler, where the intersection lives.
+	roots *rootIndex
+
 	// a standalone code is one that doesn't call any of its bindings
 	// examples:
 	//   file(xyz).content          is standalone
@@ -1710,38 +1714,27 @@ func (c *compiler) narrowRoots(resource *resources.ResourceInfo, field string) {
 		return
 	}
 
-	// The provider's declared root is the union of its roots, a compile-time
-	// receiver no connection ever reports. It carries every member by
-	// construction, so counting it would make every intersection non-empty and
-	// leave deliberately cross-platform content narrowed to a root no asset has.
-	unions := c.Schema.AllProviderRoots()
-
-	carriers := map[string]struct{}{}
-	for name, info := range c.Schema.AllResources() {
-		if info == nil || !info.GetRoot() || name != info.Id {
-			continue
-		}
-		if unions[info.GetProvider()] == name {
-			continue
-		}
-		if _, _, ok := c.Schema.FindField(info, field); ok {
-			carriers[name] = struct{}{}
-		}
-	}
-	if len(carriers) == 0 {
-		return
-	}
-
-	// Blocks compile in their own compiler, so the intersection lives on the
-	// one at the top - a member read inside `_ { ... }` narrows the same bundle
-	// as one read outside it.
+	// Blocks compile in their own compiler, so the intersection - and the index
+	// the carriers come from - live on the one at the top: a member read inside
+	// `_ { ... }` narrows the same bundle as one read outside it.
 	top := c
 	for top.parent != nil {
 		top = top.parent
 	}
 
+	carriers := top.rootIdx().carriersOf(c.Schema, field)
+	if len(carriers) == 0 {
+		return
+	}
+
 	if top.compatibleRoots == nil {
-		top.compatibleRoots = carriers
+		// Copied, not aliased: the intersection below mutates this map, and
+		// carriers comes from the index, where it is answering for every other
+		// read of the same member.
+		top.compatibleRoots = make(map[string]struct{}, len(carriers))
+		for name := range carriers {
+			top.compatibleRoots[name] = struct{}{}
+		}
 		return
 	}
 	for name := range top.compatibleRoots {
@@ -1768,6 +1761,59 @@ func (c *compiler) recordCompatibleRoots() {
 	}
 	sort.Strings(roots)
 	c.Result.CompatibleRoots = roots
+}
+
+// rootIndex answers "which asset roots carry this member" without walking the
+// schema for every read.
+//
+// Finding the roots means scanning every resource the schema knows - hundreds
+// in a two-provider schema, many thousands with a full set installed - so doing
+// it per field access made narrowing cost O(fields x resources). Both halves are
+// stable for the length of a compile: the roots do not change, and neither does
+// which of them carries a given member.
+type rootIndex struct {
+	roots    []*resources.ResourceInfo
+	carriers map[string]map[string]struct{}
+}
+
+func (c *compiler) rootIdx() *rootIndex {
+	if c.roots != nil {
+		return c.roots
+	}
+
+	// The provider's declared root is the union of its roots, a compile-time
+	// receiver no connection ever reports. It carries every member by
+	// construction, so counting it would make every intersection non-empty and
+	// leave deliberately cross-platform content narrowed to a root no asset has.
+	unions := c.Schema.AllProviderRoots()
+
+	idx := &rootIndex{carriers: map[string]map[string]struct{}{}}
+	for name, info := range c.Schema.AllResources() {
+		if info == nil || !info.GetRoot() || name != info.Id {
+			continue
+		}
+		if unions[info.GetProvider()] == name {
+			continue
+		}
+		idx.roots = append(idx.roots, info)
+	}
+	c.roots = idx
+	return idx
+}
+
+func (idx *rootIndex) carriersOf(schema resources.ResourcesSchema, field string) map[string]struct{} {
+	if known, ok := idx.carriers[field]; ok {
+		return known
+	}
+
+	carriers := map[string]struct{}{}
+	for _, root := range idx.roots {
+		if _, _, ok := schema.FindField(root, field); ok {
+			carriers[root.Id] = struct{}{}
+		}
+	}
+	idx.carriers[field] = carriers
+	return carriers
 }
 
 // noteIfUnrooted records a resource that this bundle reaches through the global
