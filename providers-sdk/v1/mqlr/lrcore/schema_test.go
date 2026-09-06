@@ -444,3 +444,54 @@ demo.instance @root {
 		assert.Contains(t, err.Error(), "does not name a resource or field")
 	})
 }
+
+// Two peers can contribute to the same resource: at runtime `Schema.Add` unions
+// the fields of same-named resources across providers, which is how `os`
+// extends core's `asset`. So what a `@replaced_by` may name is everything the
+// imports contribute together, not whatever the last one to load happened to
+// declare.
+func TestReplacedByAcrossProvidersMergesPeers(t *testing.T) {
+	files := map[string]string{
+		"providers/demo/resources/demo.lr": `
+import core
+import os
+
+option provider = "go.mondoo.com/mql/providers/demo"
+option go_package = "go.mondoo.com/mql/providers/demo/resources"
+option root = "demo.instance"
+
+demo.instance @root {
+  version @maturity("deprecated") @replaced_by("asset.version") string
+  build @maturity("deprecated") @replaced_by("asset.buildId") string
+}
+`,
+		"providers/core/resources/core.lr": `
+option provider = "go.mondoo.com/mql/providers/core"
+option go_package = "go.mondoo.com/mql/providers/core/resources"
+
+asset @global {
+  version string
+}
+`,
+		// Loaded after core, and extending the same resource. Its `buildId` has
+		// to be visible without core's `version` disappearing.
+		"providers/os/resources/os.lr": `
+option provider = "go.mondoo.com/mql/providers/os"
+option go_package = "go.mondoo.com/mql/providers/os/resources"
+
+extend asset {
+  buildId string
+}
+`,
+	}
+
+	res, err := Resolve("providers/demo/resources/demo.lr", func(path string) ([]byte, error) {
+		raw, ok := files[path]
+		require.Truef(t, ok, "unexpected read of %q", path)
+		return []byte(raw), nil
+	})
+	require.NoError(t, err)
+
+	_, err = Schema(res)
+	require.NoError(t, err)
+}
