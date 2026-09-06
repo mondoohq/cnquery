@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/nmap"
 option go_package = "go.mondoo.com/mql/providers/nmap/resources"
+option root = "nmap"
 
 // Nmap network scanner
 //
@@ -12,7 +13,7 @@ option go_package = "go.mondoo.com/mql/providers/nmap/resources"
 // I/O engines, and the target platform. Query it to confirm which nmap
 // build backs your scans and which optional capabilities (OpenSSL,
 // libpcap, and similar) are available.
-nmap {
+nmap @root {
   // Nmap installation version and build info
   version() nmap.versionInformation
 }

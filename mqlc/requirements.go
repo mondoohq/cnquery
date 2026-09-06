@@ -150,3 +150,16 @@ func SupportsRoot(bundle *llx.CodeBundle, root string) bool {
 	}
 	return false
 }
+
+// rootScopeError is a compile failure that is really a scoping answer: the
+// field exists, on a root this asset does not have.
+//
+// It carries the diagnosis as its message - which is what a user reading one
+// query wants - while matching ErrRootMismatch under errors.Is, which is what a
+// caller running over many assets needs to tell "not for this asset" apart from
+// "broken".
+type rootScopeError struct{ msg string }
+
+func (e *rootScopeError) Error() string { return e.msg }
+
+func (e *rootScopeError) Is(target error) bool { return target == ErrRootMismatch }

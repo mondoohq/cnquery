@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/postgresdb"
 option go_package = "go.mondoo.com/mql/providers/postgresdb/resources"
+option root = "postgresdb"
 
 // PostgreSQL
 //
@@ -10,7 +11,7 @@ option go_package = "go.mondoo.com/mql/providers/postgresdb/resources"
 // `postgresdb.instance` for the connected server: its configuration settings,
 // cluster roles, databases, schemas, tables, functions, privileges, host-based
 // authentication rules, extensions, foreign servers, and replication state.
-postgresdb {}
+postgresdb @root {}
 
 // PostgreSQL server
 //

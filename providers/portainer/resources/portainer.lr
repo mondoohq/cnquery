@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/portainer"
 option go_package = "go.mondoo.com/mql/providers/portainer/resources"
+option root = "portainer"
 
 // Portainer instance
 //
@@ -12,7 +13,7 @@ option go_package = "go.mondoo.com/mql/providers/portainer/resources"
 // environments (Docker hosts, Swarm or Kubernetes clusters, and Edge agents)
 // are the hosts it manages. The registries, stacks, webhooks, and Edge jobs
 // are the paths by which code reaches those hosts.
-portainer {
+portainer @root {
   // Portainer server version
   version() string
   // Unique Portainer instance identifier

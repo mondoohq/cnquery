@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/jamf"
 option go_package = "go.mondoo.com/mql/providers/jamf/resources"
+option root = "jamf"
 
 // Jamf Pro
 //
@@ -12,7 +13,7 @@ option go_package = "go.mondoo.com/mql/providers/jamf/resources"
 // configuration, smart and static computer groups, policies, scripts,
 // restricted software definitions, and the Jamf user directory. The
 // Jamf Pro server version is available via `version`.
-jamf {
+jamf @root {
   // Retrieve a list of all computers in the Jamf Pro inventory
   computerInventory() []jamf.computer
 

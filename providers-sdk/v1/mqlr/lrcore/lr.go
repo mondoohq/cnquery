@@ -666,16 +666,31 @@ func (lr *LR) validateAliases() []error {
 	return errs
 }
 
-// reservedIdentifiers are the names the compiler answers itself: language
-// constructs, and the type conversions. A query is a block on the asset root
-// (ADR 031 point 7), and a bound identifier is resolved before any of these, so
-// a root member carrying one of these names would shadow the language.
+// reservedIdentifiers are the language constructs the compiler answers itself. A
+// query is a block on the asset root (ADR 031 point 7) and these are resolved
+// without ever consulting it, so a root member carrying one of these names could
+// not be read.
 //
-// This only constrains members of a root. Any other resource may still have a
-// `version` or `string` field - nothing binds it implicitly.
+// This only constrains members of a root; any other resource may use these
+// names freely, because nothing binds them implicitly.
 var reservedIdentifiers = map[string]struct{}{
 	"props": {}, "if": {}, "else": {}, "expect": {}, "switch": {}, "return": {},
-	"_": {}, "bool": {}, "int": {}, "float": {}, "string": {}, "regex": {},
+	"_": {},
+}
+
+// conversionIdentifiers are the type conversions - `version("1.2.3")`,
+// `string(x)`. They are NOT reserved against a root member, because the
+// compiler already tells them apart by arity: compileTypeConversion returns
+// errNotConversion when there are no arguments, and mqlc then "tosses this fish
+// back in the sea" and resolves the name as a member of the root. So a device
+// with a `version` field answers `mql run arista -c version` with the device's
+// version, which is the whole point of having a root - the root is the position
+// everything is relative to.
+//
+// A member that *takes arguments* is the real conflict: the conversion is tried
+// first and wins on any call with arguments, leaving that member unreachable.
+var conversionIdentifiers = map[string]struct{}{
+	"bool": {}, "int": {}, "float": {}, "string": {}, "regex": {},
 	"dict": {}, "ip": {}, "semver": {}, "version": {},
 }
 
@@ -712,10 +727,20 @@ func (lr *LR) validateRootMembers() []error {
 	}
 
 	var errs []error
-	for name, typ := range lr.exposedMembers(byID, root, 0) {
+	for name, member := range lr.exposedMembers(byID, root, 0) {
+		typ := member.typ
 		if _, reserved := reservedIdentifiers[name]; reserved {
 			errs = append(errs, errors.New("root "+root+" has a member named "+name+
 				", which the compiler answers itself; a bare identifier would never reach it"))
+			continue
+		}
+		// A conversion is only a conversion when it is called with arguments, so
+		// a plain `version` member reads fine off the root. One that takes
+		// arguments does not: the conversion is tried first and wins on any
+		// call that has them.
+		if _, conversion := conversionIdentifiers[name]; conversion && member.hasArgs {
+			errs = append(errs, errors.New("root "+root+" has a member "+name+
+				" that takes arguments, but "+name+"(...) is a type conversion; the conversion wins and the member could not be called"))
 			continue
 		}
 
@@ -780,7 +805,8 @@ func (lr *LR) validateEmbedAmbiguity() []error {
 		types := map[string]types.Type{}
 		origin := map[string]string{}
 		for _, e := range embeds {
-			for name, typ := range lr.exposedMembers(byID, e, 0) {
+			for name, member := range lr.exposedMembers(byID, e, 0) {
+				typ := member.typ
 				prev, ok := types[name]
 				if ok && prev != typ {
 					errs = append(errs, errors.New("resource "+r.ID+" embeds both "+origin[name]+
@@ -799,8 +825,16 @@ func (lr *LR) validateEmbedAmbiguity() []error {
 // exposedMembers returns the members a resource offers by name, following its
 // own embeds. An embed of a resource this schema does not define (an imported
 // one) contributes nothing, because its members are not knowable here.
-func (lr *LR) exposedMembers(byID map[string]*Resource, id string, depth int) map[string]types.Type {
-	res := map[string]types.Type{}
+// exposedMember is one member a root offers, and whether reading it takes
+// arguments. Arity is what decides whether a type conversion of the same name
+// shadows it, so it has to travel with the type.
+type exposedMember struct {
+	typ     types.Type
+	hasArgs bool
+}
+
+func (lr *LR) exposedMembers(byID map[string]*Resource, id string, depth int) map[string]exposedMember {
+	res := map[string]exposedMember{}
 	if depth > 10 {
 		return res
 	}
@@ -814,12 +848,15 @@ func (lr *LR) exposedMembers(byID map[string]*Resource, id string, depth int) ma
 			continue
 		}
 		if f.BasicField.isEmbedded && f.BasicField.Type.SimpleType != nil {
-			for name, typ := range lr.exposedMembers(byID, f.BasicField.Type.SimpleType.Type, depth+1) {
-				res[name] = typ
+			for name, m := range lr.exposedMembers(byID, f.BasicField.Type.SimpleType.Type, depth+1) {
+				res[name] = m
 			}
 			continue
 		}
-		res[f.BasicField.ID] = f.BasicField.Type.Type(lr)
+		res[f.BasicField.ID] = exposedMember{
+			typ:     f.BasicField.Type.Type(lr),
+			hasArgs: f.BasicField.Args != nil && len(f.BasicField.Args.List) > 0,
+		}
 	}
 	return res
 }

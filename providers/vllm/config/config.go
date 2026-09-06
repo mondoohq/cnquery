@@ -11,9 +11,15 @@ import (
 )
 
 var Config = plugin.Provider{
-	Name:            "vllm",
-	ID:              "go.mondoo.com/mql/providers/vllm",
-	Version:         "13.0.22",
+	Name: "vllm",
+	// Every kind this provider hands out as its own asset is a root (ADR 031).
+	Root:    "vllm",
+	ID:      "go.mondoo.com/mql/providers/vllm",
+	Version: "13.0.22",
+	// Every root carries `asset`, which core owns (ADR 042).
+	Requires: []plugin.ProviderDep{
+		{ID: "go.mondoo.com/mql/providers/core", Name: "core", MinVersion: "13.0.0"},
+	},
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
