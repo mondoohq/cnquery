@@ -9,6 +9,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	web "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice/v6"
+	aci "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerinstance/armcontainerinstance/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,6 +23,10 @@ import (
 const (
 	fakeStorageConnString = "DefaultEndpointsProtocol=https;AccountName=acct;AccountKey=SUPERSECRETKEY==;"
 	fakeClientSecret      = "SUPERSECRETCLIENTSECRET"
+	fakeRegistryPassword  = "SUPERSECRETREGISTRYPW"
+	fakeSecureEnvValue    = "SUPERSECRETENVVALUE"
+	fakeSecretVolumeData  = "SUPERSECRETVOLUMEDATA"
+	fakeFileShareKey      = "SUPERSECRETSHAREKEY"
 )
 
 func TestRedactedRedisConfigurationDropsStorageCredentials(t *testing.T) {
@@ -160,6 +165,129 @@ func TestCreateRedisInstanceRawDataLeavesTheSourceAlone(t *testing.T) {
 	require.NotNil(t, withSecret.Properties.RedisConfiguration.RdbStorageConnectionString)
 	assert.Equal(t, fakeStorageConnString,
 		*withSecret.Properties.RedisConfiguration.RdbStorageConnectionString)
+}
+
+func TestRedactedImageRegistryCredentialsDropsThePassword(t *testing.T) {
+	creds := []*aci.ImageRegistryCredential{
+		{
+			Server:   to.Ptr("myregistry.azurecr.io"),
+			Username: to.Ptr("pull-user"),
+			Password: to.Ptr(fakeRegistryPassword),
+		},
+		{
+			Server:   to.Ptr("identity.azurecr.io"),
+			Identity: to.Ptr("/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/pull"),
+		},
+		nil,
+	}
+
+	dict, err := convert.JsonToDictSlice(redactedImageRegistryCredentials(creds))
+	require.NoError(t, err)
+	serialized := mustJSON(t, dict)
+
+	assert.NotContains(t, serialized, fakeRegistryPassword,
+		"the registry password must not reach MQL")
+
+	// The audit signal has to survive: which registry a group pulls from, and
+	// whether it authenticates with an identity rather than a password.
+	assert.Contains(t, serialized, "myregistry.azurecr.io")
+	assert.Contains(t, serialized, "pull-user", "the username is not a credential")
+	assert.Contains(t, serialized, "userAssignedIdentities/pull",
+		"the managed identity is what registryAuthUsesIdentity reads")
+
+	// The source is not mutated: registryAuthUsesIdentity is computed from the
+	// caller's own records after this runs.
+	require.NotNil(t, creds[0].Password)
+	assert.Equal(t, fakeRegistryPassword, *creds[0].Password)
+
+	assert.Nil(t, redactedImageRegistryCredentials(nil))
+}
+
+// TestRedactedVolumesDropsSecretContentsAndShareKey covers two secrets in one
+// field: a secret volume's file contents, and the storage account key that
+// grants access to an entire Azure File share.
+func TestRedactedVolumesDropsSecretContentsAndShareKey(t *testing.T) {
+	volumes := []*aci.Volume{
+		{
+			Name: to.Ptr("secrets"),
+			Secret: map[string]*string{
+				"app.key": to.Ptr(fakeSecretVolumeData + "-app"),
+				"tls.pem": to.Ptr(fakeSecretVolumeData + "-tls"),
+				"absent":  nil,
+			},
+		},
+		{
+			Name: to.Ptr("share"),
+			AzureFile: &aci.AzureFileVolume{
+				ShareName:          to.Ptr("data"),
+				StorageAccountName: to.Ptr("acct"),
+				ReadOnly:           to.Ptr(true),
+				StorageAccountKey:  to.Ptr(fakeFileShareKey),
+			},
+		},
+		{
+			Name:    to.Ptr("repo"),
+			GitRepo: &aci.GitRepoVolume{Repository: to.Ptr("https://example.invalid/repo.git")},
+		},
+		nil,
+	}
+
+	dict, err := convert.JsonToDictSlice(redactedVolumes(volumes))
+	require.NoError(t, err)
+	serialized := mustJSON(t, dict)
+
+	for _, suffix := range []string{"-app", "-tls"} {
+		assert.NotContains(t, serialized, fakeSecretVolumeData+suffix,
+			"secret volume contents %q must not reach MQL", suffix)
+	}
+	assert.NotContains(t, serialized, fakeSecretVolumeData)
+	assert.NotContains(t, serialized, fakeFileShareKey,
+		"the Azure File storage account key must not reach MQL")
+
+	// The audit signal has to survive: which files a secret volume mounts, and
+	// which share is mounted read-only from where.
+	assert.Contains(t, serialized, "app.key", "the mounted file names are kept")
+	assert.Contains(t, serialized, "tls.pem")
+	assert.Contains(t, serialized, "data", "the share name is kept")
+	assert.Contains(t, serialized, "acct", "the storage account name is kept")
+	assert.Contains(t, serialized, "https://example.invalid/repo.git",
+		"a git repo volume carries no credential and is untouched")
+
+	// The source is not mutated: hasSecretVolume is computed from the caller's
+	// own records after this runs.
+	require.NotNil(t, volumes[0].Secret["app.key"])
+	assert.Equal(t, fakeSecretVolumeData+"-app", *volumes[0].Secret["app.key"])
+	require.NotNil(t, volumes[1].AzureFile.StorageAccountKey)
+	assert.Equal(t, fakeFileShareKey, *volumes[1].AzureFile.StorageAccountKey)
+
+	assert.Nil(t, redactedVolumes(nil))
+}
+
+func TestRedactedEnvironmentVariablesDropsTheSecureValue(t *testing.T) {
+	env := []*aci.EnvironmentVariable{
+		{Name: to.Ptr("LOG_LEVEL"), Value: to.Ptr("debug")},
+		{Name: to.Ptr("DB_PASSWORD"), SecureValue: to.Ptr(fakeSecureEnvValue)},
+		nil,
+	}
+
+	dict, err := convert.JsonToDictSlice(redactedEnvironmentVariables(env))
+	require.NoError(t, err)
+	serialized := mustJSON(t, dict)
+
+	assert.NotContains(t, serialized, fakeSecureEnvValue,
+		"a secure environment value must not reach MQL")
+
+	// The audit signal has to survive: which variables a container declares,
+	// including the secure ones, and the plain values that are not credentials.
+	assert.Contains(t, serialized, "DB_PASSWORD", "the variable name is kept")
+	assert.Contains(t, serialized, "LOG_LEVEL")
+	assert.Contains(t, serialized, "debug",
+		"a plain value is not secure by declaration and is kept")
+
+	require.NotNil(t, env[1].SecureValue)
+	assert.Equal(t, fakeSecureEnvValue, *env[1].SecureValue, "source not mutated")
+
+	assert.Nil(t, redactedEnvironmentVariables(nil))
 }
 
 // mustJSON serializes exactly as the value will reach MQL. It deliberately does

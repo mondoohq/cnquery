@@ -16969,11 +16969,22 @@ azure.subscription.containerInstanceService.containerGroup @defaults("name locat
   subnetIds []string
   // DNS configuration (nameServers, searchDomains, options)
   dnsConfig dict
-  // Image registry credentials — each entry has {server, username?, identity?, identityUrl?}
+  // Image registry credentials
+  //
+  // One entry per private registry the group pulls from, with keys `server`,
+  // `username`, `identity`, and `identityUrl`. The registry password is
+  // deliberately not published; `registryAuthUsesIdentity` reports whether the
+  // group authenticates with a managed identity instead of a password.
   imageRegistryCredentials []dict
   // Whether any registry credential uses managed identity (vs username/password)
   registryAuthUsesIdentity bool
-  // Volumes mounted into containers — entries are azureFile / emptyDir / secret / gitRepo
+  // Volumes mounted into containers
+  //
+  // One entry per volume, each of type `azureFile`, `emptyDir`, `secret`, or
+  // `gitRepo`. A secret volume lists the file names it mounts as the keys of
+  // its `secret` map, with every value null: the file contents are deliberately
+  // not published. The Azure File storage account key is likewise absent, while
+  // the share name, storage account name, and read-only flag are reported.
   volumes []dict
   // Convenience: any volume of type "secret"
   hasSecretVolume bool
@@ -17003,7 +17014,11 @@ private azure.subscription.containerInstanceService.containerGroup.container @de
   imagePinned bool
   // Container start command
   command []string
-  // Environment variables — each entry has {name, value, secureValue}
+  // Environment variables
+  //
+  // One entry per variable, with keys `name` and `value`. A variable declared
+  // as a secure value reports its name with no value, since the value is a
+  // credential and is deliberately not published.
   env []dict
   // CPU cores requested
   cpuCores float
