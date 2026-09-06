@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/gitlab"
 option go_package = "go.mondoo.com/mql/providers/gitlab/resources"
+option root = "gitlab.group"
 
 // GitLab Instance Application Settings
 //
@@ -555,7 +556,7 @@ gitlab.namespace @defaults("name kind plan") {
 // and audit events (the last two on Premium and Ultimate). Vulnerabilities,
 // packages, and container registry repositories aggregate across the group
 // and all of its subgroups.
-gitlab.group @defaults("name visibility webURL") {
+gitlab.group @defaults("name visibility webURL") @root {
   // Group ID
   id int
   // Group name
@@ -802,7 +803,7 @@ private gitlab.project.auditEvent @defaults("id eventName createdAt") {
 // vulnerabilities, audit events, and container-registry and package
 // protection rules. Select a project by its full path with namespace, for
 // example `gitlab.project(fullPath: "mondoohq/test-project")`.
-gitlab.project @defaults("fullName visibility webURL") {
+gitlab.project @defaults("fullName visibility webURL") @root {
   // Project ID
   id int
   // Project name

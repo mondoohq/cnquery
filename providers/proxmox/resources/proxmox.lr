@@ -636,7 +636,7 @@ proxmox.cluster.haResource @defaults("id type status") {
   //
   // Deprecated in favor of `groupRef`, which resolves the same group as
   // an HA group resource.
-  group @maturity("deprecated") string
+  group @maturity("deprecated") @replaced_by("proxmox.cluster.haResource.groupRef") string
   // VM this resource refers to when `type` is `vm`; null otherwise
   vm() proxmox.vm
   // Container this resource refers to when `type` is `ct`; null otherwise
@@ -1148,7 +1148,7 @@ proxmox.vm.disk @defaults("id storage size") {
   //
   // Deprecated in favor of `storageRef`, which resolves the same pool
   // as a storage resource.
-  storage @maturity("deprecated") string
+  storage @maturity("deprecated") @replaced_by("proxmox.vm.disk.storageRef") string
   // Disk size in bytes
   size int
   // Disk format (qcow2, raw, vmdk)
@@ -1669,7 +1669,7 @@ proxmox.group @defaults("id comment") {
   //
   // Deprecated in favor of `members`, which resolves the same accounts
   // as user resources.
-  memberIds @maturity("deprecated") []string
+  memberIds @maturity("deprecated") @replaced_by("proxmox.group.members") []string
   // Members of this group resolved as user resources
   members() []proxmox.user
 }
@@ -1696,7 +1696,7 @@ proxmox.acl @defaults("path type ugid roleId propagate") {
   //
   // Deprecated in favor of `role`, which resolves the same role as a
   // role resource carrying its privilege list.
-  roleId @maturity("deprecated") string
+  roleId @maturity("deprecated") @replaced_by("proxmox.acl.role") string
   // Whether the grant propagates to child paths
   propagate bool
   // Resolved role
@@ -2061,7 +2061,7 @@ proxmox.container.mountPoint @defaults("id storage mountPath size") {
   //
   // Deprecated in favor of `storageRef`, which resolves the same pool
   // as a storage resource.
-  storage @maturity("deprecated") string
+  storage @maturity("deprecated") @replaced_by("proxmox.container.mountPoint.storageRef") string
   // Size in bytes
   size int
   // Path inside the container
@@ -2101,7 +2101,7 @@ proxmox.backup.job @defaults("id schedule storage enabled") {
   //
   // Deprecated in favor of `targetStorage`, which resolves the same
   // pool as a storage resource.
-  storage @maturity("deprecated") string
+  storage @maturity("deprecated") @replaced_by("proxmox.backup.job.targetStorage") string
   // Dump mode (snapshot, suspend, stop)
   mode string
   // Job comment
@@ -2344,12 +2344,12 @@ proxmox.replication.job @defaults("id schedule source target disabled") {
   //
   // Deprecated in favor of `sourceNode`, which resolves the same host
   // as a node resource.
-  source @maturity("deprecated") string
+  source @maturity("deprecated") @replaced_by("proxmox.replication.job.sourceNode") string
   // Target node name
   //
   // Deprecated in favor of `targetNode`, which resolves the same host
   // as a node resource.
-  target @maturity("deprecated") string
+  target @maturity("deprecated") @replaced_by("proxmox.replication.job.targetNode") string
   // Job type (local for built-in storage replication)
   type string
   // Job comment
@@ -2416,7 +2416,7 @@ proxmox.sdn.vnet @defaults("vnet zone tag") {
   //
   // Deprecated in favor of `zoneRef`, which resolves the same zone as
   // an SDN zone resource.
-  zone @maturity("deprecated") string
+  zone @maturity("deprecated") @replaced_by("proxmox.sdn.vnet.zoneRef") string
   // Friendly alias
   alias string
   // VLAN/VXLAN tag identifier
@@ -2468,7 +2468,7 @@ proxmox.sdn.subnet @defaults("id cidr gateway") {
   //
   // Deprecated in favor of `vnetRef`, which resolves the same vnet as
   // an SDN vnet resource.
-  vnet @maturity("deprecated") string
+  vnet @maturity("deprecated") @replaced_by("proxmox.sdn.subnet.vnetRef") string
   // Resolved parent vnet
   vnetRef() proxmox.sdn.vnet
 }
@@ -2814,7 +2814,7 @@ proxmox.ceph.metadataServer @defaults("name host state fsName") {
   //
   // Deprecated in favor of `fileSystem`, which resolves the same file
   // system as a CephFS resource.
-  fsName @maturity("deprecated") string
+  fsName @maturity("deprecated") @replaced_by("proxmox.ceph.metadataServer.fileSystem") string
   // CephFS this daemon serves; null for unbound standbys
   fileSystem() proxmox.ceph.filesystem
   // Whether the standby is polling the active daemon for faster recovery

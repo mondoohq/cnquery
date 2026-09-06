@@ -3,13 +3,14 @@
 
 option provider = "go.mondoo.com/mql/providers/nextdns"
 option go_package = "go.mondoo.com/mql/providers/nextdns/resources"
+option root = "nextdns"
 
 // NextDNS
 //
 // NextDNS account behind the configured API key and the DNS profiles it
 // owns. Query `profiles` to enumerate every profile in the account, or
 // `account` for the account that owns them.
-nextdns {
+nextdns @root {
   // Account that owns the configured API key
   account() nextdns.account
   // All profiles in the account

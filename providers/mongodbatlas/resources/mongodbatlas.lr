@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/mongodbatlas"
 option go_package = "go.mondoo.com/mql/providers/mongodbatlas/resources"
+option root = "mongodbatlas"
 
 // MongoDB Atlas
 //
@@ -22,7 +23,7 @@ option go_package = "go.mondoo.com/mql/providers/mongodbatlas/resources"
 // through alertConfigs, thirdPartyIntegrations, and metricIntegrations, its
 // patching cadence through maintenanceWindow, and the data it federates out to
 // customer cloud storage through dataFederations.
-mongodbatlas {
+mongodbatlas @root {
   // Organization id
   organizationId() string
   // Organization name

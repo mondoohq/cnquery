@@ -11,9 +11,15 @@ import (
 )
 
 var Config = plugin.Provider{
-	Name:            "slack",
-	ID:              "go.mondoo.com/mql/providers/slack",
-	Version:         "13.1.22",
+	Name: "slack",
+	// Every kind this provider hands out as its own asset is a root (ADR 031).
+	Root:    "slack",
+	ID:      "go.mondoo.com/mql/providers/slack",
+	Version: "13.1.22",
+	// Every root carries `asset`, which core owns (ADR 042).
+	Requires: []plugin.ProviderDep{
+		{ID: "go.mondoo.com/mql/providers/core", Name: "core", MinVersion: "13.0.0"},
+	},
 	ConnectionTypes: []string{provider.ConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{

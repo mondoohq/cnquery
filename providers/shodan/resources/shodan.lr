@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/shodan"
 option go_package = "go.mondoo.com/mql/providers/shodan/resources"
+option root = "shodan"
 
 // Shodan Search Engine
 //
@@ -13,7 +14,7 @@ option go_package = "go.mondoo.com/mql/providers/shodan/resources"
 // `shodan.domain(name: "example.com")` for a domain's subdomains and DNS
 // records, `shodan.profile` for the connected account, and
 // `shodan.apiPlan` for the plan's scan-credit and monitored-IP limits.
-shodan {}
+shodan @root {}
 
 // Shodan host information
 //

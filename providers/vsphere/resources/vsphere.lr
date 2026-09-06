@@ -548,7 +548,7 @@ private vsphere.host @defaults("moid name") {
   //
   // Deprecated in favor of `tagRefs`, which resolves each tag to a typed
   // vsphere.tag (with its category) rather than a "category:tag" string.
-  tags @maturity("deprecated") []string
+  tags @maturity("deprecated") @replaced_by("vsphere.host.tagRefs") []string
   // Tags attached to this host
   tagRefs() []vsphere.tag
   // Lockdown mode (lockdownDisabled, lockdownNormal, lockdownStrict)
@@ -940,7 +940,7 @@ private vsphere.host.certificate @defaults("subject status notAfter") {
 // Deprecated in favor of `vsphere.host.firewallRuleset`. This resource
 // is kept for backward compatibility and has the same fields as its
 // replacement.
-private esxi.firewallRuleset @defaults("key enabled allIpsAllowed") @maturity("deprecated") {
+private esxi.firewallRuleset @defaults("key enabled allIpsAllowed") @maturity("deprecated") @replaced_by("vsphere.host.firewallRuleset") {
   id string
   key string
   label string
@@ -962,7 +962,7 @@ private esxi.firewallRuleset @defaults("key enabled allIpsAllowed") @maturity("d
 // Deprecated in favor of `vsphere.host.firewallRule`. This resource is
 // kept for backward compatibility and has the same fields as its
 // replacement.
-private esxi.firewallRule @defaults("port direction protocol") @maturity("deprecated") {
+private esxi.firewallRule @defaults("port direction protocol") @maturity("deprecated") @replaced_by("vsphere.host.firewallRule") {
   // Identifier (parent ruleset id + rule index)
   id string
   // Port number (or start port for a range)
@@ -982,7 +982,7 @@ private esxi.firewallRule @defaults("port direction protocol") @maturity("deprec
 // Deprecated in favor of `vsphere.host.iscsiAdapter`. This resource is
 // kept for backward compatibility and has the same fields as its
 // replacement.
-private esxi.iscsiAdapter @defaults("device iScsiName") @maturity("deprecated") {
+private esxi.iscsiAdapter @defaults("device iScsiName") @maturity("deprecated") @replaced_by("vsphere.host.iscsiAdapter") {
   // Identifier (host inventory path + device name)
   id string
   // HBA device name (e.g., vmhba65)
@@ -1008,7 +1008,7 @@ private esxi.iscsiAdapter @defaults("device iScsiName") @maturity("deprecated") 
 // Deprecated in favor of `vsphere.host.certificate`. This resource is
 // kept for backward compatibility and has the same fields as its
 // replacement.
-private esxi.certificate @defaults("subject status notAfter") @maturity("deprecated") {
+private esxi.certificate @defaults("subject status notAfter") @maturity("deprecated") @replaced_by("vsphere.host.certificate") {
   // Identifier (host inventory path + cert kind)
   id string
   // Certificate kind (e.g. machine, vmca); empty/unset means the host machine cert
@@ -1061,7 +1061,7 @@ private vsphere.vm @defaults("moid name") {
   //
   // Deprecated in favor of `tagRefs`, which resolves each tag to a typed
   // vsphere.tag (with its category) rather than a "category:tag" string.
-  tags @maturity("deprecated") []string
+  tags @maturity("deprecated") @replaced_by("vsphere.vm.tagRefs") []string
   // Tags attached to this virtual machine
   tagRefs() []vsphere.tag
   // Boot firmware (bios or efi)
@@ -1357,15 +1357,15 @@ private vsphere.vswitch.standard @defaults("name") {
   // Raw failover policy dict
   //
   // Deprecated in favor of `failoverPolicySettings`.
-  failoverPolicy() @maturity("deprecated") dict
+  failoverPolicy() @maturity("deprecated") @replaced_by("vsphere.vswitch.standard.failoverPolicySettings") dict
   // Raw security policy dict
   //
   // Deprecated in favor of `securityPolicySettings`.
-  securityPolicy() @maturity("deprecated") dict
+  securityPolicy() @maturity("deprecated") @replaced_by("vsphere.vswitch.standard.securityPolicySettings") dict
   // Raw shaping policy dict
   //
   // Deprecated in favor of `shapingPolicySettings`.
-  shapingPolicy() @maturity("deprecated") dict
+  shapingPolicy() @maturity("deprecated") @replaced_by("vsphere.vswitch.standard.shapingPolicySettings") dict
   // NIC teaming / failover policy applied to traffic on this vSwitch
   failoverPolicySettings() vsphere.vswitch.failoverPolicy
   // Layer-2 security policy applied to traffic on this vSwitch (promiscuous mode, MAC changes, forged transmits)
@@ -1841,7 +1841,7 @@ esxi @maturity("deprecated") {}
 //
 // Deprecated in favor of `vsphere.host.command`. This resource is kept
 // for backward compatibility and has the same fields as its replacement.
-esxi.command @maturity("deprecated") {
+esxi.command @maturity("deprecated") @replaced_by("vsphere.host.command") {
   init(command string)
   // vSphere inventory path of the host the command runs on
   inventoryPath string
@@ -1859,7 +1859,7 @@ esxi.command @maturity("deprecated") {
 //
 // Deprecated in favor of `vsphere.host.vib`. This resource is kept for
 // backward compatibility and has the same fields as its replacement.
-private esxi.vib @defaults("id name") @maturity("deprecated") {
+private esxi.vib @defaults("id name") @maturity("deprecated") @replaced_by("vsphere.host.vib") {
   id string
   name string
   // Acceptance level (VMwareCertified, VMwareAccepted, PartnerSupported, CommunitySupported)
@@ -1876,7 +1876,7 @@ private esxi.vib @defaults("id name") @maturity("deprecated") {
 // Deprecated in favor of `vsphere.host.kernelModule`. This resource is
 // kept for backward compatibility and has the same fields as its
 // replacement.
-private esxi.kernelmodule @defaults("name") @maturity("deprecated") {
+private esxi.kernelmodule @defaults("name") @maturity("deprecated") @replaced_by("vsphere.host.kernelModule") {
   name string
   modulefile string
   version string
@@ -1893,7 +1893,7 @@ private esxi.kernelmodule @defaults("name") @maturity("deprecated") {
 //
 // Deprecated in favor of `vsphere.host.service`. This resource is kept
 // for backward compatibility and has the same fields as its replacement.
-private esxi.service @defaults("key label") @maturity("deprecated") {
+private esxi.service @defaults("key label") @maturity("deprecated") @replaced_by("vsphere.host.service") {
   key string
   label string
   required bool
@@ -1906,7 +1906,7 @@ private esxi.service @defaults("key label") @maturity("deprecated") {
 //
 // Deprecated in favor of `vsphere.host.timezone`. This resource is kept
 // for backward compatibility and has the same fields as its replacement.
-private esxi.timezone @defaults("key name") @maturity("deprecated") {
+private esxi.timezone @defaults("key name") @maturity("deprecated") @replaced_by("vsphere.host.timezone") {
   // Identifier for the time zone
   key string
   // Time zone name
@@ -1922,7 +1922,7 @@ private esxi.timezone @defaults("key name") @maturity("deprecated") {
 // Deprecated in favor of `vsphere.host.ntpConfig`. This resource is
 // kept for backward compatibility and has the same fields as its
 // replacement.
-private esxi.ntpconfig @defaults("id") @maturity("deprecated") {
+private esxi.ntpconfig @defaults("id") @maturity("deprecated") @replaced_by("vsphere.host.ntpConfig") {
   // NTP config ID
   id string
   // List of time servers, specified as either IP addresses or fully qualified domain names (FQDNs)

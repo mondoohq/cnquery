@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/snowflake"
 option go_package = "go.mondoo.com/mql/providers/snowflake/resources"
+option root = "snowflake"
 
 // Snowflake Data Cloud
 //
@@ -10,7 +11,7 @@ option go_package = "go.mondoo.com/mql/providers/snowflake/resources"
 // for users, roles, security integrations, password and network policies, warehouses,
 // databases, stages, shares, API integrations, tags, failover groups, and grants.
 // `currentRole` returns the role active for the current session.
-snowflake {
+snowflake @root {
   // Current role
   currentRole() string
 }
@@ -701,7 +702,7 @@ snowflake.stage @defaults("name") {
 // `secrets`, mirroring the account-wide collections but limited to this database.
 // Asset discovery emits each database as its own asset, so these fields also form
 // the posture surface scanned per database.
-snowflake.database @defaults("name") {
+snowflake.database @defaults("name") @root {
   // Name of the database
   name string
   // Whether the database is a default database

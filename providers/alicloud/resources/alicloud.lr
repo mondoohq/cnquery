@@ -1105,7 +1105,7 @@ alicloud.ecs.securitygroup @defaults("securityGroupId securityGroupName security
   // VPC ID the security group belongs to
   //
   // Deprecated in favor of vpc.
-  vpcId @maturity("deprecated") string
+  vpcId @maturity("deprecated") @replaced_by("alicloud.ecs.securitygroup.vpc") string
   // VPC the security group belongs to
   //
   // Null on a classic-network security group, which is not in a VPC.
@@ -1168,7 +1168,7 @@ alicloud.ecs.securitygroup.permission @defaults("direction ipProtocol portRange 
   // Source prefix list ID for an inbound rule
   //
   // Deprecated in favor of sourcePrefixList.
-  sourcePrefixListId @maturity("deprecated") string
+  sourcePrefixListId @maturity("deprecated") @replaced_by("alicloud.ecs.securitygroup.permission.sourcePrefixList") string
   // Source prefix list for an inbound rule
   //
   // Null unless the rule is scoped to a prefix list. When it is set, the rule
@@ -1184,7 +1184,7 @@ alicloud.ecs.securitygroup.permission @defaults("direction ipProtocol portRange 
   // Destination prefix list ID for an outbound rule
   //
   // Deprecated in favor of destPrefixList.
-  destPrefixListId @maturity("deprecated") string
+  destPrefixListId @maturity("deprecated") @replaced_by("alicloud.ecs.securitygroup.permission.destPrefixList") string
   // Destination prefix list for an outbound rule
   //
   // Null unless the rule is scoped to a prefix list. When it is set, the rule
@@ -1966,7 +1966,7 @@ alicloud.vpc.routeTable {
   // Deprecated in favor of routes. Each entry carries destinationCidrBlock,
   // nextHopType, nextHopId, status, type, routeEntryId, routeEntryName,
   // description, ipVersion, and origin.
-  routeEntries() @maturity("deprecated") []dict
+  routeEntries() @maturity("deprecated") @replaced_by("alicloud.vpc.routeTable.routes") []dict
   // Routes in the route table
   //
   // Where traffic leaving the attached vSwitches is sent. A route for
@@ -2328,13 +2328,13 @@ alicloud.vpc.networkAcl {
   // Deprecated in favor of ingressEntries. Each entry carries protocol, port,
   // sourceCidrIp, policy, description, entryType, ipVersion, networkAclEntryId,
   // and networkAclEntryName.
-  ingressAclEntries @maturity("deprecated") []dict
+  ingressAclEntries @maturity("deprecated") @replaced_by("alicloud.vpc.networkAcl.ingressEntries") []dict
   // Outbound rule summaries
   //
   // Deprecated in favor of egressEntries. Each entry carries protocol, port,
   // destinationCidrIp, policy, description, entryType, ipVersion,
   // networkAclEntryId, and networkAclEntryName.
-  egressAclEntries @maturity("deprecated") []dict
+  egressAclEntries @maturity("deprecated") @replaced_by("alicloud.vpc.networkAcl.egressEntries") []dict
   // Inbound rules of the network ACL
   //
   // Evaluated before security groups on traffic entering the attached
@@ -2773,7 +2773,7 @@ alicloud.slb.loadBalancer {
   //
   // Deprecated in favor of backends. Each entry carries the serverId, serverIp,
   // weight, type (ecs or eni), and an optional description.
-  backendServers() @maturity("deprecated") []dict
+  backendServers() @maturity("deprecated") @replaced_by("alicloud.slb.loadBalancer.backends") []dict
   // Backend servers attached directly to the CLB instance
   //
   // What the load balancer forwards to. An internet-facing CLB makes every one
@@ -4606,7 +4606,7 @@ alicloud.resourceManager.folder {
   // ID of the parent folder, empty for the root folder
   //
   // Deprecated in favor of parentFolder.
-  parentFolderId @maturity("deprecated") string
+  parentFolderId @maturity("deprecated") @replaced_by("alicloud.resourceManager.folder.parentFolder") string
   // Parent folder in the resource directory hierarchy
   //
   // Null on the root folder, which has no parent.
@@ -5190,7 +5190,7 @@ alicloud.alb.listener {
   // ID of the load balancer the listener belongs to
   //
   // Deprecated in favor of loadBalancer.
-  loadBalancerId @maturity("deprecated") string
+  loadBalancerId @maturity("deprecated") @replaced_by("alicloud.alb.listener.loadBalancer") string
   // Load balancer the listener belongs to
   loadBalancer() alicloud.alb.loadBalancer
   // Listener protocol, one of HTTP, HTTPS, or QUIC
@@ -5452,7 +5452,7 @@ alicloud.nlb.listener {
   // ID of the load balancer the listener belongs to
   //
   // Deprecated in favor of loadBalancer.
-  loadBalancerId @maturity("deprecated") string
+  loadBalancerId @maturity("deprecated") @replaced_by("alicloud.nlb.listener.loadBalancer") string
   // Load balancer the listener belongs to
   loadBalancer() alicloud.nlb.loadBalancer
   // Listener protocol, one of TCP, UDP, or TCPSSL
@@ -5815,7 +5815,7 @@ alicloud.nas.mountTarget {
   // ID of the file system the mount target belongs to
   //
   // Deprecated in favor of fileSystem.
-  fileSystemId @maturity("deprecated") string
+  fileSystemId @maturity("deprecated") @replaced_by("alicloud.nas.mountTarget.fileSystem") string
   // File system the mount target belongs to
   fileSystem() alicloud.nas.fileSystem
   // Mount target domain (the mount address), used as the lookup key

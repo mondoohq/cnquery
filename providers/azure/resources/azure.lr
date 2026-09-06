@@ -439,7 +439,7 @@ private azure.subscription.resource @defaults("id name location") {
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.resource.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Resource plan
@@ -452,7 +452,7 @@ private azure.subscription.resource @defaults("id name location") {
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.resource.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Resource provisioning state
@@ -765,7 +765,7 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.computeService.vm.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Principal ID of the VM's system-assigned managed identity; empty when no system-assigned identity is enabled
@@ -986,7 +986,7 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.computeService.disk.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Disk resource properties
@@ -1124,7 +1124,7 @@ azure.subscription.computeService.diskEncryptionSet @defaults("name location enc
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.computeService.diskEncryptionSet.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Creation and last-modification provenance recorded by Azure Resource Manager
@@ -1187,7 +1187,7 @@ azure.subscription.computeService.snapshot @defaults("name location diskSizeByte
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.computeService.snapshot.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Snapshot resource properties
@@ -1313,7 +1313,7 @@ azure.subscription.computeService.vmScaleSet @defaults("name location orchestrat
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.computeService.vmScaleSet.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // VMSS resource properties
@@ -1368,7 +1368,7 @@ azure.subscription.computeService.vmScaleSet @defaults("name location orchestrat
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.computeService.vmScaleSet.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Principal ID of the scale set's system-assigned managed identity; empty when no system-assigned identity is enabled
@@ -1423,7 +1423,7 @@ azure.subscription.computeService.vmScaleSet.instance @defaults("name instanceId
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.computeService.vmScaleSet.instance.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Creation and last-modification provenance recorded by Azure Resource Manager
@@ -1488,7 +1488,7 @@ azure.subscription.computeService.dedicatedHost @defaults("name sku.name provisi
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.computeService.dedicatedHost.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Unmodeled resource properties returned by the Azure API
@@ -1832,7 +1832,7 @@ azure.subscription.batchService.account.pool @defaults("id name") {
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.batchService.account.pool.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Pool configuration settings including scale, network, and task scheduling options
@@ -1926,7 +1926,7 @@ azure.subscription.databricksService.workspace @defaults("id name location publi
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.databricksService.workspace.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Public network access setting ("Enabled" or "Disabled")
@@ -3735,12 +3735,12 @@ azure.subscription.networkService.interface @defaults("name location properties.
   //
   // Deprecated in favor of effectiveRules. Merged across NSG-on-NIC, ASGs, and
   // NSG-on-subnet.
-  effectiveSecurityRules() @maturity("deprecated") []dict
+  effectiveSecurityRules() @maturity("deprecated") @replaced_by("azure.subscription.networkService.interface.effectiveRules") []dict
   // Effective route dicts
   //
   // Deprecated in favor of effectiveRoutes. Each entry carries name, source,
   // state, addressPrefix, nextHopType, and nextHopIpAddress.
-  effectiveRouteTable() @maturity("deprecated") []dict
+  effectiveRouteTable() @maturity("deprecated") @replaced_by("azure.subscription.networkService.interface.effectiveRoutes") []dict
   // Security rules actually applied to the interface
   //
   // The merged rule set across the NSG on the interface, the NSG on its subnet,
@@ -3944,7 +3944,7 @@ private azure.subscription.networkService.bastionHost @defaults("id name locatio
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.networkService.bastionHost.skuData") dict
   // Bastion SKU name ("Basic", "Standard", "Developer", "Premium")
   skuName string
   // Whether copy/paste between the local machine and the remote session is disabled
@@ -4715,7 +4715,7 @@ azure.subscription.networkService.applicationFirewallPolicy @defaults("id name l
   // inside them. Each entry here carries only the `ruleSetType` (e.g.
   // "OWASP", "Microsoft_DefaultRuleSet", "Microsoft_BotManagerRuleSet")
   // and its `ruleSetVersion`.
-  managedRuleSets @maturity("deprecated") []dict
+  managedRuleSets @maturity("deprecated") @replaced_by("azure.subscription.networkService.applicationFirewallPolicy.managedRules") []dict
   // Managed rule sets applied by the policy, with their overrides
   //
   // A policy can report Prevention mode and a current rule set while
@@ -5110,13 +5110,13 @@ azure.subscription.networkService.trafficManagerProfile @defaults("id name locat
   //
   // Deprecated in favor of dnsSettings, which carries the DNS name and
   // TTL as typed fields.
-  dnsConfig @maturity("deprecated") dict
+  dnsConfig @maturity("deprecated") @replaced_by("azure.subscription.networkService.trafficManagerProfile.dnsSettings") dict
   // DNS name and TTL the profile answers on
   dnsSettings azure.subscription.networkService.trafficManagerProfile.dnsSettings
   // Endpoint health monitoring settings
   //
   // Deprecated in favor of monitorSettings.
-  monitorConfig @maturity("deprecated") dict
+  monitorConfig @maturity("deprecated") @replaced_by("azure.subscription.networkService.trafficManagerProfile.monitorSettings") dict
   // Endpoint health monitoring settings
   //
   // How the profile probes its endpoints and what it accepts as healthy.
@@ -6262,7 +6262,7 @@ private azure.subscription.storageService.account @defaults("id name location") 
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.storageService.account.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Storage account kind
@@ -6483,7 +6483,7 @@ private azure.subscription.storageService.account.table @defaults("id name") {
   // Stored access policies on the table
   //
   // Deprecated in favor of storedAccessPolicies.
-  signedIdentifiers @maturity("deprecated") []dict
+  signedIdentifiers @maturity("deprecated") @replaced_by("azure.subscription.storageService.account.table.storedAccessPolicies") []dict
   // Stored access policies on the table
   //
   // A shared access signature bound to one of these policies can be revoked
@@ -6542,7 +6542,7 @@ private azure.subscription.storageService.account.localUser @defaults("id name h
   // Permission scopes granted to the local user
   //
   // Deprecated in favor of permissions.
-  permissionScopes @maturity("deprecated") []dict
+  permissionScopes @maturity("deprecated") @replaced_by("azure.subscription.storageService.account.localUser.permissions") []dict
   // Permission scopes granted to the local user
   //
   // One entry per container or file share the user can reach, with the
@@ -7105,7 +7105,7 @@ private azure.subscription.storageService.account.defenderForStorageSetting @def
   //
   // Deprecated in favor of sensitiveDataDiscoveryOperationStatus, which
   // carries the status code and message as typed fields.
-  sensitiveDataDiscoveryStatus @maturity("deprecated") dict
+  sensitiveDataDiscoveryStatus @maturity("deprecated") @replaced_by("azure.subscription.storageService.account.defenderForStorageSetting.sensitiveDataDiscoveryOperationStatus") dict
   // Operational status Defender reports for sensitive data discovery
   sensitiveDataDiscoveryOperationStatus azure.subscription.storageService.account.defenderForStorageSetting.operationStatus
   // Operational status Defender reports for on-upload malware scanning
@@ -7120,7 +7120,7 @@ private azure.subscription.storageService.account.defenderForStorageSetting @def
   //
   // Deprecated in favor of malwareScanningOperationStatus, which carries
   // the status code and message as typed fields.
-  malwareScanningStatus @maturity("deprecated") dict
+  malwareScanningStatus @maturity("deprecated") @replaced_by("azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningOperationStatus") dict
 }
 
 // Azure Web
@@ -7373,7 +7373,7 @@ private azure.subscription.webService.appslot @defaults("id name location") {
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.webService.appslot.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Parent web app site for this slot
@@ -7682,7 +7682,7 @@ private azure.subscription.webService.appServicePlan @defaults("id name location
   //
   // Deprecated in favor of skuData, which carries the SKU members, its
   // capabilities and its scaling limits as typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.webService.appServicePlan.skuData") dict
   // SKU the plan is provisioned at, with its capabilities and scaling limits
   skuData azure.subscription.webService.appServicePlan.skuDescription
   // Whether the plan is zone-redundant
@@ -8375,7 +8375,7 @@ private azure.subscription.sqlService.server.failoverGroup @defaults("name repli
   // Partner server descriptors
   //
   // Deprecated in favor of partners.
-  partnerServers @maturity("deprecated") []dict
+  partnerServers @maturity("deprecated") @replaced_by("azure.subscription.sqlService.server.failoverGroup.partners") []dict
   // Servers this failover group pairs with
   //
   // The secondary a primary fails over to, resolved to the server
@@ -8385,7 +8385,7 @@ private azure.subscription.sqlService.server.failoverGroup @defaults("name repli
   //
   // Deprecated in favor of readWriteListener, which carries the failover
   // policy and grace period as typed fields.
-  readWriteEndpoint @maturity("deprecated") dict
+  readWriteEndpoint @maturity("deprecated") @replaced_by("azure.subscription.sqlService.server.failoverGroup.readWriteListener") dict
   // Failover configuration of the read-write listener endpoint
   readWriteListener azure.subscription.sqlService.server.failoverGroup.readWriteEndpoint
   // Failover configuration of the read-only listener endpoint
@@ -8394,7 +8394,7 @@ private azure.subscription.sqlService.server.failoverGroup @defaults("name repli
   //
   // Deprecated in favor of readOnlyListener, which carries the failover
   // policy as a typed field.
-  readOnlyEndpoint @maturity("deprecated") dict
+  readOnlyEndpoint @maturity("deprecated") @replaced_by("azure.subscription.sqlService.server.failoverGroup.readOnlyListener") dict
   // Databases included in the failover group
   databases() []azure.subscription.sqlService.database
 }
@@ -8630,7 +8630,7 @@ private azure.subscription.postgreSqlService {
   // Server on 2025-03-28, so this list is empty on any current subscription
   // and an assertion made over it passes without checking anything. Will be
   // removed in the next major release.
-  servers() @maturity("deprecated") []azure.subscription.postgreSqlService.server
+  servers() @maturity("deprecated") @replaced_by("azure.subscription.postgreSqlService.flexibleServers") []azure.subscription.postgreSqlService.server
   // List of PostgreSQL flexible servers
   flexibleServers() []azure.subscription.postgreSqlService.flexibleServer
 }
@@ -8748,7 +8748,7 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
   //
   // Deprecated in favor of maintenanceSchedule, which carries the window
   // as typed fields.
-  maintenanceWindow @maturity("deprecated") dict
+  maintenanceWindow @maturity("deprecated") @replaced_by("azure.subscription.postgreSqlService.flexibleServer.maintenanceSchedule") dict
   // Weekly window in which Azure applies planned maintenance
   maintenanceSchedule azure.subscription.maintenanceWindow
   // PostgreSQL server configuration
@@ -8811,7 +8811,7 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
 // enforcement, minimum TLS version, infrastructure (double) encryption, public
 // network access, firewall rules, and backup configuration. Will be removed in
 // the next major release.
-private azure.subscription.postgreSqlService.server @defaults("id name location") @maturity("deprecated") {
+private azure.subscription.postgreSqlService.server @defaults("id name location") @maturity("deprecated") @replaced_by("azure.subscription.postgreSqlService.flexibleServer") {
   // PostgreSQL server ID
   id string
   // PostgreSQL server name
@@ -8948,7 +8948,7 @@ private azure.subscription.sqlService.virtualNetworkRule @defaults("id name") {
   // Virtual network rule properties
   //
   // Deprecated in favor of state and ignoreMissingVnetServiceEndpoint.
-  properties @maturity("deprecated") dict
+  properties @maturity("deprecated") @replaced_by("azure.subscription.sqlService.virtualNetworkRule.state") dict
   // Virtual network rule Subnet ID
   virtualNetworkSubnetId string
   // Subnet the rule admits; null when the subnet cannot be read
@@ -9086,7 +9086,7 @@ private azure.subscription.mySqlService {
   // on 2024-09-16, so this list is empty on any current subscription and an
   // assertion made over it passes without checking anything. Will be removed
   // in the next major release.
-  servers() @maturity("deprecated") []azure.subscription.mySqlService.server
+  servers() @maturity("deprecated") @replaced_by("azure.subscription.mySqlService.flexibleServers") []azure.subscription.mySqlService.server
   // List of Flexible MySQL servers
   flexibleServers() []azure.subscription.mySqlService.flexibleServer
 }
@@ -9099,7 +9099,7 @@ private azure.subscription.mySqlService {
 // field below is unreachable in practice. Reports SSL enforcement, minimum TLS
 // version, infrastructure (double) encryption, public network access, firewall
 // rules, and backup configuration. Will be removed in the next major release.
-private azure.subscription.mySqlService.server @defaults("id name location") @maturity("deprecated") {
+private azure.subscription.mySqlService.server @defaults("id name location") @maturity("deprecated") @replaced_by("azure.subscription.mySqlService.flexibleServer") {
   // MySQL server ID
   id string
   // MySQL server name
@@ -9236,7 +9236,7 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   //
   // Deprecated in favor of maintenanceSchedule, which carries the window
   // as typed fields.
-  maintenanceWindow @maturity("deprecated") dict
+  maintenanceWindow @maturity("deprecated") @replaced_by("azure.subscription.mySqlService.flexibleServer.maintenanceSchedule") dict
   // Weekly window in which Azure applies planned maintenance
   maintenanceSchedule azure.subscription.maintenanceWindow
   // Whether the MySQL flexible server is reachable from the public internet
@@ -9389,7 +9389,7 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   //
   // Deprecated in favor of masterKeyMetadata, which carries the four key
   // generation times as typed fields.
-  keysMetadata @maturity("deprecated") dict
+  keysMetadata @maturity("deprecated") @replaced_by("azure.subscription.cosmosDbService.account.masterKeyMetadata") dict
   // Generation times of the account's four master keys
   masterKeyMetadata azure.subscription.cosmosDbService.account.keysMetadata
   // Optional capabilities turned on for the account
@@ -9621,7 +9621,7 @@ private azure.subscription.cosmosDbService.postgresqlCluster @defaults("postgres
   //
   // Deprecated in favor of maintenanceSchedule, which carries the window
   // as typed fields.
-  maintenanceWindow @maturity("deprecated") dict
+  maintenanceWindow @maturity("deprecated") @replaced_by("azure.subscription.cosmosDbService.postgresqlCluster.maintenanceSchedule") dict
   // Weekly window in which Azure applies planned maintenance
   maintenanceSchedule azure.subscription.maintenanceWindow
   // Server names in the cluster
@@ -9650,7 +9650,7 @@ private azure.subscription.cosmosDbService.account.sqlRoleDefinition @defaults("
   // Permission set granted by this role
   //
   // Deprecated in favor of dataPermissions.
-  permissions @maturity("deprecated") []dict
+  permissions @maturity("deprecated") @replaced_by("azure.subscription.cosmosDbService.account.sqlRoleDefinition.dataPermissions") []dict
   // Permission sets granted by this role
   //
   // Each entry lists the data actions the role allows and the ones it
@@ -9717,7 +9717,7 @@ private azure.subscription.cosmosDbService.account.cassandraRoleDefinition @defa
   // Permission set granted by this role
   //
   // Deprecated in favor of dataPermissions.
-  permissions @maturity("deprecated") []dict
+  permissions @maturity("deprecated") @replaced_by("azure.subscription.cosmosDbService.account.cassandraRoleDefinition.dataPermissions") []dict
   // Permission sets granted by this role
   //
   // Each entry lists the data actions the role allows and the ones it
@@ -9765,7 +9765,7 @@ private azure.subscription.cosmosDbService.account.gremlinRoleDefinition @defaul
   // Permission set granted by this role
   //
   // Deprecated in favor of dataPermissions.
-  permissions @maturity("deprecated") []dict
+  permissions @maturity("deprecated") @replaced_by("azure.subscription.cosmosDbService.account.gremlinRoleDefinition.dataPermissions") []dict
   // Permission sets granted by this role
   //
   // Each entry lists the data actions the role allows and the ones it
@@ -9813,7 +9813,7 @@ private azure.subscription.cosmosDbService.account.tableRoleDefinition @defaults
   // Permission set granted by this role
   //
   // Deprecated in favor of dataPermissions.
-  permissions @maturity("deprecated") []dict
+  permissions @maturity("deprecated") @replaced_by("azure.subscription.cosmosDbService.account.tableRoleDefinition.dataPermissions") []dict
   // Permission sets granted by this role
   //
   // Each entry lists the data actions the role allows and the ones it
@@ -9861,7 +9861,7 @@ private azure.subscription.cosmosDbService.account.mongoMIRoleDefinition @defaul
   // Permission set granted by this role
   //
   // Deprecated in favor of dataPermissions.
-  permissions @maturity("deprecated") []dict
+  permissions @maturity("deprecated") @replaced_by("azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.dataPermissions") []dict
   // Permission sets granted by this role
   //
   // Each entry lists the data actions the role allows and the ones it
@@ -10033,7 +10033,7 @@ azure.subscription.keyVaultService.managedHsm @defaults("name location") {
   // Inbound network rule set
   //
   // Deprecated in favor of networkRuleSet.
-  networkAcls @maturity("deprecated") dict
+  networkAcls @maturity("deprecated") @replaced_by("azure.subscription.keyVaultService.managedHsm.networkRuleSet") dict
   // Inbound network rule set
   //
   // The IP, virtual-network and service-tag rules that decide which
@@ -10268,7 +10268,7 @@ private azure.subscription.keyVaultService.key.rotationPolicyObject @defaults("e
   // Lifetime actions for the rotation policy
   //
   // Deprecated in favor of actions.
-  lifetimeActions @maturity("deprecated") []dict
+  lifetimeActions @maturity("deprecated") @replaced_by("azure.subscription.keyVaultService.key.rotationPolicyObject.actions") []dict
   // Lifetime actions for the rotation policy
   //
   // One entry per scheduled action. A policy carrying only a Notify
@@ -10278,7 +10278,7 @@ private azure.subscription.keyVaultService.key.rotationPolicyObject @defaults("e
   //
   // Deprecated in favor of policyAttributes, which carries the key version
   // lifetime and the policy provenance as typed fields.
-  attributes @maturity("deprecated") dict
+  attributes @maturity("deprecated") @replaced_by("azure.subscription.keyVaultService.key.rotationPolicyObject.policyAttributes") dict
   // Lifetime and provenance the policy records
   policyAttributes azure.subscription.keyVaultService.key.rotationPolicyObject.attributes
   // Whether automatic key rotation is enabled (true if rotationPolicy exists with Rotate action)
@@ -10433,7 +10433,7 @@ private azure.subscription.monitorService {
   // 2023-09-01, so this list is empty on any current subscription and an
   // assertion made over it passes without checking anything. Will be removed
   // in the next major release.
-  logProfiles() @maturity("deprecated") []azure.subscription.monitorService.logprofile
+  logProfiles() @maturity("deprecated") @replaced_by("azure.subscription.monitorService.diagnosticSettings") []azure.subscription.monitorService.logprofile
   // List of diagnostic settings for the subscription
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
   // Application insights for the subscription
@@ -10744,7 +10744,7 @@ private azure.subscription.monitorService.activityLog.entry @defaults("operation
 // storage account, an event hub, or Log Analytics. Azure retired them on
 // 2023-09-01, so no current subscription returns one and every field below is
 // unreachable in practice. Will be removed in the next major release.
-private azure.subscription.monitorService.logprofile @defaults("id name location") @maturity("deprecated") {
+private azure.subscription.monitorService.logprofile @defaults("id name location") @maturity("deprecated") @replaced_by("azure.subscription.monitorService.diagnosticsetting") {
   // Log profile ID
   id string
   // Log profile name
@@ -10796,11 +10796,11 @@ private azure.subscription.monitorService.diagnosticsetting @defaults("id name")
   // Per-category log settings
   //
   // Deprecated in favor of logSettings.
-  logs @maturity("deprecated") []dict
+  logs @maturity("deprecated") @replaced_by("azure.subscription.monitorService.diagnosticsetting.logSettings") []dict
   // Per-category metric settings
   //
   // Deprecated in favor of metricSettings.
-  metrics @maturity("deprecated") []dict
+  metrics @maturity("deprecated") @replaced_by("azure.subscription.monitorService.diagnosticsetting.metricSettings") []dict
   // Per-category log settings
   //
   // One entry per log stream the setting can forward, whether or not it
@@ -11076,7 +11076,7 @@ private azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMa
   // Per-port just-in-time rules
   //
   // Deprecated in favor of portRules.
-  ports @maturity("deprecated") []dict
+  ports @maturity("deprecated") @replaced_by("azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRules") []dict
   // Per-port just-in-time rules
   //
   // One rule per port the policy can open on demand, with the sources it
@@ -11878,7 +11878,7 @@ private azure.subscription.authorizationService {
   // Deprecated in favor of roleAssignments. Azure retired classic
   // administrators on 2024-08-31 and converted the remaining grants to RBAC
   // Owner assignments, so this list is always empty.
-  classicAdministrators() @maturity("deprecated") []azure.subscription.authorizationService.classicAdministrator
+  classicAdministrators() @maturity("deprecated") @replaced_by("azure.subscription.authorizationService.roleAssignments") []azure.subscription.authorizationService.classicAdministrator
   // PIM role eligibility schedules: who is eligible to activate which privileged role
   roleEligibilitySchedules() []azure.subscription.authorizationService.roleEligibilitySchedule
   // PIM role assignment schedules: currently active (including time-bound) privileged role assignments
@@ -12093,7 +12093,7 @@ private azure.subscription.authorizationService.denyAssignment @defaults("name d
 // classic administrators on 2024-08-31 and converted the remaining grants to
 // RBAC Owner assignments, so no subscription returns one. Select by the
 // administrator's resource ID. Will be removed in the next major release.
-private azure.subscription.authorizationService.classicAdministrator @defaults("emailAddress role") @maturity("deprecated") {
+private azure.subscription.authorizationService.classicAdministrator @defaults("emailAddress role") @maturity("deprecated") @replaced_by("azure.subscription.authorizationService.roleAssignment") {
   // Classic administrator ID
   id string
   // Resource name (typically the email)
@@ -12631,7 +12631,7 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.aksService.cluster.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Principal ID of the cluster's system-assigned control-plane managed identity; empty when a user-assigned identity is used
@@ -13082,7 +13082,7 @@ private azure.subscription.policy.assignment @defaults("displayName enforcementM
   // value to the definition itself. Despite the name, this field holds
   // the assigned definition's resource ID rather than the assignment's
   // own ID, which is assignmentId.
-  id @maturity("deprecated") string
+  id @maturity("deprecated") @replaced_by("azure.subscription.policy.assignment.policyDefinition") string
   // Policy assignment resource ID
   assignmentId string
   // Display name of the assignment
@@ -13090,7 +13090,7 @@ private azure.subscription.policy.assignment @defaults("displayName enforcementM
   // Deprecated in favor of displayName, which carries the same value
   // under a name that matches the Azure property. This field holds the
   // assignment's display name, not its resource name.
-  name @maturity("deprecated") string
+  name @maturity("deprecated") @replaced_by("azure.subscription.policy.assignment.displayName") string
   // Display name given to the assignment
   displayName string
   // Policy scope
@@ -13347,7 +13347,7 @@ private azure.subscription.iotService.iotHub @defaults("id name location") {
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.iotService.iotHub.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Provisioning state
@@ -13481,7 +13481,7 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.cacheService.redisInstance.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Tags of redis cache
@@ -13490,7 +13490,7 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   //
   // Deprecated in favor of configuration, which carries the Redis server
   // settings as typed fields.
-  redisConfiguration @maturity("deprecated") dict
+  redisConfiguration @maturity("deprecated") @replaced_by("azure.subscription.cacheService.redisInstance.configuration") dict
   // Redis server configuration the cache runs with
   configuration azure.subscription.cacheService.redisInstance.redisConfiguration
   // Number of shards (Premium Cluster Cache only)
@@ -13507,7 +13507,7 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.cacheService.redisInstance.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Principal ID of the cache's system-assigned managed identity; empty when no system-assigned identity is enabled
@@ -13611,7 +13611,7 @@ azure.subscription.dataFactoryService.factory @defaults("name location") {
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.dataFactoryService.factory.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Provisioning state
@@ -13810,7 +13810,7 @@ azure.subscription.synapseService.workspace @defaults("name location") {
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.synapseService.workspace.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Managed virtual network setting, set to "default" when enabled and empty when disabled
@@ -14246,7 +14246,7 @@ private azure.subscription.containerRegistryService.registry.credentialSet @defa
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.containerRegistryService.registry.credentialSet.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Upstream authentication credentials
@@ -14361,7 +14361,7 @@ azure.subscription.monitorService.workspace @defaults("id name location skuName"
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.monitorService.workspace.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // ARM resource ID of the default Data Collection Rule for this workspace
@@ -14662,7 +14662,7 @@ azure.subscription.recoveryServicesService.vault @defaults("id name location sku
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.recoveryServicesService.vault.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the vault
@@ -15054,7 +15054,7 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.serviceBusService.namespace.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Namespace status
@@ -15121,7 +15121,7 @@ private azure.subscription.serviceBusService.namespace.networkRules @defaults("d
   //
   // Deprecated in favor of ipAllowRules, which carries the address range and
   // action of each rule as typed fields.
-  ipRules @maturity("deprecated") []dict
+  ipRules @maturity("deprecated") @replaced_by("azure.subscription.serviceBusService.namespace.networkRules.ipAllowRules") []dict
   // IP rules in the namespace firewall
   ipAllowRules []azure.subscription.serviceBusService.namespace.networkRules.ipRule
   // Virtual network rules; each references a subnet
@@ -15303,7 +15303,7 @@ azure.subscription.eventHubService.namespace @defaults("id name location") {
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.eventHubService.namespace.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Namespace status
@@ -15382,7 +15382,7 @@ private azure.subscription.eventHubService.namespace.networkRules @defaults("def
   //
   // Deprecated in favor of ipAllowRules, which carries the address range and
   // action of each rule as typed fields.
-  ipRules @maturity("deprecated") []dict
+  ipRules @maturity("deprecated") @replaced_by("azure.subscription.eventHubService.namespace.networkRules.ipAllowRules") []dict
   // IP rules in the namespace firewall
   ipAllowRules []azure.subscription.eventHubService.namespace.networkRules.ipRule
   // Virtual network rules; each references a subnet
@@ -15515,7 +15515,7 @@ azure.subscription.eventGridService.topic @defaults("name location publicNetwork
   //
   // Deprecated in favor of inboundIpAllowRules, which carries the address
   // range and action of each rule as typed fields.
-  inboundIpRules @maturity("deprecated") []dict
+  inboundIpRules @maturity("deprecated") @replaced_by("azure.subscription.eventGridService.topic.inboundIpAllowRules") []dict
   // Inbound IP rules in the resource firewall
   inboundIpAllowRules []azure.subscription.eventGridService.inboundIpRule
   // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
@@ -15605,7 +15605,7 @@ azure.subscription.eventGridService.domain @defaults("name location publicNetwor
   //
   // Deprecated in favor of inboundIpAllowRules, which carries the address
   // range and action of each rule as typed fields.
-  inboundIpRules @maturity("deprecated") []dict
+  inboundIpRules @maturity("deprecated") @replaced_by("azure.subscription.eventGridService.domain.inboundIpAllowRules") []dict
   // Inbound IP rules in the resource firewall
   inboundIpAllowRules []azure.subscription.eventGridService.inboundIpRule
   // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
@@ -15714,7 +15714,7 @@ azure.subscription.eventGridService.namespace @defaults("name location publicNet
   //
   // Deprecated in favor of inboundIpAllowRules, which carries the address
   // range and action of each rule as typed fields.
-  inboundIpRules @maturity("deprecated") []dict
+  inboundIpRules @maturity("deprecated") @replaced_by("azure.subscription.eventGridService.namespace.inboundIpAllowRules") []dict
   // Inbound IP rules in the resource firewall
   inboundIpAllowRules []azure.subscription.eventGridService.inboundIpRule
   // Whether the MQTT broker is enabled ("Enabled" or "Disabled")
@@ -16254,7 +16254,7 @@ azure.subscription.frontDoorService.profile @defaults("id name location") {
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.frontDoorService.profile.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Profile kind (frontdoor, cdn)
@@ -16289,7 +16289,7 @@ private azure.subscription.frontDoorService.profile.securityPolicy @defaults("id
   //
   // Deprecated in favor of wafPolicy, which resolves the same policy and
   // exposes its mode, managed rule sets, and custom rules.
-  wafPolicyId @maturity("deprecated") string
+  wafPolicyId @maturity("deprecated") @replaced_by("azure.subscription.frontDoorService.profile.securityPolicy.wafPolicy") string
   // Firewall policy this security policy binds to the profile
   //
   // Null when the security policy associates no firewall policy, which
@@ -16697,7 +16697,7 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   // IP security restrictions on ingress
   //
   // Deprecated in favor of ingressIpRestrictions.
-  ipSecurityRestrictions @maturity("deprecated") []dict
+  ipSecurityRestrictions @maturity("deprecated") @replaced_by("azure.subscription.containerAppService.containerApp.ingressIpRestrictions") []dict
   // IP security restrictions on ingress
   //
   // A rule set is all-Allow or all-Deny. When Allow rules are present
@@ -16884,7 +16884,7 @@ azure.subscription.containerAppService.job @defaults("name location triggerType 
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.containerAppService.job.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Container definitions (image, env, resources, probes); flattened
@@ -16954,7 +16954,7 @@ azure.subscription.containerInstanceService.containerGroup @defaults("name locat
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.containerInstanceService.containerGroup.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // IP address type ("Public", "Private", or null)
@@ -17108,7 +17108,7 @@ azure.subscription.logicService.workflow @defaults("name location state provisio
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.logicService.workflow.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // ARM id of the linked integration account, if any
@@ -17525,14 +17525,14 @@ private azure.subscription.purviewService.account @defaults("name location publi
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.purviewService.account.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.purviewService.account.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Friendly display name for the account
@@ -17605,14 +17605,14 @@ azure.subscription.searchService.service @defaults("id name location publicNetwo
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.searchService.service.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Managed identity configuration
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.searchService.service.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Whether the service is reachable from the public internet ("enabled" or "disabled")
@@ -17837,14 +17837,14 @@ azure.subscription.machineLearningService.workspace @defaults("id name location 
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.machineLearningService.workspace.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.machineLearningService.workspace.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Immutable workspace identifier assigned by Azure
@@ -18024,7 +18024,7 @@ azure.subscription.machineLearningService.workspace.onlineEndpoint @defaults("na
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.machineLearningService.workspace.onlineEndpoint.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Description of the endpoint
@@ -18115,7 +18115,7 @@ azure.subscription.machineLearningService.workspace.serverlessEndpoint @defaults
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.machineLearningService.workspace.serverlessEndpoint.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Authentication mode for the endpoint (e.g., "Key")
@@ -18158,7 +18158,7 @@ azure.subscription.machineLearningService.workspace.compute @defaults("name comp
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.machineLearningService.workspace.compute.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Kind of compute
@@ -18348,7 +18348,7 @@ azure.subscription.machineLearningService.workspace.batchEndpoint @defaults("nam
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.machineLearningService.workspace.batchEndpoint.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Endpoint-specific settings
@@ -18418,7 +18418,7 @@ azure.subscription.machineLearningService.workspace.batchEndpoint.deployment @de
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Deployment-specific settings
@@ -18464,14 +18464,14 @@ azure.subscription.appConfigurationService.configurationStore @defaults("id name
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.appConfigurationService.configurationStore.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Managed identity configuration
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.appConfigurationService.configurationStore.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Whether the store is reachable from the public internet ("Enabled" or "Disabled")
@@ -18560,14 +18560,14 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.cognitiveServicesService.account.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.cognitiveServicesService.account.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Whether the account is reachable from the public internet ("Enabled" or "Disabled")
@@ -18816,7 +18816,7 @@ azure.subscription.cognitiveServicesService.account.project @defaults("name disp
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.cognitiveServicesService.account.project.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Human-facing display name of the project
@@ -19495,14 +19495,14 @@ azure.subscription.signalRService.signalR @defaults("id name location publicNetw
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.signalRService.signalR.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Identity configuration
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.signalRService.signalR.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Public hostname clients connect to
@@ -19568,14 +19568,14 @@ azure.subscription.webPubSubService.webPubSub @defaults("id name location public
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.webPubSubService.webPubSub.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.webPubSubService.webPubSub.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Public hostname clients connect to
@@ -19640,14 +19640,14 @@ azure.subscription.kustoService.cluster @defaults("id name location publicNetwor
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.kustoService.cluster.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.kustoService.cluster.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Cluster query endpoint URI
@@ -19955,14 +19955,14 @@ azure.subscription.automationService.account @defaults("id name location publicN
   //
   // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
-  sku @maturity("deprecated") dict
+  sku @maturity("deprecated") @replaced_by("azure.subscription.automationService.account.skuData") dict
   // Billable SKU the resource is provisioned at
   skuData azure.subscription.resourceSku
   // Managed identity configuration
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.automationService.account.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Account lifecycle state ("Ok", "Unavailable", "Suspended")
@@ -20084,7 +20084,7 @@ azure.subscription.desktopVirtualizationService.hostPool @defaults("id name loca
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.desktopVirtualizationService.hostPool.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // Host pool type ("Personal", "Pooled", or "BYODesktop")
@@ -20198,7 +20198,7 @@ azure.subscription.dataProtectionService.backupVault @defaults("id name location
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.dataProtectionService.backupVault.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the vault
@@ -20316,7 +20316,7 @@ azure.subscription.netAppService.account @defaults("id name location provisionin
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.netAppService.account.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the account
@@ -20588,7 +20588,7 @@ azure.subscription.dataBoxService.job @defaults("id name status transferType") {
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.dataBoxService.job.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the job
@@ -20788,7 +20788,7 @@ azure.subscription.elasticSanService.elasticSan.volumeGroup @defaults("id name e
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.elasticSanService.elasticSan.volumeGroup.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the volume group
@@ -21042,7 +21042,7 @@ azure.subscription.storageCacheService.amlFilesystem @defaults("id name location
   //
   // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
-  identity @maturity("deprecated") dict
+  identity @maturity("deprecated") @replaced_by("azure.subscription.storageCacheService.amlFilesystem.resourceIdentity") dict
   // Managed identity attached to the resource
   resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the file system

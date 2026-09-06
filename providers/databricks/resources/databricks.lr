@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/databricks"
 option go_package = "go.mondoo.com/mql/providers/databricks/resources"
+option root = "databricks"
 
 // Databricks
 //
@@ -18,7 +19,7 @@ option go_package = "go.mondoo.com/mql/providers/databricks/resources"
 // externalLocations, systemSchemas, deltaSharingRecipients,
 // deltaSharingShares, globalInitScripts, instanceProfiles, servingEndpoints,
 // and registeredModels fields.
-databricks {
+databricks @root {
   // Workspaces registered in the account
   workspaces() []databricks.workspace
   // Account users provisioned through SCIM

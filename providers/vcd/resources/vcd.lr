@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/vcd"
 option go_package = "go.mondoo.com/mql/providers/vcd/resources"
+option root = "vcd"
 
 // VMware Cloud Director
 //
@@ -10,7 +11,7 @@ option go_package = "go.mondoo.com/mql/providers/vcd/resources"
 // organizations, provider virtual data centers, network pools, external networks,
 // and the connected vCenter server instances. Navigate into `vcd.organization`
 // for tenant-level resources including VMs, VDCs, roles, and LDAP configuration.
-vcd {
+vcd @root {
   // VMware Cloud Director organization resources
   organizations() []vcd.organization
   // VMware Cloud Director provider VDC

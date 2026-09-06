@@ -6,6 +6,7 @@ import network
 
 option provider = "go.mondoo.com/mql/providers/k8s"
 option go_package = "go.mondoo.com/mql/providers/k8s/resources"
+option root = "k8s"
 
 // Kubernetes cluster
 //
@@ -22,7 +23,7 @@ option go_package = "go.mondoo.com/mql/providers/k8s/resources"
 // webhook and CEL-based validating policies. The serverVersion field
 // reports the control-plane version and apiResources lists the resource
 // types the API server advertises through discovery.
-k8s {
+k8s @root {
   // Control-plane version
   //
   // Version reported by the API server, as a dict including the keys
@@ -182,7 +183,7 @@ private k8s.apiresource @defaults("name kind") {
 // podSecurityEnforce, podSecurityAudit, and podSecurityWarn fields (with their
 // version companions) report the Pod Security Standards level applied by Pod
 // Security admission.
-private k8s.namespace @defaults("name created") {
+private k8s.namespace @defaults("name created") @root {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -302,7 +303,7 @@ private k8s.namespace @defaults("name created") {
 // containerRuntimeVersion, operatingSystem, and architecture fields report the
 // node's software stack, and unschedulable reports whether the node is
 // cordoned.
-private k8s.node @defaults("name labels['kubernetes.io/arch'] labels['kubernetes.io/os'] ") @context("k8s.context") {
+private k8s.node @defaults("name labels['kubernetes.io/arch'] labels['kubernetes.io/os'] ") @context("k8s.context") @root {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -454,7 +455,7 @@ private k8s.nodeAddress @defaults("type address") {
 // and runtime status by phase, qosClass, podIP, and conditions. The owning
 // controller is reached through replicaSet, statefulSet, daemonSet, job, and
 // deployment.
-private k8s.pod @defaults("namespace name created") @context("k8s.context") {
+private k8s.pod @defaults("namespace name created") @context("k8s.context") @root {
   // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
   runsPrivileged() bool
   // Whether privilege escalation is possible for any container
@@ -741,7 +742,7 @@ private k8s.pod @defaults("namespace name created") @context("k8s.context") {
 // the current rollout state is reported by replicas, readyReplicas,
 // availableReplicas, updatedReplicas, unavailableReplicas, and conditions. The
 // pods field returns the pods currently backing the deployment.
-private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas created") @context("k8s.context") {
+private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas created") @context("k8s.context") @root {
   // Whether an API token is automatically mounted for the ServiceAccount
   automountServiceAccountToken() bool
   // Whether the pod shares the host network namespace
@@ -931,7 +932,7 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
 // desiredNumberScheduled, currentNumberScheduled, numberReady, numberAvailable,
 // numberMisscheduled, and updatedNumberScheduled. The pods field returns the
 // daemon pods currently running.
-private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberReady created") @context("k8s.context") {
+private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberReady created") @context("k8s.context") @root {
   // Whether an API token is automatically mounted for the ServiceAccount
   automountServiceAccountToken() bool
   // Whether the pod shares the host network namespace
@@ -1111,7 +1112,7 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
 // scale-down. Rollout state is reported by replicas, readyReplicas,
 // currentReplicas, updatedReplicas, currentRevision, updateRevision, and
 // conditions, and the pods field returns the backing pods.
-private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas created") @context("k8s.context") {
+private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas created") @context("k8s.context") @root {
   // Whether an API token is automatically mounted for the ServiceAccount
   automountServiceAccountToken() bool
   // Whether the pod shares the host network namespace
@@ -1308,7 +1309,7 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
 // desiredReplicas and selector, and the observed state is reported by replicas,
 // readyReplicas, availableReplicas, fullyLabeledReplicas, and conditions. The
 // pods field returns the pods the ReplicaSet owns.
-private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas created") @context("k8s.context") {
+private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas created") @context("k8s.context") @root {
   // Whether an API token is automatically mounted for the ServiceAccount
   automountServiceAccountToken() bool
   // Whether the pod shares the host network namespace
@@ -1487,7 +1488,7 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
 // backoffLimit, activeDeadlineSeconds, and suspend; and progress is reported by
 // active, succeeded, failed, ready, startTime, completionTime, and conditions.
 // The pods field returns the pods the job has created.
-private k8s.job @defaults("namespace name succeeded failed created") @context("k8s.context") {
+private k8s.job @defaults("namespace name succeeded failed created") @context("k8s.context") @root {
   // Whether an API token is automatically mounted for the ServiceAccount
   automountServiceAccountToken() bool
   // Whether the pod shares the host network namespace
@@ -1682,7 +1683,7 @@ private k8s.job @defaults("namespace name succeeded failed created") @context("k
 // finished jobs are retained. The activeJobs field returns the jobs currently
 // running, jobs returns every job the CronJob still owns, and the shared pod
 // template is available through podSpec, containers, and initContainers.
-private k8s.cronjob @defaults("namespace name schedule suspend created") @context("k8s.context") {
+private k8s.cronjob @defaults("namespace name schedule suspend created") @context("k8s.context") @root {
   // Whether an API token is automatically mounted for the ServiceAccount
   automountServiceAccountToken() bool
   // Whether the pod shares the host network namespace
@@ -2479,7 +2480,7 @@ private k8s.configmap @defaults("namespace name created") @context("k8s.context"
 // governed by externalTrafficPolicy, internalTrafficPolicy, and
 // sessionAffinity, and endpointSlices returns the slices listing the current
 // backing endpoints.
-private k8s.service @defaults("namespace name created") @context("k8s.context") {
+private k8s.service @defaults("namespace name created") @context("k8s.context") @root {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -2660,7 +2661,7 @@ private k8s.ingresstls {
 // terminated by the ingress, and ingressClass identifies the controller that
 // implements the rules. The loadBalancerIngress field reports the addresses the
 // controller has assigned.
-private k8s.ingress @defaults("namespace name created") @context("k8s.context") {
+private k8s.ingress @defaults("namespace name created") @context("k8s.context") @root {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID

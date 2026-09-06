@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/auth0"
 option go_package = "go.mondoo.com/mql/providers/auth0/resources"
+option root = "auth0"
 
 // Auth0 tenant
 //
@@ -11,7 +12,7 @@ option go_package = "go.mondoo.com/mql/providers/auth0/resources"
 // and log streams. Query auth0.tenant for tenant-wide session and flag
 // settings, and auth0.attackProtection for the brute-force, suspicious-IP,
 // and breached-password defenses that apply across the whole tenant.
-auth0 @maturity("experimental") {
+auth0 @maturity("experimental") @root {
   // Applications (OAuth/OIDC clients) registered in the tenant
   clients() []auth0.client
   // Identity connections (database, social, and enterprise) available to applications

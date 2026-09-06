@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/dropbox"
 option go_package = "go.mondoo.com/mql/providers/dropbox/resources"
+option root = "dropbox"
 
 // Dropbox Business team
 //
@@ -13,7 +14,7 @@ option go_package = "go.mondoo.com/mql/providers/dropbox/resources"
 // third-party apps members have authorized. Use this resource to audit
 // a team's overall security posture: external sharing exposure and the
 // devices and apps with standing access to team data.
-dropbox @maturity("experimental") {
+dropbox @maturity("experimental") @root {
   // Team members
   members() []dropbox.member
   // Team-managed groups

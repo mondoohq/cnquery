@@ -545,7 +545,7 @@ aws.vpc @defaults("id isDefault cidrBlock region") {
   // `exclusionsAllowed`, `managedBy`, `reason`, and `lastUpdateTimestamp`.
   // Empty when VPC Block Public Access has never been configured in the
   // region.
-  blockPublicAccessOptions() @maturity("deprecated") dict
+  blockPublicAccessOptions() @maturity("deprecated") @replaced_by("aws.vpc.blockPublicAccess") dict
   // Region-wide VPC Block Public Access options that apply to the VPC
   //
   // Null when VPC Block Public Access has never been configured in the
@@ -812,7 +812,7 @@ private aws.vpc.endpoint @defaults("id type region") {
   // Subnet IDs for the (interface) endpoint
   //
   // Deprecated in favor of `subnetRefs`.
-  subnets @maturity("deprecated") []string
+  subnets @maturity("deprecated") @replaced_by("aws.vpc.endpoint.subnetRefs") []string
   // Subnets the (interface) endpoint places network interfaces in
   subnetRefs() []aws.vpc.subnet
   // Whether to associate a private hosted zone with the specified VPC
@@ -1940,7 +1940,7 @@ private aws.efs.filesystem @defaults("name id region") {
   // resource. Dict with a `BackupPolicy` object whose `Status` reports the
   // automatic backup state. Null when the file system has no backup policy
   // configured.
-  backupPolicy() @maturity("deprecated") dict
+  backupPolicy() @maturity("deprecated") @replaced_by("aws.efs.filesystem.automaticBackup") dict
   // Automatic backup policy for the file system
   //
   // Null when the file system has no backup policy configured, which reads
@@ -2001,7 +2001,7 @@ private aws.efs.filesystem @defaults("name id region") {
   //
   // Deprecated in favor of protection, which carries the same value as a
   // resource. Dict with a `replicationOverwriteProtection` key.
-  fileSystemProtection() @maturity("deprecated") dict
+  fileSystemProtection() @maturity("deprecated") @replaced_by("aws.efs.filesystem.protection") dict
   // File system protection configuration
   //
   // Null when the service reports no protection settings for the file system.
@@ -2154,13 +2154,13 @@ private aws.efs.accessPoint @defaults("accessPointId name") {
   //
   // Deprecated in favor of posixIdentity, which carries the same three values
   // as a resource. Dict with `uid`, `gid`, and `secondaryGids`.
-  posixUser @maturity("deprecated") dict
+  posixUser @maturity("deprecated") @replaced_by("aws.efs.accessPoint.posixIdentity") dict
   // Root directory configuration
   //
   // Deprecated in favor of root, which carries the same values as
   // a resource. Dict with `path` and `creationInfo`, an object with
   // `ownerUid`, `ownerGid`, and `permissions`.
-  rootDirectory @maturity("deprecated") dict
+  rootDirectory @maturity("deprecated") @replaced_by("aws.efs.accessPoint.root") dict
   // POSIX identity every request through the access point runs as
   //
   // Null when the access point enforces no user identity, in which case the
@@ -2628,7 +2628,7 @@ aws.iam {
   // entries as resources with proper time values for the expiry and upload
   // dates rather than JSON strings. Each entry has the shape `{Arn, Path,
   // ServerCertificateId, ServerCertificateName, Expiration, UploadDate}`.
-  serverCertificates() @maturity("deprecated") []dict
+  serverCertificates() @maturity("deprecated") @replaced_by("aws.iam.tlsCertificates") []dict
   // Server certificates stored in IAM
   //
   // IAM is the legacy store for TLS certificates, predating ACM. A
@@ -2785,7 +2785,7 @@ private aws.iam.user @defaults("arn name createdAt") {
   // Deprecated in favor of inlinePolicyDetails, which resolves each inline
   // policy to an aws.iam.inlinePolicy carrying the policy document and its
   // parsed statements.
-  policies() @maturity("deprecated") []string
+  policies() @maturity("deprecated") @replaced_by("aws.iam.user.inlinePolicyDetails") []string
   // Inline policies embedded in the user, including their documents
   inlinePolicyDetails() []aws.iam.inlinePolicy
   // List of managed policies attached to the user
@@ -2818,7 +2818,7 @@ private aws.iam.user @defaults("arn name createdAt") {
   // as resources with a proper time value for the enablement date rather than
   // a JSON string. Each entry has the shape `{SerialNumber, EnableDate,
   // UserName}`. For a virtual MFA device the SerialNumber is the device ARN.
-  mfaDevices() @maturity("deprecated") []dict
+  mfaDevices() @maturity("deprecated") @replaced_by("aws.iam.user.assignedMfaDevices") []dict
   // MFA devices (virtual and hardware) assigned to the user
   //
   // Empty when the user has no second factor, which is the reading a
@@ -3179,7 +3179,7 @@ private aws.iam.role @defaults("arn name") {
   // Deprecated in favor of inlinePolicyDetails, which resolves each inline
   // policy to an aws.iam.inlinePolicy carrying the policy document and its
   // parsed statements.
-  inlinePolicies() @maturity("deprecated") []string
+  inlinePolicies() @maturity("deprecated") @replaced_by("aws.iam.role.inlinePolicyDetails") []string
   // Inline policies embedded in the role, including their documents
   inlinePolicyDetails() []aws.iam.inlinePolicy
   // IAM Access Analyzer findings reporting external or public access to this resource
@@ -3216,7 +3216,7 @@ private aws.iam.group @defaults("arn name") {
   // Deprecated in favor of inlinePolicyDetails, which resolves each inline
   // policy to an aws.iam.inlinePolicy carrying the policy document and its
   // parsed statements.
-  inlinePolicies() @maturity("deprecated") []string
+  inlinePolicies() @maturity("deprecated") @replaced_by("aws.iam.group.inlinePolicyDetails") []string
   // Inline policies embedded in the group, including their documents
   inlinePolicyDetails() []aws.iam.inlinePolicy
   // List of managed policies attached to the group
@@ -7264,7 +7264,7 @@ private aws.elb.listener @defaults("arn port protocol") {
   // `TrustStoreArn`, `IgnoreClientCertificateExpiry`,
   // `AdvertiseTrustStoreCaNames`, and `TrustStoreAssociationStatus`. Empty for
   // listeners without mTLS.
-  mutualAuthentication @maturity("deprecated") dict
+  mutualAuthentication @maturity("deprecated") @replaced_by("aws.elb.listener.mutualTls") dict
   // Mutual TLS authentication settings for the listener
   //
   // Null for listeners the load balancer reports no mutual TLS settings for.
@@ -8351,7 +8351,7 @@ private aws.macie.bucket @defaults("name region sensitivityScore sharedAccess") 
   // Deprecated in favor of defaultEncryption, which carries the same two
   // settings with the key resolved to a resource. Keys `Type` and
   // `KmsMasterKeyId`.
-  serverSideEncryption @maturity("deprecated") dict
+  serverSideEncryption @maturity("deprecated") @replaced_by("aws.macie.bucket.defaultEncryption") dict
   // Default server-side encryption settings
   //
   // Encryption Amazon S3 applies to new objects written to the bucket, as
@@ -9365,7 +9365,7 @@ private aws.ecs.cluster @defaults("name region status runningTasksCount pendingT
   // KmsKeyId, Logging, LogConfiguration) and ManagedStorageConfiguration
   // (KmsKeyId and FargateEphemeralStorageKmsKeyId for encrypting managed and
   // Fargate ephemeral storage).
-  configuration @maturity("deprecated") dict
+  configuration @maturity("deprecated") @replaced_by("aws.ecs.cluster.executeCommandConfiguration") dict
   // ECS Exec session logging and encryption settings for the cluster
   //
   // Null when the cluster leaves ECS Exec at its defaults, in which case
@@ -12707,7 +12707,7 @@ aws.s3control @defaults("accountBlockPublicAccess") {
   // four settings as a resource. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
   // `IgnorePublicAcls`, and `RestrictPublicBuckets`, each a boolean. Null when
   // the account has no Block Public Access configuration.
-  accountPublicAccessBlock() @maturity("deprecated") dict
+  accountPublicAccessBlock() @maturity("deprecated") @replaced_by("aws.s3control.accountBlockPublicAccess") dict
   // Account-wide Block Public Access configuration
   //
   // Applies on top of what each bucket and access point configures, so a
@@ -12844,7 +12844,7 @@ private aws.s3.bucket @defaults("name location public") {
   // Deprecated in favor of blockPublicAccess, which carries the same four
   // settings as a resource. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
   // `IgnorePublicAcls`, and `RestrictPublicBuckets`, each a boolean.
-  publicAccessBlock() @maturity("deprecated") dict
+  publicAccessBlock() @maturity("deprecated") @replaced_by("aws.s3.bucket.blockPublicAccess") dict
   // Block Public Access configuration of the bucket
   //
   // Null when the bucket has no Block Public Access configuration at all,
@@ -12987,7 +12987,7 @@ private aws.s3.bucket.accessPoint @defaults("name networkOrigin") {
   // Deprecated in favor of blockPublicAccess, which carries the same four
   // settings as a resource. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
   // `IgnorePublicAcls`, and `RestrictPublicBuckets`, each a boolean.
-  publicAccessBlock() @maturity("deprecated") dict
+  publicAccessBlock() @maturity("deprecated") @replaced_by("aws.s3.bucket.accessPoint.blockPublicAccess") dict
   // Block Public Access configuration of the access point
   //
   // Separate from the configuration on the bucket the access point fronts, so
@@ -13465,7 +13465,7 @@ private aws.drs.recoveryInstance @defaults("recoveryInstanceID arn ec2InstanceSt
   // DataReplicationInitiation, DataReplicationState, EtaDateTime,
   // LagDuration, ReplicatedDisks, StagingAvailabilityZone, and
   // StagingOutpostArn.
-  dataReplicationInfo @maturity("deprecated") dict
+  dataReplicationInfo @maturity("deprecated") @replaced_by("aws.drs.recoveryInstance.dataReplicationState") dict
   // State of failback data replication
   //
   // One of STOPPED, INITIATING, INITIAL_SYNC, BACKLOG, CREATING_SNAPSHOT,
@@ -14133,7 +14133,7 @@ private aws.dynamodb.table @defaults("name region") {
   //
   // Deprecated in favor of tableId. ListTables reports only table names, so
   // this field was never populated from the listing and always read as empty.
-  id @maturity("deprecated") string
+  id @maturity("deprecated") @replaced_by("aws.dynamodb.table.tableId") string
   // Table identifier
   //
   // Unique identifier AWS assigns the table, for example
@@ -14668,7 +14668,7 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   // AttributeValues lists the AWS account IDs allowed to restore the
   // snapshot; the value "all" means the snapshot is public. The isPublic
   // field derives its result from this.
-  attributes() @maturity("deprecated") []dict
+  attributes() @maturity("deprecated") @replaced_by("aws.rds.snapshot.restoreAttributes") []dict
   // Permissions to restore the snapshot, keyed by attribute name
   //
   // The "restore" key lists the AWS account IDs allowed to restore the
@@ -15476,7 +15476,7 @@ private aws.elasticache.user @defaults("userName status engine") {
   //
   // Deprecated in favor of authenticationMode, which carries the same two
   // values as a resource. Dict with `Type` and `PasswordCount`.
-  authentication @maturity("deprecated") dict
+  authentication @maturity("deprecated") @replaced_by("aws.elasticache.user.authenticationMode") dict
   // Authentication mode for the user
   //
   // Null when the service reports no authentication settings for the user.
@@ -15633,7 +15633,7 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   // `BucketName`, `S3KeyPrefix`, `LogDestinationType`, `LogExports`,
   // `LastSuccessfulDeliveryTime`, `LastFailureTime`, and
   // `LastFailureMessage`, alongside the SDK response metadata.
-  logging() @maturity("deprecated") dict
+  logging() @maturity("deprecated") @replaced_by("aws.redshift.cluster.auditLogging") dict
   // Audit-logging delivery status for the cluster
   //
   // Audit logs record connections, user activity and user changes. Without
@@ -16096,7 +16096,7 @@ private aws.route53.hostedZone @defaults("id name type isPrivate") {
   //
   // Deprecated in favor of comment and isPrivate, which carry the same two
   // values. Has `comment` and `privateZone`.
-  config @maturity("deprecated") dict
+  config @maturity("deprecated") @replaced_by("aws.route53.hostedZone.comment") dict
   // Whether this is a private hosted zone
   isPrivate bool
   // Comment associated with the hosted zone
@@ -17764,7 +17764,7 @@ private aws.apigatewayv2.stage @defaults("stageName apiId") {
   // Deprecated in favor of defaultRoute, which carries the same five values as
   // a resource. Keys: throttlingBurstLimit, throttlingRateLimit,
   // detailedMetricsEnabled, dataTraceEnabled, loggingLevel.
-  defaultRouteSettings @maturity("deprecated") dict
+  defaultRouteSettings @maturity("deprecated") @replaced_by("aws.apigatewayv2.stage.defaultRoute") dict
   // Default per-route settings
   //
   // Applied to every route on the stage that has no override of its own. Null
@@ -17783,7 +17783,7 @@ private aws.apigatewayv2.stage @defaults("stageName apiId") {
   // resource with the destination log group resolved. Keys: destinationArn
   // (CloudWatch Logs log group or Kinesis Data Firehose delivery stream) and
   // format (the $context log format string). Null when access logging is off.
-  accessLogSettings @maturity("deprecated") dict
+  accessLogSettings @maturity("deprecated") @replaced_by("aws.apigatewayv2.stage.accessLog") dict
   // Access-log configuration for the stage
   //
   // Null when access logging is off, which is the reading an access-logging
@@ -18215,7 +18215,7 @@ private aws.lambda.function @defaults("arn") {
   // Deprecated in favor of runtimeManagement, which carries the same two
   // values as a resource. Dict with `updateRuntimeOn` and, when the runtime is
   // pinned, `runtimeVersionArn`.
-  runtimeManagementConfig() @maturity("deprecated") dict
+  runtimeManagementConfig() @maturity("deprecated") @replaced_by("aws.lambda.function.runtimeManagement") dict
   // Runtime management configuration
   //
   // Null when the configuration cannot be read, either because the function
@@ -19495,17 +19495,17 @@ private aws.ec2.clientVpnEndpoint @defaults("id status region") {
   //
   // Deprecated in favor of clientConnect, which carries the same values as a
   // resource with the Lambda function resolved.
-  clientConnectOptions @maturity("deprecated") dict
+  clientConnectOptions @maturity("deprecated") @replaced_by("aws.ec2.clientVpnEndpoint.clientConnect") dict
   // Client login banner options (banner text, enabled flag)
   //
   // Deprecated in favor of loginBanner, which carries the same two values as
   // a resource.
-  clientLoginBannerOptions @maturity("deprecated") dict
+  clientLoginBannerOptions @maturity("deprecated") @replaced_by("aws.ec2.clientVpnEndpoint.loginBanner") dict
   // Connection logging options (CloudWatch log group/stream, enabled flag)
   //
   // Deprecated in favor of connectionLogging, which carries the same values
   // as a resource with the log group resolved.
-  connectionLogOptions @maturity("deprecated") dict
+  connectionLogOptions @maturity("deprecated") @replaced_by("aws.ec2.clientVpnEndpoint.connectionLogging") dict
   // Connection logging configuration of the endpoint
   //
   // Without connection logging there is no record of who connected to the
@@ -19781,7 +19781,7 @@ private aws.ec2.launchtemplate @defaults("name region") {
   // as a resource. Keys are `HttpEndpoint`, `HttpProtocolIpv6`,
   // `HttpPutResponseHopLimit`, `HttpTokens`, `InstanceMetadataTags`, and
   // `State`.
-  metadataOptions() @maturity("deprecated") dict
+  metadataOptions() @maturity("deprecated") @replaced_by("aws.ec2.launchtemplate.instanceMetadata") dict
   // Instance metadata service options from the default version
   //
   // Null when the default version sets no metadata options, in which case
@@ -19887,7 +19887,7 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   // createVolumePermissionGroups. Each entry carries either UserId (an AWS
   // account ID granted permission) or Group (set to all when the snapshot is
   // shared publicly).
-  createVolumePermission() @maturity("deprecated") []dict
+  createVolumePermission() @maturity("deprecated") @replaced_by("aws.ec2.snapshot.createVolumePermissionUserIds") []dict
   // AWS account IDs permitted to create volumes from the snapshot
   //
   // Every account outside the owner listed here can restore the snapshot's
@@ -20466,7 +20466,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   //
   // Deprecated in favor of stateChangeReason, which carries the same two values
   // as a resource. Carries Code and Message.
-  stateReason @maturity("deprecated") dict
+  stateReason @maturity("deprecated") @replaced_by("aws.ec2.instance.stateChangeReason") dict
   // Reason for the most recent state transition
   //
   // Null when the instance reports no reason, which is the usual case for an
@@ -20942,7 +20942,7 @@ private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProto
   // the referenced security group, UserId of the account that owns it, VpcId
   // and VpcPeeringConnectionId when the reference crosses a VPC peering
   // connection, PeeringStatus, and an optional Description.
-  userIdGroupPairs @maturity("deprecated") []dict
+  userIdGroupPairs @maturity("deprecated") @replaced_by("aws.ec2.securitygroup.ippermission.peers") []dict
   // Security groups the rule allows traffic from or to
   //
   // A rule can name another security group instead of an address range, so
@@ -21297,7 +21297,7 @@ private aws.eks.nodegroup @defaults("name diskSize status") {
   // Deprecated in favor of scaling, which carries the same three values as a
   // resource. Keys: `MinSize`, `MaxSize`, and `DesiredSize` (node counts the
   // managed node group maintains).
-  scalingConfig() @maturity("deprecated") dict
+  scalingConfig() @maturity("deprecated") @replaced_by("aws.eks.nodegroup.scaling") dict
   // Scaling configuration for the node group
   //
   // Null when the node group reports no scaling configuration.
@@ -21339,7 +21339,7 @@ private aws.eks.nodegroup @defaults("name diskSize status") {
   // resource with the key pair and security groups resolved. Keys:
   // `Ec2SshKey` (EC2 key pair granting SSH access to the nodes) and
   // `SourceSecurityGroups` (security group IDs allowed SSH access).
-  remoteAccess() @maturity("deprecated") dict
+  remoteAccess() @maturity("deprecated") @replaced_by("aws.eks.nodegroup.sshAccess") dict
   // Remote access configuration for the node group
   //
   // Null when the node group reports no remote access configuration, which
@@ -21439,7 +21439,7 @@ aws.eks.cluster @defaults("arn version status") {
   // entry has `Enabled` and a `Types` list of control-plane log types (api,
   // audit, authenticator, controllerManager, scheduler) exported to
   // CloudWatch Logs.
-  logging() @maturity("deprecated") dict
+  logging() @maturity("deprecated") @replaced_by("aws.eks.cluster.controlPlaneLogging") dict
   // Whether each control-plane log type is exported to CloudWatch Logs
   //
   // Keyed by log type: api, audit, authenticator, controllerManager, and
@@ -21540,13 +21540,13 @@ aws.eks.cluster @defaults("arn version status") {
   // Deprecated in favor of supportType. Contains `SupportType`, one of
   // STANDARD (auto-upgrade at the end of standard support) or EXTENDED
   // (enter extended support at the end of standard support).
-  upgradePolicy() @maturity("deprecated") dict
+  upgradePolicy() @maturity("deprecated") @replaced_by("aws.eks.cluster.supportType") dict
   // Zonal shift configuration for the cluster
   //
   // Deprecated in favor of zonalShift, which carries the same value as a
   // resource. Contains `Enabled`, indicating whether ARC zonal shift is
   // enabled to shift traffic away from an impaired Availability Zone.
-  zonalShiftConfig() @maturity("deprecated") dict
+  zonalShiftConfig() @maturity("deprecated") @replaced_by("aws.eks.cluster.zonalShift") dict
   // Zonal shift configuration for the cluster
   //
   // Null when the cluster reports no zonal shift configuration.
@@ -21912,7 +21912,7 @@ private aws.neptune.instance @defaults("arn name status"){
   //
   // Deprecated in favor of connectionEndpoint, which carries the same three
   // values as a resource. Dict with `Address`, `Port`, and `HostedZoneId`.
-  endpoint @maturity("deprecated") dict
+  endpoint @maturity("deprecated") @replaced_by("aws.neptune.instance.connectionEndpoint") dict
   // Connection endpoint
   //
   // Null while the instance is still being created and has no endpoint yet.
@@ -22085,7 +22085,7 @@ private aws.cognito.userPool @defaults("arn name") {
   // as a resource. Keys: MinimumLength, RequireUppercase, RequireLowercase,
   // RequireNumbers, RequireSymbols, TemporaryPasswordValidityDays, and
   // PasswordHistorySize (how many previous passwords are blocked from reuse).
-  passwordPolicy() @maturity("deprecated") dict
+  passwordPolicy() @maturity("deprecated") @replaced_by("aws.cognito.userPool.passwordRequirements") dict
   // Password-strength requirements enforced on the user pool
   //
   // Null when the user pool reports no password policy.
@@ -22117,7 +22117,7 @@ private aws.cognito.userPool @defaults("arn name") {
   // values as a resource. A null value means device remembering is
   // deactivated. When set, exposes ChallengeRequiredOnNewDevice and
   // DeviceOnlyRememberedOnUserPrompt.
-  deviceConfiguration() @maturity("deprecated") dict
+  deviceConfiguration() @maturity("deprecated") @replaced_by("aws.cognito.userPool.deviceRemembering") dict
   // Device-remembering configuration
   //
   // Null when device remembering is deactivated on the user pool.
@@ -22127,7 +22127,7 @@ private aws.cognito.userPool @defaults("arn name") {
   // Deprecated in favor of usernamePolicy, which carries the same
   // value as a resource. Exposes CaseSensitive: when false, users can sign in
   // with any capitalization variation of their username or email alias.
-  usernameConfiguration() @maturity("deprecated") dict
+  usernameConfiguration() @maturity("deprecated") @replaced_by("aws.cognito.userPool.usernamePolicy") dict
   // Username case-sensitivity configuration
   //
   // Null when the user pool reports no username configuration.
@@ -22234,7 +22234,7 @@ private aws.cognito.userPoolClient @defaults("clientId clientName userPoolId") {
   // Deprecated in favor of validityUnits, which carries the same three
   // values as a resource. Keys: accessToken, idToken, refreshToken. Values
   // are seconds, minutes, hours, or days.
-  tokenValidityUnits @maturity("deprecated") dict
+  tokenValidityUnits @maturity("deprecated") @replaced_by("aws.cognito.userPoolClient.validityUnits") dict
   // Time units applied to the *Validity numeric fields
   //
   // Null when the client reports no token validity units, in which case the
@@ -24750,7 +24750,7 @@ private aws.kinesis.stream @defaults("name status region") {
   //
   // Deprecated in favor of capacityMode, which carries the same value
   // as a resource. Dict with a single `StreamMode` key.
-  streamModeDetails @maturity("deprecated") dict
+  streamModeDetails @maturity("deprecated") @replaced_by("aws.kinesis.stream.capacityMode") dict
   // Capacity mode of the stream
   //
   // Null when the mode is not reported, which is what a stream reached by ARN
@@ -25193,7 +25193,7 @@ private aws.memorydb.user @defaults("name status") {
   // Deprecated in favor of authenticationMode, which carries the same two
   // values as a resource. Password and IAM authentication state for the user,
   // with the keys `Type` and `PasswordCount`.
-  authentication @maturity("deprecated") dict
+  authentication @maturity("deprecated") @replaced_by("aws.memorydb.user.authenticationMode") dict
   // Authentication configuration for the user
   //
   // Null when the service reports no authentication settings for the user.
@@ -25757,19 +25757,19 @@ private aws.glue.securityConfiguration @defaults("name") {
   // Deprecated in favor of s3DataEncryption, which carries the same values as a
   // resource with the key resolved. Shape: {S3EncryptionMode:
   // DISABLED|SSE-KMS|SSE-S3, KmsKeyArn}.
-  s3Encryption @maturity("deprecated") dict
+  s3Encryption @maturity("deprecated") @replaced_by("aws.glue.securityConfiguration.s3DataEncryption") dict
   // CloudWatch encryption configuration
   //
   // Deprecated in favor of cloudWatchLogsEncryption, which carries the same
   // values as a resource with the key resolved. Shape:
   // {CloudWatchEncryptionMode: DISABLED|SSE-KMS, KmsKeyArn}.
-  cloudWatchEncryption @maturity("deprecated") dict
+  cloudWatchEncryption @maturity("deprecated") @replaced_by("aws.glue.securityConfiguration.cloudWatchLogsEncryption") dict
   // Job bookmarks encryption configuration
   //
   // Deprecated in favor of bookmarkStateEncryption, which carries the same
   // values as a resource with the key resolved. Shape:
   // {JobBookmarksEncryptionMode: DISABLED|CSE-KMS, KmsKeyArn}.
-  jobBookmarksEncryption @maturity("deprecated") dict
+  jobBookmarksEncryption @maturity("deprecated") @replaced_by("aws.glue.securityConfiguration.bookmarkStateEncryption") dict
   // Encryption applied to data the job or crawler writes to Amazon S3
   //
   // The mode is one of DISABLED, SSE-KMS, or SSE-S3, where DISABLED means
@@ -29614,7 +29614,7 @@ private aws.identitycenter.permissionSet @defaults("arn name") {
   //
   // Deprecated in favor of awsManagedPolicies. Each entry has the keys `arn`
   // (the managed policy ARN) and `name` (the managed policy name).
-  managedPolicies() @maturity("deprecated") []dict
+  managedPolicies() @maturity("deprecated") @replaced_by("aws.identitycenter.permissionSet.awsManagedPolicies") []dict
   // AWS managed policies attached to the permission set
   //
   // A permission set is provisioned as an IAM role into every account it is
@@ -29929,7 +29929,7 @@ private aws.verifiedaccess.trustProvider @defaults("verifiedAccessTrustProviderI
   // Deprecated in favor of serverSideEncryption, which carries the same two
   // settings with the key resolved to a resource. KMS encryption settings for
   // the trust provider, with keys `CustomerManagedKeyEnabled` and `KmsKeyArn`.
-  sseSpecification @maturity("deprecated") dict
+  sseSpecification @maturity("deprecated") @replaced_by("aws.verifiedaccess.trustProvider.serverSideEncryption") dict
   // Server-side encryption specification
   //
   // Encryption settings AWS Verified Access applies to the trust provider. Null when
@@ -29954,7 +29954,7 @@ private aws.verifiedaccess.group @defaults("verifiedAccessGroupId verifiedAccess
   // Deprecated in favor of serverSideEncryption, which carries the same two
   // settings with the key resolved to a resource. KMS encryption settings for
   // the group, with keys `CustomerManagedKeyEnabled` and `KmsKeyArn`.
-  sseSpecification @maturity("deprecated") dict
+  sseSpecification @maturity("deprecated") @replaced_by("aws.verifiedaccess.group.serverSideEncryption") dict
   // Server-side encryption specification
   //
   // Encryption settings AWS Verified Access applies to the group. Null when
@@ -29998,7 +29998,7 @@ private aws.verifiedaccess.endpoint @defaults("verifiedAccessEndpointId applicat
   // Deprecated in favor of serverSideEncryption, which carries the same two
   // settings with the key resolved to a resource. KMS encryption settings for
   // the endpoint, with keys `CustomerManagedKeyEnabled` and `KmsKeyArn`.
-  sseSpecification @maturity("deprecated") dict
+  sseSpecification @maturity("deprecated") @replaced_by("aws.verifiedaccess.endpoint.serverSideEncryption") dict
   // Server-side encryption specification
   //
   // Encryption settings AWS Verified Access applies to the endpoint. Null when
@@ -31115,14 +31115,14 @@ private aws.bedrock.agent @defaults("name status foundationModel") {
   // Deprecated in favor of actionGroupDetails, which resolves each action
   // group to a queryable aws.bedrock.agent.actionGroup with its executor
   // Lambda function and API schema.
-  actionGroups() @maturity("deprecated") []dict
+  actionGroups() @maturity("deprecated") @replaced_by("aws.bedrock.agent.actionGroupDetails") []dict
   // Action groups attached to the agent's DRAFT version
   actionGroupDetails() []aws.bedrock.agent.actionGroup
   // Knowledge base association summaries for the agent's DRAFT version
   //
   // Deprecated in favor of attachedKnowledgeBases, which resolves each
   // association to the aws.bedrock.knowledgeBase it points at.
-  knowledgeBases() @maturity("deprecated") []dict
+  knowledgeBases() @maturity("deprecated") @replaced_by("aws.bedrock.agent.attachedKnowledgeBases") []dict
   // Knowledge bases attached to the agent's DRAFT version
   attachedKnowledgeBases() []aws.bedrock.knowledgeBase
   // Guardrail applied to the agent's model invocations
@@ -31360,7 +31360,7 @@ private aws.bedrock.knowledgeBase @defaults("name status") {
   // Deprecated in favor of dataSourceDetails, which resolves each data
   // source to a queryable aws.bedrock.knowledgeBase.dataSource with its
   // deletion policy, encryption key, and connector configuration.
-  dataSources() @maturity("deprecated") []dict
+  dataSources() @maturity("deprecated") @replaced_by("aws.bedrock.knowledgeBase.dataSourceDetails") []dict
   // Data sources connected to the knowledge base
   dataSourceDetails() []aws.bedrock.knowledgeBase.dataSource
 }

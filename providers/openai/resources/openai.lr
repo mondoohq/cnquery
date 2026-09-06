@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/openai"
 option go_package = "go.mondoo.com/mql/providers/openai/resources"
+option root = "openai"
 
 // OpenAI account
 //
@@ -15,7 +16,7 @@ option go_package = "go.mondoo.com/mql/providers/openai/resources"
 // organization. Several collections (users, groups, roles, admin API
 // keys, invites, audit logs, project keys, and service accounts)
 // require an admin API key.
-openai @defaults("organization") @maturity("preview") {
+openai @defaults("organization") @maturity("preview") @root {
   // Organization ID associated with the API key
   organization() string
   // Project ID associated with the API key

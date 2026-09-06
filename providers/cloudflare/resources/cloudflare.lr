@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/cloudflare"
 option go_package = "go.mondoo.com/mql/providers/cloudflare/resources"
+option root = "cloudflare"
 
 // Cloudflare
 //
@@ -10,7 +11,7 @@ option go_package = "go.mondoo.com/mql/providers/cloudflare/resources"
 // `zones` field enumerates DNS zones, `accounts` exposes account-level
 // configuration, and `apiTokens` lists the tokens visible to the calling
 // user for token inventory and policy audits.
-cloudflare {
+cloudflare @root {
 	// List all zones
 	zones() []cloudflare.zone
 
@@ -37,7 +38,7 @@ cloudflare {
 // `customCertificates` for TLS certificates; `dnssec` for DNSSEC configuration;
 // `botManagement` for bot-mitigation settings; `emailRouting` for SPF/DKIM/DMARC
 // status; and `logpushJobs` for data-export configuration.
-private cloudflare.zone @defaults("name account.name") {
+private cloudflare.zone @defaults("name account.name") @root {
 	// Zone identifier
 	id string
 	// Zone name
@@ -365,7 +366,7 @@ private cloudflare.dns.record @defaults("type content name") {
 // `members` for the account's access model, `one` for Zero Trust, `r2` for
 // object storage, `workers` for deployed scripts, `tunnels` for Cloudflare
 // Tunnel connectivity, and `liveInputs` and `videos` for Stream assets.
-private cloudflare.account @defaults("name") {
+private cloudflare.account @defaults("name") @root {
 	// Account identifier
 	//
 	// The 32-character account ID (the account "tag") that scopes every

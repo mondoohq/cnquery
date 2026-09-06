@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/grafana"
 option go_package = "go.mondoo.com/mql/providers/grafana/resources"
+option root = "grafana"
 
 // Grafana
 //
@@ -14,7 +15,7 @@ option go_package = "go.mondoo.com/mql/providers/grafana/resources"
 // surface auditors use to find weak datasource credentials, missing
 // MFA, expired, revoked, or broad-scope tokens, and permissive SSO
 // configuration.
-grafana {
+grafana @root {
   // Organization details
   organization() grafana.organization
   // Users in the organization
