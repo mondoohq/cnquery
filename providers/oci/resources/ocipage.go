@@ -3,7 +3,10 @@
 
 package resources
 
-import "context"
+import (
+	"context"
+	"errors"
+)
 
 // OCI paginates almost every list API the same way: the request carries an
 // opaque `Page` token and the response returns the next one as `OpcNextPage`,
@@ -31,9 +34,9 @@ import "context"
 // unreadable compartment) and which under-report resources.
 func ociPaginate[T any](ctx context.Context, page func(ctx context.Context, page *string) ([]T, *string, error)) ([]T, error) {
 	var items []T
-	var token *string
+	var cursor *string
 	for {
-		batch, next, err := page(ctx, token)
+		batch, next, err := page(ctx, cursor)
 		if err != nil {
 			return nil, err
 		}
@@ -41,7 +44,24 @@ func ociPaginate[T any](ctx context.Context, page func(ctx context.Context, page
 		if next == nil {
 			return items, nil
 		}
-		token = next
+		// A cursor that does not advance is the one shape this loop cannot
+		// survive: the same page is requested forever, items grows without
+		// bound, and the scan hangs with no error to attribute it to. OCI page
+		// cursors are opaque but must move, so an unchanged one is a broken
+		// response rather than a signal to keep asking. Reported rather than
+		// truncated, for the same reason an error discards the partial result
+		// above - a silently short list is indistinguishable from a complete
+		// one.
+		//
+		// A plain comparison is correct here. The cursor is an opaque
+		// continuation marker the service just handed back, not a credential
+		// being authenticated, and it is compared only against the value this
+		// same loop sent - so there is no secret for a timing side channel to
+		// leak.
+		if cursor != nil && *next == *cursor {
+			return nil, errors.New("oci: pagination did not advance, the service returned the same page cursor twice")
+		}
+		cursor = next
 	}
 }
 
