@@ -78,6 +78,103 @@ func (a *mqlAzureSubscriptionContainerInstanceService) containerGroups() ([]any,
 	return res, nil
 }
 
+// redactedImageRegistryCredentials copies the registry credentials with the
+// registry passwords removed.
+//
+// The password authenticates to the private registry the group pulls from, and
+// the audit signal it would serve is already carried by registryAuthUsesIdentity,
+// which is computed from the same records. The server, username and identity
+// are kept, so a check on which registry a group pulls from and whether it
+// authenticates with a managed identity reads as before.
+//
+// The copy is by field rather than by JSON key so that a field renamed in a
+// future SDK breaks the build instead of silently leaking again.
+func redactedImageRegistryCredentials(creds []*aci.ImageRegistryCredential) []*aci.ImageRegistryCredential {
+	if creds == nil {
+		return nil
+	}
+	out := make([]*aci.ImageRegistryCredential, 0, len(creds))
+	for _, cred := range creds {
+		if cred == nil {
+			out = append(out, nil)
+			continue
+		}
+		safe := *cred
+		safe.Password = nil
+		out = append(out, &safe)
+	}
+	return out
+}
+
+// redactedVolumes copies the group's volumes with the secret-volume contents
+// and the Azure File storage account key removed.
+//
+// A secret volume's map holds the base64 file contents mounted into the
+// containers, and the Azure File key grants access to the whole file share.
+// The file names are kept as the map's keys, with each value nulled, so a check
+// on which files a secret volume mounts still reads while their contents do
+// not. Everything else about a volume is kept, including the share name,
+// storage account name and read-only flag, and hasSecretVolume is computed from
+// the unredacted records.
+//
+// The copy is by field rather than by JSON key so that a field renamed in a
+// future SDK breaks the build instead of silently leaking again.
+func redactedVolumes(volumes []*aci.Volume) []*aci.Volume {
+	if volumes == nil {
+		return nil
+	}
+	out := make([]*aci.Volume, 0, len(volumes))
+	for _, v := range volumes {
+		if v == nil {
+			out = append(out, nil)
+			continue
+		}
+		safe := *v
+		if v.Secret != nil {
+			names := make(map[string]*string, len(v.Secret))
+			for name := range v.Secret {
+				names[name] = nil
+			}
+			safe.Secret = names
+		}
+		if v.AzureFile != nil {
+			file := *v.AzureFile
+			file.StorageAccountKey = nil
+			safe.AzureFile = &file
+		}
+		out = append(out, &safe)
+	}
+	return out
+}
+
+// redactedEnvironmentVariables copies a container's environment with the secure
+// values removed.
+//
+// SecureValue is the write-only half of an ACI environment variable, the one
+// callers use precisely because the value is a credential. The variable's name
+// is kept, so a check on which secure variables a container declares still
+// reads; only the value is dropped. Plain Value entries are not secure by
+// declaration and are kept as before.
+//
+// The copy is by field rather than by JSON key so that a field renamed in a
+// future SDK breaks the build instead of silently leaking again.
+func redactedEnvironmentVariables(env []*aci.EnvironmentVariable) []*aci.EnvironmentVariable {
+	if env == nil {
+		return nil
+	}
+	out := make([]*aci.EnvironmentVariable, 0, len(env))
+	for _, e := range env {
+		if e == nil {
+			out = append(out, nil)
+			continue
+		}
+		safe := *e
+		safe.SecureValue = nil
+		out = append(out, &safe)
+	}
+	return out
+}
+
 func aciContainerGroupToMQL(runtime *plugin.Runtime, entry *aci.ContainerGroup) (plugin.Resource, error) {
 	var provisioningState, osType, restartPolicy, sku, ccePolicyHash string
 	var ipAddressType, publicIp, fqdn, dnsLabelScope string
@@ -166,7 +263,7 @@ func aciContainerGroupToMQL(runtime *plugin.Runtime, entry *aci.ContainerGroup) 
 			dnsConfig = d
 		}
 		if len(props.ImageRegistryCredentials) > 0 {
-			d, err := convert.JsonToDictSlice(props.ImageRegistryCredentials)
+			d, err := convert.JsonToDictSlice(redactedImageRegistryCredentials(props.ImageRegistryCredentials))
 			if err != nil {
 				return nil, err
 			}
@@ -178,7 +275,7 @@ func aciContainerGroupToMQL(runtime *plugin.Runtime, entry *aci.ContainerGroup) 
 			}
 		}
 		if len(props.Volumes) > 0 {
-			d, err := convert.JsonToDictSlice(props.Volumes)
+			d, err := convert.JsonToDictSlice(redactedVolumes(props.Volumes))
 			if err != nil {
 				return nil, err
 			}
@@ -313,7 +410,7 @@ func aciContainersToMQL(runtime *plugin.Runtime, parentId string, specs []*aci.C
 
 		env := []any{}
 		if len(c.Properties.EnvironmentVariables) > 0 {
-			d, err := convert.JsonToDictSlice(c.Properties.EnvironmentVariables)
+			d, err := convert.JsonToDictSlice(redactedEnvironmentVariables(c.Properties.EnvironmentVariables))
 			if err != nil {
 				return nil, err
 			}
