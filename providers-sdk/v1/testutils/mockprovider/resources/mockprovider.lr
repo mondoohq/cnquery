@@ -4,6 +4,8 @@
 option provider = "go.mondoo.com/mql/providers-sdk/v1/testutils/mockprovider"
 option go_package = "go.mondoo.com/mql/providers-sdk/v1/testutils/mockprovider"
 
+alias mgroup.mthing = mthing
+
 muser {
   name string
   group() mgroup
@@ -20,6 +22,16 @@ muser {
 
 mgroup {
   name string
+}
+
+// Resource reached from the root by an alias
+//
+// An alias compiles to a createResource chunk bound to the root rather than to
+// a field read. That is a separate execution path, and the one that used to
+// build the resource on the wrong runtime after a chain crossed into another
+// asset (ADR 031).
+mthing {
+  value string
 }
 
 mos {

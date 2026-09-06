@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/exec"
+	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/testutils"
 )
 
@@ -110,4 +111,34 @@ func TestAssetChainResolvesThroughTheProvider(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, res.Error)
 	assert.Equal(t, "resolved-group", res.Value)
+}
+
+// A resource reached from the root by an alias compiles to a createResource
+// chunk bound to the root, not to a field read - a different execution path,
+// and one that used to build the resource on the *querying* runtime after the
+// chain had already crossed into another asset.
+//
+// It is the path most of an OS root goes through: `running.packages`,
+// `running.file("/etc/os-release")`, `running.users`. Against a real container
+// it read the host's package list and the host's files while `running.hostname`
+// - a plain field - was correctly reporting the container. `mthing` is recorded
+// on both assets with different values, so a read that fails to cross shows up
+// as the parent's value rather than as an absence.
+func TestAssetChainCrossesForAliasedResources(t *testing.T) {
+	for name, rt := range map[string]llx.Runtime{
+		"recorded": testutils.CrossAssetMock(),
+		"live":     testutils.CrossAssetLiveMock(),
+	} {
+		t.Run(name, func(t *testing.T) {
+			parent, err := exec.Exec("mthing.value", rt, testutils.Features, nil)
+			require.NoError(t, err)
+			require.NoError(t, parent.Error)
+			require.Equal(t, "parent-thing", parent.Value, "the parent has its own")
+
+			res, err := exec.Exec("muser.running.mthing.value", rt, testutils.Features, nil)
+			require.NoError(t, err)
+			require.NoError(t, res.Error)
+			assert.Equal(t, "target-thing", res.Value)
+		})
+	}
 }

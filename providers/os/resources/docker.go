@@ -11,6 +11,7 @@ import (
 	"github.com/moby/moby/client"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/os/connection/dockerclient"
@@ -114,12 +115,56 @@ func (p *mqlDocker) containers() ([]any, error) {
 	return container, nil
 }
 
-func (p *mqlDockerContainer) os() (*mqlOsLinux, error) {
-	res, err := CreateResource(p.MqlRuntime, "os.linux", map[string]*llx.RawData{})
-	if err != nil {
-		return nil, err
+// running is the anchor for the container as its own asset (ADR 031).
+//
+// It answers with the anchor and nothing else - identity, never how to reach
+// the thing - because this value persists into recordings and upstream (ADR
+// 030). The connection is asked for at connect time, in MqlAsset.
+//
+// A container that is not running has nothing to connect to, so it answers
+// null: `docker.containers.where(running == null)` is how you ask which ones
+// are down.
+func (p *mqlDockerContainer) running() (*llx.AssetValue, error) {
+	if !p.isRunning() {
+		p.Running.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	return res.(*mqlOsLinux), nil
+	return &llx.AssetValue{
+		ResourceType: p.MqlName(),
+		ResourceId:   p.MqlID(),
+	}, nil
+}
+
+// MqlAsset implements plugin.AssetSource: how to reach the container behind the
+// `running` anchor. The os provider serves containers through its own
+// `docker-container` connector, so this is a local connect - no other provider
+// is involved.
+func (p *mqlDockerContainer) MqlAsset() (*inventory.Asset, error) {
+	if !p.isRunning() {
+		return nil, nil
+	}
+
+	name := p.Id.Data
+	if names := p.Names.Data; len(names) > 0 {
+		if first, ok := names[0].(string); ok && first != "" {
+			name = first
+		}
+	}
+
+	return &inventory.Asset{
+		Name: name,
+		Connections: []*inventory.Config{{
+			Type: string(shared.Type_DockerContainer),
+			Host: p.Id.Data,
+		}},
+	}, nil
+}
+
+// isRunning reports whether the container is up. Docker's `state` is the
+// machine-readable one of created/running/paused/restarting/exited/dead, so
+// only one value means there is a process to connect to.
+func (p *mqlDockerContainer) isRunning() bool {
+	return p.State.Data == "running"
 }
 
 func (p *mqlDockerImage) id() (string, error) {

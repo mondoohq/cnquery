@@ -613,10 +613,20 @@ itself `asset<…>` resolves through the *target* runtime's own resolver.
    fix. Testable in-repo from a recording fixture; no live connect. **Landed.**
 8. **Live-connect backend.** The same `RuntimeFor` + `Connect` path with the
    target's real connection; reachability asked for through `ResolveAsset`
-   rather than carried on the value; sub-runtime lifecycle and timeouts. Interactive verification: `…running.tools` against the installed `ai`
-   provider plus the dummy server. Also fixes `docker.container.os`, which today
-   answers with the host. Exposes the imperative SDK-side wrapper for Go callers
-   that spawn a new asset over this same path.
+   rather than carried on the value; sub-runtime lifecycle and timeouts.
+
+   Also fixes `docker.container`, which embedded `os.linux` and answered every
+   member of it about the **host**: an Alpine container reported the Arch host's
+   1359 packages and the host's hostname. The embed is replaced by
+   `running() asset<os.any>`, so a container is reached as the separate asset it
+   is. Removed rather than deprecated - an embed carries no `@maturity`, and
+   every member of it was wrong in the same way.
+
+   Verified against live containers, which is what makes this the first phase
+   with an end-to-end target anyone can reach: the `docker` connector lives in
+   the os provider, so a container needs no second provider to connect to.
+   Still open: the imperative SDK-side wrapper for Go callers that spawn a new
+   asset over this same path.
 9. **Namespace migration + other providers.** Roots for the remaining providers,
    `os`'s deprecated fields removed in v15, global names retired, `RootedNamespace`
    becomes the default.

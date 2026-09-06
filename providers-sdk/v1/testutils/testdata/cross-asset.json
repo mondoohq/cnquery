@@ -1813,6 +1813,16 @@
        ]
       }
      }
+    },
+    {
+     "Resource": "mthing",
+     "ID": "",
+     "Fields": {
+      "value": {
+       "type": "\u0007",
+       "value": "parent-thing"
+      }
+     }
     }
    ]
   },
@@ -1876,6 +1886,16 @@
       "name": {
        "type": "\u0007",
        "value": "resolved-group"
+      }
+     }
+    },
+    {
+     "Resource": "mthing",
+     "ID": "",
+     "Fields": {
+      "value": {
+       "type": "\u0007",
+       "value": "target-thing"
       }
      }
     }

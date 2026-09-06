@@ -8669,8 +8669,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"docker.image.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerImage).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"docker.container.os": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDockerContainer).GetOs()).ToDataRes(types.Resource("os.linux"))
+	"docker.container.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerContainer).GetRunning()).ToDataRes(types.Asset("os.any"))
 	},
 	"docker.container.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerContainer).GetId()).ToDataRes(types.String)
@@ -25300,8 +25300,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDockerContainer).__id, ok = v.Value.(string)
 		return
 	},
-	"docker.container.os": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDockerContainer).Os, ok = plugin.RawToTValue[*mqlOsLinux](v.Value, v.Error)
+	"docker.container.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerContainer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
 		return
 	},
 	"docker.container.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -61945,7 +61945,7 @@ type mqlDockerContainer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDockerContainerInternal it will be used here
-	Os         plugin.TValue[*mqlOsLinux]
+	Running    plugin.TValue[*llx.AssetValue]
 	Id         plugin.TValue[string]
 	Command    plugin.TValue[string]
 	Image      plugin.TValue[string]
@@ -61994,19 +61994,9 @@ func (c *mqlDockerContainer) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlDockerContainer) GetOs() *plugin.TValue[*mqlOsLinux] {
-	return plugin.GetOrCompute[*mqlOsLinux](&c.Os, func() (*mqlOsLinux, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("docker.container", c.__id, "os")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlOsLinux), nil
-			}
-		}
-
-		return c.os()
+func (c *mqlDockerContainer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
 	})
 }
 
