@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/arista"
 option go_package = "go.mondoo.com/mql/providers/arista/resources"
+option root = "arista.eos"
 
 // Arista EOS network operating system
 //
@@ -12,7 +13,7 @@ option go_package = "go.mondoo.com/mql/providers/arista/resources"
 // ACLs), the management-plane services (SSH, telnet, SNMP, NTP), the AAA
 // stack, control-plane policing, and the local user / role / password-policy
 // hardening that auditors check against network-device benchmarks.
-arista.eos {
+arista.eos @root {
   // Global system settings parsed from the running-config
   //
   // Keyed map of top-level system settings. `hostname` is the configured

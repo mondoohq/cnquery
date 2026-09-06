@@ -676,3 +676,32 @@ func TestUnrootedNoteIsRecordedNotLogged(t *testing.T) {
 	assert.Equal(t, []string{"os"}, res.UnrootedResources, "the note is on the bundle")
 	assert.Empty(t, logged.String(), "and nothing was written to the log while compiling it")
 }
+
+// A field that exists on other roots is a statement about which assets a query
+// targets, not a failure. A caller running over several assets has to be able to
+// tell the two apart - it should skip an asset the query does not apply to and
+// keep the ones it does - so the compile error carries that distinction as a
+// type, not only as prose.
+func TestRootScopeMissIsTypedAsAMismatch(t *testing.T) {
+	schema := provenanceSchema(t)
+	conf := mqlc.NewConfig(schema, mql.Features{})
+	conf.AssetRoot = "os.linux"
+
+	t.Run("a field that lives on another root", func(t *testing.T) {
+		_, err := mqlc.Compile("_.registrykey", nil, conf)
+		require.Error(t, err)
+		assert.ErrorIs(t, err, mqlc.ErrRootMismatch)
+		// The message still says the useful thing; the type is additional.
+		assert.Contains(t, err.Error(), "this asset is rooted at os.linux")
+		assert.Contains(t, err.Error(), "os.windows")
+	})
+
+	// A name no root carries is a real failure and must not be skipped over:
+	// treating it as "not for this asset" would silently drop every asset in a
+	// run over a typo.
+	t.Run("a field no root has", func(t *testing.T) {
+		_, err := mqlc.Compile("_.thisFieldDoesNotExistAnywhere", nil, conf)
+		require.Error(t, err)
+		assert.NotErrorIs(t, err, mqlc.ErrRootMismatch)
+	})
+}

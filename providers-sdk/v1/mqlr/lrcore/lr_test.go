@@ -1309,17 +1309,51 @@ option root = "demo.any"
 ` + body
 	}
 
-	t.Run("a member may not shadow the language", func(t *testing.T) {
+	t.Run("a member may not shadow a language construct", func(t *testing.T) {
+		_, err := Parse(schema(`
+// Any
+//
+// the root.
+demo.any {
+  return() string
+}
+`))
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "which the compiler answers itself")
+	})
+
+	// A type conversion is only a conversion when it is called with arguments
+	// (compileTypeConversion returns errNotConversion otherwise, and mqlc then
+	// resolves the name against the root). So a device with a `version` field
+	// answers a bare `version` with the device's version - which is the point
+	// of a root: it is the position everything is relative to.
+	t.Run("a member named like a type conversion is fine", func(t *testing.T) {
 		_, err := Parse(schema(`
 // Any
 //
 // the root.
 demo.any {
   version() string
+  ip() string
+}
+`))
+		require.NoError(t, err)
+	})
+
+	// Taking arguments is the real conflict: the conversion is tried first and
+	// wins on any call that has them, so the member could never be called.
+	t.Run("a conversion-named member that takes arguments is not", func(t *testing.T) {
+		_, err := Parse(schema(`
+// Any
+//
+// the root.
+demo.any {
+  version(name) string
+  name string
 }
 `))
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "which the compiler answers itself")
+		assert.Contains(t, err.Error(), "the conversion wins")
 	})
 
 	t.Run("a member may not shadow a different resource", func(t *testing.T) {

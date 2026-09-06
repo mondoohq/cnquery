@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/mssql"
 option go_package = "go.mondoo.com/mql/providers/mssql/resources"
+option root = "mssql"
 
 // Microsoft SQL Server
 //
@@ -11,7 +12,7 @@ option go_package = "go.mondoo.com/mql/providers/mssql/resources"
 // encryption settings, server principals (logins and roles), permissions,
 // databases, credentials, linked servers, SQL Agent proxies, audit
 // specifications, and surface-area configuration options.
-mssql {}
+mssql @root {}
 
 // SQL Server instance
 //

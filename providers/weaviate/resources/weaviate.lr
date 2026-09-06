@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/weaviate"
 option go_package = "go.mondoo.com/mql/providers/weaviate/resources"
+option root = "weaviate.instance"
 
 // Weaviate vector database
 //
@@ -18,7 +19,7 @@ weaviate {
 // whether anonymous access is allowed, and whether OpenID Connect and
 // role-based access control are enabled. Collections, roles, users, and
 // cluster nodes are reached from here.
-weaviate.instance @defaults("version rbacEnabled anonymousAccessEnabled") {
+weaviate.instance @defaults("version rbacEnabled anonymousAccessEnabled") @root {
   // Server version, for example "1.38.8"
   version string
   // Hostname the server reports for itself

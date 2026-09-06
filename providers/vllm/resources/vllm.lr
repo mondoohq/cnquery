@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/vllm"
 option go_package = "go.mondoo.com/mql/providers/vllm/resources"
+option root = "vllm"
 
 // vLLM inference server
 //
@@ -10,7 +11,7 @@ option go_package = "go.mondoo.com/mql/providers/vllm/resources"
 // server: the server-level exposure summary, the per-endpoint
 // anonymous-access probe results, the minimal metrics-exposure posture,
 // the reported vLLM version, and the models loaded for serving.
-vllm {
+vllm @root {
   // Server-level HTTP posture summary
   server() vllm.server
   // Observed HTTP endpoint posture

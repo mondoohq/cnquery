@@ -2397,7 +2397,15 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 				// native internal operators)
 				if (typ != types.Dict && !typ.IsMap()) || !reAccessor.MatchString(id) {
 					addFieldSuggestions(availableFields(c, typ), id, c.Result)
-					return nil, errors.New("cannot find field '" + id + "' in " + typ.Label() + c.missingFieldHint(typ, id))
+					msg := "cannot find field '" + id + "' in " + typ.Label()
+					if scope := c.rootScopeHint(typ, id); scope != "" {
+						// The field exists - on other roots. That makes this a
+						// statement about which assets the query targets, not a
+						// failure, and a caller running over many assets should
+						// skip this one rather than abort (ADR 031).
+						return nil, &rootScopeError{msg: msg + scope}
+					}
+					return nil, errors.New(msg + c.fieldSkewHint(typ))
 				}
 
 				// Support easy accessors for dicts and maps, e.g:

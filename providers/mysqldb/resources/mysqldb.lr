@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/mysqldb"
 option go_package = "go.mondoo.com/mql/providers/mysqldb/resources"
+option root = "mysqldb"
 
 // MySQL
 //
@@ -10,7 +11,7 @@ option go_package = "go.mondoo.com/mql/providers/mysqldb/resources"
 // `mysqldb.instance` for the connected server: its configuration variables,
 // users, privileges, schemas, routines, plugins, components, and replication
 // state.
-mysqldb {}
+mysqldb @root {}
 
 // MySQL server
 //

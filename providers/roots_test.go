@@ -33,19 +33,13 @@ import (
 var rootBacklog = map[string]struct{}{}
 
 func init() {
-	// jamf and portainer cannot be rooted as they stand: each has a member
-	// named `version`, which the compiler answers itself, so a bare identifier
-	// would never reach it (validateRootMembers). Renaming a shipped field is
-	// breaking, so they wait for a deliberate decision rather than a sweep.
 	for _, p := range []string{
-		"activedirectory", "alicloud", "ansible", "arista", "artifactory",
+		"activedirectory", "alicloud", "ansible", "artifactory",
 		"atlassian", "aws", "azure", "bicep", "bitwarden", "cassandra",
 		"claude", "clickhousecloud", "clickhousedb", "cloudformation",
 		"datadog", "depsdev", "elasticsearch", "gcp", "google-workspace", "hcp", "helm",
-		"hetzner", "huggingface", "ipinfo", "ipmi", "iru", "jamf", "kustomize", "mikrotik", "mistral", "mondoo", "mongo",
-		"ms365", "mssql", "mysqldb", "network", "nmap", "nutanix", "oci", "ollama", "opcua",
-		"opensearch", "openstack", "portainer", "postgresdb",
-		"proxmox", "redfish", "redisdb", "stackit", "terraform", "vllm", "vsphere", "weaviate",
+		"hetzner", "huggingface", "ipinfo", "ipmi", "iru", "kustomize", "mikrotik", "mistral", "mondoo", "ms365", "network", "nutanix", "oci", "ollama", "opcua",
+		"opensearch", "openstack", "proxmox", "redfish", "redisdb", "stackit", "terraform", "vsphere",
 	} {
 		rootBacklog[p] = struct{}{}
 	}

@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"context"
+	stderrors "errors"
 	"os"
 
 	"github.com/cockroachdb/errors"
@@ -156,6 +157,10 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 	// if the flag `exit-1-on-failure` is provided and anyResultFailed is true, we
 	// will exit the program with the exit code `1`
 	anyResultFailed := false
+	// Assets the query does not apply to. Counted rather than ignored: a run
+	// where every asset was skipped produced no answers, and saying nothing
+	// would let that read as a clean pass.
+	skipped := 0
 	// we defer this check since we want it to be the last thing to be evaluated
 	defer func() {
 		if conf.GetExit_1OnFailure() && anyResultFailed {
@@ -221,6 +226,19 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 			code, results, err = sh.RunOnce(conf.Command)
 		}
 		if err != nil {
+			// A query that does not fit this asset's root is a statement about
+			// which assets it targets, not a failure (ADR 031). Over a mixed
+			// set - a k8s manifest yields a cluster, a namespace and a
+			// deployment, each rooted differently - aborting on the first
+			// mismatch would throw away every asset the query does apply to.
+			// Skip it, and say so, so a skipped asset is never mistaken for one
+			// that passed.
+			if stderrors.Is(err, mqlc.ErrRootMismatch) {
+				skipped++
+				log.Info().Str("asset", tracked.Asset.GetName()).Err(err).
+					Msg("skipping asset: this query does not apply to it")
+				continue
+			}
 			return errors.Wrap(err, "failed to run")
 		}
 
@@ -259,6 +277,14 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 
 	if conf.Format == "json" {
 		_ = out.WriteString("]")
+	}
+
+	if skipped == len(allAssets) && skipped > 0 {
+		return errors.Errorf("this query does not apply to any of the %d assets found", skipped)
+	}
+	if skipped > 0 {
+		log.Info().Int("skipped", skipped).Int("total", len(allAssets)).
+			Msg("some assets were skipped because the query does not apply to them")
 	}
 
 	return nil

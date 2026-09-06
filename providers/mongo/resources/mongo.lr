@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/mongo"
 option go_package = "go.mondoo.com/mql/providers/mongo/resources"
+option root = "mongo"
 
 // MongoDB
 //
@@ -10,7 +11,7 @@ option go_package = "go.mondoo.com/mql/providers/mongo/resources"
 // for the connected server: its version, configuration, TLS and authentication
 // settings, users, roles, and databases. For MongoDB Atlas (the managed
 // service), use the mongodbatlas provider instead.
-mongo {}
+mongo @root {}
 
 // MongoDB server
 //
