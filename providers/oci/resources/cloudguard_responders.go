@@ -241,10 +241,11 @@ func (o *mqlOciCloudGuardResponderRecipe) rules() ([]any, error) {
 
 		isEnabled, mode := ociCloudGuardResponderRuleExecution(rule.Details)
 
-		var (
-			condition any
-			settings  []any
-		)
+		var condition any
+		// Empty rather than nil so the field renders as an empty list, matching
+		// every other list in this provider, on a rule the service reported
+		// without a detail block.
+		settings := []any{}
 		if rule.Details != nil {
 			condition, err = convert.JsonToDict(rule.Details.Condition)
 			if err != nil {
