@@ -942,6 +942,7 @@ oci.compute.vnic.macAddress 13.1.1
 oci.compute.vnic.name 13.1.1
 oci.compute.vnic.privateIp 13.1.1
 oci.compute.vnic.publicIp 13.1.1
+oci.compute.vnic.routeTable 13.21.1
 oci.compute.vnic.securityAttributes 13.18.2
 oci.compute.vnic.securityGroups 13.6.2
 oci.compute.vnic.skipSourceDestCheck 13.1.1

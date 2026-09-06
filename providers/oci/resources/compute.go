@@ -483,8 +483,9 @@ func (o *mqlOciComputeInstance) vnics() ([]any, error) {
 
 type mqlOciComputeVnicInternal struct {
 	ociCompartmentRef
-	cacheNsgIDs   []any
-	cacheSubnetID string
+	cacheNsgIDs       []any
+	cacheSubnetID     string
+	cacheRouteTableID string
 }
 
 func (o *mqlOciComputeVnic) id() (string, error) {
@@ -503,6 +504,28 @@ func (o *mqlOciComputeVnic) subnet() (*mqlOciNetworkSubnet, error) {
 		return nil, err
 	}
 	return mqlSubnet.(*mqlOciNetworkSubnet), nil
+}
+
+// routeTable resolves the route table the VNIC routes through, which OCI calls
+// per-resource routing. Null when the VNIC sets none, in which case its subnet's
+// route table governs the interface.
+//
+// A route table the VNIC names but that cannot be resolved is reported as an
+// error rather than as null, the same way the subnet reference behaves: the
+// exposure verdict reads this field, and an unread route table must not be
+// indistinguishable from a VNIC that overrides nothing.
+func (o *mqlOciComputeVnic) routeTable() (*mqlOciNetworkRouteTable, error) {
+	if o.cacheRouteTableID == "" {
+		o.RouteTable.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlRouteTable, err := NewResource(o.MqlRuntime, "oci.network.routeTable", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheRouteTableID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRouteTable.(*mqlOciNetworkRouteTable), nil
 }
 
 func (o *mqlOciCompute) images() ([]any, error) {

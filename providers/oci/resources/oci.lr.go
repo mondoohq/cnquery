@@ -2868,6 +2868,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.compute.vnic.subnet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeVnic).GetSubnet()).ToDataRes(types.Resource("oci.network.subnet"))
 	},
+	"oci.compute.vnic.routeTable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeVnic).GetRouteTable()).ToDataRes(types.Resource("oci.network.routeTable"))
+	},
 	"oci.compute.vnic.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeVnic).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
 	},
@@ -13594,6 +13597,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.compute.vnic.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeVnic).Subnet, ok = plugin.RawToTValue[*mqlOciNetworkSubnet](v.Value, v.Error)
+		return
+	},
+	"oci.compute.vnic.routeTable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeVnic).RouteTable, ok = plugin.RawToTValue[*mqlOciNetworkRouteTable](v.Value, v.Error)
 		return
 	},
 	"oci.compute.vnic.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31023,6 +31030,7 @@ type mqlOciComputeVnic struct {
 	MacAddress                plugin.TValue[string]
 	HostnameLabel             plugin.TValue[string]
 	Subnet                    plugin.TValue[*mqlOciNetworkSubnet]
+	RouteTable                plugin.TValue[*mqlOciNetworkRouteTable]
 	SecurityGroups            plugin.TValue[[]any]
 	SkipSourceDestCheck       plugin.TValue[bool]
 	SecurityAttributes        plugin.TValue[map[string]any]
@@ -31132,6 +31140,22 @@ func (c *mqlOciComputeVnic) GetSubnet() *plugin.TValue[*mqlOciNetworkSubnet] {
 		}
 
 		return c.subnet()
+	})
+}
+
+func (c *mqlOciComputeVnic) GetRouteTable() *plugin.TValue[*mqlOciNetworkRouteTable] {
+	return plugin.GetOrCompute[*mqlOciNetworkRouteTable](&c.RouteTable, func() (*mqlOciNetworkRouteTable, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute.vnic", c.__id, "routeTable")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkRouteTable), nil
+			}
+		}
+
+		return c.routeTable()
 	})
 }
 

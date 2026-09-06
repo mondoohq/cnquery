@@ -936,6 +936,9 @@ func ociVnicToMql(runtime *plugin.Runtime, vnic core.Vnic) (*mqlOciComputeVnic, 
 	}
 	mqlVnic := res.(*mqlOciComputeVnic)
 	mqlVnic.cacheSubnetID = stringValue(vnic.SubnetId)
+	// Per-resource routing: set only when the VNIC overrides its subnet's route
+	// table, and what the exposure verdict routes on when it is.
+	mqlVnic.cacheRouteTableID = stringValue(vnic.RouteTableId)
 	mqlVnic.cacheNsgIDs = convert.SliceAnyToInterface(vnic.NsgIds)
 	return mqlVnic, nil
 }
