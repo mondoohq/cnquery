@@ -124,7 +124,12 @@ func (r *Runtime) connectedRuntime(key string, label string, find func() (*inven
 		r.mu.Unlock()
 		return sub, nil
 	}
-	chain := r.resolveChain
+	// Copied, not aliased: the error below appends to this, and appending to a
+	// slice that shares another runtime's backing array writes into storage we
+	// no longer hold the lock for. Nothing observes that write today - it lands
+	// past every reader's length - but it is one growth of the chain away from
+	// being a real race, and the write side already copies for the same reason.
+	chain := append([]string{}, r.resolveChain...)
 	r.mu.Unlock()
 
 	if len(chain) >= maxAssetResolveDepth {
