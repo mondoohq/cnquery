@@ -6,6 +6,8 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -107,7 +109,10 @@ func TestOciPaginateDiscardsPartialResultOnError(t *testing.T) {
 	items, err := ociPaginate(context.Background(), func(_ context.Context, _ *string) ([]int, *string, error) {
 		call++
 		if call < 3 {
-			return []int{call}, token("more"), nil
+			// Distinct per page: an unchanged token is itself an error now,
+			// and a fixture repeating one would fail here for that reason
+			// rather than for the one this test is about.
+			return []int{call}, token(fmt.Sprintf("page-%d", call+1)), nil
 		}
 		return nil, nil, errPageFailed
 	})
@@ -242,5 +247,60 @@ func TestOciScimPaginateDiscardsPartialResultOnError(t *testing.T) {
 	}
 	if items != nil {
 		t.Errorf("got %d resources alongside the error, want nil", len(items))
+	}
+}
+
+// TestOciPaginateStopsOnAStuckCursor covers the one shape the walk cannot
+// survive on its own. An endpoint that echoes the page token it was handed
+// would be asked for the same page forever: the collection grows without
+// bound, the scan hangs, and nothing names the region or service responsible.
+//
+// Reported rather than truncated. Returning what was collected would hand back
+// the same page N times as though it were a complete listing, which is the
+// confident-subset failure the rest of this helper's error handling exists to
+// avoid.
+func TestOciPaginateStopsOnAStuckCursor(t *testing.T) {
+	calls := 0
+	items, err := ociPaginate(context.Background(), func(_ context.Context, _ *string) ([]int, *string, error) {
+		calls++
+		if calls > 100 {
+			t.Fatal("pagination did not terminate on a repeated page token")
+		}
+		return []int{calls}, token("stuck"), nil
+	})
+	if err == nil {
+		t.Fatal("got no error for a page token that never advanced")
+	}
+	if !strings.Contains(err.Error(), "did not advance") {
+		t.Errorf("error %q does not say the cursor was stuck", err)
+	}
+	if items != nil {
+		t.Errorf("got %v alongside the error, want nil", items)
+	}
+	// Two requests: the first has no token to compare against, the second
+	// returns the same one it was given.
+	if calls != 2 {
+		t.Errorf("made %d requests before stopping, want 2", calls)
+	}
+}
+
+// TestOciPaginateAllowsARepeatedTokenAfterAnAdvance keeps the guard from
+// firing on a cursor that legitimately revisits a value. Only an immediate
+// repeat is stuck; a walk that moves p1 -> p2 -> p1 -> nil is odd but is
+// making progress, and rejecting it would truncate a real listing.
+func TestOciPaginateAllowsARepeatedTokenAfterAnAdvance(t *testing.T) {
+	nextTokens := []*string{token("p1"), token("p2"), token("p1"), nil}
+
+	call := 0
+	items, err := ociPaginate(context.Background(), func(_ context.Context, _ *string) ([]int, *string, error) {
+		next := nextTokens[call]
+		call++
+		return []int{call}, next, nil
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(items) != 4 {
+		t.Errorf("got %d items, want 4: %v", len(items), items)
 	}
 }

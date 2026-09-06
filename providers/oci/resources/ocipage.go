@@ -3,7 +3,10 @@
 
 package resources
 
-import "context"
+import (
+	"context"
+	"errors"
+)
 
 // OCI paginates almost every list API the same way: the request carries an
 // opaque `Page` token and the response returns the next one as `OpcNextPage`,
@@ -40,6 +43,17 @@ func ociPaginate[T any](ctx context.Context, page func(ctx context.Context, page
 		items = append(items, batch...)
 		if next == nil {
 			return items, nil
+		}
+		// A cursor that does not advance is the one shape this loop cannot
+		// survive: the same page is requested forever, items grows without
+		// bound, and the scan hangs with no error to attribute it to. OCI page
+		// tokens are opaque but must move, so an unchanged one is a broken
+		// response rather than a signal to keep asking. Reported rather than
+		// truncated, for the same reason an error discards the partial result
+		// above - a silently short list is indistinguishable from a complete
+		// one.
+		if token != nil && *next == *token {
+			return nil, errors.New("oci: pagination did not advance, the service returned the same page token twice")
 		}
 		token = next
 	}
