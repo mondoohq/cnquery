@@ -365,6 +365,33 @@ This is *not* the same-asset cross-provider call that
 involved, because creating a genuinely new asset is not calling another provider
 for the asset you are already on.
 
+### 5b. `asset` is a member of every root
+
+`asset` is what a query asks for the platform, version and identity in front of
+it. It is `@global`, which is right on the asset you connected to and silently
+wrong one hop into another one: a bare mention resolves through the global
+namespace to whichever runtime is executing, so `running { asset.platform }`
+reported the *host* as `arch` for an Alpine container - the same shape of wrong
+answer the `docker.container` embed produced.
+
+So every root carries it, and the **schema builder attaches it** rather than each
+provider declaring it. This is not a choice a provider makes: it is true of every
+root and the shape is the one core defines, so restating it once per provider -
+with a validator to catch whoever forgets - would be duplication guarding
+duplication. A provider that declares a root gets `asset` without knowing this
+exists.
+
+The field names core's `asset` directly. An alias would have generated a
+separate resource carrying only the part *that* provider extends onto it
+(`os.base.asset` held the four fields os adds and none of the twenty core
+declares), which then needs reconciling with the real one somewhere else;
+naming the resource means there is only ever one of it. A provider that
+deliberately declares its own `asset` member keeps it - the attachment fills a
+gap, it does not overrule a schema.
+
+Reached as a member, it resolves through the runtime the chain is bound to, so
+on a cross-connected root it answers about that asset.
+
 ### 6. Top-level `_` is the connected asset's root
 
 Inside a block, `_` already names the block's binding (`mqlc/mqlc.go:1492`). At the
