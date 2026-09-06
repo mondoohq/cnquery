@@ -30,21 +30,21 @@ func TestAssetReferenceExec(t *testing.T) {
 	assert.Equal(t, false, res.Value)
 }
 
-// A single-asset recording has nothing on the other end of the anchor. That is
-// an ordinary state - most recordings are of one asset - so it has to fail
-// specifically, naming the asset it could not reach, rather than surfacing as a
-// missing function on the asset type or as a null that looks like an answer.
+// A single-asset recording holds neither the reverse edge nor the target, so
+// both legs come up empty: nothing recorded is anchored on it, and the target
+// the provider names is not in this recording either.
 //
 // The chain compiles either way, so this error is the only thing standing
-// between a user and a confusing result.
+// between a user and a confusing result. It has to name the asset it could not
+// reach rather than surfacing as a missing function on the asset type, or as a
+// null that reads like an answer.
 func TestAssetChainWithNothingToResolveTo(t *testing.T) {
 	rt := testutils.LinuxMock()
 
 	res, err := exec.Exec("muser.running.name", rt, testutils.Features, nil)
 	require.NoError(t, err, "the chain compiles")
 	require.Error(t, res.Error)
-	assert.Contains(t, res.Error.Error(), "no recorded asset is anchored on it")
-	assert.Contains(t, res.Error.Error(), "muser", "the error names the asset it could not reach")
+	assert.Contains(t, res.Error.Error(), "resolved-target", "the error names the asset it could not reach")
 }
 
 // The whole phase 7 path, end to end through llx: a typed asset reference is
@@ -93,4 +93,21 @@ func TestAssetChainLeavesTheParentConnectionAlone(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, after.Error)
 	assert.Nil(t, after.Value, "the parent still reads its own asset, not the target's")
+}
+
+// The same crossing over the live leg. With no reverse edge recorded, the
+// recorded lookup misses and the provider that owns the anchor is asked for the
+// target instead (ADR 031 phase 8) - which is the half that cannot come from
+// the value, because the value carries identity and never reachability.
+//
+// Same query, same answer, different path: `mgroup.name` is "group one" on the
+// parent and "resolved-group" on the target, so the value proves the read
+// crossed rather than falling back locally.
+func TestAssetChainResolvesThroughTheProvider(t *testing.T) {
+	rt := testutils.CrossAssetLiveMock()
+
+	res, err := exec.Exec("muser.running.name", rt, testutils.Features, nil)
+	require.NoError(t, err)
+	require.NoError(t, res.Error)
+	assert.Equal(t, "resolved-group", res.Value)
 }

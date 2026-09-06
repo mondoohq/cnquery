@@ -1019,6 +1019,126 @@ func (x *Translation) GetBlock() *llx.Block {
 	return nil
 }
 
+// ResolveAssetReq asks a provider for the asset behind one of its resources.
+//
+// The `asset` value a query carries is only an anchor - the resource that
+// anchors the target in this asset's tree - because that is identity, and
+// identity is all that belongs in a value which persists into recordings and
+// upstream (ADR 030). Connecting needs more than identity: it needs to know how
+// to reach the thing. That is asked for here, at the moment it is needed, and
+// is never stored.
+//
+// Only the provider that owns the resource can answer, which is the point: the
+// connection config is built from the resource by the same code discovery uses,
+// so the forward and reverse views cannot drift.
+type ResolveAssetReq struct {
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	Connection uint32                 `protobuf:"varint,1,opt,name=connection,proto3" json:"connection,omitempty"`
+	// The anchor: the resource this asset hangs off, in the caller's tree.
+	ResourceType  string `protobuf:"bytes,2,opt,name=resource_type,json=resourceType,proto3" json:"resource_type,omitempty"`
+	ResourceId    string `protobuf:"bytes,3,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResolveAssetReq) Reset() {
+	*x = ResolveAssetReq{}
+	mi := &file_plugin_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResolveAssetReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResolveAssetReq) ProtoMessage() {}
+
+func (x *ResolveAssetReq) ProtoReflect() protoreflect.Message {
+	mi := &file_plugin_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResolveAssetReq.ProtoReflect.Descriptor instead.
+func (*ResolveAssetReq) Descriptor() ([]byte, []int) {
+	return file_plugin_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *ResolveAssetReq) GetConnection() uint32 {
+	if x != nil {
+		return x.Connection
+	}
+	return 0
+}
+
+func (x *ResolveAssetReq) GetResourceType() string {
+	if x != nil {
+		return x.ResourceType
+	}
+	return ""
+}
+
+func (x *ResolveAssetReq) GetResourceId() string {
+	if x != nil {
+		return x.ResourceId
+	}
+	return ""
+}
+
+type ResolveAssetRes struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The asset behind the anchor, carrying the connection needed to reach it.
+	// Null when this provider has no asset for that resource, which is not an
+	// error - most resources are not assets.
+	Asset         *inventory.Asset `protobuf:"bytes,1,opt,name=asset,proto3" json:"asset,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResolveAssetRes) Reset() {
+	*x = ResolveAssetRes{}
+	mi := &file_plugin_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResolveAssetRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResolveAssetRes) ProtoMessage() {}
+
+func (x *ResolveAssetRes) ProtoReflect() protoreflect.Message {
+	mi := &file_plugin_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResolveAssetRes.ProtoReflect.Descriptor instead.
+func (*ResolveAssetRes) Descriptor() ([]byte, []int) {
+	return file_plugin_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *ResolveAssetRes) GetAsset() *inventory.Asset {
+	if x != nil {
+		return x.Asset
+	}
+	return nil
+}
+
 var File_plugin_proto protoreflect.FileDescriptor
 
 const file_plugin_proto_rawDesc = "" +
@@ -1098,7 +1218,16 @@ const file_plugin_proto_rawDesc = "" +
 	"\x05field\x18\x02 \x01(\tR\x05field\x12\x1d\n" +
 	"\n" +
 	"changed_in\x18\x03 \x01(\tR\tchangedIn\x12$\n" +
-	"\x05block\x18\x04 \x01(\v2\x0e.mql.llx.BlockR\x05block2\xf7\x05\n" +
+	"\x05block\x18\x04 \x01(\v2\x0e.mql.llx.BlockR\x05block\"w\n" +
+	"\x0fResolveAssetReq\x12\x1e\n" +
+	"\n" +
+	"connection\x18\x01 \x01(\rR\n" +
+	"connection\x12#\n" +
+	"\rresource_type\x18\x02 \x01(\tR\fresourceType\x12\x1f\n" +
+	"\vresource_id\x18\x03 \x01(\tR\n" +
+	"resourceId\"D\n" +
+	"\x0fResolveAssetRes\x121\n" +
+	"\x05asset\x18\x01 \x01(\v2\x1b.cnquery.providers.v1.AssetR\x05asset2\xd5\x06\n" +
 	"\x0eProviderPlugin\x12S\n" +
 	"\tHeartbeat\x12\".cnquery.providers.v1.HeartbeatReq\x1a\".cnquery.providers.v1.HeartbeatRes\x12\\\n" +
 	"\fTranslations\x12%.cnquery.providers.v1.TranslationsReq\x1a%.cnquery.providers.v1.TranslationsRes\x12P\n" +
@@ -1109,7 +1238,8 @@ const file_plugin_proto_rawDesc = "" +
 	"\vMockConnect\x12 .cnquery.providers.v1.ConnectReq\x1a .cnquery.providers.v1.ConnectRes\x12P\n" +
 	"\bShutdown\x12!.cnquery.providers.v1.ShutdownReq\x1a!.cnquery.providers.v1.ShutdownRes\x12G\n" +
 	"\aGetData\x12\x1d.cnquery.providers.v1.DataReq\x1a\x1d.cnquery.providers.v1.DataRes\x12K\n" +
-	"\tStoreData\x12\x1e.cnquery.providers.v1.StoreReq\x1a\x1e.cnquery.providers.v1.StoreRes2\xfa\x01\n" +
+	"\tStoreData\x12\x1e.cnquery.providers.v1.StoreReq\x1a\x1e.cnquery.providers.v1.StoreRes\x12\\\n" +
+	"\fResolveAsset\x12%.cnquery.providers.v1.ResolveAssetReq\x1a%.cnquery.providers.v1.ResolveAssetRes2\xfa\x01\n" +
 	"\x10ProviderCallback\x12J\n" +
 	"\aCollect\x12\x1d.cnquery.providers.v1.DataRes\x1a .cnquery.providers.v1.CollectRes\x12Q\n" +
 	"\fGetRecording\x12\x1d.cnquery.providers.v1.DataReq\x1a\".cnquery.providers.v1.ResourceData\x12G\n" +
@@ -1127,7 +1257,7 @@ func file_plugin_proto_rawDescGZIP() []byte {
 	return file_plugin_proto_rawDescData
 }
 
-var file_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_plugin_proto_goTypes = []any{
 	(*ParseCLIReq)(nil),             // 0: cnquery.providers.v1.ParseCLIReq
 	(*ParseCLIRes)(nil),             // 1: cnquery.providers.v1.ParseCLIRes
@@ -1148,61 +1278,66 @@ var file_plugin_proto_goTypes = []any{
 	(*TranslationsReq)(nil),         // 16: cnquery.providers.v1.TranslationsReq
 	(*TranslationsRes)(nil),         // 17: cnquery.providers.v1.TranslationsRes
 	(*Translation)(nil),             // 18: cnquery.providers.v1.Translation
-	nil,                             // 19: cnquery.providers.v1.ParseCLIReq.FlagsEntry
-	nil,                             // 20: cnquery.providers.v1.DataReq.ArgsEntry
-	nil,                             // 21: cnquery.providers.v1.ResourceData.FieldsEntry
-	(*inventory.Asset)(nil),         // 22: cnquery.providers.v1.Asset
-	(*upstream.UpstreamConfig)(nil), // 23: mondoo.mql.upstream.v1.UpstreamConfig
-	(*inventory.Inventory)(nil),     // 24: cnquery.providers.v1.Inventory
-	(*llx.Primitive)(nil),           // 25: mql.llx.Primitive
-	(*llx.Block)(nil),               // 26: mql.llx.Block
-	(*llx.Result)(nil),              // 27: mql.llx.Result
+	(*ResolveAssetReq)(nil),         // 19: cnquery.providers.v1.ResolveAssetReq
+	(*ResolveAssetRes)(nil),         // 20: cnquery.providers.v1.ResolveAssetRes
+	nil,                             // 21: cnquery.providers.v1.ParseCLIReq.FlagsEntry
+	nil,                             // 22: cnquery.providers.v1.DataReq.ArgsEntry
+	nil,                             // 23: cnquery.providers.v1.ResourceData.FieldsEntry
+	(*inventory.Asset)(nil),         // 24: cnquery.providers.v1.Asset
+	(*upstream.UpstreamConfig)(nil), // 25: mondoo.mql.upstream.v1.UpstreamConfig
+	(*inventory.Inventory)(nil),     // 26: cnquery.providers.v1.Inventory
+	(*llx.Primitive)(nil),           // 27: mql.llx.Primitive
+	(*llx.Block)(nil),               // 28: mql.llx.Block
+	(*llx.Result)(nil),              // 29: mql.llx.Result
 }
 var file_plugin_proto_depIdxs = []int32{
-	19, // 0: cnquery.providers.v1.ParseCLIReq.flags:type_name -> cnquery.providers.v1.ParseCLIReq.FlagsEntry
-	22, // 1: cnquery.providers.v1.ParseCLIRes.asset:type_name -> cnquery.providers.v1.Asset
-	22, // 2: cnquery.providers.v1.ConnectReq.asset:type_name -> cnquery.providers.v1.Asset
-	23, // 3: cnquery.providers.v1.ConnectReq.upstream:type_name -> mondoo.mql.upstream.v1.UpstreamConfig
-	22, // 4: cnquery.providers.v1.ConnectRes.asset:type_name -> cnquery.providers.v1.Asset
-	24, // 5: cnquery.providers.v1.ConnectRes.inventory:type_name -> cnquery.providers.v1.Inventory
-	20, // 6: cnquery.providers.v1.DataReq.args:type_name -> cnquery.providers.v1.DataReq.ArgsEntry
-	25, // 7: cnquery.providers.v1.DataRes.data:type_name -> mql.llx.Primitive
+	21, // 0: cnquery.providers.v1.ParseCLIReq.flags:type_name -> cnquery.providers.v1.ParseCLIReq.FlagsEntry
+	24, // 1: cnquery.providers.v1.ParseCLIRes.asset:type_name -> cnquery.providers.v1.Asset
+	24, // 2: cnquery.providers.v1.ConnectReq.asset:type_name -> cnquery.providers.v1.Asset
+	25, // 3: cnquery.providers.v1.ConnectReq.upstream:type_name -> mondoo.mql.upstream.v1.UpstreamConfig
+	24, // 4: cnquery.providers.v1.ConnectRes.asset:type_name -> cnquery.providers.v1.Asset
+	26, // 5: cnquery.providers.v1.ConnectRes.inventory:type_name -> cnquery.providers.v1.Inventory
+	22, // 6: cnquery.providers.v1.DataReq.args:type_name -> cnquery.providers.v1.DataReq.ArgsEntry
+	27, // 7: cnquery.providers.v1.DataRes.data:type_name -> mql.llx.Primitive
 	10, // 8: cnquery.providers.v1.StoreReq.resources:type_name -> cnquery.providers.v1.ResourceData
-	21, // 9: cnquery.providers.v1.ResourceData.fields:type_name -> cnquery.providers.v1.ResourceData.FieldsEntry
+	23, // 9: cnquery.providers.v1.ResourceData.fields:type_name -> cnquery.providers.v1.ResourceData.FieldsEntry
 	18, // 10: cnquery.providers.v1.TranslationsRes.translations:type_name -> cnquery.providers.v1.Translation
-	26, // 11: cnquery.providers.v1.Translation.block:type_name -> mql.llx.Block
-	25, // 12: cnquery.providers.v1.ParseCLIReq.FlagsEntry.value:type_name -> mql.llx.Primitive
-	25, // 13: cnquery.providers.v1.DataReq.ArgsEntry.value:type_name -> mql.llx.Primitive
-	27, // 14: cnquery.providers.v1.ResourceData.FieldsEntry.value:type_name -> mql.llx.Result
-	12, // 15: cnquery.providers.v1.ProviderPlugin.Heartbeat:input_type -> cnquery.providers.v1.HeartbeatReq
-	16, // 16: cnquery.providers.v1.ProviderPlugin.Translations:input_type -> cnquery.providers.v1.TranslationsReq
-	0,  // 17: cnquery.providers.v1.ProviderPlugin.ParseCLI:input_type -> cnquery.providers.v1.ParseCLIReq
-	2,  // 18: cnquery.providers.v1.ProviderPlugin.Connect:input_type -> cnquery.providers.v1.ConnectReq
-	14, // 19: cnquery.providers.v1.ProviderPlugin.Disconnect:input_type -> cnquery.providers.v1.DisconnectReq
-	2,  // 20: cnquery.providers.v1.ProviderPlugin.MockConnect:input_type -> cnquery.providers.v1.ConnectReq
-	4,  // 21: cnquery.providers.v1.ProviderPlugin.Shutdown:input_type -> cnquery.providers.v1.ShutdownReq
-	6,  // 22: cnquery.providers.v1.ProviderPlugin.GetData:input_type -> cnquery.providers.v1.DataReq
-	9,  // 23: cnquery.providers.v1.ProviderPlugin.StoreData:input_type -> cnquery.providers.v1.StoreReq
-	7,  // 24: cnquery.providers.v1.ProviderCallback.Collect:input_type -> cnquery.providers.v1.DataRes
-	6,  // 25: cnquery.providers.v1.ProviderCallback.GetRecording:input_type -> cnquery.providers.v1.DataReq
-	6,  // 26: cnquery.providers.v1.ProviderCallback.GetData:input_type -> cnquery.providers.v1.DataReq
-	13, // 27: cnquery.providers.v1.ProviderPlugin.Heartbeat:output_type -> cnquery.providers.v1.HeartbeatRes
-	17, // 28: cnquery.providers.v1.ProviderPlugin.Translations:output_type -> cnquery.providers.v1.TranslationsRes
-	1,  // 29: cnquery.providers.v1.ProviderPlugin.ParseCLI:output_type -> cnquery.providers.v1.ParseCLIRes
-	3,  // 30: cnquery.providers.v1.ProviderPlugin.Connect:output_type -> cnquery.providers.v1.ConnectRes
-	15, // 31: cnquery.providers.v1.ProviderPlugin.Disconnect:output_type -> cnquery.providers.v1.DisconnectRes
-	3,  // 32: cnquery.providers.v1.ProviderPlugin.MockConnect:output_type -> cnquery.providers.v1.ConnectRes
-	5,  // 33: cnquery.providers.v1.ProviderPlugin.Shutdown:output_type -> cnquery.providers.v1.ShutdownRes
-	7,  // 34: cnquery.providers.v1.ProviderPlugin.GetData:output_type -> cnquery.providers.v1.DataRes
-	11, // 35: cnquery.providers.v1.ProviderPlugin.StoreData:output_type -> cnquery.providers.v1.StoreRes
-	8,  // 36: cnquery.providers.v1.ProviderCallback.Collect:output_type -> cnquery.providers.v1.CollectRes
-	10, // 37: cnquery.providers.v1.ProviderCallback.GetRecording:output_type -> cnquery.providers.v1.ResourceData
-	7,  // 38: cnquery.providers.v1.ProviderCallback.GetData:output_type -> cnquery.providers.v1.DataRes
-	27, // [27:39] is the sub-list for method output_type
-	15, // [15:27] is the sub-list for method input_type
-	15, // [15:15] is the sub-list for extension type_name
-	15, // [15:15] is the sub-list for extension extendee
-	0,  // [0:15] is the sub-list for field type_name
+	28, // 11: cnquery.providers.v1.Translation.block:type_name -> mql.llx.Block
+	24, // 12: cnquery.providers.v1.ResolveAssetRes.asset:type_name -> cnquery.providers.v1.Asset
+	27, // 13: cnquery.providers.v1.ParseCLIReq.FlagsEntry.value:type_name -> mql.llx.Primitive
+	27, // 14: cnquery.providers.v1.DataReq.ArgsEntry.value:type_name -> mql.llx.Primitive
+	29, // 15: cnquery.providers.v1.ResourceData.FieldsEntry.value:type_name -> mql.llx.Result
+	12, // 16: cnquery.providers.v1.ProviderPlugin.Heartbeat:input_type -> cnquery.providers.v1.HeartbeatReq
+	16, // 17: cnquery.providers.v1.ProviderPlugin.Translations:input_type -> cnquery.providers.v1.TranslationsReq
+	0,  // 18: cnquery.providers.v1.ProviderPlugin.ParseCLI:input_type -> cnquery.providers.v1.ParseCLIReq
+	2,  // 19: cnquery.providers.v1.ProviderPlugin.Connect:input_type -> cnquery.providers.v1.ConnectReq
+	14, // 20: cnquery.providers.v1.ProviderPlugin.Disconnect:input_type -> cnquery.providers.v1.DisconnectReq
+	2,  // 21: cnquery.providers.v1.ProviderPlugin.MockConnect:input_type -> cnquery.providers.v1.ConnectReq
+	4,  // 22: cnquery.providers.v1.ProviderPlugin.Shutdown:input_type -> cnquery.providers.v1.ShutdownReq
+	6,  // 23: cnquery.providers.v1.ProviderPlugin.GetData:input_type -> cnquery.providers.v1.DataReq
+	9,  // 24: cnquery.providers.v1.ProviderPlugin.StoreData:input_type -> cnquery.providers.v1.StoreReq
+	19, // 25: cnquery.providers.v1.ProviderPlugin.ResolveAsset:input_type -> cnquery.providers.v1.ResolveAssetReq
+	7,  // 26: cnquery.providers.v1.ProviderCallback.Collect:input_type -> cnquery.providers.v1.DataRes
+	6,  // 27: cnquery.providers.v1.ProviderCallback.GetRecording:input_type -> cnquery.providers.v1.DataReq
+	6,  // 28: cnquery.providers.v1.ProviderCallback.GetData:input_type -> cnquery.providers.v1.DataReq
+	13, // 29: cnquery.providers.v1.ProviderPlugin.Heartbeat:output_type -> cnquery.providers.v1.HeartbeatRes
+	17, // 30: cnquery.providers.v1.ProviderPlugin.Translations:output_type -> cnquery.providers.v1.TranslationsRes
+	1,  // 31: cnquery.providers.v1.ProviderPlugin.ParseCLI:output_type -> cnquery.providers.v1.ParseCLIRes
+	3,  // 32: cnquery.providers.v1.ProviderPlugin.Connect:output_type -> cnquery.providers.v1.ConnectRes
+	15, // 33: cnquery.providers.v1.ProviderPlugin.Disconnect:output_type -> cnquery.providers.v1.DisconnectRes
+	3,  // 34: cnquery.providers.v1.ProviderPlugin.MockConnect:output_type -> cnquery.providers.v1.ConnectRes
+	5,  // 35: cnquery.providers.v1.ProviderPlugin.Shutdown:output_type -> cnquery.providers.v1.ShutdownRes
+	7,  // 36: cnquery.providers.v1.ProviderPlugin.GetData:output_type -> cnquery.providers.v1.DataRes
+	11, // 37: cnquery.providers.v1.ProviderPlugin.StoreData:output_type -> cnquery.providers.v1.StoreRes
+	20, // 38: cnquery.providers.v1.ProviderPlugin.ResolveAsset:output_type -> cnquery.providers.v1.ResolveAssetRes
+	8,  // 39: cnquery.providers.v1.ProviderCallback.Collect:output_type -> cnquery.providers.v1.CollectRes
+	10, // 40: cnquery.providers.v1.ProviderCallback.GetRecording:output_type -> cnquery.providers.v1.ResourceData
+	7,  // 41: cnquery.providers.v1.ProviderCallback.GetData:output_type -> cnquery.providers.v1.DataRes
+	29, // [29:42] is the sub-list for method output_type
+	16, // [16:29] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_plugin_proto_init() }
@@ -1216,7 +1351,7 @@ func file_plugin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_plugin_proto_rawDesc), len(file_plugin_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   22,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

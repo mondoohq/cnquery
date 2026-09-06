@@ -52,6 +52,12 @@ type ProviderPlugin interface {
 	Shutdown(req *ShutdownReq) (*ShutdownRes, error)
 	GetData(req *DataReq) (*DataRes, error)
 	StoreData(req *StoreReq) (*StoreRes, error)
+	// ResolveAsset returns the asset one of this provider's resources stands
+	// for, with the connection needed to reach it (ADR 031). plugin.Service
+	// answers it from the resource itself, so a provider whose resources
+	// implement AssetSource needs no code at all, and one whose resources are
+	// not assets answers nothing.
+	ResolveAsset(req *ResolveAssetReq) (*ResolveAssetRes, error)
 }
 
 // This is the implementation of plugin.Plugin so we can serve/consume this.

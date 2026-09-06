@@ -182,6 +182,12 @@ func (s *sbomProviderService) Disconnect(req *plugin.DisconnectReq) (*plugin.Dis
 	return nil, nil
 }
 
+// ResolveAsset: this service owns no resources of its own - it replays or
+// wraps another provider's - so there is no anchor here to stand for an asset.
+func (s *sbomProviderService) ResolveAsset(req *plugin.ResolveAssetReq) (*plugin.ResolveAssetRes, error) {
+	return &plugin.ResolveAssetRes{}, nil
+}
+
 func (s *sbomProviderService) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
 	// Nothing to do yet...
 	return nil, nil

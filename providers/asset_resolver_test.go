@@ -54,7 +54,7 @@ func runtimeWith(self *inventory.Asset, assets ...*recording.Asset) *Runtime {
 	}
 }
 
-func TestTargetAssetForAnchor(t *testing.T) {
+func TestRecordedTargetForAnchor(t *testing.T) {
 	host := &inventory.Asset{Name: "host", PlatformIds: []string{"//platformid/host"}}
 	anchor := &llx.AssetValue{ResourceType: "claude.code.mcpServer", ResourceId: "claude.code.mcpServer/github"}
 
@@ -64,24 +64,34 @@ func TestTargetAssetForAnchor(t *testing.T) {
 			recordedAsset("mcp-github", anchoredOn(host, anchor.ResourceType, anchor.ResourceId)),
 		)
 
-		target, err := r.targetAssetForAnchor(anchor)
+		target, err := r.recordedTargetForAnchor(anchor)
 		require.NoError(t, err)
+		require.NotNil(t, target)
 		assert.Equal(t, "mcp-github", target.Name)
 		assert.Equal(t, []string{"//platformid/mcp-github"}, target.PlatformIds)
 		// A mock connection is what makes this the recorded leg; the live leg
-		// is the same call with the target's real connection.
+		// carries the target's real connection instead.
 		require.Len(t, target.Connections, 1)
 		assert.Equal(t, "mock", target.Connections[0].Type)
 	})
 
-	t.Run("a different anchor on the same asset is not a match", func(t *testing.T) {
+	// Nothing recorded is not an error - it is every live scan. It hands over
+	// to the provider instead, so this has to be a miss rather than a failure.
+	t.Run("a different anchor on the same asset is a miss", func(t *testing.T) {
 		r := runtimeWith(host,
 			recordedAsset("mcp-github", anchoredOn(host, anchor.ResourceType, "claude.code.mcpServer/other")),
 		)
 
-		_, err := r.targetAssetForAnchor(anchor)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "no recorded asset is anchored on it")
+		target, err := r.recordedTargetForAnchor(anchor)
+		require.NoError(t, err)
+		assert.Nil(t, target)
+	})
+
+	t.Run("no multi-asset recording is a miss", func(t *testing.T) {
+		r := &Runtime{recording: recording.Null{}}
+		target, err := r.recordedTargetForAnchor(anchor)
+		require.NoError(t, err)
+		assert.Nil(t, target)
 	})
 
 	// An anchor id is only unique within one parent, so a recording holding two
@@ -93,12 +103,16 @@ func TestTargetAssetForAnchor(t *testing.T) {
 			recordedAsset("mcp-here", anchoredOn(host, anchor.ResourceType, anchor.ResourceId)),
 		)
 
-		target, err := r.targetAssetForAnchor(anchor)
+		target, err := r.recordedTargetForAnchor(anchor)
 		require.NoError(t, err)
+		require.NotNil(t, target)
 		assert.Equal(t, "mcp-here", target.Name)
 	})
 
-	t.Run("ambiguous is an error, not a guess", func(t *testing.T) {
+	// Ambiguity is an error rather than a fall-through to a live connect: the
+	// recording does hold the answer, we just cannot tell which, and guessing
+	// would connect the wrong asset.
+	t.Run("ambiguous is an error, not a guess and not a miss", func(t *testing.T) {
 		hostA := &inventory.Asset{Name: "a", PlatformIds: []string{"//platformid/a"}}
 		hostB := &inventory.Asset{Name: "b", PlatformIds: []string{"//platformid/b"}}
 		r := runtimeWith(host,
@@ -106,17 +120,112 @@ func TestTargetAssetForAnchor(t *testing.T) {
 			recordedAsset("mcp-b", anchoredOn(hostB, anchor.ResourceType, anchor.ResourceId)),
 		)
 
-		_, err := r.targetAssetForAnchor(anchor)
+		_, err := r.recordedTargetForAnchor(anchor)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "several recorded assets are anchored on it")
 	})
+}
 
-	t.Run("no recording to resolve from", func(t *testing.T) {
-		r := &Runtime{recording: recording.Null{}}
-		_, err := r.targetAssetForAnchor(anchor)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "live connect is not implemented yet")
+// liveRuntime builds a runtime whose anchor resource is owned by a mocked
+// provider, so the ResolveAsset round trip can be exercised without a plugin.
+func liveRuntime(t *testing.T, resourceType string) (*Runtime, *MockProviderPlugin) {
+	t.Helper()
+	ctrl := gomock.NewController(t)
+	mockC := NewMockProvidersCoordinator(ctrl)
+	mockSchema := NewMockResourcesSchema(ctrl)
+	mockPlugin := NewMockProviderPlugin(ctrl)
+
+	const providerID = "go.mondoo.com/mql/providers/os"
+	connected := &ConnectedProvider{
+		Instance:   &RunningProvider{ID: providerID, Name: "os", Plugin: mockPlugin},
+		Connection: &plugin.ConnectRes{Id: 7},
+	}
+	r := &Runtime{
+		coordinator: mockC,
+		recording:   recording.Null{},
+		Provider:    connected,
+		providers:   map[string]*ConnectedProvider{providerID: connected},
+	}
+
+	mockC.EXPECT().Schema().AnyTimes().Return(mockSchema)
+	mockSchema.EXPECT().Lookup(resourceType).AnyTimes().Return(&resources.ResourceInfo{
+		Id: resourceType, Name: resourceType, Provider: providerID,
 	})
+	return r, mockPlugin
+}
+
+// The value carries only the anchor, so reaching the asset means asking the
+// provider that owns the resource. This is the half of resolution that cannot
+// come from the value (ADR 030/031).
+func TestLiveTargetForAnchor(t *testing.T) {
+	anchor := &llx.AssetValue{ResourceType: "claude.code.mcpServer", ResourceId: "claude.code.mcpServer/github"}
+
+	t.Run("asks the owning provider and passes its connection", func(t *testing.T) {
+		r, mockPlugin := liveRuntime(t, anchor.ResourceType)
+
+		mockPlugin.EXPECT().ResolveAsset(gomock.Any()).Times(1).
+			DoAndReturn(func(req *plugin.ResolveAssetReq) (*plugin.ResolveAssetRes, error) {
+				// The provider is asked on the connection it is connected on,
+				// for the exact anchor the value carried.
+				assert.Equal(t, uint32(7), req.Connection)
+				assert.Equal(t, anchor.ResourceType, req.ResourceType)
+				assert.Equal(t, anchor.ResourceId, req.ResourceId)
+				return &plugin.ResolveAssetRes{Asset: &inventory.Asset{
+					Name:        "github-mcp",
+					Connections: []*inventory.Config{{Type: "mcp"}},
+				}}, nil
+			})
+
+		target, err := r.liveTargetForAnchor(anchor)
+		require.NoError(t, err)
+		assert.Equal(t, "github-mcp", target.Name)
+		require.Len(t, target.Connections, 1)
+		assert.Equal(t, "mcp", target.Connections[0].Type, "the target's own connection, not a mock one")
+	})
+
+	// Most resources are not assets. Answering nothing is the normal case and
+	// has to read as "there is nothing here", not as a failure to reach it.
+	t.Run("a resource that is not an asset source", func(t *testing.T) {
+		r, mockPlugin := liveRuntime(t, anchor.ResourceType)
+		mockPlugin.EXPECT().ResolveAsset(gomock.Any()).Times(1).
+			Return(&plugin.ResolveAssetRes{}, nil)
+
+		_, err := r.liveTargetForAnchor(anchor)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "has no asset to connect to")
+	})
+
+	// An asset with no connection cannot be connected to. Catching it here says
+	// which provider produced it; letting it through fails later with nothing
+	// to attribute it to.
+	t.Run("an asset with no connection", func(t *testing.T) {
+		r, mockPlugin := liveRuntime(t, anchor.ResourceType)
+		mockPlugin.EXPECT().ResolveAsset(gomock.Any()).Times(1).
+			Return(&plugin.ResolveAssetRes{Asset: &inventory.Asset{Name: "github-mcp"}}, nil)
+
+		_, err := r.liveTargetForAnchor(anchor)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "no connection")
+	})
+}
+
+// Recording first: a replayed asset answers from what was recorded rather than
+// reconnecting to something that may no longer exist.
+func TestTargetAssetPrefersTheRecording(t *testing.T) {
+	anchor := &llx.AssetValue{ResourceType: "claude.code.mcpServer", ResourceId: "claude.code.mcpServer/github"}
+	host := &inventory.Asset{Name: "host", PlatformIds: []string{"//platformid/host"}}
+
+	r, mockPlugin := liveRuntime(t, anchor.ResourceType)
+	r.recording = &multiAssetRecording{assets: []*recording.Asset{
+		recordedAsset("mcp-github", anchoredOn(host, anchor.ResourceType, anchor.ResourceId)),
+	}}
+	r.Provider.Connection.Asset = host
+	// Never asked: the recording answered.
+	mockPlugin.EXPECT().ResolveAsset(gomock.Any()).Times(0)
+
+	target, err := r.targetAssetForAnchor(anchor)
+	require.NoError(t, err)
+	assert.Equal(t, "mock", target.Connections[0].Type)
 }
 
 // A per-runtime cache cannot see an A -> B -> A cycle, because each hop is a

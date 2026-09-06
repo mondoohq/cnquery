@@ -232,6 +232,12 @@ func (s *recordingProvider) Disconnect(req *plugin.DisconnectReq) (*plugin.Disco
 	return nil, nil
 }
 
+// ResolveAsset: this service owns no resources of its own - it replays or
+// wraps another provider's - so there is no anchor here to stand for an asset.
+func (s *recordingProvider) ResolveAsset(req *plugin.ResolveAssetReq) (*plugin.ResolveAssetRes, error) {
+	return &plugin.ResolveAssetRes{}, nil
+}
+
 func (s *recordingProvider) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
 	return nil, nil
 }

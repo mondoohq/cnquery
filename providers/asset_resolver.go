@@ -144,10 +144,32 @@ func (r *Runtime) runtimeForAnchor(v *llx.AssetValue) (*Runtime, error) {
 // edge at runtime. Nothing about the parent's own tree is consulted, which is
 // what keeps forward and reverse in agreement by construction.
 func (r *Runtime) targetAssetForAnchor(v *llx.AssetValue) (*inventory.Asset, error) {
+	target, err := r.recordedTargetForAnchor(v)
+	if err != nil || target != nil {
+		return target, err
+	}
+
+	// Nothing recorded, so ask the provider that owns the anchor resource. Only
+	// it can say how to reach the asset: the value carries identity and never
+	// reachability (ADR 030), so reachability is fetched at the moment it is
+	// needed and is not stored.
+	return r.liveTargetForAnchor(v)
+}
+
+// recordedTargetForAnchor finds a target asset in the recording, over the
+// **reverse edge**: discovery writes an inventory.AssetRelationship on the
+// discovered asset naming the resource on its parent that anchors it (ADR 030),
+// and this is the first consumer of that edge at runtime. Nothing about the
+// parent's own tree is consulted, which is what keeps forward and reverse in
+// agreement by construction.
+//
+// Returns nil, nil when the recording holds no such asset, which includes every
+// live scan. Recording first: a replayed asset must answer from what was
+// recorded rather than reconnecting to something that may no longer exist.
+func (r *Runtime) recordedTargetForAnchor(v *llx.AssetValue) (*inventory.Asset, error) {
 	multi, ok := r.Recording().(recording.MultiAsset)
 	if !ok {
-		return nil, errors.New("cannot resolve asset " + anchorLabel(v) +
-			": no recording to resolve it from, and live connect is not implemented yet")
+		return nil, nil
 	}
 
 	self := r.asset()
@@ -176,11 +198,14 @@ func (r *Runtime) targetAssetForAnchor(v *llx.AssetValue) (*inventory.Asset, err
 	if target == nil {
 		switch len(matches) {
 		case 0:
-			return nil, errors.New("cannot resolve asset " + anchorLabel(v) +
-				": no recorded asset is anchored on it")
+			// Not recorded. The caller asks the provider instead.
+			return nil, nil
 		case 1:
 			target = matches[0]
 		default:
+			// Ambiguity is an error rather than a fall-through to a live
+			// connect: the recording does hold the answer, we just cannot tell
+			// which one it is, and guessing would connect the wrong asset.
 			return nil, errors.New("cannot resolve asset " + anchorLabel(v) +
 				": several recorded assets are anchored on it and none names this asset as its parent")
 		}
@@ -198,6 +223,49 @@ func (r *Runtime) targetAssetForAnchor(v *llx.AssetValue) (*inventory.Asset, err
 			Type: "mock",
 		}},
 	}, nil
+}
+
+// liveTargetForAnchor asks the provider that owns the anchor resource for the
+// asset it stands for.
+//
+// This is the half that cannot come from the value. An `asset` value carries the
+// anchor and nothing else, because it persists into recordings and upstream and
+// identity is all that belongs in the stored data model (ADR 030). Reaching the
+// asset needs a connection config, which is not identity - so it is asked for
+// here, once, immediately before connecting, and never stored.
+//
+// The provider answers from the resource instance the caller just read the
+// anchor off, using the same code its discovery uses, so the asset a query
+// resolves into and the asset a scan would have discovered are the same asset.
+func (r *Runtime) liveTargetForAnchor(v *llx.AssetValue) (*inventory.Asset, error) {
+	provider, _, err := r.lookupResourceProvider(v.ResourceType)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot resolve asset "+anchorLabel(v))
+	}
+	if provider == nil || provider.Connection == nil {
+		return nil, errors.New("cannot resolve asset " + anchorLabel(v) +
+			": no connected provider owns " + v.ResourceType)
+	}
+
+	res, err := provider.Instance.Plugin.ResolveAsset(&plugin.ResolveAssetReq{
+		Connection:   provider.Connection.Id,
+		ResourceType: v.ResourceType,
+		ResourceId:   v.ResourceId,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot resolve asset "+anchorLabel(v))
+	}
+
+	target := res.GetAsset()
+	if target == nil {
+		return nil, errors.New("cannot resolve asset " + anchorLabel(v) +
+			": " + v.ResourceType + " has no asset to connect to")
+	}
+	if len(target.Connections) == 0 {
+		return nil, errors.New("cannot resolve asset " + anchorLabel(v) +
+			": the provider returned an asset with no connection")
+	}
+	return target, nil
 }
 
 // closeSubRuntimes tears down the runtimes this one opened for other assets.

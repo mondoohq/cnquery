@@ -90,6 +90,33 @@ func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error)
 	return &plugin.ShutdownRes{}, nil
 }
 
+// ResolveAsset answers plugin.AssetSource for this provider's resources. It
+// overrides the embedded plugin.Service for the same reason Disconnect does:
+// this provider keeps its own runtimes map, so the embedded implementation
+// would look in an empty one.
+func (s *Service) ResolveAsset(req *plugin.ResolveAssetReq) (*plugin.ResolveAssetRes, error) {
+	if req == nil {
+		return &plugin.ResolveAssetRes{}, nil
+	}
+	runtime, ok := s.runtimes[req.Connection]
+	if !ok {
+		return &plugin.ResolveAssetRes{}, nil
+	}
+	resource, ok := runtime.Resources.Get(req.ResourceType + "\x00" + req.ResourceId)
+	if !ok {
+		return &plugin.ResolveAssetRes{}, nil
+	}
+	source, ok := resource.(plugin.AssetSource)
+	if !ok {
+		return &plugin.ResolveAssetRes{}, nil
+	}
+	asset, err := source.MqlAsset()
+	if err != nil {
+		return nil, err
+	}
+	return &plugin.ResolveAssetRes{Asset: asset}, nil
+}
+
 // Disconnect releases a connection. This provider tracks its own runtimes
 // map, so it overrides the embedded plugin.Service.Disconnect (which operates
 // on a separate, uninitialized map and would otherwise flush a nil memoizer).

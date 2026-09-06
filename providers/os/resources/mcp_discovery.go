@@ -10,6 +10,7 @@ import (
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 )
 
 // mcpClientResources are the AI tool resources that declare MCP servers. Each
@@ -49,11 +50,7 @@ type mcpServerLike interface {
 //   - a resource-anchored relationship back to the host: the anchor is the
 //     mcpServer resource's own (type, id), matching the `running` field. See ADR 030.
 func DiscoverMCPServerAssets(runtime *plugin.Runtime, host *inventory.Asset) ([]*inventory.Asset, error) {
-	hostRef := &inventory.Asset{
-		Id:          host.GetId(),
-		Mrn:         host.GetMrn(),
-		PlatformIds: host.GetPlatformIds(),
-	}
+	hostRef := hostRefOf(host)
 
 	var assets []*inventory.Asset
 	for _, clientName := range mcpClientResources {
@@ -85,21 +82,67 @@ func DiscoverMCPServerAssets(runtime *plugin.Runtime, host *inventory.Asset) ([]
 			// No PlatformIds here: identity is assigned by the AI provider's
 			// Connect() at connect time. The relationship back to the host is
 			// resource-anchored on (type, id), not platform-ID-based. See ADR 030.
-			assets = append(assets, &inventory.Asset{
-				Name:        srv.GetName().Data,
-				State:       inventory.State_STATE_ONLINE,
-				Connections: []*inventory.Config{conf},
-				Relationships: []*inventory.AssetRelationship{
-					{
-						Asset:        hostRef,
-						ResourceType: srv.MqlName(),
-						ResourceId:   srv.MqlID(),
-					},
-				},
-			})
+			assets = append(assets, mcpServerAssetWith(srv, conf, hostRef))
 		}
 	}
 	return assets, nil
+}
+
+// mcpServerAssetWith assembles the asset one MCP server stands for.
+//
+// Discovery and the `running` field both go through here, which is what keeps
+// the asset a query resolves into and the asset a scan would have discovered
+// identical rather than merely similar. The anchor is the server resource's own
+// (type, id), matching the `running` value exactly. See ADR 030 and ADR 031.
+func mcpServerAssetWith(srv mcpServerLike, conf *inventory.Config, hostRef *inventory.Asset) *inventory.Asset {
+	return &inventory.Asset{
+		Name:        srv.GetName().Data,
+		State:       inventory.State_STATE_ONLINE,
+		Connections: []*inventory.Config{conf},
+		Relationships: []*inventory.AssetRelationship{
+			{
+				Asset:        hostRef,
+				ResourceType: srv.MqlName(),
+				ResourceId:   srv.MqlID(),
+			},
+		},
+	}
+}
+
+// hostRefOf reduces the connected asset to the identity a relationship needs.
+func hostRefOf(host *inventory.Asset) *inventory.Asset {
+	if host == nil {
+		return nil
+	}
+	return &inventory.Asset{
+		Id:          host.GetId(),
+		Mrn:         host.GetMrn(),
+		PlatformIds: host.GetPlatformIds(),
+	}
+}
+
+// mcpServerAssetFor answers plugin.AssetSource for an MCP server resource: the
+// asset behind the anchor a `running` value carries, with the connection needed
+// to reach it (ADR 031 phase 8).
+//
+// The value itself stays the bare anchor, because it persists into recordings
+// and upstream and identity is all that belongs there. This is asked for at
+// connect time and is never stored.
+//
+// A server configured with neither a command nor a url has nothing to connect
+// to. That is an ordinary state - a half-written config - so it answers with no
+// asset rather than an error.
+func mcpServerAssetFor(runtime *plugin.Runtime, srv mcpServerLike) (*inventory.Asset, error) {
+	conf := mcpConnectionConfig(srv)
+	if conf == nil {
+		return nil, nil
+	}
+
+	var host *inventory.Asset
+	if conn, ok := runtime.Connection.(shared.Connection); ok {
+		host = conn.Asset()
+	}
+	return mcpServerAssetWith(srv, conf, hostRefOf(host)), nil
 }
 
 // mcpConnectionConfig builds the `mcp` connection Config the AI provider needs.

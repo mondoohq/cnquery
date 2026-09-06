@@ -310,24 +310,29 @@ Both are `Coordinator.RuntimeFor(target, parent)` + `Connect`, so recording-firs
 ordering is preserved by *choosing the target asset's connection*, not by two
 resolution code paths.
 
-**The value carries the target stub.** This is a phase 8 concern, not phase 7:
-the recorded leg finds the target by scanning the recording for the asset whose
-reverse edge names the anchor, so it needs nothing on the value. Live connect has
-no recording to scan, and that is where the stub becomes load-bearing - along
-with the question it opens, since ADR 030 has the anchor value carrying only
-`(resource_type, resource_id)`.
+**Identity persists, reachability is asked for.** `RuntimeFor` needs an
+`inventory.Asset` with a connection, and the anchor alone does not carry one. An
+earlier draft of this ADR put the target's connection stub on the `asset` value
+itself; that is rejected. The value persists into recordings and upstream on
+every `running` read, and identity is all that belongs in the stored data model
+(ADR 030) - a connection config is not identity, it is how to reach a thing.
 
-`RuntimeFor` needs an `inventory.Asset`
-(connection + name) and the anchor alone does not carry one, so the `asset` value
-gains the target's connection `Config` and name, no secrets, built by the same
-function discovery uses (`mcpConnectionConfig`, `mcp_discovery.go:109`) so ADR
-030's forward/reverse parity holds by construction rather than by discipline. The
-stub rides into recordings and upstream on every `running` read; discovery already
-ships the identical stub for discovered children, so it is not a new exposure
-class. Rejected: a targeted plugin call asking the producing provider for the asset
-behind an anchor, which costs an RPC and a schema notion of "this resource can mint
-an asset". The callback channel was never an option — `providerCallbacks.Collect`
-panics (`providers/runtime.go:857`).
+So the host asks for it, at the moment it connects and never before:
+`ResolveAsset(resource_type, resource_id)` on `plugin.Service`, answered from the
+resource the anchor names. `plugin.AssetSource` is the resource-side contract
+(`MqlAsset() (*inventory.Asset, error)`), and the default implementation reads
+the instance out of the connection's own resource cache, so a provider whose
+resources implement it needs no other code, and one whose resources are not
+assets answers nothing. The asset is built by the same function discovery uses
+(`mcpConnectionConfig`, `mcp_discovery.go`), so ADR 030's forward/reverse parity
+holds by construction rather than by discipline.
+
+The cost is one RPC per distinct anchor - absorbed by the anchor cache, and
+trivial next to the connect it immediately precedes. An earlier draft rejected
+this call for costing "an RPC and a schema notion of 'this resource can mint an
+asset'"; the schema already states that notion, because a field typed
+`asset<root>` is exactly it. The callback channel was never an option -
+`providerCallbacks.Collect` panics (`providers/runtime.go:857`).
 
 **Never lookup-shop a foreign asset on the current runtime's recording.** The
 `llx.Recording` API takes an `AssetRecordingLookup`, but only the local multi-asset

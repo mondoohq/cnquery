@@ -304,6 +304,13 @@ func CrossAssetMock() llx.Runtime {
 	return mockRuntime("testdata/cross-asset.json")
 }
 
+// CrossAssetLiveMock is CrossAssetMock with the reverse edge left out, so the
+// recorded leg of resolution finds nothing and the target has to be asked for
+// from the provider that owns the anchor resource (ADR 031 phase 8).
+func CrossAssetLiveMock() llx.Runtime {
+	return mockRuntime("testdata/cross-asset-live.json")
+}
+
 func KubeletMock() llx.Runtime {
 	return mockRuntime("testdata/kubelet.json")
 }

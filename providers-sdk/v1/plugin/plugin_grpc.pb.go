@@ -31,6 +31,7 @@ const (
 	ProviderPlugin_Shutdown_FullMethodName     = "/cnquery.providers.v1.ProviderPlugin/Shutdown"
 	ProviderPlugin_GetData_FullMethodName      = "/cnquery.providers.v1.ProviderPlugin/GetData"
 	ProviderPlugin_StoreData_FullMethodName    = "/cnquery.providers.v1.ProviderPlugin/StoreData"
+	ProviderPlugin_ResolveAsset_FullMethodName = "/cnquery.providers.v1.ProviderPlugin/ResolveAsset"
 )
 
 // ProviderPluginClient is the client API for ProviderPlugin service.
@@ -46,6 +47,7 @@ type ProviderPluginClient interface {
 	Shutdown(ctx context.Context, in *ShutdownReq, opts ...grpc.CallOption) (*ShutdownRes, error)
 	GetData(ctx context.Context, in *DataReq, opts ...grpc.CallOption) (*DataRes, error)
 	StoreData(ctx context.Context, in *StoreReq, opts ...grpc.CallOption) (*StoreRes, error)
+	ResolveAsset(ctx context.Context, in *ResolveAssetReq, opts ...grpc.CallOption) (*ResolveAssetRes, error)
 }
 
 type providerPluginClient struct {
@@ -146,6 +148,16 @@ func (c *providerPluginClient) StoreData(ctx context.Context, in *StoreReq, opts
 	return out, nil
 }
 
+func (c *providerPluginClient) ResolveAsset(ctx context.Context, in *ResolveAssetReq, opts ...grpc.CallOption) (*ResolveAssetRes, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ResolveAssetRes)
+	err := c.cc.Invoke(ctx, ProviderPlugin_ResolveAsset_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProviderPluginServer is the server API for ProviderPlugin service.
 // All implementations must embed UnimplementedProviderPluginServer
 // for forward compatibility.
@@ -159,6 +171,7 @@ type ProviderPluginServer interface {
 	Shutdown(context.Context, *ShutdownReq) (*ShutdownRes, error)
 	GetData(context.Context, *DataReq) (*DataRes, error)
 	StoreData(context.Context, *StoreReq) (*StoreRes, error)
+	ResolveAsset(context.Context, *ResolveAssetReq) (*ResolveAssetRes, error)
 	mustEmbedUnimplementedProviderPluginServer()
 }
 
@@ -195,6 +208,9 @@ func (UnimplementedProviderPluginServer) GetData(context.Context, *DataReq) (*Da
 }
 func (UnimplementedProviderPluginServer) StoreData(context.Context, *StoreReq) (*StoreRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StoreData not implemented")
+}
+func (UnimplementedProviderPluginServer) ResolveAsset(context.Context, *ResolveAssetReq) (*ResolveAssetRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResolveAsset not implemented")
 }
 func (UnimplementedProviderPluginServer) mustEmbedUnimplementedProviderPluginServer() {}
 func (UnimplementedProviderPluginServer) testEmbeddedByValue()                        {}
@@ -379,6 +395,24 @@ func _ProviderPlugin_StoreData_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProviderPlugin_ResolveAsset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResolveAssetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProviderPluginServer).ResolveAsset(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProviderPlugin_ResolveAsset_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProviderPluginServer).ResolveAsset(ctx, req.(*ResolveAssetReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProviderPlugin_ServiceDesc is the grpc.ServiceDesc for ProviderPlugin service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -421,6 +455,10 @@ var ProviderPlugin_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StoreData",
 			Handler:    _ProviderPlugin_StoreData_Handler,
+		},
+		{
+			MethodName: "ResolveAsset",
+			Handler:    _ProviderPlugin_ResolveAsset_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
