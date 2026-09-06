@@ -1572,6 +1572,15 @@ private oci.compute.vnic @defaults("name") {
   hostnameLabel string
   // Subnet the VNIC is in
   subnet() oci.network.subnet
+  // Route table the VNIC routes through
+  //
+  // Per-resource routing lets a VNIC carry a route table of its own, which
+  // governs traffic on that interface instead of the one attached to the
+  // subnet. Null when the VNIC sets none, in which case the subnet's route
+  // table applies. A VNIC routed to an internet gateway from a subnet that
+  // has no such route, or routed away from one on a subnet that has, reaches
+  // the internet differently from every other interface on that subnet.
+  routeTable() oci.network.routeTable
   // Network Security Groups attached to the VNIC
   securityGroups() []oci.network.networkSecurityGroup
   // Whether source/destination check is skipped

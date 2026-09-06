@@ -419,6 +419,35 @@ func ociSubnetReachesInternet(subnet *mqlOciNetworkSubnet) (bool, error) {
 	return ociRouteTableReachesInternet(rt.Data)
 }
 
+// ociVnicReachesInternet reports whether traffic on a VNIC is routed to an
+// enabled internet gateway, reading the route table that actually governs the
+// interface.
+//
+// OCI per-resource routing lets a VNIC carry a route table of its own, and that
+// table, not the subnet's, decides where the interface's traffic goes. Judging
+// the subnet alone is wrong in both directions: a VNIC routed to an internet
+// gateway from a subnet with no such route reads as unreachable, and a VNIC
+// routed away from one on a subnet that has it reads as reachable.
+//
+// A VNIC that names a route table the scan could not read is an unknown, not a
+// closed one, so it counts as internet-reaching. An unreadable route table must
+// not be the reason an instance is reported as protected, which is the same
+// reason an unresolvable internet gateway counts as internet-reaching.
+//
+// Only a VNIC with no route table of its own falls back to the subnet's.
+func ociVnicReachesInternet(vnic *mqlOciComputeVnic, subnet *mqlOciNetworkSubnet) (bool, error) {
+	if vnic != nil {
+		rt := vnic.GetRouteTable()
+		if rt.Error != nil {
+			return true, nil
+		}
+		if rt.Data != nil {
+			return ociRouteTableReachesInternet(rt.Data)
+		}
+	}
+	return ociSubnetReachesInternet(subnet)
+}
+
 // ociIngressOpen reports whether ingress from any address is admitted. OCI
 // evaluates the union of network security group and security-list rules, so the
 // path is open when either an actual NSG rule admits any address or the
@@ -607,10 +636,9 @@ func (i *mqlOciComputeInstance) exposure() (*mqlOciNetworkExposure, error) {
 		}
 
 		// Subnet-level gates: a subnet that prohibits internet ingress blocks
-		// reachability, and the subnet's security lists and route table decide
-		// the security-list layer and whether internet traffic is routed at all.
+		// reachability and its security lists decide the security-list layer.
+		// Routing is read separately, because the VNIC can override it.
 		subnetProhibits := false
-		vnicRoutesToInternet := false
 		var slOpenRules, slInternetRules []any
 		// Default open so an unresolvable subnet fails toward "reachable"
 		// rather than silently clearing the resource. subnetResolved keeps that
@@ -639,12 +667,15 @@ func (i *mqlOciComputeInstance) exposure() (*mqlOciNetworkExposure, error) {
 			if err != nil {
 				return nil, err
 			}
+		}
 
-			reaches, err := ociSubnetReachesInternet(subnet.Data)
-			if err != nil {
-				return nil, err
-			}
-			vnicRoutesToInternet = reaches
+		// Routing is decided by the VNIC's own route table when it has one and
+		// by the subnet's otherwise, so it is read outside the subnet block: a
+		// VNIC that overrides its subnet's routing answers on its own table
+		// whatever the subnet's says.
+		vnicRoutesToInternet, err := ociVnicReachesInternet(vnic, subnet.Data)
+		if err != nil {
+			return nil, err
 		}
 
 		// Network security groups attached to this VNIC.
