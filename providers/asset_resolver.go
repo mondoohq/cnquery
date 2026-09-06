@@ -5,7 +5,6 @@ package providers
 
 import (
 	"strings"
-	"sync"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -30,10 +29,6 @@ import (
 // a single asset being connected twice, but not an A -> B -> A cycle across
 // runtimes, because each hop is a legitimate cache miss on a different runtime.
 const maxAssetResolveDepth = 5
-
-// mockConnectLock serializes the recording handoff and connect for a resolved
-// asset. See the comment at its use.
-var mockConnectLock sync.Mutex
 
 // ResolveAssetRoot implements llx.AssetResolver.
 func (r *Runtime) ResolveAssetRoot(v *llx.AssetValue, root string) (llx.Resource, error) {
@@ -97,16 +92,14 @@ func (r *Runtime) runtimeForAnchor(v *llx.AssetValue) (*Runtime, error) {
 	// RuntimeFor may hand back an already-connected runtime when the target
 	// deduped onto one the coordinator knows.
 	if sub.Provider == nil || sub.Provider.Connection == nil {
-		// SetRecording after the provider is selected and before connecting,
-		// as discovery does (discovery.go:71). It is not just bookkeeping: it
-		// is what hands the builtin mock service the runtime whose recording it
-		// reads, and without it Connect dereferences a nil one.
+		// SetRecording after the provider is selected and before connecting, as
+		// discovery does (discovery.go:71): the sub-runtime resolves the target
+		// asset out of the recording its parent already holds.
 		//
-		// The builtin services are singletons (runtime.go:963), so that handoff
-		// is last-writer-wins across runtimes. Serializing connect keeps a
-		// concurrent resolution - `servers.map(running.tools)` - from connecting
-		// one asset against another's recording.
-		mockConnectLock.Lock()
+		// Nothing needs serializing here. The builtin mock service is one
+		// instance shared by every runtime, but it takes the runtime from the
+		// connect callback rather than from a field, so two resolutions can
+		// connect at once without reading each other's state.
 		if err = sub.SetRecording(r.Recording()); err == nil {
 			err = sub.Connect(&plugin.ConnectReq{
 				Asset:    target,
@@ -114,7 +107,6 @@ func (r *Runtime) runtimeForAnchor(v *llx.AssetValue) (*Runtime, error) {
 				Upstream: r.UpstreamConfig,
 			})
 		}
-		mockConnectLock.Unlock()
 		if err != nil {
 			sub.Close()
 			return nil, errors.Wrap(err, "cannot connect to asset "+anchorLabel(v))

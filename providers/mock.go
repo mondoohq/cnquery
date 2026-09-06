@@ -43,7 +43,6 @@ var mockProvider = Provider{
 
 type mockProviderService struct {
 	initialized bool
-	runtime     *Runtime
 }
 
 func (s *mockProviderService) Heartbeat(req *plugin.HeartbeatReq) (*plugin.HeartbeatRes, error) {
@@ -116,6 +115,14 @@ func assetinfo2providerName(asset *inventory.Asset) (string, error) {
 }
 
 func (s *mockProviderService) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
+	// This service instance is shared by every runtime in the process, so the
+	// runtime to work against comes from the callback of this connect and never
+	// from the service. See runtimeFromCallback.
+	runtime, err := runtimeFromCallback(callback)
+	if err != nil {
+		return nil, err
+	}
+
 	// If an upstream asset was requested
 	if req.Asset.Mrn != "" {
 		if req.Upstream == nil {
@@ -149,7 +156,7 @@ func (s *mockProviderService) Connect(req *plugin.ConnectReq, callback plugin.Pr
 			return nil, errors.New("failed to look up provider for upstream recording with name=" + providerName)
 		}
 
-		addedProvider, err := s.runtime.addProvider(provider.ID)
+		addedProvider, err := runtime.addProvider(provider.ID)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to init provider for connection in recording")
 		}
@@ -164,12 +171,12 @@ func (s *mockProviderService) Connect(req *plugin.ConnectReq, callback plugin.Pr
 		}
 
 		addedProvider.Connection = conn
-		err = s.runtime.SetRecording(urecording)
+		err = runtime.SetRecording(urecording)
 		return conn, err
 	}
 
 	// initialize all other providers from all asset connections in the recording
-	multiRecording, ok := s.runtime.Recording().(recording.MultiAsset)
+	multiRecording, ok := runtime.Recording().(recording.MultiAsset)
 	if !ok {
 		return nil, errors.New("cannot find assets in recording for mock provider")
 	}
@@ -191,7 +198,7 @@ func (s *mockProviderService) Connect(req *plugin.ConnectReq, callback plugin.Pr
 	for i := range asset.Connections {
 		conf := asset.Connections[i]
 
-		provider, err := s.runtime.addRecordedProvider(conf.ProviderID)
+		provider, err := runtime.addRecordedProvider(conf.ProviderID)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to init provider for connection in recording")
 		}

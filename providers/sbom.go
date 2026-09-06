@@ -49,7 +49,6 @@ var sbomProvider = Provider{
 
 type sbomProviderService struct {
 	initialized bool
-	runtime     *Runtime
 	recording   *recording.Asset
 }
 
@@ -80,6 +79,14 @@ func (s *sbomProviderService) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCL
 func (s *sbomProviderService) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "missing config")
+	}
+
+	// This service instance is shared by every runtime in the process, so the
+	// runtime to work against comes from the callback of this connect and never
+	// from the service. See runtimeFromCallback.
+	runtime, err := runtimeFromCallback(callback)
+	if err != nil {
+		return nil, err
 	}
 
 	// load file
@@ -142,7 +149,7 @@ func (s *sbomProviderService) Connect(req *plugin.ConnectReq, callback plugin.Pr
 		return nil, errors.New("failed to look up provider for upstream recording with name=" + providerName)
 	}
 
-	addedProvider, err := s.runtime.addProvider(provider.ID)
+	addedProvider, err := runtime.addProvider(provider.ID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to init provider for connection in recording")
 	}
@@ -159,7 +166,7 @@ func (s *sbomProviderService) Connect(req *plugin.ConnectReq, callback plugin.Pr
 	// overwrite the mock type
 	conn.Asset.Connections[0].Type = "sbom"
 	addedProvider.Connection = conn
-	err = s.runtime.SetRecording(urecording)
+	err = runtime.SetRecording(urecording)
 	return conn, err
 }
 

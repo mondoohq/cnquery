@@ -850,6 +850,27 @@ type providerCallbacks struct {
 	runtime   *Runtime
 }
 
+// runtimeFromCallback recovers the runtime a builtin provider service is
+// connecting on behalf of.
+//
+// The builtin services (mock, sbom) are single instances shared by every
+// runtime in the process, so they cannot keep the runtime in a field: whoever
+// connected last would overwrite it, and a concurrent connect would then read
+// another runtime's providers and recording. The callback the connect is handed
+// already belongs to exactly one runtime, which makes it the right place to
+// take it from.
+//
+// A nil or foreign callback means the caller has no in-process runtime to offer,
+// which these services cannot work without - so it is an error rather than a
+// dereference.
+func runtimeFromCallback(callback plugin.ProviderCallback) (*Runtime, error) {
+	cb, ok := callback.(*providerCallbacks)
+	if !ok || cb == nil || cb.runtime == nil {
+		return nil, errors.New("cannot connect: this provider needs an in-process runtime, and the connect call supplied none")
+	}
+	return cb.runtime, nil
+}
+
 func (p *providerCallbacks) GetRecording(req *plugin.DataReq) (*plugin.ResourceData, error) {
 	fields, ok := p.recordedFields(req)
 	if !ok {
@@ -1002,26 +1023,12 @@ func (r *Runtime) SetRecording(recording llx.Recording) error {
 	r.recording = recording
 	if r.Provider == nil || r.Provider.Instance == nil {
 		log.Warn().Msg("set recording while no provider is set on runtime")
-		return nil
 	}
-	if r.Provider.Instance.ID != mockProvider.ID && r.Provider.Instance.ID != sbomProvider.ID {
-		return nil
-	}
-
-	if r.Provider.Instance.ID == mockProvider.ID {
-		service := r.Provider.Instance.Plugin.(*mockProviderService)
-		// TODO: This is problematic, since we don't have multiple instances of
-		// the service!!
-		service.runtime = r
-	}
-
-	if r.Provider.Instance.ID == sbomProvider.ID {
-		service := r.Provider.Instance.Plugin.(*sbomProviderService)
-		// TODO: This is problematic, since we don't have multiple instances of
-		// the service!!
-		service.runtime = r
-	}
-
+	// The builtin mock and sbom services used to be handed this runtime here,
+	// to be read back when they connect. They take it from the connect
+	// callback instead: one service instance is shared by every runtime, so a
+	// field on it is whichever runtime set a recording most recently, not the
+	// one connecting. See runtimeFromCallback.
 	return nil
 }
 
