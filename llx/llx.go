@@ -116,6 +116,11 @@ type blockExecutor struct {
 	parent         *blockExecutor
 	ctx            *MQLExecutorV2
 	watcherIds     *types.StringSet
+	// foreignWatchers maps a watcher id to the runtime it was placed on, for
+	// the few that are not on the executor's own runtime. Cross-asset
+	// resolution (ADR 031) reads a field from another asset's runtime, and
+	// unregister has to take that watcher down where it was put.
+	foreignWatchers sync.Map
 }
 
 // MQLExecutorV2 is the runtime of MQL codestructure
@@ -358,7 +363,11 @@ func (e *blockExecutor) unregister() []error {
 	var errs []error
 
 	e.watcherIds.Range(func(key string) bool {
-		if err := e.ctx.runtime.Unregister(key); err != nil {
+		runtime := e.ctx.runtime
+		if foreign, ok := e.foreignWatchers.Load(key); ok {
+			runtime = foreign.(Runtime)
+		}
+		if err := runtime.Unregister(key); err != nil {
 			log.Error().Err(err).Msg("exec> unregister error")
 			errs = append(errs, err)
 		}

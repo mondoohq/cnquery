@@ -310,7 +310,14 @@ Both are `Coordinator.RuntimeFor(target, parent)` + `Connect`, so recording-firs
 ordering is preserved by *choosing the target asset's connection*, not by two
 resolution code paths.
 
-**The value carries the target stub.** `RuntimeFor` needs an `inventory.Asset`
+**The value carries the target stub.** This is a phase 8 concern, not phase 7:
+the recorded leg finds the target by scanning the recording for the asset whose
+reverse edge names the anchor, so it needs nothing on the value. Live connect has
+no recording to scan, and that is where the stub becomes load-bearing - along
+with the question it opens, since ADR 030 has the anchor value carrying only
+`(resource_type, resource_id)`.
+
+`RuntimeFor` needs an `inventory.Asset`
 (connection + name) and the anchor alone does not carry one, so the `asset` value
 gains the target's connection `Config` and name, no secrets, built by the same
 function discovery uses (`mcpConnectionConfig`, `mcp_discovery.go:109`) so ADR
@@ -589,7 +596,7 @@ itself `asset<…>` resolves through the *target* runtime's own resolver.
 7. **Recording-backed cross-asset resolution.** `providers.Runtime` implements
    `AssetResolver`; the target asset is found from the reverse edge and connected
    with a `mock` connection, including the `providers/mock.go:182` asset-selection
-   fix. Testable in-repo from a recording fixture; no live connect.
+   fix. Testable in-repo from a recording fixture; no live connect. **Landed.**
 8. **Live-connect backend.** The same `RuntimeFor` + `Connect` path with the
    target's real connection; the target stub on the value; sub-runtime lifecycle and
    timeouts. Interactive verification: `…running.tools` against the installed `ai`

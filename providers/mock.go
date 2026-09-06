@@ -179,7 +179,10 @@ func (s *mockProviderService) Connect(req *plugin.ConnectReq, callback plugin.Pr
 		return nil, errors.New("no assets found in recording for mock provider")
 	}
 
-	asset := assetRecordings[0]
+	asset := pickAssetRecording(assetRecordings, req.Asset)
+	if asset == nil {
+		return nil, errors.New("no recording found for asset " + assetLabel(req.Asset))
+	}
 	if len(asset.Connections) == 0 {
 		return nil, errors.New("no connections found in asset")
 	}
@@ -188,7 +191,7 @@ func (s *mockProviderService) Connect(req *plugin.ConnectReq, callback plugin.Pr
 	for i := range asset.Connections {
 		conf := asset.Connections[i]
 
-		provider, err := s.runtime.addProvider(conf.ProviderID)
+		provider, err := s.runtime.addRecordedProvider(conf.ProviderID)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to init provider for connection in recording")
 		}
@@ -246,4 +249,71 @@ func (s *mockProviderService) Init(running *RunningProvider) {
 	// Once it doesn't do that anymore, remember to load all schemas here
 	// rt.schema.unsafeLoadAll()
 	// rt.schema.unsafeRefresh()
+}
+
+// pickAssetRecording finds the recorded asset a connect request is asking for.
+//
+// A recording holds many assets, and taking the first one was fine while the
+// only caller replayed the asset the recording was made for. Cross-asset
+// resolution (ADR 031) connects a *specific* recorded asset, and answering with
+// the first one hands back the host's data under the target's name - a wrong
+// answer rather than a miss, which is the worst shape a bug can take here.
+//
+// Matching follows the same precedence the coordinator uses to dedupe runtimes
+// (coordinator.go:191): MRN, then platform ids, then - only because a stub
+// assembled from a relationship may carry neither - the name. A request that
+// identifies nothing keeps the historical behavior and gets the first asset.
+func pickAssetRecording(assets []*recording.Asset, want *inventory.Asset) *recording.Asset {
+	if len(assets) == 0 {
+		return nil
+	}
+	if want == nil || (want.Mrn == "" && len(want.PlatformIds) == 0 && want.Name == "") {
+		return assets[0]
+	}
+
+	if want.Mrn != "" {
+		for _, a := range assets {
+			if a.Asset != nil && a.Asset.Mrn == want.Mrn {
+				return a
+			}
+		}
+	}
+	for _, id := range want.PlatformIds {
+		for _, a := range assets {
+			if a.Asset == nil {
+				continue
+			}
+			for _, have := range a.Asset.PlatformIds {
+				if have == id {
+					return a
+				}
+			}
+		}
+	}
+	if want.Name != "" {
+		for _, a := range assets {
+			if a.Asset != nil && a.Asset.Name == want.Name {
+				return a
+			}
+		}
+	}
+	return nil
+}
+
+// assetLabel names an asset for an error message, preferring the most specific
+// identifier it carries.
+func assetLabel(a *inventory.Asset) string {
+	if a == nil {
+		return "<none>"
+	}
+	if a.Mrn != "" {
+		return a.Mrn
+	}
+	if len(a.PlatformIds) > 0 {
+		return a.PlatformIds[0]
+	}
+	if a.Name != "" {
+		return a.Name
+	}
+	return "<unidentified>"
 }

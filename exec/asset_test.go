@@ -30,19 +30,67 @@ func TestAssetReferenceExec(t *testing.T) {
 	assert.Equal(t, false, res.Value)
 }
 
-// Resolving into the referenced asset is not implemented yet: it runs host-side,
-// where the coordinator and the recording layer are, and llx can reach neither.
-// The chain compiles, so the failure has to name the reason at the deref rather
-// than surface as a missing function on the asset type.
+// A single-asset recording has nothing on the other end of the anchor. That is
+// an ordinary state - most recordings are of one asset - so it has to fail
+// specifically, naming the asset it could not reach, rather than surfacing as a
+// missing function on the asset type or as a null that looks like an answer.
 //
-// Replace this with the resolution it describes when the backend lands (ADR 031
-// phase 3).
-func TestAssetChainNotResolvableYet(t *testing.T) {
+// The chain compiles either way, so this error is the only thing standing
+// between a user and a confusing result.
+func TestAssetChainWithNothingToResolveTo(t *testing.T) {
 	rt := testutils.LinuxMock()
 
 	res, err := exec.Exec("muser.running.name", rt, testutils.Features, nil)
 	require.NoError(t, err, "the chain compiles")
 	require.Error(t, res.Error)
-	assert.Contains(t, res.Error.Error(), "cross-asset resolution is not implemented yet")
+	assert.Contains(t, res.Error.Error(), "no recorded asset is anchored on it")
 	assert.Contains(t, res.Error.Error(), "muser", "the error names the asset it could not reach")
+}
+
+// The whole phase 7 path, end to end through llx: a typed asset reference is
+// dereferenced by the $assetRoot chunk, the host-side resolver finds the target
+// through its reverse edge in the recording, connects it, and the field read
+// above the deref goes to *that* asset's runtime.
+//
+// The value is the point: `mgroup.name` is "group one" on the parent asset and
+// "resolved-group" on the target. Asserting the second is what proves the read
+// crossed, rather than falling back to the local runtime and looking like it
+// worked.
+func TestAssetChainResolvesThroughTheRecording(t *testing.T) {
+	rt := testutils.CrossAssetMock()
+
+	res, err := exec.Exec("muser.running.name", rt, testutils.Features, nil)
+	require.NoError(t, err)
+	require.NoError(t, res.Error)
+	assert.Equal(t, "resolved-group", res.Value)
+}
+
+// Resolving into another asset must not disturb the asset the query is running
+// against. A runtime opened for a target inherits its parent's providers *by
+// pointer*, so mock-connecting into the inherited ConnectedProvider rather than
+// a fresh one replaces the connection the parent is still reading through. The
+// parent then silently answers from the target's recording.
+//
+// `mgroup` is recorded on the target and not on the parent, so reading it bare
+// is what tells the two apart: null is the parent's own answer, and the target's
+// value appearing here means the connection was taken over. Making
+// addRecordedProvider return the inherited provider turns the last assertion
+// into "resolved-group".
+func TestAssetChainLeavesTheParentConnectionAlone(t *testing.T) {
+	rt := testutils.CrossAssetMock()
+
+	before, err := exec.Exec("mgroup.name", rt, testutils.Features, nil)
+	require.NoError(t, err)
+	require.NoError(t, before.Error)
+	require.Nil(t, before.Value, "the parent asset records no mgroup")
+
+	crossed, err := exec.Exec("muser.running.name", rt, testutils.Features, nil)
+	require.NoError(t, err)
+	require.NoError(t, crossed.Error)
+	require.Equal(t, "resolved-group", crossed.Value, "the target does record one")
+
+	after, err := exec.Exec("mgroup.name", rt, testutils.Features, nil)
+	require.NoError(t, err)
+	require.NoError(t, after.Error)
+	assert.Nil(t, after.Value, "the parent still reads its own asset, not the target's")
 }

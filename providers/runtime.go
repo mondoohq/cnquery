@@ -57,6 +57,15 @@ type Runtime struct {
 	// that should be reported to an error tracker even though execution continues.
 	criticalErrors []error
 
+	// resolvedAssets caches the runtime opened for each asset anchor this
+	// runtime resolved into, and subRuntimes owns them so they are torn down
+	// with this runtime rather than left for the coordinator. resolveChain is
+	// the path of anchors that led here, which is what bounds a cycle across
+	// runtimes. See asset_resolver.go and ADR 031.
+	resolvedAssets map[string]*Runtime
+	subRuntimes    []*Runtime
+	resolveChain   []string
+
 	// used to lock unsafe tasks
 	mu sync.Mutex
 }
@@ -100,6 +109,9 @@ func (r *Runtime) tryShutdown() shutdownResult {
 func (r *Runtime) Close() {
 	r.isClosed = true
 	r.close.Do(func() {
+		// Runtimes opened for other assets are owned by this one (ADR 031).
+		r.closeSubRuntimes()
+
 		if err := r.Recording().Save(); err != nil {
 			log.Error().Err(err).Msg("failed to save recording")
 		}
@@ -287,6 +299,33 @@ func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
 	res := &ConnectedProvider{Instance: running}
 	r.AddConnectedProvider(res)
 
+	return res, nil
+}
+
+// addRecordedProvider is addProvider for a provider that is being mock-connected
+// from a recording.
+//
+// It reuses a running instance this runtime already carries instead of asking
+// the coordinator to start one. A runtime created for another asset inherits its
+// parent's providers (NewRuntimeFrom), so the instance is usually right there -
+// and it is the only one available when the providers were registered directly
+// on a runtime rather than through the coordinator, which is what an in-process
+// host does.
+//
+// The ConnectedProvider is always fresh: the inherited one holds the *parent's*
+// connection, and those structs are shared by pointer, so mock-connecting into
+// it would replace the connection the parent is still using.
+func (r *Runtime) addRecordedProvider(id string) (*ConnectedProvider, error) {
+	r.mu.Lock()
+	existing := r.providers[id]
+	r.mu.Unlock()
+
+	if existing == nil || existing.Instance == nil {
+		return r.addProvider(id)
+	}
+
+	res := &ConnectedProvider{Instance: existing.Instance}
+	r.AddConnectedProvider(res)
 	return res, nil
 }
 
@@ -812,7 +851,7 @@ type providerCallbacks struct {
 }
 
 func (p *providerCallbacks) GetRecording(req *plugin.DataReq) (*plugin.ResourceData, error) {
-	resource, ok := p.recording.GetResource(req.Resource, req.ResourceId)
+	fields, ok := p.recordedFields(req)
 	if !ok {
 		return nil, nil
 	}
@@ -820,13 +859,36 @@ func (p *providerCallbacks) GetRecording(req *plugin.DataReq) (*plugin.ResourceD
 	res := plugin.ResourceData{
 		Name:   req.Resource,
 		Id:     req.ResourceId,
-		Fields: make(map[string]*llx.Result, len(resource.Fields)),
+		Fields: make(map[string]*llx.Result, len(fields)),
 	}
-	for k, v := range resource.Fields {
+	for k, v := range fields {
 		res.Fields[k] = v.Result()
 	}
 
 	return &res, nil
+}
+
+// recordedFields reads a recorded resource for a callback.
+//
+// Callbacks built for one asset carry that asset's recording directly. The ones
+// Runtime.Connect builds do not - they are made for a live connection, which
+// has no recording to carry - so they resolve through the runtime's own
+// recording, keyed by the connection the request came in on. That is the path a
+// recorded asset connected for cross-asset resolution takes (ADR 031), and
+// dereferencing the nil is what it used to do instead.
+func (p *providerCallbacks) recordedFields(req *plugin.DataReq) (map[string]*llx.RawData, bool) {
+	if p.recording != nil {
+		resource, ok := p.recording.GetResource(req.Resource, req.ResourceId)
+		if !ok {
+			return nil, false
+		}
+		return resource.Fields, true
+	}
+	if p.runtime == nil || p.runtime.Recording() == nil {
+		return nil, false
+	}
+	return p.runtime.Recording().GetResource(
+		llx.AssetRecordingLookup{ConnectionId: req.Connection}, req.Resource, req.ResourceId)
 }
 
 func (p *providerCallbacks) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {

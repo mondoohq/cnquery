@@ -834,7 +834,19 @@ func runResourceFunction(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 		return nil, 0, fmt.Errorf("cannot cast resource to resource type: %+v", bind.Value)
 	}
 
-	resource := e.ctx.runtime.Schema().Lookup(rr.MqlName())
+	// A resource reached by resolving into another asset names the runtime that
+	// answers it (ADR 031). That redirect is the whole of cross-asset routing:
+	// everything below is unchanged, because the schema lookup, the watcher and
+	// the field read all just go to a different runtime.
+	rt := e.ctx.runtime
+	var foreign Runtime
+	if bound, ok := bind.Value.(RuntimeBoundResource); ok {
+		if boundRuntime := bound.MqlRuntime(); boundRuntime != nil {
+			rt, foreign = boundRuntime, boundRuntime
+		}
+	}
+
+	resource := rt.Schema().Lookup(rr.MqlName())
 	if resource == nil {
 		return nil, 0, fmt.Errorf("cannot retrieve resource definition for resource %q", rr.MqlName())
 	}
@@ -843,9 +855,15 @@ func runResourceFunction(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 	wid := e.watcherUID(ref)
 	// log.Debug().Str("wid", wid).Msg("exec> add watcher id ")
 	e.watcherIds.Store(wid)
+	if foreign != nil {
+		// Unregistering walks watcherIds against the executor's own runtime, so
+		// a watcher placed on another one has to say where it went or it is
+		// never taken down.
+		e.foreignWatchers.Store(wid, foreign)
+	}
 
 	// watch this field in the resource
-	err := e.ctx.runtime.WatchAndUpdate(rr, chunk.Id, wid, func(fieldData any, fieldError error) {
+	err := rt.WatchAndUpdate(rr, chunk.Id, wid, func(fieldData any, fieldError error) {
 		// A field can be missing from the schema when the compiled bundle and
 		// the loaded provider disagree (e.g. the provider was updated at runtime
 		// independently of the bundle version). Fall back to Unset rather than
@@ -868,9 +886,11 @@ func runResourceFunction(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 		// position. See ADR 043 §1. An error is left alone - shortCircuitNull
 		// returns res untouched when res.Error is set - so a genuine field
 		// failure still propagates as an error.
+		// A resource answered by a foreign runtime lives in that asset's tree,
+		// so the next chunk in the chain has to keep asking the same runtime.
 		data := shortCircuitNull(chunk, &RawData{
 			Type:  fieldType,
-			Value: fieldData,
+			Value: bindResourceValues(fieldData, foreign),
 			Error: fieldError,
 		})
 		e.cache.Store(ref, &stepCache{

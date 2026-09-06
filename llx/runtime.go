@@ -46,6 +46,19 @@ type AssetRootSource interface {
 	DeclaredAssetRoot() string
 }
 
+// AssetResolver resolves a typed asset reference into the root resource of the
+// asset it points at (ADR 031). It is an optional interface, type-asserted at
+// exec time - the same pattern as TranslationSource - because llx itself can
+// never do this: a builtin reaches only its runtime, which has no coordinator
+// and cannot connect. Only the host-side runtime that owns the coordinator and
+// the recording layer implements it.
+type AssetResolver interface {
+	// ResolveAssetRoot returns the named root resource of the asset v points
+	// at, bound to the runtime that answers it. The returned resource is
+	// ordinary in every other way.
+	ResolveAssetRoot(v *AssetValue, root string) (Resource, error)
+}
+
 // Allows looking up data for assets, based on different asset identifiers.
 // If set, Mrn is preferred, followed by PlatformIds, and lastly ConnectionId.
 type AssetRecordingLookup struct {
