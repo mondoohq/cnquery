@@ -59,6 +59,7 @@ func initMssqlServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	args["machineName"] = llx.StringData(machine.String)
 	args["instanceName"] = llx.StringData(instanceName)
 	args["version"] = llx.StringData(version.String)
+	args["versionBanner"] = llx.StringData(version.String)
 	args["productVersion"] = llx.StringData(productVersion.String)
 	args["productLevel"] = llx.StringData(productLevel.String)
 	args["edition"] = llx.StringData(edition.String)

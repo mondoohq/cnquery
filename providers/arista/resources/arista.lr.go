@@ -439,6 +439,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEos).GetVersion()).ToDataRes(types.Dict)
 	},
+	"arista.eos.systemInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetSystemInfo()).ToDataRes(types.Dict)
+	},
 	"arista.eos.hostname": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEos).GetHostname()).ToDataRes(types.String)
 	},
@@ -1981,6 +1984,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEos).Version, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.systemInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).SystemInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.hostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4296,6 +4303,7 @@ type mqlAristaEos struct {
 	IpInterfaces         plugin.TValue[[]any]
 	Interfaces           plugin.TValue[[]any]
 	Version              plugin.TValue[any]
+	SystemInfo           plugin.TValue[any]
 	Hostname             plugin.TValue[string]
 	Fqdn                 plugin.TValue[string]
 	Users                plugin.TValue[[]any]
@@ -4420,6 +4428,12 @@ func (c *mqlAristaEos) GetInterfaces() *plugin.TValue[[]any] {
 func (c *mqlAristaEos) GetVersion() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Version, func() (any, error) {
 		return c.version()
+	})
+}
+
+func (c *mqlAristaEos) GetSystemInfo() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SystemInfo, func() (any, error) {
+		return c.systemInfo()
 	})
 }
 

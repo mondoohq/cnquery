@@ -181,6 +181,7 @@ mssql.server.serviceAccount 13.0.0
 mssql.server.serviceAccountSid 13.0.0
 mssql.server.servicePrincipalNames 13.0.0
 mssql.server.version 13.0.0
+mssql.server.versionBanner 13.1.1
 mssql.serverRole 13.0.0
 mssql.serverRole.createDate 13.0.0
 mssql.serverRole.explicitPermissions 13.0.0

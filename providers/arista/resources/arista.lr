@@ -35,7 +35,17 @@ arista.eos @root {
   // `hardwareRevision`, `systemMacAddress`, `configMacAddress`, and
   // `hwMacAddress`. Memory keys `memTotal` and `memFree` are in kilobytes,
   // and `uptime` and `bootupTimestamp` are in seconds.
-  version() dict
+  version() @maturity("deprecated") @replaced_by("arista.eos.systemInfo") dict
+  // Software release, hardware identity, memory and uptime
+  //
+  // The same dict this resource has always returned, under a name that says
+  // what is in it: the running image (`version`, `internalVersion`,
+  // `internalBuildId`, `architecture`), the chassis (`modelName`, `mfgName`,
+  // `serialNumber`, `hardwareRevision`, and the MAC addresses), memory
+  // (`memTotal`, `memFree`, in kilobytes) and `uptime`/`bootupTimestamp` in
+  // seconds. Only a fraction of it is the version, which is why `version` was
+  // the wrong name; the version number on its own is asset.version.
+  systemInfo() dict
   // System hostname
   hostname() string
   // Fully qualified domain name

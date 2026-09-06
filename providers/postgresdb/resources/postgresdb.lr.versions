@@ -65,6 +65,7 @@ postgresdb.instance.subscriptions 13.0.0
 postgresdb.instance.systemIdentifier 13.0.0
 postgresdb.instance.tablespaces 13.0.0
 postgresdb.instance.version 13.0.0
+postgresdb.instance.versionBanner 13.0.4
 postgresdb.privilege 13.0.0
 postgresdb.privilege.grantee 13.0.0
 postgresdb.privilege.isGrantable 13.0.0

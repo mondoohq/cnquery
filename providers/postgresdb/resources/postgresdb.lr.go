@@ -186,6 +186,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"postgresdb.instance.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPostgresdbInstance).GetVersion()).ToDataRes(types.String)
 	},
+	"postgresdb.instance.versionBanner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresdbInstance).GetVersionBanner()).ToDataRes(types.String)
+	},
 	"postgresdb.instance.systemIdentifier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPostgresdbInstance).GetSystemIdentifier()).ToDataRes(types.String)
 	},
@@ -589,6 +592,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"postgresdb.instance.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPostgresdbInstance).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresdb.instance.versionBanner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresdbInstance).VersionBanner, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"postgresdb.instance.systemIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1237,6 +1244,7 @@ type mqlPostgresdbInstance struct {
 	__id       string
 	// optional: if you define mqlPostgresdbInstanceInternal it will be used here
 	Version            plugin.TValue[string]
+	VersionBanner      plugin.TValue[string]
 	SystemIdentifier   plugin.TValue[string]
 	StartTime          plugin.TValue[*time.Time]
 	InRecovery         plugin.TValue[bool]
@@ -1286,6 +1294,10 @@ func (c *mqlPostgresdbInstance) MqlID() string {
 
 func (c *mqlPostgresdbInstance) GetVersion() *plugin.TValue[string] {
 	return &c.Version
+}
+
+func (c *mqlPostgresdbInstance) GetVersionBanner() *plugin.TValue[string] {
+	return &c.VersionBanner
 }
 
 func (c *mqlPostgresdbInstance) GetSystemIdentifier() *plugin.TValue[string] {

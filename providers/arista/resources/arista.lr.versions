@@ -514,6 +514,7 @@ arista.eos.switchport.trunkGroups 11.1.0
 arista.eos.switchport.trunkNativeVlan 11.1.0
 arista.eos.switchports 11.1.0
 arista.eos.systemConfig 9.0.0
+arista.eos.systemInfo 13.3.16
 arista.eos.telnetService 13.1.9
 arista.eos.telnetService.configured 13.1.9
 arista.eos.telnetService.enabled 13.1.9
