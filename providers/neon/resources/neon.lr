@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/neon"
 option go_package = "go.mondoo.com/mql/providers/neon/resources"
+option root = "neon"
 
 // Neon
 //
@@ -11,7 +12,7 @@ option go_package = "go.mondoo.com/mql/providers/neon/resources"
 // members and API keys, `projects` flattens every project across them,
 // `apiKeys` lists the keys owned by the authenticated account, and
 // `currentUser` identifies the principal the key belongs to.
-neon {
+neon @root {
   // Organizations the API key can access
   organizations() []neon.organization
   // Projects across every accessible organization

@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/okta"
 option go_package = "go.mondoo.com/mql/providers/okta/resources"
+option root = "okta"
 
 // Okta
 //
@@ -11,7 +12,7 @@ option go_package = "go.mondoo.com/mql/providers/okta/resources"
 // your Okta organization. Query `okta.organization` for tenant-level settings
 // such as billing contacts, threat insight configuration, and security
 // notification preferences.
-okta {
+okta @root {
   // Okta users
   users() []okta.user
   // Okta groups

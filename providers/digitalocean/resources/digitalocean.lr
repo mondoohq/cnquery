@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/digitalocean"
 option go_package = "go.mondoo.com/mql/providers/digitalocean/resources"
+option root = "digitalocean"
 
 // DigitalOcean account
 //
@@ -16,7 +17,7 @@ option go_package = "go.mondoo.com/mql/providers/digitalocean/resources"
 // uptime checks, projects and tags for grouping, and account billing.
 // Start here to enumerate an account's full inventory or to scope an
 // audit to one class of resource.
-digitalocean {
+digitalocean @root {
   // Droplets (virtual machines)
   droplets() []digitalocean.droplet
   // MicroDroplets (container instances that pause when idle)

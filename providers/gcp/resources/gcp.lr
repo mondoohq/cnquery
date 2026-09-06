@@ -1103,7 +1103,7 @@ gcp.project @defaults("name number") {
   //
   // Deprecated in favor of workbench. Google deleted the last managed and
   // user-managed notebook instances on 2026-03-30.
-  notebooks() @maturity("deprecated") gcp.project.notebooksService
+  notebooks() @maturity("deprecated") @replaced_by("gcp.project.workbench") gcp.project.notebooksService
   // GCP Cloud Composer resources
   composer() gcp.project.composerService
   // GCP Cloud Healthcare resources
@@ -1841,7 +1841,7 @@ gcp.project.computeService.instance @defaults("name id") {
   //
   // Deprecated in favor of instanceEncryption. Carries `kmsKeyName`,
   // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and `sha256`.
-  instanceEncryptionKey @maturity("deprecated") dict
+  instanceEncryptionKey @maturity("deprecated") @replaced_by("gcp.project.computeService.instance.instanceEncryption") dict
   // Encryption key protecting the instance suspend state and its Local SSDs
   //
   // Null when the instance has no instance-level encryption key configured,
@@ -1854,7 +1854,7 @@ gcp.project.computeService.instance @defaults("name id") {
   // Deprecated in favor of sourceMachineImageEncryption. Carries
   // `kmsKeyName`, `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and
   // `sha256`.
-  sourceMachineImageEncryptionKey @maturity("deprecated") dict
+  sourceMachineImageEncryptionKey @maturity("deprecated") @replaced_by("gcp.project.computeService.instance.sourceMachineImageEncryption") dict
   // Encryption key used to decrypt the source machine image when the instance was created from one
   //
   // Tracks encryption lineage from the source machine image into the
@@ -1963,13 +1963,13 @@ private gcp.project.computeService.instance.networkInterface @defaults("name net
   // Deprecated in favor of externalIpConfigs. Each entry carries `name`,
   // `natIP`, `type`, `networkTier`, `setPublicPtr`, `publicPtrDomainName`,
   // and `securityPolicy`.
-  accessConfigs @maturity("deprecated") []dict
+  accessConfigs @maturity("deprecated") @replaced_by("gcp.project.computeService.instance.networkInterface.externalIpConfigs") []dict
   // External IPv6 configuration dicts
   //
   // Deprecated in favor of externalIpConfigs. Each entry carries `name`,
   // `externalIpv6`, `externalIpv6PrefixLength`, `type`, `networkTier`,
   // `setPublicPtr`, `publicPtrDomainName`, and `securityPolicy`.
-  ipv6AccessConfigs @maturity("deprecated") []dict
+  ipv6AccessConfigs @maturity("deprecated") @replaced_by("gcp.project.computeService.instance.networkInterface.externalIpConfigs") []dict
   // External IP configurations attached to the interface, IPv4 and IPv6 together
   //
   // One entry per external address the interface carries. A non-empty list is
@@ -2234,7 +2234,7 @@ private gcp.project.computeService.disk @defaults("name") {
   //
   // Deprecated in favor of diskEncryption. Carries `kmsKeyName`,
   // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and `sha256`.
-  diskEncryptionKey @maturity("deprecated") dict
+  diskEncryptionKey @maturity("deprecated") @replaced_by("gcp.project.computeService.disk.diskEncryption") dict
   // Customer-managed KMS key used for disk encryption (null when Google-managed or customer-supplied)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Encryption key protecting the disk
@@ -2247,7 +2247,7 @@ private gcp.project.computeService.disk @defaults("name") {
   //
   // Deprecated in favor of sourceImageEncryption. Carries `kmsKeyName`,
   // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and `sha256`.
-  sourceImageEncryptionKey @maturity("deprecated") dict
+  sourceImageEncryptionKey @maturity("deprecated") @replaced_by("gcp.project.computeService.disk.sourceImageEncryption") dict
   // Encryption key used to decrypt the source image when the disk was created from one
   //
   // Tracks encryption lineage from the source image into the disk. Null when
@@ -2257,7 +2257,7 @@ private gcp.project.computeService.disk @defaults("name") {
   //
   // Deprecated in favor of sourceSnapshotEncryption. Carries `kmsKeyName`,
   // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and `sha256`.
-  sourceSnapshotEncryptionKey @maturity("deprecated") dict
+  sourceSnapshotEncryptionKey @maturity("deprecated") @replaced_by("gcp.project.computeService.disk.sourceSnapshotEncryption") dict
   // Encryption key used to decrypt the source snapshot when the disk was created from one
   //
   // Tracks encryption lineage from the source snapshot into the disk. Null
@@ -2363,7 +2363,7 @@ private gcp.project.computeService.attachedDisk {
   //
   // Deprecated in favor of diskEncryption. Carries `kmsKeyName`,
   // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and `sha256`.
-  diskEncryptionKey @maturity("deprecated") dict
+  diskEncryptionKey @maturity("deprecated") @replaced_by("gcp.project.computeService.attachedDisk.diskEncryption") dict
   // Encryption key protecting the attached disk
   //
   // Null when the disk uses Google-managed encryption. Distinguishes a
@@ -2440,7 +2440,7 @@ private gcp.project.computeService.snapshot @defaults("name") {
   //
   // Deprecated in favor of snapshotEncryption. Carries `kmsKeyName`,
   // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and `sha256`.
-  snapshotEncryptionKey @maturity("deprecated") dict
+  snapshotEncryptionKey @maturity("deprecated") @replaced_by("gcp.project.computeService.snapshot.snapshotEncryption") dict
   // Encryption key protecting the snapshot
   //
   // Null when the snapshot uses Google-managed encryption. Distinguishes a
@@ -2514,7 +2514,7 @@ private gcp.project.computeService.image @defaults("id name") {
   //
   // Deprecated in favor of imageEncryption. Carries `kmsKeyName`,
   // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, and `sha256`.
-  imageEncryptionKey @maturity("deprecated") dict
+  imageEncryptionKey @maturity("deprecated") @replaced_by("gcp.project.computeService.image.imageEncryption") dict
   // Encryption key protecting the image
   //
   // Null when the image uses Google-managed encryption. Distinguishes a
@@ -2593,11 +2593,11 @@ private gcp.project.computeService.firewall @defaults("name") {
   // ALLOW rule dicts
   //
   // Deprecated in favor of allowedProtocols. Each entry: {ipProtocol, ports}.
-  allowed @maturity("deprecated") []dict
+  allowed @maturity("deprecated") @replaced_by("gcp.project.computeService.firewall.allowedProtocols") []dict
   // DENY rule dicts
   //
   // Deprecated in favor of deniedProtocols. Each entry: {ipProtocol, ports}.
-  denied @maturity("deprecated") []dict
+  denied @maturity("deprecated") @replaced_by("gcp.project.computeService.firewall.deniedProtocols") []dict
   // Ports this rule allows, keyed by protocol
   //
   // Maps each protocol the rule permits (tcp, udp, icmp, esp, ah, sctp, ipip,
@@ -3145,12 +3145,12 @@ private gcp.project.storageService.bucket @defaults("id") {
   // Deprecated in favor of accessControl. Each entry carries `entity`,
   // `entityId`, `role`, `email`, `domain`, `projectTeam`, `bucket`, `id`,
   // `etag`, `kind`, and `selfLink`.
-  acl() @maturity("deprecated") []dict
+  acl() @maturity("deprecated") @replaced_by("gcp.project.storageService.bucket.accessControl") []dict
   // Default object access control list dicts
   //
   // Deprecated in favor of defaultObjectAccessControl. Each entry carries the
   // same keys as `acl` plus `object` and `generation`.
-  defaultObjectAcl() @maturity("deprecated") []dict
+  defaultObjectAcl() @maturity("deprecated") @replaced_by("gcp.project.storageService.bucket.defaultObjectAccessControl") []dict
   // Legacy access control list granting access to the bucket itself
   //
   // Each entry names one grantee and the role it holds. An entity of
@@ -4926,7 +4926,7 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   //
   // Deprecated in favor of legacyAbacEnabled. containerpb.LegacyAbac has
   // exactly one field, so this dict only ever carried `enabled`.
-  legacyAbac @maturity("deprecated") dict
+  legacyAbac @maturity("deprecated") @replaced_by("gcp.project.gkeService.cluster.legacyAbacEnabled") dict
   // Whether the legacy ABAC authorizer is enabled on the cluster
   legacyAbacEnabled bool
   // Control plane authentication dict
@@ -4937,7 +4937,7 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   // `clientCertificate`. The basic-auth password and the client private key
   // are deliberately not published; the rest of the message is credential
   // material.
-  masterAuth @maturity("deprecated") dict
+  masterAuth @maturity("deprecated") @replaced_by("gcp.project.gkeService.cluster.clientCertificateEnabled") dict
   // Whether client certificate authentication to the control plane is enabled
   //
   // True when the cluster issues a client certificate (MasterAuth client
@@ -5357,53 +5357,53 @@ private gcp.project.gkeService.cluster.addonsConfig @defaults("httpLoadBalancing
   // HTTP load balancing controller addon dict
   //
   // Deprecated in favor of httpLoadBalancingAddon. Carries `disabled`.
-  httpLoadBalancing @maturity("deprecated") dict
+  httpLoadBalancing @maturity("deprecated") @replaced_by("gcp.project.gkeService.cluster.addonsConfig.httpLoadBalancingAddon") dict
   // Horizontal pod autoscaling addon dict
   //
   // Deprecated in favor of horizontalPodAutoscalingAddon. Carries `disabled`.
-  horizontalPodAutoscaling @maturity("deprecated") dict
+  horizontalPodAutoscaling @maturity("deprecated") @replaced_by("gcp.project.gkeService.cluster.addonsConfig.horizontalPodAutoscalingAddon") dict
   // Kubernetes Dashboard addon dict
   //
   // Deprecated in favor of kubernetesDashboardAddon. Carries `disabled`.
-  kubernetesDashboard @maturity("deprecated") dict
+  kubernetesDashboard @maturity("deprecated") @replaced_by("gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboardAddon") dict
   // NetworkPolicy addon dict
   //
   // Deprecated in favor of networkPolicyAddon. Carries `disabled`.
-  networkPolicyConfig @maturity("deprecated") dict
+  networkPolicyConfig @maturity("deprecated") @replaced_by("gcp.project.gkeService.cluster.addonsConfig.networkPolicyAddon") dict
   // Cloud Run addon dict
   //
   // Deprecated in favor of cloudRunAddon. Carries `disabled` and
   // `loadBalancerType`.
-  cloudRunConfig @maturity("deprecated") dict
+  cloudRunConfig @maturity("deprecated") @replaced_by("gcp.project.gkeService.cluster.addonsConfig.cloudRunAddon") dict
   // NodeLocalDNS addon dict
   //
   // Deprecated in favor of dnsCacheAddon. Carries `enabled`.
-  dnsCacheConfig @maturity("deprecated") dict
+  dnsCacheConfig @maturity("deprecated") @replaced_by("gcp.project.gkeService.cluster.addonsConfig.dnsCacheAddon") dict
   // ConfigConnector addon dict
   //
   // Deprecated in favor of configConnectorAddon. Carries `enabled`.
-  configConnectorConfig @maturity("deprecated") dict
+  configConnectorConfig @maturity("deprecated") @replaced_by("gcp.project.gkeService.cluster.addonsConfig.configConnectorAddon") dict
   // Compute Engine Persistent Disk CSI driver addon dict
   //
   // Deprecated in favor of gcePersistentDiskCsiDriverAddon. Carries
   // `enabled`.
-  gcePersistentDiskCsiDriverConfig @maturity("deprecated") dict
+  gcePersistentDiskCsiDriverConfig @maturity("deprecated") @replaced_by("gcp.project.gkeService.cluster.addonsConfig.gcePersistentDiskCsiDriverAddon") dict
   // Filestore CSI driver addon dict
   //
   // Deprecated in favor of gcpFilestoreCsiDriverAddon. Carries `enabled`.
-  gcpFilestoreCsiDriverConfig @maturity("deprecated") dict
+  gcpFilestoreCsiDriverConfig @maturity("deprecated") @replaced_by("gcp.project.gkeService.cluster.addonsConfig.gcpFilestoreCsiDriverAddon") dict
   // Backup for GKE agent addon dict
   //
   // Deprecated in favor of gkeBackupAgentAddon. Carries `enabled`.
-  gkeBackupAgentConfig @maturity("deprecated") dict
+  gkeBackupAgentConfig @maturity("deprecated") @replaced_by("gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentAddon") dict
   // Cloud Storage FUSE CSI driver addon dict
   //
   // Deprecated in favor of gcsFuseCsiDriverAddon. Carries `enabled`.
-  gcsFuseCsiDriverConfig @maturity("deprecated") dict
+  gcsFuseCsiDriverConfig @maturity("deprecated") @replaced_by("gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverAddon") dict
   // StatefulHA addon dict
   //
   // Deprecated in favor of statefulHaAddon. Carries `enabled`.
-  statefulHaConfig @maturity("deprecated") dict
+  statefulHaConfig @maturity("deprecated") @replaced_by("gcp.project.gkeService.cluster.addonsConfig.statefulHaAddon") dict
   // GKE HTTP load balancing addon
   //
   // The addon that turns an Ingress object into a Google Cloud HTTP(S) load
@@ -6824,7 +6824,7 @@ private gcp.project.apiKey.restrictions {
   //
   // Deprecated in favor of allowedApiTargets. Each entry carries `service`
   // and `methods`.
-  apiTargets @maturity("deprecated") []dict
+  apiTargets @maturity("deprecated") @replaced_by("gcp.project.apiKey.restrictions.allowedApiTargets") []dict
   // Services and methods the key may call
   //
   // An empty list means the key may call every API enabled in the project,
@@ -6833,7 +6833,7 @@ private gcp.project.apiKey.restrictions {
   // Browser restriction dict
   //
   // Deprecated in favor of browser. Carries `allowedReferrers`.
-  browserKeyRestrictions @maturity("deprecated") dict
+  browserKeyRestrictions @maturity("deprecated") @replaced_by("gcp.project.apiKey.restrictions.browser") dict
   // Restriction limiting the key to a set of HTTP referrers
   //
   // Null when the key carries no browser restriction, which leaves it usable
@@ -6842,7 +6842,7 @@ private gcp.project.apiKey.restrictions {
   // iOS restriction dict
   //
   // Deprecated in favor of ios. Carries `allowedBundleIds`.
-  iosKeyRestrictions @maturity("deprecated") dict
+  iosKeyRestrictions @maturity("deprecated") @replaced_by("gcp.project.apiKey.restrictions.ios") dict
   // Restriction limiting the key to a set of iOS apps
   //
   // Null when the key carries no iOS restriction.
@@ -6850,7 +6850,7 @@ private gcp.project.apiKey.restrictions {
   // Server restriction dict
   //
   // Deprecated in favor of server. Carries `allowedIps`.
-  serverKeyRestrictions @maturity("deprecated") dict
+  serverKeyRestrictions @maturity("deprecated") @replaced_by("gcp.project.apiKey.restrictions.server") dict
   // Restriction limiting the key to a set of caller IP addresses
   //
   // Null when the key carries no server restriction.
@@ -6921,7 +6921,7 @@ private gcp.loggingSettings @defaults("name disableDefaultSink storageLocation")
   //
   // Deprecated in favor of defaultSink. Carries `filter`, `mode`, and
   // `exclusions`.
-  defaultSinkConfig @maturity("deprecated") dict
+  defaultSinkConfig @maturity("deprecated") @replaced_by("gcp.loggingSettings.defaultSink") dict
   // Overrides applied to the built-in _Default sink
   //
   // Null when the node leaves the _Default sink exactly as Cloud Logging
@@ -7110,7 +7110,7 @@ private gcp.project.loggingservice.sink @defaults("destination") {
   //
   // Deprecated in favor of exclusionRules. Each entry carries `name`,
   // `description`, `filter`, and `disabled`.
-  exclusions @maturity("deprecated") []dict
+  exclusions @maturity("deprecated") @replaced_by("gcp.project.loggingservice.sink.exclusionRules") []dict
   // Per-sink exclusion filters
   //
   // Each entry drops matching log entries from this sink's export before they
@@ -7395,7 +7395,7 @@ private gcp.project.iamService.denyPolicy @defaults("displayName name") {
   // Deprecated in favor of denyRules. Each entry carries `description`,
   // `deniedPrincipals`, `deniedPermissions`, `exceptionPrincipals`,
   // `exceptionPermissions`, and an optional `denialCondition`.
-  rules @maturity("deprecated") []dict
+  rules @maturity("deprecated") @replaced_by("gcp.project.iamService.denyPolicy.denyRules") []dict
   // Deny rules that make up the policy
   denyRules []gcp.project.iamService.denyPolicy.denyRule
   // Etag for optimistic concurrency control
@@ -7768,12 +7768,12 @@ private gcp.project.cloudFunction @defaults("name") {
   //
   // Deprecated in favor of boundSecretEnvVars. Keyed by environment variable
   // name, each value carrying `projectId`, `secret`, and `version`.
-  secretEnvVars @maturity("deprecated") map[string]dict
+  secretEnvVars @maturity("deprecated") @replaced_by("gcp.project.cloudFunction.boundSecretEnvVars") map[string]dict
   // Secret volume dicts
   //
   // Deprecated in favor of boundSecretVolumes. Each entry carries
   // `mountPath`, `projectId`, `secret`, and `versions`.
-  secretVolumes @maturity("deprecated") []dict
+  secretVolumes @maturity("deprecated") @replaced_by("gcp.project.cloudFunction.boundSecretVolumes") []dict
   // Secret Manager secrets exposed to the function as environment variables
   boundSecretEnvVars []gcp.project.cloudFunction.secretEnvVar
   // Secret Manager secrets mounted into the function filesystem
@@ -7923,12 +7923,12 @@ private gcp.project.cloudFunctionV2.serviceConfig @defaults("service timeoutSeco
   //
   // Deprecated in favor of boundSecretEnvVars. Each entry carries `key`,
   // `projectId`, `secret`, and `version`.
-  secretEnvironmentVariables @maturity("deprecated") []dict
+  secretEnvironmentVariables @maturity("deprecated") @replaced_by("gcp.project.cloudFunctionV2.serviceConfig.boundSecretEnvVars") []dict
   // Secret volume dicts
   //
   // Deprecated in favor of boundSecretVolumes. Each entry carries
   // `mountPath`, `projectId`, `secret`, and `versions`.
-  secretVolumes @maturity("deprecated") []dict
+  secretVolumes @maturity("deprecated") @replaced_by("gcp.project.cloudFunctionV2.serviceConfig.boundSecretVolumes") []dict
   // Secret Manager secrets exposed to the function as environment variables
   boundSecretEnvVars []gcp.project.cloudFunction.secretEnvVar
   // Secret Manager secrets mounted into the function filesystem
@@ -10324,7 +10324,7 @@ private gcp.project.bigtableService.cluster @defaults("name") {
   //
   // Deprecated in favor of kmsKey. The message has exactly one field, so this
   // dict only ever carried `kmsKeyName`.
-  encryptionConfig @maturity("deprecated") dict
+  encryptionConfig @maturity("deprecated") @replaced_by("gcp.project.bigtableService.cluster.kmsKey") dict
   // Customer-managed KMS key used for cluster encryption (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Node scaling factor
@@ -10865,7 +10865,7 @@ private gcp.project.computeService.securityPolicy @defaults("name type") {
   // Deprecated in favor of adaptiveProtection. Keyed by
   // `layer7DdosDefenseConfig`, which carries `enable`, `ruleVisibility`, and
   // the per-traffic-granularity `thresholdConfigs`.
-  adaptiveProtectionConfig @maturity("deprecated") dict
+  adaptiveProtectionConfig @maturity("deprecated") @replaced_by("gcp.project.computeService.securityPolicy.adaptiveProtection") dict
   // Machine-learned defense the policy applies on top of its own rules
   //
   // Null when the policy has no adaptive protection configured at all.
@@ -10876,7 +10876,7 @@ private gcp.project.computeService.securityPolicy @defaults("name type") {
   // `logLevel`, `requestBodyInspectionSize`, the `jsonCustomConfig` content
   // types, and the `userIpRequestHeaders` the policy trusts for the client
   // address.
-  advancedOptionsConfig @maturity("deprecated") dict
+  advancedOptionsConfig @maturity("deprecated") @replaced_by("gcp.project.computeService.securityPolicy.advancedOptions") dict
   // How the policy reads a request before its rules evaluate it
   //
   // Null when the policy leaves every advanced option at its default.
@@ -10885,7 +10885,7 @@ private gcp.project.computeService.securityPolicy @defaults("name type") {
   //
   // Deprecated in favor of networkDdosProtection. Carries `ddosProtection`,
   // `ddosAdaptiveProtection`, and `ddosImpactedBaselineThreshold`.
-  ddosProtectionConfig @maturity("deprecated") dict
+  ddosProtectionConfig @maturity("deprecated") @replaced_by("gcp.project.computeService.securityPolicy.networkDdosProtection") dict
   // Network-layer DDoS protection the policy applies
   //
   // Null on a policy that is not a CLOUD_ARMOR_NETWORK policy, which is the
@@ -10924,7 +10924,7 @@ private gcp.project.computeService.securityPolicy.rule @defaults("priority actio
   // Deprecated in favor of matcher. Carries `versionedExpr`, the `config`
   // source IP ranges, the CEL `expr`, and `exprOptions` for reCAPTCHA
   // matching.
-  match @maturity("deprecated") dict
+  match @maturity("deprecated") @replaced_by("gcp.project.computeService.securityPolicy.rule.matcher") dict
   // Condition deciding which requests the rule acts on
   //
   // Null when the rule carries no match condition, which the API only reports
@@ -12267,7 +12267,7 @@ private gcp.project.computeService.firewallPolicy.rule @defaults("priority actio
   // Layer 4 configuration dicts
   //
   // Deprecated in favor of layer4Protocols. Each entry: {ipProtocol, ports}.
-  layer4Configs @maturity("deprecated") []dict
+  layer4Configs @maturity("deprecated") @replaced_by("gcp.project.computeService.firewallPolicy.rule.layer4Protocols") []dict
   // Ports the rule matches, keyed by protocol
   //
   // Maps each protocol the rule matches (tcp, udp, icmp, esp, ah, sctp, or an
@@ -13021,7 +13021,7 @@ private gcp.project.healthcareService.dataset @defaults("name timeZone") {
   // Encryption spec dict
   //
   // Deprecated in favor of kmsKey. The dict carries only `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.healthcareService.dataset.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // DICOM stores in this dataset
@@ -13816,7 +13816,7 @@ private gcp.project.computeService.instanceTemplate @defaults("name description"
   // instance properties block: machineType, disks, networkInterfaces,
   // serviceAccounts, metadata, tags, scheduling, shieldedInstanceConfig,
   // confidentialInstanceConfig, advancedMachineFeatures, and labels.
-  properties @maturity("deprecated") dict
+  properties @maturity("deprecated") @replaced_by("gcp.project.computeService.instanceTemplate.vmProperties") dict
   // Instance configuration every VM created from this template receives
   vmProperties gcp.project.computeService.instanceTemplate.instanceProperties
   // Creation timestamp
@@ -14616,7 +14616,7 @@ private gcp.project.vertexaiService.metadataStore @defaults("name state") {
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.metadataStore.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Dataplex integration config
@@ -14666,7 +14666,7 @@ private gcp.project.vertexaiService.model @defaults("name displayName") {
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.model.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
@@ -14713,7 +14713,7 @@ private gcp.project.vertexaiService.endpoint @defaults("name displayName") {
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.endpoint.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // VPC network used for private endpoints (resolved from network)
@@ -14816,7 +14816,7 @@ private gcp.project.vertexaiService.pipelineJob @defaults("name displayName stat
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.pipelineJob.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Template URI
@@ -14868,7 +14868,7 @@ private gcp.project.vertexaiService.dataset @defaults("name displayName") {
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.dataset.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
@@ -14903,7 +14903,7 @@ private gcp.project.vertexaiService.featureOnlineStore @defaults("name state") {
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.featureOnlineStore.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
@@ -14940,7 +14940,7 @@ private gcp.project.vertexaiService.tensorboard @defaults("displayName") {
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.tensorboard.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14981,7 +14981,7 @@ private gcp.project.vertexaiService.customJob @defaults("displayName state") {
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.customJob.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Error details (if failed)
@@ -15028,7 +15028,7 @@ private gcp.project.vertexaiService.index @defaults("displayName") {
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.index.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Index update method (BATCH_UPDATE, STREAM_UPDATE)
@@ -15069,7 +15069,7 @@ private gcp.project.vertexaiService.indexEndpoint @defaults("displayName") {
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.indexEndpoint.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15145,7 +15145,7 @@ private gcp.project.vertexaiService.notebookRuntime @defaults("displayName runti
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.notebookRuntime.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15213,7 +15213,7 @@ private gcp.project.vertexaiService.notebookRuntimeTemplate @defaults("displayNa
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.notebookRuntimeTemplate.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Resource-level IAM policy bindings governing who can use this template
@@ -15259,7 +15259,7 @@ private gcp.project.vertexaiService.notebookExecutionJob @defaults("displayName 
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.notebookExecutionJob.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15305,7 +15305,7 @@ private gcp.project.vertexaiService.reasoningEngine @defaults("displayName agent
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.reasoningEngine.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
@@ -15338,7 +15338,7 @@ private gcp.project.vertexaiService.ragCorpus @defaults("displayName") {
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.ragCorpus.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15399,7 +15399,7 @@ private gcp.project.vertexaiService.persistentResource @defaults("displayName st
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.persistentResource.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15470,7 +15470,7 @@ private gcp.project.vertexaiService.deploymentResourcePool @defaults("name") {
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.deploymentResourcePool.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15499,7 +15499,7 @@ private gcp.project.vertexaiService.cachedContent @defaults("displayName model")
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.cachedContent.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15546,7 +15546,7 @@ private gcp.project.vertexaiService.batchPredictionJob @defaults("displayName st
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.batchPredictionJob.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15601,7 +15601,7 @@ private gcp.project.vertexaiService.tuningJob @defaults("tunedModelDisplayName s
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.tuningJob.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15650,7 +15650,7 @@ private gcp.project.vertexaiService.trainingPipeline @defaults("displayName stat
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.trainingPipeline.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15699,7 +15699,7 @@ private gcp.project.vertexaiService.hyperparameterTuningJob @defaults("displayNa
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.hyperparameterTuningJob.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15746,7 +15746,7 @@ private gcp.project.vertexaiService.modelDeploymentMonitoringJob @defaults("disp
   //
   // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
   // field, so this dict only ever carried `kmsKeyName`.
-  encryptionSpec @maturity("deprecated") dict
+  encryptionSpec @maturity("deprecated") @replaced_by("gcp.project.vertexaiService.modelDeploymentMonitoringJob.kmsKey") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15883,7 +15883,7 @@ private gcp.scc.finding @defaults("name category severity") {
   // `exposedEndpoint`, `loadBalancerFirewallPolicy`, `serviceFirewallPolicy`,
   // `forwardingRule`, `backendService`, `instanceGroup`, and
   // `networkEndpointGroup`.
-  externalExposure @maturity("deprecated") dict
+  externalExposure @maturity("deprecated") @replaced_by("gcp.scc.finding.internetExposure") dict
   // How the affected resource is reachable from the internet
   internetExposure gcp.scc.finding.internetExposure
   // Toxic combination details for the finding
@@ -16834,7 +16834,7 @@ private gcp.project.dlpService.projectDataProfile @defaults("projectId sensitivi
   // Sensitivity score dict
   //
   // Deprecated in favor of sensitivity. Carries `score`.
-  sensitivityScore @maturity("deprecated") dict
+  sensitivityScore @maturity("deprecated") @replaced_by("gcp.project.dlpService.projectDataProfile.sensitivity") dict
   // Sensitivity DLP assigned to the profiled data
   //
   // Null when the profile reports no score at all, which is different from
@@ -16843,7 +16843,7 @@ private gcp.project.dlpService.projectDataProfile @defaults("projectId sensitivi
   // Data risk level dict
   //
   // Deprecated in favor of riskLevel. Carries `score`.
-  dataRiskLevel @maturity("deprecated") dict
+  dataRiskLevel @maturity("deprecated") @replaced_by("gcp.project.dlpService.projectDataProfile.riskLevel") dict
   // Data risk DLP assigned to the profiled data
   //
   // Null when the profile reports no risk level at all.
@@ -16852,7 +16852,7 @@ private gcp.project.dlpService.projectDataProfile @defaults("projectId sensitivi
   //
   // Deprecated in favor of lastProfileStatus. Carries `status` and
   // `timestamp`.
-  profileStatus @maturity("deprecated") dict
+  profileStatus @maturity("deprecated") @replaced_by("gcp.project.dlpService.projectDataProfile.lastProfileStatus") dict
   // Outcome of the last profile-generation attempt
   //
   // Null when the profile reports no status at all.
@@ -16890,7 +16890,7 @@ private gcp.project.dlpService.tableDataProfile @defaults("tableId datasetId sen
   // Sensitivity score dict
   //
   // Deprecated in favor of sensitivity. Carries `score`.
-  sensitivityScore @maturity("deprecated") dict
+  sensitivityScore @maturity("deprecated") @replaced_by("gcp.project.dlpService.tableDataProfile.sensitivity") dict
   // Sensitivity DLP assigned to the profiled data
   //
   // Null when the profile reports no score at all, which is different from
@@ -16899,7 +16899,7 @@ private gcp.project.dlpService.tableDataProfile @defaults("tableId datasetId sen
   // Data risk level dict
   //
   // Deprecated in favor of riskLevel. Carries `score`.
-  dataRiskLevel @maturity("deprecated") dict
+  dataRiskLevel @maturity("deprecated") @replaced_by("gcp.project.dlpService.tableDataProfile.riskLevel") dict
   // Data risk DLP assigned to the profiled data
   //
   // Null when the profile reports no risk level at all.
@@ -16908,7 +16908,7 @@ private gcp.project.dlpService.tableDataProfile @defaults("tableId datasetId sen
   //
   // Deprecated in favor of lastProfileStatus. Carries `status` and
   // `timestamp`.
-  profileStatus @maturity("deprecated") dict
+  profileStatus @maturity("deprecated") @replaced_by("gcp.project.dlpService.tableDataProfile.lastProfileStatus") dict
   // Outcome of the last profile-generation attempt
   //
   // Null when the profile reports no status at all.
@@ -16965,7 +16965,7 @@ private gcp.project.dlpService.columnDataProfile @defaults("column tableId sensi
   // Sensitivity score dict
   //
   // Deprecated in favor of sensitivity. Carries `score`.
-  sensitivityScore @maturity("deprecated") dict
+  sensitivityScore @maturity("deprecated") @replaced_by("gcp.project.dlpService.columnDataProfile.sensitivity") dict
   // Sensitivity DLP assigned to the profiled data
   //
   // Null when the profile reports no score at all, which is different from
@@ -16974,7 +16974,7 @@ private gcp.project.dlpService.columnDataProfile @defaults("column tableId sensi
   // Data risk level dict
   //
   // Deprecated in favor of riskLevel. Carries `score`.
-  dataRiskLevel @maturity("deprecated") dict
+  dataRiskLevel @maturity("deprecated") @replaced_by("gcp.project.dlpService.columnDataProfile.riskLevel") dict
   // Data risk DLP assigned to the profiled data
   //
   // Null when the profile reports no risk level at all.
@@ -17022,7 +17022,7 @@ private gcp.project.dlpService.fileStoreDataProfile @defaults("fileStorePath sen
   //
   // Deprecated in favor of lastProfileStatus. Carries `status` and
   // `timestamp`.
-  profileStatus @maturity("deprecated") dict
+  profileStatus @maturity("deprecated") @replaced_by("gcp.project.dlpService.fileStoreDataProfile.lastProfileStatus") dict
   // Outcome of the last profile-generation attempt
   //
   // Null when the profile reports no status at all.
@@ -17034,7 +17034,7 @@ private gcp.project.dlpService.fileStoreDataProfile @defaults("fileStorePath sen
   // Sensitivity score dict
   //
   // Deprecated in favor of sensitivity. Carries `score`.
-  sensitivityScore @maturity("deprecated") dict
+  sensitivityScore @maturity("deprecated") @replaced_by("gcp.project.dlpService.fileStoreDataProfile.sensitivity") dict
   // Sensitivity DLP assigned to the profiled data
   //
   // Null when the profile reports no score at all, which is different from
@@ -17043,7 +17043,7 @@ private gcp.project.dlpService.fileStoreDataProfile @defaults("fileStorePath sen
   // Data risk level dict
   //
   // Deprecated in favor of riskLevel. Carries `score`.
-  dataRiskLevel @maturity("deprecated") dict
+  dataRiskLevel @maturity("deprecated") @replaced_by("gcp.project.dlpService.fileStoreDataProfile.riskLevel") dict
   // Data risk DLP assigned to the profiled data
   //
   // Null when the profile reports no risk level at all.

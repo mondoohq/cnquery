@@ -155,6 +155,10 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		Name:      conn.Name(),
 		Asset:     req.Asset,
 		Inventory: inventory,
+		// Which kind this asset actually is. The static Root above has to name
+		// one resource for a provider serving a dozen kinds; only the connected
+		// asset says whether it is a cluster, a Pod or an Ingress (ADR 031).
+		Root: assetRoot(req.Asset.GetPlatform()),
 	}, nil
 }
 

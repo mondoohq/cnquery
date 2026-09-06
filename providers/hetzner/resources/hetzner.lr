@@ -494,7 +494,7 @@ private hetzner.network @defaults("id name ipRange") {
   // Deprecated in favor of staticRoutes, which carries the same destination
   // and gateway plus the server holding the gateway address. Each entry is a
   // dict with `destination` and `gateway`.
-  routes @maturity("deprecated") []dict
+  routes @maturity("deprecated") @replaced_by("hetzner.network.staticRoutes") []dict
   // Static routes with the gateway resolved to a server
   //
   // The network's next-hop entries. A route to 0.0.0.0/0 whose gateway is one

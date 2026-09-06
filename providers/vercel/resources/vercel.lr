@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/vercel"
 option go_package = "go.mondoo.com/mql/providers/vercel/resources"
+option root = "vercel"
 
 // Vercel
 //
@@ -11,7 +12,7 @@ option go_package = "go.mondoo.com/mql/providers/vercel/resources"
 // across those teams, `user` identifies the authenticated principal, and
 // `accessTokens` lists the API tokens owned by that user for token inventory
 // and rotation audits.
-vercel {
+vercel @root {
   // Teams and personal accounts the token can access
   teams() []vercel.team
   // Projects across every accessible team
@@ -82,7 +83,7 @@ private vercel.accessToken @defaults("name expiresAt") {
 // `logDrains`, `webhooks`,
 // `integrationConfigurations`, and `accessGroups` for the surrounding
 // configuration. Select a team with `vercel.teams.where(slug == "acme")`.
-private vercel.team @defaults("slug name") {
+private vercel.team @defaults("slug name") @root {
   // Unique team identifier
   id string
   // URL-safe team slug
@@ -442,7 +443,7 @@ private vercel.team.sharedEnvironmentVariable @defaults("key type") {
 // that hold a deployment back; and `firewall` for the Web Application Firewall.
 // Select a project with
 // `vercel.projects.where(name == "web")`.
-private vercel.project @defaults("name framework") {
+private vercel.project @defaults("name framework") @root {
   // Unique project identifier
   id string
   // Project name
@@ -1333,12 +1334,12 @@ private vercel.firewall @defaults("enabled") {
   //
   // Deprecated in favor of managedRules, which reports the same rulesets with
   // the action and the account that last changed each one as fields.
-  managedRulesets @maturity("deprecated") dict
+  managedRulesets @maturity("deprecated") @replaced_by("vercel.firewall.managedRules") dict
   // Core rule set configuration keyed by attack class
   //
   // Deprecated in favor of coreRules, which reports the same categories with
   // the active state and action as fields.
-  coreRuleSet @maturity("deprecated") dict
+  coreRuleSet @maturity("deprecated") @replaced_by("vercel.firewall.coreRules") dict
   // Managed rulesets Vercel evaluates for the project
   //
   // Each entry is a ruleset Vercel maintains, with whether it is active, what

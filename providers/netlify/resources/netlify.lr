@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/netlify"
 option go_package = "go.mondoo.com/mql/providers/netlify/resources"
+option root = "netlify"
 
 // Netlify
 //
@@ -12,7 +13,7 @@ option go_package = "go.mondoo.com/mql/providers/netlify/resources"
 // covers Netlify-managed DNS, `deployKeys` lists the SSH keys that grant
 // repository access to builds, and `currentUser` identifies the principal the
 // token belongs to.
-netlify {
+netlify @root {
   // Accounts the token can access
   accounts() []netlify.account
   // Sites across every accessible account

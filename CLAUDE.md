@@ -738,6 +738,7 @@ Each provider follows a standard directory layout:
 - **`gen/main.go`** - Generates CLI configuration JSON
 
 ### Creating a New Provider
+- **Every provider that accepts connections must declare an asset root** (ADR 031). Mark the resource a connection binds to with `@root`, add `option root = "<resource>"` to the `.lr`, and set `Root:` in `config/config.go` to the same name. A provider serving several asset kinds marks each kind's resource `@root` and reports the concrete one per connection through `ConnectRes.Root`; derive the kinds from what the provider already hands out as assets, not from a taxonomy you invent. Rooting also means the provider now reads `asset`, which core owns, so add core to `Requires` (ADR 042). `providers/roots_test.go` enforces all of this and names the fix when it fails.
 See [DEVELOPMENT.md → Creating a new provider](DEVELOPMENT.md#creating-a-new-provider) for the scaffolding command and the four files to register the new provider in.
 
 ### CLI and Output

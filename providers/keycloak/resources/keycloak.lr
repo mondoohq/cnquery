@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/keycloak"
 option go_package = "go.mondoo.com/mql/providers/keycloak/resources"
+option root = "keycloak"
 
 // Keycloak
 //
@@ -12,7 +13,7 @@ option go_package = "go.mondoo.com/mql/providers/keycloak/resources"
 // `clients` flattens every client across them so a wildcard redirect URI or a
 // public client can be found in one query. Scope a scan to one realm with the
 // --realm flag, or leave it unset to walk every realm the credentials reach.
-keycloak {
+keycloak @root {
   // Realms the credentials can read
   realms() []keycloak.realm
   // Clients across every realm in scope

@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/tailscale"
 option go_package = "go.mondoo.com/mql/providers/tailscale/resources"
+option root = "tailscale"
 
 // Tailscale tailnet
 //
@@ -15,7 +16,7 @@ option go_package = "go.mondoo.com/mql/providers/tailscale/resources"
 // exposes `authKeys` (pre-auth keys issued to onboard devices),
 // `webhooks` (event subscription endpoints), and `logstreams` (audit and
 // network-flow log export destinations).
-tailscale {
+tailscale @root {
   // Tailnet organization name
   tailnet string
   // List devices in a tailnet

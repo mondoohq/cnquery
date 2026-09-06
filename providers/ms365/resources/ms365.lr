@@ -16,7 +16,7 @@ microsoft {
   // Microsoft 365 tenant organizations
   //
   // Deprecated in favor of `microsoft.tenant`.
-  organizations() @maturity("deprecated") []microsoft.tenant
+  organizations() @maturity("deprecated") @replaced_by("microsoft.tenant") []microsoft.tenant
   // List of users
   users() microsoft.users
   // List of groups
@@ -38,7 +38,7 @@ microsoft {
   // Tenant-wide settings
   //
   // Deprecated in favor of `groupSettings`.
-  settings() @maturity("deprecated") dict
+  settings() @maturity("deprecated") @replaced_by("microsoft.groupSettings") dict
   // Microsoft 365 settings
   groupSettings() []microsoft.setting
   // The connected tenant's default domain name
@@ -1889,7 +1889,7 @@ private microsoft.security.securityscore @defaults("id azureTenantId") {
   // Secure Score control scores as raw dictionaries
   //
   // Deprecated in favor of `controls`.
-  controlScores @maturity("deprecated") []dict
+  controlScores @maturity("deprecated") @replaced_by("microsoft.security.securityscore.controls") []dict
   // Per-control score breakdown for the Secure Score
   //
   // Each entry exposes the control's `controlName`, `controlCategory`,
@@ -2932,11 +2932,11 @@ microsoft.roles {
 // Deprecated in favor of `microsoft.roles`. This namespace previously
 // exposed role definitions and assignments; use `microsoft.roles` for
 // role definitions going forward.
-microsoft.rolemanagement @maturity("deprecated") {
+microsoft.rolemanagement @maturity("deprecated") @replaced_by("microsoft.roles") {
   // Role definitions
   //
   // Deprecated in favor of `microsoft.roles`.
-  roleDefinitions() @maturity("deprecated") microsoft.roles
+  roleDefinitions() @maturity("deprecated") @replaced_by("microsoft.roles") microsoft.roles
 }
 
 // Microsoft role definition
@@ -4120,7 +4120,7 @@ ms365.exchangeonline {
   // Malware filter policies as raw dictionaries
   //
   // Deprecated in favor of malwareFilterPolicies.
-  malwareFilterPolicy() @maturity("deprecated") []dict
+  malwareFilterPolicy() @maturity("deprecated") @replaced_by("ms365.exchangeonline.malwareFilterPolicies") []dict
   // Malware filter policies
   //
   // Each policy exposes fields for common-attachment filtering, zero-hour auto purge,
@@ -4129,7 +4129,7 @@ ms365.exchangeonline {
   // Hosted outbound spam filter policies as raw dictionaries
   //
   // Deprecated in favor of hostedOutboundSpamFilterPolicies.
-  hostedOutboundSpamFilterPolicy() @maturity("deprecated") []dict
+  hostedOutboundSpamFilterPolicy() @maturity("deprecated") @replaced_by("ms365.exchangeonline.hostedOutboundSpamFilterPolicies") []dict
   // Outbound spam filter policies
   //
   // Each policy exposes fields for the sending limits and the automatic
@@ -4143,7 +4143,7 @@ ms365.exchangeonline {
   // Transport rules as raw dictionaries
   //
   // Deprecated in favor of transportRules.
-  transportRule() @maturity("deprecated") []dict
+  transportRule() @maturity("deprecated") @replaced_by("ms365.exchangeonline.transportRules") []dict
   // Mail flow (transport) rules
   //
   // Each rule exposes fields for its name, evaluation priority, and
@@ -4157,7 +4157,7 @@ ms365.exchangeonline {
   // Safe Links policies as raw dictionaries
   //
   // Deprecated in favor of safeLinksPolicies.
-  safeLinksPolicy() @maturity("deprecated") []dict
+  safeLinksPolicy() @maturity("deprecated") @replaced_by("ms365.exchangeonline.safeLinksPolicies") []dict
   // Defender for Office 365 Safe Links policies
   //
   // Each policy exposes fields for the URL scanning coverage, click tracking, and
@@ -4166,7 +4166,7 @@ ms365.exchangeonline {
   // Safe Attachments policies as raw dictionaries
   //
   // Deprecated in favor of safeAttachmentPolicies.
-  safeAttachmentPolicy() @maturity("deprecated") []dict
+  safeAttachmentPolicy() @maturity("deprecated") @replaced_by("ms365.exchangeonline.safeAttachmentPolicies") []dict
   // Defender for Office 365 Safe Attachments policies
   //
   // Each policy exposes fields for the malware-detection action and redirect settings.
@@ -4181,7 +4181,7 @@ ms365.exchangeonline {
   // Anti-phishing policies as raw dictionaries
   //
   // Deprecated in favor of antiPhishPolicies.
-  antiPhishPolicy() @maturity("deprecated") []dict
+  antiPhishPolicy() @maturity("deprecated") @replaced_by("ms365.exchangeonline.antiPhishPolicies") []dict
   // Anti-phishing policies
   //
   // Each policy exposes fields for the impersonation protection, spoof intelligence,
@@ -4190,7 +4190,7 @@ ms365.exchangeonline {
   // DKIM signing configurations as raw dictionaries
   //
   // Deprecated in favor of dkimSigningConfigs.
-  dkimSigningConfig() @maturity("deprecated") []dict
+  dkimSigningConfig() @maturity("deprecated") @replaced_by("ms365.exchangeonline.dkimSigningConfigs") []dict
   // DKIM signing configurations
   //
   // One configuration per accepted domain, with fields for whether outbound
@@ -4199,7 +4199,7 @@ ms365.exchangeonline {
   // OWA mailbox policies as raw dictionaries
   //
   // Deprecated in favor of owaMailboxPolicies.
-  owaMailboxPolicy() @maturity("deprecated") []dict
+  owaMailboxPolicy() @maturity("deprecated") @replaced_by("ms365.exchangeonline.owaMailboxPolicies") []dict
   // Outlook on the web mailbox policies
   //
   // Each policy exposes fields for the third-party storage availability and direct
@@ -4228,7 +4228,7 @@ ms365.exchangeonline {
   // ATP policies for Office 365 as raw dictionaries
   //
   // Deprecated in favor of atpPoliciesForO365.
-  atpPolicyForO365() @maturity("deprecated") []dict
+  atpPolicyForO365() @maturity("deprecated") @replaced_by("ms365.exchangeonline.atpPoliciesForO365") []dict
   // Defender for Office 365 ATP policies
   //
   // Each policy exposes fields for the Safe Documents and SharePoint, OneDrive, and
@@ -4237,7 +4237,7 @@ ms365.exchangeonline {
   // Sharing policies as raw dictionaries
   //
   // Deprecated in favor of sharingPolicies.
-  sharingPolicy() @maturity("deprecated") []dict
+  sharingPolicy() @maturity("deprecated") @replaced_by("ms365.exchangeonline.sharingPolicies") []dict
   // Calendar and contact sharing policies
   //
   // Each policy exposes fields for whether sharing is enabled and the domains and
@@ -4246,7 +4246,7 @@ ms365.exchangeonline {
   // Role assignment policies as raw dictionaries
   //
   // Deprecated in favor of roleAssignmentPolicies.
-  roleAssignmentPolicy() @maturity("deprecated") []dict
+  roleAssignmentPolicy() @maturity("deprecated") @replaced_by("ms365.exchangeonline.roleAssignmentPolicies") []dict
   // Role assignment policies
   //
   // Each policy exposes fields for the management roles assigned to mailboxes and
@@ -4567,7 +4567,7 @@ ms365.sharepointonline {
   //
   // Deprecated in favor of tenantConfiguration, which models the
   // security-relevant settings as individual fields.
-  spoTenant() @maturity("deprecated") dict
+  spoTenant() @maturity("deprecated") @replaced_by("ms365.sharepointonline.tenantConfiguration") dict
   // SharePoint Online tenant configuration
   tenantConfiguration() ms365.sharepointonline.tenantConfig
   // OneDrive sync client access restrictions for the tenant
@@ -4729,7 +4729,7 @@ ms365.teams {
   //
   // Deprecated in favor of clientConfiguration, which models the same
   // settings as individual fields.
-  csTeamsClientConfiguration() @maturity("deprecated") dict
+  csTeamsClientConfiguration() @maturity("deprecated") @replaced_by("ms365.teams.clientConfiguration") dict
   // Teams client configuration
   //
   // Tenant-wide Teams client feature controls covering third-party cloud

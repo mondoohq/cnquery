@@ -3,13 +3,14 @@
 
 option provider = "go.mondoo.com/mql/providers/github"
 option go_package = "go.mondoo.com/mql/providers/github/resources"
+option root = "github"
 
 // GitHub
 //
 // Namespace root for GitHub queries, exposing organizations, repositories,
 // teams, users, packages, deploy keys, and security and governance settings
 // across the connected account.
-private github {}
+private github @root {}
 
 // Git commit
 //
@@ -70,7 +71,7 @@ private git.gpgSignature @defaults("sha") {
 // Dependabot defaults for new repositories, SAML single sign-on, the IP allow
 // list, custom roles, approved OAuth apps and fine-grained personal access
 // tokens, audit log streaming, and GitHub Copilot Business configuration.
-github.organization @defaults("login name") {
+github.organization @defaults("login name") @root {
   // Organization login
   login string
   // Organization ID
@@ -672,7 +673,7 @@ private github.organization.copilot.seat @defaults("assigneeLogin planType lastA
 // was suspended, both useful for auditing privileged or disabled accounts. Also
 // exposes the user's `repositories`, `gists`, and registered `publicKeys` for
 // reviewing what an account owns and which SSH keys can act on its behalf.
-private github.user @defaults("login name email company") {
+private github.user @defaults("login name email company") @root {
   // User ID
   id int
   // User login
@@ -905,7 +906,7 @@ github.packages {
 // environments, and branch and tag rulesets. Selected by repository name within
 // the connected owner, for example `github.repository(name: "cnquery")`, when
 // authenticated as a user.
-github.repository @defaults("fullName") {
+github.repository @defaults("fullName") @root {
   // can only be used when logged in to github as a user
   init(name string)
   // Repository ID

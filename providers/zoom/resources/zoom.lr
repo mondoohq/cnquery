@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/zoom"
 option go_package = "go.mondoo.com/mql/providers/zoom/resources"
+option root = "zoom"
 
 // Zoom account root
 //
@@ -13,7 +14,7 @@ option go_package = "go.mondoo.com/mql/providers/zoom/resources"
 // Groups and roles both carry their own meeting-security overrides and
 // membership lists, so admin-equivalent access and account-wide meeting
 // defaults can be audited from a single query surface.
-zoom @maturity("experimental") {
+zoom @maturity("experimental") @root {
   // Users provisioned on the account, in every status
   //
   // Covers active, deactivated, and pending users alike, so a dormant account
@@ -276,13 +277,13 @@ zoom.user @defaults("id email type") @maturity("experimental") {
   // Role ID assigned to the user
   //
   // Deprecated in favor of role.
-  roleId @maturity("deprecated") string
+  roleId @maturity("deprecated") @replaced_by("zoom.user.role") string
   // Role assigned to the user, governing their admin privileges
   role() zoom.role
   // Group IDs the user belongs to
   //
   // Deprecated in favor of groups.
-  groupIds @maturity("deprecated") []string
+  groupIds @maturity("deprecated") @replaced_by("zoom.user.groups") []string
   // Groups the user belongs to
   groups() []zoom.group
 }

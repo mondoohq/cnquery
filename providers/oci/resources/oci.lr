@@ -303,7 +303,7 @@ private oci.identity.domain.user @defaults("userName active mfaStatus") {
   // Deprecated in favor of groupMemberships, which resolves each row to the
   // group resource behind it. Each entry has the group's `value` (its SCIM
   // id), `display` name, `ocid`, and the `type` of membership.
-  groups @maturity("deprecated") []dict
+  groups @maturity("deprecated") @replaced_by("oci.identity.domain.user.groupMemberships") []dict
   // Group memberships held by the user
   //
   // One row per group the user belongs to, each resolving to the group
@@ -699,7 +699,7 @@ private oci.identity.domain.networkPerimeter @defaults("name") {
   // Deprecated in favor of addresses, which returns the same entries as
   // resources. Each entry carries `value` with the address or range, `type` as
   // CIDR, RANGE or EXACT, and `version` as IPV4 or IPV6.
-  ipAddresses @maturity("deprecated") []dict
+  ipAddresses @maturity("deprecated") @replaced_by("oci.identity.domain.networkPerimeter.addresses") []dict
   // Client addresses the perimeter covers
   //
   // One row per entry in the perimeter. A perimeter naming a single wide CIDR
@@ -1177,7 +1177,7 @@ private oci.network.exposure @defaults("internetReachable hasPublicIp") {
   // `stateless`, so a filter naming either one silently misses half the rows.
   // Each entry: {source, sourceType, protocol (IANA number, e.g. "6"=TCP,
   // "17"=UDP, "1"=ICMP), description, tcpOptions, udpOptions, icmpOptions}.
-  openIngressRules @maturity("deprecated") []dict
+  openIngressRules @maturity("deprecated") @replaced_by("oci.network.exposure.internetIngressRules") []dict
   // Ingress rules that admit traffic from any address (0.0.0.0/0 or ::/0)
   //
   // The matching rules from every attached network security group and from the
@@ -1192,7 +1192,7 @@ private oci.network.exposure @defaults("internetReachable hasPublicIp") {
   // labelling to the namespace behind it and so reports whether that namespace
   // enforces or only audits. Each key is a security attribute namespace and
   // each value maps that namespace's attribute names to the resource's values.
-  securityAttributes @maturity("deprecated") map[string]dict
+  securityAttributes @maturity("deprecated") @replaced_by("oci.network.exposure.appliedSecurityAttributes") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -1259,7 +1259,7 @@ private oci.compute.instance @defaults("name") {
   // AMD_MILAN_BM), `isSecureBootEnabled`, `isTrustedPlatformModuleEnabled`,
   // `isMeasuredBootEnabled`, and `isMemoryEncryptionEnabled`. Absent when the
   // shape does not support these features.
-  platformConfig @maturity("deprecated") dict
+  platformConfig @maturity("deprecated") @replaced_by("oci.compute.instance.platformSecurity") dict
   // Shielded-instance and confidential-computing settings
   //
   // Null when the instance carries no platform configuration, which is the
@@ -1274,7 +1274,7 @@ private oci.compute.instance @defaults("name") {
   // PARAVIRTUALIZED), `firmware` (BIOS or UEFI_64), `networkType` (E1000,
   // VFIO, PARAVIRTUALIZED, or ACCELERATEDPV),
   // `isPvEncryptionInTransitEnabled`, and `isConsistentVolumeNamingEnabled`.
-  launchOptions @maturity("deprecated") dict
+  launchOptions @maturity("deprecated") @replaced_by("oci.compute.instance.launchConfig") dict
   // Emulation and I/O settings chosen at launch
   //
   // Null when the instance reports no launch options.
@@ -1285,7 +1285,7 @@ private oci.compute.instance @defaults("name") {
   // only value this dict holds. The single key
   // `areLegacyImdsEndpointsDisabled` reports whether the legacy instance
   // metadata service (IMDSv1) endpoints are turned off.
-  instanceOptions @maturity("deprecated") dict
+  instanceOptions @maturity("deprecated") @replaced_by("oci.compute.instance.legacyImdsEndpointsDisabled") dict
   // Whether legacy instance metadata service (IMDSv1) endpoints are disabled
   //
   // When true, only the more secure IMDSv2 (/v2) endpoints are reachable.
@@ -1318,7 +1318,7 @@ private oci.compute.instance @defaults("name") {
   // `networkingBandwidthInGbps`, `maxVnicAttachments`, `gpus` with
   // `gpuDescription`, `localDisks` with `localDisksTotalSizeInGBs`, and
   // `processorDescription`.
-  shapeConfig @maturity("deprecated") dict
+  shapeConfig @maturity("deprecated") @replaced_by("oci.compute.instance.sizing") dict
   // Compute, memory, network and local-disk allocation of the instance
   //
   // Null when the instance reports no shape configuration, which is the case
@@ -1372,7 +1372,7 @@ private oci.compute.instance @defaults("name") {
   // enforces or only audits. Each key is a security attribute namespace and
   // each value maps that namespace's attribute names to this instance's
   // values.
-  securityAttributes @maturity("deprecated") map[string]dict
+  securityAttributes @maturity("deprecated") @replaced_by("oci.compute.instance.appliedSecurityAttributes") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -1592,7 +1592,7 @@ private oci.compute.vnic @defaults("name") {
   // enforces or only audits. A VNIC can carry attributes its instance does
   // not, so Zero Trust Packet Routing may govern one interface of a
   // multi-homed instance and not another.
-  securityAttributes @maturity("deprecated") map[string]dict
+  securityAttributes @maturity("deprecated") @replaced_by("oci.compute.vnic.appliedSecurityAttributes") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -1869,7 +1869,7 @@ private oci.network.vcn @defaults("name") {
   // labelling to the namespace behind it and so reports whether that namespace
   // enforces or only audits. Zero Trust Packet Routing statements can name a
   // whole VCN this way rather than naming the resources inside it.
-  securityAttributes @maturity("deprecated") map[string]dict
+  securityAttributes @maturity("deprecated") @replaced_by("oci.network.vcn.appliedSecurityAttributes") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -1880,13 +1880,13 @@ private oci.network.vcn @defaults("name") {
   // Default route table OCID for the VCN
   //
   // Deprecated in favor of defaultRouteTable.
-  defaultRouteTableId @maturity("deprecated") string
+  defaultRouteTableId @maturity("deprecated") @replaced_by("oci.network.vcn.defaultRouteTable") string
   // Route table applied to subnets that specify none of their own
   defaultRouteTable() oci.network.routeTable
   // Default security list OCID for the VCN
   //
   // Deprecated in favor of defaultSecurityList.
-  defaultSecurityListId @maturity("deprecated") string
+  defaultSecurityListId @maturity("deprecated") @replaced_by("oci.network.vcn.defaultSecurityList") string
   // Security list applied to subnets that specify none of their own
   defaultSecurityList() oci.network.securityList
   // DNS label for the VCN
@@ -2023,12 +2023,12 @@ private oci.network.securityList @defaults("name") {
   // Deprecated in favor of egressRules, which resolves the port ranges nested
   // inside tcpOptions and udpOptions into queryable fields. Each entry:
   // {description, stateless, protocol (IANA number, e.g. "6"=TCP, "17"=UDP, "1"=ICMP), destination, destinationType, tcpOptions{sourcePortRange{min,max}, destinationPortRange{min,max}}, udpOptions{...}, icmpOptions{type,code}}.
-  egressSecurityRules @maturity("deprecated") []dict
+  egressSecurityRules @maturity("deprecated") @replaced_by("oci.network.securityList.egressRules") []dict
   // Ingress security rule dicts
   //
   // Deprecated in favor of ingressRules. Same shape as egressSecurityRules but
   // with source/sourceType instead of destination/destinationType.
-  ingressSecurityRules @maturity("deprecated") []dict
+  ingressSecurityRules @maturity("deprecated") @replaced_by("oci.network.securityList.ingressRules") []dict
   // Inbound rules the security list permits
   ingressRules []oci.network.securityRule
   // Outbound rules the security list permits
@@ -2078,12 +2078,12 @@ private oci.network.networkSecurityGroup @defaults("name") {
   // Deprecated in favor of ingressRules, which resolves the port ranges nested
   // inside tcpOptions and udpOptions into queryable fields. Each entry:
   // {direction, protocol (IANA number, e.g. "6"=TCP), description, source, sourceType, isStateless, tcpOptions{sourcePortRange{min,max}, destinationPortRange{min,max}}, udpOptions{...}, icmpOptions{type,code}}.
-  ingressSecurityRules() @maturity("deprecated") []dict
+  ingressSecurityRules() @maturity("deprecated") @replaced_by("oci.network.networkSecurityGroup.ingressRules") []dict
   // Egress security rule dicts
   //
   // Deprecated in favor of egressRules. Same shape as ingressSecurityRules but
   // with destination/destinationType instead of source/sourceType.
-  egressSecurityRules() @maturity("deprecated") []dict
+  egressSecurityRules() @maturity("deprecated") @replaced_by("oci.network.networkSecurityGroup.egressRules") []dict
   // Inbound rules the group permits
   ingressRules() []oci.network.securityRule
   // Outbound rules the group permits
@@ -2261,7 +2261,7 @@ private oci.network.routeTable @defaults("name") {
   // resolves each one's target to the gateway resource it names. Each entry:
   // {networkEntityId, destination, destinationType (CIDR_BLOCK,
   // SERVICE_CIDR_BLOCK), description, routeType (STATIC, LOCAL)}.
-  routeRules @maturity("deprecated") []dict
+  routeRules @maturity("deprecated") @replaced_by("oci.network.routeTable.routes") []dict
   // Route rules resolved to their destination and target network entity
   routes() []oci.network.routeTable.route
   // Lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
@@ -2703,7 +2703,7 @@ private oci.network.virtualCircuit @defaults("name type state") {
   // Each entry: {crossConnectOrCrossConnectGroupId, vlan,
   // customerBgpPeeringIp, oracleBgpPeeringIp, customerBgpPeeringIpv6,
   // oracleBgpPeeringIpv6}.
-  crossConnectMappings @maturity("deprecated") []dict
+  crossConnectMappings @maturity("deprecated") @replaced_by("oci.network.virtualCircuit.mappings") []dict
   // BGP peering mappings to the underlying cross-connects
   //
   // One row per cross-connect the circuit terminates on, carrying the VLAN and
@@ -3069,7 +3069,7 @@ private oci.objectStorage.bucket {
   //
   // Deprecated in favor of kmsKey, which resolves the same OCID to the key it
   // names.
-  kmsKeyId() @maturity("deprecated") string
+  kmsKeyId() @maturity("deprecated") @replaced_by("oci.objectStorage.bucket.kmsKey") string
   // Customer-managed key that encrypts the bucket
   //
   // Null when the bucket is encrypted with an Oracle-managed key. Resolving
@@ -3328,7 +3328,7 @@ private oci.fileStorage.mountTarget @defaults("name state availabilityDomain") {
   // labelling to the namespace behind it and so reports whether that namespace
   // enforces or only audits. Zero Trust Packet Routing authorizes traffic from
   // these rather than from the mount target's address.
-  securityAttributes @maturity("deprecated") map[string]dict
+  securityAttributes @maturity("deprecated") @replaced_by("oci.fileStorage.mountTarget.appliedSecurityAttributes") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -3879,7 +3879,7 @@ private oci.cloudGuard.detectorRule @defaults("name isEnabled riskLevel") {
   // resources. Each entry has `configKey`, `name`, `value`, `dataType`, and
   // for multi-valued settings a `values` list whose entries carry `name`,
   // `value`, and `listType`.
-  configurations @maturity("deprecated") []dict
+  configurations @maturity("deprecated") @replaced_by("oci.cloudGuard.detectorRule.settings") []dict
   // Tunable parameters for the rule
   //
   // One row per setting the rule exposes, keyed by `configKey`. A rule is only
@@ -4472,7 +4472,7 @@ private oci.monitoring.alarm @defaults("name") {
   //
   // Deprecated in favor of metricCompartment, which resolves the same OCID to
   // the compartment it names.
-  metricCompartmentId @maturity("deprecated") string
+  metricCompartmentId @maturity("deprecated") @replaced_by("oci.monitoring.alarm.metricCompartment") string
   // Compartment whose metrics the alarm evaluates
   //
   // An alarm watches the metrics of this compartment rather than of the one it
@@ -4721,7 +4721,7 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
   // entry is a dict with an `ipAddress`, an `isPublic` flag indicating
   // internet reachability, and a `reservedIpId` when the address is backed by
   // a reserved public IP.
-  ipAddresses @maturity("deprecated") []dict
+  ipAddresses @maturity("deprecated") @replaced_by("oci.loadBalancer.loadBalancer.addresses") []dict
   // Assigned IP addresses
   //
   // One row per address the load balancer answers on. A row whose `isPublic`
@@ -4740,7 +4740,7 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
   // labelling to the namespace behind it and so reports whether that namespace
   // enforces or only audits. Zero Trust Packet Routing decides what the load
   // balancer may talk to from these rather than from its address.
-  securityAttributes @maturity("deprecated") map[string]dict
+  securityAttributes @maturity("deprecated") @replaced_by("oci.loadBalancer.loadBalancer.appliedSecurityAttributes") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -4805,7 +4805,7 @@ private oci.loadBalancer.listener @defaults("name") {
   // the suite itself. Kept because it also carries the OCI-predefined suite
   // names, which are not part of the load balancer's own collection and so
   // do not resolve.
-  sslCipherSuiteName @maturity("deprecated") string
+  sslCipherSuiteName @maturity("deprecated") @replaced_by("oci.loadBalancer.listener.sslCipherSuite") string
   // Cipher suite the listener negotiates with
   //
   // Resolves the load balancer's named cipher suite, whose ciphers list is
@@ -4836,7 +4836,7 @@ private oci.loadBalancer.listener @defaults("name") {
   //
   // Deprecated in favor of certificateBundle, which resolves the same name to
   // the bundle itself.
-  certificateName @maturity("deprecated") string
+  certificateName @maturity("deprecated") @replaced_by("oci.loadBalancer.listener.certificateBundle") string
   // Inline certificate bundle the listener serves
   //
   // Resolves the bundle managed directly on the load balancer, carrying the
@@ -4983,7 +4983,7 @@ private oci.loadBalancer.backendSet @defaults("name") {
   // TCP), `port`, `urlPath`, `returnCode` (expected status code),
   // `responseBodyRegex`, `retries`, `timeoutInMillis`, `intervalInMillis`, and
   // `isForcePlainText`.
-  healthChecker @maturity("deprecated") dict
+  healthChecker @maturity("deprecated") @replaced_by("oci.loadBalancer.backendSet.healthCheck") dict
   // Probe that decides whether a backend is healthy
   //
   // Null when the backend set carries no health checker, in which case no
@@ -5177,7 +5177,7 @@ private oci.networkLoadBalancer.loadBalancer @defaults("name isPrivate state") {
   // internet reachability, an `ipVersion` of IPV4 or IPV6, and a `reservedIp`
   // block carrying the OCID when the address is backed by a reserved public
   // IP.
-  ipAddresses @maturity("deprecated") []dict
+  ipAddresses @maturity("deprecated") @replaced_by("oci.networkLoadBalancer.loadBalancer.addresses") []dict
   // Assigned IP addresses
   //
   // One row per address the network load balancer answers on. A row whose
@@ -5209,7 +5209,7 @@ private oci.networkLoadBalancer.loadBalancer @defaults("name isPrivate state") {
   // Deprecated in favor of appliedSecurityAttributes, which joins each
   // labelling to the namespace behind it and so reports whether that namespace
   // enforces or only audits.
-  securityAttributes @maturity("deprecated") map[string]dict
+  securityAttributes @maturity("deprecated") @replaced_by("oci.networkLoadBalancer.loadBalancer.appliedSecurityAttributes") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -5284,7 +5284,7 @@ private oci.networkLoadBalancer.backendSet @defaults("name policy") {
   // `urlPath`, `returnCode` (expected status code), `responseBodyRegex`,
   // `retries`, `timeoutInMillis`, `intervalInMillis`, and a `dns` block for
   // DNS probes.
-  healthChecker @maturity("deprecated") dict
+  healthChecker @maturity("deprecated") @replaced_by("oci.networkLoadBalancer.backendSet.healthCheck") dict
   // Probe that decides whether a backend is healthy
   //
   // Null when the backend set carries no health checker, in which case no
@@ -5618,7 +5618,7 @@ private oci.streaming.streamPool @defaults("name isPrivate state") {
   //
   // Deprecated in favor of kafka, which reports the same settings as a
   // structure.
-  kafkaSettings() @maturity("deprecated") dict
+  kafkaSettings() @maturity("deprecated") @replaced_by("oci.streaming.streamPool.kafka") dict
   // Kafka compatibility settings
   //
   // Null when the pool reports no Kafka settings, meaning nothing connects to
@@ -5629,7 +5629,7 @@ private oci.streaming.streamPool @defaults("name isPrivate state") {
   // Deprecated in favor of appliedSecurityAttributes, which joins each
   // labelling to the namespace behind it and so reports whether that namespace
   // enforces or only audits.
-  securityAttributes @maturity("deprecated") map[string]dict
+  securityAttributes @maturity("deprecated") @replaced_by("oci.streaming.streamPool.appliedSecurityAttributes") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -5861,7 +5861,7 @@ private oci.mysql.dbSystem @defaults("name version state") {
   // an `ipAddressVersion`, a `status`, the `modes` the endpoint accepts (READ,
   // WRITE), and a `resourceType` of DBSYSTEM, READ_REPLICA, LOAD_BALANCER, or
   // READ_ENDPOINT.
-  endpoints @maturity("deprecated") []dict
+  endpoints @maturity("deprecated") @replaced_by("oci.mysql.dbSystem.dbEndpoints") []dict
   // Addresses the database system answers on
   //
   // One row per address the system listens on. `modes` separates a read-only
@@ -5890,7 +5890,7 @@ private oci.mysql.dbSystem @defaults("name version state") {
   // Deprecated in favor of deletionRules, which reports the same policy as a
   // structure. Together its values decide whether deleting the system also
   // destroys its recovery points.
-  deletionPolicy @maturity("deprecated") dict
+  deletionPolicy @maturity("deprecated") @replaced_by("oci.mysql.dbSystem.deletionRules") dict
   // What deleting the system does to it and to its backups
   //
   // Null when the system reports no deletion policy.
@@ -6098,7 +6098,7 @@ private oci.nosql.table @defaults("name state") {
   //
   // Deprecated in favor of limits, which reports the same ceilings as a
   // structure.
-  tableLimits @maturity("deprecated") dict
+  tableLimits @maturity("deprecated") @replaced_by("oci.nosql.table.limits") dict
   // Throughput and storage ceilings the table is provisioned with
   //
   // Null when the table reports no limits.
@@ -6280,7 +6280,7 @@ private oci.opensearch.cluster @defaults("name softwareVersion securityMode stat
   //
   // Deprecated in favor of backups, which reports the same policy as a
   // structure.
-  backupPolicy @maturity("deprecated") dict
+  backupPolicy @maturity("deprecated") @replaced_by("oci.opensearch.cluster.backups") dict
   // Automatic backup schedule and retention
   //
   // Null when the cluster reports no backup policy, which is a different fact
@@ -6295,7 +6295,7 @@ private oci.opensearch.cluster @defaults("name softwareVersion securityMode stat
   // Deprecated in favor of appliedSecurityAttributes, which joins each
   // labelling to the namespace behind it and so reports whether that namespace
   // enforces or only audits.
-  securityAttributes @maturity("deprecated") map[string]dict
+  securityAttributes @maturity("deprecated") @replaced_by("oci.opensearch.cluster.appliedSecurityAttributes") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -6407,7 +6407,7 @@ private oci.goldenGate.deployment @defaults("name isPublic state") {
   // Deprecated in favor of appliedSecurityAttributes, which joins each
   // labelling to the namespace behind it and so reports whether that namespace
   // enforces or only audits.
-  securityAttributes @maturity("deprecated") map[string]dict
+  securityAttributes @maturity("deprecated") @replaced_by("oci.goldenGate.deployment.appliedSecurityAttributes") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -6685,7 +6685,7 @@ private oci.networkFirewall.firewall @defaults("name") {
   // labelling to the namespace behind it and so reports whether that namespace
   // enforces or only audits. Keyed by security-attribute namespace, each value
   // maps the attribute names within that namespace to their assigned values.
-  securityAttributes @maturity("deprecated") map[string]dict
+  securityAttributes @maturity("deprecated") @replaced_by("oci.networkFirewall.firewall.appliedSecurityAttributes") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -7275,7 +7275,7 @@ private oci.oke.cluster @defaults("name") {
   // Deprecated in favor of appliedSecurityAttributes, which joins each
   // labelling to the namespace behind it and so reports whether that namespace
   // enforces or only audits.
-  securityAttributes @maturity("deprecated") map[string]dict
+  securityAttributes @maturity("deprecated") @replaced_by("oci.oke.cluster.appliedSecurityAttributes") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -7307,7 +7307,7 @@ private oci.oke.nodePool @defaults("name") {
   //
   // Deprecated in favor of nodeSizing, which reports the same allocation as a
   // structure. Compute sizing applied to each node when the shape is flexible.
-  nodeShapeConfig @maturity("deprecated") dict
+  nodeShapeConfig @maturity("deprecated") @replaced_by("oci.oke.nodePool.nodeSizing") dict
   // Compute and memory allocation of each node in the pool
   //
   // Null on a node pool whose shape is not flexible, where the shape name
@@ -7508,7 +7508,7 @@ private oci.functions.application @defaults("name") {
   // Deprecated in favor of tracing, which reports the same settings as a
   // structure. Application Performance Monitoring (APM) trace settings, with
   // keys `isEnabled` and `domainId`.
-  traceConfig @maturity("deprecated") dict
+  traceConfig @maturity("deprecated") @replaced_by("oci.functions.application.tracing") dict
   // Distributed tracing settings of the application
   //
   // Null when the application reports no trace configuration.
@@ -7613,7 +7613,7 @@ private oci.functions.function @defaults("name") {
   // Deprecated in favor of tracing, which reports the same setting as a
   // structure. Application Performance Monitoring (APM) trace settings, with
   // the single key `isEnabled`.
-  traceConfig @maturity("deprecated") dict
+  traceConfig @maturity("deprecated") @replaced_by("oci.functions.function.tracing") dict
   // Distributed tracing settings of the function
   //
   // Null when the function reports no trace configuration.
@@ -7677,7 +7677,7 @@ private oci.containerInstances.instance @defaults("name") {
   //
   // Deprecated in favor of sizing, which reports the same allocation as a
   // structure.
-  shapeConfig @maturity("deprecated") dict
+  shapeConfig @maturity("deprecated") @replaced_by("oci.containerInstances.instance.sizing") dict
   // Compute, memory and network allocation of the container instance
   //
   // Null when the instance reports no shape configuration.
@@ -7756,7 +7756,7 @@ private oci.containerInstances.container @defaults("name") {
   //
   // Deprecated in favor of resourceLimits, which reports the same ceilings as
   // a structure. Absent when the container inherits the instance defaults.
-  resourceConfig @maturity("deprecated") dict
+  resourceConfig @maturity("deprecated") @replaced_by("oci.containerInstances.container.resourceLimits") dict
   // Ceilings on what the container's process may consume
   //
   // Null when the container declares no resource configuration, in which case
@@ -8049,7 +8049,7 @@ private oci.database.dbSystem @defaults("name") {
   // enforces or only audits. Each key is a security attribute namespace and
   // each value maps that namespace's attribute names to this DB system's
   // values.
-  securityAttributes @maturity("deprecated") map[string]dict
+  securityAttributes @maturity("deprecated") @replaced_by("oci.database.dbSystem.appliedSecurityAttributes") map[string]dict
   // Security attributes applied to this resource, resolved
   //
   // Each labelling as a row carrying its namespace, its definition and whether
@@ -8064,7 +8064,7 @@ private oci.database.dbSystem @defaults("name") {
   // `customActionTimeoutInMins`, `leadTimeInWeeks`, `skipRu`, and the
   // `months`, `weeksOfMonth`, `daysOfWeek`, and `hoursOfDay` that schedule the
   // window.
-  maintenanceWindow @maturity("deprecated") dict
+  maintenanceWindow @maturity("deprecated") @replaced_by("oci.database.dbSystem.maintenanceSchedule") dict
   // When Oracle may patch the system, and how
   //
   // Null when the system has no maintenance window configured, which is a
@@ -8266,13 +8266,13 @@ private oci.database.autonomousDatabase @defaults("name") {
   // GraphStudio, ORDS, MongoDB, Machine Learning Notebook and User Management,
   // and Database Transforms. Populated when the database is publicly
   // accessible or reachable via an allowed private endpoint.
-  connectionUrls @maturity("deprecated") dict
+  connectionUrls @maturity("deprecated") @replaced_by("oci.database.autonomousDatabase.managementUrls") dict
   // Connection URLs reachable over the public internet
   //
   // Deprecated in favor of publicManagementUrls. The same management and user
   // interfaces as connectionUrls, but the copies served on the database's
   // public endpoint.
-  publicConnectionUrls @maturity("deprecated") dict
+  publicConnectionUrls @maturity("deprecated") @replaced_by("oci.database.autonomousDatabase.publicManagementUrls") dict
   // Management and user interface URLs for the database
   //
   // The web consoles the database publishes, one field per interface.
@@ -9195,7 +9195,7 @@ private oci.vulnerabilityScanning.hostAgentScanResult.problem @defaults("name se
   // resources. Each entry has `name`, `version`, `type` (RPM, DPKG, and so
   // on), `cveFixVersion` (empty when no fix is available), and `locations`
   // (file paths where the package is installed).
-  vulnerablePackages @maturity("deprecated") []dict
+  vulnerablePackages @maturity("deprecated") @replaced_by("oci.vulnerabilityScanning.hostAgentScanResult.problem.packages") []dict
   // Installed packages affected by this vulnerability
   //
   // One row per affected package. `cveFixVersion` is what separates a finding
@@ -9291,7 +9291,7 @@ private oci.vulnerabilityScanning.hostCisBenchmarkScanResult @defaults("name ins
   // Deprecated in favor of benchmarkScores, which returns the same entries as
   // resources. Each entry has `benchmarkIdentifier` (e.g., "1.1.1"),
   // `description` (the control statement), and `score` (PASS or FAIL).
-  scores() @maturity("deprecated") []dict
+  scores() @maturity("deprecated") @replaced_by("oci.vulnerabilityScanning.hostCisBenchmarkScanResult.benchmarkScores") []dict
   // Per-control benchmark scores
   //
   // One row per benchmark control the scan evaluated, so a policy can require
@@ -9337,7 +9337,7 @@ private oci.vulnerabilityScanning.hostEndpointProtectionScanResult @defaults("na
   // the formatted string a dict value has to be. Each entry has `service` (the
   // endpoint protection product name), `configurationFinding` (the
   // misconfiguration, if any), `severity`, and `timeSignatureUpdated`.
-  endpointProtections() @maturity("deprecated") []dict
+  endpointProtections() @maturity("deprecated") @replaced_by("oci.vulnerabilityScanning.hostEndpointProtectionScanResult.protections") []dict
   // Per-service endpoint protection findings
   //
   // One row per endpoint protection product found on the host.
@@ -9417,7 +9417,7 @@ private oci.vulnerabilityScanning.containerScanResult.problem @defaults("name se
   // Deprecated in favor of packages, which returns the same entries as
   // resources. Each entry has `name`, `version`, `type`, `cveFixVersion`, and
   // `locations` (file paths inside the image where the package resides).
-  vulnerablePackages @maturity("deprecated") []dict
+  vulnerablePackages @maturity("deprecated") @replaced_by("oci.vulnerabilityScanning.containerScanResult.problem.packages") []dict
   // Image layer packages affected by this vulnerability
   //
   // One row per affected package. `cveFixVersion` is what separates a finding
@@ -9499,7 +9499,7 @@ private oci.vulnerabilityScanning.vulnerability @defaults("name severity vulnera
   // as resources and adds the scan completion time this dict drops. Each entry
   // has `image`, `repository`, `registry`, `containerScanTargetId`, and
   // `lastContainerScanId`.
-  impactedContainerImages() @maturity("deprecated") []dict
+  impactedContainerImages() @maturity("deprecated") @replaced_by("oci.vulnerabilityScanning.vulnerability.impactedContainers") []dict
   // Container images affected by this vulnerability
   //
   // One row per affected image, each carrying when the scan that found it

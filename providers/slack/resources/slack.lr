@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/slack"
 option go_package = "go.mondoo.com/mql/providers/slack/resources"
+option root = "slack"
 
 // Slack workspace
 //
@@ -12,7 +13,7 @@ option go_package = "go.mondoo.com/mql/providers/slack/resources"
 // groups defined in the workspace. Pair with `slack.users` for per-user
 // identity, 2FA, and role audits, and `slack.conversations` for channel
 // sharing-and-membership reviews.
-slack {
+slack @root {
   // Slack workspace access log entries (login activity)
   accessLogs() []slack.login
   // User groups defined in the workspace

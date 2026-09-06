@@ -3,6 +3,7 @@
 
 option provider = "go.mondoo.com/mql/providers/jumpcloud"
 option go_package = "go.mondoo.com/mql/providers/jumpcloud/resources"
+option root = "jumpcloud"
 
 // JumpCloud organization
 //
@@ -13,7 +14,7 @@ option go_package = "go.mondoo.com/mql/providers/jumpcloud/resources"
 // accessors on each resource, so an audit can traverse from a user to the
 // groups it belongs to and the systems it can authenticate to, or from a
 // group to its members, without correlating raw identifiers by hand.
-jumpcloud {
+jumpcloud @root {
   // User accounts in the organization
   users() []jumpcloud.user
   // Systems (enrolled devices) in the organization
