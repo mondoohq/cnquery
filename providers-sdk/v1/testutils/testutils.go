@@ -297,6 +297,13 @@ func LinuxMock() llx.Runtime {
 	return mockRuntime("testdata/arch.json")
 }
 
+// CrossAssetMock is LinuxMock plus a second recorded asset that names `muser`
+// as the resource anchoring it (ADR 031). It is what a query resolving into
+// another asset needs and a single-asset recording cannot provide.
+func CrossAssetMock() llx.Runtime {
+	return mockRuntime("testdata/cross-asset.json")
+}
+
 func KubeletMock() llx.Runtime {
 	return mockRuntime("testdata/kubelet.json")
 }

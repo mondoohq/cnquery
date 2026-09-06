@@ -314,3 +314,71 @@ func resourceDuration(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 
 	return TimeData(t), 0, nil
 }
+
+// RuntimeBoundResource is a resource that names the runtime which answers its
+// fields, instead of leaving that to the executor's own runtime.
+//
+// Everything in one asset's tree is answered by the runtime executing the
+// query, so almost no resource needs this. A resource reached by resolving into
+// *another* asset does (ADR 031): its fields live on that asset's runtime, and
+// nothing else about it is special - blocks, `where`, labels and recording see
+// an ordinary resource.
+type RuntimeBoundResource interface {
+	Resource
+	// MqlRuntime returns the runtime that answers this resource's fields. A nil
+	// return means the executor's own runtime, so a wrapper is never obliged to
+	// have one.
+	MqlRuntime() Runtime
+}
+
+// BoundResource pins a resource to the runtime that can answer it.
+type BoundResource struct {
+	Resource
+	runtime Runtime
+}
+
+func (b *BoundResource) MqlRuntime() Runtime {
+	return b.runtime
+}
+
+// BindResource pins a resource to a runtime, unwrapping any binding it already
+// carries so the pin does not stack. Returns the resource untouched when there
+// is no runtime to bind to.
+func BindResource(resource Resource, runtime Runtime) Resource {
+	if resource == nil || runtime == nil {
+		return resource
+	}
+	if bound, ok := resource.(*BoundResource); ok {
+		resource = bound.Resource
+	}
+	return &BoundResource{Resource: resource, runtime: runtime}
+}
+
+// bindResourceValues pins every resource in a field's value to runtime. A field
+// read on a foreign asset can answer with a resource (or a list of them) that
+// lives in that same foreign tree, and the next chunk in the chain binds to that
+// value - so without this, a chain crosses into another asset and silently falls
+// back to the local runtime one hop later.
+func bindResourceValues(value any, runtime Runtime) any {
+	if value == nil || runtime == nil {
+		return value
+	}
+	switch v := value.(type) {
+	case Resource:
+		return BindResource(v, runtime)
+	case []any:
+		res := make([]any, len(v))
+		for i := range v {
+			res[i] = bindResourceValues(v[i], runtime)
+		}
+		return res
+	case map[string]any:
+		res := make(map[string]any, len(v))
+		for k := range v {
+			res[k] = bindResourceValues(v[k], runtime)
+		}
+		return res
+	default:
+		return value
+	}
+}

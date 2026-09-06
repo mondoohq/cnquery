@@ -773,10 +773,14 @@ const AssetRootChunkID = "$assetRoot"
 // runAssetRoot resolves the asset reference it is bound to into that asset's
 // root resource.
 //
-// Resolution itself is not implemented yet: it has to run host-side, where the
-// coordinator and the recording layer are, and llx can reach neither (see ADR
-// 031). Until that lands, a chain that reaches another asset fails here with the
-// reason rather than with a missing-function error from the dispatch table.
+// Resolution runs host-side, where the coordinator and the recording layer are,
+// because llx can reach neither: a builtin sees only its runtime, and that
+// interface cannot connect (ADR 031). So this dereferences through the optional
+// AssetResolver and does nothing else - converting the asset to a resource once
+// is what makes every chunk above it an ordinary resource chain.
+//
+// A runtime that does not implement AssetResolver fails here with that reason
+// rather than with a missing-function error from the dispatch table.
 func runAssetRoot(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return NilData, 0, nil
@@ -785,8 +789,34 @@ func runAssetRoot(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	if !ok || v == nil {
 		return NilData, 0, nil
 	}
-	return nil, 0, errors.New("cannot resolve into asset " + v.ResourceType + " (id " + v.ResourceId +
-		"): cross-asset resolution is not implemented yet")
+
+	// The compiler put the root's resource type on this chunk, so the root is
+	// read from the bytecode rather than re-derived from the asset type.
+	typ := chunk.Type()
+	root := ""
+	if typ.IsResource() {
+		root = typ.ResourceName()
+	}
+	if root == "" {
+		return nil, 0, errors.New("cannot resolve into asset " + v.ResourceType + " (id " + v.ResourceId +
+			"): the reference declares no root type")
+	}
+
+	resolver, ok := e.ctx.runtime.(AssetResolver)
+	if !ok {
+		return nil, 0, errors.New("cannot resolve into asset " + v.ResourceType + " (id " + v.ResourceId +
+			"): this runtime cannot reach other assets")
+	}
+
+	resource, err := resolver.ResolveAssetRoot(v, root)
+	if err != nil {
+		return nil, 0, err
+	}
+	if resource == nil {
+		return &RawData{Type: typ}, 0, nil
+	}
+
+	return &RawData{Type: typ, Value: resource}, 0, nil
 }
 
 // string </>/<=/>= string
