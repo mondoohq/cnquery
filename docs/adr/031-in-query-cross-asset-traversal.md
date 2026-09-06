@@ -568,6 +568,15 @@ itself `asset<…>` resolves through the *target* runtime's own resolver.
   the coordinator to reap.
 - **Depth guard of 5** on chained resolution, with the chain reported in the error.
   It bounds A → B → A cycles across runtimes, which a per-runtime cache cannot.
+- **A time bound on each step of reaching another asset** - asking its provider
+  how to get there, and connecting to it. A backstop, not the primary bound: a
+  provider that talks to something remote is expected to bound its own connect
+  and can say far more about what went wrong than a caller counting seconds.
+  What this stops is a provider that bounds nothing taking the query down with
+  it. A connect that overruns is abandoned rather than cancelled - the plugin
+  interface carries no context - so ownership of the sub-runtime passes to a
+  watcher that closes it once the connect finally returns, because bounding must
+  not mean leaking a runtime and the provider process behind it.
 
 ## Phased plan
 
@@ -603,8 +612,8 @@ itself `asset<…>` resolves through the *target* runtime's own resolver.
    with a `mock` connection, including the `providers/mock.go:182` asset-selection
    fix. Testable in-repo from a recording fixture; no live connect. **Landed.**
 8. **Live-connect backend.** The same `RuntimeFor` + `Connect` path with the
-   target's real connection; the target stub on the value; sub-runtime lifecycle and
-   timeouts. Interactive verification: `…running.tools` against the installed `ai`
+   target's real connection; reachability asked for through `ResolveAsset`
+   rather than carried on the value; sub-runtime lifecycle and timeouts. Interactive verification: `…running.tools` against the installed `ai`
    provider plus the dummy server. Also fixes `docker.container.os`, which today
    answers with the host. Exposes the imperative SDK-side wrapper for Go callers
    that spawn a new asset over this same path.

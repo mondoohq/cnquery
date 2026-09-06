@@ -5,6 +5,7 @@ package providers
 
 import (
 	"strings"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -29,6 +30,20 @@ import (
 // a single asset being connected twice, but not an A -> B -> A cycle across
 // runtimes, because each hop is a legitimate cache miss on a different runtime.
 const maxAssetResolveDepth = 5
+
+// defaultAssetReachTimeout bounds each step of reaching another asset: asking
+// its provider how to get there, and connecting to it.
+//
+// This is a backstop, not the primary bound. A provider that talks to something
+// remote is expected to bound its own connect - the ai provider gives an MCP
+// server 60s - and it can say far more about what went wrong than a caller
+// counting seconds. What this stops is a provider that bounds nothing taking a
+// query down with it: the field read that reached for the asset is blocked on
+// this call, and above it sits a whole scan.
+//
+// So it is deliberately generous: long enough that a provider's own timeout
+// fires first and reports the real reason, short enough to be a bound.
+const defaultAssetReachTimeout = 2 * time.Minute
 
 // ResolveAssetRoot implements llx.AssetResolver.
 func (r *Runtime) ResolveAssetRoot(v *llx.AssetValue, root string) (llx.Resource, error) {
@@ -79,7 +94,12 @@ func (r *Runtime) runtimeForAnchor(v *llx.AssetValue) (*Runtime, error) {
 			strings.Join(append(chain, anchorLabel(v)), " -> ") + ")")
 	}
 
-	target, err := r.targetAssetForAnchor(v)
+	var target *inventory.Asset
+	err := r.bounded("resolving", v, func() error {
+		var err error
+		target, err = r.targetAssetForAnchor(v)
+		return err
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -92,24 +112,8 @@ func (r *Runtime) runtimeForAnchor(v *llx.AssetValue) (*Runtime, error) {
 	// RuntimeFor may hand back an already-connected runtime when the target
 	// deduped onto one the coordinator knows.
 	if sub.Provider == nil || sub.Provider.Connection == nil {
-		// SetRecording after the provider is selected and before connecting, as
-		// discovery does (discovery.go:71): the sub-runtime resolves the target
-		// asset out of the recording its parent already holds.
-		//
-		// Nothing needs serializing here. The builtin mock service is one
-		// instance shared by every runtime, but it takes the runtime from the
-		// connect callback rather than from a field, so two resolutions can
-		// connect at once without reading each other's state.
-		if err = sub.SetRecording(r.Recording()); err == nil {
-			err = sub.Connect(&plugin.ConnectReq{
-				Asset:    target,
-				Features: r.features,
-				Upstream: r.UpstreamConfig,
-			})
-		}
-		if err != nil {
-			sub.Close()
-			return nil, errors.Wrap(err, "cannot connect to asset "+anchorLabel(v))
+		if err := r.connectTarget(sub, target, v); err != nil {
+			return nil, err
 		}
 	}
 
@@ -320,4 +324,87 @@ func anchorLabel(v *llx.AssetValue) string {
 		return v.ResourceType
 	}
 	return v.ResourceType + " (" + v.ResourceId + ")"
+}
+
+// connectTarget connects sub to the target asset, bounded.
+//
+// On timeout the connect is still running and still owns sub, so closing it
+// here would race a provider that is mid-handshake. Ownership passes to a
+// watcher that closes it once the connect finally returns - which is the whole
+// point of bounding rather than abandoning: the caller stops waiting, but the
+// runtime and the provider process behind it still get torn down.
+func (r *Runtime) connectTarget(sub *Runtime, target *inventory.Asset, v *llx.AssetValue) error {
+	done := make(chan error, 1)
+	go func() {
+		// SetRecording after the provider is selected and before connecting, as
+		// discovery does (discovery.go:71): the sub-runtime resolves the target
+		// asset out of the recording its parent already holds.
+		//
+		// Nothing needs serializing here. The builtin mock service is one
+		// instance shared by every runtime, but it takes the runtime from the
+		// connect callback rather than from a field, so two resolutions can
+		// connect at once without reading each other's state.
+		err := sub.SetRecording(r.Recording())
+		if err == nil {
+			err = sub.Connect(&plugin.ConnectReq{
+				Asset:    target,
+				Features: r.features,
+				Upstream: r.UpstreamConfig,
+			})
+		}
+		done <- err
+	}()
+
+	timeout := r.assetReachTimeout()
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			sub.Close()
+			return errors.Wrap(err, "cannot connect to asset "+anchorLabel(v))
+		}
+		return nil
+	case <-timer.C:
+		go func() {
+			<-done
+			sub.Close()
+		}()
+		return errors.New("cannot connect to asset " + anchorLabel(v) + ": timed out after " + timeout.String())
+	}
+}
+
+// bounded runs one step of reaching another asset under the same bound.
+//
+// A step that overruns is abandoned rather than cancelled: the plugin interface
+// carries no context, so there is nothing to cancel through. The goroutine ends
+// when the provider finally answers. That is acceptable for a backstop - it
+// leaks one goroutine on a provider that was already misbehaving - and is why
+// connecting, which leaves a runtime and a process behind, gets the cleanup in
+// connectTarget instead of this.
+func (r *Runtime) bounded(what string, v *llx.AssetValue, fn func() error) error {
+	done := make(chan error, 1)
+	go func() { done <- fn() }()
+
+	timeout := r.assetReachTimeout()
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+
+	select {
+	case err := <-done:
+		return err
+	case <-timer.C:
+		return errors.New("timed out after " + timeout.String() + " " + what + " asset " + anchorLabel(v))
+	}
+}
+
+// assetReachTimeout is the bound for one step of reaching another asset,
+// overridable per runtime so a caller with a slower fleet - or a test - can say
+// so.
+func (r *Runtime) assetReachTimeout() time.Duration {
+	if r.assetReachTimeoutOverride > 0 {
+		return r.assetReachTimeoutOverride
+	}
+	return defaultAssetReachTimeout
 }

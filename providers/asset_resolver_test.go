@@ -4,7 +4,9 @@
 package providers
 
 import (
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -339,4 +341,131 @@ func TestResolveAssetRootBindsToTheTargetRuntime(t *testing.T) {
 
 	// And the parent owns it: closing the parent closes what it opened.
 	assert.Equal(t, []*Runtime{sub}, r.subRuntimes)
+}
+
+// connectFixture builds a parent and an unconnected sub-runtime whose plugin is
+// mocked, over the *real* coordinator: Runtime.Connect re-checks which provider
+// owns the connected asset, and that goes through the coordinator's provider
+// registry. Mocking it there means an unexpected call kills the connecting
+// goroutine silently, which looks exactly like the hang this bound exists to
+// prevent.
+func connectFixture(t *testing.T) (*Runtime, *Runtime, *MockProviderPlugin) {
+	t.Helper()
+	mockPlugin := NewMockProviderPlugin(gomock.NewController(t))
+	// Closing a runtime disconnects its providers; not every path here reaches
+	// it, so this is allowed rather than required.
+	mockPlugin.EXPECT().Disconnect(gomock.Any()).AnyTimes().Return(&plugin.DisconnectRes{}, nil)
+
+	parent := &Runtime{coordinator: Coordinator, recording: recording.Null{}}
+	sub := &Runtime{
+		coordinator: Coordinator,
+		recording:   recording.Null{},
+		Provider: &ConnectedProvider{
+			Instance: &RunningProvider{ID: mockProvider.ID, Name: "mock", Plugin: mockPlugin},
+		},
+	}
+	return parent, sub, mockPlugin
+}
+
+// A builtin connector, so Connect's post-connect provider re-check resolves
+// in-process instead of going looking for one to install.
+func connectTargetAsset(name string) *inventory.Asset {
+	return &inventory.Asset{Name: name, Connections: []*inventory.Config{{Type: "mock"}}}
+}
+
+// A live connect talks to something outside this process, so it can hang. The
+// field read that reached for the asset is blocked on it, and above that sits a
+// whole scan - so the bound is what stops one unreachable target taking the
+// query down with it.
+func TestConnectTargetTimesOut(t *testing.T) {
+	anchor := &llx.AssetValue{ResourceType: "claude.code.mcpServer", ResourceId: "srv/hung"}
+	target := connectTargetAsset("hung")
+
+	parent, sub, mockPlugin := connectFixture(t)
+	parent.assetReachTimeoutOverride = 50 * time.Millisecond
+
+	release := make(chan struct{})
+	entered := make(chan struct{})
+	mockPlugin.EXPECT().Connect(gomock.Any(), gomock.Any()).Times(1).
+		DoAndReturn(func(*plugin.ConnectReq, plugin.ProviderCallback) (*plugin.ConnectRes, error) {
+			close(entered)
+			<-release
+			return &plugin.ConnectRes{Id: 1, Asset: target}, nil
+		})
+
+	err := parent.connectTarget(sub, target, anchor)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "timed out after 50ms")
+	assert.Contains(t, err.Error(), "srv/hung", "the error names the asset it could not reach")
+
+	// The abandoned connect still owns the sub-runtime, so closing it here
+	// would race a provider mid-handshake.
+	<-entered
+	assert.False(t, sub.isClosed, "the sub-runtime was closed while the connect was still running")
+
+	// Once the connect finally returns, the watcher tears it down. Bounding
+	// must not mean leaking a runtime and the process behind it.
+	close(release)
+	require.Eventually(t, func() bool { return sub.isClosed }, 5*time.Second, 10*time.Millisecond,
+		"the abandoned connect never closed its runtime")
+}
+
+// A connect that answers in time is untouched by the bound.
+func TestConnectTargetPassesThrough(t *testing.T) {
+	anchor := &llx.AssetValue{ResourceType: "claude.code.mcpServer", ResourceId: "srv/ok"}
+	target := connectTargetAsset("ok")
+
+	parent, sub, mockPlugin := connectFixture(t)
+	mockPlugin.EXPECT().Connect(gomock.Any(), gomock.Any()).Times(1).
+		Return(&plugin.ConnectRes{Id: 1, Asset: target}, nil)
+
+	require.NoError(t, parent.connectTarget(sub, target, anchor))
+	assert.NotNil(t, sub.Provider.Connection, "the connection is on the sub-runtime")
+	assert.False(t, sub.isClosed)
+}
+
+// A connect that fails outright closes its runtime immediately - there is
+// nothing still running to race with.
+func TestConnectTargetClosesOnFailure(t *testing.T) {
+	anchor := &llx.AssetValue{ResourceType: "claude.code.mcpServer", ResourceId: "srv/refused"}
+	target := connectTargetAsset("refused")
+
+	parent, sub, mockPlugin := connectFixture(t)
+	mockPlugin.EXPECT().Connect(gomock.Any(), gomock.Any()).Times(1).
+		Return(nil, errors.New("connection refused"))
+
+	err := parent.connectTarget(sub, target, anchor)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "connection refused")
+	assert.Contains(t, err.Error(), "srv/refused")
+	assert.True(t, sub.isClosed)
+}
+
+// Asking a provider how to reach an asset is bounded too: MqlAsset can call an
+// API - inspecting a container, reading a config off a remote - so it is not
+// fast by construction.
+func TestResolveStepIsBounded(t *testing.T) {
+	anchor := &llx.AssetValue{ResourceType: "claude.code.mcpServer", ResourceId: "srv/slow"}
+
+	r := &Runtime{recording: recording.Null{}}
+	r.assetReachTimeoutOverride = 50 * time.Millisecond
+
+	release := make(chan struct{})
+	defer close(release)
+
+	err := r.bounded("resolving", anchor, func() error {
+		<-release
+		return nil
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "timed out after 50ms resolving asset")
+	assert.Contains(t, err.Error(), "srv/slow")
+}
+
+func TestAssetReachTimeoutDefaults(t *testing.T) {
+	r := &Runtime{}
+	assert.Equal(t, defaultAssetReachTimeout, r.assetReachTimeout())
+
+	r.assetReachTimeoutOverride = time.Second
+	assert.Equal(t, time.Second, r.assetReachTimeout())
 }
