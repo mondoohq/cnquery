@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
@@ -113,6 +114,12 @@ func (r *mqlGithubCopilotAccount) id() (string, error) {
 
 func (r *mqlGithubCopilotMcpServer) running() (*llx.AssetValue, error) {
 	return mcpServerAsset(r), nil
+}
+
+// MqlAsset implements plugin.AssetSource: the asset the `running` anchor stands
+// for, with the connection needed to reach it. See mcpServerAssetFor.
+func (r *mqlGithubCopilotMcpServer) MqlAsset() (*inventory.Asset, error) {
+	return mcpServerAssetFor(r.MqlRuntime, r)
 }
 
 func (r *mqlGithubCopilotMcpServer) id() (string, error) {

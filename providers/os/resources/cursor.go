@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
@@ -123,6 +124,12 @@ func (r *mqlCursorRepo) id() (string, error) {
 
 func (r *mqlCursorMcpServer) running() (*llx.AssetValue, error) {
 	return mcpServerAsset(r), nil
+}
+
+// MqlAsset implements plugin.AssetSource: the asset the `running` anchor stands
+// for, with the connection needed to reach it. See mcpServerAssetFor.
+func (r *mqlCursorMcpServer) MqlAsset() (*inventory.Asset, error) {
+	return mcpServerAssetFor(r.MqlRuntime, r)
 }
 
 func (r *mqlCursorMcpServer) id() (string, error) {

@@ -6911,7 +6911,19 @@ docker.image {
 // capabilities, and mounts. Filter by state, for example
 // `docker.containers.where(state == "running")`.
 docker.container @defaults("names.first status"){
-  embed os.linux as os
+  // The running container as its own asset
+  //
+  // A container is a separate asset, not a part of this host, so its operating
+  // system is reached by resolving into it rather than by reading a field here.
+  // `docker.containers { running.packages }` connects to the container and
+  // reports the container's packages. Null when the container is not running,
+  // since there is nothing to connect to. See ADR 031.
+  //
+  // This replaces an embedded `os` which reported the *host* for every
+  // container: an Alpine container answered with the Arch host's 1359 packages
+  // and the host's hostname. Every member of that embed was wrong in the same
+  // way, so it was removed rather than deprecated.
+  running() asset<os.any>
   // Container ID
   id string
   // Command the container runs as its main process

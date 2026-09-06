@@ -764,17 +764,27 @@ func pargs2argmap(b *blockExecutor, ref uint64, args []*Primitive) (map[string]*
 
 func (b *blockExecutor) createResource(name string, binding uint64, f *Function, ref uint64) (*RawData, uint64, error) {
 	runtime := b.ctx.runtime
-	// if binding != 0 {
-	// // This happens with aliases, like:
-	// // > os.unix.sshd.config.file.path
-	// // TODO: Re-connect cross-provider resource calls in this part
-	// res, dref, err := b.resolveRef(binding, ref)
-	// if dref != 0 || err != nil {
-	// 	return res, dref, err
-	// }
-	// mqlResource := res.Value.(resourceInterface).MqlResource()
-	// // runtime = mqlResource.MqlRuntime
-	// }
+
+	// A resource created off a binding belongs to whatever that binding belongs
+	// to. That matters once a chain has crossed into another asset (ADR 031):
+	// `container.running.file("/etc/os-release")` builds a `file` resource, and
+	// building it here would read the file on the host that owns the query
+	// rather than on the asset the chain reached. The field-read path routes on
+	// the same rule; this is the resource-construction half of it.
+	var foreign Runtime
+	if binding != 0 {
+		res, dref, err := b.resolveRef(binding, ref)
+		if dref != 0 || err != nil {
+			return res, dref, err
+		}
+		if res != nil {
+			if bound, ok := res.Value.(RuntimeBoundResource); ok {
+				if boundRuntime := bound.MqlRuntime(); boundRuntime != nil {
+					runtime, foreign = boundRuntime, boundRuntime
+				}
+			}
+		}
+	}
 
 	args, rref, err := pargs2argmap(b, ref, f.Args)
 	if err != nil || rref != 0 {
@@ -811,8 +821,10 @@ func (b *blockExecutor) createResource(name string, binding uint64, f *Function,
 
 	res := stepCache{
 		Result: &RawData{
-			Type:  types.Resource(name),
-			Value: resource,
+			Type: types.Resource(name),
+			// Whatever is chained off this resource has to keep asking the
+			// runtime that built it.
+			Value: BindResource(resource, foreign),
 		},
 		IsStatic: true,
 	}

@@ -216,6 +216,9 @@ func (m *mockPlugin) ParseCLI(*pp.ParseCLIReq) (*pp.ParseCLIRes, error) { return
 func (m *mockPlugin) Translations(*pp.TranslationsReq) (*pp.TranslationsRes, error) {
 	return &pp.TranslationsRes{}, nil
 }
+func (m *mockPlugin) ResolveAsset(*pp.ResolveAssetReq) (*pp.ResolveAssetRes, error) {
+	return &pp.ResolveAssetRes{}, nil
+}
 func (m *mockPlugin) MockConnect(*pp.ConnectReq, pp.ProviderCallback) (*pp.ConnectRes, error) {
 	return nil, nil
 }

@@ -670,7 +670,7 @@ docker.container.image 9.0.0
 docker.container.imageid 9.0.0
 docker.container.labels 9.0.0
 docker.container.names 9.0.0
-docker.container.os 9.0.0
+docker.container.running 13.40.10
 docker.container.state 9.0.0
 docker.container.status 9.0.0
 docker.containers 9.0.0

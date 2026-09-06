@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
@@ -67,4 +68,64 @@ func TestMcpConnectionConfig(t *testing.T) {
 		assert.Equal(t, "stdio", conf.Options["protocol"])
 		assert.Equal(t, "npx", conf.Options["target"])
 	})
+}
+
+// The asset a query resolves into and the asset a scan would have discovered
+// have to be the same asset, not merely similar ones: the anchor is what joins
+// them, and a drift there means a cross-asset query connects to something the
+// scan never saw. They share one constructor, and this is what holds them to it.
+func TestMcpServerAssetMatchesDiscovery(t *testing.T) {
+	srv := &mqlClaudeCodeMcpServer{
+		Name:    plugin.TValue[string]{Data: "github", State: plugin.StateIsSet},
+		Type:    plugin.TValue[string]{Data: "stdio", State: plugin.StateIsSet},
+		Command: plugin.TValue[string]{Data: "npx", State: plugin.StateIsSet},
+		Args:    plugin.TValue[[]any]{Data: []any{"-y", "@modelcontextprotocol/server-github"}, State: plugin.StateIsSet},
+	}
+	host := &inventory.Asset{
+		Id:          "host-id",
+		Mrn:         "//assets/host",
+		PlatformIds: []string{"//platformid/host"},
+		Name:        "should-not-travel",
+	}
+
+	// What discovery emits, and what `running` resolves to, for the same server.
+	discovered := mcpServerAssetWith(srv, mcpConnectionConfig(srv), hostRefOf(host))
+	require.NotNil(t, discovered)
+
+	assert.Equal(t, "github", discovered.Name)
+	require.Len(t, discovered.Connections, 1)
+	assert.Equal(t, "mcp", discovered.Connections[0].Type)
+	assert.Equal(t, "npx -y @modelcontextprotocol/server-github", discovered.Connections[0].Options["target"])
+
+	// The anchor is the server resource's own (type, id) - the same pair the
+	// `running` value carries, which is what lets the host join the two.
+	require.Len(t, discovered.Relationships, 1)
+	rel := discovered.Relationships[0]
+	assert.Equal(t, srv.MqlName(), rel.ResourceType)
+	assert.Equal(t, srv.MqlID(), rel.ResourceId)
+
+	anchor := mcpServerAsset(srv)
+	assert.Equal(t, anchor.ResourceType, rel.ResourceType)
+	assert.Equal(t, anchor.ResourceId, rel.ResourceId)
+
+	// The parent is referenced by identity only.
+	require.NotNil(t, rel.Asset)
+	assert.Equal(t, "//assets/host", rel.Asset.Mrn)
+	assert.Equal(t, []string{"//platformid/host"}, rel.Asset.PlatformIds)
+	assert.Empty(t, rel.Asset.Name, "a host reference carries identity, not display data")
+}
+
+// A server config with neither a command nor a url has nothing to connect to.
+// That is a half-written config, not an error, and it must not produce an asset
+// with an empty connection that fails later with nothing to attribute it to.
+func TestMcpServerAssetWithoutATarget(t *testing.T) {
+	srv := &mqlClaudeCodeMcpServer{
+		Name: plugin.TValue[string]{Data: "broken", State: plugin.StateIsSet},
+	}
+
+	assert.Nil(t, mcpConnectionConfig(srv))
+
+	asset, err := mcpServerAssetFor(&plugin.Runtime{}, srv)
+	require.NoError(t, err)
+	assert.Nil(t, asset)
 }

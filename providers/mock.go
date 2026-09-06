@@ -233,6 +233,12 @@ func (s *mockProviderService) Disconnect(req *plugin.DisconnectReq) (*plugin.Dis
 	return nil, nil
 }
 
+// ResolveAsset: this service owns no resources of its own - it replays or
+// wraps another provider's - so there is no anchor here to stand for an asset.
+func (s *mockProviderService) ResolveAsset(req *plugin.ResolveAssetReq) (*plugin.ResolveAssetRes, error) {
+	return &plugin.ResolveAssetRes{}, nil
+}
+
 func (s *mockProviderService) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
 	// Nothing to do yet...
 	return nil, nil

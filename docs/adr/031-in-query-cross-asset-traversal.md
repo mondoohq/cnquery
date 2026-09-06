@@ -310,24 +310,29 @@ Both are `Coordinator.RuntimeFor(target, parent)` + `Connect`, so recording-firs
 ordering is preserved by *choosing the target asset's connection*, not by two
 resolution code paths.
 
-**The value carries the target stub.** This is a phase 8 concern, not phase 7:
-the recorded leg finds the target by scanning the recording for the asset whose
-reverse edge names the anchor, so it needs nothing on the value. Live connect has
-no recording to scan, and that is where the stub becomes load-bearing - along
-with the question it opens, since ADR 030 has the anchor value carrying only
-`(resource_type, resource_id)`.
+**Identity persists, reachability is asked for.** `RuntimeFor` needs an
+`inventory.Asset` with a connection, and the anchor alone does not carry one. An
+earlier draft of this ADR put the target's connection stub on the `asset` value
+itself; that is rejected. The value persists into recordings and upstream on
+every `running` read, and identity is all that belongs in the stored data model
+(ADR 030) - a connection config is not identity, it is how to reach a thing.
 
-`RuntimeFor` needs an `inventory.Asset`
-(connection + name) and the anchor alone does not carry one, so the `asset` value
-gains the target's connection `Config` and name, no secrets, built by the same
-function discovery uses (`mcpConnectionConfig`, `mcp_discovery.go:109`) so ADR
-030's forward/reverse parity holds by construction rather than by discipline. The
-stub rides into recordings and upstream on every `running` read; discovery already
-ships the identical stub for discovered children, so it is not a new exposure
-class. Rejected: a targeted plugin call asking the producing provider for the asset
-behind an anchor, which costs an RPC and a schema notion of "this resource can mint
-an asset". The callback channel was never an option — `providerCallbacks.Collect`
-panics (`providers/runtime.go:857`).
+So the host asks for it, at the moment it connects and never before:
+`ResolveAsset(resource_type, resource_id)` on `plugin.Service`, answered from the
+resource the anchor names. `plugin.AssetSource` is the resource-side contract
+(`MqlAsset() (*inventory.Asset, error)`), and the default implementation reads
+the instance out of the connection's own resource cache, so a provider whose
+resources implement it needs no other code, and one whose resources are not
+assets answers nothing. The asset is built by the same function discovery uses
+(`mcpConnectionConfig`, `mcp_discovery.go`), so ADR 030's forward/reverse parity
+holds by construction rather than by discipline.
+
+The cost is one RPC per distinct anchor - absorbed by the anchor cache, and
+trivial next to the connect it immediately precedes. An earlier draft rejected
+this call for costing "an RPC and a schema notion of 'this resource can mint an
+asset'"; the schema already states that notion, because a field typed
+`asset<root>` is exactly it. The callback channel was never an option -
+`providerCallbacks.Collect` panics (`providers/runtime.go:857`).
 
 **Never lookup-shop a foreign asset on the current runtime's recording.** The
 `llx.Recording` API takes an `AssetRecordingLookup`, but only the local multi-asset
@@ -339,15 +344,53 @@ Harmless while the two assets share no resource types; wrong data the moment the
 do (host → container, both `os`, both with `packages`). Selecting a backing per
 target asset makes that unrepresentable.
 
-**This path is also the one imperative Go-side callers use.** A provider that needs
-to spawn a *new* asset through another provider mid-resolution (an `os` resource
-finding a container image reference on disk and connecting it as a separate asset)
-goes through this same resolution, exposed as a thin SDK-side wrapper rather than a
-parallel API. A second connect path would bypass the recording-first ordering and
-make those assets invisible to replay. This is *not* the same-asset cross-provider
-call that [ADR 042](042-cross-provider-invocation.md) governs: no peer declaration
-is involved, because creating a genuinely new asset is not calling another provider
+**This path is also the one imperative Go-side callers use**, exposed as
+`Runtime.RuntimeForAsset(key, asset)` rather than as a parallel API. A second
+connect path would bypass the recording-first ordering and make those assets
+invisible to replay, as well as losing dedupe, parent ownership and the time
+bound. The caller supplies the dedupe key because a freshly built asset has no
+identity to key on: its mrn and platform ids are assigned by the connect the call
+is about to make.
+
+A **provider** wanting to expose a new asset (an `os` resource finding a
+container image reference on disk) does not use that, and does not need a
+callback to the host either: it declares a field typed `asset<root>` and
+implements `plugin.AssetSource`, and the engine reaches the asset the same way.
+That keeps the result queryable and chainable instead of a Go object only its
+author can see, and it is why this needs no provider-side imperative API at all.
+`docker.container.running` is the worked example.
+
+This is *not* the same-asset cross-provider call that
+[ADR 042](042-cross-provider-invocation.md) governs: no peer declaration is
+involved, because creating a genuinely new asset is not calling another provider
 for the asset you are already on.
+
+### 5b. `asset` is a member of every root
+
+`asset` is what a query asks for the platform, version and identity in front of
+it. It is `@global`, which is right on the asset you connected to and silently
+wrong one hop into another one: a bare mention resolves through the global
+namespace to whichever runtime is executing, so `running { asset.platform }`
+reported the *host* as `arch` for an Alpine container - the same shape of wrong
+answer the `docker.container` embed produced.
+
+So every root carries it, and the **schema builder attaches it** rather than each
+provider declaring it. This is not a choice a provider makes: it is true of every
+root and the shape is the one core defines, so restating it once per provider -
+with a validator to catch whoever forgets - would be duplication guarding
+duplication. A provider that declares a root gets `asset` without knowing this
+exists.
+
+The field names core's `asset` directly. An alias would have generated a
+separate resource carrying only the part *that* provider extends onto it
+(`os.base.asset` held the four fields os adds and none of the twenty core
+declares), which then needs reconciling with the real one somewhere else;
+naming the resource means there is only ever one of it. A provider that
+deliberately declares its own `asset` member keeps it - the attachment fills a
+gap, it does not overrule a schema.
+
+Reached as a member, it resolves through the runtime the chain is bound to, so
+on a cross-connected root it answers about that asset.
 
 ### 6. Top-level `_` is the connected asset's root
 
@@ -563,6 +606,15 @@ itself `asset<…>` resolves through the *target* runtime's own resolver.
   the coordinator to reap.
 - **Depth guard of 5** on chained resolution, with the chain reported in the error.
   It bounds A → B → A cycles across runtimes, which a per-runtime cache cannot.
+- **A time bound on each step of reaching another asset** - asking its provider
+  how to get there, and connecting to it. A backstop, not the primary bound: a
+  provider that talks to something remote is expected to bound its own connect
+  and can say far more about what went wrong than a caller counting seconds.
+  What this stops is a provider that bounds nothing taking the query down with
+  it. A connect that overruns is abandoned rather than cancelled - the plugin
+  interface carries no context - so ownership of the sub-runtime passes to a
+  watcher that closes it once the connect finally returns, because bounding must
+  not mean leaking a runtime and the provider process behind it.
 
 ## Phased plan
 
@@ -598,11 +650,22 @@ itself `asset<…>` resolves through the *target* runtime's own resolver.
    with a `mock` connection, including the `providers/mock.go:182` asset-selection
    fix. Testable in-repo from a recording fixture; no live connect. **Landed.**
 8. **Live-connect backend.** The same `RuntimeFor` + `Connect` path with the
-   target's real connection; the target stub on the value; sub-runtime lifecycle and
-   timeouts. Interactive verification: `…running.tools` against the installed `ai`
-   provider plus the dummy server. Also fixes `docker.container.os`, which today
-   answers with the host. Exposes the imperative SDK-side wrapper for Go callers
-   that spawn a new asset over this same path.
+   target's real connection; reachability asked for through `ResolveAsset`
+   rather than carried on the value; sub-runtime lifecycle and timeouts.
+
+   Also fixes `docker.container`, which embedded `os.linux` and answered every
+   member of it about the **host**: an Alpine container reported the Arch host's
+   1359 packages and the host's hostname. The embed is replaced by
+   `running() asset<os.any>`, so a container is reached as the separate asset it
+   is. Removed rather than deprecated - an embed carries no `@maturity`, and
+   every member of it was wrong in the same way.
+
+   Verified against live containers, which is what makes this the first phase
+   with an end-to-end target anyone can reach: the `docker` connector lives in
+   the os provider, so a container needs no second provider to connect to.
+   The imperative entry point for Go callers is `Runtime.RuntimeForAsset`, the
+   same implementation the anchor path uses with the anchor step replaced by a
+   caller-supplied asset. **Landed.**
 9. **Namespace migration + other providers.** Roots for the remaining providers,
    `os`'s deprecated fields removed in v15, global names retired, `RootedNamespace`
    becomes the default.

@@ -17,6 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
@@ -570,4 +571,10 @@ func (r *mqlClaudeCodeRepo) id() (string, error) {
 
 func (r *mqlClaudeCodeMcpServer) running() (*llx.AssetValue, error) {
 	return mcpServerAsset(r), nil
+}
+
+// MqlAsset implements plugin.AssetSource: the asset the `running` anchor stands
+// for, with the connection needed to reach it. See mcpServerAssetFor.
+func (r *mqlClaudeCodeMcpServer) MqlAsset() (*inventory.Asset, error) {
+	return mcpServerAssetFor(r.MqlRuntime, r)
 }

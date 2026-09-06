@@ -65,6 +65,9 @@ type Runtime struct {
 	resolvedAssets map[string]*Runtime
 	subRuntimes    []*Runtime
 	resolveChain   []string
+	// assetReachTimeoutOverride bounds each step of reaching another asset when
+	// the default does not fit. Zero means the default.
+	assetReachTimeoutOverride time.Duration
 
 	// used to lock unsafe tasks
 	mu sync.Mutex

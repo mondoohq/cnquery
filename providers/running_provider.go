@@ -361,6 +361,11 @@ func (r *RestartableProvider) Translations(req *pp.TranslationsReq) (*pp.Transla
 	return r.plugin.Translations(req)
 }
 
+// ResolveAsset implements plugin.ProviderPlugin.
+func (r *RestartableProvider) ResolveAsset(req *pp.ResolveAssetReq) (*pp.ResolveAssetRes, error) {
+	return r.plugin.ResolveAsset(req)
+}
+
 // MockConnect implements plugin.ProviderPlugin.
 func (r *RestartableProvider) MockConnect(req *pp.ConnectReq, callback pp.ProviderCallback) (*pp.ConnectRes, error) {
 	return r.plugin.MockConnect(req, callback)

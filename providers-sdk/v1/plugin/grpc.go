@@ -103,6 +103,10 @@ func (m *GRPCClient) Translations(req *TranslationsReq) (*TranslationsRes, error
 	return m.client.Translations(context.Background(), req)
 }
 
+func (m *GRPCClient) ResolveAsset(req *ResolveAssetReq) (*ResolveAssetRes, error) {
+	return m.client.ResolveAsset(context.Background(), req)
+}
+
 // recoverPanic converts a panic into a gRPC Internal error. The full stack
 // trace is logged locally; only a short message is sent over the wire.
 // The message is prefixed with "panic in provider " so the caller can
@@ -148,6 +152,12 @@ func (m *GRPCServer) Translations(ctx context.Context, req *TranslationsReq) (re
 	defer recoverPanic("Translations", &err)
 	defer m.trackRequest()()
 	return m.Impl.Translations(req)
+}
+
+func (m *GRPCServer) ResolveAsset(ctx context.Context, req *ResolveAssetReq) (resp *ResolveAssetRes, err error) {
+	defer recoverPanic("ResolveAsset", &err)
+	defer m.trackRequest()()
+	return m.Impl.ResolveAsset(req)
 }
 
 func (m *GRPCServer) ParseCLI(ctx context.Context, req *ParseCLIReq) (resp *ParseCLIRes, err error) {

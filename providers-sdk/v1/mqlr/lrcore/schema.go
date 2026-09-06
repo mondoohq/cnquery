@@ -155,6 +155,8 @@ func Schema(ast *LR) (*resources.Schema, error) {
 		}
 	}
 
+	attachAssetToRoots(res, provider)
+
 	// Validate all maturity values
 	for name, ri := range res.Resources {
 		if err := resources.ValidateMaturity(ri.Maturity); err != nil {
@@ -358,4 +360,44 @@ func validateReplacedBy(res *resources.Schema) error {
 
 	slices.SortFunc(errs, func(a, b error) int { return strings.Compare(a.Error(), b.Error()) })
 	return errors.Join(errs...)
+}
+
+// attachAssetToRoots gives every asset root the `asset` member.
+//
+// `asset` is what a query asks for the platform, version and identity it is
+// looking at. Standing on an asset's root and not being able to ask what asset
+// it is has no sensible reading, so this is not a choice a provider makes: it is
+// true of every root, and the shape is the same one core defines.
+//
+// That is why it is attached here rather than written as an alias in each
+// provider's schema. A rule that is always true and always identical should not
+// be restated once per provider, with a validator to catch whoever forgets -
+// and forgetting would be quiet, because `asset` is `@global`: a bare mention
+// still resolves, to whichever runtime is executing, which is the wrong asset
+// the moment a query has crossed into another one (ADR 031).
+//
+// The field names core's `asset` directly rather than aliasing it. An alias
+// generates a separate resource carrying only the part *this* provider extends
+// onto it, which then has to be reconciled with the real one somewhere else;
+// naming the resource means there is only ever one of it.
+func attachAssetToRoots(res *resources.Schema, provider string) {
+	for _, info := range res.Resources {
+		if info == nil || !info.GetRoot() {
+			continue
+		}
+		if info.Fields == nil {
+			info.Fields = map[string]*resources.Field{}
+		}
+		if _, ok := info.Fields["asset"]; ok {
+			continue
+		}
+		info.Fields["asset"] = &resources.Field{
+			Name:               "asset",
+			Type:               string(types.Resource("asset")),
+			Provider:           provider,
+			IsImplicitResource: true,
+			Title:              "Asset this root belongs to",
+			Desc:               "Platform, version, identity and labels of the asset this root describes.",
+		}
+	}
 }

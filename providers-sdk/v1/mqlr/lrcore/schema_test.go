@@ -315,3 +315,51 @@ func TestReplacedByReachability(t *testing.T) {
 		require.NoError(t, err)
 	})
 }
+
+// `asset` is true of every root and always the same shape, so the builder
+// attaches it rather than each provider restating it. A provider declaring a
+// root gets it without knowing this exists - which is the point, because
+// forgetting it would be quiet: `asset` is `@global`, so a bare mention still
+// resolves, to whichever runtime is executing rather than to the asset the
+// query is standing on (ADR 031).
+func TestRootsCarryAsset(t *testing.T) {
+	res := schemaFor(t, `
+		os.base @root {
+			hostname() string
+		}
+		os.windows @root {
+			hostname() string
+		}
+		notARoot {
+			name string
+		}
+	`)
+
+	for _, root := range []string{"os.base", "os.windows"} {
+		field := res.Resources[root].Fields["asset"]
+		require.NotNil(t, field, "root %s carries asset", root)
+		// It names core's `asset` directly. An alias would generate a separate
+		// resource holding only what this provider extends onto it, which then
+		// has to be reconciled with the real one somewhere else.
+		assert.Equal(t, string(types.Resource("asset")), field.Type)
+		assert.True(t, field.IsImplicitResource)
+	}
+
+	assert.Nil(t, res.Resources["notARoot"].Fields["asset"], "only roots get it")
+	assert.NotContains(t, res.Resources, "os.base.asset", "no bridging resource is generated")
+}
+
+// A provider that declares its own `asset` member keeps it. The attachment
+// fills a gap; it does not overrule a schema that says something deliberate.
+func TestRootsCarryAssetDoesNotOverwrite(t *testing.T) {
+	res := schemaFor(t, `
+		mine {
+			name string
+		}
+		os.base @root {
+			asset() mine
+		}
+	`)
+
+	assert.Equal(t, string(types.Resource("mine")), res.Resources["os.base"].Fields["asset"].Type)
+}

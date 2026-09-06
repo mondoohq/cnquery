@@ -1854,19 +1854,6 @@
       "type": "mock",
       "id": 2
      }
-    ],
-    "relationships": [
-     {
-      "asset": {
-       "id": "Arch Linux",
-       "platform_ids": [
-        "archlinux"
-       ],
-       "name": "arch"
-      },
-      "resource_type": "muser",
-      "resource_id": ""
-     }
     ]
    },
    "connections": [

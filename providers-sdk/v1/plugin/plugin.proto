@@ -141,6 +141,32 @@ message Translation {
   mql.llx.Block block = 4;
 }
 
+// ResolveAssetReq asks a provider for the asset behind one of its resources.
+//
+// The `asset` value a query carries is only an anchor - the resource that
+// anchors the target in this asset's tree - because that is identity, and
+// identity is all that belongs in a value which persists into recordings and
+// upstream (ADR 030). Connecting needs more than identity: it needs to know how
+// to reach the thing. That is asked for here, at the moment it is needed, and
+// is never stored.
+//
+// Only the provider that owns the resource can answer, which is the point: the
+// connection config is built from the resource by the same code discovery uses,
+// so the forward and reverse views cannot drift.
+message ResolveAssetReq {
+  uint32 connection = 1;
+  // The anchor: the resource this asset hangs off, in the caller's tree.
+  string resource_type = 2;
+  string resource_id = 3;
+}
+
+message ResolveAssetRes {
+  // The asset behind the anchor, carrying the connection needed to reach it.
+  // Null when this provider has no asset for that resource, which is not an
+  // error - most resources are not assets.
+  Asset asset = 1;
+}
+
 service ProviderPlugin {
   rpc Heartbeat(HeartbeatReq) returns (HeartbeatRes);
   rpc Translations(TranslationsReq) returns (TranslationsRes);
@@ -151,6 +177,7 @@ service ProviderPlugin {
   rpc Shutdown(ShutdownReq) returns (ShutdownRes);
   rpc GetData(DataReq) returns (DataRes);
   rpc StoreData(StoreReq) returns (StoreRes);
+  rpc ResolveAsset(ResolveAssetReq) returns (ResolveAssetRes);
 }
 
 service ProviderCallback {

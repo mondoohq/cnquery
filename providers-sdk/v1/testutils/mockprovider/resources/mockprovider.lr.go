@@ -17,6 +17,7 @@ import (
 const (
 	ResourceMuser        string = "muser"
 	ResourceMgroup       string = "mgroup"
+	ResourceMthing       string = "mthing"
 	ResourceMos          string = "mos"
 	ResourceCustomGroups string = "customGroups"
 	ResourceEmptyGroups  string = "emptyGroups"
@@ -33,6 +34,10 @@ func init() {
 		"mgroup": {
 			// to override args, implement: initMgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMgroup,
+		},
+		"mthing": {
+			// to override args, implement: initMthing(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMthing,
 		},
 		"mos": {
 			// to override args, implement: initMos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -147,6 +152,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mgroup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMgroup).GetName()).ToDataRes(types.String)
 	},
+	"mthing.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMthing).GetValue()).ToDataRes(types.String)
+	},
 	"mos.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMos).GetGroups()).ToDataRes(types.Resource("customGroups"))
 	},
@@ -217,6 +225,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mgroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMgroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mthing.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMthing).__id, ok = v.Value.(string)
+		return
+	},
+	"mthing.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMthing).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"mos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -453,6 +469,50 @@ func (c *mqlMgroup) MqlID() string {
 
 func (c *mqlMgroup) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+// mqlMthing for the mthing resource
+type mqlMthing struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMthingInternal it will be used here
+	Value plugin.TValue[string]
+}
+
+// createMthing creates a new instance of this resource
+func createMthing(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMthing{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mthing", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMthing) MqlName() string {
+	return "mthing"
+}
+
+func (c *mqlMthing) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMthing) GetValue() *plugin.TValue[string] {
+	return &c.Value
 }
 
 // mqlMos for the mos resource

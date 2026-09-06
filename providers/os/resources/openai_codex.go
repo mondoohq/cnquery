@@ -16,6 +16,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/types"
 )
@@ -443,6 +444,12 @@ func (r *mqlOpenaiCodexSkill) purl() (string, error) {
 
 func (r *mqlOpenaiCodexMcpServer) running() (*llx.AssetValue, error) {
 	return mcpServerAsset(r), nil
+}
+
+// MqlAsset implements plugin.AssetSource: the asset the `running` anchor stands
+// for, with the connection needed to reach it. See mcpServerAssetFor.
+func (r *mqlOpenaiCodexMcpServer) MqlAsset() (*inventory.Asset, error) {
+	return mcpServerAssetFor(r.MqlRuntime, r)
 }
 
 func (r *mqlOpenaiCodexMcpServer) id() (string, error) {

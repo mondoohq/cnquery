@@ -1806,91 +1806,100 @@ func TestCompiler_LongResourceWithUnnamedArgs(t *testing.T) {
 	})
 }
 
+// Reading an embedded resource by its own name compiles to a field access on
+// the embedder.
+//
+// This used to be exercised through `docker.containers[0].os`. That embed was
+// removed: a container is a separate asset, and embedding the host's os.linux
+// into it made every member of that tree answer about the host (ADR 031). The
+// root chain is the deepest embed left, and it is the one the compiler has to
+// keep getting right.
 func TestCompiler_EmbeddedResource(t *testing.T) {
-	compileCtx(t, "docker.containers[0].os", func(res *llx.CodeBundle) {
-		assertFunction(t, "os", &llx.Function{
-			Type:    string(types.Resource("os.linux")),
-			Binding: 1<<32 | 3,
-		}, res.CodeV2.Blocks[0].Chunks[3])
+	compileCtx(t, "os.linux.unix", func(res *llx.CodeBundle) {
+		assertFunction(t, "unix", &llx.Function{
+			Type:    string(types.Resource("os.unix")),
+			Binding: 1<<32 | 1,
+		}, res.CodeV2.Blocks[0].Chunks[1])
 	})
 }
 
+// A member of an embedded resource is reached without naming the embed, and the
+// compiler inserts the whole chain to get there - two hops here, os.linux ->
+// os.unix -> os.base, before the field itself.
 func TestCompiler_EmbeddedResource_Lookup(t *testing.T) {
-	compileCtx(t, "docker.containers[0].hostname", func(res *llx.CodeBundle) {
-		assertFunction(t, "os", &llx.Function{
-			Type:    string(types.Resource("os.linux")),
-			Binding: 1<<32 | 3,
-		}, res.CodeV2.Blocks[0].Chunks[3])
-
+	compileCtx(t, "os.linux.hostname", func(res *llx.CodeBundle) {
 		assertFunction(t, "unix", &llx.Function{
 			Type:    string(types.Resource("os.unix")),
-			Binding: 1<<32 | 4,
-		}, res.CodeV2.Blocks[0].Chunks[4])
+			Binding: 1<<32 | 1,
+		}, res.CodeV2.Blocks[0].Chunks[1])
 
 		assertFunction(t, "base", &llx.Function{
 			Type:    string(types.Resource("os.base")),
-			Binding: 1<<32 | 5,
-		}, res.CodeV2.Blocks[0].Chunks[5])
+			Binding: 1<<32 | 2,
+		}, res.CodeV2.Blocks[0].Chunks[2])
 
 		assertFunction(t, "hostname", &llx.Function{
 			Type:    string(types.String),
-			Binding: 1<<32 | 6,
-		}, res.CodeV2.Blocks[0].Chunks[6])
+			Binding: 1<<32 | 3,
+		}, res.CodeV2.Blocks[0].Chunks[3])
 	})
 }
 
+// A resource reached through an embed compiles to createResource *bound to the
+// embedder*, not to a field read - which is why crossing into another asset had
+// to learn to route this path too (ADR 031, llx.createResource).
 func TestCompiler_EmbeddedResource_ImplicitResource(t *testing.T) {
-	compileCtx(t, "docker.containers[0].user(uid: 999).name", func(res *llx.CodeBundle) {
+	compileCtx(t, "os.linux.user(uid: 999).name", func(res *llx.CodeBundle) {
 		assertFunction(t, "createResource", &llx.Function{
 			Type: string(types.Resource("os.base.user")),
 			Args: []*llx.Primitive{
-				llx.RefPrimitiveV2(1<<32 | 3),
+				llx.RefPrimitiveV2(1<<32 | 1),
 				llx.StringPrimitive("uid"),
 				llx.IntPrimitive(999),
 			},
 			Binding: 0,
-		}, res.CodeV2.Blocks[0].Chunks[3])
+		}, res.CodeV2.Blocks[0].Chunks[1])
 
-		assert.Equal(t, "user", res.Labels.Labels[res.CodeV2.Checksums[1<<32|4]])
+		assert.Equal(t, "user", res.Labels.Labels[res.CodeV2.Checksums[1<<32|2]])
 
 		assertFunction(t, "name", &llx.Function{
 			Type:    string(types.String),
-			Binding: 1<<32 | 4,
-		}, res.CodeV2.Blocks[0].Chunks[4])
+			Binding: 1<<32 | 2,
+		}, res.CodeV2.Blocks[0].Chunks[2])
 	})
 }
 
 func TestCompiler_EmbeddedResource_ImplicitResource_Block(t *testing.T) {
-	compileCtx(t, "docker.containers[0].user(uid: 999) { name }", func(res *llx.CodeBundle) {
+	compileCtx(t, "os.linux.user(uid: 999) { name }", func(res *llx.CodeBundle) {
 		assertFunction(t, "createResource", &llx.Function{
 			Type:    string(types.Resource("os.base.user")),
 			Binding: 0,
 			Args: []*llx.Primitive{
-				llx.RefPrimitiveV2(1<<32 | 3),
+				llx.RefPrimitiveV2(1<<32 | 1),
 				llx.StringPrimitive("uid"),
 				llx.IntPrimitive(999),
 			},
-		}, res.CodeV2.Blocks[0].Chunks[3])
+		}, res.CodeV2.Blocks[0].Chunks[1])
 
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Block),
-			Binding: 1<<32 | 4,
+			Binding: 1<<32 | 2,
 			Args: []*llx.Primitive{
 				llx.FunctionPrimitive(2 << 32),
 			},
-		}, res.CodeV2.Blocks[0].Chunks[4])
+		}, res.CodeV2.Blocks[0].Chunks[2])
 	})
 }
 
 func TestCompiler_EmbeddedResource_ImplicitResource_List(t *testing.T) {
-	compileCtx(t, "docker.containers[0].packages", func(res *llx.CodeBundle) {
+	compileCtx(t, "os.linux.packages", func(res *llx.CodeBundle) {
 		assertFunction(t, "createResource", &llx.Function{
 			Type:    string(types.Resource("os.base.packages")),
 			Binding: 0,
 			Args: []*llx.Primitive{
-				llx.RefPrimitiveV2(1<<32 | 3),
+				llx.RefPrimitiveV2(1<<32 | 1),
 			},
-		}, res.CodeV2.Blocks[0].Chunks[3])
+		}, res.CodeV2.Blocks[0].Chunks[1])
 	})
 }
 
@@ -2345,17 +2354,20 @@ func TestSuggestions(t *testing.T) {
 			nil,
 		},
 		{
-			// embedded with asset context on
-			"docker.containers[0].hostnam",
-			[]string{"hostname"},
-			errors.New("cannot find field 'hostnam' in docker.container"),
+			// embedded with asset context on. docker.file embeds `file`, so its
+			// members are suggested through the embed. (This used to use
+			// docker.container's embedded os.linux; that embed was removed
+			// because it answered about the host - see ADR 031.)
+			"docker.file(\"Dockerfile\").pat",
+			[]string{"path"},
+			errors.New("cannot find field 'pat' in docker.file"),
 			mql.Features{byte(mql.MQLAssetContext)},
 		},
 		{
 			// embedded with asset context off
-			"docker.containers[0].hostnam",
+			"docker.file(\"Dockerfile\").pat",
 			[]string{},
-			errors.New("cannot find field 'hostnam' in docker.container"),
+			errors.New("cannot find field 'pat' in docker.file"),
 			nil,
 		},
 	}
