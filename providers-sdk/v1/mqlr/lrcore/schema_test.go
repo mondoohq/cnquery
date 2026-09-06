@@ -427,11 +427,11 @@ demo.instance @root {
 	t.Run("a field the peer does not have", func(t *testing.T) {
 		err := schemaOf(t, header+`
 demo.instance @root {
-  version @maturity("deprecated") @replaced_by("asset.verison") string
+  version @maturity("deprecated") @replaced_by("asset.noSuchField") string
 }
 `)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), `"asset" is imported but has no field "verison"`)
+		assert.Contains(t, err.Error(), `"asset" is imported but has no field "noSuchField"`)
 	})
 
 	t.Run("a resource no provider here has", func(t *testing.T) {
