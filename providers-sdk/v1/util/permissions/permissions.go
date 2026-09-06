@@ -1887,6 +1887,7 @@ var azureServiceToARMMap = map[string]string{
 	"resources":             "Microsoft.Resources",
 	"search":                "Microsoft.Search",
 	"servicebus":            "Microsoft.ServiceBus",
+	"servicefabric":         "Microsoft.ServiceFabric",
 	"eventhub":              "Microsoft.EventHub",
 	"iothub":                "Microsoft.Devices",
 	"managedidentity":       "Microsoft.ManagedIdentity",

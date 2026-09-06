@@ -263,6 +263,8 @@ azure.subscription @defaults ("name") {
   functions() azure.subscription.functionsService
   // Service Bus resources in the subscription
   serviceBus() azure.subscription.serviceBusService
+  // Service Fabric resources in the subscription
+  serviceFabric() azure.subscription.serviceFabricService
   // Event Hubs resources in the subscription
   eventHub() azure.subscription.eventHubService
   // DNS resources in the subscription
@@ -21108,4 +21110,341 @@ azure.subscription.storageCacheService.amlFilesystem @defaults("id name location
   mountCommand string
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+
+// Azure Service Fabric
+//
+// Service Fabric clusters across the subscription. The `clusters`
+// field lists every cluster resource, each exposing the management
+// endpoint clients connect to, the runtime version and upgrade
+// posture, and the authentication settings that decide who may
+// administer it: Entra ID (Azure Active Directory) integration, the
+// cluster and client certificates, and the node types that publish
+// the management and application ports.
+private azure.subscription.serviceFabricService {
+  // Subscription identifier
+  subscriptionId string
+  // List of Service Fabric clusters
+  clusters() []azure.subscription.serviceFabricService.cluster
+}
+
+// Azure Service Fabric cluster
+//
+// Cluster resource that hosts Service Fabric applications on a virtual
+// machine scale set. The management endpoint, its transport, and the
+// authentication settings together decide who can administer the
+// cluster: azureActiveDirectory carries the Entra ID tenant and
+// application registrations when the cluster is behind Entra, while
+// clientCertificateThumbprints and clientCertificateCommonNames list
+// the certificates allowed to manage it and mark which of them hold
+// admin rights. A cluster with no Entra configuration and only client
+// certificates is a materially different posture from one behind
+// Entra, and both lists are empty on a cluster that is not secured at
+// all. certificate and certificateCommonNames carry the server
+// certificate protecting node to node traffic and the management
+// endpoint, reverseProxyCertificate the one fronting the reverse
+// proxy. clusterCodeVersion, upgradeMode, upgradeWave and
+// waveUpgradePaused show whether the runtime still receives patches,
+// nodeTypes exposes the published management and application ports
+// per scale set, and fabricSettings carries the cluster configuration
+// sections.
+azure.subscription.serviceFabricService.cluster @defaults("id name location clusterState") {
+  // Cluster resource ID
+  id string
+  // Cluster name
+  name string
+  // Cluster location
+  location string
+  // Cluster resource type
+  type string
+  // Cluster tags
+  tags map[string]string
+  // Azure resource etag
+  etag string
+  // Service generated unique identifier for the cluster resource
+  clusterId string
+  // HTTP management endpoint of the cluster
+  //
+  // The address clients and the Service Fabric Explorer connect to,
+  // for example "https://mycluster.westus2.cloudapp.azure.com:19080".
+  managementEndpoint string
+  // Whether the management endpoint uses HTTPS
+  //
+  // True when managementEndpoint is an https:// URL. A cluster that
+  // publishes its management endpoint over plain HTTP carries the
+  // administrative API in the clear.
+  managementEndpointHttps bool
+  // Azure Resource Provider endpoint a system service in the cluster connects to
+  clusterEndpoint string
+  // Current state of the cluster
+  //
+  // One of WaitingForNodes, Deploying, BaselineUpgrade,
+  // UpdatingUserConfiguration, UpdatingUserCertificate,
+  // UpdatingInfrastructure, EnforcingClusterVersion,
+  // UpgradeServiceUnreachable, AutoScale, or Ready.
+  clusterState string
+  // Provisioning state of the cluster resource
+  //
+  // One of Updating, Succeeded, Failed, or Canceled.
+  provisioningState string
+  // Service Fabric runtime version the cluster runs
+  clusterCodeVersion string
+  // Upgrade mode of the cluster when a new runtime version is available
+  //
+  // One of Automatic or Manual. A cluster on Manual stays on
+  // clusterCodeVersion until an operator upgrades it.
+  upgradeMode string
+  // When new runtime version upgrades are applied after release
+  //
+  // One of Wave0, Wave1, or Wave2. Only applies when upgradeMode is
+  // Automatic.
+  upgradeWave string
+  // Whether automatic runtime version upgrades are paused
+  waveUpgradePaused bool
+  // Start of the window during which automatic runtime upgrades are paused, in UTC
+  upgradePauseStartTimestampUtc time
+  // End of the window during which automatic runtime upgrades are paused, in UTC
+  upgradePauseEndTimestampUtc time
+  // Reliability level setting the replica set size of system services
+  //
+  // One of None (1 replica), Bronze (3), Silver (5), Gold (7), or
+  // Platinum (9). None and Bronze are intended for test clusters
+  // only.
+  reliabilityLevel string
+  // VM image the scale set is configured with
+  vmImage string
+  // Add-on features enabled in the cluster
+  //
+  // Any of BackupRestoreService, DnsService, RepairManager, or
+  // ResourceMonitorService.
+  addOnFeatures []string
+  // Whether the event store service is enabled
+  eventStoreServiceEnabled bool
+  // Whether the infrastructure service manager is enabled
+  infrastructureServiceManager bool
+  // Logical grouping of VMs into upgrade domains across availability zones
+  //
+  // One of Parallel or Hierarchical.
+  sfZonalUpgradeMode string
+  // Upgrade mode for the virtual machine scale set across availability zones
+  //
+  // One of Parallel or Hierarchical.
+  vmssZonalUpgradeMode string
+  // Entra ID authentication settings of the cluster
+  //
+  // Null on a cluster that does not authenticate administrators
+  // against Entra ID, which leaves client certificates as the only
+  // way to authorize management access.
+  azureActiveDirectory azure.subscription.serviceFabricService.cluster.azureActiveDirectory
+  // Server certificate securing node to node traffic and the management endpoint
+  //
+  // Null on a cluster secured by certificate common name instead of
+  // thumbprint, in which case certificateCommonNames carries the
+  // configuration, and on an unsecured cluster.
+  certificate azure.subscription.serviceFabricService.cluster.certificate
+  // Server certificates referenced by common name that secure the cluster
+  certificateCommonNames []azure.subscription.serviceFabricService.cluster.serverCertificateCommonName
+  // Local certificate store holding the server certificates referenced by common name
+  //
+  // One of AddressBook, AuthRoot, CertificateAuthority, Disallowed,
+  // My, Root, TrustedPeople, or TrustedPublisher.
+  certificateCommonNamesStoreName string
+  // Server certificate used by the reverse proxy
+  reverseProxyCertificate azure.subscription.serviceFabricService.cluster.certificate
+  // Reverse proxy server certificates referenced by common name
+  reverseProxyCertificateCommonNames []azure.subscription.serviceFabricService.cluster.serverCertificateCommonName
+  // Local certificate store holding the reverse proxy certificates referenced by common name
+  //
+  // One of AddressBook, AuthRoot, CertificateAuthority, Disallowed,
+  // My, Root, TrustedPeople, or TrustedPublisher.
+  reverseProxyCertificateCommonNamesStoreName string
+  // Client certificates referenced by thumbprint that may manage the cluster
+  clientCertificateThumbprints []azure.subscription.serviceFabricService.cluster.clientCertificateThumbprint
+  // Client certificates referenced by common name that may manage the cluster
+  clientCertificateCommonNames []azure.subscription.serviceFabricService.cluster.clientCertificateCommonName
+  // Node types in the cluster
+  nodeTypes []azure.subscription.serviceFabricService.cluster.nodeType
+  // Cluster configuration sections
+  fabricSettings []azure.subscription.serviceFabricService.cluster.fabricSetting
+  // Storage account collecting Service Fabric diagnostic logs
+  diagnosticsStorageAccountConfig azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Entra ID settings of a Service Fabric cluster
+//
+// Tenant and application registrations a cluster uses to authenticate
+// administrators against Entra ID (Azure Active Directory).
+// clusterApplication is the web application representing the cluster
+// itself and clientApplication the native application that management
+// clients authenticate through.
+private azure.subscription.serviceFabricService.cluster.azureActiveDirectory @defaults("tenantId clusterApplication") {
+  // Entra ID tenant the cluster authenticates against
+  tenantId string
+  // Application ID of the Entra ID registration representing the cluster
+  clusterApplication string
+  // Application ID of the Entra ID registration management clients authenticate through
+  clientApplication string
+}
+
+// Certificate of a Service Fabric cluster
+//
+// Server certificate pinned by thumbprint. thumbprintSecondary
+// carries the second certificate during a rotation, and x509StoreName
+// names the local store on the cluster nodes the certificate is read
+// from.
+private azure.subscription.serviceFabricService.cluster.certificate @defaults("thumbprint x509StoreName") {
+  // Thumbprint of the primary certificate
+  thumbprint string
+  // Thumbprint of the secondary certificate
+  thumbprintSecondary string
+  // Local certificate store the certificate is read from
+  //
+  // One of AddressBook, AuthRoot, CertificateAuthority, Disallowed,
+  // My, Root, TrustedPeople, or TrustedPublisher.
+  x509StoreName string
+}
+
+// Server certificate of a Service Fabric cluster referenced by common name
+//
+// Certificate matched by subject common name rather than thumbprint,
+// which lets a cluster keep working across a certificate renewal. The
+// issuer thumbprint pins which certificate authority may issue a
+// matching certificate, so an empty issuer thumbprint accepts any
+// issuer for that common name.
+private azure.subscription.serviceFabricService.cluster.serverCertificateCommonName @defaults("commonName issuerThumbprint") {
+  // Common name of the server certificate
+  commonName string
+  // Issuer thumbprint of the server certificate
+  issuerThumbprint string
+}
+
+// Client certificate of a Service Fabric cluster referenced by thumbprint
+//
+// Certificate allowed to manage the cluster, pinned by thumbprint.
+// isAdmin separates certificates holding full administrative rights
+// from those limited to read-only operations.
+private azure.subscription.serviceFabricService.cluster.clientCertificateThumbprint @defaults("thumbprint isAdmin") {
+  // Thumbprint of the client certificate
+  thumbprint string
+  // Whether the certificate has admin access to the cluster
+  //
+  // False restricts the certificate to read-only operations.
+  isAdmin bool
+}
+
+// Client certificate of a Service Fabric cluster referenced by common name
+//
+// Certificate allowed to manage the cluster, matched by subject
+// common name and constrained by issuer thumbprint. isAdmin separates
+// certificates holding full administrative rights from those limited
+// to read-only operations.
+private azure.subscription.serviceFabricService.cluster.clientCertificateCommonName @defaults("commonName isAdmin") {
+  // Common name of the client certificate
+  commonName string
+  // Issuer thumbprint of the client certificate
+  issuerThumbprint string
+  // Whether the certificate has admin access to the cluster
+  //
+  // False restricts the certificate to read-only operations.
+  isAdmin bool
+}
+
+// Node type of a Service Fabric cluster
+//
+// Group of nodes backed by one virtual machine scale set. The node
+// type publishes the ports the cluster is reached on:
+// clientConnectionEndpointPort carries the TCP management endpoint,
+// httpGatewayEndpointPort the HTTP management endpoint, and
+// reverseProxyEndpointPort the reverse proxy when one is configured.
+// applicationStartPort through applicationEndPort and
+// ephemeralStartPort through ephemeralEndPort give the ranges
+// assigned to applications and to the operating system. isPrimary
+// marks the node type that runs the Service Fabric system services,
+// and durabilityLevel governs how much control the cluster has over
+// the underlying infrastructure jobs.
+private azure.subscription.serviceFabricService.cluster.nodeType @defaults("name isPrimary vmInstanceCount") {
+  // Name of the node type
+  name string
+  // Whether system services run on this node type
+  //
+  // Only one node type in a cluster is primary.
+  isPrimary bool
+  // Whether the node type can only host stateless workloads
+  isStateless bool
+  // Number of VM instances backing this node type
+  vmInstanceCount int
+  // TCP cluster management endpoint port
+  clientConnectionEndpointPort int
+  // HTTP cluster management endpoint port
+  httpGatewayEndpointPort int
+  // Port used by the reverse proxy
+  //
+  // Null when the node type does not run a reverse proxy.
+  reverseProxyEndpointPort int
+  // Lowest port assigned to Service Fabric applications
+  applicationStartPort int
+  // Highest port assigned to Service Fabric applications
+  applicationEndPort int
+  // Lowest ephemeral port configured on nodes of this type
+  ephemeralStartPort int
+  // Highest ephemeral port configured on nodes of this type
+  ephemeralEndPort int
+  // Durability level of the node type
+  //
+  // One of Bronze, Silver, or Gold. Bronze gives Service Fabric no
+  // privileges to delay infrastructure jobs.
+  durabilityLevel string
+  // Whether the node type supports multiple availability zones
+  multipleAvailabilityZones bool
+  // Capacity tags the cluster resource manager uses to place services
+  capacities map[string]string
+  // Placement tags marking where particular workloads should run
+  placementProperties map[string]string
+}
+
+// Configuration section of a Service Fabric cluster
+//
+// One named section of the cluster configuration, with its parameters
+// as a name to value map. Sections such as Security, Diagnostics and
+// ApplicationGateway/Http carry the settings that govern
+// authentication, auditing and the reverse proxy, so
+// fabricSettings.where(name == "Security") reaches the cluster
+// security configuration.
+private azure.subscription.serviceFabricService.cluster.fabricSetting @defaults("name") {
+  // Name of the configuration section
+  name string
+  // Parameters in the section, keyed by parameter name
+  parameters map[string]string
+}
+
+// Diagnostics storage configuration of a Service Fabric cluster
+//
+// Storage account Service Fabric writes cluster diagnostic logs to.
+// storageAccount resolves the account itself when it is in the same
+// subscription, which is how the retention and access settings
+// protecting the logs are reached. protectedAccountKeyName names
+// which of the account keys the cluster authenticates with, and the
+// key value itself is never returned by Azure Resource Manager.
+private azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig @defaults("storageAccountName blobEndpoint") {
+  // Name of the storage account collecting diagnostic logs
+  storageAccountName string
+  // Blob endpoint of the storage account
+  blobEndpoint string
+  // Queue endpoint of the storage account
+  queueEndpoint string
+  // Table endpoint of the storage account
+  tableEndpoint string
+  // Name of the storage account key the cluster authenticates with
+  //
+  // Names which key is used, for example StorageAccountKey1. The key
+  // value is not returned by Azure Resource Manager.
+  protectedAccountKeyName string
+  // Name of the fallback storage account key used while a key is rotated
+  protectedAccountKeyName2 string
+  // Storage account collecting the diagnostic logs
+  //
+  // Null when the account is not in the subscription being scanned.
+  storageAccount() azure.subscription.storageService.account
 }
