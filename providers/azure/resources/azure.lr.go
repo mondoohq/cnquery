@@ -584,6 +584,16 @@ const (
 	ResourceAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule                   string = "azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule"
 	ResourceAzureSubscriptionStorageCacheService                                                        string = "azure.subscription.storageCacheService"
 	ResourceAzureSubscriptionStorageCacheServiceAmlFilesystem                                           string = "azure.subscription.storageCacheService.amlFilesystem"
+	ResourceAzureSubscriptionServiceFabricService                                                       string = "azure.subscription.serviceFabricService"
+	ResourceAzureSubscriptionServiceFabricServiceCluster                                                string = "azure.subscription.serviceFabricService.cluster"
+	ResourceAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory                            string = "azure.subscription.serviceFabricService.cluster.azureActiveDirectory"
+	ResourceAzureSubscriptionServiceFabricServiceClusterCertificate                                     string = "azure.subscription.serviceFabricService.cluster.certificate"
+	ResourceAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName                     string = "azure.subscription.serviceFabricService.cluster.serverCertificateCommonName"
+	ResourceAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint                     string = "azure.subscription.serviceFabricService.cluster.clientCertificateThumbprint"
+	ResourceAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName                     string = "azure.subscription.serviceFabricService.cluster.clientCertificateCommonName"
+	ResourceAzureSubscriptionServiceFabricServiceClusterNodeType                                        string = "azure.subscription.serviceFabricService.cluster.nodeType"
+	ResourceAzureSubscriptionServiceFabricServiceClusterFabricSetting                                   string = "azure.subscription.serviceFabricService.cluster.fabricSetting"
+	ResourceAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig                 string = "azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -2862,6 +2872,46 @@ func init() {
 			Init:   initAzureSubscriptionStorageCacheServiceAmlFilesystem,
 			Create: createAzureSubscriptionStorageCacheServiceAmlFilesystem,
 		},
+		"azure.subscription.serviceFabricService": {
+			Init:   initAzureSubscriptionServiceFabricService,
+			Create: createAzureSubscriptionServiceFabricService,
+		},
+		"azure.subscription.serviceFabricService.cluster": {
+			// to override args, implement: initAzureSubscriptionServiceFabricServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionServiceFabricServiceCluster,
+		},
+		"azure.subscription.serviceFabricService.cluster.azureActiveDirectory": {
+			// to override args, implement: initAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory,
+		},
+		"azure.subscription.serviceFabricService.cluster.certificate": {
+			// to override args, implement: initAzureSubscriptionServiceFabricServiceClusterCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionServiceFabricServiceClusterCertificate,
+		},
+		"azure.subscription.serviceFabricService.cluster.serverCertificateCommonName": {
+			// to override args, implement: initAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName,
+		},
+		"azure.subscription.serviceFabricService.cluster.clientCertificateThumbprint": {
+			// to override args, implement: initAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint,
+		},
+		"azure.subscription.serviceFabricService.cluster.clientCertificateCommonName": {
+			// to override args, implement: initAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName,
+		},
+		"azure.subscription.serviceFabricService.cluster.nodeType": {
+			// to override args, implement: initAzureSubscriptionServiceFabricServiceClusterNodeType(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionServiceFabricServiceClusterNodeType,
+		},
+		"azure.subscription.serviceFabricService.cluster.fabricSetting": {
+			// to override args, implement: initAzureSubscriptionServiceFabricServiceClusterFabricSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionServiceFabricServiceClusterFabricSetting,
+		},
+		"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig": {
+			// to override args, implement: initAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig,
+		},
 	}
 }
 
@@ -3130,6 +3180,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.serviceBus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetServiceBus()).ToDataRes(types.Resource("azure.subscription.serviceBusService"))
+	},
+	"azure.subscription.serviceFabric": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetServiceFabric()).ToDataRes(types.Resource("azure.subscription.serviceFabricService"))
 	},
 	"azure.subscription.eventHub": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetEventHub()).ToDataRes(types.Resource("azure.subscription.eventHubService"))
@@ -23267,6 +23320,237 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageCacheService.amlFilesystem.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
+	"azure.subscription.serviceFabricService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricService).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricService).GetClusters()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceFabricService.cluster")))
+	},
+	"azure.subscription.serviceFabricService.cluster.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.serviceFabricService.cluster.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.clusterId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetClusterId()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.managementEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetManagementEndpoint()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.managementEndpointHttps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetManagementEndpointHttps()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.serviceFabricService.cluster.clusterEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetClusterEndpoint()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.clusterState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetClusterState()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.clusterCodeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetClusterCodeVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.upgradeMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetUpgradeMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.upgradeWave": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetUpgradeWave()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.waveUpgradePaused": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetWaveUpgradePaused()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.serviceFabricService.cluster.upgradePauseStartTimestampUtc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetUpgradePauseStartTimestampUtc()).ToDataRes(types.Time)
+	},
+	"azure.subscription.serviceFabricService.cluster.upgradePauseEndTimestampUtc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetUpgradePauseEndTimestampUtc()).ToDataRes(types.Time)
+	},
+	"azure.subscription.serviceFabricService.cluster.reliabilityLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetReliabilityLevel()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.vmImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetVmImage()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.addOnFeatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetAddOnFeatures()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.serviceFabricService.cluster.eventStoreServiceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetEventStoreServiceEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.serviceFabricService.cluster.infrastructureServiceManager": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetInfrastructureServiceManager()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.serviceFabricService.cluster.sfZonalUpgradeMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetSfZonalUpgradeMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.vmssZonalUpgradeMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetVmssZonalUpgradeMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.azureActiveDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetAzureActiveDirectory()).ToDataRes(types.Resource("azure.subscription.serviceFabricService.cluster.azureActiveDirectory"))
+	},
+	"azure.subscription.serviceFabricService.cluster.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetCertificate()).ToDataRes(types.Resource("azure.subscription.serviceFabricService.cluster.certificate"))
+	},
+	"azure.subscription.serviceFabricService.cluster.certificateCommonNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetCertificateCommonNames()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceFabricService.cluster.serverCertificateCommonName")))
+	},
+	"azure.subscription.serviceFabricService.cluster.certificateCommonNamesStoreName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetCertificateCommonNamesStoreName()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.reverseProxyCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetReverseProxyCertificate()).ToDataRes(types.Resource("azure.subscription.serviceFabricService.cluster.certificate"))
+	},
+	"azure.subscription.serviceFabricService.cluster.reverseProxyCertificateCommonNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetReverseProxyCertificateCommonNames()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceFabricService.cluster.serverCertificateCommonName")))
+	},
+	"azure.subscription.serviceFabricService.cluster.reverseProxyCertificateCommonNamesStoreName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetReverseProxyCertificateCommonNamesStoreName()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateThumbprints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetClientCertificateThumbprints()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceFabricService.cluster.clientCertificateThumbprint")))
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateCommonNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetClientCertificateCommonNames()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceFabricService.cluster.clientCertificateCommonName")))
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetNodeTypes()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceFabricService.cluster.nodeType")))
+	},
+	"azure.subscription.serviceFabricService.cluster.fabricSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetFabricSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceFabricService.cluster.fabricSetting")))
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetDiagnosticsStorageAccountConfig()).ToDataRes(types.Resource("azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig"))
+	},
+	"azure.subscription.serviceFabricService.cluster.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceCluster).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.serviceFabricService.cluster.azureActiveDirectory.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory).GetTenantId()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.azureActiveDirectory.clusterApplication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory).GetClusterApplication()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.azureActiveDirectory.clientApplication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory).GetClientApplication()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.certificate.thumbprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterCertificate).GetThumbprint()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.certificate.thumbprintSecondary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterCertificate).GetThumbprintSecondary()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.certificate.x509StoreName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterCertificate).GetX509StoreName()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.serverCertificateCommonName.commonName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName).GetCommonName()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.serverCertificateCommonName.issuerThumbprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName).GetIssuerThumbprint()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateThumbprint.thumbprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint).GetThumbprint()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateThumbprint.isAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint).GetIsAdmin()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateCommonName.commonName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName).GetCommonName()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateCommonName.issuerThumbprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName).GetIssuerThumbprint()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateCommonName.isAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName).GetIsAdmin()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.isPrimary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).GetIsPrimary()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.isStateless": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).GetIsStateless()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.vmInstanceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).GetVmInstanceCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.clientConnectionEndpointPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).GetClientConnectionEndpointPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.httpGatewayEndpointPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).GetHttpGatewayEndpointPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.reverseProxyEndpointPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).GetReverseProxyEndpointPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.applicationStartPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).GetApplicationStartPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.applicationEndPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).GetApplicationEndPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.ephemeralStartPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).GetEphemeralStartPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.ephemeralEndPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).GetEphemeralEndPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.durabilityLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).GetDurabilityLevel()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.multipleAvailabilityZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).GetMultipleAvailabilityZones()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.capacities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).GetCapacities()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.placementProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).GetPlacementProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.serviceFabricService.cluster.fabricSetting.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterFabricSetting).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.fabricSetting.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterFabricSetting).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig.storageAccountName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig).GetStorageAccountName()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig.blobEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig).GetBlobEndpoint()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig.queueEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig).GetQueueEndpoint()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig.tableEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig).GetTableEndpoint()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig.protectedAccountKeyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig).GetProtectedAccountKeyName()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig.protectedAccountKeyName2": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig).GetProtectedAccountKeyName2()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig.storageAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig).GetStorageAccount()).ToDataRes(types.Resource("azure.subscription.storageService.account"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -23557,6 +23841,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.serviceBus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).ServiceBus, ok = plugin.RawToTValue[*mqlAzureSubscriptionServiceBusService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabric": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).ServiceFabric, ok = plugin.RawToTValue[*mqlAzureSubscriptionServiceFabricService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.eventHub": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52663,6 +52951,354 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.serviceFabricService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.serviceFabricService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricService).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.clusterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).ClusterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.managementEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).ManagementEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.managementEndpointHttps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).ManagementEndpointHttps, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.clusterEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).ClusterEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.clusterState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).ClusterState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.clusterCodeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).ClusterCodeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.upgradeMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).UpgradeMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.upgradeWave": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).UpgradeWave, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.waveUpgradePaused": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).WaveUpgradePaused, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.upgradePauseStartTimestampUtc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).UpgradePauseStartTimestampUtc, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.upgradePauseEndTimestampUtc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).UpgradePauseEndTimestampUtc, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.reliabilityLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).ReliabilityLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.vmImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).VmImage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.addOnFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).AddOnFeatures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.eventStoreServiceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).EventStoreServiceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.infrastructureServiceManager": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).InfrastructureServiceManager, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.sfZonalUpgradeMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).SfZonalUpgradeMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.vmssZonalUpgradeMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).VmssZonalUpgradeMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.azureActiveDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).AzureActiveDirectory, ok = plugin.RawToTValue[*mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).Certificate, ok = plugin.RawToTValue[*mqlAzureSubscriptionServiceFabricServiceClusterCertificate](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.certificateCommonNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).CertificateCommonNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.certificateCommonNamesStoreName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).CertificateCommonNamesStoreName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.reverseProxyCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).ReverseProxyCertificate, ok = plugin.RawToTValue[*mqlAzureSubscriptionServiceFabricServiceClusterCertificate](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.reverseProxyCertificateCommonNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).ReverseProxyCertificateCommonNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.reverseProxyCertificateCommonNamesStoreName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).ReverseProxyCertificateCommonNamesStoreName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateThumbprints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).ClientCertificateThumbprints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateCommonNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).ClientCertificateCommonNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).NodeTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.fabricSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).FabricSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).DiagnosticsStorageAccountConfig, ok = plugin.RawToTValue[*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceCluster).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.azureActiveDirectory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.azureActiveDirectory.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.azureActiveDirectory.clusterApplication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory).ClusterApplication, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.azureActiveDirectory.clientApplication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory).ClientApplication, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.certificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterCertificate).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.certificate.thumbprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterCertificate).Thumbprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.certificate.thumbprintSecondary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterCertificate).ThumbprintSecondary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.certificate.x509StoreName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterCertificate).X509StoreName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.serverCertificateCommonName.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.serverCertificateCommonName.commonName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName).CommonName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.serverCertificateCommonName.issuerThumbprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName).IssuerThumbprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateThumbprint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateThumbprint.thumbprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint).Thumbprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateThumbprint.isAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint).IsAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateCommonName.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateCommonName.commonName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName).CommonName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateCommonName.issuerThumbprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName).IssuerThumbprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.clientCertificateCommonName.isAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName).IsAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.isPrimary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).IsPrimary, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.isStateless": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).IsStateless, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.vmInstanceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).VmInstanceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.clientConnectionEndpointPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).ClientConnectionEndpointPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.httpGatewayEndpointPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).HttpGatewayEndpointPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.reverseProxyEndpointPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).ReverseProxyEndpointPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.applicationStartPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).ApplicationStartPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.applicationEndPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).ApplicationEndPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.ephemeralStartPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).EphemeralStartPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.ephemeralEndPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).EphemeralEndPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.durabilityLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).DurabilityLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.multipleAvailabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).MultipleAvailabilityZones, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.capacities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).Capacities, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.nodeType.placementProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterNodeType).PlacementProperties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.fabricSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterFabricSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.fabricSetting.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterFabricSetting).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.fabricSetting.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterFabricSetting).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig.storageAccountName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig).StorageAccountName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig.blobEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig).BlobEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig.queueEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig).QueueEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig.tableEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig).TableEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig.protectedAccountKeyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig).ProtectedAccountKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig.protectedAccountKeyName2": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig).ProtectedAccountKeyName2, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig.storageAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig).StorageAccount, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccount](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -53019,6 +53655,7 @@ type mqlAzureSubscription struct {
 	StorageCache          plugin.TValue[*mqlAzureSubscriptionStorageCacheService]
 	Functions             plugin.TValue[*mqlAzureSubscriptionFunctionsService]
 	ServiceBus            plugin.TValue[*mqlAzureSubscriptionServiceBusService]
+	ServiceFabric         plugin.TValue[*mqlAzureSubscriptionServiceFabricService]
 	EventHub              plugin.TValue[*mqlAzureSubscriptionEventHubService]
 	Dns                   plugin.TValue[*mqlAzureSubscriptionDnsService]
 	FrontDoor             plugin.TValue[*mqlAzureSubscriptionFrontDoorService]
@@ -53687,6 +54324,22 @@ func (c *mqlAzureSubscription) GetServiceBus() *plugin.TValue[*mqlAzureSubscript
 		}
 
 		return c.serviceBus()
+	})
+}
+
+func (c *mqlAzureSubscription) GetServiceFabric() *plugin.TValue[*mqlAzureSubscriptionServiceFabricService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionServiceFabricService](&c.ServiceFabric, func() (*mqlAzureSubscriptionServiceFabricService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "serviceFabric")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionServiceFabricService), nil
+			}
+		}
+
+		return c.serviceFabric()
 	})
 }
 
@@ -123654,5 +124307,826 @@ func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetSystemMetadata
 		}
 
 		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionServiceFabricService for the azure.subscription.serviceFabricService resource
+type mqlAzureSubscriptionServiceFabricService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionServiceFabricServiceInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	Clusters       plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionServiceFabricService creates a new instance of this resource
+func createAzureSubscriptionServiceFabricService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionServiceFabricService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.serviceFabricService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionServiceFabricService) MqlName() string {
+	return "azure.subscription.serviceFabricService"
+}
+
+func (c *mqlAzureSubscriptionServiceFabricService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionServiceFabricService) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionServiceFabricService) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.serviceFabricService", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
+// mqlAzureSubscriptionServiceFabricServiceCluster for the azure.subscription.serviceFabricService.cluster resource
+type mqlAzureSubscriptionServiceFabricServiceCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionServiceFabricServiceClusterInternal
+	Id                                          plugin.TValue[string]
+	Name                                        plugin.TValue[string]
+	Location                                    plugin.TValue[string]
+	Type                                        plugin.TValue[string]
+	Tags                                        plugin.TValue[map[string]any]
+	Etag                                        plugin.TValue[string]
+	ClusterId                                   plugin.TValue[string]
+	ManagementEndpoint                          plugin.TValue[string]
+	ManagementEndpointHttps                     plugin.TValue[bool]
+	ClusterEndpoint                             plugin.TValue[string]
+	ClusterState                                plugin.TValue[string]
+	ProvisioningState                           plugin.TValue[string]
+	ClusterCodeVersion                          plugin.TValue[string]
+	UpgradeMode                                 plugin.TValue[string]
+	UpgradeWave                                 plugin.TValue[string]
+	WaveUpgradePaused                           plugin.TValue[bool]
+	UpgradePauseStartTimestampUtc               plugin.TValue[*time.Time]
+	UpgradePauseEndTimestampUtc                 plugin.TValue[*time.Time]
+	ReliabilityLevel                            plugin.TValue[string]
+	VmImage                                     plugin.TValue[string]
+	AddOnFeatures                               plugin.TValue[[]any]
+	EventStoreServiceEnabled                    plugin.TValue[bool]
+	InfrastructureServiceManager                plugin.TValue[bool]
+	SfZonalUpgradeMode                          plugin.TValue[string]
+	VmssZonalUpgradeMode                        plugin.TValue[string]
+	AzureActiveDirectory                        plugin.TValue[*mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory]
+	Certificate                                 plugin.TValue[*mqlAzureSubscriptionServiceFabricServiceClusterCertificate]
+	CertificateCommonNames                      plugin.TValue[[]any]
+	CertificateCommonNamesStoreName             plugin.TValue[string]
+	ReverseProxyCertificate                     plugin.TValue[*mqlAzureSubscriptionServiceFabricServiceClusterCertificate]
+	ReverseProxyCertificateCommonNames          plugin.TValue[[]any]
+	ReverseProxyCertificateCommonNamesStoreName plugin.TValue[string]
+	ClientCertificateThumbprints                plugin.TValue[[]any]
+	ClientCertificateCommonNames                plugin.TValue[[]any]
+	NodeTypes                                   plugin.TValue[[]any]
+	FabricSettings                              plugin.TValue[[]any]
+	DiagnosticsStorageAccountConfig             plugin.TValue[*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig]
+	SystemMetadata                              plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionServiceFabricServiceCluster creates a new instance of this resource
+func createAzureSubscriptionServiceFabricServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionServiceFabricServiceCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.serviceFabricService.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) MqlName() string {
+	return "azure.subscription.serviceFabricService.cluster"
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetClusterId() *plugin.TValue[string] {
+	return &c.ClusterId
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetManagementEndpoint() *plugin.TValue[string] {
+	return &c.ManagementEndpoint
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetManagementEndpointHttps() *plugin.TValue[bool] {
+	return &c.ManagementEndpointHttps
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetClusterEndpoint() *plugin.TValue[string] {
+	return &c.ClusterEndpoint
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetClusterState() *plugin.TValue[string] {
+	return &c.ClusterState
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetClusterCodeVersion() *plugin.TValue[string] {
+	return &c.ClusterCodeVersion
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetUpgradeMode() *plugin.TValue[string] {
+	return &c.UpgradeMode
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetUpgradeWave() *plugin.TValue[string] {
+	return &c.UpgradeWave
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetWaveUpgradePaused() *plugin.TValue[bool] {
+	return &c.WaveUpgradePaused
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetUpgradePauseStartTimestampUtc() *plugin.TValue[*time.Time] {
+	return &c.UpgradePauseStartTimestampUtc
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetUpgradePauseEndTimestampUtc() *plugin.TValue[*time.Time] {
+	return &c.UpgradePauseEndTimestampUtc
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetReliabilityLevel() *plugin.TValue[string] {
+	return &c.ReliabilityLevel
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetVmImage() *plugin.TValue[string] {
+	return &c.VmImage
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetAddOnFeatures() *plugin.TValue[[]any] {
+	return &c.AddOnFeatures
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetEventStoreServiceEnabled() *plugin.TValue[bool] {
+	return &c.EventStoreServiceEnabled
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetInfrastructureServiceManager() *plugin.TValue[bool] {
+	return &c.InfrastructureServiceManager
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetSfZonalUpgradeMode() *plugin.TValue[string] {
+	return &c.SfZonalUpgradeMode
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetVmssZonalUpgradeMode() *plugin.TValue[string] {
+	return &c.VmssZonalUpgradeMode
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetAzureActiveDirectory() *plugin.TValue[*mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory] {
+	return &c.AzureActiveDirectory
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetCertificate() *plugin.TValue[*mqlAzureSubscriptionServiceFabricServiceClusterCertificate] {
+	return &c.Certificate
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetCertificateCommonNames() *plugin.TValue[[]any] {
+	return &c.CertificateCommonNames
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetCertificateCommonNamesStoreName() *plugin.TValue[string] {
+	return &c.CertificateCommonNamesStoreName
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetReverseProxyCertificate() *plugin.TValue[*mqlAzureSubscriptionServiceFabricServiceClusterCertificate] {
+	return &c.ReverseProxyCertificate
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetReverseProxyCertificateCommonNames() *plugin.TValue[[]any] {
+	return &c.ReverseProxyCertificateCommonNames
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetReverseProxyCertificateCommonNamesStoreName() *plugin.TValue[string] {
+	return &c.ReverseProxyCertificateCommonNamesStoreName
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetClientCertificateThumbprints() *plugin.TValue[[]any] {
+	return &c.ClientCertificateThumbprints
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetClientCertificateCommonNames() *plugin.TValue[[]any] {
+	return &c.ClientCertificateCommonNames
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetNodeTypes() *plugin.TValue[[]any] {
+	return &c.NodeTypes
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetFabricSettings() *plugin.TValue[[]any] {
+	return &c.FabricSettings
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetDiagnosticsStorageAccountConfig() *plugin.TValue[*mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig] {
+	return &c.DiagnosticsStorageAccountConfig
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceCluster) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.serviceFabricService.cluster", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory for the azure.subscription.serviceFabricService.cluster.azureActiveDirectory resource
+type mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectoryInternal it will be used here
+	TenantId           plugin.TValue[string]
+	ClusterApplication plugin.TValue[string]
+	ClientApplication  plugin.TValue[string]
+}
+
+// createAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory creates a new instance of this resource
+func createAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.serviceFabricService.cluster.azureActiveDirectory", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory) MqlName() string {
+	return "azure.subscription.serviceFabricService.cluster.azureActiveDirectory"
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory) GetClusterApplication() *plugin.TValue[string] {
+	return &c.ClusterApplication
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterAzureActiveDirectory) GetClientApplication() *plugin.TValue[string] {
+	return &c.ClientApplication
+}
+
+// mqlAzureSubscriptionServiceFabricServiceClusterCertificate for the azure.subscription.serviceFabricService.cluster.certificate resource
+type mqlAzureSubscriptionServiceFabricServiceClusterCertificate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionServiceFabricServiceClusterCertificateInternal it will be used here
+	Thumbprint          plugin.TValue[string]
+	ThumbprintSecondary plugin.TValue[string]
+	X509StoreName       plugin.TValue[string]
+}
+
+// createAzureSubscriptionServiceFabricServiceClusterCertificate creates a new instance of this resource
+func createAzureSubscriptionServiceFabricServiceClusterCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionServiceFabricServiceClusterCertificate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.serviceFabricService.cluster.certificate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterCertificate) MqlName() string {
+	return "azure.subscription.serviceFabricService.cluster.certificate"
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterCertificate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterCertificate) GetThumbprint() *plugin.TValue[string] {
+	return &c.Thumbprint
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterCertificate) GetThumbprintSecondary() *plugin.TValue[string] {
+	return &c.ThumbprintSecondary
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterCertificate) GetX509StoreName() *plugin.TValue[string] {
+	return &c.X509StoreName
+}
+
+// mqlAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName for the azure.subscription.serviceFabricService.cluster.serverCertificateCommonName resource
+type mqlAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonNameInternal it will be used here
+	CommonName       plugin.TValue[string]
+	IssuerThumbprint plugin.TValue[string]
+}
+
+// createAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName creates a new instance of this resource
+func createAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.serviceFabricService.cluster.serverCertificateCommonName", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName) MqlName() string {
+	return "azure.subscription.serviceFabricService.cluster.serverCertificateCommonName"
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName) GetCommonName() *plugin.TValue[string] {
+	return &c.CommonName
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterServerCertificateCommonName) GetIssuerThumbprint() *plugin.TValue[string] {
+	return &c.IssuerThumbprint
+}
+
+// mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint for the azure.subscription.serviceFabricService.cluster.clientCertificateThumbprint resource
+type mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprintInternal it will be used here
+	Thumbprint plugin.TValue[string]
+	IsAdmin    plugin.TValue[bool]
+}
+
+// createAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint creates a new instance of this resource
+func createAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.serviceFabricService.cluster.clientCertificateThumbprint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint) MqlName() string {
+	return "azure.subscription.serviceFabricService.cluster.clientCertificateThumbprint"
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint) GetThumbprint() *plugin.TValue[string] {
+	return &c.Thumbprint
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateThumbprint) GetIsAdmin() *plugin.TValue[bool] {
+	return &c.IsAdmin
+}
+
+// mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName for the azure.subscription.serviceFabricService.cluster.clientCertificateCommonName resource
+type mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonNameInternal it will be used here
+	CommonName       plugin.TValue[string]
+	IssuerThumbprint plugin.TValue[string]
+	IsAdmin          plugin.TValue[bool]
+}
+
+// createAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName creates a new instance of this resource
+func createAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.serviceFabricService.cluster.clientCertificateCommonName", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName) MqlName() string {
+	return "azure.subscription.serviceFabricService.cluster.clientCertificateCommonName"
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName) GetCommonName() *plugin.TValue[string] {
+	return &c.CommonName
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName) GetIssuerThumbprint() *plugin.TValue[string] {
+	return &c.IssuerThumbprint
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterClientCertificateCommonName) GetIsAdmin() *plugin.TValue[bool] {
+	return &c.IsAdmin
+}
+
+// mqlAzureSubscriptionServiceFabricServiceClusterNodeType for the azure.subscription.serviceFabricService.cluster.nodeType resource
+type mqlAzureSubscriptionServiceFabricServiceClusterNodeType struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionServiceFabricServiceClusterNodeTypeInternal it will be used here
+	Name                         plugin.TValue[string]
+	IsPrimary                    plugin.TValue[bool]
+	IsStateless                  plugin.TValue[bool]
+	VmInstanceCount              plugin.TValue[int64]
+	ClientConnectionEndpointPort plugin.TValue[int64]
+	HttpGatewayEndpointPort      plugin.TValue[int64]
+	ReverseProxyEndpointPort     plugin.TValue[int64]
+	ApplicationStartPort         plugin.TValue[int64]
+	ApplicationEndPort           plugin.TValue[int64]
+	EphemeralStartPort           plugin.TValue[int64]
+	EphemeralEndPort             plugin.TValue[int64]
+	DurabilityLevel              plugin.TValue[string]
+	MultipleAvailabilityZones    plugin.TValue[bool]
+	Capacities                   plugin.TValue[map[string]any]
+	PlacementProperties          plugin.TValue[map[string]any]
+}
+
+// createAzureSubscriptionServiceFabricServiceClusterNodeType creates a new instance of this resource
+func createAzureSubscriptionServiceFabricServiceClusterNodeType(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionServiceFabricServiceClusterNodeType{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.serviceFabricService.cluster.nodeType", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) MqlName() string {
+	return "azure.subscription.serviceFabricService.cluster.nodeType"
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) GetIsPrimary() *plugin.TValue[bool] {
+	return &c.IsPrimary
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) GetIsStateless() *plugin.TValue[bool] {
+	return &c.IsStateless
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) GetVmInstanceCount() *plugin.TValue[int64] {
+	return &c.VmInstanceCount
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) GetClientConnectionEndpointPort() *plugin.TValue[int64] {
+	return &c.ClientConnectionEndpointPort
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) GetHttpGatewayEndpointPort() *plugin.TValue[int64] {
+	return &c.HttpGatewayEndpointPort
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) GetReverseProxyEndpointPort() *plugin.TValue[int64] {
+	return &c.ReverseProxyEndpointPort
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) GetApplicationStartPort() *plugin.TValue[int64] {
+	return &c.ApplicationStartPort
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) GetApplicationEndPort() *plugin.TValue[int64] {
+	return &c.ApplicationEndPort
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) GetEphemeralStartPort() *plugin.TValue[int64] {
+	return &c.EphemeralStartPort
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) GetEphemeralEndPort() *plugin.TValue[int64] {
+	return &c.EphemeralEndPort
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) GetDurabilityLevel() *plugin.TValue[string] {
+	return &c.DurabilityLevel
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) GetMultipleAvailabilityZones() *plugin.TValue[bool] {
+	return &c.MultipleAvailabilityZones
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) GetCapacities() *plugin.TValue[map[string]any] {
+	return &c.Capacities
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterNodeType) GetPlacementProperties() *plugin.TValue[map[string]any] {
+	return &c.PlacementProperties
+}
+
+// mqlAzureSubscriptionServiceFabricServiceClusterFabricSetting for the azure.subscription.serviceFabricService.cluster.fabricSetting resource
+type mqlAzureSubscriptionServiceFabricServiceClusterFabricSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionServiceFabricServiceClusterFabricSettingInternal it will be used here
+	Name       plugin.TValue[string]
+	Parameters plugin.TValue[map[string]any]
+}
+
+// createAzureSubscriptionServiceFabricServiceClusterFabricSetting creates a new instance of this resource
+func createAzureSubscriptionServiceFabricServiceClusterFabricSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionServiceFabricServiceClusterFabricSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.serviceFabricService.cluster.fabricSetting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterFabricSetting) MqlName() string {
+	return "azure.subscription.serviceFabricService.cluster.fabricSetting"
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterFabricSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterFabricSetting) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterFabricSetting) GetParameters() *plugin.TValue[map[string]any] {
+	return &c.Parameters
+}
+
+// mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig for the azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig resource
+type mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfigInternal
+	StorageAccountName       plugin.TValue[string]
+	BlobEndpoint             plugin.TValue[string]
+	QueueEndpoint            plugin.TValue[string]
+	TableEndpoint            plugin.TValue[string]
+	ProtectedAccountKeyName  plugin.TValue[string]
+	ProtectedAccountKeyName2 plugin.TValue[string]
+	StorageAccount           plugin.TValue[*mqlAzureSubscriptionStorageServiceAccount]
+}
+
+// createAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig creates a new instance of this resource
+func createAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig) MqlName() string {
+	return "azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig"
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig) GetStorageAccountName() *plugin.TValue[string] {
+	return &c.StorageAccountName
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig) GetBlobEndpoint() *plugin.TValue[string] {
+	return &c.BlobEndpoint
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig) GetQueueEndpoint() *plugin.TValue[string] {
+	return &c.QueueEndpoint
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig) GetTableEndpoint() *plugin.TValue[string] {
+	return &c.TableEndpoint
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig) GetProtectedAccountKeyName() *plugin.TValue[string] {
+	return &c.ProtectedAccountKeyName
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig) GetProtectedAccountKeyName2() *plugin.TValue[string] {
+	return &c.ProtectedAccountKeyName2
+}
+
+func (c *mqlAzureSubscriptionServiceFabricServiceClusterDiagnosticsStorageAccountConfig) GetStorageAccount() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccount] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionStorageServiceAccount](&c.StorageAccount, func() (*mqlAzureSubscriptionStorageServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.serviceFabricService.cluster.diagnosticsStorageAccountConfig", c.__id, "storageAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionStorageServiceAccount), nil
+			}
+		}
+
+		return c.storageAccount()
 	})
 }

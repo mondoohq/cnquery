@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.36.0",
-  "generated_at": "2026-08-25T10:25:48-07:00",
+  "generated_at": "2026-09-05T18:22:29-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.ApiManagement/service/apis/policies/read",
@@ -287,6 +287,7 @@
     "Microsoft.ServiceBus/namespaces/read",
     "Microsoft.ServiceBus/namespaces/topics/read",
     "Microsoft.ServiceBus/namespaces/topics/subscriptions/read",
+    "Microsoft.ServiceFabric/clusters/read",
     "Microsoft.Signalr/signalr/read",
     "Microsoft.Sql/managedInstances/databases/read",
     "Microsoft.Sql/managedInstances/read",
@@ -2111,6 +2112,12 @@
       "service": "Microsoft.ServiceBus",
       "action": "NewListByTopicPager",
       "source_file": "servicebus.go"
+    },
+    {
+      "permission": "Microsoft.ServiceFabric/clusters/read",
+      "service": "Microsoft.ServiceFabric",
+      "action": "NewListPager",
+      "source_file": "servicefabric.go"
     },
     {
       "permission": "Microsoft.Signalr/signalr/read",

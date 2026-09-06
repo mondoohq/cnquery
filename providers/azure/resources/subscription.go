@@ -389,6 +389,16 @@ func (a *mqlAzureSubscription) serviceBus() (*mqlAzureSubscriptionServiceBusServ
 	return svc.(*mqlAzureSubscriptionServiceBusService), nil
 }
 
+func (a *mqlAzureSubscription) serviceFabric() (*mqlAzureSubscriptionServiceFabricService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionServiceFabricService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionServiceFabricService), nil
+}
+
 func (a *mqlAzureSubscription) eventHub() (*mqlAzureSubscriptionEventHubService, error) {
 	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionEventHubService, map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
