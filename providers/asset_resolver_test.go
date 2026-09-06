@@ -393,7 +393,7 @@ func TestConnectTargetTimesOut(t *testing.T) {
 			return &plugin.ConnectRes{Id: 1, Asset: target}, nil
 		})
 
-	err := parent.connectTarget(sub, target, anchor)
+	err := parent.connectTarget(sub, target, anchorLabel(anchor))
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "timed out after 50ms")
 	assert.Contains(t, err.Error(), "srv/hung", "the error names the asset it could not reach")
@@ -419,7 +419,7 @@ func TestConnectTargetPassesThrough(t *testing.T) {
 	mockPlugin.EXPECT().Connect(gomock.Any(), gomock.Any()).Times(1).
 		Return(&plugin.ConnectRes{Id: 1, Asset: target}, nil)
 
-	require.NoError(t, parent.connectTarget(sub, target, anchor))
+	require.NoError(t, parent.connectTarget(sub, target, anchorLabel(anchor)))
 	assert.NotNil(t, sub.Provider.Connection, "the connection is on the sub-runtime")
 	assert.False(t, sub.isClosed)
 }
@@ -434,7 +434,7 @@ func TestConnectTargetClosesOnFailure(t *testing.T) {
 	mockPlugin.EXPECT().Connect(gomock.Any(), gomock.Any()).Times(1).
 		Return(nil, errors.New("connection refused"))
 
-	err := parent.connectTarget(sub, target, anchor)
+	err := parent.connectTarget(sub, target, anchorLabel(anchor))
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "connection refused")
 	assert.Contains(t, err.Error(), "srv/refused")
@@ -453,7 +453,7 @@ func TestResolveStepIsBounded(t *testing.T) {
 	release := make(chan struct{})
 	defer close(release)
 
-	err := r.bounded("resolving", anchor, func() error {
+	err := r.bounded("resolving", anchorLabel(anchor), func() error {
 		<-release
 		return nil
 	})
@@ -468,4 +468,62 @@ func TestAssetReachTimeoutDefaults(t *testing.T) {
 
 	r.assetReachTimeoutOverride = time.Second
 	assert.Equal(t, time.Second, r.assetReachTimeout())
+}
+
+// RuntimeForAsset is the same path a query takes, for a caller that already has
+// the asset. What it has to keep is everything the anchor path guarantees, not
+// just the connect.
+func TestRuntimeForAsset(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockC := NewMockProvidersCoordinator(ctrl)
+	mockPlugin := NewMockProviderPlugin(ctrl)
+	mockPlugin.EXPECT().Disconnect(gomock.Any()).AnyTimes().Return(&plugin.DisconnectRes{}, nil)
+
+	target := connectTargetAsset("discovered")
+	sub := &Runtime{
+		coordinator: Coordinator,
+		recording:   recording.Null{},
+		Provider: &ConnectedProvider{
+			Instance: &RunningProvider{ID: mockProvider.ID, Name: "mock", Plugin: mockPlugin},
+		},
+	}
+
+	parent := &Runtime{coordinator: mockC, recording: recording.Null{}}
+	mockC.EXPECT().RuntimeFor(target, parent).Times(1).Return(sub, nil)
+	mockPlugin.EXPECT().Connect(gomock.Any(), gomock.Any()).Times(1).
+		Return(&plugin.ConnectRes{Id: 1, Asset: target}, nil)
+
+	got, err := parent.RuntimeForAsset("docker.image\x00sha256:abc", target)
+	require.NoError(t, err)
+	assert.Same(t, sub, got)
+
+	// One connection per target however many times it is asked for. The
+	// coordinator cannot dedupe this - a freshly built asset has no mrn or
+	// platform ids until the connect assigns them - which is why the caller
+	// supplies the key.
+	again, err := parent.RuntimeForAsset("docker.image\x00sha256:abc", target)
+	require.NoError(t, err)
+	assert.Same(t, sub, again)
+
+	// And the parent owns it, so it is torn down with the parent rather than
+	// left for the coordinator to reap.
+	assert.Equal(t, []*Runtime{sub}, parent.subRuntimes)
+	parent.closeSubRuntimes()
+	assert.True(t, sub.isClosed)
+}
+
+// The key is the caller's contract, and the asset needs a way to be reached.
+// Both are refused up front rather than surfacing as a confusing connect
+// failure, or - worse for the key - as a target connected once per call.
+func TestRuntimeForAssetRejectsUnusableInput(t *testing.T) {
+	r := &Runtime{coordinator: Coordinator, recording: recording.Null{}}
+
+	_, err := r.RuntimeForAsset("", connectTargetAsset("x"))
+	assert.ErrorContains(t, err, "without a key")
+
+	_, err = r.RuntimeForAsset("k", nil)
+	assert.ErrorContains(t, err, "no connection to reach it by")
+
+	_, err = r.RuntimeForAsset("k", &inventory.Asset{Name: "x"})
+	assert.ErrorContains(t, err, "no connection to reach it by")
 }

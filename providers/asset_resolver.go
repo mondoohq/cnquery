@@ -79,8 +79,46 @@ func (r *Runtime) ResolveAssetRoot(v *llx.AssetValue, root string) (llx.Resource
 // that two resolutions mean the same asset, and `mcpServers.map(running.tools)`
 // would open one connection per server without this.
 func (r *Runtime) runtimeForAnchor(v *llx.AssetValue) (*Runtime, error) {
-	key := v.ResourceType + "\x00" + v.ResourceId
+	return r.connectedRuntime(v.ResourceType+"\x00"+v.ResourceId, anchorLabel(v),
+		func() (*inventory.Asset, error) { return r.targetAssetForAnchor(v) })
+}
 
+// RuntimeForAsset connects another asset and returns a runtime for it, owned by
+// this one.
+//
+// This is the same path a query takes when it resolves an `asset<root>` value,
+// for a caller that already has the asset and needs no anchor to find it: an
+// embedder correlating two systems, a tool that discovered something and wants
+// to query it. It is exposed rather than reimplemented because a second connect
+// path would skip everything this one guarantees - one connection per target
+// however many times it is asked for, recording-first ordering, teardown with
+// the parent, and a bound on a target that never answers. Assets reached by a
+// parallel path would also be invisible to replay.
+//
+// `key` is what two calls meaning the same asset must agree on. It is not
+// derived from the asset because a freshly built one often has no identity yet:
+// an MRN and platform ids are assigned by the connect this call is about to
+// make, so keying on them would connect the same target once per call. A
+// resource anchor, a container id, an image digest - anything stable to the
+// caller - is the right key.
+//
+// A provider that wants to expose another asset to *queries* should not use
+// this. Declare a field typed `asset<root>` and implement plugin.AssetSource;
+// the engine then reaches it the same way, and the value stays queryable and
+// chainable rather than being a Go object only its author can see.
+func (r *Runtime) RuntimeForAsset(key string, asset *inventory.Asset) (*Runtime, error) {
+	if key == "" {
+		return nil, errors.New("cannot connect an asset without a key to dedupe it by")
+	}
+	if asset == nil || len(asset.Connections) == 0 {
+		return nil, errors.New("cannot connect asset " + key + ": no connection to reach it by")
+	}
+	return r.connectedRuntime(key, assetLabel(asset), func() (*inventory.Asset, error) { return asset, nil })
+}
+
+// connectedRuntime is the one implementation behind both: find the target, get a
+// runtime for it, connect it, and hand it to the parent to own.
+func (r *Runtime) connectedRuntime(key string, label string, find func() (*inventory.Asset, error)) (*Runtime, error) {
 	r.mu.Lock()
 	if sub, ok := r.resolvedAssets[key]; ok {
 		r.mu.Unlock()
@@ -90,14 +128,14 @@ func (r *Runtime) runtimeForAnchor(v *llx.AssetValue) (*Runtime, error) {
 	r.mu.Unlock()
 
 	if len(chain) >= maxAssetResolveDepth {
-		return nil, errors.New("cannot resolve asset " + anchorLabel(v) + ": resolution nested too deeply (" +
-			strings.Join(append(chain, anchorLabel(v)), " -> ") + ")")
+		return nil, errors.New("cannot resolve asset " + label + ": resolution nested too deeply (" +
+			strings.Join(append(chain, label), " -> ") + ")")
 	}
 
 	var target *inventory.Asset
-	err := r.bounded("resolving", v, func() error {
+	err := r.bounded("resolving", label, func() error {
 		var err error
-		target, err = r.targetAssetForAnchor(v)
+		target, err = find()
 		return err
 	})
 	if err != nil {
@@ -106,19 +144,19 @@ func (r *Runtime) runtimeForAnchor(v *llx.AssetValue) (*Runtime, error) {
 
 	sub, err := r.coordinator.RuntimeFor(target, r)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot create a runtime for asset "+anchorLabel(v))
+		return nil, errors.Wrap(err, "cannot create a runtime for asset "+label)
 	}
 
 	// RuntimeFor may hand back an already-connected runtime when the target
 	// deduped onto one the coordinator knows.
 	if sub.Provider == nil || sub.Provider.Connection == nil {
-		if err := r.connectTarget(sub, target, v); err != nil {
+		if err := r.connectTarget(sub, target, label); err != nil {
 			return nil, err
 		}
 	}
 
 	sub.mu.Lock()
-	sub.resolveChain = append(append([]string{}, chain...), anchorLabel(v))
+	sub.resolveChain = append(append([]string{}, chain...), label)
 	sub.mu.Unlock()
 
 	r.mu.Lock()
@@ -333,7 +371,7 @@ func anchorLabel(v *llx.AssetValue) string {
 // watcher that closes it once the connect finally returns - which is the whole
 // point of bounding rather than abandoning: the caller stops waiting, but the
 // runtime and the provider process behind it still get torn down.
-func (r *Runtime) connectTarget(sub *Runtime, target *inventory.Asset, v *llx.AssetValue) error {
+func (r *Runtime) connectTarget(sub *Runtime, target *inventory.Asset, label string) error {
 	done := make(chan error, 1)
 	go func() {
 		// SetRecording after the provider is selected and before connecting, as
@@ -363,7 +401,7 @@ func (r *Runtime) connectTarget(sub *Runtime, target *inventory.Asset, v *llx.As
 	case err := <-done:
 		if err != nil {
 			sub.Close()
-			return errors.Wrap(err, "cannot connect to asset "+anchorLabel(v))
+			return errors.Wrap(err, "cannot connect to asset "+label)
 		}
 		return nil
 	case <-timer.C:
@@ -371,7 +409,7 @@ func (r *Runtime) connectTarget(sub *Runtime, target *inventory.Asset, v *llx.As
 			<-done
 			sub.Close()
 		}()
-		return errors.New("cannot connect to asset " + anchorLabel(v) + ": timed out after " + timeout.String())
+		return errors.New("cannot connect to asset " + label + ": timed out after " + timeout.String())
 	}
 }
 
@@ -383,7 +421,7 @@ func (r *Runtime) connectTarget(sub *Runtime, target *inventory.Asset, v *llx.As
 // leaks one goroutine on a provider that was already misbehaving - and is why
 // connecting, which leaves a runtime and a process behind, gets the cleanup in
 // connectTarget instead of this.
-func (r *Runtime) bounded(what string, v *llx.AssetValue, fn func() error) error {
+func (r *Runtime) bounded(what string, label string, fn func() error) error {
 	done := make(chan error, 1)
 	go func() { done <- fn() }()
 
@@ -395,7 +433,7 @@ func (r *Runtime) bounded(what string, v *llx.AssetValue, fn func() error) error
 	case err := <-done:
 		return err
 	case <-timer.C:
-		return errors.New("timed out after " + timeout.String() + " " + what + " asset " + anchorLabel(v))
+		return errors.New("timed out after " + timeout.String() + " " + what + " asset " + label)
 	}
 }
 

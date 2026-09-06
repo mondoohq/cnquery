@@ -344,14 +344,25 @@ Harmless while the two assets share no resource types; wrong data the moment the
 do (host → container, both `os`, both with `packages`). Selecting a backing per
 target asset makes that unrepresentable.
 
-**This path is also the one imperative Go-side callers use.** A provider that needs
-to spawn a *new* asset through another provider mid-resolution (an `os` resource
-finding a container image reference on disk and connecting it as a separate asset)
-goes through this same resolution, exposed as a thin SDK-side wrapper rather than a
-parallel API. A second connect path would bypass the recording-first ordering and
-make those assets invisible to replay. This is *not* the same-asset cross-provider
-call that [ADR 042](042-cross-provider-invocation.md) governs: no peer declaration
-is involved, because creating a genuinely new asset is not calling another provider
+**This path is also the one imperative Go-side callers use**, exposed as
+`Runtime.RuntimeForAsset(key, asset)` rather than as a parallel API. A second
+connect path would bypass the recording-first ordering and make those assets
+invisible to replay, as well as losing dedupe, parent ownership and the time
+bound. The caller supplies the dedupe key because a freshly built asset has no
+identity to key on: its mrn and platform ids are assigned by the connect the call
+is about to make.
+
+A **provider** wanting to expose a new asset (an `os` resource finding a
+container image reference on disk) does not use that, and does not need a
+callback to the host either: it declares a field typed `asset<root>` and
+implements `plugin.AssetSource`, and the engine reaches the asset the same way.
+That keeps the result queryable and chainable instead of a Go object only its
+author can see, and it is why this needs no provider-side imperative API at all.
+`docker.container.running` is the worked example.
+
+This is *not* the same-asset cross-provider call that
+[ADR 042](042-cross-provider-invocation.md) governs: no peer declaration is
+involved, because creating a genuinely new asset is not calling another provider
 for the asset you are already on.
 
 ### 6. Top-level `_` is the connected asset's root
@@ -625,8 +636,9 @@ itself `asset<…>` resolves through the *target* runtime's own resolver.
    Verified against live containers, which is what makes this the first phase
    with an end-to-end target anyone can reach: the `docker` connector lives in
    the os provider, so a container needs no second provider to connect to.
-   Still open: the imperative SDK-side wrapper for Go callers that spawn a new
-   asset over this same path.
+   The imperative entry point for Go callers is `Runtime.RuntimeForAsset`, the
+   same implementation the anchor path uses with the anchor step replaced by a
+   caller-supplied asset. **Landed.**
 9. **Namespace migration + other providers.** Roots for the remaining providers,
    `os`'s deprecated fields removed in v15, global names retired, `RootedNamespace`
    becomes the default.
