@@ -126,23 +126,13 @@ func (c *compiler) skewHint(provider string, what string) string {
 		" is installed; this " + what + " may require a newer one)"
 }
 
-// missingFieldHint explains a failed field access with whatever the schema can
-// actually attribute it to.
+// rootScopeHint names the roots that do carry a field the current root lacks.
 //
 // A field missing from an asset root is usually a platform mismatch, not version
 // skew: `_.registrykey` on a Linux host fails because the asset is rooted at
 // `os.linux` and the registry lives on `os.windows` (ADR 031). Saying "the
 // provider may need to be newer" there sends the reader after an upgrade that
-// cannot help, so a sibling root that does carry the field is reported instead.
-// With no sibling to name, this falls back to the version-skew lead.
-func (c *compiler) missingFieldHint(typ types.Type, id string) string {
-	if hint := c.rootScopeHint(typ, id); hint != "" {
-		return hint
-	}
-	return c.fieldSkewHint(typ)
-}
-
-// rootScopeHint names the roots that do carry a field the current root lacks.
+// cannot help, so this hint takes precedence over the version-skew lead.
 //
 // Only roots are offered as alternatives, read from the schema's `@root`
 // marking rather than guessed from the shape of a name: `os.date` sits in the
