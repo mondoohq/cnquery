@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 import network
+import core
 
 option provider = "go.mondoo.com/mql/providers/oci"
 option go_package = "go.mondoo.com/mql/providers/oci/resources"
+option root = "oci"
 
 // Oracle Cloud Infrastructure (OCI)
 //
@@ -15,7 +17,7 @@ option go_package = "go.mondoo.com/mql/providers/oci/resources"
 // `oci.tenancy`, and service-specific entry points (`oci.identity`,
 // `oci.compute`, `oci.network`, `oci.objectStorage`, `oci.kms`, and so
 // on) are reached as siblings.
-oci {
+oci @root {
   // Available regions
   regions() []oci.region
   // Compartments in the tenancy

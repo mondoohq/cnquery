@@ -5,6 +5,7 @@ import core
 
 option provider = "go.mondoo.com/mql/providers/vsphere"
 option go_package = "go.mondoo.com/mql/providers/vsphere/resources"
+option root = "vsphere"
 
 // vSphere asset resource
 extend asset {
@@ -116,7 +117,7 @@ private audit.cvss @defaults("score") {
 // scheduled and recent tasks, events, and certificates. Navigate into
 // vsphere.datacenter to reach hosts, virtual machines, clusters, and
 // networking.
-vsphere {
+vsphere @root {
   // System identity of the connected vSphere endpoint
   //
   // Keyed by property name, including name, fullName, vendor, version, build,

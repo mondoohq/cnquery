@@ -1,15 +1,18 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/redisdb"
 option go_package = "go.mondoo.com/mql/providers/redisdb/resources"
+option root = "redisdb"
 
 // Redis or Valkey server
 //
 // Root of the redisdb provider. The connected server and everything queryable
 // through it (access-control users and the security-relevant configuration) is
 // reached from redisdb.instance.
-redisdb {
+redisdb @root {
 }
 
 // Redis or Valkey server

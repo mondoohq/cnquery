@@ -1,15 +1,18 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/cassandra"
 option go_package = "go.mondoo.com/mql/providers/cassandra/resources"
+option root = "cassandra"
 
 // Apache Cassandra cluster
 //
 // Root of the Cassandra provider. The connected cluster and everything
 // queryable through it (security posture, roles, nodes, and keyspaces) is
 // reached from cassandra.cluster.
-cassandra {
+cassandra @root {
 }
 
 // Apache Cassandra cluster

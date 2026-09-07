@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/hcp"
 option go_package = "go.mondoo.com/mql/providers/hcp/resources"
+option root = "hcp"
 
 // HashiCorp Cloud Platform
 //
@@ -13,7 +16,7 @@ option go_package = "go.mondoo.com/mql/providers/hcp/resources"
 // applications. This is the control-plane view of an HCP estate; cluster
 // internal configuration (Vault mounts, Consul ACLs) lives behind each
 // cluster's own API and is not exposed here.
-hcp {
+hcp @root {
   // Organization the connection is rooted at
   organization() hcp.organization
   // Projects in the organization

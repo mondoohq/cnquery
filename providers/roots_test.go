@@ -33,13 +33,14 @@ import (
 var rootBacklog = map[string]struct{}{}
 
 func init() {
+	// What is left needs a decision, not a sweep:
+	//   aws, azure, gcp - "the root of an account" is the flat-os question again
+	//   mondoo          - mondoo.client is one field; no resource models the
+	//                     connected space
+	//   network         - the asset is a host or URL and nothing models it;
+	//                     socket/tls/dns/http are aspects of one
 	for _, p := range []string{
-		"activedirectory", "alicloud", "ansible", "artifactory",
-		"atlassian", "aws", "azure", "bicep", "bitwarden", "cassandra",
-		"claude", "clickhousecloud", "clickhousedb", "cloudformation",
-		"datadog", "depsdev", "elasticsearch", "gcp", "google-workspace", "hcp", "helm",
-		"hetzner", "huggingface", "ipinfo", "ipmi", "iru", "kustomize", "mikrotik", "mistral", "mondoo", "ms365", "network", "nutanix", "oci", "ollama", "opcua",
-		"opensearch", "openstack", "proxmox", "redfish", "redisdb", "stackit", "terraform", "vsphere",
+		"aws", "azure", "gcp", "mondoo", "network",
 	} {
 		rootBacklog[p] = struct{}{}
 	}

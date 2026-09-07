@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/cloudformation"
 option go_package = "go.mondoo.com/mql/providers/cloudformation/resources"
+option root = "cloudformation.template"
 
 // AWS CloudFormation template
 //
@@ -13,7 +16,7 @@ option go_package = "go.mondoo.com/mql/providers/cloudformation/resources"
 // the declared resources, the outputs, and the full set of AWS resource
 // types referenced. This is the surface for IaC policy checks against
 // CloudFormation and SAM templates.
-cloudformation.template @defaults("description") {
+cloudformation.template @defaults("description") @root {
   // Template format version
   version string
   // Template macros

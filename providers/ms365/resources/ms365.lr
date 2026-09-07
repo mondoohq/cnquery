@@ -1,8 +1,15 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/ms365"
 option go_package = "go.mondoo.com/mql/providers/ms365/resources"
+option root = "microsoft"
+
+alias microsoft.exchangeonline = ms365.exchangeonline
+alias microsoft.sharepointonline = ms365.sharepointonline
+alias microsoft.teams = ms365.teams
 
 alias microsoft.organization = microsoft.tenant
 
@@ -12,7 +19,7 @@ alias microsoft.organization = microsoft.tenant
 // domains, applications, service principals, roles, and identity and access
 // policies. Serves as the top-level entry point for querying tenant-wide
 // Microsoft Entra ID and Microsoft 365 configuration.
-microsoft {
+microsoft @root {
   // Microsoft 365 tenant organizations
   //
   // Deprecated in favor of `microsoft.tenant`.

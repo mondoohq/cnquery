@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/claude"
 option go_package = "go.mondoo.com/mql/providers/claude/resources"
+option root = "claude"
 
 // Claude AI platform
 //
@@ -12,7 +15,7 @@ option go_package = "go.mondoo.com/mql/providers/claude/resources"
 // profiles. When an admin API key is configured, organizational
 // resources such as workspaces, members, invites, API keys, usage,
 // cost, and rate limits also become queryable.
-claude @defaults("host") {
+claude @defaults("host") @root {
   // API host address
   host() string
   // Available models

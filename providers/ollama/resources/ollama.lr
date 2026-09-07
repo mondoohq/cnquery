@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/ollama"
 option go_package = "go.mondoo.com/mql/providers/ollama/resources"
+option root = "ollama"
 
 // Ollama instance
 //
@@ -17,7 +20,7 @@ option go_package = "go.mondoo.com/mql/providers/ollama/resources"
 // read and whether they may write, and whether inference may be offloaded to
 // Ollama Cloud are all queryable, so an instance can be audited for exposure
 // and for the advisories that apply to the version it runs.
-ollama @defaults("host version") {
+ollama @defaults("host version") @root {
   // Host address of the Ollama instance
   host() string
   // Ollama server version

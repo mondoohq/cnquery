@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/datadog"
 option go_package = "go.mondoo.com/mql/providers/datadog/resources"
+option root = "datadog"
 
 // Datadog
 //
@@ -23,7 +26,7 @@ option go_package = "go.mondoo.com/mql/providers/datadog/resources"
 // The integration fields cover the standing credentials Datadog holds
 // against outside providers, spanning AWS, Google Cloud, Azure, Okta,
 // Cloudflare, Fastly and Confluent Cloud.
-datadog {
+datadog @root {
   // Organization the credentials authenticate against
   org() datadog.organization
   // Datadog users in the organization

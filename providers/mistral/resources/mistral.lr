@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/mistral"
 option go_package = "go.mondoo.com/mql/providers/mistral/resources"
+option root = "mistral"
 
 // Mistral AI workspace
 //
@@ -11,7 +14,7 @@ option go_package = "go.mondoo.com/mql/providers/mistral/resources"
 // API key. Backs AI security posture assessment and AI Bill of
 // Materials generation. API keys are scoped to one workspace, so add
 // each workspace as a separate asset to scan an entire organization.
-mistral @defaults("ownedBy") @maturity("preview") {
+mistral @defaults("ownedBy") @maturity("preview") @root {
   // Workspace identifier passed via --workspace flag
   ownedBy() string
   // Available models in the Mistral AI platform

@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/helm"
 option go_package = "go.mondoo.com/mql/providers/helm/resources"
+option root = "helm"
 
 // Helm chart catalog
 //
@@ -10,7 +13,7 @@ option go_package = "go.mondoo.com/mql/providers/helm/resources"
 // chart along with its metadata, templates, rendered Kubernetes resources,
 // dependencies, and bundled files, used to enforce policy on Kubernetes
 // manifests before they ever reach a cluster.
-helm {
+helm @root {
   // List of all parsed Helm charts
   charts() []helm.chart
 }

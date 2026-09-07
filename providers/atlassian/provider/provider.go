@@ -126,6 +126,9 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		Name:      conn.Name(),
 		Asset:     req.Asset,
 		Inventory: nil,
+		// Which kind this asset actually is; the static Root can only name one
+		// for a provider serving several (ADR 031).
+		Root: assetRoot(req.Asset.GetPlatform()),
 	}, nil
 }
 

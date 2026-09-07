@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/bitwarden"
 option go_package = "go.mondoo.com/mql/providers/bitwarden/resources"
+option root = "bitwarden"
 
 // Bitwarden organization
 //
@@ -13,7 +16,7 @@ option go_package = "go.mondoo.com/mql/providers/bitwarden/resources"
 // access. Vault item contents, folders, and Send payloads are never
 // read by this provider; the Bitwarden Public API this provider talks
 // to has no endpoint for them.
-bitwarden @maturity("experimental") {
+bitwarden @maturity("experimental") @root {
   // Security policies configured for the organization
   policies() []bitwarden.policy
   // Members of the organization

@@ -1,15 +1,18 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/opensearch"
 option go_package = "go.mondoo.com/mql/providers/opensearch/resources"
+option root = "opensearch"
 
 // OpenSearch cluster
 //
 // Root of the OpenSearch provider. The connected cluster and everything
 // queryable through it (security posture, internal users, roles, and role
 // mappings) is reached from opensearch.cluster.
-opensearch {
+opensearch @root {
 }
 
 // OpenSearch cluster

@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/kustomize"
 option go_package = "go.mondoo.com/mql/providers/kustomize/resources"
+option root = "kustomize"
 
 // Kustomize overlay
 //
@@ -11,7 +14,7 @@ option go_package = "go.mondoo.com/mql/providers/kustomize/resources"
 // overrides, replacements, and the Kubernetes resources rendered by
 // `kustomize build`. Use this to enforce policy on Kustomize-driven
 // manifests before they reach a cluster.
-kustomize {
+kustomize @root {
   // List of all parsed kustomizations
   kustomizations() []kustomize.kustomization
 }

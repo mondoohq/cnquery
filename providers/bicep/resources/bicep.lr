@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/bicep"
 option go_package = "go.mondoo.com/mql/providers/bicep/resources"
+option root = "bicep"
 
 // Bicep / ARM template
 //
@@ -11,7 +14,7 @@ option go_package = "go.mondoo.com/mql/providers/bicep/resources"
 // modules, outputs) and, when available, the compiled ARM template, the
 // surface for IaC policy checks of Azure infrastructure-as-code without
 // deploying it.
-bicep {
+bicep @root {
   // All Bicep source files found
   files() []bicep.file
   // All top-level resources across every Bicep source file

@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/iru"
 option go_package = "go.mondoo.com/mql/providers/iru/resources"
+option root = "iru"
 
 // Iru (formerly Kandji)
 //
@@ -13,7 +16,7 @@ option go_package = "go.mondoo.com/mql/providers/iru/resources"
 // profiles, custom scripts), and the directory of end-users. Sub-resources
 // are populated from the Iru API and respect the permissions granted to the
 // bearer token used to connect.
-iru {
+iru @root {
   // List every device enrolled in the Iru tenant
   devices() []iru.device
 

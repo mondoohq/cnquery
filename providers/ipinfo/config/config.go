@@ -9,9 +9,15 @@ import (
 )
 
 var Config = plugin.Provider{
-	Name:            "ipinfo",
-	ID:              "go.mondoo.com/mql/providers/ipinfo",
-	Version:         "13.0.28",
+	Name: "ipinfo",
+	// Every kind this provider hands out as its own asset is a root (ADR 031).
+	Root:    "ipinfo",
+	ID:      "go.mondoo.com/mql/providers/ipinfo",
+	Version: "13.0.28",
+	// Every root carries `asset`, which core owns (ADR 042).
+	Requires: []plugin.ProviderDep{
+		{ID: "go.mondoo.com/mql/providers/core", Name: "core", MinVersion: "13.0.0"},
+	},
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{

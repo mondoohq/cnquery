@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/nutanix"
 option go_package = "go.mondoo.com/mql/providers/nutanix/resources"
+option root = "nutanix"
 
 // Nutanix Prism Central
 //
@@ -12,7 +15,7 @@ option go_package = "go.mondoo.com/mql/providers/nutanix/resources"
 // images, IAM (users, groups, roles, authorization policies, directory
 // services, SAML identity providers), networking (VPCs, subnets, floating
 // IPs), and storage (containers, volume groups).
-nutanix {
+nutanix @root {
   // Clusters registered with this Prism Central instance
   clusters() []nutanix.cluster
   // Hypervisor hosts across all registered clusters

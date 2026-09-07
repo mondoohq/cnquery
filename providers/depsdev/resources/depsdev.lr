@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/depsdev"
 option go_package = "go.mondoo.com/mql/providers/depsdev/resources"
+option root = "depsdev"
 
 // deps.dev dependency catalog
 //
@@ -12,7 +15,7 @@ option go_package = "go.mondoo.com/mql/providers/depsdev/resources"
 // parsed from go.mod. The packages field lists one entry per direct
 // dependency, the starting point for stale-dependency, lagging-patch,
 // license, and supply-chain risk audits.
-depsdev {
+depsdev @root {
   // List of packages from go.mod direct dependencies
   packages() []depsdev.package
 }

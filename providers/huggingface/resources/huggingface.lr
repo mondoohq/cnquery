@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/huggingface"
 option go_package = "go.mondoo.com/mql/providers/huggingface/resources"
+option root = "huggingface"
 
 // Hugging Face
 //
@@ -11,7 +14,7 @@ option go_package = "go.mondoo.com/mql/providers/huggingface/resources"
 // authenticated user, organization memberships, models, datasets,
 // Spaces, webhooks, and inference endpoints. Query it to inventory
 // hosted AI assets and to understand the reach of the credential in use.
-huggingface @defaults("user.name") {
+huggingface @defaults("user.name") @root {
   // Authenticated user
   user() huggingface.user
   // Organizations the authenticated user belongs to

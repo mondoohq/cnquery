@@ -1,15 +1,18 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/elasticsearch"
 option go_package = "go.mondoo.com/mql/providers/elasticsearch/resources"
+option root = "elasticsearch"
 
 // Elasticsearch cluster
 //
 // Root of the Elasticsearch provider. The connected cluster and everything
 // queryable through it (security posture, users, roles, role mappings, and API
 // keys) is reached from elasticsearch.cluster.
-elasticsearch {
+elasticsearch @root {
 }
 
 // Elasticsearch cluster

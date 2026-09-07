@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/activedirectory"
 option go_package = "go.mondoo.com/mql/providers/activedirectory/resources"
+option root = "activedirectory"
 
 // Active Directory Domain Services
 //
@@ -19,7 +22,7 @@ option go_package = "go.mondoo.com/mql/providers/activedirectory/resources"
 // metadata used by attack-path tooling (LAPS schema extension, machine-
 // account quota, AD Recycle Bin, schema version) and the dangerous-ACL
 // delegations across critical objects.
-activedirectory @defaults("domain functionalLevel") {
+activedirectory @defaults("domain functionalLevel") @root {
   // Domain DNS name (e.g., corp.example.com)
   domain string
   // Domain NetBIOS name

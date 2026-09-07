@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/opcua"
 option go_package = "go.mondoo.com/mql/providers/opcua/resources"
+option root = "opcua"
 
 // OPC UA (Open Platform Communications Unified Architecture) server
 //
@@ -10,7 +13,7 @@ option go_package = "go.mondoo.com/mql/providers/opcua/resources"
 // node of its address space, and a flat list of every node reachable
 // in that address space. The starting point for industrial control
 // systems and OT (operational technology) audits expressed in MQL.
-opcua {
+opcua @root {
   // Namespaces
   namespaces() []opcua.namespace
   // Root node
