@@ -433,7 +433,7 @@ func TestConnectionArgs_TokenBasedSapIagMember(t *testing.T) {
 
 	args := newMqlConnectionArgs("conn/connectionInfo", connector.GetConnectionInfo())
 
-	assert.Equal(t, connectionInfoKindTokenBasedSapIag, rawString(t, args, "kind"))
+	assert.Equal(t, connectionInfoKindSapIag, rawString(t, args, "kind"))
 	assert.Equal(t, "https://iag.contoso.example/api", rawString(t, args, "url"))
 	assert.Equal(t, "https://iag.contoso.example/oauth/token", rawString(t, args, "accessTokenUrl"))
 	assert.Equal(t, "sb-iag-integration", rawString(t, args, "clientId"))
