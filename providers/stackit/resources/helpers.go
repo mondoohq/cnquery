@@ -77,6 +77,17 @@ func rfc3339OrNil[T time.Time | *time.Time](t T, ok bool) any {
 	return tp.Format(time.RFC3339)
 }
 
+// nonEmpty keeps an empty string out of a field the service normally
+// populates, so "the API told us nothing" reads as null rather than as a real
+// empty setting. Use it where the SDK models a value as a plain string, which
+// leaves no other way to tell an absent value apart from a blank one.
+func nonEmpty(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
 // parseRFC3339 turns an RFC3339 timestamp string into the *time.Time form
 // llx.TimeDataPtr wants, or nil if the string is empty or malformed. Several
 // STACKIT services return timestamps as strings rather than time.Time.

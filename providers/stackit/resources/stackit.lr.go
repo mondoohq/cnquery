@@ -78,6 +78,8 @@ const (
 	ResourceStackitSecretsManager                          string = "stackit.secretsManager"
 	ResourceStackitSecretsManagerInstance                  string = "stackit.secretsManager.instance"
 	ResourceStackitSecretsManagerUser                      string = "stackit.secretsManager.user"
+	ResourceStackitSecretsManagerApprole                   string = "stackit.secretsManager.approle"
+	ResourceStackitSecretsManagerApproleSecretId           string = "stackit.secretsManager.approle.secretId"
 	ResourceStackitObservability                           string = "stackit.observability"
 	ResourceStackitObservabilityInstance                   string = "stackit.observability.instance"
 	ResourceStackitTelemetry                               string = "stackit.telemetry"
@@ -363,6 +365,14 @@ func init() {
 		"stackit.secretsManager.user": {
 			// to override args, implement: initStackitSecretsManagerUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitSecretsManagerUser,
+		},
+		"stackit.secretsManager.approle": {
+			// to override args, implement: initStackitSecretsManagerApprole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitSecretsManagerApprole,
+		},
+		"stackit.secretsManager.approle.secretId": {
+			// to override args, implement: initStackitSecretsManagerApproleSecretId(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitSecretsManagerApproleSecretId,
 		},
 		"stackit.observability": {
 			// to override args, implement: initStackitObservability(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2366,6 +2376,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.secretsManager.instance.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecretsManagerInstance).GetUsers()).ToDataRes(types.Array(types.Resource("stackit.secretsManager.user")))
 	},
+	"stackit.secretsManager.instance.approles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerInstance).GetApproles()).ToDataRes(types.Array(types.Resource("stackit.secretsManager.approle")))
+	},
 	"stackit.secretsManager.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecretsManagerUser).GetId()).ToDataRes(types.String)
 	},
@@ -2380,6 +2393,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.secretsManager.user.instance": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecretsManagerUser).GetInstance()).ToDataRes(types.Resource("stackit.secretsManager.instance"))
+	},
+	"stackit.secretsManager.approle.roleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerApprole).GetRoleId()).ToDataRes(types.String)
+	},
+	"stackit.secretsManager.approle.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerApprole).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.secretsManager.approle.write": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerApprole).GetWrite()).ToDataRes(types.Bool)
+	},
+	"stackit.secretsManager.approle.secretIdTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerApprole).GetSecretIdTtl()).ToDataRes(types.String)
+	},
+	"stackit.secretsManager.approle.secretIdTtlSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerApprole).GetSecretIdTtlSeconds()).ToDataRes(types.Int)
+	},
+	"stackit.secretsManager.approle.secretIdNumUses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerApprole).GetSecretIdNumUses()).ToDataRes(types.Int)
+	},
+	"stackit.secretsManager.approle.secretIdUsesUnlimited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerApprole).GetSecretIdUsesUnlimited()).ToDataRes(types.Bool)
+	},
+	"stackit.secretsManager.approle.secretIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerApprole).GetSecretIds()).ToDataRes(types.Array(types.Resource("stackit.secretsManager.approle.secretId")))
+	},
+	"stackit.secretsManager.approle.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerApprole).GetInstance()).ToDataRes(types.Resource("stackit.secretsManager.instance"))
+	},
+	"stackit.secretsManager.approle.secretId.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerApproleSecretId).GetVersion()).ToDataRes(types.Int)
+	},
+	"stackit.secretsManager.approle.secretId.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerApproleSecretId).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.secretsManager.approle.secretId.ttl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerApproleSecretId).GetTtl()).ToDataRes(types.String)
+	},
+	"stackit.secretsManager.approle.secretId.ttlSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerApproleSecretId).GetTtlSeconds()).ToDataRes(types.Int)
+	},
+	"stackit.secretsManager.approle.secretId.numUses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerApproleSecretId).GetNumUses()).ToDataRes(types.Int)
+	},
+	"stackit.secretsManager.approle.secretId.usesUnlimited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerApproleSecretId).GetUsesUnlimited()).ToDataRes(types.Bool)
 	},
 	"stackit.observability.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitObservability).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.observability.instance")))
@@ -5725,6 +5783,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitSecretsManagerInstance).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.secretsManager.instance.approles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerInstance).Approles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.secretsManager.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSecretsManagerUser).__id, ok = v.Value.(string)
 		return
@@ -5747,6 +5809,74 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.secretsManager.user.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSecretsManagerUser).Instance, ok = plugin.RawToTValue[*mqlStackitSecretsManagerInstance](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.approle.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApprole).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.secretsManager.approle.roleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApprole).RoleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.approle.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApprole).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.approle.write": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApprole).Write, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.approle.secretIdTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApprole).SecretIdTtl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.approle.secretIdTtlSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApprole).SecretIdTtlSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.approle.secretIdNumUses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApprole).SecretIdNumUses, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.approle.secretIdUsesUnlimited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApprole).SecretIdUsesUnlimited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.approle.secretIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApprole).SecretIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.approle.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApprole).Instance, ok = plugin.RawToTValue[*mqlStackitSecretsManagerInstance](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.approle.secretId.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApproleSecretId).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.secretsManager.approle.secretId.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApproleSecretId).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.approle.secretId.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApproleSecretId).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.approle.secretId.ttl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApproleSecretId).Ttl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.approle.secretId.ttlSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApproleSecretId).TtlSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.approle.secretId.numUses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApproleSecretId).NumUses, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.approle.secretId.usesUnlimited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerApproleSecretId).UsesUnlimited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"stackit.observability.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13737,6 +13867,7 @@ type mqlStackitSecretsManagerInstance struct {
 	CreationFinishedAt plugin.TValue[*time.Time]
 	Acls               plugin.TValue[[]any]
 	Users              plugin.TValue[[]any]
+	Approles           plugin.TValue[[]any]
 }
 
 // createStackitSecretsManagerInstance creates a new instance of this resource
@@ -13830,6 +13961,22 @@ func (c *mqlStackitSecretsManagerInstance) GetUsers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitSecretsManagerInstance) GetApproles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Approles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.secretsManager.instance", c.__id, "approles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.approles()
+	})
+}
+
 // mqlStackitSecretsManagerUser for the stackit.secretsManager.user resource
 type mqlStackitSecretsManagerUser struct {
 	MqlRuntime *plugin.Runtime
@@ -13904,6 +14051,183 @@ func (c *mqlStackitSecretsManagerUser) GetInstance() *plugin.TValue[*mqlStackitS
 
 		return c.instance()
 	})
+}
+
+// mqlStackitSecretsManagerApprole for the stackit.secretsManager.approle resource
+type mqlStackitSecretsManagerApprole struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlStackitSecretsManagerApproleInternal
+	RoleId                plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Write                 plugin.TValue[bool]
+	SecretIdTtl           plugin.TValue[string]
+	SecretIdTtlSeconds    plugin.TValue[int64]
+	SecretIdNumUses       plugin.TValue[int64]
+	SecretIdUsesUnlimited plugin.TValue[bool]
+	SecretIds             plugin.TValue[[]any]
+	Instance              plugin.TValue[*mqlStackitSecretsManagerInstance]
+}
+
+// createStackitSecretsManagerApprole creates a new instance of this resource
+func createStackitSecretsManagerApprole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitSecretsManagerApprole{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.secretsManager.approle", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitSecretsManagerApprole) MqlName() string {
+	return "stackit.secretsManager.approle"
+}
+
+func (c *mqlStackitSecretsManagerApprole) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitSecretsManagerApprole) GetRoleId() *plugin.TValue[string] {
+	return &c.RoleId
+}
+
+func (c *mqlStackitSecretsManagerApprole) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitSecretsManagerApprole) GetWrite() *plugin.TValue[bool] {
+	return &c.Write
+}
+
+func (c *mqlStackitSecretsManagerApprole) GetSecretIdTtl() *plugin.TValue[string] {
+	return &c.SecretIdTtl
+}
+
+func (c *mqlStackitSecretsManagerApprole) GetSecretIdTtlSeconds() *plugin.TValue[int64] {
+	return &c.SecretIdTtlSeconds
+}
+
+func (c *mqlStackitSecretsManagerApprole) GetSecretIdNumUses() *plugin.TValue[int64] {
+	return &c.SecretIdNumUses
+}
+
+func (c *mqlStackitSecretsManagerApprole) GetSecretIdUsesUnlimited() *plugin.TValue[bool] {
+	return &c.SecretIdUsesUnlimited
+}
+
+func (c *mqlStackitSecretsManagerApprole) GetSecretIds() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecretIds, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.secretsManager.approle", c.__id, "secretIds")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.secretIds()
+	})
+}
+
+func (c *mqlStackitSecretsManagerApprole) GetInstance() *plugin.TValue[*mqlStackitSecretsManagerInstance] {
+	return plugin.GetOrCompute[*mqlStackitSecretsManagerInstance](&c.Instance, func() (*mqlStackitSecretsManagerInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.secretsManager.approle", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitSecretsManagerInstance), nil
+			}
+		}
+
+		return c.instance()
+	})
+}
+
+// mqlStackitSecretsManagerApproleSecretId for the stackit.secretsManager.approle.secretId resource
+type mqlStackitSecretsManagerApproleSecretId struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitSecretsManagerApproleSecretIdInternal it will be used here
+	Version       plugin.TValue[int64]
+	Description   plugin.TValue[string]
+	Ttl           plugin.TValue[string]
+	TtlSeconds    plugin.TValue[int64]
+	NumUses       plugin.TValue[int64]
+	UsesUnlimited plugin.TValue[bool]
+}
+
+// createStackitSecretsManagerApproleSecretId creates a new instance of this resource
+func createStackitSecretsManagerApproleSecretId(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitSecretsManagerApproleSecretId{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.secretsManager.approle.secretId", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitSecretsManagerApproleSecretId) MqlName() string {
+	return "stackit.secretsManager.approle.secretId"
+}
+
+func (c *mqlStackitSecretsManagerApproleSecretId) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitSecretsManagerApproleSecretId) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlStackitSecretsManagerApproleSecretId) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitSecretsManagerApproleSecretId) GetTtl() *plugin.TValue[string] {
+	return &c.Ttl
+}
+
+func (c *mqlStackitSecretsManagerApproleSecretId) GetTtlSeconds() *plugin.TValue[int64] {
+	return &c.TtlSeconds
+}
+
+func (c *mqlStackitSecretsManagerApproleSecretId) GetNumUses() *plugin.TValue[int64] {
+	return &c.NumUses
+}
+
+func (c *mqlStackitSecretsManagerApproleSecretId) GetUsesUnlimited() *plugin.TValue[bool] {
+	return &c.UsesUnlimited
 }
 
 // mqlStackitObservability for the stackit.observability resource
