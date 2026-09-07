@@ -1340,3 +1340,298 @@ func (g *mqlGcpProjectBigqueryServiceTable) dlpDataProfile() (*mqlGcpProjectDlpS
 func (g *mqlGcpProjectDlpService) isEnabled() (bool, error) {
 	return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_dlp)
 }
+
+// ---------------------------------------------------------------
+// Content Policies
+// ---------------------------------------------------------------
+
+// Kinds of sink a content policy records its verdicts to. LOG_TO_BIG_QUERY is
+// the only destination the API models today; DESTINATION_UNSPECIFIED covers a
+// logging config that names none, including one whose destination is a variant
+// added after this provider was built.
+const (
+	dlpLogDestinationBigQuery    = "LOG_TO_BIG_QUERY"
+	dlpLogDestinationUnspecified = "DESTINATION_UNSPECIFIED"
+)
+
+// dlpPolicyActionVerdict returns the verdict a content policy action produces,
+// or nil when the policy sets no action for that case at all.
+//
+// The distinction matters: a policy that sets no action for unsupported file
+// types is not the same as one that explicitly allows them, and collapsing the
+// first into ALLOW would report a decision the policy never made. An action that
+// exists but carries no verdict is a third state and reports the API's own
+// CONTENT_POLICY_VERDICT_UNSPECIFIED rather than being flattened into either.
+func dlpPolicyActionVerdict(action *dlppb.ContentPolicy_PolicyAction) *string {
+	if action == nil {
+		return nil
+	}
+	verdict := action.GetReturnVerdict().String()
+	return &verdict
+}
+
+// dlpDefaultVerdict returns the verdict applied to content that matched no rule.
+//
+// A content policy with no default action allows such content, which the API
+// documents as the default rather than reporting explicitly, so that is what
+// this returns. Reporting null instead would leave the most permissive
+// configuration a policy can have looking like an absence of data, and a check
+// asserting the default is BLOCK would then have nothing to fail on.
+func dlpDefaultVerdict(action *dlppb.ContentPolicy_PolicyAction) string {
+	if action == nil {
+		return "ALLOW"
+	}
+	return action.GetReturnVerdict().String()
+}
+
+// dlpConditionMinCount returns the number of findings a condition needs before
+// it holds.
+//
+// The API treats an unset count as 1, so an unset count is reported as 1. A
+// literal 0 would read as "no findings required", which inverts the meaning of
+// the field and would let a check asserting a positive threshold pass on a
+// condition that in fact fires on the first finding.
+func dlpConditionMinCount(minCount int64) int64 {
+	if minCount <= 0 {
+		return 1
+	}
+	return minCount
+}
+
+// dlpLoggingDestination reports the kind of sink a logging config writes to and,
+// when that sink is BigQuery, the table it names.
+//
+// An unrecognized or absent destination reports DESTINATION_UNSPECIFIED with no
+// table rather than an error, so a policy carrying a destination variant newer
+// than this provider still lists its other logging configs.
+func dlpLoggingDestination(cfg *dlppb.ContentPolicy_LoggingConfig) (destination, projectID, datasetID, tableID string) {
+	if bq := cfg.GetLogToBigQuery(); bq != nil {
+		return dlpLogDestinationBigQuery, bq.GetProjectId(), bq.GetDatasetId(), bq.GetTableId()
+	}
+	return dlpLogDestinationUnspecified, "", "", ""
+}
+
+func (g *mqlGcpProjectDlpServiceContentPolicy) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+type mqlGcpProjectDlpServiceContentPolicyLoggingConfigInternal struct {
+	cacheProjectId string
+	cacheDatasetId string
+	cacheTableId   string
+}
+
+func (g *mqlGcpProjectDlpServiceContentPolicyLoggingConfig) bigQueryDataset() (*mqlGcpProjectBigqueryServiceDataset, error) {
+	dataset, err := resolveBigqueryDataset(g.MqlRuntime, g.cacheProjectId, g.cacheDatasetId)
+	if err != nil {
+		return nil, err
+	}
+	if dataset == nil {
+		g.BigQueryDataset.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return dataset, nil
+}
+
+func (g *mqlGcpProjectDlpServiceContentPolicyLoggingConfig) bigQueryTable() (*mqlGcpProjectBigqueryServiceTable, error) {
+	table, err := resolveBigqueryTable(g.MqlRuntime, g.cacheProjectId, g.cacheDatasetId, g.cacheTableId)
+	if err != nil {
+		return nil, err
+	}
+	if table == nil {
+		g.BigQueryTable.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return table, nil
+}
+
+// dlpContentPolicyCondition is the flattened reading of one content policy
+// condition, in the form the MQL resource reports it.
+type dlpContentPolicyCondition struct {
+	// Known reports whether this is a condition shape the provider models. When
+	// it is false nothing about the condition was read, and every other field
+	// here is meaningless: the resource reports them all as null rather than as
+	// zeroes it cannot stand behind.
+	Known bool
+	// MinCount is the findings threshold, with the API's documented default of 1
+	// already applied.
+	MinCount int64
+	// InfoTypeNames is the named set the condition matches on, or nil when it
+	// matches every infoType. Nil is deliberate: an empty list would read as
+	// "matches nothing", the opposite of what AnyInfoType means.
+	InfoTypeNames []string
+	// AnyInfoType reports whether the condition matches every infoType the
+	// inspection looked for rather than a named set.
+	AnyInfoType bool
+}
+
+// readDlpContentPolicyCondition flattens a policy condition into the values the
+// MQL resource reports.
+//
+// A condition that is not an infoType condition (a oneof variant added after
+// this provider was built) comes back with Known false, so the resource reports
+// null throughout instead of a zero minCount and an empty infoType list, both of
+// which would be claims this code is in no position to make.
+func readDlpContentPolicyCondition(cond *dlppb.ContentPolicy_PolicyRule_PolicyCondition) dlpContentPolicyCondition {
+	itc := cond.GetInfoTypeCondition()
+	if itc == nil {
+		return dlpContentPolicyCondition{}
+	}
+
+	out := dlpContentPolicyCondition{
+		Known:       true,
+		MinCount:    dlpConditionMinCount(itc.GetMinCount()),
+		AnyInfoType: itc.GetAnyInfoType() != nil,
+	}
+	if names := itc.GetInfoTypes(); names != nil {
+		out.InfoTypeNames = names.GetInfoTypeNames()
+	}
+	return out
+}
+
+// newMqlDlpContentPolicyCondition builds one condition of a content policy rule.
+func newMqlDlpContentPolicyCondition(runtime *plugin.Runtime, id string, cond *dlppb.ContentPolicy_PolicyRule_PolicyCondition) (plugin.Resource, error) {
+	read := readDlpContentPolicyCondition(cond)
+
+	minCount := llx.NilData
+	infoTypeNames := llx.NilData
+	anyInfoType := llx.NilData
+	if read.Known {
+		minCount = llx.IntData(read.MinCount)
+		anyInfoType = llx.BoolData(read.AnyInfoType)
+		if read.InfoTypeNames != nil {
+			infoTypeNames = llx.ArrayData(stringsToAnySlice(read.InfoTypeNames), types.String)
+		}
+	}
+
+	return CreateResource(runtime, "gcp.project.dlpService.contentPolicy.rule.condition", map[string]*llx.RawData{
+		"__id":          llx.StringData(id),
+		"minCount":      minCount,
+		"infoTypeNames": infoTypeNames,
+		"anyInfoType":   anyInfoType,
+	})
+}
+
+func (g *mqlGcpProjectDlpService) contentPolicies() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(dlp.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	var res []any
+	for _, loc := range dlpRegionalListLocations {
+		it := client.ListContentPolicies(ctx, &dlppb.ListContentPoliciesRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, loc),
+		})
+		for {
+			cp, err := it.Next()
+			if errors.Is(err, iterator.Done) {
+				break
+			}
+			if err != nil {
+				// Content policies are a newer part of the DLP API than the rest
+				// of this service, so a project that can list job triggers may
+				// still answer Unimplemented or PermissionDenied here. Both mean
+				// this caller sees no content policies in this location, which is
+				// a state to report rather than a failure that should take the
+				// whole DLP resource down with it.
+				if isSkippable(err) {
+					log.Warn().Err(err).Str("location", loc).Msg("could not list DLP content policies")
+					break
+				}
+				return nil, err
+			}
+
+			mqlRules := make([]any, 0, len(cp.Rules))
+			for i, rule := range cp.Rules {
+				ruleId := fmt.Sprintf("%s/rules/%d", cp.Name, i)
+
+				mqlConditions := make([]any, 0, len(rule.GetConditions()))
+				for j, cond := range rule.GetConditions() {
+					mqlCond, err := newMqlDlpContentPolicyCondition(g.MqlRuntime,
+						fmt.Sprintf("%s/conditions/%d", ruleId, j), cond)
+					if err != nil {
+						return nil, err
+					}
+					mqlConditions = append(mqlConditions, mqlCond)
+				}
+
+				mqlRule, err := CreateResource(g.MqlRuntime, "gcp.project.dlpService.contentPolicy.rule", map[string]*llx.RawData{
+					"__id":       llx.StringData(ruleId),
+					"verdict":    llx.StringDataPtr(dlpPolicyActionVerdict(rule.GetAction())),
+					"conditions": llx.ArrayData(mqlConditions, types.Resource("gcp.project.dlpService.contentPolicy.rule.condition")),
+				})
+				if err != nil {
+					return nil, err
+				}
+				mqlRules = append(mqlRules, mqlRule)
+			}
+
+			mqlLoggingConfigs := make([]any, 0, len(cp.LoggingConfigs))
+			for i, lc := range cp.LoggingConfigs {
+				destination, bqProject, bqDataset, bqTable := dlpLoggingDestination(lc)
+
+				mqlLc, err := CreateResource(g.MqlRuntime, "gcp.project.dlpService.contentPolicy.loggingConfig", map[string]*llx.RawData{
+					"__id":        llx.StringData(fmt.Sprintf("%s/loggingConfigs/%d", cp.Name, i)),
+					"destination": llx.StringData(destination),
+				})
+				if err != nil {
+					return nil, err
+				}
+				lcRes := mqlLc.(*mqlGcpProjectDlpServiceContentPolicyLoggingConfig)
+				lcRes.cacheProjectId = bqProject
+				lcRes.cacheDatasetId = bqDataset
+				lcRes.cacheTableId = bqTable
+				mqlLoggingConfigs = append(mqlLoggingConfigs, mqlLc)
+			}
+
+			inspectConfig, err := protoToDict(cp.InspectConfig)
+			if err != nil {
+				return nil, err
+			}
+			errs, err := dlpProtoSliceToDict(cp.Errors)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlCp, err := CreateResource(g.MqlRuntime, "gcp.project.dlpService.contentPolicy", map[string]*llx.RawData{
+				"name":                                 llx.StringData(cp.Name),
+				"displayName":                          llx.StringData(cp.DisplayName),
+				"rules":                                llx.ArrayData(mqlRules, types.Resource("gcp.project.dlpService.contentPolicy.rule")),
+				"defaultVerdict":                       llx.StringData(dlpDefaultVerdict(cp.DefaultAction)),
+				"unsupportedFileTypeVerdict":           llx.StringDataPtr(dlpPolicyActionVerdict(cp.UnsupportedFileType)),
+				"inputTooLargeVerdict":                 llx.StringDataPtr(dlpPolicyActionVerdict(cp.InputTooLarge)),
+				"failedToScanSupportedFileTypeVerdict": llx.StringDataPtr(dlpPolicyActionVerdict(cp.FailedToScanSupportedFileType)),
+				"inspectConfig":                        llx.DictData(inspectConfig),
+				"loggingConfigs":                       llx.ArrayData(mqlLoggingConfigs, types.Resource("gcp.project.dlpService.contentPolicy.loggingConfig")),
+				"errors":                               llx.ArrayData(errs, types.Dict),
+				"created":                              llx.TimeDataPtr(timestampAsTimePtr(cp.CreateTime)),
+				"updated":                              llx.TimeDataPtr(timestampAsTimePtr(cp.UpdateTime)),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlCp)
+		}
+	}
+
+	return res, nil
+}

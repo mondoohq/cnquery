@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/api/sqladmin/v1"
 )
 
 func TestSQLIPMappingID(t *testing.T) {
@@ -80,4 +81,29 @@ func TestSQLDenyMaintenancePeriodID(t *testing.T) {
 			seen[tc.got] = tc.name
 		})
 	}
+}
+
+func TestSQLDiskConfidentialMode(t *testing.T) {
+	// The whole DiskEncryptionConfiguration message is absent on an instance
+	// using Google-managed encryption, which is the common case. Reading it
+	// unguarded would panic on most of an estate.
+	t.Run("absent encryption configuration reports not enabled", func(t *testing.T) {
+		assert.False(t, sqlDiskConfidentialMode(nil))
+	})
+
+	// Confidential Mode is only supported on zonal C4A instances, so an
+	// encryption configuration that exists for a customer-managed key but says
+	// nothing about confidential disks must report false rather than inheriting
+	// anything from the key being set.
+	t.Run("customer-managed key alone does not imply confidential mode", func(t *testing.T) {
+		assert.False(t, sqlDiskConfidentialMode(&sqladmin.DiskEncryptionConfiguration{
+			KmsKeyName: "projects/p/locations/l/keyRings/r/cryptoKeys/k",
+		}))
+	})
+
+	t.Run("enabled confidential mode is reported", func(t *testing.T) {
+		assert.True(t, sqlDiskConfidentialMode(&sqladmin.DiskEncryptionConfiguration{
+			ConfidentialMode: true,
+		}))
+	})
 }

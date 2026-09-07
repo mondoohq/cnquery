@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.37.0",
-  "generated_at": "2026-08-23T20:23:17-07:00",
+  "generated_at": "2026-09-07T10:41:15-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -167,6 +167,7 @@
     "discoveryengine.engines.list",
     "dlp.columnDataProfiles.list",
     "dlp.connections.list",
+    "dlp.contentPolicies.list",
     "dlp.deidentifyTemplates.list",
     "dlp.fileStoreProfiles.list",
     "dlp.inspectTemplates.list",
@@ -1348,6 +1349,12 @@
       "permission": "dlp.connections.list",
       "service": "dlp",
       "action": "ListConnections",
+      "source_file": "dlp.go"
+    },
+    {
+      "permission": "dlp.contentPolicies.list",
+      "service": "dlp",
+      "action": "ListContentPolicies",
       "source_file": "dlp.go"
     },
     {

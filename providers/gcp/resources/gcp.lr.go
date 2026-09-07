@@ -458,6 +458,10 @@ const (
 	ResourceGcpProjectDlpServiceDlpJob                                                 string = "gcp.project.dlpService.dlpJob"
 	ResourceGcpProjectDlpServiceDiscoveryConfig                                        string = "gcp.project.dlpService.discoveryConfig"
 	ResourceGcpProjectDlpServiceConnection                                             string = "gcp.project.dlpService.connection"
+	ResourceGcpProjectDlpServiceContentPolicy                                          string = "gcp.project.dlpService.contentPolicy"
+	ResourceGcpProjectDlpServiceContentPolicyRule                                      string = "gcp.project.dlpService.contentPolicy.rule"
+	ResourceGcpProjectDlpServiceContentPolicyRuleCondition                             string = "gcp.project.dlpService.contentPolicy.rule.condition"
+	ResourceGcpProjectDlpServiceContentPolicyLoggingConfig                             string = "gcp.project.dlpService.contentPolicy.loggingConfig"
 	ResourceGcpProjectDlpServiceSensitivityScore                                       string = "gcp.project.dlpService.sensitivityScore"
 	ResourceGcpProjectDlpServiceDataRiskLevel                                          string = "gcp.project.dlpService.dataRiskLevel"
 	ResourceGcpProjectDlpServiceProfileStatus                                          string = "gcp.project.dlpService.profileStatus"
@@ -2315,6 +2319,22 @@ func init() {
 		"gcp.project.dlpService.connection": {
 			// to override args, implement: initGcpProjectDlpServiceConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectDlpServiceConnection,
+		},
+		"gcp.project.dlpService.contentPolicy": {
+			// to override args, implement: initGcpProjectDlpServiceContentPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDlpServiceContentPolicy,
+		},
+		"gcp.project.dlpService.contentPolicy.rule": {
+			// to override args, implement: initGcpProjectDlpServiceContentPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDlpServiceContentPolicyRule,
+		},
+		"gcp.project.dlpService.contentPolicy.rule.condition": {
+			// to override args, implement: initGcpProjectDlpServiceContentPolicyRuleCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDlpServiceContentPolicyRuleCondition,
+		},
+		"gcp.project.dlpService.contentPolicy.loggingConfig": {
+			// to override args, implement: initGcpProjectDlpServiceContentPolicyLoggingConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDlpServiceContentPolicyLoggingConfig,
 		},
 		"gcp.project.dlpService.sensitivityScore": {
 			// to override args, implement: initGcpProjectDlpServiceSensitivityScore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5918,6 +5938,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.sqlService.instance.diskEncryptionStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetDiskEncryptionStatus()).ToDataRes(types.Dict)
 	},
+	"gcp.project.sqlService.instance.diskConfidentialMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstance).GetDiskConfidentialMode()).ToDataRes(types.Bool)
+	},
 	"gcp.project.sqlService.instance.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
@@ -6169,6 +6192,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.sqlService.backupRun.diskEncryptionStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetDiskEncryptionStatus()).ToDataRes(types.Dict)
+	},
+	"gcp.project.sqlService.backupRun.diskConfidentialMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetDiskConfidentialMode()).ToDataRes(types.Bool)
 	},
 	"gcp.project.sqlService.backupRun.endTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetEndTime()).ToDataRes(types.Time)
@@ -17309,6 +17335,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dlpService.connections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpService).GetConnections()).ToDataRes(types.Array(types.Resource("gcp.project.dlpService.connection")))
 	},
+	"gcp.project.dlpService.contentPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpService).GetContentPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.dlpService.contentPolicy")))
+	},
 	"gcp.project.dlpService.projectDataProfiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpService).GetProjectDataProfiles()).ToDataRes(types.Array(types.Resource("gcp.project.dlpService.projectDataProfile")))
 	},
@@ -17398,6 +17427,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dlpService.connection.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceConnection).GetProperties()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.contentPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicy).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.contentPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.contentPolicy.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicy).GetRules()).ToDataRes(types.Array(types.Resource("gcp.project.dlpService.contentPolicy.rule")))
+	},
+	"gcp.project.dlpService.contentPolicy.defaultVerdict": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicy).GetDefaultVerdict()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.contentPolicy.unsupportedFileTypeVerdict": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicy).GetUnsupportedFileTypeVerdict()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.contentPolicy.inputTooLargeVerdict": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicy).GetInputTooLargeVerdict()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.contentPolicy.failedToScanSupportedFileTypeVerdict": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicy).GetFailedToScanSupportedFileTypeVerdict()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.contentPolicy.inspectConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicy).GetInspectConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.contentPolicy.loggingConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicy).GetLoggingConfigs()).ToDataRes(types.Array(types.Resource("gcp.project.dlpService.contentPolicy.loggingConfig")))
+	},
+	"gcp.project.dlpService.contentPolicy.errors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicy).GetErrors()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.dlpService.contentPolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.contentPolicy.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicy).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.contentPolicy.rule.verdict": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicyRule).GetVerdict()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.contentPolicy.rule.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicyRule).GetConditions()).ToDataRes(types.Array(types.Resource("gcp.project.dlpService.contentPolicy.rule.condition")))
+	},
+	"gcp.project.dlpService.contentPolicy.rule.condition.minCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicyRuleCondition).GetMinCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.dlpService.contentPolicy.rule.condition.infoTypeNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicyRuleCondition).GetInfoTypeNames()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.dlpService.contentPolicy.rule.condition.anyInfoType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicyRuleCondition).GetAnyInfoType()).ToDataRes(types.Bool)
+	},
+	"gcp.project.dlpService.contentPolicy.loggingConfig.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicyLoggingConfig).GetDestination()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.contentPolicy.loggingConfig.bigQueryDataset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicyLoggingConfig).GetBigQueryDataset()).ToDataRes(types.Resource("gcp.project.bigqueryService.dataset"))
+	},
+	"gcp.project.dlpService.contentPolicy.loggingConfig.bigQueryTable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceContentPolicyLoggingConfig).GetBigQueryTable()).ToDataRes(types.Resource("gcp.project.bigqueryService.table"))
 	},
 	"gcp.project.dlpService.sensitivityScore.score": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceSensitivityScore).GetScore()).ToDataRes(types.String)
@@ -18004,6 +18093,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.networkSecurityService.tlsInspectionPolicy.caPool": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).GetCaPool()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.certificateIssuanceMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).GetCertificateIssuanceMode()).ToDataRes(types.String)
 	},
 	"gcp.project.networkSecurityService.tlsInspectionPolicy.minTlsVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).GetMinTlsVersion()).ToDataRes(types.String)
@@ -24129,6 +24221,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSqlServiceInstance).DiskEncryptionStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.sqlService.instance.diskConfidentialMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstance).DiskConfidentialMode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.sqlService.instance.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstance).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
 		return
@@ -24479,6 +24575,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.sqlService.backupRun.diskEncryptionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceBackupRun).DiskEncryptionStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.diskConfidentialMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).DiskConfidentialMode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sqlService.backupRun.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40781,6 +40881,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDlpService).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dlpService.contentPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpService).ContentPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dlpService.projectDataProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDlpService).ProjectDataProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -40911,6 +41015,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dlpService.connection.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDlpServiceConnection).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicy).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.defaultVerdict": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicy).DefaultVerdict, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.unsupportedFileTypeVerdict": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicy).UnsupportedFileTypeVerdict, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.inputTooLargeVerdict": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicy).InputTooLargeVerdict, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.failedToScanSupportedFileTypeVerdict": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicy).FailedToScanSupportedFileTypeVerdict, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.inspectConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicy).InspectConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.loggingConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicy).LoggingConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.errors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicy).Errors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicy).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicyRule).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.rule.verdict": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicyRule).Verdict, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.rule.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicyRule).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.rule.condition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicyRuleCondition).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.rule.condition.minCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicyRuleCondition).MinCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.rule.condition.infoTypeNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicyRuleCondition).InfoTypeNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.rule.condition.anyInfoType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicyRuleCondition).AnyInfoType, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.loggingConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicyLoggingConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.loggingConfig.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicyLoggingConfig).Destination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.loggingConfig.bigQueryDataset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicyLoggingConfig).BigQueryDataset, ok = plugin.RawToTValue[*mqlGcpProjectBigqueryServiceDataset](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.contentPolicy.loggingConfig.bigQueryTable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceContentPolicyLoggingConfig).BigQueryTable, ok = plugin.RawToTValue[*mqlGcpProjectBigqueryServiceTable](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dlpService.sensitivityScore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41815,6 +42015,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.networkSecurityService.tlsInspectionPolicy.caPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).CaPool, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.certificateIssuanceMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).CertificateIssuanceMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.networkSecurityService.tlsInspectionPolicy.minTlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55600,6 +55804,7 @@ type mqlGcpProjectSqlServiceInstance struct {
 	DatabaseVersion                            plugin.TValue[string]
 	DiskEncryptionConfiguration                plugin.TValue[any]
 	DiskEncryptionStatus                       plugin.TValue[any]
+	DiskConfidentialMode                       plugin.TValue[bool]
 	KmsKey                                     plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	FailoverReplica                            plugin.TValue[any]
 	FailoverReplicaRef                         plugin.TValue[*mqlGcpProjectSqlServiceInstance]
@@ -55725,6 +55930,10 @@ func (c *mqlGcpProjectSqlServiceInstance) GetDiskEncryptionConfiguration() *plug
 
 func (c *mqlGcpProjectSqlServiceInstance) GetDiskEncryptionStatus() *plugin.TValue[any] {
 	return &c.DiskEncryptionStatus
+}
+
+func (c *mqlGcpProjectSqlServiceInstance) GetDiskConfidentialMode() *plugin.TValue[bool] {
+	return &c.DiskConfidentialMode
 }
 
 func (c *mqlGcpProjectSqlServiceInstance) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
@@ -56379,6 +56588,7 @@ type mqlGcpProjectSqlServiceBackupRun struct {
 	Description                 plugin.TValue[string]
 	DiskEncryptionConfiguration plugin.TValue[any]
 	DiskEncryptionStatus        plugin.TValue[any]
+	DiskConfidentialMode        plugin.TValue[bool]
 	EndTime                     plugin.TValue[*time.Time]
 	EnqueuedTime                plugin.TValue[*time.Time]
 	Error                       plugin.TValue[any]
@@ -56459,6 +56669,10 @@ func (c *mqlGcpProjectSqlServiceBackupRun) GetDiskEncryptionConfiguration() *plu
 
 func (c *mqlGcpProjectSqlServiceBackupRun) GetDiskEncryptionStatus() *plugin.TValue[any] {
 	return &c.DiskEncryptionStatus
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetDiskConfidentialMode() *plugin.TValue[bool] {
+	return &c.DiskConfidentialMode
 }
 
 func (c *mqlGcpProjectSqlServiceBackupRun) GetEndTime() *plugin.TValue[*time.Time] {
@@ -95533,6 +95747,7 @@ type mqlGcpProjectDlpService struct {
 	DlpJobs               plugin.TValue[[]any]
 	DiscoveryConfigs      plugin.TValue[[]any]
 	Connections           plugin.TValue[[]any]
+	ContentPolicies       plugin.TValue[[]any]
 	ProjectDataProfiles   plugin.TValue[[]any]
 	TableDataProfiles     plugin.TValue[[]any]
 	ColumnDataProfiles    plugin.TValue[[]any]
@@ -95689,6 +95904,22 @@ func (c *mqlGcpProjectDlpService) GetConnections() *plugin.TValue[[]any] {
 		}
 
 		return c.connections()
+	})
+}
+
+func (c *mqlGcpProjectDlpService) GetContentPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContentPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dlpService", c.__id, "contentPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.contentPolicies()
 	})
 }
 
@@ -96016,6 +96247,291 @@ func (c *mqlGcpProjectDlpServiceConnection) GetErrors() *plugin.TValue[[]any] {
 
 func (c *mqlGcpProjectDlpServiceConnection) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
+}
+
+// mqlGcpProjectDlpServiceContentPolicy for the gcp.project.dlpService.contentPolicy resource
+type mqlGcpProjectDlpServiceContentPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDlpServiceContentPolicyInternal it will be used here
+	Name                                 plugin.TValue[string]
+	DisplayName                          plugin.TValue[string]
+	Rules                                plugin.TValue[[]any]
+	DefaultVerdict                       plugin.TValue[string]
+	UnsupportedFileTypeVerdict           plugin.TValue[string]
+	InputTooLargeVerdict                 plugin.TValue[string]
+	FailedToScanSupportedFileTypeVerdict plugin.TValue[string]
+	InspectConfig                        plugin.TValue[any]
+	LoggingConfigs                       plugin.TValue[[]any]
+	Errors                               plugin.TValue[[]any]
+	Created                              plugin.TValue[*time.Time]
+	Updated                              plugin.TValue[*time.Time]
+}
+
+// createGcpProjectDlpServiceContentPolicy creates a new instance of this resource
+func createGcpProjectDlpServiceContentPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDlpServiceContentPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dlpService.contentPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicy) MqlName() string {
+	return "gcp.project.dlpService.contentPolicy"
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicy) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicy) GetDefaultVerdict() *plugin.TValue[string] {
+	return &c.DefaultVerdict
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicy) GetUnsupportedFileTypeVerdict() *plugin.TValue[string] {
+	return &c.UnsupportedFileTypeVerdict
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicy) GetInputTooLargeVerdict() *plugin.TValue[string] {
+	return &c.InputTooLargeVerdict
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicy) GetFailedToScanSupportedFileTypeVerdict() *plugin.TValue[string] {
+	return &c.FailedToScanSupportedFileTypeVerdict
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicy) GetInspectConfig() *plugin.TValue[any] {
+	return &c.InspectConfig
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicy) GetLoggingConfigs() *plugin.TValue[[]any] {
+	return &c.LoggingConfigs
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicy) GetErrors() *plugin.TValue[[]any] {
+	return &c.Errors
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicy) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+// mqlGcpProjectDlpServiceContentPolicyRule for the gcp.project.dlpService.contentPolicy.rule resource
+type mqlGcpProjectDlpServiceContentPolicyRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDlpServiceContentPolicyRuleInternal it will be used here
+	Verdict    plugin.TValue[string]
+	Conditions plugin.TValue[[]any]
+}
+
+// createGcpProjectDlpServiceContentPolicyRule creates a new instance of this resource
+func createGcpProjectDlpServiceContentPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDlpServiceContentPolicyRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dlpService.contentPolicy.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicyRule) MqlName() string {
+	return "gcp.project.dlpService.contentPolicy.rule"
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicyRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicyRule) GetVerdict() *plugin.TValue[string] {
+	return &c.Verdict
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicyRule) GetConditions() *plugin.TValue[[]any] {
+	return &c.Conditions
+}
+
+// mqlGcpProjectDlpServiceContentPolicyRuleCondition for the gcp.project.dlpService.contentPolicy.rule.condition resource
+type mqlGcpProjectDlpServiceContentPolicyRuleCondition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDlpServiceContentPolicyRuleConditionInternal it will be used here
+	MinCount      plugin.TValue[int64]
+	InfoTypeNames plugin.TValue[[]any]
+	AnyInfoType   plugin.TValue[bool]
+}
+
+// createGcpProjectDlpServiceContentPolicyRuleCondition creates a new instance of this resource
+func createGcpProjectDlpServiceContentPolicyRuleCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDlpServiceContentPolicyRuleCondition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dlpService.contentPolicy.rule.condition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicyRuleCondition) MqlName() string {
+	return "gcp.project.dlpService.contentPolicy.rule.condition"
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicyRuleCondition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicyRuleCondition) GetMinCount() *plugin.TValue[int64] {
+	return &c.MinCount
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicyRuleCondition) GetInfoTypeNames() *plugin.TValue[[]any] {
+	return &c.InfoTypeNames
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicyRuleCondition) GetAnyInfoType() *plugin.TValue[bool] {
+	return &c.AnyInfoType
+}
+
+// mqlGcpProjectDlpServiceContentPolicyLoggingConfig for the gcp.project.dlpService.contentPolicy.loggingConfig resource
+type mqlGcpProjectDlpServiceContentPolicyLoggingConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectDlpServiceContentPolicyLoggingConfigInternal
+	Destination     plugin.TValue[string]
+	BigQueryDataset plugin.TValue[*mqlGcpProjectBigqueryServiceDataset]
+	BigQueryTable   plugin.TValue[*mqlGcpProjectBigqueryServiceTable]
+}
+
+// createGcpProjectDlpServiceContentPolicyLoggingConfig creates a new instance of this resource
+func createGcpProjectDlpServiceContentPolicyLoggingConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDlpServiceContentPolicyLoggingConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dlpService.contentPolicy.loggingConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicyLoggingConfig) MqlName() string {
+	return "gcp.project.dlpService.contentPolicy.loggingConfig"
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicyLoggingConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicyLoggingConfig) GetDestination() *plugin.TValue[string] {
+	return &c.Destination
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicyLoggingConfig) GetBigQueryDataset() *plugin.TValue[*mqlGcpProjectBigqueryServiceDataset] {
+	return plugin.GetOrCompute[*mqlGcpProjectBigqueryServiceDataset](&c.BigQueryDataset, func() (*mqlGcpProjectBigqueryServiceDataset, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dlpService.contentPolicy.loggingConfig", c.__id, "bigQueryDataset")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectBigqueryServiceDataset), nil
+			}
+		}
+
+		return c.bigQueryDataset()
+	})
+}
+
+func (c *mqlGcpProjectDlpServiceContentPolicyLoggingConfig) GetBigQueryTable() *plugin.TValue[*mqlGcpProjectBigqueryServiceTable] {
+	return plugin.GetOrCompute[*mqlGcpProjectBigqueryServiceTable](&c.BigQueryTable, func() (*mqlGcpProjectBigqueryServiceTable, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dlpService.contentPolicy.loggingConfig", c.__id, "bigQueryTable")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectBigqueryServiceTable), nil
+			}
+		}
+
+		return c.bigQueryTable()
+	})
 }
 
 // mqlGcpProjectDlpServiceSensitivityScore for the gcp.project.dlpService.sensitivityScore resource
@@ -98171,16 +98687,17 @@ type mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicyInternal it will be used here
-	Name               plugin.TValue[string]
-	Description        plugin.TValue[string]
-	CaPool             plugin.TValue[string]
-	MinTlsVersion      plugin.TValue[string]
-	TlsFeatureProfile  plugin.TValue[string]
-	CustomTlsFeatures  plugin.TValue[[]any]
-	ExcludePublicCaSet plugin.TValue[bool]
-	TrustConfig        plugin.TValue[string]
-	Created            plugin.TValue[*time.Time]
-	Updated            plugin.TValue[*time.Time]
+	Name                    plugin.TValue[string]
+	Description             plugin.TValue[string]
+	CaPool                  plugin.TValue[string]
+	CertificateIssuanceMode plugin.TValue[string]
+	MinTlsVersion           plugin.TValue[string]
+	TlsFeatureProfile       plugin.TValue[string]
+	CustomTlsFeatures       plugin.TValue[[]any]
+	ExcludePublicCaSet      plugin.TValue[bool]
+	TrustConfig             plugin.TValue[string]
+	Created                 plugin.TValue[*time.Time]
+	Updated                 plugin.TValue[*time.Time]
 }
 
 // createGcpProjectNetworkSecurityServiceTlsInspectionPolicy creates a new instance of this resource
@@ -98230,6 +98747,10 @@ func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) GetDescription(
 
 func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) GetCaPool() *plugin.TValue[string] {
 	return &c.CaPool
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) GetCertificateIssuanceMode() *plugin.TValue[string] {
+	return &c.CertificateIssuanceMode
 }
 
 func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) GetMinTlsVersion() *plugin.TValue[string] {

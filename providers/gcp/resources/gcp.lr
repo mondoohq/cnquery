@@ -3443,6 +3443,14 @@ private gcp.project.sqlService.instance @defaults("name") {
   // The kmsKeyVersionName is the specific Cloud KMS key version currently
   // protecting the instance's data disk.
   diskEncryptionStatus dict
+  // Whether Confidential Mode is enabled for the instance's Hyperdisk Balanced volumes
+  //
+  // Confidential Mode encrypts the instance's disks with hardware-backed keys
+  // that the hypervisor cannot read. Cloud SQL supports it only on zonal C4A
+  // instances, so this reads false on every other machine type and on any
+  // instance that predates the option, which makes an enabled reading the
+  // meaningful one to assert on.
+  diskConfidentialMode bool
   // Customer-managed KMS key used for disk encryption (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Name and availability of the failover replica (`{name, available}`)
@@ -3715,6 +3723,13 @@ private gcp.project.sqlService.backupRun @defaults("id status type startTime") {
   // The kmsKeyVersionName is the specific Cloud KMS key version used to
   // encrypt this backup.
   diskEncryptionStatus dict
+  // Whether Confidential Mode was enabled for the disks this backup was taken from
+  //
+  // Confidential Mode encrypts disks with hardware-backed keys that the
+  // hypervisor cannot read. Cloud SQL supports it only on zonal C4A instances,
+  // so this reads false for backups of every other machine type, which makes an
+  // enabled reading the meaningful one to assert on.
+  diskConfidentialMode bool
   // Time the backup operation completed
   endTime time
   // Time the run was enqueued
@@ -16672,6 +16687,10 @@ private gcp.project.dlpService {
   discoveryConfigs() []gcp.project.dlpService.discoveryConfig
   // Connections to data sources used by discovery (Cloud SQL, AlloyDB)
   connections() []gcp.project.dlpService.connection
+  // Content policies that decide whether inspected content is allowed or blocked
+  //
+  // Where the rest of Sensitive Data Protection reports what it found, a content policy acts on it: each policy returns an ALLOW or BLOCK verdict for the content a caller submits.
+  contentPolicies() []gcp.project.dlpService.contentPolicy
   // Project-level data sensitivity profiles produced by discovery, one per profiled project, with sensitivity and risk scores
   projectDataProfiles() []gcp.project.dlpService.projectDataProfile
   // Table-level data sensitivity profiles for BigQuery tables: sensitivity score, predicted infoTypes, encryption status, and resource visibility
@@ -16770,6 +16789,125 @@ private gcp.project.dlpService.connection @defaults("name state") {
   //
   // Shape varies by the configured data source. For Cloud SQL the `cloudSql` key holds the instance, database name, and credential configuration.
   properties dict
+}
+
+// Google Cloud (GCP) Cloud DLP content policy
+//
+// Content policy: the enforcement half of Sensitive Data Protection. Where an
+// inspect template says what to look for, a content policy says what to do
+// about what was found. Each entry in `rules` pairs infoType conditions with an
+// ALLOW or BLOCK verdict, and the first rule to match decides the outcome.
+// `defaultVerdict` covers content that matched no rule, while
+// `unsupportedFileTypeVerdict`, `inputTooLargeVerdict` and
+// `failedToScanSupportedFileTypeVerdict` cover the paths where inspection could
+// not run at all, which is where a policy most often fails open.
+// `loggingConfigs` reports whether verdicts are written anywhere, without which
+// an enforcing policy leaves no audit trail. Selected by the full resource
+// name.
+private gcp.project.dlpService.contentPolicy @defaults("name displayName defaultVerdict") {
+  // Full resource name (`projects/{project}/locations/{location}/contentPolicies/{id}`)
+  name string
+  // Human-readable display name
+  displayName string
+  // Rules evaluated in order, the first match deciding the verdict
+  rules []gcp.project.dlpService.contentPolicy.rule
+  // Verdict returned when content is scanned and no rule matches
+  //
+  // ALLOW or BLOCK. The API treats a policy with no default action as ALLOW,
+  // and that is what this field reports, so a policy that never set one reads
+  // ALLOW rather than null.
+  defaultVerdict string
+  // Verdict returned when the content is a file type inspection does not support
+  //
+  // ALLOW or BLOCK, or null when the policy sets no action for this case.
+  unsupportedFileTypeVerdict string
+  // Verdict returned when the content is a supported file type but too large to scan
+  //
+  // ALLOW or BLOCK, or null when the policy sets no action for this case.
+  inputTooLargeVerdict string
+  // Verdict returned when a supported, in-size file could not be scanned
+  //
+  // Covers content inspection failed on rather than declined, an encrypted or
+  // corrupted file being the usual cause. ALLOW or BLOCK, or null when the
+  // policy sets no action for this case.
+  failedToScanSupportedFileTypeVerdict string
+  // Inspection configuration producing the findings the rules match on
+  //
+  // Keys include `infoTypes`, `minLikelihood`, `limits`, `includeQuote`, `excludeInfoTypes`, `customInfoTypes`, and `ruleSet`.
+  inspectConfig dict
+  // Destinations that verdicts produced by this policy are recorded to
+  loggingConfigs []gcp.project.dlpService.contentPolicy.loggingConfig
+  // Errors encountered the last time the policy was applied
+  //
+  // Cleared whenever the policy is modified, and capped by the API at the most recent 100.
+  errors []dict
+  // Time the policy was created
+  created time
+  // Time the policy was last updated
+  updated time
+}
+
+// Rule of a Cloud DLP content policy
+//
+// One rule of a content policy: the conditions that select content, and the
+// verdict returned when they match. Conditions are combined with AND, so a rule
+// carrying two of them applies only when both hold, and an OR is written as two
+// rules. Rules are evaluated in the order they appear and the first match wins,
+// so a broad ALLOW ahead of a narrow BLOCK makes the BLOCK unreachable.
+private gcp.project.dlpService.contentPolicy.rule @defaults("verdict") {
+  // Verdict returned when every condition matches (ALLOW or BLOCK)
+  verdict string
+  // Conditions that must all match for the rule to apply
+  conditions []gcp.project.dlpService.contentPolicy.rule.condition
+}
+
+// Condition of a Cloud DLP content policy rule
+//
+// Test a content policy rule applies. A condition matches on the infoTypes
+// inspection detected: either a named set through `infoTypeNames`, or every
+// infoType the inspection looked for through `anyInfoType`. `minCount` sets how
+// many findings across the matching infoTypes are needed before the condition
+// holds, which is what separates a rule that fires on a single detection from
+// one that tolerates a few.
+private gcp.project.dlpService.contentPolicy.rule.condition @defaults("infoTypeNames minCount anyInfoType") {
+  // Findings across the matching infoTypes required before the condition holds
+  //
+  // The API treats an unset count as 1, and that is what this field reports, so
+  // a condition that never set one reads 1 rather than 0.
+  minCount int
+  // InfoTypes this condition matches on
+  //
+  // Null when the condition names no infoTypes, which is normally because it
+  // matches every one of them instead. Read anyInfoType to tell which.
+  infoTypeNames []string
+  // Whether the condition matches every infoType the inspection looked for
+  anyInfoType bool
+}
+
+// Logging destination of a Cloud DLP content policy
+//
+// Where the verdicts a content policy returns are recorded. A policy with no
+// logging destination still enforces, but leaves nothing behind to audit
+// afterwards, so an enforcing policy with an empty `loggingConfigs` is itself a
+// finding. `destination` names the kind of sink, and `bigQueryDataset` and
+// `bigQueryTable` resolve where the verdicts land.
+private gcp.project.dlpService.contentPolicy.loggingConfig @defaults("destination") {
+  // Kind of sink verdicts are written to
+  //
+  // LOG_TO_BIG_QUERY when the policy records verdicts to BigQuery, or DESTINATION_UNSPECIFIED when the policy names no destination.
+  destination string
+  // BigQuery dataset holding the table verdicts are written to
+  //
+  // Null when the policy names no BigQuery destination, and also null when the
+  // dataset has been deleted or this caller cannot read it. Those are different
+  // facts, so read destination alongside this to tell them apart.
+  bigQueryDataset() gcp.project.bigqueryService.dataset
+  // BigQuery table verdicts are written to
+  //
+  // Null when the policy names no BigQuery destination, and also null when the
+  // table has been deleted or this caller cannot read it. Those are different
+  // facts, so read destination alongside this to tell them apart.
+  bigQueryTable() gcp.project.bigqueryService.table
 }
 
 // Sensitivity score of a Cloud DLP data profile
@@ -17582,6 +17720,17 @@ private gcp.project.networkSecurityService.tlsInspectionPolicy @defaults("name m
   description string
   // Certificate Authority Service CA pool used to mint intercept certificates
   caPool string
+  // How intercept certificates are issued from the CA pool
+  //
+  // One of CERTIFICATE_ISSUANCE_MODE_UNSPECIFIED, DIRECT_LEAF_PROVISIONING, or
+  // LOCAL_INTERMEDIATE_CA_SIGNING. Under DIRECT_LEAF_PROVISIONING the CA pool
+  // signs every leaf certificate, so no CA private key is held outside
+  // Certificate Authority Service. Under LOCAL_INTERMEDIATE_CA_SIGNING an
+  // intermediate CA key is delegated to the inspection data plane, which then
+  // signs leaf certificates itself. The two carry different trust exposure:
+  // anything holding that intermediate key can mint certificates for any name
+  // the CA pool is trusted for.
+  certificateIssuanceMode string
   // Minimum accepted TLS version (TLS_VERSION_UNSPECIFIED, TLS_1_0, TLS_1_1, TLS_1_2, TLS_1_3)
   minTlsVersion string
   // TLS feature profile constraining the negotiated cipher suites

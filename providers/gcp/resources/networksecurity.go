@@ -385,16 +385,17 @@ func (g *mqlGcpProjectNetworkSecurityService) tlsInspectionPolicies() ([]any, er
 				customTlsFeatures = append(customTlsFeatures, f)
 			}
 			mqlPolicy, err := CreateResource(g.MqlRuntime, "gcp.project.networkSecurityService.tlsInspectionPolicy", map[string]*llx.RawData{
-				"name":               llx.StringData(p.Name),
-				"description":        llx.StringData(p.Description),
-				"caPool":             llx.StringData(p.CaPool),
-				"minTlsVersion":      llx.StringData(p.MinTlsVersion),
-				"tlsFeatureProfile":  llx.StringData(p.TlsFeatureProfile),
-				"customTlsFeatures":  llx.ArrayData(customTlsFeatures, types.String),
-				"excludePublicCaSet": llx.BoolData(p.ExcludePublicCaSet),
-				"trustConfig":        llx.StringData(p.TrustConfig),
-				"created":            llx.TimeDataPtr(parseTime(p.CreateTime)),
-				"updated":            llx.TimeDataPtr(parseTime(p.UpdateTime)),
+				"name":                    llx.StringData(p.Name),
+				"description":             llx.StringData(p.Description),
+				"caPool":                  llx.StringData(p.CaPool),
+				"certificateIssuanceMode": llx.StringData(p.CertificateIssuanceMode),
+				"minTlsVersion":           llx.StringData(p.MinTlsVersion),
+				"tlsFeatureProfile":       llx.StringData(p.TlsFeatureProfile),
+				"customTlsFeatures":       llx.ArrayData(customTlsFeatures, types.String),
+				"excludePublicCaSet":      llx.BoolData(p.ExcludePublicCaSet),
+				"trustConfig":             llx.StringData(p.TrustConfig),
+				"created":                 llx.TimeDataPtr(parseTime(p.CreateTime)),
+				"updated":                 llx.TimeDataPtr(parseTime(p.UpdateTime)),
 			})
 			if err != nil {
 				return err
