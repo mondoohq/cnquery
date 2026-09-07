@@ -1619,7 +1619,20 @@ func (c *compiler) compileRootMember(id string, calls []*parser.Call) (bool, []*
 	}
 	// FindField walks embedded resources, which is how a member of `os.base`
 	// is reachable on the `os.linux` root.
-	if _, _, ok := c.Schema.FindField(root, id); !ok {
+	_, fields, ok := c.Schema.FindField(root, id)
+	if !ok {
+		return false, nil, types.Nil, nil
+	}
+
+	// A call with arguments that this member cannot serve is not a member read
+	// at all: it names the resource of the same name. `tls` is a member of
+	// `network.host` *and* a resource you construct with a target, so
+	// `tls("example.com")` has to reach the resource while a bare `tls` reads
+	// the member. Declining here is the same move a type conversion makes when
+	// it is called with no arguments - the identifier goes back for the other
+	// interpretation rather than failing on this one.
+	if len(calls) > 0 && calls[0].Function != nil && len(calls[0].Function) > 0 &&
+		!c.rootMemberTakesArgs(fields) {
 		return false, nil, types.Nil, nil
 	}
 
@@ -1640,6 +1653,37 @@ func (c *compiler) compileRootMember(id string, calls []*parser.Call) (bool, []*
 		err = errors.New("cannot find field '" + id + "' in " + c.AssetRoot)
 	}
 	return true, calls, typ, err
+}
+
+// rootMemberTakesArgs reports whether a root member can be called with
+// arguments. Only one shape can: an *implicit* member, the kind an alias
+// creates, which constructs its resource and so passes the arguments to that
+// resource's init. `_.file("/etc/hosts")` is that shape.
+//
+// A field that merely *returns* a resource cannot, even though its type has an
+// init: reading it runs the provider's accessor, which takes no arguments.
+// `network.host.tls` is that shape - it hands back the TLS endpoint of the
+// connected host - so `tls("example.com")` has to mean the resource instead.
+// And a plain field cannot either, whatever dependencies it declares:
+// `path(env)` names what the compiler resolves first, not something a user
+// passes.
+func (c *compiler) rootMemberTakesArgs(fields []*resources.Field) bool {
+	if len(fields) == 0 {
+		return false
+	}
+	field := fields[len(fields)-1]
+	if field == nil || !field.IsImplicitResource {
+		return false
+	}
+	name := types.ResourceOf(types.Type(field.Type))
+	if name == "" {
+		return false
+	}
+	info := c.Schema.Lookup(name)
+	if info == nil || info.Init == nil {
+		return false
+	}
+	return len(info.Init.Args) > 0
 }
 
 func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*parser.Call, types.Type, error) {
