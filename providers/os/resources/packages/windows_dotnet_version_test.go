@@ -41,6 +41,16 @@ func TestNormalizeDotNetPackedVersion(t *testing.T) {
 		{"fleet, desktop runtime 6", "Microsoft .NET Desktop Runtime - 6.0.36 (x64)", "48.144.23141", "6.0.36"},
 		{"fleet, legacy Core spelling", "Microsoft .NET Core Runtime - 3.1.32 (x64)", "24.192.31915", "3.1.32"},
 
+		// The WPF/WinForms runtime, which Microsoft registers under the "Windows
+		// Desktop Runtime" name rather than the ".NET" brand. Its MSI entry is
+		// packed like the others; verified on the VM alongside its bundle twin.
+		{"VM, windows desktop runtime MSI entry", "Microsoft Windows Desktop Runtime - 8.0.30 (arm64)", "64.120.56881", "8.0.30"},
+		{"VM, windows desktop runtime bundle entry", "Microsoft Windows Desktop Runtime - 8.0.30 (arm64)", "8.0.30.36323", "8.0.30"},
+		{"fixture, windows desktop runtime", "Microsoft Windows Desktop Runtime - 8.0.15 (arm64)", "64.60.31203", "8.0.15"},
+		{"fixture, windows desktop runtime preview", "Microsoft Windows Desktop Runtime - 10.0.0 Preview 3 (arm64)", "80.0.31297", "10.0.0"},
+		// Microsoft dropped the separator at 10.0; both punctuations are live.
+		{"fleet, windows desktop runtime without separator", "Microsoft Windows Desktop Runtime 10.0.10 (x64)", "80.40.55332", "10.0.10"},
+
 		// --- bundle entries: collapsed onto the same release as their MSI twin, so a\n		// bundle-installed host reports the runtime once instead of twice ---
 		{"VM, runtime 8.0.30 bundle entry", "Microsoft .NET Runtime - 8.0.30 (arm64)", "8.0.30.36317", "8.0.30"},
 		{"fleet, shared framework hyphenated", "Microsoft ASP.NET Core 8.0.28 - Shared Framework (x86)", "8.0.28.26269", "8.0.28"},

@@ -965,8 +965,27 @@ var dotNetSuffixedRelease = regexp.MustCompile(`^Microsoft (?:ASP\.NET Core|\.NE
 // different component and does not match.
 var aspNetCoreSharedFrameworkRelease = regexp.MustCompile(`^Microsoft ASP\.NET Core (\d+(?:\.\d+)*) (?:- )?Shared Framework\b`)
 
+// windowsDesktopRuntimeRelease matches the WPF/WinForms runtime, which Microsoft
+// registers under the "Windows Desktop Runtime" name rather than the ".NET"
+// brand — so it matches neither of the patterns above, and its packed MSI
+// version would otherwise never be recovered. Verified on the VM:
+//
+//	BUNDLE  Microsoft Windows Desktop Runtime - 8.0.30 (arm64)  8.0.30.36323
+//	msi     Microsoft Windows Desktop Runtime - 8.0.30 (arm64)  64.120.56881
+//
+// The separator is optional because Microsoft dropped it at 10.0. Both
+// punctuations are live in one fleet inventory:
+//
+//	Microsoft Windows Desktop Runtime - 8.0.29 (x64)
+//	Microsoft Windows Desktop Runtime 10.0.10 (x64)
+//
+// Anchored on the full product name rather than folded into the general
+// pattern above: making the separator optional there would also match
+// "Microsoft ASP.NET Core 8.0.15 Targeting Pack", which must stay untouched.
+var windowsDesktopRuntimeRelease = regexp.MustCompile(`^Microsoft Windows Desktop Runtime (?:- )?(\d+(?:\.\d+)*)`)
+
 // normalizeDotNetPackedVersion rewrites the DisplayVersion of a .NET installer
-// entry to the release its own DisplayName carries, when the two disagree.
+// entry to the release its own DisplayName carries.
 //
 // The .NET runtime installers register up to two Add/Remove-Programs entries for
 // a single installed runtime, and only one of them carries a version a human or
@@ -1012,16 +1031,16 @@ func normalizeDotNetPackedVersion(name, version string) string {
 	if version == "" {
 		return version
 	}
-	release := ""
-	if m := dotNetSuffixedRelease.FindStringSubmatch(name); m != nil {
-		release = m[1]
-	} else if m := aspNetCoreSharedFrameworkRelease.FindStringSubmatch(name); m != nil {
-		release = m[1]
+	for _, re := range []*regexp.Regexp{
+		dotNetSuffixedRelease,
+		aspNetCoreSharedFrameworkRelease,
+		windowsDesktopRuntimeRelease,
+	} {
+		if m := re.FindStringSubmatch(name); m != nil {
+			return m[1]
+		}
 	}
-	if release == "" {
-		return version
-	}
-	return release
+	return version
 }
 
 // msSqlSpVersionRegex matches the MSI DisplayVersion form for SP-era SQL Server
