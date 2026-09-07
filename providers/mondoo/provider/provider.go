@@ -53,6 +53,8 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		Name:      conn.Name(),
 		Asset:     req.Asset,
 		Inventory: nil,
+		// Space or organization; the static Root can only name one (ADR 031).
+		Root: assetRoot(conn),
 	}, nil
 }
 

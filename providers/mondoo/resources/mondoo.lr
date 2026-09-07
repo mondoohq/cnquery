@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/mondoo"
 option go_package = "go.mondoo.com/mql/providers/mondoo/resources"
+option root = "mondoo.organization"
 
 // Mondoo Client
 //
@@ -22,7 +25,7 @@ mondoo.client @defaults("mrn") {
 // contains. The starting point for walking the organization, space, and
 // asset hierarchy from policy, so audits can attribute findings to the
 // space and asset that produced them.
-mondoo.organization @defaults ("name mrn") {
+mondoo.organization @defaults ("name mrn") @root {
   // Organization name
   name string
   // Organization identifier
@@ -38,7 +41,7 @@ mondoo.organization @defaults ("name mrn") {
 // identified by its `mrn` (Mondoo Resource Name). Query the assets field
 // to walk into every asset the space contains, its display name, and its
 // scan results.
-mondoo.space @defaults("name mrn") {
+mondoo.space @defaults("name mrn") @root {
   // Space name
   name string
   // Space identifier

@@ -35,12 +35,10 @@ var rootBacklog = map[string]struct{}{}
 func init() {
 	// What is left needs a decision, not a sweep:
 	//   aws, azure, gcp - "the root of an account" is the flat-os question again
-	//   mondoo          - mondoo.client is one field; no resource models the
-	//                     connected space
 	//   network         - the asset is a host or URL and nothing models it;
 	//                     socket/tls/dns/http are aspects of one
 	for _, p := range []string{
-		"aws", "azure", "gcp", "mondoo", "network",
+		"aws", "azure", "gcp", "network",
 	} {
 		rootBacklog[p] = struct{}{}
 	}
