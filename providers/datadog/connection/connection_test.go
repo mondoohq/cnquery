@@ -6,6 +6,7 @@ package connection
 import (
 	"testing"
 
+	"github.com/DataDog/datadog-api-client-go/v2/api/datadog"
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV2"
 )
 
@@ -100,5 +101,22 @@ func TestOrgPublicIdFromUser_NilAttributes(t *testing.T) {
 
 	if got := orgPublicIdFromUser(resp); got != "" {
 		t.Fatalf("expected empty string, got %q", got)
+	}
+}
+
+func TestUnstableOperationsAreRecognized(t *testing.T) {
+	// SetUnstableOperationEnabled reports false for a name the SDK does not
+	// know, and changes nothing. A typo here would leave the operation disabled,
+	// so the resource would report an error on every organization instead of
+	// data, with nothing in the build to say why.
+	cfg := datadog.NewConfiguration()
+	for _, op := range unstableOperations {
+		if !cfg.SetUnstableOperationEnabled(op, true) {
+			t.Errorf("%q is not an unstable operation in this SDK version", op)
+			continue
+		}
+		if !cfg.IsUnstableOperationEnabled(op) {
+			t.Errorf("%q was not enabled", op)
+		}
 	}
 }

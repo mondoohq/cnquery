@@ -107,6 +107,116 @@ datadog @root {
   identityProviders() []datadog.identityProvider
   // Connections that share data with other Datadog organizations
   orgConnections() []datadog.orgConnection
+  // Execution policies governing what Datadog may run on Agent hosts
+  executionPolicies() []datadog.executionPolicy
+}
+
+// Datadog Execution Policy
+//
+// Rule governing whether Datadog may run a given action on the hosts an Agent
+// tag selects. Each policy pairs an effect, allow or deny, with an action
+// pattern naming the integration and the fully qualified actions it covers,
+// and with the targets the policy applies to. A policy whose effect is allow
+// and whose integration is INTEGRATION_REMOTE_ACTION grants remote shell
+// access to every host its targets reach, which makes those policies the ones
+// worth reading first. The scope narrows where the policy applies, naming
+// Kubernetes namespaces, script names, or remote shell paths together with
+// the access granted on them, and a scopeType of none means the policy
+// carries no restriction at all. The version, createdBy and updatedBy fields
+// record who last changed the policy and how many times it has been changed.
+// The `id` selects a policy, for example
+// datadog.executionPolicies.where(id == "1c9e5b46-0000-0000-0000-000000000000").
+datadog.executionPolicy @defaults("name effect integration") {
+  // Identifier of the execution policy
+  id string
+  // Name of the execution policy
+  name string
+  // Whether the policy allows or denies the actions it matches
+  //
+  // One of allow or deny. Datadog may add further effects, so a value outside
+  // that pair should not be read as either.
+  effect string
+  // Integration the action pattern applies to
+  //
+  // One of INTEGRATION_KUBERNETES, INTEGRATION_SCRIPT, or
+  // INTEGRATION_REMOTE_ACTION. Datadog may add further integrations.
+  integration string
+  // Fully qualified action names the policy matches
+  //
+  // A single entry of `*` matches every action of the integration. Names are
+  // otherwise prefixed with the action namespace of the integration, for
+  // example com.datadoghq.script.* for the Script integration.
+  actionFqns []string
+  // Where the policy applies
+  scope datadog.executionPolicy.scopeRestriction
+  // Hosts the policy applies to, selected by Agent tags
+  targets []datadog.executionPolicy.target
+  // Version of the policy, incremented on every update
+  version int
+  // Time the policy was created
+  createdAt time
+  // Time the policy was last updated
+  updatedAt time
+  // User that created the policy
+  createdBy() datadog.user
+  // User that last updated the policy
+  updatedBy() datadog.user
+}
+
+// Scope restriction of a Datadog execution policy
+//
+// Narrowing that decides which objects a policy reaches once its targets have
+// selected the hosts. At most one member is populated and scopeType says
+// which: kubernetes fills kubernetesNamespaces, scripts fills scriptNames,
+// and remoteActionRshell fills remoteShellRules. A scopeType of none means
+// the policy carries no restriction and applies wherever its targets match,
+// which is the widest reading available. A scopeType of unknown means Datadog
+// returned a restriction this provider cannot read as a single member, either
+// because the kind is not modeled here or because more than one member came
+// back at once, so the member lists may describe only part of what the policy
+// restricts and an empty list must not be read as an absence of restriction.
+private datadog.executionPolicy.scopeRestriction @defaults("scopeType") {
+  // Which member of the restriction carries the values
+  //
+  // One of kubernetes, scripts, remoteActionRshell, none when the policy
+  // carries no restriction, or unknown when Datadog returned a restriction
+  // this provider cannot read as a single member.
+  scopeType string
+  // Kubernetes namespaces the policy is restricted to
+  kubernetesNamespaces []string
+  // Script names the policy is restricted to
+  scriptNames []string
+  // Remote shell paths the policy is restricted to, with the access granted on each
+  remoteShellRules []datadog.executionPolicy.remoteShellRule
+}
+
+// Remote shell rule of a Datadog execution policy
+//
+// One set of file system paths together with the level of remote shell access
+// granted over them. An access of read_write permits writing through the
+// remote shell, so a read_write rule over a broad path is the strongest grant
+// a policy can carry.
+private datadog.executionPolicy.remoteShellRule @defaults("access") {
+  // Level of remote shell access granted over the target paths
+  //
+  // One of read_only or read_write. Datadog may add further levels, so a
+  // value outside that pair should not be read as read_only.
+  access string
+  // File system paths the rule applies to
+  targetPaths []string
+}
+
+// Target of a Datadog execution policy
+//
+// Agent tags identifying the hosts a policy applies to. A target naming a
+// broad tag such as env:prod reaches every host reporting it, so the tags are
+// what decide how wide an allow policy actually is. The name field carries
+// the label given to the target and is null when none was set.
+private datadog.executionPolicy.target @defaults("name") {
+  // Label given to the target
+  name string
+  // Agent tags identifying the hosts the policy applies to
+  agentTags []string
 }
 
 // Datadog Restriction Policy

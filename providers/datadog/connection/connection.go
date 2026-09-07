@@ -17,6 +17,16 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/vault"
 )
 
+// unstableOperations names the API operations the client refuses to call until
+// they are turned on explicitly. Datadog marks an operation unstable while its
+// shape may still change; the read paths listed here are ones this provider
+// depends on, so leaving them off would make the resource return an error
+// instead of data on every organization.
+var unstableOperations = []string{
+	"v2.ListExecutionPolicies",
+	"v2.GetExecutionPolicy",
+}
+
 type DatadogConnection struct {
 	plugin.Connection
 	Conf        *inventory.Config
@@ -82,6 +92,9 @@ func NewDatadogConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 	}
 
 	configuration := datadog.NewConfiguration()
+	for _, op := range unstableOperations {
+		configuration.SetUnstableOperationEnabled(op, true)
+	}
 	conn.apiClient = datadog.NewAPIClient(configuration)
 	conn.authCtx = ctx
 
