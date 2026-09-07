@@ -29,12 +29,9 @@ arista.eos @root {
   interfaces() []arista.eos.interface
   // EOS software release and hardware identity
   //
-  // Output of `show version` as a dict. Keys covering the running image are
-  // `version`, `internalVersion`, `internalBuildId`, and `architecture`.
-  // Hardware identity keys are `modelName`, `mfgName`, `serialNumber`,
-  // `hardwareRevision`, `systemMacAddress`, `configMacAddress`, and
-  // `hwMacAddress`. Memory keys `memTotal` and `memFree` are in kilobytes,
-  // and `uptime` and `bootupTimestamp` are in seconds.
+  // Deprecated in favor of systemInfo, which returns the same dict under a
+  // name that says what is in it: the running image, the chassis, memory and
+  // uptime. The comparable version number on its own is asset.version.
   version() @maturity("deprecated") @replaced_by("arista.eos.systemInfo") dict
   // Software release, hardware identity, memory and uptime
   //

@@ -11,7 +11,7 @@ import "regexp"
 //
 // `asset.version` is the one field every provider answers the same question
 // with, and the only reason it is worth having is that it is comparable: sorted,
-// matched against an advisory's affected range, comnpared across a fleet. A
+// matched against an advisory's affected range, compared across a fleet. A
 // banner is none of those things - it carries the compiler and the build host -
 // so it belongs on the resource, where postgresdb.instance.version keeps it,
 // and not here.
