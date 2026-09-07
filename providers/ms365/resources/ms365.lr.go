@@ -19,6 +19,7 @@ const (
 	ResourceMicrosoft                                                                                    string = "microsoft"
 	ResourceMicrosoftIdentityAndAccessAccessReviews                                                      string = "microsoft.identityAndAccess.accessReviews"
 	ResourceMicrosoftIdentityAndAccessAccessReviewDefinition                                             string = "microsoft.identityAndAccess.accessReviewDefinition"
+	ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope                                string = "microsoft.identityAndAccess.accessReviewDefinition.reviewerScope"
 	ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionScope                                        string = "microsoft.identityAndAccess.accessReviewDefinition.scope"
 	ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings                 string = "microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"
 	ResourceMicrosoftGroups                                                                              string = "microsoft.groups"
@@ -32,6 +33,8 @@ const (
 	ResourceMicrosoftTenantFormsSettings                                                                 string = "microsoft.tenantFormsSettings"
 	ResourceMicrosoftUsers                                                                               string = "microsoft.users"
 	ResourceMicrosoftIdentityAndAccess                                                                   string = "microsoft.identityAndAccess"
+	ResourceMicrosoftIdentityAndAccessExternalOriginResourceConnector                                    string = "microsoft.identityAndAccess.externalOriginResourceConnector"
+	ResourceMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection                          string = "microsoft.identityAndAccess.externalOriginResourceConnector.connection"
 	ResourceMicrosoftIdentityAndAccessPrivilegedIdentityManagement                                       string = "microsoft.identityAndAccess.privilegedIdentityManagement"
 	ResourceMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies                               string = "microsoft.identityAndAccess.privilegedIdentityManagement.policies"
 	ResourceMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance                                    string = "microsoft.identityAndAccess.roleEligibilityScheduleInstance"
@@ -78,6 +81,7 @@ const (
 	ResourceMicrosoftDevices                                                                             string = "microsoft.devices"
 	ResourceMicrosoftDevice                                                                              string = "microsoft.device"
 	ResourceMicrosoftDomain                                                                              string = "microsoft.domain"
+	ResourceMicrosoftDomainFederationConfiguration                                                       string = "microsoft.domain.federationConfiguration"
 	ResourceMicrosoftDomaindnsrecord                                                                     string = "microsoft.domaindnsrecord"
 	ResourceMicrosoftApplication                                                                         string = "microsoft.application"
 	ResourceMicrosoftApplicationRole                                                                     string = "microsoft.application.role"
@@ -124,6 +128,8 @@ const (
 	ResourceMicrosoftAuthenticationMethodsPolicyRegistrationCampaign                                     string = "microsoft.authenticationMethodsPolicy.registrationCampaign"
 	ResourceMicrosoftSystemCredentialPreferences                                                         string = "microsoft.systemCredentialPreferences"
 	ResourceMicrosoftCrossTenantAccessPolicyDefault                                                      string = "microsoft.crossTenantAccessPolicyDefault"
+	ResourceMicrosoftCrossTenantAccessPolicyDefaultM365Capability                                        string = "microsoft.crossTenantAccessPolicyDefault.m365Capability"
+	ResourceMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope                           string = "microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope"
 	ResourceMicrosoftCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings                          string = "microsoft.crossTenantAccessPolicyDefault.automaticUserConsentSettings"
 	ResourceMicrosoftCrossTenantAccessPolicyDefaultB2bSetting                                            string = "microsoft.crossTenantAccessPolicyDefault.b2bSetting"
 	ResourceMicrosoftCrossTenantAccessPolicyDefaultB2bSettingTargetConfig                                string = "microsoft.crossTenantAccessPolicyDefault.b2bSetting.targetConfig"
@@ -226,6 +232,10 @@ func init() {
 			// to override args, implement: initMicrosoftIdentityAndAccessAccessReviewDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftIdentityAndAccessAccessReviewDefinition,
 		},
+		"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope": {
+			// to override args, implement: initMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope,
+		},
 		"microsoft.identityAndAccess.accessReviewDefinition.scope": {
 			// to override args, implement: initMicrosoftIdentityAndAccessAccessReviewDefinitionScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftIdentityAndAccessAccessReviewDefinitionScope,
@@ -277,6 +287,14 @@ func init() {
 		"microsoft.identityAndAccess": {
 			// to override args, implement: initMicrosoftIdentityAndAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftIdentityAndAccess,
+		},
+		"microsoft.identityAndAccess.externalOriginResourceConnector": {
+			// to override args, implement: initMicrosoftIdentityAndAccessExternalOriginResourceConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessExternalOriginResourceConnector,
+		},
+		"microsoft.identityAndAccess.externalOriginResourceConnector.connection": {
+			// to override args, implement: initMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection,
 		},
 		"microsoft.identityAndAccess.privilegedIdentityManagement": {
 			// to override args, implement: initMicrosoftIdentityAndAccessPrivilegedIdentityManagement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -462,6 +480,10 @@ func init() {
 			// to override args, implement: initMicrosoftDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftDomain,
 		},
+		"microsoft.domain.federationConfiguration": {
+			// to override args, implement: initMicrosoftDomainFederationConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDomainFederationConfiguration,
+		},
 		"microsoft.domaindnsrecord": {
 			// to override args, implement: initMicrosoftDomaindnsrecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftDomaindnsrecord,
@@ -645,6 +667,14 @@ func init() {
 		"microsoft.crossTenantAccessPolicyDefault": {
 			// to override args, implement: initMicrosoftCrossTenantAccessPolicyDefault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftCrossTenantAccessPolicyDefault,
+		},
+		"microsoft.crossTenantAccessPolicyDefault.m365Capability": {
+			// to override args, implement: initMicrosoftCrossTenantAccessPolicyDefaultM365Capability(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftCrossTenantAccessPolicyDefaultM365Capability,
+		},
+		"microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope": {
+			// to override args, implement: initMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope,
 		},
 		"microsoft.crossTenantAccessPolicyDefault.automaticUserConsentSettings": {
 			// to override args, implement: initMicrosoftCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1125,8 +1155,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.identityAndAccess.accessReviewDefinition.reviewers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetReviewers()).ToDataRes(types.Dict)
 	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetReviewerScopes()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.accessReviewDefinition.reviewerScope")))
+	},
 	"microsoft.identityAndAccess.accessReviewDefinition.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetSettings()).ToDataRes(types.Resource("microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"))
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope.query": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope).GetQuery()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope.queryType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope).GetQueryType()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope.queryRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope).GetQueryRoot()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope.reviewerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope).GetReviewerId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope.scopeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope).GetScopeType()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope).GetUser()).ToDataRes(types.Resource("microsoft.user"))
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope).GetGroup()).ToDataRes(types.Resource("microsoft.group"))
 	},
 	"microsoft.identityAndAccess.accessReviewDefinition.scope.query": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope).GetQuery()).ToDataRes(types.String)
@@ -1334,6 +1388,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.identityAndAccess.organization": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccess).GetOrganization()).ToDataRes(types.Resource("microsoft.tenant"))
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccess).GetExternalOriginResourceConnectors()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.externalOriginResourceConnector")))
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connectorType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).GetConnectorType()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.modifiedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).GetModifiedBy()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.modifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).GetModifiedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connectionInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).GetConnectionInfo()).ToDataRes(types.Resource("microsoft.identityAndAccess.externalOriginResourceConnector.connection"))
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).GetKind()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).GetUrl()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.accessTokenUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).GetAccessTokenUrl()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.clientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).GetClientId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).GetResourceGroup()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.keyVaultName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).GetKeyVaultName()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.secretName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).GetSecretName()).ToDataRes(types.String)
 	},
 	"microsoft.identityAndAccess.privilegedIdentityManagement.policies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement).GetPolicies()).ToDataRes(types.Resource("microsoft.identityAndAccess.privilegedIdentityManagement.policies"))
@@ -2243,6 +2351,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.domain.serviceConfigurationRecords": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDomain).GetServiceConfigurationRecords()).ToDataRes(types.Array(types.Resource("microsoft.domaindnsrecord")))
+	},
+	"microsoft.domain.federationConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomain).GetFederationConfigurations()).ToDataRes(types.Array(types.Resource("microsoft.domain.federationConfiguration")))
+	},
+	"microsoft.domain.federationConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.domain.federationConfiguration.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.domain.federationConfiguration.issuerUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetIssuerUri()).ToDataRes(types.String)
+	},
+	"microsoft.domain.federationConfiguration.metadataExchangeUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetMetadataExchangeUri()).ToDataRes(types.String)
+	},
+	"microsoft.domain.federationConfiguration.passiveSignInUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetPassiveSignInUri()).ToDataRes(types.String)
+	},
+	"microsoft.domain.federationConfiguration.activeSignInUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetActiveSignInUri()).ToDataRes(types.String)
+	},
+	"microsoft.domain.federationConfiguration.signOutUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetSignOutUri()).ToDataRes(types.String)
+	},
+	"microsoft.domain.federationConfiguration.passwordResetUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetPasswordResetUri()).ToDataRes(types.String)
+	},
+	"microsoft.domain.federationConfiguration.preferredAuthenticationProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetPreferredAuthenticationProtocol()).ToDataRes(types.String)
+	},
+	"microsoft.domain.federationConfiguration.federatedIdpMfaBehavior": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetFederatedIdpMfaBehavior()).ToDataRes(types.String)
+	},
+	"microsoft.domain.federationConfiguration.isSignedAuthenticationRequestRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetIsSignedAuthenticationRequestRequired()).ToDataRes(types.Bool)
+	},
+	"microsoft.domain.federationConfiguration.promptLoginBehavior": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetPromptLoginBehavior()).ToDataRes(types.String)
+	},
+	"microsoft.domain.federationConfiguration.signingCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetSigningCertificate()).ToDataRes(types.String)
+	},
+	"microsoft.domain.federationConfiguration.nextSigningCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetNextSigningCertificate()).ToDataRes(types.String)
+	},
+	"microsoft.domain.federationConfiguration.signingCertificateUpdateResult": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetSigningCertificateUpdateResult()).ToDataRes(types.String)
+	},
+	"microsoft.domain.federationConfiguration.signingCertificateUpdateLastRunDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetSigningCertificateUpdateLastRunDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.domain.federationConfiguration.systemBrowserEnabledOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomainFederationConfiguration).GetSystemBrowserEnabledOn()).ToDataRes(types.Array(types.String))
 	},
 	"microsoft.domaindnsrecord.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDomaindnsrecord).GetId()).ToDataRes(types.String)
@@ -3386,6 +3548,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.crossTenantAccessPolicyDefault.tenantRestrictions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftCrossTenantAccessPolicyDefault).GetTenantRestrictions()).ToDataRes(types.Resource("microsoft.crossTenantAccessPolicyDefault.b2bSetting"))
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftCrossTenantAccessPolicyDefault).GetM365Capabilities()).ToDataRes(types.Array(types.Resource("microsoft.crossTenantAccessPolicyDefault.m365Capability")))
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability).GetName()).ToDataRes(types.String)
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability).GetLastModifiedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.inboundAccessAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability).GetInboundAccessAllowed()).ToDataRes(types.Bool)
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.includedResourceScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability).GetIncludedResourceScopes()).ToDataRes(types.Array(types.Resource("microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope")))
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.excludedResourceScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability).GetExcludedResourceScopes()).ToDataRes(types.Array(types.Resource("microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope")))
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope).GetResourceId()).ToDataRes(types.String)
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope).GetResourceType()).ToDataRes(types.String)
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope).GetUser()).ToDataRes(types.Resource("microsoft.user"))
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope).GetGroup()).ToDataRes(types.Resource("microsoft.group"))
 	},
 	"microsoft.crossTenantAccessPolicyDefault.automaticUserConsentSettings.inboundAllowed": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings).GetInboundAllowed()).ToDataRes(types.Bool)
@@ -6045,8 +6237,44 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).Reviewers, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).ReviewerScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"microsoft.identityAndAccess.accessReviewDefinition.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).Settings, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope.query": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope).Query, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope.queryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope).QueryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope.queryRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope).QueryRoot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope.reviewerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope).ReviewerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope.scopeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope).ScopeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope).User, ok = plugin.RawToTValue[*mqlMicrosoftUser](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.reviewerScope.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope).Group, ok = plugin.RawToTValue[*mqlMicrosoftGroup](v.Value, v.Error)
 		return
 	},
 	"microsoft.identityAndAccess.accessReviewDefinition.scope.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6375,6 +6603,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.identityAndAccess.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccess).Organization, ok = plugin.RawToTValue[*mqlMicrosoftTenant](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccess).ExternalOriginResourceConnectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connectorType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).ConnectorType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.modifiedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).ModifiedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.modifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).ModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connectionInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector).ConnectionInfo, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.accessTokenUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).AccessTokenUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.clientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).ClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).ResourceGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.keyVaultName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).KeyVaultName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.externalOriginResourceConnector.connection.secretName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection).SecretName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.identityAndAccess.privilegedIdentityManagement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7771,6 +8079,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.domain.serviceConfigurationRecords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDomain).ServiceConfigurationRecords, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomain).FederationConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.domain.federationConfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.issuerUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).IssuerUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.metadataExchangeUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).MetadataExchangeUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.passiveSignInUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).PassiveSignInUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.activeSignInUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).ActiveSignInUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.signOutUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).SignOutUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.passwordResetUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).PasswordResetUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.preferredAuthenticationProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).PreferredAuthenticationProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.federatedIdpMfaBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).FederatedIdpMfaBehavior, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.isSignedAuthenticationRequestRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).IsSignedAuthenticationRequestRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.promptLoginBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).PromptLoginBehavior, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.signingCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).SigningCertificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.nextSigningCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).NextSigningCertificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.signingCertificateUpdateResult": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).SigningCertificateUpdateResult, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.signingCertificateUpdateLastRunDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).SigningCertificateUpdateLastRunDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.domain.federationConfiguration.systemBrowserEnabledOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomainFederationConfiguration).SystemBrowserEnabledOn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.domaindnsrecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9479,6 +9863,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.crossTenantAccessPolicyDefault.tenantRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftCrossTenantAccessPolicyDefault).TenantRestrictions, ok = plugin.RawToTValue[*mqlMicrosoftCrossTenantAccessPolicyDefaultB2bSetting](v.Value, v.Error)
+		return
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftCrossTenantAccessPolicyDefault).M365Capabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.inboundAccessAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability).InboundAccessAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.includedResourceScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability).IncludedResourceScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.excludedResourceScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability).ExcludedResourceScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope).User, ok = plugin.RawToTValue[*mqlMicrosoftUser](v.Value, v.Error)
+		return
+	},
+	"microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope).Group, ok = plugin.RawToTValue[*mqlMicrosoftGroup](v.Value, v.Error)
 		return
 	},
 	"microsoft.crossTenantAccessPolicyDefault.automaticUserConsentSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13604,12 +14036,13 @@ type mqlMicrosoftIdentityAndAccessAccessReviewDefinition struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftIdentityAndAccessAccessReviewDefinitionInternal it will be used here
-	Id          plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	Status      plugin.TValue[string]
-	Scope       plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope]
-	Reviewers   plugin.TValue[any]
-	Settings    plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings]
+	Id             plugin.TValue[string]
+	DisplayName    plugin.TValue[string]
+	Status         plugin.TValue[string]
+	Scope          plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope]
+	Reviewers      plugin.TValue[any]
+	ReviewerScopes plugin.TValue[[]any]
+	Settings       plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings]
 }
 
 // createMicrosoftIdentityAndAccessAccessReviewDefinition creates a new instance of this resource
@@ -13664,8 +14097,110 @@ func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetReviewers() *pl
 	return &c.Reviewers
 }
 
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetReviewerScopes() *plugin.TValue[[]any] {
+	return &c.ReviewerScopes
+}
+
 func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetSettings() *plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings] {
 	return &c.Settings
+}
+
+// mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope for the microsoft.identityAndAccess.accessReviewDefinition.reviewerScope resource
+type mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScopeInternal it will be used here
+	Query      plugin.TValue[string]
+	QueryType  plugin.TValue[string]
+	QueryRoot  plugin.TValue[string]
+	ReviewerId plugin.TValue[string]
+	ScopeType  plugin.TValue[string]
+	User       plugin.TValue[*mqlMicrosoftUser]
+	Group      plugin.TValue[*mqlMicrosoftGroup]
+}
+
+// createMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope creates a new instance of this resource
+func createMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.accessReviewDefinition.reviewerScope", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope) MqlName() string {
+	return "microsoft.identityAndAccess.accessReviewDefinition.reviewerScope"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope) GetQuery() *plugin.TValue[string] {
+	return &c.Query
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope) GetQueryType() *plugin.TValue[string] {
+	return &c.QueryType
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope) GetQueryRoot() *plugin.TValue[string] {
+	return &c.QueryRoot
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope) GetReviewerId() *plugin.TValue[string] {
+	return &c.ReviewerId
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope) GetScopeType() *plugin.TValue[string] {
+	return &c.ScopeType
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope) GetUser() *plugin.TValue[*mqlMicrosoftUser] {
+	return plugin.GetOrCompute[*mqlMicrosoftUser](&c.User, func() (*mqlMicrosoftUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess.accessReviewDefinition.reviewerScope", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope) GetGroup() *plugin.TValue[*mqlMicrosoftGroup] {
+	return plugin.GetOrCompute[*mqlMicrosoftGroup](&c.Group, func() (*mqlMicrosoftGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess.accessReviewDefinition.reviewerScope", c.__id, "group")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftGroup), nil
+			}
+		}
+
+		return c.group()
+	})
 }
 
 // mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope for the microsoft.identityAndAccess.accessReviewDefinition.scope resource
@@ -14571,6 +15106,7 @@ type mqlMicrosoftIdentityAndAccess struct {
 	PrivilegedIdentityManagement     plugin.TValue[*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement]
 	IdentityAndSignIn                plugin.TValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignIn]
 	Organization                     plugin.TValue[*mqlMicrosoftTenant]
+	ExternalOriginResourceConnectors plugin.TValue[[]any]
 }
 
 // createMicrosoftIdentityAndAccess creates a new instance of this resource
@@ -14672,6 +15208,185 @@ func (c *mqlMicrosoftIdentityAndAccess) GetOrganization() *plugin.TValue[*mqlMic
 
 		return c.organization()
 	})
+}
+
+func (c *mqlMicrosoftIdentityAndAccess) GetExternalOriginResourceConnectors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExternalOriginResourceConnectors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess", c.__id, "externalOriginResourceConnectors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.externalOriginResourceConnectors()
+	})
+}
+
+// mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector for the microsoft.identityAndAccess.externalOriginResourceConnector resource
+type mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorInternal it will be used here
+	Id               plugin.TValue[string]
+	DisplayName      plugin.TValue[string]
+	Description      plugin.TValue[string]
+	ConnectorType    plugin.TValue[string]
+	CreatedBy        plugin.TValue[string]
+	CreatedDateTime  plugin.TValue[*time.Time]
+	ModifiedBy       plugin.TValue[string]
+	ModifiedDateTime plugin.TValue[*time.Time]
+	ConnectionInfo   plugin.TValue[*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection]
+}
+
+// createMicrosoftIdentityAndAccessExternalOriginResourceConnector creates a new instance of this resource
+func createMicrosoftIdentityAndAccessExternalOriginResourceConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.externalOriginResourceConnector", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector) MqlName() string {
+	return "microsoft.identityAndAccess.externalOriginResourceConnector"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector) GetConnectorType() *plugin.TValue[string] {
+	return &c.ConnectorType
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector) GetModifiedBy() *plugin.TValue[string] {
+	return &c.ModifiedBy
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector) GetModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.ModifiedDateTime
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnector) GetConnectionInfo() *plugin.TValue[*mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection] {
+	return &c.ConnectionInfo
+}
+
+// mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection for the microsoft.identityAndAccess.externalOriginResourceConnector.connection resource
+type mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnectionInternal it will be used here
+	Kind           plugin.TValue[string]
+	Url            plugin.TValue[string]
+	AccessTokenUrl plugin.TValue[string]
+	ClientId       plugin.TValue[string]
+	SubscriptionId plugin.TValue[string]
+	ResourceGroup  plugin.TValue[string]
+	KeyVaultName   plugin.TValue[string]
+	SecretName     plugin.TValue[string]
+}
+
+// createMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection creates a new instance of this resource
+func createMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.externalOriginResourceConnector.connection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection) MqlName() string {
+	return "microsoft.identityAndAccess.externalOriginResourceConnector.connection"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection) GetAccessTokenUrl() *plugin.TValue[string] {
+	return &c.AccessTokenUrl
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection) GetClientId() *plugin.TValue[string] {
+	return &c.ClientId
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection) GetResourceGroup() *plugin.TValue[string] {
+	return &c.ResourceGroup
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection) GetKeyVaultName() *plugin.TValue[string] {
+	return &c.KeyVaultName
+}
+
+func (c *mqlMicrosoftIdentityAndAccessExternalOriginResourceConnectorConnection) GetSecretName() *plugin.TValue[string] {
+	return &c.SecretName
 }
 
 // mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement for the microsoft.identityAndAccess.privilegedIdentityManagement resource
@@ -18327,6 +19042,7 @@ type mqlMicrosoftDomain struct {
 	PasswordValidityPeriodInDays     plugin.TValue[int64]
 	SupportedServices                plugin.TValue[[]any]
 	ServiceConfigurationRecords      plugin.TValue[[]any]
+	FederationConfigurations         plugin.TValue[[]any]
 }
 
 // createMicrosoftDomain creates a new instance of this resource
@@ -18424,6 +19140,146 @@ func (c *mqlMicrosoftDomain) GetServiceConfigurationRecords() *plugin.TValue[[]a
 
 		return c.serviceConfigurationRecords()
 	})
+}
+
+func (c *mqlMicrosoftDomain) GetFederationConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FederationConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.domain", c.__id, "federationConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.federationConfigurations()
+	})
+}
+
+// mqlMicrosoftDomainFederationConfiguration for the microsoft.domain.federationConfiguration resource
+type mqlMicrosoftDomainFederationConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDomainFederationConfigurationInternal it will be used here
+	Id                                      plugin.TValue[string]
+	DisplayName                             plugin.TValue[string]
+	IssuerUri                               plugin.TValue[string]
+	MetadataExchangeUri                     plugin.TValue[string]
+	PassiveSignInUri                        plugin.TValue[string]
+	ActiveSignInUri                         plugin.TValue[string]
+	SignOutUri                              plugin.TValue[string]
+	PasswordResetUri                        plugin.TValue[string]
+	PreferredAuthenticationProtocol         plugin.TValue[string]
+	FederatedIdpMfaBehavior                 plugin.TValue[string]
+	IsSignedAuthenticationRequestRequired   plugin.TValue[bool]
+	PromptLoginBehavior                     plugin.TValue[string]
+	SigningCertificate                      plugin.TValue[string]
+	NextSigningCertificate                  plugin.TValue[string]
+	SigningCertificateUpdateResult          plugin.TValue[string]
+	SigningCertificateUpdateLastRunDateTime plugin.TValue[*time.Time]
+	SystemBrowserEnabledOn                  plugin.TValue[[]any]
+}
+
+// createMicrosoftDomainFederationConfiguration creates a new instance of this resource
+func createMicrosoftDomainFederationConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDomainFederationConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.domain.federationConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) MqlName() string {
+	return "microsoft.domain.federationConfiguration"
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetIssuerUri() *plugin.TValue[string] {
+	return &c.IssuerUri
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetMetadataExchangeUri() *plugin.TValue[string] {
+	return &c.MetadataExchangeUri
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetPassiveSignInUri() *plugin.TValue[string] {
+	return &c.PassiveSignInUri
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetActiveSignInUri() *plugin.TValue[string] {
+	return &c.ActiveSignInUri
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetSignOutUri() *plugin.TValue[string] {
+	return &c.SignOutUri
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetPasswordResetUri() *plugin.TValue[string] {
+	return &c.PasswordResetUri
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetPreferredAuthenticationProtocol() *plugin.TValue[string] {
+	return &c.PreferredAuthenticationProtocol
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetFederatedIdpMfaBehavior() *plugin.TValue[string] {
+	return &c.FederatedIdpMfaBehavior
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetIsSignedAuthenticationRequestRequired() *plugin.TValue[bool] {
+	return &c.IsSignedAuthenticationRequestRequired
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetPromptLoginBehavior() *plugin.TValue[string] {
+	return &c.PromptLoginBehavior
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetSigningCertificate() *plugin.TValue[string] {
+	return &c.SigningCertificate
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetNextSigningCertificate() *plugin.TValue[string] {
+	return &c.NextSigningCertificate
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetSigningCertificateUpdateResult() *plugin.TValue[string] {
+	return &c.SigningCertificateUpdateResult
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetSigningCertificateUpdateLastRunDateTime() *plugin.TValue[*time.Time] {
+	return &c.SigningCertificateUpdateLastRunDateTime
+}
+
+func (c *mqlMicrosoftDomainFederationConfiguration) GetSystemBrowserEnabledOn() *plugin.TValue[[]any] {
+	return &c.SystemBrowserEnabledOn
 }
 
 // mqlMicrosoftDomaindnsrecord for the microsoft.domaindnsrecord resource
@@ -22560,6 +23416,7 @@ type mqlMicrosoftCrossTenantAccessPolicyDefault struct {
 	InvitationRedemptionIdentityProviderConfiguration plugin.TValue[*mqlMicrosoftCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration]
 	InboundTrust                                      plugin.TValue[*mqlMicrosoftCrossTenantAccessPolicyDefaultInboundTrust]
 	TenantRestrictions                                plugin.TValue[*mqlMicrosoftCrossTenantAccessPolicyDefaultB2bSetting]
+	M365Capabilities                                  plugin.TValue[[]any]
 }
 
 // createMicrosoftCrossTenantAccessPolicyDefault creates a new instance of this resource
@@ -22725,6 +23582,169 @@ func (c *mqlMicrosoftCrossTenantAccessPolicyDefault) GetTenantRestrictions() *pl
 		}
 
 		return c.tenantRestrictions()
+	})
+}
+
+func (c *mqlMicrosoftCrossTenantAccessPolicyDefault) GetM365Capabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.M365Capabilities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.crossTenantAccessPolicyDefault", c.__id, "m365Capabilities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.m365Capabilities()
+	})
+}
+
+// mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability for the microsoft.crossTenantAccessPolicyDefault.m365Capability resource
+type mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityInternal it will be used here
+	Name                   plugin.TValue[string]
+	LastModifiedDateTime   plugin.TValue[*time.Time]
+	InboundAccessAllowed   plugin.TValue[bool]
+	IncludedResourceScopes plugin.TValue[[]any]
+	ExcludedResourceScopes plugin.TValue[[]any]
+}
+
+// createMicrosoftCrossTenantAccessPolicyDefaultM365Capability creates a new instance of this resource
+func createMicrosoftCrossTenantAccessPolicyDefaultM365Capability(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.crossTenantAccessPolicyDefault.m365Capability", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability) MqlName() string {
+	return "microsoft.crossTenantAccessPolicyDefault.m365Capability"
+}
+
+func (c *mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDateTime
+}
+
+func (c *mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability) GetInboundAccessAllowed() *plugin.TValue[bool] {
+	return &c.InboundAccessAllowed
+}
+
+func (c *mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability) GetIncludedResourceScopes() *plugin.TValue[[]any] {
+	return &c.IncludedResourceScopes
+}
+
+func (c *mqlMicrosoftCrossTenantAccessPolicyDefaultM365Capability) GetExcludedResourceScopes() *plugin.TValue[[]any] {
+	return &c.ExcludedResourceScopes
+}
+
+// mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope for the microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope resource
+type mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScopeInternal it will be used here
+	ResourceId   plugin.TValue[string]
+	ResourceType plugin.TValue[string]
+	User         plugin.TValue[*mqlMicrosoftUser]
+	Group        plugin.TValue[*mqlMicrosoftGroup]
+}
+
+// createMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope creates a new instance of this resource
+func createMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope) MqlName() string {
+	return "microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope"
+}
+
+func (c *mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope) GetUser() *plugin.TValue[*mqlMicrosoftUser] {
+	return plugin.GetOrCompute[*mqlMicrosoftUser](&c.User, func() (*mqlMicrosoftUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+func (c *mqlMicrosoftCrossTenantAccessPolicyDefaultM365CapabilityResourceScope) GetGroup() *plugin.TValue[*mqlMicrosoftGroup] {
+	return plugin.GetOrCompute[*mqlMicrosoftGroup](&c.Group, func() (*mqlMicrosoftGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope", c.__id, "group")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftGroup), nil
+			}
+		}
+
+		return c.group()
 	})
 }
 

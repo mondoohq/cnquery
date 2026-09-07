@@ -100,12 +100,58 @@ private microsoft.identityAndAccess.accessReviewDefinition @defaults("id display
   scope microsoft.identityAndAccess.accessReviewDefinition.scope
   // Reviewer scopes
   //
-  // List of reviewer scope entries defining who performs the review. Each entry
-  // is a dict with `reviewer` (a query selecting the reviewing principals),
+  // Deprecated in favor of reviewerScopes, which additionally reports the
+  // directly named reviewer and the well-known reviewer kind. Each entry is a
+  // dict with `reviewer` (a query selecting the reviewing principals),
   // `queryType`, and `queryRoot`.
-  reviewers dict
+  reviewers @maturity("deprecated") @replaced_by("microsoft.identityAndAccess.accessReviewDefinition.reviewerScopes") dict
+  // Reviewer scopes for the access review
+  //
+  // Who performs the review, one entry per configured reviewer scope. An entry
+  // either names the reviewing principal directly through reviewerId, or
+  // selects reviewers with a query. The scopeType field reports which
+  // well-known reviewer the entry resolves to.
+  reviewerScopes []microsoft.identityAndAccess.accessReviewDefinition.reviewerScope
   // The settings for an access review series, see type definition below
   settings microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings
+}
+
+// Reviewer scope of an access review
+//
+// One reviewer configuration on an access review schedule. A scope either
+// names the reviewing principal directly through reviewerId, or selects
+// reviewers with a query held in query, queryType, and queryRoot. The
+// scopeType field reports which well-known reviewer the entry resolves to,
+// including relationship-based reviewers such as the reviewed principal's
+// manager or sponsor, which name no principal up front.
+private microsoft.identityAndAccess.accessReviewDefinition.reviewerScope @defaults("scopeType reviewerId query") {
+  // Query selecting the principals who perform the review
+  query string
+  // Type of query being used, such as MicrosoftGraph
+  queryType string
+  // Root the query is evaluated relative to
+  queryRoot string
+  // Identifier of the principal named as reviewer
+  //
+  // Carries a value when the reviewer is named directly rather than selected
+  // by a query. Empty for relationship-based scope types such as manager or
+  // sponsor, which resolve per reviewed principal when the review runs.
+  reviewerId string
+  // Well-known reviewer this scope resolves to
+  //
+  // One of user, group, self, manager, sponsor, resourceOwner,
+  // managerOrSponsor, or unknownFutureValue. Empty when Microsoft Graph
+  // reports no scope type for the entry, which is the case for a review whose
+  // reviewers are selected by query alone.
+  scopeType string
+  // Reviewing user named by reviewerId
+  //
+  // Null unless scopeType is user.
+  user() microsoft.user
+  // Reviewing group named by reviewerId
+  //
+  // Null unless scopeType is group.
+  group() microsoft.group
 }
 
 // Defines the scope of entities whose access is being reviewed
@@ -385,6 +431,98 @@ microsoft.identityAndAccess {
   identityAndSignIn() microsoft.identityAndAccess.identityAndSignIn
   // Tenant organization information
   organization() microsoft.tenant
+  // Connectors to external resource systems
+  //
+  // Entitlement management connectors that let an external system inject
+  // grantable entitlements into the tenant, currently SAP Cloud Identity
+  // Access Governance. Each entry reports the external system it integrates
+  // with, who created and last modified it, and where the credential it
+  // authenticates with is stored.
+  externalOriginResourceConnectors() []microsoft.identityAndAccess.externalOriginResourceConnector
+}
+
+// External origin resource connector
+//
+// A connector that lets an external resource system inject grantable
+// entitlements into the tenant through Microsoft Entra entitlement
+// management. connectorType names the external system, and connectionInfo
+// carries the endpoint the connector talks to together with a reference to
+// the key vault secret it authenticates with. No credential material is
+// reported.
+private microsoft.identityAndAccess.externalOriginResourceConnector @defaults("displayName connectorType") {
+  // Unique identifier of the connector
+  id string
+  // Display name of the connector
+  displayName string
+  // Description of the connector
+  description string
+  // External system the connector integrates with
+  //
+  // One of sapIag (SAP Cloud Identity Access Governance) or
+  // unknownFutureValue.
+  connectorType string
+  // Identifier of the user or application that created the connector
+  //
+  // Microsoft Graph reports a single identifier here that may name either a
+  // user or an application, with nothing to distinguish the two, so it is
+  // reported as it arrives.
+  createdBy string
+  // When the connector was created
+  createdDateTime time
+  // Identifier of the user or application that last modified the connector
+  //
+  // Microsoft Graph reports a single identifier here that may name either a
+  // user or an application, with nothing to distinguish the two, so it is
+  // reported as it arrives.
+  modifiedBy string
+  // When the connector was last modified
+  modifiedDateTime time
+  // Connection details of the connector
+  connectionInfo microsoft.identityAndAccess.externalOriginResourceConnector.connection
+}
+
+// Connection details of an external origin resource connector
+//
+// Where the connector reaches the external system and how it authenticates.
+// The kind field reports which connection shape Microsoft Graph returned,
+// which decides which of the remaining fields carry values. For the
+// tokenBasedSapIag shape the credential itself is never reported: only the
+// key vault and secret name that hold it, so an audit can check where the
+// secret lives without reading it.
+private microsoft.identityAndAccess.externalOriginResourceConnector.connection @defaults("kind url") {
+  // Shape of the connection details
+  //
+  // Either tokenBasedSapIag for an SAP Cloud Identity Access Governance
+  // connector, or unknown when Microsoft Graph reports a shape this provider
+  // does not model.
+  kind string
+  // Endpoint the connector communicates with
+  url string
+  // Endpoint the connector requests an access token from
+  //
+  // Carries a value for the tokenBasedSapIag shape.
+  accessTokenUrl string
+  // Client identifier the connector authenticates as
+  //
+  // Carries a value for the tokenBasedSapIag shape.
+  clientId string
+  // Azure subscription holding the key vault
+  //
+  // Carries a value for the tokenBasedSapIag shape.
+  subscriptionId string
+  // Azure resource group holding the key vault
+  //
+  // Carries a value for the tokenBasedSapIag shape.
+  resourceGroup string
+  // Key vault holding the connector secret
+  //
+  // Carries a value for the tokenBasedSapIag shape.
+  keyVaultName string
+  // Name of the key vault secret the connector authenticates with
+  //
+  // The name only. The secret value is never read or reported. Carries a
+  // value for the tokenBasedSapIag shape.
+  secretName string
 }
 
 // Microsoft Entra Privileged Identity Management
@@ -1400,6 +1538,88 @@ private microsoft.domain @defaults("id") {
   supportedServices []string
   // List of service configuration records
   serviceConfigurationRecords() []microsoft.domaindnsrecord
+  // Federation configuration of the domain
+  //
+  // How the domain federates authentication to an external identity provider:
+  // whether Microsoft Entra accepts an MFA claim asserted by that provider,
+  // whether signed authentication requests are required, the signing
+  // certificates and the result of the last rotation, and the sign-in
+  // endpoints. Empty for a domain whose authenticationType is Managed, since
+  // Microsoft Entra authenticates those users itself.
+  federationConfigurations() []microsoft.domain.federationConfiguration
+}
+
+// Federation configuration of a Microsoft Entra domain
+//
+// Settings that govern how a federated domain authenticates against its
+// external identity provider. federatedIdpMfaBehavior decides whether
+// Microsoft Entra honors an MFA claim asserted by that provider, the control
+// behind federated MFA bypass. Also reports whether signed authentication
+// requests are required, how a fresh-login request is handled, the current
+// and next token-signing certificates with the outcome of the last automatic
+// rotation, and the platforms on which federated sign-in is forced into the
+// system browser.
+private microsoft.domain.federationConfiguration @defaults("displayName federatedIdpMfaBehavior isSignedAuthenticationRequestRequired") {
+  // Unique identifier of the federation configuration
+  id string
+  // Display name of the federated identity provider
+  displayName string
+  // Issuer URI of the federated identity provider
+  issuerUri string
+  // URI of the metadata exchange endpoint
+  metadataExchangeUri string
+  // URI web-based clients are directed to when signing in
+  passiveSignInUri string
+  // URI rich-client applications are directed to when signing in
+  activeSignInUri string
+  // URI clients are redirected to when signing out
+  signOutUri string
+  // URI users are directed to for password resets
+  passwordResetUri string
+  // Preferred authentication protocol
+  //
+  // One of wsFed, saml, or unknownFutureValue.
+  preferredAuthenticationProtocol string
+  // Whether Microsoft Entra honors MFA performed by the federated provider
+  //
+  // One of acceptIfMfaDoneByFederatedIdp (Microsoft Entra accepts an MFA
+  // claim asserted by the provider), enforceMfaByFederatedIdp (Microsoft
+  // Entra requires the provider to perform MFA for every request),
+  // rejectMfaByFederatedIdp (Microsoft Entra performs MFA itself and ignores
+  // the provider's claim), or unknownFutureValue.
+  federatedIdpMfaBehavior string
+  // Whether Microsoft Entra requires authentication requests to be signed
+  isSignedAuthenticationRequestRequired bool
+  // How a request for fresh authentication is handled
+  //
+  // One of translateToFreshPasswordAuthentication, nativeSupport, disabled,
+  // or unknownFutureValue.
+  promptLoginBehavior string
+  // Current token-signing certificate of the federated provider
+  //
+  // The base64 encoded public part of the certificate. Carries no private key
+  // material.
+  signingCertificate string
+  // Next token-signing certificate of the federated provider
+  //
+  // The base64 encoded public part of the certificate staged to replace
+  // signingCertificate at the next rotation. Empty when no successor is
+  // staged.
+  nextSigningCertificate string
+  // Outcome of the last automatic signing-certificate rotation
+  //
+  // One of success, unknownError, internalServerError,
+  // noValidExistingCertFound, noStsAuthUrlFound, noFederationProtocolFound,
+  // noNewCertificateFound, couldNotAccessRemoteHost, connectionError,
+  // xmlParsingError, badRequest, unauthorized, forbidden, notFound, or
+  // providerError. Empty when no rotation has run.
+  signingCertificateUpdateResult string
+  // When the last automatic signing-certificate rotation ran
+  signingCertificateUpdateLastRunDateTime time
+  // Platforms on which federated sign-in is forced into the system browser
+  //
+  // Zero or more of none, ios, android, mac, or unknownFutureValue.
+  systemBrowserEnabledOn []string
 }
 
 // Microsoft domain DNS record
@@ -2864,6 +3084,76 @@ private microsoft.crossTenantAccessPolicyDefault @defaults("isServiceDefault aut
   inboundTrust() microsoft.crossTenantAccessPolicyDefault.inboundTrust
   // Defines the default configuration for tenant restrictions settings.
   tenantRestrictions() microsoft.crossTenantAccessPolicyDefault.b2bSetting
+  // Microsoft 365 capabilities open to external tenants
+  //
+  // Per-capability inbound access for the Microsoft 365 experiences shared
+  // across tenant boundaries: calendar availability and calendar sharing,
+  // mail tips, room and desk booking, profile cards, and mailbox migration.
+  // Each entry reports whether the capability is allowed inbound and which
+  // users or groups it is scoped to, which answers which Microsoft 365
+  // capabilities any external tenant can reach by default.
+  m365Capabilities() []microsoft.crossTenantAccessPolicyDefault.m365Capability
+}
+
+// Microsoft 365 cross-tenant capability
+//
+// One Microsoft 365 experience external tenants may reach inbound. The name
+// field is the capability key, for example
+// crossTenantCalendarAvailabilityBasic or crossTenantPlacesRoomBooking.
+// inboundAccessAllowed reports whether the capability is open, and the
+// included and excluded resource scopes report which users and groups it
+// applies to.
+private microsoft.crossTenantAccessPolicyDefault.m365Capability @defaults("name inboundAccessAllowed") {
+  // Name of the capability
+  //
+  // One of crossTenantCalendarAvailabilityBasic,
+  // crossTenantCalendarAvailabilityLimitedDetails,
+  // crossTenantCalendarSharingFreeBusySimple,
+  // crossTenantCalendarSharingFreeBusyDetail,
+  // crossTenantCalendarSharingFreeBusyReviewer, crossTenantMailTipsAll,
+  // crossTenantMailTipsLimited, crossTenantOpenProfileCard,
+  // crossTenantPlacesRoomBooking, crossTenantPlacesDeskBooking, or
+  // crossTenantMigration. Microsoft may add capabilities, so treat the set as
+  // open.
+  name string
+  // When the capability was last modified
+  lastModifiedDateTime time
+  // Whether external tenants may use this capability inbound
+  inboundAccessAllowed bool
+  // Resources the capability applies to
+  includedResourceScopes []microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope
+  // Resources excluded from the capability
+  //
+  // A resource listed here is excluded even when it also appears in
+  // includedResourceScopes.
+  excludedResourceScopes []microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope
+}
+
+// Resource scope of a Microsoft 365 cross-tenant capability
+//
+// One user or group a cross-tenant capability applies to. resourceType says
+// whether resourceId names a user or a group, and resourceId carries the
+// literal All when the scope covers every resource of that type.
+private microsoft.crossTenantAccessPolicyDefault.m365Capability.resourceScope @defaults("resourceType resourceId") {
+  // Identifier of the scoped resource
+  //
+  // The object identifier of a user or group, or the literal All when the
+  // scope covers every resource of the reported type.
+  resourceId string
+  // Kind of resource the scope names
+  //
+  // One of none, group, user, or unknownFutureValue.
+  resourceType string
+  // Scoped user named by resourceId
+  //
+  // Null unless resourceType is user and resourceId names a specific user
+  // rather than All.
+  user() microsoft.user
+  // Scoped group named by resourceId
+  //
+  // Null unless resourceType is group and resourceId names a specific group
+  // rather than All.
+  group() microsoft.group
 }
 
 // Automatic user consent settings for cross-tenant access policy

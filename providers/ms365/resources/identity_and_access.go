@@ -600,15 +600,21 @@ func newMqlAccessReviewDefinition(runtime *plugin.Runtime, d models.AccessReview
 		}
 	}
 
+	reviewerScopes, err := newMqlAccessReviewReviewerScopes(runtime, convert.ToValue(d.GetId()), d.GetReviewers())
+	if err != nil {
+		return nil, err
+	}
+
 	resource, err := CreateResource(runtime, "microsoft.identityAndAccess.accessReviewDefinition",
 		map[string]*llx.RawData{
-			"__id":        llx.StringDataPtr(d.GetId()),
-			"id":          llx.StringDataPtr(d.GetId()),
-			"displayName": llx.StringDataPtr(d.GetDisplayName()),
-			"status":      llx.StringDataPtr(d.GetStatus()),
-			"scope":       llx.ResourceData(mqlScope, ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionScope),
-			"reviewers":   llx.DictData(reviewersDict),
-			"settings":    llx.ResourceData(mqlAccessReviewScheduleSettings, "microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"),
+			"__id":           llx.StringDataPtr(d.GetId()),
+			"id":             llx.StringDataPtr(d.GetId()),
+			"displayName":    llx.StringDataPtr(d.GetDisplayName()),
+			"status":         llx.StringDataPtr(d.GetStatus()),
+			"scope":          llx.ResourceData(mqlScope, ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionScope),
+			"reviewers":      llx.DictData(reviewersDict),
+			"reviewerScopes": llx.ArrayData(reviewerScopes, types.Resource(ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionReviewerScope)),
+			"settings":       llx.ResourceData(mqlAccessReviewScheduleSettings, "microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"),
 		})
 	if err != nil {
 		return nil, err

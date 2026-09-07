@@ -300,8 +300,8 @@ github.com/microsoft/kiota-serialization-text-go v1.1.3 h1:8z7Cebn0YAAr++xswVgfd
 github.com/microsoft/kiota-serialization-text-go v1.1.3/go.mod h1:NDSvz4A3QalGMjNboKKQI9wR+8k+ih8UuagNmzIRgTQ=
 github.com/microsoftgraph/msgraph-beta-sdk-go v0.165.0 h1:a92zkfWfDtBTmJLroc5JbYu0gQPtrWaxme2yqIFRERY=
 github.com/microsoftgraph/msgraph-beta-sdk-go v0.165.0/go.mod h1:xlPPC1rH37ZgJdzBKdrKcVMQga1nHSWilqcdwZU4x/M=
-github.com/microsoftgraph/msgraph-sdk-go v1.101.0 h1:9Ox6mlDTm9BroNpj9i4B241OIcnyv0kjwJHHNaeXkoY=
-github.com/microsoftgraph/msgraph-sdk-go v1.101.0/go.mod h1:qxzY5SaoPigY6/Dpyfg4uigQjNDvL+sZl6fzD6EpWeQ=
+github.com/microsoftgraph/msgraph-sdk-go v1.102.0 h1:S0HHPgt9MOve3Bype2mkM7x/5/gkb6OkxE/jfReutZ4=
+github.com/microsoftgraph/msgraph-sdk-go v1.102.0/go.mod h1:qxzY5SaoPigY6/Dpyfg4uigQjNDvL+sZl6fzD6EpWeQ=
 github.com/microsoftgraph/msgraph-sdk-go-core v1.4.1 h1:k3YIaJm57ufoEX0KdsEY4l1X9BAMxEqrwr4a7WMRDzY=
 github.com/microsoftgraph/msgraph-sdk-go-core v1.4.1/go.mod h1:yNqPNhXee2w9cZzkJW5mL1utVMSInsQSo/TyEB5sup8=
 github.com/miekg/dns v1.1.73 h1:uhT8nJxmTrPJYClxVxTCX+CVn6qnzSiybRk72Z6DgrE=
