@@ -1,7 +1,6 @@
 # Copyright Mondoo, Inc. 2024, 2026
 # SPDX-License-Identifier: BUSL-1.1
 
-weaviate 13.0.0
 weaviate.collection 13.0.0
 weaviate.collection.asyncReplicationEnabled 13.0.0
 weaviate.collection.autoTenantActivation 13.0.0

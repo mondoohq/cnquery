@@ -129,6 +129,9 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		Name:      conn.Name(),
 		Asset:     req.Asset,
 		Inventory: in,
+		// The API or a single ESXi host; the static Root can only name one
+		// (ADR 031).
+		Root: assetRoot(req.Asset.GetPlatform()),
 	}, nil
 }
 

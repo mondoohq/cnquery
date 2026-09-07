@@ -8,11 +8,13 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/mqlr/lrcore"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
 )
 
 // Every provider you can connect to has to declare an asset root.
@@ -35,10 +37,8 @@ var rootBacklog = map[string]struct{}{}
 func init() {
 	// What is left needs a decision, not a sweep:
 	//   aws, azure, gcp - "the root of an account" is the flat-os question again
-	//   network         - the asset is a host or URL and nothing models it;
-	//                     socket/tls/dns/http are aspects of one
 	for _, p := range []string{
-		"aws", "azure", "gcp", "network",
+		"aws", "azure", "gcp",
 	} {
 		rootBacklog[p] = struct{}{}
 	}
@@ -157,4 +157,74 @@ func TestDeclaredRootsAgree(t *testing.T) {
 				"`option root` names %q, which is not one of the roots this provider declares", st.declared)
 		})
 	}
+}
+
+// Every resource a rooted provider owns has to be reachable from one of its
+// roots, or it stops resolving in v15 when the root becomes the namespace
+// (ADR 031).
+//
+// This is the check that was missing. `@replaced_by` targets are verified at
+// generate time, so an orphan is caught only if something happens to point at
+// it: ms365's orphaned Exchange/SharePoint/Teams tree failed loudly because a
+// deprecation pointed into it, while vsphere's `vulnmgmt` and its whole ESXi
+// host tree passed in silence. Nothing was checking a provider's own surface.
+//
+// Exempt, and why:
+//   - `@global` says outright that it needs no root (core's `time`, network's
+//     `url` - a parser, not an aspect of any asset)
+//   - private resources are reached through a parent by construction
+//   - a namespaced name (`foo.bar`) is reached through `foo`
+//   - deprecated resources are on their way out; flat `os` and vsphere's `esxi`
+//     are *expected* to be unreachable, that being the point of retiring them
+func TestRootedProvidersHaveNoOrphans(t *testing.T) {
+	dirs, err := filepath.Glob(filepath.Join("..", "providers", "*"))
+	require.NoError(t, err)
+
+	repoFile := func(p string) ([]byte, error) { return os.ReadFile(filepath.Join("..", p)) }
+
+	checked := 0
+	for _, dir := range dirs {
+		name := filepath.Base(dir)
+		lrs, _ := filepath.Glob(filepath.Join(dir, "resources", "*.lr"))
+		if len(lrs) != 1 {
+			continue
+		}
+		raw, err := os.ReadFile(lrs[0])
+		require.NoError(t, err)
+		if !strings.Contains(string(raw), "@root") {
+			continue
+		}
+
+		t.Run(name, func(t *testing.T) {
+			// Resolve, not Parse: aliases are what attach a provider's surface
+			// to its root, and they only exist after imports are resolved.
+			ast, err := lrcore.Resolve(
+				filepath.ToSlash(filepath.Join("providers", name, "resources", filepath.Base(lrs[0]))),
+				repoFile)
+			require.NoError(t, err)
+			schema, err := lrcore.Schema(ast)
+			require.NoError(t, err)
+
+			var orphans []string
+			for res, info := range schema.Resources {
+				switch {
+				case info == nil, info.Id != res, strings.Contains(res, "."),
+					info.Private, info.GetGlobal(), info.IsExtension,
+					info.Maturity == "deprecated",
+					!strings.HasSuffix(info.Provider, "/"+name):
+					continue
+				}
+				if !resources.RootReachable(schema, res) {
+					orphans = append(orphans, res)
+				}
+			}
+			sort.Strings(orphans)
+			assert.Emptyf(t, orphans, "unreachable from any root, so they stop resolving in v15: %v. "+
+				"Attach each to a root (`alias <root>.<name> = <name>`), mark it `@global` if it "+
+				"genuinely needs no asset, or deprecate it", orphans)
+		})
+		checked++
+	}
+
+	require.Greater(t, checked, 50, "the provider scan found almost nothing, so it is measuring the wrong directory")
 }

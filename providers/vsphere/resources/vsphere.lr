@@ -7,6 +7,9 @@ option provider = "go.mondoo.com/mql/providers/vsphere"
 option go_package = "go.mondoo.com/mql/providers/vsphere/resources"
 option root = "vsphere"
 
+alias vsphere.vulnmgmt = vulnmgmt
+alias vsphere.host.vulnmgmt = vulnmgmt
+
 // vSphere asset resource
 extend asset {
   // Common Platform Enumeration (CPE) for the asset
@@ -512,7 +515,7 @@ private vsphere.cluster @defaults("moid name") {
 // and operational settings such as advanced settings, management services,
 // NTP, SNMP, and the host TLS certificate. Audit these to assess a host's
 // hardening and patch state.
-private vsphere.host @defaults("moid name") {
+private vsphere.host @defaults("moid name") @root {
   // vSphere managed object ID
   moid string
   // vSphere resource name

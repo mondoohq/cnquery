@@ -1,15 +1,22 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/network"
 option go_package = "go.mondoo.com/mql/providers/network/resources"
+option root = "network.host"
+
+alias network.host.domainName = domainName
+alias network.host.dns = dns
+alias network.host.tls = tls
 
 // Network socket
 //
 // Addressable network endpoint identified by its transport `protocol`,
 // `port`, and `address`. Serves as a building block for higher-level
 // resources such as `tls` that need to know what to connect to.
-socket @defaults("protocol port address") {
+socket @defaults("protocol port address") @global {
   // Transport protocol (e.g., tcp, udp)
   protocol string
   // Port number
@@ -24,7 +31,7 @@ socket @defaults("protocol port address") {
 // to perform a GET against a URL and inspect the response status,
 // headers (parsed into sub-resources for HSTS, CSP, cookies, and other
 // security headers), and body.
-http {}
+http @global {}
 
 // HTTP GET request
 //
@@ -167,7 +174,7 @@ private http.header.setCookie @defaults("name value") {
 // inspect any of the parsed components individually: scheme, user /
 // password user-info pair, host, port, path, parsed query map, raw
 // query string, and fragment.
-url @defaults("string") {
+url @defaults("string") @global {
   init(raw string)
   // The full URL as a string
   string() string
@@ -292,7 +299,7 @@ private tls.cipher @defaults("name") {
 // returns the original source. Blocks that cannot be decoded are left
 // out of the list and counted in unparseable, so a bundle holding one
 // malformed certificate still yields the rest.
-certificates {
+certificates @global {
   []certificate
   // PEM content
   pem string
@@ -315,7 +322,7 @@ certificates {
 // the isCA and key-usage constraints, and the revocation, verification,
 // and expiration status. Useful for flagging weak keys, expired or
 // soon-to-expire leaf certificates, and untrusted or revoked chains.
-certificate @defaults("serial subject.commonName subject.dn") {
+certificate @defaults("serial subject.commonName subject.dn") @global {
   // PEM content
   pem string
   // Certificate fingerprints
@@ -1104,4 +1111,21 @@ dns.dkimRecord @defaults("dnsTxt") {
   flags []string
   // Whether the DKIM entry and public key is valid
   valid() bool
+}
+
+// Remote host
+//
+// The host this connection targets, addressed by a domain name or an IP. What
+// the provider can tell you about it hangs off here: `domainName` parses the
+// name into its registrable domain and labels, `dns` reads its records, and
+// `tls` inspects its TLS endpoint. Each of those also stands on its own with an
+// explicit target, which is how they were reached before this resource existed.
+network.host @defaults("fqdn") @root {
+  // Domain name or IP address this connection targets
+  fqdn() string
+  // URL scheme the connection uses, e.g. https
+  //
+  // Empty when the target was given without one, which the connection reads as
+  // HTTPS.
+  scheme() string
 }
