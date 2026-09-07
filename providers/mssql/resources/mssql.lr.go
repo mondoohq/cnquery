@@ -213,6 +213,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mssql.server.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMssqlServer).GetVersion()).ToDataRes(types.String)
 	},
+	"mssql.server.versionBanner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMssqlServer).GetVersionBanner()).ToDataRes(types.String)
+	},
 	"mssql.server.productVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMssqlServer).GetProductVersion()).ToDataRes(types.String)
 	},
@@ -758,6 +761,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mssql.server.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMssqlServer).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mssql.server.versionBanner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMssqlServer).VersionBanner, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"mssql.server.productVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1590,6 +1597,7 @@ type mqlMssqlServer struct {
 	InstanceName              plugin.TValue[string]
 	Port                      plugin.TValue[int64]
 	Version                   plugin.TValue[string]
+	VersionBanner             plugin.TValue[string]
 	ProductVersion            plugin.TValue[string]
 	ProductLevel              plugin.TValue[string]
 	Edition                   plugin.TValue[string]
@@ -1667,6 +1675,10 @@ func (c *mqlMssqlServer) GetPort() *plugin.TValue[int64] {
 
 func (c *mqlMssqlServer) GetVersion() *plugin.TValue[string] {
 	return &c.Version
+}
+
+func (c *mqlMssqlServer) GetVersionBanner() *plugin.TValue[string] {
+	return &c.VersionBanner
 }
 
 func (c *mqlMssqlServer) GetProductVersion() *plugin.TValue[string] {

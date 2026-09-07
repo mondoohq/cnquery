@@ -24,9 +24,20 @@ postgresdb @root {}
 // `listenAddresses`. Cluster-wide principals and objects are reachable through
 // `roles`, `databases`, `tablespaces`, `extensions`, `hbaRules`,
 // `foreignServers`, and the replication collections.
-postgresdb.instance @defaults("version") {
-  // Full server version string
-  version @maturity("deprecated") @replaced_by("asset.version") string
+postgresdb.instance @defaults("versionBanner") {
+  // Server version string
+  //
+  // Deprecated in favor of versionBanner, which carries the same text under a
+  // name that says what it is. The comparable version - sortable, matchable
+  // against an advisory - is asset.version.
+  version @maturity("deprecated") @replaced_by("postgresdb.instance.versionBanner") string
+  // Full server version banner
+  //
+  // The whole string `SELECT version()` returns, including the platform triple
+  // and the compiler that built the server, e.g. "PostgreSQL 16.1 on
+  // x86_64-pc-linux-gnu, compiled by gcc ...". Read asset.version for the
+  // version number on its own.
+  versionBanner string
   // Cluster system identifier (stable unique id for the server)
   systemIdentifier string
   // Time the server was started

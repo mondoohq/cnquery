@@ -40,10 +40,18 @@ mssql.server @defaults("name version edition") {
   // scan dialed (they differ whenever a proxy or container port mapping sits in
   // between). Falls back to the connection's port when the DMV is unavailable.
   port() int
+  // Version banner from @@VERSION
+  //
+  // Deprecated in favor of versionBanner, which carries the same text under a
+  // name that says what it is. The comparable version is asset.version.
+  version @maturity("deprecated") @replaced_by("mssql.server.versionBanner") string
   // Full version banner from @@VERSION
-  version @maturity("deprecated") @replaced_by("asset.version") string
+  //
+  // The whole string @@VERSION returns, including the build and the host OS.
+  // Read asset.version for the version number on its own.
+  versionBanner string
   // Product version number, for example 16.0.1000.6
-  productVersion string
+  productVersion @maturity("deprecated") @replaced_by("asset.version") string
   // Service pack or cumulative update level
   productLevel string
   // Product edition, for example Enterprise or Developer

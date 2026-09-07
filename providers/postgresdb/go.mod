@@ -6,9 +6,12 @@ go 1.26.8
 
 require (
 	github.com/jackc/pgx/v5 v5.10.0
+	github.com/stretchr/testify v1.12.1
 	go.mondoo.com/mql v0.0.0-20260831061709-d8437f66ebc6
 	go.mondoo.com/ranger-rpc v0.8.1
 )
+
+require go.yaml.in/yaml/v3 v3.0.5 // indirect
 
 require (
 	dario.cat/mergo v1.0.2 // indirect

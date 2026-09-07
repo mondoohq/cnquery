@@ -63,6 +63,7 @@ func initPostgresdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	args["__id"] = llx.StringData(systemID)
 	args["systemIdentifier"] = llx.StringData(systemID)
 	args["version"] = llx.StringData(version)
+	args["versionBanner"] = llx.StringData(version)
 	args["startTime"] = llx.TimeDataPtr(&startTime)
 	args["inRecovery"] = llx.BoolData(inRecovery)
 	args["ssl"] = llx.BoolData(settings["ssl"] == "on")

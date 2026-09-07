@@ -362,6 +362,13 @@ func (a *mqlAristaEos) ipInterfaces() ([]any, error) {
 	return mqlIfaces, nil
 }
 
+// systemInfo is the device's software release, hardware identity, memory and
+// uptime. `version` is the same payload under the older name and stays for the
+// deprecation window.
+func (a *mqlAristaEos) systemInfo() (map[string]any, error) {
+	return a.version()
+}
+
 func (a *mqlAristaEos) version() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AristaConnection)
 	version, err := conn.GetVersion()

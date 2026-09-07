@@ -188,7 +188,8 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.PostgresdbConn
 	asset.Id = id
 	asset.Name = conn.Conf.Host
 	asset.Platform = connection.NewPostgresServerPlatform(systemID)
-	asset.Platform.Version = version
+	// The banner belongs on the resource; asset.version has to be comparable.
+	asset.Platform.Version = serverVersion(version)
 	asset.PlatformIds = []string{id}
 	return nil
 }

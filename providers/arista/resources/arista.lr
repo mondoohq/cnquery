@@ -29,13 +29,20 @@ arista.eos @root {
   interfaces() []arista.eos.interface
   // EOS software release and hardware identity
   //
-  // Output of `show version` as a dict. Keys covering the running image are
-  // `version`, `internalVersion`, `internalBuildId`, and `architecture`.
-  // Hardware identity keys are `modelName`, `mfgName`, `serialNumber`,
-  // `hardwareRevision`, `systemMacAddress`, `configMacAddress`, and
-  // `hwMacAddress`. Memory keys `memTotal` and `memFree` are in kilobytes,
-  // and `uptime` and `bootupTimestamp` are in seconds.
-  version() dict
+  // Deprecated in favor of systemInfo, which returns the same dict under a
+  // name that says what is in it: the running image, the chassis, memory and
+  // uptime. The comparable version number on its own is asset.version.
+  version() @maturity("deprecated") @replaced_by("arista.eos.systemInfo") dict
+  // Software release, hardware identity, memory and uptime
+  //
+  // The same dict this resource has always returned, under a name that says
+  // what is in it: the running image (`version`, `internalVersion`,
+  // `internalBuildId`, `architecture`), the chassis (`modelName`, `mfgName`,
+  // `serialNumber`, `hardwareRevision`, and the MAC addresses), memory
+  // (`memTotal`, `memFree`, in kilobytes) and `uptime`/`bootupTimestamp` in
+  // seconds. Only a fraction of it is the version, which is why `version` was
+  // the wrong name; the version number on its own is asset.version.
+  systemInfo() dict
   // System hostname
   hostname() string
   // Fully qualified domain name
