@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"fmt"
 	"strconv"
 
 	secretsmanager "github.com/stackitcloud/stackit-sdk-go/services/secretsmanager/v1api"
@@ -61,16 +62,6 @@ func ttlSeconds(ttl string) *int64 {
 // from an exhausted credential.
 func usesUnlimited(numUses int32) bool {
 	return numUses == 0
-}
-
-// nonEmpty keeps an empty string out of a field the service normally
-// populates, so "the instance told us nothing" reads as null rather than as a
-// real empty setting.
-func nonEmpty(s string) *string {
-	if s == "" {
-		return nil
-	}
-	return &s
 }
 
 // approles lists the machine identities that hold credentials on the
@@ -135,7 +126,10 @@ func newApprole(inst *mqlStackitSecretsManagerInstance, role *secretsmanager.App
 // deliberately never mapped into the resource.
 func (r *mqlStackitSecretsManagerApprole) secretIds() ([]any, error) {
 	if r.cacheInstanceId == "" {
-		return []any{}, nil
+		// only newApprole creates this resource, and it always records the
+		// instance. Reporting an empty list here would pass any check written
+		// over the secret IDs while having read none of them.
+		return nil, fmt.Errorf("stackit.secretsManager.approle %q has no owning instance", r.RoleId.Data)
 	}
 	c := conn(r.MqlRuntime)
 	client, err := c.SecretsManager()
