@@ -205,7 +205,7 @@ url @defaults("string") @global {
 // non-SNI fallback). Use it to find weak protocol
 // versions, weak ciphers, expired certs, and missing OCSP / SCT
 // support.
-tls @defaults("socket domainName") {
+tls @defaults("socket domainName") @global {
   init(target string)
   // Socket of this connection
   socket socket
@@ -566,7 +566,7 @@ private openpgp.signature {
 // independently of subdomain labels, for example to group hosts by
 // their owning domain or to check whether a name sits under an
 // ICANN-managed TLD.
-domainName @defaults("fqdn") {
+domainName @defaults("fqdn") @global {
   init(fqdn string)
   // Fully qualified domain name (FQDN)
   fqdn string
@@ -587,7 +587,7 @@ domainName @defaults("fqdn") {
 // resolved record, the MX record list, DNSSEC signing state, and
 // parsed SPF, DMARC, and DKIM policy records, so mail-authentication
 // and zone-signing audits run without hand-building DNS lookups.
-dns @defaults("fqdn") {
+dns @defaults("fqdn") @global {
   init(fqdn string)
   // Fully qualified domain name (FQDN)
   fqdn string

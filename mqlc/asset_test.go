@@ -705,3 +705,65 @@ func TestRootScopeMissIsTypedAsAMismatch(t *testing.T) {
 		assert.NotErrorIs(t, err, mqlc.ErrRootMismatch)
 	})
 }
+
+// A name can be both a member of the root and a resource you construct with a
+// target, and the two are told apart by arity.
+//
+// `network.host.tls` hands back the TLS endpoint of the host you connected to;
+// the `tls` resource points anywhere you give it. Under RootedNamespace the
+// member is found first, so without this the member swallowed the call and
+// `tls("example.com")` failed with "cannot call field with arguments" - a
+// capability that worked in v14 and would have gone missing in v15.
+//
+// This is the same disambiguation type conversions get: an interpretation that
+// cannot serve the call declines instead of failing on it.
+func TestRootedNamespaceKeepsConstructibleResources(t *testing.T) {
+	schema := testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "network"})
+	core := testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "core"})
+	merged := &resources.Schema{
+		Resources:    map[string]*resources.ResourceInfo{},
+		Dependencies: map[string]*resources.ProviderInfo{},
+	}
+	merged.Add(schema)
+	merged.Add(core)
+
+	rooted := mqlc.NewConfig(merged, mql.Features{byte(mql.ResourceContext), byte(mql.RootedNamespace)})
+	rooted.AssetRoot = "network.host"
+
+	t.Run("called with a target, it is the resource", func(t *testing.T) {
+		for _, q := range []string{
+			`tls("example.com").versions`,
+			`dns("example.com").fqdn`,
+			`domainName("sub.example.co.uk").tld`,
+		} {
+			_, err := mqlc.Compile(q, nil, rooted)
+			assert.NoErrorf(t, err, q)
+		}
+	})
+
+	t.Run("bare, it is the member of the connected host", func(t *testing.T) {
+		for _, q := range []string{"tls.versions", "dns.fqdn", "domainName.tld", "_.tls.versions"} {
+			_, err := mqlc.Compile(q, nil, rooted)
+			assert.NoErrorf(t, err, q)
+		}
+	})
+
+	// A member that *is* an implicit resource does take the arguments through
+	// to its init, and must keep doing so - that is how `_.file("/x")` works.
+	t.Run("an implicit member still takes its arguments", func(t *testing.T) {
+		osSchema := testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "os"})
+		m := &resources.Schema{
+			Resources:    map[string]*resources.ResourceInfo{},
+			Dependencies: map[string]*resources.ProviderInfo{},
+		}
+		m.Add(osSchema)
+		m.Add(core)
+		osRooted := mqlc.NewConfig(m, mql.Features{byte(mql.ResourceContext), byte(mql.RootedNamespace)})
+		osRooted.AssetRoot = "os.linux"
+
+		for _, q := range []string{`file("/etc/hostname").exists`, `_.file("/etc/hostname").exists`} {
+			_, err := mqlc.Compile(q, nil, osRooted)
+			assert.NoErrorf(t, err, q)
+		}
+	})
+}
