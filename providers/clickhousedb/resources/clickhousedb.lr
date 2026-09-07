@@ -1,15 +1,18 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/clickhousedb"
 option go_package = "go.mondoo.com/mql/providers/clickhousedb/resources"
+option root = "clickhousedb"
 
 // ClickHouse
 //
 // Root of the ClickHouse provider. The connected server and everything
 // queryable through it (users, roles, grants, settings profiles, quotas,
 // clusters, and server settings) is reached from clickhousedb.instance.
-clickhousedb {
+clickhousedb @root {
 }
 
 // ClickHouse server

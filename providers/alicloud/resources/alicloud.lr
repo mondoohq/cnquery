@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/alicloud"
 option go_package = "go.mondoo.com/mql/providers/alicloud/resources"
+option root = "alicloud"
 
 // Alibaba Cloud
 //
@@ -14,7 +17,7 @@ option go_package = "go.mondoo.com/mql/providers/alicloud/resources"
 // Cloud Firewall, Anti-DDoS, Security Center, Key Management Service,
 // ActionTrail, Log Service, Cloud Config, CloudSSO, Cloud Enterprise Network,
 // and Resource Directory resources.
-alicloud {
+alicloud @root {
   // Account (UID) that the active credential belongs to
   accountId() string
   // Region IDs enabled on the account, for example cn-hangzhou

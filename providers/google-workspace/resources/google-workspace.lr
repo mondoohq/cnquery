@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/google-workspace"
 option go_package = "go.mondoo.com/mql/providers/google-workspace/resources"
+option root = "googleworkspace"
 
 // Google Workspace organization
 //
@@ -19,7 +22,7 @@ option go_package = "go.mondoo.com/mql/providers/google-workspace/resources"
 // use for identity hygiene, sharing reviews, 2-step-verification
 // enforcement checks, device-compliance audits, and domain-wide
 // security-posture review.
-googleworkspace {
+googleworkspace @root {
   // Organizational units in the account hierarchy
   orgUnits() []googleworkspace.orgUnit
   // All user accounts

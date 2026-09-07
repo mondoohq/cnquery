@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/atlassian"
 option go_package = "go.mondoo.com/mql/providers/atlassian/resources"
+option root = "atlassian.admin.organization"
 
 // Atlassian SCIM (System for Cross-domain Identity Management) directory
 //
@@ -10,7 +13,7 @@ option go_package = "go.mondoo.com/mql/providers/atlassian/resources"
 // synced into Atlassian Cloud from an external identity provider. Inventory
 // the provisioned identities and their group membership to detect orphaned
 // accounts, drift between the IdP and Atlassian, or unexpected access.
-atlassian.scim {
+atlassian.scim @root {
   // Provisioned SCIM users
   users() []atlassian.scim.user
   // Provisioned SCIM groups
@@ -79,7 +82,7 @@ atlassian.scim.group @defaults("name") {
 // owns, and the accounts it manages. This is the surface auditors check for
 // org-wide identity controls such as IP allowlists, data residency,
 // verified domains, and managed-account access reviews.
-atlassian.admin.organization @defaults("name") {
+atlassian.admin.organization @defaults("name") @root {
   // Organization ID
   id string
   // Organization name
@@ -244,7 +247,7 @@ atlassian.admin.organization.domain @defaults("name") {
 // projects, and issues, and the recent audit-log records. This is the
 // surface auditors check for least-privilege project permissions, dormant
 // users, and suspicious admin activity.
-atlassian.jira {
+atlassian.jira @root {
   // All Jira users
   users() []atlassian.jira.user
   // All Jira projects
@@ -802,7 +805,7 @@ atlassian.jira.group @defaults("name") {
 // auditing all users and all spaces. Surfaces the data auditors use to find
 // unprotected content (anonymous- or unlicensed-accessible spaces),
 // inappropriate space-level permissions, and page-level restrictions.
-atlassian.confluence {
+atlassian.confluence @root {
   // All Confluence users
   users() []atlassian.confluence.user
   // All Confluence spaces

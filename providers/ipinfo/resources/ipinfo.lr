@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/ipinfo"
 option go_package = "go.mondoo.com/mql/providers/ipinfo/resources"
+option root = "ipinfo"
 
 // IP information from the ipinfo.io service
 //
@@ -13,7 +16,7 @@ option go_package = "go.mondoo.com/mql/providers/ipinfo/resources"
 // code, timezone), the owning organization (ASN plus name), and whether
 // the address falls in a special-use bogon range. Supply an IP to look one
 // up, for example ipinfo(ip: "8.8.8.8").
-ipinfo @defaults("returned_ip hostname city") {
+ipinfo @defaults("returned_ip hostname city") @root {
   init(ip ip)
   // The IP address that was requested (empty if querying for your public IP)
   requested_ip ip

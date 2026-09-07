@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/mikrotik"
 option go_package = "go.mondoo.com/mql/providers/mikrotik/resources"
+option root = "mikrotik"
 
 // MikroTik RouterOS device
 //
@@ -31,7 +34,7 @@ option go_package = "go.mondoo.com/mql/providers/mikrotik/resources"
 // No secret material is exposed anywhere in the model. Community strings,
 // pre-shared keys, shared secrets, and private keys are reported as presence
 // or as derived booleans only.
-mikrotik {
+mikrotik @root {
   // System identity, RouterOS version, and RouterBOARD hardware
   system() mikrotik.system
   // Installed software packages

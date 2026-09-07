@@ -95,6 +95,19 @@ func RootReachable(schema ResourcesSchema, name string) bool {
 		return true
 	}
 
+	// An aliased resource is reachable under the alias name, and the alias and
+	// the resource it names are the same resource - so the question has to be
+	// asked about canonical ids, not map keys. `alias microsoft.exchangeonline
+	// = ms365.exchangeonline` puts the alias on the root; asking whether
+	// `ms365.exchangeonline` is reachable has to answer yes.
+	canonical := func(n string) string {
+		if info := schema.Lookup(n); info != nil && info.Id != "" {
+			return info.Id
+		}
+		return n
+	}
+	want := canonical(name)
+
 	seen := map[string]struct{}{}
 	queue := make([]string, 0, len(roots))
 	for rootName := range roots {
@@ -121,7 +134,7 @@ func RootReachable(schema ResourcesSchema, name string) bool {
 			if child == "" {
 				continue
 			}
-			if child == name {
+			if child == name || canonical(child) == want {
 				return true
 			}
 			if _, ok := seen[child]; ok {

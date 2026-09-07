@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/openstack"
 option go_package = "go.mondoo.com/mql/providers/openstack/resources"
+option root = "openstack"
 
 // OpenStack connection
 //
@@ -18,7 +21,7 @@ option go_package = "go.mondoo.com/mql/providers/openstack/resources"
 // firewalling, site-to-site VPN, load-balancing, and secret-management surface
 // most relevant to security review. The `authUrl`, `projectId`, and `region`
 // fields identify the connection scope every other resource is read against.
-openstack {
+openstack @root {
   // Keystone auth URL the connection is bound to
   authUrl string
   // Scoped project ID

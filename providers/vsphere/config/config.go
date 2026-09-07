@@ -12,7 +12,9 @@ import (
 )
 
 var Config = plugin.Provider{
-	Name:    "vsphere",
+	Name: "vsphere",
+	// Every kind this provider hands out as its own asset is a root (ADR 031).
+	Root:    "vsphere",
 	ID:      "go.mondoo.com/mql/providers/vsphere",
 	Version: "13.7.7",
 	Requires: []plugin.ProviderDep{

@@ -1,15 +1,18 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/clickhousecloud"
 option go_package = "go.mondoo.com/mql/providers/clickhousecloud/resources"
+option root = "clickhousecloud"
 
 // ClickHouse Cloud
 //
 // Root of the ClickHouse Cloud provider. The connected organization and
 // everything queryable through it (services, IP access lists, API keys, and
 // members) is reached from clickhousecloud.organization.
-clickhousecloud {
+clickhousecloud @root {
 }
 
 // ClickHouse Cloud organization

@@ -11,9 +11,15 @@ import (
 )
 
 var Config = plugin.Provider{
-	Name:            "helm",
-	ID:              "go.mondoo.com/mql/providers/helm",
-	Version:         "13.3.13",
+	Name: "helm",
+	// Every kind this provider hands out as its own asset is a root (ADR 031).
+	Root:    "helm",
+	ID:      "go.mondoo.com/mql/providers/helm",
+	Version: "13.3.13",
+	// Every root carries `asset`, which core owns (ADR 042).
+	Requires: []plugin.ProviderDep{
+		{ID: "go.mondoo.com/mql/providers/core", Name: "core", MinVersion: "13.0.0"},
+	},
 	Maturity:        resources.MaturityExperimental,
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       provider.Platforms,

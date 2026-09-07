@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/ansible"
 option go_package = "go.mondoo.com/mql/providers/ansible/resources"
+option root = "ansible"
 
 // Ansible playbook
 //
@@ -10,7 +13,7 @@ option go_package = "go.mondoo.com/mql/providers/ansible/resources"
 // list of plays so audits can inspect what each play targets, what privileges
 // it escalates to, and which tasks and handlers it runs, without executing
 // the playbook against any inventory.
-ansible {
+ansible @root {
   // Plays defined in the playbook
   plays() []ansible.play
 }

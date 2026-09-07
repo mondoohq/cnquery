@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/redfish"
 option go_package = "go.mondoo.com/mql/providers/redfish/resources"
+option root = "redfish"
 
 // Redfish management service
 //
@@ -11,7 +14,7 @@ option go_package = "go.mondoo.com/mql/providers/redfish/resources"
 // Provides the managed compute systems, management controllers, physical
 // chassis, BMC user accounts, and firmware inventory for out-of-band audits
 // that run independently of the host operating system.
-redfish {
+redfish @root {
   // Compute systems managed through the controller
   systems() []redfish.system
   // Management controllers (BMCs) for this service

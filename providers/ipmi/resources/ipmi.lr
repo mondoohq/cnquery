@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/ipmi"
 option go_package = "go.mondoo.com/mql/providers/ipmi/resources"
+option root = "ipmi"
 
 // Intelligent Platform Management Interface (IPMI)
 //
@@ -12,7 +15,7 @@ option go_package = "go.mondoo.com/mql/providers/ipmi/resources"
 // revision, IPMI version, manufacturer, and product identity, and guid
 // returns its globally unique identifier, together confirming which
 // management firmware answers before an audit inspects chassis state.
-ipmi {
+ipmi @root {
   // Hardware and firmware device ID of the management controller
   //
   // Dict returned by the Get Device ID command. Keys: `deviceID`,

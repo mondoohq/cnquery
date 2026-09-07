@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/proxmox"
 option go_package = "go.mondoo.com/mql/providers/proxmox/resources"
+option root = "proxmox"
 
 // Proxmox VE
 //
@@ -17,7 +20,7 @@ option go_package = "go.mondoo.com/mql/providers/proxmox/resources"
 // through `replicationJobs`; software-defined networking through
 // `sdnZones` and `sdnVnets`; and the Ceph storage cluster, when one is
 // configured, through `ceph`.
-proxmox {
+proxmox @root {
   // Version and system information
   //
   // Raw `/version` API response. Keys include `version` (the PVE manager

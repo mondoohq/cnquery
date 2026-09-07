@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/terraform"
 option go_package = "go.mondoo.com/mql/providers/terraform/resources"
+option root = "terraform"
 
 // Terraform configuration
 //
@@ -12,7 +15,7 @@ option go_package = "go.mondoo.com/mql/providers/terraform/resources"
 // variable, and output blocks. Use it to write infrastructure-as-code
 // policy against the source representation of an infrastructure tree
 // before it has been planned or applied.
-terraform {
+terraform @root {
   // Access to individual files including .tf and .tf.json files
   files() []terraform.file
   // Variable values from .tfvars and .tfvars.json

@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/stackit"
 option go_package = "go.mondoo.com/mql/providers/stackit/resources"
+option root = "stackit"
 
 // STACKIT project
 //
@@ -19,7 +22,7 @@ option go_package = "go.mondoo.com/mql/providers/stackit/resources"
 // the managed Prometheus/Alertmanager stack, key management, project
 // IAM bindings, and service accounts. Use it to audit what a project
 // exposes and how its resources are configured.
-stackit {
+stackit @root {
   // STACKIT project the connection is scoped to
   project() stackit.project
   // Region the connection targets (e.g., eu01)

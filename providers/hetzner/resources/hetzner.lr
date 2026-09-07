@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/hetzner"
 option go_package = "go.mondoo.com/mql/providers/hetzner/resources"
+option root = "hetzner"
 
 // Hetzner Cloud project
 //
@@ -16,7 +19,7 @@ option go_package = "go.mondoo.com/mql/providers/hetzner/resources"
 // regional and datacenter topology, managed Storage Boxes, and
 // managed DNS zones with their records are all queryable here,
 // providing a full inventory of a single Hetzner Cloud project.
-hetzner {
+hetzner @root {
   // Cloud servers (virtual machines)
   servers() []hetzner.server
   // Server types (VM sizes)
