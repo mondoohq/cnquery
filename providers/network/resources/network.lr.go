@@ -1028,6 +1028,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"network.host.scheme": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetworkHost).GetScheme()).ToDataRes(types.String)
 	},
+	"network.host.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkHost).GetDomainName()).ToDataRes(types.Resource("domainName"))
+	},
+	"network.host.dns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkHost).GetDns()).ToDataRes(types.Resource("dns"))
+	},
+	"network.host.tls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkHost).GetTls()).ToDataRes(types.Resource("tls"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -2194,6 +2203,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"network.host.scheme": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetworkHost).Scheme, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"network.host.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHost).DomainName, ok = plugin.RawToTValue[*mqlDomainName](v.Value, v.Error)
+		return
+	},
+	"network.host.dns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHost).Dns, ok = plugin.RawToTValue[*mqlDns](v.Value, v.Error)
+		return
+	},
+	"network.host.tls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHost).Tls, ok = plugin.RawToTValue[*mqlTls](v.Value, v.Error)
 		return
 	},
 }
@@ -5467,8 +5488,11 @@ type mqlNetworkHost struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlNetworkHostInternal it will be used here
-	Fqdn   plugin.TValue[string]
-	Scheme plugin.TValue[string]
+	Fqdn       plugin.TValue[string]
+	Scheme     plugin.TValue[string]
+	DomainName plugin.TValue[*mqlDomainName]
+	Dns        plugin.TValue[*mqlDns]
+	Tls        plugin.TValue[*mqlTls]
 }
 
 // createNetworkHost creates a new instance of this resource
@@ -5517,5 +5541,53 @@ func (c *mqlNetworkHost) GetFqdn() *plugin.TValue[string] {
 func (c *mqlNetworkHost) GetScheme() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Scheme, func() (string, error) {
 		return c.scheme()
+	})
+}
+
+func (c *mqlNetworkHost) GetDomainName() *plugin.TValue[*mqlDomainName] {
+	return plugin.GetOrCompute[*mqlDomainName](&c.DomainName, func() (*mqlDomainName, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("network.host", c.__id, "domainName")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDomainName), nil
+			}
+		}
+
+		return c.domainName()
+	})
+}
+
+func (c *mqlNetworkHost) GetDns() *plugin.TValue[*mqlDns] {
+	return plugin.GetOrCompute[*mqlDns](&c.Dns, func() (*mqlDns, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("network.host", c.__id, "dns")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDns), nil
+			}
+		}
+
+		return c.dns()
+	})
+}
+
+func (c *mqlNetworkHost) GetTls() *plugin.TValue[*mqlTls] {
+	return plugin.GetOrCompute[*mqlTls](&c.Tls, func() (*mqlTls, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("network.host", c.__id, "tls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlTls), nil
+			}
+		}
+
+		return c.tls()
 	})
 }
