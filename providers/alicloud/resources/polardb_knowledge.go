@@ -5,6 +5,7 @@ package resources
 
 import (
 	"fmt"
+	"sync"
 
 	polardb "github.com/alibabacloud-go/polardb-20170801/v9/client"
 	tea "github.com/alibabacloud-go/tea/tea"
@@ -39,11 +40,25 @@ type mqlAlicloudPolardbKnowledgeBaseInternal struct {
 	cacheSpaceID    string
 }
 
+// mqlAlicloudPolardbInternal memoizes the account-wide knowledge-base listing.
+// Both knowledgeBases and knowledgeSpaces walk it, because the spaces are only
+// reachable through the bases, and a query touching both would otherwise pay
+// the whole region walk twice.
+type mqlAlicloudPolardbInternal struct {
+	knowledgeLock  sync.Mutex
+	knowledgeReady bool
+	kbRecords      map[string][]*polardb.DescribeKnowledgeBasesResponseBodyItems
+}
+
 // listKnowledgeBaseRecords walks DescribeKnowledgeBases for one region,
-// optionally narrowed to a single knowledge space. A region without the
-// knowledge-base feature, or one the credential cannot read, yields no records
-// rather than failing a query over the whole account.
-func listKnowledgeBaseRecords(client *polardb.Client, region, knowledgeSpaceID string) []*polardb.DescribeKnowledgeBasesResponseBodyItems {
+// optionally narrowed to a single knowledge space.
+//
+// A first-page error means the region has no knowledge-base feature or the
+// credential cannot read it there; that region yields no records rather than
+// failing a query over the whole account. A later-page error is real and is
+// returned, because truncating the walk silently would report fewer corpora
+// than exist, and a shorter list satisfies every assertion made about it.
+func listKnowledgeBaseRecords(client *polardb.Client, region, knowledgeSpaceID string) ([]*polardb.DescribeKnowledgeBasesResponseBodyItems, error) {
 	res := []*polardb.DescribeKnowledgeBasesResponseBodyItems{}
 	pageNumber := int32(1)
 	pageSize := int32(100)
@@ -61,12 +76,15 @@ func listKnowledgeBaseRecords(client *polardb.Client, region, knowledgeSpaceID s
 		}
 		resp, err := client.DescribeKnowledgeBases(req)
 		if err != nil {
-			log.Debug().Err(err).Str("region", region).
-				Msg("alicloud> could not list PolarDB knowledge bases")
-			return res
+			if pages == 0 {
+				log.Debug().Err(err).Str("region", region).
+					Msg("alicloud> could not list PolarDB knowledge bases")
+				return res, nil
+			}
+			return nil, err
 		}
 		if resp == nil || resp.Body == nil {
-			return res
+			return res, nil
 		}
 
 		items := resp.Body.Items
@@ -79,10 +97,45 @@ func listKnowledgeBaseRecords(client *polardb.Client, region, knowledgeSpaceID s
 
 		pages++
 		if len(items) == 0 || len(items) < int(pageSize) || pages >= polardbKnowledgeMaxPages {
-			return res
+			return res, nil
 		}
 		pageNumber++
 	}
+}
+
+// knowledgeBaseRecordsByRegion walks every enabled region once and hands the
+// same records to both knowledge accessors. A failed walk is not memoized, so a
+// later access retries rather than permanently reporting an account as having
+// no corpora.
+func (r *mqlAlicloudPolardb) knowledgeBaseRecordsByRegion() (map[string][]*polardb.DescribeKnowledgeBasesResponseBodyItems, error) {
+	r.knowledgeLock.Lock()
+	defer r.knowledgeLock.Unlock()
+	if r.knowledgeReady {
+		return r.kbRecords, nil
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	regions, err := conn.GetRegions()
+	if err != nil {
+		return nil, err
+	}
+
+	records := map[string][]*polardb.DescribeKnowledgeBasesResponseBodyItems{}
+	for _, region := range regions {
+		client, err := conn.PolarDBClient(region)
+		if err != nil {
+			return nil, err
+		}
+		bases, err := listKnowledgeBaseRecords(client, region, "")
+		if err != nil {
+			return nil, err
+		}
+		records[region] = bases
+	}
+
+	r.kbRecords = records
+	r.knowledgeReady = true
+	return r.kbRecords, nil
 }
 
 // knowledgeBases lists the knowledge bases across every enabled region.
@@ -92,14 +145,14 @@ func (r *mqlAlicloudPolardb) knowledgeBases() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	records, err := r.knowledgeBaseRecordsByRegion()
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
 	for _, region := range regions {
-		client, err := conn.PolarDBClient(region)
-		if err != nil {
-			return nil, err
-		}
-		for _, kb := range listKnowledgeBaseRecords(client, region, "") {
+		for _, kb := range records[region] {
 			mqlBase, err := newPolardbKnowledgeBase(r.MqlRuntime, region, kb)
 			if err != nil {
 				return nil, err
@@ -144,6 +197,10 @@ func (r *mqlAlicloudPolardb) knowledgeSpaces() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	records, err := r.knowledgeBaseRecordsByRegion()
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
 	for _, region := range regions {
@@ -151,7 +208,7 @@ func (r *mqlAlicloudPolardb) knowledgeSpaces() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		for _, spaceID := range polardbKnowledgeSpaceIDs(listKnowledgeBaseRecords(client, region, "")) {
+		for _, spaceID := range polardbKnowledgeSpaceIDs(records[region]) {
 			body, err := describeKnowledgeSpace(client, region, spaceID)
 			if err != nil {
 				// one space the credential cannot read must not hide the rest
@@ -307,8 +364,13 @@ func (r *mqlAlicloudPolardbKnowledgeSpace) knowledgeBases() ([]any, error) {
 		return nil, err
 	}
 
+	bases, err := listKnowledgeBaseRecords(client, r.region, r.knowledgeSpaceId)
+	if err != nil {
+		return nil, err
+	}
+
 	res := []any{}
-	for _, kb := range listKnowledgeBaseRecords(client, r.region, r.knowledgeSpaceId) {
+	for _, kb := range bases {
 		mqlBase, err := newPolardbKnowledgeBase(r.MqlRuntime, r.region, kb)
 		if err != nil {
 			return nil, err

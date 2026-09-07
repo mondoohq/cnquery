@@ -27551,7 +27551,7 @@ func (c *mqlAlicloudMongodbInstance) GetAuditPolicyEnabled() *plugin.TValue[bool
 type mqlAlicloudPolardb struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAlicloudPolardbInternal it will be used here
+	mqlAlicloudPolardbInternal
 	Clusters        plugin.TValue[[]any]
 	KnowledgeBases  plugin.TValue[[]any]
 	KnowledgeSpaces plugin.TValue[[]any]
