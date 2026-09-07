@@ -15,7 +15,6 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceWeaviate               string = "weaviate"
 	ResourceWeaviateInstance       string = "weaviate.instance"
 	ResourceWeaviateCollection     string = "weaviate.collection"
 	ResourceWeaviateRole           string = "weaviate.role"
@@ -28,10 +27,6 @@ var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
 	resourceFactories = map[string]plugin.ResourceFactory{
-		"weaviate": {
-			// to override args, implement: initWeaviate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createWeaviate,
-		},
 		"weaviate.instance": {
 			Init:   initWeaviateInstance,
 			Create: createWeaviateInstance,
@@ -253,10 +248,6 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 }
 
 var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
-	"weaviate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWeaviate).__id, ok = v.Value.(string)
-		return
-	},
 	"weaviate.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWeaviateInstance).__id, ok = v.Value.(string)
 		return
@@ -455,50 +446,6 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 		}
 	}
 	return nil
-}
-
-// mqlWeaviate for the weaviate resource
-type mqlWeaviate struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlWeaviateInternal it will be used here
-}
-
-// createWeaviate creates a new instance of this resource
-func createWeaviate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlWeaviate{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("weaviate", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlWeaviate) MqlName() string {
-	return "weaviate"
-}
-
-func (c *mqlWeaviate) MqlID() string {
-	return c.__id
 }
 
 // mqlWeaviateInstance for the weaviate.instance resource

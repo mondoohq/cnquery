@@ -186,6 +186,9 @@ http.header.xssProtection 9.0.5
 http.header.xssProtection.enabled 9.0.5
 http.header.xssProtection.mode 9.0.5
 http.header.xssProtection.report 9.0.5
+network.host 13.3.1
+network.host.fqdn 13.3.1
+network.host.scheme 13.3.1
 openpgp.entities 9.0.1
 openpgp.entities.content 9.0.1
 openpgp.entities.list 9.0.1

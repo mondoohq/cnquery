@@ -7,13 +7,6 @@ option provider = "go.mondoo.com/mql/providers/weaviate"
 option go_package = "go.mondoo.com/mql/providers/weaviate/resources"
 option root = "weaviate.instance"
 
-// Weaviate vector database
-//
-// Root of the Weaviate provider. The connected server and everything
-// queryable through it (collections, roles, users, and cluster nodes) is
-// reached from weaviate.instance.
-weaviate {
-}
 
 // Weaviate server
 //

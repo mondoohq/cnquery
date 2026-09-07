@@ -11,9 +11,15 @@ import (
 )
 
 var Config = plugin.Provider{
-	Name:            "network",
-	ID:              "go.mondoo.com/mql/providers/network",
-	Version:         "13.3.0",
+	Name: "network",
+	// The host this provider connects to (ADR 031).
+	Root:    "network.host",
+	ID:      "go.mondoo.com/mql/providers/network",
+	Version: "13.3.0",
+	// Every root carries `asset`, which core owns (ADR 042).
+	Requires: []plugin.ProviderDep{
+		{ID: "go.mondoo.com/mql/providers/core", Name: "core", MinVersion: "13.0.0"},
+	},
 	ConnectionTypes: []string{provider.HostConnectionType},
 	Platforms:       provider.Platforms,
 	// Host scans are almost entirely spent waiting on DNS, TLS and HTTP against

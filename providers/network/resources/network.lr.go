@@ -49,6 +49,7 @@ const (
 	ResourceDnsSpfRecord              string = "dns.spfRecord"
 	ResourceDnsDmarcRecord            string = "dns.dmarcRecord"
 	ResourceDnsDkimRecord             string = "dns.dkimRecord"
+	ResourceNetworkHost               string = "network.host"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -186,6 +187,10 @@ func init() {
 		"dns.dkimRecord": {
 			// to override args, implement: initDnsDkimRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDnsDkimRecord,
+		},
+		"network.host": {
+			// to override args, implement: initNetworkHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetworkHost,
 		},
 	}
 }
@@ -1016,6 +1021,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"dns.dkimRecord.valid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDnsDkimRecord).GetValid()).ToDataRes(types.Bool)
+	},
+	"network.host.fqdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkHost).GetFqdn()).ToDataRes(types.String)
+	},
+	"network.host.scheme": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkHost).GetScheme()).ToDataRes(types.String)
 	},
 }
 
@@ -2171,6 +2182,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"dns.dkimRecord.valid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDnsDkimRecord).Valid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"network.host.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHost).__id, ok = v.Value.(string)
+		return
+	},
+	"network.host.fqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHost).Fqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"network.host.scheme": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkHost).Scheme, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -5436,5 +5459,63 @@ func (c *mqlDnsDkimRecord) GetFlags() *plugin.TValue[[]any] {
 func (c *mqlDnsDkimRecord) GetValid() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.Valid, func() (bool, error) {
 		return c.valid()
+	})
+}
+
+// mqlNetworkHost for the network.host resource
+type mqlNetworkHost struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetworkHostInternal it will be used here
+	Fqdn   plugin.TValue[string]
+	Scheme plugin.TValue[string]
+}
+
+// createNetworkHost creates a new instance of this resource
+func createNetworkHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetworkHost{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("network.host", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetworkHost) MqlName() string {
+	return "network.host"
+}
+
+func (c *mqlNetworkHost) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetworkHost) GetFqdn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Fqdn, func() (string, error) {
+		return c.fqdn()
+	})
+}
+
+func (c *mqlNetworkHost) GetScheme() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Scheme, func() (string, error) {
+		return c.scheme()
 	})
 }

@@ -17,10 +17,6 @@ import (
 	"go.mondoo.com/mql/types"
 )
 
-func (r *mqlWeaviate) id() (string, error) {
-	return "weaviate", nil
-}
-
 func weaviateConnection(runtime *plugin.Runtime) *connection.WeaviateConnection {
 	return runtime.Connection.(*connection.WeaviateConnection)
 }
