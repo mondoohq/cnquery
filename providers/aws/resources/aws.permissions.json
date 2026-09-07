@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.53.3",
-  "generated_at": "2026-08-31T10:45:17-07:00",
+  "generated_at": "2026-09-07T10:41:15-07:00",
   "permissions": [
     "access-analyzer:GetFindingV2",
     "access-analyzer:ListAnalyzers",
@@ -91,6 +91,7 @@
     "bedrock-agentcore:GetBrowser",
     "bedrock-agentcore:GetCapacityProvider",
     "bedrock-agentcore:GetCodeInterpreter",
+    "bedrock-agentcore:GetConsentPortal",
     "bedrock-agentcore:GetGateway",
     "bedrock-agentcore:GetGatewayTarget",
     "bedrock-agentcore:GetMemory",
@@ -100,6 +101,7 @@
     "bedrock-agentcore:ListBrowsers",
     "bedrock-agentcore:ListCapacityProviders",
     "bedrock-agentcore:ListCodeInterpreters",
+    "bedrock-agentcore:ListConsentPortals",
     "bedrock-agentcore:ListGatewayRateLimits",
     "bedrock-agentcore:ListGatewayTargets",
     "bedrock-agentcore:ListGateways",
@@ -503,11 +505,17 @@
     "glue:ListWorkflows",
     "guardduty:DescribePublishingDestination",
     "guardduty:GetCoverageStatistics",
+    "guardduty:GetCustomDetectionRule",
+    "guardduty:GetCustomDetectionRuleAssociation",
+    "guardduty:GetCustomDetectionRuleOrgConfiguration",
     "guardduty:GetDetector",
     "guardduty:GetFilter",
     "guardduty:GetFindings",
     "guardduty:GetIPSet",
     "guardduty:GetThreatIntelSet",
+    "guardduty:ListCustomDetectionRuleAssociations",
+    "guardduty:ListCustomDetectionRuleOrgConfigurations",
+    "guardduty:ListCustomDetectionRules",
     "guardduty:ListDetectors",
     "guardduty:ListFilters",
     "guardduty:ListFindings",
@@ -580,7 +588,9 @@
     "kafka:ListNodes",
     "kafka:ListReplicators",
     "kafka:ListScramSecrets",
+    "kinesis:DescribeChannel",
     "kinesis:DescribeStreamSummary",
+    "kinesis:ListChannels",
     "kinesis:ListStreamConsumers",
     "kinesis:ListStreams",
     "kinesis:ListTagsForStream",
@@ -932,6 +942,7 @@
     "ses:GetEmailIdentity",
     "ses:ListConfigurationSets",
     "ses:ListEmailIdentities",
+    "ses:ListEmailIdentityCertificates",
     "shield:DescribeDRTAccess",
     "shield:DescribeEmergencyContactSettings",
     "shield:DescribeSubscription",
@@ -1586,6 +1597,12 @@
       "source_file": "aws_bedrock_agentcore.go"
     },
     {
+      "permission": "bedrock-agentcore:GetConsentPortal",
+      "service": "bedrock-agentcore",
+      "action": "GetConsentPortal",
+      "source_file": "aws_bedrock_agentcore_consent.go"
+    },
+    {
       "permission": "bedrock-agentcore:GetGateway",
       "service": "bedrock-agentcore",
       "action": "GetGateway",
@@ -1638,6 +1655,12 @@
       "service": "bedrock-agentcore",
       "action": "ListCodeInterpreters",
       "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
+      "permission": "bedrock-agentcore:ListConsentPortals",
+      "service": "bedrock-agentcore",
+      "action": "ListConsentPortals",
+      "source_file": "aws_bedrock_agentcore_consent.go"
     },
     {
       "permission": "bedrock-agentcore:ListGatewayRateLimits",
@@ -4154,6 +4177,24 @@
       "source_file": "aws_guardduty.go"
     },
     {
+      "permission": "guardduty:GetCustomDetectionRule",
+      "service": "guardduty",
+      "action": "GetCustomDetectionRule",
+      "source_file": "aws_guardduty_customrules.go"
+    },
+    {
+      "permission": "guardduty:GetCustomDetectionRuleAssociation",
+      "service": "guardduty",
+      "action": "GetCustomDetectionRuleAssociation",
+      "source_file": "aws_guardduty_customrules.go"
+    },
+    {
+      "permission": "guardduty:GetCustomDetectionRuleOrgConfiguration",
+      "service": "guardduty",
+      "action": "GetCustomDetectionRuleOrgConfiguration",
+      "source_file": "aws_guardduty_customrules.go"
+    },
+    {
       "permission": "guardduty:GetDetector",
       "service": "guardduty",
       "action": "GetDetector",
@@ -4182,6 +4223,24 @@
       "service": "guardduty",
       "action": "GetThreatIntelSet",
       "source_file": "aws_guardduty.go"
+    },
+    {
+      "permission": "guardduty:ListCustomDetectionRuleAssociations",
+      "service": "guardduty",
+      "action": "ListCustomDetectionRuleAssociations",
+      "source_file": "aws_guardduty_customrules.go"
+    },
+    {
+      "permission": "guardduty:ListCustomDetectionRuleOrgConfigurations",
+      "service": "guardduty",
+      "action": "ListCustomDetectionRuleOrgConfigurations",
+      "source_file": "aws_guardduty_customrules.go"
+    },
+    {
+      "permission": "guardduty:ListCustomDetectionRules",
+      "service": "guardduty",
+      "action": "ListCustomDetectionRules",
+      "source_file": "aws_guardduty_customrules.go"
     },
     {
       "permission": "guardduty:ListDetectors",
@@ -4622,10 +4681,22 @@
       "source_file": "aws_msk.go"
     },
     {
+      "permission": "kinesis:DescribeChannel",
+      "service": "kinesis",
+      "action": "DescribeChannel",
+      "source_file": "aws_kinesis_channel.go"
+    },
+    {
       "permission": "kinesis:DescribeStreamSummary",
       "service": "kinesis",
       "action": "DescribeStreamSummary",
       "source_file": "aws_kinesis.go"
+    },
+    {
+      "permission": "kinesis:ListChannels",
+      "service": "kinesis",
+      "action": "ListChannels",
+      "source_file": "aws_kinesis_channel.go"
     },
     {
       "permission": "kinesis:ListStreamConsumers",
@@ -6834,6 +6905,12 @@
       "service": "ses",
       "action": "ListEmailIdentities",
       "source_file": "aws_ses.go"
+    },
+    {
+      "permission": "ses:ListEmailIdentityCertificates",
+      "service": "ses",
+      "action": "ListEmailIdentityCertificates",
+      "source_file": "aws_ses_certificates.go"
     },
     {
       "permission": "shield:DescribeDRTAccess",

@@ -5,7 +5,7 @@ replace go.mondoo.com/mql => ../..
 go 1.26.8
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.45.1
+	github.com/aws/aws-sdk-go-v2 v1.46.0
 	github.com/aws/aws-sdk-go-v2/config v1.33.1
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.19.1
@@ -25,9 +25,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.75.1
 	github.com/aws/aws-sdk-go-v2/service/backup v1.62.1
 	github.com/aws/aws-sdk-go-v2/service/batch v1.72.1
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.69.1
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.61.0
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.61.1
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.48.1
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.78.1
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.70.1
@@ -60,7 +60,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.93.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.46.1
-	github.com/aws/aws-sdk-go-v2/service/eks v1.95.1
+	github.com/aws/aws-sdk-go-v2/service/eks v1.98.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.58.1
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.39.1
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.38.1
@@ -73,13 +73,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.71.1
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/glue v1.155.1
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.87.1
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.91.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.61.1
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.56.1
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.61.1
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.30.1
-	github.com/aws/aws-sdk-go-v2/service/kinesis v1.49.1
+	github.com/aws/aws-sdk-go-v2/service/kinesis v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/kms v1.57.1
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.52.1
@@ -109,7 +109,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.78.1
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.31.1
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.69.1
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.72.0
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/shield v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/signer v1.38.1
@@ -157,9 +157,9 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/anchore/go-struct-converter v0.1.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.20 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.1 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.1 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.2 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.2 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.37.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.11.1 // indirect
