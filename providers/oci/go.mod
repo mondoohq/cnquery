@@ -5,7 +5,7 @@ go 1.26.8
 replace go.mondoo.com/mql => ../..
 
 require (
-	github.com/oracle/oci-go-sdk/v65 v65.124.0
+	github.com/oracle/oci-go-sdk/v65 v65.124.1
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
 	go.mondoo.com/mql v0.0.0-20260831061709-d8437f66ebc6

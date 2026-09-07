@@ -1266,6 +1266,11 @@ oci.database.autonomousDatabase.longTermBackupRepeatCadence 13.21.1
 oci.database.autonomousDatabase.longTermBackupRetentionPeriodInDays 13.21.1
 oci.database.autonomousDatabase.longTermBackupScheduleDisabled 13.21.1
 oci.database.autonomousDatabase.longTermBackupTimeOfBackup 13.21.1
+oci.database.autonomousDatabase.maintenanceAvailabilityDomain 13.21.1
+oci.database.autonomousDatabase.maintenanceDayOfWeek 13.21.1
+oci.database.autonomousDatabase.maintenanceEndTime 13.21.1
+oci.database.autonomousDatabase.maintenanceStartTime 13.21.1
+oci.database.autonomousDatabase.maintenanceWindowChangeScheduled 13.21.1
 oci.database.autonomousDatabase.managementUrls 13.21.1
 oci.database.autonomousDatabase.name 13.1.1
 oci.database.autonomousDatabase.nextLongTermBackupTimestamp 13.21.1
@@ -1281,6 +1286,7 @@ oci.database.autonomousDatabase.standbyWhitelistedIps 13.10.1
 oci.database.autonomousDatabase.state 13.1.1
 oci.database.autonomousDatabase.subnet 13.1.1
 oci.database.autonomousDatabase.systemTags 13.12.2
+oci.database.autonomousDatabase.timeScheduledMaintenanceWindowUpdate 13.21.1
 oci.database.autonomousDatabase.whitelistedIps 13.1.1
 oci.database.autonomousDatabaseBackup 13.4.1
 oci.database.autonomousDatabaseBackup.autonomousDatabase 13.4.1
