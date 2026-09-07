@@ -453,13 +453,29 @@ func (g *mqlGcpProjectBigqueryServiceTable) resolveBaseTable(ref *bigquery.Table
 	if ref == nil {
 		return nil, nil
 	}
+	return resolveBigqueryTable(g.MqlRuntime, ref.ProjectID, ref.DatasetID, ref.TableID)
+}
 
-	key := bigqueryTableCacheKey(ref.ProjectID, ref.DatasetID, ref.TableID)
-	if cached, ok := g.MqlRuntime.Resources.Get(key); ok {
+// resolveBigqueryTable returns the table named by a project/dataset/table
+// triple, or null when it does not exist or cannot be read.
+//
+// This is the shared body of every reference to a BigQuery table that arrives
+// as three ID strings rather than as a listed resource. It carries the same
+// guarantees resolveBaseTable documents above: a table already listed in this
+// scan comes back from the runtime cache at no cost, an absent or unreadable
+// table resolves to null rather than to a husk that would poison the cache
+// entry for a later full listing, and any other failure surfaces as an error.
+func resolveBigqueryTable(runtime *plugin.Runtime, projectID, datasetID, tableID string) (*mqlGcpProjectBigqueryServiceTable, error) {
+	if projectID == "" || datasetID == "" || tableID == "" {
+		return nil, nil
+	}
+
+	key := bigqueryTableCacheKey(projectID, datasetID, tableID)
+	if cached, ok := runtime.Resources.Get(key); ok {
 		return cached.(*mqlGcpProjectBigqueryServiceTable), nil
 	}
 
-	conn, ok := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
 	if !ok {
 		return nil, errors.New("resolving a base table requires a GCP connection")
 	}
@@ -468,13 +484,13 @@ func (g *mqlGcpProjectBigqueryServiceTable) resolveBaseTable(ref *bigquery.Table
 		return nil, err
 	}
 	ctx := context.Background()
-	client, err := bigquery.NewClient(ctx, ref.ProjectID, option.WithHTTPClient(httpClient))
+	client, err := bigquery.NewClient(ctx, projectID, option.WithHTTPClient(httpClient))
 	if err != nil {
 		return nil, err
 	}
 	defer client.Close()
 
-	table := client.DatasetInProject(ref.ProjectID, ref.DatasetID).Table(ref.TableID)
+	table := client.DatasetInProject(projectID, datasetID).Table(tableID)
 	metadata, err := table.Metadata(ctx)
 	if err != nil {
 		// A snapshot outlives the table it was taken from, so a base table that
@@ -487,16 +503,16 @@ func (g *mqlGcpProjectBigqueryServiceTable) resolveBaseTable(ref *bigquery.Table
 		// absent would pass on a network blip.
 		if isSkippable(err) {
 			log.Debug().Err(err).
-				Str("project", ref.ProjectID).
-				Str("dataset", ref.DatasetID).
-				Str("table", ref.TableID).
+				Str("project", projectID).
+				Str("dataset", datasetID).
+				Str("table", tableID).
 				Msg("could not read base table metadata")
 			return nil, nil
 		}
 		return nil, err
 	}
 
-	res, err := newMqlBigqueryTable(g.MqlRuntime, table, metadata)
+	res, err := newMqlBigqueryTable(runtime, table, metadata)
 	if err != nil {
 		return nil, err
 	}
@@ -1161,4 +1177,59 @@ func entityTypeToString(entityType bigquery.EntityType) string {
 	default:
 		return "UNKNOWN"
 	}
+}
+
+// resolveBigqueryDataset returns the dataset named by a project/dataset pair,
+// or null when the project holds no such dataset that this caller can see.
+//
+// A dataset is matched by (id, projectId, location), and a reference that
+// arrives as two ID strings carries no location, so the dataset cannot be built
+// through its init. It is resolved against the project's dataset listing
+// instead: that listing is a single API call, the runtime caches it on the
+// bigqueryService resource, and every later reference into the same project is
+// answered from that cache rather than from a fresh call per reference.
+//
+// A project whose datasets cannot be listed at all (the BigQuery API disabled,
+// or no permission on a cross-project destination) yields null rather than an
+// error, because "there is a dataset here I am not allowed to see" is an
+// ordinary state for a reference that points outside the scanned project.
+func resolveBigqueryDataset(runtime *plugin.Runtime, projectID, datasetID string) (*mqlGcpProjectBigqueryServiceDataset, error) {
+	if projectID == "" || datasetID == "" {
+		return nil, nil
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project.bigqueryService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectID),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	datasets := obj.(*mqlGcpProjectBigqueryService).GetDatasets()
+	if datasets.Error != nil {
+		if isSkippable(datasets.Error) {
+			log.Debug().Err(datasets.Error).
+				Str("project", projectID).
+				Str("dataset", datasetID).
+				Msg("could not list datasets to resolve a dataset reference")
+			return nil, nil
+		}
+		return nil, datasets.Error
+	}
+
+	for _, d := range datasets.Data {
+		dataset, ok := d.(*mqlGcpProjectBigqueryServiceDataset)
+		if !ok {
+			continue
+		}
+		id := dataset.GetId()
+		if id.Error != nil {
+			return nil, id.Error
+		}
+		if id.Data == datasetID {
+			return dataset, nil
+		}
+	}
+
+	return nil, nil
 }

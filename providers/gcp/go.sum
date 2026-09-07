@@ -87,8 +87,8 @@ cloud.google.com/go/deploy v1.33.0 h1:2PdZ8kbIztLVRMrIN/wHbalZeZZikQlxBptBFK+eEt
 cloud.google.com/go/deploy v1.33.0/go.mod h1:QdF3plD8D5gV2RmkTXBB6cHrq490WlpFr1SChdOJO2Y=
 cloud.google.com/go/discoveryengine v1.33.0 h1:3IYPqBoubh2pl0/pxRwrC8WnjlCa+SSg45vN+/9Kn8E=
 cloud.google.com/go/discoveryengine v1.33.0/go.mod h1:IIXFlj9628K22R2dbRG8QEMVMgzGQ2RLaRzWGFlOC7g=
-cloud.google.com/go/dlp v1.36.1 h1:iVwXwYmR9Puhzt2Np8dIhmc+zbDer2H62aOYfoELrL8=
-cloud.google.com/go/dlp v1.36.1/go.mod h1:i0jZuMLmwRSRVOYuBBEfsAz2v8m2qQGKbSQs3heLd/w=
+cloud.google.com/go/dlp v1.37.0 h1:r2XiyT90j1sa5nEH+UUiWCK5dAR365WIwitHaBdIXcI=
+cloud.google.com/go/dlp v1.37.0/go.mod h1:i0jZuMLmwRSRVOYuBBEfsAz2v8m2qQGKbSQs3heLd/w=
 cloud.google.com/go/documentai v1.49.0 h1:WLZOaWvK4NH7xMLxANsDgIdXugeqmVyYRCbVN1m87DQ=
 cloud.google.com/go/documentai v1.49.0/go.mod h1:VyQA+SxPnCPlVLSJ5UcFx+LQm8JCzK7uUXdkOaAHvG8=
 cloud.google.com/go/eventarc v1.25.0 h1:+XAJNEmxJIPZLMtzLYdUZN61Kmqx62hWLry4AsWaTwo=
@@ -1325,8 +1325,8 @@ google.golang.org/api v0.57.0/go.mod h1:dVPlbZyBo2/OjBpmvNdpn2GRm6rPy75jyU7bmhdr
 google.golang.org/api v0.59.0/go.mod h1:sT2boj7M9YJxZzgeZqXogmhfmRWDtPzT31xkieUbuZU=
 google.golang.org/api v0.61.0/go.mod h1:xQRti5UdCmoCEqFxcz93fTl338AVqDgyaDRuOZ3hg9I=
 google.golang.org/api v0.62.0/go.mod h1:dKmwPCydfsad4qCH08MSdgWjfHOyfpd4VtDGgRFdavw=
-google.golang.org/api v0.295.0 h1:SSqFeEVjnK5SKo6t7D0E0M7EfX8SP7K0+OJd2Ly5FzU=
-google.golang.org/api v0.295.0/go.mod h1:02qB8+Ox1ZFzcaKFMguy1nQLJmSIyvV6Ff4txJEXtl4=
+google.golang.org/api v0.297.0 h1:WktxTsnnx0yZNnsR6j0q6hR21RnnK81FHTOPy/ux4OE=
+google.golang.org/api v0.297.0/go.mod h1:S4m8x0M6OkQpkOzGk1y9JG2sm4fFQrMh6dxzjCTszhE=
 google.golang.org/appengine v1.1.0/go.mod h1:EbEs0AVv82hx2wNQdGPgUI5lhzA/G0D9YwlJXL52JkM=
 google.golang.org/appengine v1.4.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=
 google.golang.org/appengine v1.5.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=

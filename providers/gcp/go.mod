@@ -24,7 +24,7 @@ require (
 	cloud.google.com/go/datastream v1.21.0
 	cloud.google.com/go/deploy v1.33.0
 	cloud.google.com/go/discoveryengine v1.33.0
-	cloud.google.com/go/dlp v1.36.1
+	cloud.google.com/go/dlp v1.37.0
 	cloud.google.com/go/documentai v1.49.0
 	cloud.google.com/go/eventarc v1.25.0
 	cloud.google.com/go/filestore v1.16.0
@@ -63,7 +63,7 @@ require (
 	go.mondoo.com/mql v0.0.0-20260831061709-d8437f66ebc6
 	go.mondoo.com/ranger-rpc v0.8.1
 	golang.org/x/oauth2 v0.36.0
-	google.golang.org/api v0.295.0
+	google.golang.org/api v0.297.0
 	// Held back: cloud.google.com/go/accesscontextmanager v1.15.0 (the latest
 	// release) imports google.golang.org/genproto/googleapis/identity/
 	// accesscontextmanager/type, which go-genproto deleted in

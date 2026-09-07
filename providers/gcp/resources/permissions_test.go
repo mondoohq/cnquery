@@ -206,6 +206,11 @@ var validatedGCPPermissions = []string{
 	"discoveryengine.engines.list",
 	"dlp.columnDataProfiles.list",
 	"dlp.connections.list",
+	// Validated against Google's own documentation for
+	// projects.locations.contentPolicies.list rather than against the live IAM
+	// API, which no one has run this against yet. The generic derivation happens
+	// to produce the documented name, so no override is needed.
+	"dlp.contentPolicies.list",
 	"dlp.deidentifyTemplates.list",
 	"dlp.fileStoreProfiles.list",
 	"dlp.inspectTemplates.list",
