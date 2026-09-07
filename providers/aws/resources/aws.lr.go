@@ -228,6 +228,7 @@ const (
 	ResourceAwsSagemakerLineageGroup                                            string = "aws.sagemaker.lineageGroup"
 	ResourceAwsSes                                                              string = "aws.ses"
 	ResourceAwsSesIdentity                                                      string = "aws.ses.identity"
+	ResourceAwsSesIdentityCertificate                                           string = "aws.ses.identity.certificate"
 	ResourceAwsSesConfigurationSet                                              string = "aws.ses.configurationSet"
 	ResourceAwsSns                                                              string = "aws.sns"
 	ResourceAwsSnsTopic                                                         string = "aws.sns.topic"
@@ -272,6 +273,9 @@ const (
 	ResourceAwsGuarddutyDetectorCoverageStatistic                               string = "aws.guardduty.detector.coverageStatistic"
 	ResourceAwsGuarddutyDetectorFilter                                          string = "aws.guardduty.detector.filter"
 	ResourceAwsGuarddutyDetectorMember                                          string = "aws.guardduty.detector.member"
+	ResourceAwsGuarddutyCustomDetectionRule                                     string = "aws.guardduty.customDetectionRule"
+	ResourceAwsGuarddutyCustomDetectionRuleAssociation                          string = "aws.guardduty.customDetectionRule.association"
+	ResourceAwsGuarddutyCustomDetectionRuleOrganizationConfiguration            string = "aws.guardduty.customDetectionRule.organizationConfiguration"
 	ResourceAwsGuarddutyFinding                                                 string = "aws.guardduty.finding"
 	ResourceAwsMacie                                                            string = "aws.macie"
 	ResourceAwsMacieRevealConfiguration                                         string = "aws.macie.revealConfiguration"
@@ -788,6 +792,8 @@ const (
 	ResourceAwsKinesisStream                                                    string = "aws.kinesis.stream"
 	ResourceAwsKinesisStreamConsumer                                            string = "aws.kinesis.streamConsumer"
 	ResourceAwsKinesisVideoStream                                               string = "aws.kinesis.videoStream"
+	ResourceAwsKinesisChannel                                                   string = "aws.kinesis.channel"
+	ResourceAwsKinesisChannelTable                                              string = "aws.kinesis.channel.table"
 	ResourceAwsKinesisFirehoseDeliveryStream                                    string = "aws.kinesis.firehoseDeliveryStream"
 	ResourceAwsKinesisFirehoseDeliveryStreamEncryption                          string = "aws.kinesis.firehoseDeliveryStream.encryption"
 	ResourceAwsKinesisFirehoseDeliveryStreamDestination                         string = "aws.kinesis.firehoseDeliveryStream.destination"
@@ -978,6 +984,8 @@ const (
 	ResourceAwsBedrockAgentCoreFilesystemConfiguration                          string = "aws.bedrock.agentCore.filesystemConfiguration"
 	ResourceAwsBedrockAgentCoreOauth2CredentialProvider                         string = "aws.bedrock.agentCore.oauth2CredentialProvider"
 	ResourceAwsBedrockAgentCoreApiKeyCredentialProvider                         string = "aws.bedrock.agentCore.apiKeyCredentialProvider"
+	ResourceAwsBedrockAgentCoreConsentPortal                                    string = "aws.bedrock.agentCore.consentPortal"
+	ResourceAwsBedrockAgentCoreConsentPortalSource                              string = "aws.bedrock.agentCore.consentPortal.source"
 	ResourceAwsBedrockAgentCoreWorkloadIdentity                                 string = "aws.bedrock.agentCore.workloadIdentity"
 	ResourceAwsBedrockAdvancedPromptOptimizationJob                             string = "aws.bedrock.advancedPromptOptimizationJob"
 	ResourceAwsBedrockFoundationModel                                           string = "aws.bedrock.foundationModel"
@@ -1891,6 +1899,10 @@ func init() {
 			Init:   initAwsSesIdentity,
 			Create: createAwsSesIdentity,
 		},
+		"aws.ses.identity.certificate": {
+			// to override args, implement: initAwsSesIdentityCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSesIdentityCertificate,
+		},
 		"aws.ses.configurationSet": {
 			Init:   initAwsSesConfigurationSet,
 			Create: createAwsSesConfigurationSet,
@@ -2066,6 +2078,18 @@ func init() {
 		"aws.guardduty.detector.member": {
 			// to override args, implement: initAwsGuarddutyDetectorMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsGuarddutyDetectorMember,
+		},
+		"aws.guardduty.customDetectionRule": {
+			// to override args, implement: initAwsGuarddutyCustomDetectionRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGuarddutyCustomDetectionRule,
+		},
+		"aws.guardduty.customDetectionRule.association": {
+			// to override args, implement: initAwsGuarddutyCustomDetectionRuleAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGuarddutyCustomDetectionRuleAssociation,
+		},
+		"aws.guardduty.customDetectionRule.organizationConfiguration": {
+			// to override args, implement: initAwsGuarddutyCustomDetectionRuleOrganizationConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGuarddutyCustomDetectionRuleOrganizationConfiguration,
 		},
 		"aws.guardduty.finding": {
 			// to override args, implement: initAwsGuarddutyFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4131,6 +4155,14 @@ func init() {
 			// to override args, implement: initAwsKinesisVideoStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsKinesisVideoStream,
 		},
+		"aws.kinesis.channel": {
+			// to override args, implement: initAwsKinesisChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKinesisChannel,
+		},
+		"aws.kinesis.channel.table": {
+			// to override args, implement: initAwsKinesisChannelTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKinesisChannelTable,
+		},
 		"aws.kinesis.firehoseDeliveryStream": {
 			Init:   initAwsKinesisFirehoseDeliveryStream,
 			Create: createAwsKinesisFirehoseDeliveryStream,
@@ -4890,6 +4922,14 @@ func init() {
 		"aws.bedrock.agentCore.apiKeyCredentialProvider": {
 			// to override args, implement: initAwsBedrockAgentCoreApiKeyCredentialProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBedrockAgentCoreApiKeyCredentialProvider,
+		},
+		"aws.bedrock.agentCore.consentPortal": {
+			// to override args, implement: initAwsBedrockAgentCoreConsentPortal(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockAgentCoreConsentPortal,
+		},
+		"aws.bedrock.agentCore.consentPortal.source": {
+			// to override args, implement: initAwsBedrockAgentCoreConsentPortalSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockAgentCoreConsentPortalSource,
 		},
 		"aws.bedrock.agentCore.workloadIdentity": {
 			Init:   initAwsBedrockAgentCoreWorkloadIdentity,
@@ -11246,6 +11286,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ses.identity.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSesIdentity).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.ses.identity.certificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetCertificates()).ToDataRes(types.Array(types.Resource("aws.ses.identity.certificate")))
+	},
+	"aws.ses.identity.certificate.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentityCertificate).GetArn()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.certificate.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentityCertificate).GetCertificate()).ToDataRes(types.Resource("aws.acm.certificate"))
+	},
+	"aws.ses.identity.certificate.fromAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentityCertificate).GetFromAddress()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.certificate.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentityCertificate).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.certificate.certificateExpiryTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentityCertificate).GetCertificateExpiryTime()).ToDataRes(types.Time)
+	},
 	"aws.ses.configurationSet.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSesConfigurationSet).GetArn()).ToDataRes(types.String)
 	},
@@ -12956,6 +13014,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.guardduty.detectors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGuardduty).GetDetectors()).ToDataRes(types.Array(types.Resource("aws.guardduty.detector")))
 	},
+	"aws.guardduty.customDetectionRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuardduty).GetCustomDetectionRules()).ToDataRes(types.Array(types.Resource("aws.guardduty.customDetectionRule")))
+	},
+	"aws.guardduty.customDetectionRuleOrgConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuardduty).GetCustomDetectionRuleOrgConfigurations()).ToDataRes(types.Array(types.Resource("aws.guardduty.customDetectionRule.organizationConfiguration")))
+	},
 	"aws.guardduty.detector.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGuarddutyDetector).GetId()).ToDataRes(types.String)
 	},
@@ -13114,6 +13178,111 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.guardduty.detector.member.administratorId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGuarddutyDetectorMember).GetAdministratorId()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetArn()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.ruleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetRuleId()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetName()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetService()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetSeverity()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.tactic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetTactic()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.technique": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetTechnique()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.dataSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetDataSource()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.language": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetLanguage()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.schemaVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetSchemaVersion()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.guardduty.customDetectionRule.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.guardduty.customDetectionRule.expression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetExpression()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.associations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRule).GetAssociations()).ToDataRes(types.Array(types.Resource("aws.guardduty.customDetectionRule.association")))
+	},
+	"aws.guardduty.customDetectionRule.association.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).GetArn()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.association.associationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).GetAssociationId()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.association.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.association.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).GetMode()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.association.rule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).GetRule()).ToDataRes(types.Resource("aws.guardduty.customDetectionRule"))
+	},
+	"aws.guardduty.customDetectionRule.association.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.association.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.guardduty.customDetectionRule.association.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.guardduty.customDetectionRule.association.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).GetExpiresAt()).ToDataRes(types.Time)
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.rule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).GetRule()).ToDataRes(types.Resource("aws.guardduty.customDetectionRule"))
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).GetMode()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.statusReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).GetStatusReason()).ToDataRes(types.String)
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.includeAccountIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).GetIncludeAccountIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.excludeAccountIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).GetExcludeAccountIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).GetExpiresAt()).ToDataRes(types.Time)
 	},
 	"aws.guardduty.finding.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGuarddutyFinding).GetArn()).ToDataRes(types.String)
@@ -29519,6 +29688,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kinesis.videoStreams": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesis).GetVideoStreams()).ToDataRes(types.Array(types.Resource("aws.kinesis.videoStream")))
 	},
+	"aws.kinesis.channels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesis).GetChannels()).ToDataRes(types.Array(types.Resource("aws.kinesis.channel")))
+	},
 	"aws.kinesis.streamModeDetails.streamMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisStreamModeDetails).GetStreamMode()).ToDataRes(types.String)
 	},
@@ -29617,6 +29789,90 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.kinesis.videoStream.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisVideoStream).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.kinesis.channel.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetArn()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetName()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.statusReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetStatusReason()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.destinationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetDestinationType()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.kinesis.channel.sourceStreams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetSourceStreams()).ToDataRes(types.Array(types.Resource("aws.kinesis.stream")))
+	},
+	"aws.kinesis.channel.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.kinesis.channel.encryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetEncryptionType()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.kinesis.channel.cloudWatchLogsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetCloudWatchLogsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.kinesis.channel.cloudWatchLogGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetCloudWatchLogGroupName()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.cloudWatchLogStreamName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetCloudWatchLogStreamName()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.dataFreshnessInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetDataFreshnessInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.kinesis.channel.destinationBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetDestinationBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.kinesis.channel.destinationBucketOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetDestinationBucketOwner()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.destinationCompressionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetDestinationCompressionType()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.destinationStorageClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetDestinationStorageClass()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.destinationOutputKeyTemplate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetDestinationOutputKeyTemplate()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.deadLetterBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetDeadLetterBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.kinesis.channel.deadLetterBucketOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetDeadLetterBucketOwner()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.deadLetterErrorOutputPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetDeadLetterErrorOutputPrefix()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannel).GetTables()).ToDataRes(types.Array(types.Resource("aws.kinesis.channel.table")))
+	},
+	"aws.kinesis.channel.table.tableBucketArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannelTable).GetTableBucketArn()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.table.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannelTable).GetNamespace()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.table.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannelTable).GetName()).ToDataRes(types.String)
+	},
+	"aws.kinesis.channel.table.compressionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisChannelTable).GetCompressionType()).ToDataRes(types.String)
 	},
 	"aws.kinesis.firehoseDeliveryStream.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetArn()).ToDataRes(types.String)
@@ -35297,6 +35553,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.bedrock.agentCore.capacityProviders": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCore).GetCapacityProviders()).ToDataRes(types.Array(types.Resource("aws.bedrock.agentCore.capacityProvider")))
 	},
+	"aws.bedrock.agentCore.consentPortals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCore).GetConsentPortals()).ToDataRes(types.Array(types.Resource("aws.bedrock.agentCore.consentPortal")))
+	},
 	"aws.bedrock.agentCore.gateway.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreGateway).GetArn()).ToDataRes(types.String)
 	},
@@ -35704,6 +35963,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.bedrock.agentCore.apiKeyCredentialProvider.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreApiKeyCredentialProvider).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.agentCore.consentPortal.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortal).GetArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.consentPortal.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortal).GetName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.consentPortal.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortal).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.consentPortal.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortal).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.consentPortal.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortal).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.consentPortal.portalUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortal).GetPortalUrl()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.consentPortal.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortal).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.agentCore.consentPortal.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortal).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.agentCore.consentPortal.statusReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortal).GetStatusReason()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.consentPortal.credentialProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortal).GetCredentialProvider()).ToDataRes(types.Resource("aws.bedrock.agentCore.oauth2CredentialProvider"))
+	},
+	"aws.bedrock.agentCore.consentPortal.oauthScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortal).GetOauthScopes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.agentCore.consentPortal.oauthAudience": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortal).GetOauthAudience()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.consentPortal.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortal).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.bedrock.agentCore.consentPortal.sources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortal).GetSources()).ToDataRes(types.Array(types.Resource("aws.bedrock.agentCore.consentPortal.source")))
+	},
+	"aws.bedrock.agentCore.consentPortal.source.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortalSource).GetIdentifier()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.consentPortal.source.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortalSource).GetType()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.consentPortal.source.gateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreConsentPortalSource).GetGateway()).ToDataRes(types.Resource("aws.bedrock.agentCore.gateway"))
 	},
 	"aws.bedrock.agentCore.workloadIdentity.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreWorkloadIdentity).GetArn()).ToDataRes(types.String)
@@ -46390,6 +46700,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSesIdentity).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"aws.ses.identity.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.certificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentityCertificate).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ses.identity.certificate.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentityCertificate).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.certificate.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentityCertificate).Certificate, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.certificate.fromAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentityCertificate).FromAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.certificate.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentityCertificate).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.certificate.certificateExpiryTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentityCertificate).CertificateExpiryTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.ses.configurationSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSesConfigurationSet).__id, ok = v.Value.(string)
 		return
@@ -48814,6 +49152,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsGuardduty).Detectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.guardduty.customDetectionRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuardduty).CustomDetectionRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRuleOrgConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuardduty).CustomDetectionRuleOrgConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.guardduty.detector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGuarddutyDetector).__id, ok = v.Value.(string)
 		return
@@ -49056,6 +49402,158 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.guardduty.detector.member.administratorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGuarddutyDetectorMember).AdministratorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.guardduty.customDetectionRule.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.ruleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).RuleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.tactic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).Tactic, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.technique": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).Technique, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.dataSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).DataSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.language": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).Language, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.schemaVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).SchemaVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.expression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).Expression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.associations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRule).Associations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.association.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.guardduty.customDetectionRule.association.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.association.associationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).AssociationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.association.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.association.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.association.rule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).Rule, ok = plugin.RawToTValue[*mqlAwsGuarddutyCustomDetectionRule](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.association.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.association.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.association.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.association.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleAssociation).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.rule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).Rule, ok = plugin.RawToTValue[*mqlAwsGuarddutyCustomDetectionRule](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.statusReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).StatusReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.includeAccountIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).IncludeAccountIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.excludeAccountIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).ExcludeAccountIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.customDetectionRule.organizationConfiguration.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.guardduty.finding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -72978,6 +73476,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKinesis).VideoStreams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.kinesis.channels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesis).Channels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.kinesis.streamModeDetails.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKinesisStreamModeDetails).__id, ok = v.Value.(string)
 		return
@@ -73124,6 +73626,126 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.kinesis.videoStream.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKinesisVideoStream).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.kinesis.channel.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.statusReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).StatusReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.destinationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).DestinationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.sourceStreams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).SourceStreams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.cloudWatchLogsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).CloudWatchLogsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.cloudWatchLogGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).CloudWatchLogGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.cloudWatchLogStreamName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).CloudWatchLogStreamName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.dataFreshnessInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).DataFreshnessInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.destinationBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).DestinationBucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.destinationBucketOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).DestinationBucketOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.destinationCompressionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).DestinationCompressionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.destinationStorageClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).DestinationStorageClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.destinationOutputKeyTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).DestinationOutputKeyTemplate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.deadLetterBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).DeadLetterBucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.deadLetterBucketOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).DeadLetterBucketOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.deadLetterErrorOutputPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).DeadLetterErrorOutputPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannel).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannelTable).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.kinesis.channel.table.tableBucketArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannelTable).TableBucketArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.table.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannelTable).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.table.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannelTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.channel.table.compressionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisChannelTable).CompressionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.kinesis.firehoseDeliveryStream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -81402,6 +82024,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBedrockAgentCore).CapacityProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.bedrock.agentCore.consentPortals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCore).ConsentPortals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.bedrock.agentCore.gateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockAgentCoreGateway).__id, ok = v.Value.(string)
 		return
@@ -82000,6 +82626,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.bedrock.agentCore.apiKeyCredentialProvider.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockAgentCoreApiKeyCredentialProvider).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortal).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortal).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortal).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortal).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortal).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortal).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.portalUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortal).PortalUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortal).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortal).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.statusReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortal).StatusReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.credentialProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortal).CredentialProvider, ok = plugin.RawToTValue[*mqlAwsBedrockAgentCoreOauth2CredentialProvider](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.oauthScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortal).OauthScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.oauthAudience": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortal).OauthAudience, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortal).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.sources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortal).Sources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.source.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortalSource).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.source.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortalSource).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.source.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortalSource).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.consentPortal.source.gateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreConsentPortalSource).Gateway, ok = plugin.RawToTValue[*mqlAwsBedrockAgentCoreGateway](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.agentCore.workloadIdentity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -109343,6 +110045,7 @@ type mqlAwsSesIdentity struct {
 	MailFromBehaviorOnMxFailure plugin.TValue[string]
 	Policies                    plugin.TValue[map[string]any]
 	Tags                        plugin.TValue[map[string]any]
+	Certificates                plugin.TValue[[]any]
 }
 
 // createAwsSesIdentity creates a new instance of this resource
@@ -109465,6 +110168,103 @@ func (c *mqlAwsSesIdentity) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
+}
+
+func (c *mqlAwsSesIdentity) GetCertificates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ses.identity", c.__id, "certificates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificates()
+	})
+}
+
+// mqlAwsSesIdentityCertificate for the aws.ses.identity.certificate resource
+type mqlAwsSesIdentityCertificate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSesIdentityCertificateInternal it will be used here
+	Arn                   plugin.TValue[string]
+	Certificate           plugin.TValue[*mqlAwsAcmCertificate]
+	FromAddress           plugin.TValue[string]
+	Status                plugin.TValue[string]
+	CertificateExpiryTime plugin.TValue[*time.Time]
+}
+
+// createAwsSesIdentityCertificate creates a new instance of this resource
+func createAwsSesIdentityCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSesIdentityCertificate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ses.identity.certificate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSesIdentityCertificate) MqlName() string {
+	return "aws.ses.identity.certificate"
+}
+
+func (c *mqlAwsSesIdentityCertificate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSesIdentityCertificate) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSesIdentityCertificate) GetCertificate() *plugin.TValue[*mqlAwsAcmCertificate] {
+	return plugin.GetOrCompute[*mqlAwsAcmCertificate](&c.Certificate, func() (*mqlAwsAcmCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ses.identity.certificate", c.__id, "certificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAcmCertificate), nil
+			}
+		}
+
+		return c.certificate()
+	})
+}
+
+func (c *mqlAwsSesIdentityCertificate) GetFromAddress() *plugin.TValue[string] {
+	return &c.FromAddress
+}
+
+func (c *mqlAwsSesIdentityCertificate) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSesIdentityCertificate) GetCertificateExpiryTime() *plugin.TValue[*time.Time] {
+	return &c.CertificateExpiryTime
 }
 
 // mqlAwsSesConfigurationSet for the aws.ses.configurationSet resource
@@ -114927,8 +115727,10 @@ type mqlAwsGuardduty struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsGuarddutyInternal it will be used here
-	Findings  plugin.TValue[[]any]
-	Detectors plugin.TValue[[]any]
+	Findings                             plugin.TValue[[]any]
+	Detectors                            plugin.TValue[[]any]
+	CustomDetectionRules                 plugin.TValue[[]any]
+	CustomDetectionRuleOrgConfigurations plugin.TValue[[]any]
 }
 
 // createAwsGuardduty creates a new instance of this resource
@@ -114997,6 +115799,38 @@ func (c *mqlAwsGuardduty) GetDetectors() *plugin.TValue[[]any] {
 		}
 
 		return c.detectors()
+	})
+}
+
+func (c *mqlAwsGuardduty) GetCustomDetectionRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomDetectionRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.guardduty", c.__id, "customDetectionRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customDetectionRules()
+	})
+}
+
+func (c *mqlAwsGuardduty) GetCustomDetectionRuleOrgConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomDetectionRuleOrgConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.guardduty", c.__id, "customDetectionRuleOrgConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customDetectionRuleOrgConfigurations()
 	})
 }
 
@@ -115755,6 +116589,345 @@ func (c *mqlAwsGuarddutyDetectorMember) GetUpdatedAt() *plugin.TValue[*time.Time
 
 func (c *mqlAwsGuarddutyDetectorMember) GetAdministratorId() *plugin.TValue[string] {
 	return &c.AdministratorId
+}
+
+// mqlAwsGuarddutyCustomDetectionRule for the aws.guardduty.customDetectionRule resource
+type mqlAwsGuarddutyCustomDetectionRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsGuarddutyCustomDetectionRuleInternal
+	Arn           plugin.TValue[string]
+	RuleId        plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Region        plugin.TValue[string]
+	Service       plugin.TValue[string]
+	Severity      plugin.TValue[string]
+	Tactic        plugin.TValue[string]
+	Technique     plugin.TValue[string]
+	DataSource    plugin.TValue[string]
+	Language      plugin.TValue[string]
+	SchemaVersion plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
+	Expression    plugin.TValue[string]
+	Associations  plugin.TValue[[]any]
+}
+
+// createAwsGuarddutyCustomDetectionRule creates a new instance of this resource
+func createAwsGuarddutyCustomDetectionRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGuarddutyCustomDetectionRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.guardduty.customDetectionRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) MqlName() string {
+	return "aws.guardduty.customDetectionRule"
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetRuleId() *plugin.TValue[string] {
+	return &c.RuleId
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetTactic() *plugin.TValue[string] {
+	return &c.Tactic
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetTechnique() *plugin.TValue[string] {
+	return &c.Technique
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetDataSource() *plugin.TValue[string] {
+	return &c.DataSource
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetLanguage() *plugin.TValue[string] {
+	return &c.Language
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetSchemaVersion() *plugin.TValue[string] {
+	return &c.SchemaVersion
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetExpression() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Expression, func() (string, error) {
+		return c.expression()
+	})
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRule) GetAssociations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Associations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.guardduty.customDetectionRule", c.__id, "associations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.associations()
+	})
+}
+
+// mqlAwsGuarddutyCustomDetectionRuleAssociation for the aws.guardduty.customDetectionRule.association resource
+type mqlAwsGuarddutyCustomDetectionRuleAssociation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsGuarddutyCustomDetectionRuleAssociationInternal
+	Arn           plugin.TValue[string]
+	AssociationId plugin.TValue[string]
+	Region        plugin.TValue[string]
+	Mode          plugin.TValue[string]
+	Rule          plugin.TValue[*mqlAwsGuarddutyCustomDetectionRule]
+	AccountId     plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
+	ExpiresAt     plugin.TValue[*time.Time]
+}
+
+// createAwsGuarddutyCustomDetectionRuleAssociation creates a new instance of this resource
+func createAwsGuarddutyCustomDetectionRuleAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGuarddutyCustomDetectionRuleAssociation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.guardduty.customDetectionRule.association", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleAssociation) MqlName() string {
+	return "aws.guardduty.customDetectionRule.association"
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleAssociation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleAssociation) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleAssociation) GetAssociationId() *plugin.TValue[string] {
+	return &c.AssociationId
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleAssociation) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleAssociation) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleAssociation) GetRule() *plugin.TValue[*mqlAwsGuarddutyCustomDetectionRule] {
+	return &c.Rule
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleAssociation) GetAccountId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AccountId, func() (string, error) {
+		return c.accountId()
+	})
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleAssociation) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleAssociation) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleAssociation) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
+}
+
+// mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration for the aws.guardduty.customDetectionRule.organizationConfiguration resource
+type mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsGuarddutyCustomDetectionRuleOrganizationConfigurationInternal
+	Region            plugin.TValue[string]
+	Rule              plugin.TValue[*mqlAwsGuarddutyCustomDetectionRule]
+	Mode              plugin.TValue[string]
+	Status            plugin.TValue[string]
+	StatusReason      plugin.TValue[string]
+	IncludeAccountIds plugin.TValue[[]any]
+	ExcludeAccountIds plugin.TValue[[]any]
+	CreatedAt         plugin.TValue[*time.Time]
+	UpdatedAt         plugin.TValue[*time.Time]
+	ExpiresAt         plugin.TValue[*time.Time]
+}
+
+// createAwsGuarddutyCustomDetectionRuleOrganizationConfiguration creates a new instance of this resource
+func createAwsGuarddutyCustomDetectionRuleOrganizationConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.guardduty.customDetectionRule.organizationConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration) MqlName() string {
+	return "aws.guardduty.customDetectionRule.organizationConfiguration"
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration) GetRule() *plugin.TValue[*mqlAwsGuarddutyCustomDetectionRule] {
+	return plugin.GetOrCompute[*mqlAwsGuarddutyCustomDetectionRule](&c.Rule, func() (*mqlAwsGuarddutyCustomDetectionRule, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.guardduty.customDetectionRule.organizationConfiguration", c.__id, "rule")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsGuarddutyCustomDetectionRule), nil
+			}
+		}
+
+		return c.rule()
+	})
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration) GetStatusReason() *plugin.TValue[string] {
+	return &c.StatusReason
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration) GetIncludeAccountIds() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IncludeAccountIds, func() ([]any, error) {
+		return c.includeAccountIds()
+	})
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration) GetExcludeAccountIds() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExcludeAccountIds, func() ([]any, error) {
+		return c.excludeAccountIds()
+	})
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsGuarddutyCustomDetectionRuleOrganizationConfiguration) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
 }
 
 // mqlAwsGuarddutyFinding for the aws.guardduty.finding resource
@@ -177291,6 +178464,7 @@ type mqlAwsKinesis struct {
 	FirehoseDeliveryStreams plugin.TValue[[]any]
 	StreamConsumers         plugin.TValue[[]any]
 	VideoStreams            plugin.TValue[[]any]
+	Channels                plugin.TValue[[]any]
 }
 
 // createAwsKinesis creates a new instance of this resource
@@ -177391,6 +178565,22 @@ func (c *mqlAwsKinesis) GetVideoStreams() *plugin.TValue[[]any] {
 		}
 
 		return c.videoStreams()
+	})
+}
+
+func (c *mqlAwsKinesis) GetChannels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Channels, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis", c.__id, "channels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.channels()
 	})
 }
 
@@ -177775,6 +178965,328 @@ func (c *mqlAwsKinesisVideoStream) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
+}
+
+// mqlAwsKinesisChannel for the aws.kinesis.channel resource
+type mqlAwsKinesisChannel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsKinesisChannelInternal
+	Arn                          plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Region                       plugin.TValue[string]
+	Status                       plugin.TValue[string]
+	StatusReason                 plugin.TValue[string]
+	DestinationType              plugin.TValue[string]
+	CreatedAt                    plugin.TValue[*time.Time]
+	SourceStreams                plugin.TValue[[]any]
+	IamRole                      plugin.TValue[*mqlAwsIamRole]
+	EncryptionType               plugin.TValue[string]
+	KmsKey                       plugin.TValue[*mqlAwsKmsKey]
+	CloudWatchLogsEnabled        plugin.TValue[bool]
+	CloudWatchLogGroupName       plugin.TValue[string]
+	CloudWatchLogStreamName      plugin.TValue[string]
+	DataFreshnessInSeconds       plugin.TValue[int64]
+	DestinationBucket            plugin.TValue[*mqlAwsS3Bucket]
+	DestinationBucketOwner       plugin.TValue[string]
+	DestinationCompressionType   plugin.TValue[string]
+	DestinationStorageClass      plugin.TValue[string]
+	DestinationOutputKeyTemplate plugin.TValue[string]
+	DeadLetterBucket             plugin.TValue[*mqlAwsS3Bucket]
+	DeadLetterBucketOwner        plugin.TValue[string]
+	DeadLetterErrorOutputPrefix  plugin.TValue[string]
+	Tables                       plugin.TValue[[]any]
+}
+
+// createAwsKinesisChannel creates a new instance of this resource
+func createAwsKinesisChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKinesisChannel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.kinesis.channel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKinesisChannel) MqlName() string {
+	return "aws.kinesis.channel"
+}
+
+func (c *mqlAwsKinesisChannel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKinesisChannel) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsKinesisChannel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsKinesisChannel) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsKinesisChannel) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsKinesisChannel) GetStatusReason() *plugin.TValue[string] {
+	return &c.StatusReason
+}
+
+func (c *mqlAwsKinesisChannel) GetDestinationType() *plugin.TValue[string] {
+	return &c.DestinationType
+}
+
+func (c *mqlAwsKinesisChannel) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsKinesisChannel) GetSourceStreams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SourceStreams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis.channel", c.__id, "sourceStreams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sourceStreams()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis.channel", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetEncryptionType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionType, func() (string, error) {
+		return c.encryptionType()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis.channel", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetCloudWatchLogsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CloudWatchLogsEnabled, func() (bool, error) {
+		return c.cloudWatchLogsEnabled()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetCloudWatchLogGroupName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CloudWatchLogGroupName, func() (string, error) {
+		return c.cloudWatchLogGroupName()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetCloudWatchLogStreamName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CloudWatchLogStreamName, func() (string, error) {
+		return c.cloudWatchLogStreamName()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetDataFreshnessInSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DataFreshnessInSeconds, func() (int64, error) {
+		return c.dataFreshnessInSeconds()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetDestinationBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.DestinationBucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis.channel", c.__id, "destinationBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.destinationBucket()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetDestinationBucketOwner() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DestinationBucketOwner, func() (string, error) {
+		return c.destinationBucketOwner()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetDestinationCompressionType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DestinationCompressionType, func() (string, error) {
+		return c.destinationCompressionType()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetDestinationStorageClass() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DestinationStorageClass, func() (string, error) {
+		return c.destinationStorageClass()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetDestinationOutputKeyTemplate() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DestinationOutputKeyTemplate, func() (string, error) {
+		return c.destinationOutputKeyTemplate()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetDeadLetterBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.DeadLetterBucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis.channel", c.__id, "deadLetterBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.deadLetterBucket()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetDeadLetterBucketOwner() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DeadLetterBucketOwner, func() (string, error) {
+		return c.deadLetterBucketOwner()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetDeadLetterErrorOutputPrefix() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DeadLetterErrorOutputPrefix, func() (string, error) {
+		return c.deadLetterErrorOutputPrefix()
+	})
+}
+
+func (c *mqlAwsKinesisChannel) GetTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis.channel", c.__id, "tables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tables()
+	})
+}
+
+// mqlAwsKinesisChannelTable for the aws.kinesis.channel.table resource
+type mqlAwsKinesisChannelTable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsKinesisChannelTableInternal it will be used here
+	TableBucketArn  plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Name            plugin.TValue[string]
+	CompressionType plugin.TValue[string]
+}
+
+// createAwsKinesisChannelTable creates a new instance of this resource
+func createAwsKinesisChannelTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKinesisChannelTable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.kinesis.channel.table", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKinesisChannelTable) MqlName() string {
+	return "aws.kinesis.channel.table"
+}
+
+func (c *mqlAwsKinesisChannelTable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKinesisChannelTable) GetTableBucketArn() *plugin.TValue[string] {
+	return &c.TableBucketArn
+}
+
+func (c *mqlAwsKinesisChannelTable) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlAwsKinesisChannelTable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsKinesisChannelTable) GetCompressionType() *plugin.TValue[string] {
+	return &c.CompressionType
 }
 
 // mqlAwsKinesisFirehoseDeliveryStream for the aws.kinesis.firehoseDeliveryStream resource
@@ -198806,6 +200318,7 @@ type mqlAwsBedrockAgentCore struct {
 	ApiKeyCredentialProviders plugin.TValue[[]any]
 	WorkloadIdentities        plugin.TValue[[]any]
 	CapacityProviders         plugin.TValue[[]any]
+	ConsentPortals            plugin.TValue[[]any]
 }
 
 // createAwsBedrockAgentCore creates a new instance of this resource
@@ -198986,6 +200499,22 @@ func (c *mqlAwsBedrockAgentCore) GetCapacityProviders() *plugin.TValue[[]any] {
 		}
 
 		return c.capacityProviders()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCore) GetConsentPortals() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ConsentPortals, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore", c.__id, "consentPortals")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.consentPortals()
 	})
 }
 
@@ -200538,6 +202067,233 @@ func (c *mqlAwsBedrockAgentCoreApiKeyCredentialProvider) GetCreatedAt() *plugin.
 
 func (c *mqlAwsBedrockAgentCoreApiKeyCredentialProvider) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+// mqlAwsBedrockAgentCoreConsentPortal for the aws.bedrock.agentCore.consentPortal resource
+type mqlAwsBedrockAgentCoreConsentPortal struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockAgentCoreConsentPortalInternal
+	Arn                plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Region             plugin.TValue[string]
+	Description        plugin.TValue[string]
+	Status             plugin.TValue[string]
+	PortalUrl          plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+	UpdatedAt          plugin.TValue[*time.Time]
+	StatusReason       plugin.TValue[string]
+	CredentialProvider plugin.TValue[*mqlAwsBedrockAgentCoreOauth2CredentialProvider]
+	OauthScopes        plugin.TValue[[]any]
+	OauthAudience      plugin.TValue[string]
+	IamRole            plugin.TValue[*mqlAwsIamRole]
+	Sources            plugin.TValue[[]any]
+}
+
+// createAwsBedrockAgentCoreConsentPortal creates a new instance of this resource
+func createAwsBedrockAgentCoreConsentPortal(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockAgentCoreConsentPortal{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.agentCore.consentPortal", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) MqlName() string {
+	return "aws.bedrock.agentCore.consentPortal"
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) GetPortalUrl() *plugin.TValue[string] {
+	return &c.PortalUrl
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) GetStatusReason() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StatusReason, func() (string, error) {
+		return c.statusReason()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) GetCredentialProvider() *plugin.TValue[*mqlAwsBedrockAgentCoreOauth2CredentialProvider] {
+	return plugin.GetOrCompute[*mqlAwsBedrockAgentCoreOauth2CredentialProvider](&c.CredentialProvider, func() (*mqlAwsBedrockAgentCoreOauth2CredentialProvider, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.consentPortal", c.__id, "credentialProvider")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBedrockAgentCoreOauth2CredentialProvider), nil
+			}
+		}
+
+		return c.credentialProvider()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) GetOauthScopes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OauthScopes, func() ([]any, error) {
+		return c.oauthScopes()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) GetOauthAudience() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OauthAudience, func() (string, error) {
+		return c.oauthAudience()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.consentPortal", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortal) GetSources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Sources, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.consentPortal", c.__id, "sources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sources()
+	})
+}
+
+// mqlAwsBedrockAgentCoreConsentPortalSource for the aws.bedrock.agentCore.consentPortal.source resource
+type mqlAwsBedrockAgentCoreConsentPortalSource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockAgentCoreConsentPortalSourceInternal
+	Identifier plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Gateway    plugin.TValue[*mqlAwsBedrockAgentCoreGateway]
+}
+
+// createAwsBedrockAgentCoreConsentPortalSource creates a new instance of this resource
+func createAwsBedrockAgentCoreConsentPortalSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockAgentCoreConsentPortalSource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.agentCore.consentPortal.source", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortalSource) MqlName() string {
+	return "aws.bedrock.agentCore.consentPortal.source"
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortalSource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortalSource) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortalSource) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsBedrockAgentCoreConsentPortalSource) GetGateway() *plugin.TValue[*mqlAwsBedrockAgentCoreGateway] {
+	return plugin.GetOrCompute[*mqlAwsBedrockAgentCoreGateway](&c.Gateway, func() (*mqlAwsBedrockAgentCoreGateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.consentPortal.source", c.__id, "gateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBedrockAgentCoreGateway), nil
+			}
+		}
+
+		return c.gateway()
+	})
 }
 
 // mqlAwsBedrockAgentCoreWorkloadIdentity for the aws.bedrock.agentCore.workloadIdentity resource
