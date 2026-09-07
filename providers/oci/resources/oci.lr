@@ -8520,6 +8520,39 @@ private oci.database.autonomousDatabase @defaults("name") {
   // Null when no long-term backup schedule is configured, or when a
   // ONE_TIME schedule has already run.
   nextLongTermBackupTimestamp time
+  // Day of the week the scheduled maintenance window opens on
+  //
+  // One of MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, or SUNDAY.
+  // Null when the database has no scheduled maintenance window, in which case
+  // Oracle chooses when to patch it.
+  maintenanceDayOfWeek string
+  // Time of day the scheduled maintenance window opens, in ISO-8601 `hh:mm` form
+  //
+  // Null when the database has no scheduled maintenance window, or when the
+  // window fixes only the day and leaves the hour to Oracle.
+  maintenanceStartTime string
+  // Time of day the scheduled maintenance window closes, in ISO-8601 `hh:mm` form
+  //
+  // With maintenanceStartTime this bounds the span in which the database may be
+  // patched and restarted. Null when the database has no scheduled maintenance
+  // window, or when the window sets no end time.
+  maintenanceEndTime string
+  // Availability domain the scheduled maintenance runs in
+  //
+  // Null when the database has no scheduled maintenance window, or when the
+  // window is not pinned to a single availability domain.
+  maintenanceAvailabilityDomain string
+  // Whether a change to the maintenance window is pending
+  //
+  // True when a request to move the window has been accepted but has not taken
+  // effect, so the window reported by the other maintenance fields is the one
+  // about to be replaced. Null when the database has no scheduled maintenance
+  // window.
+  maintenanceWindowChangeScheduled bool
+  // Time the pending maintenance window change takes effect
+  //
+  // Null when no change to the maintenance window is pending.
+  timeScheduledMaintenanceWindowUpdate time
   // Oracle Data Safe status (REGISTERED, NOT_REGISTERED, REGISTERING, DEREGISTERING, FAILED)
   dataSafeStatus string
   // Open mode (READ_ONLY, READ_WRITE)

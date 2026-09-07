@@ -297,46 +297,53 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 				}
 
 				ltb := longTermBackupArgs(a.LongTermBackupSchedule, a.NextLongTermBackupTimeStamp)
+				smw := scheduledMaintenanceWindowArgs(a.ScheduledMaintenanceWindow, a.TimeScheduledMaintenanceWindowUpdate)
 
 				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.database.autonomousDatabase", stringValue(a.CompartmentId), map[string]*llx.RawData{
-					"id":                                  llx.StringDataPtr(a.Id),
-					"name":                                llx.StringDataPtr(a.DisplayName),
-					"dbName":                              llx.StringDataPtr(a.DbName),
-					"isRefreshableClone":                  llx.BoolDataPtr(a.IsRefreshableClone),
-					"dbVersion":                           llx.StringDataPtr(a.DbVersion),
-					"dbWorkload":                          llx.StringData(string(a.DbWorkload)),
-					"isDedicated":                         llx.BoolDataPtr(a.IsDedicated),
-					"isFreeTier":                          llx.BoolDataPtr(a.IsFreeTier),
-					"cpuCoreCount":                        llx.IntData(intValue(a.CpuCoreCount)),
-					"dataStorageSizeInTBs":                llx.IntData(intValue(a.DataStorageSizeInTBs)),
-					"isMtlsConnectionRequired":            llx.BoolDataPtr(a.IsMtlsConnectionRequired),
-					"isAccessControlEnabled":              llx.BoolDataPtr(a.IsAccessControlEnabled),
-					"whitelistedIps":                      llx.ArrayData(convert.SliceAnyToInterface(a.WhitelistedIps), types.String),
-					"standbyWhitelistedIps":               llx.ArrayData(convert.SliceAnyToInterface(a.StandbyWhitelistedIps), types.String),
-					"isAutoScalingEnabled":                llx.BoolDataPtr(a.IsAutoScalingEnabled),
-					"isLocalDataGuardEnabled":             llx.BoolDataPtr(a.IsLocalDataGuardEnabled),
-					"isRemoteDataGuardEnabled":            llx.BoolDataPtr(a.IsRemoteDataGuardEnabled),
-					"isDataGuardEnabled":                  llx.BoolDataPtr(a.IsDataGuardEnabled),
-					"backupRetentionPeriodInDays":         llx.IntData(intValue(a.BackupRetentionPeriodInDays)),
-					"isBackupRetentionLocked":             llx.BoolDataPtr(a.IsBackupRetentionLocked),
-					"longTermBackupRepeatCadence":         ltb["longTermBackupRepeatCadence"],
-					"longTermBackupTimeOfBackup":          ltb["longTermBackupTimeOfBackup"],
-					"longTermBackupRetentionPeriodInDays": ltb["longTermBackupRetentionPeriodInDays"],
-					"longTermBackupScheduleDisabled":      ltb["longTermBackupScheduleDisabled"],
-					"nextLongTermBackupTimestamp":         ltb["nextLongTermBackupTimestamp"],
-					"dataSafeStatus":                      llx.StringData(string(a.DataSafeStatus)),
-					"openMode":                            llx.StringData(string(a.OpenMode)),
-					"permissionLevel":                     llx.StringData(string(a.PermissionLevel)),
-					"licenseModel":                        llx.StringData(string(a.LicenseModel)),
-					"privateEndpointIp":                   llx.StringDataPtr(a.PrivateEndpointIp),
-					"privateEndpointLabel":                llx.StringDataPtr(a.PrivateEndpointLabel),
-					"connectionUrls":                      llx.DictData(connectionUrls),
-					"publicConnectionUrls":                llx.DictData(publicConnectionUrls),
-					"state":                               llx.StringData(string(a.LifecycleState)),
-					"created":                             llx.TimeDataPtr(created),
-					"freeformTags":                        llx.MapData(strMapToAny(a.FreeformTags), types.String),
-					"definedTags":                         llx.MapData(definedTagsToAny(a.DefinedTags), types.Any),
-					"systemTags":                          llx.MapData(definedTagsToAny(a.SystemTags), types.Dict),
+					"id":                                   llx.StringDataPtr(a.Id),
+					"name":                                 llx.StringDataPtr(a.DisplayName),
+					"dbName":                               llx.StringDataPtr(a.DbName),
+					"isRefreshableClone":                   llx.BoolDataPtr(a.IsRefreshableClone),
+					"dbVersion":                            llx.StringDataPtr(a.DbVersion),
+					"dbWorkload":                           llx.StringData(string(a.DbWorkload)),
+					"isDedicated":                          llx.BoolDataPtr(a.IsDedicated),
+					"isFreeTier":                           llx.BoolDataPtr(a.IsFreeTier),
+					"cpuCoreCount":                         llx.IntData(intValue(a.CpuCoreCount)),
+					"dataStorageSizeInTBs":                 llx.IntData(intValue(a.DataStorageSizeInTBs)),
+					"isMtlsConnectionRequired":             llx.BoolDataPtr(a.IsMtlsConnectionRequired),
+					"isAccessControlEnabled":               llx.BoolDataPtr(a.IsAccessControlEnabled),
+					"whitelistedIps":                       llx.ArrayData(convert.SliceAnyToInterface(a.WhitelistedIps), types.String),
+					"standbyWhitelistedIps":                llx.ArrayData(convert.SliceAnyToInterface(a.StandbyWhitelistedIps), types.String),
+					"isAutoScalingEnabled":                 llx.BoolDataPtr(a.IsAutoScalingEnabled),
+					"isLocalDataGuardEnabled":              llx.BoolDataPtr(a.IsLocalDataGuardEnabled),
+					"isRemoteDataGuardEnabled":             llx.BoolDataPtr(a.IsRemoteDataGuardEnabled),
+					"isDataGuardEnabled":                   llx.BoolDataPtr(a.IsDataGuardEnabled),
+					"backupRetentionPeriodInDays":          llx.IntData(intValue(a.BackupRetentionPeriodInDays)),
+					"isBackupRetentionLocked":              llx.BoolDataPtr(a.IsBackupRetentionLocked),
+					"longTermBackupRepeatCadence":          ltb["longTermBackupRepeatCadence"],
+					"longTermBackupTimeOfBackup":           ltb["longTermBackupTimeOfBackup"],
+					"longTermBackupRetentionPeriodInDays":  ltb["longTermBackupRetentionPeriodInDays"],
+					"longTermBackupScheduleDisabled":       ltb["longTermBackupScheduleDisabled"],
+					"nextLongTermBackupTimestamp":          ltb["nextLongTermBackupTimestamp"],
+					"maintenanceDayOfWeek":                 smw["maintenanceDayOfWeek"],
+					"maintenanceStartTime":                 smw["maintenanceStartTime"],
+					"maintenanceEndTime":                   smw["maintenanceEndTime"],
+					"maintenanceAvailabilityDomain":        smw["maintenanceAvailabilityDomain"],
+					"maintenanceWindowChangeScheduled":     smw["maintenanceWindowChangeScheduled"],
+					"timeScheduledMaintenanceWindowUpdate": smw["timeScheduledMaintenanceWindowUpdate"],
+					"dataSafeStatus":                       llx.StringData(string(a.DataSafeStatus)),
+					"openMode":                             llx.StringData(string(a.OpenMode)),
+					"permissionLevel":                      llx.StringData(string(a.PermissionLevel)),
+					"licenseModel":                         llx.StringData(string(a.LicenseModel)),
+					"privateEndpointIp":                    llx.StringDataPtr(a.PrivateEndpointIp),
+					"privateEndpointLabel":                 llx.StringDataPtr(a.PrivateEndpointLabel),
+					"connectionUrls":                       llx.DictData(connectionUrls),
+					"publicConnectionUrls":                 llx.DictData(publicConnectionUrls),
+					"state":                                llx.StringData(string(a.LifecycleState)),
+					"created":                              llx.TimeDataPtr(created),
+					"freeformTags":                         llx.MapData(strMapToAny(a.FreeformTags), types.String),
+					"definedTags":                          llx.MapData(definedTagsToAny(a.DefinedTags), types.Any),
+					"systemTags":                           llx.MapData(definedTagsToAny(a.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -769,5 +776,45 @@ func longTermBackupArgs(sched *database.LongTermBackUpScheduleDetails, next *com
 		"longTermBackupRetentionPeriodInDays": llx.IntDataPtr(retention),
 		"longTermBackupScheduleDisabled":      llx.BoolDataPtr(disabled),
 		"nextLongTermBackupTimestamp":         llx.TimeDataPtr(nextRun),
+	}
+}
+
+// scheduledMaintenanceWindowArgs flattens an Autonomous Database's scheduled
+// maintenance window onto the parent resource. Every value stays null when the
+// window is absent, so a database Oracle patches at a time of its own choosing
+// reads as "not scheduled" rather than as a window with blank values.
+func scheduledMaintenanceWindowArgs(win *database.AutonomousDatabaseMaintenanceWindowSummary, update *common.SDKTime) map[string]*llx.RawData {
+	var (
+		day           *string
+		startTime     *string
+		endTime       *string
+		availability  *string
+		changePending *bool
+	)
+	if win != nil {
+		// The SDK leaves an unset enum as "", which would otherwise reach MQL
+		// as an empty day rather than as null.
+		if win.DayOfWeek != nil && win.DayOfWeek.Name != "" {
+			d := string(win.DayOfWeek.Name)
+			day = &d
+		}
+		startTime = win.MaintenanceStartTime
+		endTime = win.MaintenanceEndTime
+		availability = win.AvailabilityDomain
+		changePending = win.IsMaintenanceWindowChangeScheduled
+	}
+
+	var updateAt *time.Time
+	if update != nil {
+		updateAt = &update.Time
+	}
+
+	return map[string]*llx.RawData{
+		"maintenanceDayOfWeek":                 llx.StringDataPtr(day),
+		"maintenanceStartTime":                 llx.StringDataPtr(startTime),
+		"maintenanceEndTime":                   llx.StringDataPtr(endTime),
+		"maintenanceAvailabilityDomain":        llx.StringDataPtr(availability),
+		"maintenanceWindowChangeScheduled":     llx.BoolDataPtr(changePending),
+		"timeScheduledMaintenanceWindowUpdate": llx.TimeDataPtr(updateAt),
 	}
 }
