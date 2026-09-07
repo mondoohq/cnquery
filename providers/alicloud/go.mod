@@ -23,14 +23,14 @@ require (
 	github.com/alibabacloud-go/kms-20160120/v4 v4.3.0
 	github.com/alibabacloud-go/nas-20170626/v4 v4.7.0
 	github.com/alibabacloud-go/nlb-20220430/v4 v4.1.3
-	github.com/alibabacloud-go/polardb-20170801/v9 v9.1.0
+	github.com/alibabacloud-go/polardb-20170801/v9 v9.2.2
 	github.com/alibabacloud-go/r-kvstore-20150101/v7 v7.6.0
 	github.com/alibabacloud-go/ram-20150501/v2 v2.2.1
 	github.com/alibabacloud-go/rds-20140815/v16 v16.9.1
 	github.com/alibabacloud-go/resourcemanager-20200331/v3 v3.5.1
 	github.com/alibabacloud-go/sas-20181203/v9 v9.3.3
 	github.com/alibabacloud-go/slb-20140515/v4 v4.0.14
-	github.com/alibabacloud-go/sls-20201230/v6 v6.14.0
+	github.com/alibabacloud-go/sls-20201230/v6 v6.15.0
 	github.com/alibabacloud-go/sts-20150401/v2 v2.1.0
 	github.com/alibabacloud-go/tea v1.5.3
 	github.com/alibabacloud-go/vpc-20160428/v7 v7.2.5
