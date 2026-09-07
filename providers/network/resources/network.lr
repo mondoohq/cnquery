@@ -7,10 +7,6 @@ option provider = "go.mondoo.com/mql/providers/network"
 option go_package = "go.mondoo.com/mql/providers/network/resources"
 option root = "network.host"
 
-alias network.host.domainName = domainName
-alias network.host.dns = dns
-alias network.host.tls = tls
-
 // Network socket
 //
 // Addressable network endpoint identified by its transport `protocol`,
@@ -1123,9 +1119,20 @@ dns.dkimRecord @defaults("dnsTxt") {
 network.host @defaults("fqdn") @root {
   // Domain name or IP address this connection targets
   fqdn() string
-  // URL scheme the connection uses, e.g. https
+  // URL scheme the target was given with, e.g. https
   //
-  // Empty when the target was given without one, which the connection reads as
-  // HTTPS.
+  // Empty when the target carried none, which is deliberate rather than
+  // unknown: the connection leaves it empty and each resource decides what
+  // that means to it. `tls` and `http.get` both read an unschemed target as
+  // HTTPS, so `host example.com` inspects the HTTPS endpoint.
   scheme() string
+  // Parsed domain name
+  //
+  // The target broken into its registrable domain, TLD and labels. Empty of
+  // meaning for an IP target.
+  domainName() domainName
+  // DNS records for this host
+  dns() dns
+  // TLS endpoint of this host
+  tls() tls
 }

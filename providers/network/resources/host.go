@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers/network/connection"
 )
 
@@ -28,4 +29,36 @@ func (r *mqlNetworkHost) scheme() (string, error) {
 		return "", nil
 	}
 	return conn.Conf.Runtime, nil
+}
+
+// The three aspects below are the same resources reached standalone with an
+// explicit target - `dns("example.com")` - built here against the connected
+// host instead. Each init already falls back to the connection when it gets no
+// target, so passing none is what asks for *this* host.
+//
+// They are fields rather than aliases so `_{*}` and autocomplete can see them:
+// glob expansion skips an implicit resource whose init takes an argument, having
+// no way to know the argument is optional in practice.
+func (r *mqlNetworkHost) domainName() (*mqlDomainName, error) {
+	o, err := NewResource(r.MqlRuntime, "domainName", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return o.(*mqlDomainName), nil
+}
+
+func (r *mqlNetworkHost) dns() (*mqlDns, error) {
+	o, err := NewResource(r.MqlRuntime, "dns", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return o.(*mqlDns), nil
+}
+
+func (r *mqlNetworkHost) tls() (*mqlTls, error) {
+	o, err := NewResource(r.MqlRuntime, "tls", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return o.(*mqlTls), nil
 }
