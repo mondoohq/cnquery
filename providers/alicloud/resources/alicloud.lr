@@ -3398,10 +3398,20 @@ alicloud.mongodb.instance {
 //
 // Entry point for querying ApsaraDB for PolarDB, the cloud-native relational
 // database service. Exposes the PolarDB clusters provisioned across every
-// enabled region through clusters.
+// enabled region through clusters, and the retrieval-augmented generation
+// corpora built on them through knowledgeBases and knowledgeSpaces.
 alicloud.polardb {
   // PolarDB clusters across all enabled regions
   clusters() []alicloud.polardb.cluster
+  // PolarDB knowledge bases across all enabled regions
+  knowledgeBases() []alicloud.polardb.knowledgeBase
+  // PolarDB knowledge spaces across all enabled regions
+  //
+  // The spaces reached from the knowledge bases listed in each region, because
+  // Alibaba Cloud offers no listing of knowledge spaces on their own. A space
+  // that holds no knowledge base is absent here and has to be named directly,
+  // for example alicloud.polardb.knowledgeSpace(knowledgeSpaceId: "pks-xxxxxxxx", regionId: "cn-beijing").
+  knowledgeSpaces() []alicloud.polardb.knowledgeSpace
 }
 
 // PolarDB cluster
@@ -3644,6 +3654,204 @@ alicloud.polardb.application @defaults("applicationId applicationType status ssl
   //
   // Null when TLS is off.
   certModifiedTime() time
+  // NAT gateway that publishes the application into the VPC
+  //
+  // Null when no NAT mapping is configured. When set, the application is
+  // reached through the gateway's DNAT entries as well as through endpoints,
+  // so an application whose endpoints are all Private can still answer callers
+  // that reach the gateway.
+  vpcNatGateway() alicloud.vpc.natGateway
+  // SNAT address bound to the vSwitch the application resides on
+  //
+  // The address the control plane discovered for NAT mapping, null when the
+  // application has no NAT mapping. It is a customer-managed SNAT entry and is
+  // unrelated to an Internet NAT gateway SNAT entry.
+  natMappingSnatIpAddress() string
+  // DNAT entries that publish the application through the NAT gateway
+  //
+  // Empty when the application is not published through DNAT. Each entry maps a
+  // port on the NAT gateway to a port on the application, which is a reachable
+  // path that endpoints does not report: an application whose endpoints are all
+  // Private still answers on every address listed here.
+  dnatMappings() []alicloud.polardb.application.dnatMapping
+}
+
+// DNAT entry of a PolarDB application
+//
+// A single destination NAT entry that publishes one port of a PolarDB
+// application through a VPC NAT gateway, keyed by entryId. Exposes the address
+// the entry answers on, the front and backend ports it maps, the application
+// port it fronts, and the entry state. Use it to find application ports that
+// are reachable through the gateway even though the application's own
+// endpoints are all private.
+alicloud.polardb.application.dnatMapping @defaults("portName accessAddress status") {
+  // DNAT entry ID, for example fwd-xxxxxxxx
+  entryId string
+  // Address the entry answers on
+  //
+  // In NatIp:FrontPort form, for example 10.64.0.10:10001.
+  accessAddress string
+  // Port on the NAT gateway that the entry accepts traffic on
+  frontPort int
+  // Port on the application that the entry forwards traffic to
+  backendPort int
+  // Application port the entry fronts
+  //
+  // For example webui, hermesagent, dashboard, or ssh. Reported as returned by
+  // the API, so a port name added after this provider shipped still appears.
+  portName string
+  // Entry state, for example Available
+  status string
+}
+
+// PolarDB knowledge space
+//
+// A single knowledge space, the vector store a PolarDB retrieval-augmented
+// generation workload answers from, keyed by knowledgeSpaceId within its
+// region. Exposes the access control mode that decides how much of the corpus a
+// caller retrieves, the OSS bucket the source documents are drawn from, the
+// PolarDB cluster and database that hold the vectors, and the embedding,
+// generation, and reranking models in use. The knowledgeSpaceId field selects
+// the space, for example
+// alicloud.polardb.knowledgeSpace(knowledgeSpaceId: "pks-xxxxxxxx", regionId: "cn-beijing").
+alicloud.polardb.knowledgeSpace @defaults("name knowledgeSpaceId aclMode status") {
+  // Region ID the knowledge space resides in, for example cn-beijing
+  regionId string
+  // Knowledge space ID, used with the region as the lookup key
+  knowledgeSpaceId string
+  // Name of the knowledge space
+  name string
+  // Description of the knowledge space, empty when none is set
+  description string
+  // Access control applied when retrieving from the corpus
+  //
+  // One of DISABLED or ENFORCED. With it DISABLED, no per-document access
+  // control is applied, so every caller that can query the space retrieves
+  // from the whole corpus.
+  aclMode string
+  // Lifecycle state of the knowledge space, for example Activation
+  status string
+  // PolarDB cluster that stores the vectors
+  //
+  // Null when the space names no cluster, and when the cluster lies outside the
+  // scanned regions.
+  dbCluster() alicloud.polardb.cluster
+  // Name of the database that holds the vectors, for example polar_rag_meta
+  dbName string
+  // Database engine that holds the vectors
+  //
+  // One of MySQL or PostgreSQL.
+  dbType string
+  // OSS bucket the source documents are drawn from
+  //
+  // Null when the space names no bucket. The bucket's own access controls
+  // decide who reaches the raw documents behind the corpus, which the access
+  // control on the space itself does not govern.
+  ossBucket() alicloud.oss.bucket
+  // Model that turns documents into vectors, for example text-embedding-v4
+  embeddingModel string
+  // Number of dimensions in the stored vectors, for example 1536
+  embeddingDimension int
+  // Model that composes answers from the retrieved documents, for example qwen3.6-plus
+  llmModel string
+  // Model that reorders retrieval results, for example qwen3-rerank
+  rerankModel string
+  // Chunking strategy applied to documents, for example hybrid
+  strategy string
+  // Chunk size in tokens
+  shardSize int
+  // Number of knowledge bases in the space
+  knowledgeBaseCount int
+  // Total number of documents across the space
+  totalDocs int
+  // Total size of the documents across the space, in bytes
+  totalSizeBytes int
+  // When the knowledge space was created
+  createTime time
+  // Knowledge bases contained in the space
+  knowledgeBases() []alicloud.polardb.knowledgeBase
+}
+
+// PolarDB knowledge base
+//
+// A single knowledge base within a knowledge space, keyed by knowledgeBaseId
+// within its region. A knowledge base groups the documents a retrieval workload
+// answers from. Exposes the sharing scope that decides who reads it, the
+// document and byte counts, how many AI applications are bound to it, and the
+// synchronization links that pull content into it from an external messaging
+// platform on a timer.
+alicloud.polardb.knowledgeBase @defaults("name knowledgeBaseId knowledgeBaseType status") {
+  // Region ID the knowledge base resides in, for example cn-beijing
+  regionId string
+  // Knowledge base ID, for example pkb-xxxxxxxx
+  knowledgeBaseId string
+  // Name of the knowledge base
+  name string
+  // Description of the knowledge base, empty when none is set
+  description string
+  // Sharing scope of the knowledge base
+  //
+  // One of PUBLIC, readable by everyone with access to the knowledge space, or
+  // PERSONAL, readable only by the account that created it.
+  knowledgeBaseType string
+  // Lifecycle state of the knowledge base, for example Activation
+  status string
+  // Knowledge space that contains the knowledge base
+  //
+  // Null when the knowledge base names no space, and when the space could not
+  // be read.
+  knowledgeSpace() alicloud.polardb.knowledgeSpace
+  // Number of AI applications bound to the knowledge base
+  bindingAppCount int
+  // Total number of documents in the knowledge base
+  totalDocs int
+  // Total size of the documents in the knowledge base, in bytes
+  totalSizeBytes int
+  // When the knowledge base was created
+  createTime time
+  // Synchronization links that feed content into the knowledge base
+  //
+  // Empty when nothing is synchronized in. Each link pulls a directory from an
+  // external messaging platform on a timer, so documents reach the corpus with
+  // nobody reviewing them at the moment they land.
+  syncLinks() []alicloud.polardb.knowledgeBase.syncLink
+}
+
+// Synchronization link of a PolarDB knowledge base
+//
+// A single link that pulls documents into a knowledge base from a directory on
+// an external messaging platform, keyed by linkId. Exposes the platform and the
+// client identity the link authenticates as, the source directory it reads, how
+// often it runs, and whether it is running. A running link is an unattended
+// path for outside content to enter the corpus a retrieval workload answers
+// from.
+alicloud.polardb.knowledgeBase.syncLink @defaults("linkName imPlatform sourceDir syncStatus") {
+  // Synchronization link ID, for example pkbl-xxxxxxxx
+  linkId string
+  // Name of the synchronization link
+  linkName string
+  // Description of the synchronization link, empty when none is set
+  description string
+  // Messaging platform the link pulls content from
+  //
+  // FEISHU is the documented source channel. Reported as returned by the API,
+  // so a platform added after this provider shipped still appears.
+  imPlatform string
+  // Client identity the link authenticates to the platform as, for example cli_xxxxxxbe8
+  clientId string
+  // Source directory the link reads
+  //
+  // For example https://example.feishu.cn/wiki/space/xxxxxx.
+  sourceDir string
+  // Minutes between synchronization runs
+  syncIntervalMinutes int
+  // Synchronization state
+  //
+  // One of CREATING, RUNNING, PAUSED, or DELETING. Only RUNNING pulls content
+  // in now.
+  syncStatus string
+  // When the synchronization link was created
+  createTime time
 }
 
 // VPC flow log
@@ -4048,6 +4256,58 @@ alicloud.log.project {
   // query matches. Logs being collected is only half of monitoring; without a
   // rule reading them, nothing is noticed.
   alerts() []alicloud.log.alert
+  // API keys scoped to the project
+  //
+  // The standing credentials that reach the project's stores directly, outside
+  // the RAM identities the rest of the account is audited through.
+  apiKeys() []alicloud.log.apiKey
+}
+
+// Log Service API key
+//
+// A single standing API key of a Log Service project, keyed by the project name
+// and the key name within a region. An API key is a long-lived credential for
+// the logging plane, so its store scope and its state decide how much log data
+// one leaked string reaches. Exposes the key state, the stores the key is
+// limited to, whether that scope leaves it unrestricted, and the creation and
+// last-update times. The key material is never read.
+alicloud.log.apiKey @defaults("apiKeyName status allowsAllStores") {
+  // Region ID of the project the key belongs to, for example cn-hangzhou
+  regionId string
+  // Name of the project the key is scoped to
+  projectName string
+  // Project the key is scoped to
+  project() alicloud.log.project
+  // Name of the API key, unique within the project
+  apiKeyName string
+  // Description of the API key, empty when none is set
+  description string
+  // State of the API key
+  //
+  // Enabled while the key authenticates requests, Disabled once it has been
+  // turned off. A disabled key still exists and can be turned back on.
+  status string
+  // Names of the stores the key is limited to
+  //
+  // The logstores and metricstores named in the key scope. An empty list is not
+  // "reaches nothing": it means the key carries no store restriction and
+  // reaches every store in the project, which allowsAllStores reports directly.
+  allowedStores []string
+  // Whether the key reaches every store in the project
+  //
+  // True when allowedStores is empty, which leaves the key unrestricted within
+  // the project.
+  allowsAllStores bool
+  // Logstores named in the key scope
+  //
+  // Empty when the key names no store, which means it is unrestricted, and
+  // empty when every name in the scope is a metricstore rather than a
+  // logstore. Read allowsAllStores before concluding a key is narrowly scoped.
+  allowedLogstores() []alicloud.log.logstore
+  // When the API key was created
+  createTime time
+  // When the API key was last updated
+  updateTime time
 }
 
 // Log Service alert rule

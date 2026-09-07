@@ -74,6 +74,10 @@ const (
 	ResourceAlicloudPolardb                       string = "alicloud.polardb"
 	ResourceAlicloudPolardbCluster                string = "alicloud.polardb.cluster"
 	ResourceAlicloudPolardbApplication            string = "alicloud.polardb.application"
+	ResourceAlicloudPolardbApplicationDnatMapping string = "alicloud.polardb.application.dnatMapping"
+	ResourceAlicloudPolardbKnowledgeSpace         string = "alicloud.polardb.knowledgeSpace"
+	ResourceAlicloudPolardbKnowledgeBase          string = "alicloud.polardb.knowledgeBase"
+	ResourceAlicloudPolardbKnowledgeBaseSyncLink  string = "alicloud.polardb.knowledgeBase.syncLink"
 	ResourceAlicloudVpcFlowLog                    string = "alicloud.vpc.flowLog"
 	ResourceAlicloudKms                           string = "alicloud.kms"
 	ResourceAlicloudKmsKey                        string = "alicloud.kms.key"
@@ -82,6 +86,7 @@ const (
 	ResourceAlicloudActiontrailTrail              string = "alicloud.actiontrail.trail"
 	ResourceAlicloudLog                           string = "alicloud.log"
 	ResourceAlicloudLogProject                    string = "alicloud.log.project"
+	ResourceAlicloudLogApiKey                     string = "alicloud.log.apiKey"
 	ResourceAlicloudLogAlert                      string = "alicloud.log.alert"
 	ResourceAlicloudLogAlertQuery                 string = "alicloud.log.alert.query"
 	ResourceAlicloudLogLogstore                   string = "alicloud.log.logstore"
@@ -412,6 +417,22 @@ func init() {
 			// to override args, implement: initAlicloudPolardbApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAlicloudPolardbApplication,
 		},
+		"alicloud.polardb.application.dnatMapping": {
+			// to override args, implement: initAlicloudPolardbApplicationDnatMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudPolardbApplicationDnatMapping,
+		},
+		"alicloud.polardb.knowledgeSpace": {
+			Init:   initAlicloudPolardbKnowledgeSpace,
+			Create: createAlicloudPolardbKnowledgeSpace,
+		},
+		"alicloud.polardb.knowledgeBase": {
+			// to override args, implement: initAlicloudPolardbKnowledgeBase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudPolardbKnowledgeBase,
+		},
+		"alicloud.polardb.knowledgeBase.syncLink": {
+			// to override args, implement: initAlicloudPolardbKnowledgeBaseSyncLink(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudPolardbKnowledgeBaseSyncLink,
+		},
 		"alicloud.vpc.flowLog": {
 			// to override args, implement: initAlicloudVpcFlowLog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAlicloudVpcFlowLog,
@@ -443,6 +464,10 @@ func init() {
 		"alicloud.log.project": {
 			Init:   initAlicloudLogProject,
 			Create: createAlicloudLogProject,
+		},
+		"alicloud.log.apiKey": {
+			// to override args, implement: initAlicloudLogApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudLogApiKey,
 		},
 		"alicloud.log.alert": {
 			// to override args, implement: initAlicloudLogAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3727,6 +3752,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.polardb.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudPolardb).GetClusters()).ToDataRes(types.Array(types.Resource("alicloud.polardb.cluster")))
 	},
+	"alicloud.polardb.knowledgeBases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardb).GetKnowledgeBases()).ToDataRes(types.Array(types.Resource("alicloud.polardb.knowledgeBase")))
+	},
+	"alicloud.polardb.knowledgeSpaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardb).GetKnowledgeSpaces()).ToDataRes(types.Array(types.Resource("alicloud.polardb.knowledgeSpace")))
+	},
 	"alicloud.polardb.cluster.dbClusterId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudPolardbCluster).GetDbClusterId()).ToDataRes(types.String)
 	},
@@ -3921,6 +3952,159 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.polardb.application.certModifiedTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudPolardbApplication).GetCertModifiedTime()).ToDataRes(types.Time)
+	},
+	"alicloud.polardb.application.vpcNatGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetVpcNatGateway()).ToDataRes(types.Resource("alicloud.vpc.natGateway"))
+	},
+	"alicloud.polardb.application.natMappingSnatIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetNatMappingSnatIpAddress()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.dnatMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplication).GetDnatMappings()).ToDataRes(types.Array(types.Resource("alicloud.polardb.application.dnatMapping")))
+	},
+	"alicloud.polardb.application.dnatMapping.entryId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplicationDnatMapping).GetEntryId()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.dnatMapping.accessAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplicationDnatMapping).GetAccessAddress()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.dnatMapping.frontPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplicationDnatMapping).GetFrontPort()).ToDataRes(types.Int)
+	},
+	"alicloud.polardb.application.dnatMapping.backendPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplicationDnatMapping).GetBackendPort()).ToDataRes(types.Int)
+	},
+	"alicloud.polardb.application.dnatMapping.portName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplicationDnatMapping).GetPortName()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.application.dnatMapping.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbApplicationDnatMapping).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeSpace.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeSpace.knowledgeSpaceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetKnowledgeSpaceId()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeSpace.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetName()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeSpace.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeSpace.aclMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetAclMode()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeSpace.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeSpace.dbCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetDbCluster()).ToDataRes(types.Resource("alicloud.polardb.cluster"))
+	},
+	"alicloud.polardb.knowledgeSpace.dbName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetDbName()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeSpace.dbType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetDbType()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeSpace.ossBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetOssBucket()).ToDataRes(types.Resource("alicloud.oss.bucket"))
+	},
+	"alicloud.polardb.knowledgeSpace.embeddingModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetEmbeddingModel()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeSpace.embeddingDimension": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetEmbeddingDimension()).ToDataRes(types.Int)
+	},
+	"alicloud.polardb.knowledgeSpace.llmModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetLlmModel()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeSpace.rerankModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetRerankModel()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeSpace.strategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetStrategy()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeSpace.shardSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetShardSize()).ToDataRes(types.Int)
+	},
+	"alicloud.polardb.knowledgeSpace.knowledgeBaseCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetKnowledgeBaseCount()).ToDataRes(types.Int)
+	},
+	"alicloud.polardb.knowledgeSpace.totalDocs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetTotalDocs()).ToDataRes(types.Int)
+	},
+	"alicloud.polardb.knowledgeSpace.totalSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetTotalSizeBytes()).ToDataRes(types.Int)
+	},
+	"alicloud.polardb.knowledgeSpace.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.polardb.knowledgeSpace.knowledgeBases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeSpace).GetKnowledgeBases()).ToDataRes(types.Array(types.Resource("alicloud.polardb.knowledgeBase")))
+	},
+	"alicloud.polardb.knowledgeBase.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBase).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeBase.knowledgeBaseId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBase).GetKnowledgeBaseId()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeBase.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBase).GetName()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeBase.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBase).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeBase.knowledgeBaseType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBase).GetKnowledgeBaseType()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeBase.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBase).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeBase.knowledgeSpace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBase).GetKnowledgeSpace()).ToDataRes(types.Resource("alicloud.polardb.knowledgeSpace"))
+	},
+	"alicloud.polardb.knowledgeBase.bindingAppCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBase).GetBindingAppCount()).ToDataRes(types.Int)
+	},
+	"alicloud.polardb.knowledgeBase.totalDocs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBase).GetTotalDocs()).ToDataRes(types.Int)
+	},
+	"alicloud.polardb.knowledgeBase.totalSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBase).GetTotalSizeBytes()).ToDataRes(types.Int)
+	},
+	"alicloud.polardb.knowledgeBase.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBase).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.polardb.knowledgeBase.syncLinks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBase).GetSyncLinks()).ToDataRes(types.Array(types.Resource("alicloud.polardb.knowledgeBase.syncLink")))
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.linkId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).GetLinkId()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.linkName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).GetLinkName()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.imPlatform": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).GetImPlatform()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.clientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).GetClientId()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.sourceDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).GetSourceDir()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.syncIntervalMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).GetSyncIntervalMinutes()).ToDataRes(types.Int)
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.syncStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).GetSyncStatus()).ToDataRes(types.String)
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).GetCreateTime()).ToDataRes(types.Time)
 	},
 	"alicloud.vpc.flowLog.regionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcFlowLog).GetRegionId()).ToDataRes(types.String)
@@ -4260,6 +4444,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.log.project.alerts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudLogProject).GetAlerts()).ToDataRes(types.Array(types.Resource("alicloud.log.alert")))
+	},
+	"alicloud.log.project.apiKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogProject).GetApiKeys()).ToDataRes(types.Array(types.Resource("alicloud.log.apiKey")))
+	},
+	"alicloud.log.apiKey.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogApiKey).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.log.apiKey.projectName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogApiKey).GetProjectName()).ToDataRes(types.String)
+	},
+	"alicloud.log.apiKey.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogApiKey).GetProject()).ToDataRes(types.Resource("alicloud.log.project"))
+	},
+	"alicloud.log.apiKey.apiKeyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogApiKey).GetApiKeyName()).ToDataRes(types.String)
+	},
+	"alicloud.log.apiKey.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogApiKey).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.log.apiKey.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogApiKey).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.log.apiKey.allowedStores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogApiKey).GetAllowedStores()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.log.apiKey.allowsAllStores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogApiKey).GetAllowsAllStores()).ToDataRes(types.Bool)
+	},
+	"alicloud.log.apiKey.allowedLogstores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogApiKey).GetAllowedLogstores()).ToDataRes(types.Array(types.Resource("alicloud.log.logstore")))
+	},
+	"alicloud.log.apiKey.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogApiKey).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.log.apiKey.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogApiKey).GetUpdateTime()).ToDataRes(types.Time)
 	},
 	"alicloud.log.alert.regionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudLogAlert).GetRegionId()).ToDataRes(types.String)
@@ -11928,6 +12148,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudPolardb).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"alicloud.polardb.knowledgeBases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardb).KnowledgeBases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardb).KnowledgeSpaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"alicloud.polardb.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudPolardbCluster).__id, ok = v.Value.(string)
 		return
@@ -12194,6 +12422,226 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.polardb.application.certModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudPolardbApplication).CertModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.vpcNatGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).VpcNatGateway, ok = plugin.RawToTValue[*mqlAlicloudVpcNatGateway](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.natMappingSnatIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).NatMappingSnatIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.dnatMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplication).DnatMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.dnatMapping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplicationDnatMapping).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.polardb.application.dnatMapping.entryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplicationDnatMapping).EntryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.dnatMapping.accessAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplicationDnatMapping).AccessAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.dnatMapping.frontPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplicationDnatMapping).FrontPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.dnatMapping.backendPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplicationDnatMapping).BackendPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.dnatMapping.portName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplicationDnatMapping).PortName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.application.dnatMapping.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbApplicationDnatMapping).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.knowledgeSpaceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).KnowledgeSpaceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.aclMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).AclMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.dbCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).DbCluster, ok = plugin.RawToTValue[*mqlAlicloudPolardbCluster](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.dbName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).DbName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.dbType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).DbType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.ossBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).OssBucket, ok = plugin.RawToTValue[*mqlAlicloudOssBucket](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.embeddingModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).EmbeddingModel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.embeddingDimension": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).EmbeddingDimension, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.llmModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).LlmModel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.rerankModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).RerankModel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.strategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).Strategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.shardSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).ShardSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.knowledgeBaseCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).KnowledgeBaseCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.totalDocs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).TotalDocs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.totalSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).TotalSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeSpace.knowledgeBases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeSpace).KnowledgeBases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBase).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBase).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.knowledgeBaseId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBase).KnowledgeBaseId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBase).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.knowledgeBaseType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBase).KnowledgeBaseType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBase).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.knowledgeSpace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBase).KnowledgeSpace, ok = plugin.RawToTValue[*mqlAlicloudPolardbKnowledgeSpace](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.bindingAppCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBase).BindingAppCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.totalDocs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBase).TotalDocs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.totalSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBase).TotalSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBase).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.syncLinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBase).SyncLinks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.linkId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).LinkId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.linkName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).LinkName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.imPlatform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).ImPlatform, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.clientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).ClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.sourceDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).SourceDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.syncIntervalMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).SyncIntervalMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.syncStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).SyncStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.knowledgeBase.syncLink.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbKnowledgeBaseSyncLink).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"alicloud.vpc.flowLog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12678,6 +13126,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.log.project.alerts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudLogProject).Alerts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.project.apiKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogProject).ApiKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.apiKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogApiKey).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.log.apiKey.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogApiKey).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.apiKey.projectName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogApiKey).ProjectName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.apiKey.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogApiKey).Project, ok = plugin.RawToTValue[*mqlAlicloudLogProject](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.apiKey.apiKeyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogApiKey).ApiKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.apiKey.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogApiKey).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.apiKey.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogApiKey).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.apiKey.allowedStores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogApiKey).AllowedStores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.apiKey.allowsAllStores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogApiKey).AllowsAllStores, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.apiKey.allowedLogstores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogApiKey).AllowedLogstores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.apiKey.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogApiKey).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.apiKey.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogApiKey).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"alicloud.log.alert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27051,8 +27551,10 @@ func (c *mqlAlicloudMongodbInstance) GetAuditPolicyEnabled() *plugin.TValue[bool
 type mqlAlicloudPolardb struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAlicloudPolardbInternal it will be used here
-	Clusters plugin.TValue[[]any]
+	mqlAlicloudPolardbInternal
+	Clusters        plugin.TValue[[]any]
+	KnowledgeBases  plugin.TValue[[]any]
+	KnowledgeSpaces plugin.TValue[[]any]
 }
 
 // createAlicloudPolardb creates a new instance of this resource
@@ -27105,6 +27607,38 @@ func (c *mqlAlicloudPolardb) GetClusters() *plugin.TValue[[]any] {
 		}
 
 		return c.clusters()
+	})
+}
+
+func (c *mqlAlicloudPolardb) GetKnowledgeBases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KnowledgeBases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.polardb", c.__id, "knowledgeBases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.knowledgeBases()
+	})
+}
+
+func (c *mqlAlicloudPolardb) GetKnowledgeSpaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KnowledgeSpaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.polardb", c.__id, "knowledgeSpaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.knowledgeSpaces()
 	})
 }
 
@@ -27434,28 +27968,31 @@ type mqlAlicloudPolardbApplication struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAlicloudPolardbApplicationInternal
-	ApplicationId         plugin.TValue[string]
-	ApplicationType       plugin.TValue[string]
-	Description           plugin.TValue[string]
-	DbCluster             plugin.TValue[*mqlAlicloudPolardbCluster]
-	EngineVersion         plugin.TValue[string]
-	Status                plugin.TValue[string]
-	RegionId              plugin.TValue[string]
-	ZoneId                plugin.TValue[string]
-	PayType               plugin.TValue[string]
-	CreateTime            plugin.TValue[*time.Time]
-	ExpireTime            plugin.TValue[*time.Time]
-	Expired               plugin.TValue[string]
-	PolarFsInstanceId     plugin.TValue[string]
-	Endpoints             plugin.TValue[[]any]
-	Tags                  plugin.TValue[map[string]any]
-	SslEnabled            plugin.TValue[bool]
-	SslAutoRotate         plugin.TValue[bool]
-	CertCommonName        plugin.TValue[string]
-	CertSource            plugin.TValue[string]
-	CertFingerprintSha256 plugin.TValue[string]
-	CertExpireTime        plugin.TValue[*time.Time]
-	CertModifiedTime      plugin.TValue[*time.Time]
+	ApplicationId           plugin.TValue[string]
+	ApplicationType         plugin.TValue[string]
+	Description             plugin.TValue[string]
+	DbCluster               plugin.TValue[*mqlAlicloudPolardbCluster]
+	EngineVersion           plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	RegionId                plugin.TValue[string]
+	ZoneId                  plugin.TValue[string]
+	PayType                 plugin.TValue[string]
+	CreateTime              plugin.TValue[*time.Time]
+	ExpireTime              plugin.TValue[*time.Time]
+	Expired                 plugin.TValue[string]
+	PolarFsInstanceId       plugin.TValue[string]
+	Endpoints               plugin.TValue[[]any]
+	Tags                    plugin.TValue[map[string]any]
+	SslEnabled              plugin.TValue[bool]
+	SslAutoRotate           plugin.TValue[bool]
+	CertCommonName          plugin.TValue[string]
+	CertSource              plugin.TValue[string]
+	CertFingerprintSha256   plugin.TValue[string]
+	CertExpireTime          plugin.TValue[*time.Time]
+	CertModifiedTime        plugin.TValue[*time.Time]
+	VpcNatGateway           plugin.TValue[*mqlAlicloudVpcNatGateway]
+	NatMappingSnatIpAddress plugin.TValue[string]
+	DnatMappings            plugin.TValue[[]any]
 }
 
 // createAlicloudPolardbApplication creates a new instance of this resource
@@ -27607,6 +28144,500 @@ func (c *mqlAlicloudPolardbApplication) GetCertModifiedTime() *plugin.TValue[*ti
 	return plugin.GetOrCompute[*time.Time](&c.CertModifiedTime, func() (*time.Time, error) {
 		return c.certModifiedTime()
 	})
+}
+
+func (c *mqlAlicloudPolardbApplication) GetVpcNatGateway() *plugin.TValue[*mqlAlicloudVpcNatGateway] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNatGateway](&c.VpcNatGateway, func() (*mqlAlicloudVpcNatGateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.polardb.application", c.__id, "vpcNatGateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNatGateway), nil
+			}
+		}
+
+		return c.vpcNatGateway()
+	})
+}
+
+func (c *mqlAlicloudPolardbApplication) GetNatMappingSnatIpAddress() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NatMappingSnatIpAddress, func() (string, error) {
+		return c.natMappingSnatIpAddress()
+	})
+}
+
+func (c *mqlAlicloudPolardbApplication) GetDnatMappings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DnatMappings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.polardb.application", c.__id, "dnatMappings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dnatMappings()
+	})
+}
+
+// mqlAlicloudPolardbApplicationDnatMapping for the alicloud.polardb.application.dnatMapping resource
+type mqlAlicloudPolardbApplicationDnatMapping struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudPolardbApplicationDnatMappingInternal it will be used here
+	EntryId       plugin.TValue[string]
+	AccessAddress plugin.TValue[string]
+	FrontPort     plugin.TValue[int64]
+	BackendPort   plugin.TValue[int64]
+	PortName      plugin.TValue[string]
+	Status        plugin.TValue[string]
+}
+
+// createAlicloudPolardbApplicationDnatMapping creates a new instance of this resource
+func createAlicloudPolardbApplicationDnatMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudPolardbApplicationDnatMapping{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.polardb.application.dnatMapping", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudPolardbApplicationDnatMapping) MqlName() string {
+	return "alicloud.polardb.application.dnatMapping"
+}
+
+func (c *mqlAlicloudPolardbApplicationDnatMapping) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudPolardbApplicationDnatMapping) GetEntryId() *plugin.TValue[string] {
+	return &c.EntryId
+}
+
+func (c *mqlAlicloudPolardbApplicationDnatMapping) GetAccessAddress() *plugin.TValue[string] {
+	return &c.AccessAddress
+}
+
+func (c *mqlAlicloudPolardbApplicationDnatMapping) GetFrontPort() *plugin.TValue[int64] {
+	return &c.FrontPort
+}
+
+func (c *mqlAlicloudPolardbApplicationDnatMapping) GetBackendPort() *plugin.TValue[int64] {
+	return &c.BackendPort
+}
+
+func (c *mqlAlicloudPolardbApplicationDnatMapping) GetPortName() *plugin.TValue[string] {
+	return &c.PortName
+}
+
+func (c *mqlAlicloudPolardbApplicationDnatMapping) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+// mqlAlicloudPolardbKnowledgeSpace for the alicloud.polardb.knowledgeSpace resource
+type mqlAlicloudPolardbKnowledgeSpace struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudPolardbKnowledgeSpaceInternal
+	RegionId           plugin.TValue[string]
+	KnowledgeSpaceId   plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	AclMode            plugin.TValue[string]
+	Status             plugin.TValue[string]
+	DbCluster          plugin.TValue[*mqlAlicloudPolardbCluster]
+	DbName             plugin.TValue[string]
+	DbType             plugin.TValue[string]
+	OssBucket          plugin.TValue[*mqlAlicloudOssBucket]
+	EmbeddingModel     plugin.TValue[string]
+	EmbeddingDimension plugin.TValue[int64]
+	LlmModel           plugin.TValue[string]
+	RerankModel        plugin.TValue[string]
+	Strategy           plugin.TValue[string]
+	ShardSize          plugin.TValue[int64]
+	KnowledgeBaseCount plugin.TValue[int64]
+	TotalDocs          plugin.TValue[int64]
+	TotalSizeBytes     plugin.TValue[int64]
+	CreateTime         plugin.TValue[*time.Time]
+	KnowledgeBases     plugin.TValue[[]any]
+}
+
+// createAlicloudPolardbKnowledgeSpace creates a new instance of this resource
+func createAlicloudPolardbKnowledgeSpace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudPolardbKnowledgeSpace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.polardb.knowledgeSpace", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) MqlName() string {
+	return "alicloud.polardb.knowledgeSpace"
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetKnowledgeSpaceId() *plugin.TValue[string] {
+	return &c.KnowledgeSpaceId
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetAclMode() *plugin.TValue[string] {
+	return &c.AclMode
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetDbCluster() *plugin.TValue[*mqlAlicloudPolardbCluster] {
+	return plugin.GetOrCompute[*mqlAlicloudPolardbCluster](&c.DbCluster, func() (*mqlAlicloudPolardbCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.polardb.knowledgeSpace", c.__id, "dbCluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudPolardbCluster), nil
+			}
+		}
+
+		return c.dbCluster()
+	})
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetDbName() *plugin.TValue[string] {
+	return &c.DbName
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetDbType() *plugin.TValue[string] {
+	return &c.DbType
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetOssBucket() *plugin.TValue[*mqlAlicloudOssBucket] {
+	return plugin.GetOrCompute[*mqlAlicloudOssBucket](&c.OssBucket, func() (*mqlAlicloudOssBucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.polardb.knowledgeSpace", c.__id, "ossBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudOssBucket), nil
+			}
+		}
+
+		return c.ossBucket()
+	})
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetEmbeddingModel() *plugin.TValue[string] {
+	return &c.EmbeddingModel
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetEmbeddingDimension() *plugin.TValue[int64] {
+	return &c.EmbeddingDimension
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetLlmModel() *plugin.TValue[string] {
+	return &c.LlmModel
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetRerankModel() *plugin.TValue[string] {
+	return &c.RerankModel
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetStrategy() *plugin.TValue[string] {
+	return &c.Strategy
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetShardSize() *plugin.TValue[int64] {
+	return &c.ShardSize
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetKnowledgeBaseCount() *plugin.TValue[int64] {
+	return &c.KnowledgeBaseCount
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetTotalDocs() *plugin.TValue[int64] {
+	return &c.TotalDocs
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetTotalSizeBytes() *plugin.TValue[int64] {
+	return &c.TotalSizeBytes
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudPolardbKnowledgeSpace) GetKnowledgeBases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KnowledgeBases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.polardb.knowledgeSpace", c.__id, "knowledgeBases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.knowledgeBases()
+	})
+}
+
+// mqlAlicloudPolardbKnowledgeBase for the alicloud.polardb.knowledgeBase resource
+type mqlAlicloudPolardbKnowledgeBase struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudPolardbKnowledgeBaseInternal
+	RegionId          plugin.TValue[string]
+	KnowledgeBaseId   plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Description       plugin.TValue[string]
+	KnowledgeBaseType plugin.TValue[string]
+	Status            plugin.TValue[string]
+	KnowledgeSpace    plugin.TValue[*mqlAlicloudPolardbKnowledgeSpace]
+	BindingAppCount   plugin.TValue[int64]
+	TotalDocs         plugin.TValue[int64]
+	TotalSizeBytes    plugin.TValue[int64]
+	CreateTime        plugin.TValue[*time.Time]
+	SyncLinks         plugin.TValue[[]any]
+}
+
+// createAlicloudPolardbKnowledgeBase creates a new instance of this resource
+func createAlicloudPolardbKnowledgeBase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudPolardbKnowledgeBase{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.polardb.knowledgeBase", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBase) MqlName() string {
+	return "alicloud.polardb.knowledgeBase"
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBase) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBase) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBase) GetKnowledgeBaseId() *plugin.TValue[string] {
+	return &c.KnowledgeBaseId
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBase) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBase) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBase) GetKnowledgeBaseType() *plugin.TValue[string] {
+	return &c.KnowledgeBaseType
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBase) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBase) GetKnowledgeSpace() *plugin.TValue[*mqlAlicloudPolardbKnowledgeSpace] {
+	return plugin.GetOrCompute[*mqlAlicloudPolardbKnowledgeSpace](&c.KnowledgeSpace, func() (*mqlAlicloudPolardbKnowledgeSpace, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.polardb.knowledgeBase", c.__id, "knowledgeSpace")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudPolardbKnowledgeSpace), nil
+			}
+		}
+
+		return c.knowledgeSpace()
+	})
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBase) GetBindingAppCount() *plugin.TValue[int64] {
+	return &c.BindingAppCount
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBase) GetTotalDocs() *plugin.TValue[int64] {
+	return &c.TotalDocs
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBase) GetTotalSizeBytes() *plugin.TValue[int64] {
+	return &c.TotalSizeBytes
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBase) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBase) GetSyncLinks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SyncLinks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.polardb.knowledgeBase", c.__id, "syncLinks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.syncLinks()
+	})
+}
+
+// mqlAlicloudPolardbKnowledgeBaseSyncLink for the alicloud.polardb.knowledgeBase.syncLink resource
+type mqlAlicloudPolardbKnowledgeBaseSyncLink struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudPolardbKnowledgeBaseSyncLinkInternal it will be used here
+	LinkId              plugin.TValue[string]
+	LinkName            plugin.TValue[string]
+	Description         plugin.TValue[string]
+	ImPlatform          plugin.TValue[string]
+	ClientId            plugin.TValue[string]
+	SourceDir           plugin.TValue[string]
+	SyncIntervalMinutes plugin.TValue[int64]
+	SyncStatus          plugin.TValue[string]
+	CreateTime          plugin.TValue[*time.Time]
+}
+
+// createAlicloudPolardbKnowledgeBaseSyncLink creates a new instance of this resource
+func createAlicloudPolardbKnowledgeBaseSyncLink(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudPolardbKnowledgeBaseSyncLink{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.polardb.knowledgeBase.syncLink", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBaseSyncLink) MqlName() string {
+	return "alicloud.polardb.knowledgeBase.syncLink"
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBaseSyncLink) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBaseSyncLink) GetLinkId() *plugin.TValue[string] {
+	return &c.LinkId
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBaseSyncLink) GetLinkName() *plugin.TValue[string] {
+	return &c.LinkName
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBaseSyncLink) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBaseSyncLink) GetImPlatform() *plugin.TValue[string] {
+	return &c.ImPlatform
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBaseSyncLink) GetClientId() *plugin.TValue[string] {
+	return &c.ClientId
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBaseSyncLink) GetSourceDir() *plugin.TValue[string] {
+	return &c.SourceDir
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBaseSyncLink) GetSyncIntervalMinutes() *plugin.TValue[int64] {
+	return &c.SyncIntervalMinutes
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBaseSyncLink) GetSyncStatus() *plugin.TValue[string] {
+	return &c.SyncStatus
+}
+
+func (c *mqlAlicloudPolardbKnowledgeBaseSyncLink) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
 }
 
 // mqlAlicloudVpcFlowLog for the alicloud.vpc.flowLog resource
@@ -28595,6 +29626,7 @@ type mqlAlicloudLogProject struct {
 	Policy             plugin.TValue[string]
 	IsPublic           plugin.TValue[bool]
 	Alerts             plugin.TValue[[]any]
+	ApiKeys            plugin.TValue[[]any]
 }
 
 // createAlicloudLogProject creates a new instance of this resource
@@ -28740,6 +29772,140 @@ func (c *mqlAlicloudLogProject) GetAlerts() *plugin.TValue[[]any] {
 
 		return c.alerts()
 	})
+}
+
+func (c *mqlAlicloudLogProject) GetApiKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApiKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.log.project", c.__id, "apiKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.apiKeys()
+	})
+}
+
+// mqlAlicloudLogApiKey for the alicloud.log.apiKey resource
+type mqlAlicloudLogApiKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudLogApiKeyInternal it will be used here
+	RegionId         plugin.TValue[string]
+	ProjectName      plugin.TValue[string]
+	Project          plugin.TValue[*mqlAlicloudLogProject]
+	ApiKeyName       plugin.TValue[string]
+	Description      plugin.TValue[string]
+	Status           plugin.TValue[string]
+	AllowedStores    plugin.TValue[[]any]
+	AllowsAllStores  plugin.TValue[bool]
+	AllowedLogstores plugin.TValue[[]any]
+	CreateTime       plugin.TValue[*time.Time]
+	UpdateTime       plugin.TValue[*time.Time]
+}
+
+// createAlicloudLogApiKey creates a new instance of this resource
+func createAlicloudLogApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudLogApiKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.log.apiKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudLogApiKey) MqlName() string {
+	return "alicloud.log.apiKey"
+}
+
+func (c *mqlAlicloudLogApiKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudLogApiKey) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudLogApiKey) GetProjectName() *plugin.TValue[string] {
+	return &c.ProjectName
+}
+
+func (c *mqlAlicloudLogApiKey) GetProject() *plugin.TValue[*mqlAlicloudLogProject] {
+	return plugin.GetOrCompute[*mqlAlicloudLogProject](&c.Project, func() (*mqlAlicloudLogProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.log.apiKey", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudLogProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlAlicloudLogApiKey) GetApiKeyName() *plugin.TValue[string] {
+	return &c.ApiKeyName
+}
+
+func (c *mqlAlicloudLogApiKey) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudLogApiKey) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudLogApiKey) GetAllowedStores() *plugin.TValue[[]any] {
+	return &c.AllowedStores
+}
+
+func (c *mqlAlicloudLogApiKey) GetAllowsAllStores() *plugin.TValue[bool] {
+	return &c.AllowsAllStores
+}
+
+func (c *mqlAlicloudLogApiKey) GetAllowedLogstores() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowedLogstores, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.log.apiKey", c.__id, "allowedLogstores")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.allowedLogstores()
+	})
+}
+
+func (c *mqlAlicloudLogApiKey) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudLogApiKey) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
 }
 
 // mqlAlicloudLogAlert for the alicloud.log.alert resource

@@ -21,6 +21,7 @@ import (
 // make its TLS detail call and to resolve its typed cluster reference.
 type mqlAlicloudPolardbApplicationInternal struct {
 	polardbApplicationSSLState
+	polardbApplicationAttributeState
 	region         string
 	applicationId  string
 	cacheClusterID string
