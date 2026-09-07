@@ -25,8 +25,14 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/resources"
 )
 
+// testPlugin answers heartbeats through a real plugin.Service, the way a
+// provider binary does. The Service has to be a pointer built by NewService
+// rather than an embedded zero value: an unconstructed Service has no watchdog
+// stop channel, so once a heartbeat arms the watchdog nothing can retire it,
+// and a few windows later it os.Exit()s the process it is running in - here
+// the test binary itself, killing whichever unrelated test is running then.
 type testPlugin struct {
-	plugin.Service
+	*plugin.Service
 }
 
 func (t *testPlugin) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
@@ -45,7 +51,9 @@ func (t *testPlugin) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, err
 	// sleep more than the heartbeat interval to ensure that even if shutting down
 	// the provider can still respond to heartbeats
 	time.Sleep(10 * time.Second)
-	return &plugin.ShutdownRes{}, nil
+	// hand off to the real Service: it retires the heartbeat watchdog, which
+	// would otherwise reap this process once the parent stops beating.
+	return t.Service.Shutdown(req)
 }
 
 func (t *testPlugin) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
@@ -58,7 +66,7 @@ func (t *testPlugin) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 
 func TestProviderShutdown(t *testing.T) {
 	s := &RunningProvider{
-		Plugin:      &testPlugin{},
+		Plugin:      &testPlugin{plugin.NewService()},
 		interval:    500 * time.Millisecond,
 		gracePeriod: 500 * time.Millisecond,
 	}
