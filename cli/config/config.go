@@ -212,6 +212,20 @@ func GetUpdatesURL() string {
 	return viper.GetString("updates_url")
 }
 
+// KeyProviderPortRange is the config key for the loopback TCP port range that
+// provider subprocesses may listen on, written as "min-max" (for example
+// "50000-50100"). It comes from mondoo.yml or, through viper's env binding,
+// from MONDOO_PROVIDER_PORT_RANGE. Only Windows uses TCP for the provider
+// transport; other platforms talk to providers over Unix sockets and ignore it.
+const KeyProviderPortRange = "provider_port_range"
+
+// GetProviderPortRange returns the provider_port_range setting, or an empty
+// string when unset. Parsing and the default live with the providers package,
+// which is the one that hands the range to the plugin runtime.
+func GetProviderPortRange() string {
+	return viper.GetString(KeyProviderPortRange)
+}
+
 // GetFeatures returns the features from viper config.
 // This can be called after InitViperConfig() to get features before cobra initialization.
 func GetFeatures() mql.Features {
@@ -316,6 +330,12 @@ type CommonOpts struct {
 	// This can be a custom URL for an internal release registry
 	// Providers are fetched from UpdatesURL + "/providers"
 	UpdatesURL string `json:"updates_url,omitempty" mapstructure:"updates_url"`
+
+	// ProviderPortRange is the loopback TCP port range ("min-max") that provider
+	// subprocesses may listen on. Only Windows uses TCP for the provider
+	// transport, so the setting has no effect elsewhere. Unset means the
+	// providers package default. See KeyProviderPortRange.
+	ProviderPortRange string `json:"provider_port_range,omitempty" mapstructure:"provider_port_range"`
 }
 
 // Workload Identity Federation
