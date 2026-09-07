@@ -51,6 +51,12 @@ mql> datadog.roles.where(permissions.any(name == "org_management")) { name users
 mql> datadog.dashboards { title sharedDashboards.where(shareType == "open") { publicUrl status expiration } }
 ```
 
+**Find who can open a remote shell on a host through Datadog**
+
+```shell
+mql> datadog.executionPolicies.where(effect == "allow" && integration == "INTEGRATION_REMOTE_ACTION") { name targets { agentTags } scope { scopeType remoteShellRules { access targetPaths } } createdBy { email } }
+```
+
 **Review where logs are forwarded outside Datadog**
 
 ```shell
@@ -190,5 +196,7 @@ The following resources require specific Datadog products to be enabled in your 
 | `datadog.securityFilters` | Cloud SIEM |
 | `datadog.securitySuppressions` | Cloud SIEM |
 | `datadog.sensitiveDataScannerGroups` | Sensitive Data Scanner |
+
+> **Note**: `datadog.executionPolicies` reads `/api/v2/actions/execution-policies`, which Datadog marks as a preview operation. The provider enables it explicitly, because the API client refuses preview operations by default. The RBAC permission and the product that gates it are not published in the API client, so they are absent from the tables above; a 403 is handled the same way as for the plan-gated resources, returning an empty list and logging a warning.
 
 To check which products are enabled, go to **Datadog > Organization Settings > Subscription** or contact your Datadog account representative.
