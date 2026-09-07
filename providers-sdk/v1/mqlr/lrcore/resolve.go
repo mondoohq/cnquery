@@ -37,6 +37,7 @@ func ResolveWithRoot(filePath string, providersRoot string, readFile func(path s
 	}
 
 	res.imports = make(map[string]map[string]struct{})
+	res.importedMembers = make(map[string]map[string]struct{})
 	res.packPaths = map[string]string{}
 	res.packProviders = map[string]string{}
 	importMap := map[string]map[string]*Resource{
@@ -67,6 +68,29 @@ func ResolveWithRoot(filePath string, providersRoot string, readFile func(path s
 		}
 
 		res.imports[packName] = resources
+
+		// Record what each peer resource exposes, so a cross-provider
+		// `@replaced_by` target can be verified down to the field instead of
+		// being accepted because the resource name happened to exist.
+		//
+		// Members accumulate across imports instead of replacing what an
+		// earlier peer recorded for the same resource id. At runtime
+		// `Schema.Add` unions the fields of same-named resources across
+		// providers - that is how `os` extends `asset` - so every contributor
+		// adds to what a target may legitimately name. Replacing here would
+		// let whichever import happened to load last decide the answer, and
+		// reject a `@replaced_by` that resolves perfectly well.
+		peerByID := importMap[packName]
+		for id := range peerByID {
+			members, ok := res.importedMembers[id]
+			if !ok {
+				members = map[string]struct{}{}
+				res.importedMembers[id] = members
+			}
+			for name := range childLR.exposedMembers(peerByID, id, 0) {
+				members[name] = struct{}{}
+			}
+		}
 
 		goPkg := childLR.Options["go_package"]
 		if goPkg == "" {
