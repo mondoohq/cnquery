@@ -2208,6 +2208,8 @@ private stackit.secretsManager.instance @defaults("id name state") {
   acls() []string
   // Users that hold credentials on the instance
   users() []stackit.secretsManager.user
+  // Approles that hold machine credentials on the instance
+  approles() []stackit.secretsManager.approle
 }
 
 // STACKIT Secrets Manager user
@@ -2230,6 +2232,84 @@ private stackit.secretsManager.user @defaults("username write") {
   write bool
   // Secrets Manager instance the user authenticates against
   instance() stackit.secretsManager.instance
+}
+
+// STACKIT Secrets Manager approle
+//
+// Machine credential on a Secrets Manager instance, keyed by its `roleId`.
+// An approle is a standing, non-human identity that authenticates with a
+// role ID and a secret ID rather than a username and password. The `write`
+// flag separates read-only consumers from identities that can create,
+// change, and delete secrets, and `secretIdTtl` with `secretIdNumUses`
+// bound how long and how often an issued secret ID keeps working. Both
+// bounds are frequently left unlimited, which is what makes a leaked
+// secret ID permanent, so `secretIdTtlSeconds` and `secretIdUsesUnlimited`
+// report those states directly. The `secretIds` field lists the secret ID
+// versions currently live on the approle.
+private stackit.secretsManager.approle @defaults("roleId description write") {
+  // Role ID the approle authenticates as
+  roleId string
+  // Free-text description recorded when the approle was created
+  description string
+  // Whether the approle may create, modify, and delete secrets
+  //
+  // False for a read-only approle that can only fetch secrets.
+  write bool
+  // Lifetime of a secret ID issued for the approle
+  //
+  // A duration string in the service's own format, such as 15m, 1h, or
+  // 24h. Null when the instance reports no lifetime for the approle.
+  secretIdTtl string
+  // Lifetime of a secret ID issued for the approle, in seconds
+  //
+  // Null when secretIdTtl is absent or is not one of the duration forms
+  // the service documents. Zero means an issued secret ID never expires.
+  secretIdTtlSeconds int
+  // Number of times a secret ID issued for the approle may be used
+  //
+  // Zero carries the service's unlimited sentinel rather than a real
+  // count, so read secretIdUsesUnlimited instead of comparing it.
+  secretIdNumUses int
+  // Whether a secret ID issued for the approle may be used any number of times
+  //
+  // True when secretIdNumUses reports the service's unlimited sentinel, so
+  // a leaked secret ID keeps authenticating until somebody revokes it.
+  secretIdUsesUnlimited bool
+  // Secret ID versions currently live on the approle
+  secretIds() []stackit.secretsManager.approle.secretId
+  // Secrets Manager instance the approle authenticates against
+  instance() stackit.secretsManager.instance
+}
+
+// Secret ID version issued for a STACKIT Secrets Manager approle
+//
+// One live secret ID on an approle, selected by its `version`. The secret
+// value itself is returned by the service only at creation time and is
+// never part of this resource; what is queryable is the bound placed on
+// the credential: `ttl` and `ttlSeconds` for how long it stays valid, and
+// `numUses` with `usesUnlimited` for how often it may authenticate.
+private stackit.secretsManager.approle.secretId @defaults("version ttl numUses") {
+  // Version that identifies the secret ID on its approle
+  version int
+  // Free-text description recorded when the secret ID was created
+  description string
+  // Lifetime of the secret ID
+  //
+  // A duration string in the service's own format, such as 15m, 1h, or
+  // 24h. Null when the instance reports no lifetime for the secret ID.
+  ttl string
+  // Lifetime of the secret ID, in seconds
+  //
+  // Null when ttl is absent or is not one of the duration forms the
+  // service documents. Zero means the secret ID never expires.
+  ttlSeconds int
+  // Number of times the secret ID may be used
+  //
+  // Zero carries the service's unlimited sentinel rather than a real
+  // count, so read usesUnlimited instead of comparing it.
+  numUses int
+  // Whether the secret ID may be used any number of times
+  usesUnlimited bool
 }
 
 // STACKIT Observability namespace
