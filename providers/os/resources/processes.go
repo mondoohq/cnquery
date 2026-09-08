@@ -234,12 +234,8 @@ func (p *mqlProcesses) collectSocketInodes(all []any) error {
 	for i := range all {
 		process := all[i].(*mqlProcess)
 
-		socketInodes := process.SocketInodes.Data
-		socketInodesErr := process.SocketInodes.Error
-		if socketInodes == nil {
-			socketInodes = []int64{}
-		}
-
+		socketInodes := []int64{}
+		socketInodesErr := error(nil)
 		if inodeInfo, ok := processesInodesByPid[process.Pid.Data]; ok {
 			socketInodes = inodeInfo.Data
 			socketInodesErr = inodeInfo.Error

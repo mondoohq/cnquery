@@ -29,6 +29,7 @@ func (lpm *LinuxProcManager) List() ([]*OSProcess, error) {
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to access /proc")
 	}
+	defer f.Close()
 
 	dirs, err := f.Readdirnames(-1)
 	if err != nil {
@@ -143,6 +144,7 @@ func (lpm *LinuxProcManager) ListSocketInodesByProcess() (map[int64]plugin.TValu
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to access /proc")
 	}
+	defer f.Close()
 
 	dirs, err := f.Readdirnames(-1)
 	if err != nil {
