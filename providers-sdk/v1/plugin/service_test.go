@@ -35,6 +35,12 @@ func (c *TestConnection) ParentID() uint32 {
 }
 
 func TestMain(m *testing.M) {
+	// A re-execution of this binary as a go-plugin plugin serves and exits
+	// instead of running tests; see transport_test.go.
+	if servePluginForTransportTests() {
+		return
+	}
+
 	// Prevent "goleak: Errors on successful test run: found unexpected goroutines"
 	opts := []goleak.Option{
 		goleak.IgnoreTopFunction("internal/poll.runtime_pollWait"),

@@ -11,65 +11,48 @@ import (
 )
 
 func TestResolvePluginPortRangeFrom(t *testing.T) {
-	t.Run("default when nothing is configured", func(t *testing.T) {
-		r, err := resolvePluginPortRangeFrom("", "", "")
-		require.NoError(t, err)
-		// The whole point of the change: the default must stay out of
-		// go-plugin's own 10000-25000, and inside the IANA dynamic range.
-		assert.Equal(t, pluginPortRange{Min: 50000, Max: 65535}, r)
+	t.Run("unset means an OS-assigned port on every platform", func(t *testing.T) {
+		for _, tcp := range []bool{true, false} {
+			r, err := resolvePluginPortRangeFrom("", tcp)
+			require.NoError(t, err)
+			// Min 0 is what makes go-plugin bind 127.0.0.1:0. Max must stay
+			// non-zero: with both at zero go-plugin silently swaps in its own
+			// 10000-25000 default, the range this whole file exists to leave.
+			assert.Equal(t, uint(0), r.Min)
+			assert.NotEqual(t, uint(0), r.Max)
+		}
 	})
 
-	t.Run("config value wins", func(t *testing.T) {
-		r, err := resolvePluginPortRangeFrom("50000-50100", "", "")
+	t.Run("configured range is used where the transport is TCP", func(t *testing.T) {
+		r, err := resolvePluginPortRangeFrom("50000-50100", true)
 		require.NoError(t, err)
 		assert.Equal(t, pluginPortRange{Min: 50000, Max: 50100}, r)
 	})
 
-	t.Run("config value tolerates whitespace", func(t *testing.T) {
-		r, err := resolvePluginPortRangeFrom(" 50000 - 50100 ", "", "")
+	t.Run("configured range tolerates whitespace", func(t *testing.T) {
+		r, err := resolvePluginPortRangeFrom(" 50000 - 50100 ", true)
 		require.NoError(t, err)
 		assert.Equal(t, pluginPortRange{Min: 50000, Max: 50100}, r)
 	})
 
 	t.Run("single port range is allowed", func(t *testing.T) {
-		r, err := resolvePluginPortRangeFrom("50000-50000", "", "")
+		r, err := resolvePluginPortRangeFrom("50000-50000", true)
 		require.NoError(t, err)
 		assert.Equal(t, pluginPortRange{Min: 50000, Max: 50000}, r)
 	})
 
-	t.Run("config value overrides go-plugin environment", func(t *testing.T) {
-		r, err := resolvePluginPortRangeFrom("50000-50100", "20000", "21000")
-		require.NoError(t, err)
-		assert.Equal(t, pluginPortRange{Min: 50000, Max: 50100}, r)
-	})
-
-	t.Run("malformed config value is an error even when the environment is valid", func(t *testing.T) {
-		_, err := resolvePluginPortRangeFrom("fifty-thousand", "20000", "21000")
+	t.Run("malformed value is an error where the transport is TCP", func(t *testing.T) {
+		_, err := resolvePluginPortRangeFrom("fifty-thousand", true)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "provider_port_range")
 	})
 
-	t.Run("go-plugin environment is honored", func(t *testing.T) {
-		r, err := resolvePluginPortRangeFrom("", "20000", "21000")
+	t.Run("malformed value is ignored where the transport is not TCP", func(t *testing.T) {
+		// A typo in a fleet-wide mondoo.yml must not fail Linux scans over a
+		// Windows-only setting; the resolver logs and uses the default instead.
+		r, err := resolvePluginPortRangeFrom("fifty-thousand", false)
 		require.NoError(t, err)
-		assert.Equal(t, pluginPortRange{Min: 20000, Max: 21000}, r)
-	})
-
-	t.Run("half-set go-plugin environment is an error", func(t *testing.T) {
-		_, err := resolvePluginPortRangeFrom("", "20000", "")
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "must be set together")
-
-		_, err = resolvePluginPortRangeFrom("", "", "21000")
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "must be set together")
-	})
-
-	t.Run("malformed go-plugin environment is an error", func(t *testing.T) {
-		_, err := resolvePluginPortRangeFrom("", "21000", "20000")
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "PLUGIN_MIN_PORT")
-		assert.Contains(t, err.Error(), "greater than")
+		assert.Equal(t, ephemeralPluginPortRange, r)
 	})
 }
 
