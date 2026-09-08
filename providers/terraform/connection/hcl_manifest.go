@@ -72,8 +72,16 @@ func newHclConnection(id uint32, path string, asset *inventory.Asset) (*Connecti
 		return nil, errors.New("path is not a valid file or directory")
 	}
 
+	// OpenTofu-specific files we cannot read yet. They are collected across the
+	// whole walk so the error can name all of them at once rather than failing
+	// on whichever happened to be visited first.
+	var tofuFiles []string
+
 	if stat.IsDir() {
-		filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
+		// NOTE: the return value of WalkDir is deliberately captured. It used to
+		// be discarded, which silently swallowed every HCL parse error raised
+		// below and turned a malformed configuration into an empty one.
+		walkErr := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				return err
 			}
@@ -105,7 +113,11 @@ func newHclConnection(id uint32, path string, asset *inventory.Asset) (*Connecti
 					return nil
 				}
 
-				log.Debug().Str("path", path).Msg("parsing hcl file")
+				if isTofuConfigFile(path) {
+					tofuFiles = append(tofuFiles, path)
+					return nil
+				}
+
 				err = loader.ParseHclFile(path)
 				if err != nil {
 					return errors.Wrap(err, "could not parse hcl file")
@@ -118,16 +130,34 @@ func newHclConnection(id uint32, path string, asset *inventory.Asset) (*Connecti
 			}
 			return nil
 		})
+		if walkErr != nil {
+			return nil, walkErr
+		}
 	} else {
-		err = loader.ParseHclFile(path)
-		if err != nil {
-			return nil, errors.Wrap(err, "could not parse hcl file")
-		}
+		if isTofuConfigFile(path) {
+			tofuFiles = append(tofuFiles, path)
+		} else {
+			err = loader.ParseHclFile(path)
+			if err != nil {
+				return nil, errors.Wrap(err, "could not parse hcl file")
+			}
 
-		err = ReadTfVarsFromFile(path, tfVars)
-		if err != nil {
-			return nil, errors.Wrap(err, "could not parse tfvars file")
+			err = ReadTfVarsFromFile(path, tfVars)
+			if err != nil {
+				return nil, errors.Wrap(err, "could not parse tfvars file")
+			}
 		}
+	}
+
+	// Refuse to hand back a connection built from files we knowingly could not
+	// read: an empty configuration passes every assertion made against it.
+	if err := newUnsupportedTofuFilesError(tofuFiles); err != nil {
+		return nil, err
+	}
+
+	if len(loader.GetParser().Files()) == 0 {
+		log.Warn().Str("path", path).
+			Msg("no terraform configuration files (.tf, .tf.json) were found, results will be empty")
 	}
 
 	return &Connection{

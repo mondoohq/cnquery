@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/rs/zerolog/log"
 )
 
 func NewHCLFileLoader() *hclFileLoader {
@@ -24,7 +25,9 @@ type hclFileLoader struct {
 	hclParser *hclparse.Parser
 }
 
-// ParseHclFile parses a single terraform file
+// ParseHclFile parses a single terraform file. Files this provider does not
+// read (anything that is not .tf or .tf.json) are skipped; callers that need to
+// know whether a path was understood use IsHclFile.
 func (h *hclFileLoader) ParseHclFile(filepath string) error {
 	var parseFunc func(filename string) (*hcl.File, hcl.Diagnostics)
 	switch {
@@ -36,11 +39,18 @@ func (h *hclFileLoader) ParseHclFile(filepath string) error {
 		return nil
 	}
 
+	log.Debug().Str("path", filepath).Msg("parsing hcl file")
 	_, diag := parseFunc(filepath)
 	if diag != nil && diag.HasErrors() {
 		return diag
 	}
 	return nil
+}
+
+// IsHclFile reports whether the path is a terraform configuration file that
+// ParseHclFile will actually read.
+func IsHclFile(filepath string) bool {
+	return strings.HasSuffix(filepath, ".tf") || strings.HasSuffix(filepath, ".tf.json")
 }
 
 func (h *hclFileLoader) GetParser() *hclparse.Parser {

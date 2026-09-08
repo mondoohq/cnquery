@@ -96,6 +96,11 @@ func NewStateConnection(id uint32, asset *inventory.Asset) (*Connection, error) 
 	if err != nil {
 		return nil, err
 	}
+	// Reject encrypted and raw state files up front. Both decode cleanly into an
+	// empty State, which would scan as a state file holding zero resources.
+	if err := validateStateDocument(data); err != nil {
+		return nil, err
+	}
 	err = json.Unmarshal(data, &tfState)
 	if err != nil {
 		return nil, err
