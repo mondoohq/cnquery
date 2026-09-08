@@ -120,7 +120,6 @@ require (
 )
 
 require (
-	github.com/containerd/errdefs v1.0.0
 	github.com/hashicorp/hcl/v2 v2.25.0
 	github.com/microsoft/wmi v0.45.0
 	github.com/moby/docker-image-spec v1.3.1
@@ -185,6 +184,9 @@ require (
 	github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
 	github.com/cockroachdb/redact v1.1.8 // indirect
+	github.com/containerd/containerd v1.7.34
+	github.com/containerd/containerd/api v1.10.0
+	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/containerd/platforms v1.0.0-rc.2 // indirect
