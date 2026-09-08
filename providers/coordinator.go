@@ -397,6 +397,14 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 	// (SIGKILL with empty stderr ≈ OOM killer) and peak RSS.
 	procTracker := &processTracker{}
 
+	// On Windows the plugin transport is loopback TCP and the client picks the
+	// port range; see plugin_ports.go for why go-plugin's own default is not
+	// acceptable and how the range is resolved. Other platforms ignore it.
+	ports, err := resolvePluginPortRange()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start provider "+id)
+	}
+
 	connectFunc := func() (pp.ProviderPlugin, *plugin.Client, error) {
 		pluginCmd := exec.Command(provider.binPath(), []string{"run_as_plugin", "--log-level", zerolog.GlobalLevel().String()}...)
 
@@ -411,8 +419,10 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 			AllowedProtocols: []plugin.Protocol{
 				plugin.ProtocolNetRPC, plugin.ProtocolGRPC,
 			},
-			Logger: pluginLogger,
-			Stderr: crashLog,
+			Logger:  pluginLogger,
+			Stderr:  crashLog,
+			MinPort: ports.Min,
+			MaxPort: ports.Max,
 		})
 
 		// Connect via RPC

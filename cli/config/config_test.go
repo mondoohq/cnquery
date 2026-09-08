@@ -332,3 +332,45 @@ space_mrn: //captain.api.mondoo.app/spaces/musing-saha-952142
 		assert.Equal(t, "baz", cfg.Annotations["foo.bar"])
 	})
 }
+
+func TestGetProviderPortRange(t *testing.T) {
+	t.Cleanup(func() {
+		viper.Reset()
+		AppFs = afero.NewOsFs()
+	})
+
+	t.Run("unset reads as empty so the providers package applies its default", func(t *testing.T) {
+		viper.Reset()
+		assert.Equal(t, "", GetProviderPortRange())
+	})
+
+	t.Run("reads the config key", func(t *testing.T) {
+		viper.Reset()
+		viper.Set(KeyProviderPortRange, "50000-50100")
+		assert.Equal(t, "50000-50100", GetProviderPortRange())
+	})
+
+	t.Run("round-trips through the Config struct", func(t *testing.T) {
+		viper.Reset()
+		viper.SetConfigType("yaml")
+		viper.SetOptions(viper.KeyDelimiter("\\"))
+		require.NoError(t, ApplyConfig(&Config{CommonOpts: CommonOpts{ProviderPortRange: "50000-50100"}}))
+		assert.Equal(t, "50000-50100", GetProviderPortRange())
+
+		cfg, err := Read()
+		require.NoError(t, err)
+		assert.Equal(t, "50000-50100", cfg.ProviderPortRange)
+	})
+
+	t.Run("MONDOO_PROVIDER_PORT_RANGE is picked up through the env binding InitViperConfig sets up", func(t *testing.T) {
+		viper.Reset()
+		resetAppFsToMemFs(t) // no config file anywhere, so only the environment can supply the value
+		t.Setenv("MONDOO_CONFIG_BASE64", "")
+		t.Setenv("MONDOO_CONFIG_PATH", "")
+		t.Setenv("MONDOO_PROVIDER_PORT_RANGE", "50000-50100")
+		UserProvidedPath = ""
+
+		InitViperConfig()
+		assert.Equal(t, "50000-50100", GetProviderPortRange())
+	})
+}
