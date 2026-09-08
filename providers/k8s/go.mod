@@ -34,7 +34,10 @@ require (
 	sigs.k8s.io/yaml v1.6.0
 )
 
-require github.com/carabiner-dev/spdx3 v0.1.0 // indirect
+require (
+	github.com/carabiner-dev/spdx3 v0.1.0 // indirect
+	google.golang.org/genproto v0.0.0-20260128011058-8636f8732409 // indirect
+)
 
 require (
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
