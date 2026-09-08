@@ -79,6 +79,22 @@ func TestDetectPlatformByDialect(t *testing.T) {
 		assert.Equal(t, "terraform-hcl", asset.Platform.Name)
 	})
 
+	t.Run("the connection runtime agrees with the platform catalog", func(t *testing.T) {
+		// Other providers build their platform from conn.Runtime(). If this
+		// provider is ever wired up that way, the two must not disagree: a
+		// connection reporting "terraform" while its platform declares
+		// "opentofu" would produce an asset that contradicts itself.
+		for files, wantRuntime := range map[string]string{
+			"main.tf":   "terraform",
+			"main.tofu": "opentofu",
+		} {
+			asset := connectToDir(t, map[string]string{files: bucket}, nil)
+			assert.Equal(t, wantRuntime, asset.Platform.Runtime, "platform runtime for %s", files)
+			assert.True(t, PlatformByName(asset.Platform.Name).Consistent(asset.Platform),
+				"platform %s should be consistent with its catalog entry", asset.Platform.Name)
+		}
+	})
+
 	t.Run("both dialects share a platform ID for the same path", func(t *testing.T) {
 		// The platform ID identifies the project, not the tool applying it, so
 		// a repository that migrates from Terraform to OpenTofu stays the same

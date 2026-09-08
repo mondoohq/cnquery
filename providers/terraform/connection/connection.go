@@ -76,8 +76,13 @@ func (c *Connection) Kind() string {
 	return "code"
 }
 
+// Runtime tracks the dialect so it agrees with the platform catalog, whose
+// opentofu-* entries declare a runtime of "opentofu". Other providers build
+// their platform from conn.Runtime(); keeping the two in step here means this
+// one can be wired up the same way without silently reporting a runtime that
+// contradicts the platform.
 func (c *Connection) Runtime() string {
-	return "terraform"
+	return string(c.Dialect())
 }
 
 func (c *Connection) Asset() *inventory.Asset {

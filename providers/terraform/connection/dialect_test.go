@@ -290,6 +290,25 @@ func TestStateConnectionDialect(t *testing.T) {
 	}
 }
 
+func TestConnectionRuntimeTracksDialect(t *testing.T) {
+	// The platform catalog's opentofu-* entries declare a runtime of
+	// "opentofu"; a connection that kept reporting "terraform" would contradict
+	// the platform built from it.
+	t.Run("opentofu", func(t *testing.T) {
+		dir := writeFiles(t, map[string]string{"main.tofu": validResource})
+		conn, err := hclConnectionFor(dir)
+		require.NoError(t, err)
+		assert.Equal(t, "opentofu", conn.Runtime())
+	})
+
+	t.Run("terraform", func(t *testing.T) {
+		dir := writeFiles(t, map[string]string{"main.tf": validResource})
+		conn, err := hclConnectionFor(dir)
+		require.NoError(t, err)
+		assert.Equal(t, "terraform", conn.Runtime())
+	})
+}
+
 func keysOf[V any](m map[string]V) []string {
 	out := make([]string, 0, len(m))
 	for k := range m {
