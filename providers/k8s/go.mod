@@ -34,7 +34,10 @@ require (
 	sigs.k8s.io/yaml v1.6.0
 )
 
-require github.com/carabiner-dev/spdx3 v0.1.0 // indirect
+require (
+	github.com/carabiner-dev/spdx3 v0.1.0 // indirect
+	google.golang.org/genproto v0.0.0-20260128011058-8636f8732409 // indirect
+)
 
 require (
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
@@ -81,8 +84,13 @@ require (
 	github.com/cloudflare/circl v1.6.5 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
 	github.com/cockroachdb/redact v1.1.8 // indirect
+	github.com/containerd/containerd v1.7.34 // indirect
+	github.com/containerd/containerd/api v1.10.0 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
+	github.com/containerd/log v0.1.0 // indirect
+	github.com/containerd/platforms v1.0.0-rc.2 // indirect
+	github.com/containerd/ttrpc v1.2.8 // indirect
 	github.com/containerd/typeurl/v2 v2.3.0 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/cyphar/filepath-securejoin v0.7.0 // indirect
