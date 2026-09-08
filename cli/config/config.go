@@ -215,8 +215,9 @@ func GetUpdatesURL() string {
 // KeyProviderPortRange is the config key for the loopback TCP port range that
 // provider subprocesses may listen on, written as "min-max" (for example
 // "50000-50100"). It comes from mondoo.yml or, through viper's env binding,
-// from MONDOO_PROVIDER_PORT_RANGE. Only Windows uses TCP for the provider
-// transport; other platforms talk to providers over Unix sockets and ignore it.
+// from MONDOO_PROVIDER_PORT_RANGE. Unset means an OS-assigned port. Only
+// Windows uses TCP for the provider transport; other platforms talk to
+// providers over Unix sockets and ignore it.
 const KeyProviderPortRange = "provider_port_range"
 
 // GetProviderPortRange returns the provider_port_range setting, or an empty
@@ -333,8 +334,8 @@ type CommonOpts struct {
 
 	// ProviderPortRange is the loopback TCP port range ("min-max") that provider
 	// subprocesses may listen on. Only Windows uses TCP for the provider
-	// transport, so the setting has no effect elsewhere. Unset means the
-	// providers package default. See KeyProviderPortRange.
+	// transport, so the setting has no effect elsewhere. Unset means an
+	// OS-assigned port. See KeyProviderPortRange.
 	ProviderPortRange string `json:"provider_port_range,omitempty" mapstructure:"provider_port_range"`
 }
 
