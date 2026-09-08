@@ -419,10 +419,11 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 			AllowedProtocols: []plugin.Protocol{
 				plugin.ProtocolNetRPC, plugin.ProtocolGRPC,
 			},
-			Logger:  pluginLogger,
-			Stderr:  crashLog,
-			MinPort: ports.Min,
-			MaxPort: ports.Max,
+			Logger:   pluginLogger,
+			Stderr:   crashLog,
+			MinPort:  ports.Min,
+			MaxPort:  ports.Max,
+			AutoMTLS: providerTransportUsesMTLS(),
 		})
 
 		// Connect via RPC
