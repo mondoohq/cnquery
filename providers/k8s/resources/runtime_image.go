@@ -5,7 +5,6 @@ package resources
 
 import (
 	"strings"
-	"time"
 
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/types"
@@ -56,7 +55,7 @@ func runtimeImageArgsFromK8sNames(nodeName, runtimeKind string, names []string, 
 		"scanStatus":        llx.StringData(scanStatus),
 		"scanStatusMessage": llx.StringData(""),
 		"layers":            llx.ArrayData([]any{}, types.Resource("container.runtimeImageLayer")),
-		"created":           llx.TimeData(time.Time{}),
+		"created":           llx.NilData,
 	}
 }
 
@@ -73,7 +72,7 @@ func runtimeDelegateArgsFromK8sNode(nodeName, runtimeKind string) map[string]*ll
 		"allowPull":     llx.BoolData(false),
 		"status":        llx.StringData("unavailable"),
 		"statusMessage": llx.StringData("runtime-cache delegate is not configured"),
-		"lastChecked":   llx.TimeData(time.Time{}),
+		"lastChecked":   llx.NilData,
 	}
 }
 
@@ -94,7 +93,7 @@ func runtimeDelegateArgsFromRuntimeCacheDelegate(nodeName string, settings *runt
 		"allowPull":     llx.BoolData(allowPull),
 		"status":        llx.StringData("ready"),
 		"statusMessage": llx.StringData(""),
-		"lastChecked":   llx.TimeData(time.Time{}),
+		"lastChecked":   llx.NilData,
 	}
 }
 
