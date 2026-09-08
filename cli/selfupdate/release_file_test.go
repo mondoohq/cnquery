@@ -99,3 +99,28 @@ func TestDownloadRejectsNonUrlTarget(t *testing.T) {
 	assert.Contains(t, err.Error(), "no download url")
 	assert.Contains(t, err.Error(), name)
 }
+
+// TestSelectionDoesNotConstrainTheDownloadUrl covers a manifest whose url is a
+// service route rather than a path ending in the artifact name.
+//
+// Whoever serves the manifest decides where the bytes come from. Selection has
+// to answer "which artifact is mine" from the filename, or that decision would
+// be constrained by a naming rule the client happens to use for matching.
+func TestSelectionDoesNotConstrainTheDownloadUrl(t *testing.T) {
+	ext := "tar.gz"
+	if runtime.GOOS == "windows" {
+		ext = "zip"
+	}
+	name := "cnspec_13.38.1_" + runtime.GOOS + "_" + runtime.GOARCH + "." + ext
+	serviceURL := "https://install.mondoo.com/package/cnspec/" + runtime.GOOS + "/" + runtime.GOARCH + "/" + ext + "/latest/download"
+
+	rel := &Release{Name: "cnspec", Version: "13.38.1", Files: []ReleaseFile{
+		{Filename: "cnspec_13.38.1_someos_somearch." + ext, Url: "https://install.mondoo.com/other/download"},
+		{Filename: name, Url: serviceURL},
+	}}
+
+	got := getPlatformFile(rel, "cnspec")
+	require.NotNil(t, got, "a url that does not end in the artifact name must not break selection")
+	assert.Equal(t, name, got.Filename)
+	assert.Equal(t, serviceURL, got.downloadTarget())
+}
