@@ -13,10 +13,10 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/utils/syncx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/utils/syncx"
 )
 
 type procSocketCountingFs struct {
@@ -171,4 +171,27 @@ func TestMqlProcessesCollectSocketInodesPreservesErrors(t *testing.T) {
 
 	err := procs.collectSocketInodes(all)
 	require.EqualError(t, err, "could not retrieve processes socket inodes")
+}
+
+func TestMqlProcessesSocketRefreshClearsVanishedProcess(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	require.NoError(t, fs.MkdirAll("/proc", 0o755))
+	runtime := newResourcesRuntime(&procResourceConn{asset: linuxAsset(), fs: fs})
+	process := &mqlProcess{
+		Pid: plugin.TValue[int64]{Data: 42, State: plugin.StateIsSet},
+		mqlProcessInternal: mqlProcessInternal{
+			SocketInodes: plugin.TValue[[]int64]{
+				Data: []int64{4201}, Error: os.ErrPermission, State: plugin.StateIsSet,
+			},
+		},
+	}
+	procs := &mqlProcesses{MqlRuntime: runtime}
+	all := []any{process}
+	require.NoError(t, procs.refreshCache(all))
+	require.Contains(t, procs.BySocketID, int64(4201))
+
+	require.NoError(t, procs.refreshCacheForSocketLookup(all))
+	assert.Empty(t, process.SocketInodes.Data)
+	assert.NoError(t, process.SocketInodes.Error)
+	assert.Empty(t, procs.BySocketID)
 }
