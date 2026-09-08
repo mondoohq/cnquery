@@ -6,7 +6,6 @@ package llx
 import (
 	"regexp"
 	"sync"
-	"sync/atomic"
 )
 
 // regexCacheMax bounds the number of cached patterns. A pattern usually comes from a policy
@@ -15,9 +14,18 @@ import (
 const regexCacheMax = 128
 
 var (
-	regexCache    sync.Map // map[string]*regexp.Regexp
-	regexCacheLen atomic.Int64
+	regexCache     sync.Map // map[string]*regexp.Regexp
+	regexCacheMu   sync.Mutex
+	regexCacheKeys [regexCacheMax]string
+	regexCacheNext int
+	regexCacheLen  int
 )
+
+func regexCacheSize() int {
+	regexCacheMu.Lock()
+	defer regexCacheMu.Unlock()
+	return regexCacheLen
+}
 
 // compiledRegex returns the compiled form of pattern. The regex operators run once per array
 // element, and the pattern is the same for every element, so compiling it once per operator
@@ -31,13 +39,18 @@ func compiledRegex(pattern string) *regexp.Regexp {
 
 	r := regexp.MustCompile(pattern)
 
-	// Stop storing once the cache is full. The check is intentionally lock-free. Concurrent
-	// callers can pass it before LoadOrStore updates the counter, so the cache holds
-	// approximately regexCacheMax patterns for the life of the process.
-	if regexCacheLen.Load() < regexCacheMax {
-		if _, loaded := regexCache.LoadOrStore(pattern, r); !loaded {
-			regexCacheLen.Add(1)
-		}
+	regexCacheMu.Lock()
+	defer regexCacheMu.Unlock()
+	if v, ok := regexCache.Load(pattern); ok {
+		return v.(*regexp.Regexp)
 	}
+	if regexCacheLen == regexCacheMax {
+		regexCache.Delete(regexCacheKeys[regexCacheNext])
+	} else {
+		regexCacheLen++
+	}
+	regexCache.Store(pattern, r)
+	regexCacheKeys[regexCacheNext] = pattern
+	regexCacheNext = (regexCacheNext + 1) % regexCacheMax
 	return r
 }

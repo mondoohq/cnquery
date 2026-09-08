@@ -49,14 +49,28 @@ func TestCompiledRegexPanicsOnInvalidPattern(t *testing.T) {
 }
 
 func TestCompiledRegexIsBounded(t *testing.T) {
-	before := regexCacheLen.Load()
+	before := regexCacheSize()
 	for i := 0; i < regexCacheMax*3; i++ {
 		r := compiledRegex(`^bounded-` + strconv.Itoa(i) + `-[0-9]+$`)
 		require.NotNil(t, r)
 		assert.True(t, r.MatchString("bounded-"+strconv.Itoa(i)+"-7"))
 	}
-	assert.LessOrEqual(t, regexCacheLen.Load(), int64(regexCacheMax),
+	assert.LessOrEqual(t, regexCacheSize(), regexCacheMax,
 		"cache grew past its bound (was %d before)", before)
+}
+
+func TestCompiledRegexEvictsOldest(t *testing.T) {
+	patterns := make([]string, regexCacheMax)
+	for i := range patterns {
+		patterns[i] = fmt.Sprintf(`^eviction-%s-%d$`, t.Name(), i)
+		compiledRegex(patterns[i])
+	}
+	first := compiledRegex(patterns[0])
+	last := compiledRegex(patterns[regexCacheMax-1])
+	compiledRegex(fmt.Sprintf(`^eviction-%s-new$`, t.Name()))
+	reloaded := compiledRegex(patterns[0])
+	assert.NotSame(t, first, reloaded)
+	assert.Same(t, last, compiledRegex(patterns[regexCacheMax-1]))
 }
 
 func TestCompiledRegexConcurrent(t *testing.T) {
