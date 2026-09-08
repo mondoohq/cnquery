@@ -6,7 +6,7 @@ package mqlc_test
 import (
 	"testing"
 
-	"go.mondoo.com/mql/v13/mqlc"
+	"go.mondoo.com/mql/mqlc"
 )
 
 func BenchmarkCompileWithLabels(b *testing.B) {
