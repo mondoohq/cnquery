@@ -73,9 +73,31 @@ type Release struct {
 
 // ReleaseFile represents a downloadable release file
 type ReleaseFile struct {
+	// Filename is the artifact name. It is the plain name in some documents and
+	// the fully qualified download URL in others, so it is not a reliable
+	// download target on its own; see downloadTarget.
 	Filename string `json:"filename"`
+	// Url is the fully qualified download URL. It is absent only on manifests
+	// published before the field existed.
+	Url      string `json:"url"`
 	Platform string `json:"platform"` // e.g., "linux_amd64", "darwin_arm64"
 	Hash     string `json:"hash"`     // SHA256 hash
+}
+
+// downloadTarget is the URL to fetch this artifact from.
+//
+// Url is the field that means the same thing in every document and is preferred.
+// It is empty only for a manifest published before the field existed, in which
+// case Filename carries the fully qualified URL instead - that is what
+// latest.json has always held, and what this code read before Url existed. A
+// document where Filename is the plain name and Url is absent has no download
+// target at all; downloadAndInstall rejects that rather than fetching a bare
+// name.
+func (f *ReleaseFile) downloadTarget() string {
+	if f.Url != "" {
+		return f.Url
+	}
+	return f.Filename
 }
 
 // updatePreflight runs the guards shared by every self-update entry point and
@@ -430,8 +452,11 @@ func getPlatformFile(release *Release, binaryName string) *ReleaseFile {
 	suffix := fmt.Sprintf("%s_%s_%s_%s.%s", binaryName, release.Version, goos, goarch, ext)
 
 	for i := range release.Files {
-		// Match by suffix since Filename is a full URL
-		if strings.HasSuffix(release.Files[i].Filename, suffix) {
+		// Match against the download target rather than Filename. Both end in
+		// the artifact name, but Filename is the plain name in some documents
+		// and the full URL in others, and only the target is guaranteed to be
+		// the thing actually fetched.
+		if strings.HasSuffix(release.Files[i].downloadTarget(), suffix) {
 			return &release.Files[i]
 		}
 	}
@@ -446,8 +471,15 @@ func downloadAndInstall(ctx context.Context, release *Release, destPath string, 
 		return "", errors.Newf("no release file found for platform %s_%s", runtime.GOOS, runtime.GOARCH)
 	}
 
-	// The Filename field contains the full download URL
-	downloadURL := file.Filename
+	downloadURL := file.downloadTarget()
+	// A manifest that carries no url and only a plain filename has no download
+	// target. Left alone this reaches http.NewRequestWithContext as a bare name
+	// and fails as a URL parse error, which points at the request rather than at
+	// the manifest that is actually wrong.
+	if !strings.HasPrefix(downloadURL, "http://") && !strings.HasPrefix(downloadURL, "https://") {
+		return "", errors.Newf("release manifest has no download url for %s_%s: %q is not a url",
+			runtime.GOOS, runtime.GOARCH, downloadURL)
+	}
 
 	log.Debug().Str("url", downloadURL).Msg("self-update: downloading")
 
