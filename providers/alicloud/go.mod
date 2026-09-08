@@ -7,7 +7,7 @@ go 1.26.8
 require (
 	github.com/alibabacloud-go/actiontrail-20200706/v3 v3.5.0
 	github.com/alibabacloud-go/alb-20200616/v2 v2.3.2
-	github.com/alibabacloud-go/cbn-20170912/v2 v2.4.3
+	github.com/alibabacloud-go/cbn-20170912/v2 v2.4.4
 	github.com/alibabacloud-go/cloudfw-20171207/v11 v11.1.0
 	github.com/alibabacloud-go/cloudsso-20210515 v1.7.0
 	github.com/alibabacloud-go/config-20200907/v4 v4.2.3
@@ -16,7 +16,7 @@ require (
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.4
 	github.com/alibabacloud-go/ddoscoo-20200101/v5 v5.0.2
 	github.com/alibabacloud-go/dds-20151201/v10 v10.4.2
-	github.com/alibabacloud-go/ecs-20140526/v7 v7.11.1
+	github.com/alibabacloud-go/ecs-20140526/v7 v7.11.2
 	github.com/alibabacloud-go/elasticsearch-20170613/v6 v6.3.3
 	github.com/alibabacloud-go/ess-20220222/v2 v2.13.3
 	github.com/alibabacloud-go/fc-20230330/v4 v4.8.2
@@ -39,7 +39,7 @@ require (
 	github.com/aliyun/credentials-go v1.4.13
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20260907062811-41ea9bf4d55f
+	go.mondoo.com/mql v0.0.0-20260908144452-0bda209d1d40
 )
 
 require (
@@ -141,14 +141,14 @@ require (
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.56.0 // indirect
-	golang.org/x/mod v0.40.0 // indirect
+	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
-	golang.org/x/time v0.15.0 // indirect
+	golang.org/x/time v0.16.0 // indirect
 	golang.org/x/tools v0.49.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260904194346-d0f1323225a4 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260908043556-f8649ddbbfe6 // indirect
 	google.golang.org/grpc v1.83.2 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect

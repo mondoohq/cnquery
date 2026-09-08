@@ -7,37 +7,37 @@ go 1.26.8
 require (
 	github.com/rs/zerolog v1.35.1
 	github.com/stackitcloud/stackit-sdk-go/core v0.27.0
-	github.com/stackitcloud/stackit-sdk-go/services/alb v0.17.1
-	github.com/stackitcloud/stackit-sdk-go/services/albwaf v0.13.3
+	github.com/stackitcloud/stackit-sdk-go/services/alb v0.17.2
+	github.com/stackitcloud/stackit-sdk-go/services/albwaf v0.13.4
 	github.com/stackitcloud/stackit-sdk-go/services/authorization v0.15.4
-	github.com/stackitcloud/stackit-sdk-go/services/certificates v1.9.1
-	github.com/stackitcloud/stackit-sdk-go/services/dns v0.23.0
-	github.com/stackitcloud/stackit-sdk-go/services/iaas v1.14.1
-	github.com/stackitcloud/stackit-sdk-go/services/kms v1.13.0
-	github.com/stackitcloud/stackit-sdk-go/services/loadbalancer v1.15.1
-	github.com/stackitcloud/stackit-sdk-go/services/logme v1.3.0
-	github.com/stackitcloud/stackit-sdk-go/services/mariadb v1.3.0
-	github.com/stackitcloud/stackit-sdk-go/services/modelserving v0.13.0
-	github.com/stackitcloud/stackit-sdk-go/services/mongodbflex v1.12.1
-	github.com/stackitcloud/stackit-sdk-go/services/objectstorage v1.9.1
-	github.com/stackitcloud/stackit-sdk-go/services/observability v0.25.0
-	github.com/stackitcloud/stackit-sdk-go/services/opensearch v1.3.0
-	github.com/stackitcloud/stackit-sdk-go/services/postgresflex v1.14.0
-	github.com/stackitcloud/stackit-sdk-go/services/rabbitmq v1.3.0
-	github.com/stackitcloud/stackit-sdk-go/services/redis v1.4.0
+	github.com/stackitcloud/stackit-sdk-go/services/certificates v1.9.2
+	github.com/stackitcloud/stackit-sdk-go/services/dns v0.23.1
+	github.com/stackitcloud/stackit-sdk-go/services/iaas v1.14.3
+	github.com/stackitcloud/stackit-sdk-go/services/kms v1.13.1
+	github.com/stackitcloud/stackit-sdk-go/services/loadbalancer v1.15.2
+	github.com/stackitcloud/stackit-sdk-go/services/logme v1.3.1
+	github.com/stackitcloud/stackit-sdk-go/services/mariadb v1.3.1
+	github.com/stackitcloud/stackit-sdk-go/services/modelserving v0.13.1
+	github.com/stackitcloud/stackit-sdk-go/services/mongodbflex v1.12.2
+	github.com/stackitcloud/stackit-sdk-go/services/objectstorage v1.9.2
+	github.com/stackitcloud/stackit-sdk-go/services/observability v0.25.1
+	github.com/stackitcloud/stackit-sdk-go/services/opensearch v1.3.1
+	github.com/stackitcloud/stackit-sdk-go/services/postgresflex v1.14.1
+	github.com/stackitcloud/stackit-sdk-go/services/rabbitmq v1.3.1
+	github.com/stackitcloud/stackit-sdk-go/services/redis v1.4.1
 	github.com/stackitcloud/stackit-sdk-go/services/resourcemanager v0.25.1
-	github.com/stackitcloud/stackit-sdk-go/services/secretsmanager v0.19.0
-	github.com/stackitcloud/stackit-sdk-go/services/serverbackup v1.7.1
-	github.com/stackitcloud/stackit-sdk-go/services/serverupdate v1.5.4
-	github.com/stackitcloud/stackit-sdk-go/services/serviceaccount v0.20.1 // pinned: v0.21.0 removes ListAccessTokens, which backs stackit.serviceAccount.accessTokens
-	github.com/stackitcloud/stackit-sdk-go/services/sfs v0.11.1
-	github.com/stackitcloud/stackit-sdk-go/services/ske v1.21.1
-	github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.18.0
-	github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.5.1
-	github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.5.1
-	github.com/stackitcloud/stackit-sdk-go/services/vpn v0.15.0
+	github.com/stackitcloud/stackit-sdk-go/services/secretsmanager v0.19.1
+	github.com/stackitcloud/stackit-sdk-go/services/serverbackup v1.7.2
+	github.com/stackitcloud/stackit-sdk-go/services/serverupdate v1.5.5
+	github.com/stackitcloud/stackit-sdk-go/services/serviceaccount v0.21.0 // pinned: v0.21.0 removes ListAccessTokens, which backs stackit.serviceAccount.accessTokens
+	github.com/stackitcloud/stackit-sdk-go/services/sfs v0.11.2
+	github.com/stackitcloud/stackit-sdk-go/services/ske v1.21.2
+	github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.18.1
+	github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.5.2
+	github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.5.2
+	github.com/stackitcloud/stackit-sdk-go/services/vpn v0.15.1
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20260907062811-41ea9bf4d55f
+	go.mondoo.com/mql v0.0.0-20260908144452-0bda209d1d40
 )
 
 require (
@@ -118,13 +118,13 @@ require (
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.56.0 // indirect
-	golang.org/x/mod v0.40.0 // indirect
+	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
 	golang.org/x/tools v0.49.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260904194346-d0f1323225a4 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260908043556-f8649ddbbfe6 // indirect
 	google.golang.org/grpc v1.83.2 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
