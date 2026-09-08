@@ -6,78 +6,7 @@ package connection
 import (
 	"encoding/json"
 	"fmt"
-	"path/filepath"
-	"sort"
-	"strings"
 )
-
-// tofuConfigExtensions are the OpenTofu-specific configuration file extensions.
-// OpenTofu loads these *instead of* the identically-named .tf file when both are
-// present, so a directory holding them cannot be read correctly by looking at
-// .tf files alone: we would miss configuration entirely, or report the .tf file
-// that OpenTofu itself ignores.
-//
-// Test files (.tofutest.hcl / .tofutest.json) are deliberately absent. They
-// carry no deployed configuration, and the .tftest.* equivalents are not read
-// either.
-var tofuConfigExtensions = []string{
-	".tofu",
-	".tofu.json",
-	".tofuvars",
-	".tofuvars.json",
-}
-
-// isTofuConfigFile reports whether path names an OpenTofu-specific
-// configuration file.
-func isTofuConfigFile(path string) bool {
-	name := filepath.Base(path)
-	for _, ext := range tofuConfigExtensions {
-		if strings.HasSuffix(name, ext) {
-			return true
-		}
-	}
-	return false
-}
-
-// UnsupportedTofuFilesError reports OpenTofu-specific configuration files that
-// this provider cannot read yet. It is returned instead of silently skipping
-// them, because skipping produces a successful scan of an empty configuration:
-// every assertion over terraform.resources then passes vacuously, and a policy
-// reports compliant on a configuration that was never read.
-type UnsupportedTofuFilesError struct {
-	// Files holds the offending paths, sorted, as encountered on disk.
-	Files []string
-}
-
-func (e *UnsupportedTofuFilesError) Error() string {
-	files := e.Files
-	// keep the message bounded on a large repository
-	const maxListed = 5
-	listed := files
-	suffix := ""
-	if len(listed) > maxListed {
-		listed = listed[:maxListed]
-		suffix = fmt.Sprintf(" (and %d more)", len(files)-maxListed)
-	}
-	return fmt.Sprintf(
-		"found %d OpenTofu configuration file(s) that this provider cannot parse yet: %s%s. "+
-			"Scanning would report on an incomplete configuration, so it was stopped instead. "+
-			"Only .tf and .tf.json files are supported today",
-		len(files), strings.Join(listed, ", "), suffix)
-}
-
-// newUnsupportedTofuFilesError builds the error from the collected paths,
-// returning nil when there is nothing to report so callers can assign it
-// directly.
-func newUnsupportedTofuFilesError(files []string) error {
-	if len(files) == 0 {
-		return nil
-	}
-	sorted := make([]string, len(files))
-	copy(sorted, files)
-	sort.Strings(sorted)
-	return &UnsupportedTofuFilesError{Files: sorted}
-}
 
 // documentKind describes what a JSON document handed to the state or plan
 // connection actually is. This provider reads the `terraform show -json`

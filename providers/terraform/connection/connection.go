@@ -32,6 +32,12 @@ type Connection struct {
 	plan            *Plan
 	closer          func()
 
+	// dialect records whether this configuration is Terraform's or OpenTofu's.
+	// For HCL it is detected from the files on disk; for state and plan files,
+	// whose JSON representations are identical, it comes from the connector the
+	// user invoked.
+	dialect Dialect
+
 	// features carries the active MQL feature flags (encoded bitset) for this
 	// connection, as sent by the client at Connect time.
 	features []byte
@@ -56,6 +62,14 @@ func (c *Connection) Close() {
 	if c.closer != nil {
 		c.closer()
 	}
+}
+
+// Dialect reports whether this configuration belongs to Terraform or OpenTofu.
+func (c *Connection) Dialect() Dialect {
+	if c.dialect == "" {
+		return DialectTerraform
+	}
+	return c.dialect
 }
 
 func (c *Connection) Kind() string {

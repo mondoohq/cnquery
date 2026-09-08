@@ -227,5 +227,8 @@ func NewPlanConnection(id uint32, asset *inventory.Asset) (*Connection, error) {
 		assetType:  assetType,
 
 		plan: &tfPlan,
+		// As with state files, the plan JSON carries no marker distinguishing
+		// the two tools, so the dialect comes from the connector invoked.
+		dialect: ParseDialect(cc.Options[OptionDialect]),
 	}, nil
 }

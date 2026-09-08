@@ -5,7 +5,6 @@ package connection
 
 import (
 	"os"
-	"strings"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
@@ -25,60 +24,58 @@ type hclFileLoader struct {
 	hclParser *hclparse.Parser
 }
 
-// ParseHclFile parses a single terraform file. Files this provider does not
-// read (anything that is not .tf or .tf.json) are skipped; callers that need to
-// know whether a path was understood use IsHclFile.
-func (h *hclFileLoader) ParseHclFile(filepath string) error {
-	var parseFunc func(filename string) (*hcl.File, hcl.Diagnostics)
-	switch {
-	case strings.HasSuffix(filepath, ".tf"):
-		parseFunc = h.hclParser.ParseHCLFile
-	case strings.HasSuffix(filepath, ".tf.json"):
-		parseFunc = h.hclParser.ParseJSONFile
-	default:
+// ParseHclFile parses a single Terraform or OpenTofu configuration file
+// (.tf, .tf.json, .tofu or .tofu.json). Anything else is skipped.
+func (h *hclFileLoader) ParseHclFile(path string) error {
+	f, ok := classifyConfigFile(path)
+	if !ok {
 		return nil
 	}
 
-	log.Debug().Str("path", filepath).Msg("parsing hcl file")
-	_, diag := parseFunc(filepath)
+	var parseFunc func(filename string) (*hcl.File, hcl.Diagnostics)
+	switch f.class {
+	case classConfig:
+		parseFunc = h.hclParser.ParseHCLFile
+	case classConfigJSON:
+		parseFunc = h.hclParser.ParseJSONFile
+	default:
+		// a variables file; ReadTfVarsFromFile handles those
+		return nil
+	}
+
+	log.Debug().Str("path", path).Str("dialect", string(f.dialect)).Msg("parsing hcl file")
+	_, diag := parseFunc(path)
 	if diag != nil && diag.HasErrors() {
 		return diag
 	}
 	return nil
 }
 
-// IsHclFile reports whether the path is a terraform configuration file that
-// ParseHclFile will actually read.
-func IsHclFile(filepath string) bool {
-	return strings.HasSuffix(filepath, ".tf") || strings.HasSuffix(filepath, ".tf.json")
-}
-
 func (h *hclFileLoader) GetParser() *hclparse.Parser {
 	return h.hclParser
 }
 
+// ReadTfVarsFromFile reads a variable definitions file (.tfvars, .tfvars.json,
+// .tofuvars or .tofuvars.json) into terraformVars. Anything else is skipped.
 func ReadTfVarsFromFile(filename string, terraformVars map[string]*hcl.Attribute) error {
-	switch {
-	case strings.HasSuffix(filename, ".tfvars"):
-		fallthrough
-	case strings.HasSuffix(filename, ".tfvars.json"):
-
-		src, err := os.ReadFile(filename)
-		if err != nil {
-			return err
-		}
-
-		// we ignore the diagnostics information here
-		variableFile, _ := hclsyntax.ParseConfig(src, filename, hcl.Pos{Line: 1, Column: 1})
-
-		// NOTE: we ignore the diagnostics info
-		attrs, _ := variableFile.Body.JustAttributes()
-		for k := range attrs {
-			v := attrs[k]
-			terraformVars[k] = v
-		}
-		return nil
-	default:
+	f, ok := classifyConfigFile(filename)
+	if !ok || (f.class != classVars && f.class != classVarsJSON) {
 		return nil
 	}
+
+	src, err := os.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+
+	// we ignore the diagnostics information here
+	variableFile, _ := hclsyntax.ParseConfig(src, filename, hcl.Pos{Line: 1, Column: 1})
+
+	// NOTE: we ignore the diagnostics info
+	attrs, _ := variableFile.Body.JustAttributes()
+	for k := range attrs {
+		v := attrs[k]
+		terraformVars[k] = v
+	}
+	return nil
 }

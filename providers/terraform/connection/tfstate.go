@@ -112,5 +112,9 @@ func NewStateConnection(id uint32, asset *inventory.Asset) (*Connection, error) 
 		assetType:  assetType,
 
 		state: &tfState,
+		// The state JSON is identical between the two tools (OpenTofu keeps the
+		// `terraform_version` key for compatibility), so there is nothing in the
+		// file to detect. The dialect comes from the connector the user invoked.
+		dialect: ParseDialect(cc.Options[OptionDialect]),
 	}, nil
 }

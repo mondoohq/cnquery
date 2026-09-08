@@ -59,6 +59,13 @@ func newHclConnection(id uint32, path string, asset *inventory.Asset) (*Connecti
 		includeDotTerraform = false
 	}
 
+	// An empty forced dialect means "detect from the files present", which is
+	// the default. Setting it reads the directory the way the named tool would.
+	var forcedDialect Dialect
+	if v := confOptions[OptionDialect]; v != "" {
+		forcedDialect = ParseDialect(v)
+	}
+
 	var assetType terraformAssetType
 	// hcl files
 	loader := NewHCLFileLoader()
@@ -72,10 +79,11 @@ func newHclConnection(id uint32, path string, asset *inventory.Asset) (*Connecti
 		return nil, errors.New("path is not a valid file or directory")
 	}
 
-	// OpenTofu-specific files we cannot read yet. They are collected across the
-	// whole walk so the error can name all of them at once rather than failing
-	// on whichever happened to be visited first.
-	var tofuFiles []string
+	// Candidate paths are collected first and parsed afterwards. OpenTofu's
+	// precedence rules are per directory and per file name, so whether main.tf
+	// should be read cannot be decided until the walk has also seen whether
+	// main.tofu exists next to it.
+	var candidates []string
 
 	if stat.IsDir() {
 		// NOTE: the return value of WalkDir is deliberately captured. It used to
@@ -113,20 +121,7 @@ func newHclConnection(id uint32, path string, asset *inventory.Asset) (*Connecti
 					return nil
 				}
 
-				if isTofuConfigFile(path) {
-					tofuFiles = append(tofuFiles, path)
-					return nil
-				}
-
-				err = loader.ParseHclFile(path)
-				if err != nil {
-					return errors.Wrap(err, "could not parse hcl file")
-				}
-
-				err = ReadTfVarsFromFile(path, tfVars)
-				if err != nil {
-					return errors.Wrap(err, "could not parse tfvars file")
-				}
+				candidates = append(candidates, path)
 			}
 			return nil
 		})
@@ -134,30 +129,34 @@ func newHclConnection(id uint32, path string, asset *inventory.Asset) (*Connecti
 			return nil, walkErr
 		}
 	} else {
-		if isTofuConfigFile(path) {
-			tofuFiles = append(tofuFiles, path)
-		} else {
-			err = loader.ParseHclFile(path)
-			if err != nil {
-				return nil, errors.Wrap(err, "could not parse hcl file")
-			}
+		candidates = append(candidates, path)
+	}
 
-			err = ReadTfVarsFromFile(path, tfVars)
-			if err != nil {
-				return nil, errors.Wrap(err, "could not parse tfvars file")
-			}
+	// Apply OpenTofu's precedence rules before reading anything, so a .tofu
+	// file replaces the .tf file it overrides rather than being read alongside
+	// it.
+	resolved := resolveConfigFilesAs(candidates, forcedDialect)
+
+	for _, overridden := range resolved.Overridden {
+		log.Debug().Str("path", overridden).
+			Msg("skipping file overridden by its OpenTofu equivalent")
+	}
+
+	for _, cfg := range resolved.Configs {
+		if err := loader.ParseHclFile(cfg); err != nil {
+			return nil, errors.Wrap(err, "could not parse hcl file")
 		}
 	}
 
-	// Refuse to hand back a connection built from files we knowingly could not
-	// read: an empty configuration passes every assertion made against it.
-	if err := newUnsupportedTofuFilesError(tofuFiles); err != nil {
-		return nil, err
+	for _, varFile := range resolved.Vars {
+		if err := ReadTfVarsFromFile(varFile, tfVars); err != nil {
+			return nil, errors.Wrap(err, "could not parse tfvars file")
+		}
 	}
 
-	if len(loader.GetParser().Files()) == 0 {
+	if len(resolved.Configs) == 0 {
 		log.Warn().Str("path", path).
-			Msg("no terraform configuration files (.tf, .tf.json) were found, results will be empty")
+			Msg("no Terraform or OpenTofu configuration files were found, results will be empty")
 	}
 
 	return &Connection{
@@ -168,6 +167,7 @@ func newHclConnection(id uint32, path string, asset *inventory.Asset) (*Connecti
 		parsed:          loader.GetParser(),
 		tfVars:          tfVars,
 		modulesManifest: modulesManifest,
+		dialect:         resolved.Dialect,
 	}, nil
 }
 
