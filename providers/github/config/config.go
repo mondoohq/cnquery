@@ -11,16 +11,9 @@ import (
 )
 
 var Config = plugin.Provider{
-	Name: "github",
-	// Every kind this provider hands out as its own asset is a root (ADR 031).
-	// A connection reports the concrete kind through ConnectRes.Root.
-	Root:    "github",
-	ID:      "go.mondoo.com/mql/providers/github",
-	Version: "13.9.0",
-	// Every root carries `asset`, which core owns (ADR 042).
-	Requires: []plugin.ProviderDep{
-		{ID: "go.mondoo.com/mql/providers/core", Name: "core", MinVersion: "13.0.0"},
-	},
+	Name:            "github",
+	ID:              "go.mondoo.com/cnquery/v9/providers/github",
+	Version:         "13.9.3",
 	ConnectionTypes: []string{provider.ConnectionType},
 	// GitHub's 5,000 requests/hour is already the binding constraint on a large
 	// organization, and there is a secondary limit on concurrent requests, so
