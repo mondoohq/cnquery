@@ -452,11 +452,16 @@ func getPlatformFile(release *Release, binaryName string) *ReleaseFile {
 	suffix := fmt.Sprintf("%s_%s_%s_%s.%s", binaryName, release.Version, goos, goarch, ext)
 
 	for i := range release.Files {
-		// Match against the download target rather than Filename. Both end in
-		// the artifact name, but Filename is the plain name in some documents
-		// and the full URL in others, and only the target is guaranteed to be
-		// the thing actually fetched.
-		if strings.HasSuffix(release.Files[i].downloadTarget(), suffix) {
+		// Match on Filename, which names the artifact in both document shapes:
+		// the plain name in one, the fully qualified URL in the other, and both
+		// end in it.
+		//
+		// Not on the download target. Which artifact this is and where to fetch
+		// it are separate questions, and answering the first with the second
+		// requires the URL to end in the artifact name. That is true of the
+		// release bucket's layout but need not be true of whoever serves the
+		// manifest, and it is not the client's place to constrain that.
+		if strings.HasSuffix(release.Files[i].Filename, suffix) {
 			return &release.Files[i]
 		}
 	}
