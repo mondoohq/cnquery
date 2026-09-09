@@ -1827,6 +1827,11 @@ private stackit.dns.recordSet @defaults("name type state") {
 stackit.postgresFlex {
   // Postgres Flex instances
   instances() []stackit.postgresFlex.instance
+  // Engine versions the service currently offers
+  //
+  // An instance whose version is not in this list runs a release the
+  // service no longer provisions. Empty when the catalog cannot be read.
+  versions() []string
 }
 
 // STACKIT Postgres Flex managed database instance
@@ -1876,6 +1881,11 @@ private stackit.postgresFlex.instance @defaults("id name version status") {
   internetReachable() bool
   // Database users defined on the instance
   users() []stackit.postgresFlex.instance.user
+  // Backups taken of the instance
+  //
+  // Proof that the backup schedule produces backups and how the last ones
+  // ended. Empty when none exist or the credential cannot list them.
+  backups() []stackit.postgresFlex.instance.backup
 }
 
 // STACKIT Postgres Flex database user
@@ -1903,6 +1913,29 @@ private stackit.postgresFlex.instance.user @defaults("username roles") {
   port() int
 }
 
+// Backup of a STACKIT Postgres Flex instance
+//
+// One backup the service took of the instance, keyed by UUID `id`. The
+// `error` text is empty for a backup that succeeded, and `startedAt` and
+// `finishedAt` bound the run, so the most recent entry answers whether
+// backups are current and healthy.
+private stackit.postgresFlex.instance.backup @defaults("name finishedAt error") {
+  // Backup UUID
+  id string
+  // Backup name
+  name string
+  // When the backup run started
+  startedAt time
+  // When the backup run finished
+  finishedAt time
+  // Backup size in bytes
+  size int
+  // Failure recorded for the run; empty when it succeeded
+  error string
+  // Labels on the backup
+  labels []string
+}
+
 // STACKIT MongoDB Flex namespace
 //
 // Entry point for the managed MongoDB Flex service in a STACKIT
@@ -1911,6 +1944,11 @@ private stackit.postgresFlex.instance.user @defaults("username roles") {
 stackit.mongoDbFlex {
   // MongoDB Flex instances
   instances() []stackit.mongoDbFlex.instance
+  // Engine versions the service currently offers
+  //
+  // An instance whose version is not in this list runs a release the
+  // service no longer provisions. Empty when the catalog cannot be read.
+  versions() []string
 }
 
 // STACKIT MongoDB Flex managed database instance
@@ -1958,6 +1996,11 @@ private stackit.mongoDbFlex.instance @defaults("id name version status") {
   internetReachable() bool
   // Database users defined on the instance
   users() []stackit.mongoDbFlex.instance.user
+  // Backups taken of the instance
+  //
+  // Proof that the backup schedule produces backups and how the last ones
+  // ended. Empty when none exist or the credential cannot list them.
+  backups() []stackit.mongoDbFlex.instance.backup
 }
 
 // STACKIT MongoDB Flex database user
@@ -1987,6 +2030,29 @@ private stackit.mongoDbFlex.instance.user @defaults("username roles") {
   port() int
 }
 
+// Backup of a STACKIT MongoDB Flex instance
+//
+// One backup the service took of the instance, keyed by UUID `id`. The
+// `error` text is empty for a backup that succeeded, and `startedAt` and
+// `finishedAt` bound the run, so the most recent entry answers whether
+// backups are current and healthy.
+private stackit.mongoDbFlex.instance.backup @defaults("name finishedAt error") {
+  // Backup UUID
+  id string
+  // Backup name
+  name string
+  // When the backup run started
+  startedAt time
+  // When the backup run finished
+  finishedAt time
+  // Backup size in bytes
+  size int
+  // Failure recorded for the run; empty when it succeeded
+  error string
+  // Labels on the backup
+  labels []string
+}
+
 // STACKIT SQLServer Flex namespace
 //
 // Managed Microsoft SQL Server instances running on STACKIT's SQLServer
@@ -1996,6 +2062,11 @@ private stackit.mongoDbFlex.instance.user @defaults("username roles") {
 stackit.sqlServerFlex {
   // SQLServer Flex instances
   instances() []stackit.sqlServerFlex.instance
+  // Engine versions the service currently offers
+  //
+  // An instance whose version is not in this list runs a release the
+  // service no longer provisions. Empty when the catalog cannot be read.
+  versions() []string
 }
 
 // STACKIT SQLServer Flex managed database instance
@@ -2058,6 +2129,11 @@ private stackit.sqlServerFlex.instance @defaults("id name version status") {
   internetReachable() bool
   // Database users defined on the instance
   users() []stackit.sqlServerFlex.instance.user
+  // Backups taken of the instance
+  //
+  // Proof that the backup schedule produces backups and how the last ones
+  // ended. Empty when none exist or the credential cannot list them.
+  backups() []stackit.sqlServerFlex.instance.backup
 }
 
 // STACKIT SQLServer Flex database user
@@ -2087,6 +2163,33 @@ private stackit.sqlServerFlex.instance.user @defaults("username roles") {
   port() int
 }
 
+// Backup of a STACKIT SQL Server Flex instance
+//
+// One backup the service took of the instance, keyed by UUID `id`. The
+// `error` text is empty for a backup that succeeded, and `startedAt` and
+// `finishedAt` bound the run, so the most recent entry answers whether
+// backups are current and healthy.
+private stackit.sqlServerFlex.instance.backup @defaults("name finishedAt error") {
+  // Backup UUID
+  id string
+  // Backup name
+  name string
+  // Database the backup belongs to
+  //
+  // SQL Server Flex backs up each database separately.
+  database string
+  // When the backup run started
+  startedAt time
+  // When the backup run finished
+  finishedAt time
+  // Backup size in bytes
+  size int
+  // Failure recorded for the run; empty when it succeeded
+  error string
+  // Labels on the backup
+  labels []string
+}
+
 // STACKIT OpenSearch namespace
 //
 // Entry point for the managed OpenSearch service in a STACKIT
@@ -2096,6 +2199,12 @@ private stackit.sqlServerFlex.instance.user @defaults("username roles") {
 stackit.openSearch {
   // OpenSearch instances
   instances() []stackit.openSearch.instance
+  // Engine offerings the service currently provides
+  //
+  // The catalog of engine versions and plans, where a version is marked
+  // latest or carries a lifecycle state and a plan is marked free. Empty
+  // when the catalog cannot be read.
+  offerings() []stackit.openSearch.offering
 }
 
 // STACKIT OpenSearch managed database instance
@@ -2196,6 +2305,22 @@ private stackit.openSearch.instance @defaults("id name status planName") {
   //
   // The max_disk_threshold parameter. Null when the parameter is absent.
   maxDiskThreshold() int
+  // Backups taken of the instance
+  //
+  // Proof that backups exist and how the last ones ended. Empty when none
+  // exist or the credential cannot list them.
+  backups() []stackit.openSearch.instance.backup
+  // Catalog offering the instance runs (nullable)
+  //
+  // Matched by offeringVersion against the engine catalog. Follow it to
+  // read whether the version is the latest and its lifecycle state. Null
+  // when the catalog does not list the version or cannot be read.
+  offering() stackit.openSearch.offering
+  // Catalog plan the instance runs on (nullable)
+  //
+  // Matched by planId against the engine catalog. Null when the catalog
+  // does not list the plan or cannot be read.
+  plan() stackit.openSearch.offering.plan
   // OpenSearch plugins enabled on the instance
   //
   // Any of repository-s3, repository-azure (both always on), or
@@ -2222,6 +2347,73 @@ private stackit.openSearch.instance @defaults("id name status planName") {
   tlsCiphers() []string
 }
 
+// Backup of a STACKIT OpenSearch instance
+//
+// One backup the service took of the instance, keyed by its numeric `id`
+// rendered as a string. `status` and `finishedAt` on the most recent
+// entry answer whether backups are current and healthy; `downloadable`
+// says whether the backup can be retrieved through the API.
+private stackit.openSearch.instance.backup @defaults("id status finishedAt") {
+  // Backup identifier
+  id string
+  // Backup status as reported by the service
+  status string
+  // Backup size in bytes
+  //
+  // Null when the service reports no size.
+  size int
+  // Whether the backup can be downloaded through the API
+  //
+  // Null when the service reports no setting.
+  downloadable bool
+  // When the backup was triggered
+  triggeredAt time
+  // When the backup finished
+  finishedAt time
+}
+
+// Catalog offering for STACKIT OpenSearch
+//
+// One engine version the service provides, keyed by `name` and
+// `version`. `latest` marks the current release and `lifecycle` carries
+// the state the service assigns to older ones, so an instance on a
+// non-latest or retired version can be found through its offering.
+private stackit.openSearch.offering @defaults("name version latest lifecycle") {
+  // Offering name
+  name string
+  // Engine version
+  version string
+  // Whether this is the latest version the service provides
+  latest bool
+  // Lifecycle state the service assigns to the version; empty when none
+  lifecycle string
+  // Description
+  description string
+  // Documentation link
+  documentationUrl string
+  // Number of instances of this offering the project may create
+  quotaCount int
+  // Plans available for the offering
+  plans() []stackit.openSearch.offering.plan
+}
+
+// Plan within a STACKIT OpenSearch offering
+//
+// One sizing plan of an engine offering, keyed by UUID `id`. `free`
+// marks the trial plan, which carries no availability commitment.
+private stackit.openSearch.offering.plan @defaults("name skuName free") {
+  // Plan UUID
+  id string
+  // Plan name
+  name string
+  // SKU name the plan is billed under
+  skuName string
+  // Whether this is the free plan
+  free bool
+  // Description
+  description string
+}
+
 // STACKIT MariaDB namespace
 //
 // Entry point for the managed MariaDB database service in the project.
@@ -2231,6 +2423,12 @@ private stackit.openSearch.instance @defaults("id name status planName") {
 stackit.mariaDb {
   // MariaDB instances
   instances() []stackit.mariaDb.instance
+  // Engine offerings the service currently provides
+  //
+  // The catalog of engine versions and plans, where a version is marked
+  // latest or carries a lifecycle state and a plan is marked free. Empty
+  // when the catalog cannot be read.
+  offerings() []stackit.mariaDb.offering
 }
 
 // STACKIT MariaDB managed database instance
@@ -2329,12 +2527,95 @@ private stackit.mariaDb.instance @defaults("id name status planName") {
   //
   // The max_disk_threshold parameter. Null when the parameter is absent.
   maxDiskThreshold() int
+  // Backups taken of the instance
+  //
+  // Proof that backups exist and how the last ones ended. Empty when none
+  // exist or the credential cannot list them.
+  backups() []stackit.mariaDb.instance.backup
+  // Catalog offering the instance runs (nullable)
+  //
+  // Matched by offeringVersion against the engine catalog. Follow it to
+  // read whether the version is the latest and its lifecycle state. Null
+  // when the catalog does not list the version or cannot be read.
+  offering() stackit.mariaDb.offering
+  // Catalog plan the instance runs on (nullable)
+  //
+  // Matched by planId against the engine catalog. Null when the catalog
+  // does not list the plan or cannot be read.
+  plan() stackit.mariaDb.offering.plan
   // Whether the instance accepts connections from any address
   //
   // True when the instance's parameters enable public access and the
   // source-IP allow-list (`sgw_acl`) is empty or admits any address
   // (0.0.0.0/0 or ::/0), making the instance reachable from the internet.
   internetReachable() bool
+}
+
+// Backup of a STACKIT MariaDB instance
+//
+// One backup the service took of the instance, keyed by its numeric `id`
+// rendered as a string. `status` and `finishedAt` on the most recent
+// entry answer whether backups are current and healthy; `downloadable`
+// says whether the backup can be retrieved through the API.
+private stackit.mariaDb.instance.backup @defaults("id status finishedAt") {
+  // Backup identifier
+  id string
+  // Backup status as reported by the service
+  status string
+  // Backup size in bytes
+  //
+  // Null when the service reports no size.
+  size int
+  // Whether the backup can be downloaded through the API
+  //
+  // Null when the service reports no setting.
+  downloadable bool
+  // When the backup was triggered
+  triggeredAt time
+  // When the backup finished
+  finishedAt time
+}
+
+// Catalog offering for STACKIT MariaDB
+//
+// One engine version the service provides, keyed by `name` and
+// `version`. `latest` marks the current release and `lifecycle` carries
+// the state the service assigns to older ones, so an instance on a
+// non-latest or retired version can be found through its offering.
+private stackit.mariaDb.offering @defaults("name version latest lifecycle") {
+  // Offering name
+  name string
+  // Engine version
+  version string
+  // Whether this is the latest version the service provides
+  latest bool
+  // Lifecycle state the service assigns to the version; empty when none
+  lifecycle string
+  // Description
+  description string
+  // Documentation link
+  documentationUrl string
+  // Number of instances of this offering the project may create
+  quotaCount int
+  // Plans available for the offering
+  plans() []stackit.mariaDb.offering.plan
+}
+
+// Plan within a STACKIT MariaDB offering
+//
+// One sizing plan of an engine offering, keyed by UUID `id`. `free`
+// marks the trial plan, which carries no availability commitment.
+private stackit.mariaDb.offering.plan @defaults("name skuName free") {
+  // Plan UUID
+  id string
+  // Plan name
+  name string
+  // SKU name the plan is billed under
+  skuName string
+  // Whether this is the free plan
+  free bool
+  // Description
+  description string
 }
 
 // STACKIT Redis namespace
@@ -2346,6 +2627,12 @@ private stackit.mariaDb.instance @defaults("id name status planName") {
 stackit.redis {
   // Redis instances
   instances() []stackit.redis.instance
+  // Engine offerings the service currently provides
+  //
+  // The catalog of engine versions and plans, where a version is marked
+  // latest or carries a lifecycle state and a plan is marked free. Empty
+  // when the catalog cannot be read.
+  offerings() []stackit.redis.offering
 }
 
 // STACKIT Redis managed instance
@@ -2444,6 +2731,22 @@ private stackit.redis.instance @defaults("id name status planName") {
   //
   // The max_disk_threshold parameter. Null when the parameter is absent.
   maxDiskThreshold() int
+  // Backups taken of the instance
+  //
+  // Proof that backups exist and how the last ones ended. Empty when none
+  // exist or the credential cannot list them.
+  backups() []stackit.redis.instance.backup
+  // Catalog offering the instance runs (nullable)
+  //
+  // Matched by offeringVersion against the engine catalog. Follow it to
+  // read whether the version is the latest and its lifecycle state. Null
+  // when the catalog does not list the version or cannot be read.
+  offering() stackit.redis.offering
+  // Catalog plan the instance runs on (nullable)
+  //
+  // Matched by planId against the engine catalog. Null when the catalog
+  // does not list the plan or cannot be read.
+  plan() stackit.redis.offering.plan
   // RDB snapshot schedule
   //
   // The Redis save specification (for example `900 1 300 10`), which
@@ -2491,6 +2794,73 @@ private stackit.redis.instance @defaults("id name status planName") {
   tlsCiphersuites() string
 }
 
+// Backup of a STACKIT Redis instance
+//
+// One backup the service took of the instance, keyed by its numeric `id`
+// rendered as a string. `status` and `finishedAt` on the most recent
+// entry answer whether backups are current and healthy; `downloadable`
+// says whether the backup can be retrieved through the API.
+private stackit.redis.instance.backup @defaults("id status finishedAt") {
+  // Backup identifier
+  id string
+  // Backup status as reported by the service
+  status string
+  // Backup size in bytes
+  //
+  // Null when the service reports no size.
+  size int
+  // Whether the backup can be downloaded through the API
+  //
+  // Null when the service reports no setting.
+  downloadable bool
+  // When the backup was triggered
+  triggeredAt time
+  // When the backup finished
+  finishedAt time
+}
+
+// Catalog offering for STACKIT Redis
+//
+// One engine version the service provides, keyed by `name` and
+// `version`. `latest` marks the current release and `lifecycle` carries
+// the state the service assigns to older ones, so an instance on a
+// non-latest or retired version can be found through its offering.
+private stackit.redis.offering @defaults("name version latest lifecycle") {
+  // Offering name
+  name string
+  // Engine version
+  version string
+  // Whether this is the latest version the service provides
+  latest bool
+  // Lifecycle state the service assigns to the version; empty when none
+  lifecycle string
+  // Description
+  description string
+  // Documentation link
+  documentationUrl string
+  // Number of instances of this offering the project may create
+  quotaCount int
+  // Plans available for the offering
+  plans() []stackit.redis.offering.plan
+}
+
+// Plan within a STACKIT Redis offering
+//
+// One sizing plan of an engine offering, keyed by UUID `id`. `free`
+// marks the trial plan, which carries no availability commitment.
+private stackit.redis.offering.plan @defaults("name skuName free") {
+  // Plan UUID
+  id string
+  // Plan name
+  name string
+  // SKU name the plan is billed under
+  skuName string
+  // Whether this is the free plan
+  free bool
+  // Description
+  description string
+}
+
 // STACKIT RabbitMQ namespace
 //
 // Managed RabbitMQ message-broker instances in the project. The
@@ -2500,6 +2870,12 @@ private stackit.redis.instance @defaults("id name status planName") {
 stackit.rabbitMq {
   // RabbitMQ instances
   instances() []stackit.rabbitMq.instance
+  // Engine offerings the service currently provides
+  //
+  // The catalog of engine versions and plans, where a version is marked
+  // latest or carries a lifecycle state and a plan is marked free. Empty
+  // when the catalog cannot be read.
+  offerings() []stackit.rabbitMq.offering
 }
 
 // STACKIT RabbitMQ managed instance
@@ -2599,6 +2975,22 @@ private stackit.rabbitMq.instance @defaults("id name status planName") {
   //
   // The max_disk_threshold parameter. Null when the parameter is absent.
   maxDiskThreshold() int
+  // Backups taken of the instance
+  //
+  // Proof that backups exist and how the last ones ended. Empty when none
+  // exist or the credential cannot list them.
+  backups() []stackit.rabbitMq.instance.backup
+  // Catalog offering the instance runs (nullable)
+  //
+  // Matched by offeringVersion against the engine catalog. Follow it to
+  // read whether the version is the latest and its lifecycle state. Null
+  // when the catalog does not list the version or cannot be read.
+  offering() stackit.rabbitMq.offering
+  // Catalog plan the instance runs on (nullable)
+  //
+  // Matched by planId against the engine catalog. Null when the catalog
+  // does not list the plan or cannot be read.
+  plan() stackit.rabbitMq.offering.plan
   // RabbitMQ plugins enabled on the instance
   //
   // Any of rabbitmq_mqtt, rabbitmq_stomp, rabbitmq_shovel,
@@ -2629,6 +3021,73 @@ private stackit.rabbitMq.instance @defaults("id name status planName") {
   tlsCiphers() []string
 }
 
+// Backup of a STACKIT RabbitMQ instance
+//
+// One backup the service took of the instance, keyed by its numeric `id`
+// rendered as a string. `status` and `finishedAt` on the most recent
+// entry answer whether backups are current and healthy; `downloadable`
+// says whether the backup can be retrieved through the API.
+private stackit.rabbitMq.instance.backup @defaults("id status finishedAt") {
+  // Backup identifier
+  id string
+  // Backup status as reported by the service
+  status string
+  // Backup size in bytes
+  //
+  // Null when the service reports no size.
+  size int
+  // Whether the backup can be downloaded through the API
+  //
+  // Null when the service reports no setting.
+  downloadable bool
+  // When the backup was triggered
+  triggeredAt time
+  // When the backup finished
+  finishedAt time
+}
+
+// Catalog offering for STACKIT RabbitMQ
+//
+// One engine version the service provides, keyed by `name` and
+// `version`. `latest` marks the current release and `lifecycle` carries
+// the state the service assigns to older ones, so an instance on a
+// non-latest or retired version can be found through its offering.
+private stackit.rabbitMq.offering @defaults("name version latest lifecycle") {
+  // Offering name
+  name string
+  // Engine version
+  version string
+  // Whether this is the latest version the service provides
+  latest bool
+  // Lifecycle state the service assigns to the version; empty when none
+  lifecycle string
+  // Description
+  description string
+  // Documentation link
+  documentationUrl string
+  // Number of instances of this offering the project may create
+  quotaCount int
+  // Plans available for the offering
+  plans() []stackit.rabbitMq.offering.plan
+}
+
+// Plan within a STACKIT RabbitMQ offering
+//
+// One sizing plan of an engine offering, keyed by UUID `id`. `free`
+// marks the trial plan, which carries no availability commitment.
+private stackit.rabbitMq.offering.plan @defaults("name skuName free") {
+  // Plan UUID
+  id string
+  // Plan name
+  name string
+  // SKU name the plan is billed under
+  skuName string
+  // Whether this is the free plan
+  free bool
+  // Description
+  description string
+}
+
 // STACKIT LogMe namespace
 //
 // Managed LogMe log-aggregation instances in the project. LogMe is a
@@ -2638,6 +3097,12 @@ private stackit.rabbitMq.instance @defaults("id name status planName") {
 stackit.logMe {
   // LogMe instances
   instances() []stackit.logMe.instance
+  // Engine offerings the service currently provides
+  //
+  // The catalog of engine versions and plans, where a version is marked
+  // latest or carries a lifecycle state and a plan is marked free. Empty
+  // when the catalog cannot be read.
+  offerings() []stackit.logMe.offering
 }
 
 // STACKIT LogMe managed instance
@@ -2735,6 +3200,22 @@ private stackit.logMe.instance @defaults("id name status planName") {
   //
   // The max_disk_threshold parameter. Null when the parameter is absent.
   maxDiskThreshold() int
+  // Backups taken of the instance
+  //
+  // Proof that backups exist and how the last ones ended. Empty when none
+  // exist or the credential cannot list them.
+  backups() []stackit.logMe.instance.backup
+  // Catalog offering the instance runs (nullable)
+  //
+  // Matched by offeringVersion against the engine catalog. Follow it to
+  // read whether the version is the latest and its lifecycle state. Null
+  // when the catalog does not list the version or cannot be read.
+  offering() stackit.logMe.offering
+  // Catalog plan the instance runs on (nullable)
+  //
+  // Matched by planId against the engine catalog. Null when the catalog
+  // does not list the plan or cannot be read.
+  plan() stackit.logMe.offering.plan
   // Port of the plaintext TCP log ingestion listener
   //
   // The fluentd-tcp parameter. A non-null value means the instance
@@ -2787,6 +3268,73 @@ private stackit.logMe.instance @defaults("id name status planName") {
   // `opensearch-tls-ciphers` parameter. Empty when the instance uses the
   // service default.
   opensearchTlsCiphers() []string
+}
+
+// Backup of a STACKIT LogMe instance
+//
+// One backup the service took of the instance, keyed by its numeric `id`
+// rendered as a string. `status` and `finishedAt` on the most recent
+// entry answer whether backups are current and healthy; `downloadable`
+// says whether the backup can be retrieved through the API.
+private stackit.logMe.instance.backup @defaults("id status finishedAt") {
+  // Backup identifier
+  id string
+  // Backup status as reported by the service
+  status string
+  // Backup size in bytes
+  //
+  // Null when the service reports no size.
+  size int
+  // Whether the backup can be downloaded through the API
+  //
+  // Null when the service reports no setting.
+  downloadable bool
+  // When the backup was triggered
+  triggeredAt time
+  // When the backup finished
+  finishedAt time
+}
+
+// Catalog offering for STACKIT LogMe
+//
+// One engine version the service provides, keyed by `name` and
+// `version`. `latest` marks the current release and `lifecycle` carries
+// the state the service assigns to older ones, so an instance on a
+// non-latest or retired version can be found through its offering.
+private stackit.logMe.offering @defaults("name version latest lifecycle") {
+  // Offering name
+  name string
+  // Engine version
+  version string
+  // Whether this is the latest version the service provides
+  latest bool
+  // Lifecycle state the service assigns to the version; empty when none
+  lifecycle string
+  // Description
+  description string
+  // Documentation link
+  documentationUrl string
+  // Number of instances of this offering the project may create
+  quotaCount int
+  // Plans available for the offering
+  plans() []stackit.logMe.offering.plan
+}
+
+// Plan within a STACKIT LogMe offering
+//
+// One sizing plan of an engine offering, keyed by UUID `id`. `free`
+// marks the trial plan, which carries no availability commitment.
+private stackit.logMe.offering.plan @defaults("name skuName free") {
+  // Plan UUID
+  id string
+  // Plan name
+  name string
+  // SKU name the plan is billed under
+  skuName string
+  // Whether this is the free plan
+  free bool
+  // Description
+  description string
 }
 
 // STACKIT Secrets Manager namespace
