@@ -182,6 +182,14 @@ private stackit.server @defaults("id name status machineType") {
   // when the server boots straight from an image and so has no boot volume,
   // and when the API reports no setting for it.
   bootVolumeDeleteOnTermination bool
+  // Volume holding the root disk (nullable)
+  //
+  // The volume the server boots from, so a check can ask about the OS
+  // disk specifically rather than the whole set in volumes: whether it is
+  // encrypted with a customer-managed key (encryptionKey), which image it
+  // was built from, or whether it is a clone. Null when the server boots
+  // straight from an image and has no boot volume.
+  bootVolume() stackit.volume
   // Security group IDs attached to the server
   securityGroupIds []string
   // Security groups attached to the server
@@ -299,6 +307,27 @@ private stackit.volume @defaults("id name size status") {
   // it rather than the newest one. Null when no version is pinned or when
   // that generation is no longer listed on the key.
   encryptionKeyVersionRef() stackit.kms.key.version
+  // Key ring holding the key that wraps the volume (nullable)
+  //
+  // Null for a platform-managed volume, and null when the key lives in
+  // another project (see encryptionKeyProjectId), whose rings this
+  // connection cannot read.
+  encryptionKeyRing() stackit.kms.keyRing
+  // Project that owns the key-encryption key
+  //
+  // Set when the volume is wrapped with a key from a different project,
+  // which only privileged internal projects may do. Empty when the key
+  // belongs to the volume's own project or the volume is platform-managed.
+  // A non-empty value means the volume's confidentiality depends on that
+  // project's access control rather than this one's.
+  encryptionKeyProjectId string
+  // Service account allowed to unwrap the volume key (nullable)
+  //
+  // The service account the platform uses to unwrap the volume's
+  // data-encryption key with the customer-managed key, which is who the
+  // key's access is granted to. Null for a platform-managed volume, and
+  // null when the account belongs to another project.
+  encryptionKeyServiceAccount() stackit.serviceAccount
   // Creation timestamp
   createdAt time
   // Last update timestamp
@@ -2252,6 +2281,32 @@ private stackit.secretsManager.instance @defaults("id name state") {
   users() []stackit.secretsManager.user
   // Approles that hold machine credentials on the instance
   approles() []stackit.secretsManager.approle
+  // Customer-managed key that encrypts the vault (nullable)
+  //
+  // Key from Key Management Service the instance is encrypted with. Null
+  // when the vault relies on platform-managed encryption, and null when
+  // the key is no longer present on its ring. Follow it to read the key
+  // state and whether it is importOnly.
+  encryptionKey() stackit.kms.key
+  // Key ring holding the vault's encryption key (nullable)
+  //
+  // Null for platform-managed encryption.
+  encryptionKeyRing() stackit.kms.keyRing
+  // Version number of the key material the vault is pinned to; 0 when unset
+  encryptionKeyVersion int
+  // Key version pinned by the vault (nullable)
+  //
+  // Generation of the key material identified by encryptionKeyVersion, so
+  // the vault can be checked against the state of the exact version that
+  // encrypts it. Null when no version is pinned or when that generation is
+  // no longer listed on the key.
+  encryptionKeyVersionRef() stackit.kms.key.version
+  // Service account the vault uses to reach its key (nullable)
+  //
+  // The identity granted use of the customer-managed key on the vault's
+  // behalf. Null for platform-managed encryption, and null when the account
+  // is not one of this project's.
+  encryptionKeyServiceAccount() stackit.serviceAccount
 }
 
 // STACKIT Secrets Manager user

@@ -385,6 +385,82 @@ func kmsKeyRef(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlStac
 	return key, nil
 }
 
+// kmsKeyRingRef resolves a key ring by UUID, marking the field null when the
+// id is empty or the ring is not readable from this project (a ring that lives
+// in another project answers 404 to GetKeyRing).
+func kmsKeyRingRef(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlStackitKmsKeyRing]) (*mqlStackitKmsKeyRing, error) {
+	if id == "" {
+		return markNull[mqlStackitKmsKeyRing](field)
+	}
+	res, err := NewResource(runtime, "stackit.kms.keyRing", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		if isNotFound(err) || isAccessDenied(err) {
+			return markNull[mqlStackitKmsKeyRing](field)
+		}
+		return nil, err
+	}
+	return res.(*mqlStackitKmsKeyRing), nil
+}
+
+// kmsKeyInRingRef resolves a key by UUID through the ring that holds it, which
+// costs one ring's key list rather than the walk over every ring that
+// kmsKeyRef performs. It falls back to that walk when the ring is unknown, and
+// marks the field null when the key id is empty or the ring's list does not
+// carry the key.
+func kmsKeyInRingRef(runtime *plugin.Runtime, ringID, keyID string, field *plugin.TValue[*mqlStackitKmsKey]) (*mqlStackitKmsKey, error) {
+	if keyID == "" {
+		return markNull[mqlStackitKmsKey](field)
+	}
+	if ringID == "" {
+		return kmsKeyRef(runtime, keyID, field)
+	}
+	var ringField plugin.TValue[*mqlStackitKmsKeyRing]
+	ring, err := kmsKeyRingRef(runtime, ringID, &ringField)
+	if err != nil {
+		return nil, err
+	}
+	if ring == nil {
+		return markNull[mqlStackitKmsKey](field)
+	}
+	keys := ring.GetKeys()
+	if keys.Error != nil {
+		return nil, keys.Error
+	}
+	key, ok := indexKmsKeysByID(keys.Data)[keyID]
+	if !ok || key == nil {
+		return markNull[mqlStackitKmsKey](field)
+	}
+	return key, nil
+}
+
+// serviceAccountRef resolves a service account by email against the project's
+// service-account list, marking the field null when the email is empty or the
+// account is not one of this project's. A key-encryption key held in another
+// project is used through a service account of that project, which this
+// connection cannot list.
+func serviceAccountRef(runtime *plugin.Runtime, email string, field *plugin.TValue[*mqlStackitServiceAccount]) (*mqlStackitServiceAccount, error) {
+	if email == "" {
+		return markNull[mqlStackitServiceAccount](field)
+	}
+	root, err := CreateResource(runtime, "stackit", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	accounts := root.(*mqlStackit).GetServiceAccounts()
+	if accounts.Error != nil {
+		return nil, accounts.Error
+	}
+	for _, a := range accounts.Data {
+		sa, ok := a.(*mqlStackitServiceAccount)
+		if ok && sa.Email.Data == email {
+			return sa, nil
+		}
+	}
+	return markNull[mqlStackitServiceAccount](field)
+}
+
 // iamRoleRef resolves a project role by name, marking the given field null when
 // the name is empty or the role catalog does not define it.
 //

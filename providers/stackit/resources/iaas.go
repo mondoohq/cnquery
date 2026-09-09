@@ -50,6 +50,26 @@ func (r *mqlStackit) servers() ([]any, error) {
 type mqlStackitServerInternal struct {
 	cacheServiceAccountMails []string
 	cacheNics                []any
+	// cacheBootVolumeID is the volume the server boots from, resolved by
+	// bootVolume(). Empty when the server boots straight from an image.
+	cacheBootVolumeID string
+}
+
+// bootVolume resolves the volume that holds the server's root disk, so a
+// check can ask about the OS disk specifically (its encryption key, its
+// image, whether it is a clone) rather than about the undifferentiated set
+// in volumes. Null when the server boots straight from an image.
+func (r *mqlStackitServer) bootVolume() (*mqlStackitVolume, error) {
+	if r.cacheBootVolumeID == "" {
+		return markNull[mqlStackitVolume](&r.BootVolume)
+	}
+	res, err := NewResource(r.MqlRuntime, "stackit.volume", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheBootVolumeID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitVolume), nil
 }
 
 // serverAgentProvisioned reports whether the STACKIT server agent is
@@ -157,6 +177,9 @@ func buildServer(runtime *plugin.Runtime, s *iaas.Server) (plugin.Resource, erro
 		return nil, err
 	}
 	mqlServer := res.(*mqlStackitServer)
+	if boot, ok := s.GetBootVolumeOk(); ok && boot != nil {
+		mqlServer.cacheBootVolumeID = boot.GetId()
+	}
 	mqlServer.cacheServiceAccountMails = s.GetServiceAccountMails()
 	mqlServer.cacheNics = nics
 	return res, nil
@@ -354,6 +377,51 @@ type mqlStackitVolumeInternal struct {
 	// cacheSourceVolumeID is the volume this one was cloned from, resolved by
 	// sourceVolume(). Held internally rather than as a raw id field.
 	cacheSourceVolumeID string
+	// cacheEncryption is the customer-managed-key reference the volume
+	// carries, resolved by the encryptionKey* accessors.
+	cacheEncryption volumeEncryption
+}
+
+// volumeEncryption is the customer-managed key-encryption-key reference on a
+// volume: which KMS key and version wrap the data-encryption key, the ring
+// that holds the key, the project that owns it (empty when the API leaves it
+// out, meaning the volume's own project), and the service account the
+// platform uses to unwrap with it.
+type volumeEncryption struct {
+	keyID          string
+	keyVersion     int64
+	keyRingID      string
+	projectID      string
+	serviceAccount string
+}
+
+// volumeEncryptionOf extracts the key-encryption-key reference from a volume.
+// The whole block is absent on a platform-managed volume, and every field
+// reads empty then.
+func volumeEncryptionOf(v *iaas.Volume) volumeEncryption {
+	var enc volumeEncryption
+	if v == nil {
+		return enc
+	}
+	ep, ok := v.GetEncryptionParametersOk()
+	if !ok || ep == nil {
+		return enc
+	}
+	enc.keyID = ep.GetKekKeyId()
+	enc.keyVersion = ep.GetKekKeyVersion()
+	enc.keyRingID = ep.GetKekKeyringId()
+	enc.serviceAccount = ep.GetServiceAccount()
+	if p, ok := ep.GetKekProjectIdOk(); ok && p != nil {
+		enc.projectID = *p
+	}
+	return enc
+}
+
+// crossProject reports whether the key lives in a project other than the
+// one this connection reads, in which case neither the ring nor the service
+// account can be resolved here.
+func (e volumeEncryption) crossProject(ownProjectID string) bool {
+	return e.projectID != "" && e.projectID != ownProjectID
 }
 
 func buildVolume(runtime *plugin.Runtime, v *iaas.Volume) (plugin.Resource, error) {
@@ -362,45 +430,65 @@ func buildVolume(runtime *plugin.Runtime, v *iaas.Volume) (plugin.Resource, erro
 		imageID, snapshotID, backupID, sourceVolumeID = classifyVolumeSource(src.GetType(), src.GetId())
 	}
 	serverID := v.GetServerId()
-
-	var (
-		kekKeyID      string
-		kekKeyVersion int64
-	)
-	if ep, ok := v.GetEncryptionParametersOk(); ok {
-		kekKeyID = ep.GetKekKeyId()
-		kekKeyVersion = ep.GetKekKeyVersion()
-	}
+	enc := volumeEncryptionOf(v)
+	kekKeyID := enc.keyID
+	kekKeyVersion := enc.keyVersion
 
 	createdAt, ok1 := v.GetCreatedAtOk()
 	updatedAt, ok2 := v.GetUpdatedAtOk()
 
 	args := map[string]*llx.RawData{
-		"id":                   llx.StringData(v.GetId()),
-		"name":                 llx.StringData(v.GetName()),
-		"description":          llx.StringData(v.GetDescription()),
-		"size":                 llx.IntData(int64(v.GetSize())),
-		"status":               llx.StringData(v.GetStatus()),
-		"availabilityZone":     llx.StringData(v.GetAvailabilityZone()),
-		"performanceClass":     llx.StringData(v.GetPerformanceClass()),
-		"bootable":             llx.BoolData(v.GetBootable()),
-		"imageId":              llx.StringData(imageID),
-		"sourceSnapshotId":     llx.StringData(snapshotID),
-		"sourceBackupId":       llx.StringData(backupID),
-		"serverId":             llx.StringData(serverID),
-		"encrypted":            llx.BoolData(v.GetEncrypted()),
-		"encryptionKeyId":      llx.StringData(kekKeyID),
-		"encryptionKeyVersion": llx.IntData(kekKeyVersion),
-		"createdAt":            llx.TimeDataPtr(timeOrNil(createdAt, ok1)),
-		"updatedAt":            llx.TimeDataPtr(timeOrNil(updatedAt, ok2)),
-		"labels":               labelData(v.GetLabels()),
+		"id":                     llx.StringData(v.GetId()),
+		"name":                   llx.StringData(v.GetName()),
+		"description":            llx.StringData(v.GetDescription()),
+		"size":                   llx.IntData(int64(v.GetSize())),
+		"status":                 llx.StringData(v.GetStatus()),
+		"availabilityZone":       llx.StringData(v.GetAvailabilityZone()),
+		"performanceClass":       llx.StringData(v.GetPerformanceClass()),
+		"bootable":               llx.BoolData(v.GetBootable()),
+		"imageId":                llx.StringData(imageID),
+		"sourceSnapshotId":       llx.StringData(snapshotID),
+		"sourceBackupId":         llx.StringData(backupID),
+		"serverId":               llx.StringData(serverID),
+		"encrypted":              llx.BoolData(v.GetEncrypted()),
+		"encryptionKeyId":        llx.StringData(kekKeyID),
+		"encryptionKeyVersion":   llx.IntData(kekKeyVersion),
+		"createdAt":              llx.TimeDataPtr(timeOrNil(createdAt, ok1)),
+		"updatedAt":              llx.TimeDataPtr(timeOrNil(updatedAt, ok2)),
+		"labels":                 labelData(v.GetLabels()),
+		"encryptionKeyProjectId": llx.StringData(enc.projectID),
 	}
 	res, err := CreateResource(runtime, "stackit.volume", args)
 	if err != nil {
 		return nil, err
 	}
-	res.(*mqlStackitVolume).cacheSourceVolumeID = sourceVolumeID
+	mqlVolume := res.(*mqlStackitVolume)
+	mqlVolume.cacheSourceVolumeID = sourceVolumeID
+	mqlVolume.cacheEncryption = enc
 	return res, nil
+}
+
+// encryptionKeyRing resolves the key ring that holds the volume's
+// key-encryption key. Null for a platform-managed volume, and null when the
+// key lives in another project, whose rings this connection cannot read.
+func (r *mqlStackitVolume) encryptionKeyRing() (*mqlStackitKmsKeyRing, error) {
+	enc := r.cacheEncryption
+	if enc.crossProject(conn(r.MqlRuntime).ProjectID()) {
+		return markNull[mqlStackitKmsKeyRing](&r.EncryptionKeyRing)
+	}
+	return kmsKeyRingRef(r.MqlRuntime, enc.keyRingID, &r.EncryptionKeyRing)
+}
+
+// encryptionKeyServiceAccount resolves the service account the platform uses
+// to unwrap the volume's data-encryption key with the customer-managed key.
+// Null for a platform-managed volume, and null when the key and its service
+// account belong to another project.
+func (r *mqlStackitVolume) encryptionKeyServiceAccount() (*mqlStackitServiceAccount, error) {
+	enc := r.cacheEncryption
+	if enc.crossProject(conn(r.MqlRuntime).ProjectID()) {
+		return markNull[mqlStackitServiceAccount](&r.EncryptionKeyServiceAccount)
+	}
+	return serviceAccountRef(r.MqlRuntime, enc.serviceAccount, &r.EncryptionKeyServiceAccount)
 }
 
 func (r *mqlStackitVolume) id() (string, error) {
@@ -494,9 +582,15 @@ func (r *mqlStackitVolume) sourceBackup() (*mqlStackitBackup, error) {
 }
 
 // encryptionKey resolves the customer-managed key that wraps the volume's
-// data-encryption key. Null for a platform-managed volume.
+// data-encryption key. Null for a platform-managed volume, and null when the
+// key lives in another project. The volume names the ring that holds the
+// key, so the lookup reads that one ring instead of walking every ring.
 func (r *mqlStackitVolume) encryptionKey() (*mqlStackitKmsKey, error) {
-	return kmsKeyRef(r.MqlRuntime, r.EncryptionKeyId.Data, &r.EncryptionKey)
+	enc := r.cacheEncryption
+	if enc.crossProject(conn(r.MqlRuntime).ProjectID()) {
+		return markNull[mqlStackitKmsKey](&r.EncryptionKey)
+	}
+	return kmsKeyInRingRef(r.MqlRuntime, enc.keyRingID, r.EncryptionKeyId.Data, &r.EncryptionKey)
 }
 
 // encryptionKeyVersionRef resolves the exact generation of key material the

@@ -132,6 +132,69 @@ func TestSecurityGroupRuleArgs(t *testing.T) {
 	})
 }
 
+// TestVolumeEncryptionOf pins the key-encryption-key reference read off a
+// volume: every part of it reads empty on a platform-managed volume, and the
+// optional owning project is empty rather than zero-valued when absent, since
+// an empty projectID is what marks the key as belonging to this project.
+func TestVolumeEncryptionOf(t *testing.T) {
+	decode := func(payload string) *iaas.Volume {
+		var v iaas.Volume
+		if err := json.Unmarshal([]byte(payload), &v); err != nil {
+			t.Fatalf("decoding volume: %v", err)
+		}
+		return &v
+	}
+
+	t.Run("customer-managed key in the volume's own project", func(t *testing.T) {
+		enc := volumeEncryptionOf(decode(`{
+			"id": "vol-1", "availabilityZone": "eu01-1", "encrypted": true,
+			"encryptionParameters": {
+				"kekKeyId": "key-1", "kekKeyVersion": 3, "kekKeyringId": "ring-1",
+				"serviceAccount": "kek@sa.stackit.cloud"
+			}
+		}`))
+		want := volumeEncryption{keyID: "key-1", keyVersion: 3, keyRingID: "ring-1", serviceAccount: "kek@sa.stackit.cloud"}
+		if enc != want {
+			t.Fatalf("volumeEncryptionOf = %+v, want %+v", enc, want)
+		}
+		if enc.crossProject("proj-a") {
+			t.Fatal("a key with no project id must read as the volume's own project")
+		}
+	})
+
+	t.Run("key held in another project", func(t *testing.T) {
+		enc := volumeEncryptionOf(decode(`{
+			"id": "vol-2", "availabilityZone": "eu01-1",
+			"encryptionParameters": {"kekKeyId": "key-2", "kekKeyVersion": 1, "kekKeyringId": "ring-2", "kekProjectId": "proj-b", "serviceAccount": "kek@sa.stackit.cloud"}
+		}`))
+		if enc.projectID != "proj-b" {
+			t.Fatalf("projectID = %q, want proj-b", enc.projectID)
+		}
+		if !enc.crossProject("proj-a") {
+			t.Fatal("a key in proj-b must read as cross-project from proj-a")
+		}
+		if enc.crossProject("proj-b") {
+			t.Fatal("a key in proj-b is not cross-project from proj-b itself")
+		}
+	})
+
+	t.Run("platform-managed volume has no reference at all", func(t *testing.T) {
+		enc := volumeEncryptionOf(decode(`{"id": "vol-3", "availabilityZone": "eu01-1", "encrypted": true}`))
+		if enc != (volumeEncryption{}) {
+			t.Fatalf("volumeEncryptionOf = %+v, want all empty", enc)
+		}
+		if enc.crossProject("proj-a") {
+			t.Fatal("an absent key must not read as cross-project")
+		}
+	})
+
+	t.Run("nil volume", func(t *testing.T) {
+		if enc := volumeEncryptionOf(nil); enc != (volumeEncryption{}) {
+			t.Fatalf("volumeEncryptionOf(nil) = %+v, want all empty", enc)
+		}
+	})
+}
+
 // --- server posture fields that must stay tri-state -------------------------
 
 // decodeServer builds an iaas.Server from a payload shaped like the one the

@@ -753,6 +753,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.server.bootVolumeDeleteOnTermination": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetBootVolumeDeleteOnTermination()).ToDataRes(types.Bool)
 	},
+	"stackit.server.bootVolume": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServer).GetBootVolume()).ToDataRes(types.Resource("stackit.volume"))
+	},
 	"stackit.server.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
 	},
@@ -857,6 +860,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.volume.encryptionKeyVersionRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitVolume).GetEncryptionKeyVersionRef()).ToDataRes(types.Resource("stackit.kms.key.version"))
+	},
+	"stackit.volume.encryptionKeyRing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVolume).GetEncryptionKeyRing()).ToDataRes(types.Resource("stackit.kms.keyRing"))
+	},
+	"stackit.volume.encryptionKeyProjectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVolume).GetEncryptionKeyProjectId()).ToDataRes(types.String)
+	},
+	"stackit.volume.encryptionKeyServiceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVolume).GetEncryptionKeyServiceAccount()).ToDataRes(types.Resource("stackit.serviceAccount"))
 	},
 	"stackit.volume.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitVolume).GetCreatedAt()).ToDataRes(types.Time)
@@ -2382,6 +2394,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.secretsManager.instance.approles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecretsManagerInstance).GetApproles()).ToDataRes(types.Array(types.Resource("stackit.secretsManager.approle")))
 	},
+	"stackit.secretsManager.instance.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerInstance).GetEncryptionKey()).ToDataRes(types.Resource("stackit.kms.key"))
+	},
+	"stackit.secretsManager.instance.encryptionKeyRing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerInstance).GetEncryptionKeyRing()).ToDataRes(types.Resource("stackit.kms.keyRing"))
+	},
+	"stackit.secretsManager.instance.encryptionKeyVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerInstance).GetEncryptionKeyVersion()).ToDataRes(types.Int)
+	},
+	"stackit.secretsManager.instance.encryptionKeyVersionRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerInstance).GetEncryptionKeyVersionRef()).ToDataRes(types.Resource("stackit.kms.key.version"))
+	},
+	"stackit.secretsManager.instance.encryptionKeyServiceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerInstance).GetEncryptionKeyServiceAccount()).ToDataRes(types.Resource("stackit.serviceAccount"))
+	},
 	"stackit.secretsManager.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecretsManagerUser).GetId()).ToDataRes(types.String)
 	},
@@ -3390,6 +3417,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitServer).BootVolumeDeleteOnTermination, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"stackit.server.bootVolume": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServer).BootVolume, ok = plugin.RawToTValue[*mqlStackitVolume](v.Value, v.Error)
+		return
+	},
 	"stackit.server.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitServer).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3532,6 +3563,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.volume.encryptionKeyVersionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitVolume).EncryptionKeyVersionRef, ok = plugin.RawToTValue[*mqlStackitKmsKeyVersion](v.Value, v.Error)
+		return
+	},
+	"stackit.volume.encryptionKeyRing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVolume).EncryptionKeyRing, ok = plugin.RawToTValue[*mqlStackitKmsKeyRing](v.Value, v.Error)
+		return
+	},
+	"stackit.volume.encryptionKeyProjectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVolume).EncryptionKeyProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.volume.encryptionKeyServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVolume).EncryptionKeyServiceAccount, ok = plugin.RawToTValue[*mqlStackitServiceAccount](v.Value, v.Error)
 		return
 	},
 	"stackit.volume.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5794,6 +5837,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitSecretsManagerInstance).Approles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.secretsManager.instance.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerInstance).EncryptionKey, ok = plugin.RawToTValue[*mqlStackitKmsKey](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.instance.encryptionKeyRing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerInstance).EncryptionKeyRing, ok = plugin.RawToTValue[*mqlStackitKmsKeyRing](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.instance.encryptionKeyVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerInstance).EncryptionKeyVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.instance.encryptionKeyVersionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerInstance).EncryptionKeyVersionRef, ok = plugin.RawToTValue[*mqlStackitKmsKeyVersion](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.instance.encryptionKeyServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerInstance).EncryptionKeyServiceAccount, ok = plugin.RawToTValue[*mqlStackitServiceAccount](v.Value, v.Error)
+		return
+	},
 	"stackit.secretsManager.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSecretsManagerUser).__id, ok = v.Value.(string)
 		return
@@ -7693,6 +7756,7 @@ type mqlStackitServer struct {
 	VolumeIds                     plugin.TValue[[]any]
 	Volumes                       plugin.TValue[[]any]
 	BootVolumeDeleteOnTermination plugin.TValue[bool]
+	BootVolume                    plugin.TValue[*mqlStackitVolume]
 	SecurityGroupIds              plugin.TValue[[]any]
 	SecurityGroups                plugin.TValue[[]any]
 	Exposure                      plugin.TValue[*mqlStackitNetworkExposure]
@@ -7853,6 +7917,22 @@ func (c *mqlStackitServer) GetBootVolumeDeleteOnTermination() *plugin.TValue[boo
 	return &c.BootVolumeDeleteOnTermination
 }
 
+func (c *mqlStackitServer) GetBootVolume() *plugin.TValue[*mqlStackitVolume] {
+	return plugin.GetOrCompute[*mqlStackitVolume](&c.BootVolume, func() (*mqlStackitVolume, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.server", c.__id, "bootVolume")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitVolume), nil
+			}
+		}
+
+		return c.bootVolume()
+	})
+}
+
 func (c *mqlStackitServer) GetSecurityGroupIds() *plugin.TValue[[]any] {
 	return &c.SecurityGroupIds
 }
@@ -8006,31 +8086,34 @@ type mqlStackitVolume struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlStackitVolumeInternal
-	Id                      plugin.TValue[string]
-	Name                    plugin.TValue[string]
-	Description             plugin.TValue[string]
-	Size                    plugin.TValue[int64]
-	Status                  plugin.TValue[string]
-	AvailabilityZone        plugin.TValue[string]
-	PerformanceClass        plugin.TValue[string]
-	Bootable                plugin.TValue[bool]
-	ImageId                 plugin.TValue[string]
-	Image                   plugin.TValue[*mqlStackitImage]
-	SourceSnapshotId        plugin.TValue[string]
-	SourceSnapshot          plugin.TValue[*mqlStackitSnapshot]
-	SourceBackupId          plugin.TValue[string]
-	SourceBackup            plugin.TValue[*mqlStackitBackup]
-	SourceVolume            plugin.TValue[*mqlStackitVolume]
-	Server                  plugin.TValue[*mqlStackitServer]
-	ServerId                plugin.TValue[string]
-	Encrypted               plugin.TValue[bool]
-	EncryptionKeyId         plugin.TValue[string]
-	EncryptionKey           plugin.TValue[*mqlStackitKmsKey]
-	EncryptionKeyVersion    plugin.TValue[int64]
-	EncryptionKeyVersionRef plugin.TValue[*mqlStackitKmsKeyVersion]
-	CreatedAt               plugin.TValue[*time.Time]
-	UpdatedAt               plugin.TValue[*time.Time]
-	Labels                  plugin.TValue[map[string]any]
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Description                 plugin.TValue[string]
+	Size                        plugin.TValue[int64]
+	Status                      plugin.TValue[string]
+	AvailabilityZone            plugin.TValue[string]
+	PerformanceClass            plugin.TValue[string]
+	Bootable                    plugin.TValue[bool]
+	ImageId                     plugin.TValue[string]
+	Image                       plugin.TValue[*mqlStackitImage]
+	SourceSnapshotId            plugin.TValue[string]
+	SourceSnapshot              plugin.TValue[*mqlStackitSnapshot]
+	SourceBackupId              plugin.TValue[string]
+	SourceBackup                plugin.TValue[*mqlStackitBackup]
+	SourceVolume                plugin.TValue[*mqlStackitVolume]
+	Server                      plugin.TValue[*mqlStackitServer]
+	ServerId                    plugin.TValue[string]
+	Encrypted                   plugin.TValue[bool]
+	EncryptionKeyId             plugin.TValue[string]
+	EncryptionKey               plugin.TValue[*mqlStackitKmsKey]
+	EncryptionKeyVersion        plugin.TValue[int64]
+	EncryptionKeyVersionRef     plugin.TValue[*mqlStackitKmsKeyVersion]
+	EncryptionKeyRing           plugin.TValue[*mqlStackitKmsKeyRing]
+	EncryptionKeyProjectId      plugin.TValue[string]
+	EncryptionKeyServiceAccount plugin.TValue[*mqlStackitServiceAccount]
+	CreatedAt                   plugin.TValue[*time.Time]
+	UpdatedAt                   plugin.TValue[*time.Time]
+	Labels                      plugin.TValue[map[string]any]
 }
 
 // createStackitVolume creates a new instance of this resource
@@ -8239,6 +8322,42 @@ func (c *mqlStackitVolume) GetEncryptionKeyVersionRef() *plugin.TValue[*mqlStack
 		}
 
 		return c.encryptionKeyVersionRef()
+	})
+}
+
+func (c *mqlStackitVolume) GetEncryptionKeyRing() *plugin.TValue[*mqlStackitKmsKeyRing] {
+	return plugin.GetOrCompute[*mqlStackitKmsKeyRing](&c.EncryptionKeyRing, func() (*mqlStackitKmsKeyRing, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.volume", c.__id, "encryptionKeyRing")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitKmsKeyRing), nil
+			}
+		}
+
+		return c.encryptionKeyRing()
+	})
+}
+
+func (c *mqlStackitVolume) GetEncryptionKeyProjectId() *plugin.TValue[string] {
+	return &c.EncryptionKeyProjectId
+}
+
+func (c *mqlStackitVolume) GetEncryptionKeyServiceAccount() *plugin.TValue[*mqlStackitServiceAccount] {
+	return plugin.GetOrCompute[*mqlStackitServiceAccount](&c.EncryptionKeyServiceAccount, func() (*mqlStackitServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.volume", c.__id, "encryptionKeyServiceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitServiceAccount), nil
+			}
+		}
+
+		return c.encryptionKeyServiceAccount()
 	})
 }
 
@@ -13886,18 +14005,23 @@ func (c *mqlStackitSecretsManager) GetInstances() *plugin.TValue[[]any] {
 type mqlStackitSecretsManagerInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitSecretsManagerInstanceInternal it will be used here
-	Id                 plugin.TValue[string]
-	Name               plugin.TValue[string]
-	State              plugin.TValue[string]
-	ApiUrl             plugin.TValue[string]
-	SecretsEngine      plugin.TValue[string]
-	SecretCount        plugin.TValue[int64]
-	CreationStartedAt  plugin.TValue[*time.Time]
-	CreationFinishedAt plugin.TValue[*time.Time]
-	Acls               plugin.TValue[[]any]
-	Users              plugin.TValue[[]any]
-	Approles           plugin.TValue[[]any]
+	mqlStackitSecretsManagerInstanceInternal
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	State                       plugin.TValue[string]
+	ApiUrl                      plugin.TValue[string]
+	SecretsEngine               plugin.TValue[string]
+	SecretCount                 plugin.TValue[int64]
+	CreationStartedAt           plugin.TValue[*time.Time]
+	CreationFinishedAt          plugin.TValue[*time.Time]
+	Acls                        plugin.TValue[[]any]
+	Users                       plugin.TValue[[]any]
+	Approles                    plugin.TValue[[]any]
+	EncryptionKey               plugin.TValue[*mqlStackitKmsKey]
+	EncryptionKeyRing           plugin.TValue[*mqlStackitKmsKeyRing]
+	EncryptionKeyVersion        plugin.TValue[int64]
+	EncryptionKeyVersionRef     plugin.TValue[*mqlStackitKmsKeyVersion]
+	EncryptionKeyServiceAccount plugin.TValue[*mqlStackitServiceAccount]
 }
 
 // createStackitSecretsManagerInstance creates a new instance of this resource
@@ -14004,6 +14128,74 @@ func (c *mqlStackitSecretsManagerInstance) GetApproles() *plugin.TValue[[]any] {
 		}
 
 		return c.approles()
+	})
+}
+
+func (c *mqlStackitSecretsManagerInstance) GetEncryptionKey() *plugin.TValue[*mqlStackitKmsKey] {
+	return plugin.GetOrCompute[*mqlStackitKmsKey](&c.EncryptionKey, func() (*mqlStackitKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.secretsManager.instance", c.__id, "encryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitKmsKey), nil
+			}
+		}
+
+		return c.encryptionKey()
+	})
+}
+
+func (c *mqlStackitSecretsManagerInstance) GetEncryptionKeyRing() *plugin.TValue[*mqlStackitKmsKeyRing] {
+	return plugin.GetOrCompute[*mqlStackitKmsKeyRing](&c.EncryptionKeyRing, func() (*mqlStackitKmsKeyRing, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.secretsManager.instance", c.__id, "encryptionKeyRing")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitKmsKeyRing), nil
+			}
+		}
+
+		return c.encryptionKeyRing()
+	})
+}
+
+func (c *mqlStackitSecretsManagerInstance) GetEncryptionKeyVersion() *plugin.TValue[int64] {
+	return &c.EncryptionKeyVersion
+}
+
+func (c *mqlStackitSecretsManagerInstance) GetEncryptionKeyVersionRef() *plugin.TValue[*mqlStackitKmsKeyVersion] {
+	return plugin.GetOrCompute[*mqlStackitKmsKeyVersion](&c.EncryptionKeyVersionRef, func() (*mqlStackitKmsKeyVersion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.secretsManager.instance", c.__id, "encryptionKeyVersionRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitKmsKeyVersion), nil
+			}
+		}
+
+		return c.encryptionKeyVersionRef()
+	})
+}
+
+func (c *mqlStackitSecretsManagerInstance) GetEncryptionKeyServiceAccount() *plugin.TValue[*mqlStackitServiceAccount] {
+	return plugin.GetOrCompute[*mqlStackitServiceAccount](&c.EncryptionKeyServiceAccount, func() (*mqlStackitServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.secretsManager.instance", c.__id, "encryptionKeyServiceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitServiceAccount), nil
+			}
+		}
+
+		return c.encryptionKeyServiceAccount()
 	})
 }
 
