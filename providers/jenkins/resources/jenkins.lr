@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/jenkins"
 option go_package = "go.mondoo.com/mql/providers/jenkins/resources"
+option root = "jenkins"
 
 // Jenkins automation server
 //
@@ -11,7 +14,7 @@ option go_package = "go.mondoo.com/mql/providers/jenkins/resources"
 // installed `plugins`, configured `jobs`, build `nodes`, and stored
 // `credentials` metadata that make up a Jenkins audit. The controller's
 // access-control posture is a separate resource, `jenkins.security`.
-jenkins @maturity("experimental") {
+jenkins @maturity("experimental") @root {
   // Base URL the connection targets, for example "https://jenkins.example.com"
   url string
   // Jenkins core version reported by the controller
