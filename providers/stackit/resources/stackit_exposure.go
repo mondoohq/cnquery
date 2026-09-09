@@ -168,8 +168,6 @@ func dictStr(v any) string {
 	return ""
 }
 
-// dictBool reads a bool-ish value out of a dict. STACKIT parameter blobs encode
-// booleans as actual bools or as the strings "true"/"false".
 // dictInt reads a whole number out of a dict value. Values that arrived
 // through a JSON round-trip are float64; native ints and numeric strings are
 // accepted too. The second result is false when the value is absent, not
@@ -199,6 +197,8 @@ func dictInt(v any) (int64, bool) {
 	return 0, false
 }
 
+// dictBool reads a bool-ish value out of a dict. STACKIT parameter blobs encode
+// booleans as actual bools or as the strings "true"/"false".
 func dictBool(v any) bool {
 	switch t := v.(type) {
 	case bool:
