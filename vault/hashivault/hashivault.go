@@ -17,14 +17,46 @@ import (
 
 var errNotImplemented = errors.New("not implemented") //nolint:unused
 
-func New(serverURL string, token string) *Vault {
-	log.Debug().Bool("token-sec", len(token) > 0).Msgf("Using HashiCorp Vault at %s", serverURL)
-	return &Vault{
+// DefaultMount is the path Vault mounts the KV v2 secrets engine at unless it
+// is enabled somewhere else.
+const DefaultMount = "secret"
+
+// Option configures the Vault client.
+type Option func(*Vault)
+
+// WithMount sets the path the KV v2 secrets engine is mounted at.
+//
+// Vault allows a KV v2 engine to be enabled at any path
+// (`vault secrets enable -path=<path> kv-v2`), and Vault-compatible services
+// do not all use the default: some mount the engine per instance, so the path
+// is only known at configuration time.
+//
+// An empty mount leaves the default in place, so callers can pass an unset
+// configuration value through without having to check it first.
+func WithMount(mount string) Option {
+	return func(v *Vault) {
+		if m := strings.Trim(mount, "/"); m != "" {
+			v.Mount = m
+		}
+	}
+}
+
+func New(serverURL string, token string, opts ...Option) *Vault {
+	v := &Vault{
 		Token: token,
+		Mount: DefaultMount,
 		APIConfig: api.Config{
 			Address: serverURL,
 		},
 	}
+	for _, opt := range opts {
+		opt(v)
+	}
+	log.Debug().
+		Bool("token-sec", len(token) > 0).
+		Str("mount", v.Mount).
+		Msgf("Using HashiCorp Vault at %s", serverURL)
+	return v
 }
 
 type Vault struct {
@@ -32,6 +64,9 @@ type Vault struct {
 	// See https://www.vaultproject.io/docs/concepts/tokens.html for more
 	// information.
 	Token string
+	// Mount is the path the KV v2 secrets engine is mounted at, without
+	// surrounding slashes. Defaults to DefaultMount.
+	Mount string
 	// APIConfig is used to configure the creation of the client.
 	APIConfig api.Config
 }
@@ -52,9 +87,13 @@ func (v *Vault) client() (*api.Client, error) {
 	return c, nil
 }
 
-func vaultSecretId(key string) string {
-	base := "secret/data/"
-	return base + key
+// secretPath builds the KV v2 read path for a key: <mount>/data/<key>.
+func (v *Vault) secretPath(key string) string {
+	mount := v.Mount
+	if mount == "" {
+		mount = DefaultMount
+	}
+	return mount + "/data/" + key
 }
 
 // we need to remove the leading // from mrns, this should not be done here, therefore we just throw an error
@@ -78,7 +117,7 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 		return nil, err
 	}
 
-	secret, err := c.Logical().Read(vaultSecretId(id.Key))
+	secret, err := c.Logical().Read(v.secretPath(id.Key))
 	if err != nil {
 		return nil, vault.NotFoundError
 	}
