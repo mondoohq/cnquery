@@ -63,22 +63,40 @@ const (
 	ResourceStackitPostgresFlex                            string = "stackit.postgresFlex"
 	ResourceStackitPostgresFlexInstance                    string = "stackit.postgresFlex.instance"
 	ResourceStackitPostgresFlexInstanceUser                string = "stackit.postgresFlex.instance.user"
+	ResourceStackitPostgresFlexInstanceBackup              string = "stackit.postgresFlex.instance.backup"
 	ResourceStackitMongoDbFlex                             string = "stackit.mongoDbFlex"
 	ResourceStackitMongoDbFlexInstance                     string = "stackit.mongoDbFlex.instance"
 	ResourceStackitMongoDbFlexInstanceUser                 string = "stackit.mongoDbFlex.instance.user"
+	ResourceStackitMongoDbFlexInstanceBackup               string = "stackit.mongoDbFlex.instance.backup"
 	ResourceStackitSqlServerFlex                           string = "stackit.sqlServerFlex"
 	ResourceStackitSqlServerFlexInstance                   string = "stackit.sqlServerFlex.instance"
 	ResourceStackitSqlServerFlexInstanceUser               string = "stackit.sqlServerFlex.instance.user"
+	ResourceStackitSqlServerFlexInstanceBackup             string = "stackit.sqlServerFlex.instance.backup"
 	ResourceStackitOpenSearch                              string = "stackit.openSearch"
 	ResourceStackitOpenSearchInstance                      string = "stackit.openSearch.instance"
+	ResourceStackitOpenSearchInstanceBackup                string = "stackit.openSearch.instance.backup"
+	ResourceStackitOpenSearchOffering                      string = "stackit.openSearch.offering"
+	ResourceStackitOpenSearchOfferingPlan                  string = "stackit.openSearch.offering.plan"
 	ResourceStackitMariaDb                                 string = "stackit.mariaDb"
 	ResourceStackitMariaDbInstance                         string = "stackit.mariaDb.instance"
+	ResourceStackitMariaDbInstanceBackup                   string = "stackit.mariaDb.instance.backup"
+	ResourceStackitMariaDbOffering                         string = "stackit.mariaDb.offering"
+	ResourceStackitMariaDbOfferingPlan                     string = "stackit.mariaDb.offering.plan"
 	ResourceStackitRedis                                   string = "stackit.redis"
 	ResourceStackitRedisInstance                           string = "stackit.redis.instance"
+	ResourceStackitRedisInstanceBackup                     string = "stackit.redis.instance.backup"
+	ResourceStackitRedisOffering                           string = "stackit.redis.offering"
+	ResourceStackitRedisOfferingPlan                       string = "stackit.redis.offering.plan"
 	ResourceStackitRabbitMq                                string = "stackit.rabbitMq"
 	ResourceStackitRabbitMqInstance                        string = "stackit.rabbitMq.instance"
+	ResourceStackitRabbitMqInstanceBackup                  string = "stackit.rabbitMq.instance.backup"
+	ResourceStackitRabbitMqOffering                        string = "stackit.rabbitMq.offering"
+	ResourceStackitRabbitMqOfferingPlan                    string = "stackit.rabbitMq.offering.plan"
 	ResourceStackitLogMe                                   string = "stackit.logMe"
 	ResourceStackitLogMeInstance                           string = "stackit.logMe.instance"
+	ResourceStackitLogMeInstanceBackup                     string = "stackit.logMe.instance.backup"
+	ResourceStackitLogMeOffering                           string = "stackit.logMe.offering"
+	ResourceStackitLogMeOfferingPlan                       string = "stackit.logMe.offering.plan"
 	ResourceStackitSecretsManager                          string = "stackit.secretsManager"
 	ResourceStackitSecretsManagerInstance                  string = "stackit.secretsManager.instance"
 	ResourceStackitSecretsManagerUser                      string = "stackit.secretsManager.user"
@@ -312,6 +330,10 @@ func init() {
 			// to override args, implement: initStackitPostgresFlexInstanceUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitPostgresFlexInstanceUser,
 		},
+		"stackit.postgresFlex.instance.backup": {
+			// to override args, implement: initStackitPostgresFlexInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitPostgresFlexInstanceBackup,
+		},
 		"stackit.mongoDbFlex": {
 			// to override args, implement: initStackitMongoDbFlex(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitMongoDbFlex,
@@ -323,6 +345,10 @@ func init() {
 		"stackit.mongoDbFlex.instance.user": {
 			// to override args, implement: initStackitMongoDbFlexInstanceUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitMongoDbFlexInstanceUser,
+		},
+		"stackit.mongoDbFlex.instance.backup": {
+			// to override args, implement: initStackitMongoDbFlexInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitMongoDbFlexInstanceBackup,
 		},
 		"stackit.sqlServerFlex": {
 			// to override args, implement: initStackitSqlServerFlex(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -336,6 +362,10 @@ func init() {
 			// to override args, implement: initStackitSqlServerFlexInstanceUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitSqlServerFlexInstanceUser,
 		},
+		"stackit.sqlServerFlex.instance.backup": {
+			// to override args, implement: initStackitSqlServerFlexInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitSqlServerFlexInstanceBackup,
+		},
 		"stackit.openSearch": {
 			// to override args, implement: initStackitOpenSearch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitOpenSearch,
@@ -343,6 +373,18 @@ func init() {
 		"stackit.openSearch.instance": {
 			Init:   initStackitOpenSearchInstance,
 			Create: createStackitOpenSearchInstance,
+		},
+		"stackit.openSearch.instance.backup": {
+			// to override args, implement: initStackitOpenSearchInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitOpenSearchInstanceBackup,
+		},
+		"stackit.openSearch.offering": {
+			// to override args, implement: initStackitOpenSearchOffering(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitOpenSearchOffering,
+		},
+		"stackit.openSearch.offering.plan": {
+			// to override args, implement: initStackitOpenSearchOfferingPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitOpenSearchOfferingPlan,
 		},
 		"stackit.mariaDb": {
 			// to override args, implement: initStackitMariaDb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -352,6 +394,18 @@ func init() {
 			Init:   initStackitMariaDbInstance,
 			Create: createStackitMariaDbInstance,
 		},
+		"stackit.mariaDb.instance.backup": {
+			// to override args, implement: initStackitMariaDbInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitMariaDbInstanceBackup,
+		},
+		"stackit.mariaDb.offering": {
+			// to override args, implement: initStackitMariaDbOffering(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitMariaDbOffering,
+		},
+		"stackit.mariaDb.offering.plan": {
+			// to override args, implement: initStackitMariaDbOfferingPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitMariaDbOfferingPlan,
+		},
 		"stackit.redis": {
 			// to override args, implement: initStackitRedis(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitRedis,
@@ -359,6 +413,18 @@ func init() {
 		"stackit.redis.instance": {
 			Init:   initStackitRedisInstance,
 			Create: createStackitRedisInstance,
+		},
+		"stackit.redis.instance.backup": {
+			// to override args, implement: initStackitRedisInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitRedisInstanceBackup,
+		},
+		"stackit.redis.offering": {
+			// to override args, implement: initStackitRedisOffering(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitRedisOffering,
+		},
+		"stackit.redis.offering.plan": {
+			// to override args, implement: initStackitRedisOfferingPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitRedisOfferingPlan,
 		},
 		"stackit.rabbitMq": {
 			// to override args, implement: initStackitRabbitMq(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -368,6 +434,18 @@ func init() {
 			Init:   initStackitRabbitMqInstance,
 			Create: createStackitRabbitMqInstance,
 		},
+		"stackit.rabbitMq.instance.backup": {
+			// to override args, implement: initStackitRabbitMqInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitRabbitMqInstanceBackup,
+		},
+		"stackit.rabbitMq.offering": {
+			// to override args, implement: initStackitRabbitMqOffering(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitRabbitMqOffering,
+		},
+		"stackit.rabbitMq.offering.plan": {
+			// to override args, implement: initStackitRabbitMqOfferingPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitRabbitMqOfferingPlan,
+		},
 		"stackit.logMe": {
 			// to override args, implement: initStackitLogMe(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitLogMe,
@@ -375,6 +453,18 @@ func init() {
 		"stackit.logMe.instance": {
 			Init:   initStackitLogMeInstance,
 			Create: createStackitLogMeInstance,
+		},
+		"stackit.logMe.instance.backup": {
+			// to override args, implement: initStackitLogMeInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitLogMeInstanceBackup,
+		},
+		"stackit.logMe.offering": {
+			// to override args, implement: initStackitLogMeOffering(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitLogMeOffering,
+		},
+		"stackit.logMe.offering.plan": {
+			// to override args, implement: initStackitLogMeOfferingPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitLogMeOfferingPlan,
 		},
 		"stackit.secretsManager": {
 			// to override args, implement: initStackitSecretsManager(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2109,6 +2199,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.postgresFlex.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitPostgresFlex).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.postgresFlex.instance")))
 	},
+	"stackit.postgresFlex.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitPostgresFlex).GetVersions()).ToDataRes(types.Array(types.String))
+	},
 	"stackit.postgresFlex.instance.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitPostgresFlexInstance).GetId()).ToDataRes(types.String)
 	},
@@ -2148,6 +2241,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.postgresFlex.instance.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitPostgresFlexInstance).GetUsers()).ToDataRes(types.Array(types.Resource("stackit.postgresFlex.instance.user")))
 	},
+	"stackit.postgresFlex.instance.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitPostgresFlexInstance).GetBackups()).ToDataRes(types.Array(types.Resource("stackit.postgresFlex.instance.backup")))
+	},
 	"stackit.postgresFlex.instance.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitPostgresFlexInstanceUser).GetId()).ToDataRes(types.String)
 	},
@@ -2163,8 +2259,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.postgresFlex.instance.user.port": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitPostgresFlexInstanceUser).GetPort()).ToDataRes(types.Int)
 	},
+	"stackit.postgresFlex.instance.backup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitPostgresFlexInstanceBackup).GetId()).ToDataRes(types.String)
+	},
+	"stackit.postgresFlex.instance.backup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitPostgresFlexInstanceBackup).GetName()).ToDataRes(types.String)
+	},
+	"stackit.postgresFlex.instance.backup.startedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitPostgresFlexInstanceBackup).GetStartedAt()).ToDataRes(types.Time)
+	},
+	"stackit.postgresFlex.instance.backup.finishedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitPostgresFlexInstanceBackup).GetFinishedAt()).ToDataRes(types.Time)
+	},
+	"stackit.postgresFlex.instance.backup.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitPostgresFlexInstanceBackup).GetSize()).ToDataRes(types.Int)
+	},
+	"stackit.postgresFlex.instance.backup.error": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitPostgresFlexInstanceBackup).GetError()).ToDataRes(types.String)
+	},
+	"stackit.postgresFlex.instance.backup.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitPostgresFlexInstanceBackup).GetLabels()).ToDataRes(types.Array(types.String))
+	},
 	"stackit.mongoDbFlex.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMongoDbFlex).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.mongoDbFlex.instance")))
+	},
+	"stackit.mongoDbFlex.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMongoDbFlex).GetVersions()).ToDataRes(types.Array(types.String))
 	},
 	"stackit.mongoDbFlex.instance.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMongoDbFlexInstance).GetId()).ToDataRes(types.String)
@@ -2205,6 +2325,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.mongoDbFlex.instance.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMongoDbFlexInstance).GetUsers()).ToDataRes(types.Array(types.Resource("stackit.mongoDbFlex.instance.user")))
 	},
+	"stackit.mongoDbFlex.instance.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMongoDbFlexInstance).GetBackups()).ToDataRes(types.Array(types.Resource("stackit.mongoDbFlex.instance.backup")))
+	},
 	"stackit.mongoDbFlex.instance.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMongoDbFlexInstanceUser).GetId()).ToDataRes(types.String)
 	},
@@ -2223,8 +2346,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.mongoDbFlex.instance.user.port": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMongoDbFlexInstanceUser).GetPort()).ToDataRes(types.Int)
 	},
+	"stackit.mongoDbFlex.instance.backup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMongoDbFlexInstanceBackup).GetId()).ToDataRes(types.String)
+	},
+	"stackit.mongoDbFlex.instance.backup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMongoDbFlexInstanceBackup).GetName()).ToDataRes(types.String)
+	},
+	"stackit.mongoDbFlex.instance.backup.startedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMongoDbFlexInstanceBackup).GetStartedAt()).ToDataRes(types.Time)
+	},
+	"stackit.mongoDbFlex.instance.backup.finishedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMongoDbFlexInstanceBackup).GetFinishedAt()).ToDataRes(types.Time)
+	},
+	"stackit.mongoDbFlex.instance.backup.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMongoDbFlexInstanceBackup).GetSize()).ToDataRes(types.Int)
+	},
+	"stackit.mongoDbFlex.instance.backup.error": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMongoDbFlexInstanceBackup).GetError()).ToDataRes(types.String)
+	},
+	"stackit.mongoDbFlex.instance.backup.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMongoDbFlexInstanceBackup).GetLabels()).ToDataRes(types.Array(types.String))
+	},
 	"stackit.sqlServerFlex.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSqlServerFlex).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.sqlServerFlex.instance")))
+	},
+	"stackit.sqlServerFlex.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlex).GetVersions()).ToDataRes(types.Array(types.String))
 	},
 	"stackit.sqlServerFlex.instance.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSqlServerFlexInstance).GetId()).ToDataRes(types.String)
@@ -2271,6 +2418,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.sqlServerFlex.instance.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSqlServerFlexInstance).GetUsers()).ToDataRes(types.Array(types.Resource("stackit.sqlServerFlex.instance.user")))
 	},
+	"stackit.sqlServerFlex.instance.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetBackups()).ToDataRes(types.Array(types.Resource("stackit.sqlServerFlex.instance.backup")))
+	},
 	"stackit.sqlServerFlex.instance.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSqlServerFlexInstanceUser).GetId()).ToDataRes(types.String)
 	},
@@ -2289,8 +2439,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.sqlServerFlex.instance.user.port": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSqlServerFlexInstanceUser).GetPort()).ToDataRes(types.Int)
 	},
+	"stackit.sqlServerFlex.instance.backup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstanceBackup).GetId()).ToDataRes(types.String)
+	},
+	"stackit.sqlServerFlex.instance.backup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstanceBackup).GetName()).ToDataRes(types.String)
+	},
+	"stackit.sqlServerFlex.instance.backup.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstanceBackup).GetDatabase()).ToDataRes(types.String)
+	},
+	"stackit.sqlServerFlex.instance.backup.startedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstanceBackup).GetStartedAt()).ToDataRes(types.Time)
+	},
+	"stackit.sqlServerFlex.instance.backup.finishedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstanceBackup).GetFinishedAt()).ToDataRes(types.Time)
+	},
+	"stackit.sqlServerFlex.instance.backup.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstanceBackup).GetSize()).ToDataRes(types.Int)
+	},
+	"stackit.sqlServerFlex.instance.backup.error": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstanceBackup).GetError()).ToDataRes(types.String)
+	},
+	"stackit.sqlServerFlex.instance.backup.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstanceBackup).GetLabels()).ToDataRes(types.Array(types.String))
+	},
 	"stackit.openSearch.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitOpenSearch).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.openSearch.instance")))
+	},
+	"stackit.openSearch.offerings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearch).GetOfferings()).ToDataRes(types.Array(types.Resource("stackit.openSearch.offering")))
 	},
 	"stackit.openSearch.instance.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitOpenSearchInstance).GetId()).ToDataRes(types.String)
@@ -2361,6 +2538,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.openSearch.instance.maxDiskThreshold": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitOpenSearchInstance).GetMaxDiskThreshold()).ToDataRes(types.Int)
 	},
+	"stackit.openSearch.instance.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetBackups()).ToDataRes(types.Array(types.Resource("stackit.openSearch.instance.backup")))
+	},
+	"stackit.openSearch.instance.offering": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetOffering()).ToDataRes(types.Resource("stackit.openSearch.offering"))
+	},
+	"stackit.openSearch.instance.plan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetPlan()).ToDataRes(types.Resource("stackit.openSearch.offering.plan"))
+	},
 	"stackit.openSearch.instance.plugins": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitOpenSearchInstance).GetPlugins()).ToDataRes(types.Array(types.String))
 	},
@@ -2373,8 +2559,68 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.openSearch.instance.tlsCiphers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitOpenSearchInstance).GetTlsCiphers()).ToDataRes(types.Array(types.String))
 	},
+	"stackit.openSearch.instance.backup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstanceBackup).GetId()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.instance.backup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstanceBackup).GetStatus()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.instance.backup.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstanceBackup).GetSize()).ToDataRes(types.Int)
+	},
+	"stackit.openSearch.instance.backup.downloadable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstanceBackup).GetDownloadable()).ToDataRes(types.Bool)
+	},
+	"stackit.openSearch.instance.backup.triggeredAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstanceBackup).GetTriggeredAt()).ToDataRes(types.Time)
+	},
+	"stackit.openSearch.instance.backup.finishedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstanceBackup).GetFinishedAt()).ToDataRes(types.Time)
+	},
+	"stackit.openSearch.offering.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchOffering).GetName()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.offering.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchOffering).GetVersion()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.offering.latest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchOffering).GetLatest()).ToDataRes(types.Bool)
+	},
+	"stackit.openSearch.offering.lifecycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchOffering).GetLifecycle()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.offering.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchOffering).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.offering.documentationUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchOffering).GetDocumentationUrl()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.offering.quotaCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchOffering).GetQuotaCount()).ToDataRes(types.Int)
+	},
+	"stackit.openSearch.offering.plans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchOffering).GetPlans()).ToDataRes(types.Array(types.Resource("stackit.openSearch.offering.plan")))
+	},
+	"stackit.openSearch.offering.plan.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchOfferingPlan).GetId()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.offering.plan.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchOfferingPlan).GetName()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.offering.plan.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchOfferingPlan).GetSkuName()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.offering.plan.free": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchOfferingPlan).GetFree()).ToDataRes(types.Bool)
+	},
+	"stackit.openSearch.offering.plan.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchOfferingPlan).GetDescription()).ToDataRes(types.String)
+	},
 	"stackit.mariaDb.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMariaDb).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.mariaDb.instance")))
+	},
+	"stackit.mariaDb.offerings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDb).GetOfferings()).ToDataRes(types.Array(types.Resource("stackit.mariaDb.offering")))
 	},
 	"stackit.mariaDb.instance.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMariaDbInstance).GetId()).ToDataRes(types.String)
@@ -2445,11 +2691,80 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.mariaDb.instance.maxDiskThreshold": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMariaDbInstance).GetMaxDiskThreshold()).ToDataRes(types.Int)
 	},
+	"stackit.mariaDb.instance.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetBackups()).ToDataRes(types.Array(types.Resource("stackit.mariaDb.instance.backup")))
+	},
+	"stackit.mariaDb.instance.offering": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetOffering()).ToDataRes(types.Resource("stackit.mariaDb.offering"))
+	},
+	"stackit.mariaDb.instance.plan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetPlan()).ToDataRes(types.Resource("stackit.mariaDb.offering.plan"))
+	},
 	"stackit.mariaDb.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMariaDbInstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
+	"stackit.mariaDb.instance.backup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstanceBackup).GetId()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.instance.backup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstanceBackup).GetStatus()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.instance.backup.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstanceBackup).GetSize()).ToDataRes(types.Int)
+	},
+	"stackit.mariaDb.instance.backup.downloadable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstanceBackup).GetDownloadable()).ToDataRes(types.Bool)
+	},
+	"stackit.mariaDb.instance.backup.triggeredAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstanceBackup).GetTriggeredAt()).ToDataRes(types.Time)
+	},
+	"stackit.mariaDb.instance.backup.finishedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstanceBackup).GetFinishedAt()).ToDataRes(types.Time)
+	},
+	"stackit.mariaDb.offering.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbOffering).GetName()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.offering.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbOffering).GetVersion()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.offering.latest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbOffering).GetLatest()).ToDataRes(types.Bool)
+	},
+	"stackit.mariaDb.offering.lifecycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbOffering).GetLifecycle()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.offering.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbOffering).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.offering.documentationUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbOffering).GetDocumentationUrl()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.offering.quotaCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbOffering).GetQuotaCount()).ToDataRes(types.Int)
+	},
+	"stackit.mariaDb.offering.plans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbOffering).GetPlans()).ToDataRes(types.Array(types.Resource("stackit.mariaDb.offering.plan")))
+	},
+	"stackit.mariaDb.offering.plan.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbOfferingPlan).GetId()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.offering.plan.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbOfferingPlan).GetName()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.offering.plan.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbOfferingPlan).GetSkuName()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.offering.plan.free": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbOfferingPlan).GetFree()).ToDataRes(types.Bool)
+	},
+	"stackit.mariaDb.offering.plan.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbOfferingPlan).GetDescription()).ToDataRes(types.String)
+	},
 	"stackit.redis.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRedis).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.redis.instance")))
+	},
+	"stackit.redis.offerings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedis).GetOfferings()).ToDataRes(types.Array(types.Resource("stackit.redis.offering")))
 	},
 	"stackit.redis.instance.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRedisInstance).GetId()).ToDataRes(types.String)
@@ -2520,6 +2835,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.redis.instance.maxDiskThreshold": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRedisInstance).GetMaxDiskThreshold()).ToDataRes(types.Int)
 	},
+	"stackit.redis.instance.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetBackups()).ToDataRes(types.Array(types.Resource("stackit.redis.instance.backup")))
+	},
+	"stackit.redis.instance.offering": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetOffering()).ToDataRes(types.Resource("stackit.redis.offering"))
+	},
+	"stackit.redis.instance.plan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetPlan()).ToDataRes(types.Resource("stackit.redis.offering.plan"))
+	},
 	"stackit.redis.instance.snapshot": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRedisInstance).GetSnapshot()).ToDataRes(types.String)
 	},
@@ -2544,8 +2868,68 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.redis.instance.tlsCiphersuites": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRedisInstance).GetTlsCiphersuites()).ToDataRes(types.String)
 	},
+	"stackit.redis.instance.backup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstanceBackup).GetId()).ToDataRes(types.String)
+	},
+	"stackit.redis.instance.backup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstanceBackup).GetStatus()).ToDataRes(types.String)
+	},
+	"stackit.redis.instance.backup.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstanceBackup).GetSize()).ToDataRes(types.Int)
+	},
+	"stackit.redis.instance.backup.downloadable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstanceBackup).GetDownloadable()).ToDataRes(types.Bool)
+	},
+	"stackit.redis.instance.backup.triggeredAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstanceBackup).GetTriggeredAt()).ToDataRes(types.Time)
+	},
+	"stackit.redis.instance.backup.finishedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstanceBackup).GetFinishedAt()).ToDataRes(types.Time)
+	},
+	"stackit.redis.offering.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisOffering).GetName()).ToDataRes(types.String)
+	},
+	"stackit.redis.offering.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisOffering).GetVersion()).ToDataRes(types.String)
+	},
+	"stackit.redis.offering.latest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisOffering).GetLatest()).ToDataRes(types.Bool)
+	},
+	"stackit.redis.offering.lifecycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisOffering).GetLifecycle()).ToDataRes(types.String)
+	},
+	"stackit.redis.offering.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisOffering).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.redis.offering.documentationUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisOffering).GetDocumentationUrl()).ToDataRes(types.String)
+	},
+	"stackit.redis.offering.quotaCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisOffering).GetQuotaCount()).ToDataRes(types.Int)
+	},
+	"stackit.redis.offering.plans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisOffering).GetPlans()).ToDataRes(types.Array(types.Resource("stackit.redis.offering.plan")))
+	},
+	"stackit.redis.offering.plan.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisOfferingPlan).GetId()).ToDataRes(types.String)
+	},
+	"stackit.redis.offering.plan.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisOfferingPlan).GetName()).ToDataRes(types.String)
+	},
+	"stackit.redis.offering.plan.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisOfferingPlan).GetSkuName()).ToDataRes(types.String)
+	},
+	"stackit.redis.offering.plan.free": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisOfferingPlan).GetFree()).ToDataRes(types.Bool)
+	},
+	"stackit.redis.offering.plan.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisOfferingPlan).GetDescription()).ToDataRes(types.String)
+	},
 	"stackit.rabbitMq.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMq).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.rabbitMq.instance")))
+	},
+	"stackit.rabbitMq.offerings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMq).GetOfferings()).ToDataRes(types.Array(types.Resource("stackit.rabbitMq.offering")))
 	},
 	"stackit.rabbitMq.instance.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMqInstance).GetId()).ToDataRes(types.String)
@@ -2616,6 +3000,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.rabbitMq.instance.maxDiskThreshold": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMqInstance).GetMaxDiskThreshold()).ToDataRes(types.Int)
 	},
+	"stackit.rabbitMq.instance.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetBackups()).ToDataRes(types.Array(types.Resource("stackit.rabbitMq.instance.backup")))
+	},
+	"stackit.rabbitMq.instance.offering": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetOffering()).ToDataRes(types.Resource("stackit.rabbitMq.offering"))
+	},
+	"stackit.rabbitMq.instance.plan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetPlan()).ToDataRes(types.Resource("stackit.rabbitMq.offering.plan"))
+	},
 	"stackit.rabbitMq.instance.plugins": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMqInstance).GetPlugins()).ToDataRes(types.Array(types.String))
 	},
@@ -2628,8 +3021,68 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.rabbitMq.instance.tlsCiphers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMqInstance).GetTlsCiphers()).ToDataRes(types.Array(types.String))
 	},
+	"stackit.rabbitMq.instance.backup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstanceBackup).GetId()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.instance.backup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstanceBackup).GetStatus()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.instance.backup.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstanceBackup).GetSize()).ToDataRes(types.Int)
+	},
+	"stackit.rabbitMq.instance.backup.downloadable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstanceBackup).GetDownloadable()).ToDataRes(types.Bool)
+	},
+	"stackit.rabbitMq.instance.backup.triggeredAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstanceBackup).GetTriggeredAt()).ToDataRes(types.Time)
+	},
+	"stackit.rabbitMq.instance.backup.finishedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstanceBackup).GetFinishedAt()).ToDataRes(types.Time)
+	},
+	"stackit.rabbitMq.offering.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqOffering).GetName()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.offering.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqOffering).GetVersion()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.offering.latest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqOffering).GetLatest()).ToDataRes(types.Bool)
+	},
+	"stackit.rabbitMq.offering.lifecycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqOffering).GetLifecycle()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.offering.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqOffering).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.offering.documentationUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqOffering).GetDocumentationUrl()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.offering.quotaCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqOffering).GetQuotaCount()).ToDataRes(types.Int)
+	},
+	"stackit.rabbitMq.offering.plans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqOffering).GetPlans()).ToDataRes(types.Array(types.Resource("stackit.rabbitMq.offering.plan")))
+	},
+	"stackit.rabbitMq.offering.plan.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqOfferingPlan).GetId()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.offering.plan.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqOfferingPlan).GetName()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.offering.plan.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqOfferingPlan).GetSkuName()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.offering.plan.free": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqOfferingPlan).GetFree()).ToDataRes(types.Bool)
+	},
+	"stackit.rabbitMq.offering.plan.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqOfferingPlan).GetDescription()).ToDataRes(types.String)
+	},
 	"stackit.logMe.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMe).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.logMe.instance")))
+	},
+	"stackit.logMe.offerings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMe).GetOfferings()).ToDataRes(types.Array(types.Resource("stackit.logMe.offering")))
 	},
 	"stackit.logMe.instance.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMeInstance).GetId()).ToDataRes(types.String)
@@ -2700,6 +3153,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.logMe.instance.maxDiskThreshold": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMeInstance).GetMaxDiskThreshold()).ToDataRes(types.Int)
 	},
+	"stackit.logMe.instance.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetBackups()).ToDataRes(types.Array(types.Resource("stackit.logMe.instance.backup")))
+	},
+	"stackit.logMe.instance.offering": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetOffering()).ToDataRes(types.Resource("stackit.logMe.offering"))
+	},
+	"stackit.logMe.instance.plan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetPlan()).ToDataRes(types.Resource("stackit.logMe.offering.plan"))
+	},
 	"stackit.logMe.instance.fluentdTcpPort": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMeInstance).GetFluentdTcpPort()).ToDataRes(types.Int)
 	},
@@ -2726,6 +3188,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.logMe.instance.opensearchTlsCiphers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMeInstance).GetOpensearchTlsCiphers()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.logMe.instance.backup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstanceBackup).GetId()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.backup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstanceBackup).GetStatus()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.backup.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstanceBackup).GetSize()).ToDataRes(types.Int)
+	},
+	"stackit.logMe.instance.backup.downloadable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstanceBackup).GetDownloadable()).ToDataRes(types.Bool)
+	},
+	"stackit.logMe.instance.backup.triggeredAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstanceBackup).GetTriggeredAt()).ToDataRes(types.Time)
+	},
+	"stackit.logMe.instance.backup.finishedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstanceBackup).GetFinishedAt()).ToDataRes(types.Time)
+	},
+	"stackit.logMe.offering.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeOffering).GetName()).ToDataRes(types.String)
+	},
+	"stackit.logMe.offering.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeOffering).GetVersion()).ToDataRes(types.String)
+	},
+	"stackit.logMe.offering.latest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeOffering).GetLatest()).ToDataRes(types.Bool)
+	},
+	"stackit.logMe.offering.lifecycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeOffering).GetLifecycle()).ToDataRes(types.String)
+	},
+	"stackit.logMe.offering.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeOffering).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.logMe.offering.documentationUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeOffering).GetDocumentationUrl()).ToDataRes(types.String)
+	},
+	"stackit.logMe.offering.quotaCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeOffering).GetQuotaCount()).ToDataRes(types.Int)
+	},
+	"stackit.logMe.offering.plans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeOffering).GetPlans()).ToDataRes(types.Array(types.Resource("stackit.logMe.offering.plan")))
+	},
+	"stackit.logMe.offering.plan.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeOfferingPlan).GetId()).ToDataRes(types.String)
+	},
+	"stackit.logMe.offering.plan.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeOfferingPlan).GetName()).ToDataRes(types.String)
+	},
+	"stackit.logMe.offering.plan.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeOfferingPlan).GetSkuName()).ToDataRes(types.String)
+	},
+	"stackit.logMe.offering.plan.free": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeOfferingPlan).GetFree()).ToDataRes(types.Bool)
+	},
+	"stackit.logMe.offering.plan.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeOfferingPlan).GetDescription()).ToDataRes(types.String)
 	},
 	"stackit.secretsManager.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecretsManager).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.secretsManager.instance")))
@@ -5875,6 +6394,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitPostgresFlex).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.postgresFlex.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitPostgresFlex).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.postgresFlex.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitPostgresFlexInstance).__id, ok = v.Value.(string)
 		return
@@ -5931,6 +6454,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitPostgresFlexInstance).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.postgresFlex.instance.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitPostgresFlexInstance).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.postgresFlex.instance.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitPostgresFlexInstanceUser).__id, ok = v.Value.(string)
 		return
@@ -5955,12 +6482,48 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitPostgresFlexInstanceUser).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"stackit.postgresFlex.instance.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitPostgresFlexInstanceBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.postgresFlex.instance.backup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitPostgresFlexInstanceBackup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.postgresFlex.instance.backup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitPostgresFlexInstanceBackup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.postgresFlex.instance.backup.startedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitPostgresFlexInstanceBackup).StartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.postgresFlex.instance.backup.finishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitPostgresFlexInstanceBackup).FinishedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.postgresFlex.instance.backup.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitPostgresFlexInstanceBackup).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.postgresFlex.instance.backup.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitPostgresFlexInstanceBackup).Error, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.postgresFlex.instance.backup.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitPostgresFlexInstanceBackup).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.mongoDbFlex.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitMongoDbFlex).__id, ok = v.Value.(string)
 		return
 	},
 	"stackit.mongoDbFlex.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitMongoDbFlex).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.mongoDbFlex.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMongoDbFlex).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.mongoDbFlex.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6019,6 +6582,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitMongoDbFlexInstance).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.mongoDbFlex.instance.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMongoDbFlexInstance).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.mongoDbFlex.instance.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitMongoDbFlexInstanceUser).__id, ok = v.Value.(string)
 		return
@@ -6047,12 +6614,48 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitMongoDbFlexInstanceUser).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"stackit.mongoDbFlex.instance.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMongoDbFlexInstanceBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.mongoDbFlex.instance.backup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMongoDbFlexInstanceBackup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mongoDbFlex.instance.backup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMongoDbFlexInstanceBackup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mongoDbFlex.instance.backup.startedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMongoDbFlexInstanceBackup).StartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.mongoDbFlex.instance.backup.finishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMongoDbFlexInstanceBackup).FinishedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.mongoDbFlex.instance.backup.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMongoDbFlexInstanceBackup).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.mongoDbFlex.instance.backup.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMongoDbFlexInstanceBackup).Error, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mongoDbFlex.instance.backup.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMongoDbFlexInstanceBackup).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.sqlServerFlex.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSqlServerFlex).__id, ok = v.Value.(string)
 		return
 	},
 	"stackit.sqlServerFlex.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSqlServerFlex).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlex).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.sqlServerFlex.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6119,6 +6722,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitSqlServerFlexInstance).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.sqlServerFlex.instance.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.sqlServerFlex.instance.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSqlServerFlexInstanceUser).__id, ok = v.Value.(string)
 		return
@@ -6147,12 +6754,52 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitSqlServerFlexInstanceUser).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"stackit.sqlServerFlex.instance.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstanceBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.sqlServerFlex.instance.backup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstanceBackup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.backup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstanceBackup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.backup.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstanceBackup).Database, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.backup.startedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstanceBackup).StartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.backup.finishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstanceBackup).FinishedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.backup.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstanceBackup).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.backup.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstanceBackup).Error, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.backup.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstanceBackup).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.openSearch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitOpenSearch).__id, ok = v.Value.(string)
 		return
 	},
 	"stackit.openSearch.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitOpenSearch).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.offerings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearch).Offerings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.openSearch.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6251,6 +6898,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitOpenSearchInstance).MaxDiskThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"stackit.openSearch.instance.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.offering": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).Offering, ok = plugin.RawToTValue[*mqlStackitOpenSearchOffering](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.plan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).Plan, ok = plugin.RawToTValue[*mqlStackitOpenSearchOfferingPlan](v.Value, v.Error)
+		return
+	},
 	"stackit.openSearch.instance.plugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitOpenSearchInstance).Plugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -6267,12 +6926,104 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitOpenSearchInstance).TlsCiphers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.openSearch.instance.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstanceBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.openSearch.instance.backup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstanceBackup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.backup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstanceBackup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.backup.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstanceBackup).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.backup.downloadable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstanceBackup).Downloadable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.backup.triggeredAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstanceBackup).TriggeredAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.backup.finishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstanceBackup).FinishedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.offering.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchOffering).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.openSearch.offering.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchOffering).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.offering.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchOffering).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.offering.latest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchOffering).Latest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.offering.lifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchOffering).Lifecycle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.offering.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchOffering).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.offering.documentationUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchOffering).DocumentationUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.offering.quotaCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchOffering).QuotaCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.offering.plans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchOffering).Plans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.offering.plan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchOfferingPlan).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.openSearch.offering.plan.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchOfferingPlan).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.offering.plan.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchOfferingPlan).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.offering.plan.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchOfferingPlan).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.offering.plan.free": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchOfferingPlan).Free, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.offering.plan.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchOfferingPlan).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"stackit.mariaDb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitMariaDb).__id, ok = v.Value.(string)
 		return
 	},
 	"stackit.mariaDb.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitMariaDb).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.offerings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDb).Offerings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.mariaDb.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6371,8 +7122,108 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitMariaDbInstance).MaxDiskThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"stackit.mariaDb.instance.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.offering": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).Offering, ok = plugin.RawToTValue[*mqlStackitMariaDbOffering](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.plan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).Plan, ok = plugin.RawToTValue[*mqlStackitMariaDbOfferingPlan](v.Value, v.Error)
+		return
+	},
 	"stackit.mariaDb.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitMariaDbInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstanceBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.mariaDb.instance.backup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstanceBackup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.backup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstanceBackup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.backup.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstanceBackup).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.backup.downloadable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstanceBackup).Downloadable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.backup.triggeredAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstanceBackup).TriggeredAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.backup.finishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstanceBackup).FinishedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.offering.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbOffering).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.mariaDb.offering.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbOffering).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.offering.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbOffering).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.offering.latest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbOffering).Latest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.offering.lifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbOffering).Lifecycle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.offering.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbOffering).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.offering.documentationUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbOffering).DocumentationUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.offering.quotaCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbOffering).QuotaCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.offering.plans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbOffering).Plans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.offering.plan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbOfferingPlan).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.mariaDb.offering.plan.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbOfferingPlan).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.offering.plan.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbOfferingPlan).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.offering.plan.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbOfferingPlan).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.offering.plan.free": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbOfferingPlan).Free, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.offering.plan.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbOfferingPlan).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"stackit.redis.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6381,6 +7232,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.redis.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitRedis).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.offerings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedis).Offerings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.redis.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6479,6 +7334,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitRedisInstance).MaxDiskThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"stackit.redis.instance.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.offering": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).Offering, ok = plugin.RawToTValue[*mqlStackitRedisOffering](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.plan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).Plan, ok = plugin.RawToTValue[*mqlStackitRedisOfferingPlan](v.Value, v.Error)
+		return
+	},
 	"stackit.redis.instance.snapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitRedisInstance).Snapshot, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6511,12 +7378,104 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitRedisInstance).TlsCiphersuites, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"stackit.redis.instance.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstanceBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.redis.instance.backup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstanceBackup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.backup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstanceBackup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.backup.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstanceBackup).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.backup.downloadable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstanceBackup).Downloadable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.backup.triggeredAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstanceBackup).TriggeredAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.backup.finishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstanceBackup).FinishedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.offering.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisOffering).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.redis.offering.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisOffering).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.offering.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisOffering).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.offering.latest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisOffering).Latest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.offering.lifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisOffering).Lifecycle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.offering.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisOffering).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.offering.documentationUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisOffering).DocumentationUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.offering.quotaCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisOffering).QuotaCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.offering.plans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisOffering).Plans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.offering.plan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisOfferingPlan).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.redis.offering.plan.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisOfferingPlan).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.offering.plan.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisOfferingPlan).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.offering.plan.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisOfferingPlan).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.offering.plan.free": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisOfferingPlan).Free, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.offering.plan.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisOfferingPlan).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"stackit.rabbitMq.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitRabbitMq).__id, ok = v.Value.(string)
 		return
 	},
 	"stackit.rabbitMq.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitRabbitMq).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.offerings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMq).Offerings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.rabbitMq.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6615,6 +7574,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitRabbitMqInstance).MaxDiskThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"stackit.rabbitMq.instance.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.offering": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).Offering, ok = plugin.RawToTValue[*mqlStackitRabbitMqOffering](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.plan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).Plan, ok = plugin.RawToTValue[*mqlStackitRabbitMqOfferingPlan](v.Value, v.Error)
+		return
+	},
 	"stackit.rabbitMq.instance.plugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitRabbitMqInstance).Plugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -6631,12 +7602,104 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitRabbitMqInstance).TlsCiphers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.rabbitMq.instance.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstanceBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.rabbitMq.instance.backup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstanceBackup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.backup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstanceBackup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.backup.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstanceBackup).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.backup.downloadable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstanceBackup).Downloadable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.backup.triggeredAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstanceBackup).TriggeredAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.backup.finishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstanceBackup).FinishedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.offering.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqOffering).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.rabbitMq.offering.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqOffering).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.offering.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqOffering).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.offering.latest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqOffering).Latest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.offering.lifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqOffering).Lifecycle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.offering.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqOffering).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.offering.documentationUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqOffering).DocumentationUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.offering.quotaCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqOffering).QuotaCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.offering.plans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqOffering).Plans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.offering.plan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqOfferingPlan).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.rabbitMq.offering.plan.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqOfferingPlan).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.offering.plan.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqOfferingPlan).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.offering.plan.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqOfferingPlan).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.offering.plan.free": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqOfferingPlan).Free, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.offering.plan.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqOfferingPlan).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"stackit.logMe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogMe).__id, ok = v.Value.(string)
 		return
 	},
 	"stackit.logMe.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogMe).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.offerings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMe).Offerings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.logMe.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6735,6 +7798,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitLogMeInstance).MaxDiskThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"stackit.logMe.instance.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.offering": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).Offering, ok = plugin.RawToTValue[*mqlStackitLogMeOffering](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.plan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).Plan, ok = plugin.RawToTValue[*mqlStackitLogMeOfferingPlan](v.Value, v.Error)
+		return
+	},
 	"stackit.logMe.instance.fluentdTcpPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogMeInstance).FluentdTcpPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -6769,6 +7844,94 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.logMe.instance.opensearchTlsCiphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogMeInstance).OpensearchTlsCiphers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstanceBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.logMe.instance.backup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstanceBackup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.backup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstanceBackup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.backup.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstanceBackup).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.backup.downloadable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstanceBackup).Downloadable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.backup.triggeredAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstanceBackup).TriggeredAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.backup.finishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstanceBackup).FinishedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.offering.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeOffering).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.logMe.offering.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeOffering).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.offering.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeOffering).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.offering.latest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeOffering).Latest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.offering.lifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeOffering).Lifecycle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.offering.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeOffering).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.offering.documentationUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeOffering).DocumentationUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.offering.quotaCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeOffering).QuotaCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.offering.plans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeOffering).Plans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.offering.plan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeOfferingPlan).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.logMe.offering.plan.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeOfferingPlan).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.offering.plan.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeOfferingPlan).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.offering.plan.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeOfferingPlan).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.offering.plan.free": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeOfferingPlan).Free, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.offering.plan.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeOfferingPlan).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"stackit.secretsManager.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13881,6 +15044,7 @@ type mqlStackitPostgresFlex struct {
 	__id       string
 	// optional: if you define mqlStackitPostgresFlexInternal it will be used here
 	Instances plugin.TValue[[]any]
+	Versions  plugin.TValue[[]any]
 }
 
 // createStackitPostgresFlex creates a new instance of this resource
@@ -13936,6 +15100,12 @@ func (c *mqlStackitPostgresFlex) GetInstances() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitPostgresFlex) GetVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Versions, func() ([]any, error) {
+		return c.versions()
+	})
+}
+
 // mqlStackitPostgresFlexInstance for the stackit.postgresFlex.instance resource
 type mqlStackitPostgresFlexInstance struct {
 	MqlRuntime *plugin.Runtime
@@ -13954,6 +15124,7 @@ type mqlStackitPostgresFlexInstance struct {
 	Options           plugin.TValue[map[string]any]
 	InternetReachable plugin.TValue[bool]
 	Users             plugin.TValue[[]any]
+	Backups           plugin.TValue[[]any]
 }
 
 // createStackitPostgresFlexInstance creates a new instance of this resource
@@ -14073,6 +15244,22 @@ func (c *mqlStackitPostgresFlexInstance) GetUsers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitPostgresFlexInstance) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.postgresFlex.instance", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
 // mqlStackitPostgresFlexInstanceUser for the stackit.postgresFlex.instance.user resource
 type mqlStackitPostgresFlexInstanceUser struct {
 	MqlRuntime *plugin.Runtime
@@ -14143,12 +15330,87 @@ func (c *mqlStackitPostgresFlexInstanceUser) GetPort() *plugin.TValue[int64] {
 	})
 }
 
+// mqlStackitPostgresFlexInstanceBackup for the stackit.postgresFlex.instance.backup resource
+type mqlStackitPostgresFlexInstanceBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitPostgresFlexInstanceBackupInternal it will be used here
+	Id         plugin.TValue[string]
+	Name       plugin.TValue[string]
+	StartedAt  plugin.TValue[*time.Time]
+	FinishedAt plugin.TValue[*time.Time]
+	Size       plugin.TValue[int64]
+	Error      plugin.TValue[string]
+	Labels     plugin.TValue[[]any]
+}
+
+// createStackitPostgresFlexInstanceBackup creates a new instance of this resource
+func createStackitPostgresFlexInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitPostgresFlexInstanceBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.postgresFlex.instance.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitPostgresFlexInstanceBackup) MqlName() string {
+	return "stackit.postgresFlex.instance.backup"
+}
+
+func (c *mqlStackitPostgresFlexInstanceBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitPostgresFlexInstanceBackup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitPostgresFlexInstanceBackup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitPostgresFlexInstanceBackup) GetStartedAt() *plugin.TValue[*time.Time] {
+	return &c.StartedAt
+}
+
+func (c *mqlStackitPostgresFlexInstanceBackup) GetFinishedAt() *plugin.TValue[*time.Time] {
+	return &c.FinishedAt
+}
+
+func (c *mqlStackitPostgresFlexInstanceBackup) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlStackitPostgresFlexInstanceBackup) GetError() *plugin.TValue[string] {
+	return &c.Error
+}
+
+func (c *mqlStackitPostgresFlexInstanceBackup) GetLabels() *plugin.TValue[[]any] {
+	return &c.Labels
+}
+
 // mqlStackitMongoDbFlex for the stackit.mongoDbFlex resource
 type mqlStackitMongoDbFlex struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitMongoDbFlexInternal it will be used here
 	Instances plugin.TValue[[]any]
+	Versions  plugin.TValue[[]any]
 }
 
 // createStackitMongoDbFlex creates a new instance of this resource
@@ -14204,6 +15466,12 @@ func (c *mqlStackitMongoDbFlex) GetInstances() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitMongoDbFlex) GetVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Versions, func() ([]any, error) {
+		return c.versions()
+	})
+}
+
 // mqlStackitMongoDbFlexInstance for the stackit.mongoDbFlex.instance resource
 type mqlStackitMongoDbFlexInstance struct {
 	MqlRuntime *plugin.Runtime
@@ -14222,6 +15490,7 @@ type mqlStackitMongoDbFlexInstance struct {
 	Options           plugin.TValue[map[string]any]
 	InternetReachable plugin.TValue[bool]
 	Users             plugin.TValue[[]any]
+	Backups           plugin.TValue[[]any]
 }
 
 // createStackitMongoDbFlexInstance creates a new instance of this resource
@@ -14341,6 +15610,22 @@ func (c *mqlStackitMongoDbFlexInstance) GetUsers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitMongoDbFlexInstance) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.mongoDbFlex.instance", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
 // mqlStackitMongoDbFlexInstanceUser for the stackit.mongoDbFlex.instance.user resource
 type mqlStackitMongoDbFlexInstanceUser struct {
 	MqlRuntime *plugin.Runtime
@@ -14418,12 +15703,87 @@ func (c *mqlStackitMongoDbFlexInstanceUser) GetPort() *plugin.TValue[int64] {
 	})
 }
 
+// mqlStackitMongoDbFlexInstanceBackup for the stackit.mongoDbFlex.instance.backup resource
+type mqlStackitMongoDbFlexInstanceBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitMongoDbFlexInstanceBackupInternal it will be used here
+	Id         plugin.TValue[string]
+	Name       plugin.TValue[string]
+	StartedAt  plugin.TValue[*time.Time]
+	FinishedAt plugin.TValue[*time.Time]
+	Size       plugin.TValue[int64]
+	Error      plugin.TValue[string]
+	Labels     plugin.TValue[[]any]
+}
+
+// createStackitMongoDbFlexInstanceBackup creates a new instance of this resource
+func createStackitMongoDbFlexInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitMongoDbFlexInstanceBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.mongoDbFlex.instance.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitMongoDbFlexInstanceBackup) MqlName() string {
+	return "stackit.mongoDbFlex.instance.backup"
+}
+
+func (c *mqlStackitMongoDbFlexInstanceBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitMongoDbFlexInstanceBackup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitMongoDbFlexInstanceBackup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitMongoDbFlexInstanceBackup) GetStartedAt() *plugin.TValue[*time.Time] {
+	return &c.StartedAt
+}
+
+func (c *mqlStackitMongoDbFlexInstanceBackup) GetFinishedAt() *plugin.TValue[*time.Time] {
+	return &c.FinishedAt
+}
+
+func (c *mqlStackitMongoDbFlexInstanceBackup) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlStackitMongoDbFlexInstanceBackup) GetError() *plugin.TValue[string] {
+	return &c.Error
+}
+
+func (c *mqlStackitMongoDbFlexInstanceBackup) GetLabels() *plugin.TValue[[]any] {
+	return &c.Labels
+}
+
 // mqlStackitSqlServerFlex for the stackit.sqlServerFlex resource
 type mqlStackitSqlServerFlex struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitSqlServerFlexInternal it will be used here
 	Instances plugin.TValue[[]any]
+	Versions  plugin.TValue[[]any]
 }
 
 // createStackitSqlServerFlex creates a new instance of this resource
@@ -14474,6 +15834,12 @@ func (c *mqlStackitSqlServerFlex) GetInstances() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitSqlServerFlex) GetVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Versions, func() ([]any, error) {
+		return c.versions()
+	})
+}
+
 // mqlStackitSqlServerFlexInstance for the stackit.sqlServerFlex.instance resource
 type mqlStackitSqlServerFlexInstance struct {
 	MqlRuntime *plugin.Runtime
@@ -14494,6 +15860,7 @@ type mqlStackitSqlServerFlexInstance struct {
 	BackupRetentionDays plugin.TValue[int64]
 	InternetReachable   plugin.TValue[bool]
 	Users               plugin.TValue[[]any]
+	Backups             plugin.TValue[[]any]
 }
 
 // createStackitSqlServerFlexInstance creates a new instance of this resource
@@ -14625,6 +15992,22 @@ func (c *mqlStackitSqlServerFlexInstance) GetUsers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitSqlServerFlexInstance) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.sqlServerFlex.instance", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
 // mqlStackitSqlServerFlexInstanceUser for the stackit.sqlServerFlex.instance.user resource
 type mqlStackitSqlServerFlexInstanceUser struct {
 	MqlRuntime *plugin.Runtime
@@ -14702,12 +16085,92 @@ func (c *mqlStackitSqlServerFlexInstanceUser) GetPort() *plugin.TValue[int64] {
 	})
 }
 
+// mqlStackitSqlServerFlexInstanceBackup for the stackit.sqlServerFlex.instance.backup resource
+type mqlStackitSqlServerFlexInstanceBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitSqlServerFlexInstanceBackupInternal it will be used here
+	Id         plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Database   plugin.TValue[string]
+	StartedAt  plugin.TValue[*time.Time]
+	FinishedAt plugin.TValue[*time.Time]
+	Size       plugin.TValue[int64]
+	Error      plugin.TValue[string]
+	Labels     plugin.TValue[[]any]
+}
+
+// createStackitSqlServerFlexInstanceBackup creates a new instance of this resource
+func createStackitSqlServerFlexInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitSqlServerFlexInstanceBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.sqlServerFlex.instance.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitSqlServerFlexInstanceBackup) MqlName() string {
+	return "stackit.sqlServerFlex.instance.backup"
+}
+
+func (c *mqlStackitSqlServerFlexInstanceBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitSqlServerFlexInstanceBackup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitSqlServerFlexInstanceBackup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitSqlServerFlexInstanceBackup) GetDatabase() *plugin.TValue[string] {
+	return &c.Database
+}
+
+func (c *mqlStackitSqlServerFlexInstanceBackup) GetStartedAt() *plugin.TValue[*time.Time] {
+	return &c.StartedAt
+}
+
+func (c *mqlStackitSqlServerFlexInstanceBackup) GetFinishedAt() *plugin.TValue[*time.Time] {
+	return &c.FinishedAt
+}
+
+func (c *mqlStackitSqlServerFlexInstanceBackup) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlStackitSqlServerFlexInstanceBackup) GetError() *plugin.TValue[string] {
+	return &c.Error
+}
+
+func (c *mqlStackitSqlServerFlexInstanceBackup) GetLabels() *plugin.TValue[[]any] {
+	return &c.Labels
+}
+
 // mqlStackitOpenSearch for the stackit.openSearch resource
 type mqlStackitOpenSearch struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitOpenSearchInternal it will be used here
+	mqlStackitOpenSearchInternal
 	Instances plugin.TValue[[]any]
+	Offerings plugin.TValue[[]any]
 }
 
 // createStackitOpenSearch creates a new instance of this resource
@@ -14763,6 +16226,22 @@ func (c *mqlStackitOpenSearch) GetInstances() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitOpenSearch) GetOfferings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Offerings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.openSearch", c.__id, "offerings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.offerings()
+	})
+}
+
 // mqlStackitOpenSearchInstance for the stackit.openSearch.instance resource
 type mqlStackitOpenSearchInstance struct {
 	MqlRuntime *plugin.Runtime
@@ -14791,6 +16270,9 @@ type mqlStackitOpenSearchInstance struct {
 	MonitoringEnabled        plugin.TValue[bool]
 	MonitoringInstance       plugin.TValue[*mqlStackitObservabilityInstance]
 	MaxDiskThreshold         plugin.TValue[int64]
+	Backups                  plugin.TValue[[]any]
+	Offering                 plugin.TValue[*mqlStackitOpenSearchOffering]
+	Plan                     plugin.TValue[*mqlStackitOpenSearchOfferingPlan]
 	Plugins                  plugin.TValue[[]any]
 	InternetReachable        plugin.TValue[bool]
 	TlsProtocols             plugin.TValue[[]any]
@@ -14948,6 +16430,54 @@ func (c *mqlStackitOpenSearchInstance) GetMaxDiskThreshold() *plugin.TValue[int6
 	})
 }
 
+func (c *mqlStackitOpenSearchInstance) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.openSearch.instance", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+func (c *mqlStackitOpenSearchInstance) GetOffering() *plugin.TValue[*mqlStackitOpenSearchOffering] {
+	return plugin.GetOrCompute[*mqlStackitOpenSearchOffering](&c.Offering, func() (*mqlStackitOpenSearchOffering, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.openSearch.instance", c.__id, "offering")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitOpenSearchOffering), nil
+			}
+		}
+
+		return c.offering()
+	})
+}
+
+func (c *mqlStackitOpenSearchInstance) GetPlan() *plugin.TValue[*mqlStackitOpenSearchOfferingPlan] {
+	return plugin.GetOrCompute[*mqlStackitOpenSearchOfferingPlan](&c.Plan, func() (*mqlStackitOpenSearchOfferingPlan, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.openSearch.instance", c.__id, "plan")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitOpenSearchOfferingPlan), nil
+			}
+		}
+
+		return c.plan()
+	})
+}
+
 func (c *mqlStackitOpenSearchInstance) GetPlugins() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Plugins, func() ([]any, error) {
 		return c.plugins()
@@ -14972,12 +16502,237 @@ func (c *mqlStackitOpenSearchInstance) GetTlsCiphers() *plugin.TValue[[]any] {
 	})
 }
 
+// mqlStackitOpenSearchInstanceBackup for the stackit.openSearch.instance.backup resource
+type mqlStackitOpenSearchInstanceBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitOpenSearchInstanceBackupInternal it will be used here
+	Id           plugin.TValue[string]
+	Status       plugin.TValue[string]
+	Size         plugin.TValue[int64]
+	Downloadable plugin.TValue[bool]
+	TriggeredAt  plugin.TValue[*time.Time]
+	FinishedAt   plugin.TValue[*time.Time]
+}
+
+// createStackitOpenSearchInstanceBackup creates a new instance of this resource
+func createStackitOpenSearchInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitOpenSearchInstanceBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.openSearch.instance.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitOpenSearchInstanceBackup) MqlName() string {
+	return "stackit.openSearch.instance.backup"
+}
+
+func (c *mqlStackitOpenSearchInstanceBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitOpenSearchInstanceBackup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitOpenSearchInstanceBackup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlStackitOpenSearchInstanceBackup) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlStackitOpenSearchInstanceBackup) GetDownloadable() *plugin.TValue[bool] {
+	return &c.Downloadable
+}
+
+func (c *mqlStackitOpenSearchInstanceBackup) GetTriggeredAt() *plugin.TValue[*time.Time] {
+	return &c.TriggeredAt
+}
+
+func (c *mqlStackitOpenSearchInstanceBackup) GetFinishedAt() *plugin.TValue[*time.Time] {
+	return &c.FinishedAt
+}
+
+// mqlStackitOpenSearchOffering for the stackit.openSearch.offering resource
+type mqlStackitOpenSearchOffering struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlStackitOpenSearchOfferingInternal
+	Name             plugin.TValue[string]
+	Version          plugin.TValue[string]
+	Latest           plugin.TValue[bool]
+	Lifecycle        plugin.TValue[string]
+	Description      plugin.TValue[string]
+	DocumentationUrl plugin.TValue[string]
+	QuotaCount       plugin.TValue[int64]
+	Plans            plugin.TValue[[]any]
+}
+
+// createStackitOpenSearchOffering creates a new instance of this resource
+func createStackitOpenSearchOffering(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitOpenSearchOffering{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.openSearch.offering", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitOpenSearchOffering) MqlName() string {
+	return "stackit.openSearch.offering"
+}
+
+func (c *mqlStackitOpenSearchOffering) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitOpenSearchOffering) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitOpenSearchOffering) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlStackitOpenSearchOffering) GetLatest() *plugin.TValue[bool] {
+	return &c.Latest
+}
+
+func (c *mqlStackitOpenSearchOffering) GetLifecycle() *plugin.TValue[string] {
+	return &c.Lifecycle
+}
+
+func (c *mqlStackitOpenSearchOffering) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitOpenSearchOffering) GetDocumentationUrl() *plugin.TValue[string] {
+	return &c.DocumentationUrl
+}
+
+func (c *mqlStackitOpenSearchOffering) GetQuotaCount() *plugin.TValue[int64] {
+	return &c.QuotaCount
+}
+
+func (c *mqlStackitOpenSearchOffering) GetPlans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.openSearch.offering", c.__id, "plans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.plans()
+	})
+}
+
+// mqlStackitOpenSearchOfferingPlan for the stackit.openSearch.offering.plan resource
+type mqlStackitOpenSearchOfferingPlan struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitOpenSearchOfferingPlanInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	SkuName     plugin.TValue[string]
+	Free        plugin.TValue[bool]
+	Description plugin.TValue[string]
+}
+
+// createStackitOpenSearchOfferingPlan creates a new instance of this resource
+func createStackitOpenSearchOfferingPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitOpenSearchOfferingPlan{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.openSearch.offering.plan", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitOpenSearchOfferingPlan) MqlName() string {
+	return "stackit.openSearch.offering.plan"
+}
+
+func (c *mqlStackitOpenSearchOfferingPlan) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitOpenSearchOfferingPlan) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitOpenSearchOfferingPlan) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitOpenSearchOfferingPlan) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlStackitOpenSearchOfferingPlan) GetFree() *plugin.TValue[bool] {
+	return &c.Free
+}
+
+func (c *mqlStackitOpenSearchOfferingPlan) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
 // mqlStackitMariaDb for the stackit.mariaDb resource
 type mqlStackitMariaDb struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitMariaDbInternal it will be used here
+	mqlStackitMariaDbInternal
 	Instances plugin.TValue[[]any]
+	Offerings plugin.TValue[[]any]
 }
 
 // createStackitMariaDb creates a new instance of this resource
@@ -15033,6 +16788,22 @@ func (c *mqlStackitMariaDb) GetInstances() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitMariaDb) GetOfferings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Offerings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.mariaDb", c.__id, "offerings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.offerings()
+	})
+}
+
 // mqlStackitMariaDbInstance for the stackit.mariaDb.instance resource
 type mqlStackitMariaDbInstance struct {
 	MqlRuntime *plugin.Runtime
@@ -15061,6 +16832,9 @@ type mqlStackitMariaDbInstance struct {
 	MonitoringEnabled        plugin.TValue[bool]
 	MonitoringInstance       plugin.TValue[*mqlStackitObservabilityInstance]
 	MaxDiskThreshold         plugin.TValue[int64]
+	Backups                  plugin.TValue[[]any]
+	Offering                 plugin.TValue[*mqlStackitMariaDbOffering]
+	Plan                     plugin.TValue[*mqlStackitMariaDbOfferingPlan]
 	InternetReachable        plugin.TValue[bool]
 }
 
@@ -15215,18 +16989,291 @@ func (c *mqlStackitMariaDbInstance) GetMaxDiskThreshold() *plugin.TValue[int64] 
 	})
 }
 
+func (c *mqlStackitMariaDbInstance) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.mariaDb.instance", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+func (c *mqlStackitMariaDbInstance) GetOffering() *plugin.TValue[*mqlStackitMariaDbOffering] {
+	return plugin.GetOrCompute[*mqlStackitMariaDbOffering](&c.Offering, func() (*mqlStackitMariaDbOffering, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.mariaDb.instance", c.__id, "offering")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitMariaDbOffering), nil
+			}
+		}
+
+		return c.offering()
+	})
+}
+
+func (c *mqlStackitMariaDbInstance) GetPlan() *plugin.TValue[*mqlStackitMariaDbOfferingPlan] {
+	return plugin.GetOrCompute[*mqlStackitMariaDbOfferingPlan](&c.Plan, func() (*mqlStackitMariaDbOfferingPlan, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.mariaDb.instance", c.__id, "plan")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitMariaDbOfferingPlan), nil
+			}
+		}
+
+		return c.plan()
+	})
+}
+
 func (c *mqlStackitMariaDbInstance) GetInternetReachable() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
 		return c.internetReachable()
 	})
 }
 
+// mqlStackitMariaDbInstanceBackup for the stackit.mariaDb.instance.backup resource
+type mqlStackitMariaDbInstanceBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitMariaDbInstanceBackupInternal it will be used here
+	Id           plugin.TValue[string]
+	Status       plugin.TValue[string]
+	Size         plugin.TValue[int64]
+	Downloadable plugin.TValue[bool]
+	TriggeredAt  plugin.TValue[*time.Time]
+	FinishedAt   plugin.TValue[*time.Time]
+}
+
+// createStackitMariaDbInstanceBackup creates a new instance of this resource
+func createStackitMariaDbInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitMariaDbInstanceBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.mariaDb.instance.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitMariaDbInstanceBackup) MqlName() string {
+	return "stackit.mariaDb.instance.backup"
+}
+
+func (c *mqlStackitMariaDbInstanceBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitMariaDbInstanceBackup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitMariaDbInstanceBackup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlStackitMariaDbInstanceBackup) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlStackitMariaDbInstanceBackup) GetDownloadable() *plugin.TValue[bool] {
+	return &c.Downloadable
+}
+
+func (c *mqlStackitMariaDbInstanceBackup) GetTriggeredAt() *plugin.TValue[*time.Time] {
+	return &c.TriggeredAt
+}
+
+func (c *mqlStackitMariaDbInstanceBackup) GetFinishedAt() *plugin.TValue[*time.Time] {
+	return &c.FinishedAt
+}
+
+// mqlStackitMariaDbOffering for the stackit.mariaDb.offering resource
+type mqlStackitMariaDbOffering struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlStackitMariaDbOfferingInternal
+	Name             plugin.TValue[string]
+	Version          plugin.TValue[string]
+	Latest           plugin.TValue[bool]
+	Lifecycle        plugin.TValue[string]
+	Description      plugin.TValue[string]
+	DocumentationUrl plugin.TValue[string]
+	QuotaCount       plugin.TValue[int64]
+	Plans            plugin.TValue[[]any]
+}
+
+// createStackitMariaDbOffering creates a new instance of this resource
+func createStackitMariaDbOffering(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitMariaDbOffering{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.mariaDb.offering", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitMariaDbOffering) MqlName() string {
+	return "stackit.mariaDb.offering"
+}
+
+func (c *mqlStackitMariaDbOffering) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitMariaDbOffering) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitMariaDbOffering) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlStackitMariaDbOffering) GetLatest() *plugin.TValue[bool] {
+	return &c.Latest
+}
+
+func (c *mqlStackitMariaDbOffering) GetLifecycle() *plugin.TValue[string] {
+	return &c.Lifecycle
+}
+
+func (c *mqlStackitMariaDbOffering) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitMariaDbOffering) GetDocumentationUrl() *plugin.TValue[string] {
+	return &c.DocumentationUrl
+}
+
+func (c *mqlStackitMariaDbOffering) GetQuotaCount() *plugin.TValue[int64] {
+	return &c.QuotaCount
+}
+
+func (c *mqlStackitMariaDbOffering) GetPlans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.mariaDb.offering", c.__id, "plans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.plans()
+	})
+}
+
+// mqlStackitMariaDbOfferingPlan for the stackit.mariaDb.offering.plan resource
+type mqlStackitMariaDbOfferingPlan struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitMariaDbOfferingPlanInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	SkuName     plugin.TValue[string]
+	Free        plugin.TValue[bool]
+	Description plugin.TValue[string]
+}
+
+// createStackitMariaDbOfferingPlan creates a new instance of this resource
+func createStackitMariaDbOfferingPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitMariaDbOfferingPlan{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.mariaDb.offering.plan", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitMariaDbOfferingPlan) MqlName() string {
+	return "stackit.mariaDb.offering.plan"
+}
+
+func (c *mqlStackitMariaDbOfferingPlan) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitMariaDbOfferingPlan) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitMariaDbOfferingPlan) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitMariaDbOfferingPlan) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlStackitMariaDbOfferingPlan) GetFree() *plugin.TValue[bool] {
+	return &c.Free
+}
+
+func (c *mqlStackitMariaDbOfferingPlan) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
 // mqlStackitRedis for the stackit.redis resource
 type mqlStackitRedis struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitRedisInternal it will be used here
+	mqlStackitRedisInternal
 	Instances plugin.TValue[[]any]
+	Offerings plugin.TValue[[]any]
 }
 
 // createStackitRedis creates a new instance of this resource
@@ -15282,6 +17329,22 @@ func (c *mqlStackitRedis) GetInstances() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitRedis) GetOfferings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Offerings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.redis", c.__id, "offerings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.offerings()
+	})
+}
+
 // mqlStackitRedisInstance for the stackit.redis.instance resource
 type mqlStackitRedisInstance struct {
 	MqlRuntime *plugin.Runtime
@@ -15310,6 +17373,9 @@ type mqlStackitRedisInstance struct {
 	MonitoringEnabled        plugin.TValue[bool]
 	MonitoringInstance       plugin.TValue[*mqlStackitObservabilityInstance]
 	MaxDiskThreshold         plugin.TValue[int64]
+	Backups                  plugin.TValue[[]any]
+	Offering                 plugin.TValue[*mqlStackitRedisOffering]
+	Plan                     plugin.TValue[*mqlStackitRedisOfferingPlan]
 	Snapshot                 plugin.TValue[string]
 	MaxmemoryPolicy          plugin.TValue[string]
 	NotifyKeyspaceEvents     plugin.TValue[string]
@@ -15471,6 +17537,54 @@ func (c *mqlStackitRedisInstance) GetMaxDiskThreshold() *plugin.TValue[int64] {
 	})
 }
 
+func (c *mqlStackitRedisInstance) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.redis.instance", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+func (c *mqlStackitRedisInstance) GetOffering() *plugin.TValue[*mqlStackitRedisOffering] {
+	return plugin.GetOrCompute[*mqlStackitRedisOffering](&c.Offering, func() (*mqlStackitRedisOffering, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.redis.instance", c.__id, "offering")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitRedisOffering), nil
+			}
+		}
+
+		return c.offering()
+	})
+}
+
+func (c *mqlStackitRedisInstance) GetPlan() *plugin.TValue[*mqlStackitRedisOfferingPlan] {
+	return plugin.GetOrCompute[*mqlStackitRedisOfferingPlan](&c.Plan, func() (*mqlStackitRedisOfferingPlan, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.redis.instance", c.__id, "plan")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitRedisOfferingPlan), nil
+			}
+		}
+
+		return c.plan()
+	})
+}
+
 func (c *mqlStackitRedisInstance) GetSnapshot() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Snapshot, func() (string, error) {
 		return c.snapshot()
@@ -15519,12 +17633,237 @@ func (c *mqlStackitRedisInstance) GetTlsCiphersuites() *plugin.TValue[string] {
 	})
 }
 
+// mqlStackitRedisInstanceBackup for the stackit.redis.instance.backup resource
+type mqlStackitRedisInstanceBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitRedisInstanceBackupInternal it will be used here
+	Id           plugin.TValue[string]
+	Status       plugin.TValue[string]
+	Size         plugin.TValue[int64]
+	Downloadable plugin.TValue[bool]
+	TriggeredAt  plugin.TValue[*time.Time]
+	FinishedAt   plugin.TValue[*time.Time]
+}
+
+// createStackitRedisInstanceBackup creates a new instance of this resource
+func createStackitRedisInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitRedisInstanceBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.redis.instance.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitRedisInstanceBackup) MqlName() string {
+	return "stackit.redis.instance.backup"
+}
+
+func (c *mqlStackitRedisInstanceBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitRedisInstanceBackup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitRedisInstanceBackup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlStackitRedisInstanceBackup) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlStackitRedisInstanceBackup) GetDownloadable() *plugin.TValue[bool] {
+	return &c.Downloadable
+}
+
+func (c *mqlStackitRedisInstanceBackup) GetTriggeredAt() *plugin.TValue[*time.Time] {
+	return &c.TriggeredAt
+}
+
+func (c *mqlStackitRedisInstanceBackup) GetFinishedAt() *plugin.TValue[*time.Time] {
+	return &c.FinishedAt
+}
+
+// mqlStackitRedisOffering for the stackit.redis.offering resource
+type mqlStackitRedisOffering struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlStackitRedisOfferingInternal
+	Name             plugin.TValue[string]
+	Version          plugin.TValue[string]
+	Latest           plugin.TValue[bool]
+	Lifecycle        plugin.TValue[string]
+	Description      plugin.TValue[string]
+	DocumentationUrl plugin.TValue[string]
+	QuotaCount       plugin.TValue[int64]
+	Plans            plugin.TValue[[]any]
+}
+
+// createStackitRedisOffering creates a new instance of this resource
+func createStackitRedisOffering(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitRedisOffering{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.redis.offering", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitRedisOffering) MqlName() string {
+	return "stackit.redis.offering"
+}
+
+func (c *mqlStackitRedisOffering) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitRedisOffering) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitRedisOffering) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlStackitRedisOffering) GetLatest() *plugin.TValue[bool] {
+	return &c.Latest
+}
+
+func (c *mqlStackitRedisOffering) GetLifecycle() *plugin.TValue[string] {
+	return &c.Lifecycle
+}
+
+func (c *mqlStackitRedisOffering) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitRedisOffering) GetDocumentationUrl() *plugin.TValue[string] {
+	return &c.DocumentationUrl
+}
+
+func (c *mqlStackitRedisOffering) GetQuotaCount() *plugin.TValue[int64] {
+	return &c.QuotaCount
+}
+
+func (c *mqlStackitRedisOffering) GetPlans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.redis.offering", c.__id, "plans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.plans()
+	})
+}
+
+// mqlStackitRedisOfferingPlan for the stackit.redis.offering.plan resource
+type mqlStackitRedisOfferingPlan struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitRedisOfferingPlanInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	SkuName     plugin.TValue[string]
+	Free        plugin.TValue[bool]
+	Description plugin.TValue[string]
+}
+
+// createStackitRedisOfferingPlan creates a new instance of this resource
+func createStackitRedisOfferingPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitRedisOfferingPlan{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.redis.offering.plan", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitRedisOfferingPlan) MqlName() string {
+	return "stackit.redis.offering.plan"
+}
+
+func (c *mqlStackitRedisOfferingPlan) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitRedisOfferingPlan) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitRedisOfferingPlan) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitRedisOfferingPlan) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlStackitRedisOfferingPlan) GetFree() *plugin.TValue[bool] {
+	return &c.Free
+}
+
+func (c *mqlStackitRedisOfferingPlan) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
 // mqlStackitRabbitMq for the stackit.rabbitMq resource
 type mqlStackitRabbitMq struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitRabbitMqInternal it will be used here
+	mqlStackitRabbitMqInternal
 	Instances plugin.TValue[[]any]
+	Offerings plugin.TValue[[]any]
 }
 
 // createStackitRabbitMq creates a new instance of this resource
@@ -15580,6 +17919,22 @@ func (c *mqlStackitRabbitMq) GetInstances() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitRabbitMq) GetOfferings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Offerings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.rabbitMq", c.__id, "offerings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.offerings()
+	})
+}
+
 // mqlStackitRabbitMqInstance for the stackit.rabbitMq.instance resource
 type mqlStackitRabbitMqInstance struct {
 	MqlRuntime *plugin.Runtime
@@ -15608,6 +17963,9 @@ type mqlStackitRabbitMqInstance struct {
 	MonitoringEnabled        plugin.TValue[bool]
 	MonitoringInstance       plugin.TValue[*mqlStackitObservabilityInstance]
 	MaxDiskThreshold         plugin.TValue[int64]
+	Backups                  plugin.TValue[[]any]
+	Offering                 plugin.TValue[*mqlStackitRabbitMqOffering]
+	Plan                     plugin.TValue[*mqlStackitRabbitMqOfferingPlan]
 	Plugins                  plugin.TValue[[]any]
 	InternetReachable        plugin.TValue[bool]
 	TlsProtocols             plugin.TValue[[]any]
@@ -15765,6 +18123,54 @@ func (c *mqlStackitRabbitMqInstance) GetMaxDiskThreshold() *plugin.TValue[int64]
 	})
 }
 
+func (c *mqlStackitRabbitMqInstance) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.rabbitMq.instance", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+func (c *mqlStackitRabbitMqInstance) GetOffering() *plugin.TValue[*mqlStackitRabbitMqOffering] {
+	return plugin.GetOrCompute[*mqlStackitRabbitMqOffering](&c.Offering, func() (*mqlStackitRabbitMqOffering, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.rabbitMq.instance", c.__id, "offering")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitRabbitMqOffering), nil
+			}
+		}
+
+		return c.offering()
+	})
+}
+
+func (c *mqlStackitRabbitMqInstance) GetPlan() *plugin.TValue[*mqlStackitRabbitMqOfferingPlan] {
+	return plugin.GetOrCompute[*mqlStackitRabbitMqOfferingPlan](&c.Plan, func() (*mqlStackitRabbitMqOfferingPlan, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.rabbitMq.instance", c.__id, "plan")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitRabbitMqOfferingPlan), nil
+			}
+		}
+
+		return c.plan()
+	})
+}
+
 func (c *mqlStackitRabbitMqInstance) GetPlugins() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Plugins, func() ([]any, error) {
 		return c.plugins()
@@ -15789,12 +18195,237 @@ func (c *mqlStackitRabbitMqInstance) GetTlsCiphers() *plugin.TValue[[]any] {
 	})
 }
 
+// mqlStackitRabbitMqInstanceBackup for the stackit.rabbitMq.instance.backup resource
+type mqlStackitRabbitMqInstanceBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitRabbitMqInstanceBackupInternal it will be used here
+	Id           plugin.TValue[string]
+	Status       plugin.TValue[string]
+	Size         plugin.TValue[int64]
+	Downloadable plugin.TValue[bool]
+	TriggeredAt  plugin.TValue[*time.Time]
+	FinishedAt   plugin.TValue[*time.Time]
+}
+
+// createStackitRabbitMqInstanceBackup creates a new instance of this resource
+func createStackitRabbitMqInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitRabbitMqInstanceBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.rabbitMq.instance.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitRabbitMqInstanceBackup) MqlName() string {
+	return "stackit.rabbitMq.instance.backup"
+}
+
+func (c *mqlStackitRabbitMqInstanceBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitRabbitMqInstanceBackup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitRabbitMqInstanceBackup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlStackitRabbitMqInstanceBackup) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlStackitRabbitMqInstanceBackup) GetDownloadable() *plugin.TValue[bool] {
+	return &c.Downloadable
+}
+
+func (c *mqlStackitRabbitMqInstanceBackup) GetTriggeredAt() *plugin.TValue[*time.Time] {
+	return &c.TriggeredAt
+}
+
+func (c *mqlStackitRabbitMqInstanceBackup) GetFinishedAt() *plugin.TValue[*time.Time] {
+	return &c.FinishedAt
+}
+
+// mqlStackitRabbitMqOffering for the stackit.rabbitMq.offering resource
+type mqlStackitRabbitMqOffering struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlStackitRabbitMqOfferingInternal
+	Name             plugin.TValue[string]
+	Version          plugin.TValue[string]
+	Latest           plugin.TValue[bool]
+	Lifecycle        plugin.TValue[string]
+	Description      plugin.TValue[string]
+	DocumentationUrl plugin.TValue[string]
+	QuotaCount       plugin.TValue[int64]
+	Plans            plugin.TValue[[]any]
+}
+
+// createStackitRabbitMqOffering creates a new instance of this resource
+func createStackitRabbitMqOffering(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitRabbitMqOffering{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.rabbitMq.offering", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitRabbitMqOffering) MqlName() string {
+	return "stackit.rabbitMq.offering"
+}
+
+func (c *mqlStackitRabbitMqOffering) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitRabbitMqOffering) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitRabbitMqOffering) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlStackitRabbitMqOffering) GetLatest() *plugin.TValue[bool] {
+	return &c.Latest
+}
+
+func (c *mqlStackitRabbitMqOffering) GetLifecycle() *plugin.TValue[string] {
+	return &c.Lifecycle
+}
+
+func (c *mqlStackitRabbitMqOffering) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitRabbitMqOffering) GetDocumentationUrl() *plugin.TValue[string] {
+	return &c.DocumentationUrl
+}
+
+func (c *mqlStackitRabbitMqOffering) GetQuotaCount() *plugin.TValue[int64] {
+	return &c.QuotaCount
+}
+
+func (c *mqlStackitRabbitMqOffering) GetPlans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.rabbitMq.offering", c.__id, "plans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.plans()
+	})
+}
+
+// mqlStackitRabbitMqOfferingPlan for the stackit.rabbitMq.offering.plan resource
+type mqlStackitRabbitMqOfferingPlan struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitRabbitMqOfferingPlanInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	SkuName     plugin.TValue[string]
+	Free        plugin.TValue[bool]
+	Description plugin.TValue[string]
+}
+
+// createStackitRabbitMqOfferingPlan creates a new instance of this resource
+func createStackitRabbitMqOfferingPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitRabbitMqOfferingPlan{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.rabbitMq.offering.plan", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitRabbitMqOfferingPlan) MqlName() string {
+	return "stackit.rabbitMq.offering.plan"
+}
+
+func (c *mqlStackitRabbitMqOfferingPlan) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitRabbitMqOfferingPlan) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitRabbitMqOfferingPlan) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitRabbitMqOfferingPlan) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlStackitRabbitMqOfferingPlan) GetFree() *plugin.TValue[bool] {
+	return &c.Free
+}
+
+func (c *mqlStackitRabbitMqOfferingPlan) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
 // mqlStackitLogMe for the stackit.logMe resource
 type mqlStackitLogMe struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitLogMeInternal it will be used here
+	mqlStackitLogMeInternal
 	Instances plugin.TValue[[]any]
+	Offerings plugin.TValue[[]any]
 }
 
 // createStackitLogMe creates a new instance of this resource
@@ -15845,6 +18476,22 @@ func (c *mqlStackitLogMe) GetInstances() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitLogMe) GetOfferings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Offerings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.logMe", c.__id, "offerings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.offerings()
+	})
+}
+
 // mqlStackitLogMeInstance for the stackit.logMe.instance resource
 type mqlStackitLogMeInstance struct {
 	MqlRuntime *plugin.Runtime
@@ -15873,6 +18520,9 @@ type mqlStackitLogMeInstance struct {
 	MonitoringEnabled        plugin.TValue[bool]
 	MonitoringInstance       plugin.TValue[*mqlStackitObservabilityInstance]
 	MaxDiskThreshold         plugin.TValue[int64]
+	Backups                  plugin.TValue[[]any]
+	Offering                 plugin.TValue[*mqlStackitLogMeOffering]
+	Plan                     plugin.TValue[*mqlStackitLogMeOfferingPlan]
 	FluentdTcpPort           plugin.TValue[int64]
 	FluentdUdpPort           plugin.TValue[int64]
 	LogRetention             plugin.TValue[string]
@@ -16035,6 +18685,54 @@ func (c *mqlStackitLogMeInstance) GetMaxDiskThreshold() *plugin.TValue[int64] {
 	})
 }
 
+func (c *mqlStackitLogMeInstance) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.logMe.instance", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetOffering() *plugin.TValue[*mqlStackitLogMeOffering] {
+	return plugin.GetOrCompute[*mqlStackitLogMeOffering](&c.Offering, func() (*mqlStackitLogMeOffering, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.logMe.instance", c.__id, "offering")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitLogMeOffering), nil
+			}
+		}
+
+		return c.offering()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetPlan() *plugin.TValue[*mqlStackitLogMeOfferingPlan] {
+	return plugin.GetOrCompute[*mqlStackitLogMeOfferingPlan](&c.Plan, func() (*mqlStackitLogMeOfferingPlan, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.logMe.instance", c.__id, "plan")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitLogMeOfferingPlan), nil
+			}
+		}
+
+		return c.plan()
+	})
+}
+
 func (c *mqlStackitLogMeInstance) GetFluentdTcpPort() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.FluentdTcpPort, func() (int64, error) {
 		return c.fluentdTcpPort()
@@ -16087,6 +18785,230 @@ func (c *mqlStackitLogMeInstance) GetOpensearchTlsCiphers() *plugin.TValue[[]any
 	return plugin.GetOrCompute[[]any](&c.OpensearchTlsCiphers, func() ([]any, error) {
 		return c.opensearchTlsCiphers()
 	})
+}
+
+// mqlStackitLogMeInstanceBackup for the stackit.logMe.instance.backup resource
+type mqlStackitLogMeInstanceBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitLogMeInstanceBackupInternal it will be used here
+	Id           plugin.TValue[string]
+	Status       plugin.TValue[string]
+	Size         plugin.TValue[int64]
+	Downloadable plugin.TValue[bool]
+	TriggeredAt  plugin.TValue[*time.Time]
+	FinishedAt   plugin.TValue[*time.Time]
+}
+
+// createStackitLogMeInstanceBackup creates a new instance of this resource
+func createStackitLogMeInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitLogMeInstanceBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.logMe.instance.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitLogMeInstanceBackup) MqlName() string {
+	return "stackit.logMe.instance.backup"
+}
+
+func (c *mqlStackitLogMeInstanceBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitLogMeInstanceBackup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitLogMeInstanceBackup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlStackitLogMeInstanceBackup) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlStackitLogMeInstanceBackup) GetDownloadable() *plugin.TValue[bool] {
+	return &c.Downloadable
+}
+
+func (c *mqlStackitLogMeInstanceBackup) GetTriggeredAt() *plugin.TValue[*time.Time] {
+	return &c.TriggeredAt
+}
+
+func (c *mqlStackitLogMeInstanceBackup) GetFinishedAt() *plugin.TValue[*time.Time] {
+	return &c.FinishedAt
+}
+
+// mqlStackitLogMeOffering for the stackit.logMe.offering resource
+type mqlStackitLogMeOffering struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlStackitLogMeOfferingInternal
+	Name             plugin.TValue[string]
+	Version          plugin.TValue[string]
+	Latest           plugin.TValue[bool]
+	Lifecycle        plugin.TValue[string]
+	Description      plugin.TValue[string]
+	DocumentationUrl plugin.TValue[string]
+	QuotaCount       plugin.TValue[int64]
+	Plans            plugin.TValue[[]any]
+}
+
+// createStackitLogMeOffering creates a new instance of this resource
+func createStackitLogMeOffering(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitLogMeOffering{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.logMe.offering", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitLogMeOffering) MqlName() string {
+	return "stackit.logMe.offering"
+}
+
+func (c *mqlStackitLogMeOffering) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitLogMeOffering) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitLogMeOffering) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlStackitLogMeOffering) GetLatest() *plugin.TValue[bool] {
+	return &c.Latest
+}
+
+func (c *mqlStackitLogMeOffering) GetLifecycle() *plugin.TValue[string] {
+	return &c.Lifecycle
+}
+
+func (c *mqlStackitLogMeOffering) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitLogMeOffering) GetDocumentationUrl() *plugin.TValue[string] {
+	return &c.DocumentationUrl
+}
+
+func (c *mqlStackitLogMeOffering) GetQuotaCount() *plugin.TValue[int64] {
+	return &c.QuotaCount
+}
+
+func (c *mqlStackitLogMeOffering) GetPlans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.logMe.offering", c.__id, "plans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.plans()
+	})
+}
+
+// mqlStackitLogMeOfferingPlan for the stackit.logMe.offering.plan resource
+type mqlStackitLogMeOfferingPlan struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitLogMeOfferingPlanInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	SkuName     plugin.TValue[string]
+	Free        plugin.TValue[bool]
+	Description plugin.TValue[string]
+}
+
+// createStackitLogMeOfferingPlan creates a new instance of this resource
+func createStackitLogMeOfferingPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitLogMeOfferingPlan{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.logMe.offering.plan", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitLogMeOfferingPlan) MqlName() string {
+	return "stackit.logMe.offering.plan"
+}
+
+func (c *mqlStackitLogMeOfferingPlan) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitLogMeOfferingPlan) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitLogMeOfferingPlan) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitLogMeOfferingPlan) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlStackitLogMeOfferingPlan) GetFree() *plugin.TValue[bool] {
+	return &c.Free
+}
+
+func (c *mqlStackitLogMeOfferingPlan) GetDescription() *plugin.TValue[string] {
+	return &c.Description
 }
 
 // mqlStackitSecretsManager for the stackit.secretsManager resource
