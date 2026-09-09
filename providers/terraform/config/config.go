@@ -29,20 +29,31 @@ var Config = plugin.Provider{
 	Connectors: []plugin.Connector{
 		{
 			Name:    "terraform",
-			Aliases: []string{},
+			Aliases: []string{"opentofu", "tofu"},
 			Use:     "terraform PATH",
-			Short:   "Terraform HCL configurations, plan files, and state files",
-			Long: `Use the terraform provider to query Terraform HCL, plan, or state files as well as directories of files.
+			Short:   "Terraform and OpenTofu HCL configurations, plan files, and state files",
+			Long: `Use the terraform provider to query Terraform or OpenTofu HCL, plan, or state files as well as directories of files.
+
+OpenTofu configurations are read as well as Terraform ones. In a directory
+holding both, the OpenTofu file wins for any name it shares with a Terraform
+file, matching how OpenTofu itself loads a configuration: main.tofu replaces
+main.tf, and .tofu.json, .tofuvars and .tofuvars.json replace their .tf
+equivalents in the same way.
+
+For HCL the tool is detected from the files present. Plan and state files carry
+no marker of their own -- their JSON is identical between the two tools -- so
+they are reported as Terraform unless --iac-tool says otherwise.
 
 Available commands:
-  plan                       Terraform plan file
-  state                      Terraform state file
+  plan                       Terraform or OpenTofu plan file
+  state                      Terraform or OpenTofu state file
 
 Examples:
   cnspec shell terraform <PATH-TO-HCL-DIRECTORY>
   cnspec scan terraform <PATH-TO-HCL-FILE>
   cnspec scan terraform plan <PATH-TO-PLAN-JSON>
-  cnspec scan terraform state <PATH-TO-STATE-JSON>
+  cnspec scan terraform state <PATH-TO-STATE-JSON> --iac-tool opentofu
+  cnspec scan terraform <PATH-TO-MIXED-DIRECTORY> --iac-tool terraform
 `,
 			MinArgs:   1,
 			MaxArgs:   2,
@@ -54,6 +65,17 @@ Examples:
 					Default:     "false",
 					Desc:        "Exclude the .terraform directory (contains cached provider plugins and modules)",
 					ConfigEntry: "ignore_dot_terraform",
+				},
+				{
+					Long:    "iac-tool",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Read the configuration as \"terraform\" or \"opentofu\" instead of detecting it from the files present",
+					// "-" reads the flag straight from the command line. A named
+					// config entry would be bound into viper under that name but
+					// read back under the flag's own name, so the value the user
+					// typed never arrives.
+					ConfigEntry: "-",
 				},
 			},
 		},

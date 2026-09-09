@@ -28,6 +28,32 @@ var Platforms = []*plugin.PlatformInfo{
 		Kind:    []string{"code"},
 		Runtime: []string{"terraform"},
 	},
+	// OpenTofu assets carry "terraform" in their family chain as well as their
+	// own name. The two tools share the HCL language and the `show -json`
+	// representation, so a policy written against the terraform family applies
+	// unchanged to an OpenTofu asset, while the platform name and title still
+	// identify which tool the configuration is for.
+	{
+		Name:    "opentofu-state",
+		Title:   "OpenTofu State",
+		Family:  []string{"opentofu", "terraform"},
+		Kind:    []string{"code"},
+		Runtime: []string{"opentofu"},
+	},
+	{
+		Name:    "opentofu-plan",
+		Title:   "OpenTofu Plan",
+		Family:  []string{"opentofu", "terraform"},
+		Kind:    []string{"code"},
+		Runtime: []string{"opentofu"},
+	},
+	{
+		Name:    "opentofu-hcl",
+		Title:   "OpenTofu HCL",
+		Family:  []string{"opentofu", "terraform"},
+		Kind:    []string{"code"},
+		Runtime: []string{"opentofu"},
+	},
 }
 
 var platformsByName = plugin.PlatformsByName(Platforms)

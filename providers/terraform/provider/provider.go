@@ -90,6 +90,20 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		}
 	}
 
+	// Only an explicit --iac-tool is recorded here. Left unset, an HCL
+	// configuration detects its dialect from the files on disk, and plan and
+	// state files -- whose JSON is identical between the two tools, so there is
+	// nothing in them to detect -- default to Terraform.
+	//
+	// NOTE: the connector name cannot drive this. The CLI always reports the
+	// canonical connector name, so reaching the provider through its `tofu`
+	// alias is indistinguishable here from reaching it as `terraform`.
+	if x, ok := flags["iac-tool"]; ok && x != nil {
+		if s, ok := x.RawData().Value.(string); ok && s != "" {
+			conf.Options[connection.OptionDialect] = string(connection.ParseDialect(s))
+		}
+	}
+
 	asset := &inventory.Asset{
 		Connections: []*inventory.Config{conf},
 	}

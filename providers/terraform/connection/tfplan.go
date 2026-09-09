@@ -211,6 +211,11 @@ func NewPlanConnection(id uint32, asset *inventory.Asset) (*Connection, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Reject encrypted and binary plan files up front, so they cannot scan as a
+	// plan holding zero resource changes.
+	if err := validatePlanDocument(data); err != nil {
+		return nil, err
+	}
 	err = json.Unmarshal(data, &tfPlan)
 	if err != nil {
 		return nil, err
@@ -222,5 +227,8 @@ func NewPlanConnection(id uint32, asset *inventory.Asset) (*Connection, error) {
 		assetType:  assetType,
 
 		plan: &tfPlan,
+		// As with state files, the plan JSON carries no marker distinguishing
+		// the two tools, so the dialect comes from the connector invoked.
+		dialect: ParseDialect(cc.Options[OptionDialect]),
 	}, nil
 }
