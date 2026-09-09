@@ -1,8 +1,11 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/circleci"
 option go_package = "go.mondoo.com/mql/providers/circleci/resources"
+option root = "circleci"
 
 // CircleCI CI/CD platform
 //
@@ -13,7 +16,7 @@ option go_package = "go.mondoo.com/mql/providers/circleci/resources"
 // project environment variables), source access (checkout keys), and
 // pull-request build settings (forked-PR builds, OIDC) across an
 // organization's CircleCI footprint.
-circleci @maturity("experimental") {
+circleci @maturity("experimental") @root {
   // Currently authenticated user
   me() circleci.user
   // Organizations the current token can see
