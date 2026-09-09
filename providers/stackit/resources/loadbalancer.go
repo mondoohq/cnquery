@@ -153,10 +153,20 @@ func (r *mqlStackitLoadBalancer) targetSecurityGroup() (*mqlStackitSecurityGroup
 func (r *mqlStackitLoadBalancer) resolveSecurityGroup(
 	id string, field *plugin.TValue[*mqlStackitSecurityGroup],
 ) (*mqlStackitSecurityGroup, error) {
+	return securityGroupFromProjectList(r.MqlRuntime, id, r.Name.Data, field)
+}
+
+// securityGroupFromProjectList is the shared body of the network and
+// application balancers' security-group accessors: null for an empty id, an
+// error for an id the project's group list does not answer for, and the
+// built group otherwise. ownerName names the balancer in the error.
+func securityGroupFromProjectList(
+	runtime *plugin.Runtime, id, ownerName string, field *plugin.TValue[*mqlStackitSecurityGroup],
+) (*mqlStackitSecurityGroup, error) {
 	if id == "" {
 		return markNull(field)
 	}
-	groups, err := conn(r.MqlRuntime).SecurityGroups(bgctx())
+	groups, err := conn(runtime).SecurityGroups(bgctx())
 	if err != nil {
 		return nil, err
 	}
@@ -164,9 +174,9 @@ func (r *mqlStackitLoadBalancer) resolveSecurityGroup(
 	if !ok {
 		return nil, fmt.Errorf(
 			"stackit.securityGroup with id %q referenced by load balancer %q not found",
-			id, r.Name.Data)
+			id, ownerName)
 	}
-	res, err := buildSecurityGroup(r.MqlRuntime, &sg)
+	res, err := buildSecurityGroup(runtime, &sg)
 	if err != nil {
 		return nil, err
 	}
@@ -211,13 +221,17 @@ func (r *mqlStackitLoadBalancer) targetPools() ([]any, error) {
 	out := make([]any, 0, len(r.rawTargetPools))
 	for i := range r.rawTargetPools {
 		tp := &r.rawTargetPools[i]
+		hcTls, hcSkip := poolHealthCheckTls(tp)
 		args := map[string]*llx.RawData{
-			"name":               llx.StringData(tp.GetName()),
-			"loadBalancerName":   llx.StringData(r.Name.Data),
-			"targetPort":         llx.IntData(tp.GetTargetPort()),
-			"targets":            llx.ArrayData(anySliceToDict(tp.GetTargets()), types.Dict),
-			"activeHealthCheck":  llx.DictData(toDict(tp.GetActiveHealthCheck())),
-			"sessionPersistence": llx.DictData(toDict(tp.GetSessionPersistence())),
+			"name":                                 llx.StringData(tp.GetName()),
+			"loadBalancerName":                     llx.StringData(r.Name.Data),
+			"targetPort":                           llx.IntData(tp.GetTargetPort()),
+			"targets":                              llx.ArrayData(anySliceToDict(tp.GetTargets()), types.Dict),
+			"activeHealthCheck":                    llx.DictData(toDict(tp.GetActiveHealthCheck())),
+			"sessionPersistence":                   llx.DictData(toDict(tp.GetSessionPersistence())),
+			"healthCheckTlsEnabled":                llx.BoolDataPtr(hcTls),
+			"healthCheckSkipCertificateValidation": llx.BoolDataPtr(hcSkip),
+			"sessionPersistenceSourceIp":           llx.BoolDataPtr(poolSessionPersistenceSourceIp(tp)),
 		}
 		res, err := CreateResource(r.MqlRuntime, "stackit.loadBalancer.targetPool", args)
 		if err != nil {

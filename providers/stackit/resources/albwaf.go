@@ -6,6 +6,7 @@ package resources
 import (
 	"fmt"
 	"slices"
+	"sort"
 
 	albwaf "github.com/stackitcloud/stackit-sdk-go/services/albwaf/v1betaapi"
 	"go.mondoo.com/mql/llx"
@@ -25,12 +26,67 @@ type mqlStackitAlbManagedRuleSetInternal struct {
 	// cacheGroups holds the rule set's groups, captured during init so rules()
 	// need not re-fetch the set. A nil pointer means "not yet fetched".
 	cacheGroups *map[string]albwaf.MRSRuleGroup
+	// cacheUsage holds the names of the WAF configurations binding this rule
+	// set, from the same response. A nil pointer means "not yet fetched".
+	cacheUsage *[]string
 }
 
 type mqlStackitAlbCustomRuleGroupInternal struct {
 	// cacheRules holds the group's rules, captured during init so rules() need
 	// not re-fetch the group. A nil pointer means "not yet fetched".
 	cacheRules *[]albwaf.GetCustomRule
+	// cacheUsage holds the names of the WAF configurations binding this
+	// group, from the same response. A nil pointer means "not yet fetched".
+	cacheUsage *[]string
+}
+
+type mqlStackitAlbWafInternal struct {
+	// cacheUsageLoadBalancers holds the names of the application load
+	// balancers whose listeners enforce this WAF, from the list or get
+	// response the WAF was built from.
+	cacheUsageLoadBalancers []string
+}
+
+// wafUsageLoadBalancers collects the load balancer names out of a WAF's
+// usage block, deduplicated and sorted. Empty when nothing enforces the WAF.
+func wafUsageLoadBalancers(u *albwaf.WAFUsage) []string {
+	if u == nil {
+		return nil
+	}
+	seen := map[string]struct{}{}
+	for _, item := range u.GetItems() {
+		if name := item.GetLoadBalancerName(); name != "" {
+			seen[name] = struct{}{}
+		}
+	}
+	out := make([]string, 0, len(seen))
+	for name := range seen {
+		out = append(out, name)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// wafRefs resolves WAF configuration names into resources, skipping names
+// that no longer resolve so one deleted WAF does not fail the list.
+func wafRefs(runtime *plugin.Runtime, names []string) ([]any, error) {
+	out := make([]any, 0, len(names))
+	for _, name := range names {
+		if name == "" {
+			continue
+		}
+		res, err := NewResource(runtime, "stackit.alb.waf", map[string]*llx.RawData{
+			"name": llx.StringData(name),
+		})
+		if err != nil {
+			if isNotFound(err) || isAccessDenied(err) {
+				continue
+			}
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
 }
 
 // ------------------------- WAF configurations -------------------------
@@ -79,11 +135,39 @@ func buildAlbWaf(runtime *plugin.Runtime, w *albwaf.GetWAFResponse) (plugin.Reso
 		"customRuleGroupName": llx.StringData(w.GetCustomRuleGroupName()),
 		"labels":              labelData(w.GetLabels()),
 	}
-	return CreateResource(runtime, "stackit.alb.waf", args)
+	res, err := CreateResource(runtime, "stackit.alb.waf", args)
+	if err != nil {
+		return nil, err
+	}
+	if usage, ok := w.GetUsageOk(); ok {
+		res.(*mqlStackitAlbWaf).cacheUsageLoadBalancers = wafUsageLoadBalancers(usage)
+	}
+	return res, nil
 }
 
 func (r *mqlStackitAlbWaf) id() (string, error) {
 	return "stackit.alb.waf/" + conn(r.MqlRuntime).ProjectID() + "/" + r.Name.Data, nil
+}
+
+// loadBalancers resolves the application load balancers whose listeners
+// enforce this WAF, from the usage block on the WAF response. Empty for a WAF
+// that is configured but attached to nothing. A balancer that no longer
+// resolves is skipped rather than failing the list.
+func (r *mqlStackitAlbWaf) loadBalancers() ([]any, error) {
+	out := make([]any, 0, len(r.cacheUsageLoadBalancers))
+	for _, name := range r.cacheUsageLoadBalancers {
+		res, err := NewResource(r.MqlRuntime, "stackit.alb.loadBalancer", map[string]*llx.RawData{
+			"name": llx.StringData(name),
+		})
+		if err != nil {
+			if isNotFound(err) || isAccessDenied(err) {
+				continue
+			}
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
 }
 
 func initStackitAlbWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -209,10 +293,64 @@ func initStackitAlbManagedRuleSet(runtime *plugin.Runtime, args map[string]*llx.
 	if err != nil {
 		return nil, nil, err
 	}
-	// Keep the groups from this call so rules() doesn't re-fetch the set.
+	// Keep the groups and usage from this call so rules() and wafs() don't
+	// re-fetch the set.
 	groups := resp.GetGroups()
-	res.(*mqlStackitAlbManagedRuleSet).cacheGroups = &groups
+	set := res.(*mqlStackitAlbManagedRuleSet)
+	set.cacheGroups = &groups
+	usage := usageNames(usageItems(resp.GetUsageOk()))
+	set.cacheUsage = &usage
 	return nil, res, nil
+}
+
+// usageItems unwraps a rule set's or rule group's usage block into its item
+// list, nil when the response omitted the block. The SDK's usage getters have
+// pointer receivers and tolerate a nil receiver, so the ok flag is what
+// distinguishes "no usage reported" from an empty list.
+func usageItems[T interface{ GetItems() []string }](u T, ok bool) []string {
+	if !ok {
+		return nil
+	}
+	return u.GetItems()
+}
+
+// usageNames copies a usage item list into a sorted, deduplicated name list.
+func usageNames(items []string) []string {
+	seen := map[string]struct{}{}
+	for _, n := range items {
+		if n != "" {
+			seen[n] = struct{}{}
+		}
+	}
+	out := make([]string, 0, len(seen))
+	for n := range seen {
+		out = append(out, n)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// wafs resolves the WAF configurations that bind this managed rule set, from
+// the usage block on the rule-set response. Empty for a rule set nothing
+// references.
+func (r *mqlStackitAlbManagedRuleSet) wafs() ([]any, error) {
+	if r.cacheUsage == nil {
+		c := conn(r.MqlRuntime)
+		client, err := c.AlbWaf()
+		if err != nil {
+			return nil, err
+		}
+		resp, err := client.DefaultAPI.GetManagedRuleSet(bgctx(), c.ProjectID(), c.Region(), r.Name.Data).Execute()
+		if err != nil {
+			if isAccessDenied(err) || isNotFound(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		usage := usageNames(usageItems(resp.GetUsageOk()))
+		r.cacheUsage = &usage
+	}
+	return wafRefs(r.MqlRuntime, *r.cacheUsage)
 }
 
 // groups returns the rule set's groups, using the copy captured during init
@@ -296,10 +434,37 @@ func initStackitAlbCustomRuleGroup(runtime *plugin.Runtime, args map[string]*llx
 	if err != nil {
 		return nil, nil, err
 	}
-	// Keep the rules from this call so rules() doesn't re-fetch the group.
+	// Keep the rules and usage from this call so rules() and wafs() don't
+	// re-fetch the group.
 	rules := resp.GetRules()
-	res.(*mqlStackitAlbCustomRuleGroup).cacheRules = &rules
+	group := res.(*mqlStackitAlbCustomRuleGroup)
+	group.cacheRules = &rules
+	usage := usageNames(usageItems(resp.GetUsageOk()))
+	group.cacheUsage = &usage
 	return nil, res, nil
+}
+
+// wafs resolves the WAF configurations that bind this custom rule group, from
+// the usage block on the group response. Empty for a group nothing
+// references.
+func (r *mqlStackitAlbCustomRuleGroup) wafs() ([]any, error) {
+	if r.cacheUsage == nil {
+		c := conn(r.MqlRuntime)
+		client, err := c.AlbWaf()
+		if err != nil {
+			return nil, err
+		}
+		resp, err := client.DefaultAPI.GetCustomRuleGroup(bgctx(), c.ProjectID(), c.Region(), r.Name.Data).Execute()
+		if err != nil {
+			if isAccessDenied(err) || isNotFound(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		usage := usageNames(usageItems(resp.GetUsageOk()))
+		r.cacheUsage = &usage
+	}
+	return wafRefs(r.MqlRuntime, *r.cacheUsage)
 }
 
 // customRules returns the group's rules, using the copy captured during init

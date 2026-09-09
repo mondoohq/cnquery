@@ -546,15 +546,15 @@ func buildSecretsManagerInstance(runtime *plugin.Runtime, inst *secretsmanager.I
 		keyVersion = kmsKey.GetKeyVersion()
 	}
 	res, err := CreateResource(runtime, "stackit.secretsManager.instance", map[string]*llx.RawData{
-		"id":                   llx.StringData(inst.GetId()),
-		"name":                 llx.StringData(inst.GetName()),
-		"state":                llx.StringData(inst.GetState()),
-		"apiUrl":               llx.StringData(inst.GetApiUrl()),
-		"secretsEngine":        llx.StringData(inst.GetSecretsEngine()),
-		"secretCount":          llx.IntData(int64(inst.GetSecretCount())),
-		"creationStartedAt":    llx.TimeDataPtr(parseDnsTime(inst.GetCreationStartDate())),
-		"creationFinishedAt":   llx.TimeDataPtr(parseDnsTime(inst.GetCreationFinishedDate())),
-		"encryptionKeyVersion": llx.IntData(keyVersion),
+		"id":                         llx.StringData(inst.GetId()),
+		"name":                       llx.StringData(inst.GetName()),
+		"state":                      llx.StringData(inst.GetState()),
+		"apiUrl":                     llx.StringData(inst.GetApiUrl()),
+		"secretsEngine":              llx.StringData(inst.GetSecretsEngine()),
+		"secretCount":                llx.IntData(int64(inst.GetSecretCount())),
+		"creationStartedAt":          llx.TimeDataPtr(parseDnsTime(inst.GetCreationStartDate())),
+		"creationFinishedAt":         llx.TimeDataPtr(parseDnsTime(inst.GetCreationFinishedDate())),
+		"encryptionKeyVersionNumber": llx.IntData(keyVersion),
 	})
 	if err != nil {
 		return nil, err
@@ -590,11 +590,11 @@ func (r *mqlStackitSecretsManagerInstance) encryptionKeyRing() (*mqlStackitKmsKe
 	return kmsKeyRingRef(r.MqlRuntime, k.GetKeyRingId(), &r.EncryptionKeyRing)
 }
 
-// encryptionKeyVersionRef resolves the generation of key material the vault
+// encryptionKeyVersion resolves the generation of key material the vault
 // is pinned to. Version numbers start at 1, so 0 means nothing is pinned.
-func (r *mqlStackitSecretsManagerInstance) encryptionKeyVersionRef() (*mqlStackitKmsKeyVersion, error) {
-	field := &r.EncryptionKeyVersionRef
-	number := r.EncryptionKeyVersion.Data
+func (r *mqlStackitSecretsManagerInstance) encryptionKeyVersion() (*mqlStackitKmsKeyVersion, error) {
+	field := &r.EncryptionKeyVersion
+	number := r.EncryptionKeyVersionNumber.Data
 	if number == 0 {
 		return markNull[mqlStackitKmsKeyVersion](field)
 	}
