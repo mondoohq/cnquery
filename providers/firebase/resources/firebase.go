@@ -542,7 +542,9 @@ func initFirebaseProjectFirestore(runtime *plugin.Runtime, args map[string]*llx.
 					// Merge with any collections found from document reads
 					seen := map[string]bool{}
 					for _, c := range exposedCollections {
-						seen[c.(string)] = true
+						if s, ok := c.(string); ok {
+							seen[s] = true
+						}
 					}
 					for _, id := range collIds {
 						if s, ok := id.(string); ok && !seen[s] {
