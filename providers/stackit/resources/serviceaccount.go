@@ -41,6 +41,24 @@ func (r *mqlStackitServiceAccount) id() (string, error) {
 	return "stackit.serviceAccount/" + r.Email.Data, nil
 }
 
+// roleBindings lists the project bindings whose subject is this service
+// account, read off the member list the stackit.iam singleton already holds.
+// Direct project bindings only: a role granted on the folder or organization
+// is inherited by the project but does not appear in its member list.
+func (r *mqlStackitServiceAccount) roleBindings() ([]any, error) {
+	i, err := iamResource(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	members := i.GetMembers()
+	if members.Error != nil {
+		return nil, members.Error
+	}
+	return filterIamMembers(members.Data, func(m *mqlStackitIamMember) bool {
+		return m.Subject.Data == r.Email.Data
+	}), nil
+}
+
 func buildServiceAccount(runtime *plugin.Runtime, sa *serviceaccount.ServiceAccount) (plugin.Resource, error) {
 	return CreateResource(runtime, "stackit.serviceAccount", map[string]*llx.RawData{
 		"email":     llx.StringData(sa.GetEmail()),

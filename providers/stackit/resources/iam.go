@@ -7,8 +7,10 @@ import (
 	"errors"
 	"sync"
 
+	authorization "github.com/stackitcloud/stackit-sdk-go/services/authorization/v2api"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/types"
 )
 
 // Authorization API works against any STACKIT resource by type/id. For
@@ -140,17 +142,7 @@ func (r *mqlStackitIam) roles() ([]any, error) {
 	roles, _ := resp.GetRolesOk()
 	out := make([]any, 0, len(roles))
 	for i := range roles {
-		role := roles[i]
-		perms := []string{}
-		for _, p := range role.GetPermissions() {
-			perms = append(perms, p.GetName())
-		}
-		args := map[string]*llx.RawData{
-			"name":        llx.StringData(role.GetName()),
-			"description": llx.StringData(role.GetDescription()),
-			"permissions": strSliceData(perms),
-		}
-		res, err := CreateResource(r.MqlRuntime, "stackit.iam.role", args)
+		res, err := CreateResource(r.MqlRuntime, "stackit.iam.role", iamRoleArgs(&roles[i]))
 		if err != nil {
 			return nil, err
 		}
@@ -159,8 +151,93 @@ func (r *mqlStackitIam) roles() ([]any, error) {
 	return out, nil
 }
 
+// iamRoleArgs maps a role onto stackit.iam.role. The permission names stay a
+// plain list for the shipped `permissions` field; the descriptions the API
+// attaches to each permission land in `permissionDescriptions`, keyed by
+// name, so a reviewer can read what a permission string allows.
+func iamRoleArgs(role *authorization.Role) map[string]*llx.RawData {
+	perms := make([]string, 0, len(role.GetPermissions()))
+	for _, p := range role.GetPermissions() {
+		perms = append(perms, p.GetName())
+	}
+	return map[string]*llx.RawData{
+		"name":                   llx.StringData(role.GetName()),
+		"id":                     llx.StringData(role.GetId()),
+		"etag":                   llx.StringData(role.GetEtag()),
+		"description":            llx.StringData(role.GetDescription()),
+		"permissions":            strSliceData(perms),
+		"permissionDescriptions": llx.MapData(permissionDescriptions(role.GetPermissions()), types.String),
+	}
+}
+
+// permissionDescriptions indexes a role's permissions by name onto the
+// description the API supplies for each, dropping unnamed entries.
+func permissionDescriptions(perms []authorization.Permission) map[string]any {
+	out := make(map[string]any, len(perms))
+	for i := range perms {
+		if name := perms[i].GetName(); name != "" {
+			out[name] = perms[i].GetDescription()
+		}
+	}
+	return out
+}
+
 func (r *mqlStackitIamRole) id() (string, error) {
 	return "stackit.iam.role/" + conn(r.MqlRuntime).ProjectID() + "/" + r.Name.Data, nil
+}
+
+// members lists the bindings that grant this role on the project, read off
+// the member list the stackit.iam singleton already holds. Direct project
+// bindings only; grants inherited from the folder or organization are not
+// part of the project's member list.
+func (r *mqlStackitIamRole) members() ([]any, error) {
+	i, err := iamResource(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	members := i.GetMembers()
+	if members.Error != nil {
+		return nil, members.Error
+	}
+	return filterIamMembers(members.Data, func(m *mqlStackitIamMember) bool {
+		return m.Role.Data == r.Name.Data
+	}), nil
+}
+
+// serviceAccount resolves the binding's subject when it is one of the
+// project's service accounts. Null for a human user or a group, which the
+// API does not distinguish by shape, so the service-account list is the
+// test.
+func (r *mqlStackitIamMember) serviceAccount() (*mqlStackitServiceAccount, error) {
+	return serviceAccountRef(r.MqlRuntime, r.Subject.Data, &r.ServiceAccount)
+}
+
+// resourceType names the kind of resource whose bindings and roles this
+// resource lists. The provider is project-scoped, so it is always "project";
+// the field makes that scope explicit rather than implied.
+func (r *mqlStackitIam) resourceType() (string, error) {
+	return authResourceTypeProject, nil
+}
+
+// resourceId is the project the bindings and roles belong to.
+func (r *mqlStackitIam) resourceId() (string, error) {
+	return conn(r.MqlRuntime).ProjectID(), nil
+}
+
+// filterIamMembers keeps the member bindings a predicate accepts. Entries
+// that are not member resources are dropped.
+func filterIamMembers(items []any, keep func(*mqlStackitIamMember) bool) []any {
+	out := []any{}
+	for _, item := range items {
+		m, ok := item.(*mqlStackitIamMember)
+		if !ok || m == nil {
+			continue
+		}
+		if keep(m) {
+			out = append(out, m)
+		}
+	}
+	return out
 }
 
 // stackit.kms and stackit.iam namespaces need stable __id values too.
