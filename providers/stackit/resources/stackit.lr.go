@@ -834,6 +834,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.volume.sourceBackup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitVolume).GetSourceBackup()).ToDataRes(types.Resource("stackit.backup"))
 	},
+	"stackit.volume.sourceVolume": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVolume).GetSourceVolume()).ToDataRes(types.Resource("stackit.volume"))
+	},
 	"stackit.volume.server": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitVolume).GetServer()).ToDataRes(types.Resource("stackit.server"))
 	},
@@ -3497,6 +3500,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.volume.sourceBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitVolume).SourceBackup, ok = plugin.RawToTValue[*mqlStackitBackup](v.Value, v.Error)
+		return
+	},
+	"stackit.volume.sourceVolume": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVolume).SourceVolume, ok = plugin.RawToTValue[*mqlStackitVolume](v.Value, v.Error)
 		return
 	},
 	"stackit.volume.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7998,7 +8005,7 @@ func (c *mqlStackitServer) GetMetadata() *plugin.TValue[map[string]any] {
 type mqlStackitVolume struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitVolumeInternal it will be used here
+	mqlStackitVolumeInternal
 	Id                      plugin.TValue[string]
 	Name                    plugin.TValue[string]
 	Description             plugin.TValue[string]
@@ -8013,6 +8020,7 @@ type mqlStackitVolume struct {
 	SourceSnapshot          plugin.TValue[*mqlStackitSnapshot]
 	SourceBackupId          plugin.TValue[string]
 	SourceBackup            plugin.TValue[*mqlStackitBackup]
+	SourceVolume            plugin.TValue[*mqlStackitVolume]
 	Server                  plugin.TValue[*mqlStackitServer]
 	ServerId                plugin.TValue[string]
 	Encrypted               plugin.TValue[bool]
@@ -8151,6 +8159,22 @@ func (c *mqlStackitVolume) GetSourceBackup() *plugin.TValue[*mqlStackitBackup] {
 		}
 
 		return c.sourceBackup()
+	})
+}
+
+func (c *mqlStackitVolume) GetSourceVolume() *plugin.TValue[*mqlStackitVolume] {
+	return plugin.GetOrCompute[*mqlStackitVolume](&c.SourceVolume, func() (*mqlStackitVolume, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.volume", c.__id, "sourceVolume")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitVolume), nil
+			}
+		}
+
+		return c.sourceVolume()
 	})
 }
 
@@ -9131,7 +9155,7 @@ func (c *mqlStackitPublicIp) GetLabels() *plugin.TValue[map[string]any] {
 type mqlStackitSecurityGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitSecurityGroupInternal it will be used here
+	mqlStackitSecurityGroupInternal
 	Id          plugin.TValue[string]
 	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
@@ -11197,7 +11221,7 @@ func (c *mqlStackitSfs) GetLockId() *plugin.TValue[string] {
 type mqlStackitSfsResourcePool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitSfsResourcePoolInternal it will be used here
+	mqlStackitSfsResourcePoolInternal
 	Id                         plugin.TValue[string]
 	Name                       plugin.TValue[string]
 	State                      plugin.TValue[string]
@@ -11304,15 +11328,21 @@ func (c *mqlStackitSfsResourcePool) GetSizeGigabytes() *plugin.TValue[int64] {
 }
 
 func (c *mqlStackitSfsResourcePool) GetUsedGigabytes() *plugin.TValue[float64] {
-	return &c.UsedGigabytes
+	return plugin.GetOrCompute[float64](&c.UsedGigabytes, func() (float64, error) {
+		return c.usedGigabytes()
+	})
 }
 
 func (c *mqlStackitSfsResourcePool) GetAvailableGigabytes() *plugin.TValue[float64] {
-	return &c.AvailableGigabytes
+	return plugin.GetOrCompute[float64](&c.AvailableGigabytes, func() (float64, error) {
+		return c.availableGigabytes()
+	})
 }
 
 func (c *mqlStackitSfsResourcePool) GetUsedBySnapshotsGigabytes() *plugin.TValue[float64] {
-	return &c.UsedBySnapshotsGigabytes
+	return plugin.GetOrCompute[float64](&c.UsedBySnapshotsGigabytes, func() (float64, error) {
+		return c.usedBySnapshotsGigabytes()
+	})
 }
 
 func (c *mqlStackitSfsResourcePool) GetIpAcl() *plugin.TValue[[]any] {

@@ -884,6 +884,7 @@ stackit.volume.sourceBackup 13.4.3
 stackit.volume.sourceBackupId 13.4.3
 stackit.volume.sourceSnapshot 13.4.2
 stackit.volume.sourceSnapshotId 13.0.0
+stackit.volume.sourceVolume 13.7.2
 stackit.volume.status 13.0.0
 stackit.volume.updatedAt 13.0.0
 stackit.volumes 13.0.0

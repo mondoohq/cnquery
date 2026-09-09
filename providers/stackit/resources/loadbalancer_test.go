@@ -8,8 +8,35 @@ import (
 	"reflect"
 	"testing"
 
+	alb "github.com/stackitcloud/stackit-sdk-go/services/alb/v2api"
 	loadbalancer "github.com/stackitcloud/stackit-sdk-go/services/loadbalancer/v2api"
 )
+
+// TestAlbDisableTargetSecurityGroupAssignmentAbsentIsNull pins the application
+// load balancer to the same tri-state reading as the network one. It used to
+// read the flag through the non-pointer getter, so an absent value came back
+// as false: an assurance that the managed group is attached on a balancer
+// whose setting was never read.
+func TestAlbDisableTargetSecurityGroupAssignmentAbsentIsNull(t *testing.T) {
+	cases := []struct {
+		name    string
+		payload string
+		want    *bool
+	}{
+		{"flag absent reads null", `{"name":"alb1"}`, nil},
+		{"operator opted out", `{"name":"alb1","disableTargetSecurityGroupAssignment":true}`, boolPtr(true)},
+		{"managed group attached", `{"name":"alb1","disableTargetSecurityGroupAssignment":false}`, boolPtr(false)},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var lb alb.LoadBalancer
+			if err := json.Unmarshal([]byte(tc.payload), &lb); err != nil {
+				t.Fatalf("decoding alb payload: %v", err)
+			}
+			assertBoolPtr(t, "lbDisableTargetSecurityGroupAssignment(alb)", lbDisableTargetSecurityGroupAssignment(&lb), tc.want)
+		})
+	}
+}
 
 func TestListenerSNINames(t *testing.T) {
 	if got := listenerSNINames(nil); len(got) != 0 {

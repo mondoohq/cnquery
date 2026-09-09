@@ -334,9 +334,9 @@ func (r *mqlStackit) volumes() ([]any, error) {
 // typed-reference field. VolumeSource.Type is one of image, volume, snapshot,
 // or backup. Snapshots and backups are distinct STACKIT resources, so their
 // UUIDs must not be conflated: a backup UUID surfaced as sourceSnapshotId would
-// resolve against the snapshot API and 404. A "volume" clone source (and any
-// unknown type) has no modeled field and yields all-empty IDs.
-func classifyVolumeSource(sourceType, sourceID string) (imageID, snapshotID, backupID string) {
+// resolve against the snapshot API and 404. A "volume" source is a clone of
+// another volume; an unknown type yields all-empty IDs.
+func classifyVolumeSource(sourceType, sourceID string) (imageID, snapshotID, backupID, volumeID string) {
 	switch sourceType {
 	case "image":
 		imageID = sourceID
@@ -344,14 +344,22 @@ func classifyVolumeSource(sourceType, sourceID string) (imageID, snapshotID, bac
 		snapshotID = sourceID
 	case "backup":
 		backupID = sourceID
+	case "volume":
+		volumeID = sourceID
 	}
 	return
 }
 
+type mqlStackitVolumeInternal struct {
+	// cacheSourceVolumeID is the volume this one was cloned from, resolved by
+	// sourceVolume(). Held internally rather than as a raw id field.
+	cacheSourceVolumeID string
+}
+
 func buildVolume(runtime *plugin.Runtime, v *iaas.Volume) (plugin.Resource, error) {
-	var imageID, snapshotID, backupID string
+	var imageID, snapshotID, backupID, sourceVolumeID string
 	if src, ok := v.GetSourceOk(); ok {
-		imageID, snapshotID, backupID = classifyVolumeSource(src.GetType(), src.GetId())
+		imageID, snapshotID, backupID, sourceVolumeID = classifyVolumeSource(src.GetType(), src.GetId())
 	}
 	serverID := v.GetServerId()
 
@@ -387,11 +395,29 @@ func buildVolume(runtime *plugin.Runtime, v *iaas.Volume) (plugin.Resource, erro
 		"updatedAt":            llx.TimeDataPtr(timeOrNil(updatedAt, ok2)),
 		"labels":               labelData(v.GetLabels()),
 	}
-	return CreateResource(runtime, "stackit.volume", args)
+	res, err := CreateResource(runtime, "stackit.volume", args)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlStackitVolume).cacheSourceVolumeID = sourceVolumeID
+	return res, nil
 }
 
 func (r *mqlStackitVolume) id() (string, error) {
 	return "stackit.volume/" + r.Id.Data, nil
+}
+
+func (r *mqlStackitVolume) sourceVolume() (*mqlStackitVolume, error) {
+	if r.cacheSourceVolumeID == "" {
+		return markNull[mqlStackitVolume](&r.SourceVolume)
+	}
+	res, err := NewResource(r.MqlRuntime, "stackit.volume", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheSourceVolumeID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitVolume), nil
 }
 
 func initStackitVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -997,6 +1023,16 @@ func (r *mqlStackit) securityGroups() ([]any, error) {
 	return out, nil
 }
 
+type mqlStackitSecurityGroupInternal struct {
+	// cacheRules holds the rules the group response carried inline, so that
+	// rules() does not spend a ListSecurityGroupRules call per group. The
+	// exposure walk reads every group's rules for every server, so that call
+	// multiplied. cacheRulesSet distinguishes "the API sent an empty rule
+	// list" (nothing to fetch) from "the API omitted the field" (fetch).
+	cacheRules    []iaas.SecurityGroupRule
+	cacheRulesSet bool
+}
+
 func buildSecurityGroup(runtime *plugin.Runtime, sg *iaas.SecurityGroup) (plugin.Resource, error) {
 	createdAt, ok1 := sg.GetCreatedAtOk()
 	updatedAt, ok2 := sg.GetUpdatedAtOk()
@@ -1009,7 +1045,16 @@ func buildSecurityGroup(runtime *plugin.Runtime, sg *iaas.SecurityGroup) (plugin
 		"updatedAt":   llx.TimeDataPtr(timeOrNil(updatedAt, ok2)),
 		"labels":      labelData(sg.GetLabels()),
 	}
-	return CreateResource(runtime, "stackit.securityGroup", args)
+	res, err := CreateResource(runtime, "stackit.securityGroup", args)
+	if err != nil {
+		return nil, err
+	}
+	if rules, ok := sg.GetRulesOk(); ok {
+		mqlSg := res.(*mqlStackitSecurityGroup)
+		mqlSg.cacheRules = rules
+		mqlSg.cacheRulesSet = true
+	}
+	return res, nil
 }
 
 func (r *mqlStackitSecurityGroup) id() (string, error) {
@@ -1038,67 +1083,74 @@ func initStackitSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawD
 }
 
 func (r *mqlStackitSecurityGroup) rules() ([]any, error) {
-	c := conn(r.MqlRuntime)
-	client, err := c.IaaS()
-	if err != nil {
-		return nil, err
-	}
-	resp, err := client.DefaultAPI.ListSecurityGroupRules(bgctx(), c.ProjectID(), c.Region(), r.Id.Data).Execute()
-	if err != nil {
-		if isAccessDenied(err) {
-			return []any{}, nil
+	items := r.cacheRules
+	if !r.cacheRulesSet {
+		c := conn(r.MqlRuntime)
+		client, err := c.IaaS()
+		if err != nil {
+			return nil, err
 		}
-		return nil, err
+		resp, err := client.DefaultAPI.ListSecurityGroupRules(bgctx(), c.ProjectID(), c.Region(), r.Id.Data).Execute()
+		if err != nil {
+			if isAccessDenied(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		items, _ = resp.GetItemsOk()
 	}
-	items, _ := resp.GetItemsOk()
 	out := make([]any, 0, len(items))
 	for i := range items {
-		rule := items[i]
-
-		// icmpType/icmpCode are nullable in the schema: leave them nil (MQL null)
-		// for non-ICMP rules rather than emitting 0, which is a valid ICMP type.
-		var icmpType, icmpCode *int64
-		if icmp, ok := rule.GetIcmpParametersOk(); ok {
-			t := icmp.GetType()
-			code := icmp.GetCode()
-			icmpType = &t
-			icmpCode = &code
-		}
-		var portMin, portMax int64
-		if pr, ok := rule.GetPortRangeOk(); ok {
-			portMin = int64(pr.GetMin())
-			portMax = int64(pr.GetMax())
-		}
-		var protocol string
-		if p, ok := rule.GetProtocolOk(); ok {
-			n, okNum := p.GetNumberOk()
-			protocol = protocolLabel(p.GetName(), derefInt64(n), okNum && n != nil)
-		}
-
-		createdAt, okCreated := rule.GetCreatedAtOk()
-
-		args := map[string]*llx.RawData{
-			"id":                    llx.StringData(rule.GetId()),
-			"securityGroupId":       llx.StringData(r.Id.Data),
-			"direction":             llx.StringData(rule.GetDirection()),
-			"ethertype":             llx.StringData(rule.GetEthertype()),
-			"protocol":              llx.StringData(protocol),
-			"description":           llx.StringData(rule.GetDescription()),
-			"icmpType":              llx.IntDataPtr(icmpType),
-			"icmpCode":              llx.IntDataPtr(icmpCode),
-			"portRangeMin":          llx.IntData(portMin),
-			"portRangeMax":          llx.IntData(portMax),
-			"ipRange":               llx.StringData(rule.GetIpRange()),
-			"remoteSecurityGroupId": llx.StringData(rule.GetRemoteSecurityGroupId()),
-			"createdAt":             llx.TimeDataPtr(timeOrNil(createdAt, okCreated)),
-		}
-		res, err := CreateResource(r.MqlRuntime, "stackit.securityGroup.rule", args)
+		res, err := CreateResource(r.MqlRuntime, "stackit.securityGroup.rule", securityGroupRuleArgs(r.Id.Data, &items[i]))
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, res)
 	}
 	return out, nil
+}
+
+// securityGroupRuleArgs maps one SDK rule onto the stackit.securityGroup.rule
+// fields. It serves both the rules the group response carries inline and the
+// ones ListSecurityGroupRules returns, which share the SecurityGroupRule model.
+func securityGroupRuleArgs(securityGroupID string, rule *iaas.SecurityGroupRule) map[string]*llx.RawData {
+	// icmpType/icmpCode are nullable in the schema: leave them nil (MQL null)
+	// for non-ICMP rules rather than emitting 0, which is a valid ICMP type.
+	var icmpType, icmpCode *int64
+	if icmp, ok := rule.GetIcmpParametersOk(); ok {
+		t := icmp.GetType()
+		code := icmp.GetCode()
+		icmpType = &t
+		icmpCode = &code
+	}
+	var portMin, portMax int64
+	if pr, ok := rule.GetPortRangeOk(); ok {
+		portMin = int64(pr.GetMin())
+		portMax = int64(pr.GetMax())
+	}
+	var protocol string
+	if p, ok := rule.GetProtocolOk(); ok {
+		n, okNum := p.GetNumberOk()
+		protocol = protocolLabel(p.GetName(), derefInt64(n), okNum && n != nil)
+	}
+
+	createdAt, okCreated := rule.GetCreatedAtOk()
+
+	return map[string]*llx.RawData{
+		"id":                    llx.StringData(rule.GetId()),
+		"securityGroupId":       llx.StringData(securityGroupID),
+		"direction":             llx.StringData(rule.GetDirection()),
+		"ethertype":             llx.StringData(rule.GetEthertype()),
+		"protocol":              llx.StringData(protocol),
+		"description":           llx.StringData(rule.GetDescription()),
+		"icmpType":              llx.IntDataPtr(icmpType),
+		"icmpCode":              llx.IntDataPtr(icmpCode),
+		"portRangeMin":          llx.IntData(portMin),
+		"portRangeMax":          llx.IntData(portMax),
+		"ipRange":               llx.StringData(rule.GetIpRange()),
+		"remoteSecurityGroupId": llx.StringData(rule.GetRemoteSecurityGroupId()),
+		"createdAt":             llx.TimeDataPtr(timeOrNil(createdAt, okCreated)),
+	}
 }
 
 // protocolLabel renders a security-group rule protocol as its name, falling

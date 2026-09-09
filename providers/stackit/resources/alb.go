@@ -62,7 +62,7 @@ func buildAlbLoadBalancer(runtime *plugin.Runtime, lb *alb.LoadBalancer, region 
 		"errors":                               llx.ArrayData(anySliceToDict(lb.GetErrors()), types.Dict),
 		"loadBalancerSecurityGroup":            llx.DictData(toDict(lb.GetLoadBalancerSecurityGroup())),
 		"targetSecurityGroup":                  llx.DictData(toDict(lb.GetTargetSecurityGroup())),
-		"disableTargetSecurityGroupAssignment": llx.BoolData(lb.GetDisableTargetSecurityGroupAssignment()),
+		"disableTargetSecurityGroupAssignment": llx.BoolDataPtr(lbDisableTargetSecurityGroupAssignment(lb)),
 		"labels":                               labelData(lb.GetLabels()),
 	}
 	return CreateResource(runtime, "stackit.alb.loadBalancer", args)

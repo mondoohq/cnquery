@@ -220,16 +220,23 @@ func lbExposure(externalAddress string, privateNetworkOnly bool, options any) (i
 // dbaasInstanceReachable reports whether a DBaaS-style managed instance
 // (OpenSearch, MariaDB, Redis, RabbitMQ, LogMe) is reachable from the internet.
 // These instances surface their networking through the free-form `parameters`
-// blob: `enable_public_access` toggles a public endpoint, and `sgw_acl` is the
-// source-IP allow-list. The instance is reachable when public access is on and
-// the allow-list admits any address (or is absent).
+// blob, and the SDK's InstanceParameters model documents exactly one network
+// key on it: `sgw_acl`, the comma-separated CIDR allow-list ("IP networks
+// which are allowed to access this instance"). The instance is reachable when
+// that list admits any address, or is absent.
+//
+// An `enable_public_access` key is honored only when the API actually sends
+// it: an explicit false short-circuits to "not reachable". No engine's
+// InstanceParameters model declares the key, so it is usually absent, and an
+// absent key must not be read as false. Doing so reported every CF-broker
+// instance as unreachable regardless of its allow-list, which is the
+// reassuring answer and the wrong one.
 func dbaasInstanceReachable(parameters any) bool {
 	params, ok := parameters.(map[string]any)
 	if !ok {
 		return false
 	}
-	publicAccess := dictBool(params["enable_public_access"])
-	if !publicAccess {
+	if v, present := params["enable_public_access"]; present && !dictBool(v) {
 		return false
 	}
 	return aclAllowsAnyAddress(dictStrSlice(params["sgw_acl"]))

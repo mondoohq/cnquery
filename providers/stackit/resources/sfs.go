@@ -5,6 +5,8 @@ package resources
 
 import (
 	"fmt"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	sfs "github.com/stackitcloud/stackit-sdk-go/services/sfs/v1api"
@@ -37,6 +39,7 @@ type sfsExportPolicyData interface {
 	GetId() string
 	GetName() string
 	GetSharesUsingExportPolicy() int32
+	GetRulesOk() ([]sfs.ShareExportPolicyRule, bool)
 	GetLabels() map[string]string
 	GetCreatedAtOk() (*time.Time, bool)
 }
@@ -126,6 +129,12 @@ func (r *mqlStackitSfs) lockId() (string, error) {
 
 // ------------------------- SFS resource pool -------------------------
 
+// sfsResourcePoolArgs maps a pool onto the stackit.sfs.resourcePool fields.
+// The three usage gauges (used, available, used by snapshots) are left out:
+// the SDK documents them as "only available when retrieving a single Resource
+// Pool by ID", so the list response carries zeros for every pool. They are
+// read lazily through fetchSpace, which the init path pre-seeds from the
+// single-pool response it already holds (see sfsResourcePoolSpaceArgs).
 func sfsResourcePoolArgs(region string, rp sfsResourcePoolData) map[string]*llx.RawData {
 	pc := rp.GetPerformanceClass()
 	sp := rp.GetSpace()
@@ -146,9 +155,6 @@ func sfsResourcePoolArgs(region string, rp sfsResourcePoolData) map[string]*llx.
 		"mountPath":                  llx.StringData(rp.GetMountPath()),
 		"countShares":                llx.IntData(rp.GetCountShares()),
 		"sizeGigabytes":              llx.IntData(sp.GetSizeGigabytes()),
-		"usedGigabytes":              llx.FloatData(derefFloat(sp.GetUsedGigabytes())),
-		"availableGigabytes":         llx.FloatData(derefFloat(sp.GetAvailableGigabytes())),
-		"usedBySnapshotsGigabytes":   llx.FloatData(derefFloat(sp.GetUsedBySnapshotsGigabytes())),
 		"ipAcl":                      strSliceData(rp.GetIpAcl()),
 		"snapshotsAreVisible":        llx.BoolData(rp.GetSnapshotsAreVisible()),
 		"snapshotPolicyId":           llx.StringData(snapPolicyID),
@@ -156,6 +162,96 @@ func sfsResourcePoolArgs(region string, rp sfsResourcePoolData) map[string]*llx.
 		"labels":                     labelData(rp.GetLabels()),
 		"createdAt":                  llx.TimeDataPtr(timeOrNil(rp.GetCreatedAtOk())),
 	}
+}
+
+// sfsResourcePoolSpaceArgs adds the usage gauges to a pool's args. Only call
+// it with a pool that came from GetResourcePool; on a list element the gauges
+// are absent and would read as 0.
+func sfsResourcePoolSpaceArgs(args map[string]*llx.RawData, sp sfs.ResourcePoolSpace) map[string]*llx.RawData {
+	args["usedGigabytes"] = llx.FloatData(derefFloat(sp.GetUsedGigabytes()))
+	args["availableGigabytes"] = llx.FloatData(derefFloat(sp.GetAvailableGigabytes()))
+	args["usedBySnapshotsGigabytes"] = llx.FloatData(derefFloat(sp.GetUsedBySnapshotsGigabytes()))
+	return args
+}
+
+type mqlStackitSfsResourcePoolInternal struct {
+	spaceFetched atomic.Bool
+	space        *sfs.ResourcePoolSpace
+	spaceLock    sync.Mutex
+}
+
+// fetchSpace reads the pool's usage gauges through GetResourcePool once and
+// caches them; the three gauge accessors share the call. A nil result with a
+// nil error means the read was denied, and the gauges report null rather
+// than a zero that would read as an empty pool.
+func (r *mqlStackitSfsResourcePool) fetchSpace() (*sfs.ResourcePoolSpace, error) {
+	if r.spaceFetched.Load() {
+		return r.space, nil
+	}
+	r.spaceLock.Lock()
+	defer r.spaceLock.Unlock()
+	if r.spaceFetched.Load() {
+		return r.space, nil
+	}
+	c := conn(r.MqlRuntime)
+	client, err := c.Sfs()
+	if err != nil {
+		return nil, err
+	}
+	region := r.Region.Data
+	if region == "" {
+		region = c.Region()
+	}
+	resp, err := client.DefaultAPI.GetResourcePool(bgctx(), c.ProjectID(), region, r.Id.Data).Execute()
+	if err != nil {
+		if isAccessDenied(err) {
+			r.spaceFetched.Store(true)
+			return nil, nil
+		}
+		return nil, err
+	}
+	if pool, ok := resp.GetResourcePoolOk(); ok && pool != nil {
+		sp := pool.GetSpace()
+		r.space = &sp
+	}
+	r.spaceFetched.Store(true)
+	return r.space, nil
+}
+
+func (r *mqlStackitSfsResourcePool) usedGigabytes() (float64, error) {
+	sp, err := r.fetchSpace()
+	if err != nil {
+		return 0, err
+	}
+	if sp == nil {
+		r.UsedGigabytes.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return derefFloat(sp.GetUsedGigabytes()), nil
+}
+
+func (r *mqlStackitSfsResourcePool) availableGigabytes() (float64, error) {
+	sp, err := r.fetchSpace()
+	if err != nil {
+		return 0, err
+	}
+	if sp == nil {
+		r.AvailableGigabytes.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return derefFloat(sp.GetAvailableGigabytes()), nil
+}
+
+func (r *mqlStackitSfsResourcePool) usedBySnapshotsGigabytes() (float64, error) {
+	sp, err := r.fetchSpace()
+	if err != nil {
+		return 0, err
+	}
+	if sp == nil {
+		r.UsedBySnapshotsGigabytes.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return derefFloat(sp.GetUsedBySnapshotsGigabytes()), nil
 }
 
 func (r *mqlStackitSfsResourcePool) id() (string, error) {
@@ -179,9 +275,14 @@ func (r *mqlStackitSfsResourcePool) shares() ([]any, error) {
 	out := make([]any, 0, len(shares))
 	for i := range shares {
 		sh := shares[i]
-		exportPolicyID := ""
-		if v, ok := sh.GetExportPolicyOk(); ok && v != nil {
-			exportPolicyID = v.GetId()
+		// The share carries its export policy inline, rules included, so the
+		// policy resource is built here rather than re-fetched by id later.
+		var exportPolicy *mqlStackitSfsExportPolicy
+		if v, ok := sh.GetExportPolicyOk(); ok && v != nil && v.GetId() != "" {
+			exportPolicy, err = newSfsExportPolicy(r.MqlRuntime, r.Region.Data, v)
+			if err != nil {
+				return nil, err
+			}
 		}
 		res, err := CreateResource(r.MqlRuntime, "stackit.sfs.share", map[string]*llx.RawData{
 			"id":                      llx.StringData(sh.GetId()),
@@ -196,7 +297,7 @@ func (r *mqlStackitSfsResourcePool) shares() ([]any, error) {
 			return nil, err
 		}
 		share := res.(*mqlStackitSfsShare)
-		share.cacheExportPolicyID = exportPolicyID
+		share.cacheExportPolicy = exportPolicy
 		share.cacheRegion = r.Region.Data
 		out = append(out, share)
 	}
@@ -255,7 +356,10 @@ func initStackitSfsResourcePool(runtime *plugin.Runtime, args map[string]*llx.Ra
 	if !ok {
 		return nil, nil, fmt.Errorf("stackit.sfs.resourcePool with id %q not found", id)
 	}
-	res, err := CreateResource(runtime, "stackit.sfs.resourcePool", sfsResourcePoolArgs(c.Region(), pool))
+	// The single-pool response is the one place the usage gauges are
+	// populated, so seed them here instead of paying fetchSpace later.
+	args = sfsResourcePoolSpaceArgs(sfsResourcePoolArgs(c.Region(), pool), pool.GetSpace())
+	res, err := CreateResource(runtime, "stackit.sfs.resourcePool", args)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -265,8 +369,10 @@ func initStackitSfsResourcePool(runtime *plugin.Runtime, args map[string]*llx.Ra
 // ------------------------- SFS share -------------------------
 
 type mqlStackitSfsShareInternal struct {
-	cacheExportPolicyID string
-	cacheRegion         string
+	// cacheExportPolicy is the policy the share response carried inline,
+	// already built as a resource; nil when the share has no policy.
+	cacheExportPolicy *mqlStackitSfsExportPolicy
+	cacheRegion       string
 }
 
 func (r *mqlStackitSfsShare) id() (string, error) {
@@ -274,23 +380,22 @@ func (r *mqlStackitSfsShare) id() (string, error) {
 }
 
 func (r *mqlStackitSfsShare) exportPolicy() (*mqlStackitSfsExportPolicy, error) {
-	if r.cacheExportPolicyID == "" {
+	if r.cacheExportPolicy == nil {
 		r.ExportPolicy.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	res, err := NewResource(r.MqlRuntime, "stackit.sfs.exportPolicy", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheExportPolicyID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlStackitSfsExportPolicy), nil
+	return r.cacheExportPolicy, nil
 }
 
 // ------------------------- SFS share export policy -------------------------
 
 type mqlStackitSfsExportPolicyInternal struct {
 	cacheRegion string
+	// cacheRules holds the rules the policy response carried inline. Both
+	// ListShareExportPolicies and the policy nested on a share return them,
+	// so rules() only calls GetShareExportPolicy when the field was omitted.
+	cacheRules    []sfs.ShareExportPolicyRule
+	cacheRulesSet bool
 }
 
 func newSfsExportPolicy(runtime *plugin.Runtime, region string, p sfsExportPolicyData) (*mqlStackitSfsExportPolicy, error) {
@@ -306,6 +411,10 @@ func newSfsExportPolicy(runtime *plugin.Runtime, region string, p sfsExportPolic
 	}
 	ep := res.(*mqlStackitSfsExportPolicy)
 	ep.cacheRegion = region
+	if rules, ok := p.GetRulesOk(); ok {
+		ep.cacheRules = rules
+		ep.cacheRulesSet = true
+	}
 	return ep, nil
 }
 
@@ -314,27 +423,30 @@ func (r *mqlStackitSfsExportPolicy) id() (string, error) {
 }
 
 func (r *mqlStackitSfsExportPolicy) rules() ([]any, error) {
-	c := conn(r.MqlRuntime)
-	client, err := c.Sfs()
-	if err != nil {
-		return nil, err
-	}
-	region := r.cacheRegion
-	if region == "" {
-		region = c.Region()
-	}
-	resp, err := client.DefaultAPI.GetShareExportPolicy(bgctx(), c.ProjectID(), region, r.Id.Data).Execute()
-	if err != nil {
-		if isAccessDenied(err) {
+	rules := r.cacheRules
+	if !r.cacheRulesSet {
+		c := conn(r.MqlRuntime)
+		client, err := c.Sfs()
+		if err != nil {
+			return nil, err
+		}
+		region := r.cacheRegion
+		if region == "" {
+			region = c.Region()
+		}
+		resp, err := client.DefaultAPI.GetShareExportPolicy(bgctx(), c.ProjectID(), region, r.Id.Data).Execute()
+		if err != nil {
+			if isAccessDenied(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		pol, ok := resp.GetShareExportPolicyOk()
+		if !ok {
 			return []any{}, nil
 		}
-		return nil, err
+		rules, _ = pol.GetRulesOk()
 	}
-	pol, ok := resp.GetShareExportPolicyOk()
-	if !ok {
-		return []any{}, nil
-	}
-	rules, _ := pol.GetRulesOk()
 	out := make([]any, 0, len(rules))
 	for i := range rules {
 		rule := rules[i]

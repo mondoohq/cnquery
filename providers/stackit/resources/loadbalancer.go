@@ -104,6 +104,13 @@ func buildLoadBalancer(runtime *plugin.Runtime, lb *loadbalancer.LoadBalancer, r
 	return res, nil
 }
 
+// targetSecurityGroupAssignmentFlag is the slice of a load balancer (network
+// or application) that lbDisableTargetSecurityGroupAssignment reads. Both SDKs
+// generate the same accessor on their LoadBalancer models.
+type targetSecurityGroupAssignmentFlag interface {
+	GetDisableTargetSecurityGroupAssignmentOk() (*bool, bool)
+}
+
 // lbDisableTargetSecurityGroupAssignment reports whether the operator opted
 // out of attaching the managed target security group to the backends, or nil
 // when the API reports no setting.
@@ -112,7 +119,8 @@ func buildLoadBalancer(runtime *plugin.Runtime, lb *loadbalancer.LoadBalancer, r
 // false, so nil is the only honest reading of an absent value. Reporting false
 // would assert that the managed group is being attached on a balancer whose
 // setting was never read, which is the reassuring answer and the wrong one.
-func lbDisableTargetSecurityGroupAssignment(lb *loadbalancer.LoadBalancer) *bool {
+// The network and application load balancers share this reading.
+func lbDisableTargetSecurityGroupAssignment(lb targetSecurityGroupAssignmentFlag) *bool {
 	if lb == nil {
 		return nil
 	}

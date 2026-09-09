@@ -54,26 +54,82 @@ func TestProtocolLabel(t *testing.T) {
 func TestClassifyVolumeSource(t *testing.T) {
 	const id = "11111111-2222-3333-4444-555555555555"
 	cases := []struct {
-		name                              string
-		sourceType                        string
-		wantImage, wantSnapshot, wantBkup string
+		name                                          string
+		sourceType                                    string
+		wantImage, wantSnapshot, wantBkup, wantVolume string
 	}{
-		{"image source", "image", id, "", ""},
-		{"snapshot source", "snapshot", "", id, ""},
-		{"backup source stays a backup, not a snapshot", "backup", "", "", id},
-		{"volume clone maps to nothing", "volume", "", "", ""},
-		{"unknown type maps to nothing", "something-new", "", "", ""},
+		{"image source", "image", id, "", "", ""},
+		{"snapshot source", "snapshot", "", id, "", ""},
+		{"backup source stays a backup, not a snapshot", "backup", "", "", id, ""},
+		// A clone used to map to nothing, which silently erased where the
+		// volume's data came from.
+		{"volume clone maps to the source volume", "volume", "", "", "", id},
+		{"unknown type maps to nothing", "something-new", "", "", "", ""},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			gotImage, gotSnapshot, gotBackup := classifyVolumeSource(tc.sourceType, id)
-			if gotImage != tc.wantImage || gotSnapshot != tc.wantSnapshot || gotBackup != tc.wantBkup {
-				t.Fatalf("classifyVolumeSource(%q, id) = (%q, %q, %q), want (%q, %q, %q)",
-					tc.sourceType, gotImage, gotSnapshot, gotBackup,
-					tc.wantImage, tc.wantSnapshot, tc.wantBkup)
+			gotImage, gotSnapshot, gotBackup, gotVolume := classifyVolumeSource(tc.sourceType, id)
+			if gotImage != tc.wantImage || gotSnapshot != tc.wantSnapshot || gotBackup != tc.wantBkup || gotVolume != tc.wantVolume {
+				t.Fatalf("classifyVolumeSource(%q, id) = (%q, %q, %q, %q), want (%q, %q, %q, %q)",
+					tc.sourceType, gotImage, gotSnapshot, gotBackup, gotVolume,
+					tc.wantImage, tc.wantSnapshot, tc.wantBkup, tc.wantVolume)
 			}
 		})
 	}
+}
+
+// TestSecurityGroupRuleArgs pins the rule mapping that both the inline rules
+// on a group response and the ListSecurityGroupRules items go through. The
+// numeric-only protocol and the ICMP null handling are the two places a
+// refactor can silently regress.
+func TestSecurityGroupRuleArgs(t *testing.T) {
+	decode := func(payload string) *iaas.SecurityGroupRule {
+		var r iaas.SecurityGroupRule
+		if err := json.Unmarshal([]byte(payload), &r); err != nil {
+			t.Fatalf("decoding rule: %v", err)
+		}
+		return &r
+	}
+
+	t.Run("tcp ingress rule", func(t *testing.T) {
+		args := securityGroupRuleArgs("sg-1", decode(`{
+			"id": "rule-1", "direction": "ingress", "ethertype": "IPv4",
+			"protocol": {"name": "tcp"}, "portRange": {"min": 22, "max": 22},
+			"ipRange": "0.0.0.0/0", "description": "ssh"
+		}`))
+		if got := args["securityGroupId"].Value; got != "sg-1" {
+			t.Fatalf("securityGroupId = %v, want sg-1", got)
+		}
+		if got := args["protocol"].Value; got != "tcp" {
+			t.Fatalf("protocol = %v, want tcp", got)
+		}
+		if got := args["portRangeMin"].Value; got != int64(22) {
+			t.Fatalf("portRangeMin = %v (%T), want 22", got, got)
+		}
+		if args["icmpType"].Value != nil || args["icmpCode"].Value != nil {
+			t.Fatalf("icmpType/icmpCode = %v/%v, want null on a non-ICMP rule", args["icmpType"].Value, args["icmpCode"].Value)
+		}
+		if got := args["ipRange"].Value; got != "0.0.0.0/0" {
+			t.Fatalf("ipRange = %v", got)
+		}
+	})
+
+	t.Run("numeric-only protocol renders its number", func(t *testing.T) {
+		args := securityGroupRuleArgs("sg-1", decode(`{"id": "rule-2", "direction": "egress", "protocol": {"number": 47}}`))
+		if got := args["protocol"].Value; got != "47" {
+			t.Fatalf("protocol = %v, want 47", got)
+		}
+	})
+
+	t.Run("icmp rule carries type and code", func(t *testing.T) {
+		args := securityGroupRuleArgs("sg-1", decode(`{"id": "rule-3", "direction": "ingress", "protocol": {"name": "icmp"}, "icmpParameters": {"type": 8, "code": 0}}`))
+		if got := args["icmpType"].Value; got != int64(8) {
+			t.Fatalf("icmpType = %v (%T), want 8", got, got)
+		}
+		if got := args["icmpCode"].Value; got != int64(0) {
+			t.Fatalf("icmpCode = %v (%T), want 0 (a real code, not null)", got, got)
+		}
+	})
 }
 
 // --- server posture fields that must stay tri-state -------------------------
