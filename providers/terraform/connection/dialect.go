@@ -31,24 +31,17 @@ const (
 // its dialect from the files on disk.
 const OptionDialect = "iac-tool"
 
-// ParseDialect maps a recorded option value onto a dialect, defaulting to
-// Terraform for anything unrecognized.
-func ParseDialect(s string) Dialect {
-	switch strings.ToLower(strings.TrimSpace(s)) {
-	case "opentofu", "tofu":
-		return DialectOpenTofu
-	default:
-		return DialectTerraform
-	}
-}
-
-// DialectForConnector maps a connector name onto the dialect it selects.
+// DialectForConnector maps a connector name onto the dialect it selects, and
+// reports whether the name was one this provider serves.
 //
 // The two tools get a connector each, so invoking one is how a user says which
 // tool the configuration belongs to. That has to be a distinct signal from "no
 // choice was made": a name this provider does not serve leaves the dialect
 // unset rather than quietly meaning Terraform, so an unrecognized caller falls
 // back to detection instead of forcing a tool it never named.
+//
+// This is the one place the spellings are matched. ParseDialect is the same
+// match with a default, for the callers that have no "unset" to represent.
 func DialectForConnector(name string) (Dialect, bool) {
 	switch strings.ToLower(strings.TrimSpace(name)) {
 	case "opentofu", "tofu":
@@ -58,6 +51,20 @@ func DialectForConnector(name string) (Dialect, bool) {
 	default:
 		return "", false
 	}
+}
+
+// ParseDialect maps a recorded option value onto a dialect, defaulting to
+// Terraform for anything unrecognized.
+//
+// The option is written from a connector name, so it accepts exactly the
+// spellings a connector does; an inventory that sets something else gets the
+// default rather than an error, because a connection option is not the place to
+// fail a scan over a typo.
+func ParseDialect(s string) Dialect {
+	if dialect, ok := DialectForConnector(s); ok {
+		return dialect
+	}
+	return DialectTerraform
 }
 
 // fileClass groups the configuration file kinds that OpenTofu defines a
