@@ -965,6 +965,28 @@ private stackit.loadBalancer @defaults("name status externalAddress") {
   labels map[string]string
   // Internet-exposure breakdown (public address combined with the access-control allow-list)
   exposure() stackit.network.exposure
+  // CIDR allow-list of client networks permitted to reach the balancer
+  //
+  // From options.accessControl.allowedSourceRanges. Empty when no
+  // allow-list is configured, which leaves a public balancer reachable
+  // from any address.
+  allowedSourceRanges() []string
+  // Whether the public address is a managed ephemeral one
+  //
+  // True when STACKIT allocates and releases the public IP with the
+  // balancer rather than binding a reserved address. Null when the
+  // options carry no setting.
+  ephemeralAddress() bool
+  // Endpoint the balancer pushes access logs to
+  //
+  // From options.observability.logs.pushUrl, an egress destination for
+  // request logs. Empty when logs are not shipped.
+  observabilityLogsPushUrl() string
+  // Endpoint the balancer pushes metrics to
+  //
+  // From options.observability.metrics.pushUrl. Empty when metrics are
+  // not shipped.
+  observabilityMetricsPushUrl() string
 }
 
 // STACKIT load balancer listener
@@ -1038,6 +1060,22 @@ private stackit.loadBalancer.targetPool @defaults("name targetPort") {
   // Single key `useSourceIpAddress` (bool): when true, requests from
   // the same client source IP are pinned to the same target.
   sessionPersistence dict
+  // Whether health probes use TLS to the backends
+  //
+  // From activeHealthCheck.httpHealthChecks.tls.enabled. Null when the
+  // pool has no HTTP health check or the API reports no setting.
+  healthCheckTlsEnabled bool
+  // Whether health probes skip backend certificate validation
+  //
+  // From activeHealthCheck.httpHealthChecks.tls.skipCertificateValidation,
+  // which the service documents as insecure and for testing only. Null
+  // when the pool has no HTTP health check or the API reports no setting.
+  healthCheckSkipCertificateValidation bool
+  // Whether clients are pinned to a backend by source address
+  //
+  // From sessionPersistence.useSourceIpAddress. Null when the API reports
+  // no setting.
+  sessionPersistenceSourceIp bool
 }
 
 // STACKIT Kubernetes Engine namespace
@@ -3211,6 +3249,7 @@ private stackit.certificate @defaults("id name region") {
 // reachability, and wafs surfaces the Web Application Firewall
 // configurations the listeners reference.
 private stackit.alb.loadBalancer @defaults("name status externalAddress") {
+  init(name? string)
   // ALB name (unique within the project+region)
   name string
   // External (public) IPv4/IPv6 address (empty if private-only)
@@ -3248,14 +3287,26 @@ private stackit.alb.loadBalancer @defaults("name status externalAddress") {
   errors []dict
   // STACKIT-managed security group
   //
-  // Security group STACKIT provisions and attaches to the balancer itself,
-  // a dict with keys id and name. Null when none is assigned.
-  loadBalancerSecurityGroup dict
+  // Deprecated in favor of loadBalancerSecurityGroupRef, which resolves
+  // the same group to the stackit.securityGroup it names. A dict with keys
+  // id and name. Null when none is assigned.
+  loadBalancerSecurityGroup @maturity("deprecated") @replaced_by("stackit.alb.loadBalancer.loadBalancerSecurityGroupRef") dict
   // STACKIT-managed target security group
   //
-  // Security group STACKIT provisions for the backend targets, a dict with
-  // keys id and name. Null when none is assigned.
-  targetSecurityGroup dict
+  // Deprecated in favor of targetSecurityGroupRef, which resolves the same
+  // group to the stackit.securityGroup it names. A dict with keys id and
+  // name. Null when none is assigned.
+  targetSecurityGroup @maturity("deprecated") @replaced_by("stackit.alb.loadBalancer.targetSecurityGroupRef") dict
+  // Security group STACKIT manages for the balancer itself (nullable)
+  //
+  // Resolved against the project's security groups. Null when no managed
+  // group is assigned, which is the finding this field exists to surface.
+  loadBalancerSecurityGroupRef() stackit.securityGroup
+  // Security group STACKIT manages for the backend targets (nullable)
+  //
+  // Null when no managed group is assigned, for example when
+  // disableTargetSecurityGroupAssignment is set.
+  targetSecurityGroupRef() stackit.securityGroup
   // Whether the operator opted out of auto-assigning the target SG to backends
   disableTargetSecurityGroupAssignment bool
   // User-defined labels
@@ -3264,6 +3315,46 @@ private stackit.alb.loadBalancer @defaults("name status externalAddress") {
   exposure() stackit.network.exposure
   // Web Application Firewall configurations referenced by the LB's listeners
   wafs() []stackit.alb.waf
+  // CIDR allow-list of client networks permitted to reach the balancer
+  //
+  // From options.accessControl.allowedSourceRanges. Empty when no
+  // allow-list is configured, which leaves a public balancer reachable
+  // from any address.
+  allowedSourceRanges() []string
+  // Whether the public address is a managed ephemeral one
+  //
+  // True when STACKIT allocates and releases the public IP with the
+  // balancer rather than binding a reserved address. Null when the
+  // options carry no setting.
+  ephemeralAddress() bool
+  // Endpoint the balancer pushes access logs to
+  //
+  // From options.observability.logs.pushUrl, an egress destination for
+  // request logs. Empty when logs are not shipped.
+  observabilityLogsPushUrl() string
+  // Endpoint the balancer pushes metrics to
+  //
+  // From options.observability.metrics.pushUrl. Empty when metrics are
+  // not shipped.
+  observabilityMetricsPushUrl() string
+  // Certificates terminated by the balancer's HTTPS listeners
+  //
+  // Every certificate referenced by a listener's certificateConfig,
+  // deduplicated. Follow it to read notAfter, isSelfSigned, and
+  // keyStrength for the certificates actually serving traffic. Empty when
+  // no listener terminates TLS.
+  certificates() []stackit.certificate
+  // Ports of listeners that accept plaintext HTTP
+  //
+  // Listener ports whose protocol is PROTOCOL_HTTP rather than
+  // PROTOCOL_HTTPS. Empty when every listener terminates TLS.
+  plaintextListenerPorts() []int
+  // Target pools whose TLS bridging skips certificate validation
+  //
+  // Names of pools with tlsConfig.skipCertificateValidation set, which the
+  // service documents as insecure and for testing only. Empty when no pool
+  // does.
+  insecureTargetPools() []string
 }
 
 // STACKIT Application Load Balancer WAF configuration
@@ -3286,6 +3377,12 @@ private stackit.alb.waf @defaults("name managedRuleSetName customRuleGroupName")
   customRuleGroup() stackit.alb.customRuleGroup
   // User-defined labels
   labels map[string]string
+  // Application load balancers whose listeners enforce this WAF
+  //
+  // From the usage the service reports for the configuration. Empty for
+  // a WAF that is configured but attached to no listener, so it protects
+  // nothing.
+  loadBalancers() []stackit.alb.loadBalancer
 }
 
 // STACKIT Application Load Balancer managed rule set
@@ -3304,6 +3401,11 @@ private stackit.alb.managedRuleSet @defaults("name type version") {
   version string
   // Rules in the set, each toggled between blocking and detection behavior
   rules() []stackit.alb.managedRule
+  // WAF configurations that bind this rule set
+  //
+  // From the usage the service reports. Empty for a rule set no WAF
+  // references.
+  wafs() []stackit.alb.waf
 }
 
 // STACKIT Application Load Balancer managed rule
@@ -3337,6 +3439,11 @@ private stackit.alb.customRuleGroup @defaults("name") {
   name string
   // Custom rules the group contains
   rules() []stackit.alb.customRule
+  // WAF configurations that bind this rule group
+  //
+  // From the usage the service reports. Empty for a group no WAF
+  // references.
+  wafs() []stackit.alb.waf
 }
 
 // STACKIT Application Load Balancer custom rule

@@ -427,7 +427,7 @@ func init() {
 			Create: createStackitCertificate,
 		},
 		"stackit.alb.loadBalancer": {
-			// to override args, implement: initStackitAlbLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initStackitAlbLoadBalancer,
 			Create: createStackitAlbLoadBalancer,
 		},
 		"stackit.alb.waf": {
@@ -1422,6 +1422,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.loadBalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLoadBalancer).GetExposure()).ToDataRes(types.Resource("stackit.network.exposure"))
 	},
+	"stackit.loadBalancer.allowedSourceRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLoadBalancer).GetAllowedSourceRanges()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.loadBalancer.ephemeralAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLoadBalancer).GetEphemeralAddress()).ToDataRes(types.Bool)
+	},
+	"stackit.loadBalancer.observabilityLogsPushUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLoadBalancer).GetObservabilityLogsPushUrl()).ToDataRes(types.String)
+	},
+	"stackit.loadBalancer.observabilityMetricsPushUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLoadBalancer).GetObservabilityMetricsPushUrl()).ToDataRes(types.String)
+	},
 	"stackit.loadBalancer.listener.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLoadBalancerListener).GetName()).ToDataRes(types.String)
 	},
@@ -1466,6 +1478,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.loadBalancer.targetPool.sessionPersistence": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLoadBalancerTargetPool).GetSessionPersistence()).ToDataRes(types.Dict)
+	},
+	"stackit.loadBalancer.targetPool.healthCheckTlsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLoadBalancerTargetPool).GetHealthCheckTlsEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.loadBalancer.targetPool.healthCheckSkipCertificateValidation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLoadBalancerTargetPool).GetHealthCheckSkipCertificateValidation()).ToDataRes(types.Bool)
+	},
+	"stackit.loadBalancer.targetPool.sessionPersistenceSourceIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLoadBalancerTargetPool).GetSessionPersistenceSourceIp()).ToDataRes(types.Bool)
 	},
 	"stackit.ske.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSke).GetClusters()).ToDataRes(types.Array(types.Resource("stackit.ske.cluster")))
@@ -3021,6 +3042,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.alb.loadBalancer.targetSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbLoadBalancer).GetTargetSecurityGroup()).ToDataRes(types.Dict)
 	},
+	"stackit.alb.loadBalancer.loadBalancerSecurityGroupRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbLoadBalancer).GetLoadBalancerSecurityGroupRef()).ToDataRes(types.Resource("stackit.securityGroup"))
+	},
+	"stackit.alb.loadBalancer.targetSecurityGroupRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbLoadBalancer).GetTargetSecurityGroupRef()).ToDataRes(types.Resource("stackit.securityGroup"))
+	},
 	"stackit.alb.loadBalancer.disableTargetSecurityGroupAssignment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbLoadBalancer).GetDisableTargetSecurityGroupAssignment()).ToDataRes(types.Bool)
 	},
@@ -3032,6 +3059,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.alb.loadBalancer.wafs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbLoadBalancer).GetWafs()).ToDataRes(types.Array(types.Resource("stackit.alb.waf")))
+	},
+	"stackit.alb.loadBalancer.allowedSourceRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbLoadBalancer).GetAllowedSourceRanges()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.alb.loadBalancer.ephemeralAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbLoadBalancer).GetEphemeralAddress()).ToDataRes(types.Bool)
+	},
+	"stackit.alb.loadBalancer.observabilityLogsPushUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbLoadBalancer).GetObservabilityLogsPushUrl()).ToDataRes(types.String)
+	},
+	"stackit.alb.loadBalancer.observabilityMetricsPushUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbLoadBalancer).GetObservabilityMetricsPushUrl()).ToDataRes(types.String)
+	},
+	"stackit.alb.loadBalancer.certificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbLoadBalancer).GetCertificates()).ToDataRes(types.Array(types.Resource("stackit.certificate")))
+	},
+	"stackit.alb.loadBalancer.plaintextListenerPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbLoadBalancer).GetPlaintextListenerPorts()).ToDataRes(types.Array(types.Int))
+	},
+	"stackit.alb.loadBalancer.insecureTargetPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbLoadBalancer).GetInsecureTargetPools()).ToDataRes(types.Array(types.String))
 	},
 	"stackit.alb.waf.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbWaf).GetName()).ToDataRes(types.String)
@@ -3051,6 +3099,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.alb.waf.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbWaf).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"stackit.alb.waf.loadBalancers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbWaf).GetLoadBalancers()).ToDataRes(types.Array(types.Resource("stackit.alb.loadBalancer")))
+	},
 	"stackit.alb.managedRuleSet.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbManagedRuleSet).GetName()).ToDataRes(types.String)
 	},
@@ -3062,6 +3113,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.alb.managedRuleSet.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbManagedRuleSet).GetRules()).ToDataRes(types.Array(types.Resource("stackit.alb.managedRule")))
+	},
+	"stackit.alb.managedRuleSet.wafs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbManagedRuleSet).GetWafs()).ToDataRes(types.Array(types.Resource("stackit.alb.waf")))
 	},
 	"stackit.alb.managedRule.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbManagedRule).GetName()).ToDataRes(types.String)
@@ -3083,6 +3137,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.alb.customRuleGroup.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbCustomRuleGroup).GetRules()).ToDataRes(types.Array(types.Resource("stackit.alb.customRule")))
+	},
+	"stackit.alb.customRuleGroup.wafs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbCustomRuleGroup).GetWafs()).ToDataRes(types.Array(types.Resource("stackit.alb.waf")))
 	},
 	"stackit.alb.customRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbCustomRule).GetId()).ToDataRes(types.Int)
@@ -4604,6 +4661,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitLoadBalancer).Exposure, ok = plugin.RawToTValue[*mqlStackitNetworkExposure](v.Value, v.Error)
 		return
 	},
+	"stackit.loadBalancer.allowedSourceRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLoadBalancer).AllowedSourceRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.loadBalancer.ephemeralAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLoadBalancer).EphemeralAddress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.loadBalancer.observabilityLogsPushUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLoadBalancer).ObservabilityLogsPushUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.loadBalancer.observabilityMetricsPushUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLoadBalancer).ObservabilityMetricsPushUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"stackit.loadBalancer.listener.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLoadBalancerListener).__id, ok = v.Value.(string)
 		return
@@ -4670,6 +4743,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.loadBalancer.targetPool.sessionPersistence": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLoadBalancerTargetPool).SessionPersistence, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"stackit.loadBalancer.targetPool.healthCheckTlsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLoadBalancerTargetPool).HealthCheckTlsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.loadBalancer.targetPool.healthCheckSkipCertificateValidation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLoadBalancerTargetPool).HealthCheckSkipCertificateValidation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.loadBalancer.targetPool.sessionPersistenceSourceIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLoadBalancerTargetPool).SessionPersistenceSourceIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"stackit.ske.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6960,6 +7045,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitAlbLoadBalancer).TargetSecurityGroup, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"stackit.alb.loadBalancer.loadBalancerSecurityGroupRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbLoadBalancer).LoadBalancerSecurityGroupRef, ok = plugin.RawToTValue[*mqlStackitSecurityGroup](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.loadBalancer.targetSecurityGroupRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbLoadBalancer).TargetSecurityGroupRef, ok = plugin.RawToTValue[*mqlStackitSecurityGroup](v.Value, v.Error)
+		return
+	},
 	"stackit.alb.loadBalancer.disableTargetSecurityGroupAssignment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitAlbLoadBalancer).DisableTargetSecurityGroupAssignment, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -6974,6 +7067,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.alb.loadBalancer.wafs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitAlbLoadBalancer).Wafs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.loadBalancer.allowedSourceRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbLoadBalancer).AllowedSourceRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.loadBalancer.ephemeralAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbLoadBalancer).EphemeralAddress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.loadBalancer.observabilityLogsPushUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbLoadBalancer).ObservabilityLogsPushUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.loadBalancer.observabilityMetricsPushUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbLoadBalancer).ObservabilityMetricsPushUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.loadBalancer.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbLoadBalancer).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.loadBalancer.plaintextListenerPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbLoadBalancer).PlaintextListenerPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.loadBalancer.insecureTargetPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbLoadBalancer).InsecureTargetPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.alb.waf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7004,6 +7125,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitAlbWaf).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"stackit.alb.waf.loadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbWaf).LoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.alb.managedRuleSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitAlbManagedRuleSet).__id, ok = v.Value.(string)
 		return
@@ -7022,6 +7147,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.alb.managedRuleSet.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitAlbManagedRuleSet).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.managedRuleSet.wafs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbManagedRuleSet).Wafs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.alb.managedRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7058,6 +7187,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.alb.customRuleGroup.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitAlbCustomRuleGroup).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.customRuleGroup.wafs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRuleGroup).Wafs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.alb.customRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10684,6 +10817,10 @@ type mqlStackitLoadBalancer struct {
 	DisableTargetSecurityGroupAssignment plugin.TValue[bool]
 	Labels                               plugin.TValue[map[string]any]
 	Exposure                             plugin.TValue[*mqlStackitNetworkExposure]
+	AllowedSourceRanges                  plugin.TValue[[]any]
+	EphemeralAddress                     plugin.TValue[bool]
+	ObservabilityLogsPushUrl             plugin.TValue[string]
+	ObservabilityMetricsPushUrl          plugin.TValue[string]
 }
 
 // createStackitLoadBalancer creates a new instance of this resource
@@ -10851,6 +10988,30 @@ func (c *mqlStackitLoadBalancer) GetExposure() *plugin.TValue[*mqlStackitNetwork
 	})
 }
 
+func (c *mqlStackitLoadBalancer) GetAllowedSourceRanges() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowedSourceRanges, func() ([]any, error) {
+		return c.allowedSourceRanges()
+	})
+}
+
+func (c *mqlStackitLoadBalancer) GetEphemeralAddress() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EphemeralAddress, func() (bool, error) {
+		return c.ephemeralAddress()
+	})
+}
+
+func (c *mqlStackitLoadBalancer) GetObservabilityLogsPushUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ObservabilityLogsPushUrl, func() (string, error) {
+		return c.observabilityLogsPushUrl()
+	})
+}
+
+func (c *mqlStackitLoadBalancer) GetObservabilityMetricsPushUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ObservabilityMetricsPushUrl, func() (string, error) {
+		return c.observabilityMetricsPushUrl()
+	})
+}
+
 // mqlStackitLoadBalancerListener for the stackit.loadBalancer.listener resource
 type mqlStackitLoadBalancerListener struct {
 	MqlRuntime *plugin.Runtime
@@ -10945,12 +11106,15 @@ type mqlStackitLoadBalancerTargetPool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitLoadBalancerTargetPoolInternal it will be used here
-	Name               plugin.TValue[string]
-	LoadBalancerName   plugin.TValue[string]
-	TargetPort         plugin.TValue[int64]
-	Targets            plugin.TValue[[]any]
-	ActiveHealthCheck  plugin.TValue[any]
-	SessionPersistence plugin.TValue[any]
+	Name                                 plugin.TValue[string]
+	LoadBalancerName                     plugin.TValue[string]
+	TargetPort                           plugin.TValue[int64]
+	Targets                              plugin.TValue[[]any]
+	ActiveHealthCheck                    plugin.TValue[any]
+	SessionPersistence                   plugin.TValue[any]
+	HealthCheckTlsEnabled                plugin.TValue[bool]
+	HealthCheckSkipCertificateValidation plugin.TValue[bool]
+	SessionPersistenceSourceIp           plugin.TValue[bool]
 }
 
 // createStackitLoadBalancerTargetPool creates a new instance of this resource
@@ -11012,6 +11176,18 @@ func (c *mqlStackitLoadBalancerTargetPool) GetActiveHealthCheck() *plugin.TValue
 
 func (c *mqlStackitLoadBalancerTargetPool) GetSessionPersistence() *plugin.TValue[any] {
 	return &c.SessionPersistence
+}
+
+func (c *mqlStackitLoadBalancerTargetPool) GetHealthCheckTlsEnabled() *plugin.TValue[bool] {
+	return &c.HealthCheckTlsEnabled
+}
+
+func (c *mqlStackitLoadBalancerTargetPool) GetHealthCheckSkipCertificateValidation() *plugin.TValue[bool] {
+	return &c.HealthCheckSkipCertificateValidation
+}
+
+func (c *mqlStackitLoadBalancerTargetPool) GetSessionPersistenceSourceIp() *plugin.TValue[bool] {
+	return &c.SessionPersistenceSourceIp
 }
 
 // mqlStackitSke for the stackit.ske resource
@@ -16653,7 +16829,7 @@ func (c *mqlStackitCertificate) GetIsCa() *plugin.TValue[bool] {
 type mqlStackitAlbLoadBalancer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitAlbLoadBalancerInternal it will be used here
+	mqlStackitAlbLoadBalancerInternal
 	Name                                 plugin.TValue[string]
 	ExternalAddress                      plugin.TValue[string]
 	PrivateAddress                       plugin.TValue[string]
@@ -16667,10 +16843,19 @@ type mqlStackitAlbLoadBalancer struct {
 	Errors                               plugin.TValue[[]any]
 	LoadBalancerSecurityGroup            plugin.TValue[any]
 	TargetSecurityGroup                  plugin.TValue[any]
+	LoadBalancerSecurityGroupRef         plugin.TValue[*mqlStackitSecurityGroup]
+	TargetSecurityGroupRef               plugin.TValue[*mqlStackitSecurityGroup]
 	DisableTargetSecurityGroupAssignment plugin.TValue[bool]
 	Labels                               plugin.TValue[map[string]any]
 	Exposure                             plugin.TValue[*mqlStackitNetworkExposure]
 	Wafs                                 plugin.TValue[[]any]
+	AllowedSourceRanges                  plugin.TValue[[]any]
+	EphemeralAddress                     plugin.TValue[bool]
+	ObservabilityLogsPushUrl             plugin.TValue[string]
+	ObservabilityMetricsPushUrl          plugin.TValue[string]
+	Certificates                         plugin.TValue[[]any]
+	PlaintextListenerPorts               plugin.TValue[[]any]
+	InsecureTargetPools                  plugin.TValue[[]any]
 }
 
 // createStackitAlbLoadBalancer creates a new instance of this resource
@@ -16762,6 +16947,38 @@ func (c *mqlStackitAlbLoadBalancer) GetTargetSecurityGroup() *plugin.TValue[any]
 	return &c.TargetSecurityGroup
 }
 
+func (c *mqlStackitAlbLoadBalancer) GetLoadBalancerSecurityGroupRef() *plugin.TValue[*mqlStackitSecurityGroup] {
+	return plugin.GetOrCompute[*mqlStackitSecurityGroup](&c.LoadBalancerSecurityGroupRef, func() (*mqlStackitSecurityGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.loadBalancer", c.__id, "loadBalancerSecurityGroupRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitSecurityGroup), nil
+			}
+		}
+
+		return c.loadBalancerSecurityGroupRef()
+	})
+}
+
+func (c *mqlStackitAlbLoadBalancer) GetTargetSecurityGroupRef() *plugin.TValue[*mqlStackitSecurityGroup] {
+	return plugin.GetOrCompute[*mqlStackitSecurityGroup](&c.TargetSecurityGroupRef, func() (*mqlStackitSecurityGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.loadBalancer", c.__id, "targetSecurityGroupRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitSecurityGroup), nil
+			}
+		}
+
+		return c.targetSecurityGroupRef()
+	})
+}
+
 func (c *mqlStackitAlbLoadBalancer) GetDisableTargetSecurityGroupAssignment() *plugin.TValue[bool] {
 	return &c.DisableTargetSecurityGroupAssignment
 }
@@ -16802,17 +17019,70 @@ func (c *mqlStackitAlbLoadBalancer) GetWafs() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitAlbLoadBalancer) GetAllowedSourceRanges() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowedSourceRanges, func() ([]any, error) {
+		return c.allowedSourceRanges()
+	})
+}
+
+func (c *mqlStackitAlbLoadBalancer) GetEphemeralAddress() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EphemeralAddress, func() (bool, error) {
+		return c.ephemeralAddress()
+	})
+}
+
+func (c *mqlStackitAlbLoadBalancer) GetObservabilityLogsPushUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ObservabilityLogsPushUrl, func() (string, error) {
+		return c.observabilityLogsPushUrl()
+	})
+}
+
+func (c *mqlStackitAlbLoadBalancer) GetObservabilityMetricsPushUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ObservabilityMetricsPushUrl, func() (string, error) {
+		return c.observabilityMetricsPushUrl()
+	})
+}
+
+func (c *mqlStackitAlbLoadBalancer) GetCertificates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.loadBalancer", c.__id, "certificates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificates()
+	})
+}
+
+func (c *mqlStackitAlbLoadBalancer) GetPlaintextListenerPorts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PlaintextListenerPorts, func() ([]any, error) {
+		return c.plaintextListenerPorts()
+	})
+}
+
+func (c *mqlStackitAlbLoadBalancer) GetInsecureTargetPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InsecureTargetPools, func() ([]any, error) {
+		return c.insecureTargetPools()
+	})
+}
+
 // mqlStackitAlbWaf for the stackit.alb.waf resource
 type mqlStackitAlbWaf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitAlbWafInternal it will be used here
+	mqlStackitAlbWafInternal
 	Name                plugin.TValue[string]
 	ManagedRuleSetName  plugin.TValue[string]
 	ManagedRuleSet      plugin.TValue[*mqlStackitAlbManagedRuleSet]
 	CustomRuleGroupName plugin.TValue[string]
 	CustomRuleGroup     plugin.TValue[*mqlStackitAlbCustomRuleGroup]
 	Labels              plugin.TValue[map[string]any]
+	LoadBalancers       plugin.TValue[[]any]
 }
 
 // createStackitAlbWaf creates a new instance of this resource
@@ -16900,6 +17170,22 @@ func (c *mqlStackitAlbWaf) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
 }
 
+func (c *mqlStackitAlbWaf) GetLoadBalancers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoadBalancers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.waf", c.__id, "loadBalancers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.loadBalancers()
+	})
+}
+
 // mqlStackitAlbManagedRuleSet for the stackit.alb.managedRuleSet resource
 type mqlStackitAlbManagedRuleSet struct {
 	MqlRuntime *plugin.Runtime
@@ -16909,6 +17195,7 @@ type mqlStackitAlbManagedRuleSet struct {
 	Type    plugin.TValue[string]
 	Version plugin.TValue[string]
 	Rules   plugin.TValue[[]any]
+	Wafs    plugin.TValue[[]any]
 }
 
 // createStackitAlbManagedRuleSet creates a new instance of this resource
@@ -16973,6 +17260,22 @@ func (c *mqlStackitAlbManagedRuleSet) GetRules() *plugin.TValue[[]any] {
 		}
 
 		return c.rules()
+	})
+}
+
+func (c *mqlStackitAlbManagedRuleSet) GetWafs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Wafs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.managedRuleSet", c.__id, "wafs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.wafs()
 	})
 }
 
@@ -17047,6 +17350,7 @@ type mqlStackitAlbCustomRuleGroup struct {
 	mqlStackitAlbCustomRuleGroupInternal
 	Name  plugin.TValue[string]
 	Rules plugin.TValue[[]any]
+	Wafs  plugin.TValue[[]any]
 }
 
 // createStackitAlbCustomRuleGroup creates a new instance of this resource
@@ -17103,6 +17407,22 @@ func (c *mqlStackitAlbCustomRuleGroup) GetRules() *plugin.TValue[[]any] {
 		}
 
 		return c.rules()
+	})
+}
+
+func (c *mqlStackitAlbCustomRuleGroup) GetWafs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Wafs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.customRuleGroup", c.__id, "wafs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.wafs()
 	})
 }
 
