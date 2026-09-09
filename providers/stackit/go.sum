@@ -440,8 +440,8 @@ github.com/stackitcloud/stackit-sdk-go/services/rabbitmq v1.3.1 h1:6t+EJTR9HOFZG
 github.com/stackitcloud/stackit-sdk-go/services/rabbitmq v1.3.1/go.mod h1:oGcpMIs2H/ldTQlTkYJUY4ZaVNi3MMRSMz0XpLDSKcU=
 github.com/stackitcloud/stackit-sdk-go/services/redis v1.4.1 h1:s3mXo6FGNEeMWqVPq7yaDgcOakEejRP7X9l7OaK7PEE=
 github.com/stackitcloud/stackit-sdk-go/services/redis v1.4.1/go.mod h1:6ihYZA22kityLgM0Pp7qROOomcZeUV0OsayOrd5vVe4=
-github.com/stackitcloud/stackit-sdk-go/services/resourcemanager v0.25.1 h1:uZrKH0JLZwHmS8sI+//YE2hWDfVxQ1Q3pAf35BZZ6i4=
-github.com/stackitcloud/stackit-sdk-go/services/resourcemanager v0.25.1/go.mod h1:Y5EM8b9qe/+AKI2LJoFvI0PzkyHO5RiW8nQuQaaNaFA=
+github.com/stackitcloud/stackit-sdk-go/services/resourcemanager v0.26.0 h1:TzmBTja200jx6An39UPYBZPvZvLFgk3g1S0XZ1vDeBI=
+github.com/stackitcloud/stackit-sdk-go/services/resourcemanager v0.26.0/go.mod h1:Y5EM8b9qe/+AKI2LJoFvI0PzkyHO5RiW8nQuQaaNaFA=
 github.com/stackitcloud/stackit-sdk-go/services/secretsmanager v0.19.1 h1:Mym5vqa3YaF42LbqlVXDFYf/evsNU76l0wpUPGEu+0U=
 github.com/stackitcloud/stackit-sdk-go/services/secretsmanager v0.19.1/go.mod h1:oFbKTkCFtp/RVjTeuv5caSuuEnf3/JG8zRDB4nbLYes=
 github.com/stackitcloud/stackit-sdk-go/services/serverbackup v1.7.2 h1:yx7qrsELMaxpc1tpZezYXrhHH9YLEUlVDwBMPa7/Ekc=
@@ -460,8 +460,8 @@ github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.5.2 h1:Jqz+Y3IO
 github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.5.2/go.mod h1:JyuStufMDibWblEo4wPOrh3B02aMgIUEhDF7YK5WGas=
 github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.5.2 h1:su5M+lv0+fsPjSY1KdC8sxoE8cB5kwNx8bSpEA6bxZE=
 github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.5.2/go.mod h1:G1irvS3PFNNnf5t5ub1UUl2Iha+lv2RYu6l/rx79tcM=
-github.com/stackitcloud/stackit-sdk-go/services/vpn v0.15.1 h1:eiUDfelmjs37SUBAWrebYK+tLfRKsGM7Gqan4aGtH2o=
-github.com/stackitcloud/stackit-sdk-go/services/vpn v0.15.1/go.mod h1:3OHHiMoNDwI63Vtvf5B/2Hc2hLlaCyTvPwg8N6T957s=
+github.com/stackitcloud/stackit-sdk-go/services/vpn v0.15.2 h1:82VZJaJPwcBKSj8WV8v0ujBvbkbMxFXIvvv0wU+0Be0=
+github.com/stackitcloud/stackit-sdk-go/services/vpn v0.15.2/go.mod h1:3OHHiMoNDwI63Vtvf5B/2Hc2hLlaCyTvPwg8N6T957s=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
