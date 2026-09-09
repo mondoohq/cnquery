@@ -59,8 +59,9 @@ func newHclConnection(id uint32, path string, asset *inventory.Asset) (*Connecti
 		includeDotTerraform = false
 	}
 
-	// An empty forced dialect means "detect from the files present", which is
-	// the default. Setting it reads the directory the way the named tool would.
+	// An empty dialect means "detect from the files present". On the command
+	// line the connector always names one; an inventory or a git integration
+	// may not, and then the files decide.
 	var forcedDialect Dialect
 	if v := confOptions[OptionDialect]; v != "" {
 		forcedDialect = ParseDialect(v)
@@ -135,11 +136,26 @@ func newHclConnection(id uint32, path string, asset *inventory.Asset) (*Connecti
 	// Apply OpenTofu's precedence rules before reading anything, so a .tofu
 	// file replaces the .tf file it overrides rather than being read alongside
 	// it.
-	resolved := resolveConfigFilesAs(candidates, forcedDialect)
+	resolved := resolveConfigFiles(candidates, forcedDialect)
 
 	for _, overridden := range resolved.Overridden {
 		log.Debug().Str("path", overridden).
 			Msg("skipping file overridden by its OpenTofu equivalent")
+	}
+
+	for _, ignored := range resolved.Ignored {
+		log.Debug().Str("path", ignored).
+			Msg("skipping OpenTofu file, reading the configuration as Terraform")
+	}
+
+	// Every configuration file here belongs to OpenTofu, and the terraform
+	// connector does not read those. Scanning it as an empty configuration would
+	// pass every policy on a project nothing was ever read from, so say what
+	// happened and which connector reads it.
+	if len(resolved.Configs) == 0 && len(resolved.Ignored) > 0 {
+		return nil, errors.Errorf(
+			"%s holds an OpenTofu configuration (%d file(s), e.g. %s) and no Terraform files; use the opentofu connector to scan it",
+			path, len(resolved.Ignored), resolved.Ignored[0])
 	}
 
 	for _, cfg := range resolved.Configs {

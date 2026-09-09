@@ -159,7 +159,64 @@ func TestProviderIDsAreConsistent(t *testing.T) {
 	assert.NotZero(t, checked, "no provider configs were discovered; the directory scan is likely broken")
 }
 
+// TestDefaultProvidersCarryConnectorAliases guards the aliases a connector
+// declares against being dropped from defaults.go.
+//
+// DefaultProviders is what resolves a connector name *before* the provider
+// binary exists on the machine: AttachCLIs reads the name off the command line
+// and hands it to EnsureProvider, which falls back to DefaultProviders.Lookup
+// to decide what to install. Lookup matches a connector's Name and its Aliases,
+// so an entry without them makes the alias unresolvable — `mql shell tofu ...`
+// on a machine with no terraform provider dies with "cannot find provider"
+// instead of installing it, while `mql shell opentofu ...` works.
+//
+// The generator used to drop every alias, so all six of these were broken. The
+// scan is over config.go source rather than an import because defaults_test
+// cannot import ~90 provider config packages.
+//
+// Fix a failure by running: make providers/defaults
+func TestDefaultProvidersCarryConnectorAliases(t *testing.T) {
+	entries, err := os.ReadDir(".")
+	assert.NoError(t, err)
+
+	checked := 0
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+
+		raw, err := os.ReadFile(filepath.Join(name, "config", "config.go"))
+		if err != nil {
+			continue // not a provider directory
+		}
+
+		for _, m := range connectorAliasesRe.FindAllSubmatch(raw, -1) {
+			for _, am := range quotedStringRe.FindAllSubmatch(m[1], -1) {
+				alias := string(am[1])
+				checked++
+
+				t.Run(name+"/"+alias, func(t *testing.T) {
+					found := DefaultProviders.Lookup(ProviderLookup{ConnName: alias})
+					if assert.NotNilf(t, found,
+						"connector alias %q declared in %s/config/config.go does not resolve through DefaultProviders; on-demand install fails for it. Run `make providers/defaults`",
+						alias, name) {
+						assert.Equalf(t, name, found.Name,
+							"alias %q resolves to provider %q, not %q", alias, found.Name, name)
+					}
+				})
+			}
+		}
+	}
+
+	// The scan finding nothing would turn this into a no-op that passes while
+	// every alias is broken.
+	assert.NotZero(t, checked, "no connector aliases were discovered; the source scan is likely broken")
+}
+
 var (
 	providerConfigIDRe = regexp.MustCompile(`(?m)^\s*ID:\s*"([^"]+)"`)
+	connectorAliasesRe = regexp.MustCompile(`(?m)^\s*Aliases:\s*\[\]string\{([^}]*)\}`)
+	quotedStringRe     = regexp.MustCompile(`"([^"]+)"`)
 	lrOptionProviderRe = regexp.MustCompile(`(?m)^\s*option\s+provider\s*=\s*"([^"]+)"`)
 )
