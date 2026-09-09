@@ -41,8 +41,12 @@ func newMqlBitbucketGroup(runtime *plugin.Runtime, workspaceSlug, slug, name str
 // lookups such as bitbucket.group(slug: "administrators"). workspace
 // defaults to the connection's selected workspace when omitted.
 func initBitbucketGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	// fast path: the caller already provided a fully populated resource
-	if len(args) > 2 {
+	// A caller that hands over a cache key is pointing at a group that was
+	// already built through newMqlBitbucketGroup, which is the only place the
+	// owning workspace gets attached; let the runtime serve it from the
+	// cache. Everything else is a lookup by slug, whatever else rides along,
+	// so the guard keys on that field rather than on an arg count.
+	if _, ok := args["__id"]; ok {
 		return args, nil, nil
 	}
 
@@ -117,5 +121,8 @@ func (g *mqlBitbucketGroup) members() ([]any, error) {
 		}
 		return all, nil
 	}
-	return []any{}, nil
+	// The group was listed a moment ago and is gone now (renamed or deleted
+	// in between). An empty list here would read as "no members" and let a
+	// membership audit pass on data that was never read.
+	return nil, fmt.Errorf("bitbucket.group with slug %q not found in workspace %q", g.Slug.Data, g.cacheWorkspaceSlug)
 }

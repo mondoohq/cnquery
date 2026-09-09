@@ -286,9 +286,13 @@ func (c *Client) ListBranchRestrictions(ctx context.Context, workspace, repoSlug
 // DeployKey is a repository deploy key,
 // GET /2.0/repositories/{workspace}/{repo_slug}/deploy-keys.
 type DeployKey struct {
-	ID        int64      `json:"id"`
-	Label     string     `json:"label"`
-	Key       string     `json:"key"`
+	ID    int64  `json:"id"`
+	Label string `json:"label"`
+	Key   string `json:"key"`
+	// Deploy keys are the one key type whose creation time the API spells
+	// added_on: the swagger deploy_key definition lists added_on and
+	// last_used, where ssh_key (a user's key) lists created_on. The MQL field
+	// stays createdOn so it lines up with every other resource.
 	CreatedOn *time.Time `json:"added_on"`
 	LastUsed  *time.Time `json:"last_used"`
 }
@@ -370,14 +374,16 @@ func (c *Client) ListGroupsLegacy(ctx context.Context, workspace string) ([]Lega
 // GET /2.0/workspaces/{workspace}/hooks. SecretSet reports whether a signing
 // secret is configured; the secret itself is write-only and never returned.
 type Webhook struct {
-	UUID                 string     `json:"uuid"`
-	URL                  string     `json:"url"`
-	Description          string     `json:"description"`
-	Active               *bool      `json:"active"`
-	Events               []string   `json:"events"`
-	SkipCertVerification *bool      `json:"skip_cert_verification"`
-	SecretSet            *bool      `json:"secret_set"`
-	CreatedAt            *time.Time `json:"created_at"`
+	UUID                 string   `json:"uuid"`
+	URL                  string   `json:"url"`
+	Description          string   `json:"description"`
+	Active               *bool    `json:"active"`
+	Events               []string `json:"events"`
+	SkipCertVerification *bool    `json:"skip_cert_verification"`
+	SecretSet            *bool    `json:"secret_set"`
+	// created_at, not created_on: webhook_subscription is the one Bitbucket
+	// object whose swagger definition uses the _at spelling.
+	CreatedAt *time.Time `json:"created_at"`
 }
 
 // ListRepositoryWebhooks lists every webhook configured on a repository.
