@@ -224,14 +224,14 @@ func (r *mqlStackitAlbLoadBalancer) insecureTargetPools() ([]any, error) {
 	return strSlice(albInsecureTargetPools(r.rawTargetPools)), nil
 }
 
-// loadBalancerSecurityGroupRef resolves the group STACKIT manages for the
+// managedSecurityGroup resolves the group STACKIT manages for the
 // application balancer itself.
-func (r *mqlStackitAlbLoadBalancer) loadBalancerSecurityGroupRef() (*mqlStackitSecurityGroup, error) {
-	return securityGroupFromProjectList(r.MqlRuntime, r.cacheLoadBalancerSecurityGroupId, r.Name.Data, &r.LoadBalancerSecurityGroupRef)
+func (r *mqlStackitAlbLoadBalancer) managedSecurityGroup() (*mqlStackitSecurityGroup, error) {
+	return securityGroupFromProjectList(r.MqlRuntime, r.cacheLoadBalancerSecurityGroupId, r.Name.Data, &r.ManagedSecurityGroup)
 }
 
-// targetSecurityGroupRef resolves the group STACKIT manages for the
+// managedTargetSecurityGroup resolves the group STACKIT manages for the
 // application balancer's backends.
-func (r *mqlStackitAlbLoadBalancer) targetSecurityGroupRef() (*mqlStackitSecurityGroup, error) {
-	return securityGroupFromProjectList(r.MqlRuntime, r.cacheTargetSecurityGroupId, r.Name.Data, &r.TargetSecurityGroupRef)
+func (r *mqlStackitAlbLoadBalancer) managedTargetSecurityGroup() (*mqlStackitSecurityGroup, error) {
+	return securityGroupFromProjectList(r.MqlRuntime, r.cacheTargetSecurityGroupId, r.Name.Data, &r.ManagedTargetSecurityGroup)
 }

@@ -2670,14 +2670,14 @@ private stackit.secretsManager.instance @defaults("id name state") {
   // Null for platform-managed encryption.
   encryptionKeyRing() stackit.kms.keyRing
   // Version number of the key material the vault is pinned to; 0 when unset
-  encryptionKeyVersion int
+  encryptionKeyVersionNumber int
   // Key version pinned by the vault (nullable)
   //
-  // Generation of the key material identified by encryptionKeyVersion, so
+  // Generation of the key material identified by encryptionKeyVersionNumber, so
   // the vault can be checked against the state of the exact version that
   // encrypts it. Null when no version is pinned or when that generation is
   // no longer listed on the key.
-  encryptionKeyVersionRef() stackit.kms.key.version
+  encryptionKeyVersion() stackit.kms.key.version
   // Service account the vault uses to reach its key (nullable)
   //
   // The identity granted use of the customer-managed key on the vault's
@@ -3287,26 +3287,26 @@ private stackit.alb.loadBalancer @defaults("name status externalAddress") {
   errors []dict
   // STACKIT-managed security group
   //
-  // Deprecated in favor of loadBalancerSecurityGroupRef, which resolves
+  // Deprecated in favor of managedSecurityGroup, which resolves
   // the same group to the stackit.securityGroup it names. A dict with keys
   // id and name. Null when none is assigned.
-  loadBalancerSecurityGroup @maturity("deprecated") @replaced_by("stackit.alb.loadBalancer.loadBalancerSecurityGroupRef") dict
+  loadBalancerSecurityGroup @maturity("deprecated") @replaced_by("stackit.alb.loadBalancer.managedSecurityGroup") dict
   // STACKIT-managed target security group
   //
-  // Deprecated in favor of targetSecurityGroupRef, which resolves the same
+  // Deprecated in favor of managedTargetSecurityGroup, which resolves the same
   // group to the stackit.securityGroup it names. A dict with keys id and
   // name. Null when none is assigned.
-  targetSecurityGroup @maturity("deprecated") @replaced_by("stackit.alb.loadBalancer.targetSecurityGroupRef") dict
+  targetSecurityGroup @maturity("deprecated") @replaced_by("stackit.alb.loadBalancer.managedTargetSecurityGroup") dict
   // Security group STACKIT manages for the balancer itself (nullable)
   //
   // Resolved against the project's security groups. Null when no managed
   // group is assigned, which is the finding this field exists to surface.
-  loadBalancerSecurityGroupRef() stackit.securityGroup
+  managedSecurityGroup() stackit.securityGroup
   // Security group STACKIT manages for the backend targets (nullable)
   //
   // Null when no managed group is assigned, for example when
   // disableTargetSecurityGroupAssignment is set.
-  targetSecurityGroupRef() stackit.securityGroup
+  managedTargetSecurityGroup() stackit.securityGroup
   // Whether the operator opted out of auto-assigning the target SG to backends
   disableTargetSecurityGroupAssignment bool
   // User-defined labels

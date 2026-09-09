@@ -2628,11 +2628,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.secretsManager.instance.encryptionKeyRing": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecretsManagerInstance).GetEncryptionKeyRing()).ToDataRes(types.Resource("stackit.kms.keyRing"))
 	},
-	"stackit.secretsManager.instance.encryptionKeyVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitSecretsManagerInstance).GetEncryptionKeyVersion()).ToDataRes(types.Int)
+	"stackit.secretsManager.instance.encryptionKeyVersionNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerInstance).GetEncryptionKeyVersionNumber()).ToDataRes(types.Int)
 	},
-	"stackit.secretsManager.instance.encryptionKeyVersionRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitSecretsManagerInstance).GetEncryptionKeyVersionRef()).ToDataRes(types.Resource("stackit.kms.key.version"))
+	"stackit.secretsManager.instance.encryptionKeyVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerInstance).GetEncryptionKeyVersion()).ToDataRes(types.Resource("stackit.kms.key.version"))
 	},
 	"stackit.secretsManager.instance.encryptionKeyServiceAccount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecretsManagerInstance).GetEncryptionKeyServiceAccount()).ToDataRes(types.Resource("stackit.serviceAccount"))
@@ -3042,11 +3042,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.alb.loadBalancer.targetSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbLoadBalancer).GetTargetSecurityGroup()).ToDataRes(types.Dict)
 	},
-	"stackit.alb.loadBalancer.loadBalancerSecurityGroupRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitAlbLoadBalancer).GetLoadBalancerSecurityGroupRef()).ToDataRes(types.Resource("stackit.securityGroup"))
+	"stackit.alb.loadBalancer.managedSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbLoadBalancer).GetManagedSecurityGroup()).ToDataRes(types.Resource("stackit.securityGroup"))
 	},
-	"stackit.alb.loadBalancer.targetSecurityGroupRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitAlbLoadBalancer).GetTargetSecurityGroupRef()).ToDataRes(types.Resource("stackit.securityGroup"))
+	"stackit.alb.loadBalancer.managedTargetSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbLoadBalancer).GetManagedTargetSecurityGroup()).ToDataRes(types.Resource("stackit.securityGroup"))
 	},
 	"stackit.alb.loadBalancer.disableTargetSecurityGroupAssignment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbLoadBalancer).GetDisableTargetSecurityGroupAssignment()).ToDataRes(types.Bool)
@@ -6425,12 +6425,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitSecretsManagerInstance).EncryptionKeyRing, ok = plugin.RawToTValue[*mqlStackitKmsKeyRing](v.Value, v.Error)
 		return
 	},
-	"stackit.secretsManager.instance.encryptionKeyVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitSecretsManagerInstance).EncryptionKeyVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"stackit.secretsManager.instance.encryptionKeyVersionNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerInstance).EncryptionKeyVersionNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"stackit.secretsManager.instance.encryptionKeyVersionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitSecretsManagerInstance).EncryptionKeyVersionRef, ok = plugin.RawToTValue[*mqlStackitKmsKeyVersion](v.Value, v.Error)
+	"stackit.secretsManager.instance.encryptionKeyVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerInstance).EncryptionKeyVersion, ok = plugin.RawToTValue[*mqlStackitKmsKeyVersion](v.Value, v.Error)
 		return
 	},
 	"stackit.secretsManager.instance.encryptionKeyServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7045,12 +7045,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitAlbLoadBalancer).TargetSecurityGroup, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"stackit.alb.loadBalancer.loadBalancerSecurityGroupRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitAlbLoadBalancer).LoadBalancerSecurityGroupRef, ok = plugin.RawToTValue[*mqlStackitSecurityGroup](v.Value, v.Error)
+	"stackit.alb.loadBalancer.managedSecurityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbLoadBalancer).ManagedSecurityGroup, ok = plugin.RawToTValue[*mqlStackitSecurityGroup](v.Value, v.Error)
 		return
 	},
-	"stackit.alb.loadBalancer.targetSecurityGroupRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitAlbLoadBalancer).TargetSecurityGroupRef, ok = plugin.RawToTValue[*mqlStackitSecurityGroup](v.Value, v.Error)
+	"stackit.alb.loadBalancer.managedTargetSecurityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbLoadBalancer).ManagedTargetSecurityGroup, ok = plugin.RawToTValue[*mqlStackitSecurityGroup](v.Value, v.Error)
 		return
 	},
 	"stackit.alb.loadBalancer.disableTargetSecurityGroupAssignment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15183,8 +15183,8 @@ type mqlStackitSecretsManagerInstance struct {
 	Approles                    plugin.TValue[[]any]
 	EncryptionKey               plugin.TValue[*mqlStackitKmsKey]
 	EncryptionKeyRing           plugin.TValue[*mqlStackitKmsKeyRing]
-	EncryptionKeyVersion        plugin.TValue[int64]
-	EncryptionKeyVersionRef     plugin.TValue[*mqlStackitKmsKeyVersion]
+	EncryptionKeyVersionNumber  plugin.TValue[int64]
+	EncryptionKeyVersion        plugin.TValue[*mqlStackitKmsKeyVersion]
 	EncryptionKeyServiceAccount plugin.TValue[*mqlStackitServiceAccount]
 }
 
@@ -15327,14 +15327,14 @@ func (c *mqlStackitSecretsManagerInstance) GetEncryptionKeyRing() *plugin.TValue
 	})
 }
 
-func (c *mqlStackitSecretsManagerInstance) GetEncryptionKeyVersion() *plugin.TValue[int64] {
-	return &c.EncryptionKeyVersion
+func (c *mqlStackitSecretsManagerInstance) GetEncryptionKeyVersionNumber() *plugin.TValue[int64] {
+	return &c.EncryptionKeyVersionNumber
 }
 
-func (c *mqlStackitSecretsManagerInstance) GetEncryptionKeyVersionRef() *plugin.TValue[*mqlStackitKmsKeyVersion] {
-	return plugin.GetOrCompute[*mqlStackitKmsKeyVersion](&c.EncryptionKeyVersionRef, func() (*mqlStackitKmsKeyVersion, error) {
+func (c *mqlStackitSecretsManagerInstance) GetEncryptionKeyVersion() *plugin.TValue[*mqlStackitKmsKeyVersion] {
+	return plugin.GetOrCompute[*mqlStackitKmsKeyVersion](&c.EncryptionKeyVersion, func() (*mqlStackitKmsKeyVersion, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.secretsManager.instance", c.__id, "encryptionKeyVersionRef")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.secretsManager.instance", c.__id, "encryptionKeyVersion")
 			if err != nil {
 				return nil, err
 			}
@@ -15343,7 +15343,7 @@ func (c *mqlStackitSecretsManagerInstance) GetEncryptionKeyVersionRef() *plugin.
 			}
 		}
 
-		return c.encryptionKeyVersionRef()
+		return c.encryptionKeyVersion()
 	})
 }
 
@@ -16843,8 +16843,8 @@ type mqlStackitAlbLoadBalancer struct {
 	Errors                               plugin.TValue[[]any]
 	LoadBalancerSecurityGroup            plugin.TValue[any]
 	TargetSecurityGroup                  plugin.TValue[any]
-	LoadBalancerSecurityGroupRef         plugin.TValue[*mqlStackitSecurityGroup]
-	TargetSecurityGroupRef               plugin.TValue[*mqlStackitSecurityGroup]
+	ManagedSecurityGroup                 plugin.TValue[*mqlStackitSecurityGroup]
+	ManagedTargetSecurityGroup           plugin.TValue[*mqlStackitSecurityGroup]
 	DisableTargetSecurityGroupAssignment plugin.TValue[bool]
 	Labels                               plugin.TValue[map[string]any]
 	Exposure                             plugin.TValue[*mqlStackitNetworkExposure]
@@ -16947,10 +16947,10 @@ func (c *mqlStackitAlbLoadBalancer) GetTargetSecurityGroup() *plugin.TValue[any]
 	return &c.TargetSecurityGroup
 }
 
-func (c *mqlStackitAlbLoadBalancer) GetLoadBalancerSecurityGroupRef() *plugin.TValue[*mqlStackitSecurityGroup] {
-	return plugin.GetOrCompute[*mqlStackitSecurityGroup](&c.LoadBalancerSecurityGroupRef, func() (*mqlStackitSecurityGroup, error) {
+func (c *mqlStackitAlbLoadBalancer) GetManagedSecurityGroup() *plugin.TValue[*mqlStackitSecurityGroup] {
+	return plugin.GetOrCompute[*mqlStackitSecurityGroup](&c.ManagedSecurityGroup, func() (*mqlStackitSecurityGroup, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.loadBalancer", c.__id, "loadBalancerSecurityGroupRef")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.loadBalancer", c.__id, "managedSecurityGroup")
 			if err != nil {
 				return nil, err
 			}
@@ -16959,14 +16959,14 @@ func (c *mqlStackitAlbLoadBalancer) GetLoadBalancerSecurityGroupRef() *plugin.TV
 			}
 		}
 
-		return c.loadBalancerSecurityGroupRef()
+		return c.managedSecurityGroup()
 	})
 }
 
-func (c *mqlStackitAlbLoadBalancer) GetTargetSecurityGroupRef() *plugin.TValue[*mqlStackitSecurityGroup] {
-	return plugin.GetOrCompute[*mqlStackitSecurityGroup](&c.TargetSecurityGroupRef, func() (*mqlStackitSecurityGroup, error) {
+func (c *mqlStackitAlbLoadBalancer) GetManagedTargetSecurityGroup() *plugin.TValue[*mqlStackitSecurityGroup] {
+	return plugin.GetOrCompute[*mqlStackitSecurityGroup](&c.ManagedTargetSecurityGroup, func() (*mqlStackitSecurityGroup, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.loadBalancer", c.__id, "targetSecurityGroupRef")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.loadBalancer", c.__id, "managedTargetSecurityGroup")
 			if err != nil {
 				return nil, err
 			}
@@ -16975,7 +16975,7 @@ func (c *mqlStackitAlbLoadBalancer) GetTargetSecurityGroupRef() *plugin.TValue[*
 			}
 		}
 
-		return c.targetSecurityGroupRef()
+		return c.managedTargetSecurityGroup()
 	})
 }
 

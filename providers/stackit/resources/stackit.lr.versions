@@ -38,7 +38,8 @@ stackit.alb.loadBalancer.insecureTargetPools 13.7.2
 stackit.alb.loadBalancer.labels 13.0.1
 stackit.alb.loadBalancer.listeners 13.0.1
 stackit.alb.loadBalancer.loadBalancerSecurityGroup 13.0.1
-stackit.alb.loadBalancer.loadBalancerSecurityGroupRef 13.7.2
+stackit.alb.loadBalancer.managedSecurityGroup 13.7.2
+stackit.alb.loadBalancer.managedTargetSecurityGroup 13.7.2
 stackit.alb.loadBalancer.name 13.0.1
 stackit.alb.loadBalancer.networks 13.0.1
 stackit.alb.loadBalancer.observabilityLogsPushUrl 13.7.2
@@ -51,7 +52,6 @@ stackit.alb.loadBalancer.region 13.0.1
 stackit.alb.loadBalancer.status 13.0.1
 stackit.alb.loadBalancer.targetPools 13.0.1
 stackit.alb.loadBalancer.targetSecurityGroup 13.0.1
-stackit.alb.loadBalancer.targetSecurityGroupRef 13.7.2
 stackit.alb.loadBalancer.wafs 13.4.2
 stackit.alb.managedRule 13.4.2
 stackit.alb.managedRule.description 13.4.2
@@ -632,7 +632,7 @@ stackit.secretsManager.instance.encryptionKey 13.7.2
 stackit.secretsManager.instance.encryptionKeyRing 13.7.2
 stackit.secretsManager.instance.encryptionKeyServiceAccount 13.7.2
 stackit.secretsManager.instance.encryptionKeyVersion 13.7.2
-stackit.secretsManager.instance.encryptionKeyVersionRef 13.7.2
+stackit.secretsManager.instance.encryptionKeyVersionNumber 13.7.2
 stackit.secretsManager.instance.id 13.0.0
 stackit.secretsManager.instance.name 13.0.0
 stackit.secretsManager.instance.secretCount 13.0.0
