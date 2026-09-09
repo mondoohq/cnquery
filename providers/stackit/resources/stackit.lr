@@ -102,23 +102,75 @@ stackit @root {
 // Metadata for the project the connection is scoped to. Projects are
 // the container that owns STACKIT resources, so this record identifies
 // which project a scan ran against and its administrative state. The
-// `id` is the project container ID, `parent` is the owning organization
-// or folder container, and `lifecycleState` (one of CREATING, ACTIVE,
-// DELETING, INACTIVE) tells you whether the project is usable or being
-// torn down. The `labels` map holds user-defined key/value tags.
+// `id` is the project UUID and `containerId` the human-readable container
+// identifier; `parent` and `parentType` name the owning organization or
+// folder, and `ancestors` walks the chain up to the organization.
+// `lifecycleState` (one of CREATING, ACTIVE, DELETING, INACTIVE) tells
+// you whether the project is usable or being torn down. The `labels` map
+// holds user-defined key/value tags.
 private stackit.project @defaults("id name lifecycleState") {
-  // Project container ID (UUID)
+  // Project UUID
   id string
+  // Project container ID
+  //
+  // The human-readable container identifier every resource-manager
+  // endpoint is keyed by, distinct from the UUID in id. This is the value
+  // the STACKIT portal shows for the project.
+  containerId string
   // Project name
   name string
   // Parent container ID (organization or folder)
   parent string
+  // Parent container UUID
+  //
+  // The UUID form of parent. The two identifier spaces are not
+  // interchangeable: organization and folder lookups take the UUID.
+  parentId string
+  // Kind of the parent container
+  //
+  // One of ORGANIZATION or FOLDER. Tells you whether parent is the owning
+  // organization directly or an intermediate folder; only in the second
+  // case does ancestors carry more than one entry.
+  parentType string
   // Lifecycle state (CREATING, ACTIVE, DELETING, INACTIVE)
   lifecycleState string
   // Creation timestamp
   creationTime time
-  // User-defined labels attached to the project
+  // Last change to the project's metadata (name, parent, or labels)
+  updateTime time
+  // User-defined labels
   labels map[string]string
+  // Containers above the project, nearest first
+  //
+  // The folder or folders the project sits in and, last, the owning
+  // organization. Answers which organization a project belongs to without
+  // organization-level read access, since the chain comes from the
+  // project's own record.
+  ancestors() []stackit.project.ancestor
+  // Container ID of the owning organization
+  //
+  // Found in ancestors by type. Empty when the record carries no
+  // organization.
+  organizationId() string
+}
+
+// Container above a STACKIT project
+//
+// One folder or organization in a project's ancestry chain, keyed by its
+// container `id`. The `type` says which of the two it is, and `parentId`
+// points one level further up, so the chain can be walked from the
+// project to the organization.
+private stackit.project.ancestor @defaults("id name type") {
+  // Container ID
+  id string
+  // Container UUID
+  uuid string
+  // Display name
+  name string
+  // Container kind (ORGANIZATION or FOLDER)
+  type string
+  // Container ID of this container's own parent; empty for the organization
+  parentId string
 }
 
 // STACKIT compute server
@@ -3116,6 +3168,12 @@ private stackit.serviceAccount @defaults("email projectId") {
   keys() []dict
   // External identity providers trusted to obtain credentials for this account
   federatedIdentityProviders() []stackit.serviceAccount.federatedIdentityProvider
+  // Project role bindings whose subject is this service account
+  //
+  // Which roles the account holds on the project, read from the project's
+  // member list. Direct bindings only; a role granted on the folder or
+  // organization is inherited but does not appear here.
+  roleBindings() []stackit.iam.member
 }
 
 // Federated identity provider trusted by a STACKIT service account
@@ -3648,6 +3706,14 @@ stackit.iam {
   members() []stackit.iam.member
   // Roles defined on the project
   roles() []stackit.iam.role
+  // Kind of resource the bindings and roles belong to
+  //
+  // Always project: the provider reads the project's direct bindings. A
+  // role granted on the folder or organization above it is inherited by
+  // the project but is not part of this list.
+  resourceType() string
+  // ID of the project the bindings and roles belong to
+  resourceId() string
 }
 
 // STACKIT IAM project member
@@ -3670,6 +3736,12 @@ private stackit.iam.member @defaults("subject role") {
   // review compares against. Null when the project role catalog cannot be
   // read or no longer defines that role.
   roleDetails() stackit.iam.role
+  // Service account the binding grants the role to (nullable)
+  //
+  // Resolved when the subject is one of the project's service accounts.
+  // Null for a human user or a group; the API does not mark the subject
+  // kind, so membership in the project's service-account list is the test.
+  serviceAccount() stackit.serviceAccount
 }
 
 // STACKIT IAM role
@@ -3684,6 +3756,28 @@ private stackit.iam.role @defaults("name") {
   description string
   // Permissions granted by the role (`<resource>.<action>` strings)
   permissions []string
+  // Role UUID
+  //
+  // Stable across renames; the key the authorization API takes for a
+  // single role.
+  id string
+  // Change token of the role definition
+  //
+  // Changes whenever the permission set changes, so a custom role that
+  // drifted from its reviewed definition can be caught without diffing
+  // permissions.
+  etag string
+  // What each permission allows, keyed by permission name
+  //
+  // The description the service attaches to every permission in
+  // permissions, so a permission string can be reviewed without looking
+  // it up.
+  permissionDescriptions map[string]string
+  // Bindings that grant this role on the project
+  //
+  // Direct project bindings only; grants inherited from the folder or
+  // organization are not in the project's member list.
+  members() []stackit.iam.member
 }
 
 // STACKIT VPN namespace

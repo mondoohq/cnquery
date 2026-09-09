@@ -18,6 +18,7 @@ import (
 const (
 	ResourceStackit                                        string = "stackit"
 	ResourceStackitProject                                 string = "stackit.project"
+	ResourceStackitProjectAncestor                         string = "stackit.project.ancestor"
 	ResourceStackitServer                                  string = "stackit.server"
 	ResourceStackitVolume                                  string = "stackit.volume"
 	ResourceStackitSnapshot                                string = "stackit.snapshot"
@@ -125,6 +126,10 @@ func init() {
 		"stackit.project": {
 			// to override args, implement: initStackitProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitProject,
+		},
+		"stackit.project.ancestor": {
+			// to override args, implement: initStackitProjectAncestor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitProjectAncestor,
 		},
 		"stackit.server": {
 			Init:   initStackitServer,
@@ -684,11 +689,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.project.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitProject).GetId()).ToDataRes(types.String)
 	},
+	"stackit.project.containerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitProject).GetContainerId()).ToDataRes(types.String)
+	},
 	"stackit.project.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitProject).GetName()).ToDataRes(types.String)
 	},
 	"stackit.project.parent": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitProject).GetParent()).ToDataRes(types.String)
+	},
+	"stackit.project.parentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitProject).GetParentId()).ToDataRes(types.String)
+	},
+	"stackit.project.parentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitProject).GetParentType()).ToDataRes(types.String)
 	},
 	"stackit.project.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitProject).GetLifecycleState()).ToDataRes(types.String)
@@ -696,8 +710,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.project.creationTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitProject).GetCreationTime()).ToDataRes(types.Time)
 	},
+	"stackit.project.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitProject).GetUpdateTime()).ToDataRes(types.Time)
+	},
 	"stackit.project.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitProject).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"stackit.project.ancestors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitProject).GetAncestors()).ToDataRes(types.Array(types.Resource("stackit.project.ancestor")))
+	},
+	"stackit.project.organizationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitProject).GetOrganizationId()).ToDataRes(types.String)
+	},
+	"stackit.project.ancestor.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitProjectAncestor).GetId()).ToDataRes(types.String)
+	},
+	"stackit.project.ancestor.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitProjectAncestor).GetUuid()).ToDataRes(types.String)
+	},
+	"stackit.project.ancestor.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitProjectAncestor).GetName()).ToDataRes(types.String)
+	},
+	"stackit.project.ancestor.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitProjectAncestor).GetType()).ToDataRes(types.String)
+	},
+	"stackit.project.ancestor.parentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitProjectAncestor).GetParentId()).ToDataRes(types.String)
 	},
 	"stackit.server.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetId()).ToDataRes(types.String)
@@ -2916,6 +2954,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.serviceAccount.federatedIdentityProviders": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServiceAccount).GetFederatedIdentityProviders()).ToDataRes(types.Array(types.Resource("stackit.serviceAccount.federatedIdentityProvider")))
 	},
+	"stackit.serviceAccount.roleBindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServiceAccount).GetRoleBindings()).ToDataRes(types.Array(types.Resource("stackit.iam.member")))
+	},
 	"stackit.serviceAccount.federatedIdentityProvider.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServiceAccountFederatedIdentityProvider).GetId()).ToDataRes(types.String)
 	},
@@ -3306,6 +3347,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.iam.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitIam).GetRoles()).ToDataRes(types.Array(types.Resource("stackit.iam.role")))
 	},
+	"stackit.iam.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitIam).GetResourceType()).ToDataRes(types.String)
+	},
+	"stackit.iam.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitIam).GetResourceId()).ToDataRes(types.String)
+	},
 	"stackit.iam.member.subject": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitIamMember).GetSubject()).ToDataRes(types.String)
 	},
@@ -3315,6 +3362,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.iam.member.roleDetails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitIamMember).GetRoleDetails()).ToDataRes(types.Resource("stackit.iam.role"))
 	},
+	"stackit.iam.member.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitIamMember).GetServiceAccount()).ToDataRes(types.Resource("stackit.serviceAccount"))
+	},
 	"stackit.iam.role.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitIamRole).GetName()).ToDataRes(types.String)
 	},
@@ -3323,6 +3373,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.iam.role.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitIamRole).GetPermissions()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.iam.role.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitIamRole).GetId()).ToDataRes(types.String)
+	},
+	"stackit.iam.role.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitIamRole).GetEtag()).ToDataRes(types.String)
+	},
+	"stackit.iam.role.permissionDescriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitIamRole).GetPermissionDescriptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"stackit.iam.role.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitIamRole).GetMembers()).ToDataRes(types.Array(types.Resource("stackit.iam.member")))
 	},
 	"stackit.vpn.gateways": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitVpn).GetGateways()).ToDataRes(types.Array(types.Resource("stackit.vpn.gateway")))
@@ -3597,12 +3659,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitProject).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"stackit.project.containerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitProject).ContainerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"stackit.project.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitProject).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"stackit.project.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitProject).Parent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.project.parentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitProject).ParentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.project.parentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitProject).ParentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"stackit.project.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3613,8 +3687,44 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitProject).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"stackit.project.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitProject).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"stackit.project.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitProject).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"stackit.project.ancestors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitProject).Ancestors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.project.organizationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitProject).OrganizationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.project.ancestor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitProjectAncestor).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.project.ancestor.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitProjectAncestor).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.project.ancestor.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitProjectAncestor).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.project.ancestor.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitProjectAncestor).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.project.ancestor.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitProjectAncestor).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.project.ancestor.parentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitProjectAncestor).ParentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"stackit.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6865,6 +6975,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitServiceAccount).FederatedIdentityProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.serviceAccount.roleBindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServiceAccount).RoleBindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.serviceAccount.federatedIdentityProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitServiceAccountFederatedIdentityProvider).__id, ok = v.Value.(string)
 		return
@@ -7445,6 +7559,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitIam).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.iam.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitIam).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.iam.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitIam).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"stackit.iam.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitIamMember).__id, ok = v.Value.(string)
 		return
@@ -7461,6 +7583,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitIamMember).RoleDetails, ok = plugin.RawToTValue[*mqlStackitIamRole](v.Value, v.Error)
 		return
 	},
+	"stackit.iam.member.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitIamMember).ServiceAccount, ok = plugin.RawToTValue[*mqlStackitServiceAccount](v.Value, v.Error)
+		return
+	},
 	"stackit.iam.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitIamRole).__id, ok = v.Value.(string)
 		return
@@ -7475,6 +7601,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.iam.role.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitIamRole).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.iam.role.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitIamRole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.iam.role.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitIamRole).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.iam.role.permissionDescriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitIamRole).PermissionDescriptions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"stackit.iam.role.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitIamRole).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.vpn.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8307,13 +8449,19 @@ func (c *mqlStackit) GetIam() *plugin.TValue[*mqlStackitIam] {
 type mqlStackitProject struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitProjectInternal it will be used here
+	mqlStackitProjectInternal
 	Id             plugin.TValue[string]
+	ContainerId    plugin.TValue[string]
 	Name           plugin.TValue[string]
 	Parent         plugin.TValue[string]
+	ParentId       plugin.TValue[string]
+	ParentType     plugin.TValue[string]
 	LifecycleState plugin.TValue[string]
 	CreationTime   plugin.TValue[*time.Time]
+	UpdateTime     plugin.TValue[*time.Time]
 	Labels         plugin.TValue[map[string]any]
+	Ancestors      plugin.TValue[[]any]
+	OrganizationId plugin.TValue[string]
 }
 
 // createStackitProject creates a new instance of this resource
@@ -8357,12 +8505,24 @@ func (c *mqlStackitProject) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
+func (c *mqlStackitProject) GetContainerId() *plugin.TValue[string] {
+	return &c.ContainerId
+}
+
 func (c *mqlStackitProject) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
 func (c *mqlStackitProject) GetParent() *plugin.TValue[string] {
 	return &c.Parent
+}
+
+func (c *mqlStackitProject) GetParentId() *plugin.TValue[string] {
+	return &c.ParentId
+}
+
+func (c *mqlStackitProject) GetParentType() *plugin.TValue[string] {
+	return &c.ParentType
 }
 
 func (c *mqlStackitProject) GetLifecycleState() *plugin.TValue[string] {
@@ -8373,8 +8533,103 @@ func (c *mqlStackitProject) GetCreationTime() *plugin.TValue[*time.Time] {
 	return &c.CreationTime
 }
 
+func (c *mqlStackitProject) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
 func (c *mqlStackitProject) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
+}
+
+func (c *mqlStackitProject) GetAncestors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ancestors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.project", c.__id, "ancestors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ancestors()
+	})
+}
+
+func (c *mqlStackitProject) GetOrganizationId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OrganizationId, func() (string, error) {
+		return c.organizationId()
+	})
+}
+
+// mqlStackitProjectAncestor for the stackit.project.ancestor resource
+type mqlStackitProjectAncestor struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitProjectAncestorInternal it will be used here
+	Id       plugin.TValue[string]
+	Uuid     plugin.TValue[string]
+	Name     plugin.TValue[string]
+	Type     plugin.TValue[string]
+	ParentId plugin.TValue[string]
+}
+
+// createStackitProjectAncestor creates a new instance of this resource
+func createStackitProjectAncestor(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitProjectAncestor{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.project.ancestor", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitProjectAncestor) MqlName() string {
+	return "stackit.project.ancestor"
+}
+
+func (c *mqlStackitProjectAncestor) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitProjectAncestor) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitProjectAncestor) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlStackitProjectAncestor) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitProjectAncestor) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlStackitProjectAncestor) GetParentId() *plugin.TValue[string] {
+	return &c.ParentId
 }
 
 // mqlStackitServer for the stackit.server resource
@@ -16502,6 +16757,7 @@ type mqlStackitServiceAccount struct {
 	AccessTokens               plugin.TValue[[]any]
 	Keys                       plugin.TValue[[]any]
 	FederatedIdentityProviders plugin.TValue[[]any]
+	RoleBindings               plugin.TValue[[]any]
 }
 
 // createStackitServiceAccount creates a new instance of this resource
@@ -16582,6 +16838,22 @@ func (c *mqlStackitServiceAccount) GetFederatedIdentityProviders() *plugin.TValu
 		}
 
 		return c.federatedIdentityProviders()
+	})
+}
+
+func (c *mqlStackitServiceAccount) GetRoleBindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleBindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.serviceAccount", c.__id, "roleBindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roleBindings()
 	})
 }
 
@@ -18080,8 +18352,10 @@ type mqlStackitIam struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlStackitIamInternal
-	Members plugin.TValue[[]any]
-	Roles   plugin.TValue[[]any]
+	Members      plugin.TValue[[]any]
+	Roles        plugin.TValue[[]any]
+	ResourceType plugin.TValue[string]
+	ResourceId   plugin.TValue[string]
 }
 
 // createStackitIam creates a new instance of this resource
@@ -18153,14 +18427,27 @@ func (c *mqlStackitIam) GetRoles() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitIam) GetResourceType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResourceType, func() (string, error) {
+		return c.resourceType()
+	})
+}
+
+func (c *mqlStackitIam) GetResourceId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResourceId, func() (string, error) {
+		return c.resourceId()
+	})
+}
+
 // mqlStackitIamMember for the stackit.iam.member resource
 type mqlStackitIamMember struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitIamMemberInternal it will be used here
-	Subject     plugin.TValue[string]
-	Role        plugin.TValue[string]
-	RoleDetails plugin.TValue[*mqlStackitIamRole]
+	Subject        plugin.TValue[string]
+	Role           plugin.TValue[string]
+	RoleDetails    plugin.TValue[*mqlStackitIamRole]
+	ServiceAccount plugin.TValue[*mqlStackitServiceAccount]
 }
 
 // createStackitIamMember creates a new instance of this resource
@@ -18224,14 +18511,34 @@ func (c *mqlStackitIamMember) GetRoleDetails() *plugin.TValue[*mqlStackitIamRole
 	})
 }
 
+func (c *mqlStackitIamMember) GetServiceAccount() *plugin.TValue[*mqlStackitServiceAccount] {
+	return plugin.GetOrCompute[*mqlStackitServiceAccount](&c.ServiceAccount, func() (*mqlStackitServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.iam.member", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
+}
+
 // mqlStackitIamRole for the stackit.iam.role resource
 type mqlStackitIamRole struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitIamRoleInternal it will be used here
-	Name        plugin.TValue[string]
-	Description plugin.TValue[string]
-	Permissions plugin.TValue[[]any]
+	Name                   plugin.TValue[string]
+	Description            plugin.TValue[string]
+	Permissions            plugin.TValue[[]any]
+	Id                     plugin.TValue[string]
+	Etag                   plugin.TValue[string]
+	PermissionDescriptions plugin.TValue[map[string]any]
+	Members                plugin.TValue[[]any]
 }
 
 // createStackitIamRole creates a new instance of this resource
@@ -18281,6 +18588,34 @@ func (c *mqlStackitIamRole) GetDescription() *plugin.TValue[string] {
 
 func (c *mqlStackitIamRole) GetPermissions() *plugin.TValue[[]any] {
 	return &c.Permissions
+}
+
+func (c *mqlStackitIamRole) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitIamRole) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlStackitIamRole) GetPermissionDescriptions() *plugin.TValue[map[string]any] {
+	return &c.PermissionDescriptions
+}
+
+func (c *mqlStackitIamRole) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.iam.role", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
 }
 
 // mqlStackitVpn for the stackit.vpn resource

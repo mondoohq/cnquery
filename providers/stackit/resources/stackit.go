@@ -4,6 +4,7 @@
 package resources
 
 import (
+	resourcemanager "github.com/stackitcloud/stackit-sdk-go/services/resourcemanager/v0api"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/stackit/connection"
@@ -21,14 +22,24 @@ func conn(runtime *plugin.Runtime) *connection.StackitConnection {
 	return runtime.Connection.(*connection.StackitConnection)
 }
 
-// project fetches the project metadata from the resource-manager API.
+// mqlStackitProjectInternal caches the ancestry chain the project response
+// carries when parents are requested, so ancestors() builds its records
+// without another call.
+type mqlStackitProjectInternal struct {
+	cacheParents []resourcemanager.ParentListInner
+}
+
+// project fetches the project metadata from the resource-manager API. Parents
+// are requested on the same call: that populates the ancestry chain up to the
+// organization, which is the only way a project-scoped credential learns
+// which organization owns it without organization-level read access.
 func (r *mqlStackit) project() (*mqlStackitProject, error) {
 	c := conn(r.MqlRuntime)
 	client, err := c.ResourceManager()
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.DefaultAPI.GetProject(bgctx(), c.ProjectID()).Execute()
+	resp, err := client.DefaultAPI.GetProject(bgctx(), c.ProjectID()).IncludeParents(true).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return markNull[mqlStackitProject](&r.Project)
@@ -39,32 +50,101 @@ func (r *mqlStackit) project() (*mqlStackitProject, error) {
 	lifecycle, _ := resp.GetLifecycleStateOk()
 	labels, _ := resp.GetLabelsOk()
 	createdAt, ok := resp.GetCreationTimeOk()
+	updatedAt, okUpdated := resp.GetUpdateTimeOk()
 
-	parentID := ""
+	parentID, parentUUID, parentType := "", "", ""
 	if p, hasParent := resp.GetParentOk(); hasParent {
 		parentID = p.GetContainerId()
 		if parentID == "" {
 			parentID = p.GetId()
 		}
+		parentUUID = p.GetId()
+		if t, ok := p.GetTypeOk(); ok && t != nil {
+			parentType = string(*t)
+		}
 	}
 
 	args := map[string]*llx.RawData{
 		"id":             llx.StringData(resp.GetProjectId()),
+		"containerId":    llx.StringData(resp.GetContainerId()),
 		"name":           llx.StringData(resp.GetName()),
 		"parent":         llx.StringData(parentID),
+		"parentId":       llx.StringData(parentUUID),
+		"parentType":     llx.StringData(parentType),
 		"lifecycleState": llx.StringData(ptrEnumStr(lifecycle)),
 		"creationTime":   llx.TimeDataPtr(timeOrNil(createdAt, ok)),
+		"updateTime":     llx.TimeDataPtr(timeOrNil(updatedAt, okUpdated)),
 		"labels":         labelData(labels),
 	}
 	res, err := CreateResource(r.MqlRuntime, "stackit.project", args)
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlStackitProject), nil
+	project := res.(*mqlStackitProject)
+	project.cacheParents = resp.GetParents()
+	return project, nil
 }
 
 func (r *mqlStackitProject) id() (string, error) {
 	return "stackit.project/" + r.Id.Data, nil
+}
+
+// ancestors lists the containers above the project, nearest first: the
+// folder (or folders) it sits in and finally the organization. The chain
+// comes from the same project response, requested with parents included.
+func (r *mqlStackitProject) ancestors() ([]any, error) {
+	out := make([]any, 0, len(r.cacheParents))
+	for i := range r.cacheParents {
+		p := &r.cacheParents[i]
+		res, err := CreateResource(r.MqlRuntime, "stackit.project.ancestor", projectAncestorArgs(p))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// organizationId reports the container id of the organization at the top of
+// the ancestry chain, or "" when the chain is empty or names no organization.
+func (r *mqlStackitProject) organizationId() (string, error) {
+	return projectOrganizationID(r.cacheParents), nil
+}
+
+// projectAncestorArgs maps one ancestry entry onto stackit.project.ancestor.
+// The container id is the identifier every resource-manager endpoint takes,
+// so it is the resource id; the UUID rides along as `uuid`.
+func projectAncestorArgs(p *resourcemanager.ParentListInner) map[string]*llx.RawData {
+	ancestorType := ""
+	if t, ok := p.GetTypeOk(); ok && t != nil {
+		ancestorType = string(*t)
+	}
+	parentID := ""
+	if v, ok := p.GetContainerParentIdOk(); ok && v != nil {
+		parentID = *v
+	}
+	return map[string]*llx.RawData{
+		"id":       llx.StringData(p.GetContainerId()),
+		"uuid":     llx.StringData(p.GetId()),
+		"name":     llx.StringData(p.GetName()),
+		"type":     llx.StringData(ancestorType),
+		"parentId": llx.StringData(parentID),
+	}
+}
+
+// projectOrganizationID finds the organization in an ancestry chain by its
+// type, not its position, since the API does not promise an ordering.
+func projectOrganizationID(parents []resourcemanager.ParentListInner) string {
+	for i := range parents {
+		if t, ok := parents[i].GetTypeOk(); ok && t != nil && *t == resourcemanager.PARENTLISTINNERTYPE_ORGANIZATION {
+			return parents[i].GetContainerId()
+		}
+	}
+	return ""
+}
+
+func (r *mqlStackitProjectAncestor) id() (string, error) {
+	return "stackit.project.ancestor/" + r.Id.Data, nil
 }
 
 // Each namespace resource has a stable id.
