@@ -105,7 +105,7 @@ func (r *mqlStackitTelemetryRouter) destinations() ([]any, error) {
 				"description":    llx.StringData(d.GetDescription()),
 				"status":         llx.StringData(string(d.GetStatus())),
 				"credentialType": llx.StringData(string(d.GetCredentialType())),
-				"config":         llx.DictData(toDict(d.GetConfig())),
+				"config":         llx.DictData(redactDestinationConfig(toDict(d.GetConfig()))),
 				"createdAt":      llx.TimeDataPtr(telemetryTime(d.GetCreationTimeOk())),
 			})
 			if err != nil {
@@ -119,6 +119,33 @@ func (r *mqlStackitTelemetryRouter) destinations() ([]any, error) {
 		}
 	}
 	return out, nil
+}
+
+// redactDestinationConfig strips the forwarding credentials out of a
+// destination's config dict before it reaches MQL. The SDK's DestinationConfig
+// carries them inline, and a wholesale marshal of the struct surfaced them:
+// `openTelemetry.basicAuth.password`, `openTelemetry.bearerToken`, and
+// `s3.accessKey.secret`. The identifying halves (`basicAuth.username`,
+// `accessKey.id`) and the endpoints stay, so "where does telemetry leave the
+// project, and how does the router authenticate" remains answerable without
+// the secret itself. The input is returned unchanged when it is not a dict.
+func redactDestinationConfig(cfg any) any {
+	m, ok := cfg.(map[string]any)
+	if !ok {
+		return cfg
+	}
+	if otel, ok := m["openTelemetry"].(map[string]any); ok {
+		delete(otel, "bearerToken")
+		if auth, ok := otel["basicAuth"].(map[string]any); ok {
+			delete(auth, "password")
+		}
+	}
+	if s3, ok := m["s3"].(map[string]any); ok {
+		if key, ok := s3["accessKey"].(map[string]any); ok {
+			delete(key, "secret")
+		}
+	}
+	return m
 }
 
 func (r *mqlStackitTelemetryRouterDestination) id() (string, error) {

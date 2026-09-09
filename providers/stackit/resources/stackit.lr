@@ -138,7 +138,13 @@ private stackit.server @defaults("id name status machineType") {
   id string
   // Server name
   name string
-  // Server status (ACTIVE, CREATING, ERROR, …)
+  // Server status
+  //
+  // One of ACTIVE, BACKING-UP, CREATING, DEALLOCATED, DEALLOCATING,
+  // DELETED, DELETING, ERROR, INACTIVE, MIGRATING, PAUSED, REBOOT,
+  // REBOOTING, REBUILD, REBUILDING, RESCUE, RESCUING, RESIZING,
+  // RESTORING, SNAPSHOTTING, STARTING, STOPPING, UNRESCUING, or
+  // UPDATING.
   status string
   // Power status (RUNNING, STOPPED, CRASHED, ERROR)
   powerStatus string
@@ -231,7 +237,13 @@ private stackit.volume @defaults("id name size status") {
   description string
   // Size in GiB
   size int
-  // Status (CREATING, AVAILABLE, IN_USE, DELETING, ERROR)
+  // Volume status
+  //
+  // One of ATTACHED, ATTACHING, AVAILABLE, AWAITING-TRANSFER, BACKING-UP,
+  // CREATING, DELETED, DELETING, DETACHING, DOWNLOADING, ERROR,
+  // ERROR_BACKING-UP, ERROR_DELETING, ERROR_RESIZING,
+  // ERROR_RESTORING-BACKUP, ERROR_KMS-ENCRYPTION-PARAMS, MAINTENANCE,
+  // RESERVED, RESIZING, RESTORING-BACKUP, RETYPING, or UPLOADING.
   status string
   // Availability zone
   availabilityZone string
@@ -251,6 +263,12 @@ private stackit.volume @defaults("id name size status") {
   sourceBackupId string
   // Backup the volume was created from (nullable)
   sourceBackup() stackit.backup
+  // Volume this one was cloned from (nullable)
+  //
+  // Set when the volume's source type is `volume`, that is, the volume
+  // was created as a copy of another volume in the project. Null for
+  // volumes created from an image, snapshot, or backup.
+  sourceVolume() stackit.volume
   // Server the volume is attached to (nullable)
   server() stackit.server
   // Attached server UUID (empty if detached)
@@ -302,7 +320,10 @@ private stackit.snapshot @defaults("id name status") {
   id string
   // Snapshot name
   name string
-  // Status (CREATING, AVAILABLE, DELETING, ERROR)
+  // Snapshot status
+  //
+  // One of AVAILABLE, BACKING-UP, CREATING, DELETED, DELETING, ERROR,
+  // RESTORING, UNMANAGING, or UPDATING.
   status string
   // Size in GiB
   size int
@@ -390,7 +411,9 @@ private stackit.image @defaults("id name status diskFormat") {
   id string
   // Image name
   name string
-  // Status (CREATING, AVAILABLE, DELETING, ERROR)
+  // Image status
+  //
+  // One of AVAILABLE, CREATING, DEACTIVATED, DELETED, DELETING, or ERROR.
   status string
   // Disk format (qcow2, raw, iso, …)
   diskFormat string
@@ -402,7 +425,12 @@ private stackit.image @defaults("id name status diskFormat") {
   protected bool
   // Owning project (empty for public images)
   owner string
-  // Image scope (public, private)
+  // Image scope
+  //
+  // One of public (available to every project), local (visible only to
+  // the owning project), projects (shared with specific projects, see
+  // sharedWithProjects), or organization (shared with the whole
+  // organization, see sharedWithOrganization).
   scope string
   // Image checksum
   //
@@ -823,7 +851,7 @@ private stackit.keyPair @defaults("name fingerprint") {
   init(name? string)
   // Key pair name (primary identifier)
   name string
-  // SHA256 fingerprint
+  // MD5 fingerprint of the public key (16 colon-separated hex octets)
   fingerprint string
   // Public key content (OpenSSH format)
   publicKey string
@@ -1013,7 +1041,7 @@ private stackit.ske.cluster @defaults("name kubernetesVersion status") {
   status string
   // Status object (raw): aggregated state, hibernated, errors, credentials rotation, …
   statusDetails dict
-  // Kubernetes minor version (e.g., 1.30)
+  // Kubernetes version of the control plane as a full patch version (e.g., 1.30.4)
   kubernetesVersion string
   // Node pools, one stackit.ske.cluster.nodePool per pool
   nodePools() []stackit.ske.cluster.nodePool
@@ -1303,11 +1331,21 @@ private stackit.sfs.resourcePool @defaults("id name state performanceClass") {
   // Provisioned capacity in gigabytes
   sizeGigabytes int
   // Used capacity in gigabytes
-  usedGigabytes float
+  //
+  // Read per pool, since the API reports usage only on a single-pool
+  // fetch and returns zero for every pool in the list. Null when the
+  // pool could not be read.
+  usedGigabytes() float
   // Available capacity in gigabytes
-  availableGigabytes float
+  //
+  // Read per pool, like usedGigabytes. Null when the pool could not be
+  // read.
+  availableGigabytes() float
   // Capacity consumed by snapshots in gigabytes
-  usedBySnapshotsGigabytes float
+  //
+  // Read per pool, like usedGigabytes. Null when the pool could not be
+  // read.
+  usedBySnapshotsGigabytes() float
   // CIDRs allowed to mount shares in this pool
   ipAcl []string
   // Whether snapshots are visible to clients under the share mount
@@ -1446,7 +1484,7 @@ private stackit.dns.zone @defaults("id dnsName type state") {
   description string
   // Zone type (primary, secondary)
   type string
-  // Visibility (public, private)
+  // Visibility (the API currently defines only public)
   visibility string
   // Lifecycle state (CREATING, CREATE_SUCCEEDED, CREATE_FAILED, DELETING, DELETE_SUCCEEDED, DELETE_FAILED, UPDATING, UPDATE_SUCCEEDED, UPDATE_FAILED)
   state string
@@ -1501,7 +1539,11 @@ private stackit.dns.recordSet @defaults("name type state") {
   zone() stackit.dns.zone
   // Record name (FQDN, e.g., `www.example.com.`)
   name string
-  // Record type (A, AAAA, CNAME, MX, TXT, NS, SRV, …)
+  // Record type
+  //
+  // One of A, AAAA, SOA, CNAME, NS, MX, TXT, SRV, PTR, ALIAS, DNAME,
+  // CAA, DNSKEY, DS, LOC, NAPTR, SSHFP, TLSA, URI, CERT, SVCB, TYPE,
+  // CSYNC, HINFO, or HTTPS.
   type string
   // Record TTL (seconds)
   ttl int
@@ -1638,7 +1680,7 @@ private stackit.mongoDbFlex.instance @defaults("id name version status") {
   // Compute flavor
   //
   // Dict describing the compute flavor backing the instance, with keys
-  // id, cpu, memory, description, and categories.
+  // id, cpu, memory, and description.
   flavor() dict
   // Number of replicas backing the instance
   replicas() int
@@ -2460,11 +2502,13 @@ private stackit.telemetry.router.destination @defaults("id displayName status cr
   // Destination configuration
   //
   // Shape depends on `configType`: `OpenTelemetry` populates an
-  // `openTelemetry` object with `uri` and an optional `basicAuth`
-  // (`username`, `password`) or `bearerToken`; `S3` populates an `s3`
-  // object with `bucket`, `endpoint`, and an optional `accessKey`
-  // (`id`, `secret`). An optional `filter` (same `attributes` shape as
-  // the router filter) narrows what this destination forwards.
+  // `openTelemetry` object with `uri` and, when basic auth is configured,
+  // a `basicAuth` object carrying the `username`; `S3` populates an `s3`
+  // object with `bucket`, `endpoint`, and, when a key is configured, an
+  // `accessKey` object carrying the key `id`. The credential halves
+  // (basic-auth password, bearer token, access-key secret) are never
+  // included. An optional `filter` (same `attributes` shape as the
+  // router filter) narrows what this destination forwards.
   config dict
   // Creation timestamp
   createdAt time
@@ -2899,6 +2943,10 @@ private stackit.alb.customRule @defaults("id action severity") {
   // Log message emitted on a match
   logMsg string
   // Severity recorded for a match
+  //
+  // One of SEVERITY_EMERGENCY, SEVERITY_ALERT, SEVERITY_CRITICAL,
+  // SEVERITY_ERROR, SEVERITY_WARNING, SEVERITY_NOTICE, SEVERITY_INFO, or
+  // SEVERITY_DEBUG.
   severity string
   // Match conditions that must hold for the rule to apply
   conditions() []stackit.alb.customRuleCondition
@@ -2979,13 +3027,19 @@ private stackit.kms.wrappingKey @defaults("displayName state expiresAt") {
   description string
   // Wrapping algorithm (for example rsa_4096_oaep_sha256)
   algorithm string
-  // Purpose the wrapping key serves (for example symmetric_key, asymmetric_key)
+  // Purpose the wrapping key serves
+  //
+  // One of wrap_symmetric_key or wrap_asymmetric_key.
   purpose string
   // Protection level backing the private half (software, hsm)
   protection string
   // Access scope (PUBLIC, SNA)
   accessScope string
-  // Lifecycle state (active, creating, deleted, …)
+  // Lifecycle state
+  //
+  // One of active, creating, expired, deleted, or
+  // key_material_unavailable. An expired wrapping key can no longer
+  // accept key material for import.
   state string
   // Expiration, after which the wrapping key can no longer wrap material
   expiresAt time
@@ -3021,7 +3075,7 @@ private stackit.kms.key @defaults("id displayName state purpose") {
   purpose string
   // Algorithm (e.g., aes_256_gcm, rsa_4096_oaep_sha256, ecdsa_p256_sha256)
   algorithm string
-  // Protection level (software)
+  // Protection level backing the key material (software, hsm)
   protection string
   // Access scope (PUBLIC, SNA)
   accessScope string

@@ -743,7 +743,7 @@ func (r *mqlStackitObservabilityInstance) acl() ([]any, error) {
 }
 
 // fetchGrafana pulls the instance's Grafana configuration once and caches it
-// for the lifetime of this resource, so the four Grafana fields share a
+// for the lifetime of this resource, so the generic OAuth fields share a
 // single API call. Double-check locked like fetchDetail.
 //
 // The response also carries the generic OAuth provider's client secret. Only
@@ -775,7 +775,22 @@ func (r *mqlStackitObservabilityInstance) fetchGrafana() (*observability.Grafana
 	return r.grafana, nil
 }
 
+// The instance detail already carries the two Grafana access flags on its
+// InstanceSensitiveData block, so they are read from the detail every other
+// field shares rather than spending the Grafana-config call on them. That call
+// is only paid when the generic OAuth fields are queried. If the detail was
+// denied, the Grafana endpoint is tried as a fallback before giving up.
+
 func (r *mqlStackitObservabilityInstance) grafanaPublicReadAccess() (bool, error) {
+	d, err := r.fetchDetail()
+	if err != nil {
+		return false, err
+	}
+	if d != nil {
+		if inst, ok := d.GetInstanceOk(); ok && inst != nil {
+			return inst.GetGrafanaPublicReadAccess(), nil
+		}
+	}
 	g, err := r.fetchGrafana()
 	if err != nil || g == nil {
 		return false, err
@@ -784,6 +799,15 @@ func (r *mqlStackitObservabilityInstance) grafanaPublicReadAccess() (bool, error
 }
 
 func (r *mqlStackitObservabilityInstance) grafanaUseStackitSso() (bool, error) {
+	d, err := r.fetchDetail()
+	if err != nil {
+		return false, err
+	}
+	if d != nil {
+		if inst, ok := d.GetInstanceOk(); ok && inst != nil {
+			return inst.GetGrafanaUseStackitSso(), nil
+		}
+	}
 	g, err := r.fetchGrafana()
 	if err != nil || g == nil {
 		return false, err
