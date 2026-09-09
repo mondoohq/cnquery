@@ -25,7 +25,7 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/postgresflex v1.14.1
 	github.com/stackitcloud/stackit-sdk-go/services/rabbitmq v1.3.1
 	github.com/stackitcloud/stackit-sdk-go/services/redis v1.4.1
-	github.com/stackitcloud/stackit-sdk-go/services/resourcemanager v0.25.1
+	github.com/stackitcloud/stackit-sdk-go/services/resourcemanager v0.26.0
 	github.com/stackitcloud/stackit-sdk-go/services/secretsmanager v0.19.1
 	github.com/stackitcloud/stackit-sdk-go/services/serverbackup v1.7.2
 	github.com/stackitcloud/stackit-sdk-go/services/serverupdate v1.5.5
@@ -35,7 +35,7 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.18.1
 	github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.5.2
 	github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.5.2
-	github.com/stackitcloud/stackit-sdk-go/services/vpn v0.15.1
+	github.com/stackitcloud/stackit-sdk-go/services/vpn v0.15.2
 	github.com/stretchr/testify v1.12.1
 	go.mondoo.com/mql v0.0.0-20260908144452-0bda209d1d40
 )
