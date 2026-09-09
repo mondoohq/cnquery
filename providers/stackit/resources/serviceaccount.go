@@ -41,6 +41,37 @@ func (r *mqlStackitServiceAccount) id() (string, error) {
 	return "stackit.serviceAccount/" + r.Email.Data, nil
 }
 
+// memberships lists every role binding the service account holds across the
+// STACKIT hierarchy, as the authorization service resolves it: bindings on
+// this project and bindings inherited from the folder or organization above
+// it. This is the view roleBindings cannot give, since the project's member
+// list holds direct bindings only. Empty when the credential may not read
+// the account's memberships.
+func (r *mqlStackitServiceAccount) memberships() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.Authorization()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.ListUserMemberships(bgctx(), r.Email.Data).Execute()
+	if err != nil {
+		if isAccessDenied(err) || isNotFound(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetItemsOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		res, err := CreateResource(r.MqlRuntime, "stackit.iam.membership", iamMembershipArgs(&items[i], c.ProjectID()))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
 // roleBindings lists the project bindings whose subject is this service
 // account, read off the member list the stackit.iam singleton already holds.
 // Direct project bindings only: a role granted on the folder or organization

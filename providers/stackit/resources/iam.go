@@ -224,6 +224,30 @@ func (r *mqlStackitIam) resourceId() (string, error) {
 	return conn(r.MqlRuntime).ProjectID(), nil
 }
 
+// iamMembershipArgs maps one resolved membership onto stackit.iam.membership.
+// `inherited` is true when the binding lives on a container other than the
+// scanned project, which is how a folder or organization grant reaches the
+// project without appearing in its own member list.
+func iamMembershipArgs(m *authorization.UserMembership, projectID string) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"subject":      llx.StringData(m.GetSubject()),
+		"role":         llx.StringData(m.GetRole()),
+		"resourceType": llx.StringData(m.GetResourceType()),
+		"resourceId":   llx.StringData(m.GetResourceId()),
+		"inherited":    llx.BoolData(membershipInherited(m.GetResourceType(), m.GetResourceId(), projectID)),
+	}
+}
+
+// membershipInherited reports whether a binding on resourceType/resourceId is
+// held somewhere other than the scanned project.
+func membershipInherited(resourceType, resourceID, projectID string) bool {
+	return !(resourceType == authResourceTypeProject && resourceID == projectID)
+}
+
+func (r *mqlStackitIamMembership) id() (string, error) {
+	return "stackit.iam.membership/" + r.ResourceType.Data + "/" + r.ResourceId.Data + "/" + r.Subject.Data + "/" + r.Role.Data, nil
+}
+
 // filterIamMembers keeps the member bindings a predicate accepts. Entries
 // that are not member resources are dropped.
 func filterIamMembers(items []any, keep func(*mqlStackitIamMember) bool) []any {
