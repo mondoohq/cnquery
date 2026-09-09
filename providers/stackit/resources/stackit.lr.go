@@ -18,7 +18,8 @@ import (
 const (
 	ResourceStackit                                        string = "stackit"
 	ResourceStackitProject                                 string = "stackit.project"
-	ResourceStackitProjectAncestor                         string = "stackit.project.ancestor"
+	ResourceStackitOrganization                            string = "stackit.organization"
+	ResourceStackitFolder                                  string = "stackit.folder"
 	ResourceStackitServer                                  string = "stackit.server"
 	ResourceStackitVolume                                  string = "stackit.volume"
 	ResourceStackitSnapshot                                string = "stackit.snapshot"
@@ -127,9 +128,13 @@ func init() {
 			// to override args, implement: initStackitProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitProject,
 		},
-		"stackit.project.ancestor": {
-			// to override args, implement: initStackitProjectAncestor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createStackitProjectAncestor,
+		"stackit.organization": {
+			Init:   initStackitOrganization,
+			Create: createStackitOrganization,
+		},
+		"stackit.folder": {
+			Init:   initStackitFolder,
+			Create: createStackitFolder,
 		},
 		"stackit.server": {
 			Init:   initStackitServer,
@@ -698,9 +703,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.project.parent": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitProject).GetParent()).ToDataRes(types.String)
 	},
-	"stackit.project.parentId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitProject).GetParentId()).ToDataRes(types.String)
-	},
 	"stackit.project.parentType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitProject).GetParentType()).ToDataRes(types.String)
 	},
@@ -716,26 +718,50 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.project.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitProject).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"stackit.project.ancestors": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitProject).GetAncestors()).ToDataRes(types.Array(types.Resource("stackit.project.ancestor")))
+	"stackit.project.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitProject).GetOrganization()).ToDataRes(types.Resource("stackit.organization"))
 	},
-	"stackit.project.organizationId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitProject).GetOrganizationId()).ToDataRes(types.String)
+	"stackit.project.folders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitProject).GetFolders()).ToDataRes(types.Array(types.Resource("stackit.folder")))
 	},
-	"stackit.project.ancestor.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitProjectAncestor).GetId()).ToDataRes(types.String)
+	"stackit.organization.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOrganization).GetId()).ToDataRes(types.String)
 	},
-	"stackit.project.ancestor.uuid": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitProjectAncestor).GetUuid()).ToDataRes(types.String)
+	"stackit.organization.containerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOrganization).GetContainerId()).ToDataRes(types.String)
 	},
-	"stackit.project.ancestor.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitProjectAncestor).GetName()).ToDataRes(types.String)
+	"stackit.organization.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOrganization).GetName()).ToDataRes(types.String)
 	},
-	"stackit.project.ancestor.type": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitProjectAncestor).GetType()).ToDataRes(types.String)
+	"stackit.organization.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOrganization).GetLifecycleState()).ToDataRes(types.String)
 	},
-	"stackit.project.ancestor.parentId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitProjectAncestor).GetParentId()).ToDataRes(types.String)
+	"stackit.organization.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOrganization).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"stackit.organization.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOrganization).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"stackit.organization.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOrganization).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"stackit.folder.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitFolder).GetId()).ToDataRes(types.String)
+	},
+	"stackit.folder.containerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitFolder).GetContainerId()).ToDataRes(types.String)
+	},
+	"stackit.folder.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitFolder).GetName()).ToDataRes(types.String)
+	},
+	"stackit.folder.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitFolder).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"stackit.folder.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitFolder).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"stackit.folder.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitFolder).GetUpdateTime()).ToDataRes(types.Time)
 	},
 	"stackit.server.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetId()).ToDataRes(types.String)
@@ -3671,10 +3697,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitProject).Parent, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"stackit.project.parentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitProject).ParentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"stackit.project.parentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitProject).ParentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3695,36 +3717,72 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitProject).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
-	"stackit.project.ancestors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitProject).Ancestors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"stackit.project.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitProject).Organization, ok = plugin.RawToTValue[*mqlStackitOrganization](v.Value, v.Error)
 		return
 	},
-	"stackit.project.organizationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitProject).OrganizationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"stackit.project.folders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitProject).Folders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"stackit.project.ancestor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitProjectAncestor).__id, ok = v.Value.(string)
+	"stackit.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOrganization).__id, ok = v.Value.(string)
 		return
 	},
-	"stackit.project.ancestor.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitProjectAncestor).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"stackit.organization.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOrganization).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"stackit.project.ancestor.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitProjectAncestor).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"stackit.organization.containerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOrganization).ContainerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"stackit.project.ancestor.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitProjectAncestor).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"stackit.organization.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOrganization).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"stackit.project.ancestor.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitProjectAncestor).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"stackit.organization.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOrganization).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"stackit.project.ancestor.parentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitProjectAncestor).ParentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"stackit.organization.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOrganization).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"stackit.organization.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOrganization).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.organization.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOrganization).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.folder.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitFolder).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.folder.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitFolder).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.folder.containerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitFolder).ContainerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.folder.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitFolder).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.folder.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitFolder).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"stackit.folder.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitFolder).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.folder.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitFolder).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"stackit.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8454,14 +8512,13 @@ type mqlStackitProject struct {
 	ContainerId    plugin.TValue[string]
 	Name           plugin.TValue[string]
 	Parent         plugin.TValue[string]
-	ParentId       plugin.TValue[string]
 	ParentType     plugin.TValue[string]
 	LifecycleState plugin.TValue[string]
 	CreationTime   plugin.TValue[*time.Time]
 	UpdateTime     plugin.TValue[*time.Time]
 	Labels         plugin.TValue[map[string]any]
-	Ancestors      plugin.TValue[[]any]
-	OrganizationId plugin.TValue[string]
+	Organization   plugin.TValue[*mqlStackitOrganization]
+	Folders        plugin.TValue[[]any]
 }
 
 // createStackitProject creates a new instance of this resource
@@ -8517,10 +8574,6 @@ func (c *mqlStackitProject) GetParent() *plugin.TValue[string] {
 	return &c.Parent
 }
 
-func (c *mqlStackitProject) GetParentId() *plugin.TValue[string] {
-	return &c.ParentId
-}
-
 func (c *mqlStackitProject) GetParentType() *plugin.TValue[string] {
 	return &c.ParentType
 }
@@ -8541,10 +8594,26 @@ func (c *mqlStackitProject) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
 }
 
-func (c *mqlStackitProject) GetAncestors() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Ancestors, func() ([]any, error) {
+func (c *mqlStackitProject) GetOrganization() *plugin.TValue[*mqlStackitOrganization] {
+	return plugin.GetOrCompute[*mqlStackitOrganization](&c.Organization, func() (*mqlStackitOrganization, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.project", c.__id, "ancestors")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.project", c.__id, "organization")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitOrganization), nil
+			}
+		}
+
+		return c.organization()
+	})
+}
+
+func (c *mqlStackitProject) GetFolders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Folders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.project", c.__id, "folders")
 			if err != nil {
 				return nil, err
 			}
@@ -8553,31 +8622,27 @@ func (c *mqlStackitProject) GetAncestors() *plugin.TValue[[]any] {
 			}
 		}
 
-		return c.ancestors()
+		return c.folders()
 	})
 }
 
-func (c *mqlStackitProject) GetOrganizationId() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.OrganizationId, func() (string, error) {
-		return c.organizationId()
-	})
-}
-
-// mqlStackitProjectAncestor for the stackit.project.ancestor resource
-type mqlStackitProjectAncestor struct {
+// mqlStackitOrganization for the stackit.organization resource
+type mqlStackitOrganization struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitProjectAncestorInternal it will be used here
-	Id       plugin.TValue[string]
-	Uuid     plugin.TValue[string]
-	Name     plugin.TValue[string]
-	Type     plugin.TValue[string]
-	ParentId plugin.TValue[string]
+	mqlStackitOrganizationInternal
+	Id             plugin.TValue[string]
+	ContainerId    plugin.TValue[string]
+	Name           plugin.TValue[string]
+	LifecycleState plugin.TValue[string]
+	Labels         plugin.TValue[map[string]any]
+	CreationTime   plugin.TValue[*time.Time]
+	UpdateTime     plugin.TValue[*time.Time]
 }
 
-// createStackitProjectAncestor creates a new instance of this resource
-func createStackitProjectAncestor(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlStackitProjectAncestor{
+// createStackitOrganization creates a new instance of this resource
+func createStackitOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitOrganization{
 		MqlRuntime: runtime,
 	}
 
@@ -8594,7 +8659,7 @@ func createStackitProjectAncestor(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("stackit.project.ancestor", res.__id)
+		args, err = runtime.ResourceFromRecording("stackit.organization", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -8604,32 +8669,128 @@ func createStackitProjectAncestor(runtime *plugin.Runtime, args map[string]*llx.
 	return res, nil
 }
 
-func (c *mqlStackitProjectAncestor) MqlName() string {
-	return "stackit.project.ancestor"
+func (c *mqlStackitOrganization) MqlName() string {
+	return "stackit.organization"
 }
 
-func (c *mqlStackitProjectAncestor) MqlID() string {
+func (c *mqlStackitOrganization) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlStackitProjectAncestor) GetId() *plugin.TValue[string] {
+func (c *mqlStackitOrganization) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlStackitProjectAncestor) GetUuid() *plugin.TValue[string] {
-	return &c.Uuid
+func (c *mqlStackitOrganization) GetContainerId() *plugin.TValue[string] {
+	return &c.ContainerId
 }
 
-func (c *mqlStackitProjectAncestor) GetName() *plugin.TValue[string] {
+func (c *mqlStackitOrganization) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlStackitProjectAncestor) GetType() *plugin.TValue[string] {
-	return &c.Type
+func (c *mqlStackitOrganization) GetLifecycleState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LifecycleState, func() (string, error) {
+		return c.lifecycleState()
+	})
 }
 
-func (c *mqlStackitProjectAncestor) GetParentId() *plugin.TValue[string] {
-	return &c.ParentId
+func (c *mqlStackitOrganization) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlStackitOrganization) GetCreationTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreationTime, func() (*time.Time, error) {
+		return c.creationTime()
+	})
+}
+
+func (c *mqlStackitOrganization) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.UpdateTime, func() (*time.Time, error) {
+		return c.updateTime()
+	})
+}
+
+// mqlStackitFolder for the stackit.folder resource
+type mqlStackitFolder struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlStackitFolderInternal
+	Id           plugin.TValue[string]
+	ContainerId  plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Labels       plugin.TValue[map[string]any]
+	CreationTime plugin.TValue[*time.Time]
+	UpdateTime   plugin.TValue[*time.Time]
+}
+
+// createStackitFolder creates a new instance of this resource
+func createStackitFolder(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitFolder{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.folder", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitFolder) MqlName() string {
+	return "stackit.folder"
+}
+
+func (c *mqlStackitFolder) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitFolder) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitFolder) GetContainerId() *plugin.TValue[string] {
+	return &c.ContainerId
+}
+
+func (c *mqlStackitFolder) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitFolder) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlStackitFolder) GetCreationTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreationTime, func() (*time.Time, error) {
+		return c.creationTime()
+	})
+}
+
+func (c *mqlStackitFolder) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.UpdateTime, func() (*time.Time, error) {
+		return c.updateTime()
+	})
 }
 
 // mqlStackitServer for the stackit.server resource

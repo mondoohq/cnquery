@@ -104,7 +104,7 @@ stackit @root {
 // which project a scan ran against and its administrative state. The
 // `id` is the project UUID and `containerId` the human-readable container
 // identifier; `parent` and `parentType` name the owning organization or
-// folder, and `ancestors` walks the chain up to the organization.
+// folder, and `organization` and `folders` resolve the chain above it.
 // `lifecycleState` (one of CREATING, ACTIVE, DELETING, INACTIVE) tells
 // you whether the project is usable or being torn down. The `labels` map
 // holds user-defined key/value tags.
@@ -113,24 +113,19 @@ private stackit.project @defaults("id name lifecycleState") {
   id string
   // Project container ID
   //
-  // The human-readable container identifier every resource-manager
-  // endpoint is keyed by, distinct from the UUID in id. This is the value
-  // the STACKIT portal shows for the project.
+  // The human-readable identifier every resource-manager endpoint is
+  // keyed by, distinct from the UUID in id. This is the value the STACKIT
+  // portal shows for the project.
   containerId string
   // Project name
   name string
   // Parent container ID (organization or folder)
   parent string
-  // Parent container UUID
-  //
-  // The UUID form of parent. The two identifier spaces are not
-  // interchangeable: organization and folder lookups take the UUID.
-  parentId string
   // Kind of the parent container
   //
-  // One of ORGANIZATION or FOLDER. Tells you whether parent is the owning
-  // organization directly or an intermediate folder; only in the second
-  // case does ancestors carry more than one entry.
+  // One of ORGANIZATION or FOLDER. Tells you whether the project sits
+  // directly under its organization or inside a folder; only in the
+  // second case does folders carry entries.
   parentType string
   // Lifecycle state (CREATING, ACTIVE, DELETING, INACTIVE)
   lifecycleState string
@@ -140,37 +135,80 @@ private stackit.project @defaults("id name lifecycleState") {
   updateTime time
   // User-defined labels
   labels map[string]string
-  // Containers above the project, nearest first
+  // Organization that owns the project (nullable)
   //
-  // The folder or folders the project sits in and, last, the owning
-  // organization. Answers which organization a project belongs to without
-  // organization-level read access, since the chain comes from the
-  // project's own record.
-  ancestors() []stackit.project.ancestor
-  // Container ID of the owning organization
+  // Read from the project's own record, so a project-scoped credential
+  // learns its organization without organization-level access. The
+  // organization's lifecycleState, labels, and timestamps are read on
+  // demand and stay null when the credential cannot read it. Null when
+  // the record names no organization.
+  organization() stackit.organization
+  // Folders between the project and its organization, nearest first
   //
-  // Found in ancestors by type. Empty when the record carries no
-  // organization.
-  organizationId() string
+  // Empty when the project sits directly under the organization.
+  folders() []stackit.folder
 }
 
-// Container above a STACKIT project
+// STACKIT organization
 //
-// One folder or organization in a project's ancestry chain, keyed by its
-// container `id`. The `type` says which of the two it is, and `parentId`
-// points one level further up, so the chain can be walked from the
-// project to the organization.
-private stackit.project.ancestor @defaults("id name type") {
-  // Container ID
+// The organization at the top of a project's container hierarchy, keyed
+// by its UUID `id`, for example `stackit.organization(id: "...")`.
+// `containerId` is the human-readable identifier the portal shows.
+// Reached from `stackit.project.organization`, where the identity fields
+// come from the project's own record and the rest is read on demand.
+stackit.organization @defaults("id name") {
+  init(id? string)
+  // Organization UUID
   id string
-  // Container UUID
-  uuid string
+  // Organization container ID
+  containerId string
   // Display name
   name string
-  // Container kind (ORGANIZATION or FOLDER)
-  type string
-  // Container ID of this container's own parent; empty for the organization
-  parentId string
+  // Lifecycle state (CREATING, ACTIVE, DELETING, INACTIVE)
+  //
+  // Null when the credential cannot read the organization.
+  lifecycleState() string
+  // User-defined labels
+  //
+  // Null when the credential cannot read the organization.
+  labels() map[string]string
+  // Creation timestamp
+  //
+  // Null when the credential cannot read the organization.
+  creationTime() time
+  // Last change to the organization's metadata
+  //
+  // Null when the credential cannot read the organization.
+  updateTime() time
+}
+
+// STACKIT folder
+//
+// A folder in the container hierarchy between a project and its
+// organization, keyed by its container ID, for example
+// `stackit.folder(containerId: "...")`. Reached from
+// `stackit.project.folders`, where the identity fields come from the
+// project's own record and the rest is read on demand.
+stackit.folder @defaults("containerId name") {
+  init(containerId? string)
+  // Folder UUID
+  id string
+  // Folder container ID
+  containerId string
+  // Display name
+  name string
+  // User-defined labels
+  //
+  // Null when the credential cannot read the folder.
+  labels() map[string]string
+  // Creation timestamp
+  //
+  // Null when the credential cannot read the folder.
+  creationTime() time
+  // Last change to the folder's metadata
+  //
+  // Null when the credential cannot read the folder.
+  updateTime() time
 }
 
 // STACKIT compute server

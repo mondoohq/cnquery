@@ -10,7 +10,6 @@ import (
 
 	authorization "github.com/stackitcloud/stackit-sdk-go/services/authorization/v2api"
 	resourcemanager "github.com/stackitcloud/stackit-sdk-go/services/resourcemanager/v0api"
-	"go.mondoo.com/mql/llx"
 )
 
 // TestIamRoleArgs pins the role mapping: the shipped permissions list keeps
@@ -97,53 +96,85 @@ func TestFilterIamMembers(t *testing.T) {
 	}
 }
 
-// TestProjectAncestry pins the ancestry mapping and the organization lookup:
-// the organization is found by type, not by position, and a chain without
-// one reads empty rather than picking the last entry.
-func TestProjectAncestry(t *testing.T) {
+// decodeProjectParents decodes a GetProject response shaped like the API's
+// and returns its ancestry chain, so the lookups are tested against the same
+// JSON path the provider takes.
+func decodeProjectParents(t *testing.T, payload string) []resourcemanager.ParentListInner {
+	t.Helper()
 	var resp resourcemanager.GetProjectResponse
-	if err := json.Unmarshal([]byte(`{
-		"projectId": "11111111-1111-1111-1111-111111111111",
-		"containerId": "my-project-abc123",
-		"name": "my-project",
-		"lifecycleState": "ACTIVE",
-		"creationTime": "2026-01-02T03:04:05Z",
-		"updateTime": "2026-02-03T04:05:06Z",
-		"parent": {"id": "22222222-2222-2222-2222-222222222222", "containerId": "team-folder-def456", "type": "FOLDER"},
-		"parents": [
-			{"id": "22222222-2222-2222-2222-222222222222", "containerId": "team-folder-def456", "name": "team", "type": "FOLDER", "containerParentId": "acme-org-ghi789", "parentId": "33333333-3333-3333-3333-333333333333"},
-			{"id": "33333333-3333-3333-3333-333333333333", "containerId": "acme-org-ghi789", "name": "acme", "type": "ORGANIZATION"}
-		]
-	}`), &resp); err != nil {
+	if err := json.Unmarshal([]byte(payload), &resp); err != nil {
 		t.Fatalf("decoding project: %v", err)
 	}
-	parents := resp.GetParents()
+	return resp.GetParents()
+}
 
-	if got := projectOrganizationID(parents); got != "acme-org-ghi789" {
-		t.Fatalf("organizationId = %q, want acme-org-ghi789", got)
-	}
-	folder := projectAncestorArgs(&parents[0])
-	if folder["id"].Value != "team-folder-def456" || folder["type"].Value != "FOLDER" || folder["parentId"].Value != "acme-org-ghi789" {
-		t.Fatalf("folder ancestor = %v", valuesOf(folder))
-	}
-	org := projectAncestorArgs(&parents[1])
-	if org["id"].Value != "acme-org-ghi789" || org["type"].Value != "ORGANIZATION" || org["parentId"].Value != "" {
-		t.Fatalf("organization ancestor = %v (parentId must be empty at the top)", valuesOf(org))
-	}
+const projectInNestedFolders = `{
+	"projectId": "11111111-1111-1111-1111-111111111111",
+	"containerId": "my-project-abc123",
+	"name": "my-project",
+	"lifecycleState": "ACTIVE",
+	"creationTime": "2026-01-02T03:04:05Z",
+	"updateTime": "2026-02-03T04:05:06Z",
+	"parent": {"id": "22222222-2222-2222-2222-222222222222", "containerId": "team-folder-def456", "type": "FOLDER"},
+	"parents": [
+		{"id": "33333333-3333-3333-3333-333333333333", "containerId": "acme-org-ghi789", "name": "acme", "type": "ORGANIZATION"},
+		{"id": "44444444-4444-4444-4444-444444444444", "containerId": "dept-folder-jkl012", "name": "dept", "type": "FOLDER", "containerParentId": "acme-org-ghi789"},
+		{"id": "22222222-2222-2222-2222-222222222222", "containerId": "team-folder-def456", "name": "team", "type": "FOLDER", "containerParentId": "dept-folder-jkl012"}
+	]
+}`
 
-	// A chain that carries only folders names no organization.
-	if got := projectOrganizationID(parents[:1]); got != "" {
-		t.Fatalf("folder-only chain organizationId = %q, want empty", got)
+// TestProjectOrganization pins the organization lookup: found by type, not
+// by position (the fixture lists it first), and a chain without one reads
+// nil rather than picking any entry.
+func TestProjectOrganization(t *testing.T) {
+	parents := decodeProjectParents(t, projectInNestedFolders)
+	org := projectOrganization(parents)
+	if org == nil || org.GetContainerId() != "acme-org-ghi789" || org.GetId() != "33333333-3333-3333-3333-333333333333" || org.GetName() != "acme" {
+		t.Fatalf("organization = %+v, want acme-org-ghi789", org)
 	}
-	if got := projectOrganizationID(nil); got != "" {
-		t.Fatalf("empty chain organizationId = %q, want empty", got)
+	if got := projectOrganization(parents[1:]); got != nil {
+		t.Fatalf("folder-only chain organization = %+v, want nil", got)
+	}
+	if got := projectOrganization(nil); got != nil {
+		t.Fatalf("empty chain organization = %+v, want nil", got)
 	}
 }
 
-func valuesOf(args map[string]*llx.RawData) map[string]any {
-	out := map[string]any{}
-	for k, v := range args {
-		out[k] = v.Value
+// TestOrderedFolders pins the nearest-first ordering: the walk starts at the
+// project's direct parent and follows containerParentId upward, regardless of
+// the order the API returned the entries in, and the organization is never a
+// folder.
+func TestOrderedFolders(t *testing.T) {
+	parents := decodeProjectParents(t, projectInNestedFolders)
+	got := orderedFolders(parents, "team-folder-def456")
+	names := make([]string, 0, len(got))
+	for i := range got {
+		names = append(names, got[i].GetContainerId())
 	}
-	return out
+	if !reflect.DeepEqual(names, []string{"team-folder-def456", "dept-folder-jkl012"}) {
+		t.Fatalf("folders = %v, want nearest first [team-folder-def456 dept-folder-jkl012]", names)
+	}
+
+	t.Run("project directly under the organization has no folders", func(t *testing.T) {
+		if got := orderedFolders(parents[:1], "acme-org-ghi789"); len(got) != 0 {
+			t.Fatalf("folders = %d, want 0", len(got))
+		}
+	})
+	t.Run("a folder the walk cannot reach is still listed", func(t *testing.T) {
+		// Parent points at a folder missing from the chain; the remaining
+		// folders come out in API order rather than being dropped.
+		got := orderedFolders(parents, "missing-folder")
+		if len(got) != 2 || got[0].GetContainerId() != "dept-folder-jkl012" || got[1].GetContainerId() != "team-folder-def456" {
+			t.Fatalf("unreachable walk = %v", got)
+		}
+	})
+	t.Run("a cycle terminates", func(t *testing.T) {
+		cyclic := decodeProjectParents(t, `{"projectId":"p","containerId":"p","name":"p","lifecycleState":"ACTIVE","creationTime":"2026-01-02T03:04:05Z","updateTime":"2026-01-02T03:04:05Z","parent":{"id":"a","containerId":"a","type":"FOLDER"},"parents":[
+			{"id":"a","containerId":"a","name":"a","type":"FOLDER","containerParentId":"b"},
+			{"id":"b","containerId":"b","name":"b","type":"FOLDER","containerParentId":"a"}
+		]}`)
+		if got := orderedFolders(cyclic, "a"); len(got) != 2 {
+			t.Fatalf("cyclic chain = %d folders, want 2 (each once)", len(got))
+		}
+	})
 }
