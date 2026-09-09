@@ -23,11 +23,15 @@ const (
 )
 
 // OptionDialect is the connection option carrying an explicitly chosen dialect.
-// It is set from the --iac-tool flag, or from the connector name when the user
-// invoked the provider as `opentofu` / `tofu`.
+//
+// On the command line it is set from the connector the user invoked: the
+// `terraform` connector records Terraform, the `opentofu` connector records
+// OpenTofu. An inventory can set it directly. Left unset -- which is what a git
+// integration produces, since it names no tool -- an HCL configuration detects
+// its dialect from the files on disk.
 const OptionDialect = "iac-tool"
 
-// ParseDialect maps a user-supplied name onto a dialect, defaulting to
+// ParseDialect maps a recorded option value onto a dialect, defaulting to
 // Terraform for anything unrecognized.
 func ParseDialect(s string) Dialect {
 	switch strings.ToLower(strings.TrimSpace(s)) {
@@ -35,6 +39,24 @@ func ParseDialect(s string) Dialect {
 		return DialectOpenTofu
 	default:
 		return DialectTerraform
+	}
+}
+
+// DialectForConnector maps a connector name onto the dialect it selects.
+//
+// The two tools get a connector each, so invoking one is how a user says which
+// tool the configuration belongs to. That has to be a distinct signal from "no
+// choice was made": a name this provider does not serve leaves the dialect
+// unset rather than quietly meaning Terraform, so an unrecognized caller falls
+// back to detection instead of forcing a tool it never named.
+func DialectForConnector(name string) (Dialect, bool) {
+	switch strings.ToLower(strings.TrimSpace(name)) {
+	case "opentofu", "tofu":
+		return DialectOpenTofu, true
+	case "terraform":
+		return DialectTerraform, true
+	default:
+		return "", false
 	}
 }
 
@@ -116,6 +138,11 @@ type resolvedConfig struct {
 	// Overridden lists the .tf files that a .tofu file replaced, sorted. They
 	// are reported so a scan can explain why a file on disk was not read.
 	Overridden []string
+	// Ignored lists the .tofu-flavored files skipped because the dialect was
+	// forced to Terraform, sorted. Terraform does not read them, so neither do
+	// we, but a scan that found nothing else needs to be able to say that an
+	// OpenTofu configuration was sitting there.
+	Ignored []string
 }
 
 // slot identifies the position a .tofu file competes for.
@@ -125,29 +152,26 @@ type slot struct {
 	class fileClass
 }
 
-// resolveConfigFiles applies OpenTofu's file precedence to the candidates.
+// resolveConfigFiles picks the configuration files a given tool would read.
 //
-// OpenTofu loads foo.tofu *instead of* foo.tf when both are present, and
-// likewise for the .json, .tfvars and .tfvars.json variants. The rule is per
-// directory and per file name: a.tofu overrides a.tf and leaves b.tf alone.
-// Reading the .tf file in that situation would describe configuration that
-// OpenTofu never applies.
+// Under DialectOpenTofu, OpenTofu's precedence applies: it loads foo.tofu
+// *instead of* foo.tf when both are present, and likewise for the .json,
+// .tfvars and .tfvars.json variants. The rule is per directory and per file
+// name -- a.tofu overrides a.tf and leaves b.tf alone. Reading the .tf file in
+// that situation would describe configuration that OpenTofu never applies.
+//
+// Under DialectTerraform the .tofu-flavored files are skipped entirely rather
+// than allowed to override anything, which is what a repository shared between
+// the two tools looks like to Terraform.
+//
+// An empty dialect detects instead of choosing: any .tofu-flavored file present
+// means the configuration is OpenTofu's. That is for callers that name no tool,
+// such as a git integration.
 //
 // Paths that are not configuration files are ignored.
-func resolveConfigFiles(paths []string) resolvedConfig {
-	return resolveConfigFilesAs(paths, "")
-}
-
-// resolveConfigFilesAs is resolveConfigFiles with an explicitly chosen dialect.
-//
-// An empty dialect auto-detects: any .tofu-flavored file present means the
-// configuration is OpenTofu's. Forcing DialectTerraform reads the directory the
-// way Terraform itself does, ignoring .tofu files entirely rather than letting
-// them override anything, which is what a repository shared between the two
-// tools looks like to Terraform.
-func resolveConfigFilesAs(paths []string, forced Dialect) resolvedConfig {
+func resolveConfigFiles(paths []string, forced Dialect) resolvedConfig {
 	chosen := make(map[slot]configFile, len(paths))
-	var overridden []string
+	var overridden, ignored []string
 
 	for _, p := range paths {
 		f, ok := classifyConfigFile(p)
@@ -155,6 +179,7 @@ func resolveConfigFilesAs(paths []string, forced Dialect) resolvedConfig {
 			continue
 		}
 		if forced == DialectTerraform && f.dialect == DialectOpenTofu {
+			ignored = append(ignored, f.path)
 			continue
 		}
 
@@ -197,7 +222,9 @@ func resolveConfigFilesAs(paths []string, forced Dialect) resolvedConfig {
 	sort.Strings(res.Configs)
 	sort.Strings(res.Vars)
 	sort.Strings(overridden)
+	sort.Strings(ignored)
 	res.Overridden = overridden
+	res.Ignored = ignored
 
 	return res
 }

@@ -28,56 +28,64 @@ var Config = plugin.Provider{
 	},
 	Connectors: []plugin.Connector{
 		{
-			Name:    "terraform",
-			Aliases: []string{"opentofu", "tofu"},
-			Use:     "terraform PATH",
-			Short:   "Terraform and OpenTofu HCL configurations, plan files, and state files",
-			Long: `Use the terraform provider to query Terraform or OpenTofu HCL, plan, or state files as well as directories of files.
+			Name:  "terraform",
+			Use:   "terraform PATH",
+			Short: "Terraform HCL configurations, plan files, and state files",
+			Long: `Use the terraform connector to query Terraform HCL, plan, or state files as well as directories of files.
 
-OpenTofu configurations are read as well as Terraform ones. In a directory
-holding both, the OpenTofu file wins for any name it shares with a Terraform
-file, matching how OpenTofu itself loads a configuration: main.tofu replaces
-main.tf, and .tofu.json, .tofuvars and .tofuvars.json replace their .tf
-equivalents in the same way.
-
-For HCL the tool is detected from the files present. Plan and state files carry
-no marker of their own -- their JSON is identical between the two tools -- so
-they are reported as Terraform unless --iac-tool says otherwise.
+A directory is read the way Terraform itself reads it: the .tf, .tf.json,
+.tfvars and .tfvars.json files. Any .tofu-flavored file sitting next to them is
+skipped, because Terraform never applies it. Use the opentofu connector for
+those.
 
 Available commands:
-  plan                       Terraform or OpenTofu plan file
-  state                      Terraform or OpenTofu state file
+  plan                       Terraform plan file
+  state                      Terraform state file
 
 Examples:
   cnspec shell terraform <PATH-TO-HCL-DIRECTORY>
   cnspec scan terraform <PATH-TO-HCL-FILE>
   cnspec scan terraform plan <PATH-TO-PLAN-JSON>
-  cnspec scan terraform state <PATH-TO-STATE-JSON> --iac-tool opentofu
-  cnspec scan terraform <PATH-TO-MIXED-DIRECTORY> --iac-tool terraform
+  cnspec scan terraform state <PATH-TO-STATE-JSON>
 `,
 			MinArgs:   1,
 			MaxArgs:   2,
 			Discovery: []string{},
-			Flags: []plugin.Flag{
-				{
-					Long:        "ignore-dot-terraform",
-					Type:        plugin.FlagType_Bool,
-					Default:     "false",
-					Desc:        "Exclude the .terraform directory (contains cached provider plugins and modules)",
-					ConfigEntry: "ignore_dot_terraform",
-				},
-				{
-					Long:    "iac-tool",
-					Type:    plugin.FlagType_String,
-					Default: "",
-					Desc:    "Read the configuration as \"terraform\" or \"opentofu\" instead of detecting it from the files present",
-					// "-" reads the flag straight from the command line. A named
-					// config entry would be bound into viper under that name but
-					// read back under the flag's own name, so the value the user
-					// typed never arrives.
-					ConfigEntry: "-",
-				},
-			},
+			Flags:     iacFlags(),
+		},
+		{
+			Name:    "opentofu",
+			Aliases: []string{"tofu"},
+			Use:     "opentofu PATH",
+			Short:   "OpenTofu HCL configurations, plan files, and state files",
+			Long: `Use the opentofu connector to query OpenTofu HCL, plan, or state files as well as directories of files.
+
+A directory is read the way OpenTofu itself reads it. Where a .tofu-flavored
+file shares a name with its Terraform equivalent, the .tofu file wins and the
+.tf file is not read: main.tofu replaces main.tf, and .tofu.json, .tofuvars and
+.tofuvars.json replace their .tf equivalents in the same way. Files with no
+.tofu counterpart are read as they are, so a configuration that has not been
+renamed is queried unchanged.
+
+Plan and state files carry no marker of their own -- their JSON is identical
+between the two tools -- so the connector is what says which tool produced them.
+It selects the platform the asset is reported under; the file is read the same
+way either way.
+
+Available commands:
+  plan                       OpenTofu plan file
+  state                      OpenTofu state file
+
+Examples:
+  cnspec shell opentofu <PATH-TO-HCL-DIRECTORY>
+  cnspec scan opentofu <PATH-TO-HCL-FILE>
+  cnspec scan opentofu plan <PATH-TO-PLAN-JSON>
+  cnspec scan opentofu state <PATH-TO-STATE-JSON>
+`,
+			MinArgs:   1,
+			MaxArgs:   2,
+			Discovery: []string{},
+			Flags:     iacFlags(),
 		},
 	},
 	AssetUrlTrees: []*inventory.AssetUrlBranch{
@@ -92,4 +100,26 @@ Examples:
 			},
 		},
 	},
+}
+
+// iacFlags are the flags both connectors carry. They read the same kinds of
+// file from the same kinds of directory, so a flag that applies to one applies
+// to the other; the connector chooses the tool, not the feature set. A fresh
+// slice per connector, so the CLI appending its built-in flags to one cannot
+// reach the other.
+func iacFlags() []plugin.Flag {
+	return []plugin.Flag{
+		{
+			Long:    "ignore-dot-terraform",
+			Type:    plugin.FlagType_Bool,
+			Default: "false",
+			Desc:    "Exclude the .terraform directory (contains cached provider plugins and modules)",
+			// "-" reads the flag straight from the command line, which is what
+			// every other provider does. A named config entry is bound into
+			// viper under that name but read back under the flag's own name, so
+			// the value the user typed never arrived: this flag was accepted and
+			// then silently ignored, and .terraform was always scanned.
+			ConfigEntry: "-",
+		},
+	}
 }

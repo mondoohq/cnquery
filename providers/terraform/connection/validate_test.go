@@ -143,6 +143,15 @@ func hclConnectionFor(path string) (*Connection, error) {
 	})
 }
 
+// hclConnectionAs connects with the dialect a given connector would record.
+func hclConnectionAs(path string, dialect Dialect) (*Connection, error) {
+	return NewHclConnection(0, &inventory.Asset{
+		Connections: []*inventory.Config{
+			{Options: map[string]string{"path": path, OptionDialect: string(dialect)}, Type: "hcl"},
+		},
+	})
+}
+
 const validResource = `resource "aws_s3_bucket" "b" { bucket = "example" }`
 
 func TestHclConnectionAcceptsTerraformFiles(t *testing.T) {

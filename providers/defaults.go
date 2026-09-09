@@ -1382,6 +1382,12 @@ var DefaultProviders Providers = map[string]*Provider{
 					Use:   "terraform PATH",
 					Short: "Terraform HCL configurations, plan files, and state files",
 				},
+
+				{
+					Name:  "opentofu",
+					Use:   "opentofu PATH",
+					Short: "OpenTofu HCL configurations, plan files, and state files",
+				},
 			},
 		},
 	},

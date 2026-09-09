@@ -83,25 +83,27 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options["path"] = req.Args[0]
 	}
 
-	if x, ok := flags["ignore-dot-terraform"]; ok {
-		if x != nil {
-			conf.Options["ignore-dot-terraform"] = strconv.FormatBool(x.RawData().Value.(bool))
+	// The flag is present on every run, defaulting to false, so only a true
+	// value is worth recording or reporting. Logging on mere presence announced
+	// "user requested to ignore .terraform" on every scan, including the ones
+	// that read it.
+	if x, ok := flags["ignore-dot-terraform"]; ok && x != nil {
+		if ignore, ok := x.RawData().Value.(bool); ok && ignore {
+			conf.Options["ignore-dot-terraform"] = strconv.FormatBool(true)
 			log.Info().Msg("user requested to ignore .terraform")
 		}
 	}
 
-	// Only an explicit --iac-tool is recorded here. Left unset, an HCL
-	// configuration detects its dialect from the files on disk, and plan and
-	// state files -- whose JSON is identical between the two tools, so there is
-	// nothing in them to detect -- default to Terraform.
+	// The connector the user invoked is the choice of tool: `terraform` reads
+	// the directory the way Terraform does, `opentofu` the way OpenTofu does,
+	// and both label the asset accordingly. The CLI reports the canonical
+	// connector name, so the `tofu` alias arrives here as `opentofu`.
 	//
-	// NOTE: the connector name cannot drive this. The CLI always reports the
-	// canonical connector name, so reaching the provider through its `tofu`
-	// alias is indistinguishable here from reaching it as `terraform`.
-	if x, ok := flags["iac-tool"]; ok && x != nil {
-		if s, ok := x.RawData().Value.(string); ok && s != "" {
-			conf.Options[connection.OptionDialect] = string(connection.ParseDialect(s))
-		}
+	// A caller that names no connector this provider serves records nothing, and
+	// an HCL configuration then detects its dialect from the files on disk. That
+	// is the git-integration path, which knows a repository but not a tool.
+	if dialect, ok := connection.DialectForConnector(req.Connector); ok {
+		conf.Options[connection.OptionDialect] = string(dialect)
 	}
 
 	asset := &inventory.Asset{

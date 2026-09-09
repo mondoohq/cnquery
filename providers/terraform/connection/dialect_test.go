@@ -29,6 +29,32 @@ func TestParseDialect(t *testing.T) {
 	}
 }
 
+func TestDialectForConnector(t *testing.T) {
+	// The connector name is now the whole choice of tool, so a name this
+	// provider does not serve has to stay distinguishable from "terraform" --
+	// otherwise an unrecognized caller would silently force a tool it never
+	// named, instead of letting the files decide.
+	tests := []struct {
+		connector string
+		want      Dialect
+		wantOK    bool
+	}{
+		{"terraform", DialectTerraform, true},
+		{"opentofu", DialectOpenTofu, true},
+		{"tofu", DialectOpenTofu, true},
+		{"OpenTofu", DialectOpenTofu, true},
+		{"", "", false},
+		{"k8s", "", false},
+	}
+	for _, tc := range tests {
+		t.Run("connector="+tc.connector, func(t *testing.T) {
+			got, ok := DialectForConnector(tc.connector)
+			assert.Equal(t, tc.wantOK, ok)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
 func TestClassifyConfigFile(t *testing.T) {
 	tests := []struct {
 		path        string
@@ -78,9 +104,9 @@ func TestClassifyConfigFile(t *testing.T) {
 	}
 }
 
-func TestResolveConfigFiles(t *testing.T) {
+func TestResolveConfigFilesDetectsTheDialect(t *testing.T) {
 	t.Run("terraform only", func(t *testing.T) {
-		got := resolveConfigFiles([]string{"a/main.tf", "a/vars.tf", "a/prod.tfvars"})
+		got := resolveConfigFiles([]string{"a/main.tf", "a/vars.tf", "a/prod.tfvars"}, "")
 		assert.Equal(t, DialectTerraform, got.Dialect)
 		assert.Equal(t, []string{"a/main.tf", "a/vars.tf"}, got.Configs)
 		assert.Equal(t, []string{"a/prod.tfvars"}, got.Vars)
@@ -90,7 +116,7 @@ func TestResolveConfigFiles(t *testing.T) {
 	t.Run("opentofu file overrides the matching terraform file", func(t *testing.T) {
 		// OpenTofu loads main.tofu *instead of* main.tf. Reading main.tf here
 		// would report configuration that OpenTofu never applies.
-		got := resolveConfigFiles([]string{"a/main.tf", "a/main.tofu"})
+		got := resolveConfigFiles([]string{"a/main.tf", "a/main.tofu"}, "")
 		assert.Equal(t, DialectOpenTofu, got.Dialect)
 		assert.Equal(t, []string{"a/main.tofu"}, got.Configs)
 		assert.Equal(t, []string{"a/main.tf"}, got.Overridden)
@@ -98,13 +124,13 @@ func TestResolveConfigFiles(t *testing.T) {
 
 	t.Run("override does not depend on walk order", func(t *testing.T) {
 		// The same set in the opposite order must resolve identically.
-		got := resolveConfigFiles([]string{"a/main.tofu", "a/main.tf"})
+		got := resolveConfigFiles([]string{"a/main.tofu", "a/main.tf"}, "")
 		assert.Equal(t, []string{"a/main.tofu"}, got.Configs)
 		assert.Equal(t, []string{"a/main.tf"}, got.Overridden)
 	})
 
 	t.Run("only the matching name is overridden", func(t *testing.T) {
-		got := resolveConfigFiles([]string{"a/main.tf", "a/main.tofu", "a/other.tf"})
+		got := resolveConfigFiles([]string{"a/main.tf", "a/main.tofu", "a/other.tf"}, "")
 		assert.Equal(t, []string{"a/main.tofu", "a/other.tf"}, got.Configs)
 		assert.Equal(t, []string{"a/main.tf"}, got.Overridden)
 	})
@@ -112,7 +138,7 @@ func TestResolveConfigFiles(t *testing.T) {
 	t.Run("precedence is per directory", func(t *testing.T) {
 		// b/main.tf has no b/main.tofu next to it, so it survives even though
 		// a/main.tofu exists elsewhere in the tree.
-		got := resolveConfigFiles([]string{"a/main.tf", "a/main.tofu", "b/main.tf"})
+		got := resolveConfigFiles([]string{"a/main.tf", "a/main.tofu", "b/main.tf"}, "")
 		assert.Equal(t, []string{"a/main.tofu", "b/main.tf"}, got.Configs)
 		assert.Equal(t, []string{"a/main.tf"}, got.Overridden)
 	})
@@ -120,68 +146,72 @@ func TestResolveConfigFiles(t *testing.T) {
 	t.Run("classes do not override each other", func(t *testing.T) {
 		// main.tofu overrides main.tf but must leave main.tf.json alone: they
 		// are different kinds of file and both are loaded.
-		got := resolveConfigFiles([]string{"a/main.tf", "a/main.tf.json", "a/main.tofu"})
+		got := resolveConfigFiles([]string{"a/main.tf", "a/main.tf.json", "a/main.tofu"}, "")
 		assert.Equal(t, []string{"a/main.tf.json", "a/main.tofu"}, got.Configs)
 		assert.Equal(t, []string{"a/main.tf"}, got.Overridden)
 	})
 
 	t.Run("tofuvars overrides tfvars", func(t *testing.T) {
-		got := resolveConfigFiles([]string{"a/prod.tfvars", "a/prod.tofuvars"})
+		got := resolveConfigFiles([]string{"a/prod.tfvars", "a/prod.tofuvars"}, "")
 		assert.Equal(t, DialectOpenTofu, got.Dialect)
 		assert.Equal(t, []string{"a/prod.tofuvars"}, got.Vars)
 		assert.Equal(t, []string{"a/prod.tfvars"}, got.Overridden)
 	})
 
 	t.Run("json variants override each other", func(t *testing.T) {
-		got := resolveConfigFiles([]string{"a/main.tf.json", "a/main.tofu.json"})
+		got := resolveConfigFiles([]string{"a/main.tf.json", "a/main.tofu.json"}, "")
 		assert.Equal(t, []string{"a/main.tofu.json"}, got.Configs)
 		assert.Equal(t, []string{"a/main.tf.json"}, got.Overridden)
 	})
 
 	t.Run("a lone tofu file still marks the configuration as opentofu", func(t *testing.T) {
-		got := resolveConfigFiles([]string{"a/main.tf", "a/extra.tofu"})
+		got := resolveConfigFiles([]string{"a/main.tf", "a/extra.tofu"}, "")
 		assert.Equal(t, DialectOpenTofu, got.Dialect)
 		assert.Equal(t, []string{"a/extra.tofu", "a/main.tf"}, got.Configs)
 		assert.Empty(t, got.Overridden)
 	})
 
 	t.Run("non-configuration files are ignored", func(t *testing.T) {
-		got := resolveConfigFiles([]string{"a/README.md", "a/main.go", "a/.terraform.lock.hcl"})
+		got := resolveConfigFiles([]string{"a/README.md", "a/main.go", "a/.terraform.lock.hcl"}, "")
 		assert.Empty(t, got.Configs)
 		assert.Empty(t, got.Vars)
 		assert.Equal(t, DialectTerraform, got.Dialect)
 	})
 
 	t.Run("output is sorted regardless of input order", func(t *testing.T) {
-		got := resolveConfigFiles([]string{"a/z.tf", "a/a.tf", "a/m.tf"})
+		got := resolveConfigFiles([]string{"a/z.tf", "a/a.tf", "a/m.tf"}, "")
 		assert.Equal(t, []string{"a/a.tf", "a/m.tf", "a/z.tf"}, got.Configs)
 	})
 }
 
-func TestResolveConfigFilesAsForcedDialect(t *testing.T) {
+func TestResolveConfigFilesForcedDialect(t *testing.T) {
 	files := []string{"a/main.tf", "a/main.tofu", "a/prod.tfvars", "a/prod.tofuvars"}
 
 	t.Run("forced terraform ignores tofu files entirely", func(t *testing.T) {
 		// This is how Terraform itself reads a directory shared between the two
 		// tools: the .tofu files are invisible to it, so they override nothing.
-		got := resolveConfigFilesAs(files, DialectTerraform)
+		got := resolveConfigFiles(files, DialectTerraform)
 		assert.Equal(t, DialectTerraform, got.Dialect)
 		assert.Equal(t, []string{"a/main.tf"}, got.Configs)
 		assert.Equal(t, []string{"a/prod.tfvars"}, got.Vars)
 		assert.Empty(t, got.Overridden)
+		// Reported, not just dropped: it is what lets the connection explain a
+		// directory it read nothing out of.
+		assert.Equal(t, []string{"a/main.tofu", "a/prod.tofuvars"}, got.Ignored)
 	})
 
 	t.Run("forced opentofu applies precedence", func(t *testing.T) {
-		got := resolveConfigFilesAs(files, DialectOpenTofu)
+		got := resolveConfigFiles(files, DialectOpenTofu)
 		assert.Equal(t, DialectOpenTofu, got.Dialect)
 		assert.Equal(t, []string{"a/main.tofu"}, got.Configs)
 		assert.Equal(t, []string{"a/prod.tofuvars"}, got.Vars)
+		assert.Empty(t, got.Ignored, "OpenTofu reads both flavors, so nothing is ignored")
 	})
 
 	t.Run("forced opentofu on a pure terraform tree", func(t *testing.T) {
 		// The user asserted the tool; there is nothing to override, but the
 		// asset is still labelled OpenTofu.
-		got := resolveConfigFilesAs([]string{"a/main.tf"}, DialectOpenTofu)
+		got := resolveConfigFiles([]string{"a/main.tf"}, DialectOpenTofu)
 		assert.Equal(t, DialectOpenTofu, got.Dialect)
 		assert.Equal(t, []string{"a/main.tf"}, got.Configs)
 	})
@@ -229,18 +259,13 @@ func TestHclConnectionReadsOpenTofuFiles(t *testing.T) {
 		assert.True(t, readTheTofuFile, "expected main.tofu to be the file parsed, got %v", keysOf(files))
 	})
 
-	t.Run("forcing terraform ignores the .tofu file", func(t *testing.T) {
+	t.Run("the terraform connector ignores the .tofu file", func(t *testing.T) {
 		dir := writeFiles(t, map[string]string{
 			"main.tf":   `resource "aws_s3_bucket" "b" { acl = "private" }`,
 			"main.tofu": `resource "aws_s3_bucket" "b" { acl = "public-read" }`,
 		})
 
-		conn, err := NewHclConnection(0, &inventory.Asset{
-			Connections: []*inventory.Config{{
-				Options: map[string]string{"path": dir, OptionDialect: "terraform"},
-				Type:    "hcl",
-			}},
-		})
+		conn, err := hclConnectionAs(dir, DialectTerraform)
 		require.NoError(t, err)
 		assert.Equal(t, DialectTerraform, conn.Dialect())
 
@@ -256,6 +281,60 @@ func TestHclConnectionReadsOpenTofuFiles(t *testing.T) {
 		conn, err := hclConnectionFor(dir)
 		require.NoError(t, err)
 		assert.Equal(t, DialectTerraform, conn.Dialect())
+	})
+}
+
+func TestTerraformConnectorRejectsAnOpenTofuOnlyTree(t *testing.T) {
+	// The regression this guards: connecting anyway would produce a
+	// configuration holding zero resources, and every policy would pass on a
+	// project not one line of which was read.
+	t.Run("a directory of only .tofu files", func(t *testing.T) {
+		dir := writeFiles(t, map[string]string{
+			"main.tofu":     validResource,
+			"prod.tofuvars": `region = "eu-west-1"`,
+		})
+
+		_, err := hclConnectionAs(dir, DialectTerraform)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "opentofu connector")
+		assert.Contains(t, err.Error(), "main.tofu")
+	})
+
+	t.Run("a single .tofu file given directly", func(t *testing.T) {
+		dir := writeFiles(t, map[string]string{"main.tofu": validResource})
+
+		_, err := hclConnectionAs(filepath.Join(dir, "main.tofu"), DialectTerraform)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "opentofu connector")
+	})
+
+	t.Run("a mixed directory connects, because Terraform reads part of it", func(t *testing.T) {
+		dir := writeFiles(t, map[string]string{
+			"main.tf":  validResource,
+			"api.tofu": validResource,
+		})
+
+		conn, err := hclConnectionAs(dir, DialectTerraform)
+		require.NoError(t, err)
+		assert.Len(t, conn.Parser().Files(), 1)
+	})
+
+	t.Run("an empty directory is not blamed on OpenTofu", func(t *testing.T) {
+		// Nothing was skipped here, so there is nothing to point the user at;
+		// this stays the pre-existing empty-results warning.
+		dir := writeFiles(t, map[string]string{"README.md": "nothing to see"})
+
+		conn, err := hclConnectionAs(dir, DialectTerraform)
+		require.NoError(t, err)
+		assert.Empty(t, conn.Parser().Files())
+	})
+
+	t.Run("the opentofu connector reads the same tree", func(t *testing.T) {
+		dir := writeFiles(t, map[string]string{"main.tofu": validResource})
+
+		conn, err := hclConnectionAs(dir, DialectOpenTofu)
+		require.NoError(t, err)
+		assert.Len(t, conn.Parser().Files(), 1)
 	})
 }
 
