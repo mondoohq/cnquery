@@ -542,6 +542,11 @@ stackit.secretsManager.instance.apiUrl 13.0.0
 stackit.secretsManager.instance.approles 13.7.2
 stackit.secretsManager.instance.creationFinishedAt 13.2.2
 stackit.secretsManager.instance.creationStartedAt 13.2.2
+stackit.secretsManager.instance.encryptionKey 13.7.2
+stackit.secretsManager.instance.encryptionKeyRing 13.7.2
+stackit.secretsManager.instance.encryptionKeyServiceAccount 13.7.2
+stackit.secretsManager.instance.encryptionKeyVersion 13.7.2
+stackit.secretsManager.instance.encryptionKeyVersionRef 13.7.2
 stackit.secretsManager.instance.id 13.0.0
 stackit.secretsManager.instance.name 13.0.0
 stackit.secretsManager.instance.secretCount 13.0.0
@@ -615,6 +620,7 @@ stackit.server.backupSchedule.volumeIds 13.4.2
 stackit.server.backupSchedule.volumes 13.4.2
 stackit.server.backupSchedules 13.4.2
 stackit.server.backups 13.4.2
+stackit.server.bootVolume 13.7.2
 stackit.server.bootVolumeDeleteOnTermination 13.7.2
 stackit.server.configDrive 13.0.0
 stackit.server.createdAt 13.0.0
@@ -869,6 +875,9 @@ stackit.volume.description 13.0.0
 stackit.volume.encrypted 13.0.0
 stackit.volume.encryptionKey 13.6.2
 stackit.volume.encryptionKeyId 13.0.1
+stackit.volume.encryptionKeyProjectId 13.7.2
+stackit.volume.encryptionKeyRing 13.7.2
+stackit.volume.encryptionKeyServiceAccount 13.7.2
 stackit.volume.encryptionKeyVersion 13.0.1
 stackit.volume.encryptionKeyVersionRef 13.6.2
 stackit.volume.id 13.0.0

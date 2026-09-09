@@ -11,6 +11,7 @@ import (
 	mongodbflex "github.com/stackitcloud/stackit-sdk-go/services/mongodbflex/v2api"
 	observability "github.com/stackitcloud/stackit-sdk-go/services/observability/v1api"
 	postgresflex "github.com/stackitcloud/stackit-sdk-go/services/postgresflex/v2api"
+	secretsmanager "github.com/stackitcloud/stackit-sdk-go/services/secretsmanager/v1api"
 	sqlserverflex "github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex/v2api"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -502,18 +503,7 @@ func (r *mqlStackitSecretsManager) instances() ([]any, error) {
 	items, _ := resp.GetInstancesOk()
 	out := make([]any, 0, len(items))
 	for i := range items {
-		inst := items[i]
-		args := map[string]*llx.RawData{
-			"id":                 llx.StringData(inst.GetId()),
-			"name":               llx.StringData(inst.GetName()),
-			"state":              llx.StringData(inst.GetState()),
-			"apiUrl":             llx.StringData(inst.GetApiUrl()),
-			"secretsEngine":      llx.StringData(inst.GetSecretsEngine()),
-			"secretCount":        llx.IntData(int64(inst.GetSecretCount())),
-			"creationStartedAt":  llx.TimeDataPtr(parseDnsTime(inst.GetCreationStartDate())),
-			"creationFinishedAt": llx.TimeDataPtr(parseDnsTime(inst.GetCreationFinishedDate())),
-		}
-		res, err := CreateResource(r.MqlRuntime, "stackit.secretsManager.instance", args)
+		res, err := buildSecretsManagerInstance(r.MqlRuntime, &items[i])
 		if err != nil {
 			return nil, err
 		}
@@ -522,8 +512,102 @@ func (r *mqlStackitSecretsManager) instances() ([]any, error) {
 	return out, nil
 }
 
+type mqlStackitSecretsManagerInstanceInternal struct {
+	// cacheKmsKey is the customer-managed key reference the instance
+	// carries, resolved by the encryptionKey* accessors. Nil when the vault
+	// relies on platform-managed encryption.
+	cacheKmsKey *secretsmanager.KmsKeyPayload
+}
+
+// buildSecretsManagerInstance maps an instance record onto the resource. The
+// list and the single-instance endpoints return the same model, so both
+// creation paths share it.
+func buildSecretsManagerInstance(runtime *plugin.Runtime, inst *secretsmanager.Instance) (plugin.Resource, error) {
+	kmsKey, hasKmsKey := inst.GetKmsKeyOk()
+	var keyVersion int64
+	if hasKmsKey && kmsKey != nil {
+		keyVersion = kmsKey.GetKeyVersion()
+	}
+	res, err := CreateResource(runtime, "stackit.secretsManager.instance", map[string]*llx.RawData{
+		"id":                   llx.StringData(inst.GetId()),
+		"name":                 llx.StringData(inst.GetName()),
+		"state":                llx.StringData(inst.GetState()),
+		"apiUrl":               llx.StringData(inst.GetApiUrl()),
+		"secretsEngine":        llx.StringData(inst.GetSecretsEngine()),
+		"secretCount":          llx.IntData(int64(inst.GetSecretCount())),
+		"creationStartedAt":    llx.TimeDataPtr(parseDnsTime(inst.GetCreationStartDate())),
+		"creationFinishedAt":   llx.TimeDataPtr(parseDnsTime(inst.GetCreationFinishedDate())),
+		"encryptionKeyVersion": llx.IntData(keyVersion),
+	})
+	if err != nil {
+		return nil, err
+	}
+	if hasKmsKey && kmsKey != nil {
+		res.(*mqlStackitSecretsManagerInstance).cacheKmsKey = kmsKey
+	}
+	return res, nil
+}
+
 func (r *mqlStackitSecretsManagerInstance) id() (string, error) {
 	return "stackit.secretsManager.instance/" + r.Id.Data, nil
+}
+
+// encryptionKey resolves the customer-managed key that encrypts the vault.
+// Null when the instance relies on platform-managed encryption. The instance
+// names the ring, so the lookup reads that one ring's key list.
+func (r *mqlStackitSecretsManagerInstance) encryptionKey() (*mqlStackitKmsKey, error) {
+	k := r.cacheKmsKey
+	if k == nil {
+		return markNull[mqlStackitKmsKey](&r.EncryptionKey)
+	}
+	return kmsKeyInRingRef(r.MqlRuntime, k.GetKeyRingId(), k.GetKeyId(), &r.EncryptionKey)
+}
+
+// encryptionKeyRing resolves the key ring that holds the vault's
+// customer-managed key. Null for platform-managed encryption.
+func (r *mqlStackitSecretsManagerInstance) encryptionKeyRing() (*mqlStackitKmsKeyRing, error) {
+	k := r.cacheKmsKey
+	if k == nil {
+		return markNull[mqlStackitKmsKeyRing](&r.EncryptionKeyRing)
+	}
+	return kmsKeyRingRef(r.MqlRuntime, k.GetKeyRingId(), &r.EncryptionKeyRing)
+}
+
+// encryptionKeyVersionRef resolves the generation of key material the vault
+// is pinned to. Version numbers start at 1, so 0 means nothing is pinned.
+func (r *mqlStackitSecretsManagerInstance) encryptionKeyVersionRef() (*mqlStackitKmsKeyVersion, error) {
+	field := &r.EncryptionKeyVersionRef
+	number := r.EncryptionKeyVersion.Data
+	if number == 0 {
+		return markNull[mqlStackitKmsKeyVersion](field)
+	}
+	key := r.GetEncryptionKey()
+	if key.Error != nil {
+		return nil, key.Error
+	}
+	if key.Data == nil {
+		return markNull[mqlStackitKmsKeyVersion](field)
+	}
+	versions := key.Data.GetVersions()
+	if versions.Error != nil {
+		return nil, versions.Error
+	}
+	v := findKmsKeyVersion(versions.Data, number)
+	if v == nil {
+		return markNull[mqlStackitKmsKeyVersion](field)
+	}
+	return v, nil
+}
+
+// encryptionKeyServiceAccount resolves the service account the vault uses
+// to reach its customer-managed key. Null for platform-managed encryption,
+// and null when the account is not one of this project's.
+func (r *mqlStackitSecretsManagerInstance) encryptionKeyServiceAccount() (*mqlStackitServiceAccount, error) {
+	k := r.cacheKmsKey
+	if k == nil {
+		return markNull[mqlStackitServiceAccount](&r.EncryptionKeyServiceAccount)
+	}
+	return serviceAccountRef(r.MqlRuntime, k.GetServiceAccountEmail(), &r.EncryptionKeyServiceAccount)
 }
 
 func (r *mqlStackitSecretsManagerInstance) acls() ([]any, error) {
@@ -1418,16 +1502,7 @@ func initStackitSecretsManagerInstance(runtime *plugin.Runtime, args map[string]
 	if inst == nil {
 		return nil, nil, fmt.Errorf("stackit.secretsManager.instance with id %q not found", id)
 	}
-	res, err := CreateResource(runtime, "stackit.secretsManager.instance", map[string]*llx.RawData{
-		"id":                 llx.StringData(inst.GetId()),
-		"name":               llx.StringData(inst.GetName()),
-		"state":              llx.StringData(inst.GetState()),
-		"apiUrl":             llx.StringData(inst.GetApiUrl()),
-		"secretsEngine":      llx.StringData(inst.GetSecretsEngine()),
-		"secretCount":        llx.IntData(int64(inst.GetSecretCount())),
-		"creationStartedAt":  llx.TimeDataPtr(parseDnsTime(inst.GetCreationStartDate())),
-		"creationFinishedAt": llx.TimeDataPtr(parseDnsTime(inst.GetCreationFinishedDate())),
-	})
+	res, err := buildSecretsManagerInstance(runtime, inst)
 	if err != nil {
 		return nil, nil, err
 	}
