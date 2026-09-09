@@ -264,12 +264,12 @@ circleci.runner.resourceClass @defaults("resourceClass description") @maturity("
 // once at creation and is never returned by the API, so this resource
 // exposes the token's metadata (nickname, creation time) for inventory and
 // rotation audits, not the secret itself. The `resourceClass` field is the
-// fully qualified name of the class the token belongs to.
+// class the token belongs to.
 private circleci.runner.token @defaults("nickname createdAt") @maturity("experimental") {
   // Token ID (UUID)
   id string
-  // Fully qualified resource class name the token belongs to
-  resourceClass string
+  // Resource class the token belongs to
+  resourceClass() circleci.runner.resourceClass
   // Human-readable token nickname
   nickname string
   // Creation time

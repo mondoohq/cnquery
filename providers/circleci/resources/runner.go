@@ -78,16 +78,32 @@ func (c *mqlCircleciRunnerResourceClass) tokens() ([]any, error) {
 	all := make([]any, 0, len(resp.Items))
 	for _, t := range resp.Items {
 		res, err := CreateResource(c.MqlRuntime, "circleci.runner.token", map[string]*llx.RawData{
-			"__id":          llx.StringData(t.ID),
-			"id":            llx.StringData(t.ID),
-			"resourceClass": llx.StringData(t.ResourceClass),
-			"nickname":      llx.StringData(t.Nickname),
-			"createdAt":     llx.TimeDataPtr(parseCircleciTime(t.CreatedAt)),
+			"__id":      llx.StringData(t.ID),
+			"id":        llx.StringData(t.ID),
+			"nickname":  llx.StringData(t.Nickname),
+			"createdAt": llx.TimeDataPtr(parseCircleciTime(t.CreatedAt)),
 		})
 		if err != nil {
 			return nil, err
 		}
+		res.(*mqlCircleciRunnerToken).cacheResourceClass = c
 		all = append(all, res)
 	}
 	return all, nil
+}
+
+// mqlCircleciRunnerTokenInternal caches the resource class a token was listed
+// under. The token API response names the class only by its slug, and the
+// class itself is already in hand when its tokens are enumerated.
+type mqlCircleciRunnerTokenInternal struct {
+	cacheResourceClass *mqlCircleciRunnerResourceClass
+}
+
+// resourceClass resolves the resource class this token registers agents with.
+func (t *mqlCircleciRunnerToken) resourceClass() (*mqlCircleciRunnerResourceClass, error) {
+	if t.cacheResourceClass == nil {
+		t.ResourceClass.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return t.cacheResourceClass, nil
 }

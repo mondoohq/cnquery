@@ -346,7 +346,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlCircleciRunnerToken).GetId()).ToDataRes(types.String)
 	},
 	"circleci.runner.token.resourceClass": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCircleciRunnerToken).GetResourceClass()).ToDataRes(types.String)
+		return (r.(*mqlCircleciRunnerToken).GetResourceClass()).ToDataRes(types.Resource("circleci.runner.resourceClass"))
 	},
 	"circleci.runner.token.nickname": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCircleciRunnerToken).GetNickname()).ToDataRes(types.String)
@@ -671,7 +671,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"circleci.runner.token.resourceClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCircleciRunnerToken).ResourceClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlCircleciRunnerToken).ResourceClass, ok = plugin.RawToTValue[*mqlCircleciRunnerResourceClass](v.Value, v.Error)
 		return
 	},
 	"circleci.runner.token.nickname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1727,9 +1727,9 @@ func (c *mqlCircleciRunnerResourceClass) GetTokens() *plugin.TValue[[]any] {
 type mqlCircleciRunnerToken struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlCircleciRunnerTokenInternal it will be used here
+	mqlCircleciRunnerTokenInternal
 	Id            plugin.TValue[string]
-	ResourceClass plugin.TValue[string]
+	ResourceClass plugin.TValue[*mqlCircleciRunnerResourceClass]
 	Nickname      plugin.TValue[string]
 	CreatedAt     plugin.TValue[*time.Time]
 }
@@ -1770,8 +1770,20 @@ func (c *mqlCircleciRunnerToken) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlCircleciRunnerToken) GetResourceClass() *plugin.TValue[string] {
-	return &c.ResourceClass
+func (c *mqlCircleciRunnerToken) GetResourceClass() *plugin.TValue[*mqlCircleciRunnerResourceClass] {
+	return plugin.GetOrCompute[*mqlCircleciRunnerResourceClass](&c.ResourceClass, func() (*mqlCircleciRunnerResourceClass, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("circleci.runner.token", c.__id, "resourceClass")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCircleciRunnerResourceClass), nil
+			}
+		}
+
+		return c.resourceClass()
+	})
 }
 
 func (c *mqlCircleciRunnerToken) GetNickname() *plugin.TValue[string] {
