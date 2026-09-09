@@ -1,15 +1,18 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import core
+
 option provider = "go.mondoo.com/mql/providers/bitbucket"
 option go_package = "go.mondoo.com/mql/providers/bitbucket/resources"
+option root = "bitbucket"
 
 // Bitbucket
 //
 // Namespace root for Bitbucket Cloud queries, exposing workspaces,
 // projects, repositories, branch restrictions, deploy keys, and the
 // members and groups that hold access across the connected account.
-bitbucket @maturity("experimental") {
+bitbucket @maturity("experimental") @root {
   // All workspaces the authenticated identity can access
   workspaces() []bitbucket.workspace
 }
