@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"net/url"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -67,7 +68,7 @@ func (r *mqlJenkins) credentials() ([]any, error) {
 		return all, nil
 	}
 	for _, f := range folders {
-		folderPath := "/job/" + strings.ReplaceAll(f.FullName, "/", "/job/")
+		folderPath := folderJobPath(f.FullName)
 		storeBase := folderPath + "/credentials/store/folder"
 		idBase := conn.BaseUrl() + folderPath + "/credentials/folder"
 		for _, domain := range fetchCredentialDomains(conn, storeBase) {
@@ -133,4 +134,17 @@ func (r *mqlJenkins) credentialsFromStoreDomain(conn *connection.JenkinsConnecti
 		out = append(out, res)
 	}
 	return out, nil
+}
+
+// folderJobPath builds the URL path of a folder from its Jenkins fullName
+// ("team-a/sub"). Each segment is escaped on its own: job names may carry
+// spaces, '#' or '%', which would otherwise truncate or corrupt the path.
+// A job name cannot contain "/", so splitting on it is safe.
+func folderJobPath(fullName string) string {
+	var b strings.Builder
+	for _, seg := range strings.Split(fullName, "/") {
+		b.WriteString("/job/")
+		b.WriteString(url.PathEscape(seg))
+	}
+	return b.String()
 }

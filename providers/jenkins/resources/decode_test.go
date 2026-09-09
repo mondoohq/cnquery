@@ -567,3 +567,21 @@ func TestJobsTreeQueryNestsRequestedDepth(t *testing.T) {
 		})
 	}
 }
+
+// Folder names reach the credentials store URL as path segments. Without
+// per-segment escaping a space truncates the request and '#' or '%' corrupt
+// it, so the store lookup 404s and the folder's credentials vanish silently.
+func TestFolderJobPath(t *testing.T) {
+	cases := map[string]string{
+		"team-a":        "/job/team-a",
+		"team-a/deploy": "/job/team-a/job/deploy",
+		"team a/sub#1":  "/job/team%20a/job/sub%231",
+		"100%/nightly":  "/job/100%25/job/nightly",
+		"a/b/c":         "/job/a/job/b/job/c",
+	}
+	for in, want := range cases {
+		if got := folderJobPath(in); got != want {
+			t.Errorf("folderJobPath(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

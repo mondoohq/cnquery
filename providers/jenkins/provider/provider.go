@@ -52,7 +52,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options[connection.OPTION_USER] = string(v.Value)
 	}
 	if v, ok := flags[connection.OPTION_TOKEN]; ok && len(v.Value) != 0 {
-		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", string(v.Value)))
+		// The user rides on the credential as well as in Options, so the
+		// pair survives a round trip through a vault or an inventory file,
+		// where Options may not follow.
+		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential(conf.Options[connection.OPTION_USER], string(v.Value)))
 	}
 
 	return &plugin.ParseCLIRes{
