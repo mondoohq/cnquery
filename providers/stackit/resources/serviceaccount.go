@@ -77,40 +77,14 @@ func initStackitServiceAccount(runtime *plugin.Runtime, args map[string]*llx.Raw
 	return nil, nil, fmt.Errorf("stackit.serviceAccount with email %q not found", email)
 }
 
+// accessTokens reports an empty list. STACKIT retired long-lived service
+// account access tokens on 17 December 2025 and removed the access-token
+// endpoints from the service account API (spec commits of 2026-08-27 and
+// 2026-09-04), so no service account can hold one and there is nothing left
+// to list. The field is kept, deprecated, so existing queries keep compiling;
+// `keys` carries the successor credentials.
 func (r *mqlStackitServiceAccount) accessTokens() ([]any, error) {
-	c := conn(r.MqlRuntime)
-	client, err := c.ServiceAccount()
-	if err != nil {
-		return nil, err
-	}
-	resp, err := client.DefaultAPI.ListAccessTokens(bgctx(), r.ProjectId.Data, r.Email.Data).Execute()
-	if err != nil {
-		if isAccessDenied(err) {
-			return []any{}, nil
-		}
-		return nil, err
-	}
-	items, _ := resp.GetItemsOk()
-	out := make([]any, 0, len(items))
-	for i := range items {
-		out = append(out, serviceAccountTokenEntry(&items[i]))
-	}
-	return out, nil
-}
-
-// serviceAccountTokenEntry maps an access-token metadata record into a
-// dict-native map. Timestamps are RFC3339 strings (a `dict` cannot carry a
-// *time.Time) so the entry serializes cleanly for the `accessTokens []dict`
-// field.
-func serviceAccountTokenEntry(t *serviceaccount.AccessTokenMetadata) map[string]any {
-	createdAt, ok1 := t.GetCreatedAtOk()
-	validUntil, ok2 := t.GetValidUntilOk()
-	return map[string]any{
-		"id":         t.GetId(),
-		"active":     t.GetActive(),
-		"createdAt":  rfc3339OrNil(createdAt, ok1),
-		"validUntil": rfc3339OrNil(validUntil, ok2),
-	}
+	return []any{}, nil
 }
 
 func (r *mqlStackitServiceAccount) keys() ([]any, error) {
