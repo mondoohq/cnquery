@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"math"
 	"strconv"
 	"strings"
 
@@ -183,7 +184,7 @@ func dictInt(v any) (int64, bool) {
 	case int32:
 		return int64(n), true
 	case float64:
-		if n != float64(int64(n)) {
+		if n < math.MinInt64 || n > math.MaxInt64 || n != float64(int64(n)) {
 			return 0, false
 		}
 		return int64(n), true

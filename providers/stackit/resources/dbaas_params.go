@@ -90,10 +90,10 @@ func (r *mqlStackitOpenSearchInstance) graphite() (string, error) {
 
 func (r *mqlStackitOpenSearchInstance) monitoringEnabled() (bool, error) {
 	v, ok, err := paramBool(r.GetParameters(), "enable_monitoring")
-	if err != nil || !ok {
-		if err != nil {
-			return false, err
-		}
+	if err != nil {
+		return false, err
+	}
+	if !ok {
 		return nullBool(&r.MonitoringEnabled)
 	}
 	return v, nil

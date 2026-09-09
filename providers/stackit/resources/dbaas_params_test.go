@@ -28,6 +28,8 @@ func TestDictInt(t *testing.T) {
 		{"numeric string", "514", 514, true},
 		{"numeric string with whitespace", " 90 ", 90, true},
 		{"fractional float is not a whole number", 80.5, 0, false},
+		{"float beyond int64 range is rejected, not wrapped", 1e19, 0, false},
+		{"negative float beyond int64 range is rejected", -1e19, 0, false},
 		{"non-numeric string", "eighty", 0, false},
 		{"bool is not a number", true, 0, false},
 		{"nil", nil, 0, false},
