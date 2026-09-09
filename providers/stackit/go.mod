@@ -29,7 +29,7 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/secretsmanager v0.19.1
 	github.com/stackitcloud/stackit-sdk-go/services/serverbackup v1.7.2
 	github.com/stackitcloud/stackit-sdk-go/services/serverupdate v1.5.5
-	github.com/stackitcloud/stackit-sdk-go/services/serviceaccount v0.20.1 // pinned: v0.21.0 removes ListAccessTokens, which backs stackit.serviceAccount.accessTokens
+	github.com/stackitcloud/stackit-sdk-go/services/serviceaccount v0.21.0
 	github.com/stackitcloud/stackit-sdk-go/services/sfs v0.11.2
 	github.com/stackitcloud/stackit-sdk-go/services/ske v1.21.2
 	github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.18.1

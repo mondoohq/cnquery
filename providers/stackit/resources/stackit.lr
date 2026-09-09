@@ -2607,8 +2607,8 @@ private stackit.modelServing.model @defaults("name type category") {
 // principal used by automation and SDK callers to authenticate
 // against STACKIT APIs. Service accounts are keyed by their email
 // address, for example `stackit.serviceAccount(email: "...")`, and
-// expose the project they belong to along with the access tokens and
-// long-lived keys issued for authentication (useful for auditing
+// expose the project they belong to along with the keys and federated
+// identity providers issued for authentication (useful for auditing
 // credential age and active status).
 private stackit.serviceAccount @defaults("email projectId") {
   init(email? string)
@@ -2618,11 +2618,14 @@ private stackit.serviceAccount @defaults("email projectId") {
   projectId string
   // Internal service-account ID (UUID), if returned by the API
   id string
-  // Access tokens issued for this service account
+  // Long-lived access tokens issued for this service account
   //
-  // Each entry has `id`, `active` (whether the token is currently
-  // valid), `createdAt`, and `validUntil`.
-  accessTokens() []dict
+  // Deprecated in favor of keys. STACKIT retired long-lived service
+  // account access tokens on 17 December 2025 and removed the
+  // access-token endpoints from the service account API, so this
+  // field always reports an empty list. Audit credential age and
+  // active status through `keys` and `federatedIdentityProviders`.
+  accessTokens() @maturity("deprecated") @replaced_by("stackit.serviceAccount.keys") []dict
   // Long-lived keys associated with this service account
   //
   // Each entry has `id`, `keyType`, `keyAlgorithm`, `keyOrigin`,

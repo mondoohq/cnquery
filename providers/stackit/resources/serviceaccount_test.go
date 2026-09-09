@@ -57,27 +57,3 @@ func TestServiceAccountKeyEntry(t *testing.T) {
 
 	assertDictSerializable(t, []any{entry})
 }
-
-func TestServiceAccountTokenEntry(t *testing.T) {
-	now := time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
-	valid := now.Add(24 * time.Hour)
-	tok := &serviceaccount.AccessTokenMetadata{}
-	tok.SetId("tok-1")
-	tok.SetActive(true)
-	tok.SetCreatedAt(now)
-	tok.SetValidUntil(valid)
-
-	entry := serviceAccountTokenEntry(tok)
-
-	if got, ok := entry["createdAt"].(string); !ok || got != now.Format(time.RFC3339) {
-		t.Fatalf("createdAt = %v (%T), want RFC3339 %q", entry["createdAt"], entry["createdAt"], now.Format(time.RFC3339))
-	}
-	if got, ok := entry["validUntil"].(string); !ok || got != valid.Format(time.RFC3339) {
-		t.Fatalf("validUntil = %v (%T), want RFC3339 %q", entry["validUntil"], entry["validUntil"], valid.Format(time.RFC3339))
-	}
-	if got, ok := entry["active"].(bool); !ok || !got {
-		t.Fatalf("active = %v (%T), want bool true", entry["active"], entry["active"])
-	}
-
-	assertDictSerializable(t, []any{entry})
-}
