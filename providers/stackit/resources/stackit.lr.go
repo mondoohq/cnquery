@@ -1806,6 +1806,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.sfs.exportPolicy.rule.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSfsExportPolicyRule).GetDescription()).ToDataRes(types.String)
 	},
+	"stackit.sfs.exportPolicy.rule.readOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSfsExportPolicyRule).GetReadOnly()).ToDataRes(types.Bool)
+	},
+	"stackit.sfs.exportPolicy.rule.superUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSfsExportPolicyRule).GetSuperUser()).ToDataRes(types.Bool)
+	},
+	"stackit.sfs.exportPolicy.rule.setUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSfsExportPolicyRule).GetSetUuid()).ToDataRes(types.Bool)
+	},
 	"stackit.sfs.exportPolicy.rule.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSfsExportPolicyRule).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -2087,6 +2096,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.sqlServerFlex.instance.options": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSqlServerFlexInstance).GetOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"stackit.sqlServerFlex.instance.edition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetEdition()).ToDataRes(types.String)
+	},
+	"stackit.sqlServerFlex.instance.backupRetentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetBackupRetentionDays()).ToDataRes(types.Int)
 	},
 	"stackit.sqlServerFlex.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSqlServerFlexInstance).GetInternetReachable()).ToDataRes(types.Bool)
@@ -2676,6 +2691,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.serviceAccount.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServiceAccount).GetId()).ToDataRes(types.String)
 	},
+	"stackit.serviceAccount.internal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServiceAccount).GetInternal()).ToDataRes(types.Bool)
+	},
 	"stackit.serviceAccount.accessTokens": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServiceAccount).GetAccessTokens()).ToDataRes(types.Array(types.Dict))
 	},
@@ -2762,6 +2780,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.certificate.usage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitCertificate).GetUsage()).ToDataRes(types.Array(types.Dict))
+	},
+	"stackit.certificate.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetOrganization()).ToDataRes(types.String)
+	},
+	"stackit.certificate.isSelfSigned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetIsSelfSigned()).ToDataRes(types.Bool)
+	},
+	"stackit.certificate.isCa": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetIsCa()).ToDataRes(types.Bool)
 	},
 	"stackit.alb.loadBalancer.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbLoadBalancer).GetName()).ToDataRes(types.String)
@@ -4953,6 +4980,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitSfsExportPolicyRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"stackit.sfs.exportPolicy.rule.readOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSfsExportPolicyRule).ReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.sfs.exportPolicy.rule.superUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSfsExportPolicyRule).SuperUser, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.sfs.exportPolicy.rule.setUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSfsExportPolicyRule).SetUuid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"stackit.sfs.exportPolicy.rule.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSfsExportPolicyRule).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -5375,6 +5414,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.sqlServerFlex.instance.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSqlServerFlexInstance).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.edition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).Edition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.backupRetentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).BackupRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"stackit.sqlServerFlex.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6269,6 +6316,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitServiceAccount).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"stackit.serviceAccount.internal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServiceAccount).Internal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"stackit.serviceAccount.accessTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitServiceAccount).AccessTokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -6391,6 +6442,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.certificate.usage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitCertificate).Usage, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).Organization, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.isSelfSigned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).IsSelfSigned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.isCa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).IsCa, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"stackit.alb.loadBalancer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11711,6 +11774,9 @@ type mqlStackitSfsExportPolicyRule struct {
 	Order       plugin.TValue[int64]
 	IpAcl       plugin.TValue[[]any]
 	Description plugin.TValue[string]
+	ReadOnly    plugin.TValue[bool]
+	SuperUser   plugin.TValue[bool]
+	SetUuid     plugin.TValue[bool]
 	CreatedAt   plugin.TValue[*time.Time]
 }
 
@@ -11765,6 +11831,18 @@ func (c *mqlStackitSfsExportPolicyRule) GetIpAcl() *plugin.TValue[[]any] {
 
 func (c *mqlStackitSfsExportPolicyRule) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+func (c *mqlStackitSfsExportPolicyRule) GetReadOnly() *plugin.TValue[bool] {
+	return &c.ReadOnly
+}
+
+func (c *mqlStackitSfsExportPolicyRule) GetSuperUser() *plugin.TValue[bool] {
+	return &c.SuperUser
+}
+
+func (c *mqlStackitSfsExportPolicyRule) GetSetUuid() *plugin.TValue[bool] {
+	return &c.SetUuid
 }
 
 func (c *mqlStackitSfsExportPolicyRule) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -12792,19 +12870,21 @@ type mqlStackitSqlServerFlexInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlStackitSqlServerFlexInstanceInternal
-	Id                plugin.TValue[string]
-	Name              plugin.TValue[string]
-	Status            plugin.TValue[string]
-	Region            plugin.TValue[string]
-	Version           plugin.TValue[string]
-	Flavor            plugin.TValue[any]
-	Acl               plugin.TValue[[]any]
-	Replicas          plugin.TValue[int64]
-	Storage           plugin.TValue[any]
-	BackupSchedule    plugin.TValue[string]
-	Options           plugin.TValue[map[string]any]
-	InternetReachable plugin.TValue[bool]
-	Users             plugin.TValue[[]any]
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Status              plugin.TValue[string]
+	Region              plugin.TValue[string]
+	Version             plugin.TValue[string]
+	Flavor              plugin.TValue[any]
+	Acl                 plugin.TValue[[]any]
+	Replicas            plugin.TValue[int64]
+	Storage             plugin.TValue[any]
+	BackupSchedule      plugin.TValue[string]
+	Options             plugin.TValue[map[string]any]
+	Edition             plugin.TValue[string]
+	BackupRetentionDays plugin.TValue[int64]
+	InternetReachable   plugin.TValue[bool]
+	Users               plugin.TValue[[]any]
 }
 
 // createStackitSqlServerFlexInstance creates a new instance of this resource
@@ -12899,6 +12979,18 @@ func (c *mqlStackitSqlServerFlexInstance) GetBackupSchedule() *plugin.TValue[str
 func (c *mqlStackitSqlServerFlexInstance) GetOptions() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Options, func() (map[string]any, error) {
 		return c.options()
+	})
+}
+
+func (c *mqlStackitSqlServerFlexInstance) GetEdition() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Edition, func() (string, error) {
+		return c.edition()
+	})
+}
+
+func (c *mqlStackitSqlServerFlexInstance) GetBackupRetentionDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.BackupRetentionDays, func() (int64, error) {
+		return c.backupRetentionDays()
 	})
 }
 
@@ -15334,6 +15426,7 @@ type mqlStackitServiceAccount struct {
 	Email                      plugin.TValue[string]
 	ProjectId                  plugin.TValue[string]
 	Id                         plugin.TValue[string]
+	Internal                   plugin.TValue[bool]
 	AccessTokens               plugin.TValue[[]any]
 	Keys                       plugin.TValue[[]any]
 	FederatedIdentityProviders plugin.TValue[[]any]
@@ -15386,6 +15479,10 @@ func (c *mqlStackitServiceAccount) GetProjectId() *plugin.TValue[string] {
 
 func (c *mqlStackitServiceAccount) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlStackitServiceAccount) GetInternal() *plugin.TValue[bool] {
+	return &c.Internal
 }
 
 func (c *mqlStackitServiceAccount) GetAccessTokens() *plugin.TValue[[]any] {
@@ -15526,6 +15623,9 @@ type mqlStackitCertificate struct {
 	NotBefore         plugin.TValue[*time.Time]
 	NotAfter          plugin.TValue[*time.Time]
 	Usage             plugin.TValue[[]any]
+	Organization      plugin.TValue[string]
+	IsSelfSigned      plugin.TValue[bool]
+	IsCa              plugin.TValue[bool]
 }
 
 // createStackitCertificate creates a new instance of this resource
@@ -15639,6 +15739,18 @@ func (c *mqlStackitCertificate) GetNotAfter() *plugin.TValue[*time.Time] {
 
 func (c *mqlStackitCertificate) GetUsage() *plugin.TValue[[]any] {
 	return &c.Usage
+}
+
+func (c *mqlStackitCertificate) GetOrganization() *plugin.TValue[string] {
+	return &c.Organization
+}
+
+func (c *mqlStackitCertificate) GetIsSelfSigned() *plugin.TValue[bool] {
+	return &c.IsSelfSigned
+}
+
+func (c *mqlStackitCertificate) GetIsCa() *plugin.TValue[bool] {
+	return &c.IsCa
 }
 
 // mqlStackitAlbLoadBalancer for the stackit.alb.loadBalancer resource

@@ -385,6 +385,16 @@ func kmsKeyRef(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlStac
 	return key, nil
 }
 
+// optBool passes an SDK GetXxxOk() bool pair through as a pointer that is nil
+// when the API omitted the field, so the MQL field reads null rather than a
+// false the API never sent.
+func optBool(v *bool, ok bool) *bool {
+	if !ok {
+		return nil
+	}
+	return v
+}
+
 // kmsKeyRingRef resolves a key ring by UUID, marking the field null when the
 // id is empty or the ring is not readable from this project (a ring that lives
 // in another project answers 404 to GetKeyRing).

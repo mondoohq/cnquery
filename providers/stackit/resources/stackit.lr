@@ -1458,6 +1458,21 @@ private stackit.sfs.exportPolicy.rule @defaults("order ipAcl") {
   ipAcl []string
   // Optional rule description
   description string
+  // Whether matching clients may only mount the share read-only
+  //
+  // False means clients matching this rule can write to the share. Null
+  // when the service reports nothing for the rule.
+  readOnly bool
+  // Whether matching clients keep root privileges on the share
+  //
+  // True grants root access to clients matching the rule, the NFS
+  // equivalent of no_root_squash. Null when the service reports nothing.
+  superUser bool
+  // Whether set-user-ID bits are honored on the export
+  //
+  // True lets executables on the share run with their file owner's
+  // privileges. Null when the service reports nothing.
+  setUuid bool
   // Creation timestamp
   createdAt time
 }
@@ -1812,6 +1827,17 @@ private stackit.sqlServerFlex.instance @defaults("id name version status") {
   backupSchedule() string
   // Operator-tunable engine options as key/value pairs
   options() map[string]string
+  // SQL Server edition the instance runs
+  //
+  // The edition from the instance options (for example developer,
+  // express, standard, or enterprise), which decides the feature set
+  // available to the instance. Null when the options carry no edition.
+  edition() string
+  // Days backup files are kept before cleanup
+  //
+  // From the retentionDays instance option, which the service accepts in
+  // the range 30 to 365. Null when the option is absent or not numeric.
+  backupRetentionDays() int
   // Whether the instance accepts connections from any address
   //
   // True only when the connection ACL explicitly admits a default route
@@ -2717,6 +2743,13 @@ private stackit.serviceAccount @defaults("email projectId") {
   projectId string
   // Internal service-account ID (UUID), if returned by the API
   id string
+  // Whether the account is a platform-managed internal service account
+  //
+  // True for service accounts STACKIT itself creates and operates on the
+  // project's behalf, false for accounts a user created for their own
+  // automation. Filter on it to keep platform identities out of a review
+  // of stale or over-privileged automation credentials.
+  internal bool
   // Long-lived access tokens issued for this service account
   //
   // Deprecated in favor of keys. STACKIT retired long-lived service
@@ -2836,6 +2869,20 @@ private stackit.certificate @defaults("id name region") {
   // with `loadBalancerName` and the `listenerNames` on that load
   // balancer using it ([{loadBalancerName, listenerNames}]).
   usage []dict
+  // Organization named in the certificate subject
+  organization string
+  // Whether the certificate is signed by its own private key
+  //
+  // True when the certificate was signed by its own key rather than by a
+  // trusted third-party certificate authority, as reported by the
+  // service. Null when the service reports nothing.
+  isSelfSigned bool
+  // Whether the certificate is a certificate authority
+  //
+  // True when the certificate can sign other certificates. A CA
+  // certificate uploaded to serve as a server certificate is a finding.
+  // Null when the service reports nothing.
+  isCa bool
 }
 
 // STACKIT Application Load Balancer

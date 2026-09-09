@@ -46,6 +46,7 @@ func buildServiceAccount(runtime *plugin.Runtime, sa *serviceaccount.ServiceAcco
 		"email":     llx.StringData(sa.GetEmail()),
 		"projectId": llx.StringData(sa.GetProjectId()),
 		"id":        llx.StringData(sa.GetId()),
+		"internal":  llx.BoolData(sa.GetInternal()),
 	})
 }
 
