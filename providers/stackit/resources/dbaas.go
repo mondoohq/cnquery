@@ -5,6 +5,8 @@ package resources
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -1765,6 +1767,75 @@ func (r *mqlStackitSqlServerFlexInstance) options() (map[string]any, error) {
 		return map[string]any{}, err
 	}
 	return stringMap(d.GetOptions()), nil
+}
+
+// The SDK documents two keys inside the SQL Server Flex options map
+// (InstanceDocumentationOptions): `edition` and `retentionDays`. They are
+// hoisted here so a policy reads a typed value instead of a string in a map.
+
+// edition reports the SQL Server edition the instance runs (for example
+// developer, express, standard, or enterprise), which decides the feature
+// set available to it. Null when the instance detail could not be read or
+// carries no edition.
+func (r *mqlStackitSqlServerFlexInstance) edition() (string, error) {
+	d, err := r.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	edition, ok := sqlServerOption(d, "edition")
+	if !ok {
+		r.Edition.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	return edition, nil
+}
+
+// backupRetentionDays reports how many days backup files are kept before
+// cleanup, from the instance's `retentionDays` option. Null when the detail
+// could not be read, the option is absent, or it does not parse as a number.
+func (r *mqlStackitSqlServerFlexInstance) backupRetentionDays() (int64, error) {
+	d, err := r.fetchDetail()
+	if err != nil {
+		return 0, err
+	}
+	days, ok := sqlServerRetentionDays(d)
+	if !ok {
+		r.BackupRetentionDays.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return days, nil
+}
+
+// sqlServerOption reads one key from the instance's options map, reporting
+// whether it was present and non-empty.
+func sqlServerOption(d *sqlserverflex.Instance, key string) (string, bool) {
+	if d == nil {
+		return "", false
+	}
+	opts, ok := d.GetOptionsOk()
+	if !ok || opts == nil {
+		return "", false
+	}
+	v, ok := (*opts)[key]
+	if !ok || strings.TrimSpace(v) == "" {
+		return "", false
+	}
+	return v, true
+}
+
+// sqlServerRetentionDays parses the `retentionDays` option, which the API
+// carries as a decimal string, into days. It reports false rather than a
+// zero when the option is absent or malformed, so the field reads null.
+func sqlServerRetentionDays(d *sqlserverflex.Instance) (int64, bool) {
+	raw, ok := sqlServerOption(d, "retentionDays")
+	if !ok {
+		return 0, false
+	}
+	days, err := strconv.ParseInt(strings.TrimSpace(raw), 10, 64)
+	if err != nil || days < 0 {
+		return 0, false
+	}
+	return days, true
 }
 
 func initStackitSqlServerFlexInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

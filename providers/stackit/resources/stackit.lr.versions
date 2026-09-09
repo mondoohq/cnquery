@@ -83,6 +83,8 @@ stackit.certificate.extendedKeyUsage 13.4.2
 stackit.certificate.fingerprintSha1 13.4.2
 stackit.certificate.fingerprintSha256 13.4.2
 stackit.certificate.id 13.0.1
+stackit.certificate.isCa 13.7.2
+stackit.certificate.isSelfSigned 13.7.2
 stackit.certificate.issuer 13.4.2
 stackit.certificate.keyAlgorithm 13.4.2
 stackit.certificate.keyBitSize 13.4.2
@@ -91,6 +93,7 @@ stackit.certificate.labels 13.4.2
 stackit.certificate.name 13.0.1
 stackit.certificate.notAfter 13.4.2
 stackit.certificate.notBefore 13.4.2
+stackit.certificate.organization 13.7.2
 stackit.certificate.publicKey 13.0.1
 stackit.certificate.region 13.0.1
 stackit.certificate.serialNumber 13.4.2
@@ -680,6 +683,7 @@ stackit.serviceAccount.federatedIdentityProvider.serviceAccount 13.5.2
 stackit.serviceAccount.federatedIdentityProvider.updatedAt 13.5.2
 stackit.serviceAccount.federatedIdentityProviders 13.5.2
 stackit.serviceAccount.id 13.0.0
+stackit.serviceAccount.internal 13.7.2
 stackit.serviceAccount.keys 13.0.0
 stackit.serviceAccount.projectId 13.0.0
 stackit.serviceAccounts 13.0.0
@@ -696,6 +700,9 @@ stackit.sfs.exportPolicy.rule.description 13.0.2
 stackit.sfs.exportPolicy.rule.id 13.0.2
 stackit.sfs.exportPolicy.rule.ipAcl 13.0.2
 stackit.sfs.exportPolicy.rule.order 13.0.2
+stackit.sfs.exportPolicy.rule.readOnly 13.7.2
+stackit.sfs.exportPolicy.rule.setUuid 13.7.2
+stackit.sfs.exportPolicy.rule.superUser 13.7.2
 stackit.sfs.exportPolicy.rules 13.0.2
 stackit.sfs.exportPolicy.sharesUsingExportPolicy 13.0.2
 stackit.sfs.lockId 13.0.2
@@ -810,7 +817,9 @@ stackit.snapshots 13.0.0
 stackit.sqlServerFlex 13.0.1
 stackit.sqlServerFlex.instance 13.0.1
 stackit.sqlServerFlex.instance.acl 13.0.1
+stackit.sqlServerFlex.instance.backupRetentionDays 13.7.2
 stackit.sqlServerFlex.instance.backupSchedule 13.0.1
+stackit.sqlServerFlex.instance.edition 13.7.2
 stackit.sqlServerFlex.instance.flavor 13.0.1
 stackit.sqlServerFlex.instance.id 13.0.1
 stackit.sqlServerFlex.instance.internetReachable 13.0.6

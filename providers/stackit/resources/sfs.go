@@ -455,6 +455,9 @@ func (r *mqlStackitSfsExportPolicy) rules() ([]any, error) {
 			"order":       llx.IntData(rule.GetOrder()),
 			"ipAcl":       strSliceData(rule.GetIpAcl()),
 			"description": llx.StringData(rule.GetDescription()),
+			"readOnly":    llx.BoolDataPtr(optBool(rule.GetReadOnlyOk())),
+			"superUser":   llx.BoolDataPtr(optBool(rule.GetSuperUserOk())),
+			"setUuid":     llx.BoolDataPtr(optBool(rule.GetSetUuidOk())),
 			"createdAt":   llx.TimeDataPtr(timeOrNil(rule.GetCreatedAtOk())),
 		})
 		if err != nil {

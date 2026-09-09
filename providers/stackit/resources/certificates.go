@@ -75,6 +75,9 @@ func buildCertificate(runtime *plugin.Runtime, cert *certificates.GetCertificate
 		"notBefore":         llx.TimeDataPtr(parseRFC3339(data.GetNotBefore())),
 		"notAfter":          llx.TimeDataPtr(parseRFC3339(data.GetNotAfter())),
 		"usage":             llx.ArrayData(certificateUsage(cert.GetUsage()), types.Dict),
+		"organization":      llx.StringData(data.GetOrganization()),
+		"isSelfSigned":      llx.BoolDataPtr(optBool(data.GetIsSelfSignedOk())),
+		"isCa":              llx.BoolDataPtr(optBool(data.GetIsCaOk())),
 	}
 	return CreateResource(runtime, "stackit.certificate", args)
 }
