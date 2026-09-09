@@ -20,9 +20,10 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 
 				{
-					Name:  "activedirectory",
-					Use:   "activedirectory",
-					Short: "an Active Directory domain",
+					Name:    "activedirectory",
+					Use:     "activedirectory",
+					Short:   "an Active Directory domain",
+					Aliases: []string{"ad"},
 				},
 			},
 		},
@@ -520,9 +521,10 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 
 				{
-					Name:  "google-workspace",
-					Use:   "google-workspace [--credentials-path <credentials-path>] [--customer-id <customer-id>] [--impersonated-user-email <impersonated-user-email>]",
-					Short: "a Google Workspace account",
+					Name:    "google-workspace",
+					Use:     "google-workspace [--credentials-path <credentials-path>] [--customer-id <customer-id>] [--impersonated-user-email <impersonated-user-email>]",
+					Short:   "a Google Workspace account",
+					Aliases: []string{"googleworkspace"},
 				},
 			},
 		},
@@ -711,9 +713,10 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 
 				{
-					Name:  "k8s",
-					Use:   "k8s (optional MANIFEST path)",
-					Short: "a Kubernetes cluster or local manifest file(s)",
+					Name:    "k8s",
+					Use:     "k8s (optional MANIFEST path)",
+					Short:   "a Kubernetes cluster or local manifest file(s)",
+					Aliases: []string{"kubernetes"},
 				},
 			},
 		},
@@ -839,9 +842,10 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 
 				{
-					Name:  "ms365",
-					Use:   "ms365",
-					Short: "a Microsoft 365 tenant",
+					Name:    "ms365",
+					Use:     "ms365",
+					Short:   "a Microsoft 365 tenant",
+					Aliases: []string{"m365"},
 				},
 			},
 		},
@@ -1181,9 +1185,10 @@ var DefaultProviders Providers = map[string]*Provider{
 				},
 
 				{
-					Name:  "filesystem",
-					Use:   "filesystem PATH [flags]",
-					Short: "a mounted file system target",
+					Name:    "filesystem",
+					Use:     "filesystem PATH [flags]",
+					Short:   "a mounted file system target",
+					Aliases: []string{"fs"},
 				},
 
 				{
@@ -1384,9 +1389,10 @@ var DefaultProviders Providers = map[string]*Provider{
 				},
 
 				{
-					Name:  "opentofu",
-					Use:   "opentofu PATH",
-					Short: "OpenTofu HCL configurations, plan files, and state files",
+					Name:    "opentofu",
+					Use:     "opentofu PATH",
+					Short:   "OpenTofu HCL configurations, plan files, and state files",
+					Aliases: []string{"tofu"},
 				},
 			},
 		},

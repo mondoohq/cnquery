@@ -71,7 +71,17 @@ func goGen(configs []*plugin.Provider) ([]byte, error) {
 		var conns strings.Builder
 		for j := range conf.Connectors {
 			conn := conf.Connectors[j]
-			fmt.Fprintf(&conns, connectorTemplate, conn.Name, conn.Use, conn.Short)
+			// Aliases are emitted only when there are any, so the ~90 connectors
+			// without them don't each carry a `[]string(nil)`. They have to be
+			// emitted at all because DefaultProviders is what resolves a
+			// connector name before the provider binary exists: dropping them
+			// meant `mql shell tofu` (or `ad`, `fs`, `kubernetes`, `m365`,
+			// `googleworkspace`) could not find a provider to install.
+			var aliases string
+			if len(conn.Aliases) > 0 {
+				aliases = fmt.Sprintf("\n\t\t\t\t\tAliases: %#v,", conn.Aliases)
+			}
+			fmt.Fprintf(&conns, connectorTemplate, conn.Name, conn.Use, conn.Short, aliases)
 		}
 		fmt.Fprintf(&body, providerTemplate, conf.Name, conf.Name, conf.ID, conf.ConnectionTypes, conns.String())
 	}
@@ -114,7 +124,7 @@ const connectorTemplate = `
 				{
 					Name:  %#v,
 					Use:   %#v,
-					Short: %#v,
+					Short: %#v,%s
 				},
 `
 
