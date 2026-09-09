@@ -2166,6 +2166,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.openSearch.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitOpenSearchInstance).GetParameters()).ToDataRes(types.Dict)
 	},
+	"stackit.openSearch.instance.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetState()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.instance.lastOperationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetLastOperationType()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.instance.lastOperationDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetLastOperationDescription()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.instance.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetRegion()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.instance.cfGuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetCfGuid()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.instance.sgwAcl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetSgwAcl()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.openSearch.instance.syslog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetSyslog()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.openSearch.instance.graphite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetGraphite()).ToDataRes(types.String)
+	},
+	"stackit.openSearch.instance.monitoringEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetMonitoringEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.openSearch.instance.monitoringInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetMonitoringInstance()).ToDataRes(types.Resource("stackit.observability.instance"))
+	},
+	"stackit.openSearch.instance.maxDiskThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetMaxDiskThreshold()).ToDataRes(types.Int)
+	},
+	"stackit.openSearch.instance.plugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetPlugins()).ToDataRes(types.Array(types.String))
+	},
 	"stackit.openSearch.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitOpenSearchInstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
@@ -2214,6 +2250,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.mariaDb.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMariaDbInstance).GetParameters()).ToDataRes(types.Dict)
 	},
+	"stackit.mariaDb.instance.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetState()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.instance.lastOperationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetLastOperationType()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.instance.lastOperationDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetLastOperationDescription()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.instance.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetRegion()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.instance.cfGuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetCfGuid()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.instance.sgwAcl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetSgwAcl()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.mariaDb.instance.syslog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetSyslog()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.mariaDb.instance.graphite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetGraphite()).ToDataRes(types.String)
+	},
+	"stackit.mariaDb.instance.monitoringEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetMonitoringEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.mariaDb.instance.monitoringInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetMonitoringInstance()).ToDataRes(types.Resource("stackit.observability.instance"))
+	},
+	"stackit.mariaDb.instance.maxDiskThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetMaxDiskThreshold()).ToDataRes(types.Int)
+	},
 	"stackit.mariaDb.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMariaDbInstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
@@ -2255,6 +2324,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.redis.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRedisInstance).GetParameters()).ToDataRes(types.Dict)
+	},
+	"stackit.redis.instance.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetState()).ToDataRes(types.String)
+	},
+	"stackit.redis.instance.lastOperationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetLastOperationType()).ToDataRes(types.String)
+	},
+	"stackit.redis.instance.lastOperationDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetLastOperationDescription()).ToDataRes(types.String)
+	},
+	"stackit.redis.instance.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetRegion()).ToDataRes(types.String)
+	},
+	"stackit.redis.instance.cfGuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetCfGuid()).ToDataRes(types.String)
+	},
+	"stackit.redis.instance.sgwAcl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetSgwAcl()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.redis.instance.syslog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetSyslog()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.redis.instance.graphite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetGraphite()).ToDataRes(types.String)
+	},
+	"stackit.redis.instance.monitoringEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetMonitoringEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.redis.instance.monitoringInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetMonitoringInstance()).ToDataRes(types.Resource("stackit.observability.instance"))
+	},
+	"stackit.redis.instance.maxDiskThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetMaxDiskThreshold()).ToDataRes(types.Int)
+	},
+	"stackit.redis.instance.snapshot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetSnapshot()).ToDataRes(types.String)
+	},
+	"stackit.redis.instance.maxmemoryPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetMaxmemoryPolicy()).ToDataRes(types.String)
+	},
+	"stackit.redis.instance.notifyKeyspaceEvents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetNotifyKeyspaceEvents()).ToDataRes(types.String)
+	},
+	"stackit.redis.instance.maxClients": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetMaxClients()).ToDataRes(types.Int)
 	},
 	"stackit.redis.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRedisInstance).GetInternetReachable()).ToDataRes(types.Bool)
@@ -2307,6 +2421,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.rabbitMq.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMqInstance).GetParameters()).ToDataRes(types.Dict)
 	},
+	"stackit.rabbitMq.instance.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetState()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.instance.lastOperationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetLastOperationType()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.instance.lastOperationDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetLastOperationDescription()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.instance.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetRegion()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.instance.cfGuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetCfGuid()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.instance.sgwAcl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetSgwAcl()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.rabbitMq.instance.syslog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetSyslog()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.rabbitMq.instance.graphite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetGraphite()).ToDataRes(types.String)
+	},
+	"stackit.rabbitMq.instance.monitoringEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetMonitoringEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.rabbitMq.instance.monitoringInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetMonitoringInstance()).ToDataRes(types.Resource("stackit.observability.instance"))
+	},
+	"stackit.rabbitMq.instance.maxDiskThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetMaxDiskThreshold()).ToDataRes(types.Int)
+	},
+	"stackit.rabbitMq.instance.plugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetPlugins()).ToDataRes(types.Array(types.String))
+	},
 	"stackit.rabbitMq.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMqInstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
@@ -2354,6 +2504,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.logMe.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMeInstance).GetParameters()).ToDataRes(types.Dict)
+	},
+	"stackit.logMe.instance.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetState()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.lastOperationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetLastOperationType()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.lastOperationDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetLastOperationDescription()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetRegion()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.cfGuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetCfGuid()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.sgwAcl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetSgwAcl()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.logMe.instance.syslog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetSyslog()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.logMe.instance.graphite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetGraphite()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.monitoringEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetMonitoringEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.logMe.instance.monitoringInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetMonitoringInstance()).ToDataRes(types.Resource("stackit.observability.instance"))
+	},
+	"stackit.logMe.instance.maxDiskThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetMaxDiskThreshold()).ToDataRes(types.Int)
+	},
+	"stackit.logMe.instance.fluentdTcpPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetFluentdTcpPort()).ToDataRes(types.Int)
+	},
+	"stackit.logMe.instance.fluentdUdpPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetFluentdUdpPort()).ToDataRes(types.Int)
+	},
+	"stackit.logMe.instance.logRetention": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetLogRetention()).ToDataRes(types.String)
 	},
 	"stackit.logMe.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMeInstance).GetInternetReachable()).ToDataRes(types.Bool)
@@ -5520,6 +5712,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitOpenSearchInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"stackit.openSearch.instance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.lastOperationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).LastOperationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.lastOperationDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).LastOperationDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.cfGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).CfGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.sgwAcl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).SgwAcl, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.syslog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).Syslog, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.graphite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).Graphite, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.monitoringEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).MonitoringEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.monitoringInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).MonitoringInstance, ok = plugin.RawToTValue[*mqlStackitObservabilityInstance](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.maxDiskThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).MaxDiskThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.plugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).Plugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.openSearch.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitOpenSearchInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -5592,6 +5832,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitMariaDbInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"stackit.mariaDb.instance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.lastOperationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).LastOperationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.lastOperationDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).LastOperationDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.cfGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).CfGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.sgwAcl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).SgwAcl, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.syslog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).Syslog, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.graphite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).Graphite, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.monitoringEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).MonitoringEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.monitoringInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).MonitoringInstance, ok = plugin.RawToTValue[*mqlStackitObservabilityInstance](v.Value, v.Error)
+		return
+	},
+	"stackit.mariaDb.instance.maxDiskThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).MaxDiskThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"stackit.mariaDb.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitMariaDbInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -5654,6 +5938,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.redis.instance.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitRedisInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.lastOperationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).LastOperationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.lastOperationDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).LastOperationDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.cfGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).CfGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.sgwAcl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).SgwAcl, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.syslog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).Syslog, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.graphite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).Graphite, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.monitoringEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).MonitoringEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.monitoringInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).MonitoringInstance, ok = plugin.RawToTValue[*mqlStackitObservabilityInstance](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.maxDiskThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).MaxDiskThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.snapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).Snapshot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.maxmemoryPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).MaxmemoryPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.notifyKeyspaceEvents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).NotifyKeyspaceEvents, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.maxClients": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).MaxClients, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"stackit.redis.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5732,6 +6076,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitRabbitMqInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"stackit.rabbitMq.instance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.lastOperationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).LastOperationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.lastOperationDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).LastOperationDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.cfGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).CfGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.sgwAcl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).SgwAcl, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.syslog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).Syslog, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.graphite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).Graphite, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.monitoringEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).MonitoringEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.monitoringInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).MonitoringInstance, ok = plugin.RawToTValue[*mqlStackitObservabilityInstance](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.maxDiskThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).MaxDiskThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.rabbitMq.instance.plugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).Plugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.rabbitMq.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitRabbitMqInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -5802,6 +6194,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.logMe.instance.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogMeInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.lastOperationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).LastOperationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.lastOperationDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).LastOperationDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.cfGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).CfGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.sgwAcl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).SgwAcl, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.syslog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).Syslog, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.graphite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).Graphite, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.monitoringEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).MonitoringEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.monitoringInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).MonitoringInstance, ok = plugin.RawToTValue[*mqlStackitObservabilityInstance](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.maxDiskThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).MaxDiskThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.fluentdTcpPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).FluentdTcpPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.fluentdUdpPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).FluentdUdpPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.logRetention": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).LogRetention, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"stackit.logMe.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13159,21 +13607,33 @@ type mqlStackitOpenSearchInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitOpenSearchInstanceInternal it will be used here
-	Id                 plugin.TValue[string]
-	Name               plugin.TValue[string]
-	Status             plugin.TValue[string]
-	PlanName           plugin.TValue[string]
-	PlanId             plugin.TValue[string]
-	OfferingName       plugin.TValue[string]
-	OfferingVersion    plugin.TValue[string]
-	CfOrganizationGuid plugin.TValue[string]
-	CfSpaceGuid        plugin.TValue[string]
-	DashboardUrl       plugin.TValue[string]
-	ImageUrl           plugin.TValue[string]
-	Parameters         plugin.TValue[any]
-	InternetReachable  plugin.TValue[bool]
-	TlsProtocols       plugin.TValue[[]any]
-	TlsCiphers         plugin.TValue[[]any]
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Status                   plugin.TValue[string]
+	PlanName                 plugin.TValue[string]
+	PlanId                   plugin.TValue[string]
+	OfferingName             plugin.TValue[string]
+	OfferingVersion          plugin.TValue[string]
+	CfOrganizationGuid       plugin.TValue[string]
+	CfSpaceGuid              plugin.TValue[string]
+	DashboardUrl             plugin.TValue[string]
+	ImageUrl                 plugin.TValue[string]
+	Parameters               plugin.TValue[any]
+	State                    plugin.TValue[string]
+	LastOperationType        plugin.TValue[string]
+	LastOperationDescription plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	CfGuid                   plugin.TValue[string]
+	SgwAcl                   plugin.TValue[[]any]
+	Syslog                   plugin.TValue[[]any]
+	Graphite                 plugin.TValue[string]
+	MonitoringEnabled        plugin.TValue[bool]
+	MonitoringInstance       plugin.TValue[*mqlStackitObservabilityInstance]
+	MaxDiskThreshold         plugin.TValue[int64]
+	Plugins                  plugin.TValue[[]any]
+	InternetReachable        plugin.TValue[bool]
+	TlsProtocols             plugin.TValue[[]any]
+	TlsCiphers               plugin.TValue[[]any]
 }
 
 // createStackitOpenSearchInstance creates a new instance of this resource
@@ -13261,6 +13721,78 @@ func (c *mqlStackitOpenSearchInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
 }
 
+func (c *mqlStackitOpenSearchInstance) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlStackitOpenSearchInstance) GetLastOperationType() *plugin.TValue[string] {
+	return &c.LastOperationType
+}
+
+func (c *mqlStackitOpenSearchInstance) GetLastOperationDescription() *plugin.TValue[string] {
+	return &c.LastOperationDescription
+}
+
+func (c *mqlStackitOpenSearchInstance) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlStackitOpenSearchInstance) GetCfGuid() *plugin.TValue[string] {
+	return &c.CfGuid
+}
+
+func (c *mqlStackitOpenSearchInstance) GetSgwAcl() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SgwAcl, func() ([]any, error) {
+		return c.sgwAcl()
+	})
+}
+
+func (c *mqlStackitOpenSearchInstance) GetSyslog() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Syslog, func() ([]any, error) {
+		return c.syslog()
+	})
+}
+
+func (c *mqlStackitOpenSearchInstance) GetGraphite() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Graphite, func() (string, error) {
+		return c.graphite()
+	})
+}
+
+func (c *mqlStackitOpenSearchInstance) GetMonitoringEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MonitoringEnabled, func() (bool, error) {
+		return c.monitoringEnabled()
+	})
+}
+
+func (c *mqlStackitOpenSearchInstance) GetMonitoringInstance() *plugin.TValue[*mqlStackitObservabilityInstance] {
+	return plugin.GetOrCompute[*mqlStackitObservabilityInstance](&c.MonitoringInstance, func() (*mqlStackitObservabilityInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.openSearch.instance", c.__id, "monitoringInstance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitObservabilityInstance), nil
+			}
+		}
+
+		return c.monitoringInstance()
+	})
+}
+
+func (c *mqlStackitOpenSearchInstance) GetMaxDiskThreshold() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxDiskThreshold, func() (int64, error) {
+		return c.maxDiskThreshold()
+	})
+}
+
+func (c *mqlStackitOpenSearchInstance) GetPlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plugins, func() ([]any, error) {
+		return c.plugins()
+	})
+}
+
 func (c *mqlStackitOpenSearchInstance) GetInternetReachable() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
 		return c.internetReachable()
@@ -13345,19 +13877,30 @@ type mqlStackitMariaDbInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitMariaDbInstanceInternal it will be used here
-	Id                 plugin.TValue[string]
-	Name               plugin.TValue[string]
-	Status             plugin.TValue[string]
-	PlanName           plugin.TValue[string]
-	PlanId             plugin.TValue[string]
-	OfferingName       plugin.TValue[string]
-	OfferingVersion    plugin.TValue[string]
-	CfOrganizationGuid plugin.TValue[string]
-	CfSpaceGuid        plugin.TValue[string]
-	DashboardUrl       plugin.TValue[string]
-	ImageUrl           plugin.TValue[string]
-	Parameters         plugin.TValue[any]
-	InternetReachable  plugin.TValue[bool]
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Status                   plugin.TValue[string]
+	PlanName                 plugin.TValue[string]
+	PlanId                   plugin.TValue[string]
+	OfferingName             plugin.TValue[string]
+	OfferingVersion          plugin.TValue[string]
+	CfOrganizationGuid       plugin.TValue[string]
+	CfSpaceGuid              plugin.TValue[string]
+	DashboardUrl             plugin.TValue[string]
+	ImageUrl                 plugin.TValue[string]
+	Parameters               plugin.TValue[any]
+	State                    plugin.TValue[string]
+	LastOperationType        plugin.TValue[string]
+	LastOperationDescription plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	CfGuid                   plugin.TValue[string]
+	SgwAcl                   plugin.TValue[[]any]
+	Syslog                   plugin.TValue[[]any]
+	Graphite                 plugin.TValue[string]
+	MonitoringEnabled        plugin.TValue[bool]
+	MonitoringInstance       plugin.TValue[*mqlStackitObservabilityInstance]
+	MaxDiskThreshold         plugin.TValue[int64]
+	InternetReachable        plugin.TValue[bool]
 }
 
 // createStackitMariaDbInstance creates a new instance of this resource
@@ -13445,6 +13988,72 @@ func (c *mqlStackitMariaDbInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
 }
 
+func (c *mqlStackitMariaDbInstance) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlStackitMariaDbInstance) GetLastOperationType() *plugin.TValue[string] {
+	return &c.LastOperationType
+}
+
+func (c *mqlStackitMariaDbInstance) GetLastOperationDescription() *plugin.TValue[string] {
+	return &c.LastOperationDescription
+}
+
+func (c *mqlStackitMariaDbInstance) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlStackitMariaDbInstance) GetCfGuid() *plugin.TValue[string] {
+	return &c.CfGuid
+}
+
+func (c *mqlStackitMariaDbInstance) GetSgwAcl() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SgwAcl, func() ([]any, error) {
+		return c.sgwAcl()
+	})
+}
+
+func (c *mqlStackitMariaDbInstance) GetSyslog() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Syslog, func() ([]any, error) {
+		return c.syslog()
+	})
+}
+
+func (c *mqlStackitMariaDbInstance) GetGraphite() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Graphite, func() (string, error) {
+		return c.graphite()
+	})
+}
+
+func (c *mqlStackitMariaDbInstance) GetMonitoringEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MonitoringEnabled, func() (bool, error) {
+		return c.monitoringEnabled()
+	})
+}
+
+func (c *mqlStackitMariaDbInstance) GetMonitoringInstance() *plugin.TValue[*mqlStackitObservabilityInstance] {
+	return plugin.GetOrCompute[*mqlStackitObservabilityInstance](&c.MonitoringInstance, func() (*mqlStackitObservabilityInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.mariaDb.instance", c.__id, "monitoringInstance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitObservabilityInstance), nil
+			}
+		}
+
+		return c.monitoringInstance()
+	})
+}
+
+func (c *mqlStackitMariaDbInstance) GetMaxDiskThreshold() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxDiskThreshold, func() (int64, error) {
+		return c.maxDiskThreshold()
+	})
+}
+
 func (c *mqlStackitMariaDbInstance) GetInternetReachable() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
 		return c.internetReachable()
@@ -13517,22 +14126,37 @@ type mqlStackitRedisInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitRedisInstanceInternal it will be used here
-	Id                 plugin.TValue[string]
-	Name               plugin.TValue[string]
-	Status             plugin.TValue[string]
-	PlanName           plugin.TValue[string]
-	PlanId             plugin.TValue[string]
-	OfferingName       plugin.TValue[string]
-	OfferingVersion    plugin.TValue[string]
-	CfOrganizationGuid plugin.TValue[string]
-	CfSpaceGuid        plugin.TValue[string]
-	DashboardUrl       plugin.TValue[string]
-	ImageUrl           plugin.TValue[string]
-	Parameters         plugin.TValue[any]
-	InternetReachable  plugin.TValue[bool]
-	TlsProtocols       plugin.TValue[[]any]
-	TlsCiphers         plugin.TValue[[]any]
-	TlsCiphersuites    plugin.TValue[string]
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Status                   plugin.TValue[string]
+	PlanName                 plugin.TValue[string]
+	PlanId                   plugin.TValue[string]
+	OfferingName             plugin.TValue[string]
+	OfferingVersion          plugin.TValue[string]
+	CfOrganizationGuid       plugin.TValue[string]
+	CfSpaceGuid              plugin.TValue[string]
+	DashboardUrl             plugin.TValue[string]
+	ImageUrl                 plugin.TValue[string]
+	Parameters               plugin.TValue[any]
+	State                    plugin.TValue[string]
+	LastOperationType        plugin.TValue[string]
+	LastOperationDescription plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	CfGuid                   plugin.TValue[string]
+	SgwAcl                   plugin.TValue[[]any]
+	Syslog                   plugin.TValue[[]any]
+	Graphite                 plugin.TValue[string]
+	MonitoringEnabled        plugin.TValue[bool]
+	MonitoringInstance       plugin.TValue[*mqlStackitObservabilityInstance]
+	MaxDiskThreshold         plugin.TValue[int64]
+	Snapshot                 plugin.TValue[string]
+	MaxmemoryPolicy          plugin.TValue[string]
+	NotifyKeyspaceEvents     plugin.TValue[string]
+	MaxClients               plugin.TValue[int64]
+	InternetReachable        plugin.TValue[bool]
+	TlsProtocols             plugin.TValue[[]any]
+	TlsCiphers               plugin.TValue[[]any]
+	TlsCiphersuites          plugin.TValue[string]
 }
 
 // createStackitRedisInstance creates a new instance of this resource
@@ -13618,6 +14242,96 @@ func (c *mqlStackitRedisInstance) GetImageUrl() *plugin.TValue[string] {
 
 func (c *mqlStackitRedisInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
+}
+
+func (c *mqlStackitRedisInstance) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlStackitRedisInstance) GetLastOperationType() *plugin.TValue[string] {
+	return &c.LastOperationType
+}
+
+func (c *mqlStackitRedisInstance) GetLastOperationDescription() *plugin.TValue[string] {
+	return &c.LastOperationDescription
+}
+
+func (c *mqlStackitRedisInstance) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlStackitRedisInstance) GetCfGuid() *plugin.TValue[string] {
+	return &c.CfGuid
+}
+
+func (c *mqlStackitRedisInstance) GetSgwAcl() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SgwAcl, func() ([]any, error) {
+		return c.sgwAcl()
+	})
+}
+
+func (c *mqlStackitRedisInstance) GetSyslog() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Syslog, func() ([]any, error) {
+		return c.syslog()
+	})
+}
+
+func (c *mqlStackitRedisInstance) GetGraphite() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Graphite, func() (string, error) {
+		return c.graphite()
+	})
+}
+
+func (c *mqlStackitRedisInstance) GetMonitoringEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MonitoringEnabled, func() (bool, error) {
+		return c.monitoringEnabled()
+	})
+}
+
+func (c *mqlStackitRedisInstance) GetMonitoringInstance() *plugin.TValue[*mqlStackitObservabilityInstance] {
+	return plugin.GetOrCompute[*mqlStackitObservabilityInstance](&c.MonitoringInstance, func() (*mqlStackitObservabilityInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.redis.instance", c.__id, "monitoringInstance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitObservabilityInstance), nil
+			}
+		}
+
+		return c.monitoringInstance()
+	})
+}
+
+func (c *mqlStackitRedisInstance) GetMaxDiskThreshold() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxDiskThreshold, func() (int64, error) {
+		return c.maxDiskThreshold()
+	})
+}
+
+func (c *mqlStackitRedisInstance) GetSnapshot() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Snapshot, func() (string, error) {
+		return c.snapshot()
+	})
+}
+
+func (c *mqlStackitRedisInstance) GetMaxmemoryPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MaxmemoryPolicy, func() (string, error) {
+		return c.maxmemoryPolicy()
+	})
+}
+
+func (c *mqlStackitRedisInstance) GetNotifyKeyspaceEvents() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NotifyKeyspaceEvents, func() (string, error) {
+		return c.notifyKeyspaceEvents()
+	})
+}
+
+func (c *mqlStackitRedisInstance) GetMaxClients() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxClients, func() (int64, error) {
+		return c.maxClients()
+	})
 }
 
 func (c *mqlStackitRedisInstance) GetInternetReachable() *plugin.TValue[bool] {
@@ -13710,21 +14424,33 @@ type mqlStackitRabbitMqInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitRabbitMqInstanceInternal it will be used here
-	Id                 plugin.TValue[string]
-	Name               plugin.TValue[string]
-	Status             plugin.TValue[string]
-	PlanName           plugin.TValue[string]
-	PlanId             plugin.TValue[string]
-	OfferingName       plugin.TValue[string]
-	OfferingVersion    plugin.TValue[string]
-	CfOrganizationGuid plugin.TValue[string]
-	CfSpaceGuid        plugin.TValue[string]
-	DashboardUrl       plugin.TValue[string]
-	ImageUrl           plugin.TValue[string]
-	Parameters         plugin.TValue[any]
-	InternetReachable  plugin.TValue[bool]
-	TlsProtocols       plugin.TValue[[]any]
-	TlsCiphers         plugin.TValue[[]any]
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Status                   plugin.TValue[string]
+	PlanName                 plugin.TValue[string]
+	PlanId                   plugin.TValue[string]
+	OfferingName             plugin.TValue[string]
+	OfferingVersion          plugin.TValue[string]
+	CfOrganizationGuid       plugin.TValue[string]
+	CfSpaceGuid              plugin.TValue[string]
+	DashboardUrl             plugin.TValue[string]
+	ImageUrl                 plugin.TValue[string]
+	Parameters               plugin.TValue[any]
+	State                    plugin.TValue[string]
+	LastOperationType        plugin.TValue[string]
+	LastOperationDescription plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	CfGuid                   plugin.TValue[string]
+	SgwAcl                   plugin.TValue[[]any]
+	Syslog                   plugin.TValue[[]any]
+	Graphite                 plugin.TValue[string]
+	MonitoringEnabled        plugin.TValue[bool]
+	MonitoringInstance       plugin.TValue[*mqlStackitObservabilityInstance]
+	MaxDiskThreshold         plugin.TValue[int64]
+	Plugins                  plugin.TValue[[]any]
+	InternetReachable        plugin.TValue[bool]
+	TlsProtocols             plugin.TValue[[]any]
+	TlsCiphers               plugin.TValue[[]any]
 }
 
 // createStackitRabbitMqInstance creates a new instance of this resource
@@ -13812,6 +14538,78 @@ func (c *mqlStackitRabbitMqInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
 }
 
+func (c *mqlStackitRabbitMqInstance) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlStackitRabbitMqInstance) GetLastOperationType() *plugin.TValue[string] {
+	return &c.LastOperationType
+}
+
+func (c *mqlStackitRabbitMqInstance) GetLastOperationDescription() *plugin.TValue[string] {
+	return &c.LastOperationDescription
+}
+
+func (c *mqlStackitRabbitMqInstance) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlStackitRabbitMqInstance) GetCfGuid() *plugin.TValue[string] {
+	return &c.CfGuid
+}
+
+func (c *mqlStackitRabbitMqInstance) GetSgwAcl() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SgwAcl, func() ([]any, error) {
+		return c.sgwAcl()
+	})
+}
+
+func (c *mqlStackitRabbitMqInstance) GetSyslog() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Syslog, func() ([]any, error) {
+		return c.syslog()
+	})
+}
+
+func (c *mqlStackitRabbitMqInstance) GetGraphite() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Graphite, func() (string, error) {
+		return c.graphite()
+	})
+}
+
+func (c *mqlStackitRabbitMqInstance) GetMonitoringEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MonitoringEnabled, func() (bool, error) {
+		return c.monitoringEnabled()
+	})
+}
+
+func (c *mqlStackitRabbitMqInstance) GetMonitoringInstance() *plugin.TValue[*mqlStackitObservabilityInstance] {
+	return plugin.GetOrCompute[*mqlStackitObservabilityInstance](&c.MonitoringInstance, func() (*mqlStackitObservabilityInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.rabbitMq.instance", c.__id, "monitoringInstance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitObservabilityInstance), nil
+			}
+		}
+
+		return c.monitoringInstance()
+	})
+}
+
+func (c *mqlStackitRabbitMqInstance) GetMaxDiskThreshold() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxDiskThreshold, func() (int64, error) {
+		return c.maxDiskThreshold()
+	})
+}
+
+func (c *mqlStackitRabbitMqInstance) GetPlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plugins, func() ([]any, error) {
+		return c.plugins()
+	})
+}
+
 func (c *mqlStackitRabbitMqInstance) GetInternetReachable() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
 		return c.internetReachable()
@@ -13891,24 +14689,38 @@ type mqlStackitLogMeInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitLogMeInstanceInternal it will be used here
-	Id                     plugin.TValue[string]
-	Name                   plugin.TValue[string]
-	Status                 plugin.TValue[string]
-	PlanName               plugin.TValue[string]
-	PlanId                 plugin.TValue[string]
-	OfferingName           plugin.TValue[string]
-	OfferingVersion        plugin.TValue[string]
-	CfOrganizationGuid     plugin.TValue[string]
-	CfSpaceGuid            plugin.TValue[string]
-	DashboardUrl           plugin.TValue[string]
-	ImageUrl               plugin.TValue[string]
-	Parameters             plugin.TValue[any]
-	InternetReachable      plugin.TValue[bool]
-	FluentdTlsMinVersion   plugin.TValue[string]
-	FluentdTlsMaxVersion   plugin.TValue[string]
-	FluentdTlsCiphers      plugin.TValue[string]
-	OpensearchTlsProtocols plugin.TValue[[]any]
-	OpensearchTlsCiphers   plugin.TValue[[]any]
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Status                   plugin.TValue[string]
+	PlanName                 plugin.TValue[string]
+	PlanId                   plugin.TValue[string]
+	OfferingName             plugin.TValue[string]
+	OfferingVersion          plugin.TValue[string]
+	CfOrganizationGuid       plugin.TValue[string]
+	CfSpaceGuid              plugin.TValue[string]
+	DashboardUrl             plugin.TValue[string]
+	ImageUrl                 plugin.TValue[string]
+	Parameters               plugin.TValue[any]
+	State                    plugin.TValue[string]
+	LastOperationType        plugin.TValue[string]
+	LastOperationDescription plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	CfGuid                   plugin.TValue[string]
+	SgwAcl                   plugin.TValue[[]any]
+	Syslog                   plugin.TValue[[]any]
+	Graphite                 plugin.TValue[string]
+	MonitoringEnabled        plugin.TValue[bool]
+	MonitoringInstance       plugin.TValue[*mqlStackitObservabilityInstance]
+	MaxDiskThreshold         plugin.TValue[int64]
+	FluentdTcpPort           plugin.TValue[int64]
+	FluentdUdpPort           plugin.TValue[int64]
+	LogRetention             plugin.TValue[string]
+	InternetReachable        plugin.TValue[bool]
+	FluentdTlsMinVersion     plugin.TValue[string]
+	FluentdTlsMaxVersion     plugin.TValue[string]
+	FluentdTlsCiphers        plugin.TValue[string]
+	OpensearchTlsProtocols   plugin.TValue[[]any]
+	OpensearchTlsCiphers     plugin.TValue[[]any]
 }
 
 // createStackitLogMeInstance creates a new instance of this resource
@@ -13994,6 +14806,90 @@ func (c *mqlStackitLogMeInstance) GetImageUrl() *plugin.TValue[string] {
 
 func (c *mqlStackitLogMeInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
+}
+
+func (c *mqlStackitLogMeInstance) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlStackitLogMeInstance) GetLastOperationType() *plugin.TValue[string] {
+	return &c.LastOperationType
+}
+
+func (c *mqlStackitLogMeInstance) GetLastOperationDescription() *plugin.TValue[string] {
+	return &c.LastOperationDescription
+}
+
+func (c *mqlStackitLogMeInstance) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlStackitLogMeInstance) GetCfGuid() *plugin.TValue[string] {
+	return &c.CfGuid
+}
+
+func (c *mqlStackitLogMeInstance) GetSgwAcl() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SgwAcl, func() ([]any, error) {
+		return c.sgwAcl()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetSyslog() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Syslog, func() ([]any, error) {
+		return c.syslog()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetGraphite() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Graphite, func() (string, error) {
+		return c.graphite()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetMonitoringEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MonitoringEnabled, func() (bool, error) {
+		return c.monitoringEnabled()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetMonitoringInstance() *plugin.TValue[*mqlStackitObservabilityInstance] {
+	return plugin.GetOrCompute[*mqlStackitObservabilityInstance](&c.MonitoringInstance, func() (*mqlStackitObservabilityInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.logMe.instance", c.__id, "monitoringInstance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitObservabilityInstance), nil
+			}
+		}
+
+		return c.monitoringInstance()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetMaxDiskThreshold() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxDiskThreshold, func() (int64, error) {
+		return c.maxDiskThreshold()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetFluentdTcpPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.FluentdTcpPort, func() (int64, error) {
+		return c.fluentdTcpPort()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetFluentdUdpPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.FluentdUdpPort, func() (int64, error) {
+		return c.fluentdUdpPort()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetLogRetention() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogRetention, func() (string, error) {
+		return c.logRetention()
+	})
 }
 
 func (c *mqlStackitLogMeInstance) GetInternetReachable() *plugin.TValue[bool] {

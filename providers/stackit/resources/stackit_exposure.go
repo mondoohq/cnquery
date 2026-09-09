@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 
 	"go.mondoo.com/mql/llx"
@@ -169,6 +170,35 @@ func dictStr(v any) string {
 
 // dictBool reads a bool-ish value out of a dict. STACKIT parameter blobs encode
 // booleans as actual bools or as the strings "true"/"false".
+// dictInt reads a whole number out of a dict value. Values that arrived
+// through a JSON round-trip are float64; native ints and numeric strings are
+// accepted too. The second result is false when the value is absent, not
+// numeric, or not a whole number.
+func dictInt(v any) (int64, bool) {
+	switch n := v.(type) {
+	case nil:
+		return 0, false
+	case int64:
+		return n, true
+	case int:
+		return int64(n), true
+	case int32:
+		return int64(n), true
+	case float64:
+		if n != float64(int64(n)) {
+			return 0, false
+		}
+		return int64(n), true
+	case string:
+		i, err := strconv.ParseInt(strings.TrimSpace(n), 10, 64)
+		if err != nil {
+			return 0, false
+		}
+		return i, true
+	}
+	return 0, false
+}
+
 func dictBool(v any) bool {
 	switch t := v.(type) {
 	case bool:
