@@ -29,6 +29,16 @@ stackit @root {
   region() string
   // Compute servers (virtual machines)
   servers() []stackit.server
+  // Project backup policies for servers
+  //
+  // The schedule-and-retention templates a server backup schedule is
+  // created from, including which one applies by default.
+  serverBackupPolicies() []stackit.server.backupPolicy
+  // Project update policies for servers
+  //
+  // The cadence-and-maintenance-window templates a server update schedule
+  // is created from, including which one applies by default.
+  serverUpdatePolicies() []stackit.server.updatePolicy
   // Block storage volumes
   volumes() []stackit.volume
   // Volume snapshots
@@ -309,6 +319,18 @@ private stackit.server @defaults("id name status machineType") {
   updates() []stackit.server.update
   // Recurring maintenance schedules attached to the server
   updateSchedules() []stackit.server.updateSchedule
+  // Whether the Server Backup service is enabled for this server
+  //
+  // Separates "no backups because the service is off" from "no backups
+  // yet". Null when the service does not know the server or the
+  // credential cannot read it.
+  backupServiceEnabled() bool
+  // Whether the Server Update service is enabled for this server
+  //
+  // Separates "no update runs because the service is off" from "no runs
+  // yet". Null when the service does not know the server or the
+  // credential cannot read it.
+  updateServiceEnabled() bool
   // User data (base64-encoded cloud-init)
   userData string
   // User-defined labels
@@ -955,6 +977,67 @@ private stackit.server.updateSchedule @defaults("id name enabled") {
   // iCalendar RRULE describing when maintenance runs
   rrule string
   // Maintenance window start hour (0-23)
+  maintenanceWindow int
+}
+
+// Project backup policy for STACKIT servers
+//
+// A named backup template a project offers its servers, keyed by UUID
+// `id`: an rrule cadence, the retention period applied to the backups it
+// produces, and whether it is the project default. A disabled default
+// policy means servers created without an explicit schedule are not
+// backed up.
+private stackit.server.backupPolicy @defaults("name enabled default") {
+  // Policy UUID
+  id string
+  // Policy name
+  name string
+  // Description
+  description string
+  // Whether the policy is active
+  //
+  // Null when the service reports no setting.
+  enabled bool
+  // Whether this is the project default policy
+  //
+  // Null when the service reports no setting.
+  default bool
+  // Backup cadence as an iCalendar recurrence rule
+  rrule string
+  // Name template for the backups the policy produces
+  backupName string
+  // Days a produced backup is kept before it is deleted
+  //
+  // Null when the policy carries no retention.
+  retentionPeriod int
+}
+
+// Project update policy for STACKIT servers
+//
+// A named OS update template a project offers its servers, keyed by UUID
+// `id`: an rrule cadence and the hourly maintenance window updates start
+// in, and whether it is the project default.
+private stackit.server.updatePolicy @defaults("name enabled default") {
+  // Policy UUID
+  id string
+  // Policy name
+  name string
+  // Description
+  description string
+  // Whether the policy is active
+  //
+  // Null when the service reports no setting.
+  enabled bool
+  // Whether this is the project default policy
+  //
+  // Null when the service reports no setting.
+  default bool
+  // Update cadence as an iCalendar recurrence rule
+  rrule string
+  // Hours in the maintenance window updates start within
+  //
+  // Updates may run past the window and can trigger an automatic
+  // restart. Null when the policy carries no window.
   maintenanceWindow int
 }
 
@@ -3212,6 +3295,15 @@ private stackit.serviceAccount @defaults("email projectId") {
   // member list. Direct bindings only; a role granted on the folder or
   // organization is inherited but does not appear here.
   roleBindings() []stackit.iam.member
+  // Every role binding the account holds, including inherited ones
+  //
+  // Resolved by the authorization service across the hierarchy: bindings
+  // on this project and bindings on the folder or organization above it
+  // that the project inherits. Where roleBindings shows only the
+  // project's own list, this is the complete answer to which roles the
+  // account holds. Empty when the credential may not read the account's
+  // memberships.
+  memberships() []stackit.iam.membership
 }
 
 // Federated identity provider trusted by a STACKIT service account
@@ -3782,6 +3874,27 @@ private stackit.iam.member @defaults("subject role") {
   serviceAccount() stackit.serviceAccount
 }
 
+// Role binding held by an identity anywhere in the STACKIT hierarchy
+//
+// One binding as the authorization service resolves it for an identity:
+// the `role`, the `subject`, and the container it is granted on
+// (`resourceType` project, folder, or organization and its
+// `resourceId`). `inherited` is true when the container is not the
+// scanned project, which is how a folder or organization grant reaches
+// the project without appearing in its member list.
+private stackit.iam.membership @defaults("subject role resourceType inherited") {
+  // Identity the role is granted to
+  subject string
+  // Role name
+  role string
+  // Kind of container the binding is on (project, folder, or organization)
+  resourceType string
+  // ID of the container the binding is on
+  resourceId string
+  // Whether the binding is held above the scanned project
+  inherited bool
+}
+
 // STACKIT IAM role
 //
 // Single role defined on the project, grouping the set of `permissions`
@@ -3859,6 +3972,48 @@ private stackit.vpn.gateway @defaults("id name status routingType") {
   labels map[string]string
   // Connections configured on the gateway
   connections() []stackit.vpn.gateway.connection
+  // Public addresses of the gateway's tunnel endpoints
+  //
+  // The internet-facing surface of the VPN, from the gateway's live
+  // status. Empty when the status names none; null when the status could
+  // not be read.
+  publicIps() []string
+  // Failure the gateway is in, from its live status
+  //
+  // Empty when healthy; null when the status could not be read.
+  errorMessage() string
+  // BGP sessions held by the gateway's tunnel instances
+  //
+  // One per remote peer, with the session state and the prefixes
+  // exchanged. Empty for a gateway with static routing; null when the
+  // status could not be read.
+  bgpPeers() []stackit.vpn.gateway.bgpPeer
+}
+
+// BGP session on a STACKIT VPN gateway
+//
+// One BGP peering the gateway's tunnel instance holds with a remote
+// router, from the gateway's live status: the peer address and AS
+// numbers, the session `state`, its uptime, and how many prefixes were
+// received and sent. A session that is not established means the
+// dynamic routes behind that peer are not being exchanged.
+private stackit.vpn.gateway.bgpPeer @defaults("tunnel remoteIp state") {
+  // Tunnel instance holding the session (tunnel1 or tunnel2)
+  tunnel string
+  // Peer router address
+  remoteIp string
+  // Peer autonomous system number
+  remoteAsn int
+  // Gateway autonomous system number
+  localAsn int
+  // BGP session state as reported by the gateway
+  state string
+  // Session uptime as reported by the gateway
+  uptime string
+  // Prefixes received from the peer
+  prefixesReceived int
+  // Prefixes sent to the peer
+  prefixesSent int
 }
 
 // STACKIT VPN connection
@@ -3925,4 +4080,48 @@ private stackit.vpn.tunnel @defaults("remoteAddress") {
   dpdAction string
   // Action taken when establishing the data channel (none, start)
   startAction string
+  // Whether the tunnel is currently established
+  //
+  // From the gateway's live status. Null when the status could not be
+  // read or does not carry this tunnel.
+  established() bool
+  // Key-exchange phase state (for example ESTABLISHED)
+  //
+  // Null when the status could not be read.
+  phase1State() string
+  // Diffie-Hellman group actually negotiated for the key exchange
+  //
+  // The peers may settle on any group offered in phase1DhGroups; this is
+  // the one in use. Null when the status could not be read.
+  negotiatedPhase1DhGroup() string
+  // Encryption algorithm actually negotiated for the key exchange
+  //
+  // Null when the status could not be read.
+  negotiatedPhase1EncryptionAlgorithm() string
+  // Integrity algorithm actually negotiated for the key exchange
+  //
+  // Null when the status could not be read.
+  negotiatedPhase1IntegrityAlgorithm() string
+  // Data-channel phase state (for example INSTALLED)
+  //
+  // Null when the status could not be read.
+  phase2State() string
+  // Diffie-Hellman group actually negotiated for the data channel
+  //
+  // Null when the status could not be read.
+  negotiatedPhase2DhGroup() string
+  // Encryption algorithm actually negotiated for the data channel
+  //
+  // The peers may settle on any algorithm offered in
+  // phase2EncryptionAlgorithms; this is the one protecting traffic. Null
+  // when the status could not be read.
+  negotiatedPhase2EncryptionAlgorithm() string
+  // Integrity algorithm actually negotiated for the data channel
+  //
+  // Null when the status could not be read.
+  negotiatedPhase2IntegrityAlgorithm() string
+  // Encapsulation negotiated for the data channel (for example UDP)
+  //
+  // Null when the status could not be read.
+  negotiatedPhase2Encapsulation() string
 }

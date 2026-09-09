@@ -20,6 +20,89 @@ type mqlStackitServerBackupInternal struct {
 	cacheIdBase        string
 }
 
+// ------------------------- server backup service -------------------------
+
+// backupServiceEnabled reports whether the Server Backup service is turned on
+// for this server, which is what separates "no backups because the service is
+// off" from "no backups yet". Null when the service does not know the server
+// (404) or the credential cannot read it.
+func (r *mqlStackitServer) backupServiceEnabled() (bool, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.ServerBackup()
+	if err != nil {
+		return false, err
+	}
+	resp, err := client.DefaultAPI.GetServiceResource(bgctx(), c.ProjectID(), r.Id.Data, c.Region()).Execute()
+	if err != nil {
+		if isAccessDenied(err) || isNotFound(err) {
+			return nullBool(&r.BackupServiceEnabled)
+		}
+		return false, err
+	}
+	enabled, ok := resp.GetEnabledOk()
+	if !ok || enabled == nil {
+		return nullBool(&r.BackupServiceEnabled)
+	}
+	return *enabled, nil
+}
+
+// serverBackupPolicies lists the project's backup policies: the named
+// schedule-and-retention templates a server backup schedule can be created
+// from, including which one applies by default.
+func (r *mqlStackit) serverBackupPolicies() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.ServerBackup()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.ListBackupPolicies(bgctx(), c.ProjectID()).Execute()
+	if err != nil {
+		if isAccessDenied(err) || isNotFound(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetItemsOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		res, err := CreateResource(r.MqlRuntime, "stackit.server.backupPolicy", serverBackupPolicyArgs(&items[i]))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// serverBackupPolicyArgs maps a backup policy onto stackit.server.backupPolicy.
+// The enabled and default flags stay tri-state; the retention period and the
+// backup-name template live inside the nested backupProperties block.
+func serverBackupPolicyArgs(p *serverbackup.BackupPolicy) map[string]*llx.RawData {
+	var retention *int64
+	backupName := ""
+	if props, ok := p.GetBackupPropertiesOk(); ok && props != nil {
+		backupName = props.GetName()
+		if v, ok := props.GetRetentionPeriodOk(); ok && v != nil {
+			days := int64(*v)
+			retention = &days
+		}
+	}
+	return map[string]*llx.RawData{
+		"id":              llx.StringData(p.GetId()),
+		"name":            llx.StringData(p.GetName()),
+		"description":     llx.StringData(p.GetDescription()),
+		"enabled":         llx.BoolDataPtr(optBool(p.GetEnabledOk())),
+		"default":         llx.BoolDataPtr(optBool(p.GetDefaultOk())),
+		"rrule":           llx.StringData(p.GetRrule()),
+		"backupName":      llx.StringData(backupName),
+		"retentionPeriod": llx.IntDataPtr(retention),
+	}
+}
+
+func (r *mqlStackitServerBackupPolicy) id() (string, error) {
+	return "stackit.server.backupPolicy/" + conn(r.MqlRuntime).ProjectID() + "/" + r.Id.Data, nil
+}
+
 // ------------------------- server backups -------------------------
 
 func (r *mqlStackitServer) backups() ([]any, error) {

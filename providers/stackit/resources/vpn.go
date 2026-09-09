@@ -4,6 +4,10 @@
 package resources
 
 import (
+	"sort"
+	"sync"
+	"sync/atomic"
+
 	vpn "github.com/stackitcloud/stackit-sdk-go/services/vpn/v1api"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -14,9 +18,318 @@ type mqlStackitVpnGatewayConnectionInternal struct {
 	// configurations, captured when the connection is built so tunnel1() and
 	// tunnel2() can expose them without another API call. cacheIdBase is the
 	// connection's own cache key, used to key the tunnel sub-resources.
-	cacheTunnel1 *vpn.TunnelConfiguration
-	cacheTunnel2 *vpn.TunnelConfiguration
-	cacheIdBase  string
+	// cacheGatewayID is the owning gateway, which the tunnels need to find
+	// their live status.
+	cacheTunnel1   *vpn.TunnelConfiguration
+	cacheTunnel2   *vpn.TunnelConfiguration
+	cacheIdBase    string
+	cacheGatewayID string
+}
+
+// mqlStackitVpnGatewayInternal caches the gateway's live status, read once
+// through GetGatewayStatus and shared by the public-address, BGP-peer, and
+// per-tunnel negotiated-parameter accessors.
+type mqlStackitVpnGatewayInternal struct {
+	statusFetched atomic.Bool
+	status        *vpn.GatewayStatusResponse
+	statusLock    sync.Mutex
+}
+
+// mqlStackitVpnTunnelInternal locates a tunnel's live status inside its
+// gateway's status response: the gateway, the connection, and the slot
+// (tunnel1 or tunnel2).
+type mqlStackitVpnTunnelInternal struct {
+	cacheGatewayID    string
+	cacheConnectionID string
+	cacheSlot         string
+}
+
+// fetchStatus reads the gateway's live status once and caches it. A nil
+// result with a nil error means the status could not be read (denied, or the
+// gateway is gone), and every status-derived field reports null.
+func (r *mqlStackitVpnGateway) fetchStatus() (*vpn.GatewayStatusResponse, error) {
+	if r.statusFetched.Load() {
+		return r.status, nil
+	}
+	r.statusLock.Lock()
+	defer r.statusLock.Unlock()
+	if r.statusFetched.Load() {
+		return r.status, nil
+	}
+	c := conn(r.MqlRuntime)
+	client, err := c.Vpn()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.GetGatewayStatus(bgctx(), c.ProjectID(), c.Region(), r.Id.Data).Execute()
+	if err != nil {
+		if isAccessDenied(err) || isNotFound(err) {
+			r.statusFetched.Store(true)
+			return nil, nil
+		}
+		return nil, err
+	}
+	r.status = resp
+	r.statusFetched.Store(true)
+	return r.status, nil
+}
+
+// publicIps lists the public addresses of the gateway's tunnel endpoints,
+// the internet-facing surface of the VPN. Empty when the status carries
+// none; null when the status could not be read.
+func (r *mqlStackitVpnGateway) publicIps() ([]any, error) {
+	st, err := r.fetchStatus()
+	if err != nil {
+		return nil, err
+	}
+	if st == nil {
+		r.PublicIps.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return strSlice(gatewayPublicIPs(st)), nil
+}
+
+// errorMessage reports the failure the gateway is in, empty when healthy.
+// Null when the status could not be read.
+func (r *mqlStackitVpnGateway) errorMessage() (string, error) {
+	st, err := r.fetchStatus()
+	if err != nil {
+		return "", err
+	}
+	if st == nil {
+		r.ErrorMessage.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	return st.GetErrorMessage(), nil
+}
+
+// bgpPeers lists the BGP sessions the gateway's tunnel instances hold, one
+// per remote peer, with the session state and the routes exchanged. Empty
+// for a static-routing gateway; null when the status could not be read.
+func (r *mqlStackitVpnGateway) bgpPeers() ([]any, error) {
+	st, err := r.fetchStatus()
+	if err != nil {
+		return nil, err
+	}
+	if st == nil {
+		r.BgpPeers.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	c := conn(r.MqlRuntime)
+	out := []any{}
+	for _, t := range st.GetTunnels() {
+		bgp, ok := t.GetBgpStatusOk()
+		if !ok || bgp == nil {
+			continue
+		}
+		slot := string(t.GetName())
+		for _, peer := range bgp.GetPeers() {
+			res, err := CreateResource(r.MqlRuntime, "stackit.vpn.gateway.bgpPeer", map[string]*llx.RawData{
+				"__id":             llx.StringData("stackit.vpn.gateway.bgpPeer/" + c.ProjectID() + "/" + r.Id.Data + "/" + slot + "/" + peer.GetRemoteIP()),
+				"tunnel":           llx.StringData(slot),
+				"remoteIp":         llx.StringData(peer.GetRemoteIP()),
+				"remoteAsn":        llx.IntData(peer.GetRemoteAs()),
+				"localAsn":         llx.IntData(peer.GetLocalAs()),
+				"state":            llx.StringData(peer.GetState()),
+				"uptime":           llx.StringData(peer.GetPeerUptime()),
+				"prefixesReceived": llx.IntData(int64(peer.GetPfxRcd())),
+				"prefixesSent":     llx.IntData(int64(peer.GetPfxSnt())),
+			})
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, res)
+		}
+	}
+	return out, nil
+}
+
+// gatewayPublicIPs collects the tunnel endpoints' public addresses out of a
+// gateway status, deduplicated and sorted.
+func gatewayPublicIPs(st *vpn.GatewayStatusResponse) []string {
+	if st == nil {
+		return nil
+	}
+	seen := map[string]struct{}{}
+	for _, t := range st.GetTunnels() {
+		if ip := t.GetPublicIP(); ip != "" {
+			seen[ip] = struct{}{}
+		}
+	}
+	out := make([]string, 0, len(seen))
+	for ip := range seen {
+		out = append(out, ip)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// findTunnelStatus locates one tunnel's live status in a gateway status by
+// connection id and slot name (tunnel1 or tunnel2). Nil when the connection
+// or the slot is not in the response.
+func findTunnelStatus(st *vpn.GatewayStatusResponse, connectionID, slot string) *vpn.TunnelStatus {
+	if st == nil {
+		return nil
+	}
+	for _, c := range st.GetConnections() {
+		if c.GetId() != connectionID {
+			continue
+		}
+		tunnels := c.GetTunnels()
+		for i := range tunnels {
+			if string(tunnels[i].GetName()) == slot {
+				return &tunnels[i]
+			}
+		}
+	}
+	return nil
+}
+
+// tunnelStatus resolves the live status of the tunnel through its gateway,
+// whose status fetch is shared across every tunnel and connection on it.
+// Nil when the status could not be read or does not carry the tunnel.
+func (r *mqlStackitVpnTunnel) tunnelStatus() (*vpn.TunnelStatus, error) {
+	if r.cacheGatewayID == "" {
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "stackit.vpn.gateway", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheGatewayID),
+	})
+	if err != nil {
+		if isAccessDenied(err) || isNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	st, err := res.(*mqlStackitVpnGateway).fetchStatus()
+	if err != nil {
+		return nil, err
+	}
+	return findTunnelStatus(st, r.cacheConnectionID, r.cacheSlot), nil
+}
+
+// tunnelStatusString reads one string out of the tunnel's live status,
+// marking the field null when the status is unavailable or the value absent.
+func tunnelStatusString(r *mqlStackitVpnTunnel, field *plugin.TValue[string], pick func(*vpn.TunnelStatus) (*string, bool)) (string, error) {
+	ts, err := r.tunnelStatus()
+	if err != nil {
+		return "", err
+	}
+	if ts == nil {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	v, ok := pick(ts)
+	if !ok || v == nil {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	return *v, nil
+}
+
+func (r *mqlStackitVpnTunnel) established() (bool, error) {
+	ts, err := r.tunnelStatus()
+	if err != nil {
+		return false, err
+	}
+	if ts == nil {
+		return nullBool(&r.Established)
+	}
+	v, ok := ts.GetEstablishedOk()
+	if !ok || v == nil {
+		return nullBool(&r.Established)
+	}
+	return *v, nil
+}
+
+func (r *mqlStackitVpnTunnel) phase1State() (string, error) {
+	return tunnelStatusString(r, &r.Phase1State, func(t *vpn.TunnelStatus) (*string, bool) {
+		p, ok := t.GetPhase1Ok()
+		if !ok || p == nil {
+			return nil, false
+		}
+		return p.GetStateOk()
+	})
+}
+
+func (r *mqlStackitVpnTunnel) negotiatedPhase1DhGroup() (string, error) {
+	return tunnelStatusString(r, &r.NegotiatedPhase1DhGroup, func(t *vpn.TunnelStatus) (*string, bool) {
+		p, ok := t.GetPhase1Ok()
+		if !ok || p == nil {
+			return nil, false
+		}
+		return p.GetDhGroupOk()
+	})
+}
+
+func (r *mqlStackitVpnTunnel) negotiatedPhase1EncryptionAlgorithm() (string, error) {
+	return tunnelStatusString(r, &r.NegotiatedPhase1EncryptionAlgorithm, func(t *vpn.TunnelStatus) (*string, bool) {
+		p, ok := t.GetPhase1Ok()
+		if !ok || p == nil {
+			return nil, false
+		}
+		return p.GetEncryptionAlgorithmOk()
+	})
+}
+
+func (r *mqlStackitVpnTunnel) negotiatedPhase1IntegrityAlgorithm() (string, error) {
+	return tunnelStatusString(r, &r.NegotiatedPhase1IntegrityAlgorithm, func(t *vpn.TunnelStatus) (*string, bool) {
+		p, ok := t.GetPhase1Ok()
+		if !ok || p == nil {
+			return nil, false
+		}
+		return p.GetIntegrityAlgorithmOk()
+	})
+}
+
+func (r *mqlStackitVpnTunnel) phase2State() (string, error) {
+	return tunnelStatusString(r, &r.Phase2State, func(t *vpn.TunnelStatus) (*string, bool) {
+		p, ok := t.GetPhase2Ok()
+		if !ok || p == nil {
+			return nil, false
+		}
+		return p.GetStateOk()
+	})
+}
+
+func (r *mqlStackitVpnTunnel) negotiatedPhase2DhGroup() (string, error) {
+	return tunnelStatusString(r, &r.NegotiatedPhase2DhGroup, func(t *vpn.TunnelStatus) (*string, bool) {
+		p, ok := t.GetPhase2Ok()
+		if !ok || p == nil {
+			return nil, false
+		}
+		return p.GetDhGroupOk()
+	})
+}
+
+func (r *mqlStackitVpnTunnel) negotiatedPhase2EncryptionAlgorithm() (string, error) {
+	return tunnelStatusString(r, &r.NegotiatedPhase2EncryptionAlgorithm, func(t *vpn.TunnelStatus) (*string, bool) {
+		p, ok := t.GetPhase2Ok()
+		if !ok || p == nil {
+			return nil, false
+		}
+		return p.GetEncryptionAlgorithmOk()
+	})
+}
+
+func (r *mqlStackitVpnTunnel) negotiatedPhase2IntegrityAlgorithm() (string, error) {
+	return tunnelStatusString(r, &r.NegotiatedPhase2IntegrityAlgorithm, func(t *vpn.TunnelStatus) (*string, bool) {
+		p, ok := t.GetPhase2Ok()
+		if !ok || p == nil {
+			return nil, false
+		}
+		return p.GetIntegrityAlgorithmOk()
+	})
+}
+
+func (r *mqlStackitVpnTunnel) negotiatedPhase2Encapsulation() (string, error) {
+	return tunnelStatusString(r, &r.NegotiatedPhase2Encapsulation, func(t *vpn.TunnelStatus) (*string, bool) {
+		p, ok := t.GetPhase2Ok()
+		if !ok || p == nil {
+			return nil, false
+		}
+		return p.GetEncapOk()
+	})
 }
 
 func (r *mqlStackit) vpn() (*mqlStackitVpn, error) {
@@ -143,6 +456,7 @@ func (r *mqlStackitVpnGateway) connections() ([]any, error) {
 		mqlConn.cacheTunnel1 = &t1
 		mqlConn.cacheTunnel2 = &t2
 		mqlConn.cacheIdBase = idBase
+		mqlConn.cacheGatewayID = r.Id.Data
 		out = append(out, res)
 	}
 	return out, nil
@@ -197,7 +511,11 @@ func (r *mqlStackitVpnGatewayConnection) buildTunnel(t *vpn.TunnelConfiguration,
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlStackitVpnTunnel), nil
+	tunnel := res.(*mqlStackitVpnTunnel)
+	tunnel.cacheGatewayID = r.cacheGatewayID
+	tunnel.cacheConnectionID = r.Id.Data
+	tunnel.cacheSlot = slot
+	return tunnel, nil
 }
 
 // enumSliceToStr converts a slice of string-based SDK enum values into a

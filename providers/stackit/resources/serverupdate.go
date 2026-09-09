@@ -11,6 +11,83 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
+// ------------------------- server update service -------------------------
+
+// updateServiceEnabled reports whether the Server Update service is turned on
+// for this server, which separates "no update runs because the service is
+// off" from "no runs yet". Null when the service does not know the server
+// (404) or the credential cannot read it.
+func (r *mqlStackitServer) updateServiceEnabled() (bool, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.ServerUpdate()
+	if err != nil {
+		return false, err
+	}
+	resp, err := client.DefaultAPI.GetServiceResource(bgctx(), c.ProjectID(), r.Id.Data, c.Region()).Execute()
+	if err != nil {
+		if isAccessDenied(err) || isNotFound(err) {
+			return nullBool(&r.UpdateServiceEnabled)
+		}
+		return false, err
+	}
+	enabled, ok := resp.GetEnabledOk()
+	if !ok || enabled == nil {
+		return nullBool(&r.UpdateServiceEnabled)
+	}
+	return *enabled, nil
+}
+
+// serverUpdatePolicies lists the project's update policies: the named
+// cadence-and-maintenance-window templates a server update schedule can be
+// created from, including which one applies by default.
+func (r *mqlStackit) serverUpdatePolicies() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.ServerUpdate()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.ListUpdatePolicies(bgctx(), c.ProjectID()).Execute()
+	if err != nil {
+		if isAccessDenied(err) || isNotFound(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetItemsOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		res, err := CreateResource(r.MqlRuntime, "stackit.server.updatePolicy", serverUpdatePolicyArgs(&items[i]))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// serverUpdatePolicyArgs maps an update policy onto stackit.server.updatePolicy.
+// The enabled and default flags and the maintenance window stay tri-state.
+func serverUpdatePolicyArgs(p *serverupdate.UpdatePolicy) map[string]*llx.RawData {
+	var window *int64
+	if v, ok := p.GetMaintenanceWindowOk(); ok && v != nil {
+		hours := int64(*v)
+		window = &hours
+	}
+	return map[string]*llx.RawData{
+		"id":                llx.StringData(p.GetId()),
+		"name":              llx.StringData(p.GetName()),
+		"description":       llx.StringData(p.GetDescription()),
+		"enabled":           llx.BoolDataPtr(optBool(p.GetEnabledOk())),
+		"default":           llx.BoolDataPtr(optBool(p.GetDefaultOk())),
+		"rrule":             llx.StringData(p.GetRrule()),
+		"maintenanceWindow": llx.IntDataPtr(window),
+	}
+}
+
+func (r *mqlStackitServerUpdatePolicy) id() (string, error) {
+	return "stackit.server.updatePolicy/" + conn(r.MqlRuntime).ProjectID() + "/" + r.Id.Data, nil
+}
+
 // ------------------------- server updates -------------------------
 
 func (r *mqlStackitServer) updates() ([]any, error) {
