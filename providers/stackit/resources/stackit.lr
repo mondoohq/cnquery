@@ -1902,7 +1902,11 @@ private stackit.openSearch.instance @defaults("id name status planName") {
   id string
   // Instance name
   name string
-  // Status ("in progress", "succeeded", "failed")
+  // Outcome of the last provisioning operation
+  //
+  // One of "in progress", "succeeded", or "failed". Reports how the
+  // last create, update, or delete went (see lastOperationType), not
+  // whether the instance is running; read state for that.
   status string
   // Plan name (sizing/quota tier)
   planName string
@@ -1933,6 +1937,60 @@ private stackit.openSearch.instance @defaults("id name status planName") {
   // public endpoint, and `sgw_acl` is the source-IP allow-list of CIDR
   // ranges. The password is not included.
   parameters dict
+  // Instance lifecycle state
+  //
+  // Whether the instance is running, as reported by the service: one of
+  // active, failed, stopped, creating, deleting, or updating. Distinct
+  // from status, which is the outcome of the last provisioning operation;
+  // a stopped instance can still report a succeeded status.
+  state string
+  // Kind of the last provisioning operation
+  //
+  // One of create, update, or delete. Qualifies status: a succeeded
+  // delete is not a healthy instance.
+  lastOperationType string
+  // Description of the last provisioning operation, including the failure reason when it failed
+  lastOperationDescription string
+  // Region the instance runs in
+  region string
+  // Cloud Foundry service instance GUID
+  cfGuid string
+  // CIDR allow-list of client networks permitted to reach the instance
+  //
+  // From the sgw_acl parameter, the one network control the service
+  // exposes on these instances. Empty when no allow-list is configured,
+  // which leaves the instance reachable from any address.
+  sgwAcl() []string
+  // Remote syslog endpoints the instance forwards its logs to
+  //
+  // Each entry is a syslog drain the instance ships logs to, an egress
+  // path for log data that may include connection details. Empty when
+  // none is configured.
+  syslog() []string
+  // Graphite endpoint the instance ships metrics to
+  //
+  // Host and port of an external Graphite receiver, an off-platform
+  // metrics egress. Empty when metrics stay on the platform.
+  graphite() string
+  // Whether the instance ships metrics to a STACKIT Observability instance
+  //
+  // Null when the parameter is absent.
+  monitoringEnabled() bool
+  // Observability instance the instance ships metrics to (nullable)
+  //
+  // Null when monitoring is not configured or the referenced instance is
+  // not readable from this project.
+  monitoringInstance() stackit.observability.instance
+  // Disk usage percentage at which the node halts to protect data
+  //
+  // The max_disk_threshold parameter. Null when the parameter is absent.
+  maxDiskThreshold() int
+  // OpenSearch plugins enabled on the instance
+  //
+  // Any of repository-s3, repository-azure (both always on), or
+  // analysis-phonetic. The repository plugins are the snapshot egress
+  // surface to external object stores.
+  plugins() []string
   // Whether the instance accepts connections from any address
   //
   // True when the instance's parameters enable public access and the
@@ -1977,7 +2035,11 @@ private stackit.mariaDb.instance @defaults("id name status planName") {
   id string
   // Instance name
   name string
-  // Status ("in progress", "succeeded", "failed")
+  // Outcome of the last provisioning operation
+  //
+  // One of "in progress", "succeeded", or "failed". Reports how the
+  // last create, update, or delete went (see lastOperationType), not
+  // whether the instance is running; read state for that.
   status string
   // Plan name (sizing/quota tier)
   planName string
@@ -2008,6 +2070,54 @@ private stackit.mariaDb.instance @defaults("id name status planName") {
   // derived `internetReachable` field folds these into a single
   // public-reachability verdict.
   parameters dict
+  // Instance lifecycle state
+  //
+  // Whether the instance is running, as reported by the service: one of
+  // active, failed, stopped, creating, deleting, or updating. Distinct
+  // from status, which is the outcome of the last provisioning operation;
+  // a stopped instance can still report a succeeded status.
+  state string
+  // Kind of the last provisioning operation
+  //
+  // One of create, update, or delete. Qualifies status: a succeeded
+  // delete is not a healthy instance.
+  lastOperationType string
+  // Description of the last provisioning operation, including the failure reason when it failed
+  lastOperationDescription string
+  // Region the instance runs in
+  region string
+  // Cloud Foundry service instance GUID
+  cfGuid string
+  // CIDR allow-list of client networks permitted to reach the instance
+  //
+  // From the sgw_acl parameter, the one network control the service
+  // exposes on these instances. Empty when no allow-list is configured,
+  // which leaves the instance reachable from any address.
+  sgwAcl() []string
+  // Remote syslog endpoints the instance forwards its logs to
+  //
+  // Each entry is a syslog drain the instance ships logs to, an egress
+  // path for log data that may include connection details. Empty when
+  // none is configured.
+  syslog() []string
+  // Graphite endpoint the instance ships metrics to
+  //
+  // Host and port of an external Graphite receiver, an off-platform
+  // metrics egress. Empty when metrics stay on the platform.
+  graphite() string
+  // Whether the instance ships metrics to a STACKIT Observability instance
+  //
+  // Null when the parameter is absent.
+  monitoringEnabled() bool
+  // Observability instance the instance ships metrics to (nullable)
+  //
+  // Null when monitoring is not configured or the referenced instance is
+  // not readable from this project.
+  monitoringInstance() stackit.observability.instance
+  // Disk usage percentage at which the node halts to protect data
+  //
+  // The max_disk_threshold parameter. Null when the parameter is absent.
+  maxDiskThreshold() int
   // Whether the instance accepts connections from any address
   //
   // True when the instance's parameters enable public access and the
@@ -2040,7 +2150,11 @@ private stackit.redis.instance @defaults("id name status planName") {
   id string
   // Instance name
   name string
-  // Status ("in progress", "succeeded", "failed")
+  // Outcome of the last provisioning operation
+  //
+  // One of "in progress", "succeeded", or "failed". Reports how the
+  // last create, update, or delete went (see lastOperationType), not
+  // whether the instance is running; read state for that.
   status string
   // Plan name (sizing/quota tier)
   planName string
@@ -2071,6 +2185,75 @@ private stackit.redis.instance @defaults("id name status planName") {
   // instance); the `internetReachable` field is derived from these two
   // keys. Additional engine-specific keys may also be present.
   parameters dict
+  // Instance lifecycle state
+  //
+  // Whether the instance is running, as reported by the service: one of
+  // active, failed, stopped, creating, deleting, or updating. Distinct
+  // from status, which is the outcome of the last provisioning operation;
+  // a stopped instance can still report a succeeded status.
+  state string
+  // Kind of the last provisioning operation
+  //
+  // One of create, update, or delete. Qualifies status: a succeeded
+  // delete is not a healthy instance.
+  lastOperationType string
+  // Description of the last provisioning operation, including the failure reason when it failed
+  lastOperationDescription string
+  // Region the instance runs in
+  region string
+  // Cloud Foundry service instance GUID
+  cfGuid string
+  // CIDR allow-list of client networks permitted to reach the instance
+  //
+  // From the sgw_acl parameter, the one network control the service
+  // exposes on these instances. Empty when no allow-list is configured,
+  // which leaves the instance reachable from any address.
+  sgwAcl() []string
+  // Remote syslog endpoints the instance forwards its logs to
+  //
+  // Each entry is a syslog drain the instance ships logs to, an egress
+  // path for log data that may include connection details. Empty when
+  // none is configured.
+  syslog() []string
+  // Graphite endpoint the instance ships metrics to
+  //
+  // Host and port of an external Graphite receiver, an off-platform
+  // metrics egress. Empty when metrics stay on the platform.
+  graphite() string
+  // Whether the instance ships metrics to a STACKIT Observability instance
+  //
+  // Null when the parameter is absent.
+  monitoringEnabled() bool
+  // Observability instance the instance ships metrics to (nullable)
+  //
+  // Null when monitoring is not configured or the referenced instance is
+  // not readable from this project.
+  monitoringInstance() stackit.observability.instance
+  // Disk usage percentage at which the node halts to protect data
+  //
+  // The max_disk_threshold parameter. Null when the parameter is absent.
+  maxDiskThreshold() int
+  // RDB snapshot schedule
+  //
+  // The Redis save specification (for example `900 1 300 10`), which
+  // decides whether and how often the dataset is written to disk. Empty
+  // when persistence is not configured, so the dataset is memory-only.
+  snapshot() string
+  // Eviction policy applied at the memory limit
+  //
+  // One of volatile-lru, allkeys-lru, volatile-random, allkeys-random,
+  // volatile-ttl, or noeviction. Any policy other than noeviction
+  // silently drops keys under memory pressure.
+  maxmemoryPolicy() string
+  // Keyspace event classes broadcast to subscribers
+  //
+  // The notify-keyspace-events flags. A non-empty value announces key
+  // activity to any connected subscriber.
+  notifyKeyspaceEvents() string
+  // Maximum number of simultaneous client connections
+  //
+  // Null when the parameter is absent.
+  maxClients() int
   // Whether the instance accepts connections from any address
   //
   // True when the instance's parameters enable public access and the
@@ -2121,7 +2304,11 @@ private stackit.rabbitMq.instance @defaults("id name status planName") {
   id string
   // Instance name
   name string
-  // Status ("in progress", "succeeded", "failed")
+  // Outcome of the last provisioning operation
+  //
+  // One of "in progress", "succeeded", or "failed". Reports how the
+  // last create, update, or delete went (see lastOperationType), not
+  // whether the instance is running; read state for that.
   status string
   // Plan name (sizing/quota tier)
   planName string
@@ -2153,6 +2340,64 @@ private stackit.rabbitMq.instance @defaults("id name status planName") {
   // permitted to connect). The `internetReachable` predicate is
   // derived from these two keys.
   parameters dict
+  // Instance lifecycle state
+  //
+  // Whether the instance is running, as reported by the service: one of
+  // active, failed, stopped, creating, deleting, or updating. Distinct
+  // from status, which is the outcome of the last provisioning operation;
+  // a stopped instance can still report a succeeded status.
+  state string
+  // Kind of the last provisioning operation
+  //
+  // One of create, update, or delete. Qualifies status: a succeeded
+  // delete is not a healthy instance.
+  lastOperationType string
+  // Description of the last provisioning operation, including the failure reason when it failed
+  lastOperationDescription string
+  // Region the instance runs in
+  region string
+  // Cloud Foundry service instance GUID
+  cfGuid string
+  // CIDR allow-list of client networks permitted to reach the instance
+  //
+  // From the sgw_acl parameter, the one network control the service
+  // exposes on these instances. Empty when no allow-list is configured,
+  // which leaves the instance reachable from any address.
+  sgwAcl() []string
+  // Remote syslog endpoints the instance forwards its logs to
+  //
+  // Each entry is a syslog drain the instance ships logs to, an egress
+  // path for log data that may include connection details. Empty when
+  // none is configured.
+  syslog() []string
+  // Graphite endpoint the instance ships metrics to
+  //
+  // Host and port of an external Graphite receiver, an off-platform
+  // metrics egress. Empty when metrics stay on the platform.
+  graphite() string
+  // Whether the instance ships metrics to a STACKIT Observability instance
+  //
+  // Null when the parameter is absent.
+  monitoringEnabled() bool
+  // Observability instance the instance ships metrics to (nullable)
+  //
+  // Null when monitoring is not configured or the referenced instance is
+  // not readable from this project.
+  monitoringInstance() stackit.observability.instance
+  // Disk usage percentage at which the node halts to protect data
+  //
+  // The max_disk_threshold parameter. Null when the parameter is absent.
+  maxDiskThreshold() int
+  // RabbitMQ plugins enabled on the instance
+  //
+  // Any of rabbitmq_mqtt, rabbitmq_stomp, rabbitmq_shovel,
+  // rabbitmq_shovel_management, rabbitmq_federation,
+  // rabbitmq_federation_management, rabbitmq_tracing,
+  // rabbitmq_event_exchange, rabbitmq_sharding, or
+  // rabbitmq_consistent_hash_exchange. Protocol plugins open additional
+  // listeners, the management plugins expose admin HTTP surfaces, and
+  // rabbitmq_tracing records message bodies.
+  plugins() []string
   // Whether the instance accepts connections from any address
   //
   // True when the instance's parameters enable public access and the
@@ -2197,7 +2442,11 @@ private stackit.logMe.instance @defaults("id name status planName") {
   id string
   // Instance name
   name string
-  // Status ("in progress", "succeeded", "failed")
+  // Outcome of the last provisioning operation
+  //
+  // One of "in progress", "succeeded", or "failed". Reports how the
+  // last create, update, or delete went (see lastOperationType), not
+  // whether the instance is running; read state for that.
   status string
   // Plan name (sizing/quota tier)
   planName string
@@ -2227,6 +2476,70 @@ private stackit.logMe.instance @defaults("id name status planName") {
   // and `sgw_acl` (list of CIDR strings) as the source-IP allow-list;
   // both feed the `internetReachable` exposure check.
   parameters dict
+  // Instance lifecycle state
+  //
+  // Whether the instance is running, as reported by the service: one of
+  // active, failed, stopped, creating, deleting, or updating. Distinct
+  // from status, which is the outcome of the last provisioning operation;
+  // a stopped instance can still report a succeeded status.
+  state string
+  // Kind of the last provisioning operation
+  //
+  // One of create, update, or delete. Qualifies status: a succeeded
+  // delete is not a healthy instance.
+  lastOperationType string
+  // Description of the last provisioning operation, including the failure reason when it failed
+  lastOperationDescription string
+  // Region the instance runs in
+  region string
+  // Cloud Foundry service instance GUID
+  cfGuid string
+  // CIDR allow-list of client networks permitted to reach the instance
+  //
+  // From the sgw_acl parameter, the one network control the service
+  // exposes on these instances. Empty when no allow-list is configured,
+  // which leaves the instance reachable from any address.
+  sgwAcl() []string
+  // Remote syslog endpoints the instance forwards its logs to
+  //
+  // Each entry is a syslog drain the instance ships logs to, an egress
+  // path for log data that may include connection details. Empty when
+  // none is configured.
+  syslog() []string
+  // Graphite endpoint the instance ships metrics to
+  //
+  // Host and port of an external Graphite receiver, an off-platform
+  // metrics egress. Empty when metrics stay on the platform.
+  graphite() string
+  // Whether the instance ships metrics to a STACKIT Observability instance
+  //
+  // Null when the parameter is absent.
+  monitoringEnabled() bool
+  // Observability instance the instance ships metrics to (nullable)
+  //
+  // Null when monitoring is not configured or the referenced instance is
+  // not readable from this project.
+  monitoringInstance() stackit.observability.instance
+  // Disk usage percentage at which the node halts to protect data
+  //
+  // The max_disk_threshold parameter. Null when the parameter is absent.
+  maxDiskThreshold() int
+  // Port of the plaintext TCP log ingestion listener
+  //
+  // The fluentd-tcp parameter. A non-null value means the instance
+  // accepts logs over unencrypted TCP alongside the TLS listener. Null
+  // when no plaintext TCP listener is configured.
+  fluentdTcpPort() int
+  // Port of the plaintext UDP log ingestion listener
+  //
+  // The fluentd-udp parameter. A non-null value means the instance
+  // accepts logs over unencrypted UDP. Null when none is configured.
+  fluentdUdpPort() int
+  // Retention period after which stored logs are deleted
+  //
+  // The ism_deletion_after parameter as a duration such as `30d`. Empty
+  // when no deletion policy is configured.
+  logRetention() string
   // Whether the instance accepts connections from any address
   //
   // True when the instance's parameters enable public access and the

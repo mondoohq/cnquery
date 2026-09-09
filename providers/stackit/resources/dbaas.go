@@ -319,20 +319,8 @@ func (r *mqlStackitOpenSearch) instances() ([]any, error) {
 	for i := range items {
 		inst := items[i]
 		lop := inst.GetLastOperation()
-		args := map[string]*llx.RawData{
-			"id":                 llx.StringData(inst.GetInstanceId()),
-			"name":               llx.StringData(inst.GetName()),
-			"status":             llx.StringData(string(lop.GetState())),
-			"planName":           llx.StringData(inst.GetPlanName()),
-			"planId":             llx.StringData(inst.GetPlanId()),
-			"offeringName":       llx.StringData(inst.GetOfferingName()),
-			"offeringVersion":    llx.StringDataPtr(strOrNil(inst.GetOfferingVersionOk())),
-			"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
-			"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
-			"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
-			"imageUrl":           llx.StringData(inst.GetImageUrl()),
-			"parameters":         llx.DictData(toDict(inst.GetParameters())),
-		}
+		st, stOk := inst.GetStatusOk()
+		args := cfBrokerInstanceArgs(c.Region(), &inst, st, stOk, &lop)
 		res, err := CreateResource(r.MqlRuntime, "stackit.openSearch.instance", args)
 		if err != nil {
 			return nil, err
@@ -366,20 +354,8 @@ func (r *mqlStackitMariaDb) instances() ([]any, error) {
 	for i := range items {
 		inst := items[i]
 		lop := inst.GetLastOperation()
-		args := map[string]*llx.RawData{
-			"id":                 llx.StringData(inst.GetInstanceId()),
-			"name":               llx.StringData(inst.GetName()),
-			"status":             llx.StringData(string(lop.GetState())),
-			"planName":           llx.StringData(inst.GetPlanName()),
-			"planId":             llx.StringData(inst.GetPlanId()),
-			"offeringName":       llx.StringData(inst.GetOfferingName()),
-			"offeringVersion":    llx.StringDataPtr(strOrNil(inst.GetOfferingVersionOk())),
-			"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
-			"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
-			"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
-			"imageUrl":           llx.StringData(inst.GetImageUrl()),
-			"parameters":         llx.DictData(toDict(inst.GetParameters())),
-		}
+		st, stOk := inst.GetStatusOk()
+		args := cfBrokerInstanceArgs(c.Region(), &inst, st, stOk, &lop)
 		res, err := CreateResource(r.MqlRuntime, "stackit.mariaDb.instance", args)
 		if err != nil {
 			return nil, err
@@ -391,6 +367,69 @@ func (r *mqlStackitMariaDb) instances() ([]any, error) {
 
 func (r *mqlStackitMariaDbInstance) id() (string, error) {
 	return "stackit.mariaDb.instance/" + r.Id.Data, nil
+}
+
+// ------------------------- CF-broker instances (shared) -------------------------
+
+// cfBrokerInstance is the slice of an OpenSearch, MariaDB, Redis, RabbitMQ, or
+// LogMe instance record that every engine's SDK model exposes with the same
+// signatures. The five SDK packages generate the same Instance shape, so one
+// mapper serves all ten creation paths (five list, five init). The status and
+// last-operation enums are package-specific named string types and are passed
+// alongside through type parameters.
+type cfBrokerInstance interface {
+	GetInstanceId() string
+	GetName() string
+	GetPlanName() string
+	GetPlanId() string
+	GetOfferingName() string
+	GetOfferingVersionOk() (*string, bool)
+	GetCfGuid() string
+	GetCfOrganizationGuid() string
+	GetCfSpaceGuid() string
+	GetDashboardUrl() string
+	GetImageUrl() string
+	GetParameters() map[string]interface{}
+}
+
+// cfLastOperation is the last provisioning operation on a CF-broker instance:
+// what ran, how it ended, and why.
+type cfLastOperation[S ~string, T ~string] interface {
+	GetState() S
+	GetType() T
+	GetDescription() string
+}
+
+// cfBrokerInstanceArgs maps a CF-broker instance onto the fields shared by
+// the five instance resources. `status` stays the outcome of the last
+// operation, as shipped; the instance's own lifecycle state, which the
+// schema never read before, lands in `state`. An absent status reads null
+// rather than "" so a policy can tell "not reported" from a real value.
+func cfBrokerInstanceArgs[ST ~string, LS ~string, LT ~string](region string, inst cfBrokerInstance, status *ST, statusOk bool, lop cfLastOperation[LS, LT]) map[string]*llx.RawData {
+	var state *string
+	if statusOk && status != nil {
+		s := string(*status)
+		state = &s
+	}
+	return map[string]*llx.RawData{
+		"id":                       llx.StringData(inst.GetInstanceId()),
+		"name":                     llx.StringData(inst.GetName()),
+		"status":                   llx.StringData(string(lop.GetState())),
+		"state":                    llx.StringDataPtr(state),
+		"lastOperationType":        llx.StringData(string(lop.GetType())),
+		"lastOperationDescription": llx.StringData(lop.GetDescription()),
+		"region":                   llx.StringData(region),
+		"planName":                 llx.StringData(inst.GetPlanName()),
+		"planId":                   llx.StringData(inst.GetPlanId()),
+		"offeringName":             llx.StringData(inst.GetOfferingName()),
+		"offeringVersion":          llx.StringDataPtr(strOrNil(inst.GetOfferingVersionOk())),
+		"cfGuid":                   llx.StringData(inst.GetCfGuid()),
+		"cfOrganizationGuid":       llx.StringData(inst.GetCfOrganizationGuid()),
+		"cfSpaceGuid":              llx.StringData(inst.GetCfSpaceGuid()),
+		"dashboardUrl":             llx.StringData(inst.GetDashboardUrl()),
+		"imageUrl":                 llx.StringData(inst.GetImageUrl()),
+		"parameters":               llx.DictData(toDict(inst.GetParameters())),
+	}
 }
 
 // ------------------------- Redis -------------------------
@@ -413,20 +452,8 @@ func (r *mqlStackitRedis) instances() ([]any, error) {
 	for i := range items {
 		inst := items[i]
 		lop := inst.GetLastOperation()
-		args := map[string]*llx.RawData{
-			"id":                 llx.StringData(inst.GetInstanceId()),
-			"name":               llx.StringData(inst.GetName()),
-			"status":             llx.StringData(string(lop.GetState())),
-			"planName":           llx.StringData(inst.GetPlanName()),
-			"planId":             llx.StringData(inst.GetPlanId()),
-			"offeringName":       llx.StringData(inst.GetOfferingName()),
-			"offeringVersion":    llx.StringDataPtr(strOrNil(inst.GetOfferingVersionOk())),
-			"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
-			"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
-			"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
-			"imageUrl":           llx.StringData(inst.GetImageUrl()),
-			"parameters":         llx.DictData(toDict(inst.GetParameters())),
-		}
+		st, stOk := inst.GetStatusOk()
+		args := cfBrokerInstanceArgs(c.Region(), &inst, st, stOk, &lop)
 		res, err := CreateResource(r.MqlRuntime, "stackit.redis.instance", args)
 		if err != nil {
 			return nil, err
@@ -460,20 +487,8 @@ func (r *mqlStackitRabbitMq) instances() ([]any, error) {
 	for i := range items {
 		inst := items[i]
 		lop := inst.GetLastOperation()
-		args := map[string]*llx.RawData{
-			"id":                 llx.StringData(inst.GetInstanceId()),
-			"name":               llx.StringData(inst.GetName()),
-			"status":             llx.StringData(string(lop.GetState())),
-			"planName":           llx.StringData(inst.GetPlanName()),
-			"planId":             llx.StringData(inst.GetPlanId()),
-			"offeringName":       llx.StringData(inst.GetOfferingName()),
-			"offeringVersion":    llx.StringDataPtr(strOrNil(inst.GetOfferingVersionOk())),
-			"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
-			"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
-			"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
-			"imageUrl":           llx.StringData(inst.GetImageUrl()),
-			"parameters":         llx.DictData(toDict(inst.GetParameters())),
-		}
+		st, stOk := inst.GetStatusOk()
+		args := cfBrokerInstanceArgs(c.Region(), &inst, st, stOk, &lop)
 		res, err := CreateResource(r.MqlRuntime, "stackit.rabbitMq.instance", args)
 		if err != nil {
 			return nil, err
@@ -1341,20 +1356,8 @@ func initStackitOpenSearchInstance(runtime *plugin.Runtime, args map[string]*llx
 		return nil, nil, fmt.Errorf("stackit.openSearch.instance with id %q not found", id)
 	}
 	lop := inst.GetLastOperation()
-	res, err := CreateResource(runtime, "stackit.openSearch.instance", map[string]*llx.RawData{
-		"id":                 llx.StringData(inst.GetInstanceId()),
-		"name":               llx.StringData(inst.GetName()),
-		"status":             llx.StringData(string(lop.GetState())),
-		"planName":           llx.StringData(inst.GetPlanName()),
-		"planId":             llx.StringData(inst.GetPlanId()),
-		"offeringName":       llx.StringData(inst.GetOfferingName()),
-		"offeringVersion":    llx.StringDataPtr(strOrNil(inst.GetOfferingVersionOk())),
-		"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
-		"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
-		"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
-		"imageUrl":           llx.StringData(inst.GetImageUrl()),
-		"parameters":         llx.DictData(toDict(inst.GetParameters())),
-	})
+	st, stOk := inst.GetStatusOk()
+	res, err := CreateResource(runtime, "stackit.openSearch.instance", cfBrokerInstanceArgs(c.Region(), inst, st, stOk, &lop))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1382,20 +1385,8 @@ func initStackitMariaDbInstance(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return nil, nil, fmt.Errorf("stackit.mariaDb.instance with id %q not found", id)
 	}
 	lop := inst.GetLastOperation()
-	res, err := CreateResource(runtime, "stackit.mariaDb.instance", map[string]*llx.RawData{
-		"id":                 llx.StringData(inst.GetInstanceId()),
-		"name":               llx.StringData(inst.GetName()),
-		"status":             llx.StringData(string(lop.GetState())),
-		"planName":           llx.StringData(inst.GetPlanName()),
-		"planId":             llx.StringData(inst.GetPlanId()),
-		"offeringName":       llx.StringData(inst.GetOfferingName()),
-		"offeringVersion":    llx.StringDataPtr(strOrNil(inst.GetOfferingVersionOk())),
-		"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
-		"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
-		"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
-		"imageUrl":           llx.StringData(inst.GetImageUrl()),
-		"parameters":         llx.DictData(toDict(inst.GetParameters())),
-	})
+	st, stOk := inst.GetStatusOk()
+	res, err := CreateResource(runtime, "stackit.mariaDb.instance", cfBrokerInstanceArgs(c.Region(), inst, st, stOk, &lop))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1423,20 +1414,8 @@ func initStackitRedisInstance(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return nil, nil, fmt.Errorf("stackit.redis.instance with id %q not found", id)
 	}
 	lop := inst.GetLastOperation()
-	res, err := CreateResource(runtime, "stackit.redis.instance", map[string]*llx.RawData{
-		"id":                 llx.StringData(inst.GetInstanceId()),
-		"name":               llx.StringData(inst.GetName()),
-		"status":             llx.StringData(string(lop.GetState())),
-		"planName":           llx.StringData(inst.GetPlanName()),
-		"planId":             llx.StringData(inst.GetPlanId()),
-		"offeringName":       llx.StringData(inst.GetOfferingName()),
-		"offeringVersion":    llx.StringDataPtr(strOrNil(inst.GetOfferingVersionOk())),
-		"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
-		"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
-		"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
-		"imageUrl":           llx.StringData(inst.GetImageUrl()),
-		"parameters":         llx.DictData(toDict(inst.GetParameters())),
-	})
+	st, stOk := inst.GetStatusOk()
+	res, err := CreateResource(runtime, "stackit.redis.instance", cfBrokerInstanceArgs(c.Region(), inst, st, stOk, &lop))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1464,20 +1443,8 @@ func initStackitRabbitMqInstance(runtime *plugin.Runtime, args map[string]*llx.R
 		return nil, nil, fmt.Errorf("stackit.rabbitMq.instance with id %q not found", id)
 	}
 	lop := inst.GetLastOperation()
-	res, err := CreateResource(runtime, "stackit.rabbitMq.instance", map[string]*llx.RawData{
-		"id":                 llx.StringData(inst.GetInstanceId()),
-		"name":               llx.StringData(inst.GetName()),
-		"status":             llx.StringData(string(lop.GetState())),
-		"planName":           llx.StringData(inst.GetPlanName()),
-		"planId":             llx.StringData(inst.GetPlanId()),
-		"offeringName":       llx.StringData(inst.GetOfferingName()),
-		"offeringVersion":    llx.StringDataPtr(strOrNil(inst.GetOfferingVersionOk())),
-		"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
-		"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
-		"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
-		"imageUrl":           llx.StringData(inst.GetImageUrl()),
-		"parameters":         llx.DictData(toDict(inst.GetParameters())),
-	})
+	st, stOk := inst.GetStatusOk()
+	res, err := CreateResource(runtime, "stackit.rabbitMq.instance", cfBrokerInstanceArgs(c.Region(), inst, st, stOk, &lop))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1565,20 +1532,8 @@ func (r *mqlStackitLogMe) instances() ([]any, error) {
 	for i := range items {
 		inst := items[i]
 		lop := inst.GetLastOperation()
-		args := map[string]*llx.RawData{
-			"id":                 llx.StringData(inst.GetInstanceId()),
-			"name":               llx.StringData(inst.GetName()),
-			"status":             llx.StringData(string(lop.GetState())),
-			"planName":           llx.StringData(inst.GetPlanName()),
-			"planId":             llx.StringData(inst.GetPlanId()),
-			"offeringName":       llx.StringData(inst.GetOfferingName()),
-			"offeringVersion":    llx.StringDataPtr(strOrNil(inst.GetOfferingVersionOk())),
-			"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
-			"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
-			"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
-			"imageUrl":           llx.StringData(inst.GetImageUrl()),
-			"parameters":         llx.DictData(toDict(inst.GetParameters())),
-		}
+		st, stOk := inst.GetStatusOk()
+		args := cfBrokerInstanceArgs(c.Region(), &inst, st, stOk, &lop)
 		res, err := CreateResource(r.MqlRuntime, "stackit.logMe.instance", args)
 		if err != nil {
 			return nil, err
@@ -1613,20 +1568,8 @@ func initStackitLogMeInstance(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return nil, nil, fmt.Errorf("stackit.logMe.instance with id %q not found", id)
 	}
 	lop := inst.GetLastOperation()
-	res, err := CreateResource(runtime, "stackit.logMe.instance", map[string]*llx.RawData{
-		"id":                 llx.StringData(inst.GetInstanceId()),
-		"name":               llx.StringData(inst.GetName()),
-		"status":             llx.StringData(string(lop.GetState())),
-		"planName":           llx.StringData(inst.GetPlanName()),
-		"planId":             llx.StringData(inst.GetPlanId()),
-		"offeringName":       llx.StringData(inst.GetOfferingName()),
-		"offeringVersion":    llx.StringDataPtr(strOrNil(inst.GetOfferingVersionOk())),
-		"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
-		"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
-		"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
-		"imageUrl":           llx.StringData(inst.GetImageUrl()),
-		"parameters":         llx.DictData(toDict(inst.GetParameters())),
-	})
+	st, stOk := inst.GetStatusOk()
+	res, err := CreateResource(runtime, "stackit.logMe.instance", cfBrokerInstanceArgs(c.Region(), inst, st, stOk, &lop))
 	if err != nil {
 		return nil, nil, err
 	}
