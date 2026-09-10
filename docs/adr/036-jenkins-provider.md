@@ -26,7 +26,7 @@ Credentials stored in Jenkins (via the Credentials plugin) are modeled for inven
 |-----------|-------|
 | **Provider Name** | `jenkins` |
 | **Provider ID** | `go.mondoo.com/mql/providers/jenkins` |
-| **Initial Version** | `13.0.0` |
+| **Initial Version** | `14.0.0` |
 | **Connection Type** | `jenkins` |
 | **Go SDK** | `github.com/bndr/gojenkins` (community client; rung-3 fallback, no vendor SDK or canonical OpenAPI spec exists, see Context) |
 | **API Type** | REST/JSON (Jenkins Remote Access API, `/api/json`) |
