@@ -168,7 +168,11 @@ func initFirebaseProjectAuthConfig(runtime *plugin.Runtime, args map[string]*llx
 	if resp.StatusCode == http.StatusOK {
 		// The parsed result is what matters; only a head of the raw body is
 		// logged, so a large answer cannot produce an unbounded log line.
-		log.Debug().Str("response", string(body[:min(len(body), 2048)])).Msg("Identity Toolkit API response")
+		snippet := string(body[:min(len(body), 2048)])
+		if snippet == "" {
+			snippet = "(empty)"
+		}
+		log.Debug().Str("response", snippet).Msg("Identity Toolkit API response")
 		cfg, err = parseAuthConfig(body)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to parse Identity Toolkit response: %w", err)
