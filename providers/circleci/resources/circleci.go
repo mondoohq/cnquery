@@ -67,11 +67,18 @@ func (r *mqlCircleci) projects() ([]any, error) {
 	var all []any
 	for _, o := range orgs {
 		org := o.(*mqlCircleciOrganization)
-		projects, err := org.projects()
-		if err != nil {
-			return nil, err
+		// Through the cached getter, so an organization whose projects a
+		// query already listed is not walked a second time.
+		projects := org.GetProjects()
+		if projects.Error != nil {
+			return nil, projects.Error
 		}
-		all = append(all, projects...)
+		if projects.State&plugin.StateIsNull != 0 {
+			// This organization's pipelines were not readable; its own
+			// projects field says so, and it contributes nothing here.
+			continue
+		}
+		all = append(all, projects.Data...)
 	}
 	return all, nil
 }
@@ -87,11 +94,11 @@ func (r *mqlCircleci) contexts() ([]any, error) {
 	var all []any
 	for _, o := range orgs {
 		org := o.(*mqlCircleciOrganization)
-		contexts, err := org.contexts()
-		if err != nil {
-			return nil, err
+		contexts := org.GetContexts()
+		if contexts.Error != nil {
+			return nil, contexts.Error
 		}
-		all = append(all, contexts...)
+		all = append(all, contexts.Data...)
 	}
 	return all, nil
 }

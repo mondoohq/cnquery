@@ -592,3 +592,16 @@ func TestParseCircleciTime(t *testing.T) {
 }
 
 func boolRef(b bool) *bool { return &b }
+
+// The sibling fields of a checkout key are hyphenated, so the wrong spelling
+// an author actually reaches for is "finger-print"; the API spells it
+// "fingerprint" and the tag has to stay that way.
+func TestCheckoutKeyRejectsHyphenatedFingerprint(t *testing.T) {
+	var rec connection.CheckoutKey
+	if err := json.Unmarshal([]byte(`{"finger-print":"aa:bb:cc:dd"}`), &rec); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if rec.Fingerprint != "" {
+		t.Fatalf("finger-print must not decode into Fingerprint, got %q", rec.Fingerprint)
+	}
+}
