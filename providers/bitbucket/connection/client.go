@@ -103,6 +103,10 @@ func (c *Client) get(ctx context.Context, rawURL string, out any) error {
 // listAllPages walks every page of a paginated 2.0 API endpoint, starting at
 // firstURL, following the response's "next" URL until it is nil.
 func listAllPages[T any](ctx context.Context, c *Client, firstURL string) ([]T, error) {
+	origin, err := url.Parse(firstURL)
+	if err != nil {
+		return nil, errors.Wrapf(err, "bitbucket: invalid page URL %q", firstURL)
+	}
 	var all []T
 	next := firstURL
 	for next != "" {
@@ -116,6 +120,16 @@ func listAllPages[T any](ctx context.Context, c *Client, firstURL string) ([]T, 
 		// forever.
 		if pg.Next == nil || *pg.Next == "" || *pg.Next == next {
 			break
+		}
+		// The walk stays where it started. A "next" that points at another
+		// host is not a page of this listing, whatever put it there, and
+		// following it would send this connection's credentials along.
+		nu, err := url.Parse(*pg.Next)
+		if err != nil {
+			return nil, errors.Wrapf(err, "bitbucket: invalid next page URL %q", *pg.Next)
+		}
+		if nu.Scheme != origin.Scheme || nu.Host != origin.Host {
+			return nil, errors.Newf("bitbucket: refusing to follow next page URL %q off %s", *pg.Next, origin.Host)
 		}
 		next = *pg.Next
 	}
@@ -515,7 +529,23 @@ type bitbucketAuthTransport struct {
 	appPassword string // App Password secret (Basic auth)
 }
 
+// bitbucketAPIHost is the only host credentials are attached to. The page
+// walker follows the API's "next" URL, so a response that steered it to
+// another host must not carry the token along. listAllPages refuses such a
+// URL before it is requested; this is the second line, and it also covers a
+// redirect the HTTP client follows on its own.
+var bitbucketAPIHost = func() string {
+	u, err := url.Parse(bitbucketAPIBaseURL)
+	if err != nil {
+		panic(err)
+	}
+	return u.Host
+}()
+
 func (t *bitbucketAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req.URL == nil || req.URL.Host != bitbucketAPIHost {
+		return t.base.RoundTrip(req)
+	}
 	req = req.Clone(req.Context())
 	if t.token != "" {
 		req.Header.Set("Authorization", "Bearer "+t.token)

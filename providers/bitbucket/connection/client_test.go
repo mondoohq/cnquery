@@ -751,3 +751,75 @@ func TestListRepositoriesByProjectRejectsUnquotableKey(t *testing.T) {
 		}
 	}
 }
+
+type rtFunc func(*http.Request) (*http.Response, error)
+
+func (f rtFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+// Credentials go to the Bitbucket API host and nowhere else. A page walk
+// follows the API's "next" URL, so a response steering it to another host
+// must not carry the token; this pins the transport half of that guarantee.
+func TestAuthTransportCredentialsOnlyTheAPIHost(t *testing.T) {
+	capture := func(t *testing.T, tr *bitbucketAuthTransport, rawURL string) http.Header {
+		t.Helper()
+		var seen http.Header
+		tr.base = rtFunc(func(r *http.Request) (*http.Response, error) {
+			seen = r.Header.Clone()
+			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("{}"))}, nil
+		})
+		req, err := http.NewRequest(http.MethodGet, rawURL, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp, err := tr.RoundTrip(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		return seen
+	}
+
+	t.Run("bearer to the api host", func(t *testing.T) {
+		h := capture(t, &bitbucketAuthTransport{token: "tok"}, bitbucketAPIBaseURL+"/workspaces/ws")
+		if got := h.Get("Authorization"); got != "Bearer tok" {
+			t.Fatalf("Authorization = %q, want bearer", got)
+		}
+	})
+	t.Run("basic to the legacy api host", func(t *testing.T) {
+		h := capture(t, &bitbucketAuthTransport{username: "alice", appPassword: "pw"}, bitbucketLegacyAPIBaseURL+"/groups/ws")
+		if got := h.Get("Authorization"); !strings.HasPrefix(got, "Basic ") {
+			t.Fatalf("Authorization = %q, want basic", got)
+		}
+	})
+	t.Run("nothing to another host", func(t *testing.T) {
+		for _, tr := range []*bitbucketAuthTransport{{token: "tok"}, {username: "alice", appPassword: "pw"}} {
+			h := capture(t, tr, "https://evil.invalid/2.0/workspaces/ws")
+			if got := h.Get("Authorization"); got != "" {
+				t.Fatalf("Authorization = %q leaked to a foreign host", got)
+			}
+		}
+	})
+}
+
+// The walker half of the same guarantee: a "next" that leaves the host the
+// listing started on is an error, not a page, and is never requested.
+func TestListAllPagesRefusesForeignNext(t *testing.T) {
+	var calls int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&calls, 1)
+		w.Header().Set("Content-Type", "application/json")
+		io.WriteString(w, `{"values":[{"id":"a"}],"next":"https://evil.invalid/page2"}`)
+	}))
+	defer srv.Close()
+
+	_, err := listAllPages[pagedItem](context.Background(), NewClient(srv.Client()), srv.URL+"/page1")
+	if err == nil {
+		t.Fatal("expected an error for a next URL on another host")
+	}
+	if !strings.Contains(err.Error(), "refusing to follow") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if n := atomic.LoadInt32(&calls); n != 1 {
+		t.Fatalf("expected exactly 1 request, got %d", n)
+	}
+}
