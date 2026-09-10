@@ -14,12 +14,12 @@ import (
 var Config = plugin.Provider{
 	Name:    "jenkins",
 	ID:      "go.mondoo.com/mql/providers/jenkins",
-	Version: "13.0.0",
+	Version: "14.0.0",
 	// Every kind this provider hands out as its own asset is a root (ADR 031).
 	Root: "jenkins",
 	// Every root carries `asset`, which core owns (ADR 042).
 	Requires: []plugin.ProviderDep{
-		{ID: "go.mondoo.com/mql/providers/core", Name: "core", MinVersion: "13.0.0"},
+		{ID: "go.mondoo.com/mql/providers/core", Name: "core", MinVersion: "14.0.0"},
 	},
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
