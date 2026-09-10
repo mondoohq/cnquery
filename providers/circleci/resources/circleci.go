@@ -98,6 +98,9 @@ func (r *mqlCircleci) contexts() ([]any, error) {
 		if contexts.Error != nil {
 			return nil, contexts.Error
 		}
+		if contexts.State&plugin.StateIsNull != 0 {
+			continue
+		}
 		all = append(all, contexts.Data...)
 	}
 	return all, nil
