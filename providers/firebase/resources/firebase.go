@@ -302,8 +302,16 @@ func emailEnumerationProtected(status int, body []byte) bool {
 	return status == http.StatusOK
 }
 
+// id is qualified by the project so two projects scanned through one runtime
+// cannot share a cached auth config. The API key stands in when the project
+// was reached by key alone.
 func (c *mqlFirebaseProjectAuthConfig) id() (string, error) {
-	return "firebase/authConfig", nil
+	conn := c.MqlRuntime.Connection.(*connection.FirebaseConnection)
+	qualifier := conn.ProjectId()
+	if qualifier == "" {
+		qualifier = conn.ApiKey()
+	}
+	return "firebase/authConfig/" + qualifier, nil
 }
 
 // ---------------------------------------------------------------------------
