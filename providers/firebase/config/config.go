@@ -36,6 +36,7 @@ Examples:
 Notes:
   - Provide --project-id and --api-key for direct checks, or --domain to auto-discover them.
   - A positional argument is treated as a domain.
+  - --domain always enables the hosting probes, also when --project-id is given; discovery only runs when --project-id is absent.
   - All checks are read-only and use only public HTTP endpoints.
 `,
 			MinArgs: 0,

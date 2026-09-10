@@ -50,10 +50,19 @@ func NewFirebaseConnection(id uint32, asset *inventory.Asset, conf *inventory.Co
 		conn.domain = conf.Options["domain"]
 	}
 
-	// If we have a domain but no project ID, try to resolve Firebase config from the domain
+	// A domain without a project id is resolved by reading the deployed
+	// app's Firebase config. A domain given alongside a project id is kept
+	// as-is: it is not used for discovery, but it still enables the hosting
+	// probes, which run against whatever domain is set.
 	if conn.domain != "" && conn.projectId == "" {
 		if err := conn.resolveFromDomain(); err != nil {
 			return nil, errors.Newf("could not discover Firebase config from domain %q: %v", conn.domain, err)
+		}
+		if conn.apiKey == "" {
+			// Discovery is partial: the auth config needs the web API key,
+			// so authConfig reads as null for this project.
+			log.Warn().Str("domain", conn.domain).Str("projectId", conn.projectId).
+				Msg("firebase> discovered the project id but no web API key; authConfig reads as null, pass --api-key to probe it")
 		}
 	}
 
