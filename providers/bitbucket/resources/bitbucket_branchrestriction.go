@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/rs/zerolog/log"
@@ -80,11 +81,16 @@ func (b *mqlBitbucketRepositoryBranchRestriction) groups() ([]any, error) {
 			"slug":      llx.StringData(g.Slug),
 		})
 		if err != nil {
-			// A group referenced by a branch restriction that can no longer
-			// be resolved (deleted, or the legacy groups API is unavailable
-			// for this workspace) should not fail the whole restriction.
-			log.Debug().Err(err).Str("group", g.Slug).Msg("bitbucket> unable to resolve exempted group")
-			continue
+			// A group the restriction still names but the workspace no
+			// longer has (deleted, or the legacy groups API is gone for this
+			// workspace) drops out of the list. Anything else is a read that
+			// failed, and a truncated exemption list would let an audit of
+			// who may bypass the restriction pass on missing data.
+			if errors.Is(err, connection.ErrNotFound) {
+				log.Debug().Err(err).Str("group", g.Slug).Msg("bitbucket> exempted group no longer exists")
+				continue
+			}
+			return nil, fmt.Errorf("bitbucket: unable to resolve exempted group %q: %w", g.Slug, err)
 		}
 		all = append(all, res)
 	}

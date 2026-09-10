@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -243,6 +244,13 @@ func (c *Client) ListRepositories(ctx context.Context, workspace string) ([]Repo
 // ListRepositoriesByProject lists every repository in a workspace that
 // belongs to the given project key.
 func (c *Client) ListRepositoriesByProject(ctx context.Context, workspace, projectKey string) ([]Repository, error) {
+	// The key is spliced into a BQL filter as a quoted string. Bitbucket's UI
+	// only issues keys matching [A-Z0-9_]+, but the API does not enforce
+	// that, and a quote or backslash would change the query rather than the
+	// match, so such a key is refused rather than sent.
+	if strings.ContainsAny(projectKey, `"\`) {
+		return nil, fmt.Errorf("bitbucket: project key %q cannot be used in a repository query", projectKey)
+	}
 	path := "/repositories/" + url.PathEscape(workspace)
 	q := url.Values{"q": {fmt.Sprintf(`project.key="%s"`, projectKey)}}
 	return listAllPages[Repository](ctx, c, apiURL(path, q))
@@ -350,18 +358,26 @@ type LegacyGroup struct {
 // 2.0 replacement.
 func (c *Client) ListGroupsLegacy(ctx context.Context, workspace string) ([]LegacyGroup, error) {
 	c.legacyGroupsMu.Lock()
-	defer c.legacyGroupsMu.Unlock()
-
-	if groups, ok := c.legacyGroupsCache[workspace]; ok {
+	groups, ok := c.legacyGroupsCache[workspace]
+	c.legacyGroupsMu.Unlock()
+	if ok {
 		return groups, nil
 	}
 
-	var groups []LegacyGroup
+	// The lock is not held across the round trip, so lookups for different
+	// workspaces do not queue behind each other's network call. Two callers
+	// racing on the same workspace may both fetch; whichever stores first
+	// wins and the other returns the stored copy.
 	u := bitbucketLegacyAPIBaseURL + "/groups/" + url.PathEscape(workspace)
 	if err := c.get(ctx, u, &groups); err != nil {
 		return nil, err
 	}
 
+	c.legacyGroupsMu.Lock()
+	defer c.legacyGroupsMu.Unlock()
+	if cached, ok := c.legacyGroupsCache[workspace]; ok {
+		return cached, nil
+	}
 	if c.legacyGroupsCache == nil {
 		c.legacyGroupsCache = map[string][]LegacyGroup{}
 	}

@@ -69,7 +69,7 @@ func initBitbucketGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 
 	groups, err := conn.Client().ListGroupsLegacy(context.Background(), workspace)
 	if err != nil {
-		return nil, nil, fmt.Errorf("bitbucket.group with workspace %q and slug %q not found: %w", workspace, slug, err)
+		return nil, nil, fmt.Errorf("bitbucket.group: unable to list groups in workspace %q to resolve slug %q: %w", workspace, slug, err)
 	}
 	for _, g := range groups {
 		if g.Slug != slug {
@@ -82,7 +82,7 @@ func initBitbucketGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return args, res, nil
 	}
 
-	return nil, nil, fmt.Errorf("bitbucket.group with workspace %q and slug %q not found", workspace, slug)
+	return nil, nil, fmt.Errorf("bitbucket.group with workspace %q and slug %q: %w", workspace, slug, connection.ErrNotFound)
 }
 
 // workspace resolves the workspace this group belongs to.
@@ -124,5 +124,5 @@ func (g *mqlBitbucketGroup) members() ([]any, error) {
 	// The group was listed a moment ago and is gone now (renamed or deleted
 	// in between). An empty list here would read as "no members" and let a
 	// membership audit pass on data that was never read.
-	return nil, fmt.Errorf("bitbucket.group with slug %q not found in workspace %q", g.Slug.Data, g.cacheWorkspaceSlug)
+	return nil, fmt.Errorf("bitbucket.group with slug %q in workspace %q: %w", g.Slug.Data, g.cacheWorkspaceSlug, connection.ErrNotFound)
 }

@@ -740,3 +740,14 @@ func TestClientGetStatusHandling(t *testing.T) {
 		}
 	})
 }
+
+// A project key is spliced into a BQL filter as a quoted string, so a quote
+// or a backslash in it would change the query rather than the match.
+func TestListRepositoriesByProjectRejectsUnquotableKey(t *testing.T) {
+	c := &Client{}
+	for _, key := range []string{`PR"OJ`, `PR\OJ`} {
+		if _, err := c.ListRepositoriesByProject(context.Background(), "ws", key); err == nil {
+			t.Errorf("key %q was accepted", key)
+		}
+	}
+}

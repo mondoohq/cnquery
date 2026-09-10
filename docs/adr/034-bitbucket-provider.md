@@ -26,7 +26,7 @@ Authentication uses either a workspace- or repository-scoped **Access Token** (b
 |-----------|-------|
 | **Provider Name** | `bitbucket` |
 | **Provider ID** | `go.mondoo.com/mql/providers/bitbucket` |
-| **Initial Version** | `13.0.0` |
+| **Initial Version** | `14.0.0` |
 | **Connection Type** | `bitbucket` |
 | **Go SDK** | None official; client generated from the Bitbucket Cloud OpenAPI/Swagger 2.0 spec (`https://api.bitbucket.org/swagger.json`) via `openapi-generator` into `providers/bitbucket/internal/bbapi` (rung 2 of the client-selection ladder — see Context) |
 | **API Type** | REST (Bitbucket Cloud API 2.0) |
