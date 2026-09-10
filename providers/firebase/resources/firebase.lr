@@ -8,7 +8,7 @@ option go_package = "go.mondoo.com/mql/providers/firebase/resources"
 option root = "firebase.project"
 
 // Firebase project security configuration
-firebase.project @defaults("projectId domain") @root {
+firebase.project @defaults("projectId domain") @maturity("experimental") @root {
   // Firebase project ID
   projectId string
   // Firebase web API key (semi-public: required for client-side Firebase SDKs, but restricted by API key restrictions in the Google Cloud console)
@@ -30,7 +30,7 @@ firebase.project @defaults("projectId domain") @root {
 }
 
 // Firebase Realtime Database public access check
-firebase.project.realtimeDatabase @defaults("url publiclyReadable") {
+firebase.project.realtimeDatabase @defaults("url publiclyReadable") @maturity("experimental") {
   // Realtime Database URL tested
   url string
   // Whether the database is publicly readable without authentication
@@ -40,7 +40,7 @@ firebase.project.realtimeDatabase @defaults("url publiclyReadable") {
 }
 
 // Firebase Authentication configuration from Identity Toolkit
-firebase.project.authConfig @defaults("signInProviders anonymousAuthEnabled") {
+firebase.project.authConfig @defaults("signInProviders anonymousAuthEnabled") @maturity("experimental") {
   // Enabled sign-in providers (e.g. password, google.com, anonymous)
   signInProviders []string
   // Whether anonymous authentication is enabled
@@ -52,7 +52,7 @@ firebase.project.authConfig @defaults("signInProviders anonymousAuthEnabled") {
 }
 
 // Firebase Hosting well-known path configuration
-firebase.project.hosting @defaults("domain sourceMapExposed") {
+firebase.project.hosting @defaults("domain sourceMapExposed") @maturity("experimental") {
   // Domain checked
   domain string
   // Apple App Site Association data from /.well-known/apple-app-site-association
@@ -66,7 +66,7 @@ firebase.project.hosting @defaults("domain sourceMapExposed") {
 }
 
 // Firebase Cloud Storage public access check
-firebase.project.storage @defaults("bucketUrl publiclyListable") {
+firebase.project.storage @defaults("bucketUrl publiclyListable") @maturity("experimental") {
   // Storage bucket URL tested
   bucketUrl string
   // Whether the default storage bucket is publicly listable
@@ -74,7 +74,7 @@ firebase.project.storage @defaults("bucketUrl publiclyListable") {
 }
 
 // Firebase Cloud Firestore public access check
-firebase.project.firestore @defaults("url publiclyReadable") {
+firebase.project.firestore @defaults("url publiclyReadable") @maturity("experimental") {
   // Firestore REST API URL tested
   url string
   // Whether the default Firestore database documents are publicly readable
