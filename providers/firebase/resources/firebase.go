@@ -399,6 +399,9 @@ func initFirebaseProjectHosting(runtime *plugin.Runtime, args map[string]*llx.Ra
 				if isExternalScript(src) {
 					continue
 				}
+				// Count the attempt, not the result: a page with hundreds of
+				// scripts whose maps all time out must still stop at the cap.
+				checked++
 
 				mapURL := src + ".map"
 				log.Debug().Str("url", mapURL).Msg("checking source map exposure")
@@ -413,7 +416,6 @@ func initFirebaseProjectHosting(runtime *plugin.Runtime, args map[string]*llx.Ra
 						}
 					}
 					drainAndClose(mapResp.Body)
-					checked++
 				}
 			}
 		}
