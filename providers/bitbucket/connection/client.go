@@ -25,6 +25,9 @@ const bitbucketAPIBaseURL = "https://api.bitbucket.org/2.0"
 // way to resolve full group membership; see its doc comment.
 const bitbucketLegacyAPIBaseURL = "https://api.bitbucket.org/1.0"
 
+// maxResponseBytes caps how much of a response body is read.
+const maxResponseBytes = 10 << 20
+
 // ErrNotFound is returned by single-resource lookups (GetWorkspace,
 // GetProject, GetRepository) when the API responds 404.
 var ErrNotFound = errors.New("bitbucket: resource not found")
@@ -74,7 +77,9 @@ func (c *Client) get(ctx context.Context, rawURL string, out any) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	// Bounded so a misbehaving or interposed server cannot answer with a body
+	// large enough to exhaust memory; no Bitbucket page comes near this.
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes))
 	if err != nil {
 		return errors.Wrapf(err, "bitbucket: failed to read response body for %s", rawURL)
 	}
@@ -246,9 +251,9 @@ func (c *Client) ListRepositories(ctx context.Context, workspace string) ([]Repo
 func (c *Client) ListRepositoriesByProject(ctx context.Context, workspace, projectKey string) ([]Repository, error) {
 	// The key is spliced into a BQL filter as a quoted string. Bitbucket's UI
 	// only issues keys matching [A-Z0-9_]+, but the API does not enforce
-	// that, and a quote or backslash would change the query rather than the
-	// match, so such a key is refused rather than sent.
-	if strings.ContainsAny(projectKey, `"\`) {
+	// that, and a quote (of either kind) or a backslash would change the
+	// query rather than the match, so such a key is refused rather than sent.
+	if strings.ContainsAny(projectKey, `"'\`) {
 		return nil, fmt.Errorf("bitbucket: project key %q cannot be used in a repository query", projectKey)
 	}
 	path := "/repositories/" + url.PathEscape(workspace)
