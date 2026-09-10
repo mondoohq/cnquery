@@ -5,6 +5,7 @@ package connection
 
 import (
 	"context"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"os"
 	"time"
@@ -80,19 +81,25 @@ func NewBitbucketConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 	appPassword := os.Getenv(BITBUCKET_APP_PASSWORD_VAR)
 
 	// A vault credential (from --token/--app-password, or one injected by the
-	// inventory) takes precedence over the environment. Its User field tells
-	// the two auth modes apart: a credential minted from --app-password
-	// carries the username (see provider.ParseCLI), an Access Token
-	// credential does not.
+	// inventory) takes precedence over the environment. An Access Token
+	// arrives as a bearer credential, which is what ParseCLI emits for
+	// --token and what an inventory naturally carries for a token. An App
+	// Password is a password credential whose User field carries the
+	// username; a password credential without a user is a token handed over
+	// in the older form and is still honoured.
 	for _, cred := range conf.Credentials {
-		if cred.Type != vault.CredentialType_password {
-			continue
-		}
-		if cred.User != "" {
-			username = cred.User
-			appPassword = string(cred.Secret)
-		} else {
+		switch cred.Type {
+		case vault.CredentialType_bearer:
 			token = string(cred.Secret)
+		case vault.CredentialType_password:
+			if cred.User != "" {
+				username = cred.User
+				appPassword = string(cred.Secret)
+			} else {
+				token = string(cred.Secret)
+			}
+		default:
+			log.Warn().Str("credential-type", cred.Type.String()).Msg("bitbucket> unsupported credential type, ignoring")
 		}
 	}
 

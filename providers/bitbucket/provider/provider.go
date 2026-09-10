@@ -54,8 +54,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options[connection.OPTION_WORKSPACE] = string(v.Value)
 	}
 	if v, ok := flags[connection.OPTION_TOKEN]; ok && len(v.Value) != 0 {
-		// Access Token: no username attached to the credential.
-		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", string(v.Value)))
+		// Access Token: a bearer credential, so its kind survives a round
+		// trip through an inventory file or a vault.
+		conf.Credentials = append(conf.Credentials, &vault.Credential{Type: vault.CredentialType_bearer, Secret: v.Value})
 	}
 	if v, ok := flags[connection.OPTION_APP_PASSWORD]; ok && len(v.Value) != 0 {
 		// App Password: the credential's User field carries the username so
