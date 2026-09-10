@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"github.com/rs/zerolog/log"
 	"sync"
 	"sync/atomic"
 
@@ -50,6 +51,13 @@ func (p *mqlCircleciProject) advancedSettings() (*connection.AdvancedSettings, e
 	}
 	conn := p.MqlRuntime.Connection.(*connection.CircleciConnection)
 	p.settings, p.settingsErr = conn.Client().GetProjectSettings(context.Background(), p.cacheSlug)
+	if connection.IsAccessDenied(p.settingsErr) {
+		// A token without the project-settings permission reads every
+		// advanced-settings field as null rather than failing each one.
+		log.Warn().Str("project", p.cacheSlug).Msg("circleci> access denied reading project settings; the advanced settings fields read as null")
+		p.settings = &connection.AdvancedSettings{}
+		p.settingsErr = nil
+	}
 	p.settingsDone.Store(true)
 	return p.settings, p.settingsErr
 }

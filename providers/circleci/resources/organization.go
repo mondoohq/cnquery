@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -77,6 +78,15 @@ func (o *mqlCircleciOrganization) projects() ([]any, error) {
 	for {
 		resp, err := client.ListPipelines(context.Background(), orgSlug, pageToken)
 		if err != nil {
+			if connection.IsAccessDenied(err) {
+				// The token can see the organization but not its pipelines,
+				// so no project can be discovered. Null rather than an empty
+				// list: an empty list would tell a coverage check that the
+				// organization has no projects.
+				log.Warn().Str("org", orgSlug).Msg("circleci> access denied listing pipelines; projects reads as null")
+				o.Projects.State = plugin.StateIsSet | plugin.StateIsNull
+				return nil, nil
+			}
 			return nil, err
 		}
 		for _, p := range resp.Items {
@@ -98,6 +108,9 @@ func (o *mqlCircleciOrganization) projects() ([]any, error) {
 		}
 		pageToken = next
 	}
+	// A project that never ran a pipeline is not reachable this way, so the
+	// count is the one signal a user of a new or idle organization gets.
+	log.Debug().Int("projects", len(slugs)).Str("org", orgSlug).Msg("circleci> projects discovered by walking pipelines")
 
 	all := make([]any, 0, len(slugs))
 	for _, slug := range slugs {

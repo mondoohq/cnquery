@@ -24,7 +24,7 @@ A defining constraint shapes the resource model: CircleCI's API deliberately nev
 |-----------|-------|
 | **Provider Name** | `circleci` |
 | **Provider ID** | `go.mondoo.com/mql/providers/circleci` |
-| **Initial Version** | `13.0.0` |
+| **Initial Version** | `14.0.0` |
 | **Connection Type** | `circleci` |
 | **Go SDK** | None official. Generated client via `openapi-generator` (`go` generator) from CircleCI's published OpenAPI 3.0.0 spec (`https://circleci.com/api/v2/openapi.json`); vendored under `providers/circleci/gen-client/`. The community `github.com/grezar/go-circleci` was considered and rejected (hand-maintained, incomplete spec coverage). |
 | **API Type** | REST (CircleCI API v2) |
