@@ -164,77 +164,104 @@ func initFirebaseProjectAuthConfig(runtime *plugin.Runtime, args map[string]*llx
 		return nil, nil, fmt.Errorf("failed to read Identity Toolkit response: %w", err)
 	}
 
-	signInProviders := []interface{}{}
-	anonymousAuthEnabled := false
-	authorizedDomains := []interface{}{}
-	emailEnumerationProtection := false
-
+	cfg := authConfig{}
 	if resp.StatusCode == http.StatusOK {
-		var result map[string]interface{}
-		if err := json.Unmarshal(body, &result); err != nil {
-			return nil, nil, fmt.Errorf("failed to parse Identity Toolkit response: %w", err)
-		}
-
 		log.Debug().Str("response", string(body)).Msg("Identity Toolkit API response")
-
-		if domains, ok := result["authorizedDomains"].([]interface{}); ok {
-			authorizedDomains = domains
-		}
-
-		// Check email enumeration protection (emailPrivacyConfig.enableImprovedEmailPrivacy)
-		if emailPrivacy, ok := result["emailPrivacyConfig"].(map[string]interface{}); ok {
-			if enabled, ok := emailPrivacy["enableImprovedEmailPrivacy"].(bool); ok {
-				emailEnumerationProtection = enabled
-			}
-		}
-
-		// Try v1 response structure
-		if idps, ok := result["signInConfig"].(map[string]interface{}); ok {
-			if methods, ok := idps["allowedMethods"].([]interface{}); ok {
-				signInProviders = methods
-			}
-		}
-
-		// Check for anonymous auth
-		for _, p := range signInProviders {
-			if str, ok := p.(string); ok && strings.EqualFold(str, "anonymous") {
-				anonymousAuthEnabled = true
-				break
-			}
-		}
-	}
-
-	// If we didn't find providers in the v1 format, try legacy format
-	if len(signInProviders) == 0 && resp.StatusCode == http.StatusOK {
-		var legacyResult map[string]interface{}
-		if err := json.Unmarshal(body, &legacyResult); err == nil {
-			if idps, ok := legacyResult["idpConfig"].([]interface{}); ok {
-				for _, idp := range idps {
-					if idpMap, ok := idp.(map[string]interface{}); ok {
-						if provider, ok := idpMap["provider"].(string); ok {
-							signInProviders = append(signInProviders, provider)
-						}
-					}
-				}
-			}
-			if domains, ok := legacyResult["authorizedDomains"].([]interface{}); ok && len(authorizedDomains) == 0 {
-				authorizedDomains = domains
-			}
+		cfg, err = parseAuthConfig(body)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to parse Identity Toolkit response: %w", err)
 		}
 	}
 
 	// If not found in the config response, probe for email enumeration directly
 	// using the createAuthUri endpoint (read-only email lookup, no auth attempt).
-	if !emailEnumerationProtection && apiKey != "" {
-		emailEnumerationProtection = probeEmailEnumerationProtection(client, apiKey)
+	if !cfg.emailEnumerationProtection && apiKey != "" {
+		cfg.emailEnumerationProtection = probeEmailEnumerationProtection(client, identityToolkitURL, apiKey)
 	}
 
-	args["signInProviders"] = llx.ArrayData(signInProviders, types.String)
-	args["anonymousAuthEnabled"] = llx.BoolData(anonymousAuthEnabled)
-	args["authorizedDomains"] = llx.ArrayData(authorizedDomains, types.String)
-	args["emailEnumerationProtection"] = llx.BoolData(emailEnumerationProtection)
+	args["signInProviders"] = llx.ArrayData(anyOf(cfg.signInProviders), types.String)
+	args["anonymousAuthEnabled"] = llx.BoolData(cfg.anonymousAuthEnabled)
+	args["authorizedDomains"] = llx.ArrayData(anyOf(cfg.authorizedDomains), types.String)
+	args["emailEnumerationProtection"] = llx.BoolData(cfg.emailEnumerationProtection)
 
 	return args, nil, nil
+}
+
+// identityToolkitURL is the public Identity Toolkit endpoint; the probe takes
+// it as a parameter so a test can stand in a local server.
+const identityToolkitURL = "https://identitytoolkit.googleapis.com"
+
+// authConfig is what the public project config discloses about sign-in.
+type authConfig struct {
+	signInProviders            []string
+	anonymousAuthEnabled       bool
+	authorizedDomains          []string
+	emailEnumerationProtection bool
+}
+
+// parseAuthConfig reads the two shapes the project config comes in: the v1
+// shape (signInConfig.allowedMethods and emailPrivacyConfig) and the legacy
+// shape (idpConfig[].provider), which is consulted only when the v1 shape
+// lists no method. authorizedDomains sits at the top level in both. Anonymous
+// sign-in is derived from the provider list, case-insensitively.
+func parseAuthConfig(body []byte) (authConfig, error) {
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return authConfig{}, err
+	}
+
+	cfg := authConfig{}
+	if domains, ok := result["authorizedDomains"].([]interface{}); ok {
+		cfg.authorizedDomains = stringsOf(domains)
+	}
+	if emailPrivacy, ok := result["emailPrivacyConfig"].(map[string]interface{}); ok {
+		if enabled, ok := emailPrivacy["enableImprovedEmailPrivacy"].(bool); ok {
+			cfg.emailEnumerationProtection = enabled
+		}
+	}
+	if signIn, ok := result["signInConfig"].(map[string]interface{}); ok {
+		if methods, ok := signIn["allowedMethods"].([]interface{}); ok {
+			cfg.signInProviders = stringsOf(methods)
+		}
+	}
+	if len(cfg.signInProviders) == 0 {
+		if idps, ok := result["idpConfig"].([]interface{}); ok {
+			for _, idp := range idps {
+				if idpMap, ok := idp.(map[string]interface{}); ok {
+					if provider, ok := idpMap["provider"].(string); ok {
+						cfg.signInProviders = append(cfg.signInProviders, provider)
+					}
+				}
+			}
+		}
+	}
+	for _, p := range cfg.signInProviders {
+		if strings.EqualFold(p, "anonymous") {
+			cfg.anonymousAuthEnabled = true
+			break
+		}
+	}
+	return cfg, nil
+}
+
+// stringsOf keeps the string members of a decoded JSON array.
+func stringsOf(vals []interface{}) []string {
+	out := make([]string, 0, len(vals))
+	for _, v := range vals {
+		if s, ok := v.(string); ok {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+// anyOf widens a string slice for llx.ArrayData.
+func anyOf(vals []string) []interface{} {
+	out := make([]interface{}, len(vals))
+	for i, v := range vals {
+		out[i] = v
+	}
+	return out
 }
 
 // probeEmailEnumerationProtection tests whether email enumeration protection is enabled
@@ -242,8 +269,8 @@ func initFirebaseProjectAuthConfig(runtime *plugin.Runtime, args map[string]*llx
 // console). This does NOT trigger sign-in attempts or write to the target's auth audit log.
 // When protection is ON, the API returns an empty response; when OFF, it reveals whether
 // the email is registered.
-func probeEmailEnumerationProtection(client *http.Client, apiKey string) bool {
-	url := "https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=" + apiKey
+func probeEmailEnumerationProtection(client *http.Client, baseURL, apiKey string) bool {
+	url := baseURL + "/v1/accounts:createAuthUri?key=" + apiKey
 	payload := `{"identifier":"mql-probe-nonexistent@test.invalid","continueUri":"https://localhost"}`
 
 	resp, err := client.Post(url, "application/json", strings.NewReader(payload))
@@ -256,27 +283,23 @@ func probeEmailEnumerationProtection(client *http.Client, apiKey string) bool {
 	if err != nil {
 		return false
 	}
+	return emailEnumerationProtected(resp.StatusCode, body)
+}
 
-	// When email enumeration protection is OFF, the response includes a "registered"
-	// field that reveals whether the email exists. When protection is ON, the
-	// "registered" field is absent — the API refuses to disclose account existence.
+// emailEnumerationProtected classifies a createAuthUri answer for an address
+// that cannot exist. With protection off the API says whether the address is
+// registered; with protection on it answers 200 and withholds that field.
+// Anything else (an error status, a body that is not JSON) reads as not
+// protected, so an audit fails closed rather than passing on an unread value.
+func emailEnumerationProtected(status int, body []byte) bool {
 	var result map[string]interface{}
 	if err := json.Unmarshal(body, &result); err != nil {
 		return false
 	}
-
 	if _, hasRegistered := result["registered"]; hasRegistered {
-		// The API reveals account existence → protection is OFF
 		return false
 	}
-
-	// No "registered" field and a successful response → protection is ON
-	if resp.StatusCode == http.StatusOK {
-		return true
-	}
-
-	// Unable to determine — assume not protected
-	return false
+	return status == http.StatusOK
 }
 
 func (c *mqlFirebaseProjectAuthConfig) id() (string, error) {
@@ -364,22 +387,8 @@ func initFirebaseProjectHosting(runtime *plugin.Runtime, args map[string]*llx.Ra
 				if checked >= 10 {
 					break
 				}
-				src := m[1]
-
-				// Resolve relative URLs
-				if strings.HasPrefix(src, "//") {
-					src = "https:" + src
-				} else if strings.HasPrefix(src, "/") {
-					src = domainURL + src
-				} else if !strings.HasPrefix(src, "http") {
-					src = domainURL + "/" + src
-				}
-
-				// Skip external CDNs
-				if strings.Contains(src, "googleapis.com") ||
-					strings.Contains(src, "gstatic.com") ||
-					strings.Contains(src, "google-analytics.com") ||
-					strings.Contains(src, "googletagmanager.com") {
+				src := resolveScriptURL(m[1], domainURL)
+				if isExternalScript(src) {
 					continue
 				}
 
@@ -389,10 +398,8 @@ func initFirebaseProjectHosting(runtime *plugin.Runtime, args map[string]*llx.Ra
 				mapResp, err := client.Get(mapURL)
 				if err == nil {
 					if mapResp.StatusCode == http.StatusOK {
-						// Verify it's actually a source map (should contain "sources" key)
 						mapBody, _ := io.ReadAll(io.LimitReader(mapResp.Body, 1<<10)) // Just peek
-						if strings.Contains(string(mapBody), "\"sources\"") ||
-							strings.Contains(string(mapBody), "\"mappings\"") {
+						if looksLikeSourceMap(mapBody) {
 							sourceMapExposed = true
 							exposedSourceMaps = append(exposedSourceMaps, mapURL)
 						}
@@ -416,6 +423,49 @@ func initFirebaseProjectHosting(runtime *plugin.Runtime, args map[string]*llx.Ra
 
 func (c *mqlFirebaseProjectHosting) id() (string, error) {
 	return "firebase/hosting/" + c.Domain.Data, nil
+}
+
+// resolveScriptURL turns a script src as written in the page into an absolute
+// URL: protocol-relative gets https, root-relative and bare paths hang off the
+// page, absolute URLs pass through.
+func resolveScriptURL(src, pageURL string) string {
+	switch {
+	case strings.HasPrefix(src, "//"):
+		return "https:" + src
+	case strings.HasPrefix(src, "/"):
+		return pageURL + src
+	case strings.HasPrefix(src, "http"):
+		return src
+	default:
+		return pageURL + "/" + src
+	}
+}
+
+// externalScriptHosts are Google-served bundles a page pulls in that are not
+// the project's own build output, so their maps say nothing about the project.
+var externalScriptHosts = []string{
+	"googleapis.com",
+	"gstatic.com",
+	"google-analytics.com",
+	"googletagmanager.com",
+}
+
+func isExternalScript(url string) bool {
+	for _, host := range externalScriptHosts {
+		if strings.Contains(url, host) {
+			return true
+		}
+	}
+	return false
+}
+
+// looksLikeSourceMap sniffs the first bytes of a 200 answer for foo.js.map. A
+// 200 alone proves nothing: hosting configured for a single-page app answers
+// every path with index.html. Only a body carrying a sources or mappings key
+// is a map.
+func looksLikeSourceMap(body []byte) bool {
+	s := string(body)
+	return strings.Contains(s, `"sources"`) || strings.Contains(s, `"mappings"`)
 }
 
 // ---------------------------------------------------------------------------
@@ -492,36 +542,15 @@ func initFirebaseProjectFirestore(runtime *plugin.Runtime, args map[string]*llx.
 	client := conn.HttpClient()
 	publiclyReadable := false
 	structureExposed := false
-	exposedCollections := []interface{}{}
+	var exposedCollections []string
 
 	// Check 1: Can we read documents directly?
 	resp, err := client.Get(firestoreURL)
 	if err == nil {
 		if resp.StatusCode == http.StatusOK {
 			publiclyReadable = true
-
 			body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-			var result map[string]interface{}
-			if json.Unmarshal(body, &result) == nil {
-				if docs, ok := result["documents"].([]interface{}); ok {
-					seen := map[string]bool{}
-					for _, doc := range docs {
-						if docMap, ok := doc.(map[string]interface{}); ok {
-							if name, ok := docMap["name"].(string); ok {
-								// Document name: projects/{proj}/databases/(default)/documents/{collection}/{docId}
-								parts := strings.Split(name, "/")
-								if len(parts) >= 6 {
-									collectionId := parts[5]
-									if !seen[collectionId] {
-										seen[collectionId] = true
-										exposedCollections = append(exposedCollections, collectionId)
-									}
-								}
-							}
-						}
-					}
-				}
-			}
+			exposedCollections = collectionIDsFromDocuments(body)
 		}
 		drainAndClose(resp.Body)
 	}
@@ -535,24 +564,9 @@ func initFirebaseProjectFirestore(runtime *plugin.Runtime, args map[string]*llx.
 	if err == nil {
 		if listResp.StatusCode == http.StatusOK {
 			body, _ := io.ReadAll(io.LimitReader(listResp.Body, 1<<20))
-			var listResult map[string]interface{}
-			if json.Unmarshal(body, &listResult) == nil {
-				if collIds, ok := listResult["collectionIds"].([]interface{}); ok {
-					structureExposed = true
-					// Merge with any collections found from document reads
-					seen := map[string]bool{}
-					for _, c := range exposedCollections {
-						if s, ok := c.(string); ok {
-							seen[s] = true
-						}
-					}
-					for _, id := range collIds {
-						if s, ok := id.(string); ok && !seen[s] {
-							seen[s] = true
-							exposedCollections = append(exposedCollections, id)
-						}
-					}
-				}
+			if ids, ok := listedCollectionIDs(body); ok {
+				structureExposed = true
+				exposedCollections = mergeUnique(exposedCollections, ids)
 			}
 		}
 		drainAndClose(listResp.Body)
@@ -561,9 +575,67 @@ func initFirebaseProjectFirestore(runtime *plugin.Runtime, args map[string]*llx.
 	args["url"] = llx.StringData(firestoreURL)
 	args["publiclyReadable"] = llx.BoolData(publiclyReadable)
 	args["structureExposed"] = llx.BoolData(structureExposed)
-	args["exposedCollections"] = llx.ArrayData(exposedCollections, types.String)
+	args["exposedCollections"] = llx.ArrayData(anyOf(exposedCollections), types.String)
 
 	return args, nil, nil
+}
+
+// collectionIDsFromDocuments pulls the top-level collection of every document
+// in a documents.list answer. A name reads
+// projects/{p}/databases/(default)/documents/{collection}/{doc}, so the
+// collection is the sixth segment. First-seen order is kept, duplicates and
+// names too short to carry a collection are dropped, and a body that is not
+// the expected shape yields nothing.
+func collectionIDsFromDocuments(body []byte) []string {
+	var result struct {
+		Documents []struct {
+			Name string `json:"name"`
+		} `json:"documents"`
+	}
+	if json.Unmarshal(body, &result) != nil {
+		return nil
+	}
+	var out []string
+	seen := map[string]bool{}
+	for _, d := range result.Documents {
+		parts := strings.Split(d.Name, "/")
+		if len(parts) < 6 || parts[5] == "" || seen[parts[5]] {
+			continue
+		}
+		seen[parts[5]] = true
+		out = append(out, parts[5])
+	}
+	return out
+}
+
+// listedCollectionIDs reads a listCollectionIds answer. ok is false when the
+// body carries no collectionIds key at all, which means the call disclosed
+// nothing; an empty list still counts as the structure being readable.
+func listedCollectionIDs(body []byte) ([]string, bool) {
+	var result map[string]interface{}
+	if json.Unmarshal(body, &result) != nil {
+		return nil, false
+	}
+	ids, ok := result["collectionIds"].([]interface{})
+	if !ok {
+		return nil, false
+	}
+	return stringsOf(ids), true
+}
+
+// mergeUnique appends the members of b that a does not already hold.
+func mergeUnique(a, b []string) []string {
+	seen := make(map[string]bool, len(a))
+	for _, v := range a {
+		seen[v] = true
+	}
+	for _, v := range b {
+		if !seen[v] {
+			seen[v] = true
+			a = append(a, v)
+		}
+	}
+	return a
 }
 
 func (c *mqlFirebaseProjectFirestore) id() (string, error) {
