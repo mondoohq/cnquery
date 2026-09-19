@@ -502,7 +502,7 @@ func (s *mqlFrrConfig) interfaces(file *mqlFile) ([]any, error) {
 	for i := range ifaces {
 		iface := &ifaces[i]
 		ifaceArgs := map[string]*llx.RawData{
-			"__id":          llx.StringData(s.__id + "#interface/" + iface.Name),
+			"__id":          llx.StringData(s.__id + "#interface/" + iface.Name + "/" + iface.VRF),
 			"name":          llx.StringData(iface.Name),
 			"vrf":           llx.StringData(iface.VRF),
 			"description":   llx.StringData(iface.Description),
