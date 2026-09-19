@@ -131,41 +131,11 @@ func (k *mqlK8sPod) containerStatuses() ([]any, error) {
 		{"ephemeralcontainerstatus", pod.Status.EphemeralContainerStatuses},
 	}
 	for _, group := range statusGroups {
-		for _, c := range group.statuses {
-			state, err := convert.JsonToDict(c.State)
-			if err != nil {
-				return nil, err
-			}
-			lastState, err := convert.JsonToDict(c.LastTerminationState)
-			if err != nil {
-				return nil, err
-			}
-			statusResources, err := convert.JsonToDict(c.Resources)
-			if err != nil {
-				return nil, err
-			}
-
-			args := map[string]*llx.RawData{
-				// The status kind is part of the key: a sidecar and a regular
-				// container may share a name across the two slices.
-				"__id":         llx.StringData(string(pod.GetUID()) + "-" + group.kind + "-" + c.Name),
-				"name":         llx.StringData(c.Name),
-				"ready":        llx.BoolData(c.Ready),
-				"started":      llx.BoolDataPtr(c.Started),
-				"restartCount": llx.IntData(int64(c.RestartCount)),
-				"image":        llx.StringData(c.Image),
-				"imageId":      llx.StringData(c.ImageID),
-				"containerId":  llx.StringData(c.ContainerID),
-				"state":        llx.DictData(state),
-				"lastState":    llx.DictData(lastState),
-				"resources":    llx.DictData(statusResources),
-			}
-			mqlContainer, err := CreateResource(k.MqlRuntime, ResourceK8sContainerStatus, args)
-			if err != nil {
-				return nil, err
-			}
-			resp = append(resp, mqlContainer)
+		groupResources, err := containerStatusResources(k.MqlRuntime, pod, group.statuses, group.kind)
+		if err != nil {
+			return nil, err
 		}
+		resp = append(resp, groupResources...)
 	}
 	return resp, nil
 }
@@ -203,16 +173,11 @@ func containerStatusResources(runtime *plugin.Runtime, pod *corev1.Pod, statuses
 		if err != nil {
 			return nil, err
 		}
-		started := false
-		if c.Started != nil {
-			started = *c.Started
-		}
-
 		args := map[string]*llx.RawData{
 			"__id":         llx.StringData(string(pod.GetUID()) + "-" + idPart + "-" + c.Name),
 			"name":         llx.StringData(c.Name),
 			"ready":        llx.BoolData(c.Ready),
-			"started":      llx.BoolData(started),
+			"started":      llx.BoolDataPtr(c.Started),
 			"restartCount": llx.IntData(int64(c.RestartCount)),
 			"image":        llx.StringData(c.Image),
 			"imageId":      llx.StringData(c.ImageID),
