@@ -36,7 +36,7 @@ var reSafeName = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._\-]{0,63}$`)
 // The dash is escaped so the class cannot be read as a range from `%` to
 // `-`. It is the last character either way, which RE2 already takes
 // literally, but the escape says so without the reader having to know that.
-var rePeer = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:%\-]{0,63}$`)
+var rePeer = regexp.MustCompile(`^[A-Za-z0-9:][A-Za-z0-9._:%\-]{0,63}$`)
 
 // ValidatePeer rejects a peer identifier that could change the meaning of
 // the command it is placed in.

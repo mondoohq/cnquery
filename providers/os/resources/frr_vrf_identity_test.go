@@ -4,13 +4,14 @@
 package resources
 
 import (
+	"strings"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/os/resources/frr"
 	"go.mondoo.com/mql/utils/syncx"
-	"strings"
-	"testing"
 )
 
 func TestFrrISISDistinctAcrossVRFs(t *testing.T) {
