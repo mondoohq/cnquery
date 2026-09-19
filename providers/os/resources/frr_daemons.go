@@ -63,7 +63,7 @@ func (s *mqlFrrConfig) isis(file *mqlFile) ([]any, error) {
 	for i := range instances {
 		v := &instances[i]
 		obj, err := CreateResource(s.MqlRuntime, "frr.config.isisInstance", map[string]*llx.RawData{
-			"__id":                llx.StringData(s.__id + "#isis/" + v.Tag),
+			"__id":                llx.StringData(s.__id + "#isis/" + v.Tag + "/" + vrfKey(v.VRF)),
 			"tag":                 llx.StringData(v.Tag),
 			"vrf":                 llx.StringData(v.VRF),
 			"net":                 llx.StringData(v.Net),
