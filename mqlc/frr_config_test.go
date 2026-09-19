@@ -29,6 +29,7 @@ func TestFrrConfigQueriesCompile(t *testing.T) {
 
 		// root resource and file discovery
 		`frr.version`,
+		`os.base.frr.version`,
 		`frr.config.file.path`,
 		`frr.config { hostname version defaults integratedVtyshConfig }`,
 		`frr.config("/etc/cra/frr.conf").hostname`,
