@@ -19,6 +19,7 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/utils/iox"
 )
 
 var (
@@ -83,7 +84,7 @@ func (p ProcessEntry) ToOSProcess() *OSProcess {
 
 func ParseLinuxPsResult(input io.Reader) ([]*ProcessEntry, error) {
 	processes := []*ProcessEntry{}
-	scanner := bufio.NewScanner(input)
+	scanner := iox.NewLineScanner(input)
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -124,12 +125,16 @@ func ParseLinuxPsResult(input io.Reader) ([]*ProcessEntry, error) {
 		processes = append(processes, p)
 	}
 
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("processes> cannot read ps output: %w", err)
+	}
+
 	return processes, nil
 }
 
 func ParseUnixPsResult(input io.Reader) ([]*ProcessEntry, error) {
 	processes := []*ProcessEntry{}
-	scanner := bufio.NewScanner(input)
+	scanner := iox.NewLineScanner(input)
 	for scanner.Scan() {
 		line := scanner.Text()
 		m := UNIX_PS_REGEX.FindStringSubmatch(line)
@@ -168,13 +173,17 @@ func ParseUnixPsResult(input io.Reader) ([]*ProcessEntry, error) {
 		processes = append(processes, p)
 	}
 
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("processes> cannot read ps output: %w", err)
+	}
+
 	return processes, nil
 }
 
 func ParseAixPsResult(input io.Reader) ([]*ProcessEntry, error) {
 	processes := []*ProcessEntry{}
 	re := AIX_PS_REGEX
-	scanner := bufio.NewScanner(input)
+	scanner := iox.NewLineScanner(input)
 	for scanner.Scan() {
 		line := scanner.Text()
 		// skip zombies, which AIX prints as <defunct> with their other
@@ -226,6 +235,10 @@ func ParseAixPsResult(input io.Reader) ([]*ProcessEntry, error) {
 			p.Stat = m[8]
 		}
 		processes = append(processes, p)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("processes> cannot read ps output: %w", err)
 	}
 
 	return processes, nil
