@@ -219,3 +219,11 @@ func TestStatDirOnlyOnLinux(t *testing.T) {
 	_, ok = New(&dirStatRunner{uname: "AIX"}).StatDir("/t", []string{"a"})
 	assert.False(t, ok)
 }
+
+func TestToFileModeFileTypes(t *testing.T) {
+	// %f of GNU stat for a FIFO, a socket, a symlink and a regular file, 0600
+	assert.Equal(t, fs.ModeNamedPipe, toFileMode(0x1180).Type())
+	assert.Equal(t, fs.ModeSocket, toFileMode(0xc180).Type())
+	assert.Equal(t, fs.ModeSymlink, toFileMode(0xa180).Type())
+	assert.True(t, toFileMode(0x8180).IsRegular())
+}
