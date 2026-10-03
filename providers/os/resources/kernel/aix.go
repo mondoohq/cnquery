@@ -86,7 +86,6 @@ func (c *SysctlConfig) ParseAixNextboot(r io.Reader, file string) error {
 			Line:  line,
 		}
 		c.Assignments = append(c.Assignments, a)
-		c.explicit[a.Name] = true
 	}
 	return scanner.Err()
 }
