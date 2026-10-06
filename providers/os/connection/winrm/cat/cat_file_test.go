@@ -71,7 +71,8 @@ func (r *fakeRunner) RunCommand(command string) (*shared.Command, error) {
 				return res, nil
 			}
 		}
-		res.Stdout = bytes.NewBufferString("hi\n")
+		// "hi\n", as openScript writes it
+		res.Stdout = bytes.NewBufferString("aGkK\r\n")
 	case strings.Contains(script, "Get-Item "):
 		res.Stdout = bytes.NewBufferString(r.itemFor(scriptPath(script)))
 	}
