@@ -5,10 +5,9 @@ package cat
 
 import (
 	"bytes"
-	"encoding/json"
-	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -41,48 +40,75 @@ func (cat *Fs) Name() string {
 // has to survive both. Encoding removes the outer layer entirely and
 // SingleQuote covers the inner one.
 
-func getContentScript(name string) string {
-	return powershell.Encode("Get-Content -LiteralPath " + powershell.SingleQuote(name))
+// dirExitStatus is the exit status openScript ends with when the path is a
+// directory. Get-Content cannot read a directory, so without it a directory
+// failed to open as if it did not exist, and nothing could be listed.
+const dirExitStatus = 64
+
+// tooLargeExitStatus is the exit status openScript ends with when the file is
+// larger than maxOpenSize.
+const tooLargeExitStatus = 65
+
+// maxOpenSize is the largest file Open reads. WinRM can only return a file
+// whole, as Get-Content text: a 105 MB model file had not finished after ten
+// minutes, and a binary read that way arrives altered anyway. Past this a
+// read fails at once with ErrFileTooLarge instead of stalling the scan.
+const maxOpenSize = 32 << 20
+
+// ErrFileTooLarge is returned by Open for a file larger than maxOpenSize.
+var ErrFileTooLarge = errors.New("file is too large to read over WinRM")
+
+// openScript reads a file, or reports a directory through dirExitStatus or a
+// file over maxOpenSize through tooLargeExitStatus, in one round trip. A
+// missing path still fails in Get-Content, as before.
+func openScript(name string) string {
+	quoted := powershell.SingleQuote(name)
+	return powershell.Encode("if (Test-Path -LiteralPath " + quoted + " -PathType Container) { exit " +
+		strconv.Itoa(dirExitStatus) + " }; " +
+		"$i = Get-Item -LiteralPath " + quoted + " -Force -ErrorAction SilentlyContinue; " +
+		"if ($i -and $i.Length -gt " + strconv.Itoa(maxOpenSize) + ") { exit " + strconv.Itoa(tooLargeExitStatus) + " }; " +
+		"Get-Content -LiteralPath " + quoted)
 }
 
 func getItemScript(name string) string {
 	return powershell.Encode("Get-Item -LiteralPath " + powershell.SingleQuote(name) + " | ConvertTo-JSON")
 }
 
+// listDirScript lists a directory as a JSON array, one object per entry, with
+// what a FileInfo needs so that no entry has to be stat'ed separately. Times
+// are Unix milliseconds, which reads the same on Windows PowerShell and
+// PowerShell 7, whose ConvertTo-Json format dates differently. Output is UTF-8
+// because the console code page would turn a name like über.txt into one that
+// no longer exists. An entry that cannot be read is skipped; the errors are
+// written to stderr and fail the script only when nothing could be listed.
+func listDirScript(name string) string {
+	return powershell.Encode("[Console]::OutputEncoding = [Text.Encoding]::UTF8; $ev = $null; " +
+		"$e = @(Get-ChildItem -LiteralPath " + powershell.SingleQuote(name) + " -Force -ErrorAction SilentlyContinue -ErrorVariable ev | ForEach-Object { " +
+		"[pscustomobject]@{ " +
+		"Name = $_.Name; " +
+		"Length = $(if ($_.PSIsContainer) { 0 } else { $_.Length }); " +
+		"Attributes = [int]$_.Attributes; " +
+		"CreationTime = [DateTimeOffset]::new($_.CreationTimeUtc).ToUnixTimeMilliseconds(); " +
+		"LastAccessTime = [DateTimeOffset]::new($_.LastAccessTimeUtc).ToUnixTimeMilliseconds(); " +
+		"LastWriteTime = [DateTimeOffset]::new($_.LastWriteTimeUtc).ToUnixTimeMilliseconds(); " +
+		"LinkType = $_.LinkType } }); " +
+		"ConvertTo-Json -InputObject $e -Compress; " +
+		"if ($ev -and $e.Count -eq 0) { [Console]::Error.WriteLine((($ev | ForEach-Object { $_.FullyQualifiedErrorId }) -join ' ')); exit 1 }")
+}
+
 func (cat *Fs) Open(name string) (afero.File, error) {
-	info, err := cat.Stat(name)
-	if err != nil {
-		return nil, err
-	}
-	if info.IsDir() {
-		cmd, err := cat.commandRunner.RunCommand(getDirectoryScript(name))
-		if err != nil {
-			return nil, err
-		}
-		if cmd.ExitStatus != 0 {
-			message, err := io.ReadAll(cmd.Stderr)
-			if err != nil {
-				return nil, err
-			}
-			return nil, &os.PathError{Op: "readdir", Path: name, Err: fmt.Errorf("directory listing failed: %s", message)}
-		}
-		var items []GetItem
-		if err := json.NewDecoder(cmd.Stdout).Decode(&items); err != nil {
-			return nil, fmt.Errorf("cannot parse directory listing for %s: %w", name, err)
-		}
-		entries := make([]os.FileInfo, len(items))
-		for i := range items {
-			entries[i] = itemFileInfo(&items[i])
-		}
-		return &File{path: name, info: info, entries: entries}, nil
-	}
-
 	// NOTE: do not use type here since it does not work well with file names like 'C:\Program Files\New Text Document.txt'
-	cmd, err := cat.commandRunner.RunCommand(getContentScript(name))
+	cmd, err := cat.commandRunner.RunCommand(openScript(name))
 	if err != nil {
 		return nil, err
 	}
 
+	if cmd.ExitStatus == dirExitStatus {
+		return newDir(cat, name), nil
+	}
+	if cmd.ExitStatus == tooLargeExitStatus {
+		return nil, &os.PathError{Op: "open", Path: name, Err: ErrFileTooLarge}
+	}
 	if cmd.ExitStatus != 0 {
 		return nil, os.ErrNotExist
 	}
@@ -93,16 +119,25 @@ func (cat *Fs) Open(name string) (afero.File, error) {
 	}
 
 	file := NewFile(name, bytes.NewBuffer(data))
-	file.info = info
+	file.catfs = cat
 	return file, nil
 }
 
-func getDirectoryScript(name string) string {
-	return powershell.Encode("$items = @(Get-ChildItem -Force -LiteralPath " + powershell.SingleQuote(name) +
-		" -ErrorAction Stop | Select-Object Name,Length,Attributes,CreationTime,LastAccessTime,LastWriteTime); ConvertTo-Json -Compress -InputObject $items")
+func (cat *Fs) Stat(name string) (os.FileInfo, error) {
+	return cat.stat(name, false)
 }
 
-func (cat *Fs) Stat(name string) (os.FileInfo, error) {
+// LstatIfPossible reports a junction or symbolic link as the link itself, as
+// os.Lstat does, where Stat describes what it points to. afero.Walk uses it
+// when the filesystem has it, so a walk does not descend into a link: a user
+// profile holds junctions such as AppData\Local\Application Data that point
+// back at their own parent, and following one walks the same tree forever.
+func (cat *Fs) LstatIfPossible(name string) (os.FileInfo, bool, error) {
+	fi, err := cat.stat(name, true)
+	return fi, true, err
+}
+
+func (cat *Fs) stat(name string, lstat bool) (os.FileInfo, error) {
 	cmd, err := cat.commandRunner.RunCommand(getItemScript(name))
 	if err != nil {
 		return nil, err
@@ -117,11 +152,7 @@ func (cat *Fs) Stat(name string) (os.FileInfo, error) {
 		return nil, err
 	}
 
-	return itemFileInfo(item), nil
-}
-
-func itemFileInfo(item *GetItem) os.FileInfo {
-	return &fileStat{
+	fs := &fileStat{
 		name:           item.Name,
 		FileSize:       item.Length,
 		FileAttributes: item.Attributes,
@@ -129,6 +160,23 @@ func itemFileInfo(item *GetItem) os.FileInfo {
 		LastAccessTime: powershell.PSJsonTimestamp(item.LastAccessTime),
 		LastWriteTime:  powershell.PSJsonTimestamp(item.LastWriteTime),
 	}
+	if lstat {
+		fs.Reserved0 = reparseTag(item.LinkType)
+	}
+	return fs, nil
+}
+
+// reparseTag maps PowerShell's LinkType to the reparse tag fileStat reads to
+// report a link. A hard link is an ordinary file, and so is a reparse point
+// of any other kind, such as a OneDrive placeholder.
+func reparseTag(linkType string) uint32 {
+	switch linkType {
+	case "Junction":
+		return IO_REPARSE_TAG_MOUNT_POINT
+	case "SymbolicLink":
+		return IO_REPARSE_TAG_SYMLINK
+	}
+	return 0
 }
 
 var NotImplemented = errors.New("not implemented")
