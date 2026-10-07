@@ -1236,25 +1236,20 @@ func (k *mqlK8s) kyverno() (*mqlK8sKyverno, error) {
 }
 
 func (k *mqlK8sKyverno) installed() (bool, error) {
-	policies := k.GetPolicies()
-	if policies.Error != nil {
-		return false, policies.Error
+	conn, err := k8sProvider(k.MqlRuntime.Connection)
+	if err != nil {
+		return false, err
 	}
-	if len(policies.Data) > 0 {
-		return true, nil
+	resources, err := conn.SupportedResourceTypes()
+	if err != nil {
+		return false, err
 	}
-	exceptions := k.GetPolicyExceptions()
-	if exceptions.Error != nil {
-		return false, exceptions.Error
+	for _, resource := range resources.Resources() {
+		if strings.HasSuffix(resource.GroupVersion.Group, ".kyverno.io") || resource.GroupVersion.Group == "wgpolicyk8s.io" {
+			return true, nil
+		}
 	}
-	if len(exceptions.Data) > 0 {
-		return true, nil
-	}
-	reports := k.GetPolicyReports()
-	if reports.Error != nil {
-		return false, reports.Error
-	}
-	return len(reports.Data) > 0, nil
+	return false, nil
 }
 
 func (k *mqlK8sKyverno) policyCount() (int64, error) {
@@ -2020,6 +2015,9 @@ func kyvernoResultResource(runtime *plugin.Runtime, data *kyvernoResultData) (*m
 		return nil, err
 	}
 	cast := res.(*mqlK8sKyvernoResult)
+	if data.timestamp.IsZero() {
+		cast.Timestamp.State = plugin.StateIsSet | plugin.StateIsNull
+	}
 	cast.data = data
 	return cast, nil
 }
@@ -3698,14 +3696,20 @@ func kyvernoPolicyExceptionMatchesResult(exception *kyvernoExceptionData, result
 }
 
 func kyvernoPolicyExceptionMatchConditionsMatchResult(match map[string]any, result *kyvernoResultData) bool {
-	if !scopeValuesMatch(matchConditionKinds(match), result.scopeKind, normalizeK8sKind) {
-		return false
-	}
-	if !scopeValuesMatch(matchConditionNamespaces(match), result.scopeNamespace, normalizeScopeString) {
-		return false
-	}
-	if !scopeValuesMatch(matchConditionNames(match), result.scopeName, normalizeScopeString) {
-		return false
+	conditions := sliceOfMapsFromAny(valueFromPath(match, "matchConditions"))
+	for _, condition := range conditions {
+		expression := stringFromMap(condition, "expression")
+		kinds := celStringEqualities(map[string]any{"expression": expression}, kyvernoCELKindEquals...)
+		namespaces := celStringEqualities(map[string]any{"expression": expression}, kyvernoCELNamespaceEquals...)
+		names := celStringEqualities(map[string]any{"expression": expression}, kyvernoCELNameEquals...)
+		if len(kinds) == 0 && len(namespaces) == 0 && len(names) == 0 {
+			return false
+		}
+		if !scopeValuesMatch(kinds, result.scopeKind, normalizeK8sKind) ||
+			!scopeValuesMatch(namespaces, result.scopeNamespace, normalizeScopeString) ||
+			!scopeValuesMatch(names, result.scopeName, normalizeScopeString) {
+			return false
+		}
 	}
 	return true
 }
