@@ -2044,13 +2044,17 @@ private k8s.container @defaults("name") {
   // One entry per variable, with keys `name`, `value` (a literal value), and
   // `valueFrom` for values sourced from elsewhere (`configMapKeyRef`,
   // `secretKeyRef`, `fieldRef`, `resourceFieldRef`, or `fileKeyRef`).
-  env []dict
+  // Deprecated: use envs for the complete list of environment variables.
+  env dict
+  envs []dict
   // Sources to populate environment variables in bulk
   //
   // One entry per source, with keys `configMapRef` or `secretRef` naming the
   // ConfigMap or Secret whose keys become environment variables, and an
   // optional `prefix` prepended to each variable name.
-  envFrom []dict
+  // Deprecated: use envFroms for the complete list of environment sources.
+  envFrom dict
+  envFroms []dict
   // Network ports exposed by the container (containerPort, protocol, hostPort, hostIP, name)
   ports []dict
   // Lifecycle hooks (postStart, preStop)
@@ -2250,12 +2254,16 @@ private k8s.initContainer @defaults("name") {
   // source (`fieldRef`, `resourceFieldRef`, `configMapKeyRef`,
   // `secretKeyRef`, or `fileKeyRef`). Values pulled from a ConfigMap or Secret can expose
   // sensitive data to the container.
-  env []dict
+  // Deprecated: use envs for the complete list of environment variables.
+  env dict
+  envs []dict
   // Sources that populate environment variables in bulk
   //
   // Each entry references a `configMapRef` or `secretRef` whose keys become
   // environment variables, with an optional `prefix` applied to every name.
-  envFrom []dict
+  // Deprecated: use envFroms for the complete list of environment sources.
+  envFrom dict
+  envFroms []dict
   // Network ports exposed by the container (containerPort, protocol, hostPort, hostIP, name)
   ports []dict
   // Lifecycle hooks (postStart, preStop)
@@ -2396,13 +2404,17 @@ private k8s.ephemeralContainer @defaults("name") {
   // One entry per variable, each with `name` and either an inline `value`
   // or a `valueFrom` source (`fieldRef`, `resourceFieldRef`,
   // `configMapKeyRef`, `secretKeyRef`, or `fileKeyRef`).
-  env []dict
+  // Deprecated: use envs for the complete list of environment variables.
+  env dict
+  envs []dict
   // Sources that populate environment variables in bulk
   //
   // One entry per source, each with an optional `prefix` and either a
   // `configMapRef` or `secretRef` naming the ConfigMap or Secret whose keys
   // become environment variables.
-  envFrom []dict
+  // Deprecated: use envFroms for the complete list of environment sources.
+  envFrom dict
+  envFroms []dict
   // Network ports exposed by the container (typically empty for ephemeral containers)
   //
   // One entry per port, each with `containerPort`, an optional `name`,

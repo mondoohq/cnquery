@@ -184,6 +184,8 @@ k8s.container.containerImage 9.0.0
 k8s.container.droppedCapabilities 13.1.2
 k8s.container.env 9.0.0
 k8s.container.envFrom 9.0.0
+k8s.container.envFroms 14.0.1
+k8s.container.envs 14.0.1
 k8s.container.imageName 9.0.0
 k8s.container.imagePullPolicy 9.0.0
 k8s.container.lifecycle 13.0.16
@@ -536,6 +538,8 @@ k8s.ephemeralContainer.containerImage 9.0.0
 k8s.ephemeralContainer.droppedCapabilities 13.1.2
 k8s.ephemeralContainer.env 9.0.0
 k8s.ephemeralContainer.envFrom 9.0.0
+k8s.ephemeralContainer.envFroms 14.0.1
+k8s.ephemeralContainer.envs 14.0.1
 k8s.ephemeralContainer.imageName 9.0.0
 k8s.ephemeralContainer.imagePullPolicy 9.0.0
 k8s.ephemeralContainer.name 9.0.0
@@ -748,6 +752,8 @@ k8s.initContainer.containerImage 9.0.0
 k8s.initContainer.droppedCapabilities 13.1.2
 k8s.initContainer.env 9.0.0
 k8s.initContainer.envFrom 9.0.0
+k8s.initContainer.envFroms 14.0.1
+k8s.initContainer.envs 14.0.1
 k8s.initContainer.imageName 9.0.0
 k8s.initContainer.imagePullPolicy 9.0.0
 k8s.initContainer.lifecycle 13.0.16

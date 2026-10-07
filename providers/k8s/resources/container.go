@@ -150,6 +150,15 @@ func getContainers(
 		if err != nil {
 			return nil, err
 		}
+		// Keep the released singular fields usable for the unambiguous legacy
+		// shape while exposing the complete Kubernetes lists through envs/envFroms.
+		envData, envFromData := llx.NilData, llx.NilData
+		if len(env) == 1 {
+			envData = llx.DictData(env[0])
+		}
+		if len(envFrom) == 1 {
+			envFromData = llx.DictData(envFrom[0])
+		}
 
 		ports, err := convert.JsonToDictSlice(c.Ports)
 		if err != nil {
@@ -170,8 +179,10 @@ func getContainers(
 			"tty":                      llx.BoolData(c.TTY),
 			"stdin":                    llx.BoolData(c.Stdin),
 			"stdinOnce":                llx.BoolData(c.StdinOnce),
-			"env":                      llx.ArrayData(env, types.Dict),
-			"envFrom":                  llx.ArrayData(envFrom, types.Dict),
+			"env":                      envData,
+			"envFrom":                  envFromData,
+			"envs":                     llx.ArrayData(env, types.Dict),
+			"envFroms":                 llx.ArrayData(envFrom, types.Dict),
 			"ports":                    llx.ArrayData(ports, types.Dict),
 			"terminationMessagePath":   llx.StringData(c.TerminationMessagePath),
 			"terminationMessagePolicy": llx.StringData(string(c.TerminationMessagePolicy)),

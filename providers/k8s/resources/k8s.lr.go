@@ -2675,10 +2675,16 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlK8sContainer).GetStdinOnce()).ToDataRes(types.Bool)
 	},
 	"k8s.container.env": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sContainer).GetEnv()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlK8sContainer).GetEnv()).ToDataRes(types.Dict)
+	},
+	"k8s.container.envs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetEnvs()).ToDataRes(types.Array(types.Dict))
 	},
 	"k8s.container.envFrom": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sContainer).GetEnvFrom()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlK8sContainer).GetEnvFrom()).ToDataRes(types.Dict)
+	},
+	"k8s.container.envFroms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetEnvFroms()).ToDataRes(types.Array(types.Dict))
 	},
 	"k8s.container.ports": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sContainer).GetPorts()).ToDataRes(types.Array(types.Dict))
@@ -2822,10 +2828,16 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlK8sInitContainer).GetStdinOnce()).ToDataRes(types.Bool)
 	},
 	"k8s.initContainer.env": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sInitContainer).GetEnv()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlK8sInitContainer).GetEnv()).ToDataRes(types.Dict)
+	},
+	"k8s.initContainer.envs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetEnvs()).ToDataRes(types.Array(types.Dict))
 	},
 	"k8s.initContainer.envFrom": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sInitContainer).GetEnvFrom()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlK8sInitContainer).GetEnvFrom()).ToDataRes(types.Dict)
+	},
+	"k8s.initContainer.envFroms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetEnvFroms()).ToDataRes(types.Array(types.Dict))
 	},
 	"k8s.initContainer.ports": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sInitContainer).GetPorts()).ToDataRes(types.Array(types.Dict))
@@ -2927,10 +2939,16 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlK8sEphemeralContainer).GetStdinOnce()).ToDataRes(types.Bool)
 	},
 	"k8s.ephemeralContainer.env": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sEphemeralContainer).GetEnv()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlK8sEphemeralContainer).GetEnv()).ToDataRes(types.Dict)
+	},
+	"k8s.ephemeralContainer.envs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetEnvs()).ToDataRes(types.Array(types.Dict))
 	},
 	"k8s.ephemeralContainer.envFrom": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sEphemeralContainer).GetEnvFrom()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlK8sEphemeralContainer).GetEnvFrom()).ToDataRes(types.Dict)
+	},
+	"k8s.ephemeralContainer.envFroms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetEnvFroms()).ToDataRes(types.Array(types.Dict))
 	},
 	"k8s.ephemeralContainer.ports": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEphemeralContainer).GetPorts()).ToDataRes(types.Array(types.Dict))
@@ -9109,11 +9127,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"k8s.container.env": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sContainer).Env, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*mqlK8sContainer).Env, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.container.envs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).Envs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.container.envFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sContainer).EnvFrom, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*mqlK8sContainer).EnvFrom, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.container.envFroms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).EnvFroms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.container.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9313,11 +9339,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"k8s.initContainer.env": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sInitContainer).Env, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*mqlK8sInitContainer).Env, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.envs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).Envs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.initContainer.envFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sInitContainer).EnvFrom, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*mqlK8sInitContainer).EnvFrom, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.envFroms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).EnvFroms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.initContainer.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9457,11 +9491,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"k8s.ephemeralContainer.env": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sEphemeralContainer).Env, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*mqlK8sEphemeralContainer).Env, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.envs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).Envs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.ephemeralContainer.envFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sEphemeralContainer).EnvFrom, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*mqlK8sEphemeralContainer).EnvFrom, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.envFroms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).EnvFroms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.ephemeralContainer.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20933,8 +20975,10 @@ type mqlK8sContainer struct {
 	Tty                      plugin.TValue[bool]
 	Stdin                    plugin.TValue[bool]
 	StdinOnce                plugin.TValue[bool]
-	Env                      plugin.TValue[[]any]
-	EnvFrom                  plugin.TValue[[]any]
+	Env                      plugin.TValue[any]
+	Envs                     plugin.TValue[[]any]
+	EnvFrom                  plugin.TValue[any]
+	EnvFroms                 plugin.TValue[[]any]
 	Ports                    plugin.TValue[[]any]
 	Lifecycle                plugin.TValue[any]
 	TerminationMessagePath   plugin.TValue[string]
@@ -21116,12 +21160,20 @@ func (c *mqlK8sContainer) GetStdinOnce() *plugin.TValue[bool] {
 	return &c.StdinOnce
 }
 
-func (c *mqlK8sContainer) GetEnv() *plugin.TValue[[]any] {
+func (c *mqlK8sContainer) GetEnv() *plugin.TValue[any] {
 	return &c.Env
 }
 
-func (c *mqlK8sContainer) GetEnvFrom() *plugin.TValue[[]any] {
+func (c *mqlK8sContainer) GetEnvs() *plugin.TValue[[]any] {
+	return &c.Envs
+}
+
+func (c *mqlK8sContainer) GetEnvFrom() *plugin.TValue[any] {
 	return &c.EnvFrom
+}
+
+func (c *mqlK8sContainer) GetEnvFroms() *plugin.TValue[[]any] {
+	return &c.EnvFroms
 }
 
 func (c *mqlK8sContainer) GetPorts() *plugin.TValue[[]any] {
@@ -21273,8 +21325,10 @@ type mqlK8sInitContainer struct {
 	Tty                      plugin.TValue[bool]
 	Stdin                    plugin.TValue[bool]
 	StdinOnce                plugin.TValue[bool]
-	Env                      plugin.TValue[[]any]
-	EnvFrom                  plugin.TValue[[]any]
+	Env                      plugin.TValue[any]
+	Envs                     plugin.TValue[[]any]
+	EnvFrom                  plugin.TValue[any]
+	EnvFroms                 plugin.TValue[[]any]
 	Ports                    plugin.TValue[[]any]
 	Lifecycle                plugin.TValue[any]
 	TerminationMessagePath   plugin.TValue[string]
@@ -21456,12 +21510,20 @@ func (c *mqlK8sInitContainer) GetStdinOnce() *plugin.TValue[bool] {
 	return &c.StdinOnce
 }
 
-func (c *mqlK8sInitContainer) GetEnv() *plugin.TValue[[]any] {
+func (c *mqlK8sInitContainer) GetEnv() *plugin.TValue[any] {
 	return &c.Env
 }
 
-func (c *mqlK8sInitContainer) GetEnvFrom() *plugin.TValue[[]any] {
+func (c *mqlK8sInitContainer) GetEnvs() *plugin.TValue[[]any] {
+	return &c.Envs
+}
+
+func (c *mqlK8sInitContainer) GetEnvFrom() *plugin.TValue[any] {
 	return &c.EnvFrom
+}
+
+func (c *mqlK8sInitContainer) GetEnvFroms() *plugin.TValue[[]any] {
+	return &c.EnvFroms
 }
 
 func (c *mqlK8sInitContainer) GetPorts() *plugin.TValue[[]any] {
@@ -21520,8 +21582,10 @@ type mqlK8sEphemeralContainer struct {
 	Tty                      plugin.TValue[bool]
 	Stdin                    plugin.TValue[bool]
 	StdinOnce                plugin.TValue[bool]
-	Env                      plugin.TValue[[]any]
-	EnvFrom                  plugin.TValue[[]any]
+	Env                      plugin.TValue[any]
+	Envs                     plugin.TValue[[]any]
+	EnvFrom                  plugin.TValue[any]
+	EnvFroms                 plugin.TValue[[]any]
 	Ports                    plugin.TValue[[]any]
 	TerminationMessagePath   plugin.TValue[string]
 	TerminationMessagePolicy plugin.TValue[string]
@@ -21684,12 +21748,20 @@ func (c *mqlK8sEphemeralContainer) GetStdinOnce() *plugin.TValue[bool] {
 	return &c.StdinOnce
 }
 
-func (c *mqlK8sEphemeralContainer) GetEnv() *plugin.TValue[[]any] {
+func (c *mqlK8sEphemeralContainer) GetEnv() *plugin.TValue[any] {
 	return &c.Env
 }
 
-func (c *mqlK8sEphemeralContainer) GetEnvFrom() *plugin.TValue[[]any] {
+func (c *mqlK8sEphemeralContainer) GetEnvs() *plugin.TValue[[]any] {
+	return &c.Envs
+}
+
+func (c *mqlK8sEphemeralContainer) GetEnvFrom() *plugin.TValue[any] {
 	return &c.EnvFrom
+}
+
+func (c *mqlK8sEphemeralContainer) GetEnvFroms() *plugin.TValue[[]any] {
+	return &c.EnvFroms
 }
 
 func (c *mqlK8sEphemeralContainer) GetPorts() *plugin.TValue[[]any] {
