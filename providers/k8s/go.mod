@@ -43,6 +43,7 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/zclconf/go-cty v1.19.0 // indirect
 	go.opentelemetry.io/otel/log v1.47.0 // indirect
+	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7 // indirect
 )
 
 require (
@@ -87,7 +88,7 @@ require (
 	github.com/cloudflare/circl v1.6.5 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
 	github.com/cockroachdb/redact v1.1.8 // indirect
-	github.com/containerd/containerd v1.7.34 // indirect
+	github.com/containerd/containerd v1.7.35 // indirect
 	github.com/containerd/containerd/api v1.10.0 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
