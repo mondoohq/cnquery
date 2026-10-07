@@ -831,6 +831,9 @@ container.repository.fullName 9.0.1
 container.repository.name 9.0.1
 container.repository.registry 9.0.1
 container.repository.scheme 9.0.1
+container.runtimeDelegate 14.15.5
+container.runtimeImage 14.15.5
+container.runtimeImageLayer 14.15.5
 containerd 11.4.84
 containerd.configFile 14.17.1
 containerd.configVersion 14.17.1
