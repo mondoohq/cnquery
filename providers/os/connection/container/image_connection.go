@@ -88,30 +88,42 @@ func newImageTarConnectionWithCloseFn(id uint32, conf *inventory.Config, asset *
 	conf.Options[tar.OPTION_FILE] = extractedFsTar.Name()
 
 	var ociTar *os.File
-	if includeOci && ref != nil {
-		ociTar, err = tmp.File()
-		if err != nil {
-			return nil, err
-		}
-		conf.Options[OPTION_FILE_OCI] = ociTar.Name()
-	}
-
 	var closeOnce sync.Once
 	cleanup := func() {
 		closeOnce.Do(func() {
-			_ = os.Remove(extractedFsTar.Name())
+			_ = extractedFsTar.Close()
+			if err := os.Remove(extractedFsTar.Name()); err != nil && !errors.Is(err, os.ErrNotExist) {
+				log.Warn().Err(err).Str("tar", extractedFsTar.Name()).Msg("tar> failed to remove temporary tar file")
+			}
 			if ociTar != nil {
-				_ = os.Remove(ociTar.Name())
+				_ = ociTar.Close()
+				if err := os.Remove(ociTar.Name()); err != nil && !errors.Is(err, os.ErrNotExist) {
+					log.Warn().Err(err).Str("tar", ociTar.Name()).Msg("tar> failed to remove temporary OCI tar file")
+				}
 			}
 			for _, dir := range cleanupDirs {
-				_ = os.RemoveAll(dir)
+				if dir == "" {
+					continue
+				}
+				if err := os.RemoveAll(dir); err != nil {
+					log.Warn().Err(err).Str("dir", dir).Msg("tar> failed to remove temporary cache directory")
+				}
 			}
 			if closeFn != nil {
 				closeFn()
 			}
 		})
 	}
-	return tar.NewConnection(id, conf, asset,
+	if includeOci && ref != nil {
+		ociTar, err = tmp.File()
+		if err != nil {
+			cleanup()
+			return nil, err
+		}
+		conf.Options[OPTION_FILE_OCI] = ociTar.Name()
+	}
+
+	conn, err := tar.NewConnection(id, conf, asset,
 		tar.WithFetchFn(func() (string, error) {
 			log.Debug().Str("tar", extractedFsTar.Name()).Msg("tar> starting image extract to temporary file")
 			var err error
@@ -138,10 +150,13 @@ func newImageTarConnectionWithCloseFn(id uint32, conf *inventory.Config, asset *
 		tar.WithCloseFn(func() {
 			log.Debug().Str("tar", extractedFsTar.Name()).Msg("tar> remove temporary tar file on connection close")
 			cleanup()
-			/* cleanup also removes the configured cache dirs and releases the slot. */
-			/* the remaining logging below is intentionally retained for close diagnostics. */
 		}),
 	)
+	if err != nil {
+		cleanup()
+		return nil, err
+	}
+	return conn, nil
 }
 
 type limitedFileWriter struct {

@@ -4,12 +4,13 @@
 package runtime
 
 import (
+	"archive/tar"
+	"bytes"
 	"context"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/google/go-containerregistry/pkg/v1/empty"
@@ -28,7 +29,13 @@ func TestRuntimeImageLazyFlattenBudgetCleansAndReleasesSlot(t *testing.T) {
 
 	// The compressed OCI layer is small, but its flattened filesystem tar is
 	// deliberately larger than the remaining budget.
-	img, err := mutate.AppendLayers(empty.Image, stream.NewLayer(io.NopCloser(strings.NewReader(strings.Repeat("x", 1<<20)))))
+	var layerTar bytes.Buffer
+	tw := tar.NewWriter(&layerTar)
+	require.NoError(t, tw.WriteHeader(&tar.Header{Name: "payload", Mode: 0o644, Size: 1 << 20}))
+	_, err := tw.Write(make([]byte, 1<<20))
+	require.NoError(t, err)
+	require.NoError(t, tw.Close())
+	img, err := mutate.AppendLayers(empty.Image, stream.NewLayer(io.NopCloser(bytes.NewReader(layerTar.Bytes()))))
 	require.NoError(t, err)
 	layers, err := img.Layers()
 	require.NoError(t, err)
@@ -38,7 +45,13 @@ func TestRuntimeImageLazyFlattenBudgetCleansAndReleasesSlot(t *testing.T) {
 	imageDigest := writeTestOCILayoutTarFromImage(t, fixture, img)
 	fixtureInfo, err := os.Stat(fixture)
 	require.NoError(t, err)
-	maxBytes := fixtureInfo.Size() + 4096
+	_, layoutDir, err := imageFromOCILayoutTar(fixture, imageDigest, -1)
+	require.NoError(t, err)
+	layoutBytes, err := directoryBytes(layoutDir)
+	require.NoError(t, err)
+	require.NoError(t, os.RemoveAll(layoutDir))
+	// Exact export+layout budget leaves zero bytes for the lazy flattened tar.
+	maxBytes := fixtureInfo.Size() + layoutBytes
 
 	oldExporter := exportRuntimeImage
 	exportRuntimeImage = func(_ context.Context, _, _, path, _, _ string) error {
@@ -57,7 +70,7 @@ func TestRuntimeImageLazyFlattenBudgetCleansAndReleasesSlot(t *testing.T) {
 	}
 	t.Cleanup(func() { exportRuntimeImage = oldExporter })
 
-	config := func(id uint32) *inventory.Config {
+	config := func() *inventory.Config {
 		return &inventory.Config{
 			Type: shared.Type_RuntimeImage.String(),
 			Host: "registry.example.com/team/app:1.2.3",
@@ -73,7 +86,7 @@ func TestRuntimeImageLazyFlattenBudgetCleansAndReleasesSlot(t *testing.T) {
 		}
 	}
 
-	conn, err := NewRuntimeImage(1, config(1), &inventory.Asset{})
+	conn, err := NewRuntimeImage(1, config(), &inventory.Asset{})
 	require.NoError(t, err)
 	require.ErrorIs(t, conn.Fetch(), errRuntimeImageTooLarge)
 	entries, err := os.ReadDir(tmpRoot)
@@ -82,7 +95,7 @@ func TestRuntimeImageLazyFlattenBudgetCleansAndReleasesSlot(t *testing.T) {
 
 	// The failed connection was never explicitly closed. Reacquisition proves
 	// the lazy failure released the max-concurrent-images slot exactly once.
-	second, err := NewRuntimeImage(2, config(2), &inventory.Asset{})
+	second, err := NewRuntimeImage(2, config(), &inventory.Asset{})
 	require.NoError(t, err)
 	second.Close()
 }
