@@ -205,10 +205,7 @@ func NewRuntimeImage(id uint32, conf *inventory.Config, asset *inventory.Asset) 
 	conf.Type = shared.Type_RuntimeImage.String()
 	conf.Runtime = shared.Type_RuntimeImage.String()
 
-	var releaseOnce sync.Once
-	conn, err := container.NewImageConnectionWithCloseFn(id, conf, asset, img, nil, func() {
-		releaseOnce.Do(releaseImageSlot)
-	}, cleanupDirs...)
+	conn, err := container.NewImageConnectionWithCloseFn(id, conf, asset, img, nil, releaseImageSlot, cleanupDirs...)
 	if err != nil {
 		cleanup()
 		for _, dir := range cleanupDirs {
@@ -260,8 +257,9 @@ func acquireRuntimeImageOptionSlot(options map[string]string, key, scope string)
 	}
 	sem := runtimeImageSemaphore(scope, limit)
 	sem <- struct{}{}
+	var releaseOnce sync.Once
 	return func() {
-		<-sem
+		releaseOnce.Do(func() { <-sem })
 	}, nil
 }
 

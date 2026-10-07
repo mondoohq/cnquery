@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/google/go-containerregistry/pkg/v1/empty"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
@@ -100,4 +101,25 @@ func TestRuntimeImageLazyFlattenBudgetCleansAndReleasesSlot(t *testing.T) {
 	conn.Close()
 	conn.Close()
 	second.Close()
+}
+
+func TestRuntimeImageSlotReleaseIsIdempotent(t *testing.T) {
+	options := map[string]string{OPTION_RUNTIME_IMAGE_MAX_IMAGES: "1"}
+	release, err := acquireRuntimeImageOptionSlot(options, OPTION_RUNTIME_IMAGE_MAX_IMAGES, t.Name())
+	require.NoError(t, err)
+	done := make(chan struct{})
+	go func() {
+		release()
+		release()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("repeated release blocked")
+	}
+	assert.Empty(t, runtimeImageSemaphore(t.Name(), 1))
+	secondRelease, err := acquireRuntimeImageOptionSlot(options, OPTION_RUNTIME_IMAGE_MAX_IMAGES, t.Name())
+	require.NoError(t, err)
+	secondRelease()
 }
