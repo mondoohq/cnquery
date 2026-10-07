@@ -69,12 +69,13 @@ func newImageTarConnectionWithCloseFn(id uint32, conf *inventory.Config, asset *
 	}
 	maxBytes := int64(-1)
 	raw := conf.Options[optionRuntimeImageMaxBytesRemaining]
+	internalBudget := raw != ""
 	if raw == "" {
 		raw = conf.Options[optionRuntimeImageMaxBytes]
 	}
 	if raw != "" {
 		parsed, parseErr := strconv.ParseInt(raw, 10, 64)
-		if parseErr != nil || parsed < 1 {
+		if parseErr != nil || parsed < 0 || (!internalBudget && parsed < 1) {
 			return nil, fmt.Errorf("invalid runtime image byte budget %q", raw)
 		}
 		maxBytes = parsed
