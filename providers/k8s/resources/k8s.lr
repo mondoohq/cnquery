@@ -2052,9 +2052,9 @@ private k8s.container @defaults("name") {
   // One entry per source, with keys `configMapRef` or `secretRef` naming the
   // ConfigMap or Secret whose keys become environment variables, and an
   // optional `prefix` prepended to each variable name.
-  // Deprecated: use envFroms for the complete list of environment sources.
+  // Deprecated: use envFromEntries for the complete list of environment sources.
   envFrom dict
-  envFroms []dict
+  envFromEntries []dict
   // Network ports exposed by the container (containerPort, protocol, hostPort, hostIP, name)
   ports []dict
   // Lifecycle hooks (postStart, preStop)
@@ -2261,9 +2261,9 @@ private k8s.initContainer @defaults("name") {
   //
   // Each entry references a `configMapRef` or `secretRef` whose keys become
   // environment variables, with an optional `prefix` applied to every name.
-  // Deprecated: use envFroms for the complete list of environment sources.
+  // Deprecated: use envFromEntries for the complete list of environment sources.
   envFrom dict
-  envFroms []dict
+  envFromEntries []dict
   // Network ports exposed by the container (containerPort, protocol, hostPort, hostIP, name)
   ports []dict
   // Lifecycle hooks (postStart, preStop)
@@ -2412,9 +2412,9 @@ private k8s.ephemeralContainer @defaults("name") {
   // One entry per source, each with an optional `prefix` and either a
   // `configMapRef` or `secretRef` naming the ConfigMap or Secret whose keys
   // become environment variables.
-  // Deprecated: use envFroms for the complete list of environment sources.
+  // Deprecated: use envFromEntries for the complete list of environment sources.
   envFrom dict
-  envFroms []dict
+  envFromEntries []dict
   // Network ports exposed by the container (typically empty for ephemeral containers)
   //
   // One entry per port, each with `containerPort`, an optional `name`,
