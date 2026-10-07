@@ -168,12 +168,16 @@ func (k *mqlK8sIngress) ingressClassByName(name string) (*mqlK8sIngressclass, er
 }
 
 func (k *mqlK8sIngress) defaultIngressClass() (*mqlK8sIngressclass, error) {
-	classes, err := k.ingressClasses()
+	obj, err := CreateResource(k.MqlRuntime, "k8s", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
+	classes := obj.(*mqlK8s).GetIngressClasses()
+	if classes.Error != nil {
+		return nil, classes.Error
+	}
 	var defaultClass *mqlK8sIngressclass
-	for _, item := range classes {
+	for _, item := range classes.Data {
 		ic, ok := item.(*mqlK8sIngressclass)
 		if !ok {
 			continue
