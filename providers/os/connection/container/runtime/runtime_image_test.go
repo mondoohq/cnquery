@@ -96,6 +96,64 @@ func TestRuntimeImageConnectionExportsContainerdImage(t *testing.T) {
 	assert.Equal(t, imageDigest, calls[0].targetDigest)
 }
 
+func TestNewRuntimeImageCleansExportAfterBudgetFailure(t *testing.T) {
+	var exportPath string
+	oldExporter := exportRuntimeImage
+	exportRuntimeImage = func(_ context.Context, _, _, path, _, _ string) error {
+		exportPath = path
+		return os.WriteFile(path, bytes.Repeat([]byte{'x'}, 4), 0o600)
+	}
+	t.Cleanup(func() { exportRuntimeImage = oldExporter })
+
+	_, err := NewRuntimeImage(1, &inventory.Config{
+		Type: shared.Type_RuntimeImage.String(), Host: "registry.example.com/team/app:1.2.3",
+		Options: map[string]string{
+			OPTION_RUNTIME_IMAGE_KIND: "containerd", OPTION_RUNTIME_IMAGE_ENDPOINT: "unix:///run/containerd.sock",
+			OPTION_RUNTIME_IMAGE_ALLOW_PULL: "false", OPTION_RUNTIME_IMAGE_MAX_BYTES: "3", "disable-cache": "true",
+		},
+	}, &inventory.Asset{})
+	require.ErrorIs(t, err, errRuntimeImageTooLarge)
+	assert.NotEmpty(t, exportPath)
+	assert.NoFileExists(t, exportPath)
+}
+
+func TestNewRuntimeImageCleansExportAfterExtractionBudgetFailure(t *testing.T) {
+	tmpDir := t.TempDir()
+	ociTar := filepath.Join(tmpDir, "image.tar")
+	writeTestOCILayoutTar(t, ociTar)
+	info, err := os.Stat(ociTar)
+	require.NoError(t, err)
+	var exportPath string
+	oldExporter := exportRuntimeImage
+	exportRuntimeImage = func(_ context.Context, _, _, path, _, _ string) error {
+		exportPath = path
+		in, err := os.Open(ociTar)
+		if err != nil {
+			return err
+		}
+		defer in.Close()
+		out, err := os.Create(path)
+		if err != nil {
+			return err
+		}
+		defer out.Close()
+		_, err = io.Copy(out, in)
+		return err
+	}
+	t.Cleanup(func() { exportRuntimeImage = oldExporter })
+
+	_, err = NewRuntimeImage(1, &inventory.Config{
+		Type: shared.Type_RuntimeImage.String(), Host: "registry.example.com/team/app:1.2.3",
+		Options: map[string]string{
+			OPTION_RUNTIME_IMAGE_KIND: "containerd", OPTION_RUNTIME_IMAGE_ENDPOINT: "unix:///run/containerd.sock",
+			OPTION_RUNTIME_IMAGE_ALLOW_PULL: "false", OPTION_RUNTIME_IMAGE_MAX_BYTES: strconv.FormatInt(info.Size()+1, 10), "disable-cache": "true",
+		},
+	}, &inventory.Asset{})
+	require.ErrorIs(t, err, errRuntimeImageTooLarge)
+	assert.NotEmpty(t, exportPath)
+	assert.NoFileExists(t, exportPath)
+}
+
 func TestRuntimeImageConnectionFallsBackToNextDelegateCandidate(t *testing.T) {
 	tmpDir := t.TempDir()
 	ociTar := filepath.Join(tmpDir, "image.tar")
