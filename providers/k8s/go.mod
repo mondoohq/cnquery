@@ -88,7 +88,7 @@ require (
 	github.com/cloudflare/circl v1.6.5 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
 	github.com/cockroachdb/redact v1.1.8 // indirect
-	github.com/containerd/containerd v1.7.35 // indirect
+	github.com/containerd/containerd v1.7.36 // indirect
 	github.com/containerd/containerd/api v1.10.0 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
