@@ -54,7 +54,6 @@ func TestRuntimeImageArgsFromK8sNamesDigest(t *testing.T) {
 	assert.Equal(t, []any{"containerd://abc123"}, args["containers"].Value)
 	assert.Equal(t, "pending", args["scanStatus"].Value)
 	assert.Nil(t, args["created"].Value)
-	assert.Nil(t, args["inUse"].Value)
 }
 
 func TestRuntimeCacheAbsentTimesAreNull(t *testing.T) {
@@ -62,6 +61,7 @@ func TestRuntimeCacheAbsentTimesAreNull(t *testing.T) {
 	delegate := runtimeDelegateArgsFromK8sNode("node-a", "containerd")
 	configured := runtimeDelegateArgsFromRuntimeCacheDelegate("node-a", nil, runtimeCacheDelegate{ID: "primary", Kind: "containerd"})
 	assert.Nil(t, image["created"].Value)
+	assert.Nil(t, image["inUse"].Value)
 	assert.Nil(t, delegate["lastChecked"].Value)
 	assert.Nil(t, configured["lastChecked"].Value)
 	assert.Equal(t, "unavailable", configured["status"].Value)
