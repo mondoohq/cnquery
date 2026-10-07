@@ -920,6 +920,9 @@ func TestLimitedWriterRejectsBytesBeyondBudget(t *testing.T) {
 	_, err = w.Write([]byte("5"))
 	require.ErrorIs(t, err, errRuntimeImageTooLarge)
 	assert.Equal(t, "1234", buf.String())
+	zero := &limitedWriter{w: &buf, max: 0}
+	_, err = zero.Write([]byte("1"))
+	require.ErrorIs(t, err, errRuntimeImageTooLarge)
 }
 
 func TestRuntimeImageMaxBytesValidation(t *testing.T) {

@@ -32,7 +32,6 @@ import (
 	"github.com/containerd/platforms"
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
-	"github.com/google/go-containerregistry/pkg/v1/cache"
 	"github.com/google/go-containerregistry/pkg/v1/layout"
 	digest "github.com/opencontainers/go-digest"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
@@ -77,7 +76,7 @@ var runtimeImageSemaphores sync.Map
 
 type runtimeImageMaxBytesKey struct{}
 
-var errRuntimeImageTooLarge = errors.New("runtime image exceeds configured byte limit")
+var errRuntimeImageTooLarge = container.ErrRuntimeImageTooLarge
 
 type limitedWriter struct {
 	w   io.Writer
@@ -173,6 +172,19 @@ func NewRuntimeImage(id uint32, conf *inventory.Config, asset *inventory.Asset) 
 		cleanup()
 		return nil, err
 	}
+	layoutBytes, err := directoryBytes(layoutDir)
+	if err != nil {
+		_ = os.RemoveAll(layoutDir)
+		cleanup()
+		return nil, err
+	}
+	remainingBytes := maxBytes - exportInfo.Size() - layoutBytes
+	if remainingBytes < 0 {
+		_ = os.RemoveAll(layoutDir)
+		cleanup()
+		return nil, fmt.Errorf("%w: export and layout exceed limit", errRuntimeImageTooLarge)
+	}
+	conf.Options["runtime-cache-max-image-bytes-remaining"] = strconv.FormatInt(remainingBytes, 10)
 	cleanupDirs := []string{exportPath, layoutDir}
 
 	if layerReaders, err := positiveRuntimeImageOption(conf.Options, OPTION_RUNTIME_IMAGE_MAX_LAYER_IO); err != nil {
@@ -184,16 +196,9 @@ func NewRuntimeImage(id uint32, conf *inventory.Config, asset *inventory.Asset) 
 	} else if layerReaders > 0 {
 		img = throttledImage{Image: img, sem: runtimeImageSemaphore("layer", layerReaders)}
 	}
-	if conf.Options["disable-cache"] != "true" {
-		cacheDir, err := tmp.Dir()
-		if err != nil {
-			cleanup()
-			_ = os.RemoveAll(layoutDir)
-			return nil, err
-		}
-		img = cache.Image(img, cache.NewFilesystemCache(cacheDir))
-		cleanupDirs = append(cleanupDirs, cacheDir)
-	}
+	// Runtime images already have bounded export and OCI-layout storage. Avoid
+	// a second filesystem cache that would duplicate those bytes outside the
+	// per-image budget.
 
 	conf.Type = shared.Type_RuntimeImage.String()
 	conf.Runtime = shared.Type_RuntimeImage.String()
@@ -827,6 +832,20 @@ func imageFromOCILayoutTar(path string, targetDigest string, maxBytes int64) (v1
 		return nil, "", err
 	}
 	return img, layoutDir, nil
+}
+
+func directoryBytes(root string) (int64, error) {
+	var total int64
+	err := filepath.Walk(root, func(_ string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			total += info.Size()
+		}
+		return nil
+	})
+	return total, err
 }
 
 func imageFromIndex(idx v1.ImageIndex, targetDigest string) (v1.Image, error) {

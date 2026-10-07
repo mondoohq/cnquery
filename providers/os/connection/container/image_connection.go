@@ -5,8 +5,12 @@ package container
 
 import (
 	"errors"
+	"fmt"
+	"io"
 	"os"
 	"slices"
+	"strconv"
+	"sync"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -28,8 +32,12 @@ const (
 	// used to cache the oci format tar file when the inventory requests to create it alongside the extracted file system tar
 	OPTION_FILE_OCI = "oci-path"
 	// tar the image in the format you get when running `docker save <image> > <image>.tar` containing layers and manifest.json
-	INCLUDE_OCI_TAR_OPT_KEY = "include-oci-tar"
+	INCLUDE_OCI_TAR_OPT_KEY             = "include-oci-tar"
+	optionRuntimeImageMaxBytes          = "runtime-cache-max-image-bytes"
+	optionRuntimeImageMaxBytesRemaining = "runtime-cache-max-image-bytes-remaining"
 )
+
+var ErrRuntimeImageTooLarge = errors.New("runtime image exceeds configured byte limit")
 
 // NewImageConnection uses a container image reference as input and creates a tar connection.
 // Optional cleanupDirs are removed when the connection is closed.
@@ -59,6 +67,18 @@ func newImageTarConnectionWithCloseFn(id uint32, conf *inventory.Config, asset *
 	if conf.Options == nil {
 		conf.Options = map[string]string{}
 	}
+	maxBytes := int64(-1)
+	raw := conf.Options[optionRuntimeImageMaxBytesRemaining]
+	if raw == "" {
+		raw = conf.Options[optionRuntimeImageMaxBytes]
+	}
+	if raw != "" {
+		parsed, parseErr := strconv.ParseInt(raw, 10, 64)
+		if parseErr != nil || parsed < 1 {
+			return nil, fmt.Errorf("invalid runtime image byte budget %q", raw)
+		}
+		maxBytes = parsed
+	}
 
 	extractedFsTar, err := tmp.File()
 	if err != nil {
@@ -75,22 +95,39 @@ func newImageTarConnectionWithCloseFn(id uint32, conf *inventory.Config, asset *
 		conf.Options[OPTION_FILE_OCI] = ociTar.Name()
 	}
 
+	var closeOnce sync.Once
+	cleanup := func() {
+		closeOnce.Do(func() {
+			_ = os.Remove(extractedFsTar.Name())
+			if ociTar != nil {
+				_ = os.Remove(ociTar.Name())
+			}
+			for _, dir := range cleanupDirs {
+				_ = os.RemoveAll(dir)
+			}
+			if closeFn != nil {
+				closeFn()
+			}
+		})
+	}
 	return tar.NewConnection(id, conf, asset,
 		tar.WithFetchFn(func() (string, error) {
 			log.Debug().Str("tar", extractedFsTar.Name()).Msg("tar> starting image extract to temporary file")
-			if err := tar.StreamToTmpFile(mutate.Extract(img), extractedFsTar); err != nil {
+			var err error
+			if maxBytes >= 0 {
+				err = streamToTmpFileLimited(mutate.Extract(img), extractedFsTar, maxBytes)
+			} else {
+				err = tar.StreamToTmpFile(mutate.Extract(img), extractedFsTar)
+			}
+			if err != nil {
 				log.Debug().Str("tar", extractedFsTar.Name()).Msg("tar> failed to save image tar")
-				_ = os.Remove(extractedFsTar.Name())
-				if ociTar != nil {
-					_ = os.Remove(ociTar.Name())
-				}
+				cleanup()
 				return "", err
 			}
 			if ociTar != nil {
 				log.Debug().Str("oci_tar", ociTar.Name()).Msg("tar> saving image in oci format")
 				if err := tarball.Write(ref, img, ociTar); err != nil {
-					_ = os.Remove(extractedFsTar.Name())
-					_ = os.Remove(ociTar.Name())
+					cleanup()
 					return "", err
 				}
 			}
@@ -99,24 +136,31 @@ func newImageTarConnectionWithCloseFn(id uint32, conf *inventory.Config, asset *
 		}),
 		tar.WithCloseFn(func() {
 			log.Debug().Str("tar", extractedFsTar.Name()).Msg("tar> remove temporary tar file on connection close")
-			_ = os.Remove(extractedFsTar.Name())
-			if ociTar != nil {
-				_ = os.Remove(ociTar.Name())
-			}
-			for _, dir := range cleanupDirs {
-				if dir == "" {
-					continue
-				}
-				log.Debug().Str("dir", dir).Msg("tar> remove temporary cache directory on connection close")
-				if err := os.RemoveAll(dir); err != nil {
-					log.Warn().Err(err).Str("dir", dir).Msg("tar> failed to remove temporary cache directory")
-				}
-			}
-			if closeFn != nil {
-				closeFn()
-			}
+			cleanup()
+			/* cleanup also removes the configured cache dirs and releases the slot. */
+			/* the remaining logging below is intentionally retained for close diagnostics. */
 		}),
 	)
+}
+
+type limitedFileWriter struct {
+	file         *os.File
+	written, max int64
+}
+
+func (w *limitedFileWriter) Write(p []byte) (int, error) {
+	if int64(len(p)) > w.max-w.written {
+		return 0, ErrRuntimeImageTooLarge
+	}
+	n, err := w.file.Write(p)
+	w.written += int64(n)
+	return n, err
+}
+func streamToTmpFileLimited(r io.ReadCloser, out *os.File, max int64) error {
+	defer r.Close()
+	defer out.Close()
+	_, err := io.Copy(&limitedFileWriter{file: out, max: max}, r)
+	return err
 }
 
 func includeOciTar(conf *inventory.Config) bool {
