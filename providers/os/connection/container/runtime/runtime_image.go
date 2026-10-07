@@ -62,6 +62,8 @@ const (
 	OPTION_RUNTIME_IMAGE_ALLOW_PULL          = "runtime-cache-allow-pull"
 	OPTION_RUNTIME_IMAGE_MAX_IMAGES          = "runtime-cache-max-concurrent-images"
 	OPTION_RUNTIME_IMAGE_MAX_LAYER_IO        = "runtime-cache-max-concurrent-layer-io"
+	OPTION_RUNTIME_IMAGE_MAX_BYTES           = "runtime-cache-max-image-bytes"
+	defaultRuntimeImageMaxBytes              = int64(8) * 1024 * 1024 * 1024
 )
 
 const defaultContainerdNamespace = "k8s.io"
@@ -69,6 +71,37 @@ const defaultContainerdNamespace = "k8s.io"
 var exportRuntimeImage = exportContainerdImageWithClient
 
 var runtimeImageSemaphores sync.Map
+
+type runtimeImageMaxBytesKey struct{}
+
+var errRuntimeImageTooLarge = errors.New("runtime image exceeds configured byte limit")
+
+type limitedWriter struct {
+	w   io.Writer
+	n   int64
+	max int64
+}
+
+func (w *limitedWriter) Write(p []byte) (int, error) {
+	if int64(len(p)) > w.max-w.n {
+		return 0, errRuntimeImageTooLarge
+	}
+	n, err := w.w.Write(p)
+	w.n += int64(n)
+	return n, err
+}
+
+func runtimeImageMaxBytes(options map[string]string) (int64, error) {
+	raw := strings.TrimSpace(options[OPTION_RUNTIME_IMAGE_MAX_BYTES])
+	if raw == "" {
+		return defaultRuntimeImageMaxBytes, nil
+	}
+	v, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || v < 1 {
+		return 0, fmt.Errorf("%s must be a positive integer", OPTION_RUNTIME_IMAGE_MAX_BYTES)
+	}
+	return v, nil
+}
 
 // NewRuntimeImage opens a node-local runtime image without pulling from a registry.
 // It currently supports read-only containerd delegates by exporting the image
@@ -114,12 +147,25 @@ func NewRuntimeImage(id uint32, conf *inventory.Config, asset *inventory.Asset) 
 		return nil, err
 	}
 
+	maxBytes, err := runtimeImageMaxBytes(conf.Options)
+	if err != nil {
+		return nil, err
+	}
 	exportPath, cleanup, err := exportContainerdImageWithFallback(conf, imageRef)
 	if err != nil {
 		return nil, err
 	}
 
-	img, layoutDir, err := imageFromOCILayoutTar(exportPath, conf.Options[OPTION_RUNTIME_IMAGE_DIGEST])
+	exportInfo, err := os.Stat(exportPath)
+	if err != nil {
+		cleanup()
+		return nil, err
+	}
+	if exportInfo.Size() > maxBytes {
+		cleanup()
+		return nil, fmt.Errorf("%w: export is %d bytes, limit is %d", errRuntimeImageTooLarge, exportInfo.Size(), maxBytes)
+	}
+	img, layoutDir, err := imageFromOCILayoutTar(exportPath, conf.Options[OPTION_RUNTIME_IMAGE_DIGEST], maxBytes-exportInfo.Size())
 	if err != nil {
 		cleanup()
 		return nil, err
@@ -444,6 +490,13 @@ func exportContainerdImage(conf *inventory.Config, imageRef string) (string, fun
 	var errs []error
 	for _, namespace := range namespaces {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		maxBytes, limitErr := runtimeImageMaxBytes(conf.Options)
+		if limitErr != nil {
+			cancel()
+			cleanup()
+			return "", nil, limitErr
+		}
+		ctx = context.WithValue(ctx, runtimeImageMaxBytesKey{}, maxBytes)
 		err := exportRuntimeImage(ctx, endpoint, namespace, exportFile.Name(), imageRef, targetDigest)
 		cancel()
 		if err == nil {
@@ -479,7 +532,11 @@ func exportContainerdImageWithClient(ctx context.Context, endpoint, namespace, e
 	}
 	defer out.Close()
 
-	return archive.Export(ctx, contentStore, out,
+	writer := io.Writer(out)
+	if maxBytes, ok := ctx.Value(runtimeImageMaxBytesKey{}).(int64); ok {
+		writer = &limitedWriter{w: out, max: maxBytes}
+	}
+	return archive.Export(ctx, contentStore, writer,
 		archive.WithImage(imageStore, imageName),
 		archive.WithPlatform(platforms.DefaultStrict()),
 	)
@@ -746,12 +803,12 @@ func validatedRuntimeImageDigest(raw string) (string, error) {
 	return parsed.String(), nil
 }
 
-func imageFromOCILayoutTar(path string, targetDigest string) (v1.Image, string, error) {
+func imageFromOCILayoutTar(path string, targetDigest string, maxBytes int64) (v1.Image, string, error) {
 	layoutDir, err := tmp.Dir()
 	if err != nil {
 		return nil, "", err
 	}
-	if err := extractTarFile(path, layoutDir); err != nil {
+	if err := extractTarFileLimited(path, layoutDir, maxBytes); err != nil {
 		_ = os.RemoveAll(layoutDir)
 		return nil, "", err
 	}
@@ -868,6 +925,10 @@ func digestStringEqual(a interface{ String() string }, b string) bool {
 }
 
 func extractTarFile(src, dest string) error {
+	return extractTarFileLimited(src, dest, -1)
+}
+
+func extractTarFileLimited(src, dest string, maxBytes int64) error {
 	f, err := os.Open(src)
 	if err != nil {
 		return err
@@ -889,6 +950,7 @@ func extractTarFile(src, dest string) error {
 	defer root.Close()
 
 	tr := stdtar.NewReader(f)
+	var written int64
 	for {
 		hdr, err := tr.Next()
 		if errors.Is(err, io.EOF) {
@@ -910,6 +972,9 @@ func extractTarFile(src, dest string) error {
 				return err
 			}
 		case stdtar.TypeReg, 0:
+			if maxBytes >= 0 && hdr.Size > maxBytes-written {
+				return fmt.Errorf("%w while extracting archive", errRuntimeImageTooLarge)
+			}
 			if err := root.MkdirAll(filepath.Dir(cleanName), 0o755); err != nil {
 				return err
 			}
@@ -918,6 +983,7 @@ func extractTarFile(src, dest string) error {
 				return err
 			}
 			_, copyErr := io.Copy(out, tr)
+			written += hdr.Size
 			closeErr := out.Close()
 			if copyErr != nil {
 				return copyErr

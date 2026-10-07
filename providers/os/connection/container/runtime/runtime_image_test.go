@@ -5,6 +5,7 @@ package runtime
 
 import (
 	"archive/tar"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -850,6 +851,26 @@ func TestExtractTarFileWritesSafeRegularFiles(t *testing.T) {
 	data, err := os.ReadFile(filepath.Join(dest, "blobs", "sha256", "layer"))
 	require.NoError(t, err)
 	assert.Equal(t, "layer-data", string(data))
+}
+
+func TestLimitedWriterRejectsBytesBeyondBudget(t *testing.T) {
+	var buf bytes.Buffer
+	w := &limitedWriter{w: &buf, max: 4}
+	_, err := w.Write([]byte("1234"))
+	require.NoError(t, err)
+	_, err = w.Write([]byte("5"))
+	require.ErrorIs(t, err, errRuntimeImageTooLarge)
+	assert.Equal(t, "1234", buf.String())
+}
+
+func TestExtractTarFileLimitedRejectsOversizedArchive(t *testing.T) {
+	tmpDir := t.TempDir()
+	src := filepath.Join(tmpDir, "oversized.tar")
+	dest := filepath.Join(tmpDir, "dest")
+	writeSingleEntryTar(t, src, "blobs/sha256/layer", tar.TypeReg, []byte("layer-data"))
+
+	require.ErrorIs(t, extractTarFileLimited(src, dest, int64(len("layer-data"))-1), errRuntimeImageTooLarge)
+	assert.NoFileExists(t, filepath.Join(dest, "blobs", "sha256", "layer"))
 }
 
 func TestExtractTarFileRejectsUnsafeEntries(t *testing.T) {
