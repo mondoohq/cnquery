@@ -3674,8 +3674,11 @@ func kyvernoPolicyExceptionMatchesResult(exception *kyvernoExceptionData, result
 	if exception.excludeScope.hasClauses() && exception.excludeScope.matches(result) {
 		return false
 	}
+	if !kyvernoPolicyExceptionMatchConditionsMatchResult(exception.match, result) {
+		return false
+	}
 	if exception.matchScope.hasClauses() {
-		return exception.matchScope.matches(result) && kyvernoPolicyExceptionMatchConditionsMatchResult(exception.match, result)
+		return exception.matchScope.matches(result)
 	}
 	if !scopeValuesMatch(exception.matchKinds, result.scopeKind, normalizeK8sKind) {
 		return false
