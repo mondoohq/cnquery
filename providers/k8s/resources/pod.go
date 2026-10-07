@@ -331,9 +331,14 @@ func newRuntimeImageClusterLookup(pods, nodes []any) (*runtimeImageClusterLookup
 		if !ok || pod.Uid.Data == "" {
 			continue
 		}
+		// A malformed unrelated pod must not prevent matching a valid status.
+		// Resolve the UID first and ignore objects whose node metadata cannot be read.
+		if _, err := pod.getPod(); err != nil {
+			continue
+		}
 		nodeName := pod.GetNodeName()
 		if nodeName.Error != nil {
-			return nil, nodeName.Error
+			continue
 		}
 		lookup.podNodeNames[pod.Uid.Data] = nodeName.Data
 	}

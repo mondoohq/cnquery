@@ -264,8 +264,20 @@ func (k *mqlK8sNode) images() ([]any, error) {
 func (k *mqlK8sNode) runtimeImages() ([]any, error) {
 	out := make([]any, 0, len(k.obj.Status.Images))
 	runtimeKind := runtimeKindFromVersion(k.obj.Status.NodeInfo.ContainerRuntimeVersion)
+	var delegate plugin.Resource
+	if settings, err := runtimeCacheSettingsFromRuntime(k.MqlRuntime); err != nil {
+		return nil, err
+	} else if settings != nil {
+		configured := runtimeCacheDelegatesByKind(settings.Delegates)[runtimeKind]
+		if len(configured) == 1 {
+			delegate, err = createSharedRuntimeResource(k.MqlRuntime, "container.runtimeDelegate", runtimeDelegateArgsFromRuntimeCacheDelegate(k.obj.GetName(), settings, configured[0]))
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 	for _, image := range k.obj.Status.Images {
-		args := runtimeImageArgsFromK8sNames(k.obj.GetName(), runtimeKind, image.Names, image.SizeBytes, nil, "pending")
+		args := runtimeImageArgsFromK8sNamesWithDelegate(k.obj.GetName(), runtimeKind, image.Names, image.SizeBytes, nil, "pending", delegate)
 		img, err := createSharedRuntimeResource(k.MqlRuntime, "container.runtimeImage", args)
 		if err != nil {
 			return nil, err

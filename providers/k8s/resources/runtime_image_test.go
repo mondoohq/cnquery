@@ -44,7 +44,7 @@ func TestRuntimeImageArgsFromK8sNamesDigest(t *testing.T) {
 
 	assert.Equal(t, "node-a/sha256:abc123", args["id"].Value)
 	assert.Equal(t, "node-a", args["nodeName"].Value)
-	assert.Equal(t, "containerd", args["delegateId"].Value)
+	assert.Nil(t, args["delegate"])
 	assert.Equal(t, "containerd", args["runtimeKind"].Value)
 	assert.Equal(t, "sha256:abc123", args["imageId"].Value)
 	assert.Equal(t, []any{"registry.example.com/team/app:1.2.3"}, args["repoTags"].Value)
@@ -54,6 +54,7 @@ func TestRuntimeImageArgsFromK8sNamesDigest(t *testing.T) {
 	assert.Equal(t, []any{"containerd://abc123"}, args["containers"].Value)
 	assert.Equal(t, "pending", args["scanStatus"].Value)
 	assert.Nil(t, args["created"].Value)
+	assert.Nil(t, args["inUse"].Value)
 }
 
 func TestRuntimeCacheAbsentTimesAreNull(t *testing.T) {

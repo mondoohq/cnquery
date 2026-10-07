@@ -14217,7 +14217,7 @@ container.runtimeImage @defaults("resolvedDigest imageId repoTags") {
   // Kubernetes node name where this image was observed
   nodeName string
   // Runtime delegate that reported this image
-  delegateId string
+  delegate() container.runtimeDelegate
   // Runtime kind that reported this image
   runtimeKind string
   // Runtime image ID

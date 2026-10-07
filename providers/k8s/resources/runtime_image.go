@@ -7,10 +7,15 @@ import (
 	"strings"
 
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/types"
 )
 
 func runtimeImageArgsFromK8sNames(nodeName, runtimeKind string, names []string, sizeBytes int64, containers []string, scanStatus string) map[string]*llx.RawData {
+	return runtimeImageArgsFromK8sNamesWithDelegate(nodeName, runtimeKind, names, sizeBytes, containers, scanStatus, nil)
+}
+
+func runtimeImageArgsFromK8sNamesWithDelegate(nodeName, runtimeKind string, names []string, sizeBytes int64, containers []string, scanStatus string, delegate plugin.Resource) map[string]*llx.RawData {
 	tags, digests := splitK8sImageNames(names)
 	imageID := ""
 	if len(digests) > 0 {
@@ -37,10 +42,9 @@ func runtimeImageArgsFromK8sNames(nodeName, runtimeKind string, names []string, 
 		id = nodeScopedRuntimeID(nodeName, tags[0])
 	}
 
-	return map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"id":                llx.StringData(id),
 		"nodeName":          llx.StringData(nodeName),
-		"delegateId":        llx.StringData(runtimeKind),
 		"runtimeKind":       llx.StringData(runtimeKind),
 		"imageId":           llx.StringData(imageID),
 		"repoTags":          llx.ArrayData(runtimeStringsToAny(tags), types.String),
@@ -50,13 +54,20 @@ func runtimeImageArgsFromK8sNames(nodeName, runtimeKind string, names []string, 
 		"sizeBytes":         llx.IntData(sizeBytes),
 		"labels":            llx.MapData(map[string]any{}, types.String),
 		"namespaces":        llx.ArrayData([]any{}, types.String),
-		"inUse":             llx.BoolData(len(containers) > 0),
+		"inUse":             llx.NilData,
 		"containers":        llx.ArrayData(runtimeStringsToAny(containers), types.String),
 		"scanStatus":        llx.StringData(scanStatus),
 		"scanStatusMessage": llx.StringData(""),
 		"layers":            llx.ArrayData([]any{}, types.Resource("container.runtimeImageLayer")),
 		"created":           llx.NilData,
 	}
+	if containers != nil {
+		args["inUse"] = llx.BoolData(len(containers) > 0)
+	}
+	if delegate != nil {
+		args["delegate"] = llx.ResourceData(delegate, "container.runtimeDelegate")
+	}
+	return args
 }
 
 func runtimeDelegateArgsFromK8sNode(nodeName, runtimeKind string) map[string]*llx.RawData {

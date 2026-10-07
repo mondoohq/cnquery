@@ -16,6 +16,7 @@ import (
 	"github.com/kballard/go-shellquote"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/types"
 )
@@ -370,12 +371,16 @@ func (p *mqlContainerdContainer) id() (string, error) {
 }
 
 func (p *mqlContainerd) delegate() (*mqlContainerRuntimeDelegate, error) {
+	status, statusMessage := "ready", ""
+	if _, _, err := p.listContainerdNamespaces(); err != nil {
+		status, statusMessage = "unavailable", err.Error()
+	}
 	delegate, err := CreateResource(p.MqlRuntime, "container.runtimeDelegate", map[string]*llx.RawData{
 		"id": llx.StringData("containerd"), "kind": llx.StringData("containerd"), "endpoint": llx.StringData(""),
 		"priority": llx.IntData(0), "namespaces": llx.ArrayData([]any{}, types.String),
 		"snapshotters": llx.ArrayData([]any{}, types.String), "readonly": llx.BoolData(true),
-		"allowPull": llx.BoolData(false), "status": llx.StringData("ready"), "statusMessage": llx.StringData(""),
-		"lastChecked": llx.TimeData(time.Time{}),
+		"allowPull": llx.BoolData(false), "status": llx.StringData(status), "statusMessage": llx.StringData(statusMessage),
+		"lastChecked": llx.TimeData(time.Now()),
 	})
 	if err != nil {
 		return nil, err
@@ -418,7 +423,11 @@ func (p *mqlContainerd) images() ([]any, error) {
 	out := make([]any, 0, len(byRef))
 	for _, entry := range byRef {
 		args := runtimeImageArgsFromReference(entry.ref)
-		args["delegateId"] = llx.StringData("containerd")
+		delegate, err := p.delegate()
+		if err != nil {
+			return nil, err
+		}
+		args["delegate"] = llx.ResourceData(delegate, "container.runtimeDelegate")
 		args["runtimeKind"] = llx.StringData("containerd")
 		args["namespaces"] = llx.ArrayData(stringsSetToAny(entry.namespaces), types.String)
 		args["containers"] = llx.ArrayData(stringsSliceToAny(entry.containers), types.String)
@@ -434,6 +443,10 @@ func (p *mqlContainerd) images() ([]any, error) {
 }
 
 func (p *mqlContainerRuntimeDelegate) id() (string, error) { return p.Id.Data, nil }
+func (p *mqlContainerRuntimeImage) delegate() (*mqlContainerRuntimeDelegate, error) {
+	p.Delegate.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
 func (p *mqlContainerRuntimeImage) id() (string, error) {
 	if p.Id.Data != "" {
 		return p.Id.Data, nil
