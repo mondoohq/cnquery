@@ -421,12 +421,12 @@ func (p *mqlContainerd) images() ([]any, error) {
 		}
 	}
 	out := make([]any, 0, len(byRef))
+	delegate, err := p.delegate()
+	if err != nil {
+		return nil, err
+	}
 	for _, entry := range byRef {
 		args := runtimeImageArgsFromReference(entry.ref)
-		delegate, err := p.delegate()
-		if err != nil {
-			return nil, err
-		}
 		args["delegate"] = llx.ResourceData(delegate, "container.runtimeDelegate")
 		args["runtimeKind"] = llx.StringData("containerd")
 		args["namespaces"] = llx.ArrayData(stringsSetToAny(entry.namespaces), types.String)

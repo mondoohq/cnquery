@@ -64,6 +64,8 @@ func TestRuntimeCacheAbsentTimesAreNull(t *testing.T) {
 	assert.Nil(t, image["created"].Value)
 	assert.Nil(t, delegate["lastChecked"].Value)
 	assert.Nil(t, configured["lastChecked"].Value)
+	assert.Equal(t, "unavailable", configured["status"].Value)
+	assert.Equal(t, "runtime-cache delegate health was not probed from Kubernetes", configured["statusMessage"].Value)
 }
 
 func TestRuntimeImageArgsAreNodeScoped(t *testing.T) {

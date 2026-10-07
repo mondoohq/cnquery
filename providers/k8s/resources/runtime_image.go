@@ -102,8 +102,8 @@ func runtimeDelegateArgsFromRuntimeCacheDelegate(nodeName string, settings *runt
 		"snapshotters":  llx.ArrayData([]any{}, types.String),
 		"readonly":      llx.BoolData(delegate.ReadOnly),
 		"allowPull":     llx.BoolData(allowPull),
-		"status":        llx.StringData("ready"),
-		"statusMessage": llx.StringData(""),
+		"status":        llx.StringData("unavailable"),
+		"statusMessage": llx.StringData("runtime-cache delegate health was not probed from Kubernetes"),
 		"lastChecked":   llx.NilData,
 	}
 }
