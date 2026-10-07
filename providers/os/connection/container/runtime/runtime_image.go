@@ -62,8 +62,11 @@ const (
 	OPTION_RUNTIME_IMAGE_ALLOW_PULL          = "runtime-cache-allow-pull"
 	OPTION_RUNTIME_IMAGE_MAX_IMAGES          = "runtime-cache-max-concurrent-images"
 	OPTION_RUNTIME_IMAGE_MAX_LAYER_IO        = "runtime-cache-max-concurrent-layer-io"
-	OPTION_RUNTIME_IMAGE_MAX_BYTES           = "runtime-cache-max-image-bytes"
-	defaultRuntimeImageMaxBytes              = int64(8) * 1024 * 1024 * 1024
+	// OPTION_RUNTIME_IMAGE_MAX_BYTES bounds the combined temporary export and
+	// extracted OCI layout for one image. It defaults to 8 GiB and applies per
+	// concurrent image, so callers should account for max-concurrent-images.
+	OPTION_RUNTIME_IMAGE_MAX_BYTES = "runtime-cache-max-image-bytes"
+	defaultRuntimeImageMaxBytes    = int64(8) * 1024 * 1024 * 1024
 )
 
 const defaultContainerdNamespace = "k8s.io"

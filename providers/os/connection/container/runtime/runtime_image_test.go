@@ -863,6 +863,19 @@ func TestLimitedWriterRejectsBytesBeyondBudget(t *testing.T) {
 	assert.Equal(t, "1234", buf.String())
 }
 
+func TestRuntimeImageMaxBytesValidation(t *testing.T) {
+	got, err := runtimeImageMaxBytes(nil)
+	require.NoError(t, err)
+	assert.Equal(t, defaultRuntimeImageMaxBytes, got)
+	for _, raw := range []string{"0", "-1", "not-a-number", "9223372036854775808"} {
+		_, err := runtimeImageMaxBytes(map[string]string{OPTION_RUNTIME_IMAGE_MAX_BYTES: raw})
+		require.Error(t, err, raw)
+	}
+	got, err = runtimeImageMaxBytes(map[string]string{OPTION_RUNTIME_IMAGE_MAX_BYTES: "7"})
+	require.NoError(t, err)
+	assert.Equal(t, int64(7), got)
+}
+
 func TestExtractTarFileLimitedRejectsOversizedArchive(t *testing.T) {
 	tmpDir := t.TempDir()
 	src := filepath.Join(tmpDir, "oversized.tar")
