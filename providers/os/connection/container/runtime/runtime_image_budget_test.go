@@ -15,7 +15,7 @@ import (
 
 	"github.com/google/go-containerregistry/pkg/v1/empty"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
-	"github.com/google/go-containerregistry/pkg/v1/stream"
+	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
@@ -35,11 +35,11 @@ func TestRuntimeImageLazyFlattenBudgetCleansAndReleasesSlot(t *testing.T) {
 	_, err := tw.Write(make([]byte, 1<<20))
 	require.NoError(t, err)
 	require.NoError(t, tw.Close())
-	img, err := mutate.AppendLayers(empty.Image, stream.NewLayer(io.NopCloser(bytes.NewReader(layerTar.Bytes()))))
+	layer, err := tarball.LayerFromOpener(func() (io.ReadCloser, error) {
+		return io.NopCloser(bytes.NewReader(layerTar.Bytes())), nil
+	})
 	require.NoError(t, err)
-	layers, err := img.Layers()
-	require.NoError(t, err)
-	_, err = layers[0].Digest()
+	img, err := mutate.AppendLayers(empty.Image, layer)
 	require.NoError(t, err)
 	fixture := filepath.Join(fixtureDir, "image.tar")
 	imageDigest := writeTestOCILayoutTarFromImage(t, fixture, img)
@@ -97,5 +97,7 @@ func TestRuntimeImageLazyFlattenBudgetCleansAndReleasesSlot(t *testing.T) {
 	// the lazy failure released the max-concurrent-images slot exactly once.
 	second, err := NewRuntimeImage(2, config(), &inventory.Asset{})
 	require.NoError(t, err)
+	conn.Close()
+	conn.Close()
 	second.Close()
 }
