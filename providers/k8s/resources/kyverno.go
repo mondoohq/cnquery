@@ -3086,8 +3086,13 @@ func sliceOfMapsFromPath(m map[string]any, path ...string) []map[string]any {
 }
 
 func sliceOfMapsFromAny(v any) []map[string]any {
-	items, ok := v.([]any)
-	if !ok {
+	var items []any
+	switch t := v.(type) {
+	case []any:
+		items = t
+	case []map[string]any:
+		return t
+	default:
 		if single := mapFromAny(v); len(single) > 0 {
 			return []map[string]any{single}
 		}
