@@ -919,6 +919,7 @@ containerd.container.status 11.4.84
 containerd.container.uid 14.17.1
 containerd.containers 11.4.84
 containerd.defaultRuntime 14.17.1
+containerd.delegate 14.19.1
 containerd.deviceOwnershipFromSecurityContext 14.17.1
 containerd.disableApparmor 14.17.1
 containerd.disabledPlugins 14.17.1
@@ -976,6 +977,7 @@ containerd.runtime.root 14.17.1
 containerd.runtime.shimPath 14.17.1
 containerd.runtime.systemdCgroup 14.17.1
 containerd.runtime.type 14.17.1
+containerd.runtimeImages 14.19.1
 containerd.runtimes 14.17.1
 containerd.sandboxImage 14.17.1
 containerd.selinuxEnabled 14.17.1
