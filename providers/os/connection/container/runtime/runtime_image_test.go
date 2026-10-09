@@ -95,6 +95,7 @@ func TestRuntimeImageConnectionExportsContainerdImage(t *testing.T) {
 	assert.Equal(t, "k8s.io", calls[0].namespace)
 	assert.Equal(t, "registry.example.com/team/app:1.2.3", calls[0].imageRef)
 	assert.Equal(t, imageDigest, calls[0].targetDigest)
+	assert.NotContains(t, conf.Options, "runtime-cache-max-image-bytes-remaining")
 }
 
 func TestNewRuntimeImageCleansExportAfterBudgetFailure(t *testing.T) {
@@ -229,7 +230,7 @@ func TestRuntimeImageConnectionFallsBackToNextDelegateCandidate(t *testing.T) {
 	assert.Equal(t, exportCall{endpoint: "unix:///host/run/containerd-primary.sock", namespace: "prod"}, calls[0])
 	assert.Equal(t, exportCall{endpoint: "unix:///host/run/containerd-secondary.sock", namespace: "k8s.io"}, calls[1])
 	assert.Equal(t, []string{"containerd-primary", "containerd-primary"}, observedConfigDelegateIDs)
-	assert.Equal(t, "containerd-secondary", conf.Options[OPTION_RUNTIME_IMAGE_DELEGATE_ID])
+	assert.Equal(t, "containerd-primary", conf.Options[OPTION_RUNTIME_IMAGE_DELEGATE_ID])
 	assert.Equal(t, "containerd-secondary", asset.Labels["mondoo.com/runtime-delegate-id"])
 }
 
@@ -616,11 +617,12 @@ func TestRuntimeImageLayerReadersThrottle(t *testing.T) {
 	assert.Equal(t, int32(1), maxActive)
 }
 
-func TestRuntimeImageLayerReadersReleaseSlotAfterEachRead(t *testing.T) {
+func TestRuntimeImageLayerReadersReleaseSlotOnClose(t *testing.T) {
+	var closeCount int
 	layer := throttledLayer{
 		Layer: fakeRuntimeLayer{
 			open: func() (io.ReadCloser, error) {
-				return io.NopCloser(strings.NewReader("layer")), nil
+				return &trackedReadCloser{Reader: strings.NewReader("layer"), close: func() { closeCount++ }}, nil
 			},
 		},
 		sem: make(chan struct{}, 1),
@@ -628,26 +630,44 @@ func TestRuntimeImageLayerReadersReleaseSlotAfterEachRead(t *testing.T) {
 
 	first, err := layer.Uncompressed()
 	require.NoError(t, err)
-	second, err := layer.Uncompressed()
-	require.NoError(t, err)
+	secondCh := make(chan io.ReadCloser, 1)
+	errCh := make(chan error, 1)
+	go func() {
+		second, err := layer.Uncompressed()
+		if err != nil {
+			errCh <- err
+			return
+		}
+		secondCh <- second
+	}()
 
 	_, err = first.Read(make([]byte, 1))
 	require.NoError(t, err)
-	done := make(chan error, 1)
-	go func() {
-		_, err := second.Read(make([]byte, 1))
-		done <- err
-	}()
-
 	select {
-	case err := <-done:
+	case err := <-errCh:
 		require.NoError(t, err)
-	case <-time.After(time.Second):
-		t.Fatal("second layer stream remained blocked after the first read completed")
+	case <-secondCh:
+		t.Fatal("second layer stream opened before the first stream closed")
+	case <-time.After(50 * time.Millisecond):
 	}
 
 	require.NoError(t, first.Close())
-	require.NoError(t, second.Close())
+	require.NoError(t, first.Close())
+	var second io.ReadCloser
+	select {
+	case err := <-errCh:
+		require.NoError(t, err)
+	case second = <-secondCh:
+		_, err := second.Read(make([]byte, 1))
+		require.NoError(t, err)
+	case <-time.After(time.Second):
+		t.Fatal("second layer stream remained blocked after the first stream closed")
+	}
+	if second != nil {
+		require.NoError(t, second.Close())
+		require.NoError(t, second.Close())
+	}
+	require.Equal(t, 2, closeCount)
 }
 
 func TestRuntimeImageConnectionRejectsInvalidConcurrencyOptions(t *testing.T) {

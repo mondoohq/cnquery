@@ -9167,6 +9167,10 @@ containerd {
   // under several references is listed once for each, for example
   // `containerd.images.where(namespace == "k8s.io" && runsAsRoot) { name }`.
   images() []containerd.image
+  // Generic runtime images observed through the local containerd delegate
+  runtimeImages() []container.runtimeImage
+  // Runtime delegate for the local containerd endpoint
+  delegate() container.runtimeDelegate
   // containerd version (for example "2.2.0")
   //
   // Reported by the containerd binary. Null when it cannot be run, as on an

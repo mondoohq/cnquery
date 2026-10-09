@@ -155,7 +155,8 @@ func NewRuntimeImage(id uint32, conf *inventory.Config, asset *inventory.Asset) 
 	if err != nil {
 		return nil, err
 	}
-	exportPath, cleanup, err := exportContainerdImageWithFallback(conf, imageRef)
+	selectedOptions := cloneStringMap(conf.Options)
+	exportPath, cleanup, err := exportContainerdImageWithFallback(conf, imageRef, &selectedOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +170,7 @@ func NewRuntimeImage(id uint32, conf *inventory.Config, asset *inventory.Asset) 
 		cleanup()
 		return nil, fmt.Errorf("%w: export is %d bytes, limit is %d", errRuntimeImageTooLarge, exportInfo.Size(), maxBytes)
 	}
-	img, layoutDir, err := imageFromOCILayoutTar(exportPath, conf.Options[OPTION_RUNTIME_IMAGE_DIGEST], maxBytes-exportInfo.Size())
+	img, layoutDir, err := imageFromOCILayoutTar(exportPath, selectedOptions[OPTION_RUNTIME_IMAGE_DIGEST], maxBytes-exportInfo.Size())
 	if err != nil {
 		cleanup()
 		return nil, err
@@ -186,10 +187,10 @@ func NewRuntimeImage(id uint32, conf *inventory.Config, asset *inventory.Asset) 
 		cleanup()
 		return nil, fmt.Errorf("%w: export and layout exceed limit", errRuntimeImageTooLarge)
 	}
-	conf.Options["runtime-cache-max-image-bytes-remaining"] = strconv.FormatInt(remainingBytes, 10)
+	selectedOptions["runtime-cache-max-image-bytes-remaining"] = strconv.FormatInt(remainingBytes, 10)
 	cleanupDirs := []string{exportPath, layoutDir}
 
-	if layerReaders, err := positiveRuntimeImageOption(conf.Options, OPTION_RUNTIME_IMAGE_MAX_LAYER_IO); err != nil {
+	if layerReaders, err := positiveRuntimeImageOption(selectedOptions, OPTION_RUNTIME_IMAGE_MAX_LAYER_IO); err != nil {
 		cleanup()
 		for _, dir := range cleanupDirs {
 			_ = os.RemoveAll(dir)
@@ -202,10 +203,19 @@ func NewRuntimeImage(id uint32, conf *inventory.Config, asset *inventory.Asset) 
 	// a second filesystem cache that would duplicate those bytes outside the
 	// per-image budget.
 
-	conf.Type = shared.Type_RuntimeImage.String()
-	conf.Runtime = shared.Type_RuntimeImage.String()
+	runtimeConf, ok := proto.Clone(conf).(*inventory.Config)
+	if !ok {
+		cleanup()
+		for _, dir := range cleanupDirs {
+			_ = os.RemoveAll(dir)
+		}
+		return nil, errors.New("runtime image connection requires protobuf config")
+	}
+	runtimeConf.Options = selectedOptions
+	runtimeConf.Type = shared.Type_RuntimeImage.String()
+	runtimeConf.Runtime = shared.Type_RuntimeImage.String()
 
-	conn, err := container.NewImageConnectionWithCloseFn(id, conf, asset, img, nil, releaseImageSlot, cleanupDirs...)
+	conn, err := container.NewImageConnectionWithCloseFn(id, runtimeConf, asset, img, nil, releaseImageSlot, cleanupDirs...)
 	if err != nil {
 		cleanup()
 		for _, dir := range cleanupDirs {
@@ -237,10 +247,10 @@ func NewRuntimeImage(id uint32, conf *inventory.Config, asset *inventory.Asset) 
 		asset.Labels = map[string]string{}
 	}
 	asset.Labels["mondoo.com/runtime-image-ref"] = imageRef
-	if digest := strings.TrimSpace(conf.Options[OPTION_RUNTIME_IMAGE_DIGEST]); digest != "" {
+	if digest := strings.TrimSpace(selectedOptions[OPTION_RUNTIME_IMAGE_DIGEST]); digest != "" {
 		asset.Labels["mondoo.com/runtime-image-digest"] = digest
 	}
-	if delegateID := strings.TrimSpace(conf.Options[OPTION_RUNTIME_IMAGE_DELEGATE_ID]); delegateID != "" {
+	if delegateID := strings.TrimSpace(selectedOptions[OPTION_RUNTIME_IMAGE_DELEGATE_ID]); delegateID != "" {
 		asset.Labels["mondoo.com/runtime-delegate-id"] = delegateID
 	}
 
@@ -339,8 +349,14 @@ func (l throttledLayer) Uncompressed() (io.ReadCloser, error) {
 }
 
 func (l throttledLayer) withSlot(open func() (io.ReadCloser, error)) (io.ReadCloser, error) {
+	if l.sem != nil {
+		l.sem <- struct{}{}
+	}
 	rc, err := open()
 	if err != nil {
+		if l.sem != nil {
+			<-l.sem
+		}
 		return nil, err
 	}
 	if l.sem == nil {
@@ -351,20 +367,25 @@ func (l throttledLayer) withSlot(open func() (io.ReadCloser, error)) (io.ReadClo
 
 type throttledReadCloser struct {
 	io.ReadCloser
-	sem chan struct{}
+	sem         chan struct{}
+	releaseOnce sync.Once
+	closeOnce   sync.Once
+	closeErr    error
 }
 
 func (r *throttledReadCloser) Read(p []byte) (int, error) {
-	r.sem <- struct{}{}
-	defer func() { <-r.sem }()
 	return r.ReadCloser.Read(p)
 }
 
 func (r *throttledReadCloser) Close() error {
-	return r.ReadCloser.Close()
+	r.closeOnce.Do(func() {
+		r.closeErr = r.ReadCloser.Close()
+		r.releaseOnce.Do(func() { <-r.sem })
+	})
+	return r.closeErr
 }
 
-func exportContainerdImageWithFallback(conf *inventory.Config, imageRef string) (string, func(), error) {
+func exportContainerdImageWithFallback(conf *inventory.Config, imageRef string, selectedOptions *map[string]string) (string, func(), error) {
 	candidates, err := runtimeImageDelegateCandidates(conf.Options[OPTION_RUNTIME_IMAGE_DELEGATE_CANDIDATES])
 	if err != nil {
 		return "", nil, err
@@ -393,13 +414,14 @@ func exportContainerdImageWithFallback(conf *inventory.Config, imageRef string) 
 		candidateConfig.Options = candidateOptions
 		exportPath, cleanup, err := exportContainerdImage(candidateConfig, imageRef)
 		if err == nil {
-			conf.Options = candidateOptions
+			if selectedOptions != nil {
+				*selectedOptions = candidateOptions
+			}
 			return exportPath, cleanup, nil
 		}
 		errs = append(errs, fmt.Errorf("delegate %q: %w", candidate.ID, err))
 		log.Debug().Err(err).Str("delegate", candidate.ID).Str("image", imageRef).Msg("runtime image delegate export failed")
 	}
-	conf.Options = original
 	return "", nil, fmt.Errorf("failed to export runtime image %q from configured delegates: %w", imageRef, errors.Join(errs...))
 }
 

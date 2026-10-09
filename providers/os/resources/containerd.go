@@ -388,7 +388,7 @@ func (p *mqlContainerd) delegate() (*mqlContainerRuntimeDelegate, error) {
 	return delegate.(*mqlContainerRuntimeDelegate), nil
 }
 
-func (p *mqlContainerd) images() ([]any, error) {
+func (p *mqlContainerd) runtimeImages() ([]any, error) {
 	containers := p.GetContainers()
 	if containers.Error != nil {
 		return nil, containers.Error
