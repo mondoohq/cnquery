@@ -231,7 +231,6 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 				nsConfig := invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))
 				nsConfig.Options[shared.OPTION_NAMESPACE] = ns.Name
 				ns.Connections = []*inventory.Config{nsConfig}
-				ns.Connections = []*inventory.Config{nsConfig}
 			}
 		}
 
