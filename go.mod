@@ -188,7 +188,7 @@ require (
 	github.com/cockroachdb/redact v1.1.8 // indirect
 	github.com/containerd/containerd v1.7.36
 	github.com/containerd/containerd/api v1.10.0
-	github.com/containerd/errdefs v1.0.0 // indirect
+	github.com/containerd/errdefs v1.0.0
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/containerd/platforms v1.0.0-rc.2
