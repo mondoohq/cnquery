@@ -83,3 +83,39 @@ func TestLinuxProcManager_ProcessExistingSucceeds(t *testing.T) {
 	require.Equal(t, int64(42), proc.Pid)
 	require.Equal(t, "bash", proc.Command)
 }
+
+// The kernel cuts the Name in /proc/<pid>/status to 15 characters; the
+// executable is the full name from the command's first argument, as over SSH
+// (mondoohq/mql#11185).
+func TestFullExecutableName(t *testing.T) {
+	tests := []struct {
+		name, status, cmdline, want string
+	}{
+		{"cut name, absolute path", "kube-controller", "/usr/local/bin/kube-controller-manager\x00--kubeconfig=/etc/kubernetes/controller-manager.conf\x00", "kube-controller-manager"},
+		{"cut name, bare first argument", "kube-controller", "kube-controller-manager\x00--profiling=false\x00", "kube-controller-manager"},
+		{"short name is kept", "kubelet", "/usr/bin/kubelet\x00--config=/var/lib/kubelet/config.yaml\x00", "kubelet"},
+		{"15 characters, not cut", "abcdefghijklmno", "/usr/bin/abcdefghijklmno\x00", "abcdefghijklmno"},
+		{"rewritten title is not a name", "postgres-worker", "postgres: checkpointer\x00", "postgres-worker"},
+		{"other first argument", "kube-controller", "/usr/bin/python3\x00/opt/kube-controller-manager.py\x00", "kube-controller"},
+		{"kernel thread, empty cmdline", "ksoftirqd/0-abc", "", "ksoftirqd/0-abc"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, fullExecutableName(tt.status, []byte(tt.cmdline)))
+		})
+	}
+}
+
+// processInfo reports the full executable of a process whose status Name the
+// kernel cut.
+func TestLinuxProcManager_ProcessFullExecutable(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	require.NoError(t, afero.WriteFile(fs, "/proc/7/cmdline", []byte("/usr/local/bin/kube-controller-manager\x00--profiling=false\x00"), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/proc/7/status", []byte("Name:\tkube-controller\nState:\tS (sleeping)\nPid:\t7\n"), 0o644))
+	lpm := &LinuxProcManager{conn: &fakeProcConn{fs: fs}}
+
+	p, err := lpm.Process(7)
+	require.NoError(t, err)
+	require.Equal(t, "kube-controller-manager", p.Executable)
+	require.Equal(t, "/usr/local/bin/kube-controller-manager --profiling=false", p.Command)
+}
