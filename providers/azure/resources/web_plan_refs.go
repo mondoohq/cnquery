@@ -108,6 +108,10 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) hostingEnvironment() (*mqlAzureS
 	}
 	env, ok := findByID[*mqlAzureSubscriptionWebServiceHostingEnvironment](envs.Data, envID)
 	if !ok {
+		// A tag filter may have left the environment out of the list.
+		if filtered, ok := tagFilteredOut(a.MqlRuntime, ResourceAzureSubscriptionWebServiceHostingEnvironment, envID).(*mqlAzureSubscriptionWebServiceHostingEnvironment); ok {
+			return filtered, nil
+		}
 		a.HostingEnvironment.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
