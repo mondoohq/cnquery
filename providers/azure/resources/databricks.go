@@ -74,7 +74,7 @@ func (a *mqlAzureSubscriptionDatabricksService) workspaces() ([]any, error) {
 		}
 	}
 
-	return res, nil
+	return keepTagMatches(a.MqlRuntime, res), nil
 }
 
 func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.Workspace) (*mqlAzureSubscriptionDatabricksServiceWorkspace, error) {

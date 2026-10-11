@@ -346,7 +346,7 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) 
 			res = append(res, alert)
 		}
 	}
-	return res, nil
+	return keepTagMatches(a.MqlRuntime, res), nil
 }
 
 // The flattened shapes an activity-log alert's actions and conditions are
