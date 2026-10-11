@@ -4,8 +4,11 @@
 package processes
 
 import (
+	"bytes"
+	"io"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -73,7 +76,11 @@ func (lpm *LinuxProcManager) processInfo(pid int64, pidPath string) (*OSProcess,
 	}
 	defer cmdlinef.Close()
 
-	cmdline, err := procfs.ParseProcessCmdline(cmdlinef)
+	cmdlineData, err := io.ReadAll(cmdlinef)
+	if err != nil {
+		return nil, err
+	}
+	cmdline, err := procfs.ParseProcessCmdline(bytes.NewReader(cmdlineData))
 	if err != nil {
 		return nil, err
 	}
@@ -104,10 +111,37 @@ func (lpm *LinuxProcManager) processInfo(pid int64, pidPath string) (*OSProcess,
 
 	return &OSProcess{
 		Pid:        pid,
-		Executable: status.Executable,
+		Executable: fullExecutableName(status.Executable, cmdlineData),
 		State:      status.State,
 		Command:    cmdline,
 	}, nil
+}
+
+// taskCommLen is the length the kernel cuts a process name to in
+// /proc/<pid>/status and /proc/<pid>/comm: TASK_COMM_LEN (16) less the
+// terminating NUL.
+const taskCommLen = 15
+
+// fullExecutableName returns the process name from /proc/<pid>/status, or,
+// when the kernel cut it to taskCommLen characters, the base name of the
+// command's first argument that it is the start of. kube-controller-manager
+// is "kube-controller" in status, and "/usr/local/bin/kube-controller-manager"
+// in cmdline. A first argument the name does not start (a process that
+// rewrote its title, such as "nginx: master process") leaves the name as it
+// is, as does an empty cmdline (kernel threads).
+func fullExecutableName(name string, cmdline []byte) string {
+	if len(name) != taskCommLen {
+		return name
+	}
+	argv0, _, _ := bytes.Cut(cmdline, []byte{0})
+	base := string(argv0)
+	if i := strings.LastIndexByte(base, '/'); i >= 0 {
+		base = base[i+1:]
+	}
+	if len(base) > len(name) && strings.HasPrefix(base, name) {
+		return base
+	}
+	return name
 }
 
 // check that the pid directory exists
