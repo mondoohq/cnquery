@@ -334,6 +334,7 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) 
 					"type":        llx.StringDataPtr(entry.Type),
 					"tags":        llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 					"location":    llx.StringDataPtr(entry.Location),
+					"enabled":     llx.BoolDataPtr(entry.Properties.Enabled),
 				})
 			if err != nil {
 				return nil, err
@@ -346,7 +347,7 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) 
 			res = append(res, alert)
 		}
 	}
-	return res, nil
+	return keepTagMatches(a.MqlRuntime, res), nil
 }
 
 // The flattened shapes an activity-log alert's actions and conditions are

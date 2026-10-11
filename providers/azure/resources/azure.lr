@@ -11179,6 +11179,8 @@ private azure.subscription.monitorService.activityLog.alert @defaults("name type
   actions []dict
   // List of resource IDs that must be present to trigger the alert
   scopes []string
+  // Whether the alert is enabled; a disabled alert notifies no one
+  enabled bool
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }

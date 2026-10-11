@@ -3900,6 +3900,7 @@ azure.subscription.monitorService.activityLog.alert 9.0.1
 azure.subscription.monitorService.activityLog.alert.actions 9.0.1
 azure.subscription.monitorService.activityLog.alert.conditions 9.0.1
 azure.subscription.monitorService.activityLog.alert.description 9.0.1
+azure.subscription.monitorService.activityLog.alert.enabled 14.3.7
 azure.subscription.monitorService.activityLog.alert.id 9.0.1
 azure.subscription.monitorService.activityLog.alert.location 9.0.1
 azure.subscription.monitorService.activityLog.alert.name 9.0.1

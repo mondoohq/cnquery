@@ -14025,6 +14025,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.monitorService.activityLog.alert.scopes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceActivityLogAlert).GetScopes()).ToDataRes(types.Array(types.String))
 	},
+	"azure.subscription.monitorService.activityLog.alert.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActivityLogAlert).GetEnabled()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.monitorService.activityLog.alert.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceActivityLogAlert).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -40101,6 +40104,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.monitorService.activityLog.alert.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMonitorServiceActivityLogAlert).Scopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.activityLog.alert.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActivityLogAlert).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.monitorService.activityLog.alert.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -92652,6 +92659,7 @@ type mqlAzureSubscriptionMonitorServiceActivityLogAlert struct {
 	Tags           plugin.TValue[map[string]any]
 	Actions        plugin.TValue[[]any]
 	Scopes         plugin.TValue[[]any]
+	Enabled        plugin.TValue[bool]
 	SystemMetadata plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -92726,6 +92734,10 @@ func (c *mqlAzureSubscriptionMonitorServiceActivityLogAlert) GetActions() *plugi
 
 func (c *mqlAzureSubscriptionMonitorServiceActivityLogAlert) GetScopes() *plugin.TValue[[]any] {
 	return &c.Scopes
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActivityLogAlert) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
 }
 
 func (c *mqlAzureSubscriptionMonitorServiceActivityLogAlert) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
