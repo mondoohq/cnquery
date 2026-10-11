@@ -2417,5 +2417,5 @@ func (a *mqlAzureSubscriptionWebService) hostingEnvironments() ([]any, error) {
 		}
 	}
 
-	return res, nil
+	return keepTagMatches(a.MqlRuntime, res), nil
 }

@@ -45,6 +45,7 @@ var _ = []taggedListedResource{
 	(*mqlAzureSubscriptionStorageServiceAccount)(nil),
 	(*mqlAzureSubscriptionSynapseServiceWorkspace)(nil),
 	(*mqlAzureSubscriptionWebServiceAppsite)(nil),
+	(*mqlAzureSubscriptionWebServiceHostingEnvironment)(nil),
 }
 
 // keepTagMatches narrows a subscription list to the entries that pass the
