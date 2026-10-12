@@ -288,32 +288,7 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 						log.Debug().Interface("acl", acl.NetworkAclId).Msg("excluding network acl due to filters")
 						continue
 					}
-					assoc := []any{}
-					for _, association := range acl.Associations {
-						mqlNetworkAclAssoc, err := CreateResource(a.MqlRuntime, ResourceAwsEc2NetworkaclAssociation,
-							map[string]*llx.RawData{
-								"__id":          llx.StringData("aws.ec2.networkacl.association/" + convert.ToValue(association.NetworkAclAssociationId)),
-								"associationId": llx.StringDataPtr(association.NetworkAclAssociationId),
-								"networkAclId":  llx.StringDataPtr(association.NetworkAclId),
-							})
-						if err == nil {
-							assocRes := mqlNetworkAclAssoc.(*mqlAwsEc2NetworkaclAssociation)
-							assocRes.cacheSubnetId = association.SubnetId
-							assocRes.region = region
-							assocRes.accountID = conn.AccountId()
-							assoc = append(assoc, mqlNetworkAclAssoc)
-						}
-					}
-
-					mqlNetworkAcl, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Networkacl,
-						map[string]*llx.RawData{
-							"arn":          llx.StringData(fmt.Sprintf(networkAclArnPattern, region, conn.AccountId(), convert.ToValue(acl.NetworkAclId))),
-							"id":           llx.StringDataPtr(acl.NetworkAclId),
-							"region":       llx.StringData(region),
-							"isDefault":    llx.BoolDataPtr(acl.IsDefault),
-							"tags":         llx.MapData(toInterfaceMap(ec2TagsToMap(acl.Tags)), types.String),
-							"associations": llx.ArrayData(assoc, types.Type(ResourceAwsEc2NetworkaclAssociation)),
-						})
+					mqlNetworkAcl, err := buildNetworkAclResource(a.MqlRuntime, region, conn.AccountId(), acl)
 					if err != nil {
 						return nil, err
 					}
@@ -344,6 +319,50 @@ func (a *mqlAwsEc2NetworkaclEntry) isPublic() (bool, error) {
 	return cidrEntryIsPublic(a.CidrBlock.Data, a.Ipv6CidrBlock.Data), nil
 }
 
+// networkAclRegionAndId returns the region and the ID of a network ACL's ARN.
+func networkAclRegionAndId(arnVal string) (string, string, bool) {
+	parsed, err := arn.Parse(arnVal)
+	if err != nil || parsed.Region == "" || !strings.HasPrefix(parsed.Resource, "network-acl/") {
+		return "", "", false
+	}
+	return parsed.Region, strings.TrimPrefix(parsed.Resource, "network-acl/"), true
+}
+
+// buildNetworkAclResource makes the aws.ec2.networkacl resource of a network
+// ACL that DescribeNetworkAcls returned.
+func buildNetworkAclResource(runtime *plugin.Runtime, region, accountId string, acl ec2types.NetworkAcl) (*mqlAwsEc2Networkacl, error) {
+	assoc := []any{}
+	for _, association := range acl.Associations {
+		mqlNetworkAclAssoc, err := CreateResource(runtime, ResourceAwsEc2NetworkaclAssociation,
+			map[string]*llx.RawData{
+				"__id":          llx.StringData("aws.ec2.networkacl.association/" + convert.ToValue(association.NetworkAclAssociationId)),
+				"associationId": llx.StringDataPtr(association.NetworkAclAssociationId),
+				"networkAclId":  llx.StringDataPtr(association.NetworkAclId),
+			})
+		if err == nil {
+			assocRes := mqlNetworkAclAssoc.(*mqlAwsEc2NetworkaclAssociation)
+			assocRes.cacheSubnetId = association.SubnetId
+			assocRes.region = region
+			assocRes.accountID = accountId
+			assoc = append(assoc, mqlNetworkAclAssoc)
+		}
+	}
+
+	mqlNetworkAcl, err := CreateResource(runtime, ResourceAwsEc2Networkacl,
+		map[string]*llx.RawData{
+			"arn":          llx.StringData(fmt.Sprintf(networkAclArnPattern, region, accountId, convert.ToValue(acl.NetworkAclId))),
+			"id":           llx.StringDataPtr(acl.NetworkAclId),
+			"region":       llx.StringData(region),
+			"isDefault":    llx.BoolDataPtr(acl.IsDefault),
+			"tags":         llx.MapData(toInterfaceMap(ec2TagsToMap(acl.Tags)), types.String),
+			"associations": llx.ArrayData(assoc, types.Type(ResourceAwsEc2NetworkaclAssociation)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlNetworkAcl.(*mqlAwsEc2Networkacl), nil
+}
+
 func initAwsEc2Networkacl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -351,6 +370,27 @@ func initAwsEc2Networkacl(runtime *plugin.Runtime, args map[string]*llx.RawData)
 
 	if args["arn"] == nil && args["id"] == nil {
 		return nil, nil, errors.New("arn or id required to fetch aws network acl")
+	}
+
+	// With the region and the ID in the ARN, describe that one network ACL.
+	// It need not carry the discovery's tag filters: a subnet's or a VPC's
+	// network ACL is found through the subnet or the VPC, which do.
+	if args["arn"] != nil {
+		if region, aclId, ok := networkAclRegionAndId(args["arn"].Value.(string)); ok {
+			conn := runtime.Connection.(*connection.AwsConnection)
+			resp, err := conn.Ec2(region).DescribeNetworkAcls(context.Background(), &ec2.DescribeNetworkAclsInput{NetworkAclIds: []string{aclId}})
+			if err != nil {
+				return nil, nil, err
+			}
+			if len(resp.NetworkAcls) == 0 {
+				return nil, nil, errors.New("network acl not found")
+			}
+			acl, err := buildNetworkAclResource(runtime, region, conn.AccountId(), resp.NetworkAcls[0])
+			if err != nil {
+				return nil, nil, err
+			}
+			return args, acl, nil
+		}
 	}
 
 	// load all network acls
@@ -4200,7 +4240,7 @@ func (a *mqlAwsEc2) getLaunchTemplates(conn *connection.AwsConnection) []*jobpoo
 			ctx := context.Background()
 			res := []any{}
 
-			paginator := ec2.NewDescribeLaunchTemplatesPaginator(svc, &ec2.DescribeLaunchTemplatesInput{})
+			paginator := ec2.NewDescribeLaunchTemplatesPaginator(svc, describeLaunchTemplatesInput(conn.Filters.General))
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
@@ -4211,6 +4251,10 @@ func (a *mqlAwsEc2) getLaunchTemplates(conn *connection.AwsConnection) []*jobpoo
 					return nil, err
 				}
 				for _, lt := range page.LaunchTemplates {
+					if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(lt.Tags)) {
+						log.Debug().Interface("launchtemplate", lt.LaunchTemplateId).Msg("excluding launch template due to filters")
+						continue
+					}
 					mqlLtRes, err := buildLaunchTemplateResource(a.MqlRuntime, region, conn.AccountId(), lt)
 					if err != nil {
 						return nil, err
@@ -4223,6 +4267,12 @@ func (a *mqlAwsEc2) getLaunchTemplates(conn *connection.AwsConnection) []*jobpoo
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+// describeLaunchTemplatesInput lists only the launch templates that carry the
+// discovery's tag filters, as the other EC2 lists do.
+func describeLaunchTemplatesInput(f connection.GeneralDiscoveryFilters) *ec2.DescribeLaunchTemplatesInput {
+	return &ec2.DescribeLaunchTemplatesInput{Filters: f.ToServerSideEc2Filters()}
 }
 
 type mqlAwsEc2LaunchtemplateInternal struct {
