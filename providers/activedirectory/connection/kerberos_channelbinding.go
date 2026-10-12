@@ -18,6 +18,7 @@ import (
 	krbcrypto "github.com/jcmturner/gokrb5/v8/crypto"
 	"github.com/jcmturner/gokrb5/v8/gssapi"
 	"github.com/jcmturner/gokrb5/v8/iana/chksumtype"
+	krbflags "github.com/jcmturner/gokrb5/v8/iana/flags"
 	"github.com/jcmturner/gokrb5/v8/iana/keyusage"
 	"github.com/jcmturner/gokrb5/v8/messages"
 	"github.com/jcmturner/gokrb5/v8/spnego"
@@ -43,12 +44,16 @@ const gssTokIDKRB5APREQ = "0100"
 // exposes NewSSPIClientWithChannelBinding) always emits an all-zero channel
 // binding, so a Kerberos SASL bind against a domain controller that enforces
 // LDAP channel binding (LdapEnforceChannelBinding = 2, "Always") is rejected
-// with SEC_E_BAD_BINDINGS (0x80090346) or AcceptSecurityContext data 57. This
-// wrapper supplies the binding derived from the DC's TLS certificate so those
-// hardened DCs accept the bind over LDAPS/StartTLS.
+// with SEC_E_BAD_BINDINGS (0x80090346). This wrapper supplies the binding
+// derived from the DC's TLS certificate so those hardened DCs accept the bind
+// over LDAPS/StartTLS.
 //
-// When bnd is empty (no TLS transport) the behavior is byte-for-byte identical
-// to go-ldap's client, so plaintext LDAP and unhardened DCs are unaffected.
+// It also sets the mutual-required AP option, which go-ldap leaves to the
+// caller (go-ldap issue #536). Active Directory rejects an AP-REQ without it
+// with AcceptSecurityContext data 57, whatever its channel binding setting.
+//
+// When bnd is empty (no TLS transport) the token differs from go-ldap's only
+// in that AP option.
 type channelBindingGSSAPIClient struct {
 	krb5   *krbclient.Client
 	closer func() error
@@ -75,7 +80,8 @@ func (c *channelBindingGSSAPIClient) InitSecContext(target string, token []byte)
 }
 
 // InitSecContextWithOptions mirrors go-ldap's gokrb5 bind but sets the channel
-// binding in the AP-REQ authenticator checksum.
+// binding in the AP-REQ authenticator checksum and requires mutual
+// authentication.
 func (c *channelBindingGSSAPIClient) InitSecContextWithOptions(target string, input []byte, apOptions []int) ([]byte, bool, error) {
 	gssapiFlags := []int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf, gssapi.ContextFlagMutual}
 
@@ -178,8 +184,9 @@ func (c *channelBindingGSSAPIClient) Close() error {
 var _ ldap.GSSAPIClient = (*channelBindingGSSAPIClient)(nil)
 
 // newAPREQMechToken builds a GSSAPI KRB5 AP-REQ MechToken whose authenticator
-// checksum carries the channel binding. It mirrors gokrb5's
-// spnego.NewKRB5TokenAPREQ, which does not expose a channel-binding hook.
+// checksum carries the channel binding and whose AP options always include
+// mutual-required. It mirrors gokrb5's spnego.NewKRB5TokenAPREQ, which does
+// not expose a channel-binding hook.
 func (c *channelBindingGSSAPIClient) newAPREQMechToken(tkt messages.Ticket, sessionKey types.EncryptionKey, gssapiFlags, apOptions []int) ([]byte, error) {
 	auth, err := types.NewAuthenticator(c.krb5.Credentials.Domain(), c.krb5.Credentials.CName())
 	if err != nil {
@@ -194,6 +201,10 @@ func (c *channelBindingGSSAPIClient) newAPREQMechToken(tkt messages.Ticket, sess
 	if err != nil {
 		return nil, err
 	}
+	// SASL GSSAPI requires mutual authentication (RFC 4752 §3.1) and the
+	// checksum already asks for it, but go-ldap's GSSAPIBind passes no AP
+	// options. Without mutual-required, AD rejects the AP-REQ (data 57).
+	types.SetFlag(&apReq.APOptions, krbflags.APOptionMutualRequired)
 	for _, o := range apOptions {
 		types.SetFlag(&apReq.APOptions, o)
 	}

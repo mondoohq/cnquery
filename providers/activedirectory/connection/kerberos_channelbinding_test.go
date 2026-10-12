@@ -18,10 +18,45 @@ import (
 	"testing"
 	"time"
 
+	krbclient "github.com/jcmturner/gokrb5/v8/client"
+	"github.com/jcmturner/gokrb5/v8/config"
 	"github.com/jcmturner/gokrb5/v8/gssapi"
+	"github.com/jcmturner/gokrb5/v8/iana"
+	"github.com/jcmturner/gokrb5/v8/iana/etypeID"
+	krbflags "github.com/jcmturner/gokrb5/v8/iana/flags"
+	"github.com/jcmturner/gokrb5/v8/iana/nametype"
+	"github.com/jcmturner/gokrb5/v8/messages"
+	"github.com/jcmturner/gokrb5/v8/spnego"
+	"github.com/jcmturner/gokrb5/v8/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// TestNewAPREQMechTokenRequiresMutualAuth decodes the AP-REQ we send and checks
+// the mutual-required AP option. go-ldap's GSSAPIBind passes no AP options, and
+// Active Directory rejects an AP-REQ without this one (AcceptSecurityContext
+// data 57, go-ldap issue #536).
+func TestNewAPREQMechTokenRequiresMutualAuth(t *testing.T) {
+	c := &channelBindingGSSAPIClient{
+		krb5: krbclient.NewWithPassword("svc", "TEST.LOCAL", "secret", config.New()),
+		bnd:  make([]byte, 16),
+	}
+	sessionKey := types.EncryptionKey{KeyType: etypeID.AES256_CTS_HMAC_SHA1_96, KeyValue: make([]byte, 32)}
+	tkt := messages.Ticket{
+		TktVNO:  iana.PVNO,
+		Realm:   "TEST.LOCAL",
+		SName:   types.NewPrincipalName(nametype.KRB_NT_SRV_INST, "ldap/dc.test.local"),
+		EncPart: types.EncryptedData{EType: etypeID.AES256_CTS_HMAC_SHA1_96, KVNO: 1, Cipher: []byte{0}},
+	}
+
+	b, err := c.newAPREQMechToken(tkt, sessionKey, []int{gssapi.ContextFlagMutual}, nil)
+	require.NoError(t, err)
+
+	var token spnego.KRB5Token
+	require.NoError(t, token.Unmarshal(b))
+	require.True(t, token.IsAPReq())
+	assert.True(t, types.IsFlagSet(&token.APReq.APOptions, krbflags.APOptionMutualRequired))
+}
 
 // TestAuthenticatorChecksumNoBindingMatchesGokrb5 pins the no-binding checksum
 // to gokrb5's own reference vector (spnego.newAuthenticatorChksum), proving our
