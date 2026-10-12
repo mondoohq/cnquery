@@ -345,11 +345,11 @@ func discoverLegacy(runtime *plugin.Runtime, conn *connection.AzureConnection, r
 		sub := subs[i]
 		subsWithConfigs[i] = subWithConfig{
 			sub:  sub,
-			conf: getSubConfig(conn.Conf, sub, inventory.WithoutDiscovery()),
+			conf: getSubConfig(conn.Conf, sub, inventory.WithoutDiscovery(), inventory.WithFilters()),
 			// No parent connection: on this path every discovered asset gets a
 			// runtime and a resource cache of its own, and re-fetches whatever
 			// it needs. That is the cost staged discovery exists to remove.
-			assetOpts: []inventory.CloneOption{inventory.WithoutDiscovery()},
+			assetOpts: leafAssetOpts(nil),
 		}
 	}
 
@@ -362,7 +362,7 @@ func discoverLegacy(runtime *plugin.Runtime, conn *connection.AzureConnection, r
 	if stringx.ContainsAnyOf(targets, DiscoverySubscriptions) {
 		// we've already discovered those, simply add them as assets
 		for _, s := range subsWithConfigs {
-			assets = append(assets, subToAsset(s, inventory.WithoutDiscovery()))
+			assets = append(assets, subToAsset(s, inventory.WithoutDiscovery(), inventory.WithFilters()))
 		}
 	}
 
@@ -513,19 +513,15 @@ func discoverSubscriptionStage(runtime *plugin.Runtime, conn *connection.AzureCo
 		conn.Filters.PropagateSubscriptionTags && len(conn.Filters.SubscriptionTags) == 0
 
 	swc := subWithConfig{
-		sub:  subscriptionRecord(conn, invConfig, subId, emitSubscription || needsTags),
-		conf: invConfig,
-		assetOpts: []inventory.CloneOption{
-			// These are leaves: nothing below them to discover.
-			inventory.WithoutDiscovery(),
-			inventory.WithParentConnectionId(invConfig.Id),
-		},
+		sub:       subscriptionRecord(conn, invConfig, subId, emitSubscription || needsTags),
+		conf:      invConfig,
+		assetOpts: leafAssetOpts(&invConfig.Id),
 	}
 	subsWithConfigs := []subWithConfig{swc}
 
 	assets := []*inventory.Asset{}
 	if emitSubscription {
-		assets = append(assets, subToAsset(swc, inventory.WithoutDiscovery()))
+		assets = append(assets, subToAsset(swc, inventory.WithoutDiscovery(), inventory.WithFilters()))
 	}
 	assets = append(assets, discoverResources(runtime, conn, subsWithConfigs, targets)...)
 
@@ -975,6 +971,20 @@ func discoverSubscriptions(conn *connection.AzureConnection, filter connection.S
 	}
 
 	return subs, nil
+}
+
+// leafAssetOpts are the clone options for a discovered resource's asset. A
+// leaf has nothing below it to discover, but keeps the discovery filters: the
+// tag filters narrow the subscription lists its queries read
+// (keepTagMatches), and under staged discovery (a parent connection) it
+// shares its parent's resource cache, so a list it fetched unfiltered would
+// reach the subscription asset too.
+func leafAssetOpts(parentConnectionId *uint32) []inventory.CloneOption {
+	opts := []inventory.CloneOption{inventory.WithoutDiscovery(), inventory.WithFilters()}
+	if parentConnectionId != nil {
+		opts = append(opts, inventory.WithParentConnectionId(*parentConnectionId))
+	}
+	return opts
 }
 
 // subToAsset builds the asset for a subscription. cloneOpts are passed to
