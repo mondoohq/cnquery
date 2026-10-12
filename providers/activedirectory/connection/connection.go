@@ -500,10 +500,11 @@ func enrichKerberosBindError(err error, servicePrincipal, krb5confDesc string, o
 			"binding token (ensure --dc is the DC's certificate hostname and the TLS connection "+
 			"terminates at the DC, not a proxy/load balancer): %w", servicePrincipal, err)
 
-	// AD error 80090308 (SEC_E_INVALID_TOKEN) with data 57 means the DC requires
-	// LDAP signing and/or channel binding for SASL binds. Over TLS we now supply
-	// a channel binding, so a remaining failure most often points at LDAP
-	// signing enforcement on a non-TLS transport.
+	// AD error 80090308 (SEC_E_INVALID_TOKEN) with data 57 means the DC rejected
+	// the AP-REQ itself. A missing mutual-required AP option causes it (set
+	// since go-ldap issue #536 surfaced it; see newAPREQMechToken), and it has
+	// been attributed to LDAP signing enforcement on a non-TLS transport. A
+	// missing or wrong channel binding is 80090346 instead, handled above.
 	case strings.Contains(msg, "80090308"):
 		if !overTLS {
 			return fmt.Errorf("GSSAPI bind to %s failed: the domain controller requires LDAP signing "+
