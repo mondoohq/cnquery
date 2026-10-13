@@ -5329,6 +5329,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.events.rule.condition": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciEventsRule).GetCondition()).ToDataRes(types.String)
 	},
+	"oci.events.rule.eventTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciEventsRule).GetEventTypes()).ToDataRes(types.Array(types.String))
+	},
+	"oci.events.rule.conditionData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciEventsRule).GetConditionData()).ToDataRes(types.Dict)
+	},
+	"oci.events.rule.topics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciEventsRule).GetTopics()).ToDataRes(types.Array(types.Resource("oci.ons.topic")))
+	},
+	"oci.events.rule.hasActiveNotification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciEventsRule).GetHasActiveNotification()).ToDataRes(types.Bool)
+	},
 	"oci.events.rule.isEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciEventsRule).GetIsEnabled()).ToDataRes(types.Bool)
 	},
@@ -18832,6 +18844,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.events.rule.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciEventsRule).Condition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.events.rule.eventTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEventsRule).EventTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.events.rule.conditionData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEventsRule).ConditionData, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.events.rule.topics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEventsRule).Topics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.events.rule.hasActiveNotification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEventsRule).HasActiveNotification, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"oci.events.rule.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44147,17 +44175,21 @@ type mqlOciEventsRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciEventsRuleInternal
-	Id           plugin.TValue[string]
-	Name         plugin.TValue[string]
-	Description  plugin.TValue[string]
-	Compartment  plugin.TValue[*mqlOciCompartment]
-	Condition    plugin.TValue[string]
-	IsEnabled    plugin.TValue[bool]
-	State        plugin.TValue[string]
-	Actions      plugin.TValue[[]any]
-	Created      plugin.TValue[*time.Time]
-	FreeformTags plugin.TValue[map[string]any]
-	DefinedTags  plugin.TValue[map[string]any]
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Compartment           plugin.TValue[*mqlOciCompartment]
+	Condition             plugin.TValue[string]
+	EventTypes            plugin.TValue[[]any]
+	ConditionData         plugin.TValue[any]
+	Topics                plugin.TValue[[]any]
+	HasActiveNotification plugin.TValue[bool]
+	IsEnabled             plugin.TValue[bool]
+	State                 plugin.TValue[string]
+	Actions               plugin.TValue[[]any]
+	Created               plugin.TValue[*time.Time]
+	FreeformTags          plugin.TValue[map[string]any]
+	DefinedTags           plugin.TValue[map[string]any]
 }
 
 // createOciEventsRule creates a new instance of this resource
@@ -44227,6 +44259,40 @@ func (c *mqlOciEventsRule) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
 
 func (c *mqlOciEventsRule) GetCondition() *plugin.TValue[string] {
 	return &c.Condition
+}
+
+func (c *mqlOciEventsRule) GetEventTypes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EventTypes, func() ([]any, error) {
+		return c.eventTypes()
+	})
+}
+
+func (c *mqlOciEventsRule) GetConditionData() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ConditionData, func() (any, error) {
+		return c.conditionData()
+	})
+}
+
+func (c *mqlOciEventsRule) GetTopics() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Topics, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.events.rule", c.__id, "topics")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.topics()
+	})
+}
+
+func (c *mqlOciEventsRule) GetHasActiveNotification() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasActiveNotification, func() (bool, error) {
+		return c.hasActiveNotification()
+	})
 }
 
 func (c *mqlOciEventsRule) GetIsEnabled() *plugin.TValue[bool] {
