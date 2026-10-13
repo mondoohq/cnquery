@@ -1223,12 +1223,23 @@ func (a *mqlAwsEksAddon) health() (map[string]any, error) {
 
 // Access Entries
 
+// accessEntriesSupported reports whether a cluster with this authentication
+// mode has access entries. EKS refuses to list them for a cluster that
+// authenticates through the aws-auth ConfigMap only.
+func accessEntriesSupported(authMode string) bool {
+	return authMode != string(ekstypes.AuthenticationModeConfigMap)
+}
+
 func (a *mqlAwsEksCluster) accessEntries() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	regionVal := a.Region.Data
 	svc := conn.Eks(regionVal)
 	ctx := context.Background()
 	res := []any{}
+
+	if mode := a.GetAuthenticationMode(); mode.Error == nil && !accessEntriesSupported(mode.Data) {
+		return res, nil
+	}
 
 	paginator := eks.NewListAccessEntriesPaginator(svc, &eks.ListAccessEntriesInput{ClusterName: aws.String(a.Name.Data)})
 	for paginator.HasMorePages() {
