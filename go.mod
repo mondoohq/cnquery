@@ -93,7 +93,7 @@ require (
 	github.com/tliron/glsp v0.2.2
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
 	github.com/ulikunitz/xz v0.5.17
-	go.mondoo.com/mondoo-go v0.0.0-20261011001519-0877cbf1b3e0
+	go.mondoo.com/mondoo-go v0.0.0-20261009120721-91d592217e58
 	go.mondoo.com/ranger-rpc v0.8.1
 	go.uber.org/goleak v1.3.0
 	go.uber.org/mock v0.6.0
