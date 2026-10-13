@@ -5,12 +5,16 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/events"
+	"github.com/oracle/oci-go-sdk/v65/ons"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/oci/connection"
 	"go.mondoo.com/mql/types"
 )
@@ -171,4 +175,164 @@ func (o *mqlOciEventsRule) actions() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+// ociEventsCondition is the subset of an Events rule condition that names what
+// the rule matches. OCI accepts eventType as either a string or a list.
+type ociEventsCondition struct {
+	EventType json.RawMessage `json:"eventType"`
+	Data      map[string]any  `json:"data"`
+}
+
+// parseOciEventsCondition decodes a rule condition into its event types and
+// its data filter. An empty condition matches every event, so it yields no
+// event types and no data filter rather than an error.
+func parseOciEventsCondition(condition string) ([]string, map[string]any, error) {
+	if condition == "" {
+		return []string{}, nil, nil
+	}
+
+	var cond ociEventsCondition
+	if err := json.Unmarshal([]byte(condition), &cond); err != nil {
+		return nil, nil, err
+	}
+
+	eventTypes := []string{}
+	if len(cond.EventType) > 0 && string(cond.EventType) != "null" {
+		var single string
+		if err := json.Unmarshal(cond.EventType, &single); err == nil {
+			eventTypes = append(eventTypes, single)
+		} else if err := json.Unmarshal(cond.EventType, &eventTypes); err != nil {
+			return nil, nil, fmt.Errorf("eventType is neither a string nor a list of strings: %w", err)
+		}
+	}
+
+	return eventTypes, cond.Data, nil
+}
+
+func (o *mqlOciEventsRule) eventTypes() ([]any, error) {
+	eventTypes, _, err := parseOciEventsCondition(o.Condition.Data)
+	if err != nil {
+		return nil, llx.MalformedData(fmt.Errorf("cannot parse condition of oci.events.rule %s: %w", o.Id.Data, err))
+	}
+	return stringsToAny(eventTypes), nil
+}
+
+func (o *mqlOciEventsRule) conditionData() (map[string]any, error) {
+	_, data, err := parseOciEventsCondition(o.Condition.Data)
+	if err != nil {
+		return nil, llx.MalformedData(fmt.Errorf("cannot parse condition of oci.events.rule %s: %w", o.Id.Data, err))
+	}
+	if data == nil {
+		o.ConditionData.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return data, nil
+}
+
+// ociOnsActionTopicIDs returns the distinct topic OCIDs of a rule's ONS
+// actions, in the order the rule lists them. activeOnly keeps only actions
+// that are enabled and ACTIVE.
+func ociOnsActionTopicIDs(rule *events.Rule, activeOnly bool) []string {
+	ids := []string{}
+	if rule == nil || rule.Actions == nil {
+		return ids
+	}
+
+	seen := map[string]struct{}{}
+	for _, action := range rule.Actions.Actions {
+		onsAction, ok := action.(events.NotificationServiceAction)
+		if !ok {
+			continue
+		}
+		if activeOnly && (!boolValue(onsAction.IsEnabled) || onsAction.LifecycleState != events.ActionLifecycleStateActive) {
+			continue
+		}
+		id := stringValue(onsAction.TopicId)
+		if id == "" {
+			continue
+		}
+		if _, dup := seen[id]; dup {
+			continue
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+	return ids
+}
+
+func (o *mqlOciEventsRule) topics() ([]any, error) {
+	rule, err := o.getRuleDetails()
+	if err != nil {
+		return nil, err
+	}
+	return resolveOciTopics(o.MqlRuntime, stringsToAny(ociOnsActionTopicIDs(rule, false)))
+}
+
+// ociTopicDelivery is what decides whether a topic delivers: its own state and
+// the states of its subscriptions.
+type ociTopicDelivery struct {
+	topicState         string
+	subscriptionStates []string
+}
+
+// ociEventsRuleNotifies reports whether any of topicIDs is an ACTIVE topic with
+// an ACTIVE subscription. A topic that no longer exists does not count. A topic
+// that cannot be read is an error only when no other topic answers true, since
+// one readable delivering topic settles the question.
+func ociEventsRuleNotifies(topicIDs []string, lookup func(topicID string) (ociTopicDelivery, error)) (bool, error) {
+	var firstErr error
+	for _, id := range topicIDs {
+		delivery, err := lookup(id)
+		if err != nil {
+			if ociReferentGone(err) {
+				continue
+			}
+			if firstErr == nil {
+				firstErr = err
+			}
+			continue
+		}
+		if delivery.topicState != string(ons.NotificationTopicSummaryLifecycleStateActive) {
+			continue
+		}
+		for _, state := range delivery.subscriptionStates {
+			if state == string(ons.SubscriptionSummaryLifecycleStateActive) {
+				return true, nil
+			}
+		}
+	}
+	return false, firstErr
+}
+
+func (o *mqlOciEventsRule) hasActiveNotification() (bool, error) {
+	if !o.IsEnabled.Data || o.State.Data != string(events.RuleLifecycleStateActive) {
+		return false, nil
+	}
+
+	rule, err := o.getRuleDetails()
+	if err != nil {
+		return false, err
+	}
+
+	return ociEventsRuleNotifies(ociOnsActionTopicIDs(rule, true), func(topicID string) (ociTopicDelivery, error) {
+		res, err := NewResource(o.MqlRuntime, "oci.ons.topic", map[string]*llx.RawData{
+			"id": llx.StringData(topicID),
+		})
+		if err != nil {
+			return ociTopicDelivery{}, err
+		}
+		topic := res.(*mqlOciOnsTopic)
+
+		subs := topic.GetSubscriptions()
+		if subs.Error != nil {
+			return ociTopicDelivery{}, subs.Error
+		}
+
+		delivery := ociTopicDelivery{topicState: topic.State.Data}
+		for _, raw := range subs.Data {
+			delivery.subscriptionStates = append(delivery.subscriptionStates, raw.(*mqlOciOnsSubscription).State.Data)
+		}
+		return delivery, nil
+	})
 }

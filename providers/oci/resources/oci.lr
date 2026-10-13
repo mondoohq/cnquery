@@ -4000,6 +4000,31 @@ private oci.events.rule @defaults("name") {
   compartment() oci.compartment
   // Event matching condition (JSON)
   condition string
+  // Event types the rule matches
+  //
+  // The `eventType` values from `condition`, whether written as a single
+  // string or a list, for example `com.oraclecloud.identitycontrolplane.createpolicy`.
+  // Compare against this field rather than searching `condition`, where one
+  // event type can be a prefix of another. Empty when the condition does not
+  // filter on event type, which matches every event type.
+  eventTypes() []string
+  // Event attribute filter from the condition
+  //
+  // The `data` object from `condition`, keyed by event attribute with the
+  // value or values the rule requires. Null when the condition does not
+  // filter on event attributes.
+  conditionData() dict
+  // Notification topics the rule publishes to
+  //
+  // The topics named by the rule's ONS actions, whether or not the action
+  // is enabled. A topic that no longer exists is left out.
+  topics() []oci.ons.topic
+  // Whether a match reaches at least one notification subscriber
+  //
+  // True when the rule is enabled and ACTIVE, and at least one of its
+  // enabled, ACTIVE ONS actions publishes to an ACTIVE topic that has at
+  // least one ACTIVE subscription.
+  hasActiveNotification() bool
   // Whether the rule is enabled
   isEnabled bool
   // Rule lifecycle state (e.g., CREATING, ACTIVE, INACTIVE, UPDATING, DELETING, DELETED, FAILED)
