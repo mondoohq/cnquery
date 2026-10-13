@@ -11311,6 +11311,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nftables.rule.comment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNftablesRule).GetComment()).ToDataRes(types.String)
 	},
+	"nftables.rule.iif": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetIif()).ToDataRes(types.Array(types.String))
+	},
+	"nftables.rule.oif": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetOif()).ToDataRes(types.Array(types.String))
+	},
+	"nftables.rule.saddr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetSaddr()).ToDataRes(types.Array(types.String))
+	},
+	"nftables.rule.daddr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetDaddr()).ToDataRes(types.Array(types.String))
+	},
+	"nftables.rule.l4proto": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetL4proto()).ToDataRes(types.Array(types.String))
+	},
+	"nftables.rule.sport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetSport()).ToDataRes(types.Array(types.String))
+	},
+	"nftables.rule.dport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetDport()).ToDataRes(types.Array(types.String))
+	},
+	"nftables.rule.ctState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetCtState()).ToDataRes(types.Array(types.String))
+	},
+	"nftables.rule.verdict": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetVerdict()).ToDataRes(types.String)
+	},
+	"nftables.rule.verdictTarget": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetVerdictTarget()).ToDataRes(types.String)
+	},
+	"nftables.rule.packets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetPackets()).ToDataRes(types.Int)
+	},
+	"nftables.rule.bytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetBytes()).ToDataRes(types.Int)
+	},
+	"nftables.rule.sets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetSets()).ToDataRes(types.Array(types.Resource("nftables.set")))
+	},
 	"nftables.set.family": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNftablesSet).GetFamily()).ToDataRes(types.String)
 	},
@@ -32212,6 +32251,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"nftables.rule.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNftablesRule).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.iif": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Iif, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.oif": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Oif, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.saddr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Saddr, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.daddr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Daddr, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.l4proto": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).L4proto, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.sport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Sport, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.dport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Dport, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.ctState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).CtState, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.verdict": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Verdict, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.verdictTarget": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).VerdictTarget, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.packets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Packets, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.bytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Bytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.sets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Sets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"nftables.set.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -78247,15 +78338,28 @@ func (c *mqlNftablesChain) GetRules() *plugin.TValue[[]any] {
 type mqlNftablesRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlNftablesRuleInternal it will be used here
-	Family   plugin.TValue[string]
-	Table    plugin.TValue[string]
-	TableRef plugin.TValue[*mqlNftablesTable]
-	Chain    plugin.TValue[string]
-	ChainRef plugin.TValue[*mqlNftablesChain]
-	Handle   plugin.TValue[int64]
-	Expr     plugin.TValue[[]any]
-	Comment  plugin.TValue[string]
+	mqlNftablesRuleInternal
+	Family        plugin.TValue[string]
+	Table         plugin.TValue[string]
+	TableRef      plugin.TValue[*mqlNftablesTable]
+	Chain         plugin.TValue[string]
+	ChainRef      plugin.TValue[*mqlNftablesChain]
+	Handle        plugin.TValue[int64]
+	Expr          plugin.TValue[[]any]
+	Comment       plugin.TValue[string]
+	Iif           plugin.TValue[[]any]
+	Oif           plugin.TValue[[]any]
+	Saddr         plugin.TValue[[]any]
+	Daddr         plugin.TValue[[]any]
+	L4proto       plugin.TValue[[]any]
+	Sport         plugin.TValue[[]any]
+	Dport         plugin.TValue[[]any]
+	CtState       plugin.TValue[[]any]
+	Verdict       plugin.TValue[string]
+	VerdictTarget plugin.TValue[string]
+	Packets       plugin.TValue[int64]
+	Bytes         plugin.TValue[int64]
+	Sets          plugin.TValue[[]any]
 }
 
 // createNftablesRule creates a new instance of this resource
@@ -78349,6 +78453,70 @@ func (c *mqlNftablesRule) GetExpr() *plugin.TValue[[]any] {
 
 func (c *mqlNftablesRule) GetComment() *plugin.TValue[string] {
 	return &c.Comment
+}
+
+func (c *mqlNftablesRule) GetIif() *plugin.TValue[[]any] {
+	return &c.Iif
+}
+
+func (c *mqlNftablesRule) GetOif() *plugin.TValue[[]any] {
+	return &c.Oif
+}
+
+func (c *mqlNftablesRule) GetSaddr() *plugin.TValue[[]any] {
+	return &c.Saddr
+}
+
+func (c *mqlNftablesRule) GetDaddr() *plugin.TValue[[]any] {
+	return &c.Daddr
+}
+
+func (c *mqlNftablesRule) GetL4proto() *plugin.TValue[[]any] {
+	return &c.L4proto
+}
+
+func (c *mqlNftablesRule) GetSport() *plugin.TValue[[]any] {
+	return &c.Sport
+}
+
+func (c *mqlNftablesRule) GetDport() *plugin.TValue[[]any] {
+	return &c.Dport
+}
+
+func (c *mqlNftablesRule) GetCtState() *plugin.TValue[[]any] {
+	return &c.CtState
+}
+
+func (c *mqlNftablesRule) GetVerdict() *plugin.TValue[string] {
+	return &c.Verdict
+}
+
+func (c *mqlNftablesRule) GetVerdictTarget() *plugin.TValue[string] {
+	return &c.VerdictTarget
+}
+
+func (c *mqlNftablesRule) GetPackets() *plugin.TValue[int64] {
+	return &c.Packets
+}
+
+func (c *mqlNftablesRule) GetBytes() *plugin.TValue[int64] {
+	return &c.Bytes
+}
+
+func (c *mqlNftablesRule) GetSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Sets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nftables.rule", c.__id, "sets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sets()
+	})
 }
 
 // mqlNftablesSet for the nftables.set resource

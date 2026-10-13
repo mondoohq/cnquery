@@ -29,6 +29,9 @@ extend-exclude = [
 gost = "gost"
 # AIDE attributes: ANF (allow new file) and ARF (allow removed file).
 anf = "anf"
+# nftables input/output interface match keywords (`iif lo`, `oif eth0`).
+iif = "iif"
+oif = "oif"
 # MikroTik RouterOS (and the go-routeros SDK package name).
 routeros = "routeros"
 aks = "aks"

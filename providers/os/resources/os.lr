@@ -10072,11 +10072,14 @@ private nftables.chain @defaults("family table name") {
 
 // nftables rule
 //
-// Single rule within a chain, identified by its handle number. The matching
-// criteria and the action (accept, drop, jump, log, and so on) are parsed
-// into `expr` as structured expression data, and `comment` carries any inline
-// rule comment. Use `chainRef` and `tableRef` to walk back to the chain and
-// table that contain the rule.
+// Single rule within a chain, identified by its handle number. The common
+// matches are normalized into `iif`, `oif`, `saddr`, `daddr`, `l4proto`,
+// `sport`, `dport`, and `ctState`, the final action into `verdict` and
+// `verdictTarget`, and a counter into `packets` and `bytes`, so a loopback,
+// anti-spoofing, or per-port check reads the same however nft printed the
+// rule. The full statement list stays in `expr`, and `comment` carries any
+// inline rule comment. Use `chainRef` and `tableRef` to walk back to the chain
+// and table that contain the rule, and `sets` to reach the named sets it uses.
 private nftables.rule @defaults("family table chain handle") {
   // Address family
   family string
@@ -10094,6 +10097,73 @@ private nftables.rule @defaults("family table chain handle") {
   expr []dict
   // Rule comment
   comment string
+  // Input interfaces the rule matches
+  //
+  // Names from `iif` and `iifname` matches, anonymous sets expanded. A negated
+  // match is prefixed with "!", for example "!lo", as on `iptables.entry`.
+  // Empty when the rule does not match on the input interface.
+  iif []string
+  // Output interfaces the rule matches
+  //
+  // Names from `oif` and `oifname` matches, anonymous sets expanded. A negated
+  // match is prefixed with "!", for example "!eth0".
+  oif []string
+  // Source addresses the rule matches
+  //
+  // IPv4 and IPv6 matches in CIDR form: "127.0.0.1/32", "127.0.0.0/8",
+  // "::1/128". A range reads "172.16.0.1-172.16.0.9" and a named set
+  // "@blocklist"; anonymous sets are expanded. A negated match is prefixed
+  // with "!", for example "!127.0.0.0/8". When a rule matches the source
+  // address more than once, every value is listed.
+  saddr []string
+  // Destination addresses the rule matches
+  //
+  // Same form as `saddr`.
+  daddr []string
+  // Layer 4 protocols the rule matches
+  //
+  // Names as nft prints them ("tcp", "udp", "icmp", "ipv6-icmp"), from
+  // `meta l4proto`, `ip protocol`, and `ip6 nexthdr` matches, and implied by a
+  // match on a transport header such as `tcp dport` or `icmpv6 type`. A
+  // negated match is prefixed with "!".
+  l4proto []string
+  // Source ports the rule matches
+  //
+  // Single ports ("22") and ranges ("1024-65535"), anonymous sets expanded, a
+  // named set as "@name". A comparison reads as a range (`< 1024` is
+  // "0-1023"). A negated match is prefixed with "!".
+  sport []string
+  // Destination ports the rule matches
+  //
+  // Same form as `sport`.
+  dport []string
+  // Connection tracking states the rule matches
+  //
+  // Values of `ct state` matches: "established", "related", "new",
+  // "invalid", "untracked". A negated match is prefixed with "!", for example
+  // "!new".
+  ctState []string
+  // Verdict of the rule
+  //
+  // One of "accept", "drop", "reject", "jump", "goto", "return", "continue",
+  // or "queue". Empty when the rule has no verdict statement, for example a
+  // logging rule, a NAT rule, or a rule whose verdict comes from a verdict map
+  // (`ct state vmap { ... }`), which `expr` still shows.
+  verdict string
+  // Chain the rule jumps to
+  //
+  // Set when `verdict` is "jump" or "goto", empty otherwise.
+  verdictTarget string
+  // Packets counted by the rule
+  //
+  // Null when the rule has no anonymous counter statement.
+  packets int
+  // Bytes counted by the rule
+  //
+  // Null when the rule has no anonymous counter statement.
+  bytes int
+  // Named sets and maps the rule references
+  sets() []nftables.set
 }
 
 // nftables named set or map

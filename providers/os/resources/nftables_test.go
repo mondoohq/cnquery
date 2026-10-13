@@ -673,3 +673,117 @@ func TestNftElemToString_Verdicts(t *testing.T) {
 	assert.Equal(t, "jump regular", nftElemToString(map[string]any{"jump": map[string]any{"target": "regular"}}))
 	assert.Equal(t, "goto regular", nftElemToString(map[string]any{"goto": map[string]any{"target": "regular"}}))
 }
+
+// TestParseNftRuleMatches reads testdata/nftables/rule-matches-1.1.3.json,
+// which is `nft -j list ruleset` from nft 1.1.3 (Debian 13) after loading
+// testdata/nftables/rule-matches.nft. The expectations follow the rule text.
+func TestParseNftRuleMatches(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("testdata", "nftables", "rule-matches-1.1.3.json"))
+	require.NoError(t, err)
+	ruleset, err := parseNftRuleset(data)
+	require.NoError(t, err)
+
+	byHandle := map[int64]nftRuleMatches{}
+	for _, obj := range ruleset.Nftables {
+		if obj.Rule != nil {
+			byHandle[obj.Rule.Handle] = parseNftRuleMatches(obj.Rule.Expr)
+		}
+	}
+
+	tests := []struct {
+		rule   string
+		handle int64
+		want   nftRuleMatches
+	}{
+		{`iif "lo" accept`, 6, nftRuleMatches{iif: []string{"lo"}, verdict: "accept"}},
+		{`iifname "lo" counter packets 0 bytes 0 accept`, 7, nftRuleMatches{iif: []string{"lo"}, verdict: "accept", hasCounter: true}},
+		{`iif != "lo" ip saddr 127.0.0.0/8 counter drop`, 8, nftRuleMatches{iif: []string{"!lo"}, saddr: []string{"127.0.0.0/8"}, verdict: "drop", hasCounter: true}},
+		{`iif != "lo" ip6 saddr ::1 drop`, 9, nftRuleMatches{iif: []string{"!lo"}, saddr: []string{"::1/128"}, verdict: "drop"}},
+		{`ip saddr 10.0.0.1 accept`, 10, nftRuleMatches{saddr: []string{"10.0.0.1/32"}, verdict: "accept"}},
+		{`ip6 saddr 2001:db8::/48 accept`, 11, nftRuleMatches{saddr: []string{"2001:db8::/48"}, verdict: "accept"}},
+		{`ip6 saddr ::ffff:127.0.0.1 drop`, 12, nftRuleMatches{saddr: []string{"::ffff:127.0.0.1/128"}, verdict: "drop"}},
+		{`ct state established,related accept`, 13, nftRuleMatches{ctState: []string{"established", "related"}, verdict: "accept"}},
+		{`ct state invalid drop`, 14, nftRuleMatches{ctState: []string{"invalid"}, verdict: "drop"}},
+		{`ct state vmap { ... }`, 16, nftRuleMatches{}},
+		{`ct state != new drop`, 17, nftRuleMatches{ctState: []string{"!new"}, verdict: "drop"}},
+		{`tcp dport 22 accept`, 18, nftRuleMatches{l4proto: []string{"tcp"}, dport: []string{"22"}, verdict: "accept"}},
+		{`tcp dport { 80, 443 } accept`, 20, nftRuleMatches{l4proto: []string{"tcp"}, dport: []string{"80", "443"}, verdict: "accept"}},
+		{`udp dport 1024-65535 accept`, 21, nftRuleMatches{l4proto: []string{"udp"}, dport: []string{"1024-65535"}, verdict: "accept"}},
+		{`tcp dport < 1024 drop`, 22, nftRuleMatches{l4proto: []string{"tcp"}, dport: []string{"0-1023"}, verdict: "drop"}},
+		{`tcp dport >= 8000 drop`, 23, nftRuleMatches{l4proto: []string{"tcp"}, dport: []string{"8000-65535"}, verdict: "drop"}},
+		{`tcp dport @sshports ip saddr != @blocklist accept`, 24, nftRuleMatches{l4proto: []string{"tcp"}, dport: []string{"@sshports"}, saddr: []string{"!@blocklist"}, verdict: "accept", sets: []string{"sshports", "blocklist"}}},
+		{`ip saddr { 10.0.0.0/8, 172.16.0.1-172.16.0.9 } accept`, 26, nftRuleMatches{saddr: []string{"10.0.0.0/8", "172.16.0.1-172.16.0.9"}, verdict: "accept"}},
+		{`meta l4proto icmp accept`, 27, nftRuleMatches{l4proto: []string{"icmp"}, verdict: "accept"}},
+		{`meta l4proto { tcp, udp } th dport 53 accept`, 30, nftRuleMatches{l4proto: []string{"tcp", "udp"}, dport: []string{"53"}, verdict: "accept"}},
+		{`ip protocol icmp accept`, 31, nftRuleMatches{l4proto: []string{"icmp"}, verdict: "accept"}},
+		{`ip6 nexthdr ipv6-icmp accept`, 32, nftRuleMatches{l4proto: []string{"ipv6-icmp"}, verdict: "accept"}},
+		// The header implies the protocol, named as `ip6 nexthdr icmpv6` prints it.
+		{`icmpv6 type echo-request accept`, 33, nftRuleMatches{l4proto: []string{"ipv6-icmp"}, verdict: "accept"}},
+		{`ip daddr != 10.0.0.0/8 tcp sport 1-1023 reject with tcp reset`, 34, nftRuleMatches{daddr: []string{"!10.0.0.0/8"}, l4proto: []string{"tcp"}, sport: []string{"1-1023"}, verdict: "reject"}},
+		{`reject`, 35, nftRuleMatches{verdict: "reject"}},
+		{`jump mychain`, 36, nftRuleMatches{verdict: "jump", verdictTarget: "mychain"}},
+		{`goto mychain`, 37, nftRuleMatches{verdict: "goto", verdictTarget: "mychain"}},
+		{`oifname { "eth0", "wg*" } return`, 39, nftRuleMatches{oif: []string{"eth0", "wg*"}, verdict: "return"}},
+		{`queue to 3`, 40, nftRuleMatches{verdict: "queue"}},
+		// A named counter carries no values.
+		{`tcp dport 25 counter name "smtp" continue`, 41, nftRuleMatches{l4proto: []string{"tcp"}, dport: []string{"25"}, verdict: "continue"}},
+		{`ip saddr 10.0.0.0/8 ip saddr 10.1.0.0/16 accept`, 42, nftRuleMatches{saddr: []string{"10.0.0.0/8", "10.1.0.0/16"}, verdict: "accept"}},
+		// Concatenated matches are left to expr.
+		{`iifname . ip saddr { "lo" . 127.0.0.1 } accept`, 45, nftRuleMatches{verdict: "accept"}},
+		{`log prefix "x"`, 46, nftRuleMatches{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.rule, func(t *testing.T) {
+			got, ok := byHandle[tt.handle]
+			require.True(t, ok, "no rule with handle %d", tt.handle)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestParseNftRuleMatches_Counter(t *testing.T) {
+	m := parseNftRuleMatches([]any{
+		map[string]any{"counter": map[string]any{"packets": int64(12), "bytes": int64(3456)}},
+		map[string]any{"drop": nil},
+	})
+	assert.True(t, m.hasCounter)
+	assert.EqualValues(t, 12, m.packets)
+	assert.EqualValues(t, 3456, m.bytes)
+}
+
+// Older nft releases print a flag match as an anonymous set with "==".
+func TestParseNftRuleMatches_CtStateAsSet(t *testing.T) {
+	m := parseNftRuleMatches([]any{
+		map[string]any{"match": map[string]any{
+			"op":    "==",
+			"left":  map[string]any{"ct": map[string]any{"key": "state"}},
+			"right": map[string]any{"set": []any{"established", "related"}},
+		}},
+	})
+	assert.Equal(t, []string{"established", "related"}, m.ctState)
+}
+
+func TestNftAddrValue(t *testing.T) {
+	assert.Equal(t, "127.0.0.1/32", nftAddrValue("127.0.0.1"))
+	assert.Equal(t, "::1/128", nftAddrValue("::1"))
+	assert.Equal(t, "2001:db8::1/128", nftAddrValue("2001:0db8:0:0::1"))
+	assert.Equal(t, "127.0.0.0/8", nftAddrValue("127.0.0.0/8"))
+	assert.Equal(t, "not-an-address", nftAddrValue("not-an-address"))
+}
+
+func TestNftPortMatchValues(t *testing.T) {
+	assert.Equal(t, []string{"0-1023"}, nftPortMatchValues("<", int64(1024)))
+	assert.Equal(t, []string{"0-1024"}, nftPortMatchValues("<=", int64(1024)))
+	assert.Equal(t, []string{"1025-65535"}, nftPortMatchValues(">", int64(1024)))
+	assert.Equal(t, []string{"1024-65535"}, nftPortMatchValues(">=", int64(1024)))
+	assert.Empty(t, nftPortMatchValues("<", int64(0)))
+	assert.Equal(t, []string{"!22"}, nftPortMatchValues("!=", int64(22)))
+	assert.Equal(t, []string{"!80", "!443"}, nftPortMatchValues("!=", map[string]any{"set": []any{int64(80), int64(443)}}))
+}
+
+func TestNftMatchValues_ElemWithAttributes(t *testing.T) {
+	right := map[string]any{"set": []any{
+		map[string]any{"elem": map[string]any{"val": "192.0.2.1", "timeout": int64(60)}},
+	}}
+	assert.Equal(t, []string{"192.0.2.1/32"}, nftMatchValues("==", right, nftAddrValue))
+}

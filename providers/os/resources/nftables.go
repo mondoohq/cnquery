@@ -8,13 +8,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/netip"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
 
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/types"
 )
@@ -234,6 +237,285 @@ func nftElemToString(v any) string {
 	default:
 		return fmt.Sprintf("%v", v)
 	}
+}
+
+// nftRuleMatches is what a rule's statement list matches and does, in the
+// normalized form of the typed nftables.rule fields.
+type nftRuleMatches struct {
+	iif, oif      []string
+	saddr, daddr  []string
+	l4proto       []string
+	sport, dport  []string
+	ctState       []string
+	verdict       string
+	verdictTarget string
+	// hasCounter is set by an anonymous counter statement, which carries
+	// packets and bytes. A named counter only references a counter object.
+	hasCounter     bool
+	packets, bytes int64
+	// sets are the names of the named sets and maps the rule references.
+	sets []string
+}
+
+// nftVerdicts are the statements that end a rule with a verdict.
+var nftVerdicts = map[string]bool{
+	"accept": true, "drop": true, "reject": true, "jump": true, "goto": true,
+	"return": true, "continue": true, "queue": true,
+}
+
+// nftL4Headers maps a transport header that a payload match reads to the
+// protocol name nft prints for it in `meta l4proto`, so `icmpv6 type` and
+// `meta l4proto ipv6-icmp` report the same value. th (any transport header)
+// implies no protocol.
+var nftL4Headers = map[string]string{
+	"tcp": "tcp", "udp": "udp", "udplite": "udplite", "sctp": "sctp",
+	"dccp": "dccp", "icmp": "icmp", "icmpv6": "ipv6-icmp", "igmp": "igmp",
+	"esp": "esp", "ah": "ah",
+}
+
+// nftPortHeaders are the payload protocols with sport and dport fields.
+var nftPortHeaders = map[string]bool{
+	"tcp": true, "udp": true, "udplite": true, "sctp": true, "dccp": true, "th": true,
+}
+
+// parseNftRuleMatches reads the matches, verdict, and counter of a rule from
+// its JSON statement list. Statements it does not recognize, such as
+// concatenated matches or verdict maps, leave the typed fields empty.
+func parseNftRuleMatches(expr []any) nftRuleMatches {
+	var m nftRuleMatches
+	for _, e := range expr {
+		stmt, ok := e.(map[string]any)
+		if !ok {
+			continue
+		}
+		for key, val := range stmt {
+			switch {
+			case key == "match":
+				if match, ok := val.(map[string]any); ok {
+					m.addMatch(match)
+				}
+			case key == "counter":
+				if c, ok := val.(map[string]any); ok {
+					m.hasCounter = true
+					m.packets = nftInt(c["packets"])
+					m.bytes = nftInt(c["bytes"])
+				}
+			case key == "vmap":
+				if v, ok := val.(map[string]any); ok {
+					m.addSetRef(v["data"])
+				}
+			case key == "set" || key == "map":
+				// A set or map statement (`add @name { ip saddr }`) names
+				// the set it updates in a field of the same name.
+				if v, ok := val.(map[string]any); ok {
+					m.addSetRef(v[key])
+				}
+			case nftVerdicts[key]:
+				m.verdict = key
+				m.verdictTarget = ""
+				if arg, ok := val.(map[string]any); ok && (key == "jump" || key == "goto") {
+					m.verdictTarget, _ = arg["target"].(string)
+				}
+			}
+		}
+	}
+	return m
+}
+
+func (m *nftRuleMatches) addMatch(match map[string]any) {
+	op, _ := match["op"].(string)
+	left, _ := match["left"].(map[string]any)
+	right := match["right"]
+	m.addSetRef(right)
+
+	if meta, ok := left["meta"].(map[string]any); ok {
+		switch meta["key"] {
+		case "iif", "iifname":
+			m.iif = nftAppendUnique(m.iif, nftMatchValues(op, right, nftPlainValue)...)
+		case "oif", "oifname":
+			m.oif = nftAppendUnique(m.oif, nftMatchValues(op, right, nftPlainValue)...)
+		case "l4proto":
+			m.l4proto = nftAppendUnique(m.l4proto, nftMatchValues(op, right, nftPlainValue)...)
+		}
+		return
+	}
+
+	if ct, ok := left["ct"].(map[string]any); ok {
+		if ct["key"] == "state" {
+			m.ctState = nftAppendUnique(m.ctState, nftMatchValues(op, right, nftPlainValue)...)
+		}
+		return
+	}
+
+	payload, ok := left["payload"].(map[string]any)
+	if !ok {
+		return
+	}
+	proto, _ := payload["protocol"].(string)
+	field, _ := payload["field"].(string)
+	if l4, ok := nftL4Headers[proto]; ok {
+		m.l4proto = nftAppendUnique(m.l4proto, l4)
+	}
+	switch {
+	case (proto == "ip" || proto == "ip6") && field == "saddr":
+		m.saddr = nftAppendUnique(m.saddr, nftMatchValues(op, right, nftAddrValue)...)
+	case (proto == "ip" || proto == "ip6") && field == "daddr":
+		m.daddr = nftAppendUnique(m.daddr, nftMatchValues(op, right, nftAddrValue)...)
+	case (proto == "ip" && field == "protocol") || (proto == "ip6" && field == "nexthdr"):
+		m.l4proto = nftAppendUnique(m.l4proto, nftMatchValues(op, right, nftPlainValue)...)
+	case nftPortHeaders[proto] && field == "sport":
+		m.sport = nftAppendUnique(m.sport, nftPortMatchValues(op, right)...)
+	case nftPortHeaders[proto] && field == "dport":
+		m.dport = nftAppendUnique(m.dport, nftPortMatchValues(op, right)...)
+	}
+}
+
+// addSetRef records a named set reference ("@name").
+func (m *nftRuleMatches) addSetRef(v any) {
+	if s, ok := v.(string); ok && len(s) > 1 && s[0] == '@' {
+		m.sets = nftAppendUnique(m.sets, s[1:])
+	}
+}
+
+// nftMatchValues renders the right-hand side of a match as one string per
+// value: anonymous sets and flag lists are expanded, prefixes and ranges are
+// rendered by value, and a named set reads "@name". A negated match ("!=")
+// prefixes every value with "!".
+func nftMatchValues(op string, right any, value func(any) string) []string {
+	var elems []any
+	switch r := right.(type) {
+	case []any:
+		elems = r
+	case map[string]any:
+		if set, ok := r["set"]; ok {
+			if list, ok := set.([]any); ok {
+				elems = list
+			} else {
+				elems = []any{set}
+			}
+		} else {
+			elems = []any{r}
+		}
+	default:
+		elems = []any{r}
+	}
+
+	var res []string
+	for _, e := range elems {
+		v := nftMatchValue(e, value)
+		if v == "" {
+			continue
+		}
+		if op == "!=" {
+			v = "!" + v
+		}
+		res = append(res, v)
+	}
+	return res
+}
+
+// nftMatchValue renders one element of a match: a scalar, a prefix, a range,
+// or an element carrying attributes ({"elem": {"val": ...}}).
+func nftMatchValue(e any, value func(any) string) string {
+	x, ok := e.(map[string]any)
+	if !ok {
+		if s, ok := e.(string); ok && strings.HasPrefix(s, "@") {
+			return s
+		}
+		return value(e)
+	}
+	if prefix, ok := x["prefix"].(map[string]any); ok {
+		return value(nftElemToString(prefix["addr"]) + "/" + nftElemToString(prefix["len"]))
+	}
+	if rng, ok := x["range"].([]any); ok && len(rng) == 2 {
+		return nftRangeEnd(rng[0]) + "-" + nftRangeEnd(rng[1])
+	}
+	if inner, ok := x["elem"].(map[string]any); ok {
+		return nftMatchValue(inner["val"], value)
+	}
+	// Anything else (a concatenation, an expression) is not a plain value.
+	return ""
+}
+
+func nftPlainValue(v any) string {
+	if v == nil {
+		return ""
+	}
+	return nftElemToString(v)
+}
+
+// nftAddrValue renders an address in CIDR form: "127.0.0.1" reads
+// "127.0.0.1/32", "::1" reads "::1/128", and IPv6 is printed in its canonical
+// short form. A value that is not an address is returned as nft printed it.
+func nftAddrValue(v any) string {
+	s := nftPlainValue(v)
+	if p, err := netip.ParsePrefix(s); err == nil {
+		return p.String()
+	}
+	if a, err := netip.ParseAddr(s); err == nil {
+		return netip.PrefixFrom(a, a.BitLen()).String()
+	}
+	return s
+}
+
+// nftRangeEnd renders one end of a range: a port as is, an address in its
+// canonical form without a prefix length ("172.16.0.1-172.16.0.9").
+func nftRangeEnd(v any) string {
+	s := nftPlainValue(v)
+	if a, err := netip.ParseAddr(s); err == nil {
+		return a.String()
+	}
+	return s
+}
+
+// nftMaxPort is the highest port a comparison can reach.
+const nftMaxPort = 65535
+
+// nftPortMatchValues renders a port match. A comparison is read as the range
+// it covers, so `tcp dport < 1024` reads "0-1023".
+func nftPortMatchValues(op string, right any) []string {
+	switch op {
+	case "<", "<=", ">", ">=":
+		n, ok := right.(int64)
+		if !ok {
+			return nil
+		}
+		lo, hi := int64(0), int64(nftMaxPort)
+		switch op {
+		case "<":
+			hi = n - 1
+		case "<=":
+			hi = n
+		case ">":
+			lo = n + 1
+		case ">=":
+			lo = n
+		}
+		if lo > hi {
+			return nil
+		}
+		return []string{strconv.FormatInt(lo, 10) + "-" + strconv.FormatInt(hi, 10)}
+	}
+	return nftMatchValues(op, right, nftPlainValue)
+}
+
+func nftInt(v any) int64 {
+	switch n := v.(type) {
+	case int64:
+		return n
+	case float64:
+		return int64(n)
+	}
+	return 0
+}
+
+func nftAppendUnique(list []string, vals ...string) []string {
+	for _, v := range vals {
+		if !slices.Contains(list, v) {
+			list = append(list, v)
+		}
+	}
+	return list
 }
 
 func parseNftRuleset(data []byte) (*nftRuleset, error) {
@@ -700,6 +982,35 @@ func (r *mqlNftablesRule) chainRef() (*mqlNftablesChain, error) {
 	return raw.(*mqlNftablesChain), nil
 }
 
+type mqlNftablesRuleInternal struct {
+	// setNames are the named sets and maps the rule references.
+	setNames []string
+}
+
+// sets resolves the rule's named set references against the sets of its
+// table, which the ruleset listing has already built.
+func (r *mqlNftablesRule) sets() ([]any, error) {
+	res := []any{}
+	if len(r.setNames) == 0 {
+		return res, nil
+	}
+	table, err := r.tableRef()
+	if err != nil {
+		return nil, err
+	}
+	tableSets := table.GetSets()
+	if tableSets.Error != nil {
+		return nil, tableSets.Error
+	}
+	for _, raw := range tableSets.Data {
+		set := raw.(*mqlNftablesSet)
+		if slices.Contains(r.setNames, set.Name.Data) {
+			res = append(res, set)
+		}
+	}
+	return res, nil
+}
+
 func (s *mqlNftablesSet) tableRef() (*mqlNftablesTable, error) {
 	return nftLookupTable(s.MqlRuntime, s.Family.Data, s.Table.Data)
 }
@@ -1063,17 +1374,36 @@ func nftCollectRules(runtime *plugin.Runtime, ruleset *nftRuleset, family, table
 		exprDicts := make([]any, len(r.Expr))
 		copy(exprDicts, r.Expr)
 
+		m := parseNftRuleMatches(r.Expr)
+		packets, bytes := llx.NilData, llx.NilData
+		if m.hasCounter {
+			packets, bytes = llx.IntData(m.packets), llx.IntData(m.bytes)
+		}
+
 		ruleRes, err := CreateResource(runtime, "nftables.rule", map[string]*llx.RawData{
-			"family":  llx.StringData(r.Family),
-			"table":   llx.StringData(r.Table),
-			"chain":   llx.StringData(r.Chain),
-			"handle":  llx.IntData(r.Handle),
-			"expr":    llx.ArrayData(exprDicts, types.Dict),
-			"comment": llx.StringData(r.Comment),
+			"family":        llx.StringData(r.Family),
+			"table":         llx.StringData(r.Table),
+			"chain":         llx.StringData(r.Chain),
+			"handle":        llx.IntData(r.Handle),
+			"expr":          llx.ArrayData(exprDicts, types.Dict),
+			"comment":       llx.StringData(r.Comment),
+			"iif":           llx.ArrayData(convert.SliceAnyToInterface(m.iif), types.String),
+			"oif":           llx.ArrayData(convert.SliceAnyToInterface(m.oif), types.String),
+			"saddr":         llx.ArrayData(convert.SliceAnyToInterface(m.saddr), types.String),
+			"daddr":         llx.ArrayData(convert.SliceAnyToInterface(m.daddr), types.String),
+			"l4proto":       llx.ArrayData(convert.SliceAnyToInterface(m.l4proto), types.String),
+			"sport":         llx.ArrayData(convert.SliceAnyToInterface(m.sport), types.String),
+			"dport":         llx.ArrayData(convert.SliceAnyToInterface(m.dport), types.String),
+			"ctState":       llx.ArrayData(convert.SliceAnyToInterface(m.ctState), types.String),
+			"verdict":       llx.StringData(m.verdict),
+			"verdictTarget": llx.StringData(m.verdictTarget),
+			"packets":       packets,
+			"bytes":         bytes,
 		})
 		if err != nil {
 			return nil, err
 		}
+		ruleRes.(*mqlNftablesRule).setNames = m.sets
 		rules = append(rules, ruleRes)
 	}
 	return rules, nil
