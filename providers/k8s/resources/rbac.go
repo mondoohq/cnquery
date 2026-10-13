@@ -61,8 +61,9 @@ func rbacResourceMatches(ruleResources []string, resource string) bool {
 
 // rbacRuleGrants reports whether the rule grants the given verb on the given
 // (apiGroup, resource, resourceName), honoring wildcards in the group, resource,
-// and verb dimensions, including the "*/<subresource>" resource form. A rule with a non-empty ResourceNames list grants the
-// action only on those named objects; an empty list grants it on every object.
+// and verb dimensions, including the "*/<subresource>" resource form. A rule
+// with a non-empty ResourceNames list grants the action only on those named
+// objects; an empty list grants it on every object.
 // An empty resourceName means the action is not scoped to a specific object, so
 // a name-restricted rule still counts (the subject can act on at least the named
 // objects). This matches the API server's RBAC authorizer and keeps whoCan
