@@ -15811,6 +15811,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.spooler.redirectionGuardPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSpooler).GetRedirectionGuardPolicy()).ToDataRes(types.Bool)
 	},
+	"windows.spooler.redirectionGuardMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetRedirectionGuardMode()).ToDataRes(types.Int)
+	},
 	"windows.spooler.webPnpDownloadDisabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSpooler).GetWebPnpDownloadDisabled()).ToDataRes(types.Bool)
 	},
@@ -15819,6 +15822,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.spooler.copyFilesPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSpooler).GetCopyFilesPolicy()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.copyFilesMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetCopyFilesMode()).ToDataRes(types.Int)
 	},
 	"windows.spooler.rpcAuthnLevelPrivacyEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSpooler).GetRpcAuthnLevelPrivacyEnabled()).ToDataRes(types.Bool)
@@ -39137,6 +39143,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsSpooler).RedirectionGuardPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"windows.spooler.redirectionGuardMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).RedirectionGuardMode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"windows.spooler.webPnpDownloadDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsSpooler).WebPnpDownloadDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -39147,6 +39157,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.spooler.copyFilesPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsSpooler).CopyFilesPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.copyFilesMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).CopyFilesMode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.spooler.rpcAuthnLevelPrivacyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -99603,9 +99617,11 @@ type mqlWindowsSpooler struct {
 	Disabled                              plugin.TValue[bool]
 	RegisterRemoteRpcEndpoint             plugin.TValue[bool]
 	RedirectionGuardPolicy                plugin.TValue[bool]
+	RedirectionGuardMode                  plugin.TValue[int64]
 	WebPnpDownloadDisabled                plugin.TValue[bool]
 	HttpPrintingDisabled                  plugin.TValue[bool]
 	CopyFilesPolicy                       plugin.TValue[bool]
+	CopyFilesMode                         plugin.TValue[int64]
 	RpcAuthnLevelPrivacyEnabled           plugin.TValue[bool]
 	AddPrinterDriversRestricted           plugin.TValue[bool]
 	PointAndPrint                         plugin.TValue[*mqlWindowsSpoolerPointAndPrint]
@@ -99675,6 +99691,12 @@ func (c *mqlWindowsSpooler) GetRedirectionGuardPolicy() *plugin.TValue[bool] {
 	})
 }
 
+func (c *mqlWindowsSpooler) GetRedirectionGuardMode() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RedirectionGuardMode, func() (int64, error) {
+		return c.redirectionGuardMode()
+	})
+}
+
 func (c *mqlWindowsSpooler) GetWebPnpDownloadDisabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.WebPnpDownloadDisabled, func() (bool, error) {
 		return c.webPnpDownloadDisabled()
@@ -99690,6 +99712,12 @@ func (c *mqlWindowsSpooler) GetHttpPrintingDisabled() *plugin.TValue[bool] {
 func (c *mqlWindowsSpooler) GetCopyFilesPolicy() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.CopyFilesPolicy, func() (bool, error) {
 		return c.copyFilesPolicy()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetCopyFilesMode() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.CopyFilesMode, func() (int64, error) {
+		return c.copyFilesMode()
 	})
 }
 

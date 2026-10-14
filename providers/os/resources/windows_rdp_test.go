@@ -77,24 +77,45 @@ func toLowerASCII(s string) string {
 	return string(b)
 }
 
-// Remote Assistance is machine-wide, not per-listener. Its value is written
-// under the Terminal Server key when it is enabled outside Group Policy, never
-// under WinStations\RDP-Tcp, so resolving it against the per-listener map
-// misses a host that has it turned on and reports Remote Assistance as off.
-func TestRemoteAssistanceResolvesAgainstTheMachineWideKey(t *testing.T) {
-	for _, name := range []string{"fAllowToGetHelp", "fAllowUnsolicited"} {
-		t.Run(name, func(t *testing.T) {
-			// how a host with Remote Assistance enabled locally looks: the
-			// value is under the Terminal Server key and no policy sets it
-			tsRoot := map[string]int64{toLowerASCII(name): 1}
-			winSta := map[string]int64{}
+// Remote Assistance keeps its local setting under Control\Remote Assistance,
+// not under Control\Terminal Server. The local map below is what Windows 10
+// 22H2 and Windows 11 25H2 client installs hold there (Remote Assistance on,
+// no policy), read with Get-ItemProperty.
+func TestRdpSolicitedRemoteAssistanceAllowed(t *testing.T) {
+	clientDefault := map[string]int64{"fallowtogethelp": 1, "fallowfullcontrol": 1}
 
-			assert.Equal(t, int64(1), resolveRdpValue(nil, tsRoot, name, 0),
-				"the machine-wide key holds the value and has to be the source consulted")
-			assert.Equal(t, int64(0), resolveRdpValue(nil, winSta, name, 0),
-				"the per-listener key never holds it, so resolving there reports the default")
-		})
-	}
+	t.Run("local setting applies without a policy", func(t *testing.T) {
+		assert.True(t, rdpSolicitedRemoteAssistanceAllowed(map[string]int64{}, clientDefault))
+		assert.False(t, rdpSolicitedRemoteAssistanceAllowed(map[string]int64{}, map[string]int64{"fallowtogethelp": 0}))
+	})
+
+	t.Run("policy wins over the local setting in both directions", func(t *testing.T) {
+		assert.False(t, rdpSolicitedRemoteAssistanceAllowed(map[string]int64{"fallowtogethelp": 0}, clientDefault))
+		assert.True(t, rdpSolicitedRemoteAssistanceAllowed(map[string]int64{"fallowtogethelp": 1}, map[string]int64{"fallowtogethelp": 0}))
+	})
+
+	t.Run("off when neither key sets it", func(t *testing.T) {
+		assert.False(t, rdpSolicitedRemoteAssistanceAllowed(nil, nil))
+	})
+
+	t.Run("does not read the offer setting", func(t *testing.T) {
+		assert.False(t, rdpSolicitedRemoteAssistanceAllowed(nil, map[string]int64{"fallowunsolicited": 1}))
+	})
+}
+
+func TestRdpOfferRemoteAssistanceAllowed(t *testing.T) {
+	t.Run("off on a client default install, where only solicited help is on", func(t *testing.T) {
+		assert.False(t, rdpOfferRemoteAssistanceAllowed(map[string]int64{}, map[string]int64{"fallowtogethelp": 1, "fallowfullcontrol": 1}))
+	})
+
+	t.Run("local setting applies without a policy", func(t *testing.T) {
+		assert.True(t, rdpOfferRemoteAssistanceAllowed(nil, map[string]int64{"fallowunsolicited": 1}))
+	})
+
+	t.Run("policy wins over the local setting", func(t *testing.T) {
+		assert.False(t, rdpOfferRemoteAssistanceAllowed(map[string]int64{"fallowunsolicited": 0}, map[string]int64{"fallowunsolicited": 1}))
+		assert.True(t, rdpOfferRemoteAssistanceAllowed(map[string]int64{"fallowunsolicited": 1}, nil))
+	})
 }
 
 // DisablePasswordSaving is a Group Policy-only setting. Microsoft documents the

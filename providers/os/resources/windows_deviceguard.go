@@ -91,8 +91,11 @@ func computeDeviceGuard(items map[string]registry.RegistryKeyItem) deviceGuardVa
 		hypervisorEnforcedCodeIntegrity:    regIntPtr(items, "HypervisorEnforcedCodeIntegrity"),
 		hvciMatRequired:                    regBoolPtr(items, "HVCIMATRequired"),
 		credentialGuardConfig:              regIntPtr(items, "LsaCfgFlags"),
-		systemGuardLaunch:                  regBoolPtr(items, "ConfigureSystemGuardLaunch"),
-		kernelShadowStacksLaunch:           regIntPtr(items, "ConfigureKernelShadowStacksLaunch"),
+		// ConfigureSystemGuardLaunch is an enumeration, not a toggle: 0 leaves
+		// Secure Launch unmanaged, 1 enables it, 2 disables it. A non-zero test
+		// read the disabling value as enabled.
+		systemGuardLaunch:        regEnumBoolPtr(items, "ConfigureSystemGuardLaunch", 1, 2),
+		kernelShadowStacksLaunch: regIntPtr(items, "ConfigureKernelShadowStacksLaunch"),
 	}
 }
 

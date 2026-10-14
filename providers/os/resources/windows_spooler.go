@@ -204,8 +204,15 @@ func (r *mqlWindowsSpooler) registerRemoteRpcEndpoint() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return resolveNullableBool(&r.RegisterRemoteRpcEndpoint,
-		regBoolPtr(reg.printers, "RegisterSpoolerRemoteRpcEndPoint"))
+	return resolveNullableBool(&r.RegisterRemoteRpcEndpoint, spoolerRegisterRemoteRpcEndpoint(reg.printers))
+}
+
+// spoolerRegisterRemoteRpcEndpoint decodes the "Allow Print Spooler to accept
+// client connections" policy. Its registry value is 1 when the policy is
+// enabled and 2 when it is disabled, so the hardened value is non-zero and a
+// non-zero test reported it as "remote connections allowed".
+func spoolerRegisterRemoteRpcEndpoint(printers map[string]registry.RegistryKeyItem) *bool {
+	return regEnumBoolPtr(printers, "RegisterSpoolerRemoteRpcEndPoint", 1, 2)
 }
 
 func (r *mqlWindowsSpooler) redirectionGuardPolicy() (bool, error) {
@@ -213,8 +220,22 @@ func (r *mqlWindowsSpooler) redirectionGuardPolicy() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return resolveNullableBool(&r.RedirectionGuardPolicy,
-		regBoolPtr(reg.printers, "RedirectionguardPolicy"))
+	return resolveNullableBool(&r.RedirectionGuardPolicy, spoolerRedirectionGuardEnabled(reg.printers))
+}
+
+func (r *mqlWindowsSpooler) redirectionGuardMode() (int64, error) {
+	reg, err := r.load()
+	if err != nil {
+		return 0, err
+	}
+	return resolveNullableInt(&r.RedirectionGuardMode, regIntPtr(reg.printers, "RedirectionguardPolicy"))
+}
+
+// spoolerRedirectionGuardEnabled decodes the "Configure Redirection Guard"
+// policy: 0 = disabled, 1 = enabled, 2 = audit. Audit mode logs redirections
+// without blocking them, so it is not enabled.
+func spoolerRedirectionGuardEnabled(printers map[string]registry.RegistryKeyItem) *bool {
+	return regEnumBoolPtr(printers, "RedirectionguardPolicy", 1, 0, 2)
 }
 
 func (r *mqlWindowsSpooler) webPnpDownloadDisabled() (bool, error) {
@@ -238,7 +259,36 @@ func (r *mqlWindowsSpooler) copyFilesPolicy() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return resolveNullableBool(&r.CopyFilesPolicy, regBoolPtr(reg.printers, "CopyFilesPolicy"))
+	return resolveNullableBool(&r.CopyFilesPolicy, spoolerCopyFilesRestricted(reg.printers))
+}
+
+func (r *mqlWindowsSpooler) copyFilesMode() (int64, error) {
+	reg, err := r.load()
+	if err != nil {
+		return 0, err
+	}
+	return resolveNullableInt(&r.CopyFilesMode, regIntPtr(reg.printers, "CopyFilesPolicy"))
+}
+
+// spoolerCopyFilesRestricted decodes the "Manage processing of Queue-specific
+// files" policy: 0 = do not allow queue-specific files, 1 = limit them to
+// color profiles, 2 = allow all. The first two restrict what a print queue can
+// copy to the client; 2 is the unrestricted legacy behavior, which a non-zero
+// test reported as restricted.
+func spoolerCopyFilesRestricted(printers map[string]registry.RegistryKeyItem) *bool {
+	v := regIntPtr(printers, "CopyFilesPolicy")
+	if v == nil {
+		return nil
+	}
+	switch *v {
+	case 0, 1:
+		res := true
+		return &res
+	case 2:
+		res := false
+		return &res
+	}
+	return nil
 }
 
 func (r *mqlWindowsSpooler) rpcAuthnLevelPrivacyEnabled() (bool, error) {

@@ -394,6 +394,37 @@ func TestLsaRegBoolPtr(t *testing.T) {
 	})
 }
 
+func TestRegEnumBoolPtr(t *testing.T) {
+	m := items(d("Setting", 1), d("Disabled", 2), d("Off", 0), d("Unknown", 7))
+
+	t.Run("true value returns true", func(t *testing.T) {
+		p := regEnumBoolPtr(m, "Setting", 1, 2)
+		require.NotNil(t, p)
+		assert.True(t, *p)
+	})
+
+	t.Run("a non-zero disabling value returns false, unlike regBoolPtr", func(t *testing.T) {
+		p := regEnumBoolPtr(m, "Disabled", 1, 2)
+		require.NotNil(t, p)
+		assert.False(t, *p)
+	})
+
+	t.Run("every listed false value returns false", func(t *testing.T) {
+		p := regEnumBoolPtr(m, "Off", 1, 2, 0)
+		require.NotNil(t, p)
+		assert.False(t, *p)
+	})
+
+	t.Run("a value outside both sets returns nil", func(t *testing.T) {
+		assert.Nil(t, regEnumBoolPtr(m, "Unknown", 1, 2))
+		assert.Nil(t, regEnumBoolPtr(m, "Off", 1, 2))
+	})
+
+	t.Run("absent value returns nil", func(t *testing.T) {
+		assert.Nil(t, regEnumBoolPtr(m, "DoesNotExist", 1, 2))
+	})
+}
+
 func TestLsaBoolFieldPtr(t *testing.T) {
 	t.Run("nil pointer yields a null field", func(t *testing.T) {
 		f := boolFieldPtr(nil)

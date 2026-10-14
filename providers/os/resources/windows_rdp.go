@@ -25,6 +25,9 @@ const (
 	rdpPolicyClientPath   = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\Client`
 	rdpWinStationsPath    = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp`
 	rdpTerminalServerPath = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server`
+	// Remote Assistance keeps its local (non-policy) settings in a key of its
+	// own; the System Properties > Remote toggle writes fAllowToGetHelp here.
+	rdpRemoteAssistancePath = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Remote Assistance`
 )
 
 // rdpSource selects which non-policy key holds the effective value for a
@@ -46,6 +49,7 @@ type mqlWindowsRdpInternal struct {
 	policyClient map[string]int64
 	winSta       map[string]int64
 	tsRoot       map[string]int64
+	remoteAssist map[string]int64
 	loadErr      error
 }
 
@@ -107,10 +111,17 @@ func (r *mqlWindowsRdp) load() error {
 		return err
 	}
 
+	remoteAssist, err := r.readRdpKey(rdpRemoteAssistancePath)
+	if err != nil {
+		r.loadErr = err
+		return err
+	}
+
 	r.policy = policy
 	r.policyClient = policyClient
 	r.winSta = winSta
 	r.tsRoot = tsRoot
+	r.remoteAssist = remoteAssist
 	r.loaded = true
 	return nil
 }
@@ -233,18 +244,34 @@ func (r *mqlWindowsRdp) perSessionTempDirsUsed() (bool, error) {
 }
 
 func (r *mqlWindowsRdp) solicitedRemoteAssistanceAllowed() (bool, error) {
-	// Remote Assistance is machine-wide, not per-listener: the policy writes
-	// fAllowToGetHelp under the Terminal Services policy key and enabling it
-	// locally writes it under the Terminal Server key. Neither is under
-	// WinStations\RDP-Tcp, so looking there missed a host that had turned
-	// Remote Assistance on outside Group Policy and reported it as off.
-	return r.resolveBool("fAllowToGetHelp", rdpTerminalServer, 0)
+	if err := r.load(); err != nil {
+		return false, err
+	}
+	return rdpSolicitedRemoteAssistanceAllowed(r.policy, r.remoteAssist), nil
 }
 
 func (r *mqlWindowsRdp) offerRemoteAssistanceAllowed() (bool, error) {
-	// machine-wide for the same reason as fAllowToGetHelp; off when nothing
-	// sets it
-	return r.resolveBool("fAllowUnsolicited", rdpTerminalServer, 0)
+	if err := r.load(); err != nil {
+		return false, err
+	}
+	return rdpOfferRemoteAssistanceAllowed(r.policy, r.remoteAssist), nil
+}
+
+// rdpSolicitedRemoteAssistanceAllowed resolves fAllowToGetHelp. Remote
+// Assistance is machine-wide and not part of Remote Desktop: the Group Policy
+// value under the Terminal Services policy key wins, otherwise the local value
+// under Control\Remote Assistance applies (written by the System Properties
+// toggle, and set to 1 on a Windows client install). The value is never under
+// Control\Terminal Server, so reading that key reported Remote Assistance as
+// off on every host that had it on. Off when neither key sets it.
+func rdpSolicitedRemoteAssistanceAllowed(policy, remoteAssist map[string]int64) bool {
+	return resolveRdpValue(policy, remoteAssist, "fAllowToGetHelp", 0) == 1
+}
+
+// rdpOfferRemoteAssistanceAllowed resolves fAllowUnsolicited with the same
+// precedence as fAllowToGetHelp. Off when neither key sets it.
+func rdpOfferRemoteAssistanceAllowed(policy, remoteAssist map[string]int64) bool {
+	return resolveRdpValue(policy, remoteAssist, "fAllowUnsolicited", 0) == 1
 }
 
 func (r *mqlWindowsRdp) webAuthnRedirectionDisabled() (bool, error) {
