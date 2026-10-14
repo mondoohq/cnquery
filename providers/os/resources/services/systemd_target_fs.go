@@ -56,7 +56,12 @@ func ListSystemdFSTargetNames(fs afero.Fs) []string {
 // carries. A target whose file cannot be read is left out of the map rather
 // than reported as a target carrying nothing.
 func ReadSystemdFSTargetProperties(fs afero.Fs, names []string) map[string]map[string]string {
-	enabledSet := buildEnabledSet(fs)
+	states := map[string]string{}
+	if units, err := readSystemdUnitFiles(fs, ".target"); err == nil {
+		for _, u := range units {
+			states[u.Name] = u.State
+		}
+	}
 	out := make(map[string]map[string]string, len(names))
 
 	for _, name := range names {
@@ -71,8 +76,10 @@ func ReadSystemdFSTargetProperties(fs afero.Fs, names []string) map[string]map[s
 			if err != nil {
 				break
 			}
-			if enabledSet[unitFile] {
-				props["UnitFileState"] = "enabled"
+			// the state systemctl reports: a target without an [Install]
+			// section is static even when another target wants it
+			if state, ok := states[unitFile]; ok && state != "alias" && props["UnitFileState"] != "masked" {
+				props["UnitFileState"] = state
 			}
 			out[name] = props
 			break
