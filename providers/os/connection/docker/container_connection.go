@@ -13,6 +13,7 @@ import (
 
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
+	containertypes "github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -83,6 +84,21 @@ func NewContainerConnection(id uint32, conf *inventory.Config, asset *inventory.
 		runtime:    "docker",
 	}
 
+	conn.PlatformArchitecture = inspectedContainerArchitecture(dockerClient, data)
+
+	conn.Fs = &FS{
+		dockerClient: conn.Client,
+		Container:    conn.container,
+		Connection:   conn,
+		catFS:        cat.New(conn),
+		runner:       conn,
+	}
+	return conn, nil
+}
+
+// inspectedContainerArchitecture returns the architecture of an inspected
+// container.
+func inspectedContainerArchitecture(dockerClient *client.Client, data containertypes.InspectResponse) string {
 	// The container runs its image's architecture, which is not the daemon's
 	// when the image was pulled for another platform (an amd64 image under
 	// emulation on an arm64 host). The daemon's is only the fallback.
@@ -111,16 +127,7 @@ func NewContainerConnection(id uint32, conf *inventory.Config, asset *inventory.
 			daemonArch = serverVersionRes.Arch
 		}
 	}
-	conn.PlatformArchitecture = containerArchitecture(manifestArch, imageArch, daemonArch)
-
-	conn.Fs = &FS{
-		dockerClient: conn.Client,
-		Container:    conn.container,
-		Connection:   conn,
-		catFS:        cat.New(conn),
-		runner:       conn,
-	}
-	return conn, nil
+	return containerArchitecture(manifestArch, imageArch, daemonArch)
 }
 
 // containerArchitecture picks the architecture a container runs: the one of
@@ -300,6 +307,18 @@ func newContainerSnapshot(id uint32, conf *inventory.Config, asset *inventory.As
 	conn, err := NewSnapshotConnection(id, &inventory.Config{Host: containerID}, asset)
 	if err != nil {
 		return nil, err
+	}
+	// The same architecture the container reports while it runs: the one of
+	// its image, in the OCI naming. Detection on the exported filesystem
+	// reported the kernel's name instead (aarch64 for arm64), so the
+	// container's asset changed when it stopped.
+	if dockerClient, err := GetDockerClient(); err == nil {
+		if inspectRes, err := dockerClient.ContainerInspect(context.Background(), containerID, client.ContainerInspectOptions{}); err == nil {
+			conn.PlatformArchitecture = inspectedContainerArchitecture(dockerClient, inspectRes.Container)
+		}
+		if err := dockerClient.Close(); err != nil {
+			log.Debug().Err(err).Msg("docker> could not close the client used to inspect a stopped container")
+		}
 	}
 	conn.PlatformIdentifier = platformID
 	conn.Metadata.Name = shortID

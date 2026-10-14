@@ -89,9 +89,12 @@ func (r *PlatformResolver) Resolve(conn shared.Connection) (*inventory.Platform,
 
 	// A stopped container is scanned from an export of its filesystem. It is
 	// still a container, not the bare metal system detection falls back to.
-	if _, ok := conn.(*docker.SnapshotConnection); resolved && ok {
+	if snapConn, ok := conn.(*docker.SnapshotConnection); resolved && ok {
 		pi.Kind = "container"
 		pi.Runtime = string(shared.Type_DockerContainer)
+		if snapConn.PlatformArchitecture != "" {
+			pi.Arch = snapConn.PlatformArchitecture
+		}
 	}
 
 	containerConn, ok := conn.(*docker.ContainerConnection)

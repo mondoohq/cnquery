@@ -48,3 +48,26 @@ func TestStoppedContainerIsAContainer(t *testing.T) {
 	assert.Equal(t, "container", pf.Kind)
 	assert.Equal(t, "docker-container", pf.Runtime)
 }
+
+// A stopped container reports the architecture it reports while it runs, the
+// one of its image (arm64), not the one detection reads off its files
+// (aarch64). Without one from the container, detection still decides.
+func TestStoppedContainerArchitecture(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "export.tar")
+	f, err := os.Create(path)
+	require.NoError(t, err)
+	tw := archivetar.NewWriter(f)
+	require.NoError(t, tw.WriteHeader(&archivetar.Header{Name: "etc/os-release", Typeflag: archivetar.TypeReg, Mode: 0o644, Size: int64(len(debian12OsRelease))}))
+	_, err = tw.Write([]byte(debian12OsRelease))
+	require.NoError(t, err)
+	require.NoError(t, tw.Close())
+	require.NoError(t, f.Close())
+
+	tc, err := tar.NewConnection(0, &inventory.Config{Type: "docker-snapshot", Options: map[string]string{tar.OPTION_FILE: path}}, &inventory.Asset{})
+	require.NoError(t, err)
+	tc.PlatformArchitecture = "arm64"
+
+	pf, ok := DetectOS(&docker.SnapshotConnection{Connection: tc})
+	require.True(t, ok)
+	assert.Equal(t, "arm64", pf.Arch)
+}
