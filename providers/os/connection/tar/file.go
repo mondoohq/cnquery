@@ -79,27 +79,15 @@ func (f *File) children() map[string]*tar.Header {
 	if dir == "" {
 		dir = Abs(f.path)
 	}
-	prefix := dir
-	if !strings.HasSuffix(prefix, "/") {
-		prefix += "/"
+	if dir != "/" {
+		dir = strings.TrimSuffix(dir, "/")
 	}
 
-	res := map[string]*tar.Header{}
-	for k, h := range f.Fs.FileMap {
-		if !strings.HasPrefix(k, prefix) {
-			continue
-		}
-		rel := k[len(prefix):]
-		if rel == "" {
-			continue
-		}
-		if i := strings.IndexByte(rel, '/'); i >= 0 {
-			if _, ok := res[rel[:i]]; !ok {
-				res[rel[:i]] = nil
-			}
-			continue
-		}
-		res[rel] = h
+	names := f.Fs.childNames(dir)
+	res := make(map[string]*tar.Header, len(names))
+	for _, name := range names {
+		// nil for a directory the archive holds no entry of its own for
+		res[name] = f.Fs.FileMap[join(dir, name)]
 	}
 	return res
 }

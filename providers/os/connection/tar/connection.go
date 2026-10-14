@@ -187,11 +187,16 @@ func (c *Connection) Close() {
 	}
 	if c.fs != nil {
 		c.fs.FileMap = nil
+		c.fs.dataOffsets = nil
 	}
 }
 
 func (c *Connection) Load(stream io.Reader) error {
-	tr := tar.NewReader(stream)
+	// The reader counts what the tar reader consumed: right after Next, that
+	// is where the entry's data starts in the archive.
+	cr := &countingReader{r: stream}
+	tr := tar.NewReader(cr)
+	names := map[string]int{}
 	for {
 		h, err := tr.Next()
 		if err == io.EOF {
@@ -203,6 +208,10 @@ func (c *Connection) Load(stream io.Reader) error {
 		}
 
 		path := Abs(h.Name)
+		names[h.Name]++
+		if names[h.Name] == 1 && h.Size > 0 && isContiguous(h) {
+			c.fs.dataOffsets[h] = cr.n
+		}
 
 		// The map key holds the entry name with a leading separator, so the name is stored
 		// twice. Point the header name at the tail of the key when the bytes are the same.
@@ -212,8 +221,42 @@ func (c *Connection) Load(stream io.Reader) error {
 		}
 		c.fs.FileMap[path] = h
 	}
+	// A name the archive holds more than once is read the way it always
+	// was, every copy concatenated, by scanning the archive for it.
+	for h := range c.fs.dataOffsets {
+		if names[h.Name] > 1 {
+			delete(c.fs.dataOffsets, h)
+		}
+	}
 	log.Debug().Int("files", len(c.fs.FileMap)).Msg("tar> successfully loaded")
 	return nil
+}
+
+// countingReader counts the bytes read through it.
+type countingReader struct {
+	r io.Reader
+	n int64
+}
+
+func (c *countingReader) Read(p []byte) (int, error) {
+	n, err := c.r.Read(p)
+	c.n += int64(n)
+	return n, err
+}
+
+// isContiguous reports whether the entry's data is stored as one run of
+// bytes. A sparse file's data is a list of fragments the tar reader puts
+// together, so it cannot be read at an offset.
+func isContiguous(h *tar.Header) bool {
+	if h.Typeflag == tar.TypeGNUSparse {
+		return false
+	}
+	for k := range h.PAXRecords {
+		if strings.HasPrefix(k, "GNU.sparse.") {
+			return false
+		}
+	}
+	return true
 }
 
 func (c *Connection) LoadFile(path string) error {
