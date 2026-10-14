@@ -8395,20 +8395,24 @@ docker.volume @defaults("name driver mountpoint") {
 // Docker Engine daemon configuration
 //
 // The settings dockerd runs with, read from its configuration file
-// (`configFile`, /etc/docker/daemon.json unless the running dockerd names
+// (`configFile`, /etc/docker/daemon.json or, on Windows,
+// C:\ProgramData\docker\config\daemon.json, unless the running dockerd names
 // another with `--config-file`) and the command-line flags of the running
 // `process`. It reads files and the process list, not the Docker API, so it
 // works over SSH and on images and mounted filesystems where nothing is
 // running. Settings neither source sets report the value dockerd uses by
-// default, as each field says. The headline audit is a TCP listener in
+// default, as each field says. Those defaults are null on a target without
+// dockerd: none running, no configuration file, and no dockerd binary where
+// Docker installs it. The headline audit is a TCP listener in
 // `hosts` without `tlsVerify`, for example
 // `docker.daemon { hosts.where(_ == /^tcp:/).length == 0 || tlsVerify }`.
 docker.daemon @defaults("configFile.path hosts") {
   // Daemon configuration file
   //
   // The file the running dockerd's `--config-file` flag names, otherwise
-  // /etc/docker/daemon.json. Reported even when it does not exist, since
-  // dockerd runs without one.
+  // /etc/docker/daemon.json, or C:\ProgramData\docker\config\daemon.json on
+  // Windows. Reported even when it does not exist, since dockerd runs without
+  // one.
   configFile() file
   // Running dockerd process; null when dockerd is not running or the process list cannot be read
   process() process
@@ -8446,8 +8450,9 @@ docker.daemon @defaults("configFile.path hosts") {
   //
   // As configured, for example "unix:///var/run/docker.sock", "fd://" (the
   // socket systemd passes in) or "tcp://0.0.0.0:2376". When none is
-  // configured dockerd listens on "unix:///var/run/docker.sock" alone, which
-  // is what this reports then.
+  // configured dockerd listens on "unix:///var/run/docker.sock" alone, or on
+  // Windows on the "npipe:////./pipe/docker_engine" named pipe, which is what
+  // this reports then. Null when the target has no dockerd.
   hosts() []string
   // Whether the Engine API serves TLS on its TCP listeners
   //
@@ -8477,7 +8482,7 @@ docker.daemon @defaults("configFile.path hosts") {
   defaultUlimits() []docker.daemon.ulimit
   // Parent cgroup of all containers; empty when dockerd uses its default for the cgroup driver
   cgroupParent() string
-  // Root directory of the daemon's persistent state; dockerd's default is "/var/lib/docker"
+  // Root directory of the daemon's persistent state; dockerd's default is "/var/lib/docker", or "C:\ProgramData\docker" on Windows
   dataRoot() string
   // Storage driver for images and containers; empty when dockerd picks one itself
   storageDriver() string
@@ -21941,6 +21946,9 @@ private cursor.skill @defaults("name") @maturity("preview") {
 github.copilot @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the GitHub Copilot configuration directory
+  //
+  // Defaults to ~/.config/github-copilot, or %USERPROFILE%\AppData\Local\github-copilot
+  // on Windows.
   configPath string
 
   // Package that installed this tool
@@ -22047,6 +22055,8 @@ private github.copilot.skill @defaults("name") @maturity("preview") {
 goose @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Goose configuration directory
+  //
+  // Defaults to ~/.config/goose, or %APPDATA%\Block\goose\config on Windows.
   configPath string
 
   // Package that installed this tool
@@ -22073,6 +22083,12 @@ goose @defaults("configPath") @maturity("preview") {
   // Active model name
   model() string
   // Whether usage telemetry is enabled
+  //
+  // From GOOSE_TELEMETRY_ENABLED in config.yaml. Goose sends telemetry only
+  // after an explicit opt-in, so this is false when the key is not set, and
+  // null when there is no config.yaml. The GOOSE_TELEMETRY_OFF environment
+  // variable of the process running Goose also turns it off, which a file
+  // cannot show.
   telemetryEnabled() bool
   // Configured extensions
   extensions() []goose.extension
@@ -22390,6 +22406,8 @@ private windsurf.skill @defaults("name") @maturity("preview") {
 zed @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Zed configuration directory
+  //
+  // Defaults to ~/.config/zed, or %APPDATA%\Zed on Windows.
   configPath string
 
   // Package that installed this tool

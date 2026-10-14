@@ -28,6 +28,13 @@ import (
 // initConfigPath is a shared init helper for resources that resolve a
 // configPath from the target's home directory (e.g. claude.code, openai.codex).
 func initConfigPath(runtime *plugin.Runtime, args map[string]*llx.RawData, resourceName, defaultDir string) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initOSConfigPath(runtime, args, resourceName, func(string) string { return defaultDir })
+}
+
+// initOSConfigPath is initConfigPath for tools whose configuration directory
+// depends on the target's OS. defaultDir maps the OS family (see
+// targetOSFamily) to the directory relative to the user's home.
+func initOSConfigPath(runtime *plugin.Runtime, args map[string]*llx.RawData, resourceName string, defaultDir func(osFamily string) string) (map[string]*llx.RawData, plugin.Resource, error) {
 	if x, ok := args["configPath"]; ok {
 		path, ok := x.Value.(string)
 		if !ok {
@@ -44,10 +51,19 @@ func initConfigPath(runtime *plugin.Runtime, args map[string]*llx.RawData, resou
 		if err != nil {
 			return nil, nil, err
 		}
-		args["configPath"] = llx.StringData(filepath.Join(home, defaultDir))
+		args["configPath"] = llx.StringData(filepath.Join(home, defaultDir(runtimeOSFamily(runtime))))
 	}
 
 	return args, nil, nil
+}
+
+// runtimeOSFamily is targetOSFamily for a runtime, "" when it has no OS
+// connection.
+func runtimeOSFamily(runtime *plugin.Runtime) string {
+	if conn, ok := runtime.Connection.(shared.Connection); ok {
+		return targetOSFamily(conn)
+	}
+	return ""
 }
 
 // connectionAfs returns an afero.Afero wrapping the connection's filesystem.

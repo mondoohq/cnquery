@@ -222,6 +222,7 @@ func (f *mqlFirefox) addons() ([]any, error) {
 	if !ok {
 		return []any{}, nil
 	}
+	windows := platformKey == "windows"
 
 	// Enumerate all users so addons are discovered for every account.
 	users, err := targetUserHomes(f.MqlRuntime)
@@ -298,8 +299,9 @@ func (f *mqlFirefox) addons() ([]any, error) {
 					continue
 				}
 
-				// Extract profile name from path
-				profileName := filepath.Base(filepath.Dir(extensionsPath.Data))
+				// The profile is the directory holding extensions.json.
+				profileDir := targetPathDir(extensionsPath.Data, windows)
+				profileName := targetPathBase(profileDir, windows)
 
 				log.Debug().
 					Str("browser", browserCfg.name).
@@ -325,7 +327,7 @@ func (f *mqlFirefox) addons() ([]any, error) {
 					}
 
 					// Create unique key including user and browser to avoid deduplication across users
-					uniqueKey := firefoxAddonKey(u.name, browserCfg.name, filepath.Dir(extensionsPath.Data), addon.ID)
+					uniqueKey := firefoxAddonKey(u.name, browserCfg.name, profileDir, addon.ID)
 					if seen[uniqueKey] {
 						continue
 					}

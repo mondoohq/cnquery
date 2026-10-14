@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -57,7 +58,9 @@ func TestGooseConfigParsing(t *testing.T) {
 
 	assert.Equal(t, "custom_ollama", config.Provider)
 	assert.Equal(t, "qwen3:8b", config.Model)
-	assert.False(t, config.TelemetryEnabled)
+	require.NotNil(t, config.TelemetryEnabled)
+	assert.False(t, *config.TelemetryEnabled)
+	assert.False(t, gooseTelemetryEnabled(&config))
 	assert.Len(t, config.Extensions, 3)
 
 	dev := config.Extensions["developer"]
@@ -75,10 +78,31 @@ func TestGooseConfigParsing(t *testing.T) {
 	assert.Equal(t, "platform", skills.Type)
 }
 
-func TestGooseConfigMissing(t *testing.T) {
-	afs := testAfero()
-	dir := t.TempDir()
+// Goose's telemetry is opt-in: a configuration without the key reads as off,
+// and only an explicit true turns it on.
+func TestGooseTelemetryEnabled(t *testing.T) {
+	for name, tc := range map[string]struct {
+		yaml string
+		want bool
+	}{
+		"absent":   {yaml: "GOOSE_PROVIDER: anthropic\n", want: false},
+		"enabled":  {yaml: "GOOSE_TELEMETRY_ENABLED: true\n", want: true},
+		"disabled": {yaml: "GOOSE_TELEMETRY_ENABLED: false\n", want: false},
+	} {
+		t.Run(name, func(t *testing.T) {
+			var config gooseConfig
+			require.NoError(t, yaml.Unmarshal([]byte(tc.yaml), &config))
+			assert.Equal(t, tc.want, gooseTelemetryEnabled(&config))
+		})
+	}
+	var config gooseConfig
+	require.NoError(t, yaml.Unmarshal([]byte("GOOSE_PROVIDER: anthropic\n"), &config))
+	assert.Nil(t, config.TelemetryEnabled)
+}
 
-	_, err := afs.ReadFile(dir + "/config.yaml")
-	assert.Error(t, err)
+func TestGooseConfigDir(t *testing.T) {
+	assert.Equal(t, filepath.Join("AppData", "Roaming", "Block", "goose", "config"), gooseConfigDir("windows"))
+	assert.Equal(t, filepath.Join(".config", "goose"), gooseConfigDir("darwin"))
+	assert.Equal(t, filepath.Join(".config", "goose"), gooseConfigDir("linux"))
+	assert.Equal(t, filepath.Join(".config", "goose"), gooseConfigDir(""))
 }

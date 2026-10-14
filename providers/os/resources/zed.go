@@ -21,10 +21,18 @@ import (
 	_ "github.com/glebarez/go-sqlite" // registers the "sqlite" database/sql driver
 )
 
-const defaultZedConfigDir = ".config/zed"
-
 func initZed(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initConfigPath(runtime, args, "zed", defaultZedConfigDir)
+	return initOSConfigPath(runtime, args, "zed", zedConfigDir)
+}
+
+// zedConfigDir returns where Zed keeps settings.json, relative to the user's
+// home. Zed's paths::config_dir() uses the roaming application-data directory
+// on Windows and ~/.config/zed everywhere else, macOS included.
+func zedConfigDir(osFamily string) string {
+	if osFamily == "windows" {
+		return filepath.Join("AppData", "Roaming", "Zed")
+	}
+	return filepath.Join(".config", "zed")
 }
 
 func (r *mqlZed) id() (string, error) {
@@ -173,7 +181,7 @@ func (r *mqlZed) repos() ([]interface{}, error) {
 
 // zedDataDir returns the platform-specific data directory Zed stores its
 // workspace database under, given a user home. This is distinct from the
-// configPath (`~/.config/zed`) the resource resolves for settings.
+// configPath (see zedConfigDir) the resource resolves for settings.
 func zedDataDir(home, osFamily string) string {
 	switch osFamily {
 	case "darwin":

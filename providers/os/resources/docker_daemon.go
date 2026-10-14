@@ -6,7 +6,6 @@ package resources
 import (
 	"encoding/json"
 	"fmt"
-	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -17,18 +16,66 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
-const (
-	// dockerDaemonConfigFile is where dockerd reads its configuration from
-	// unless --config-file names another file.
-	dockerDaemonConfigFile = "/etc/docker/daemon.json"
-	// dockerDefaultHost is the address dockerd listens on when no host is
-	// configured.
-	dockerDefaultHost = "unix:///var/run/docker.sock"
+// dockerdPlatform holds what dockerd uses on one OS when nothing configures
+// it otherwise.
+type dockerdPlatform struct {
+	// configFile is where dockerd reads its configuration from unless
+	// --config-file names another file.
+	configFile string
+	// host is the address dockerd listens on when no host is configured.
+	host string
+	// dataRoot is the default root directory of the daemon's state.
+	dataRoot string
+	// binaries are where Docker's packages and installers put dockerd.
+	binaries []string
+}
+
+var (
+	dockerdLinux = dockerdPlatform{
+		configFile: "/etc/docker/daemon.json",
+		host:       "unix:///var/run/docker.sock",
+		dataRoot:   "/var/lib/docker",
+		binaries: []string{
+			"/usr/bin/dockerd",
+			"/usr/sbin/dockerd",
+			"/usr/local/bin/dockerd",
+			"/usr/local/sbin/dockerd",
+			"/bin/dockerd",
+			"/snap/docker/current/bin/dockerd",
+		},
+	}
+	// Docker Engine on Windows (docs.docker.com/engine/daemon and Microsoft's
+	// "Configure Docker in Windows"): the configuration file and the state
+	// live under %ProgramData%\docker, and the Engine API listens on the
+	// docker_engine named pipe.
+	dockerdWindows = dockerdPlatform{
+		configFile: `C:\ProgramData\docker\config\daemon.json`,
+		host:       "npipe:////./pipe/docker_engine",
+		dataRoot:   `C:\ProgramData\docker`,
+		binaries: []string{
+			// Docker Engine installed on its own (Microsoft's install script, static binaries)
+			`C:\Program Files\Docker\dockerd.exe`,
+			// Docker Desktop, which runs it in Windows containers mode
+			`C:\Program Files\Docker\Docker\resources\dockerd.exe`,
+		},
+	}
 )
+
+func dockerdPlatformFor(osFamily string) dockerdPlatform {
+	if osFamily == "windows" {
+		return dockerdWindows
+	}
+	return dockerdLinux
+}
 
 type mqlDockerDaemonInternal struct {
 	lock   sync.Mutex
 	loaded bool
+	// platform holds dockerd's defaults on the target's OS
+	platform dockerdPlatform
+	// installed is whether the target has a dockerd: a running one, its
+	// configuration file, or its binary
+	installed bool
 	// proc is the running dockerd, nil when there is none
 	proc *mqlProcess
 	// cmdline is what its command line sets
@@ -59,18 +106,43 @@ func (d *mqlDockerDaemon) load() {
 	}
 	d.loaded = true
 	d.cmdline = dockerdCommandLine{settings: map[string]any{}}
+	d.platform = dockerdPlatformFor(runtimeOSFamily(d.MqlRuntime))
 
-	proc := findDockerdProcess(d.MqlRuntime)
-	if proc == nil {
-		return
+	if proc := findDockerdProcess(d.MqlRuntime); proc != nil {
+		d.installed = true
+		command := proc.GetCommand()
+		if command.Error != nil {
+			log.Debug().Err(command.Error).Msg("docker.daemon> cannot read the dockerd command line")
+		} else {
+			d.proc = proc
+			d.cmdline = parseDockerdCommandLine(command.Data)
+		}
 	}
-	command := proc.GetCommand()
-	if command.Error != nil {
-		log.Debug().Err(command.Error).Msg("docker.daemon> cannot read the dockerd command line")
-		return
+	if !d.installed {
+		afs := connectionAfs(d.MqlRuntime)
+		for _, p := range append([]string{d.configFilePath()}, d.platform.binaries...) {
+			if ok, _ := afs.Exists(p); ok {
+				d.installed = true
+				break
+			}
+		}
 	}
-	d.proc = proc
-	d.cmdline = parseDockerdCommandLine(command.Data)
+}
+
+// configFilePath is the configuration file dockerd reads. The caller holds
+// the lock or has called load.
+func (d *mqlDockerDaemon) configFilePath() string {
+	if d.cmdline.configFile != "" {
+		return d.cmdline.configFile
+	}
+	return d.platform.configFile
+}
+
+// isDockerdExecutable reports whether a process executable is dockerd:
+// dockerd on Unix, dockerd.exe on Windows, whichever separator the path uses.
+func isDockerdExecutable(exe string) bool {
+	name := exe[strings.LastIndexAny(exe, `\/`)+1:]
+	return name == "dockerd" || strings.EqualFold(name, "dockerd.exe")
 }
 
 // findDockerdProcess returns the running dockerd, or nil when there is none or
@@ -88,7 +160,7 @@ func findDockerdProcess(runtime *plugin.Runtime) *mqlProcess {
 	for _, p := range list.Data {
 		proc := p.(*mqlProcess)
 		exe := proc.GetExecutable()
-		if exe.Error != nil || path.Base(exe.Data) != "dockerd" {
+		if exe.Error != nil || !isDockerdExecutable(exe.Data) {
 			continue
 		}
 		// any user can start a process named dockerd, with a --config-file of
@@ -111,12 +183,8 @@ func (d *mqlDockerDaemon) process() (*mqlProcess, error) {
 
 func (d *mqlDockerDaemon) configFile() (*mqlFile, error) {
 	d.load()
-	p := d.cmdline.configFile
-	if p == "" {
-		p = dockerDaemonConfigFile
-	}
 	f, err := CreateResource(d.MqlRuntime, "file", map[string]*llx.RawData{
-		"path": llx.StringData(p),
+		"path": llx.StringData(d.configFilePath()),
 	})
 	if err != nil {
 		return nil, err
@@ -191,7 +259,22 @@ func (d *mqlDockerDaemon) settings() (map[string]any, error) {
 	return m, nil
 }
 
-func (d *mqlDockerDaemon) boolSetting(key string, def bool) (bool, error) {
+// notInstalled reports whether the target has no dockerd, and if so marks
+// field null: a setting dockerd would default to says nothing about a host
+// that does not run it.
+func notInstalled[T any](d *mqlDockerDaemon, field *plugin.TValue[T]) bool {
+	d.load()
+	if d.installed {
+		return false
+	}
+	field.State = plugin.StateIsSet | plugin.StateIsNull
+	return true
+}
+
+func (d *mqlDockerDaemon) boolSetting(field *plugin.TValue[bool], key string, def bool) (bool, error) {
+	if notInstalled(d, field) {
+		return false, nil
+	}
 	cfg, err := d.settings()
 	if err != nil {
 		return false, err
@@ -199,7 +282,10 @@ func (d *mqlDockerDaemon) boolSetting(key string, def bool) (bool, error) {
 	return dockerBool(cfg, key, def), nil
 }
 
-func (d *mqlDockerDaemon) stringSetting(key string, def string) (string, error) {
+func (d *mqlDockerDaemon) stringSetting(field *plugin.TValue[string], key string, def string) (string, error) {
+	if notInstalled(d, field) {
+		return "", nil
+	}
 	cfg, err := d.settings()
 	if err != nil {
 		return "", err
@@ -244,31 +330,31 @@ func dockerStringList(v any) []any {
 }
 
 func (d *mqlDockerDaemon) icc() (bool, error) {
-	return d.boolSetting("icc", true)
+	return d.boolSetting(&d.Icc, "icc", true)
 }
 
 func (d *mqlDockerDaemon) usernsRemap() (string, error) {
-	return d.stringSetting("userns-remap", "")
+	return d.stringSetting(&d.UsernsRemap, "userns-remap", "")
 }
 
 func (d *mqlDockerDaemon) liveRestore() (bool, error) {
-	return d.boolSetting("live-restore", false)
+	return d.boolSetting(&d.LiveRestore, "live-restore", false)
 }
 
 func (d *mqlDockerDaemon) noNewPrivileges() (bool, error) {
-	return d.boolSetting("no-new-privileges", false)
+	return d.boolSetting(&d.NoNewPrivileges, "no-new-privileges", false)
 }
 
 func (d *mqlDockerDaemon) userlandProxy() (bool, error) {
-	return d.boolSetting("userland-proxy", true)
+	return d.boolSetting(&d.UserlandProxy, "userland-proxy", true)
 }
 
 func (d *mqlDockerDaemon) logDriver() (string, error) {
-	return d.stringSetting("log-driver", "json-file")
+	return d.stringSetting(&d.LogDriver, "log-driver", "json-file")
 }
 
 func (d *mqlDockerDaemon) logLevel() (string, error) {
-	return d.stringSetting("log-level", "info")
+	return d.stringSetting(&d.LogLevel, "log-level", "info")
 }
 
 func (d *mqlDockerDaemon) logOpts() (map[string]any, error) {
@@ -299,19 +385,22 @@ func (d *mqlDockerDaemon) authorizationPlugins() ([]any, error) {
 }
 
 func (d *mqlDockerDaemon) hosts() ([]any, error) {
+	if notInstalled(d, &d.Hosts) {
+		return nil, nil
+	}
 	cfg, err := d.settings()
 	if err != nil {
 		return nil, err
 	}
-	return dockerHosts(cfg), nil
+	return dockerHosts(cfg, d.platform.host), nil
 }
 
 // dockerHosts returns the addresses dockerd listens on: the configured ones,
-// or the default socket when none is configured.
-func dockerHosts(cfg map[string]any) []any {
+// or the platform's default listener when none is configured.
+func dockerHosts(cfg map[string]any, defaultHost string) []any {
 	hosts := dockerStringList(cfg["hosts"])
 	if len(hosts) == 0 {
-		return []any{dockerDefaultHost}
+		return []any{defaultHost}
 	}
 	return hosts
 }
@@ -332,6 +421,9 @@ func dockerTLS(cfg map[string]any) (bool, bool) {
 }
 
 func (d *mqlDockerDaemon) tls() (bool, error) {
+	if notInstalled(d, &d.Tls) {
+		return false, nil
+	}
 	cfg, err := d.settings()
 	if err != nil {
 		return false, err
@@ -341,6 +433,9 @@ func (d *mqlDockerDaemon) tls() (bool, error) {
 }
 
 func (d *mqlDockerDaemon) tlsVerify() (bool, error) {
+	if notInstalled(d, &d.TlsVerify) {
+		return false, nil
+	}
 	cfg, err := d.settings()
 	if err != nil {
 		return false, err
@@ -350,10 +445,11 @@ func (d *mqlDockerDaemon) tlsVerify() (bool, error) {
 }
 
 func (d *mqlDockerDaemon) settingFile(field *plugin.TValue[*mqlFile], key string) (*mqlFile, error) {
-	p, err := d.stringSetting(key, "")
+	cfg, err := d.settings()
 	if err != nil {
 		return nil, err
 	}
+	p := dockerString(cfg, key, "")
 	if p == "" {
 		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -380,39 +476,40 @@ func (d *mqlDockerDaemon) tlsKey() (*mqlFile, error) {
 }
 
 func (d *mqlDockerDaemon) seccompProfile() (string, error) {
-	return d.stringSetting("seccomp-profile", "builtin")
+	return d.stringSetting(&d.SeccompProfile, "seccomp-profile", "builtin")
 }
 
 func (d *mqlDockerDaemon) selinuxEnabled() (bool, error) {
-	return d.boolSetting("selinux-enabled", false)
+	return d.boolSetting(&d.SelinuxEnabled, "selinux-enabled", false)
 }
 
 func (d *mqlDockerDaemon) cgroupParent() (string, error) {
-	return d.stringSetting("cgroup-parent", "")
+	return d.stringSetting(&d.CgroupParent, "cgroup-parent", "")
 }
 
 func (d *mqlDockerDaemon) dataRoot() (string, error) {
-	return d.stringSetting("data-root", "/var/lib/docker")
+	d.load()
+	return d.stringSetting(&d.DataRoot, "data-root", d.platform.dataRoot)
 }
 
 func (d *mqlDockerDaemon) storageDriver() (string, error) {
-	return d.stringSetting("storage-driver", "")
+	return d.stringSetting(&d.StorageDriver, "storage-driver", "")
 }
 
 func (d *mqlDockerDaemon) experimental() (bool, error) {
-	return d.boolSetting("experimental", false)
+	return d.boolSetting(&d.Experimental, "experimental", false)
 }
 
 func (d *mqlDockerDaemon) iptables() (bool, error) {
-	return d.boolSetting("iptables", true)
+	return d.boolSetting(&d.Iptables, "iptables", true)
 }
 
 func (d *mqlDockerDaemon) ipForward() (bool, error) {
-	return d.boolSetting("ip-forward", true)
+	return d.boolSetting(&d.IpForward, "ip-forward", true)
 }
 
 func (d *mqlDockerDaemon) defaultRuntime() (string, error) {
-	return d.stringSetting("default-runtime", "runc")
+	return d.stringSetting(&d.DefaultRuntime, "default-runtime", "runc")
 }
 
 func (d *mqlDockerDaemon) runtimes() (map[string]any, error) {

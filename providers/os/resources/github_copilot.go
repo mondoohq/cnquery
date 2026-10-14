@@ -13,10 +13,18 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
-const defaultGitHubCopilotConfigDir = ".config/github-copilot"
-
 func initGithubCopilot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initConfigPath(runtime, args, "github.copilot", defaultGitHubCopilotConfigDir)
+	return initOSConfigPath(runtime, args, "github.copilot", gitHubCopilotConfigDir)
+}
+
+// gitHubCopilotConfigDir returns where the Copilot language server keeps
+// apps.json, relative to the user's home: %USERPROFILE%\AppData\Local\github-copilot
+// on Windows and ~/.config/github-copilot elsewhere (its getXdgConfigPath).
+func gitHubCopilotConfigDir(osFamily string) string {
+	if osFamily == "windows" {
+		return filepath.Join("AppData", "Local", "github-copilot")
+	}
+	return filepath.Join(".config", "github-copilot")
 }
 
 func (r *mqlGithubCopilot) id() (string, error) {
