@@ -56,3 +56,28 @@ func showSystemdUnitStates(conn shared.Connection, units []string) map[string]ma
 	}
 	return res
 }
+
+// describeUnloadedUnits fills in the description of the unit-file rows that
+// list-units did not report. list-units only lists the units systemd has
+// loaded, and a disabled unit nothing pulls in is not loaded, so its
+// description was left blank (ssh.socket on Debian, any disabled timer).
+// `systemctl show` loads the unit file to answer. Templates are left out:
+// "systemctl show" on name@.socket yields no record.
+func describeUnloadedUnits(conn shared.Connection, rows map[string]*string) {
+	units := make([]string, 0, len(rows))
+	for unit := range rows {
+		if !isSystemdTemplateUnit(unit) {
+			units = append(units, unit)
+		}
+	}
+	if len(units) == 0 {
+		return
+	}
+	sort.Strings(units)
+	shown := showSystemdUnitStates(conn, units)
+	for unit, description := range rows {
+		if record, ok := shown[unit]; ok && *description == "" {
+			*description = record["Description"]
+		}
+	}
+}

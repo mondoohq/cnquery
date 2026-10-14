@@ -79,9 +79,11 @@ func (m *SystemdSocketManager) listViaSystemctl() ([]*SystemdSocket, error) {
 	}
 
 	// Step 3: Merge
+	unloaded := map[string]*string{}
 	for _, socket := range sockets {
 		unitState, ok := unitStates[socket.Name]
 		if !ok {
+			unloaded[ensureSystemdSocketUnit(socket.Name)] = &socket.Description
 			continue
 		}
 		socket.Description = unitState.Description
@@ -93,6 +95,8 @@ func (m *SystemdSocketManager) listViaSystemctl() ([]*SystemdSocket, error) {
 
 	// Step 4: Add the units only list-units names, such as the instances of a
 	// template. A failed show keeps what list-units told about them.
+	describeUnloadedUnits(m.conn, unloaded)
+
 	listed := make(map[string]bool, len(sockets))
 	for _, socket := range sockets {
 		listed[ensureSystemdSocketUnit(socket.Name)] = true

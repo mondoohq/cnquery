@@ -113,6 +113,18 @@ func TestSystemdSocketManagerList(t *testing.T) {
 					"",
 				}, "\n"),
 			},
+			// docker.socket is disabled and not loaded, so list-units leaves
+			// it out and only systemctl show knows its description
+			"systemctl show --property=Id,LoadState,ActiveState,UnitFileState,Description docker.socket": {
+				Stdout: strings.Join([]string{
+					"Id=docker.socket",
+					"Description=Docker Socket for the API",
+					"LoadState=loaded",
+					"ActiveState=inactive",
+					"UnitFileState=disabled",
+					"",
+				}, "\n"),
+			},
 		},
 	}))
 	require.NoError(t, err)
@@ -133,6 +145,7 @@ func TestSystemdSocketManagerList(t *testing.T) {
 
 	assert.False(t, socketMap["docker"].Enabled)
 	assert.False(t, socketMap["docker"].Running)
+	assert.Equal(t, "Docker Socket for the API", socketMap["docker"].Description)
 }
 
 func TestSystemdSocketManagerGet(t *testing.T) {

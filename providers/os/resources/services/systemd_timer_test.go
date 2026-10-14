@@ -118,6 +118,18 @@ func TestSystemdTimerManagerList(t *testing.T) {
 					"",
 				}, "\n"),
 			},
+			// fstrim.timer is disabled and not loaded, so list-units leaves it
+			// out and only systemctl show knows its description
+			"systemctl show --property=Id,LoadState,ActiveState,UnitFileState,Description fstrim.timer": {
+				Stdout: strings.Join([]string{
+					"Id=fstrim.timer",
+					"Description=Discard unused blocks once a week",
+					"LoadState=loaded",
+					"ActiveState=inactive",
+					"UnitFileState=disabled",
+					"",
+				}, "\n"),
+			},
 		},
 	}))
 	require.NoError(t, err)
@@ -140,6 +152,7 @@ func TestSystemdTimerManagerList(t *testing.T) {
 	// fstrim: only in unit-files, not running
 	assert.False(t, timerMap["fstrim"].Enabled)
 	assert.False(t, timerMap["fstrim"].Running)
+	assert.Equal(t, "Discard unused blocks once a week", timerMap["fstrim"].Description)
 }
 
 func TestSystemdTimerManagerGet(t *testing.T) {
