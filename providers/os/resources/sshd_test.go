@@ -175,6 +175,75 @@ func TestSshdConfigEffectiveAlgorithmsCommandFailure(t *testing.T) {
 	require.ErrorContains(t, ciphers.Error, "sshd -T failed (exit 255): bad sshd configuration")
 }
 
+func TestSshdConfigEffectiveAlgorithmsNotInstalled(t *testing.T) {
+	runtime := sshdEffectiveConfigMockRuntime(t, map[string]*mock.Command{
+		sshdEffectiveConfigCommand: {
+			Command:    sshdEffectiveConfigCommand,
+			Stderr:     "sh: 1: sshd: not found\n",
+			ExitStatus: 127,
+		},
+	})
+
+	raw, err := CreateResource(runtime, ResourceSshdConfig, nil)
+	require.NoError(t, err)
+
+	ciphers := raw.(*mqlSshdConfig).GetEffectiveCiphers()
+	require.EqualError(t, ciphers.Error, "sshd -T failed (exit 127): sh: 1: sshd: not found")
+}
+
+// sshd -T that exits 0 without printing anything did not run. Windows 10
+// 22H2's inbox sshd.exe fails to load (0xC0000139) and cmd.exe over WinRM
+// reports exit 0, empty stdout and empty stderr.
+func TestSshdConfigEffectiveAlgorithmsEmptyOutput(t *testing.T) {
+	tests := []struct {
+		name     string
+		platform *inventory.Platform
+		stdout   string
+		stderr   string
+		wantErr  string
+	}{
+		{
+			name:     "windows loader failure",
+			platform: windowsPlatform,
+			wantErr:  "sshd -T printed no configuration",
+		},
+		{
+			name:     "windows blank lines only",
+			platform: windowsPlatform,
+			stdout:   "\r\n\r\n",
+			wantErr:  "sshd -T printed no configuration",
+		},
+		{
+			name:     "linux with stderr",
+			platform: linuxPlatform,
+			stderr:   "sshd: error while loading shared libraries\n",
+			wantErr:  "sshd -T printed no configuration: sshd: error while loading shared libraries",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			runtime := sshdMockRuntime(t, tt.platform, map[string]*mock.Command{
+				sshdEffectiveConfigCommand: {
+					Command: sshdEffectiveConfigCommand,
+					Stdout:  tt.stdout,
+					Stderr:  tt.stderr,
+				},
+			}, nil)
+			raw, err := CreateResource(runtime, ResourceSshdConfig, nil)
+			require.NoError(t, err)
+			config := raw.(*mqlSshdConfig)
+
+			ciphers := config.GetEffectiveCiphers()
+			require.EqualError(t, ciphers.Error, tt.wantErr)
+			assert.Nil(t, ciphers.Data)
+			macs := config.GetEffectiveMacs()
+			require.EqualError(t, macs.Error, tt.wantErr)
+			kexs := config.GetEffectiveKexs()
+			require.EqualError(t, kexs.Error, tt.wantErr)
+		})
+	}
+}
+
 func sshdEffectiveConfigMockRuntime(t *testing.T, commands map[string]*mock.Command) *plugin.Runtime {
 	t.Helper()
 	return sshdEffectiveConfigMockRuntimeOn(t, &inventory.Platform{
