@@ -69,6 +69,7 @@ func compileStatic(t *testing.T, query string) *llx.CodeBundle {
 // A query that panics while it runs fails with the panic as its error, and the
 // next query still runs: one broken query must not drop every other result.
 func TestExecutionManagerPanicFailsOnlyThatQuery(t *testing.T) {
+	resetReportedPanicSites(t)
 	// `true && true` with its right operand swapped for a string: the bool &&
 	// bool builtin asserts a bool and panics, as a bug in a builtin would.
 	broken := compileStatic(t, "true && true")
@@ -164,6 +165,14 @@ func TestPanicSite(t *testing.T) {
 	require.Equal(t, "unknown", panicSite())
 }
 
+// resetReportedPanicSites starts a test with no panic sites reported and
+// clears the ones it reports, so tests that read reportedPanicSites don't see
+// each other's sites (or their own from an earlier -count run).
+func resetReportedPanicSites(t *testing.T) {
+	reportedPanicSites.Clear()
+	t.Cleanup(reportedPanicSites.Clear)
+}
+
 func reportedSites() []string {
 	var sites []string
 	reportedPanicSites.Range(func(k, _ any) bool {
@@ -174,18 +183,18 @@ func reportedSites() []string {
 }
 
 func TestReportPanicOncePerSite(t *testing.T) {
+	resetReportedPanicSites(t)
 	report := func(fn func()) {
 		defer func() { _ = reportPanic(nil, recover()) }()
 		fn()
 	}
 
-	before := len(reportedSites())
 	report(func() { panicsOnTypeAssertion(1) })
-	require.Len(t, reportedSites(), before+1)
+	require.Len(t, reportedSites(), 1)
 	// Same site, different value and caller: already reported.
 	report(func() { panicsOnTypeAssertion("x") })
-	require.Len(t, reportedSites(), before+1)
+	require.Len(t, reportedSites(), 1)
 	// Another site is reported.
 	report(func() { panicsOnIndex(1) })
-	require.Len(t, reportedSites(), before+2)
+	require.Len(t, reportedSites(), 2)
 }
