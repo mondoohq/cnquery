@@ -241,3 +241,117 @@ func TestBitlockerScriptFailsOnMissingNamespace(t *testing.T) {
 	assert.Contains(t, bitlockerStatusScript, "-ErrorAction Stop")
 	assert.Contains(t, bitlockerStatusScript, "exit 1")
 }
+
+// Captured on Windows 11 25H2 (build 26200) through the shipped collection
+// script, with the volume objects reduced to the properties the parser reads:
+// the decrypted system volume C: and a BitLocker-encrypted data volume Q:
+// after Lock-BitLocker. On Q: GetConversionStatus answers FVE_E_LOCKED_VOLUME
+// with ConversionStatus 0xFFFFFFFF and EncryptionPercentage 0 although the
+// volume is fully encrypted, while GetVersion and GetLockStatus still succeed.
+func TestBitlockerLockedVolumeFixture(t *testing.T) {
+	r, err := os.Open("./testdata/bitlocker_status_locked.json")
+	require.NoError(t, err)
+	defer r.Close()
+
+	vols, err := ParseWindowsBitlockerStatus(r)
+	require.NoError(t, err)
+	require.Len(t, vols, 2)
+
+	t.Run("the decrypted volume reads cleanly", func(t *testing.T) {
+		c := vols[0]
+		assert.Equal(t, "C:", c.DriveLetter)
+		require.NoError(t, c.ConversionStatusError)
+		require.NoError(t, c.VersionError)
+		require.NoError(t, c.LockStatusError)
+		assert.Equal(t, "FullyDecrypted", c.ConversionStatus.ConversionStatus.Text)
+		// 0xFFFFFFFF is "not reported", not a wiping state
+		assert.Nil(t, c.ConversionStatus.WipingStatus)
+		assert.Nil(t, c.ConversionStatus.WipingPercentage)
+	})
+
+	t.Run("the locked volume reports why its conversion status is missing", func(t *testing.T) {
+		q := vols[1]
+		assert.Equal(t, "Q:", q.DriveLetter)
+		require.Error(t, q.ConversionStatusError)
+		assert.Contains(t, q.ConversionStatusError.Error(), "the volume is locked")
+		assert.Contains(t, q.ConversionStatusError.Error(), "0x80310000")
+		// the methods that did answer on the locked volume keep their values
+		require.NoError(t, q.VersionError)
+		assert.Equal(t, "Win7", q.Version.Text)
+		require.NoError(t, q.LockStatusError)
+		assert.Equal(t, int64(1), q.LockStatus)
+		require.NoError(t, q.KeyProtectorError)
+		require.Len(t, q.KeyProtectors, 2)
+		assert.Equal(t, "Password", q.KeyProtectors[0].Type.Text)
+	})
+}
+
+// Payloads from before the script carried the method return codes cannot
+// vouch for the values they hold, the same rule the key protectors follow.
+func TestBitlockerMissingReturnValuesAreErrors(t *testing.T) {
+	r, err := os.Open("./testdata/bitlocker_status.json")
+	require.NoError(t, err)
+	defer r.Close()
+
+	vols, err := ParseWindowsBitlockerStatus(r)
+	require.NoError(t, err)
+	require.NotEmpty(t, vols)
+	for i := range vols {
+		assert.ErrorContains(t, vols[i].ConversionStatusError, "GetConversionStatus")
+		assert.ErrorContains(t, vols[i].VersionError, "GetVersion")
+		assert.ErrorContains(t, vols[i].LockStatusError, "GetLockStatus")
+	}
+}
+
+func TestVolumeMethodError(t *testing.T) {
+	rv := func(v int64) *int64 { return &v }
+	const dev = "\\\\?\\Volume{a}\\"
+
+	assert.NoError(t, VolumeMethodError(dev, "GetConversionStatus", rv(0)))
+
+	err := VolumeMethodError(dev, "GetConversionStatus", nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "elevated")
+
+	err = VolumeMethodError(dev, "GetConversionStatus", rv(2150694912))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "FVE_E_LOCKED_VOLUME")
+
+	err = VolumeMethodError(dev, "GetVersion", rv(2147942487))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "GetVersion returned 0x80070057")
+}
+
+func TestNewConversionStatus(t *testing.T) {
+	t.Run("a reported wiping state keeps its name and percentage", func(t *testing.T) {
+		cs := newConversionStatus(2, 40, 2, 15)
+		assert.Equal(t, "EncryptionInProgress", cs.ConversionStatus.Text)
+		assert.Equal(t, int64(40), cs.EncryptionPercentage)
+		require.NotNil(t, cs.WipingStatus)
+		assert.Equal(t, "FreeSpaceWipingInProgress", cs.WipingStatus.Text)
+		require.NotNil(t, cs.WipingPercentage)
+		assert.Equal(t, int64(15), *cs.WipingPercentage)
+	})
+
+	t.Run("FreeSpaceNotWiped is a state, not an absence", func(t *testing.T) {
+		cs := newConversionStatus(1, 100, 0, 0)
+		require.NotNil(t, cs.WipingStatus)
+		assert.Equal(t, "FreeSpaceNotWiped", cs.WipingStatus.Text)
+	})
+
+	t.Run("an undocumented code is named as such, not blank", func(t *testing.T) {
+		cs := newConversionStatus(9, 0, 7, 0)
+		assert.Equal(t, StatusUnrecognized, cs.ConversionStatus.Text)
+		require.NotNil(t, cs.WipingStatus)
+		assert.Equal(t, StatusUnrecognized, cs.WipingStatus.Text)
+	})
+}
+
+// A method that throws on one volume must not leave the previous volume's
+// result in place for the next one to report.
+func TestBitlockerScriptResetsPerVolumeResults(t *testing.T) {
+	assert.Contains(t, bitlockerStatusScript, "$v = $null; $c = $null; $l = $null")
+	assert.Contains(t, bitlockerStatusScript, "ReturnValue = $c.ReturnValue")
+	assert.Contains(t, bitlockerStatusScript, "ReturnValue = $v.ReturnValue")
+	assert.Contains(t, bitlockerStatusScript, "ReturnValue = $l.ReturnValue")
+}

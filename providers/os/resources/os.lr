@@ -17268,6 +17268,9 @@ private windows.disk @defaults("number friendlyName size isBoot") {
 // several BitLocker and device-health controls, and a locked out or
 // unprovisioned TPM is present without being usable. On a system without a
 // TPM the fields resolve cleanly (present is false) rather than erroring.
+// When the TPM state cannot be read, for example in a session that is not
+// elevated, every field reports that error instead of reading as an absent
+// TPM.
 windows.tpm {
   // Whether a TPM is present on the system
   present() bool
@@ -18783,6 +18786,12 @@ windows.bitlocker.volume {
   // Drive letter of the volume
   driveLetter string
   // Status of the encryption or decryption on the volume
+  //
+  // `ConversionStatus` and `WipingStatus` each carry a `code` and its `text`,
+  // next to `EncryptionPercentage` and `WipingPercentage`. `WipingStatus` and
+  // `WipingPercentage` are null when the volume reports no wiping state. A
+  // locked volume cannot report its conversion status, so the field is an
+  // error saying so rather than a 0 % reading.
   conversionStatus dict
   // Encryption algorithm and key size used on the volume
   encryptionMethod dict

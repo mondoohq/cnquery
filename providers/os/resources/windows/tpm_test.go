@@ -47,12 +47,48 @@ func TestParseTpm(t *testing.T) {
 		assert.Equal(t, "", info.MajorSpecVersion())
 	})
 
-	t.Run("empty output is treated as an absent TPM", func(t *testing.T) {
+	// The script emits an object on every run that succeeds, including on a
+	// machine with no TPM, so output that never arrived is not an absent TPM.
+	t.Run("empty output is an error, not an absent TPM", func(t *testing.T) {
 		info, err := ParseTpm(strings.NewReader("   \n"))
-		require.NoError(t, err)
-		assert.False(t, info.TpmPresent)
-		assert.Equal(t, "", info.MajorSpecVersion())
+		require.Error(t, err)
+		assert.Nil(t, info)
+		assert.Contains(t, err.Error(), "no output")
 	})
+}
+
+// Get-Tpm pads the firmware strings with NUL bytes. The version shape is the
+// one a Hyper-V vTPM reports on Windows 10 22H2 and Windows 11 25H2, where
+// Win32_Tpm gives the same version as "8224.786.18.4".
+func TestParseTpmTrimsNulPadding(t *testing.T) {
+	nul19 := strings.Repeat(`\u0000`, 19)
+	input := `{
+  "TpmPresent": true,
+  "ManufacturerVersion": "8224.786.18.4` + nul19 + `",
+  "ManufacturerIdTxt": "MSFT\u0000",
+  "LockoutHealTime": "16 minutes 40 seconds\u0000",
+  "AutoProvisioning": " Enabled\u0000",
+  "SpecVersion": "2.0, 0, 1.38\u0000\u0000"
+}`
+	info, err := ParseTpm(strings.NewReader(input))
+	require.NoError(t, err)
+	assert.Equal(t, "8224.786.18.4", info.ManufacturerVersion)
+	assert.Equal(t, "MSFT", info.ManufacturerIdTxt)
+	assert.Equal(t, "MSFT", info.Manufacturer())
+	assert.Equal(t, "16 minutes 40 seconds", info.LockoutHealTime)
+	assert.Equal(t, "Enabled", info.AutoProvisioning)
+	assert.Equal(t, "2.0, 0, 1.38", info.SpecVersion)
+}
+
+// A Get-Tpm that cannot answer must fail the read instead of reporting the
+// cast-to-false flags of an absent TPM.
+func TestPSGetTpmFailsInsteadOfReportingAbsent(t *testing.T) {
+	assert.NotContains(t, PSGetTpm, "SilentlyContinue")
+	assert.Contains(t, PSGetTpm, "$ErrorActionPreference = 'Stop'")
+	assert.Contains(t, PSGetTpm, "exit 1")
+	// the failure is forgiven only where Win32_Tpm says there is no TPM
+	assert.Contains(t, PSGetTpm, "if ($wmi.Count -gt 0)")
+	assert.LessOrEqual(t, len(PSGetTpm), PSMaxScriptLength)
 }
 
 func TestMajorSpecVersion(t *testing.T) {
@@ -178,7 +214,8 @@ func TestPSGetTpmDoesNotCollectOwnerAuth(t *testing.T) {
 //
 // The two versions disagree on what a machine without a TPM reports, which is
 // the point of pinning both: on 2016 the TBS service will not start, Get-Tpm
-// throws outright, and every field comes back empty; on 2019 and later Get-Tpm
+// throws outright, and every field comes back empty (the script forgives that
+// failure only because Win32_Tpm has no instance there); on 2019 and later Get-Tpm
 // returns an object whose AutoProvisioning is "NotDefined" and whose
 // OwnerClearDisabled is true. The second is the trap the resource
 // documentation warns about, since a host with no TPM at all reports the same

@@ -5,6 +5,7 @@ package windows
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"strings"
 )
@@ -12,16 +13,38 @@ import (
 // PSGetTpm collects Trusted Platform Module state. Get-Tpm provides the
 // presence/readiness flags, the manufacturer, the dictionary-attack lockout
 // state and the automatic provisioning mode, while the Win32_Tpm WMI class
-// provides the specification version. Errors are suppressed so a machine
-// without a TPM yields present=false rather than failing.
+// provides the specification version.
+//
+// A failure to read either source exits non-zero instead of reporting an
+// absent TPM. With errors suppressed and every flag cast with [bool], a
+// Get-Tpm that could not answer (a session that is not elevated, the TBS
+// service stopped) read as present=false ready=false, the same answer a
+// machine with no TPM gives. The one Get-Tpm failure that is an answer is the
+// one on a machine with no TPM at all: Server 2016 throws there instead of
+// returning TpmPresent=False. Win32_Tpm tells the two apart, since it has an
+// instance exactly when a TPM device exists.
 //
 // The owner authorization value that Get-Tpm also carries is deliberately not
 // collected. It is the secret that authorizes clearing and taking ownership of
 // the TPM, and nothing here needs it.
 const PSGetTpm = `
-$ErrorActionPreference = 'SilentlyContinue'
-$tpm = Get-Tpm
-$spec = (Get-CimInstance -Namespace 'root\cimv2\Security\MicrosoftTpm' -ClassName Win32_Tpm).SpecVersion
+$ErrorActionPreference = 'Stop'
+try {
+  $wmi = @(Get-CimInstance -Namespace 'root\cimv2\Security\MicrosoftTpm' -ClassName Win32_Tpm)
+} catch {
+  [Console]::Error.WriteLine("could not read Win32_Tpm: " + $_.Exception.Message)
+  exit 1
+}
+try {
+  $tpm = Get-Tpm
+} catch {
+  if ($wmi.Count -gt 0) {
+    [Console]::Error.WriteLine("Get-Tpm failed on a host that has a TPM: " + $_.Exception.Message)
+    exit 1
+  }
+  $tpm = $null
+}
+$spec = if ($wmi.Count -gt 0) { $wmi[0].SpecVersion } else { $null }
 [PSCustomObject]@{
   TpmPresent          = [bool]$tpm.TpmPresent
   TpmReady            = [bool]$tpm.TpmReady
@@ -39,18 +62,21 @@ $spec = (Get-CimInstance -Namespace 'root\cimv2\Security\MicrosoftTpm' -ClassNam
 } | ConvertTo-Json
 `
 
-// TpmInfo is the parsed result of PSGetTpm.
+// TpmInfo is the parsed result of PSGetTpm. ParseTpm trims the NUL padding
+// Get-Tpm leaves on its fixed-width strings, so every string field holds the
+// value as Win32_Tpm reports it.
 type TpmInfo struct {
-	TpmPresent          bool   `json:"TpmPresent"`
-	TpmReady            bool   `json:"TpmReady"`
-	TpmEnabled          bool   `json:"TpmEnabled"`
-	TpmActivated        bool   `json:"TpmActivated"`
+	TpmPresent   bool `json:"TpmPresent"`
+	TpmReady     bool `json:"TpmReady"`
+	TpmEnabled   bool `json:"TpmEnabled"`
+	TpmActivated bool `json:"TpmActivated"`
+	// ManufacturerVersion is the firmware version of the TPM, for example
+	// "8224.786.18.4".
 	ManufacturerVersion string `json:"ManufacturerVersion"`
 	// ManufacturerId is the raw TCG vendor identifier, usually four ASCII
 	// characters packed into an integer.
 	ManufacturerId int64 `json:"ManufacturerId"`
-	// ManufacturerIdTxt is the readable form of the vendor identifier, which
-	// the firmware pads to a fixed width, so it is trimmed on read.
+	// ManufacturerIdTxt is the readable form of the vendor identifier.
 	ManufacturerIdTxt string `json:"ManufacturerIdTxt"`
 	// LockedOut is true while the TPM is refusing owner authorization after
 	// too many failed attempts.
@@ -74,7 +100,7 @@ type TpmInfo struct {
 // firmware adds removed. Get-Tpm renders the fixed-width field verbatim, so an
 // untrimmed value compares unequal to the vendor name it obviously is.
 func (t *TpmInfo) Manufacturer() string {
-	return strings.TrimSpace(strings.TrimRight(t.ManufacturerIdTxt, "\x00"))
+	return trimTpmString(t.ManufacturerIdTxt)
 }
 
 // MajorSpecVersion returns just the major specification version (e.g. "2.0")
@@ -84,8 +110,17 @@ func (t *TpmInfo) MajorSpecVersion() string {
 	return strings.TrimSpace(major)
 }
 
-// ParseTpm decodes the JSON emitted by PSGetTpm. Empty output (no object
-// produced) is treated as an absent TPM rather than an error.
+// trimTpmString removes the NUL padding and surrounding whitespace Get-Tpm
+// leaves on the fixed-width strings it reads from the firmware. A version
+// such as "8224.786.18.4" arrives followed by 19 NUL bytes, which no string
+// comparison or version check expects.
+func trimTpmString(s string) string {
+	return strings.TrimSpace(strings.Trim(s, "\x00"))
+}
+
+// ParseTpm decodes the JSON emitted by PSGetTpm. The script emits an object on
+// every successful run, including on a machine without a TPM, so empty output
+// means it never ran and is an error rather than an absent TPM.
 func ParseTpm(r io.Reader) (*TpmInfo, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
@@ -93,12 +128,17 @@ func ParseTpm(r io.Reader) (*TpmInfo, error) {
 	}
 
 	if len(strings.TrimSpace(string(data))) == 0 {
-		return &TpmInfo{}, nil
+		return nil, errors.New("failed to retrieve TPM information: the collection script produced no output")
 	}
 
 	var info TpmInfo
 	if err := json.Unmarshal(data, &info); err != nil {
 		return nil, err
 	}
+	info.ManufacturerVersion = trimTpmString(info.ManufacturerVersion)
+	info.ManufacturerIdTxt = trimTpmString(info.ManufacturerIdTxt)
+	info.LockoutHealTime = trimTpmString(info.LockoutHealTime)
+	info.AutoProvisioning = trimTpmString(info.AutoProvisioning)
+	info.SpecVersion = trimTpmString(info.SpecVersion)
 	return &info, nil
 }
