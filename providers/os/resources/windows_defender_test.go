@@ -4,11 +4,13 @@
 package resources
 
 import (
+	"strings"
 	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/providers/os/registry"
 	"go.mondoo.com/mql/providers/os/resources/windows"
 )
 
@@ -83,4 +85,75 @@ func TestWindowsDefenderPreferencesSeedIsSynchronized(t *testing.T) {
 	prefs, err = p.getPrefs()
 	require.NoError(t, err)
 	assert.Equal(t, int64(2), prefs.ScanParameters)
+}
+
+func defenderPolicyItems(values map[string]int64) map[string]registry.RegistryKeyItem {
+	res := make(map[string]registry.RegistryKeyItem, len(values))
+	for k, v := range values {
+		res[strings.ToLower(k)] = registry.RegistryKeyItem{
+			Key:   k,
+			Value: registry.RegistryKeyValue{Kind: registry.DWORD, Number: v},
+		}
+	}
+	return res
+}
+
+// Current Defender platforms report none of the LocalSettingOverride*
+// preferences through Get-MpPreference, so each field must come from the
+// Group Policy value WindowsDefender.admx defines for it.
+func TestResolveLocalSettingOverrides(t *testing.T) {
+	t.Run("not configured is null", func(t *testing.T) {
+		o := resolveLocalSettingOverrides(&windows.MpPreference{}, &defenderPolicy{})
+		assert.Equal(t, defenderOverrides{}, o)
+	})
+
+	t.Run("each field reads its own policy value", func(t *testing.T) {
+		pol := &defenderPolicy{
+			realTime: defenderPolicyItems(map[string]int64{
+				"LocalSettingOverrideDisableRealtimeMonitoring": 1,
+				"LocalSettingOverrideDisableBehaviorMonitoring": 0,
+				"LocalSettingOverrideDisableIOAVProtection":     1,
+				"LocalSettingOverrideDisableOnAccessProtection": 0,
+			}),
+			spynet: defenderPolicyItems(map[string]int64{"LocalSettingOverrideSpynetReporting": 1}),
+			scan: defenderPolicyItems(map[string]int64{
+				"LocalSettingOverrideScanParameters":   0,
+				"LocalSettingOverrideScheduleDay":      1,
+				"LocalSettingOverrideAvgCPULoadFactor": 0,
+			}),
+		}
+		o := resolveLocalSettingOverrides(&windows.MpPreference{}, pol)
+
+		check := func(name string, got *bool, want bool) {
+			require.NotNil(t, got, name)
+			assert.Equal(t, want, *got, name)
+		}
+		check("realtimeMonitoring", o.realtimeMonitoring, true)
+		check("disableBehaviorMonitoring", o.disableBehaviorMonitoring, false)
+		check("disableIOAVProtection", o.disableIOAVProtection, true)
+		check("disableOnAccessProtection", o.disableOnAccessProtection, false)
+		check("spynetReporting", o.spynetReporting, true)
+		check("scanParameters", o.scanParameters, false)
+		check("scanScheduleDay", o.scanScheduleDay, true)
+		check("avgCPULoadFactor", o.avgCPULoadFactor, false)
+		assert.Nil(t, o.disableIntrusionPreventionSystem, "Group Policy has no setting for this override")
+	})
+
+	t.Run("a value under the wrong subkey is not read", func(t *testing.T) {
+		pol := &defenderPolicy{
+			scan: defenderPolicyItems(map[string]int64{"LocalSettingOverrideDisableRealtimeMonitoring": 1}),
+		}
+		o := resolveLocalSettingOverrides(&windows.MpPreference{}, pol)
+		assert.Nil(t, o.realtimeMonitoring)
+	})
+
+	t.Run("a reported preference wins over the policy", func(t *testing.T) {
+		f := false
+		pol := &defenderPolicy{
+			realTime: defenderPolicyItems(map[string]int64{"LocalSettingOverrideDisableRealtimeMonitoring": 1}),
+		}
+		o := resolveLocalSettingOverrides(&windows.MpPreference{LocalSettingOverrideRealtimeMonitoring: &f}, pol)
+		require.NotNil(t, o.realtimeMonitoring)
+		assert.False(t, *o.realtimeMonitoring)
+	})
 }

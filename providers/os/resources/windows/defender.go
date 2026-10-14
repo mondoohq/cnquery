@@ -119,19 +119,55 @@ func runDefenderCommand(p shared.Connection, script string) ([]byte, error) {
 
 // DefenderTime parses a Defender JSON date, handling both the PowerShell 5.1
 // "/Date(ms)/" form and the ISO-8601 form emitted by PowerShell 7+.
+//
+// Some properties (SmartAppControlExpiration) arrive as a preformatted string
+// "<raw> (<ISO-8601>)", for example "(null) (1601-01-01T00:00:00Z)"; the
+// parenthesized tail is the timestamp.
+//
+// Defender reports an unset timestamp as the FILETIME epoch, 1601-01-01, and
+// that resolves to nil rather than to a date four centuries ago.
 func DefenderTime(s string) *time.Time {
+	s = strings.TrimSpace(s)
 	if s == "" {
 		return nil
 	}
+	if strings.HasSuffix(s, ")") {
+		if i := strings.LastIndex(s, " ("); i >= 0 {
+			s = strings.TrimSpace(s[i+2 : len(s)-1])
+		}
+	}
 	if t := powershell.PSJsonTimestamp(s); t != nil {
-		return t
+		return notFiletimeEpoch(t)
 	}
 	for _, layout := range []string{time.RFC3339Nano, time.RFC3339, "2006-01-02T15:04:05"} {
 		if t, err := time.Parse(layout, s); err == nil {
-			return &t
+			return notFiletimeEpoch(&t)
 		}
 	}
 	return nil
+}
+
+// notFiletimeEpoch returns nil for a timestamp at or before the FILETIME epoch
+// (1601-01-01), which Windows uses for "never".
+func notFiletimeEpoch(t *time.Time) *time.Time {
+	if t.Year() <= 1601 {
+		return nil
+	}
+	return t
+}
+
+// defenderUnsetAge is the value Get-MpComputerStatus reports for an age in days
+// when the event it counts from never happened, for example FullScanAge on a
+// host that has never completed a full scan. It is the UINT32 maximum.
+const defenderUnsetAge = 4294967295
+
+// DefenderAge returns an age in days reported by Get-MpComputerStatus, or nil
+// when Defender reports it as unset.
+func DefenderAge(v int64) *int64 {
+	if v < 0 || v >= defenderUnsetAge {
+		return nil
+	}
+	return &v
 }
 
 // flexStrings unmarshals a JSON value that PowerShell may emit either as a
