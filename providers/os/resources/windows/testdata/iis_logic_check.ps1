@@ -249,6 +249,13 @@ Assert-Equal 'IIS' (ConvertTo-LogFormat 'Iis') 'Iis -> IIS'
 Assert-Equal 'Custom' (ConvertTo-LogFormat 'Custom') 'Custom is already right'
 Assert-Equal 'Something' (ConvertTo-LogFormat 'Something') 'an unknown format passes through'
 
+# --- Server-scope sections ----------------------------------------------------
+#
+# applicationPoolDefaults lives only in system.applicationHost/applicationPools.
+# Without it in the list, the defaults every pool inherits are unreadable.
+Assert-Equal $true ($serverSectionPaths -contains 'system.applicationHost/applicationPools') 'applicationPools is a server-scope section'
+Assert-Equal $false ($collectionSections.ContainsKey('system.applicationHost/applicationPools')) 'pools stay out of the section; appPools reports them'
+
 Write-Host ""
 if ($failures -gt 0) {
   Write-Host "$failures FAILURES"
