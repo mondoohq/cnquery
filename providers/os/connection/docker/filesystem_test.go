@@ -22,3 +22,15 @@ func TestReadlinkIfPossible(t *testing.T) {
 	_, err = fs.ReadlinkIfPossible("/proc/71/fd/99")
 	assert.Error(t, err, "a path that is not a link")
 }
+
+// /proc, /dev and /sys are read inside the container; a path that merely
+// starts with the same letters is not.
+func TestIsDockerClientSupported(t *testing.T) {
+	assert.False(t, isDockerClientSupported("/proc"))
+	assert.False(t, isDockerClientSupported("/proc/1/cmdline"))
+	assert.False(t, isDockerClientSupported("/dev/null"))
+	assert.False(t, isDockerClientSupported("/sys/class/dmi/id/product_uuid"))
+	assert.True(t, isDockerClientSupported("/devops/config.yaml"))
+	assert.True(t, isDockerClientSupported("/system/app"))
+	assert.True(t, isDockerClientSupported("/etc/os-release"))
+}

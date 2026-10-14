@@ -47,7 +47,7 @@ func isDockerClientSupported(path string) bool {
 	// See https://docs.docker.com/reference/cli/docker/container/cp/#corner-cases
 	unsupported := []string{"/proc", "/dev", "/sys"}
 	for _, v := range unsupported {
-		if v == path || strings.HasPrefix(path, v) {
+		if v == path || strings.HasPrefix(path, v+"/") {
 			return false
 		}
 	}
