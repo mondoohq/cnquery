@@ -113,7 +113,8 @@ func (t *TpmInfo) MajorSpecVersion() string {
 // trimTpmString removes the NUL padding and surrounding whitespace Get-Tpm
 // leaves on the fixed-width strings it reads from the firmware. A version
 // such as "8224.786.18.4" arrives followed by 19 NUL bytes, which no string
-// comparison or version check expects.
+// comparison or version check expects. NULs are trimmed from both ends: a
+// NUL is never part of a readable firmware string, wherever it sits.
 func trimTpmString(s string) string {
 	return strings.TrimSpace(strings.Trim(s, "\x00"))
 }

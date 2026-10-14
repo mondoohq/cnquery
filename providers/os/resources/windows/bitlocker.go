@@ -325,7 +325,7 @@ const fveErrLockedVolume = 2150694912
 func VolumeMethodError(deviceID, method string, returnValue *int64) error {
 	if returnValue == nil {
 		return errors.New("could not call Win32_EncryptableVolume." + method + " on " + deviceID +
-			"; it requires an elevated session")
+			": the call failed without a return code, which usually means the session is not elevated")
 	}
 	switch *returnValue {
 	case 0:
