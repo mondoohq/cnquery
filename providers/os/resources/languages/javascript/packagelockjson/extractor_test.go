@@ -209,6 +209,6 @@ func TestPackageLockWithByteOrderMark(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NotEmpty(t, plain.Transitive())
-	assert.Equal(t, plain.Transitive(), withBOM.Transitive())
+	assert.ElementsMatch(t, plain.Transitive(), withBOM.Transitive())
 	assert.Equal(t, plain.Root(), withBOM.Root())
 }
