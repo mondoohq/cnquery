@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 
@@ -377,11 +378,11 @@ func (w *mqlWindowsUpdate) installedFromWUA(conn shared.Connection) ([]any, erro
 	res := make([]any, 0, len(entries))
 	for i := range entries {
 		e := entries[i]
-		mqlEntry, err := w.newEntry(map[string]*llx.RawData{
+		mqlEntry, err := w.newEntry(updateEntryInstalled, e.RevisionNumber, map[string]*llx.RawData{
 			"updateId":       llx.StringData(e.UpdateID),
 			"kbId":           llx.StringData(windows.ParseKBID(e.Title)),
 			"title":          llx.StringData(e.Title),
-			"classification": llx.StringData(windows.ClassifyUpdate(e.Categories, e.Title)),
+			"classification": llx.StringData(windows.ClassifyUpdate(e.Classification, e.Title)),
 			"severity":       llx.StringData(""),
 			"supportUrl":     llx.StringData(e.SupportUrl),
 			"cveIds":         llx.ArrayData([]any{}, types.String),
@@ -445,11 +446,11 @@ func (w *mqlWindowsUpdate) installedFromCBS() ([]any, error) {
 		}
 		seen[kbID] = struct{}{}
 
-		mqlEntry, err := w.newEntry(map[string]*llx.RawData{
+		mqlEntry, err := w.newEntry(updateEntryInstalled, 0, map[string]*llx.RawData{
 			"updateId":       llx.StringData(name),
 			"kbId":           llx.StringData(kbID),
 			"title":          llx.StringData(name),
-			"classification": llx.StringData(windows.ClassifyUpdate(nil, name)),
+			"classification": llx.StringData(windows.ClassifyUpdate("", name)),
 			"severity":       llx.StringData(""),
 			"supportUrl":     llx.StringData(""),
 			"cveIds":         llx.ArrayData([]any{}, types.String),
@@ -502,11 +503,11 @@ func (w *mqlWindowsUpdate) available() ([]any, error) {
 			kbID = windows.ParseKBID("KB" + u.KBArticleIDs[0])
 		}
 
-		mqlEntry, err := w.newEntry(map[string]*llx.RawData{
+		mqlEntry, err := w.newEntry(updateEntryAvailable, u.RevisionNumber, map[string]*llx.RawData{
 			"updateId":       llx.StringData(u.UpdateID),
 			"kbId":           llx.StringData(kbID),
 			"title":          llx.StringData(u.Title),
-			"classification": llx.StringData(windows.ClassifyUpdate(u.Categories, u.Title)),
+			"classification": llx.StringData(windows.ClassifyUpdate(u.Classification, u.Title)),
 			"severity":       llx.StringData(u.MsrcSeverity),
 			"supportUrl":     llx.StringData(u.SupportUrl),
 			"cveIds":         llx.ArrayData(strSliceToAny(u.CveIDs), types.String),
@@ -523,15 +524,33 @@ func (w *mqlWindowsUpdate) available() ([]any, error) {
 	return res, nil
 }
 
-func (w *mqlWindowsUpdate) newEntry(args map[string]*llx.RawData) (*mqlWindowsUpdateEntry, error) {
+// Lists a windows.update.entry belongs to. The same update can sit in both at
+// once (a driver the agent installed and still offers), so the list is part
+// of the entry's identity.
+const (
+	updateEntryInstalled = "installed"
+	updateEntryAvailable = "available"
+)
+
+func (w *mqlWindowsUpdate) newEntry(list string, revision int, args map[string]*llx.RawData) (*mqlWindowsUpdateEntry, error) {
 	id := firstNonEmptyStringArg(args, "updateId", "kbId", "title")
-	args["__id"] = llx.StringData("windows.update.entry/" + id)
+	args["__id"] = llx.StringData(updateEntryID(list, id, revision))
 
 	o, err := CreateResource(w.MqlRuntime, "windows.update.entry", args)
 	if err != nil {
 		return nil, err
 	}
 	return o.(*mqlWindowsUpdateEntry), nil
+}
+
+// updateEntryID builds the cache identity of a windows.update.entry. An update
+// is identified by its UpdateID and revision, and the list it was read from is
+// part of the key: an installed history record and an available search result
+// for the same update carry different values (the install date and operation
+// against none), and CreateResource hands back the first one cached for a
+// repeated id.
+func updateEntryID(list string, id string, revision int) string {
+	return "windows.update.entry/" + list + "/" + id + "/" + strconv.Itoa(revision)
 }
 
 // firstNonEmptyStringArg returns the first non-empty string value among the

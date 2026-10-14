@@ -368,7 +368,7 @@ func lastInstalledWindows(runtime *plugin.Runtime) (*updates.LastInstalledUpdate
 		if !ok {
 			continue
 		}
-		if !windows.IsOperatingSystemUpdate(entryCategories(entry), entry.Title.Data) {
+		if !windows.IsOperatingSystemUpdate(entryCategories(entry), entry.Classification.Data, entry.Title.Data) {
 			continue
 		}
 		date := entry.Date.Data

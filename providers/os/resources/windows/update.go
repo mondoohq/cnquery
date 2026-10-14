@@ -69,7 +69,9 @@ const windowsUpdateHistoryMaxEntries = 1000
 // entries on a long-lived host. Go's FilterInstalledHistory re-applies the
 // same predicate (and de-duplicates by KB), so the two must stay in sync;
 // see TestUpdateHistoryQueryFilterMatchesGo. Dates serialize as PowerShell
-// "/Date(ms)/" strings.
+// "/Date(ms)/" strings. Classification is the name of the one category whose
+// Type is UpdateClassification; Categories also carries product names, in no
+// fixed order.
 //
 // $ErrorActionPreference is Stop so a failed COM call exits non-zero. Without
 // it GetTotalHistoryCount failing leaves $count null, the $count -gt 0 guard is
@@ -86,6 +88,10 @@ if ($count -gt 0) {
   $take = [Math]::Min($count, %d)
   $history = foreach ($entry in $searcher.QueryHistory(0, $take)) {
     if ($entry.Operation -eq %d -and $entry.ResultCode -eq %d) {
+      $classification = $null
+      foreach ($category in $entry.Categories) {
+        if ($category.Type -eq 'UpdateClassification') { $classification = $category.Name; break }
+      }
       [pscustomobject]@{
         "Title" = $entry.Title
         "Date" = $entry.Date
@@ -93,7 +99,9 @@ if ($count -gt 0) {
         "ResultCode" = [int]$entry.ResultCode
         "SupportUrl" = $entry.SupportUrl
         "UpdateID" = $entry.UpdateIdentity.UpdateID
+        "RevisionNumber" = [int]$entry.UpdateIdentity.RevisionNumber
         "Categories" = @($entry.Categories | ForEach-Object { $_.Name })
+        "Classification" = $classification
       }
     }
   }
@@ -102,13 +110,15 @@ if ($count -gt 0) {
 
 // WindowsUpdateHistoryEntry is a single Windows Update Agent history record.
 type WindowsUpdateHistoryEntry struct {
-	Title      string   `json:"Title"`
-	Date       string   `json:"Date"`
-	Operation  int      `json:"Operation"`
-	ResultCode int      `json:"ResultCode"`
-	SupportUrl string   `json:"SupportUrl"`
-	UpdateID   string   `json:"UpdateID"`
-	Categories []string `json:"Categories"`
+	Title          string   `json:"Title"`
+	Date           string   `json:"Date"`
+	Operation      int      `json:"Operation"`
+	ResultCode     int      `json:"ResultCode"`
+	SupportUrl     string   `json:"SupportUrl"`
+	UpdateID       string   `json:"UpdateID"`
+	RevisionNumber int      `json:"RevisionNumber"`
+	Categories     []string `json:"Categories"`
+	Classification string   `json:"Classification"`
 }
 
 func ParseWindowsUpdateHistory(input io.Reader) ([]WindowsUpdateHistoryEntry, error) {
@@ -168,22 +178,14 @@ func OperationName(op int) string {
 	}
 }
 
-// FirstCategory returns the first non-empty category name, or "".
-func FirstCategory(categories []string) string {
-	for _, c := range categories {
-		if c != "" {
-			return c
-		}
-	}
-	return ""
-}
-
 // ClassifyUpdate derives a best-effort classification for an update. It
-// prefers the agent-reported category and otherwise infers one from the title
-// (Windows Update history entries frequently report no categories).
-func ClassifyUpdate(categories []string, title string) string {
-	if c := FirstCategory(categories); c != "" {
-		return c
+// prefers the agent-reported classification (the category typed
+// UpdateClassification, never a product category) and otherwise infers one
+// from the title (Windows Update history entries frequently report no
+// categories).
+func ClassifyUpdate(classification string, title string) string {
+	if classification != "" {
+		return classification
 	}
 	return inferClassificationFromTitle(title)
 }
@@ -253,7 +255,9 @@ var nonOSProductMarkers = []string{
 // That second title is why a plain search for "Windows" in the title is wrong:
 // a .NET update names the Windows release it targets, and matching it would
 // count every .NET servicing entry as an operating system patch.
-func IsOperatingSystemUpdate(categories []string, title string) bool {
+//
+// classification is the agent-reported classification, "" when there is none.
+func IsOperatingSystemUpdate(categories []string, classification string, title string) bool {
 	for _, c := range categories {
 		if namesNonOSProduct(c) {
 			return false
@@ -263,7 +267,7 @@ func IsOperatingSystemUpdate(categories []string, title string) bool {
 		return false
 	}
 
-	switch ClassifyUpdate(categories, title) {
+	switch ClassifyUpdate(classification, title) {
 	case "Definition Updates", "Drivers":
 		// Definition data lands daily and a driver is firmware for one device,
 		// so neither says anything about operating system patch state.
