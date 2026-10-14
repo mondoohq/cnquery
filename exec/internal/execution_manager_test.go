@@ -175,7 +175,7 @@ func reportedSites() []string {
 
 func TestReportPanicOncePerSite(t *testing.T) {
 	report := func(fn func()) {
-		defer func() { reportPanic(nil, recover()) }()
+		defer func() { _ = reportPanic(nil, recover()) }()
 		fn()
 	}
 
