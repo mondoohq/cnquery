@@ -10,6 +10,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/os/registry"
@@ -18,9 +19,11 @@ import (
 	"go.mondoo.com/ranger-rpc/status"
 )
 
-// Registry locations that back an Event Log channel policy. A value enforced
-// through Group Policy (the policy path) overrides the channel's effective
-// configuration; when neither is set the documented Windows default applies.
+// Registry locations that describe an Event Log channel. The live state the
+// Event Log service reports for the channel wins over them where the two can
+// disagree; the registry is read for the overrides it holds, as the fallback
+// for a connection that cannot run commands, and to tell a channel that does
+// not exist from one left at its defaults.
 const (
 	eventlogPolicyPathFmt  = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\EventLog\%s`
 	eventlogServicePathFmt = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\%s`
@@ -32,20 +35,18 @@ const (
 	eventlogChannelPathFmt = `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\%s`
 )
 
-// Decoded Retention behaviors.
+// Decoded Retention behaviors. The Event Log service since Windows Vista has
+// no "overwrite events older than N days" mode: a channel either overwrites
+// as needed or keeps its events, refusing new ones or archiving the full log.
 const (
 	retentionOverwriteAsNeeded = "overwrite_as_needed"
-	retentionOverwriteByDays   = "overwrite_by_days"
 	retentionNeverOverwrite    = "never_overwrite"
 )
 
-// neverOverwriteRetention is the Retention sentinel (0xFFFFFFFF) that selects
-// "do not overwrite events"; it can also appear as -1 from a signed reading.
+// neverOverwriteRetention is the legacy Retention sentinel (0xFFFFFFFF) that
+// selects "do not overwrite events"; it can also appear as -1 from a signed
+// reading.
 const neverOverwriteRetention int64 = 0xFFFFFFFF
-
-// eventlogDefaultMaxSizeKB is the modern Windows default for the classic
-// channels (20 MB) used when no policy or effective value is configured.
-const eventlogDefaultMaxSizeKB int64 = 20480
 
 type mqlWindowsEventlogInternal struct {
 	lock    sync.Mutex
@@ -55,6 +56,10 @@ type mqlWindowsEventlogInternal struct {
 	policy  map[string]registry.RegistryKeyItem
 	service map[string]registry.RegistryKeyItem
 	channel map[string]registry.RegistryKeyItem
+	// registered is whether the channel has a Services\EventLog or a WINEVT
+	// channel key. Every channel Get-WinEvent -ListLog enumerates has one of
+	// the two, so a name with neither does not exist.
+	registered bool
 	// the live channel state is a command rather than a registry read, so it
 	// is cached separately: the registry-backed fields must keep resolving on
 	// a connection that cannot run commands
@@ -74,29 +79,41 @@ func initWindowsEventlog(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 }
 
 // readKey reads a single registry key and returns its values keyed by the
-// lower-cased value name. A missing key yields an empty map rather than an
-// error, so resolution can fall through to the next source or the default.
-func (w *mqlWindowsEventlog) readKey(path string) (map[string]registry.RegistryKeyItem, error) {
+// lower-cased value name, and whether the key exists. A missing key yields an
+// empty map rather than an error, so resolution can fall through to the next
+// source.
+func (w *mqlWindowsEventlog) readKey(path string) (map[string]registry.RegistryKeyItem, bool, error) {
 	o, err := CreateResource(w.MqlRuntime, "registrykey", map[string]*llx.RawData{
 		"path": llx.StringData(path),
 	})
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
+	key := o.(*mqlRegistrykey)
 
-	entries, err := o.(*mqlRegistrykey).getEntries()
+	entries, err := key.getEntries()
 	if err != nil {
 		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
-			return map[string]registry.RegistryKeyItem{}, nil
+			return map[string]registry.RegistryKeyItem{}, false, nil
 		}
-		return nil, err
+		return nil, false, err
 	}
 
 	res := make(map[string]registry.RegistryKeyItem, len(entries))
 	for i := range entries {
 		res[strings.ToLower(entries[i].Key)] = entries[i]
 	}
-	return res, nil
+	if len(res) > 0 {
+		return res, true, nil
+	}
+
+	// A key without values still exists. Only this case costs the extra
+	// existence check.
+	exists := key.GetExists()
+	if exists.Error != nil {
+		return nil, false, exists.Error
+	}
+	return res, exists.Data, nil
 }
 
 // load reads the policy and effective registry keys exactly once and caches
@@ -111,17 +128,17 @@ func (w *mqlWindowsEventlog) load() error {
 		return w.loadErr
 	}
 
-	policy, err := w.readKey(fmt.Sprintf(eventlogPolicyPathFmt, w.Name.Data))
+	policy, _, err := w.readKey(fmt.Sprintf(eventlogPolicyPathFmt, w.Name.Data))
 	if err != nil {
 		w.loadErr = err
 		return err
 	}
-	service, err := w.readKey(fmt.Sprintf(eventlogServicePathFmt, w.Name.Data))
+	service, serviceExists, err := w.readKey(fmt.Sprintf(eventlogServicePathFmt, w.Name.Data))
 	if err != nil {
 		w.loadErr = err
 		return err
 	}
-	channel, err := w.readKey(fmt.Sprintf(eventlogChannelPathFmt, w.Name.Data))
+	channel, channelExists, err := w.readKey(fmt.Sprintf(eventlogChannelPathFmt, w.Name.Data))
 	if err != nil {
 		w.loadErr = err
 		return err
@@ -130,13 +147,33 @@ func (w *mqlWindowsEventlog) load() error {
 	w.policy = policy
 	w.service = service
 	w.channel = channel
+	w.registered = serviceExists || channelExists
 	w.loaded.Store(true)
 	return nil
 }
 
+// errNoSuchChannel is the error for a channel name the target does not know.
+// A policy that names a channel with a typo must fail rather than read a size
+// or a retention mode nobody configured.
+func errNoSuchChannel(name string) error {
+	return llx.NotFound(fmt.Errorf("there is no Event Log channel named %q", name))
+}
+
+// loadRegistered loads the registry sources and fails for a channel that
+// does not exist.
+func (w *mqlWindowsEventlog) loadRegistered() error {
+	if err := w.load(); err != nil {
+		return err
+	}
+	if !w.registered {
+		return errNoSuchChannel(w.Name.Data)
+	}
+	return nil
+}
+
 // registryItemInt extracts an int64 from a registry item, accepting both the
-// DWORD form (effective channel config) and the string form ("0", "0xFFFFFFFF")
-// that the Group Policy keys use.
+// DWORD form (effective channel config) and the string form ("0", "1",
+// "0xFFFFFFFF") that the Group Policy keys use.
 func registryItemInt(item registry.RegistryKeyItem) (int64, bool) {
 	switch v := item.GetRawValue().(type) {
 	case int64:
@@ -160,13 +197,13 @@ func registryItemInt(item registry.RegistryKeyItem) (int64, bool) {
 }
 
 // resolveMaxSizeKB picks the maximum log size in KB out of the three registry
-// sources, in the order Windows applies them, and reports whether any of them
-// carried a value at all. Pure function for unit testing.
+// sources, policy first, for a target whose live channel state is out of
+// reach, and reports whether any of them carried a value at all. Pure
+// function for unit testing.
 //
 // The registry holds overrides only. A channel left at the size its manifest
 // declares has no value in any of these keys, which is why a miss here is
-// reported rather than resolved to a default: the caller has one more source
-// that knows the manifest value.
+// reported rather than resolved to a default.
 func resolveMaxSizeKB(policy, service, channel map[string]registry.RegistryKeyItem) (int64, bool) {
 	// the Group Policy MaxSize is already expressed in KB
 	if n, ok := lookupInt(policy, "maxsize"); ok {
@@ -187,58 +224,31 @@ func resolveMaxSizeKB(policy, service, channel map[string]registry.RegistryKeyIt
 }
 
 func (w *mqlWindowsEventlog) maxSizeKB() (int64, error) {
-	if err := w.load(); err != nil {
+	if err := w.loadRegistered(); err != nil {
 		return 0, err
 	}
+
+	// The size the channel itself reports is what Windows applies, including
+	// the size its manifest declares, which is in no registry key at all. A
+	// Group Policy MaxSize written to the registry is not applied until the
+	// Event Log service picks it up: measured on Windows 10 and 11, a policy
+	// MaxSize of 32768 KB left the channel at 20971520 bytes in both
+	// Get-WinEvent and wevtutil gl.
+	state, stateErr := w.loadState()
+	if stateErr == nil && state.MaximumSizeInBytes > 0 {
+		return state.MaximumSizeInBytes / 1024, nil
+	}
+
+	// A connection that cannot run commands falls back to the registry.
 	if n, ok := resolveMaxSizeKB(w.policy, w.service, w.channel); ok {
 		return n, nil
 	}
 
-	// Nothing overrides the size, which is the normal state for a channel left
-	// at what its manifest declares. That value is not in the registry at all
-	// and is only reachable through the channel itself, so a host that reports
-	// 1028 KB through wevtutil was reported as 20480 without this.
-	//
-	// A connection that cannot run commands still resolves below rather than
-	// failing: this source is an improvement on the default, not a
-	// replacement for the registry chain.
-	if state, err := w.loadState(); err == nil && state.MaximumSizeInBytes > 0 {
-		return state.MaximumSizeInBytes / 1024, nil
+	// No source reports a size, and a manifest can declare any.
+	if stateErr != nil {
+		return 0, stateErr
 	}
-
-	return eventlogDefaultMaxSizeKB, nil
-}
-
-// retentionRaw returns the effective Retention value from the two keys that
-// use the legacy seconds encoding (policy wins) and whether either carried a
-// value.
-//
-// The WINEVT channel key is deliberately not consulted here: it stores
-// Retention as a boolean rather than a period, so its value cannot be fed to
-// decodeRetention. resolveRetention reads it separately.
-func (w *mqlWindowsEventlog) retentionRaw() (int64, bool, error) {
-	if err := w.load(); err != nil {
-		return 0, false, err
-	}
-	if n, ok := lookupInt(w.policy, "retention"); ok {
-		return n, true, nil
-	}
-	if n, ok := lookupInt(w.service, "retention"); ok {
-		return n, true, nil
-	}
-	return 0, false, nil
-}
-
-// decodeChannelRetention maps the WINEVT channel Retention value to a
-// behavior. This key does not use the legacy seconds encoding the classic logs
-// use: it is a flag, 0 for "overwrite events as needed" and non-zero for "do
-// not overwrite events". Passing it to decodeRetention would read a channel
-// configured to retain its events as one that overwrites them after a day.
-func decodeChannelRetention(n int64) string {
-	if n == 0 {
-		return retentionOverwriteAsNeeded
-	}
-	return retentionNeverOverwrite
+	return 0, fmt.Errorf("the Event Log channel %q reported no maximum size", w.Name.Data)
 }
 
 // decodeLogMode maps the effective LogMode Windows reports for a channel to a
@@ -255,57 +265,116 @@ func decodeLogMode(mode string) (string, bool) {
 	}
 }
 
-// resolveRetention picks the retention behavior out of the sources in the
-// order Windows applies them.
+// decodePolicyRetention maps the Group Policy values under
+// Policies\Microsoft\Windows\EventLog\<channel> to a behavior, and reports
+// whether either is set. EventLog.admx writes both as strings: Retention "1"
+// is "Retain old events" (do not overwrite) and "0" overwrites as needed;
+// AutoBackupLogFiles "1" archives the full log instead of overwriting it.
+// Neither is the legacy period in seconds of the Services\EventLog key, so
+// reading the policy "1" as a period reported a channel that keeps its events
+// as one that overwrites them.
+func decodePolicyRetention(policy map[string]registry.RegistryKeyItem) (string, bool) {
+	ret, hasRet := lookupInt(policy, "retention")
+	backup, hasBackup := lookupInt(policy, "autobackuplogfiles")
+	switch {
+	case hasRet && ret != 0, hasBackup && backup != 0:
+		return retentionNeverOverwrite, true
+	case hasRet:
+		return retentionOverwriteAsNeeded, true
+	default:
+		return "", false
+	}
+}
+
+// decodeServiceRetention maps the classic Services\EventLog\<log> values to a
+// behavior, and reports whether either is set. Retention is the legacy period
+// in seconds: 0 overwrites as needed and 0xFFFFFFFF (or -1) never overwrites.
+// A positive period is what Limit-EventLog -OverflowAction OverwriteOlder
+// writes, but the Event Log service has no by-days mode and runs that log
+// circular (Get-WinEvent reports LogMode Circular, wevtutil gl retention
+// false), so it overwrites as needed. AutoBackupLogFiles 1 archives the full
+// log, which the service reports as LogMode AutoBackup.
+func decodeServiceRetention(service map[string]registry.RegistryKeyItem) (string, bool) {
+	ret, hasRet := lookupInt(service, "retention")
+	backup, hasBackup := lookupInt(service, "autobackuplogfiles")
+	switch {
+	case hasBackup && backup != 0:
+		return retentionNeverOverwrite, true
+	case hasRet && (ret < 0 || ret == neverOverwriteRetention):
+		return retentionNeverOverwrite, true
+	case hasRet:
+		return retentionOverwriteAsNeeded, true
+	default:
+		return "", false
+	}
+}
+
+// decodeChannelRetention maps the WINEVT channel values to a behavior, and
+// reports whether either is set. This key does not use the legacy seconds
+// encoding of the classic logs: Retention is a flag, 0 for "overwrite events
+// as needed" and non-zero for "do not overwrite events", and AutoBackup is a
+// flag for archiving the full log.
+func decodeChannelRetention(channel map[string]registry.RegistryKeyItem) (string, bool) {
+	ret, hasRet := lookupInt(channel, "retention")
+	backup, hasBackup := lookupInt(channel, "autobackup")
+	switch {
+	case hasRet && ret != 0, hasBackup && backup != 0:
+		return retentionNeverOverwrite, true
+	case hasRet:
+		return retentionOverwriteAsNeeded, true
+	default:
+		return "", false
+	}
+}
+
+// resolveRegistryRetention picks the retention behavior out of the registry
+// sources, policy first, for a target whose live channel state is out of
+// reach. Pure function for unit testing.
+func resolveRegistryRetention(policy, service, channel map[string]registry.RegistryKeyItem) (string, bool) {
+	if mode, ok := decodePolicyRetention(policy); ok {
+		return mode, true
+	}
+	if mode, ok := decodeServiceRetention(service); ok {
+		return mode, true
+	}
+	return decodeChannelRetention(channel)
+}
+
+// resolveRetention reports the retention behavior of the channel.
 //
-// A modern provider channel such as Microsoft-Windows-PowerShell/Operational
-// is not under Services\EventLog at all. Without the WINEVT and LogMode
-// sources every one of them resolved to the documented Windows default, so a
-// channel explicitly configured not to overwrite its events was reported as
-// overwriting them as needed, which is the reading that lets an audit pass.
+// The LogMode the Event Log service reports is the answer whenever it can be
+// read, because the registry disagrees with it: a positive Services\EventLog
+// Retention reads as a period but the log runs circular, a policy Retention
+// "1" written to the registry left the channel Circular on Windows 10 and 11,
+// and on Windows 11 a Services\EventLog Retention of -1 did not change the
+// channel at all. The registry is the fallback for a connection that cannot
+// run commands.
 func (w *mqlWindowsEventlog) resolveRetention() (string, error) {
-	n, ok, err := w.retentionRaw()
-	if err != nil {
+	if err := w.loadRegistered(); err != nil {
 		return "", err
 	}
-	if ok {
-		return decodeRetention(n), nil
-	}
 
-	if n, ok := lookupInt(w.channel, "retention"); ok {
-		return decodeChannelRetention(n), nil
-	}
-
-	// The effective behavior the channel itself reports. It costs a command,
-	// so a connection that cannot run one still resolves to the default below
-	// rather than failing: this source is an improvement on the default, not a
-	// replacement for the registry chain.
-	if state, err := w.loadState(); err == nil {
+	state, stateErr := w.loadState()
+	if stateErr == nil {
 		if mode, ok := decodeLogMode(state.LogMode); ok {
 			return mode, nil
 		}
 	}
 
-	// Windows overwrites events as needed by default
-	return retentionOverwriteAsNeeded, nil
+	if mode, ok := resolveRegistryRetention(w.policy, w.service, w.channel); ok {
+		return mode, nil
+	}
+
+	// Nothing reports a behavior. A modern channel's manifest can declare
+	// either one, so there is no default that is safe to assume.
+	if stateErr != nil {
+		return "", stateErr
+	}
+	return "", fmt.Errorf("the Event Log channel %q reported an unrecognized log mode %q", w.Name.Data, state.LogMode)
 }
 
 func (w *mqlWindowsEventlog) retention() (string, error) {
 	return w.resolveRetention()
-}
-
-// decodeRetention maps a Retention value to a human-readable behavior. The
-// encoding is shared by the modern Group Policy form (0 / 0xFFFFFFFF) and the
-// legacy seconds form (0 = as needed, 0xFFFFFFFF / -1 = never, N = by days).
-func decodeRetention(n int64) string {
-	switch {
-	case n == 0:
-		return retentionOverwriteAsNeeded
-	case n < 0 || n == neverOverwriteRetention:
-		return retentionNeverOverwrite
-	default:
-		return retentionOverwriteByDays
-	}
 }
 
 // overwriteAsNeeded is derived from the same resolution retention uses, so the
@@ -332,12 +401,20 @@ func lookupInt(items map[string]registry.RegistryKeyItem, name string) (int64, b
 // many events it holds costs a single remote command.
 //
 // It is separate from load because it is a command rather than a registry
-// read: a connection that cannot run commands still resolves maxSizeKB,
-// retention and overwriteAsNeeded, and only these four fields report an error.
+// read: a connection that cannot run commands still resolves the registry
+// sources of maxSizeKB, retention and overwriteAsNeeded.
 func (w *mqlWindowsEventlog) loadState() (*windows.EventLogChannel, error) {
 	if w.stateLoaded.Load() {
 		return w.state, nil
 	}
+	// A name the registry does not know is reported as such, the same way
+	// for every field. When the registry cannot be read, the command decides.
+	if err := w.load(); err != nil {
+		log.Debug().Err(err).Str("channel", w.Name.Data).Msg("could not read the Event Log channel registry keys, reading the channel through the command")
+	} else if !w.registered {
+		return nil, errNoSuchChannel(w.Name.Data)
+	}
+
 	w.lock.Lock()
 	defer w.lock.Unlock()
 	if w.stateLoaded.Load() || w.stateErr != nil {

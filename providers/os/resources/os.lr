@@ -16009,40 +16009,43 @@ private windows.optionalFeature @defaults("name") {
 // or a modern provider channel such as
 // `windows.eventlog(name: "Microsoft-Windows-PowerShell/Operational")`.
 // `maxSizeKB` reports the maximum log file size in KB and `retention` decodes
-// how the channel behaves when that size is reached. `retention` reads the
-// registry alone, so it works on a connection that cannot run commands.
-// `enabled`, `logFilePath`, `isClassicLog` and `recordCount` report the live
-// channel state and need a connection that can run commands.
+// how the channel behaves when that size is reached. `enabled`, `logFilePath`,
+// `isClassicLog` and `recordCount` report the live channel state and need a
+// connection that can run commands. A name that matches no channel fails
+// every field.
 windows.eventlog @defaults("name") {
   init(name string)
   // Event Log channel name (for example Application, Security, Setup, or System)
   name string
   // Maximum log file size in KB
   //
-  // Resolved from the first source that carries a value: the Group Policy
-  // MaxSize, the classic channel configuration under Services\EventLog, the
-  // WINEVT channel key, and then the size the channel's manifest declares.
-  // The registry holds overrides only, so a channel left at its manifest size
-  // has no value in any of those keys and only the last source knows it; that
-  // one needs a connection that can run commands, and a connection without
-  // one still resolves the registry sources. Falls back to the documented
-  // 20 MB Windows default only when no source reports a size at all.
+  // The size the channel itself reports whenever a command can read it, since
+  // that is what Windows applies, including the size the channel's manifest
+  // declares. A connection that cannot run commands falls back to the first
+  // registry source that carries a value: the Group Policy MaxSize (in KB),
+  // the classic channel configuration under Services\EventLog, and the WINEVT
+  // channel key (both in bytes). The registry holds overrides only, so a
+  // channel left at its manifest size fails there rather than report a size
+  // nobody set.
   maxSizeKB() int
   // Retention behavior when the log reaches its maximum size
   //
-  // One of "overwrite_as_needed", "overwrite_by_days" (a positive retention
-  // period), or "never_overwrite". Resolved from the first source that
-  // carries a value: the Group Policy Retention, the classic channel
-  // configuration under Services\EventLog, the WINEVT channel key, and then
-  // the retention mode the channel itself reports. The first two use a period
-  // in seconds (0 as needed, a positive count of seconds by days, 4294967295
-  // or -1 never); the WINEVT key uses a flag instead, 0 as needed and non-zero
-  // never. A modern provider channel is not under Services\EventLog at all,
-  // so without the last two sources every one of them resolved to the Windows
-  // default. Falls back to "overwrite_as_needed", the documented default, only
-  // when no source reports a behavior.
+  // One of "overwrite_as_needed" or "never_overwrite" (the channel keeps its
+  // events, refusing new ones or archiving the full log). The retention mode
+  // the channel itself reports (Circular, Retain or AutoBackup) is the answer
+  // whenever a command can read it, since that is what Windows applies. A
+  // connection that cannot run commands falls back to the registry: the
+  // Group Policy Retention ("1" retains, "0" overwrites) and
+  // AutoBackupLogFiles ("1" archives), the classic channel configuration under
+  // Services\EventLog (Retention 0 overwrites, 4294967295 or -1 retains,
+  // AutoBackupLogFiles 1 archives), and the WINEVT channel key (Retention and
+  // AutoBackup flags). Windows has no overwrite-by-age mode, so a positive
+  // Services\EventLog Retention period runs the log circular and reads as
+  // "overwrite_as_needed". Fails when no source reports a behavior.
   retention() string
-  // Whether the channel overwrites events as needed when full (Retention 0)
+  // Whether the channel overwrites events as needed when full
+  //
+  // True exactly when `retention` is "overwrite_as_needed".
   overwriteAsNeeded() bool
   // Whether the channel is enabled and collecting events
   //
