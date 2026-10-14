@@ -22,6 +22,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -36,6 +37,7 @@ type Connection struct {
 	d                  *resources.Discovery
 	config             *rest.Config
 	namespace          string
+	nsFilter           shared.NamespaceFilter
 	clientset          *kubernetes.Clientset
 	currentClusterName string
 	// kubeconfig is what the kubeconfig says about the cluster, nil in the
@@ -147,10 +149,24 @@ func NewConnection(id uint32, asset *inventory.Asset, discoveryCache *resources.
 		d:                  d,
 		config:             config,
 		clientset:          clientset,
-		namespace:          asset.Connections[0].Options[shared.OPTION_NAMESPACE],
 		currentClusterName: currentClusterName,
 		kubeconfig:         kubeconfig,
 		inCluster:          inCluster,
+	}
+
+	// --namespaces accepts a comma-separated list of globs, and
+	// --namespaces-exclude removes namespaces. Only a filter naming exactly one
+	// namespace can be pushed down to the API server as a scoped list request;
+	// anything else has to list across namespaces and filter the result.
+	res.nsFilter, err = shared.NewNamespaceFilter(
+		asset.Connections[0].Options[shared.OPTION_NAMESPACE],
+		asset.Connections[0].Options[shared.OPTION_NAMESPACE_EXCLUDE],
+	)
+	if err != nil {
+		return nil, err
+	}
+	if ns, ok := res.nsFilter.SingleNamespace(); ok {
+		res.namespace = ns
 	}
 
 	return &res, nil
@@ -329,6 +345,28 @@ func (c *Connection) resources(kind string, name string, namespace string) (*sha
 	objs, err = resources.FilterResource(resType, objs, name, namespace)
 	if err != nil {
 		return nil, err
+	}
+
+	// A multi-namespace or glob filter cannot be pushed into the list request,
+	// so it is applied here. Cluster-scoped kinds have no namespace to match and
+	// stay in scope, and a filter naming exactly one namespace was already
+	// pushed down to the API server, so re-checking it would be redundant.
+	if resType.Resource.Namespaced && !c.nsFilter.IsEmpty() && c.namespace == "" {
+		filtered := make([]runtime.Object, 0, len(objs))
+		for i := range objs {
+			obj, err := meta.Accessor(objs[i])
+			if err != nil {
+				// dropping it silently would look identical to the filter
+				// simply not matching, which is the bug this block fixes
+				log.Warn().Err(err).Str("kind", kind).
+					Msg("skipping object: cannot read metadata to match the namespace filter")
+				continue
+			}
+			if c.nsFilter.Matches(obj.GetNamespace()) {
+				filtered = append(filtered, objs[i])
+			}
+		}
+		objs = filtered
 	}
 
 	return &shared.ResourceResult{
