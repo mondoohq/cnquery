@@ -100,8 +100,9 @@ func TestReadSystemdUnitFilesInstances(t *testing.T) {
 	}
 
 	require.Contains(t, byName, "getty@tty1.service")
-	assert.Equal(t, &systemdUnitFile{Name: "getty@tty1.service", State: "enabled",
-		Path: "/usr/lib/systemd/system/getty@.service", Description: "Getty on tty1"}, byName["getty@tty1.service"])
+	assert.Equal(t, "enabled", byName["getty@tty1.service"].State)
+	assert.Equal(t, "/usr/lib/systemd/system/getty@.service", byName["getty@tty1.service"].Path)
+	assert.Equal(t, "Getty on tty1", byName["getty@tty1.service"].Description)
 	require.Contains(t, byName, "worker@db1.service")
 	assert.Equal(t, "Worker db1 of worker", byName["worker@db1.service"].Description)
 

@@ -43,6 +43,10 @@ type systemdUnitFile struct {
 	// an instance expanded, or the unit name when the file sets none, as
 	// systemd reports it.
 	Description string
+
+	// rawDescription is Description= as the file sets it, which a
+	// template's instances expand
+	rawDescription string
 }
 
 // unitInstall is what the [Install] section of a unit file says.
@@ -153,12 +157,11 @@ func readSystemdUnitFiles(fsys afero.Fs, suffix string) ([]*systemdUnitFile, err
 		if !ok || template.State == "masked" || template.Path == "" {
 			continue
 		}
-		raw, _ := readSystemdUnitDescription(fsys, template.Path)
 		res = append(res, &systemdUnitFile{
 			Name:        instance,
 			State:       "enabled",
 			Path:        template.Path,
-			Description: unitDescription(instance, raw),
+			Description: unitDescription(instance, template.rawDescription),
 		})
 	}
 	return res, nil
@@ -225,6 +228,7 @@ func readSystemdUnitFile(fsys afero.Fs, unitPath string, name string, listedAsLi
 			}
 		}
 	}
+	u.rawDescription = description
 	if isSystemdTemplateUnit(name) {
 		// a template has no description of its own: systemd reports none
 		// until it is instantiated
@@ -277,26 +281,6 @@ func readUnitLink(fsys afero.Fs, p string, listedAsLink bool) (string, bool) {
 		return "", false
 	}
 	return target, true
-}
-
-// readSystemdUnitDescription returns the Description= of the unit file at p.
-func readSystemdUnitDescription(fsys afero.Fs, p string) (string, error) {
-	f, err := fsys.Open(p)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-	opts, err := unit.Deserialize(f)
-	if err != nil {
-		return "", err
-	}
-	description := ""
-	for _, o := range opts {
-		if o.Section == "Unit" && o.Name == "Description" {
-			description = o.Value
-		}
-	}
-	return description, nil
 }
 
 // enablementLinks are the links `systemctl enable` creates in the
