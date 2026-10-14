@@ -62,6 +62,11 @@ func windowsUpdateSearchQuery(criteria string, online bool) string {
 	// rather than `ForEach-Object` / `New-Object psobject`: the pipeline
 	// cmdlets are markedly slower in PowerShell, and both the "installed"
 	// and "available" criteria can return large result sets.
+	//
+	// Categories mixes the update's classification ("Security Updates",
+	// "Update Rollups") with the products it applies to ("Windows 11"), in no
+	// fixed order. Classification is the one category whose Type is
+	// UpdateClassification, so it never reads a product name.
 	return `
 $ErrorActionPreference='Stop';
 $ProgressPreference='SilentlyContinue';
@@ -70,8 +75,13 @@ $searcher = $updateSession.CreateupdateSearcher()
 $searcher.Online = ` + onlineValue + `
 $result = $searcher.Search("` + criteria + `")
 $updates = foreach ($update in $result.Updates) {
+	$classification = $null
+	foreach ($category in $update.Categories) {
+		if ($category.Type -eq 'UpdateClassification') { $classification = $category.Name; break }
+	}
 	[pscustomobject]@{
 		"UpdateID" = $update.Identity.UpdateID
+		"RevisionNumber" = [int]$update.Identity.RevisionNumber
 		"Title" = $update.Title
 		"MsrcSeverity" = $update.MsrcSeverity
 		"SupportUrl" = $update.SupportUrl
@@ -79,6 +89,7 @@ $updates = foreach ($update in $result.Updates) {
 		"KBArticleIDs" = @($update.KBArticleIDs)
 		"CveIDs" = @($update.CveIDs)
 		"Categories" = @($update.Categories | ForEach-Object { $_.Name })
+		"Classification" = $classification
 	}
 }
 @($updates) | ConvertTo-Json -Depth 3`
@@ -89,6 +100,7 @@ $updates = foreach ($update in $result.Updates) {
 // to its own output type.
 type WindowsUpdate struct {
 	UpdateID       string   `json:"UpdateID"`
+	RevisionNumber int      `json:"RevisionNumber"`
 	Title          string   `json:"Title"`
 	MsrcSeverity   string   `json:"MsrcSeverity"`
 	SupportUrl     string   `json:"SupportUrl"`
@@ -96,6 +108,9 @@ type WindowsUpdate struct {
 	KBArticleIDs   []string `json:"KBArticleIDs"`
 	CveIDs         []string `json:"CveIDs"`
 	Categories     []string `json:"Categories"`
+	// Classification is the name of the category typed UpdateClassification,
+	// or "" when the agent reports none.
+	Classification string `json:"Classification"`
 }
 
 type WindowsUpdateManager struct {
@@ -143,6 +158,7 @@ func (u WindowsUpdate) toOperatingSystemUpdate() (OperatingSystemUpdate, bool) {
 		Name:        u.KBArticleIDs[0],
 		Description: u.Title,
 		Severity:    u.MsrcSeverity,
+		Category:    u.Classification,
 		Format:      "windows/updates",
 		Restart:     u.RebootRequired,
 	}, true

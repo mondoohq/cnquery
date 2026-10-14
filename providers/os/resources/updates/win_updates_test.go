@@ -54,6 +54,8 @@ func TestWindowsUpdateToOperatingSystemUpdate(t *testing.T) {
 		MsrcSeverity:   "Critical",
 		RebootRequired: true,
 		KBArticleIDs:   []string{"4537759"},
+		Categories:     []string{"Windows Server 2019", "Security Updates"},
+		Classification: "Security Updates",
 	}
 	osUpdate, ok := u.toOperatingSystemUpdate()
 	require.True(t, ok)
@@ -62,6 +64,7 @@ func TestWindowsUpdateToOperatingSystemUpdate(t *testing.T) {
 	assert.Equal(t, "2020-02 Security Update (KB4537759)", osUpdate.Description)
 	assert.Equal(t, "Critical", osUpdate.Severity)
 	assert.Equal(t, "windows/updates", osUpdate.Format)
+	assert.Equal(t, "Security Updates", osUpdate.Category, "the classification, not the first category")
 	assert.True(t, osUpdate.Restart)
 
 	// updates without a KB are dropped from os.update
@@ -153,9 +156,42 @@ func TestWindowsUpdateSearchQueryUsesForeachNotPipeline(t *testing.T) {
 	assert.Contains(t, q, "[pscustomobject]@{")
 	assert.NotContains(t, q, "New-Object psobject")
 
-	for _, field := range []string{`"UpdateID"`, `"Title"`, `"MsrcSeverity"`, `"SupportUrl"`, `"RebootRequired"`, `"KBArticleIDs"`, `"CveIDs"`, `"Categories"`} {
+	for _, field := range []string{`"UpdateID"`, `"Title"`, `"MsrcSeverity"`, `"SupportUrl"`, `"RebootRequired"`, `"KBArticleIDs"`, `"CveIDs"`, `"Categories"`, `"RevisionNumber"`, `"Classification"`} {
 		assert.Contains(t, q, field)
 	}
+
+	// The classification is the category typed UpdateClassification, never
+	// whichever category the agent lists first.
+	assert.Contains(t, q, "$category.Type -eq 'UpdateClassification'")
+}
+
+// TestParseWindowsUpdatesClassification decodes a record shaped like the live
+// search result for the Malicious Software Removal Tool on Windows 10 22H2 and
+// Windows 11 25H2, whose first category is a product.
+func TestParseWindowsUpdatesClassification(t *testing.T) {
+	record := `[{"UpdateID":"3d6484a2-3e2f-4d89-8290-33b9e39f0aaf","RevisionNumber":200,` +
+		`"Title":"Windows Malicious Software Removal Tool x64 - v5.146 (KB890830)","KBArticleIDs":["890830"],` +
+		`"Categories":["EU Browser Choice Update-For Europe Only","Update Rollups","Windows 10","Windows 11"],` +
+		`"Classification":"Update Rollups"}]`
+	updates, err := ParseWindowsUpdates(strings.NewReader(record))
+	require.NoError(t, err)
+	require.Len(t, updates, 1)
+	assert.Equal(t, 200, updates[0].RevisionNumber)
+	assert.Equal(t, "Update Rollups", updates[0].Classification)
+
+	osUpdate, ok := updates[0].toOperatingSystemUpdate()
+	require.True(t, ok)
+	assert.Equal(t, "Update Rollups", osUpdate.Category)
+
+	// No category typed UpdateClassification: the category stays empty
+	// rather than borrowing a product name.
+	updates, err = ParseWindowsUpdates(strings.NewReader(
+		`{"UpdateID":"x","Title":"t (KB1)","KBArticleIDs":["1"],"Categories":["Windows 11"],"Classification":null}`))
+	require.NoError(t, err)
+	require.Len(t, updates, 1)
+	osUpdate, ok = updates[0].toOperatingSystemUpdate()
+	require.True(t, ok)
+	assert.Empty(t, osUpdate.Category)
 }
 
 func TestDropEmptyWindowsUpdatesKeepsTheInputWhenNothingIsBlank(t *testing.T) {

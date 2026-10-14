@@ -25,6 +25,17 @@ func regItems(values map[string]int64) map[string]registry.RegistryKeyItem {
 	return items
 }
 
+func TestUpdateEntryID(t *testing.T) {
+	const id = "740c4b6c-bcfa-4f97-ae49-7bcc6933e696"
+	installed := updateEntryID(updateEntryInstalled, id, 1)
+	available := updateEntryID(updateEntryAvailable, id, 1)
+	assert.NotEqual(t, installed, available,
+		"an update both installed and still offered must not share one cached entry")
+	assert.NotEqual(t, installed, updateEntryID(updateEntryInstalled, id, 2),
+		"two revisions of one update are two entries")
+	assert.Equal(t, installed, updateEntryID(updateEntryInstalled, id, 1))
+}
+
 func TestComputeWindowsUpdatePolicy(t *testing.T) {
 	t.Run("not configured", func(t *testing.T) {
 		v := computeWindowsUpdatePolicy(nil, nil)

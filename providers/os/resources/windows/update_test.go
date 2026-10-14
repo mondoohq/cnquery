@@ -49,9 +49,10 @@ func TestUpdateHistoryQueryUsesForeachNotPipeline(t *testing.T) {
 
 	// the output field names must not move: ParseWindowsUpdateHistory and
 	// downstream consumers both depend on them
-	for _, field := range []string{`"Title"`, `"Date"`, `"Operation"`, `"ResultCode"`, `"SupportUrl"`, `"UpdateID"`, `"Categories"`} {
+	for _, field := range []string{`"Title"`, `"Date"`, `"Operation"`, `"ResultCode"`, `"SupportUrl"`, `"UpdateID"`, `"Categories"`, `"RevisionNumber"`, `"Classification"`} {
 		assert.Contains(t, WINDOWS_QUERY_UPDATE_HISTORY, field)
 	}
+	assert.Contains(t, WINDOWS_QUERY_UPDATE_HISTORY, "$category.Type -eq 'UpdateClassification'")
 }
 
 func TestParseWindowsUpdateHistory(t *testing.T) {
@@ -114,6 +115,17 @@ func TestParseWindowsUpdateHistory_SingleObject(t *testing.T) {
 	assert.Equal(t, "KB5034441", ParseKBID(entries[0].Title))
 }
 
+func TestParseWindowsUpdateHistoryClassificationAndRevision(t *testing.T) {
+	record := `[{"Title":"2026-10 Cumulative Update for Windows 11 Version 25H2 for x64-based Systems (KB5127648)",` +
+		`"Date":"/Date(1705334400000)/","Operation":1,"ResultCode":2,"UpdateID":"43f0fc0f-a617-48ba-9bb1-0a4995bd53af",` +
+		`"RevisionNumber":3,"Categories":["Windows 11","Security Updates"],"Classification":"Security Updates"}]`
+	entries, err := ParseWindowsUpdateHistory(strings.NewReader(record))
+	require.NoError(t, err)
+	require.Len(t, entries, 1)
+	assert.Equal(t, 3, entries[0].RevisionNumber)
+	assert.Equal(t, "Security Updates", entries[0].Classification)
+}
+
 func TestParseKBID(t *testing.T) {
 	tests := []struct {
 		input string
@@ -132,13 +144,15 @@ func TestParseKBID(t *testing.T) {
 
 func TestClassifyUpdate(t *testing.T) {
 	// a reported category wins
-	assert.Equal(t, "Security Updates", ClassifyUpdate([]string{"Security Updates"}, "anything"))
+	assert.Equal(t, "Security Updates", ClassifyUpdate("Security Updates", "anything"))
+	// The agent's classification wins over the title.
+	assert.Equal(t, "Update Rollups", ClassifyUpdate("Update Rollups", "Windows Malicious Software Removal Tool x64 - v5.146 (KB890830)"))
 	// empty categories fall back to title inference
-	assert.Equal(t, "Update Rollups", ClassifyUpdate(nil, "2024-02 Cumulative Update for .NET Framework (KB5034763)"))
-	assert.Equal(t, "Security Updates", ClassifyUpdate([]string{}, "2024-01 Security Update for Windows (KB5030219)"))
-	assert.Equal(t, "Servicing Stack Updates", ClassifyUpdate(nil, "Servicing Stack Update for Windows (KB5031234)"))
-	assert.Equal(t, "Drivers", ClassifyUpdate(nil, "Intel - Display driver"))
-	assert.Equal(t, "", ClassifyUpdate(nil, "Some unrecognized update"))
+	assert.Equal(t, "Update Rollups", ClassifyUpdate("", "2024-02 Cumulative Update for .NET Framework (KB5034763)"))
+	assert.Equal(t, "Security Updates", ClassifyUpdate("", "2024-01 Security Update for Windows (KB5030219)"))
+	assert.Equal(t, "Servicing Stack Updates", ClassifyUpdate("", "Servicing Stack Update for Windows (KB5031234)"))
+	assert.Equal(t, "Drivers", ClassifyUpdate("", "Intel - Display driver"))
+	assert.Equal(t, "", ClassifyUpdate("", "Some unrecognized update"))
 }
 
 func TestOperationName(t *testing.T) {
@@ -153,10 +167,11 @@ func TestOperationName(t *testing.T) {
 // rejected reports a patched host as unknown.
 func TestIsOperatingSystemUpdate(t *testing.T) {
 	tests := []struct {
-		name       string
-		title      string
-		categories []string
-		want       bool
+		name           string
+		title          string
+		categories     []string
+		classification string
+		want           bool
 	}{
 		{
 			name:  "cumulative update",
@@ -208,16 +223,28 @@ func TestIsOperatingSystemUpdate(t *testing.T) {
 			want:  false,
 		},
 		{
-			name:       "definition update by category",
-			title:      "Security Intelligence Update for Microsoft Defender Antivirus - KB2267602",
-			categories: []string{"Definition Updates"},
-			want:       false,
+			name:           "definition update by classification",
+			title:          "Security Intelligence Update for Microsoft Defender Antivirus - KB2267602",
+			categories:     []string{"Definition Updates"},
+			classification: "Definition Updates",
+			want:           false,
 		},
 		{
-			name:       "driver",
-			title:      "Intel - System - 10.1.1.38",
-			categories: []string{"Drivers"},
-			want:       false,
+			name:           "driver",
+			title:          "Intel - System - 10.1.1.38",
+			categories:     []string{"Drivers"},
+			classification: "Drivers",
+			want:           false,
+		},
+		{
+			// The title alone passes the Windows product test; only the
+			// classification marks it as a driver, and the product category
+			// listed first must not hide it.
+			name:           "driver whose first category is a product",
+			title:          "2026-10 Update for Windows 11 Version 25H2 for x64-based Systems",
+			categories:     []string{"Windows 11", "Drivers"},
+			classification: "Drivers",
+			want:           false,
 		},
 		{
 			name:  "edge",
@@ -252,7 +279,7 @@ func TestIsOperatingSystemUpdate(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			assert.Equal(t, test.want, IsOperatingSystemUpdate(test.categories, test.title))
+			assert.Equal(t, test.want, IsOperatingSystemUpdate(test.categories, test.classification, test.title))
 		})
 	}
 }

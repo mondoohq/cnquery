@@ -644,7 +644,11 @@ os.date @defaults("time timezone") {
 os.update @defaults("name")  {
   // Name of the update
   name string
-  // Category of the update (e.g., "security", "bugfix")
+  // Category of the update
+  //
+  // The advisory type on Linux, such as "security" or "bugfix". On Windows,
+  // the Windows Update classification, such as "Security Updates",
+  // "Definition Updates", or "Update Rollups", never a product name.
   category string
   // Severity of the update
   severity string
@@ -15750,9 +15754,12 @@ private windows.update.entry @defaults("kbId title classification") {
   title string
   // Update classification
   //
-  // Microsoft's update category, such as "Security Updates", "Critical
+  // Microsoft's update classification, such as "Security Updates", "Critical
   // Updates", "Update Rollups", "Definition Updates", "Drivers", or
-  // "Feature Packs". Empty when the agent does not report a category.
+  // "Feature Packs". Taken from the category the agent marks as the
+  // classification, never from a product category such as "Windows 11"; when
+  // the agent reports none, inferred from the title. Empty when neither names
+  // one.
   classification string
   // Microsoft severity rating for security updates (e.g., "Critical", "Important", "Moderate", "Low")
   severity string
