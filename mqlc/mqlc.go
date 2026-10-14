@@ -2651,6 +2651,20 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 
 func (c *compiler) postCompile() {
 	code := c.Result.CodeV2
+
+	// A variable definition is not an entrypoint: updateEntrypoints removes
+	// it, but only after this pass. Expanding it here first replaced its ref
+	// with the expansion's, so it was never removed, and `x = file(...)`
+	// became a result of its own: evaluated and reported with the resource's
+	// default fields (an extra read per field, for every resource of a list),
+	// and scored, so a file of size 0 failed the query.
+	varRefs := make(map[uint64]struct{}, c.vars.len())
+	for name, v := range c.vars.vars {
+		if name != "_" {
+			varRefs[v.ref] = struct{}{}
+		}
+	}
+
 	// Use index-based loop instead of range so that blocks appended by
 	// expandResourceFields (nested @defaults) are visited in the same pass.
 	for i := 0; i < len(code.Blocks); i++ {
@@ -2667,6 +2681,12 @@ func (c *compiler) postCompile() {
 		eps := block.Entrypoints
 
 		for _, ref := range eps {
+			if block == c.block {
+				if _, ok := varRefs[ref]; ok {
+					continue
+				}
+			}
+
 			chunk := code.Chunk(ref)
 
 			if chunk.Call != llx.Chunk_FUNCTION {

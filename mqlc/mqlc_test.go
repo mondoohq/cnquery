@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -554,6 +555,36 @@ func TestCompiler_Assignment(t *testing.T) {
 	compileT(t, "a = 123\na", func(res *llx.CodeBundle) {
 		assertPrimitive(t, llx.RefPrimitiveV2((1<<32)|1), res.CodeV2.Blocks[0].Chunks[1])
 		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
+	})
+}
+
+// A variable that holds a resource, or a list of resources, is not a result of
+// its own: it is neither expanded into its default fields nor an entrypoint.
+func TestCompiler_ResourceAssignment(t *testing.T) {
+	t.Run("resource", func(t *testing.T) {
+		compileT(t, "x = mondoo\nx.version != empty", func(res *llx.CodeBundle) {
+			assert.Empty(t, res.AutoExpand)
+			assert.Len(t, res.CodeV2.Blocks, 1)
+			require.Len(t, res.CodeV2.Blocks[0].Entrypoints, 1)
+			ep := res.CodeV2.Chunk(res.CodeV2.Blocks[0].Entrypoints[0])
+			assert.True(t, strings.HasPrefix(ep.Id, "!="), ep.Id)
+		})
+	})
+
+	t.Run("list of resources", func(t *testing.T) {
+		compileT(t, "x = users.list\nx.length > 0", func(res *llx.CodeBundle) {
+			assert.Empty(t, res.AutoExpand)
+			assert.Len(t, res.CodeV2.Blocks, 1)
+			require.Len(t, res.CodeV2.Blocks[0].Entrypoints, 1)
+			ep := res.CodeV2.Chunk(res.CodeV2.Blocks[0].Entrypoints[0])
+			assert.True(t, strings.HasPrefix(ep.Id, ">"), ep.Id)
+		})
+	})
+
+	t.Run("a variable that is the result", func(t *testing.T) {
+		compileT(t, "x = mondoo\nx", func(res *llx.CodeBundle) {
+			assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Blocks[0].Entrypoints)
+		})
 	})
 }
 
