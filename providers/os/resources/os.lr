@@ -8403,7 +8403,8 @@ docker.volume @defaults("name driver mountpoint") {
 // running. Settings neither source sets report the value dockerd uses by
 // default, as each field says. Those defaults are null on a target without
 // dockerd: none running, no configuration file, and no dockerd binary where
-// Docker installs it. The headline audit is a TCP listener in
+// Docker installs it. Lists and maps hold only what is configured, so there
+// they are empty. The headline audit is a TCP listener in
 // `hosts` without `tlsVerify`, for example
 // `docker.daemon { hosts.where(_ == /^tcp:/).length == 0 || tlsVerify }`.
 docker.daemon @defaults("configFile.path hosts") {

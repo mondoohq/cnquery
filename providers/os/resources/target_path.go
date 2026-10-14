@@ -22,7 +22,9 @@ func targetSlashPath(p string, windows bool) string {
 	return filepath.ToSlash(p)
 }
 
-// targetPathDir is filepath.Dir for a path on the target.
+// targetPathDir is filepath.Dir for a path on the target. It is meant for
+// paths of files and directories below a drive root: for a bare root such as
+// `C:\` it returns ".", where filepath.Dir on Windows returns `C:\`.
 func targetPathDir(p string, windows bool) string {
 	if !windows {
 		return filepath.Dir(p)
