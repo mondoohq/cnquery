@@ -13,6 +13,7 @@ import (
 	"sync"
 	"syscall"
 
+	cerrdefs "github.com/containerd/errdefs"
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 	"github.com/spf13/afero"
@@ -62,6 +63,10 @@ type File struct {
 func (f *File) Open() error {
 	stat, err := f.statFollow(f.path, 0)
 	if err != nil {
+		// a daemon that cannot answer does not say the file is missing
+		if !cerrdefs.IsNotFound(err) {
+			return &os.PathError{Op: "stat", Path: f.path, Err: err}
+		}
 		// The Docker archive API sees the container's root filesystem and
 		// its volumes, but not a tmpfs mount such as /run. A file there
 		// exists all the same, so it is read from inside the container.

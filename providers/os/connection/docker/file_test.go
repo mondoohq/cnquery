@@ -7,13 +7,14 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
-	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
 	"syscall"
 	"testing"
 
+	cerrdefs "github.com/containerd/errdefs"
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/assert"
@@ -73,15 +74,20 @@ func TestReaddirnamesOfAMissingDirectoryIsAnError(t *testing.T) {
 // fakeArchive answers the Docker archive API: a stat of a path, and a copy of
 // it as a tar stream.
 type fakeArchive struct {
+	// err, when set, is what the daemon answers to every request
+	err    error
 	stats  map[string]container.PathStat
 	files  map[string]string
 	copies []string
 }
 
 func (a *fakeArchive) ContainerStatPath(_ context.Context, _ string, options client.ContainerStatPathOptions) (client.ContainerStatPathResult, error) {
+	if a.err != nil {
+		return client.ContainerStatPathResult{}, a.err
+	}
 	stat, ok := a.stats[options.Path]
 	if !ok {
-		return client.ContainerStatPathResult{}, errors.New("Could not find the file " + options.Path + " in container")
+		return client.ContainerStatPathResult{}, fmt.Errorf("Could not find the file %s in container: %w", options.Path, cerrdefs.ErrNotFound)
 	}
 	return client.ContainerStatPathResult{Stat: stat}, nil
 }
@@ -90,7 +96,7 @@ func (a *fakeArchive) CopyFromContainer(_ context.Context, _ string, options cli
 	a.copies = append(a.copies, options.SourcePath)
 	stat, ok := a.stats[options.SourcePath]
 	if !ok {
-		return client.CopyFromContainerResult{}, errors.New("Could not find the file " + options.SourcePath + " in container")
+		return client.CopyFromContainerResult{}, fmt.Errorf("Could not find the file %s in container: %w", options.SourcePath, cerrdefs.ErrNotFound)
 	}
 	var buf bytes.Buffer
 	tw := tar.NewWriter(&buf)
@@ -172,4 +178,16 @@ func TestOpenFileOnATmpfsReadsItInsideTheContainer(t *testing.T) {
 func TestOpenMissingFile(t *testing.T) {
 	_, err := FileOpen(etcArchive(), "/etc/nope", "ctr", nil, cat.New(&fakeContainer{}))
 	assert.ErrorIs(t, err, os.ErrNotExist)
+}
+
+// A daemon that cannot answer is an error, not a missing file, and the
+// in-container read is only a fallback for a path the archive API does not
+// find.
+func TestOpenWhenTheDaemonFails(t *testing.T) {
+	archive := etcArchive()
+	archive.err = fmt.Errorf("Cannot connect to the Docker daemon: %w", cerrdefs.ErrUnavailable)
+	_, err := FileOpen(archive, "/run/nginx.pid", "ctr", nil, cat.New(&fakeContainer{}))
+	require.Error(t, err)
+	assert.NotErrorIs(t, err, os.ErrNotExist)
+	assert.ErrorIs(t, err, cerrdefs.ErrUnavailable)
 }
