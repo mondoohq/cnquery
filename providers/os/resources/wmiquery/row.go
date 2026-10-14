@@ -94,7 +94,7 @@ func (r Row) Time(name string) (time.Time, bool) {
 	if !ok {
 		return time.Time{}, false
 	}
-	return parseCIMDatetime(s)
+	return ParseCIMDatetime(s)
 }
 
 func toInt64(v any) (int64, bool) {
@@ -132,10 +132,10 @@ func toInt64(v any) (int64, bool) {
 	return 0, false
 }
 
-// parseCIMDatetime parses yyyymmddHHMMSS.mmmmmm followed by a sign and the
+// ParseCIMDatetime parses yyyymmddHHMMSS.mmmmmm followed by a sign and the
 // UTC offset in minutes (20240115000000.000000+060), the form WMI sends a
 // datetime in. The offset is rewritten as hours and minutes for time.Parse.
-func parseCIMDatetime(s string) (time.Time, bool) {
+func ParseCIMDatetime(s string) (time.Time, bool) {
 	if len(s) == 25 {
 		mins, err := strconv.Atoi(s[22:])
 		if err != nil {

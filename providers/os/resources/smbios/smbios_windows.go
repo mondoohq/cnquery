@@ -9,7 +9,6 @@ package smbios
 import (
 	"runtime"
 	"strconv"
-	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/providers/os/connection/shared"
@@ -41,7 +40,7 @@ func nativeWindowsSmbios() (out smbiosWindows, err error) {
 			SerialNumber:      bios[0].String("SerialNumber"),
 		}
 		if releaseDate, ok := bios[0].Time("ReleaseDate"); ok {
-			out.Bios.ReleaseDate = releaseDate.Format(time.RFC3339)
+			out.Bios.ReleaseDate = formatBiosReleaseDate(releaseDate)
 		}
 	}
 
@@ -80,6 +79,14 @@ func nativeWindowsSmbios() (out smbiosWindows, err error) {
 			SerialNumber:   ch.String("SerialNumber"),
 			SMBIOSAssetTag: ch.String("SMBIOSAssetTag"),
 		})
+	}
+
+	system, err := wmiquery.Query("SELECT SystemFamily FROM Win32_ComputerSystem", "SystemFamily")
+	if err != nil {
+		return out, err
+	}
+	if len(system) > 0 {
+		out.System = smbiosSystem{SystemFamily: system[0].String("SystemFamily")}
 	}
 
 	product, err := wmiquery.Query("SELECT Vendor, Name, Version, SKUNumber, UUID, IdentifyingNumber FROM Win32_ComputerSystemProduct",

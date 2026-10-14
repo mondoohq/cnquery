@@ -8,9 +8,11 @@ import (
 	"errors"
 	"io"
 	"strconv"
+	"time"
 
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/resources/powershell"
+	"go.mondoo.com/mql/providers/os/resources/wmiquery"
 )
 
 const smbiosWindowsScript = `
@@ -113,7 +115,9 @@ func (t *smbiosChassisTypes) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type smbiosSystem struct{}
+type smbiosSystem struct {
+	SystemFamily string `json:"SystemFamily"`
+}
 
 type smbiosSystemProduct struct {
 	Vendor            string `json:"Vendor"`
@@ -139,7 +143,10 @@ func (s *WindowsSmbiosManager) Info() (*SmBiosInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	return winBios.toSmBiosInfo(), nil
+}
 
+func (winBios smbiosWindows) toSmBiosInfo() *SmBiosInfo {
 	if len(winBios.Chassis) == 0 {
 		winBios.Chassis = append(winBios.Chassis, smbiosChassis{})
 	}
@@ -148,14 +155,16 @@ func (s *WindowsSmbiosManager) Info() (*SmBiosInfo, error) {
 		BIOS: BiosInfo{
 			Vendor:      winBios.Bios.Manufacturer,
 			Version:     winBios.Bios.SMBIOSBIOSVersion,
-			ReleaseDate: winBios.Bios.ReleaseDate,
+			ReleaseDate: windowsBiosReleaseDate(winBios.Bios.ReleaseDate),
 		},
 		SysInfo: SysInfo{
-			Vendor:  winBios.SystemProduct.Vendor,
-			Model:   winBios.SystemProduct.Name,
-			Version: winBios.SystemProduct.Version,
-			SKU:     winBios.SystemProduct.SKUNumber,
-			UUID:    winBios.SystemProduct.UUID,
+			Vendor:       winBios.SystemProduct.Vendor,
+			Model:        winBios.SystemProduct.Name,
+			Version:      winBios.SystemProduct.Version,
+			SerialNumber: winBios.SystemProduct.IdentifyingNumber,
+			Family:       winBios.System.SystemFamily,
+			SKU:          winBios.SystemProduct.SKUNumber,
+			UUID:         winBios.SystemProduct.UUID,
 		},
 		BaseBoardInfo: BaseBoardInfo{
 			Vendor:       winBios.BaseBoard.Manufacturer,
@@ -168,11 +177,36 @@ func (s *WindowsSmbiosManager) Info() (*SmBiosInfo, error) {
 			Model:        toString(winBios.Chassis[0].Model),
 			Version:      winBios.Chassis[0].Version,
 			SerialNumber: winBios.Chassis[0].SerialNumber,
+			AssetTag:     winBios.Chassis[0].SMBIOSAssetTag,
 			Type:         winBios.Chassis[0].GetChassisTypes().Value()[0],
 		},
 	}
 
-	return &smInfo, nil
+	return &smInfo
+}
+
+// formatBiosReleaseDate is the one shape machine.bios.releaseDate takes on
+// Windows, whichever way the date was read.
+func formatBiosReleaseDate(t time.Time) string {
+	return t.UTC().Format(time.RFC3339)
+}
+
+// windowsBiosReleaseDate normalizes the ReleaseDate PowerShell sends.
+// Windows PowerShell's ConvertTo-Json writes a CIM DateTime as /Date(ms)/;
+// a raw WMI object carries the CIM_DATETIME string, PowerShell 7 ISO 8601.
+// Anything else is kept as is.
+func windowsBiosReleaseDate(raw string) string {
+	if t := powershell.PSJsonTimestamp(raw); t != nil {
+		return formatBiosReleaseDate(*t)
+	}
+	if t, ok := wmiquery.ParseCIMDatetime(raw); ok {
+		return formatBiosReleaseDate(t)
+	}
+	// PowerShell 7 writes ISO 8601
+	if t, err := time.Parse(time.RFC3339Nano, raw); err == nil {
+		return formatBiosReleaseDate(t)
+	}
+	return raw
 }
 
 func toString(i *string) string {
