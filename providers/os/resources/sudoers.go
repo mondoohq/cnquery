@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"path"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -255,10 +256,11 @@ func (s *mqlSudoers) collectSudoersDir(conn shared.Connection, dirPath string, v
 }
 
 // sudoersIncludedirFiles returns the entries of an includedir listing that
-// sudo reads. sudo skips names containing a '.' or ending in '~', and anything
-// outside the directory itself; every other name is read, README included:
-// `visudo -c` reports "/etc/sudoers.d/README: parsed OK" and a grant in it
-// shows up in `sudo -l`.
+// sudo reads, in the order it reads them: sorted lexically (sudoers(5)), which
+// decides which rule wins when two match. sudo skips names containing a '.'
+// or ending in '~', and anything outside the directory itself; every other
+// name is read, README included: `visudo -c` reports
+// "/etc/sudoers.d/README: parsed OK" and a grant in it shows up in `sudo -l`.
 func sudoersIncludedirFiles(dir string, paths []string) []string {
 	var res []string
 	for _, p := range paths {
@@ -266,6 +268,9 @@ func sudoersIncludedirFiles(dir string, paths []string) []string {
 			res = append(res, p)
 		}
 	}
+	// the listing comes in directory order: hash order on ext4, archive
+	// order in an image
+	sort.Strings(res)
 	return res
 }
 
