@@ -489,6 +489,13 @@ func (s *mqlSshdConfig) effectiveParams() (map[string]string, error) {
 
 	conn, ok := s.MqlRuntime.Connection.(shared.Connection)
 	if !ok || !conn.Capabilities().Has(shared.Capability_RunCommand) {
+		// The effective settings are what `sshd -T` answers, which an image
+		// or a mounted disk cannot run. An empty list read as "sshd accepts
+		// no ciphers", and a check against weak ciphers passed on it.
+		if plugin.StructuredErrors() {
+			s.effectiveParamsErr = llx.NotApplicable(errors.New("the effective sshd configuration needs a running system, and this connection cannot run commands"))
+			return nil, s.effectiveParamsErr
+		}
 		s.effectiveParamsCache = map[string]string{}
 		return s.effectiveParamsCache, nil
 	}

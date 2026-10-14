@@ -472,3 +472,24 @@ func sshdMockRuntime(t *testing.T, pf *inventory.Platform, commands map[string]*
 		Resources:  &syncx.Map[plugin.Resource]{},
 	}
 }
+
+// An image cannot run `sshd -T`. With structured errors that is a
+// not-applicable error, not an empty list that reads as "accepts no
+// ciphers"; without, the v13 empty list stays.
+func TestSshdEffectiveOnAConnectionWithoutCommands(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{Platform: &inventory.Platform{Name: "debian", Family: []string{"debian", "linux", "unix"}}})
+	require.NoError(t, err)
+	newConfig := func() *mqlSshdConfig {
+		return &mqlSshdConfig{MqlRuntime: &plugin.Runtime{Connection: &noCommandConnection{Connection: conn}}}
+	}
+
+	withStructuredErrors(t, true)
+	_, err = newConfig().effectiveCiphers()
+	require.Error(t, err)
+	assert.Equal(t, llx.ErrorKind_ERROR_KIND_NOT_APPLICABLE, llx.KindOf(err))
+
+	withStructuredErrors(t, false)
+	ciphers, err := newConfig().effectiveCiphers()
+	require.NoError(t, err)
+	assert.Empty(t, ciphers)
+}

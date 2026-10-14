@@ -14,6 +14,7 @@ import (
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/mock"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/utils/syncx"
 )
@@ -304,4 +305,22 @@ func TestSudoValidateUnderGermanLocaleNonRoot(t *testing.T) {
 	require.NoError(t, validate.Error)
 	assert.True(t, validate.IsNull())
 	assert.Nil(t, validate.Data)
+}
+
+func TestSudoPluginsOnAConnectionWithoutCommands(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{Platform: &inventory.Platform{Name: "debian", Family: []string{"debian", "linux", "unix"}}})
+	require.NoError(t, err)
+	newSudo := func() *mqlSudo {
+		return &mqlSudo{MqlRuntime: &plugin.Runtime{Connection: &noCommandConnection{Connection: conn}}}
+	}
+
+	withStructuredErrors(t, true)
+	_, err = newSudo().plugins()
+	require.Error(t, err)
+	assert.Equal(t, llx.ErrorKind_ERROR_KIND_NOT_APPLICABLE, llx.KindOf(err))
+
+	withStructuredErrors(t, false)
+	plugins, err := newSudo().plugins()
+	require.NoError(t, err)
+	assert.Empty(t, plugins)
 }
