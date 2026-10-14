@@ -52,6 +52,10 @@ type DnsRecord struct {
 	RCode string `json:"rCode"`
 	// Error during dns request
 	Error error `json:"error"`
+	// ErrorMessage is Error's text. Error does not survive the conversion to a
+	// dict (most error types marshal to {}), so this is what a resource reading
+	// the params sees of a lookup that failed.
+	ErrorMessage string `json:"errorMessage,omitempty"`
 }
 
 func New(fqdn string) (*DnsClient, error) {
@@ -435,6 +439,31 @@ func (d *DnsClient) authoritativeNameservers() ([]string, error) {
 	return addrs, nil
 }
 
+// exchangeAuthoritativeTCP sends m over TCP to the nameservers authoritative for
+// fqdn's zone, without recursion, and returns the first answer. It is the
+// fallback for an answer too large for UDP when the resolver refuses TCP.
+func (d *DnsClient) exchangeAuthoritativeTCP(fqdn string, m *dns.Msg) (*dns.Msg, error) {
+	walker := &DnsClient{fqdn: fqdn, config: d.config, lookupHost: d.lookupHost}
+	servers, err := walker.authoritativeNameservers()
+	if err != nil {
+		return nil, err
+	}
+
+	q := m.Copy()
+	q.RecursionDesired = false
+	tcp := &dns.Client{Net: "tcp"}
+	var lastErr error
+	for _, server := range servers {
+		r, _, err := tcp.Exchange(q, net.JoinHostPort(server, d.config.Port))
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		return r, nil
+	}
+	return nil, errors.Wrapf(lastErr, "no authoritative nameserver for %s answered over TCP", fqdn)
+}
+
 // queryDnsTypeAt performs the lookup against a named server.
 //
 // recursion decides who resolves the name: true asks a caching resolver to do
@@ -478,15 +507,30 @@ func (d *DnsClient) queryDnsTypeAt(server string, recursion bool, fqdn string, t
 	// would leave that case on the floor.
 	if r != nil && (r.Truncated || err != nil) {
 		tcp := &dns.Client{Net: "tcp"}
-		if retried, _, tcpErr := tcp.Exchange(m, address); tcpErr == nil {
+		retried, _, tcpErr := tcp.Exchange(m, address)
+		switch {
+		case tcpErr == nil:
 			r, err = retried, nil
+		case recursion && dnsType != dns.TypeNS:
+			// Some resolvers answer only over UDP: a sandbox or VM resolver
+			// that refuses TCP is common. The zone's own nameservers have to
+			// serve TCP, so ask them. NS is left out because finding those
+			// nameservers is itself a walk of NS queries through this function.
+			if auth, authErr := d.exchangeAuthoritativeTCP(fqdn, m); authErr == nil {
+				r, err = auth, nil
+			} else {
+				err = errors.Wrapf(authErr, "the %s answer for %s did not fit in a datagram, and the resolver refused TCP (%v)", dnsTypText, fqdn, tcpErr)
+			}
+		default:
+			err = errors.Wrapf(tcpErr, "the %s answer for %s did not fit in a datagram, and the TCP retry failed", dnsTypText, fqdn)
 		}
 	}
 
 	if err != nil {
 		res[dnsTypText] = DnsRecord{
-			Type:  dnsTypText,
-			Error: err,
+			Type:         dnsTypText,
+			Error:        err,
+			ErrorMessage: err.Error(),
 		}
 		return res, nil
 	}

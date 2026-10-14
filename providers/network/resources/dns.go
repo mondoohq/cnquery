@@ -215,10 +215,22 @@ func (d *mqlDns) recordsFromParams(params any) ([]any, error) {
 
 	// convert responses to dns types
 	resultMap := make(map[string]*mqlDnsRecord)
-	for k := range paramsM {
+	var gaps []error
+	for _, k := range sortx.Keys(paramsM) {
 		r, ok := paramsM[k].(map[string]any)
 		if !ok {
 			return nil, errors.New("incorrect structure of params entries received")
+		}
+
+		// A type whose lookup failed is missing from the list, not absent from
+		// the name: the list is partial, with that type as its gap (ADR 046 §8).
+		// Without the gap, a name whose TXT answer could not be fetched read as
+		// a name without TXT records.
+		if msg, _ := r["errorMessage"].(string); msg != "" {
+			gaps = append(gaps, llx.Unavailable(
+				errors.New("cannot read the "+k+" records of "+d.Fqdn.Data+": "+msg),
+				llx.WithScope(llx.ErrorScope_ERROR_SCOPE_PARTITION, k)))
+			continue
 		}
 
 		// filter by successful dns records
@@ -253,7 +265,7 @@ func (d *mqlDns) recordsFromParams(params any) ([]any, error) {
 		res = append(res, resultMap[keys[i]])
 	}
 
-	return res, nil
+	return res, llx.Partial(gaps...)
 }
 
 func (d *mqlDnsRecord) id() (string, error) {
@@ -343,6 +355,9 @@ func (d *mqlDns) dkim(params any) ([]any, error) {
 	}
 
 	r := record.(map[string]any)
+	if err := d.txtLookupFailed(r); err != nil {
+		return nil, err
+	}
 
 	var name string
 	var rdata []any
@@ -437,6 +452,22 @@ func parseSPF(txt string) (version string, mechanisms []string, allQualifier str
 	return version, mechanisms, allQualifier
 }
 
+// txtLookupFailed returns the failure of a TXT lookup, from its record in the
+// params, as an Unavailable error when structured errors are on (ADR 046 §9).
+// A lookup that failed is not a name without SPF or DKIM, but in v13 both read
+// as an empty list, so a resolver that could not deliver a large TXT set failed
+// every "SPF is set" check. Off, or for a lookup that succeeded, it returns nil.
+func (d *mqlDns) txtLookupFailed(record map[string]any) error {
+	if record == nil || !plugin.StructuredErrors() {
+		return nil
+	}
+	msg, _ := record["errorMessage"].(string)
+	if msg == "" {
+		return nil
+	}
+	return llx.Unavailable(errors.New("cannot read the TXT records of " + d.Fqdn.Data + ": " + msg))
+}
+
 func (d *mqlDns) spf(params any) ([]any, error) {
 	entries := []any{}
 
@@ -445,6 +476,9 @@ func (d *mqlDns) spf(params any) ([]any, error) {
 		return entries, nil
 	}
 	record, ok := paramsM["TXT"].(map[string]any)
+	if err := d.txtLookupFailed(record); err != nil {
+		return nil, err
+	}
 	if !ok || record["rCode"] != dns.RcodeToString[dns.RcodeSuccess] {
 		return entries, nil
 	}
