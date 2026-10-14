@@ -6,7 +6,9 @@ package internal
 import (
 	"errors"
 	"fmt"
+	"runtime"
 	"runtime/debug"
+	"strings"
 	"sync"
 	"time"
 
@@ -68,23 +70,18 @@ func (em *executionManager) Start() {
 		// panic site. Instead of crashing the process, the panic is
 		// reported upstream and surfaced as an unrecoverable execution
 		// error, mirroring the executeCodeBundle error path below.
+		//
+		// A panic while a query runs is handled in executeCodeBundle, which
+		// fails that query only. This handler is for panics outside of it.
 		var current *llx.CodeBundle
 		defer func() {
 			r := recover()
 			if r == nil {
 				return
 			}
-			var tags map[string]string
-			if current != nil {
-				tags = health.QueryPanicTags(current.CodeV2.GetId(), current.Source)
-			}
-			stack := debug.Stack()
-			health.ReportRecoveredPanic("mql", mql.Version, mql.Build, r, stack, tags)
-			log.Error().
-				Str("stacktrace", string(stack)).
-				Msgf("recovered from panic during query execution: %v", r)
+			err := reportPanic(current, r)
 			select {
-			case em.errChan <- fmt.Errorf("panic during query execution: %v", r):
+			case em.errChan <- err:
 			default:
 			}
 		}()
@@ -149,7 +146,63 @@ func (em *executionManager) Stop() {
 	em.wg.Wait()
 }
 
-func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props map[string]*llx.Primitive, errMsg string) error {
+// reportedPanicSites holds the panic sites already reported upstream by this
+// process. A panic in one query no longer stops the asset, so the same bug can
+// fire once per query on every asset; it is reported once per site.
+var reportedPanicSites sync.Map
+
+// reportPanic reports a recovered panic upstream and in the log, with the query
+// that was running when there is one, and returns it as an error. It must be
+// called from the deferred function that recovered, so the stack still shows
+// the panic site. Only the first panic at a site is reported upstream and logs
+// its stack; later ones log the site and the query.
+func reportPanic(codeBundle *llx.CodeBundle, r any) error {
+	var tags map[string]string
+	if codeBundle != nil {
+		tags = health.QueryPanicTags(codeBundle.CodeV2.GetId(), codeBundle.Source)
+	}
+	site := panicSite()
+	if _, seen := reportedPanicSites.LoadOrStore(site, struct{}{}); seen {
+		log.Error().
+			Str("site", site).
+			Interface("tags", tags).
+			Msgf("recovered from panic during query execution: %v", r)
+		return fmt.Errorf("panic during query execution: %v", r)
+	}
+
+	stack := debug.Stack()
+	health.ReportRecoveredPanic("mql", mql.Version, mql.Build, r, stack, tags)
+	log.Error().
+		Str("site", site).
+		Str("stacktrace", string(stack)).
+		Msgf("recovered from panic during query execution: %v", r)
+	return fmt.Errorf("panic during query execution: %v", r)
+}
+
+// panicSite returns the function and line that panicked, as "func file:line":
+// the first frame below runtime.gopanic that is not in the runtime itself
+// (runtime.panicdottypeE, runtime.panicIndex, runtime.sigpanic, ...). It must
+// be called while the panic is being recovered. Returns "unknown" when no
+// panic is on the stack.
+func panicSite() string {
+	pcs := make([]uintptr, 64)
+	frames := runtime.CallersFrames(pcs[:runtime.Callers(2, pcs)])
+	inPanic := false
+	for {
+		frame, more := frames.Next()
+		if inPanic && !strings.HasPrefix(frame.Function, "runtime.") {
+			return fmt.Sprintf("%s %s:%d", frame.Function, frame.File, frame.Line)
+		}
+		if frame.Function == "runtime.gopanic" {
+			inPanic = true
+		}
+		if !more {
+			return "unknown"
+		}
+	}
+}
+
+func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props map[string]*llx.Primitive, errMsg string) (rerr error) {
 	wg := NewWaitGroup()
 
 	sendResult := func(rr *llx.RawResult) {
@@ -197,14 +250,39 @@ func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props 
 		log.Debug().Str("qrid", codeID).Msg("finished query execution")
 	}()
 
+	// A panic while this query runs fails this query only: every datapoint it
+	// has not reported gets the panic as its error, and the manager goes on
+	// with the next query. Giving up on the whole run instead would drop the
+	// results of every other query on the asset. The executor is unregistered,
+	// so nothing it registered calls back afterwards.
+	defer func() {
+		r := recover()
+		if r == nil {
+			return
+		}
+		perr := reportPanic(codeBundle, r)
+		if executor != nil {
+			if err := executor.Unregister(); err != nil {
+				log.Warn().Err(err).Str("qrid", codeID).Msg("failed to unregister the executor of a query that panicked")
+			}
+		}
+		for _, checksum := range wg.Decommission() {
+			sendResult(&llx.RawResult{
+				CodeID: checksum,
+				Data:   &llx.RawData{Error: perr},
+			})
+		}
+		rerr = nil
+	}()
+
 	// TODO(jaym): sendResult may not be correct. We may need to fill in the
 	// checksum
 	x, err := llx.NewExecutorV2WithSkew(codeBundle.CodeV2, em.runtime, props, sendResult,
 		skewPolicyFor(codeBundle, em.runtime))
 	if err == nil {
+		executor = x
 		err = x.Run()
 	}
-	executor = x
 
 	if err != nil {
 		return err
