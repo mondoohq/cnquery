@@ -15263,16 +15263,18 @@ private windows.exploitProtection.heap @defaults("terminateOnError") {
 // Microsoft Defender SmartScreen policy configuration across its
 // three surfaces: Windows / File Explorer (which checks apps and files), the
 // Microsoft Edge browser, and Microsoft Store apps. SmartScreen is configured
-// through Group Policy registry values rather than a dedicated cmdlet; a value
-// that has not been configured resolves to its disabled default (false, or an
-// empty string for `explorerLevel`).
+// through Group Policy registry values rather than a dedicated cmdlet. Each
+// field is true when its value is 1, false when it is set to anything else
+// (a policy that turns the setting off), and null when the value is not
+// configured, in which case Windows applies its own default and the user
+// controls the setting.
 windows.smartScreen @defaults("explorerEnabled explorerLevel edgeEnabled") {
   // Whether SmartScreen is enabled for Windows / File Explorer
   explorerEnabled() bool
   // Enforcement level for Windows / File Explorer SmartScreen
   //
   // "Block" prevents the user from bypassing warnings; "Warn" lets the user
-  // continue; an empty string means no level is configured.
+  // continue. Null when no level is configured.
   explorerLevel() string
   // Whether SmartScreen is enabled for Microsoft Edge
   edgeEnabled() bool
@@ -16118,8 +16120,16 @@ windows.rdp {
   // Whether per-session temporary folders are used (PerSessionTempDir)
   perSessionTempDirsUsed() bool
   // Whether solicited Remote Assistance (users requesting help) is allowed (fAllowToGetHelp)
+  //
+  // The Group Policy value (Terminal Services policy key) wins over the local
+  // setting in HKLM\SYSTEM\CurrentControlSet\Control\Remote Assistance, which
+  // the System Properties toggle writes. False when neither sets it.
   solicitedRemoteAssistanceAllowed() bool
   // Whether offer (unsolicited) Remote Assistance is allowed (fAllowUnsolicited)
+  //
+  // The Group Policy value wins over the local setting in
+  // HKLM\SYSTEM\CurrentControlSet\Control\Remote Assistance. False when
+  // neither sets it.
   offerRemoteAssistanceAllowed() bool
   // Whether WebAuthn (FIDO2 security key) redirection is disabled (fDisableWebAuthn)
   webAuthnRedirectionDisabled() bool
@@ -16333,6 +16343,10 @@ private windows.deviceGuard @defaults("virtualizationBasedSecurityEnabled hyperv
   // configured.
   credentialGuardConfig int
   // Whether System Guard Secure Launch is enabled (ConfigureSystemGuardLaunch)
+  //
+  // True for 1 (enabled if supported by hardware), false for 2 (disabled). Null
+  // when not configured, for 0 (left to the local administrator), and for any
+  // other value.
   systemGuardLaunch bool
   // Kernel-mode hardware-enforced stack protection (ConfigureKernelShadowStacksLaunch)
   //
@@ -16940,11 +16954,21 @@ windows.spooler {
   disabled() bool
   // Whether incoming remote RPC connections to the spooler are allowed (Printers\RegisterSpoolerRemoteRpcEndPoint)
   //
-  // The hardened state is false (the remote RPC endpoint is disabled). Null
-  // when not configured.
+  // True for 1 (the spooler accepts client connections), false for 2 (it does
+  // not, the hardened state). Null when not configured or set to any other
+  // value.
   registerRemoteRpcEndpoint() bool
-  // Whether Redirection Guard is enabled (Printers\RedirectionguardPolicy). Null when not configured
+  // Whether Redirection Guard is enabled (Printers\RedirectionguardPolicy)
+  //
+  // True only for 1 (enabled). False for 0 (disabled) and 2 (audit, which logs
+  // redirections without blocking them). Null when not configured or set to
+  // any other value. `redirectionGuardMode` tells disabled and audit apart.
   redirectionGuardPolicy() bool
+  // Redirection Guard policy mode (Printers\RedirectionguardPolicy)
+  //
+  // 0 = disabled, 1 = enabled, 2 = audit. Null when not configured, in which
+  // case Windows enables Redirection Guard.
+  redirectionGuardMode() int
   // Whether downloading of print drivers over HTTP / Web Point-and-Print is disabled (Printers\DisableWebPnPDownload)
   //
   // Defaults to false (downloads allowed) when not configured.
@@ -16953,8 +16977,18 @@ windows.spooler {
   //
   // Defaults to false (HTTP printing allowed) when not configured.
   httpPrintingDisabled() bool
-  // Whether the spooler restricts copied files to the Windows color system (Printers\CopyFilesPolicy). Null when not configured
+  // Whether the spooler restricts queue-specific files copied to clients (Printers\CopyFilesPolicy)
+  //
+  // True for 0 (no queue-specific files allowed) and 1 (limited to color
+  // profiles), false for 2 (all queue-specific files allowed). Null when not
+  // configured or set to any other value. `copyFilesMode` tells 0 and 1 apart.
   copyFilesPolicy() bool
+  // Queue-specific file processing mode (Printers\CopyFilesPolicy)
+  //
+  // 0 = do not allow queue-specific files, 1 = limit them to color profiles,
+  // 2 = allow all. Null when not configured, in which case Windows limits them
+  // to color profiles.
+  copyFilesMode() int
   // Whether incoming RPC connections to the spooler require packet privacy (Control\Print\RpcAuthnLevelPrivacyEnabled)
   //
   // Defaults to true (packet privacy enabled), the modern Windows default,

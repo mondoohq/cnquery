@@ -139,6 +139,30 @@ func regBoolPtr(items map[string]registry.RegistryKeyItem, name string) *bool {
 	return nil
 }
 
+// regEnumBoolPtr decodes a policy DWORD whose values are an enumeration rather
+// than a 0/1 toggle (for example 1 = Enabled, 2 = Disabled), where regBoolPtr's
+// non-zero test would read the disabling value as true. It returns true for
+// trueValue, false for any of falseValues, and nil when the value is absent or
+// holds a value outside both sets, so a value the enumeration does not define
+// never reads as a confident answer.
+func regEnumBoolPtr(items map[string]registry.RegistryKeyItem, name string, trueValue int64, falseValues ...int64) *bool {
+	v := regIntPtr(items, name)
+	if v == nil {
+		return nil
+	}
+	if *v == trueValue {
+		res := true
+		return &res
+	}
+	for _, f := range falseValues {
+		if *v == f {
+			res := false
+			return &res
+		}
+	}
+	return nil
+}
+
 // lsaValues holds the extracted top-level Lsa values as nullable pointers.
 // On/off settings are bools; graded settings are int64s.
 type lsaValues struct {

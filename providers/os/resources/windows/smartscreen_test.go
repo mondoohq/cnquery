@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func boolp(v bool) *bool { return &v }
+
 func TestParseSmartScreenSettings_Configured(t *testing.T) {
 	data, err := os.ReadFile("testdata/smartscreen_configured.json")
 	require.NoError(t, err)
@@ -18,15 +20,19 @@ func TestParseSmartScreenSettings_Configured(t *testing.T) {
 	s, err := ParseSmartScreenSettings(data)
 	require.NoError(t, err)
 
-	assert.True(t, s.ExplorerEnabled())
-	assert.Equal(t, "Block", s.ShellSmartScreenLevel)
-	assert.True(t, s.EdgeEnabled())
-	assert.True(t, s.EdgePuaEnabled())
-	assert.True(t, s.EdgePreventOverrideEnabled())
-	assert.True(t, s.EdgePreventOverrideForFilesEnabled())
-	assert.True(t, s.StoreAppsEnabled())
+	assert.Equal(t, boolp(true), s.ExplorerEnabled())
+	require.NotNil(t, s.ShellSmartScreenLevel)
+	assert.Equal(t, "Block", *s.ShellSmartScreenLevel)
+	assert.Equal(t, boolp(true), s.EdgeEnabled())
+	assert.Equal(t, boolp(true), s.EdgePuaEnabled())
+	assert.Equal(t, boolp(true), s.EdgePreventOverrideEnabled())
+	assert.Equal(t, boolp(true), s.EdgePreventOverrideForFilesEnabled())
+	assert.Equal(t, boolp(true), s.StoreAppsEnabled())
 }
 
+// No SmartScreen policy at all, as on stock Windows 10 22H2 and Windows 11
+// 25H2 client installs: every surface is null (Windows applies its own
+// default), not false (turned off by policy).
 func TestParseSmartScreenSettings_NotConfigured(t *testing.T) {
 	data, err := os.ReadFile("testdata/smartscreen_notconfigured.json")
 	require.NoError(t, err)
@@ -34,37 +40,35 @@ func TestParseSmartScreenSettings_NotConfigured(t *testing.T) {
 	s, err := ParseSmartScreenSettings(data)
 	require.NoError(t, err)
 
-	// A missing (null) value resolves to its disabled default, never an error.
-	assert.False(t, s.ExplorerEnabled())
-	assert.Equal(t, "", s.ShellSmartScreenLevel)
-	assert.False(t, s.EdgeEnabled())
-	assert.False(t, s.EdgePuaEnabled())
-	assert.False(t, s.EdgePreventOverrideEnabled())
-	assert.False(t, s.EdgePreventOverrideForFilesEnabled())
-	assert.False(t, s.StoreAppsEnabled())
+	assert.Nil(t, s.ExplorerEnabled())
+	assert.Nil(t, s.ShellSmartScreenLevel)
+	assert.Nil(t, s.EdgeEnabled())
+	assert.Nil(t, s.EdgePuaEnabled())
+	assert.Nil(t, s.EdgePreventOverrideEnabled())
+	assert.Nil(t, s.EdgePreventOverrideForFilesEnabled())
+	assert.Nil(t, s.StoreAppsEnabled())
 }
 
-// A DWORD explicitly set to 0 is distinct from an unconfigured value but both
-// resolve to "not enabled".
-func TestParseSmartScreenSettings_ExplicitZero(t *testing.T) {
-	s, err := ParseSmartScreenSettings([]byte(`{"EnableSmartScreen":0,"ShellSmartScreenLevel":"Warn"}`))
+// A policy that turns a surface off reads false, distinct from not configured.
+func TestParseSmartScreenSettings_ExplicitlyDisabled(t *testing.T) {
+	s, err := ParseSmartScreenSettings([]byte(`{"EnableSmartScreen":0,"ShellSmartScreenLevel":"Warn","EdgeSmartScreenEnabled":0,"EdgePreventOverrideForFiles":0}`))
 	require.NoError(t, err)
-	assert.False(t, s.ExplorerEnabled())
-	require.NotNil(t, s.EnableSmartScreen)
-	assert.Equal(t, int64(0), *s.EnableSmartScreen)
-	assert.Equal(t, "Warn", s.ShellSmartScreenLevel)
+	assert.Equal(t, boolp(false), s.ExplorerEnabled())
+	require.NotNil(t, s.ShellSmartScreenLevel)
+	assert.Equal(t, "Warn", *s.ShellSmartScreenLevel)
+	assert.Equal(t, boolp(false), s.EdgeEnabled())
+	assert.Equal(t, boolp(false), s.EdgePreventOverrideForFilesEnabled())
+	assert.Nil(t, s.EdgePuaEnabled())
 }
 
 // A surface may be configured while others are not (e.g. Explorer on, Edge off).
 func TestParseSmartScreenSettings_Mixed(t *testing.T) {
 	s, err := ParseSmartScreenSettings([]byte(`{"EnableSmartScreen":1,"ShellSmartScreenLevel":"Block","EdgeSmartScreenEnabled":0}`))
 	require.NoError(t, err)
-	assert.True(t, s.ExplorerEnabled())
-	assert.Equal(t, "Block", s.ShellSmartScreenLevel)
-	assert.False(t, s.EdgeEnabled())
-	// untouched surfaces are unconfigured, not enabled
-	assert.Nil(t, s.StoreAppsEnableWebContentEvaluation)
-	assert.False(t, s.StoreAppsEnabled())
+	assert.Equal(t, boolp(true), s.ExplorerEnabled())
+	assert.Equal(t, boolp(false), s.EdgeEnabled())
+	// untouched surfaces are unconfigured, not disabled
+	assert.Nil(t, s.StoreAppsEnabled())
 }
 
 func TestParseSmartScreenSettings_Malformed(t *testing.T) {
@@ -72,16 +76,36 @@ func TestParseSmartScreenSettings_Malformed(t *testing.T) {
 	require.Error(t, err)
 }
 
-// enabledFlag only treats an explicit 1 as enabled; any other value (including
-// an unexpected non-1 DWORD) is "not enabled".
+// enabledFlag only treats an explicit 1 as enabled; any other present value
+// is "not enabled", and an absent value stays unknown.
 func TestSmartScreenEnabledFlag(t *testing.T) {
 	one := int64(1)
 	two := int64(2)
 	zero := int64(0)
-	assert.True(t, enabledFlag(&one))
-	assert.False(t, enabledFlag(&two))
-	assert.False(t, enabledFlag(&zero))
-	assert.False(t, enabledFlag(nil))
+	assert.Equal(t, boolp(true), enabledFlag(&one))
+	assert.Equal(t, boolp(false), enabledFlag(&two))
+	assert.Equal(t, boolp(false), enabledFlag(&zero))
+	assert.Nil(t, enabledFlag(nil))
+}
+
+func TestSmartScreenResult(t *testing.T) {
+	t.Run("a failed read is an error, not an all-null reading", func(t *testing.T) {
+		_, err := smartScreenResult(nil, 1, []byte("Get-Item : Requested registry access is not allowed.\n"))
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "Requested registry access is not allowed.")
+	})
+
+	t.Run("a failure without stderr names the exit status", func(t *testing.T) {
+		_, err := smartScreenResult(nil, 1, nil)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "status 1")
+	})
+
+	t.Run("success parses stdout", func(t *testing.T) {
+		s, err := smartScreenResult([]byte(`{"EnableSmartScreen":1}`), 0, nil)
+		require.NoError(t, err)
+		assert.Equal(t, boolp(true), s.ExplorerEnabled())
+	})
 }
 
 // Real SmartScreen policy readings from Windows Server 2016 (10.0.14393) and
@@ -97,11 +121,10 @@ func TestParseSmartScreenSettings_ServerBaselines(t *testing.T) {
 	for _, tc := range []struct {
 		name         string
 		fixture      string
-		storeApps    int64
 		storeEnabled bool
 	}{
-		{"Windows Server 2016", "smartscreen_server2016.json", 0, false},
-		{"Windows Server 2022", "smartscreen_server2022.json", 1, true},
+		{"Windows Server 2016", "smartscreen_server2016.json", false},
+		{"Windows Server 2022", "smartscreen_server2022.json", true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			data, err := os.ReadFile("testdata/" + tc.fixture)
@@ -110,21 +133,14 @@ func TestParseSmartScreenSettings_ServerBaselines(t *testing.T) {
 			s, err := ParseSmartScreenSettings(data)
 			require.NoError(t, err)
 
-			// not configured stays null, so it can never read as "turned off by policy"
-			assert.Nil(t, s.EnableSmartScreen)
-			assert.Nil(t, s.EdgeSmartScreenEnabled)
-			assert.Nil(t, s.EdgeSmartScreenPuaEnabled)
-			assert.Nil(t, s.EdgePreventOverride)
-			assert.Nil(t, s.EdgePreventOverrideForFiles)
-			assert.Empty(t, s.ShellSmartScreenLevel)
+			assert.Nil(t, s.ExplorerEnabled())
+			assert.Nil(t, s.EdgeEnabled())
+			assert.Nil(t, s.EdgePuaEnabled())
+			assert.Nil(t, s.EdgePreventOverrideEnabled())
+			assert.Nil(t, s.EdgePreventOverrideForFilesEnabled())
+			assert.Nil(t, s.ShellSmartScreenLevel)
 
-			// ... while the derived predicates still report the safe reading
-			assert.False(t, s.ExplorerEnabled())
-			assert.False(t, s.EdgeEnabled())
-
-			require.NotNil(t, s.StoreAppsEnableWebContentEvaluation)
-			assert.Equal(t, tc.storeApps, *s.StoreAppsEnableWebContentEvaluation)
-			assert.Equal(t, tc.storeEnabled, s.StoreAppsEnabled())
+			assert.Equal(t, boolp(tc.storeEnabled), s.StoreAppsEnabled())
 		})
 	}
 }

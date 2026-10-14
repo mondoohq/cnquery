@@ -115,8 +115,24 @@ func TestComputeDeviceGuard(t *testing.T) {
 		assert.Equal(t, int64(2), *v.hypervisorEnforcedCodeIntegrity)
 		assert.Equal(t, false, *v.hvciMatRequired)
 		assert.Equal(t, int64(2), *v.credentialGuardConfig)
-		assert.Equal(t, false, *v.systemGuardLaunch)
+		// 0 leaves Secure Launch unmanaged, which is not a policy decision
+		assert.Nil(t, v.systemGuardLaunch)
 		assert.Equal(t, int64(2), *v.kernelShadowStacksLaunch)
+	})
+
+	t.Run("systemGuardLaunch decodes the Secure Launch enumeration", func(t *testing.T) {
+		for _, tc := range []struct {
+			value int64
+			want  *bool
+		}{
+			{1, boolPtr(true)},
+			{2, boolPtr(false)}, // disabled by policy, read as enabled before
+			{0, nil},            // unmanaged
+			{3, nil},            // not defined by the policy
+		} {
+			v := computeDeviceGuard(dwordItems(map[string]int64{"configuresystemguardlaunch": tc.value}))
+			assert.Equal(t, tc.want, v.systemGuardLaunch, "ConfigureSystemGuardLaunch=%d", tc.value)
+		}
 	})
 
 	t.Run("explicit 0 stays distinguishable from null in the struct", func(t *testing.T) {

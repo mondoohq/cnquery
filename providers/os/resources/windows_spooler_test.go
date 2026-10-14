@@ -161,3 +161,57 @@ func TestSpoolerIppArgs(t *testing.T) {
 		assert.Equal(t, true, args["blockCertCNInvalid"].Value)
 	})
 }
+
+// spoolerEnumCase is one registry reading of a policy enumeration and the bool it
+// must decode to; a nil want means the field reads null.
+type spoolerEnumCase struct {
+	name  string
+	value *int64
+	want  *bool
+}
+
+func runSpoolerEnumCases(t *testing.T, valueName string, decode func(map[string]registry.RegistryKeyItem) *bool, cases []spoolerEnumCase) {
+	t.Helper()
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]int64{}
+			if tc.value != nil {
+				values[valueName] = *tc.value
+			}
+			assert.Equal(t, tc.want, decode(spoolerRegItems(values)))
+		})
+	}
+}
+
+// Values from the Printers Policy CSP / Printing.admx. Every policy here uses
+// a non-zero value for at least one "off" state, which a non-zero test read
+// as true.
+func TestSpoolerRegisterRemoteRpcEndpoint(t *testing.T) {
+	runSpoolerEnumCases(t, "RegisterSpoolerRemoteRpcEndPoint", spoolerRegisterRemoteRpcEndpoint, []spoolerEnumCase{
+		{"enabled (1) accepts client connections", int64Ptr(1), boolPtr(true)},
+		{"disabled (2) is the hardened state", int64Ptr(2), boolPtr(false)},
+		{"0 is not a defined value", int64Ptr(0), nil},
+		{"unknown value", int64Ptr(5), nil},
+		{"not configured", nil, nil},
+	})
+}
+
+func TestSpoolerRedirectionGuardEnabled(t *testing.T) {
+	runSpoolerEnumCases(t, "RedirectionguardPolicy", spoolerRedirectionGuardEnabled, []spoolerEnumCase{
+		{"enabled (1)", int64Ptr(1), boolPtr(true)},
+		{"disabled (0)", int64Ptr(0), boolPtr(false)},
+		{"audit (2) does not block redirections", int64Ptr(2), boolPtr(false)},
+		{"unknown value", int64Ptr(3), nil},
+		{"not configured", nil, nil},
+	})
+}
+
+func TestSpoolerCopyFilesRestricted(t *testing.T) {
+	runSpoolerEnumCases(t, "CopyFilesPolicy", spoolerCopyFilesRestricted, []spoolerEnumCase{
+		{"do not allow queue-specific files (0)", int64Ptr(0), boolPtr(true)},
+		{"limit to color profiles (1)", int64Ptr(1), boolPtr(true)},
+		{"allow all (2) is unrestricted", int64Ptr(2), boolPtr(false)},
+		{"unknown value", int64Ptr(3), nil},
+		{"not configured", nil, nil},
+	})
+}
