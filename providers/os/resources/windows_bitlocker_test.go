@@ -313,3 +313,40 @@ func TestBitlockerAvailableNeverFails(t *testing.T) {
 		assert.True(t, available)
 	})
 }
+
+// A field whose method failed carries the failure and no value, so a locked
+// volume never reports the zeroed percentages GetConversionStatus returns
+// alongside FVE_E_LOCKED_VOLUME.
+func TestBitlockerVolumeArgs(t *testing.T) {
+	locked := errors.New("the volume is locked")
+
+	t.Run("failed methods become field errors", func(t *testing.T) {
+		args := bitlockerVolumeArgs(&windows.BitLockerVolumeStatus{
+			DeviceID:              "volume-1",
+			LockStatus:            1,
+			ConversionStatusError: locked,
+			VersionError:          locked,
+			LockStatusError:       locked,
+		})
+		for _, field := range []string{"conversionStatus", "version", "lockStatus"} {
+			require.Contains(t, args, field)
+			assert.ErrorIs(t, args[field].Error, locked, field)
+			assert.Nil(t, args[field].Value, field)
+		}
+	})
+
+	t.Run("successful methods keep their values", func(t *testing.T) {
+		args := bitlockerVolumeArgs(&windows.BitLockerVolumeStatus{
+			DeviceID:   "volume-1",
+			LockStatus: 1,
+		})
+		assert.NoError(t, args["conversionStatus"].Error)
+		assert.NoError(t, args["lockStatus"].Error)
+		assert.Equal(t, int64(1), args["lockStatus"].Value)
+		cs, ok := args["conversionStatus"].Value.(map[string]any)
+		require.True(t, ok)
+		// a wiping state that was never reported is null in the dict
+		assert.Contains(t, cs, "WipingStatus")
+		assert.Nil(t, cs["WipingStatus"])
+	})
+}

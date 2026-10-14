@@ -127,6 +127,10 @@ func KeyProtectorReadError(deviceID string, returnValue *int64) error {
 //
 // The per-volume method calls deliberately keep the default preference: one
 // volume that will not answer must not take the whole reading down with it.
+// Each method's ReturnValue travels with its result instead: a method that
+// fails still returns an object, and on a locked volume GetConversionStatus
+// answers FVE_E_LOCKED_VOLUME with every status set to 0xFFFFFFFF and the
+// percentages at 0, which without the return code reads as "0 % encrypted".
 const bitlockerStatusScript = `
 try {
 	$encryptedVolumes = @(Get-WmiObject -namespace "Root\cimv2\security\MicrosoftVolumeEncryption" -ClassName "Win32_Encryptablevolume" -ErrorAction Stop)
@@ -138,25 +142,19 @@ try {
 $bitlockerStatus = @()
 
 foreach ($volume in $encryptedVolumes) {
-	
-	$wmiVersion = $volume.GetVersion()
-	$version = New-Object psobject -Property @{
-	  "Version" =  $wmiVersion.Version;
+	$v = $null; $c = $null; $l = $null
+	try { $v = $volume.GetVersion() } catch {}
+	try { $c = $volume.GetConversionStatus() } catch {}
+	try { $l = $volume.GetLockStatus() } catch {}
+	$version = @{ Version = $v.Version; ReturnValue = $v.ReturnValue }
+	$conversionStatus = @{
+	  ConversionStatus = $c.ConversionStatus;
+	  EncryptionPercentage = $c.EncryptionPercentage;
+	  WipingPercentage = $c.WipingPercentage;
+	  WipingStatus = $c.WipingStatus;
+	  ReturnValue = $c.ReturnValue
 	}
-	
-	$wmiConversionStatus = $volume.GetConversionStatus()
-	$conversionStatus = New-Object psobject -Property @{
-	  "ConversionStatus" =  $wmiConversionStatus.ConversionStatus;
-	  "EncryptionFlags" =  $wmiConversionStatus.EncryptionFlags;
-	  "EncryptionPercentage" =  $wmiConversionStatus.EncryptionPercentage;
-	  "WipingPercentage"  = $wmiConversionStatus.WipingPercentage;
-	  "WipingStatus"  = $wmiConversionStatus.WipingStatus;
-	}
-	
-	$wmilockStatus = $volume.GetLockStatus()
-	$lockStatus = New-Object psobject -Property @{
-	  "LockStatus" =  $wmilockStatus.LockStatus;
-	}
+	$lockStatus = @{ LockStatus = $l.LockStatus; ReturnValue = $l.ReturnValue }
 
 	$keyProtectors = @()
 	$keyProtectorReturnValue = $null
@@ -200,18 +198,22 @@ type powershellBitlockerVolumeStatus struct {
 		ProtectionStatus                 int64
 		VolumeType                       int64
 	}
+	// Each ReturnValue is the method's return code, or nil when the call
+	// threw and the script could not obtain one.
 	Version struct {
-		Version int64
+		Version     int64
+		ReturnValue *int64
 	}
 	ConversionStatus struct {
 		ConversionStatus     int64
 		WipingStatus         int64
 		WipingPercentage     int64
-		EncryptionFlags      int64
 		EncryptionPercentage int64
+		ReturnValue          *int64
 	}
 	LockStatus struct {
-		LockStatus int64
+		LockStatus  int64
+		ReturnValue *int64
 	}
 	KeyProtectors psKeyProtectorList `json:"keyProtectors"`
 	// KeyProtectorReturnValue is the GetKeyProtectors return code, or nil when
@@ -266,6 +268,13 @@ type BitLockerVolumeStatus struct {
 	// KeyProtectorError is non-nil when the key protectors could not be read,
 	// so that "none were found" is never confused with "none were readable".
 	KeyProtectorError error
+	// ConversionStatusError, VersionError and LockStatusError are non-nil
+	// when the method behind ConversionStatus, Version or LockStatus did not
+	// succeed. The value next to each is then meaningless and must not be
+	// reported.
+	ConversionStatusError error
+	VersionError          error
+	LockStatusError       error
 }
 
 // BitLockerKeyProtector is one protector of a volume's encryption key: what
@@ -279,11 +288,69 @@ type BitLockerKeyProtector struct {
 	Type statusCode
 }
 
+// conversionStatus is the GetConversionStatus result. WipingStatus and
+// WipingPercentage are nil when the volume reports no wiping state at all.
 type conversionStatus struct {
 	ConversionStatus     statusCode
-	WipingStatus         statusCode
-	WipingPercentage     int64
+	WipingStatus         *statusCode
+	WipingPercentage     *int64
 	EncryptionPercentage int64
+}
+
+// fveStatusNotReported is the 0xFFFFFFFF that GetConversionStatus puts in a
+// status it has no value for. A decrypted volume reports it as its
+// WipingStatus on every Windows 10 and 11 host, and a locked volume reports it
+// for ConversionStatus too. It is not a state.
+const fveStatusNotReported = 0xFFFFFFFF
+
+// StatusUnrecognized is the name reported for a status code outside the
+// documented set, so that a value Windows adds later reads as one this code
+// does not know rather than as an empty string.
+const StatusUnrecognized = "Unrecognized"
+
+func statusName(names map[int64]string, code int64) string {
+	if name, ok := names[code]; ok {
+		return name
+	}
+	return StatusUnrecognized
+}
+
+// fveErrLockedVolume is FVE_E_LOCKED_VOLUME (0x80310000): the method cannot
+// answer because the volume is locked.
+const fveErrLockedVolume = 2150694912
+
+// VolumeMethodError reports why a Win32_EncryptableVolume method did not
+// produce a usable result, or nil when it succeeded. returnValue is nil when
+// the call threw and no return code was obtained.
+func VolumeMethodError(deviceID, method string, returnValue *int64) error {
+	if returnValue == nil {
+		return errors.New("could not call Win32_EncryptableVolume." + method + " on " + deviceID +
+			": the call failed without a return code, which usually means the session is not elevated")
+	}
+	switch *returnValue {
+	case 0:
+		return nil
+	case fveErrLockedVolume:
+		return fmt.Errorf("could not read the BitLocker state of %s: the volume is locked (Win32_EncryptableVolume.%s returned 0x80310000, FVE_E_LOCKED_VOLUME)",
+			deviceID, method)
+	}
+	return fmt.Errorf("could not read the BitLocker state of %s: Win32_EncryptableVolume.%s returned 0x%08X",
+		deviceID, method, uint32(*returnValue))
+}
+
+func newConversionStatus(code, encryptionPercentage, wipingCode, wipingPercentage int64) conversionStatus {
+	cs := conversionStatus{
+		ConversionStatus: statusCode{
+			Code: code,
+			Text: statusName(conversionStatusValues, code),
+		},
+		EncryptionPercentage: encryptionPercentage,
+	}
+	if wipingCode != fveStatusNotReported {
+		cs.WipingStatus = &statusCode{Code: wipingCode, Text: statusName(wipingStatusValues, wipingCode)}
+		cs.WipingPercentage = &wipingPercentage
+	}
+	return cs
 }
 
 type statusCode struct {
@@ -341,34 +408,31 @@ func ParseWindowsBitlockerStatus(r io.Reader) ([]BitLockerVolumeStatus, error) {
 		bvs := BitLockerVolumeStatus{
 			DeviceID:    v.Volume.DeviceID,
 			DriveLetter: v.Volume.DriveLetter,
-			ConversionStatus: conversionStatus{
-				ConversionStatus: statusCode{
-					Code: v.ConversionStatus.ConversionStatus,
-					Text: conversionStatusValues[v.ConversionStatus.ConversionStatus],
-				},
-				EncryptionPercentage: v.ConversionStatus.EncryptionPercentage,
-				WipingStatus: statusCode{
-					Code: v.ConversionStatus.WipingStatus,
-					Text: wipingStatusValues[v.ConversionStatus.WipingStatus],
-				},
-				WipingPercentage: v.ConversionStatus.WipingPercentage,
-			},
+			ConversionStatus: newConversionStatus(
+				v.ConversionStatus.ConversionStatus,
+				v.ConversionStatus.EncryptionPercentage,
+				v.ConversionStatus.WipingStatus,
+				v.ConversionStatus.WipingPercentage,
+			),
 			EncryptionMethod: statusCode{
 				Code: v.Volume.EncryptionMethod,
-				Text: encryptionMethodValues[v.Volume.EncryptionMethod],
+				Text: statusName(encryptionMethodValues, v.Volume.EncryptionMethod),
 			},
 			LockStatus:         v.LockStatus.LockStatus,
 			PersistentVolumeID: v.Volume.PersistentVolumeID,
 			ProtectionStatus: statusCode{
 				Code: v.Volume.ProtectionStatus,
-				Text: protectionStatusValues[v.Volume.ProtectionStatus],
+				Text: statusName(protectionStatusValues, v.Volume.ProtectionStatus),
 			},
 			Version: statusCode{
 				Code: v.Version.Version,
-				Text: fveVersionValues[v.Version.Version],
+				Text: statusName(fveVersionValues, v.Version.Version),
 			},
-			KeyProtectors:     make([]BitLockerKeyProtector, 0, len(v.KeyProtectors)),
-			KeyProtectorError: KeyProtectorReadError(v.Volume.DeviceID, v.KeyProtectorReturnValue),
+			KeyProtectors:         make([]BitLockerKeyProtector, 0, len(v.KeyProtectors)),
+			KeyProtectorError:     KeyProtectorReadError(v.Volume.DeviceID, v.KeyProtectorReturnValue),
+			ConversionStatusError: VolumeMethodError(v.Volume.DeviceID, "GetConversionStatus", v.ConversionStatus.ReturnValue),
+			VersionError:          VolumeMethodError(v.Volume.DeviceID, "GetVersion", v.Version.ReturnValue),
+			LockStatusError:       VolumeMethodError(v.Volume.DeviceID, "GetLockStatus", v.LockStatus.ReturnValue),
 		}
 		for j := range v.KeyProtectors {
 			kp := v.KeyProtectors[j]

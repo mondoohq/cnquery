@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/registry"
 	"go.mondoo.com/mql/providers/os/resources/windows"
+	"go.mondoo.com/mql/types"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 )
@@ -81,21 +82,7 @@ func (s *mqlWindowsBitlocker) volumes() ([]any, error) {
 	for i := range volumes {
 		v := volumes[i]
 
-		cs, _ := convert.JsonToDict(v.ConversionStatus)
-		em, _ := convert.JsonToDict(v.EncryptionMethod)
-		version, _ := convert.JsonToDict(v.Version)
-		ps, _ := convert.JsonToDict(v.ProtectionStatus)
-
-		o, err := CreateResource(s.MqlRuntime, "windows.bitlocker.volume", map[string]*llx.RawData{
-			"deviceID":           llx.StringData(v.DeviceID),
-			"driveLetter":        llx.StringData(v.DriveLetter),
-			"conversionStatus":   llx.DictData(cs),
-			"encryptionMethod":   llx.DictData(em),
-			"lockStatus":         llx.IntData(v.LockStatus),
-			"persistentVolumeID": llx.StringData(v.PersistentVolumeID),
-			"protectionStatus":   llx.DictData(ps),
-			"version":            llx.DictData(version),
-		})
+		o, err := CreateResource(s.MqlRuntime, "windows.bitlocker.volume", bitlockerVolumeArgs(&v))
 		if err != nil {
 			return nil, err
 		}
@@ -111,6 +98,45 @@ func (s *mqlWindowsBitlocker) volumes() ([]any, error) {
 		res = append(res, volume)
 	}
 	return res, nil
+}
+
+// bitlockerVolumeArgs builds the windows.bitlocker.volume fields for one
+// volume. A field whose Win32_EncryptableVolume method failed carries that
+// failure instead of a value: on a locked volume GetConversionStatus answers
+// FVE_E_LOCKED_VOLUME with zeroed percentages, and reporting those would read
+// as "0 % encrypted" on a volume that is fully encrypted.
+func bitlockerVolumeArgs(v *windows.BitLockerVolumeStatus) map[string]*llx.RawData {
+	em, _ := convert.JsonToDict(v.EncryptionMethod)
+	ps, _ := convert.JsonToDict(v.ProtectionStatus)
+
+	args := map[string]*llx.RawData{
+		"deviceID":           llx.StringData(v.DeviceID),
+		"driveLetter":        llx.StringData(v.DriveLetter),
+		"encryptionMethod":   llx.DictData(em),
+		"persistentVolumeID": llx.StringData(v.PersistentVolumeID),
+		"protectionStatus":   llx.DictData(ps),
+	}
+
+	if v.ConversionStatusError != nil {
+		args["conversionStatus"] = &llx.RawData{Type: types.Dict, Error: v.ConversionStatusError}
+	} else {
+		cs, _ := convert.JsonToDict(v.ConversionStatus)
+		args["conversionStatus"] = llx.DictData(cs)
+	}
+
+	if v.VersionError != nil {
+		args["version"] = &llx.RawData{Type: types.Dict, Error: v.VersionError}
+	} else {
+		version, _ := convert.JsonToDict(v.Version)
+		args["version"] = llx.DictData(version)
+	}
+
+	if v.LockStatusError != nil {
+		args["lockStatus"] = &llx.RawData{Type: types.Int, Error: v.LockStatusError}
+	} else {
+		args["lockStatus"] = llx.IntData(v.LockStatus)
+	}
+	return args
 }
 
 func (s *mqlWindowsBitlockerVolume) id() (string, error) {
