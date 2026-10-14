@@ -147,6 +147,38 @@ func TestSpfAndDkimReportAFailedTXTLookup(t *testing.T) {
 	}
 }
 
+func TestRecordsArePartialWhenATypeLookupFailed(t *testing.T) {
+	d := &mqlDns{Fqdn: plugin.TValue[string]{Data: "example.com", State: plugin.StateIsSet}}
+	params := map[string]any{
+		"TXT":  map[string]any{"type": "TXT", "rCode": "", "errorMessage": "the TXT answer for example.com did not fit in a datagram, and the TCP retry failed"},
+		"CAA":  map[string]any{"type": "CAA", "rCode": "", "errorMessage": "read udp: i/o timeout"},
+		"AAAA": map[string]any{"type": "AAAA", "rCode": "NXDOMAIN"},
+	}
+
+	// Not behind the structured-errors flag: the gaps ride beside the value,
+	// which a consumer that does not read them sees exactly as before.
+	for _, on := range []bool{true, false} {
+		withStructuredErrors(t, on)
+		res, err := d.records(params)
+		assert.Empty(t, res)
+
+		gaps, partial := llx.CoverageGapsOf(err)
+		require.True(t, partial, "a failed type lookup makes the list partial, not failed")
+		require.Len(t, gaps, 2)
+		for i, typ := range []string{"CAA", "TXT"} {
+			assert.ErrorIs(t, gaps[i], llx.ErrTargetUnavailable)
+			assert.Equal(t, llx.ErrorScope_ERROR_SCOPE_PARTITION, gaps[i].Scope)
+			assert.Equal(t, typ, gaps[i].ScopeID)
+			assert.Contains(t, gaps[i].Error(), "the "+typ+" records of example.com")
+		}
+	}
+
+	// A name that answered every type, with records or without, is complete.
+	res, err := d.records(map[string]any{"AAAA": map[string]any{"type": "AAAA", "rCode": "NXDOMAIN"}})
+	assert.NoError(t, err)
+	assert.Empty(t, res)
+}
+
 func withStructuredErrors(t *testing.T, on bool) {
 	t.Helper()
 	t.Cleanup(func() { plugin.ReadFeatures([]byte(mql.Features{byte(mql.ResourceContext)})) })

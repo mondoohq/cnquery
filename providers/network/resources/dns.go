@@ -215,10 +215,22 @@ func (d *mqlDns) recordsFromParams(params any) ([]any, error) {
 
 	// convert responses to dns types
 	resultMap := make(map[string]*mqlDnsRecord)
-	for k := range paramsM {
+	var gaps []error
+	for _, k := range sortx.Keys(paramsM) {
 		r, ok := paramsM[k].(map[string]any)
 		if !ok {
 			return nil, errors.New("incorrect structure of params entries received")
+		}
+
+		// A type whose lookup failed is missing from the list, not absent from
+		// the name: the list is partial, with that type as its gap (ADR 046 §8).
+		// Without the gap, a name whose TXT answer could not be fetched read as
+		// a name without TXT records.
+		if msg, _ := r["errorMessage"].(string); msg != "" {
+			gaps = append(gaps, llx.Unavailable(
+				errors.New("cannot read the "+k+" records of "+d.Fqdn.Data+": "+msg),
+				llx.WithScope(llx.ErrorScope_ERROR_SCOPE_PARTITION, k)))
+			continue
 		}
 
 		// filter by successful dns records
@@ -253,7 +265,7 @@ func (d *mqlDns) recordsFromParams(params any) ([]any, error) {
 		res = append(res, resultMap[keys[i]])
 	}
 
-	return res, nil
+	return res, llx.Partial(gaps...)
 }
 
 func (d *mqlDnsRecord) id() (string, error) {
