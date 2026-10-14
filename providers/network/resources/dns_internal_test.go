@@ -121,7 +121,7 @@ func TestDictTTL(t *testing.T) {
 	})
 }
 
-func TestSpfReportsAFailedTXTLookup(t *testing.T) {
+func TestSpfAndDkimReportAFailedTXTLookup(t *testing.T) {
 	d := &mqlDns{Fqdn: plugin.TValue[string]{Data: "example.com", State: plugin.StateIsSet}}
 	params := map[string]any{"TXT": map[string]any{
 		"type":         "TXT",
@@ -129,20 +129,22 @@ func TestSpfReportsAFailedTXTLookup(t *testing.T) {
 		"errorMessage": "the TXT answer for example.com did not fit in a datagram, and the TCP retry failed",
 	}}
 
-	t.Run("structured errors", func(t *testing.T) {
-		withStructuredErrors(t, true)
-		_, err := d.spf(params)
-		require.Error(t, err)
-		assert.ErrorIs(t, err, llx.ErrTargetUnavailable)
-		assert.Contains(t, err.Error(), "example.com")
-	})
+	for name, read := range map[string]func(any) ([]any, error){"spf": d.spf, "dkim": d.dkim} {
+		t.Run(name+" structured errors", func(t *testing.T) {
+			withStructuredErrors(t, true)
+			_, err := read(params)
+			require.Error(t, err)
+			assert.ErrorIs(t, err, llx.ErrTargetUnavailable)
+			assert.Contains(t, err.Error(), "example.com")
+		})
 
-	t.Run("v13", func(t *testing.T) {
-		withStructuredErrors(t, false)
-		entries, err := d.spf(params)
-		require.NoError(t, err)
-		assert.Empty(t, entries)
-	})
+		t.Run(name+" v13", func(t *testing.T) {
+			withStructuredErrors(t, false)
+			entries, err := read(params)
+			require.NoError(t, err)
+			assert.Empty(t, entries)
+		})
+	}
 }
 
 func withStructuredErrors(t *testing.T, on bool) {

@@ -343,6 +343,9 @@ func (d *mqlDns) dkim(params any) ([]any, error) {
 	}
 
 	r := record.(map[string]any)
+	if err := d.txtLookupFailed(r); err != nil {
+		return nil, err
+	}
 
 	var name string
 	var rdata []any
@@ -437,6 +440,22 @@ func parseSPF(txt string) (version string, mechanisms []string, allQualifier str
 	return version, mechanisms, allQualifier
 }
 
+// txtLookupFailed returns the failure of a TXT lookup, from its record in the
+// params, as an Unavailable error when structured errors are on (ADR 046 §9).
+// A lookup that failed is not a name without SPF or DKIM, but in v13 both read
+// as an empty list, so a resolver that could not deliver a large TXT set failed
+// every "SPF is set" check. Off, or for a lookup that succeeded, it returns nil.
+func (d *mqlDns) txtLookupFailed(record map[string]any) error {
+	if record == nil || !plugin.StructuredErrors() {
+		return nil
+	}
+	msg, _ := record["errorMessage"].(string)
+	if msg == "" {
+		return nil
+	}
+	return llx.Unavailable(errors.New("cannot read the TXT records of " + d.Fqdn.Data + ": " + msg))
+}
+
 func (d *mqlDns) spf(params any) ([]any, error) {
 	entries := []any{}
 
@@ -445,13 +464,8 @@ func (d *mqlDns) spf(params any) ([]any, error) {
 		return entries, nil
 	}
 	record, ok := paramsM["TXT"].(map[string]any)
-	if ok && plugin.StructuredErrors() {
-		// A TXT lookup that failed is not a name without SPF. In v13 both answer
-		// an empty list, so a resolver that could not deliver a large TXT set
-		// failed every "SPF is set" check (ADR 046 §9).
-		if msg, _ := record["errorMessage"].(string); msg != "" {
-			return nil, llx.Unavailable(errors.New("cannot read the TXT records of " + d.Fqdn.Data + ": " + msg))
-		}
+	if err := d.txtLookupFailed(record); err != nil {
+		return nil, err
 	}
 	if !ok || record["rCode"] != dns.RcodeToString[dns.RcodeSuccess] {
 		return entries, nil
