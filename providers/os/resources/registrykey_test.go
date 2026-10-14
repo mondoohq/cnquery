@@ -13,8 +13,10 @@ import (
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/mock"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/registry"
+	"go.mondoo.com/mql/providers/os/resources/powershell"
 	"go.mondoo.com/mql/utils/syncx"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
@@ -294,17 +296,65 @@ func TestRegistryReadPath(t *testing.T) {
 
 // A key the native API cannot find is absent, as on the PowerShell path; any
 // other error, and the values of a key that exists, pass through.
-func TestNativeItemsOrAbsent(t *testing.T) {
-	items, err := nativeItemsOrAbsent(nil, status.Error(codes.NotFound, `registry key not found: Software\Policies\Missing`))
+func TestNativeOrAbsent(t *testing.T) {
+	items, err := nativeOrAbsent[registry.RegistryKeyItem](nil, status.Error(codes.NotFound, `registry key not found: Software\Policies\Missing`))
 	require.NoError(t, err)
 	assert.Nil(t, items)
 
 	denied := errors.New("Access is denied.")
-	_, err = nativeItemsOrAbsent(nil, denied)
+	_, err = nativeOrAbsent[registry.RegistryKeyItem](nil, denied)
 	assert.Equal(t, denied, err)
 
+	children, err := nativeOrAbsent[registry.RegistryKeyChild](nil, status.Error(codes.NotFound, `registry key not found: Software\Missing`))
+	require.NoError(t, err)
+	assert.Nil(t, children)
+
 	values := []registry.RegistryKeyItem{{Key: "a", Value: registry.RegistryKeyValue{Kind: registry.DWORD, Number: 1}}}
-	items, err = nativeItemsOrAbsent(values, nil)
+	items, err = nativeOrAbsent(values, nil)
 	require.NoError(t, err)
 	assert.Equal(t, values, items)
+}
+
+// A key that does not exist has null children, as its items and properties
+// are null, so a children.none(...) check cannot pass on a missing key. An
+// existing key without subkeys is still an empty list.
+func TestRegistrykeyChildren(t *testing.T) {
+	const (
+		missing = `HKEY_LOCAL_MACHINE\SOFTWARE\mqltest-missing`
+		empty   = `HKEY_LOCAL_MACHINE\SOFTWARE\mqltest-empty`
+		parent  = `HKEY_LOCAL_MACHINE\SOFTWARE\mqltest`
+	)
+	script := func(path string) string {
+		return powershell.Encode(registry.GetRegistryKeyChildItemsScript(path))
+	}
+	runtime, _ := newRemoteWindowsRuntime(t, map[string]*mock.Command{
+		script(missing): {
+			ExitStatus: 1,
+			Stderr:     "Get-Item : Cannot find path 'HKEY_LOCAL_MACHINE\\SOFTWARE\\mqltest-missing' because it does not exist.\n    + CategoryInfo          : ObjectNotFound: (HKEY_LOCAL_MACHINE\\SOFTWARE\\mqltest-missing:String) [Get-Item], ItemNotFoundException",
+		},
+		script(empty):  {Stdout: "[]"},
+		script(parent): {Stdout: `[{"path":"HKEY_LOCAL_MACHINE\\SOFTWARE\\mqltest","name":"child1"},{"path":"HKEY_LOCAL_MACHINE\\SOFTWARE\\mqltest","name":"child2"}]`},
+	})
+	key := func(path string) *mqlRegistrykey {
+		o, err := CreateResource(runtime, "registrykey", map[string]*llx.RawData{"path": llx.StringData(path)})
+		require.NoError(t, err)
+		return o.(*mqlRegistrykey)
+	}
+
+	k := key(missing)
+	children := k.GetChildren()
+	require.NoError(t, children.Error)
+	assert.Nil(t, children.Data)
+	assert.True(t, k.Children.IsNull(), "a missing key's children must be null, not an empty list")
+
+	k = key(empty)
+	children = k.GetChildren()
+	require.NoError(t, children.Error)
+	assert.NotNil(t, children.Data)
+	assert.Empty(t, children.Data)
+	assert.False(t, k.Children.IsNull())
+
+	children = key(parent).GetChildren()
+	require.NoError(t, children.Error)
+	assert.Equal(t, []any{"child1", "child2"}, children.Data)
 }

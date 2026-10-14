@@ -327,21 +327,21 @@ func (k *mqlRegistrykey) readEntries() ([]registry.RegistryKeyItem, error) {
 
 	// if we are running locally on windows, we can use native api
 	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
-		return nativeItemsOrAbsent(registry.GetNativeRegistryKeyItems(k.readPath()))
+		return nativeOrAbsent(registry.GetNativeRegistryKeyItems(k.readPath()))
 	}
 
 	return k.powershellItems(k.readPath())
 }
 
-// nativeItemsOrAbsent reports a key the native API cannot find as absent (no
-// values, no error), as powershellItems does for ObjectNotFound: otherwise
-// registrykey(...).items on a missing key is null over SSH and an error on a
-// local scan of the same machine.
-func nativeItemsOrAbsent(items []registry.RegistryKeyItem, err error) ([]registry.RegistryKeyItem, error) {
+// nativeOrAbsent reports a key the native API cannot find as absent (nil, no
+// error), as powershellItems and powershellChildren do for ObjectNotFound:
+// otherwise registrykey(...).items on a missing key is null over SSH and an
+// error on a local scan of the same machine.
+func nativeOrAbsent[T any](res []T, err error) ([]T, error) {
 	if std, ok := status.FromError(err); ok && std.Code() == codes.NotFound {
 		return nil, nil
 	}
-	return items, err
+	return res, err
 }
 
 // powershellItems reads the values of a key at an absolute registry path via the
@@ -472,19 +472,26 @@ func (k *mqlRegistrykey) getChildren() ([]registry.RegistryKeyChild, error) {
 	case k.isUserHive():
 		return k.powershellChildren(userHivePath(k.UserSid.Data, k.readPath()))
 	case conn.Type() == shared.Type_Local && runtime.GOOS == "windows":
-		return registry.GetNativeRegistryKeyChildren(k.readPath())
+		return nativeOrAbsent(registry.GetNativeRegistryKeyChildren(k.readPath()))
 	default:
 		return k.powershellChildren(k.readPath())
 	}
 }
 
+// children returns the names of the child keys. A key that does not exist has
+// no children to list, so the field is null, as items and properties are,
+// rather than an empty list that reads like an existing key without subkeys.
 func (k *mqlRegistrykey) children() ([]any, error) {
 	children, err := k.getChildren()
 	if err != nil {
 		return nil, err
 	}
+	if children == nil {
+		k.Children.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 
-	res := []any{}
+	res := make([]any, 0, len(children))
 	for i := range children {
 		child := children[i]
 		res = append(res, child.Name)
