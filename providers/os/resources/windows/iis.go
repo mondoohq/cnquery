@@ -50,6 +50,9 @@ const (
 	IisSectionSessionState            = "system.web/sessionState"
 	IisSectionTrace                   = "system.web/trace"
 	IisSectionTrust                   = "system.web/trust"
+
+	// Server scope only: applicationPoolDefaults, which every pool inherits.
+	IisSectionApplicationPools = "system.applicationHost/applicationPools"
 )
 
 // IisData is the whole result of one collection run.

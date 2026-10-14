@@ -76,6 +76,7 @@ func TestParseIisDataEmptyOutput(t *testing.T) {
 const (
 	iisCapture         = "iis.json"
 	iisCaptureHardened = "iis_hardened.json"
+	iisCaptureDefault  = "iis_default.json"
 	iisSynthetic       = "iis_synthetic.json"
 )
 
@@ -254,6 +255,32 @@ func TestParseIisConfigurationServerScopeFromCapture(t *testing.T) {
 	require.Empty(t, config.SslFlags)
 
 	require.Equal(t, "ASP.NET", config.CustomHeaders["X-Powered-By"])
+}
+
+// TestParseIisDataApplicationPoolDefaultsFromCapture reads the defaults every
+// application pool inherits. `iis_default.json` is a capture of a stock Windows
+// Server 2022 with the IIS role installed and nothing changed.
+func TestParseIisDataApplicationPoolDefaultsFromCapture(t *testing.T) {
+	data := loadIisFixture(t, iisCaptureDefault)
+
+	section, ok := data.Config[IisSectionApplicationPools].(map[string]any)
+	require.True(t, ok, "%s is reported at server scope", IisSectionApplicationPools)
+	defaults, ok := section["applicationPoolDefaults"].(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, "v4.0", defaults["managedRuntimeVersion"])
+	require.Equal(t, "Integrated", defaults["managedPipelineMode"])
+
+	processModel, ok := defaults["processModel"].(map[string]any)
+	require.True(t, ok)
+	// An enum attribute, resolved to its name like every other one.
+	require.Equal(t, "ApplicationPoolIdentity", processModel["identityType"])
+	require.Equal(t, false, processModel["loadUserProfile"])
+	require.NotContains(t, processModel, "password", "the pool identity's password is redacted")
+
+	// The pools themselves are appPools, not members of the section.
+	require.NotContains(t, section, "add")
+	require.Len(t, data.AppPools, 1)
+	require.Equal(t, "DefaultAppPool", data.AppPools[0].Name)
 }
 
 // TestParseIisConfigurationHardenedCapture reads the same server after

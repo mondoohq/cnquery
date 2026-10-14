@@ -72,8 +72,11 @@ $sectionPaths = @(
 )
 
 # Sections read only at server scope: they configure the server or the defaults
-# a new site inherits, and are not resolvable per site.
+# a new site or application pool inherits, and are not resolvable per site.
+# applicationPools reports applicationPoolDefaults; the pools themselves are
+# appPools, so its collection stays out.
 $serverSectionPaths = @(
+  'system.applicationHost/applicationPools',
   'system.applicationHost/sites',
   'system.applicationHost/log',
   'system.ftpServer/security/authentication'
