@@ -119,4 +119,73 @@ func TestExecutionManagerPanicFailsOnlyThatQuery(t *testing.T) {
 	require.NotNil(t, got[goodEntry])
 	require.NoError(t, got[goodEntry].Data.Error)
 	require.Equal(t, false, got[goodEntry].Data.Value)
+
+	// The report names the builtin that panicked, not the runtime or the
+	// execution manager.
+	var site string
+	for _, s := range reportedSites() {
+		if strings.HasPrefix(s, "go.mondoo.com/mql/llx.") {
+			site = s
+		}
+	}
+	require.NotEmpty(t, site, "no llx panic site among %v", reportedSites())
+}
+
+// recoveredSite runs fn and returns the panic site seen by its recover.
+func recoveredSite(fn func()) (site string) {
+	defer func() {
+		if recover() != nil {
+			site = panicSite()
+		}
+	}()
+	fn()
+	return "no panic"
+}
+
+func panicsOnTypeAssertion(v any) { _ = v.(bool) }
+
+func panicsOnIndex(i int) { _ = []int{}[i] }
+
+func TestPanicSite(t *testing.T) {
+	// A runtime-raised panic is attributed to the code that caused it, not to
+	// runtime.panicdottypeE or runtime.panicIndex.
+	site := recoveredSite(func() { panicsOnTypeAssertion("not a bool") })
+	require.Contains(t, site, "internal.panicsOnTypeAssertion ")
+	require.Contains(t, site, "execution_manager_test.go:")
+
+	require.Contains(t, recoveredSite(func() { panicsOnIndex(1) }), "internal.panicsOnIndex ")
+	require.Contains(t, recoveredSite(func() { panic("explicit") }), "internal.TestPanicSite.func")
+
+	// The same site from two different callers is one site, so one report.
+	require.Equal(t,
+		recoveredSite(func() { panicsOnTypeAssertion(1) }),
+		recoveredSite(func() { panicsOnTypeAssertion("x") }))
+
+	require.Equal(t, "unknown", panicSite())
+}
+
+func reportedSites() []string {
+	var sites []string
+	reportedPanicSites.Range(func(k, _ any) bool {
+		sites = append(sites, k.(string))
+		return true
+	})
+	return sites
+}
+
+func TestReportPanicOncePerSite(t *testing.T) {
+	report := func(fn func()) {
+		defer func() { reportPanic(nil, recover()) }()
+		fn()
+	}
+
+	before := len(reportedSites())
+	report(func() { panicsOnTypeAssertion(1) })
+	require.Len(t, reportedSites(), before+1)
+	// Same site, different value and caller: already reported.
+	report(func() { panicsOnTypeAssertion("x") })
+	require.Len(t, reportedSites(), before+1)
+	// Another site is reported.
+	report(func() { panicsOnIndex(1) })
+	require.Len(t, reportedSites(), before+2)
 }

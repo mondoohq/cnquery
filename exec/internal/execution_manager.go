@@ -6,7 +6,9 @@ package internal
 import (
 	"errors"
 	"fmt"
+	"runtime"
 	"runtime/debug"
+	"strings"
 	"sync"
 	"time"
 
@@ -144,21 +146,60 @@ func (em *executionManager) Stop() {
 	em.wg.Wait()
 }
 
+// reportedPanicSites holds the panic sites already reported upstream by this
+// process. A panic in one query no longer stops the asset, so the same bug can
+// fire once per query on every asset; it is reported once per site.
+var reportedPanicSites sync.Map
+
 // reportPanic reports a recovered panic upstream and in the log, with the query
-// that was running when there is one, and returns it as an error.
+// that was running when there is one, and returns it as an error. It must be
+// called from the deferred function that recovered, so the stack still shows
+// the panic site. Only the first panic at a site is reported upstream and logs
+// its stack; later ones log the site and the query.
 func reportPanic(codeBundle *llx.CodeBundle, r any) error {
 	var tags map[string]string
 	if codeBundle != nil {
 		tags = health.QueryPanicTags(codeBundle.CodeV2.GetId(), codeBundle.Source)
 	}
-	// The stack is taken in the deferred handler, so it still shows the panic
-	// site.
+	site := panicSite()
+	if _, seen := reportedPanicSites.LoadOrStore(site, struct{}{}); seen {
+		log.Error().
+			Str("site", site).
+			Interface("tags", tags).
+			Msgf("recovered from panic during query execution: %v", r)
+		return fmt.Errorf("panic during query execution: %v", r)
+	}
+
 	stack := debug.Stack()
 	health.ReportRecoveredPanic("mql", mql.Version, mql.Build, r, stack, tags)
 	log.Error().
+		Str("site", site).
 		Str("stacktrace", string(stack)).
 		Msgf("recovered from panic during query execution: %v", r)
 	return fmt.Errorf("panic during query execution: %v", r)
+}
+
+// panicSite returns the function and line that panicked, as "func file:line":
+// the first frame below runtime.gopanic that is not in the runtime itself
+// (runtime.panicdottypeE, runtime.panicIndex, runtime.sigpanic, ...). It must
+// be called while the panic is being recovered. Returns "unknown" when no
+// panic is on the stack.
+func panicSite() string {
+	pcs := make([]uintptr, 64)
+	frames := runtime.CallersFrames(pcs[:runtime.Callers(2, pcs)])
+	inPanic := false
+	for {
+		frame, more := frames.Next()
+		if inPanic && !strings.HasPrefix(frame.Function, "runtime.") {
+			return fmt.Sprintf("%s %s:%d", frame.Function, frame.File, frame.Line)
+		}
+		if frame.Function == "runtime.gopanic" {
+			inPanic = true
+		}
+		if !more {
+			return "unknown"
+		}
+	}
 }
 
 func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props map[string]*llx.Primitive, errMsg string) (rerr error) {
