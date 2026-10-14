@@ -9,7 +9,9 @@ import (
 	"time"
 )
 
-var powershellTimestamp = regexp.MustCompile(`Date\((\d+)\)`)
+// Date(ms) or Date(ms+hhmm): the offset only says which zone the value was
+// local to, ms is always since the unix epoch in UTC.
+var powershellTimestamp = regexp.MustCompile(`Date\((-?\d+)(?:[+-]\d{4})?\)`)
 
 func PSJsonTimestamp(date string) *time.Time {
 	// extract unix seconds

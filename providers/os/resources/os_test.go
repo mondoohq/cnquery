@@ -63,6 +63,39 @@ func TestSplitPathList(t *testing.T) {
 	}
 }
 
+func TestPathFromEnv(t *testing.T) {
+	t.Run("windows Path key, semicolon separated", func(t *testing.T) {
+		// Get-ChildItem Env: on Windows 10 22H2 and Windows 11 25H2 names it "Path"
+		env := map[string]any{"Path": `C:\Windows\system32;C:\Windows`, "TEMP": `C:\Temp`}
+		got, err := pathFromEnv(env, true)
+		require.NoError(t, err)
+		assert.Equal(t, []any{`C:\Windows\system32`, `C:\Windows`}, got)
+	})
+
+	t.Run("unix lookup stays case-sensitive", func(t *testing.T) {
+		got, err := pathFromEnv(map[string]any{"Path": "/opt/bin"}, false)
+		require.NoError(t, err)
+		assert.Empty(t, got)
+	})
+
+	t.Run("unix PATH colon separated", func(t *testing.T) {
+		got, err := pathFromEnv(map[string]any{"PATH": "/usr/bin:/bin"}, false)
+		require.NoError(t, err)
+		assert.Equal(t, []any{"/usr/bin", "/bin"}, got)
+	})
+
+	t.Run("no PATH", func(t *testing.T) {
+		got, err := pathFromEnv(map[string]any{"HOME": "/root"}, true)
+		require.NoError(t, err)
+		assert.Empty(t, got)
+	})
+
+	t.Run("non-string PATH is an error", func(t *testing.T) {
+		_, err := pathFromEnv(map[string]any{"PATH": 1}, false)
+		assert.Error(t, err)
+	})
+}
+
 // kernelsInstalled builds the value kernel.installed hands to os.rebootpending
 // from the JSON mql prints for `kernel { installed }`.
 func kernelsInstalled(t *testing.T, raw string) *plugin.TValue[[]any] {

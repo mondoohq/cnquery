@@ -121,13 +121,15 @@ func (p *mqlOs) path(env map[string]any) ([]any, error) {
 	if !ok {
 		return nil, errors.New("cannot determine platform for path lookup")
 	}
-	isWindows := conn.Asset().Platform.IsFamily("windows")
+	return pathFromEnv(env, conn.Asset().Platform.IsFamily("windows"))
+}
 
+// pathFromEnv returns the PATH entries of an environment. Windows variable
+// names are case-insensitive and the variable comes back from
+// Get-ChildItem Env: as "Path", so an exact "PATH" lookup misses it there.
+func pathFromEnv(env map[string]any, isWindows bool) ([]any, error) {
 	rawPath, ok := env["PATH"]
 	if !ok && isWindows {
-		// Windows environment variable names are case-insensitive and the
-		// variable comes back from Get-ChildItem Env: as "Path", so the exact
-		// "PATH" lookup missed and os.path was empty on every Windows system.
 		for k, v := range env {
 			if strings.EqualFold(k, "PATH") {
 				rawPath, ok = v, true
@@ -499,19 +501,11 @@ func (p *mqlOsBase) env() (map[string]any, error) {
 }
 
 func (p *mqlOsBase) path(env map[string]any) ([]any, error) {
-	rawPath, ok := env["PATH"]
+	conn, ok := p.MqlRuntime.Connection.(shared.Connection)
 	if !ok {
-		return []any{}, nil
+		return nil, errors.New("cannot determine platform for path lookup")
 	}
-
-	path := rawPath.(string)
-	parts := strings.Split(path, ":")
-	res := make([]any, len(parts))
-	for i := range parts {
-		res[i] = parts[i]
-	}
-
-	return res, nil
+	return pathFromEnv(env, conn.Asset().Platform.IsFamily("windows"))
 }
 
 // returns uptime in nanoseconds
