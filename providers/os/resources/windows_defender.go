@@ -7,14 +7,18 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/registry"
 	"go.mondoo.com/mql/providers/os/resources/windows"
 	"go.mondoo.com/mql/types"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
 )
 
 // enabled reports whether the Defender service and its real-time antivirus and
@@ -106,11 +110,11 @@ func (d *mqlWindowsDefender) status() (*mqlWindowsDefenderStatus, error) {
 		"amServiceEnabled":                 llx.BoolData(status.AMServiceEnabled),
 		"amServiceVersion":                 llx.StringData(status.AMServiceVersion),
 		"antispywareEnabled":               llx.BoolData(status.AntispywareEnabled),
-		"antispywareSignatureAge":          llx.IntData(status.AntispywareSignatureAge),
+		"antispywareSignatureAge":          llx.IntDataPtr(windows.DefenderAge(status.AntispywareSignatureAge)),
 		"antispywareSignatureLastUpdated":  llx.TimeDataPtr(windows.DefenderTime(status.AntispywareSignatureLastUpdated)),
 		"antispywareSignatureVersion":      llx.StringData(status.AntispywareSignatureVersion),
 		"antivirusEnabled":                 llx.BoolData(status.AntivirusEnabled),
-		"antivirusSignatureAge":            llx.IntData(status.AntivirusSignatureAge),
+		"antivirusSignatureAge":            llx.IntDataPtr(windows.DefenderAge(status.AntivirusSignatureAge)),
 		"antivirusSignatureLastUpdated":    llx.TimeDataPtr(windows.DefenderTime(status.AntivirusSignatureLastUpdated)),
 		"antivirusSignatureVersion":        llx.StringData(status.AntivirusSignatureVersion),
 		"behaviorMonitorEnabled":           llx.BoolData(status.BehaviorMonitorEnabled),
@@ -120,7 +124,7 @@ func (d *mqlWindowsDefender) status() (*mqlWindowsDefenderStatus, error) {
 		"deviceControlDefaultEnforcement":  llx.StringDataPtr(status.DeviceControlDefaultEnforcement),
 		"deviceControlPoliciesLastUpdated": llx.TimeDataPtr(windows.DefenderTime(status.DeviceControlPoliciesLastUpdated)),
 		"deviceControlState":               llx.StringData(status.DeviceControlState),
-		"fullScanAge":                      llx.IntData(status.FullScanAge),
+		"fullScanAge":                      llx.IntDataPtr(windows.DefenderAge(status.FullScanAge)),
 		"fullScanStartTime":                llx.TimeDataPtr(windows.DefenderTime(status.FullScanStartTime)),
 		"fullScanEndTime":                  llx.TimeDataPtr(windows.DefenderTime(status.FullScanEndTime)),
 		"fullScanOverdue":                  llx.BoolData(status.FullScanOverdue),
@@ -133,12 +137,12 @@ func (d *mqlWindowsDefender) status() (*mqlWindowsDefenderStatus, error) {
 		"lastQuickScanSource":              llx.IntData(status.LastQuickScanSource),
 		"nisEnabled":                       llx.BoolData(status.NISEnabled),
 		"nisEngineVersion":                 llx.StringData(status.NISEngineVersion),
-		"nisSignatureAge":                  llx.IntData(status.NISSignatureAge),
+		"nisSignatureAge":                  llx.IntDataPtr(windows.DefenderAge(status.NISSignatureAge)),
 		"nisSignatureLastUpdated":          llx.TimeDataPtr(windows.DefenderTime(status.NISSignatureLastUpdated)),
 		"nisSignatureVersion":              llx.StringData(status.NISSignatureVersion),
 		"onAccessProtectionEnabled":        llx.BoolData(status.OnAccessProtectionEnabled),
 		"productStatus":                    llx.IntData(status.ProductStatus),
-		"quickScanAge":                     llx.IntData(status.QuickScanAge),
+		"quickScanAge":                     llx.IntDataPtr(windows.DefenderAge(status.QuickScanAge)),
 		"quickScanStartTime":               llx.TimeDataPtr(windows.DefenderTime(status.QuickScanStartTime)),
 		"quickScanEndTime":                 llx.TimeDataPtr(windows.DefenderTime(status.QuickScanEndTime)),
 		"quickScanOverdue":                 llx.BoolData(status.QuickScanOverdue),
@@ -269,6 +273,122 @@ type mqlWindowsDefenderPreferencesInternal struct {
 	fetched bool
 	prefs   *windows.MpPreference
 	err     error
+
+	policyLock    sync.Mutex
+	policyFetched bool
+	policy        *defenderPolicy
+	policyErr     error
+}
+
+// defenderPolicyKey is the Group Policy root for Microsoft Defender Antivirus,
+// as defined by WindowsDefender.admx. The ADMX-backed MDM policies
+// (ADMX_MicrosoftDefenderAntivirus) write to the same keys.
+const defenderPolicyKey = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender`
+
+// defenderPolicy holds the Defender Group Policy values that Get-MpPreference
+// does not report, keyed by lower-cased value name per subkey. A key that does
+// not exist is an empty map, so every value under it reads as not configured.
+type defenderPolicy struct {
+	realTime  map[string]registry.RegistryKeyItem
+	spynet    map[string]registry.RegistryKeyItem
+	scan      map[string]registry.RegistryKeyItem
+	reporting map[string]registry.RegistryKeyItem
+}
+
+// readRegistryValues reads one registry key into a map keyed by lower-cased
+// value name. A missing key is an empty map, not an error.
+func readRegistryValues(runtime *plugin.Runtime, path string) (map[string]registry.RegistryKeyItem, error) {
+	o, err := CreateResource(runtime, "registrykey", map[string]*llx.RawData{
+		"path": llx.StringData(path),
+	})
+	if err != nil {
+		return nil, err
+	}
+	entries, err := o.(*mqlRegistrykey).getEntries()
+	if err != nil {
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			return map[string]registry.RegistryKeyItem{}, nil
+		}
+		return nil, err
+	}
+	res := make(map[string]registry.RegistryKeyItem, len(entries))
+	for i := range entries {
+		res[strings.ToLower(entries[i].Key)] = entries[i]
+	}
+	return res, nil
+}
+
+// getPolicy reads the Defender Group Policy keys once and caches the result.
+func (p *mqlWindowsDefenderPreferences) getPolicy() (*defenderPolicy, error) {
+	p.policyLock.Lock()
+	defer p.policyLock.Unlock()
+	if p.policyFetched {
+		return p.policy, p.policyErr
+	}
+	pol := &defenderPolicy{}
+	reads := []struct {
+		subkey string
+		dst    *map[string]registry.RegistryKeyItem
+	}{
+		{`Real-Time Protection`, &pol.realTime},
+		{`Spynet`, &pol.spynet},
+		{`Scan`, &pol.scan},
+		{`Reporting`, &pol.reporting},
+	}
+	for _, rd := range reads {
+		items, err := readRegistryValues(p.MqlRuntime, defenderPolicyKey+`\`+rd.subkey)
+		if err != nil {
+			p.policyFetched = true
+			p.policyErr = err
+			return nil, err
+		}
+		*rd.dst = items
+	}
+	p.policy = pol
+	p.policyFetched = true
+	return pol, nil
+}
+
+// prefOrPolicy returns the Get-MpPreference value when the platform reports
+// one, otherwise the Group Policy DWORD (non-zero is true), otherwise nil.
+func prefOrPolicy(pref *bool, items map[string]registry.RegistryKeyItem, name string) *bool {
+	if pref != nil {
+		return pref
+	}
+	return regBoolPtr(items, name)
+}
+
+// defenderOverrides are the windows.defender.localSettingOverrides values.
+type defenderOverrides struct {
+	spynetReporting                  *bool
+	realtimeMonitoring               *bool
+	disableBehaviorMonitoring        *bool
+	disableIOAVProtection            *bool
+	disableIntrusionPreventionSystem *bool
+	disableOnAccessProtection        *bool
+	scanParameters                   *bool
+	scanScheduleDay                  *bool
+	avgCPULoadFactor                 *bool
+}
+
+// resolveLocalSettingOverrides combines the LocalSettingOverride* preferences
+// with their Group Policy values. Current Defender platforms no longer report
+// these properties through Get-MpPreference, so the policy is the only source
+// there. The value names are the ones WindowsDefender.admx defines. The ADMX has
+// no override policy for the intrusion prevention system, so that one can only
+// come from Get-MpPreference.
+func resolveLocalSettingOverrides(prefs *windows.MpPreference, pol *defenderPolicy) defenderOverrides {
+	return defenderOverrides{
+		spynetReporting:                  prefOrPolicy(prefs.LocalSettingOverrideSpynetReporting, pol.spynet, "LocalSettingOverrideSpynetReporting"),
+		realtimeMonitoring:               prefOrPolicy(prefs.LocalSettingOverrideRealtimeMonitoring, pol.realTime, "LocalSettingOverrideDisableRealtimeMonitoring"),
+		disableBehaviorMonitoring:        prefOrPolicy(prefs.LocalSettingOverrideDisableBehaviorMonitoring, pol.realTime, "LocalSettingOverrideDisableBehaviorMonitoring"),
+		disableIOAVProtection:            prefOrPolicy(prefs.LocalSettingOverrideDisableIOAVProtection, pol.realTime, "LocalSettingOverrideDisableIOAVProtection"),
+		disableIntrusionPreventionSystem: prefs.LocalSettingOverrideDisableIntrusionPreventionSystem,
+		disableOnAccessProtection:        prefOrPolicy(prefs.LocalSettingOverrideDisableOnAccessProtection, pol.realTime, "LocalSettingOverrideDisableOnAccessProtection"),
+		scanParameters:                   prefOrPolicy(prefs.LocalSettingOverrideScanParameters, pol.scan, "LocalSettingOverrideScanParameters"),
+		scanScheduleDay:                  prefOrPolicy(prefs.LocalSettingOverrideScanScheduleDay, pol.scan, "LocalSettingOverrideScheduleDay"),
+		avgCPULoadFactor:                 prefOrPolicy(prefs.LocalSettingOverrideAvgCPULoadFactor, pol.scan, "LocalSettingOverrideAvgCPULoadFactor"),
+	}
 }
 
 // seedPrefs installs an already-fetched Get-MpPreference result.
@@ -497,17 +617,22 @@ func (p *mqlWindowsDefenderPreferences) localSettingOverrides() (*mqlWindowsDefe
 	if err != nil {
 		return nil, err
 	}
+	pol, err := p.getPolicy()
+	if err != nil {
+		return nil, err
+	}
+	o := resolveLocalSettingOverrides(prefs, pol)
 	res, err := CreateResource(p.MqlRuntime, "windows.defender.localSettingOverrides", map[string]*llx.RawData{
 		"__id":                             llx.StringData("windows.defender.localSettingOverrides"),
-		"spynetReporting":                  llx.BoolDataPtr(prefs.LocalSettingOverrideSpynetReporting),
-		"realtimeMonitoring":               llx.BoolDataPtr(prefs.LocalSettingOverrideRealtimeMonitoring),
-		"disableBehaviorMonitoring":        llx.BoolDataPtr(prefs.LocalSettingOverrideDisableBehaviorMonitoring),
-		"disableIOAVProtection":            llx.BoolDataPtr(prefs.LocalSettingOverrideDisableIOAVProtection),
-		"disableIntrusionPreventionSystem": llx.BoolDataPtr(prefs.LocalSettingOverrideDisableIntrusionPreventionSystem),
-		"disableOnAccessProtection":        llx.BoolDataPtr(prefs.LocalSettingOverrideDisableOnAccessProtection),
-		"scanParameters":                   llx.BoolDataPtr(prefs.LocalSettingOverrideScanParameters),
-		"scanScheduleDay":                  llx.BoolDataPtr(prefs.LocalSettingOverrideScanScheduleDay),
-		"avgCPULoadFactor":                 llx.BoolDataPtr(prefs.LocalSettingOverrideAvgCPULoadFactor),
+		"spynetReporting":                  llx.BoolDataPtr(o.spynetReporting),
+		"realtimeMonitoring":               llx.BoolDataPtr(o.realtimeMonitoring),
+		"disableBehaviorMonitoring":        llx.BoolDataPtr(o.disableBehaviorMonitoring),
+		"disableIOAVProtection":            llx.BoolDataPtr(o.disableIOAVProtection),
+		"disableIntrusionPreventionSystem": llx.BoolDataPtr(o.disableIntrusionPreventionSystem),
+		"disableOnAccessProtection":        llx.BoolDataPtr(o.disableOnAccessProtection),
+		"scanParameters":                   llx.BoolDataPtr(o.scanParameters),
+		"scanScheduleDay":                  llx.BoolDataPtr(o.scanScheduleDay),
+		"avgCPULoadFactor":                 llx.BoolDataPtr(o.avgCPULoadFactor),
 	})
 	if err != nil {
 		return nil, err
@@ -617,11 +742,21 @@ func (p *mqlWindowsDefenderPreferences) disableGenericReports() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if prefs.DisableGenericReports == nil {
+	v := prefs.DisableGenericReports
+	if v == nil {
+		// Current platforms dropped this preference from Get-MpPreference; the
+		// Group Policy value is what remains.
+		pol, err := p.getPolicy()
+		if err != nil {
+			return false, err
+		}
+		v = regBoolPtr(pol.reporting, "DisableGenericRePorts")
+	}
+	if v == nil {
 		p.DisableGenericReports.State = plugin.StateIsSet | plugin.StateIsNull
 		return false, nil
 	}
-	return *prefs.DisableGenericReports, nil
+	return *v, nil
 }
 
 // mqlWindowsDefenderThreatActionSettingsInternal caches the per-threat-ID

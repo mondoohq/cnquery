@@ -18965,6 +18965,8 @@ private windows.defender.status @defaults("antivirusEnabled realTimeProtectionEn
   // Whether antispyware protection is enabled
   antispywareEnabled bool
   // Number of days since antispyware definitions were last updated
+  //
+  // Null when Defender reports no update.
   antispywareSignatureAge int
   // Date the antispyware definitions were last updated
   antispywareSignatureLastUpdated time
@@ -18973,6 +18975,8 @@ private windows.defender.status @defaults("antivirusEnabled realTimeProtectionEn
   // Whether antivirus protection is enabled
   antivirusEnabled bool
   // Number of days since antivirus definitions were last updated
+  //
+  // Null when Defender reports no update.
   antivirusSignatureAge int
   // Date the antivirus definitions were last updated
   antivirusSignatureLastUpdated time
@@ -18999,6 +19003,8 @@ private windows.defender.status @defaults("antivirusEnabled realTimeProtectionEn
   // device control is not in effect.
   deviceControlState string
   // Number of days since the last full scan completed
+  //
+  // Null when no full scan has completed on the host.
   fullScanAge int
   // Time the last full scan started
   fullScanStartTime time
@@ -19025,6 +19031,8 @@ private windows.defender.status @defaults("antivirusEnabled realTimeProtectionEn
   // Network Inspection System engine version
   nisEngineVersion string
   // Number of days since the NIS definitions were last updated
+  //
+  // Null when Defender reports no update.
   nisSignatureAge int
   // Date the NIS definitions were last updated
   nisSignatureLastUpdated time
@@ -19035,6 +19043,8 @@ private windows.defender.status @defaults("antivirusEnabled realTimeProtectionEn
   // Aggregate product status bitmask
   productStatus int
   // Number of days since the last quick scan completed
+  //
+  // Null when no quick scan has completed on the host.
   quickScanAge int
   // Time the last quick scan started
   quickScanStartTime time
@@ -19057,6 +19067,8 @@ private windows.defender.status @defaults("antivirusEnabled realTimeProtectionEn
   // One of On, Off, Eval, or an empty string when unsupported.
   smartAppControlState string
   // Expiration time of the Smart App Control evaluation period
+  //
+  // Null when no expiration is set.
   smartAppControlExpiration time
   // Source that manages tamper protection (for example Intune, signatures, or the local UI)
   tamperProtectionSource string
@@ -19109,7 +19121,9 @@ windows.defender.preferences @defaults("puaProtection") {
   disableAutoExclusions() bool
   // Whether sending Watson (generic) reports to Microsoft is disabled
   //
-  // Null when the Defender platform does not report this preference.
+  // Read from Get-MpPreference, or from the DisableGenericRePorts Group Policy
+  // value when the platform does not report the preference. Null when neither
+  // reports it.
   disableGenericReports() bool
 }
 
@@ -19370,10 +19384,11 @@ windows.defender.behavioralNetworkBlockSettings @defaults("bruteForceProtectionC
 // the policy value is enforced and users cannot change it locally, which is
 // the hardened configuration.
 //
-// Every field here is null on a host whose Defender platform does not report
-// the preference. Recent platform releases dropped the LocalSettingOverride
-// properties from Get-MpPreference, so on those hosts nothing about the
-// overrides is known and a null must not be read as "no override allowed".
+// Recent platform releases dropped the LocalSettingOverride properties from
+// Get-MpPreference, so each field falls back to its Group Policy value under
+// `HKLM\SOFTWARE\Policies\Microsoft\Windows Defender` (the Real-Time
+// Protection, Spynet, and Scan subkeys). A field is null when neither reports
+// it, which means the override policy is not configured.
 windows.defender.localSettingOverrides @defaults("spynetReporting realtimeMonitoring") {
   // Whether a local setting may override MAPS (SpyNet) reporting
   spynetReporting bool
@@ -19384,6 +19399,9 @@ windows.defender.localSettingOverrides @defaults("spynetReporting realtimeMonito
   // Whether a local setting may override downloaded-file (IOAV) scanning
   disableIOAVProtection bool
   // Whether a local setting may override the intrusion prevention system
+  //
+  // Null unless Get-MpPreference reports it. Group Policy has no setting for
+  // this override.
   disableIntrusionPreventionSystem bool
   // Whether a local setting may override on-access protection
   disableOnAccessProtection bool
@@ -19469,6 +19487,9 @@ windows.defender.threat @defaults("name severityID isActive") {
   // Aggregate rollup status of the threat
   rollupStatus int
   // Resources (files, registry keys, processes) affected by the threat
+  //
+  // Current Defender platforms often leave this empty and report the affected
+  // resources on the matching threatDetection instead.
   resources []string
 }
 

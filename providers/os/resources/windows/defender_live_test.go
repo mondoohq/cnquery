@@ -71,9 +71,11 @@ func TestMpComputerStatusLiveDecodes(t *testing.T) {
 			assert.Nil(t, status.DeviceControlDefaultEnforcement)
 
 			// A host that has never run a scan reports uint32 max for the scan
-			// age and leaves the scan times null.
+			// age and leaves the scan times null. The age must read as null,
+			// not as 11.7 million days.
 			assert.Equal(t, int64(4294967295), status.FullScanAge)
-			assert.Equal(t, int64(4294967295), status.QuickScanAge)
+			assert.Nil(t, DefenderAge(status.FullScanAge))
+			assert.Nil(t, DefenderAge(status.QuickScanAge))
 			assert.Nil(t, DefenderTime(status.FullScanStartTime))
 			assert.Nil(t, DefenderTime(status.QuickScanEndTime))
 			assert.Nil(t, DefenderTime(status.SmartAppControlExpiration))
