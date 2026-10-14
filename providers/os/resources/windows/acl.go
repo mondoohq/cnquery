@@ -15,12 +15,15 @@ import (
 // AclScript builds the PowerShell that reads a filesystem object's
 // discretionary access control list.
 //
-// Two things are done here rather than left to the caller. The identity of
-// each entry is translated to a SID inside a try/catch, so an entry naming a
-// deleted account is still reported with its raw identity instead of taking
-// the whole list down. And the access mask is widened through BitConverter
-// rather than cast: FileSystemRights is a signed 32 bit enum, so a mask with
-// the generic bits set (0xE0010000, say) is a negative number that
+// Two things are done here rather than left to the caller. The entries are
+// read with their SIDs, which the access control list stores, and each SID is
+// translated to an account name inside a try/catch. Translating the other way,
+// from the name .NET renders back to a SID, fails for principals such as
+// APPLICATION PACKAGE AUTHORITY\ALL APPLICATION PACKAGES (S-1-15-2-1), and an
+// entry naming a deleted account keeps the SID as its identity instead of
+// taking the whole list down. And the access mask is widened through
+// BitConverter rather than cast: FileSystemRights is a signed 32 bit enum, so
+// a mask with the generic bits set (0xE0010000, say) is a negative number that
 // [uint32] refuses outright with "Value was either too large or too small".
 func AclScript(path string) string {
 	return `$ErrorActionPreference='Stop'
@@ -29,9 +32,9 @@ $a=Get-Acl -LiteralPath $p
 [ordered]@{
 Path=$p;Owner=[string]$a.Owner;Group=[string]$a.Group;Sddl=[string]$a.Sddl;Protected=$a.AreAccessRulesProtected
 OwnerSid=$(try{[string]$a.GetOwner([System.Security.Principal.SecurityIdentifier]).Value}catch{''})
-Access=@($a.Access|ForEach-Object{
-$s='';try{$s=[string]$_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value}catch{}
-[ordered]@{Identity=[string]$_.IdentityReference;Sid=$s;Type=[string]$_.AccessControlType;Rights=[string]$_.FileSystemRights;Mask=[int64][System.BitConverter]::ToUInt32([System.BitConverter]::GetBytes([int]$_.FileSystemRights),0);Inherited=$_.IsInherited;InheritanceFlags=[string]$_.InheritanceFlags;PropagationFlags=[string]$_.PropagationFlags}})
+Access=@($a.GetAccessRules($true,$true,[System.Security.Principal.SecurityIdentifier])|ForEach-Object{
+$s=[string]$_.IdentityReference.Value;$n=$s;try{$n=[string]$_.IdentityReference.Translate([System.Security.Principal.NTAccount]).Value}catch{}
+[ordered]@{Identity=$n;Sid=$s;Type=[string]$_.AccessControlType;Rights=[string]$_.FileSystemRights;Mask=[int64][System.BitConverter]::ToUInt32([System.BitConverter]::GetBytes([int]$_.FileSystemRights),0);Inherited=$_.IsInherited;InheritanceFlags=[string]$_.InheritanceFlags;PropagationFlags=[string]$_.PropagationFlags}})
 }|ConvertTo-Json -Depth 5 -Compress`
 }
 
@@ -109,32 +112,46 @@ type WindowsAclEntry struct {
 	PropagationFlags string `json:"PropagationFlags"`
 }
 
-// AllowsRead reports whether the entry covers any form of read.
-func (e WindowsAclEntry) AllowsRead() bool { return e.Mask&aclReadMask != 0 }
+// The allows* predicates answer what an entry grants, so every one of them is
+// false on a deny entry, whatever its mask: a deny entry for write is not a
+// write grant. The covers* helpers answer what the mask names, regardless of
+// the entry type.
 
-// AllowsWrite reports whether the entry covers any form of write, including
-// appending, changing attributes, and deleting.
-func (e WindowsAclEntry) AllowsWrite() bool { return e.Mask&aclWriteMask != 0 }
-
-// AllowsExecute reports whether the entry covers executing a file or
-// traversing a directory.
-func (e WindowsAclEntry) AllowsExecute() bool { return e.Mask&aclExecuteMask != 0 }
-
-// AllowsDelete reports whether the entry covers deleting the object or its
-// children.
-func (e WindowsAclEntry) AllowsDelete() bool { return e.Mask&aclDeleteMask != 0 }
-
-// AllowsFullControl reports whether the entry covers every right, either as
-// the full FileSystemRights set or as the generic all mask.
-func (e WindowsAclEntry) AllowsFullControl() bool {
+func (e WindowsAclEntry) coversRead() bool    { return e.Mask&aclReadMask != 0 }
+func (e WindowsAclEntry) coversWrite() bool   { return e.Mask&aclWriteMask != 0 }
+func (e WindowsAclEntry) coversExecute() bool { return e.Mask&aclExecuteMask != 0 }
+func (e WindowsAclEntry) coversDelete() bool  { return e.Mask&aclDeleteMask != 0 }
+func (e WindowsAclEntry) coversFullControl() bool {
 	return e.Mask&AclGenericAll != 0 || e.Mask&AclFullControl == AclFullControl
 }
+func (e WindowsAclEntry) coversPermissionChange() bool {
+	return e.Mask&aclPermissionChangeMask != 0
+}
+
+// AllowsRead reports whether the entry grants any form of read.
+func (e WindowsAclEntry) AllowsRead() bool { return e.IsAllow() && e.coversRead() }
+
+// AllowsWrite reports whether the entry grants any form of write, including
+// appending, changing attributes, and deleting.
+func (e WindowsAclEntry) AllowsWrite() bool { return e.IsAllow() && e.coversWrite() }
+
+// AllowsExecute reports whether the entry grants executing a file or
+// traversing a directory.
+func (e WindowsAclEntry) AllowsExecute() bool { return e.IsAllow() && e.coversExecute() }
+
+// AllowsDelete reports whether the entry grants deleting the object or its
+// children.
+func (e WindowsAclEntry) AllowsDelete() bool { return e.IsAllow() && e.coversDelete() }
+
+// AllowsFullControl reports whether the entry grants every right, either as
+// the full FileSystemRights set or as the generic all mask.
+func (e WindowsAclEntry) AllowsFullControl() bool { return e.IsAllow() && e.coversFullControl() }
 
 // AllowsPermissionChange reports whether the entry lets the principal rewrite
 // the access control list or take ownership, either of which lets it grant
 // itself every other right.
 func (e WindowsAclEntry) AllowsPermissionChange() bool {
-	return e.Mask&aclPermissionChangeMask != 0
+	return e.IsAllow() && e.coversPermissionChange()
 }
 
 // IsAllow reports whether the entry grants rather than denies.
@@ -152,7 +169,7 @@ func (a *WindowsAcl) AllowedWritePrincipals() []string {
 	seen := make(map[string]struct{}, len(a.Access))
 	res := []string{}
 	for _, e := range a.Access {
-		if !e.IsAllow() || !e.AllowsWrite() {
+		if !e.AllowsWrite() {
 			continue
 		}
 		if _, ok := seen[e.Identity]; ok {
@@ -216,18 +233,20 @@ func ParseWindowsAcl(input io.Reader) (*WindowsAcl, error) {
 // right, which an unelevated session does not hold, and merging the two would
 // make an unprivileged session lose the discretionary list as well.
 //
-// The mask is widened through BitConverter for the same reason as in
-// AclScript: FileSystemRights is a signed 32 bit enum, so a mask carrying the
-// generic bits is a negative number that [uint32] refuses outright.
+// The entries are read with their SIDs and the mask is widened through
+// BitConverter for the same reasons as in AclScript: a name does not always
+// translate back to its SID, and FileSystemRights is a signed 32 bit enum, so
+// a mask carrying the generic bits is a negative number that [uint32] refuses
+// outright.
 func AclAuditScript(path string) string {
 	return `$ErrorActionPreference='Stop'
 $p=` + powershell.SingleQuote(path) + `
 $a=Get-Acl -LiteralPath $p -Audit
 [ordered]@{
 Path=$p
-Audit=@($a.Audit|ForEach-Object{
-$s='';try{$s=[string]$_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value}catch{}
-[ordered]@{Identity=[string]$_.IdentityReference;Sid=$s;AuditFlags=[string]$_.AuditFlags;Rights=[string]$_.FileSystemRights;Mask=[int64][System.BitConverter]::ToUInt32([System.BitConverter]::GetBytes([int]$_.FileSystemRights),0);Inherited=$_.IsInherited;InheritanceFlags=[string]$_.InheritanceFlags;PropagationFlags=[string]$_.PropagationFlags}})
+Audit=@($a.GetAuditRules($true,$true,[System.Security.Principal.SecurityIdentifier])|ForEach-Object{
+$s=[string]$_.IdentityReference.Value;$n=$s;try{$n=[string]$_.IdentityReference.Translate([System.Security.Principal.NTAccount]).Value}catch{}
+[ordered]@{Identity=$n;Sid=$s;AuditFlags=[string]$_.AuditFlags;Rights=[string]$_.FileSystemRights;Mask=[int64][System.BitConverter]::ToUInt32([System.BitConverter]::GetBytes([int]$_.FileSystemRights),0);Inherited=$_.IsInherited;InheritanceFlags=[string]$_.InheritanceFlags;PropagationFlags=[string]$_.PropagationFlags}})
 }|ConvertTo-Json -Depth 5 -Compress`
 }
 

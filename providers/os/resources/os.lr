@@ -13297,8 +13297,14 @@ registrykey @defaults("path") {
   // entries.
   properties() @maturity("deprecated") map[string]string
   // Value entries in this registry key
+  //
+  // Null when the key does not exist, and an empty list for a key without
+  // values.
   items() []registrykey.property
   // Names of the immediate child keys under this key
+  //
+  // Null when the key does not exist, and an empty list for a key without
+  // subkeys.
   children() []string
 }
 
@@ -17893,16 +17899,23 @@ windows.acl @defaults("path owner") {
 // it was inherited from a parent object. Iterated from `windows.acl.entries`.
 private windows.acl.entry @defaults("identity type rights") {
   // Account the entry applies to, in DOMAIN\name form
-  identity string
-  // Security identifier of the account, empty when it cannot be resolved
   //
-  // An entry whose identity cannot be translated is still reported, with the
-  // raw identity kept, rather than being dropped from the list.
+  // The SID itself when it no longer resolves to an account name, for example
+  // an entry left behind by a deleted account. Such an entry is still
+  // reported rather than being dropped from the list.
+  identity string
+  // Security identifier of the account
+  //
+  // Present for every entry, including principals whose name does not
+  // translate back to a SID, such as APPLICATION PACKAGE
+  // AUTHORITY\ALL APPLICATION PACKAGES (S-1-15-2-1).
   sid string
   // Whether the entry grants or denies the rights
   //
   // Either Allow or Deny. A deny entry takes precedence over an allow entry
-  // for the same principal.
+  // for the same principal. The allows* predicates are false on a deny entry,
+  // since it grants nothing; read `rightsMask` for the rights a deny entry
+  // removes.
   type string
   // Rights as Windows labels them
   //
@@ -17920,10 +17933,10 @@ private windows.acl.entry @defaults("identity type rights") {
   allowsRead bool
   // Whether the entry grants any form of write
   //
-  // True for writing data, appending, changing attributes or extended
-  // attributes, deleting, and for the Modify, FullControl and generic
-  // write or all masks that contain those. This is the predicate behind
-  // "who can change this object".
+  // True for an allow entry writing data, appending, changing attributes or
+  // extended attributes, deleting, and for the Modify, FullControl and
+  // generic write or all masks that contain those. False on a deny entry.
+  // This is the predicate behind "who can change this object".
   allowsWrite bool
   // Whether the entry grants execute or directory traverse
   allowsExecute bool
@@ -17960,11 +17973,16 @@ private windows.acl.entry @defaults("identity type rights") {
 // nothing.
 private windows.acl.auditEntry @defaults("identity auditFlags rights") {
   // Account whose attempts the entry records, in DOMAIN\name form
-  identity string
-  // Security identifier of the account, empty when it cannot be resolved
   //
-  // An entry whose identity cannot be translated is still reported, with the
-  // raw identity kept, rather than being dropped from the list.
+  // The SID itself when it no longer resolves to an account name, for example
+  // an entry left behind by a deleted account. Such an entry is still
+  // reported rather than being dropped from the list.
+  identity string
+  // Security identifier of the account
+  //
+  // Present for every entry, including principals whose name does not
+  // translate back to a SID, such as APPLICATION PACKAGE
+  // AUTHORITY\ALL APPLICATION PACKAGES (S-1-15-2-1).
   sid string
   // Which outcomes are audited, as Windows labels them
   //

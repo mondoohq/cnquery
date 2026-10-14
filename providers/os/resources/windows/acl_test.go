@@ -45,7 +45,10 @@ func TestParseWindowsAcl(t *testing.T) {
 	assert.Equal(t, "S-1-5-7", deny.Sid)
 	assert.Equal(t, "Deny", deny.Type)
 	assert.False(t, deny.IsAllow())
-	assert.True(t, deny.AllowsFullControl(), "the entry covers full control, it just denies it")
+	assert.Equal(t, AclFullControl, deny.Mask)
+	assert.False(t, deny.AllowsFullControl(), "the entry denies full control, it grants nothing")
+	assert.False(t, deny.AllowsWrite())
+	assert.False(t, deny.AllowsRead())
 }
 
 // The rights label cannot be used for assertions, and this is the evidence.
@@ -207,13 +210,23 @@ func TestWindowsAclEntryPredicates(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			e := WindowsAclEntry{Mask: tc.mask}
+			e := WindowsAclEntry{Type: "Allow", Mask: tc.mask}
 			assert.Equal(t, tc.read, e.AllowsRead(), "AllowsRead")
 			assert.Equal(t, tc.write, e.AllowsWrite(), "AllowsWrite")
 			assert.Equal(t, tc.execute, e.AllowsExecute(), "AllowsExecute")
 			assert.Equal(t, tc.del, e.AllowsDelete(), "AllowsDelete")
 			assert.Equal(t, tc.full, e.AllowsFullControl(), "AllowsFullControl")
 			assert.Equal(t, tc.permissionChange, e.AllowsPermissionChange(), "AllowsPermissionChange")
+
+			// The same mask on a deny entry grants nothing: a check such as
+			// entries.where(allowsWrite) must not list a denied principal.
+			deny := WindowsAclEntry{Type: "Deny", Mask: tc.mask}
+			assert.False(t, deny.AllowsRead(), "deny AllowsRead")
+			assert.False(t, deny.AllowsWrite(), "deny AllowsWrite")
+			assert.False(t, deny.AllowsExecute(), "deny AllowsExecute")
+			assert.False(t, deny.AllowsDelete(), "deny AllowsDelete")
+			assert.False(t, deny.AllowsFullControl(), "deny AllowsFullControl")
+			assert.False(t, deny.AllowsPermissionChange(), "deny AllowsPermissionChange")
 		})
 	}
 }
@@ -282,6 +295,26 @@ func TestAclScriptQuotesThePath(t *testing.T) {
 
 	// The script has to fit on a Windows command line once encoded.
 	assert.Less(t, len(powershell.Encode(AclScript(strings.Repeat("a", 260)))), 8191)
+	assert.Less(t, len(powershell.Encode(AclAuditScript(strings.Repeat("a", 260)))), 8191)
+}
+
+// The SID comes from the entry itself and the name is translated from it.
+// Translating the rendered name back to a SID fails for APPLICATION PACKAGE
+// AUTHORITY\ALL APPLICATION PACKAGES (S-1-15-2-1) and ALL RESTRICTED
+// APPLICATION PACKAGES (S-1-15-2-2), which left their sid empty.
+func TestAclScriptsReadSids(t *testing.T) {
+	for name, script := range map[string]string{
+		"access": AclScript(`C:\x`),
+		"audit":  AclAuditScript(`C:\x`),
+	} {
+		t.Run(name, func(t *testing.T) {
+			assert.Contains(t, script, `($true,$true,[System.Security.Principal.SecurityIdentifier])|ForEach-Object{`)
+			assert.Contains(t, script, `$s=[string]$_.IdentityReference.Value`)
+			assert.Contains(t, script, `.Translate([System.Security.Principal.NTAccount])`)
+			assert.NotContains(t, script, `Translate([System.Security.Principal.SecurityIdentifier])`)
+			assert.Contains(t, script, `Identity=$n;Sid=$s;`)
+		})
+	}
 }
 
 // A directory with no entries at all is not the same as a directory anyone can
@@ -297,20 +330,20 @@ func TestParseWindowsAclEmptyAccess(t *testing.T) {
 	assert.True(t, acl.Protected)
 }
 
-// An entry whose account cannot be translated to a SID, an orphaned entry left
-// behind by a deleted account, is still reported with its raw identity rather
-// than being dropped from the list.
+// An entry whose SID no longer resolves to an account name, an orphaned entry
+// left behind by a deleted account, is still reported, with the SID as its
+// identity, rather than being dropped from the list.
 func TestParseWindowsAclUnresolvableIdentity(t *testing.T) {
 	acl, err := ParseWindowsAcl(strings.NewReader(`{
 		"Path":"C:\\x","Owner":"BUILTIN\\Administrators","Group":"","Sddl":"","Protected":false,"OwnerSid":"",
 		"Access":[
-		{"Identity":"S-1-5-21-1111111111-2222222222-3333333333-1013","Sid":"","Type":"Allow","Rights":"FullControl","Mask":2032127,"Inherited":false,"InheritanceFlags":"None","PropagationFlags":"None"},
+		{"Identity":"S-1-5-21-1111111111-2222222222-3333333333-1013","Sid":"S-1-5-21-1111111111-2222222222-3333333333-1013","Type":"Allow","Rights":"FullControl","Mask":2032127,"Inherited":false,"InheritanceFlags":"None","PropagationFlags":"None"},
 		{"Identity":"BUILTIN\\Administrators","Sid":"S-1-5-32-544","Type":"Allow","Rights":"FullControl","Mask":2032127,"Inherited":false,"InheritanceFlags":"None","PropagationFlags":"None"}]
 	}`))
 	require.NoError(t, err)
 
 	require.Len(t, acl.Access, 2, "an unresolvable account must not shorten the list")
-	assert.Empty(t, acl.Access[0].Sid)
+	assert.Equal(t, "S-1-5-21-1111111111-2222222222-3333333333-1013", acl.Access[0].Sid)
 	assert.Equal(t, "S-1-5-21-1111111111-2222222222-3333333333-1013", acl.Access[0].Identity)
 	// It still counts as a writer, so an audit sees the orphaned grant.
 	assert.Contains(t, acl.AllowedWritePrincipals(), "S-1-5-21-1111111111-2222222222-3333333333-1013")
