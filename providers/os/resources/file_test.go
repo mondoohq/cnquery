@@ -225,3 +225,18 @@ func TestReadSmallRegularFile(t *testing.T) {
 		assert.False(t, ok, "a link to a FIFO")
 	}
 }
+
+func TestIsAbsentPath(t *testing.T) {
+	file := filepath.Join(t.TempDir(), "file")
+	require.NoError(t, os.WriteFile(file, nil, 0o644))
+
+	_, err := os.Stat(filepath.Join(file, ".ssh"))
+	require.Error(t, err)
+	assert.True(t, isAbsentPath(err), "a path below a regular file: %v", err)
+
+	_, err = os.Stat(filepath.Join(t.TempDir(), "missing"))
+	assert.True(t, isAbsentPath(err))
+
+	assert.False(t, isAbsentPath(os.ErrPermission))
+	assert.False(t, isAbsentPath(nil))
+}
