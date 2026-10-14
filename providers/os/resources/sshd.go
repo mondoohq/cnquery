@@ -554,19 +554,28 @@ func runEffectiveSshdConfig(conn shared.Connection, command string) (map[string]
 		return nil, err
 	}
 	if exit != 0 && needsSshdConnectionSpec(stderr) {
-		retryCommand := command + " -C " + sshdTestConnectionSpec
-		stdout, stderr, exit, err = runSshdCommand(conn, retryCommand)
+		command += " -C " + sshdTestConnectionSpec
+		stdout, stderr, exit, err = runSshdCommand(conn, command)
 		if err != nil {
 			return nil, err
-		}
-		if exit != 0 {
-			return nil, fmt.Errorf("%s failed (exit %d): %s", retryCommand, exit, strings.TrimSpace(stderr))
 		}
 	}
 	if exit != 0 {
 		return nil, fmt.Errorf("%s failed (exit %d): %s", command, exit, strings.TrimSpace(stderr))
 	}
-	return parseEffectiveSshdConfig(stdout), nil
+	params := parseEffectiveSshdConfig(stdout)
+	if len(params) == 0 {
+		// A working sshd -T always prints the full configuration, so empty
+		// output means sshd did not run. On Windows 10 22H2 the inbox
+		// sshd.exe fails to load (STATUS_ENTRYPOINT_NOT_FOUND) and cmd.exe
+		// still reports exit 0 with no output. Returning an empty map here
+		// would report no ciphers, MACs or key exchanges at all.
+		if msg := strings.TrimSpace(stderr); msg != "" {
+			return nil, fmt.Errorf("%s printed no configuration: %s", command, msg)
+		}
+		return nil, fmt.Errorf("%s printed no configuration", command)
+	}
+	return params, nil
 }
 
 func runSshdCommand(conn shared.Connection, command string) (string, string, int, error) {
@@ -574,15 +583,18 @@ func runSshdCommand(conn shared.Connection, command string) (string, string, int
 	if err != nil {
 		return "", "", 0, err
 	}
+	var stderr []byte
+	if cmd.Stderr != nil {
+		stderr, _ = io.ReadAll(cmd.Stderr)
+	}
 	if cmd.ExitStatus != 0 {
-		stderr, _ := io.ReadAll(cmd.Stderr)
 		return "", string(stderr), cmd.ExitStatus, nil
 	}
 	stdout, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return "", "", 0, err
 	}
-	return string(stdout), "", 0, nil
+	return string(stdout), string(stderr), 0, nil
 }
 
 // daemonOptions returns the -o options of the running sshd when it reads the
