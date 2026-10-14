@@ -224,3 +224,95 @@ func TestQueryRetriesUnpackFailuresOverTCP(t *testing.T) {
 	assert.Equal(t, values, rec.RData)
 	assert.NoError(t, rec.Error)
 }
+
+// udpOnlyResolver plays a caching resolver that answers only over UDP, in front
+// of the zone it resolves. A recursive query (RD set) is the resolver: over UDP
+// it truncates the TXT set, and over TCP it hangs up, the way a resolver that
+// refuses TCP looks to a client. A non-recursive query is the zone's own
+// nameserver, which answers NS for the delegation walk and serves the TXT set
+// in full over TCP. authoritativeTCP false makes the nameserver hang up too.
+func udpOnlyResolver(t *testing.T, name string, values []string, authoritativeTCP bool) string {
+	t.Helper()
+
+	handler := dns.HandlerFunc(func(w dns.ResponseWriter, req *dns.Msg) {
+		_, overTCP := w.RemoteAddr().(*net.TCPAddr)
+		m := new(dns.Msg)
+		m.SetReply(req)
+		switch q := req.Question[0]; {
+		case q.Qtype == dns.TypeNS:
+			if dns.Fqdn(name) == q.Name {
+				m.Answer = append(m.Answer, &dns.NS{
+					Hdr: dns.RR_Header{Name: q.Name, Rrtype: dns.TypeNS, Class: dns.ClassINET, Ttl: 300},
+					Ns:  "ns1." + dns.Fqdn(name),
+				})
+			}
+		case overTCP && (req.RecursionDesired || !authoritativeTCP):
+			_ = w.Close()
+			return
+		case !overTCP:
+			m.Truncated = true
+		default:
+			for _, v := range values {
+				m.Answer = append(m.Answer, &dns.TXT{
+					Hdr: dns.RR_Header{Name: q.Name, Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 300},
+					Txt: []string{v},
+				})
+			}
+		}
+		_ = w.WriteMsg(m)
+	})
+
+	packetConn, listener, port := listenBoth(t)
+	udp := &dns.Server{PacketConn: packetConn, Handler: handler}
+	tcp := &dns.Server{Listener: listener, Handler: handler}
+	go func() { _ = udp.ActivateAndServe() }()
+	go func() { _ = tcp.ActivateAndServe() }()
+	t.Cleanup(func() {
+		_ = udp.Shutdown()
+		_ = tcp.Shutdown()
+	})
+	return port
+}
+
+func queryUDPOnlyResolver(t *testing.T, name, port string) DnsRecord {
+	t.Helper()
+
+	client, err := New(name)
+	require.NoError(t, err)
+	client.config = &dns.ClientConfig{Servers: []string{"127.0.0.1"}, Port: port, Attempts: 1}
+	client.lookupHost = func(string) ([]string, error) { return []string{"127.0.0.1"}, nil }
+
+	res, err := client.queryDnsTypeAt("127.0.0.1", true, name, "TXT")
+	require.NoError(t, err)
+	rec, ok := res["TXT"]
+	require.True(t, ok, "a TXT lookup must leave a TXT entry, answered or failed")
+	return rec
+}
+
+func TestQueryAsksAuthoritativeServersWhenTheResolverRefusesTCP(t *testing.T) {
+	// A sandbox resolver that truncates a large TXT set and refuses TCP left the
+	// name with no TXT records, so its SPF record went unseen. The zone's own
+	// nameservers serve TCP, and answer instead.
+	values := []string{"v=spf1 redirect=_spf.example.com", "example-site-verification=abc123"}
+	port := udpOnlyResolver(t, "example.com", values, true)
+
+	rec := queryUDPOnlyResolver(t, "example.com", port)
+
+	assert.Equal(t, values, rec.RData)
+	assert.Equal(t, "NOERROR", rec.RCode)
+	assert.NoError(t, rec.Error)
+	assert.Empty(t, rec.ErrorMessage)
+}
+
+func TestQueryReportsATruncatedAnswerNoServerWouldDeliver(t *testing.T) {
+	// When no one serves the answer over TCP, the lookup failed. It used to read
+	// as a name that publishes no TXT records at all.
+	port := udpOnlyResolver(t, "example.com", []string{"v=spf1 -all"}, false)
+
+	rec := queryUDPOnlyResolver(t, "example.com", port)
+
+	assert.Empty(t, rec.RData)
+	require.Error(t, rec.Error)
+	assert.Contains(t, rec.ErrorMessage, "did not fit in a datagram")
+	assert.Contains(t, rec.ErrorMessage, "example.com")
+}

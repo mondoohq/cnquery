@@ -445,6 +445,14 @@ func (d *mqlDns) spf(params any) ([]any, error) {
 		return entries, nil
 	}
 	record, ok := paramsM["TXT"].(map[string]any)
+	if ok && plugin.StructuredErrors() {
+		// A TXT lookup that failed is not a name without SPF. In v13 both answer
+		// an empty list, so a resolver that could not deliver a large TXT set
+		// failed every "SPF is set" check (ADR 046 §9).
+		if msg, _ := record["errorMessage"].(string); msg != "" {
+			return nil, llx.Unavailable(errors.New("cannot read the TXT records of " + d.Fqdn.Data + ": " + msg))
+		}
+	}
 	if !ok || record["rCode"] != dns.RcodeToString[dns.RcodeSuccess] {
 		return entries, nil
 	}

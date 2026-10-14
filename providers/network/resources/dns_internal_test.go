@@ -7,6 +7,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 func TestParseSPF(t *testing.T) {
@@ -115,4 +119,38 @@ func TestDictTTL(t *testing.T) {
 			assert.False(t, ok)
 		})
 	})
+}
+
+func TestSpfReportsAFailedTXTLookup(t *testing.T) {
+	d := &mqlDns{Fqdn: plugin.TValue[string]{Data: "example.com", State: plugin.StateIsSet}}
+	params := map[string]any{"TXT": map[string]any{
+		"type":         "TXT",
+		"rCode":        "",
+		"errorMessage": "the TXT answer for example.com did not fit in a datagram, and the TCP retry failed",
+	}}
+
+	t.Run("structured errors", func(t *testing.T) {
+		withStructuredErrors(t, true)
+		_, err := d.spf(params)
+		require.Error(t, err)
+		assert.ErrorIs(t, err, llx.ErrTargetUnavailable)
+		assert.Contains(t, err.Error(), "example.com")
+	})
+
+	t.Run("v13", func(t *testing.T) {
+		withStructuredErrors(t, false)
+		entries, err := d.spf(params)
+		require.NoError(t, err)
+		assert.Empty(t, entries)
+	})
+}
+
+func withStructuredErrors(t *testing.T, on bool) {
+	t.Helper()
+	t.Cleanup(func() { plugin.ReadFeatures([]byte(mql.Features{byte(mql.ResourceContext)})) })
+	if on {
+		plugin.ReadFeatures([]byte(mql.Features{byte(mql.StructuredErrors)}))
+	} else {
+		plugin.ReadFeatures([]byte(mql.Features{byte(mql.ResourceContext)}))
+	}
 }
