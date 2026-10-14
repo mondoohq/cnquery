@@ -189,28 +189,13 @@ func revocationFields(revocations map[string]*tlsshake.Revocation, cert *x509.Ce
 	return llx.BoolTrue, llx.TimeData(revocation.At), llx.BoolTrue
 }
 
-func parseCertificates(runtime *plugin.Runtime, domainName string, certificateList []*x509.Certificate, revocations map[string]*tlsshake.Revocation) ([]any, []string, error) {
+func parseCertificates(runtime *plugin.Runtime, certificateList []*x509.Certificate, revocations map[string]*tlsshake.Revocation) ([]any, []string, error) {
 	res := make([]any, len(certificateList))
 	errors := []string{}
 
-	verified := false
-	if len(certificateList) != 0 {
-		intermediates := x509.NewCertPool()
-		for i := 1; i < len(certificateList); i++ {
-			intermediates.AddCert(certificateList[i])
-		}
-
-		verifyCerts, err := certificateList[0].Verify(x509.VerifyOptions{
-			DNSName:       domainName,
-			Intermediates: intermediates,
-		})
-		if err != nil {
-			errors = append(errors, "Failed to verify certificate chain for "+certificateList[0].Subject.String())
-		}
-
-		if len(verifyCerts) != 0 {
-			verified = verifyCerts[0][0].Equal(certificateList[0])
-		}
+	verified := chainVerified(certificateList, nil)
+	if len(certificateList) != 0 && !verified {
+		errors = append(errors, "Failed to verify certificate chain for "+certificateList[0].Subject.String())
 	}
 
 	for i := range certificateList {
@@ -588,14 +573,14 @@ func (s *mqlTls) populateCertificates(socket *mqlSocket, domainName string) erro
 	}
 	revocations = withChainRevocations(revocations, certs)
 
-	mqlCerts, _, err := parseCertificates(s.MqlRuntime, domainName, certs, revocations)
+	mqlCerts, _, err := parseCertificates(s.MqlRuntime, certs, revocations)
 	if err != nil {
 		s.Certificates = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
 	} else {
 		s.Certificates = plugin.TValue[[]any]{Data: mqlCerts, State: plugin.StateIsSet}
 	}
 
-	mqlNonSniCerts, _, err := parseCertificates(s.MqlRuntime, domainName, nonSniCerts, revocations)
+	mqlNonSniCerts, _, err := parseCertificates(s.MqlRuntime, nonSniCerts, revocations)
 	if err != nil {
 		s.NonSniCertificates = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
 	} else {
@@ -643,6 +628,26 @@ func (s *mqlTls) certificateMatchesDomain() (bool, error) {
 	}
 
 	return certMatchesDomain(leaf.cert.Data, domainName.Data), nil
+}
+
+// chainVerified reports whether the served chain leads from the leaf to a
+// trusted root (roots, or the system pool when nil). It is chain trust only:
+// whether the leaf covers the host is tls.certificateMatchesDomain. Verifying
+// with the host name as well made a certificate served for another name read
+// as an untrusted chain, so one problem failed both checks.
+func chainVerified(certificateList []*x509.Certificate, roots *x509.CertPool) bool {
+	if len(certificateList) == 0 {
+		return false
+	}
+	intermediates := x509.NewCertPool()
+	for i := 1; i < len(certificateList); i++ {
+		intermediates.AddCert(certificateList[i])
+	}
+	chains, err := certificateList[0].Verify(x509.VerifyOptions{
+		Intermediates: intermediates,
+		Roots:         roots,
+	})
+	return err == nil && len(chains) != 0 && chains[0][0].Equal(certificateList[0])
 }
 
 // certMatchesDomain reports whether the certificate is valid for the given
