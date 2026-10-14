@@ -9,8 +9,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/fs"
+	"go.mondoo.com/mql/utils/syncx"
 )
 
 func readDockerDaemonFixture(t *testing.T, name string) string {
@@ -45,7 +51,7 @@ func TestParseDockerDaemonJSON(t *testing.T) {
 		assert.True(t, verify)
 
 		// "hosts": [] listens on the default socket
-		assert.Equal(t, []any{dockerDefaultHost}, dockerHosts(cfg))
+		assert.Equal(t, []any{"unix:///var/run/docker.sock"}, dockerHosts(cfg, dockerdLinux.host))
 
 		assert.Equal(t, map[string]any{
 			"cc-runtime": "/usr/bin/cc-runtime",
@@ -72,7 +78,7 @@ func TestDockerDaemonDefaults(t *testing.T) {
 	// nothing configured: what dockerd uses
 	cfg := map[string]any{}
 	assert.True(t, dockerBool(cfg, "icc", true))
-	assert.Equal(t, []any{dockerDefaultHost}, dockerHosts(cfg))
+	assert.Equal(t, []any{"unix:///var/run/docker.sock"}, dockerHosts(cfg, dockerdLinux.host))
 	tls, verify := dockerTLS(cfg)
 	assert.False(t, tls)
 	assert.False(t, verify)
@@ -155,7 +161,7 @@ func TestParseDockerdCommandLine(t *testing.T) {
 	t.Run("docker:29-dind without TLS", func(t *testing.T) {
 		// DOCKER_TLS_CERTDIR= : a TCP listener with no TLS at all
 		c := parseDockerdCommandLine(strings.TrimSpace(readDockerDaemonFixture(t, "dind-notls.cmdline")))
-		assert.Equal(t, []any{"unix:///var/run/docker.sock", "tcp://0.0.0.0:2375"}, dockerHosts(c.settings))
+		assert.Equal(t, []any{"unix:///var/run/docker.sock", "tcp://0.0.0.0:2375"}, dockerHosts(c.settings, dockerdLinux.host))
 		tls, verify := dockerTLS(c.settings)
 		assert.False(t, tls)
 		assert.False(t, verify)
@@ -240,4 +246,102 @@ func TestMergeDockerDaemonConfig(t *testing.T) {
 	cfg = mergeDockerDaemonConfig(map[string]any{"icc": true}, map[string]any{"icc": false, "debug": true})
 	assert.Equal(t, true, cfg["icc"])
 	assert.Equal(t, true, cfg["debug"])
+}
+
+func TestIsDockerdExecutable(t *testing.T) {
+	assert.True(t, isDockerdExecutable("/usr/bin/dockerd"))
+	assert.True(t, isDockerdExecutable(`C:\Program Files\Docker\dockerd.exe`))
+	assert.True(t, isDockerdExecutable(`C:\Program Files\Docker\Docker\resources\DOCKERD.EXE`))
+	assert.True(t, isDockerdExecutable("dockerd"))
+	assert.False(t, isDockerdExecutable("/usr/bin/dockerd-rootless.sh"))
+	assert.False(t, isDockerdExecutable(`C:\Program Files\Docker\docker.exe`))
+	assert.False(t, isDockerdExecutable("/usr/bin/containerd"))
+}
+
+func dockerDaemonTestRuntime(t *testing.T, family []string, files map[string]string) *plugin.Runtime {
+	t.Helper()
+	mfs := afero.NewMemMapFs()
+	for p, content := range files {
+		writeMemFSFile(t, mfs, p, []byte(content))
+	}
+	asset := &inventory.Asset{Platform: &inventory.Platform{Name: family[0], Family: family}}
+	conn, err := fs.NewFileSystemConnectionWithFs(0, &inventory.Config{}, asset, "", nil, mfs)
+	require.NoError(t, err)
+	return &plugin.Runtime{
+		Resources:  &syncx.Map[plugin.Resource]{},
+		Connection: conn,
+		Callback:   &providerCallbacks{},
+	}
+}
+
+func newTestDockerDaemon(t *testing.T, rt *plugin.Runtime) *mqlDockerDaemon {
+	t.Helper()
+	r, err := NewResource(rt, "docker.daemon", map[string]*llx.RawData{})
+	require.NoError(t, err)
+	return r.(*mqlDockerDaemon)
+}
+
+// Without a dockerd on the target, dockerd's defaults say nothing about it:
+// no listener, no default setting, while the configuration file it would
+// read is still named.
+func TestDockerDaemonNotInstalled(t *testing.T) {
+	for name, family := range map[string][]string{
+		"linux":   {"debian", "linux", "unix"},
+		"windows": {"windows"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			d := newTestDockerDaemon(t, dockerDaemonTestRuntime(t, family, nil))
+
+			hosts := d.GetHosts()
+			require.NoError(t, hosts.Error)
+			assert.True(t, hosts.IsNull())
+			assert.Nil(t, hosts.Data)
+
+			icc := d.GetIcc()
+			require.NoError(t, icc.Error)
+			assert.True(t, icc.IsNull())
+			assert.True(t, d.GetTlsVerify().IsNull())
+			assert.True(t, d.GetDataRoot().IsNull())
+			assert.True(t, d.GetLogDriver().IsNull())
+
+			cf := d.GetConfigFile()
+			require.NoError(t, cf.Error)
+			assert.Equal(t, dockerdPlatformFor(family[0]).configFile, cf.Data.Path.Data)
+		})
+	}
+}
+
+func TestDockerDaemonWindowsDefaults(t *testing.T) {
+	rt := dockerDaemonTestRuntime(t, []string{"windows"}, map[string]string{
+		`C:\Program Files\Docker\dockerd.exe`: "MZ",
+	})
+	d := newTestDockerDaemon(t, rt)
+	assert.Equal(t, []any{"npipe:////./pipe/docker_engine"}, d.GetHosts().Data)
+	assert.Equal(t, `C:\ProgramData\docker`, d.GetDataRoot().Data)
+	assert.Equal(t, `C:\ProgramData\docker\config\daemon.json`, d.GetConfigFile().Data.Path.Data)
+	icc := d.GetIcc()
+	assert.False(t, icc.IsNull())
+	assert.True(t, icc.Data)
+}
+
+func TestDockerDaemonConfigFileMeansInstalled(t *testing.T) {
+	rt := dockerDaemonTestRuntime(t, []string{"windows"}, map[string]string{
+		`C:\ProgramData\docker\config\daemon.json`: `{"hosts": ["tcp://0.0.0.0:2375"], "data-root": "D:\\docker"}`,
+	})
+	d := newTestDockerDaemon(t, rt)
+	hosts := d.GetHosts()
+	require.NoError(t, hosts.Error)
+	assert.Equal(t, []any{"tcp://0.0.0.0:2375"}, hosts.Data)
+	assert.Equal(t, `D:\docker`, d.GetDataRoot().Data)
+	assert.False(t, d.GetTlsVerify().Data)
+	assert.False(t, d.GetTlsVerify().IsNull())
+}
+
+func TestDockerDaemonLinuxBinaryMeansInstalled(t *testing.T) {
+	rt := dockerDaemonTestRuntime(t, []string{"debian", "linux", "unix"}, map[string]string{
+		"/usr/bin/dockerd": "ELF",
+	})
+	d := newTestDockerDaemon(t, rt)
+	assert.Equal(t, []any{"unix:///var/run/docker.sock"}, d.GetHosts().Data)
+	assert.Equal(t, "/var/lib/docker", d.GetDataRoot().Data)
 }

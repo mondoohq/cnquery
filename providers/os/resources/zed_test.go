@@ -101,6 +101,12 @@ func TestZedSettingsJSONC(t *testing.T) {
 	assert.Equal(t, "system", theme["mode"])
 }
 
+func TestZedConfigDir(t *testing.T) {
+	assert.Equal(t, filepath.Join("AppData", "Roaming", "Zed"), zedConfigDir("windows"))
+	assert.Equal(t, filepath.Join(".config", "zed"), zedConfigDir("darwin"))
+	assert.Equal(t, filepath.Join(".config", "zed"), zedConfigDir("linux"))
+}
+
 func TestZedConfigMissing(t *testing.T) {
 	afs := testAfero()
 	dir := t.TempDir()

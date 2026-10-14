@@ -517,6 +517,7 @@ func (c *mqlChrome) fallbackManifestScan(
 		return nil, nil
 	}
 
+	windows := targetOSFamily(c.MqlRuntime.Connection.(shared.Connection)) == "windows"
 	var extensions []any
 	for _, f := range fileList.Data {
 		file := f.(*mqlFile)
@@ -525,7 +526,7 @@ func (c *mqlChrome) fallbackManifestScan(
 			continue
 		}
 
-		normalizedPath := filepath.ToSlash(manifestPath.Data)
+		normalizedPath := targetSlashPath(manifestPath.Data, windows)
 		matches := extensionPathPattern.FindStringSubmatch(normalizedPath)
 		if matches == nil {
 			continue
@@ -543,7 +544,7 @@ func (c *mqlChrome) fallbackManifestScan(
 			continue
 		}
 
-		extDir := filepath.Dir(manifestPath.Data)
+		extDir := targetPathDir(manifestPath.Data, windows)
 		name := manifest.Name
 		if strings.HasPrefix(name, "__MSG_") {
 			if resolved := resolveChromei18n(afs, extDir, manifest.DefaultLocale, name); resolved != "" {

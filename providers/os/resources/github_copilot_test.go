@@ -90,10 +90,8 @@ func TestCopilotMCPParsing(t *testing.T) {
 	assert.Empty(t, remote.Command)
 }
 
-func TestCopilotConfigMissing(t *testing.T) {
-	afs := testAfero()
-	dir := t.TempDir()
-
-	_, err := afs.ReadFile(filepath.Join(dir, "apps.json"))
-	assert.Error(t, err)
+func TestGitHubCopilotConfigDir(t *testing.T) {
+	assert.Equal(t, filepath.Join("AppData", "Local", "github-copilot"), gitHubCopilotConfigDir("windows"))
+	assert.Equal(t, filepath.Join(".config", "github-copilot"), gitHubCopilotConfigDir("darwin"))
+	assert.Equal(t, filepath.Join(".config", "github-copilot"), gitHubCopilotConfigDir("linux"))
 }

@@ -13,10 +13,19 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-const defaultGooseConfigDir = ".config/goose"
-
 func initGoose(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initConfigPath(runtime, args, "goose", defaultGooseConfigDir)
+	return initOSConfigPath(runtime, args, "goose", gooseConfigDir)
+}
+
+// gooseConfigDir returns Goose's configuration directory relative to the
+// user's home. Goose resolves it with etcetera's choose_app_strategy (author
+// "Block", app "goose"): the Windows strategy puts it under the roaming
+// application-data directory, the XDG one, used on macOS too, under ~/.config.
+func gooseConfigDir(osFamily string) string {
+	if osFamily == "windows" {
+		return filepath.Join("AppData", "Roaming", "Block", "goose", "config")
+	}
+	return filepath.Join(".config", "goose")
 }
 
 func (r *mqlGoose) id() (string, error) {
@@ -63,11 +72,20 @@ func (r *mqlGoose) telemetryEnabled() (bool, error) {
 	config, err := r.loadConfig()
 	if err != nil {
 		if os.IsNotExist(err) {
+			// No configuration file: nothing says whether Goose is here at all.
+			r.TelemetryEnabled.State = plugin.StateIsSet | plugin.StateIsNull
 			return false, nil
 		}
 		return false, err
 	}
-	return config.TelemetryEnabled, nil
+	return gooseTelemetryEnabled(config), nil
+}
+
+// gooseTelemetryEnabled is Goose's is_telemetry_enabled for a configuration
+// file: telemetry is opt-in, so it is off until GOOSE_TELEMETRY_ENABLED says
+// otherwise.
+func gooseTelemetryEnabled(config *gooseConfig) bool {
+	return config.TelemetryEnabled != nil && *config.TelemetryEnabled
 }
 
 func (r *mqlGoose) extensions() ([]interface{}, error) {
@@ -99,8 +117,9 @@ func (r *mqlGoose) extensions() ([]interface{}, error) {
 }
 
 func (r *mqlGoose) skills() ([]interface{}, error) {
-	return agentSkills(r.MqlRuntime, "goose.skill", r.ConfigPath.Data, defaultGooseConfigDir,
-		filepath.Join(defaultGooseConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
+	dir := gooseConfigDir(runtimeOSFamily(r.MqlRuntime))
+	return agentSkills(r.MqlRuntime, "goose.skill", r.ConfigPath.Data, dir,
+		filepath.Join(dir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
 
 // Child resource ID methods
@@ -127,7 +146,7 @@ type gooseConfig struct {
 	Extensions       map[string]gooseExtension `json:"extensions"`
 	Provider         string                    `json:"GOOSE_PROVIDER"`
 	Model            string                    `json:"GOOSE_MODEL"`
-	TelemetryEnabled bool                      `json:"GOOSE_TELEMETRY_ENABLED"`
+	TelemetryEnabled *bool                     `json:"GOOSE_TELEMETRY_ENABLED"`
 }
 
 type gooseExtension struct {
