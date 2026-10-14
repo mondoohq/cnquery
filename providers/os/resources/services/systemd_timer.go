@@ -83,9 +83,11 @@ func (m *SystemdTimerManager) listViaSystemctl() ([]*SystemdTimer, error) {
 	}
 
 	// Step 3: Merge
+	unloaded := map[string]*string{}
 	for _, timer := range timers {
 		unitState, ok := unitStates[timer.Name]
 		if !ok {
+			unloaded[ensureSystemdTimerUnit(timer.Name)] = &timer.Description
 			continue
 		}
 		timer.Description = unitState.Description
@@ -94,6 +96,8 @@ func (m *SystemdTimerManager) listViaSystemctl() ([]*SystemdTimer, error) {
 			timer.Installed = false
 		}
 	}
+
+	describeUnloadedUnits(m.conn, unloaded)
 
 	// Step 4: Add the units only list-units names, such as the instances of a
 	// template. A failed show keeps what list-units told about them.
