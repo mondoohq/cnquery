@@ -10,6 +10,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/os/registry"
@@ -408,7 +409,9 @@ func (w *mqlWindowsEventlog) loadState() (*windows.EventLogChannel, error) {
 	}
 	// A name the registry does not know is reported as such, the same way
 	// for every field. When the registry cannot be read, the command decides.
-	if err := w.load(); err == nil && !w.registered {
+	if err := w.load(); err != nil {
+		log.Debug().Err(err).Str("channel", w.Name.Data).Msg("could not read the Event Log channel registry keys, reading the channel through the command")
+	} else if !w.registered {
 		return nil, errNoSuchChannel(w.Name.Data)
 	}
 
