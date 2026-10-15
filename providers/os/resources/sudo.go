@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"io"
 	"strconv"
 	"strings"
@@ -248,6 +249,12 @@ func (s *mqlSudo) plugins() ([]any, error) {
 	info, err := s.versionInfo()
 	if err != nil {
 		return nil, err
+	}
+	// The plugins are what `sudo -V` reports, which an image or a mounted
+	// disk cannot run. An empty list read as "no I/O or audit plugin", which
+	// a check for sudo session logging passed on.
+	if conn := s.MqlRuntime.Connection.(shared.Connection); !conn.Capabilities().Has(shared.Capability_RunCommand) && plugin.StructuredErrors() {
+		return nil, llx.NotApplicable(errors.New("sudo plugins need a running system, and this connection cannot run commands"))
 	}
 	out := make([]any, 0, len(info.Plugins))
 	for _, p := range info.Plugins {
