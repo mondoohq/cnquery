@@ -442,6 +442,19 @@ func find(t *testing.T, fs *tar.FS, from string, r *regexp.Regexp, typ string, p
 	return res
 }
 
+// Find returns its matches sorted. The index is a map, so the same image
+// listed them in another order on every scan, and sudoers read its
+// includedir in that order.
+func TestTarFindIsSorted(t *testing.T) {
+	fs := findFixtureFs(t)
+	for range 10 {
+		res, err := fs.Find("/etc/c3-links", nil, "", nil, nil)
+		require.NoError(t, err)
+		require.NotEmpty(t, res)
+		assert.True(t, sort.StringsAreSorted(res), "%v", res)
+	}
+}
+
 func TestTarFindPermissions(t *testing.T) {
 	fs := findFixtureFs(t)
 	suid := uint32(0o4000)

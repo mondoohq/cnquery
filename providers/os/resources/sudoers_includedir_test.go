@@ -53,7 +53,19 @@ func TestSudoersIncludedirFiles(t *testing.T) {
 		"/etc/sudoers.d/mqlsub/inner",
 	}
 	assert.Equal(t,
-		[]string{"/etc/sudoers.d/README", "/etc/sudoers.d/mqltest", "/etc/sudoers.d/mqlnew", "/etc/sudoers.d/mqllink"},
+		[]string{"/etc/sudoers.d/README", "/etc/sudoers.d/mqllink", "/etc/sudoers.d/mqlnew", "/etc/sudoers.d/mqltest"},
 		sudoersIncludedirFiles("/etc/sudoers.d", listing))
 	assert.Empty(t, sudoersIncludedirFiles("/etc/sudoers.d", nil))
+}
+
+// sudo reads an includedir in sorted lexical order and the last matching
+// rule wins, so 90-deny overrides 10-allow whatever order the directory
+// lists them in. A Debian 12 image listed /etc/sudoers.d as mqluser, README.
+func TestSudoersIncludedirFilesAreSorted(t *testing.T) {
+	assert.Equal(t,
+		[]string{"/etc/sudoers.d/10-allow", "/etc/sudoers.d/90-deny"},
+		sudoersIncludedirFiles("/etc/sudoers.d", []string{"/etc/sudoers.d/90-deny", "/etc/sudoers.d/10-allow"}))
+	assert.Equal(t,
+		[]string{"/etc/sudoers.d/README", "/etc/sudoers.d/mqluser"},
+		sudoersIncludedirFiles("/etc/sudoers.d", []string{"/etc/sudoers.d/mqluser", "/etc/sudoers.d/README"}))
 }

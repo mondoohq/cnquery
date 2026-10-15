@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -417,6 +418,9 @@ func (fs *FS) Find(from string, r *regexp.Regexp, typ string, perm *uint32, dept
 		}
 		list = append(list, p)
 	}
+	// the index is a map, so without this the same image listed its files
+	// in another order on every scan
+	sort.Strings(list)
 	return list, nil
 }
 
