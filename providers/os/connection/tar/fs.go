@@ -8,10 +8,12 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -24,14 +26,78 @@ var _ shared.FileSearch = (*FS)(nil)
 
 func NewFs(source string) *FS {
 	return &FS{
-		Source:  source,
-		FileMap: make(map[string]*tar.Header),
+		Source:      source,
+		FileMap:     make(map[string]*tar.Header),
+		dataOffsets: make(map[*tar.Header]int64),
 	}
 }
 
 type FS struct {
 	Source  string
 	FileMap map[string]*tar.Header
+
+	// dataOffsets is where the data of each entry starts in the archive at
+	// Source, recorded when the archive was loaded. Reading a file used to
+	// scan the archive from its start for the entry, so every read cost a
+	// pass over the whole image: reading the package.json files of a Debian
+	// image with nodejs installed took three minutes.
+	dataOffsets map[*tar.Header]int64
+
+	// dirIndex maps each directory to the names of its direct children. It
+	// is built from FileMap on the first listing and rebuilt when FileMap
+	// has grown since. Listing a directory used to scan every entry of the
+	// archive, which made a walk quadratic in the size of the image: npm
+	// and package file inventories took minutes on an image the same
+	// scan inside the running container finished in a second.
+	indexMu    sync.Mutex
+	dirIndex   map[string][]string
+	indexedLen int
+}
+
+// childNames returns the names of the direct children of the directory at
+// archive key dir, sorted. A child that only appears as the parent of a
+// deeper entry is included: layer tars may omit the entries of directories.
+func (fs *FS) childNames(dir string) []string {
+	fs.indexMu.Lock()
+	defer fs.indexMu.Unlock()
+	if fs.dirIndex == nil || fs.indexedLen != len(fs.FileMap) {
+		fs.dirIndex = buildDirIndex(fs.FileMap)
+		fs.indexedLen = len(fs.FileMap)
+	}
+	return fs.dirIndex[dir]
+}
+
+func buildDirIndex(files map[string]*tar.Header) map[string][]string {
+	sets := map[string]map[string]struct{}{}
+	for k := range files {
+		for k != "/" && k != "" {
+			parent, name := path.Split(k)
+			if parent != "/" {
+				parent = strings.TrimSuffix(parent, "/")
+			}
+			children, ok := sets[parent]
+			if !ok {
+				children = map[string]struct{}{}
+				sets[parent] = children
+			}
+			if _, seen := children[name]; seen {
+				// the rest of the chain was added with this name
+				break
+			}
+			children[name] = struct{}{}
+			k = parent
+		}
+	}
+	index := make(map[string][]string, len(sets))
+	for dir, children := range sets {
+		names := make([]string, 0, len(children))
+		for name := range children {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+		index[dir] = names
+	}
+	return index
 }
 
 func (fs *FS) Name() string {
@@ -336,6 +402,10 @@ func (fs *FS) open(header *tar.Header) (io.Reader, error) {
 		return nil, err
 	}
 	defer f.Close()
+
+	if offset, ok := fs.dataOffsets[header]; ok {
+		return fsutil.ReadTarEntryAt(f, offset, header.Size)
+	}
 
 	// extract file from tar stream
 	reader, err := fsutil.ExtractFileFromTarStream(header.Name, f)

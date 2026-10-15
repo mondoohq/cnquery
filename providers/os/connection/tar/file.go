@@ -8,7 +8,7 @@ import (
 	"errors"
 	"io"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -71,53 +71,29 @@ func (f *File) ReadAt(b []byte, off int64) (n int, err error) {
 	return ra.ReadAt(b, off)
 }
 
-// children returns the direct children of the directory, by name, with the
-// archive entry for each. A child the archive has no entry for, a directory
-// that is only implied by the paths below it, maps to nil.
-func (f *File) children() map[string]*tar.Header {
+// dirKey is the archive key of the directory the file lists.
+func (f *File) dirKey() string {
 	dir := f.key
 	if dir == "" {
 		dir = Abs(f.path)
 	}
-	prefix := dir
-	if !strings.HasSuffix(prefix, "/") {
-		prefix += "/"
+	if dir != "/" {
+		dir = strings.TrimSuffix(dir, "/")
 	}
-
-	res := map[string]*tar.Header{}
-	for k, h := range f.Fs.FileMap {
-		if !strings.HasPrefix(k, prefix) {
-			continue
-		}
-		rel := k[len(prefix):]
-		if rel == "" {
-			continue
-		}
-		if i := strings.IndexByte(rel, '/'); i >= 0 {
-			if _, ok := res[rel[:i]]; !ok {
-				res[rel[:i]] = nil
-			}
-			continue
-		}
-		res[rel] = h
-	}
-	return res
+	return dir
 }
 
-// Readdir returns the direct children of the directory, as lstat reports
-// them: a symlink child is reported as the link.
+// Readdir returns the direct children of the directory, sorted by name, as
+// lstat reports them: a symlink child is reported as the link.
 func (f *File) Readdir(n int) ([]os.FileInfo, error) {
-	children := f.children()
-	names := make([]string, 0, len(children))
-	for name := range children {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-
+	dir := f.dirKey()
+	names := f.Fs.childNames(dir)
 	fi := make([]os.FileInfo, 0, len(names))
 	for _, name := range names {
-		h := children[name]
+		h := f.Fs.FileMap[join(dir, name)]
 		if h == nil {
+			// a directory the archive holds no entry of its own for, only
+			// implied by the paths below it
 			h = &tar.Header{Name: name, Typeflag: tar.TypeDir, Mode: 0o755}
 		}
 		fi = append(fi, h.FileInfo())
@@ -125,15 +101,10 @@ func (f *File) Readdir(n int) ([]os.FileInfo, error) {
 	return fi, nil
 }
 
-// Readdirnames returns the names of the direct children of the directory.
+// Readdirnames returns the names of the direct children of the directory,
+// sorted.
 func (f *File) Readdirnames(n int) ([]string, error) {
-	children := f.children()
-	names := make([]string, 0, len(children))
-	for name := range children {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-	return names, nil
+	return slices.Clone(f.Fs.childNames(f.dirKey())), nil
 }
 
 func (f *File) Seek(offset int64, whence int) (int64, error) {

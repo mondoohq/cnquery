@@ -6,6 +6,7 @@ package tar_test
 import (
 	archivetar "archive/tar"
 	"debug/elf"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -522,4 +523,54 @@ func TestTarFindFromALinkedDirectory(t *testing.T) {
 		"the regex sees the path below from")
 
 	assert.Equal(t, []string{"/etc/c3-links/todir", "/etc/c3-links/todir/in.conf"}, find(t, fs, "/etc/c3-links/todir", nil, "", nil))
+}
+
+// The directory index is built on the first listing. A Load that adds
+// entries afterwards must show up in the next listing.
+func TestTarReadDirSeesEntriesAddedLater(t *testing.T) {
+	fs := tar.NewFs("")
+	fs.FileMap["/etc"] = &archivetar.Header{Name: "etc", Typeflag: archivetar.TypeDir, Mode: 0o755}
+	fs.FileMap["/etc/passwd"] = &archivetar.Header{Name: "etc/passwd", Typeflag: archivetar.TypeReg, Mode: 0o644}
+	afs := &afero.Afero{Fs: fs}
+
+	names, err := afs.ReadDir("/etc")
+	require.NoError(t, err)
+	require.Len(t, names, 1)
+
+	fs.FileMap["/etc/group"] = &archivetar.Header{Name: "etc/group", Typeflag: archivetar.TypeReg, Mode: 0o644}
+	fs.FileMap["/etc/ssh/sshd_config"] = &archivetar.Header{Name: "etc/ssh/sshd_config", Typeflag: archivetar.TypeReg, Mode: 0o600}
+	infos, err := afs.ReadDir("/etc")
+	require.NoError(t, err)
+	got := []string{}
+	for _, i := range infos {
+		got = append(got, i.Name())
+	}
+	assert.Equal(t, []string{"group", "passwd", "ssh"}, got)
+}
+
+// A walk lists every directory once. With a listing that scanned the whole
+// archive this was quadratic: ~3 minutes for the npm inventory of a Debian
+// image with nodejs installed.
+func BenchmarkTarWalk(b *testing.B) {
+	fs := tar.NewFs("")
+	for _, dir := range []string{"/usr", "/usr/share", "/usr/share/nodejs"} {
+		fs.FileMap[dir] = &archivetar.Header{Name: dir[1:], Typeflag: archivetar.TypeDir, Mode: 0o755}
+	}
+	for d := 0; d < 2000; d++ {
+		dir := fmt.Sprintf("/usr/share/nodejs/pkg%d", d)
+		fs.FileMap[dir] = &archivetar.Header{Name: dir[1:], Typeflag: archivetar.TypeDir, Mode: 0o755}
+		for f := 0; f < 20; f++ {
+			p := fmt.Sprintf("/usr/share/nodejs/pkg%d/file%d.js", d, f)
+			fs.FileMap[p] = &archivetar.Header{Name: p[1:], Typeflag: archivetar.TypeReg, Mode: 0o644}
+		}
+	}
+	afs := &afero.Afero{Fs: fs}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		n := 0
+		_ = afs.Walk("/usr/share/nodejs", func(string, os.FileInfo, error) error { n++; return nil })
+		if n != 2000*21+1 {
+			b.Fatalf("walked %d entries", n)
+		}
+	}
 }

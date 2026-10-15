@@ -117,3 +117,22 @@ func readTarEntry(tr *tar.Reader, size int64) ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+// ReadTarEntryAt returns the size bytes of a tar entry's data that start at
+// offset in the archive r. The size is only trusted up to
+// maxTarEntryPrealloc, like in ExtractFileFromTarStream.
+func ReadTarEntryAt(r io.ReaderAt, offset int64, size int64) (io.Reader, error) {
+	section := io.NewSectionReader(r, offset, size)
+	if size <= maxTarEntryPrealloc {
+		data := make([]byte, size)
+		if _, err := io.ReadFull(section, data); err != nil {
+			return nil, err
+		}
+		return bytes.NewReader(data), nil
+	}
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, section); err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(buf.Bytes()), nil
+}
