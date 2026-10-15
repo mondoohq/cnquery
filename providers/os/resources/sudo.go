@@ -311,6 +311,18 @@ func (s *mqlSudo) pythonSupport() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	// Like the plugins, Python support is what `sudo -V` reports. An image
+	// or a mounted disk cannot run it, and false read as a build without
+	// Python plugins.
+	if conn := s.MqlRuntime.Connection.(shared.Connection); !conn.Capabilities().Has(shared.Capability_RunCommand) && plugin.StructuredErrors() {
+		return false, llx.NotApplicable(errors.New("sudo's Python support needs a running system, and this connection cannot run commands"))
+	}
+	// no `sudo -V` output to read it from: sudo is not installed or did not
+	// run
+	if info.Version == "" {
+		s.PythonSupport = plugin.TValue[bool]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return false, nil
+	}
 	return info.PythonSupport, nil
 }
 
