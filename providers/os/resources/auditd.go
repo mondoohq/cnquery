@@ -1083,6 +1083,8 @@ func (s *mqlAuditdLoadedRules) list() (*auditdRuleSet, error) {
 		return nil, auditctlListError(cmd.ExitStatus, string(stdout)+string(stderr))
 	}
 
+	// auditctl -l lists filter rules only, never control rules such as -b or
+	// -e, so the controls of the parsed set stay empty and are not exposed.
 	var errs multierr.Errors
 	rules := newAuditdRuleSet(s.MqlRuntime)
 	rules.parse(auditctlListedRules(string(stdout)), &errs)

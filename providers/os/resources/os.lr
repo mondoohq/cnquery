@@ -2093,9 +2093,10 @@ auditd.rules {
 // Rules the kernel audit subsystem has loaded, as `auditctl -l` lists them.
 // They can differ from the rules on disk that `auditd.rules` reads: rules
 // added or deleted with auditctl since boot, a rules file that failed to
-// load, or rules changed on disk and not loaded again. The fields have the
-// shape of the ones on `auditd.rules`, so a check of the rules on disk reads
-// the loaded rules by replacing `auditd.rules` with `auditd.loadedRules`.
+// load, or rules changed on disk and not loaded again. `files`, `syscalls`
+// and `watches` have the shape of the same fields on `auditd.rules`, so a
+// check of the rules on disk reads the loaded rules by replacing
+// `auditd.rules` with `auditd.loadedRules`. auditctl lists no control rules.
 // The kernel keeps a syscall rule on a path or directory that has no
 // architecture or syscall filter as a watch, and auditctl lists it as a `-w`
 // rule, so compare paths through `watches`, which reads both forms. Whether
