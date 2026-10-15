@@ -16,753 +16,771 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAsset                                         string = "asset"
-	ResourceExtensionRuntime                              string = "extensionRuntime"
-	ResourceAssetEol                                      string = "asset.eol"
-	ResourceMondooEol                                     string = "mondoo.eol"
-	ResourceVulnmgmt                                      string = "vulnmgmt"
-	ResourceVulnCve                                       string = "vuln.cve"
-	ResourceVulnAdvisory                                  string = "vuln.advisory"
-	ResourceVulnPackage                                   string = "vuln.package"
-	ResourcePlatformAdvisories                            string = "platform.advisories"
-	ResourcePlatformCves                                  string = "platform.cves"
-	ResourceAuditCvss                                     string = "audit.cvss"
-	ResourceAuditAdvisory                                 string = "audit.advisory"
-	ResourceAuditCve                                      string = "audit.cve"
-	ResourceMachine                                       string = "machine"
-	ResourceMachineBios                                   string = "machine.bios"
-	ResourceMachineSystem                                 string = "machine.system"
-	ResourceMachineBaseboard                              string = "machine.baseboard"
-	ResourceMachineChassis                                string = "machine.chassis"
-	ResourceMachineCpu                                    string = "machine.cpu"
-	ResourceMachineSecureboot                             string = "machine.secureboot"
-	ResourceMemory                                        string = "memory"
-	ResourceOs                                            string = "os"
-	ResourceOsDate                                        string = "os.date"
-	ResourceOsUpdate                                      string = "os.update"
-	ResourceOsBase                                        string = "os.base"
-	ResourceOsUnix                                        string = "os.unix"
-	ResourceOsLinux                                       string = "os.linux"
-	ResourceOsWindows                                     string = "os.windows"
-	ResourceOsMacos                                       string = "os.macos"
-	ResourceOsAny                                         string = "os.any"
-	ResourceOsRootCertificates                            string = "os.rootCertificates"
-	ResourceCommand                                       string = "command"
-	ResourcePowershell                                    string = "powershell"
-	ResourceFile                                          string = "file"
-	ResourceFileContext                                   string = "file.context"
-	ResourceFilePermissions                               string = "file.permissions"
-	ResourceFiles                                         string = "files"
-	ResourceFilesFind                                     string = "files.find"
-	ResourceParseIni                                      string = "parse.ini"
-	ResourceParseJson                                     string = "parse.json"
-	ResourceParseXml                                      string = "parse.xml"
-	ResourceParsePlist                                    string = "parse.plist"
-	ResourceParseYaml                                     string = "parse.yaml"
-	ResourceParseCertificates                             string = "parse.certificates"
-	ResourceParseOpenpgp                                  string = "parse.openpgp"
-	ResourceUser                                          string = "user"
-	ResourcePrivatekey                                    string = "privatekey"
-	ResourceUsers                                         string = "users"
-	ResourceAuthorizedkeys                                string = "authorizedkeys"
-	ResourceAuthorizedkeysEntry                           string = "authorizedkeys.entry"
-	ResourceGroup                                         string = "group"
-	ResourceGroups                                        string = "groups"
-	ResourcePackage                                       string = "package"
-	ResourcePackageMacos                                  string = "package.macos"
-	ResourcePkgFileInfo                                   string = "pkgFileInfo"
-	ResourcePackages                                      string = "packages"
-	ResourcePamConf                                       string = "pam.conf"
-	ResourcePamConfServiceEntry                           string = "pam.conf.serviceEntry"
-	ResourcePamConfService                                string = "pam.conf.service"
-	ResourcePamModule                                     string = "pam.module"
-	ResourceSshd                                          string = "sshd"
-	ResourceSshdConfig                                    string = "sshd.config"
-	ResourceSshdConfigMatchBlock                          string = "sshd.config.matchBlock"
-	ResourceInetd                                         string = "inetd"
-	ResourceInetdConfig                                   string = "inetd.config"
-	ResourceInetdConfigEntry                              string = "inetd.config.entry"
-	ResourceSnmpd                                         string = "snmpd"
-	ResourceSnmpdConfig                                   string = "snmpd.config"
-	ResourceSnmpdConfigUser                               string = "snmpd.config.user"
-	ResourceAuditdConfig                                  string = "auditd.config"
-	ResourceAuditdRules                                   string = "auditd.rules"
-	ResourceAuditdLoadedRules                             string = "auditd.loadedRules"
-	ResourceAuditdRule                                    string = "auditd.rule"
-	ResourceAuditdRuleControl                             string = "auditd.rule.control"
-	ResourceAuditdRuleFile                                string = "auditd.rule.file"
-	ResourceAuditdRuleWatch                               string = "auditd.rule.watch"
-	ResourceAuditdRuleSyscall                             string = "auditd.rule.syscall"
-	ResourceAuditdStatus                                  string = "auditd.status"
-	ResourceApache2                                       string = "apache2"
-	ResourceApache2Conf                                   string = "apache2.conf"
-	ResourceApache2ConfEnvvars                            string = "apache2.conf.envvars"
-	ResourceApache2ConfModule                             string = "apache2.conf.module"
-	ResourceApache2ConfVirtualHost                        string = "apache2.conf.virtualHost"
-	ResourceApache2ConfDirectory                          string = "apache2.conf.directory"
-	ResourceApache2ConfLocation                           string = "apache2.conf.location"
-	ResourceBind9                                         string = "bind9"
-	ResourceBind9Zone                                     string = "bind9.zone"
-	ResourceBind9Acl                                      string = "bind9.acl"
-	ResourceBind9Key                                      string = "bind9.key"
-	ResourceBind9Channel                                  string = "bind9.channel"
-	ResourceBind9DnssecKey                                string = "bind9.dnssecKey"
-	ResourceNginx                                         string = "nginx"
-	ResourceNginxConf                                     string = "nginx.conf"
-	ResourceNginxConfServer                               string = "nginx.conf.server"
-	ResourceNginxConfUpstream                             string = "nginx.conf.upstream"
-	ResourceNginxConfLocation                             string = "nginx.conf.location"
-	ResourceTomcat                                        string = "tomcat"
-	ResourceTomcatServer                                  string = "tomcat.server"
-	ResourceTomcatListener                                string = "tomcat.listener"
-	ResourceTomcatService                                 string = "tomcat.service"
-	ResourceTomcatConnector                               string = "tomcat.connector"
-	ResourceTomcatEngine                                  string = "tomcat.engine"
-	ResourceTomcatHost                                    string = "tomcat.host"
-	ResourceTomcatValve                                   string = "tomcat.valve"
-	ResourceTomcatRealm                                   string = "tomcat.realm"
-	ResourceTomcatContext                                 string = "tomcat.context"
-	ResourceTomcatWebxml                                  string = "tomcat.webxml"
-	ResourceTomcatUser                                    string = "tomcat.user"
-	ResourceTomcatWebapp                                  string = "tomcat.webapp"
-	ResourceIis                                           string = "iis"
-	ResourceIisSite                                       string = "iis.site"
-	ResourceIisApplication                                string = "iis.application"
-	ResourceIisVirtualDirectory                           string = "iis.virtualDirectory"
-	ResourceIisBinding                                    string = "iis.binding"
-	ResourceIisAppPool                                    string = "iis.appPool"
-	ResourceIisConfiguration                              string = "iis.configuration"
-	ResourceJboss                                         string = "jboss"
-	ResourceJbossConfig                                   string = "jboss.config"
-	ResourceJbossManagement                               string = "jboss.management"
-	ResourceJbossManagementInterface                      string = "jboss.managementInterface"
-	ResourceJbossSecurityRealm                            string = "jboss.securityRealm"
-	ResourceJbossRealmAuthentication                      string = "jboss.realmAuthentication"
-	ResourceJbossLdapAuthentication                       string = "jboss.ldapAuthentication"
-	ResourceJbossKeystore                                 string = "jboss.keystore"
-	ResourceJbossAuditLog                                 string = "jboss.auditLog"
-	ResourceJbossAuditLogger                              string = "jboss.auditLogger"
-	ResourceJbossAuditFormatter                           string = "jboss.auditFormatter"
-	ResourceJbossAuditHandler                             string = "jboss.auditHandler"
-	ResourceJbossInterface                                string = "jboss.interface"
-	ResourceJbossSocketBindingGroup                       string = "jboss.socketBindingGroup"
-	ResourceJbossSocketBinding                            string = "jboss.socketBinding"
-	ResourceJbossVault                                    string = "jboss.vault"
-	ResourceJbossProfile                                  string = "jboss.profile"
-	ResourceJbossSubsystem                                string = "jboss.subsystem"
-	ResourceJbossLogging                                  string = "jboss.logging"
-	ResourceJbossLogHandler                               string = "jboss.logHandler"
-	ResourceJbossWeb                                      string = "jboss.web"
-	ResourceJbossConnector                                string = "jboss.connector"
-	ResourceJbossVirtualServer                            string = "jboss.virtualServer"
-	ResourceJbossJmx                                      string = "jboss.jmx"
-	ResourceJbossDeploymentScanner                        string = "jboss.deploymentScanner"
-	ResourceJbossUser                                     string = "jboss.user"
-	ResourceSquid                                         string = "squid"
-	ResourceSquidConf                                     string = "squid.conf"
-	ResourceSquidConfListen                               string = "squid.conf.listen"
-	ResourceSquidConfAcl                                  string = "squid.conf.acl"
-	ResourceSquidConfAccessRule                           string = "squid.conf.accessRule"
-	ResourceSquidConfCachePeer                            string = "squid.conf.cachePeer"
-	ResourceSquidConfCacheDir                             string = "squid.conf.cacheDir"
-	ResourceSquidConfRefreshPattern                       string = "squid.conf.refreshPattern"
-	ResourceSquidConfAccessLog                            string = "squid.conf.accessLog"
-	ResourceFrr                                           string = "frr"
-	ResourceFrrConfig                                     string = "frr.config"
-	ResourceFrrConfigBlock                                string = "frr.config.block"
-	ResourceFrrConfigRouter                               string = "frr.config.router"
-	ResourceFrrConfigRouterNeighbor                       string = "frr.config.router.neighbor"
-	ResourceFrrConfigRouterNeighborAddressFamily          string = "frr.config.router.neighbor.addressFamily"
-	ResourceFrrConfigRouterAddressFamily                  string = "frr.config.router.addressFamily"
-	ResourceFrrConfigVrf                                  string = "frr.config.vrf"
-	ResourceFrrConfigInterface                            string = "frr.config.interface"
-	ResourceFrrConfigPrefixList                           string = "frr.config.prefixList"
-	ResourceFrrConfigRouteMap                             string = "frr.config.routeMap"
-	ResourceFrrConfigRouteMapEntry                        string = "frr.config.routeMap.entry"
-	ResourceFrrVtyshConfig                                string = "frr.vtysh.config"
-	ResourceHaproxy                                       string = "haproxy"
-	ResourceHaproxyConfig                                 string = "haproxy.config"
-	ResourceHaproxyConfigSection                          string = "haproxy.config.section"
-	ResourceHaproxyConfigGlobal                           string = "haproxy.config.global"
-	ResourceHaproxyConfigDefaultsSection                  string = "haproxy.config.defaultsSection"
-	ResourceHaproxyConfigFrontend                         string = "haproxy.config.frontend"
-	ResourceHaproxyConfigBackend                          string = "haproxy.config.backend"
-	ResourceHaproxyConfigListen                           string = "haproxy.config.listen"
-	ResourceHaproxyConfigBind                             string = "haproxy.config.bind"
-	ResourceHaproxyConfigServer                           string = "haproxy.config.server"
-	ResourceHaproxyConfigResolversSection                 string = "haproxy.config.resolversSection"
-	ResourceHaproxyConfigUserlist                         string = "haproxy.config.userlist"
-	ResourceHaproxyConfigPeersSection                     string = "haproxy.config.peersSection"
-	ResourcePostgresqlConf                                string = "postgresql.conf"
-	ResourcePostgresqlHba                                 string = "postgresql.hba"
-	ResourcePostgresqlHbaRule                             string = "postgresql.hba.rule"
-	ResourcePostgresqlIdent                               string = "postgresql.ident"
-	ResourcePostgresqlIdentMapping                        string = "postgresql.ident.mapping"
-	ResourceMysql                                         string = "mysql"
-	ResourceMysqlConf                                     string = "mysql.conf"
-	ResourceMysqlConfSection                              string = "mysql.conf.section"
-	ResourceMysqlConfUserOptionFile                       string = "mysql.conf.userOptionFile"
-	ResourceMariadb                                       string = "mariadb"
-	ResourceMariadbConf                                   string = "mariadb.conf"
-	ResourceMariadbConfSection                            string = "mariadb.conf.section"
-	ResourceMariadbConfUserOptionFile                     string = "mariadb.conf.userOptionFile"
-	ResourceMongodb                                       string = "mongodb"
-	ResourceMongodbConf                                   string = "mongodb.conf"
-	ResourceCassandra                                     string = "cassandra"
-	ResourceCassandraConf                                 string = "cassandra.conf"
-	ResourceCassandraEnv                                  string = "cassandra.env"
-	ResourceCassandraRackdc                               string = "cassandra.rackdc"
-	ResourceJournaldConfig                                string = "journald.config"
-	ResourceJournaldConfigSection                         string = "journald.config.section"
-	ResourceJournaldConfigSectionParam                    string = "journald.config.section.param"
-	ResourceService                                       string = "service"
-	ResourceServices                                      string = "services"
-	ResourceSystemdTimer                                  string = "systemd.timer"
-	ResourceSystemdTimers                                 string = "systemd.timers"
-	ResourceSystemdSocket                                 string = "systemd.socket"
-	ResourceSystemdSockets                                string = "systemd.sockets"
-	ResourceSystemdTarget                                 string = "systemd.target"
-	ResourceSystemdTargets                                string = "systemd.targets"
-	ResourceSystemdUnit                                   string = "systemd.unit"
-	ResourceSystemdUnits                                  string = "systemd.units"
-	ResourceSystemdResolved                               string = "systemd.resolved"
-	ResourceSystemdTimesyncd                              string = "systemd.timesyncd"
-	ResourceSystemdCoredump                               string = "systemd.coredump"
-	ResourceSystemdBoot                                   string = "systemd.boot"
-	ResourceSystemdBootEntry                              string = "systemd.boot.entry"
-	ResourceKernel                                        string = "kernel"
-	ResourceKernelParameter                               string = "kernel.parameter"
-	ResourceKernelParameterSetting                        string = "kernel.parameter.setting"
-	ResourceKernelModule                                  string = "kernel.module"
-	ResourceKernelCmdline                                 string = "kernel.cmdline"
-	ResourceKernelTaint                                   string = "kernel.taint"
-	ResourceKernelLivepatch                               string = "kernel.livepatch"
-	ResourceKernelLivepatchPatch                          string = "kernel.livepatch.patch"
-	ResourceKernelLockdown                                string = "kernel.lockdown"
-	ResourceKernelAslr                                    string = "kernel.aslr"
-	ResourceCgroups                                       string = "cgroups"
-	ResourceCgroup                                        string = "cgroup"
-	ResourceDocker                                        string = "docker"
-	ResourceDockerFile                                    string = "docker.file"
-	ResourceDockerFileStage                               string = "docker.file.stage"
-	ResourceDockerFileOci                                 string = "docker.file.oci"
-	ResourceDockerFileArg                                 string = "docker.file.arg"
-	ResourceDockerFileEnv                                 string = "docker.file.env"
-	ResourceDockerFileUser                                string = "docker.file.user"
-	ResourceDockerFileExpose                              string = "docker.file.expose"
-	ResourceDockerFileFrom                                string = "docker.file.from"
-	ResourceDockerFileRun                                 string = "docker.file.run"
-	ResourceDockerFileRunCommand                          string = "docker.file.run.command"
-	ResourceDockerFileRunMount                            string = "docker.file.run.mount"
-	ResourceDockerFileAdd                                 string = "docker.file.add"
-	ResourceDockerFileCopy                                string = "docker.file.copy"
-	ResourceDockerFileHealthcheck                         string = "docker.file.healthcheck"
-	ResourceDockerFileVolume                              string = "docker.file.volume"
-	ResourceDockerFileShell                               string = "docker.file.shell"
-	ResourceDockerFileWorkdir                             string = "docker.file.workdir"
-	ResourceDockerFileStopsignal                          string = "docker.file.stopsignal"
-	ResourceDockerFileOnbuild                             string = "docker.file.onbuild"
-	ResourceDockerImage                                   string = "docker.image"
-	ResourceDockerContainer                               string = "docker.container"
-	ResourceDockerContainerUlimit                         string = "docker.container.ulimit"
-	ResourceDockerContainerPort                           string = "docker.container.port"
-	ResourceDockerContainerDevice                         string = "docker.container.device"
-	ResourceDockerContainerMount                          string = "docker.container.mount"
-	ResourceDockerNetwork                                 string = "docker.network"
-	ResourceDockerNetworkSubnet                           string = "docker.network.subnet"
-	ResourceDockerVolume                                  string = "docker.volume"
-	ResourceDockerDaemon                                  string = "docker.daemon"
-	ResourceDockerDaemonUlimit                            string = "docker.daemon.ulimit"
-	ResourceContainerd                                    string = "containerd"
-	ResourceContainerdRuntime                             string = "containerd.runtime"
-	ResourceContainerdRegistryHost                        string = "containerd.registryHost"
-	ResourceContainerdContainer                           string = "containerd.container"
-	ResourceContainerdImage                               string = "containerd.image"
-	ResourceContainerdContainerMount                      string = "containerd.container.mount"
-	ResourceCrio                                          string = "crio"
-	ResourceCrioNamespaceSignaturePolicy                  string = "crio.namespaceSignaturePolicy"
-	ResourceCrioRuntime                                   string = "crio.runtime"
-	ResourceCrioContainer                                 string = "crio.container"
-	ResourceCrioImage                                     string = "crio.image"
-	ResourceCrioContainerMount                            string = "crio.container.mount"
-	ResourceContainersRegistries                          string = "containers.registries"
-	ResourceContainersRegistry                            string = "containers.registry"
-	ResourceContainersRegistryMirror                      string = "containers.registry.mirror"
-	ResourceContainersPolicy                              string = "containers.policy"
-	ResourceContainersPolicyScope                         string = "containers.policy.scope"
-	ResourceContainersPolicyRequirement                   string = "containers.policy.requirement"
-	ResourceContainersConf                                string = "containers.conf"
-	ResourceContainersStorage                             string = "containers.storage"
-	ResourcePodman                                        string = "podman"
-	ResourcePodmanContainer                               string = "podman.container"
-	ResourcePodmanContainerUlimit                         string = "podman.container.ulimit"
-	ResourcePodmanContainerDevice                         string = "podman.container.device"
-	ResourcePodmanContainerMount                          string = "podman.container.mount"
-	ResourcePodmanImage                                   string = "podman.image"
-	ResourcePodmanPod                                     string = "podman.pod"
-	ResourcePodmanVolume                                  string = "podman.volume"
-	ResourcePodmanNetwork                                 string = "podman.network"
-	ResourceIptables                                      string = "iptables"
-	ResourceIp6tables                                     string = "ip6tables"
-	ResourceIptablesTable                                 string = "iptables.table"
-	ResourceIptablesChain                                 string = "iptables.chain"
-	ResourceIptablesEntry                                 string = "iptables.entry"
-	ResourceNftables                                      string = "nftables"
-	ResourceNftablesTable                                 string = "nftables.table"
-	ResourceNftablesChain                                 string = "nftables.chain"
-	ResourceNftablesRule                                  string = "nftables.rule"
-	ResourceNftablesSet                                   string = "nftables.set"
-	ResourceUfw                                           string = "ufw"
-	ResourceUfwRule                                       string = "ufw.rule"
-	ResourceUfwApplication                                string = "ufw.application"
-	ResourceFirewalld                                     string = "firewalld"
-	ResourceFirewalldZone                                 string = "firewalld.zone"
-	ResourceFirewalldRichrule                             string = "firewalld.richrule"
-	ResourcePf                                            string = "pf"
-	ResourcePfRule                                        string = "pf.rule"
-	ResourcePfTable                                       string = "pf.table"
-	ResourceFstab                                         string = "fstab"
-	ResourceFstabEntry                                    string = "fstab.entry"
-	ResourceGrubConfig                                    string = "grub.config"
-	ResourceGrubConfigEntry                               string = "grub.config.entry"
-	ResourceSecbootConfig                                 string = "secboot.config"
-	ResourceSecbootImage                                  string = "secboot.image"
-	ResourceSysrc                                         string = "sysrc"
-	ResourceSysrcEntry                                    string = "sysrc.entry"
-	ResourceJails                                         string = "jails"
-	ResourceJail                                          string = "jail"
-	ResourceProcess                                       string = "process"
-	ResourceProcesses                                     string = "processes"
-	ResourcePort                                          string = "port"
-	ResourcePorts                                         string = "ports"
-	ResourceAuditpol                                      string = "auditpol"
-	ResourceAuditpolEntry                                 string = "auditpol.entry"
-	ResourceSecpol                                        string = "secpol"
-	ResourceNtpConf                                       string = "ntp.conf"
-	ResourceChronyConf                                    string = "chrony.conf"
-	ResourcePostfix                                       string = "postfix"
-	ResourcePostfixService                                string = "postfix.service"
-	ResourceExim                                          string = "exim"
-	ResourceRsyslogConf                                   string = "rsyslog.conf"
-	ResourceRsyslogModule                                 string = "rsyslog.module"
-	ResourceRsyslogInput                                  string = "rsyslog.input"
-	ResourceRsyslogAction                                 string = "rsyslog.action"
-	ResourceRsyslogRuleset                                string = "rsyslog.ruleset"
-	ResourceRsyslogRule                                   string = "rsyslog.rule"
-	ResourceLogindefs                                     string = "logindefs"
-	ResourceUmask                                         string = "umask"
-	ResourceUmaskSetting                                  string = "umask.setting"
-	ResourceUmaskPamModule                                string = "umask.pamModule"
-	ResourcePwquality                                     string = "pwquality"
-	ResourcePwqualitySettings                             string = "pwquality.settings"
-	ResourcePwqualityPamModule                            string = "pwquality.pamModule"
-	ResourceCryptoPolicy                                  string = "cryptoPolicy"
-	ResourceCryptoPolicyScope                             string = "cryptoPolicy.scope"
-	ResourceDconf                                         string = "dconf"
-	ResourceDconfProfile                                  string = "dconf.profile"
-	ResourceDconfDatabase                                 string = "dconf.database"
-	ResourceLimits                                        string = "limits"
-	ResourceLimitsEntry                                   string = "limits.entry"
-	ResourceSudo                                          string = "sudo"
-	ResourceSudoPlugin                                    string = "sudo.plugin"
-	ResourceSudoValidation                                string = "sudo.validation"
-	ResourceSudoValidationError                           string = "sudo.validation.error"
-	ResourceSudoers                                       string = "sudoers"
-	ResourceSudoersUserSpec                               string = "sudoers.userSpec"
-	ResourceSudoersDefault                                string = "sudoers.default"
-	ResourceSudoersAlias                                  string = "sudoers.alias"
-	ResourceLsblk                                         string = "lsblk"
-	ResourceLsblkEntry                                    string = "lsblk.entry"
-	ResourceLuks                                          string = "luks"
-	ResourceLuksVolume                                    string = "luks.volume"
-	ResourceLuksVolumeCipher                              string = "luks.volume.cipher"
-	ResourceLuksKeyslot                                   string = "luks.keyslot"
-	ResourceApparmor                                      string = "apparmor"
-	ResourceApparmorProfile                               string = "apparmor.profile"
-	ResourceApparmorProcess                               string = "apparmor.process"
-	ResourceSelinux                                       string = "selinux"
-	ResourceSelinuxBoolean                                string = "selinux.boolean"
-	ResourceSelinuxModule                                 string = "selinux.module"
-	ResourcePolkit                                        string = "polkit"
-	ResourcePolkitAction                                  string = "polkit.action"
-	ResourcePolkitRule                                    string = "polkit.rule"
-	ResourcePolkitLocalAuthorityRule                      string = "polkit.localAuthorityRule"
-	ResourceAide                                          string = "aide"
-	ResourceAideRule                                      string = "aide.rule"
-	ResourceModprobe                                      string = "modprobe"
-	ResourceModprobeInstall                               string = "modprobe.install"
-	ResourceModprobeRemove                                string = "modprobe.remove"
-	ResourceModprobeBlacklist                             string = "modprobe.blacklist"
-	ResourceModprobeOption                                string = "modprobe.option"
-	ResourceModprobeAlias                                 string = "modprobe.alias"
-	ResourceModprobeSoftdep                               string = "modprobe.softdep"
-	ResourceMount                                         string = "mount"
-	ResourceNfs                                           string = "nfs"
-	ResourceNfsExport                                     string = "nfs.export"
-	ResourceNfsMount                                      string = "nfs.mount"
-	ResourceMountPoint                                    string = "mount.point"
-	ResourceShadow                                        string = "shadow"
-	ResourceShadowEntry                                   string = "shadow.entry"
-	ResourceMasterpasswd                                  string = "masterpasswd"
-	ResourceMasterpasswdEntry                             string = "masterpasswd.entry"
-	ResourceLoginconf                                     string = "loginconf"
-	ResourceLoginconfClass                                string = "loginconf.class"
-	ResourceYum                                           string = "yum"
-	ResourceYumRepo                                       string = "yum.repo"
-	ResourceYumConfig                                     string = "yum.config"
-	ResourceApt                                           string = "apt"
-	ResourceAptConfig                                     string = "apt.config"
-	ResourceAptRepo                                       string = "apt.repo"
-	ResourcePkg                                           string = "pkg"
-	ResourcePkgRepo                                       string = "pkg.repo"
-	ResourceRegistrykey                                   string = "registrykey"
-	ResourceRegistrykeyProperty                           string = "registrykey.property"
-	ResourceContainerImage                                string = "container.image"
-	ResourceContainerRepository                           string = "container.repository"
-	ResourceKubelet                                       string = "kubelet"
-	ResourcePython                                        string = "python"
-	ResourcePythonPackage                                 string = "python.package"
-	ResourceNpmPackages                                   string = "npm.packages"
-	ResourceNpmPackage                                    string = "npm.package"
-	ResourceGoPackages                                    string = "go.packages"
-	ResourceGoPackage                                     string = "go.package"
-	ResourceJavaPackages                                  string = "java.packages"
-	ResourceJavaPackage                                   string = "java.package"
-	ResourceRustPackages                                  string = "rust.packages"
-	ResourceRustPackage                                   string = "rust.package"
-	ResourceDotnetPackages                                string = "dotnet.packages"
-	ResourceDotnetPackage                                 string = "dotnet.package"
-	ResourcePhpPackages                                   string = "php.packages"
-	ResourcePhpPackage                                    string = "php.package"
-	ResourceGithubactionsPackages                         string = "githubactions.packages"
-	ResourceGithubactionsPackage                          string = "githubactions.package"
-	ResourceSwiftPackages                                 string = "swift.packages"
-	ResourceSwiftPackage                                  string = "swift.package"
-	ResourceTerraformPackages                             string = "terraform.packages"
-	ResourceTerraformPackage                              string = "terraform.package"
-	ResourceHomebrewPackages                              string = "homebrew.packages"
-	ResourceHomebrewPackage                               string = "homebrew.package"
-	ResourceChocolateyPackages                            string = "chocolatey.packages"
-	ResourceChocolateyPackage                             string = "chocolatey.package"
-	ResourceJenkinsPackages                               string = "jenkins.packages"
-	ResourceJenkinsPackage                                string = "jenkins.package"
-	ResourceWordpressPackages                             string = "wordpress.packages"
-	ResourceWordpressPackage                              string = "wordpress.package"
-	ResourceRubyPackages                                  string = "ruby.packages"
-	ResourceRubyPackage                                   string = "ruby.package"
-	ResourceDartPackages                                  string = "dart.packages"
-	ResourceDartPackage                                   string = "dart.package"
-	ResourceHaskellPackages                               string = "haskell.packages"
-	ResourceHaskellPackage                                string = "haskell.package"
-	ResourceElixirPackages                                string = "elixir.packages"
-	ResourceElixirPackage                                 string = "elixir.package"
-	ResourceErlangPackages                                string = "erlang.packages"
-	ResourceErlangPackage                                 string = "erlang.package"
-	ResourcePrologPackages                                string = "prolog.packages"
-	ResourcePrologPackage                                 string = "prolog.package"
-	ResourceCondaPackages                                 string = "conda.packages"
-	ResourceCondaPackage                                  string = "conda.package"
-	ResourceVcpkgPackages                                 string = "vcpkg.packages"
-	ResourceVcpkgPackage                                  string = "vcpkg.package"
-	ResourceOpamPackages                                  string = "opam.packages"
-	ResourceOpamPackage                                   string = "opam.package"
-	ResourceJuliaPackages                                 string = "julia.packages"
-	ResourceJuliaPackage                                  string = "julia.package"
-	ResourceRPackages                                     string = "r.packages"
-	ResourceRPackage                                      string = "r.package"
-	ResourceLuaPackages                                   string = "lua.packages"
-	ResourceLuaPackage                                    string = "lua.package"
-	ResourceMacos                                         string = "macos"
-	ResourceMacosHardware                                 string = "macos.hardware"
-	ResourceMacosAlf                                      string = "macos.alf"
-	ResourceMacosFirewall                                 string = "macos.firewall"
-	ResourceMacosFirewallApp                              string = "macos.firewall.app"
-	ResourceMacosFilevault                                string = "macos.filevault"
-	ResourceMacosGatekeeper                               string = "macos.gatekeeper"
-	ResourceMacosSip                                      string = "macos.sip"
-	ResourceMacosXprotect                                 string = "macos.xprotect"
-	ResourceMacosSharing                                  string = "macos.sharing"
-	ResourceMacosMdm                                      string = "macos.mdm"
-	ResourceMacosProfiles                                 string = "macos.profiles"
-	ResourceMacosProfile                                  string = "macos.profile"
-	ResourceMacosProfilePayload                           string = "macos.profile.payload"
-	ResourceMacosPreferences                              string = "macos.preferences"
-	ResourceMacosPreferencesUser                          string = "macos.preferences.user"
-	ResourceMacosSoftwareupdate                           string = "macos.softwareupdate"
-	ResourceMacosSoftwareupdateEntry                      string = "macos.softwareupdate.entry"
-	ResourceMacosTimemachine                              string = "macos.timemachine"
-	ResourceMacosSystemsetup                              string = "macos.systemsetup"
-	ResourceOpenBSMAudit                                  string = "openBSMAudit"
-	ResourceWindows                                       string = "windows"
-	ResourceWindowsExploitProtection                      string = "windows.exploitProtection"
-	ResourceWindowsExploitProtectionDep                   string = "windows.exploitProtection.dep"
-	ResourceWindowsExploitProtectionAslr                  string = "windows.exploitProtection.aslr"
-	ResourceWindowsExploitProtectionCfg                   string = "windows.exploitProtection.cfg"
-	ResourceWindowsExploitProtectionSehop                 string = "windows.exploitProtection.sehop"
-	ResourceWindowsExploitProtectionHeap                  string = "windows.exploitProtection.heap"
-	ResourceWindowsSmartScreen                            string = "windows.smartScreen"
-	ResourceWindowsScheduledTask                          string = "windows.scheduledTask"
-	ResourceWindowsScheduledTaskPrincipal                 string = "windows.scheduledTask.principal"
-	ResourceWindowsScheduledTaskAction                    string = "windows.scheduledTask.action"
-	ResourceWindowsScheduledTaskTrigger                   string = "windows.scheduledTask.trigger"
-	ResourceWindowsScheduledTaskSettings                  string = "windows.scheduledTask.settings"
-	ResourceWindowsLogonSession                           string = "windows.logonSession"
-	ResourceMacosSystemExtension                          string = "macos.systemExtension"
-	ResourceSafari                                        string = "safari"
-	ResourceSafariExtension                               string = "safari.extension"
-	ResourceLaunchd                                       string = "launchd"
-	ResourceLaunchdJob                                    string = "launchd.job"
-	ResourceWindowsHotfix                                 string = "windows.hotfix"
-	ResourceWindowsUpdate                                 string = "windows.update"
-	ResourceWindowsUpdateEntry                            string = "windows.update.entry"
-	ResourceWindowsUpdateConfig                           string = "windows.update.config"
-	ResourceWindowsUpdatePolicy                           string = "windows.update.policy"
-	ResourceWindowsHotpatch                               string = "windows.hotpatch"
-	ResourceWindowsServerFeature                          string = "windows.serverFeature"
-	ResourceWindowsOptionalFeature                        string = "windows.optionalFeature"
-	ResourceWindowsEventlog                               string = "windows.eventlog"
-	ResourceWindowsRdp                                    string = "windows.rdp"
-	ResourceWindowsWinrm                                  string = "windows.winrm"
-	ResourceWindowsWinrmListener                          string = "windows.winrm.listener"
-	ResourceWindowsWinrmClient                            string = "windows.winrm.client"
-	ResourceWindowsWinrmService                           string = "windows.winrm.service"
-	ResourceWindowsDeviceGuard                            string = "windows.deviceGuard"
-	ResourceWindowsLsa                                    string = "windows.lsa"
-	ResourceWindowsLsaNtlm                                string = "windows.lsa.ntlm"
-	ResourceWindowsLsaSecureChannel                       string = "windows.lsa.secureChannel"
-	ResourceWindowsUac                                    string = "windows.uac"
-	ResourceWindowsSchannel                               string = "windows.schannel"
-	ResourceWindowsSchannelProtocol                       string = "windows.schannel.protocol"
-	ResourceWindowsSchannelCipher                         string = "windows.schannel.cipher"
-	ResourceWindowsSchannelHash                           string = "windows.schannel.hash"
-	ResourceWindowsSchannelKeyExchangeAlgorithm           string = "windows.schannel.keyExchangeAlgorithm"
-	ResourceWindowsSpooler                                string = "windows.spooler"
-	ResourceWindowsSpoolerPointAndPrint                   string = "windows.spooler.pointAndPrint"
-	ResourceWindowsSpoolerRpc                             string = "windows.spooler.rpc"
-	ResourceWindowsSpoolerIpp                             string = "windows.spooler.ipp"
-	ResourceWindowsTelemetry                              string = "windows.telemetry"
-	ResourceWindowsPowershell                             string = "windows.powershell"
-	ResourceWindowsPowershellScriptBlockLogging           string = "windows.powershell.scriptBlockLogging"
-	ResourceWindowsPowershellTranscription                string = "windows.powershell.transcription"
-	ResourceWindowsPowershellModuleLogging                string = "windows.powershell.moduleLogging"
-	ResourceWindowsDisk                                   string = "windows.disk"
-	ResourceWindowsTpm                                    string = "windows.tpm"
-	ResourceWindowsAuditPolicy                            string = "windows.auditPolicy"
-	ResourceWindowsAuditPolicySubcategory                 string = "windows.auditPolicy.subcategory"
-	ResourceWindowsFirewall                               string = "windows.firewall"
-	ResourceWindowsFirewallProfile                        string = "windows.firewall.profile"
-	ResourceWindowsFirewallRule                           string = "windows.firewall.rule"
-	ResourceWindowsSmb                                    string = "windows.smb"
-	ResourceWindowsSmbServerConfiguration                 string = "windows.smb.serverConfiguration"
-	ResourceWindowsSmbClientConfiguration                 string = "windows.smb.clientConfiguration"
-	ResourceWindowsSmbShare                               string = "windows.smb.share"
-	ResourceWindowsSmbSession                             string = "windows.smb.session"
-	ResourceWindowsSmbConnection                          string = "windows.smb.connection"
-	ResourceWindowsAcl                                    string = "windows.acl"
-	ResourceWindowsAclEntry                               string = "windows.acl.entry"
-	ResourceWindowsAclAuditEntry                          string = "windows.acl.auditEntry"
-	ResourceWindowsDnsServer                              string = "windows.dnsServer"
-	ResourceWindowsDnsServerSettings                      string = "windows.dnsServer.settings"
-	ResourceWindowsDnsServerRecursion                     string = "windows.dnsServer.recursion"
-	ResourceWindowsDnsServerCache                         string = "windows.dnsServer.cache"
-	ResourceWindowsDnsServerDiagnostics                   string = "windows.dnsServer.diagnostics"
-	ResourceWindowsDnsServerScavenging                    string = "windows.dnsServer.scavenging"
-	ResourceWindowsDnsServerResponseRateLimiting          string = "windows.dnsServer.responseRateLimiting"
-	ResourceWindowsDnsServerForwarderConfiguration        string = "windows.dnsServer.forwarderConfiguration"
-	ResourceWindowsDnsServerRootHint                      string = "windows.dnsServer.rootHint"
-	ResourceWindowsDnsServerZone                          string = "windows.dnsServer.zone"
-	ResourceWindowsDnsServerZoneDnssec                    string = "windows.dnsServer.zone.dnssec"
-	ResourceWindowsDnsServerZoneSigningKey                string = "windows.dnsServer.zone.signingKey"
-	ResourceWindowsPrinterDrivers                         string = "windows.printerDrivers"
-	ResourceWindowsPrinterDriver                          string = "windows.printerDriver"
-	ResourceWindowsDrivers                                string = "windows.drivers"
-	ResourceWindowsDriver                                 string = "windows.driver"
-	ResourceWindowsCertificates                           string = "windows.certificates"
-	ResourceWindowsCertificate                            string = "windows.certificate"
-	ResourceWindowsBitlocker                              string = "windows.bitlocker"
-	ResourceWindowsBitlockerPolicy                        string = "windows.bitlocker.policy"
-	ResourceWindowsBitlockerPolicyDriveSettings           string = "windows.bitlocker.policy.driveSettings"
-	ResourceWindowsBitlockerVolume                        string = "windows.bitlocker.volume"
-	ResourceWindowsBitlockerVolumeKeyProtector            string = "windows.bitlocker.volume.keyProtector"
-	ResourceWindowsSecurity                               string = "windows.security"
-	ResourceWindowsSecurityProduct                        string = "windows.security.product"
-	ResourceWindowsSecurityHealth                         string = "windows.security.health"
-	ResourceWindowsDefender                               string = "windows.defender"
-	ResourceWindowsDefenderStatus                         string = "windows.defender.status"
-	ResourceWindowsDefenderPreferences                    string = "windows.defender.preferences"
-	ResourceWindowsDefenderScanSettings                   string = "windows.defender.scanSettings"
-	ResourceWindowsDefenderRealTimeSettings               string = "windows.defender.realTimeSettings"
-	ResourceWindowsDefenderCloudSettings                  string = "windows.defender.cloudSettings"
-	ResourceWindowsDefenderSignatureSettings              string = "windows.defender.signatureSettings"
-	ResourceWindowsDefenderThreatActionSettings           string = "windows.defender.threatActionSettings"
-	ResourceWindowsDefenderThreatIdAction                 string = "windows.defender.threatIdAction"
-	ResourceWindowsDefenderControlledFolderAccess         string = "windows.defender.controlledFolderAccess"
-	ResourceWindowsDefenderNetworkProtectionSettings      string = "windows.defender.networkProtectionSettings"
-	ResourceWindowsDefenderBehavioralNetworkBlockSettings string = "windows.defender.behavioralNetworkBlockSettings"
-	ResourceWindowsDefenderLocalSettingOverrides          string = "windows.defender.localSettingOverrides"
-	ResourceWindowsDefenderRemediationSettings            string = "windows.defender.remediationSettings"
-	ResourceWindowsDefenderExclusions                     string = "windows.defender.exclusions"
-	ResourceWindowsDefenderAsrRule                        string = "windows.defender.asrRule"
-	ResourceWindowsDefenderThreat                         string = "windows.defender.threat"
-	ResourceWindowsDefenderThreatDetection                string = "windows.defender.threatDetection"
-	ResourceEdr                                           string = "edr"
-	ResourceEdrProduct                                    string = "edr.product"
-	ResourceMdm                                           string = "mdm"
-	ResourceMdmIntune                                     string = "mdm.intune"
-	ResourceWinget                                        string = "winget"
-	ResourceWingetSource                                  string = "winget.source"
-	ResourceIdp                                           string = "idp"
-	ResourceIdpEntra                                      string = "idp.entra"
-	ResourceIdpActiveDirectory                            string = "idp.activeDirectory"
-	ResourceCloud                                         string = "cloud"
-	ResourceCloudInstance                                 string = "cloudInstance"
-	ResourceIpAddress                                     string = "ipAddress"
-	ResourceNetwork                                       string = "network"
-	ResourceNetworkNeighbor                               string = "networkNeighbor"
-	ResourceNetworkInterface                              string = "networkInterface"
-	ResourceNetworkRoutes                                 string = "networkRoutes"
-	ResourceNetworkRoute                                  string = "networkRoute"
-	ResourceChrome                                        string = "chrome"
-	ResourceChromeExtension                               string = "chrome.extension"
-	ResourceChromeExtensionContentScript                  string = "chrome.extensionContentScript"
-	ResourceFirefox                                       string = "firefox"
-	ResourceFirefoxAddon                                  string = "firefox.addon"
-	ResourceFirefoxPolicies                               string = "firefox.policies"
-	ResourceFirefoxPoliciesInput                          string = "firefox.policies.input"
-	ResourceUsb                                           string = "usb"
-	ResourceUsbDevice                                     string = "usb.device"
-	ResourceCrontab                                       string = "crontab"
-	ResourceCrontabEntry                                  string = "crontab.entry"
-	ResourceJetbrains                                     string = "jetbrains"
-	ResourceJetbrainsPlugin                               string = "jetbrains.plugin"
-	ResourceVscode                                        string = "vscode"
-	ResourceVscodeExtension                               string = "vscode.extension"
-	ResourceLogrotate                                     string = "logrotate"
-	ResourceLogrotateEntry                                string = "logrotate.entry"
-	ResourceLvm                                           string = "lvm"
-	ResourceLvmPhysicalVolume                             string = "lvm.physicalVolume"
-	ResourceLvmVolumeGroup                                string = "lvm.volumeGroup"
-	ResourceLvmLogicalVolume                              string = "lvm.logicalVolume"
-	ResourceMdadm                                         string = "mdadm"
-	ResourceMdadmArray                                    string = "mdadm.array"
-	ResourceMdadmDevice                                   string = "mdadm.device"
-	ResourceZfs                                           string = "zfs"
-	ResourceZfsPool                                       string = "zfs.pool"
-	ResourceZfsPoolVdev                                   string = "zfs.pool.vdev"
-	ResourceZfsDataset                                    string = "zfs.dataset"
-	ResourceSolarisZones                                  string = "solaris.zones"
-	ResourceSolarisZone                                   string = "solaris.zone"
-	ResourceSolarisZoneNetwork                            string = "solaris.zone.network"
-	ResourceSolarisZoneFilesystem                         string = "solaris.zone.filesystem"
-	ResourceSolarisZoneDevice                             string = "solaris.zone.device"
-	ResourceAi                                            string = "ai"
-	ResourceAiModel                                       string = "ai.model"
-	ResourceOllamaConfig                                  string = "ollama.config"
-	ResourceOllamaConfigIntegration                       string = "ollama.config.integration"
-	ResourceClaudeCode                                    string = "claude.code"
-	ResourceClaudeCodePlugin                              string = "claude.code.plugin"
-	ResourceClaudeCodeSkill                               string = "claude.code.skill"
-	ResourceClaudeCodeProject                             string = "claude.code.project"
-	ResourceClaudeCodeModelUsage                          string = "claude.code.modelUsage"
-	ResourceClaudeCodeRepo                                string = "claude.code.repo"
-	ResourceClaudeCodeMcpServer                           string = "claude.code.mcpServer"
-	ResourceClaudeDesktop                                 string = "claude.desktop"
-	ResourceClaudeDesktopMcpServer                        string = "claude.desktop.mcpServer"
-	ResourceOpenaiCodex                                   string = "openai.codex"
-	ResourceOpenaiCodexPlugin                             string = "openai.codex.plugin"
-	ResourceOpenaiCodexSkill                              string = "openai.codex.skill"
-	ResourceOpenaiCodexMcpServer                          string = "openai.codex.mcpServer"
-	ResourceOpenaiCodexConnector                          string = "openai.codex.connector"
-	ResourceOpenaiCodexRepo                               string = "openai.codex.repo"
-	ResourceCursor                                        string = "cursor"
-	ResourceCursorRepo                                    string = "cursor.repo"
-	ResourceCursorMcpServer                               string = "cursor.mcpServer"
-	ResourceCursorRule                                    string = "cursor.rule"
-	ResourceCursorSkill                                   string = "cursor.skill"
-	ResourceGithubCopilot                                 string = "github.copilot"
-	ResourceGithubCopilotAccount                          string = "github.copilot.account"
-	ResourceGithubCopilotMcpServer                        string = "github.copilot.mcpServer"
-	ResourceGithubCopilotSkill                            string = "github.copilot.skill"
-	ResourceGoose                                         string = "goose"
-	ResourceGooseExtension                                string = "goose.extension"
-	ResourceGooseSkill                                    string = "goose.skill"
-	ResourceGemini                                        string = "gemini"
-	ResourceGeminiMcpServer                               string = "gemini.mcpServer"
-	ResourceGeminiSkill                                   string = "gemini.skill"
-	ResourceWindsurf                                      string = "windsurf"
-	ResourceWindsurfRepo                                  string = "windsurf.repo"
-	ResourceWindsurfRule                                  string = "windsurf.rule"
-	ResourceWindsurfMcpServer                             string = "windsurf.mcpServer"
-	ResourceWindsurfSkill                                 string = "windsurf.skill"
-	ResourceZed                                           string = "zed"
-	ResourceZedRepo                                       string = "zed.repo"
-	ResourceRoo                                           string = "roo"
-	ResourceRooSkill                                      string = "roo.skill"
-	ResourceCline                                         string = "cline"
-	ResourceClineSkill                                    string = "cline.skill"
-	ResourceKiro                                          string = "kiro"
-	ResourceKiroSkill                                     string = "kiro.skill"
-	ResourceContinuedev                                   string = "continuedev"
-	ResourceContinuedevSkill                              string = "continuedev.skill"
-	ResourceTrae                                          string = "trae"
-	ResourceTraeSkill                                     string = "trae.skill"
-	ResourceOpencode                                      string = "opencode"
-	ResourceOpencodeSkill                                 string = "opencode.skill"
-	ResourcePi                                            string = "pi"
-	ResourcePiSkill                                       string = "pi.skill"
-	ResourceMistralVibe                                   string = "mistral.vibe"
-	ResourceMistralVibeSkill                              string = "mistral.vibe.skill"
-	ResourceAntigravity                                   string = "antigravity"
-	ResourceAntigravitySkill                              string = "antigravity.skill"
-	ResourceIbmBob                                        string = "ibm.bob"
-	ResourceIbmBobSkill                                   string = "ibm.bob.skill"
-	ResourceAider                                         string = "aider"
-	ResourceOpenclaw                                      string = "openclaw"
-	ResourceOpenclawSkill                                 string = "openclaw.skill"
-	ResourceSnowflakeCortex                               string = "snowflake.cortex"
-	ResourceSnowflakeCortexSkill                          string = "snowflake.cortex.skill"
-	ResourceJunie                                         string = "junie"
-	ResourceJunieSkill                                    string = "junie.skill"
-	ResourceAugment                                       string = "augment"
-	ResourceAugmentSkill                                  string = "augment.skill"
-	ResourceWarp                                          string = "warp"
-	ResourceWarpSkill                                     string = "warp.skill"
-	ResourceKilocode                                      string = "kilocode"
-	ResourceKilocodeSkill                                 string = "kilocode.skill"
-	ResourceOpenhands                                     string = "openhands"
-	ResourceOpenhandsSkill                                string = "openhands.skill"
-	ResourceQwenCode                                      string = "qwen.code"
-	ResourceQwenCodeSkill                                 string = "qwen.code.skill"
-	ResourceAgentskills                                   string = "agentskills"
-	ResourceAgentskillsSkill                              string = "agentskills.skill"
-	ResourceAgentinstructions                             string = "agentinstructions"
-	ResourceAgentinstructionsFile                         string = "agentinstructions.file"
-	ResourceSriov                                         string = "sriov"
-	ResourceSriovPhysicalFunction                         string = "sriov.physicalFunction"
-	ResourceSriovVirtualFunction                          string = "sriov.virtualFunction"
-	ResourceOvs                                           string = "ovs"
-	ResourceOvsBridge                                     string = "ovs.bridge"
-	ResourceOvsPort                                       string = "ovs.port"
-	ResourceOvsInterface                                  string = "ovs.interface"
-	ResourceJavaKeystore                                  string = "java.keystore"
-	ResourceJavaKeystoreEntry                             string = "java.keystore.entry"
-	ResourceJavaTruststores                               string = "java.truststores"
-	ResourceAixInittab                                    string = "aix.inittab"
-	ResourceAixInittabEntry                               string = "aix.inittab.entry"
-	ResourceAixDevice                                     string = "aix.device"
-	ResourceAixSecurityUsers                              string = "aix.security.users"
-	ResourceAixSecurityUser                               string = "aix.security.user"
-	ResourceAixSecurityLoginCfg                           string = "aix.security.loginCfg"
-	ResourceAixSecurityLimits                             string = "aix.security.limits"
-	ResourceAixSecurityLimit                              string = "aix.security.limit"
-	ResourceAixSecurityPasswd                             string = "aix.security.passwd"
-	ResourceAixSecurityPasswdEntry                        string = "aix.security.passwd.entry"
-	ResourceAixTrustedExecution                           string = "aix.trustedExecution"
-	ResourceAixFilesystems                                string = "aix.filesystems"
-	ResourceAixFilesystem                                 string = "aix.filesystem"
-	ResourceAixIpsec                                      string = "aix.ipsec"
-	ResourceAixIpsecFilter                                string = "aix.ipsec.filter"
-	ResourceAixAudit                                      string = "aix.audit"
+	ResourceAsset                                          string = "asset"
+	ResourceExtensionRuntime                               string = "extensionRuntime"
+	ResourceAssetEol                                       string = "asset.eol"
+	ResourceMondooEol                                      string = "mondoo.eol"
+	ResourceVulnmgmt                                       string = "vulnmgmt"
+	ResourceVulnCve                                        string = "vuln.cve"
+	ResourceVulnAdvisory                                   string = "vuln.advisory"
+	ResourceVulnPackage                                    string = "vuln.package"
+	ResourcePlatformAdvisories                             string = "platform.advisories"
+	ResourcePlatformCves                                   string = "platform.cves"
+	ResourceAuditCvss                                      string = "audit.cvss"
+	ResourceAuditAdvisory                                  string = "audit.advisory"
+	ResourceAuditCve                                       string = "audit.cve"
+	ResourceMachine                                        string = "machine"
+	ResourceMachineBios                                    string = "machine.bios"
+	ResourceMachineSystem                                  string = "machine.system"
+	ResourceMachineBaseboard                               string = "machine.baseboard"
+	ResourceMachineChassis                                 string = "machine.chassis"
+	ResourceMachineCpu                                     string = "machine.cpu"
+	ResourceMachineSecureboot                              string = "machine.secureboot"
+	ResourceMemory                                         string = "memory"
+	ResourceOs                                             string = "os"
+	ResourceOsDate                                         string = "os.date"
+	ResourceOsUpdate                                       string = "os.update"
+	ResourceOsBase                                         string = "os.base"
+	ResourceOsUnix                                         string = "os.unix"
+	ResourceOsLinux                                        string = "os.linux"
+	ResourceOsWindows                                      string = "os.windows"
+	ResourceOsMacos                                        string = "os.macos"
+	ResourceOsAny                                          string = "os.any"
+	ResourceOsRootCertificates                             string = "os.rootCertificates"
+	ResourceCommand                                        string = "command"
+	ResourcePowershell                                     string = "powershell"
+	ResourceFile                                           string = "file"
+	ResourceFileContext                                    string = "file.context"
+	ResourceFilePermissions                                string = "file.permissions"
+	ResourceFiles                                          string = "files"
+	ResourceFilesFind                                      string = "files.find"
+	ResourceParseIni                                       string = "parse.ini"
+	ResourceParseJson                                      string = "parse.json"
+	ResourceParseXml                                       string = "parse.xml"
+	ResourceParsePlist                                     string = "parse.plist"
+	ResourceParseYaml                                      string = "parse.yaml"
+	ResourceParseCertificates                              string = "parse.certificates"
+	ResourceParseOpenpgp                                   string = "parse.openpgp"
+	ResourceUser                                           string = "user"
+	ResourcePrivatekey                                     string = "privatekey"
+	ResourceUsers                                          string = "users"
+	ResourceAuthorizedkeys                                 string = "authorizedkeys"
+	ResourceAuthorizedkeysEntry                            string = "authorizedkeys.entry"
+	ResourceGroup                                          string = "group"
+	ResourceGroups                                         string = "groups"
+	ResourcePackage                                        string = "package"
+	ResourcePackageMacos                                   string = "package.macos"
+	ResourcePkgFileInfo                                    string = "pkgFileInfo"
+	ResourcePackages                                       string = "packages"
+	ResourcePamConf                                        string = "pam.conf"
+	ResourcePamConfServiceEntry                            string = "pam.conf.serviceEntry"
+	ResourcePamConfService                                 string = "pam.conf.service"
+	ResourcePamModule                                      string = "pam.module"
+	ResourceSshd                                           string = "sshd"
+	ResourceSshdConfig                                     string = "sshd.config"
+	ResourceSshdConfigMatchBlock                           string = "sshd.config.matchBlock"
+	ResourceInetd                                          string = "inetd"
+	ResourceInetdConfig                                    string = "inetd.config"
+	ResourceInetdConfigEntry                               string = "inetd.config.entry"
+	ResourceSnmpd                                          string = "snmpd"
+	ResourceSnmpdConfig                                    string = "snmpd.config"
+	ResourceSnmpdConfigUser                                string = "snmpd.config.user"
+	ResourceAuditdConfig                                   string = "auditd.config"
+	ResourceAuditdRules                                    string = "auditd.rules"
+	ResourceAuditdLoadedRules                              string = "auditd.loadedRules"
+	ResourceAuditdRule                                     string = "auditd.rule"
+	ResourceAuditdRuleControl                              string = "auditd.rule.control"
+	ResourceAuditdRuleFile                                 string = "auditd.rule.file"
+	ResourceAuditdRuleWatch                                string = "auditd.rule.watch"
+	ResourceAuditdRuleSyscall                              string = "auditd.rule.syscall"
+	ResourceAuditdStatus                                   string = "auditd.status"
+	ResourceApache2                                        string = "apache2"
+	ResourceApache2Conf                                    string = "apache2.conf"
+	ResourceApache2ConfEnvvars                             string = "apache2.conf.envvars"
+	ResourceApache2ConfModule                              string = "apache2.conf.module"
+	ResourceApache2ConfVirtualHost                         string = "apache2.conf.virtualHost"
+	ResourceApache2ConfDirectory                           string = "apache2.conf.directory"
+	ResourceApache2ConfLocation                            string = "apache2.conf.location"
+	ResourceBind9                                          string = "bind9"
+	ResourceBind9Zone                                      string = "bind9.zone"
+	ResourceBind9Acl                                       string = "bind9.acl"
+	ResourceBind9Key                                       string = "bind9.key"
+	ResourceBind9Channel                                   string = "bind9.channel"
+	ResourceBind9DnssecKey                                 string = "bind9.dnssecKey"
+	ResourceNginx                                          string = "nginx"
+	ResourceNginxConf                                      string = "nginx.conf"
+	ResourceNginxConfServer                                string = "nginx.conf.server"
+	ResourceNginxConfUpstream                              string = "nginx.conf.upstream"
+	ResourceNginxConfLocation                              string = "nginx.conf.location"
+	ResourceTomcat                                         string = "tomcat"
+	ResourceTomcatServer                                   string = "tomcat.server"
+	ResourceTomcatListener                                 string = "tomcat.listener"
+	ResourceTomcatService                                  string = "tomcat.service"
+	ResourceTomcatConnector                                string = "tomcat.connector"
+	ResourceTomcatEngine                                   string = "tomcat.engine"
+	ResourceTomcatHost                                     string = "tomcat.host"
+	ResourceTomcatValve                                    string = "tomcat.valve"
+	ResourceTomcatRealm                                    string = "tomcat.realm"
+	ResourceTomcatContext                                  string = "tomcat.context"
+	ResourceTomcatWebxml                                   string = "tomcat.webxml"
+	ResourceTomcatUser                                     string = "tomcat.user"
+	ResourceTomcatWebapp                                   string = "tomcat.webapp"
+	ResourceIis                                            string = "iis"
+	ResourceIisSite                                        string = "iis.site"
+	ResourceIisApplication                                 string = "iis.application"
+	ResourceIisVirtualDirectory                            string = "iis.virtualDirectory"
+	ResourceIisBinding                                     string = "iis.binding"
+	ResourceIisAppPool                                     string = "iis.appPool"
+	ResourceIisConfiguration                               string = "iis.configuration"
+	ResourceJboss                                          string = "jboss"
+	ResourceJbossConfig                                    string = "jboss.config"
+	ResourceJbossManagement                                string = "jboss.management"
+	ResourceJbossManagementInterface                       string = "jboss.managementInterface"
+	ResourceJbossSecurityRealm                             string = "jboss.securityRealm"
+	ResourceJbossRealmAuthentication                       string = "jboss.realmAuthentication"
+	ResourceJbossLdapAuthentication                        string = "jboss.ldapAuthentication"
+	ResourceJbossKeystore                                  string = "jboss.keystore"
+	ResourceJbossAuditLog                                  string = "jboss.auditLog"
+	ResourceJbossAuditLogger                               string = "jboss.auditLogger"
+	ResourceJbossAuditFormatter                            string = "jboss.auditFormatter"
+	ResourceJbossAuditHandler                              string = "jboss.auditHandler"
+	ResourceJbossInterface                                 string = "jboss.interface"
+	ResourceJbossSocketBindingGroup                        string = "jboss.socketBindingGroup"
+	ResourceJbossSocketBinding                             string = "jboss.socketBinding"
+	ResourceJbossVault                                     string = "jboss.vault"
+	ResourceJbossProfile                                   string = "jboss.profile"
+	ResourceJbossSubsystem                                 string = "jboss.subsystem"
+	ResourceJbossLogging                                   string = "jboss.logging"
+	ResourceJbossLogHandler                                string = "jboss.logHandler"
+	ResourceJbossWeb                                       string = "jboss.web"
+	ResourceJbossConnector                                 string = "jboss.connector"
+	ResourceJbossVirtualServer                             string = "jboss.virtualServer"
+	ResourceJbossJmx                                       string = "jboss.jmx"
+	ResourceJbossDeploymentScanner                         string = "jboss.deploymentScanner"
+	ResourceJbossUser                                      string = "jboss.user"
+	ResourceSquid                                          string = "squid"
+	ResourceSquidConf                                      string = "squid.conf"
+	ResourceSquidConfListen                                string = "squid.conf.listen"
+	ResourceSquidConfAcl                                   string = "squid.conf.acl"
+	ResourceSquidConfAccessRule                            string = "squid.conf.accessRule"
+	ResourceSquidConfCachePeer                             string = "squid.conf.cachePeer"
+	ResourceSquidConfCacheDir                              string = "squid.conf.cacheDir"
+	ResourceSquidConfRefreshPattern                        string = "squid.conf.refreshPattern"
+	ResourceSquidConfAccessLog                             string = "squid.conf.accessLog"
+	ResourceFrr                                            string = "frr"
+	ResourceFrrConfig                                      string = "frr.config"
+	ResourceFrrConfigBlock                                 string = "frr.config.block"
+	ResourceFrrConfigRouter                                string = "frr.config.router"
+	ResourceFrrConfigRouterNeighbor                        string = "frr.config.router.neighbor"
+	ResourceFrrConfigRouterNeighborAddressFamily           string = "frr.config.router.neighbor.addressFamily"
+	ResourceFrrConfigRouterAddressFamily                   string = "frr.config.router.addressFamily"
+	ResourceFrrConfigVrf                                   string = "frr.config.vrf"
+	ResourceFrrConfigInterface                             string = "frr.config.interface"
+	ResourceFrrConfigPrefixList                            string = "frr.config.prefixList"
+	ResourceFrrConfigRouteMap                              string = "frr.config.routeMap"
+	ResourceFrrConfigRouteMapEntry                         string = "frr.config.routeMap.entry"
+	ResourceFrrVtyshConfig                                 string = "frr.vtysh.config"
+	ResourceHaproxy                                        string = "haproxy"
+	ResourceHaproxyConfig                                  string = "haproxy.config"
+	ResourceHaproxyConfigSection                           string = "haproxy.config.section"
+	ResourceHaproxyConfigGlobal                            string = "haproxy.config.global"
+	ResourceHaproxyConfigDefaultsSection                   string = "haproxy.config.defaultsSection"
+	ResourceHaproxyConfigFrontend                          string = "haproxy.config.frontend"
+	ResourceHaproxyConfigBackend                           string = "haproxy.config.backend"
+	ResourceHaproxyConfigListen                            string = "haproxy.config.listen"
+	ResourceHaproxyConfigBind                              string = "haproxy.config.bind"
+	ResourceHaproxyConfigServer                            string = "haproxy.config.server"
+	ResourceHaproxyConfigResolversSection                  string = "haproxy.config.resolversSection"
+	ResourceHaproxyConfigUserlist                          string = "haproxy.config.userlist"
+	ResourceHaproxyConfigPeersSection                      string = "haproxy.config.peersSection"
+	ResourcePostgresqlConf                                 string = "postgresql.conf"
+	ResourcePostgresqlHba                                  string = "postgresql.hba"
+	ResourcePostgresqlHbaRule                              string = "postgresql.hba.rule"
+	ResourcePostgresqlIdent                                string = "postgresql.ident"
+	ResourcePostgresqlIdentMapping                         string = "postgresql.ident.mapping"
+	ResourceMysql                                          string = "mysql"
+	ResourceMysqlConf                                      string = "mysql.conf"
+	ResourceMysqlConfSection                               string = "mysql.conf.section"
+	ResourceMysqlConfUserOptionFile                        string = "mysql.conf.userOptionFile"
+	ResourceMariadb                                        string = "mariadb"
+	ResourceMariadbConf                                    string = "mariadb.conf"
+	ResourceMariadbConfSection                             string = "mariadb.conf.section"
+	ResourceMariadbConfUserOptionFile                      string = "mariadb.conf.userOptionFile"
+	ResourceMongodb                                        string = "mongodb"
+	ResourceMongodbConf                                    string = "mongodb.conf"
+	ResourceCassandra                                      string = "cassandra"
+	ResourceCassandraConf                                  string = "cassandra.conf"
+	ResourceCassandraEnv                                   string = "cassandra.env"
+	ResourceCassandraRackdc                                string = "cassandra.rackdc"
+	ResourceJournaldConfig                                 string = "journald.config"
+	ResourceJournaldConfigSection                          string = "journald.config.section"
+	ResourceJournaldConfigSectionParam                     string = "journald.config.section.param"
+	ResourceService                                        string = "service"
+	ResourceServices                                       string = "services"
+	ResourceSystemdTimer                                   string = "systemd.timer"
+	ResourceSystemdTimers                                  string = "systemd.timers"
+	ResourceSystemdSocket                                  string = "systemd.socket"
+	ResourceSystemdSockets                                 string = "systemd.sockets"
+	ResourceSystemdTarget                                  string = "systemd.target"
+	ResourceSystemdTargets                                 string = "systemd.targets"
+	ResourceSystemdUnit                                    string = "systemd.unit"
+	ResourceSystemdUnits                                   string = "systemd.units"
+	ResourceSystemdResolved                                string = "systemd.resolved"
+	ResourceSystemdTimesyncd                               string = "systemd.timesyncd"
+	ResourceSystemdCoredump                                string = "systemd.coredump"
+	ResourceSystemdBoot                                    string = "systemd.boot"
+	ResourceSystemdBootEntry                               string = "systemd.boot.entry"
+	ResourceKernel                                         string = "kernel"
+	ResourceKernelParameter                                string = "kernel.parameter"
+	ResourceKernelParameterSetting                         string = "kernel.parameter.setting"
+	ResourceKernelModule                                   string = "kernel.module"
+	ResourceKernelCmdline                                  string = "kernel.cmdline"
+	ResourceKernelTaint                                    string = "kernel.taint"
+	ResourceKernelLivepatch                                string = "kernel.livepatch"
+	ResourceKernelLivepatchPatch                           string = "kernel.livepatch.patch"
+	ResourceKernelLockdown                                 string = "kernel.lockdown"
+	ResourceKernelAslr                                     string = "kernel.aslr"
+	ResourceCgroups                                        string = "cgroups"
+	ResourceCgroup                                         string = "cgroup"
+	ResourceDocker                                         string = "docker"
+	ResourceDockerFile                                     string = "docker.file"
+	ResourceDockerFileStage                                string = "docker.file.stage"
+	ResourceDockerFileOci                                  string = "docker.file.oci"
+	ResourceDockerFileArg                                  string = "docker.file.arg"
+	ResourceDockerFileEnv                                  string = "docker.file.env"
+	ResourceDockerFileUser                                 string = "docker.file.user"
+	ResourceDockerFileExpose                               string = "docker.file.expose"
+	ResourceDockerFileFrom                                 string = "docker.file.from"
+	ResourceDockerFileRun                                  string = "docker.file.run"
+	ResourceDockerFileRunCommand                           string = "docker.file.run.command"
+	ResourceDockerFileRunMount                             string = "docker.file.run.mount"
+	ResourceDockerFileAdd                                  string = "docker.file.add"
+	ResourceDockerFileCopy                                 string = "docker.file.copy"
+	ResourceDockerFileHealthcheck                          string = "docker.file.healthcheck"
+	ResourceDockerFileVolume                               string = "docker.file.volume"
+	ResourceDockerFileShell                                string = "docker.file.shell"
+	ResourceDockerFileWorkdir                              string = "docker.file.workdir"
+	ResourceDockerFileStopsignal                           string = "docker.file.stopsignal"
+	ResourceDockerFileOnbuild                              string = "docker.file.onbuild"
+	ResourceDockerImage                                    string = "docker.image"
+	ResourceDockerContainer                                string = "docker.container"
+	ResourceDockerContainerUlimit                          string = "docker.container.ulimit"
+	ResourceDockerContainerPort                            string = "docker.container.port"
+	ResourceDockerContainerDevice                          string = "docker.container.device"
+	ResourceDockerContainerMount                           string = "docker.container.mount"
+	ResourceDockerNetwork                                  string = "docker.network"
+	ResourceDockerNetworkSubnet                            string = "docker.network.subnet"
+	ResourceDockerVolume                                   string = "docker.volume"
+	ResourceDockerDaemon                                   string = "docker.daemon"
+	ResourceDockerDaemonUlimit                             string = "docker.daemon.ulimit"
+	ResourceContainerd                                     string = "containerd"
+	ResourceContainerdRuntime                              string = "containerd.runtime"
+	ResourceContainerdRegistryHost                         string = "containerd.registryHost"
+	ResourceContainerdContainer                            string = "containerd.container"
+	ResourceContainerdImage                                string = "containerd.image"
+	ResourceContainerdContainerMount                       string = "containerd.container.mount"
+	ResourceCrio                                           string = "crio"
+	ResourceCrioNamespaceSignaturePolicy                   string = "crio.namespaceSignaturePolicy"
+	ResourceCrioRuntime                                    string = "crio.runtime"
+	ResourceCrioContainer                                  string = "crio.container"
+	ResourceCrioImage                                      string = "crio.image"
+	ResourceCrioContainerMount                             string = "crio.container.mount"
+	ResourceContainersRegistries                           string = "containers.registries"
+	ResourceContainersRegistry                             string = "containers.registry"
+	ResourceContainersRegistryMirror                       string = "containers.registry.mirror"
+	ResourceContainersPolicy                               string = "containers.policy"
+	ResourceContainersPolicyScope                          string = "containers.policy.scope"
+	ResourceContainersPolicyRequirement                    string = "containers.policy.requirement"
+	ResourceContainersConf                                 string = "containers.conf"
+	ResourceContainersStorage                              string = "containers.storage"
+	ResourcePodman                                         string = "podman"
+	ResourcePodmanContainer                                string = "podman.container"
+	ResourcePodmanContainerUlimit                          string = "podman.container.ulimit"
+	ResourcePodmanContainerDevice                          string = "podman.container.device"
+	ResourcePodmanContainerMount                           string = "podman.container.mount"
+	ResourcePodmanImage                                    string = "podman.image"
+	ResourcePodmanPod                                      string = "podman.pod"
+	ResourcePodmanVolume                                   string = "podman.volume"
+	ResourcePodmanNetwork                                  string = "podman.network"
+	ResourceIptables                                       string = "iptables"
+	ResourceIp6tables                                      string = "ip6tables"
+	ResourceIptablesTable                                  string = "iptables.table"
+	ResourceIptablesChain                                  string = "iptables.chain"
+	ResourceIptablesEntry                                  string = "iptables.entry"
+	ResourceNftables                                       string = "nftables"
+	ResourceNftablesTable                                  string = "nftables.table"
+	ResourceNftablesChain                                  string = "nftables.chain"
+	ResourceNftablesRule                                   string = "nftables.rule"
+	ResourceNftablesSet                                    string = "nftables.set"
+	ResourceUfw                                            string = "ufw"
+	ResourceUfwRule                                        string = "ufw.rule"
+	ResourceUfwApplication                                 string = "ufw.application"
+	ResourceFirewalld                                      string = "firewalld"
+	ResourceFirewalldZone                                  string = "firewalld.zone"
+	ResourceFirewalldRichrule                              string = "firewalld.richrule"
+	ResourcePf                                             string = "pf"
+	ResourcePfRule                                         string = "pf.rule"
+	ResourcePfTable                                        string = "pf.table"
+	ResourceFstab                                          string = "fstab"
+	ResourceFstabEntry                                     string = "fstab.entry"
+	ResourceGrubConfig                                     string = "grub.config"
+	ResourceGrubConfigEntry                                string = "grub.config.entry"
+	ResourceSecbootConfig                                  string = "secboot.config"
+	ResourceSecbootImage                                   string = "secboot.image"
+	ResourceSysrc                                          string = "sysrc"
+	ResourceSysrcEntry                                     string = "sysrc.entry"
+	ResourceJails                                          string = "jails"
+	ResourceJail                                           string = "jail"
+	ResourceProcess                                        string = "process"
+	ResourceProcesses                                      string = "processes"
+	ResourcePort                                           string = "port"
+	ResourcePorts                                          string = "ports"
+	ResourceAuditpol                                       string = "auditpol"
+	ResourceAuditpolEntry                                  string = "auditpol.entry"
+	ResourceSecpol                                         string = "secpol"
+	ResourceNtpConf                                        string = "ntp.conf"
+	ResourceChronyConf                                     string = "chrony.conf"
+	ResourcePostfix                                        string = "postfix"
+	ResourcePostfixService                                 string = "postfix.service"
+	ResourceExim                                           string = "exim"
+	ResourceRsyslogConf                                    string = "rsyslog.conf"
+	ResourceRsyslogModule                                  string = "rsyslog.module"
+	ResourceRsyslogInput                                   string = "rsyslog.input"
+	ResourceRsyslogAction                                  string = "rsyslog.action"
+	ResourceRsyslogRuleset                                 string = "rsyslog.ruleset"
+	ResourceRsyslogRule                                    string = "rsyslog.rule"
+	ResourceLogindefs                                      string = "logindefs"
+	ResourceUmask                                          string = "umask"
+	ResourceUmaskSetting                                   string = "umask.setting"
+	ResourceUmaskPamModule                                 string = "umask.pamModule"
+	ResourcePwquality                                      string = "pwquality"
+	ResourcePwqualitySettings                              string = "pwquality.settings"
+	ResourcePwqualityPamModule                             string = "pwquality.pamModule"
+	ResourceCryptoPolicy                                   string = "cryptoPolicy"
+	ResourceCryptoPolicyScope                              string = "cryptoPolicy.scope"
+	ResourceDconf                                          string = "dconf"
+	ResourceDconfProfile                                   string = "dconf.profile"
+	ResourceDconfDatabase                                  string = "dconf.database"
+	ResourceLimits                                         string = "limits"
+	ResourceLimitsEntry                                    string = "limits.entry"
+	ResourceSudo                                           string = "sudo"
+	ResourceSudoPlugin                                     string = "sudo.plugin"
+	ResourceSudoValidation                                 string = "sudo.validation"
+	ResourceSudoValidationError                            string = "sudo.validation.error"
+	ResourceSudoers                                        string = "sudoers"
+	ResourceSudoersUserSpec                                string = "sudoers.userSpec"
+	ResourceSudoersDefault                                 string = "sudoers.default"
+	ResourceSudoersAlias                                   string = "sudoers.alias"
+	ResourceLsblk                                          string = "lsblk"
+	ResourceLsblkEntry                                     string = "lsblk.entry"
+	ResourceLuks                                           string = "luks"
+	ResourceLuksVolume                                     string = "luks.volume"
+	ResourceLuksVolumeCipher                               string = "luks.volume.cipher"
+	ResourceLuksKeyslot                                    string = "luks.keyslot"
+	ResourceApparmor                                       string = "apparmor"
+	ResourceApparmorProfile                                string = "apparmor.profile"
+	ResourceApparmorProcess                                string = "apparmor.process"
+	ResourceSelinux                                        string = "selinux"
+	ResourceSelinuxBoolean                                 string = "selinux.boolean"
+	ResourceSelinuxModule                                  string = "selinux.module"
+	ResourcePolkit                                         string = "polkit"
+	ResourcePolkitAction                                   string = "polkit.action"
+	ResourcePolkitRule                                     string = "polkit.rule"
+	ResourcePolkitLocalAuthorityRule                       string = "polkit.localAuthorityRule"
+	ResourceAide                                           string = "aide"
+	ResourceAideRule                                       string = "aide.rule"
+	ResourceModprobe                                       string = "modprobe"
+	ResourceModprobeInstall                                string = "modprobe.install"
+	ResourceModprobeRemove                                 string = "modprobe.remove"
+	ResourceModprobeBlacklist                              string = "modprobe.blacklist"
+	ResourceModprobeOption                                 string = "modprobe.option"
+	ResourceModprobeAlias                                  string = "modprobe.alias"
+	ResourceModprobeSoftdep                                string = "modprobe.softdep"
+	ResourceMount                                          string = "mount"
+	ResourceNfs                                            string = "nfs"
+	ResourceNfsExport                                      string = "nfs.export"
+	ResourceNfsMount                                       string = "nfs.mount"
+	ResourceMountPoint                                     string = "mount.point"
+	ResourceShadow                                         string = "shadow"
+	ResourceShadowEntry                                    string = "shadow.entry"
+	ResourceMasterpasswd                                   string = "masterpasswd"
+	ResourceMasterpasswdEntry                              string = "masterpasswd.entry"
+	ResourceLoginconf                                      string = "loginconf"
+	ResourceLoginconfClass                                 string = "loginconf.class"
+	ResourceYum                                            string = "yum"
+	ResourceYumRepo                                        string = "yum.repo"
+	ResourceYumConfig                                      string = "yum.config"
+	ResourceApt                                            string = "apt"
+	ResourceAptConfig                                      string = "apt.config"
+	ResourceAptRepo                                        string = "apt.repo"
+	ResourcePkg                                            string = "pkg"
+	ResourcePkgRepo                                        string = "pkg.repo"
+	ResourceRegistrykey                                    string = "registrykey"
+	ResourceRegistrykeyProperty                            string = "registrykey.property"
+	ResourceContainerImage                                 string = "container.image"
+	ResourceContainerRepository                            string = "container.repository"
+	ResourceKubelet                                        string = "kubelet"
+	ResourcePython                                         string = "python"
+	ResourcePythonPackage                                  string = "python.package"
+	ResourceNpmPackages                                    string = "npm.packages"
+	ResourceNpmPackage                                     string = "npm.package"
+	ResourceGoPackages                                     string = "go.packages"
+	ResourceGoPackage                                      string = "go.package"
+	ResourceJavaPackages                                   string = "java.packages"
+	ResourceJavaPackage                                    string = "java.package"
+	ResourceRustPackages                                   string = "rust.packages"
+	ResourceRustPackage                                    string = "rust.package"
+	ResourceDotnetPackages                                 string = "dotnet.packages"
+	ResourceDotnetPackage                                  string = "dotnet.package"
+	ResourcePhpPackages                                    string = "php.packages"
+	ResourcePhpPackage                                     string = "php.package"
+	ResourceGithubactionsPackages                          string = "githubactions.packages"
+	ResourceGithubactionsPackage                           string = "githubactions.package"
+	ResourceSwiftPackages                                  string = "swift.packages"
+	ResourceSwiftPackage                                   string = "swift.package"
+	ResourceTerraformPackages                              string = "terraform.packages"
+	ResourceTerraformPackage                               string = "terraform.package"
+	ResourceHomebrewPackages                               string = "homebrew.packages"
+	ResourceHomebrewPackage                                string = "homebrew.package"
+	ResourceChocolateyPackages                             string = "chocolatey.packages"
+	ResourceChocolateyPackage                              string = "chocolatey.package"
+	ResourceJenkinsPackages                                string = "jenkins.packages"
+	ResourceJenkinsPackage                                 string = "jenkins.package"
+	ResourceWordpressPackages                              string = "wordpress.packages"
+	ResourceWordpressPackage                               string = "wordpress.package"
+	ResourceRubyPackages                                   string = "ruby.packages"
+	ResourceRubyPackage                                    string = "ruby.package"
+	ResourceDartPackages                                   string = "dart.packages"
+	ResourceDartPackage                                    string = "dart.package"
+	ResourceHaskellPackages                                string = "haskell.packages"
+	ResourceHaskellPackage                                 string = "haskell.package"
+	ResourceElixirPackages                                 string = "elixir.packages"
+	ResourceElixirPackage                                  string = "elixir.package"
+	ResourceErlangPackages                                 string = "erlang.packages"
+	ResourceErlangPackage                                  string = "erlang.package"
+	ResourcePrologPackages                                 string = "prolog.packages"
+	ResourcePrologPackage                                  string = "prolog.package"
+	ResourceCondaPackages                                  string = "conda.packages"
+	ResourceCondaPackage                                   string = "conda.package"
+	ResourceVcpkgPackages                                  string = "vcpkg.packages"
+	ResourceVcpkgPackage                                   string = "vcpkg.package"
+	ResourceOpamPackages                                   string = "opam.packages"
+	ResourceOpamPackage                                    string = "opam.package"
+	ResourceJuliaPackages                                  string = "julia.packages"
+	ResourceJuliaPackage                                   string = "julia.package"
+	ResourceRPackages                                      string = "r.packages"
+	ResourceRPackage                                       string = "r.package"
+	ResourceLuaPackages                                    string = "lua.packages"
+	ResourceLuaPackage                                     string = "lua.package"
+	ResourceMacos                                          string = "macos"
+	ResourceMacosHardware                                  string = "macos.hardware"
+	ResourceMacosAlf                                       string = "macos.alf"
+	ResourceMacosFirewall                                  string = "macos.firewall"
+	ResourceMacosFirewallApp                               string = "macos.firewall.app"
+	ResourceMacosFilevault                                 string = "macos.filevault"
+	ResourceMacosGatekeeper                                string = "macos.gatekeeper"
+	ResourceMacosSip                                       string = "macos.sip"
+	ResourceMacosXprotect                                  string = "macos.xprotect"
+	ResourceMacosSharing                                   string = "macos.sharing"
+	ResourceMacosMdm                                       string = "macos.mdm"
+	ResourceMacosProfiles                                  string = "macos.profiles"
+	ResourceMacosProfile                                   string = "macos.profile"
+	ResourceMacosProfilePayload                            string = "macos.profile.payload"
+	ResourceMacosPreferences                               string = "macos.preferences"
+	ResourceMacosPreferencesUser                           string = "macos.preferences.user"
+	ResourceMacosSoftwareupdate                            string = "macos.softwareupdate"
+	ResourceMacosSoftwareupdateEntry                       string = "macos.softwareupdate.entry"
+	ResourceMacosTimemachine                               string = "macos.timemachine"
+	ResourceMacosSystemsetup                               string = "macos.systemsetup"
+	ResourceOpenBSMAudit                                   string = "openBSMAudit"
+	ResourceWindows                                        string = "windows"
+	ResourceWindowsExploitProtection                       string = "windows.exploitProtection"
+	ResourceWindowsExploitProtectionDep                    string = "windows.exploitProtection.dep"
+	ResourceWindowsExploitProtectionAslr                   string = "windows.exploitProtection.aslr"
+	ResourceWindowsExploitProtectionCfg                    string = "windows.exploitProtection.cfg"
+	ResourceWindowsExploitProtectionSehop                  string = "windows.exploitProtection.sehop"
+	ResourceWindowsExploitProtectionHeap                   string = "windows.exploitProtection.heap"
+	ResourceWindowsSmartScreen                             string = "windows.smartScreen"
+	ResourceWindowsScheduledTask                           string = "windows.scheduledTask"
+	ResourceWindowsScheduledTaskPrincipal                  string = "windows.scheduledTask.principal"
+	ResourceWindowsScheduledTaskAction                     string = "windows.scheduledTask.action"
+	ResourceWindowsScheduledTaskTrigger                    string = "windows.scheduledTask.trigger"
+	ResourceWindowsScheduledTaskSettings                   string = "windows.scheduledTask.settings"
+	ResourceWindowsLogonSession                            string = "windows.logonSession"
+	ResourceMacosSystemExtension                           string = "macos.systemExtension"
+	ResourceSafari                                         string = "safari"
+	ResourceSafariExtension                                string = "safari.extension"
+	ResourceLaunchd                                        string = "launchd"
+	ResourceLaunchdJob                                     string = "launchd.job"
+	ResourceWindowsHotfix                                  string = "windows.hotfix"
+	ResourceWindowsUpdate                                  string = "windows.update"
+	ResourceWindowsUpdateEntry                             string = "windows.update.entry"
+	ResourceWindowsUpdateConfig                            string = "windows.update.config"
+	ResourceWindowsUpdatePolicy                            string = "windows.update.policy"
+	ResourceWindowsHotpatch                                string = "windows.hotpatch"
+	ResourceWindowsServerFeature                           string = "windows.serverFeature"
+	ResourceWindowsOptionalFeature                         string = "windows.optionalFeature"
+	ResourceWindowsEventlog                                string = "windows.eventlog"
+	ResourceWindowsRdp                                     string = "windows.rdp"
+	ResourceWindowsWinrm                                   string = "windows.winrm"
+	ResourceWindowsWinrmListener                           string = "windows.winrm.listener"
+	ResourceWindowsWinrmClient                             string = "windows.winrm.client"
+	ResourceWindowsWinrmService                            string = "windows.winrm.service"
+	ResourceWindowsDeviceGuard                             string = "windows.deviceGuard"
+	ResourceWindowsLsa                                     string = "windows.lsa"
+	ResourceWindowsLsaNtlm                                 string = "windows.lsa.ntlm"
+	ResourceWindowsLsaSecureChannel                        string = "windows.lsa.secureChannel"
+	ResourceWindowsUac                                     string = "windows.uac"
+	ResourceWindowsSchannel                                string = "windows.schannel"
+	ResourceWindowsSchannelProtocol                        string = "windows.schannel.protocol"
+	ResourceWindowsSchannelCipher                          string = "windows.schannel.cipher"
+	ResourceWindowsSchannelHash                            string = "windows.schannel.hash"
+	ResourceWindowsSchannelKeyExchangeAlgorithm            string = "windows.schannel.keyExchangeAlgorithm"
+	ResourceWindowsSpooler                                 string = "windows.spooler"
+	ResourceWindowsSpoolerPointAndPrint                    string = "windows.spooler.pointAndPrint"
+	ResourceWindowsSpoolerRpc                              string = "windows.spooler.rpc"
+	ResourceWindowsSpoolerIpp                              string = "windows.spooler.ipp"
+	ResourceWindowsTelemetry                               string = "windows.telemetry"
+	ResourceWindowsPowershell                              string = "windows.powershell"
+	ResourceWindowsPowershellScriptBlockLogging            string = "windows.powershell.scriptBlockLogging"
+	ResourceWindowsPowershellTranscription                 string = "windows.powershell.transcription"
+	ResourceWindowsPowershellModuleLogging                 string = "windows.powershell.moduleLogging"
+	ResourceWindowsDisk                                    string = "windows.disk"
+	ResourceWindowsTpm                                     string = "windows.tpm"
+	ResourceWindowsAuditPolicy                             string = "windows.auditPolicy"
+	ResourceWindowsAuditPolicySubcategory                  string = "windows.auditPolicy.subcategory"
+	ResourceWindowsFirewall                                string = "windows.firewall"
+	ResourceWindowsFirewallProfile                         string = "windows.firewall.profile"
+	ResourceWindowsFirewallRule                            string = "windows.firewall.rule"
+	ResourceWindowsSmb                                     string = "windows.smb"
+	ResourceWindowsSmbServerConfiguration                  string = "windows.smb.serverConfiguration"
+	ResourceWindowsSmbClientConfiguration                  string = "windows.smb.clientConfiguration"
+	ResourceWindowsSmbShare                                string = "windows.smb.share"
+	ResourceWindowsSmbSession                              string = "windows.smb.session"
+	ResourceWindowsSmbConnection                           string = "windows.smb.connection"
+	ResourceWindowsAcl                                     string = "windows.acl"
+	ResourceWindowsAclEntry                                string = "windows.acl.entry"
+	ResourceWindowsAclAuditEntry                           string = "windows.acl.auditEntry"
+	ResourceWindowsDnsServer                               string = "windows.dnsServer"
+	ResourceWindowsDnsServerSettings                       string = "windows.dnsServer.settings"
+	ResourceWindowsDnsServerRecursion                      string = "windows.dnsServer.recursion"
+	ResourceWindowsDnsServerCache                          string = "windows.dnsServer.cache"
+	ResourceWindowsDnsServerDiagnostics                    string = "windows.dnsServer.diagnostics"
+	ResourceWindowsDnsServerScavenging                     string = "windows.dnsServer.scavenging"
+	ResourceWindowsDnsServerResponseRateLimiting           string = "windows.dnsServer.responseRateLimiting"
+	ResourceWindowsDnsServerForwarderConfiguration         string = "windows.dnsServer.forwarderConfiguration"
+	ResourceWindowsDnsServerRootHint                       string = "windows.dnsServer.rootHint"
+	ResourceWindowsDnsServerZone                           string = "windows.dnsServer.zone"
+	ResourceWindowsDnsServerZoneDnssec                     string = "windows.dnsServer.zone.dnssec"
+	ResourceWindowsDnsServerZoneSigningKey                 string = "windows.dnsServer.zone.signingKey"
+	ResourceWindowsExchangeServer                          string = "windows.exchangeServer"
+	ResourceWindowsExchangeServerOrganizationConfig        string = "windows.exchangeServer.organizationConfig"
+	ResourceWindowsExchangeServerTransportConfig           string = "windows.exchangeServer.transportConfig"
+	ResourceWindowsExchangeServerAdminAuditLogConfig       string = "windows.exchangeServer.adminAuditLogConfig"
+	ResourceWindowsExchangeServerContentFilterConfig       string = "windows.exchangeServer.contentFilterConfig"
+	ResourceWindowsExchangeServerSenderFilterConfig        string = "windows.exchangeServer.senderFilterConfig"
+	ResourceWindowsExchangeServerSenderIdConfig            string = "windows.exchangeServer.senderIdConfig"
+	ResourceWindowsExchangeServerSenderReputationConfig    string = "windows.exchangeServer.senderReputationConfig"
+	ResourceWindowsExchangeServerRecipientFilterConfig     string = "windows.exchangeServer.recipientFilterConfig"
+	ResourceWindowsExchangeServerMobileDeviceMailboxPolicy string = "windows.exchangeServer.mobileDeviceMailboxPolicy"
+	ResourceWindowsExchangeServerRemoteDomain              string = "windows.exchangeServer.remoteDomain"
+	ResourceWindowsExchangeServerOwaVirtualDirectory       string = "windows.exchangeServer.owaVirtualDirectory"
+	ResourceWindowsExchangeServerTransportAgent            string = "windows.exchangeServer.transportAgent"
+	ResourceWindowsExchangeServerSendConnector             string = "windows.exchangeServer.sendConnector"
+	ResourceWindowsExchangeServerReceiveConnector          string = "windows.exchangeServer.receiveConnector"
+	ResourceWindowsExchangeServerTransportService          string = "windows.exchangeServer.transportService"
+	ResourceWindowsExchangeServerRpcClientAccess           string = "windows.exchangeServer.rpcClientAccess"
+	ResourceWindowsExchangeServerMailboxDatabase           string = "windows.exchangeServer.mailboxDatabase"
+	ResourceWindowsPrinterDrivers                          string = "windows.printerDrivers"
+	ResourceWindowsPrinterDriver                           string = "windows.printerDriver"
+	ResourceWindowsDrivers                                 string = "windows.drivers"
+	ResourceWindowsDriver                                  string = "windows.driver"
+	ResourceWindowsCertificates                            string = "windows.certificates"
+	ResourceWindowsCertificate                             string = "windows.certificate"
+	ResourceWindowsBitlocker                               string = "windows.bitlocker"
+	ResourceWindowsBitlockerPolicy                         string = "windows.bitlocker.policy"
+	ResourceWindowsBitlockerPolicyDriveSettings            string = "windows.bitlocker.policy.driveSettings"
+	ResourceWindowsBitlockerVolume                         string = "windows.bitlocker.volume"
+	ResourceWindowsBitlockerVolumeKeyProtector             string = "windows.bitlocker.volume.keyProtector"
+	ResourceWindowsSecurity                                string = "windows.security"
+	ResourceWindowsSecurityProduct                         string = "windows.security.product"
+	ResourceWindowsSecurityHealth                          string = "windows.security.health"
+	ResourceWindowsDefender                                string = "windows.defender"
+	ResourceWindowsDefenderStatus                          string = "windows.defender.status"
+	ResourceWindowsDefenderPreferences                     string = "windows.defender.preferences"
+	ResourceWindowsDefenderScanSettings                    string = "windows.defender.scanSettings"
+	ResourceWindowsDefenderRealTimeSettings                string = "windows.defender.realTimeSettings"
+	ResourceWindowsDefenderCloudSettings                   string = "windows.defender.cloudSettings"
+	ResourceWindowsDefenderSignatureSettings               string = "windows.defender.signatureSettings"
+	ResourceWindowsDefenderThreatActionSettings            string = "windows.defender.threatActionSettings"
+	ResourceWindowsDefenderThreatIdAction                  string = "windows.defender.threatIdAction"
+	ResourceWindowsDefenderControlledFolderAccess          string = "windows.defender.controlledFolderAccess"
+	ResourceWindowsDefenderNetworkProtectionSettings       string = "windows.defender.networkProtectionSettings"
+	ResourceWindowsDefenderBehavioralNetworkBlockSettings  string = "windows.defender.behavioralNetworkBlockSettings"
+	ResourceWindowsDefenderLocalSettingOverrides           string = "windows.defender.localSettingOverrides"
+	ResourceWindowsDefenderRemediationSettings             string = "windows.defender.remediationSettings"
+	ResourceWindowsDefenderExclusions                      string = "windows.defender.exclusions"
+	ResourceWindowsDefenderAsrRule                         string = "windows.defender.asrRule"
+	ResourceWindowsDefenderThreat                          string = "windows.defender.threat"
+	ResourceWindowsDefenderThreatDetection                 string = "windows.defender.threatDetection"
+	ResourceEdr                                            string = "edr"
+	ResourceEdrProduct                                     string = "edr.product"
+	ResourceMdm                                            string = "mdm"
+	ResourceMdmIntune                                      string = "mdm.intune"
+	ResourceWinget                                         string = "winget"
+	ResourceWingetSource                                   string = "winget.source"
+	ResourceIdp                                            string = "idp"
+	ResourceIdpEntra                                       string = "idp.entra"
+	ResourceIdpActiveDirectory                             string = "idp.activeDirectory"
+	ResourceCloud                                          string = "cloud"
+	ResourceCloudInstance                                  string = "cloudInstance"
+	ResourceIpAddress                                      string = "ipAddress"
+	ResourceNetwork                                        string = "network"
+	ResourceNetworkNeighbor                                string = "networkNeighbor"
+	ResourceNetworkInterface                               string = "networkInterface"
+	ResourceNetworkRoutes                                  string = "networkRoutes"
+	ResourceNetworkRoute                                   string = "networkRoute"
+	ResourceChrome                                         string = "chrome"
+	ResourceChromeExtension                                string = "chrome.extension"
+	ResourceChromeExtensionContentScript                   string = "chrome.extensionContentScript"
+	ResourceFirefox                                        string = "firefox"
+	ResourceFirefoxAddon                                   string = "firefox.addon"
+	ResourceFirefoxPolicies                                string = "firefox.policies"
+	ResourceFirefoxPoliciesInput                           string = "firefox.policies.input"
+	ResourceUsb                                            string = "usb"
+	ResourceUsbDevice                                      string = "usb.device"
+	ResourceCrontab                                        string = "crontab"
+	ResourceCrontabEntry                                   string = "crontab.entry"
+	ResourceJetbrains                                      string = "jetbrains"
+	ResourceJetbrainsPlugin                                string = "jetbrains.plugin"
+	ResourceVscode                                         string = "vscode"
+	ResourceVscodeExtension                                string = "vscode.extension"
+	ResourceLogrotate                                      string = "logrotate"
+	ResourceLogrotateEntry                                 string = "logrotate.entry"
+	ResourceLvm                                            string = "lvm"
+	ResourceLvmPhysicalVolume                              string = "lvm.physicalVolume"
+	ResourceLvmVolumeGroup                                 string = "lvm.volumeGroup"
+	ResourceLvmLogicalVolume                               string = "lvm.logicalVolume"
+	ResourceMdadm                                          string = "mdadm"
+	ResourceMdadmArray                                     string = "mdadm.array"
+	ResourceMdadmDevice                                    string = "mdadm.device"
+	ResourceZfs                                            string = "zfs"
+	ResourceZfsPool                                        string = "zfs.pool"
+	ResourceZfsPoolVdev                                    string = "zfs.pool.vdev"
+	ResourceZfsDataset                                     string = "zfs.dataset"
+	ResourceSolarisZones                                   string = "solaris.zones"
+	ResourceSolarisZone                                    string = "solaris.zone"
+	ResourceSolarisZoneNetwork                             string = "solaris.zone.network"
+	ResourceSolarisZoneFilesystem                          string = "solaris.zone.filesystem"
+	ResourceSolarisZoneDevice                              string = "solaris.zone.device"
+	ResourceAi                                             string = "ai"
+	ResourceAiModel                                        string = "ai.model"
+	ResourceOllamaConfig                                   string = "ollama.config"
+	ResourceOllamaConfigIntegration                        string = "ollama.config.integration"
+	ResourceClaudeCode                                     string = "claude.code"
+	ResourceClaudeCodePlugin                               string = "claude.code.plugin"
+	ResourceClaudeCodeSkill                                string = "claude.code.skill"
+	ResourceClaudeCodeProject                              string = "claude.code.project"
+	ResourceClaudeCodeModelUsage                           string = "claude.code.modelUsage"
+	ResourceClaudeCodeRepo                                 string = "claude.code.repo"
+	ResourceClaudeCodeMcpServer                            string = "claude.code.mcpServer"
+	ResourceClaudeDesktop                                  string = "claude.desktop"
+	ResourceClaudeDesktopMcpServer                         string = "claude.desktop.mcpServer"
+	ResourceOpenaiCodex                                    string = "openai.codex"
+	ResourceOpenaiCodexPlugin                              string = "openai.codex.plugin"
+	ResourceOpenaiCodexSkill                               string = "openai.codex.skill"
+	ResourceOpenaiCodexMcpServer                           string = "openai.codex.mcpServer"
+	ResourceOpenaiCodexConnector                           string = "openai.codex.connector"
+	ResourceOpenaiCodexRepo                                string = "openai.codex.repo"
+	ResourceCursor                                         string = "cursor"
+	ResourceCursorRepo                                     string = "cursor.repo"
+	ResourceCursorMcpServer                                string = "cursor.mcpServer"
+	ResourceCursorRule                                     string = "cursor.rule"
+	ResourceCursorSkill                                    string = "cursor.skill"
+	ResourceGithubCopilot                                  string = "github.copilot"
+	ResourceGithubCopilotAccount                           string = "github.copilot.account"
+	ResourceGithubCopilotMcpServer                         string = "github.copilot.mcpServer"
+	ResourceGithubCopilotSkill                             string = "github.copilot.skill"
+	ResourceGoose                                          string = "goose"
+	ResourceGooseExtension                                 string = "goose.extension"
+	ResourceGooseSkill                                     string = "goose.skill"
+	ResourceGemini                                         string = "gemini"
+	ResourceGeminiMcpServer                                string = "gemini.mcpServer"
+	ResourceGeminiSkill                                    string = "gemini.skill"
+	ResourceWindsurf                                       string = "windsurf"
+	ResourceWindsurfRepo                                   string = "windsurf.repo"
+	ResourceWindsurfRule                                   string = "windsurf.rule"
+	ResourceWindsurfMcpServer                              string = "windsurf.mcpServer"
+	ResourceWindsurfSkill                                  string = "windsurf.skill"
+	ResourceZed                                            string = "zed"
+	ResourceZedRepo                                        string = "zed.repo"
+	ResourceRoo                                            string = "roo"
+	ResourceRooSkill                                       string = "roo.skill"
+	ResourceCline                                          string = "cline"
+	ResourceClineSkill                                     string = "cline.skill"
+	ResourceKiro                                           string = "kiro"
+	ResourceKiroSkill                                      string = "kiro.skill"
+	ResourceContinuedev                                    string = "continuedev"
+	ResourceContinuedevSkill                               string = "continuedev.skill"
+	ResourceTrae                                           string = "trae"
+	ResourceTraeSkill                                      string = "trae.skill"
+	ResourceOpencode                                       string = "opencode"
+	ResourceOpencodeSkill                                  string = "opencode.skill"
+	ResourcePi                                             string = "pi"
+	ResourcePiSkill                                        string = "pi.skill"
+	ResourceMistralVibe                                    string = "mistral.vibe"
+	ResourceMistralVibeSkill                               string = "mistral.vibe.skill"
+	ResourceAntigravity                                    string = "antigravity"
+	ResourceAntigravitySkill                               string = "antigravity.skill"
+	ResourceIbmBob                                         string = "ibm.bob"
+	ResourceIbmBobSkill                                    string = "ibm.bob.skill"
+	ResourceAider                                          string = "aider"
+	ResourceOpenclaw                                       string = "openclaw"
+	ResourceOpenclawSkill                                  string = "openclaw.skill"
+	ResourceSnowflakeCortex                                string = "snowflake.cortex"
+	ResourceSnowflakeCortexSkill                           string = "snowflake.cortex.skill"
+	ResourceJunie                                          string = "junie"
+	ResourceJunieSkill                                     string = "junie.skill"
+	ResourceAugment                                        string = "augment"
+	ResourceAugmentSkill                                   string = "augment.skill"
+	ResourceWarp                                           string = "warp"
+	ResourceWarpSkill                                      string = "warp.skill"
+	ResourceKilocode                                       string = "kilocode"
+	ResourceKilocodeSkill                                  string = "kilocode.skill"
+	ResourceOpenhands                                      string = "openhands"
+	ResourceOpenhandsSkill                                 string = "openhands.skill"
+	ResourceQwenCode                                       string = "qwen.code"
+	ResourceQwenCodeSkill                                  string = "qwen.code.skill"
+	ResourceAgentskills                                    string = "agentskills"
+	ResourceAgentskillsSkill                               string = "agentskills.skill"
+	ResourceAgentinstructions                              string = "agentinstructions"
+	ResourceAgentinstructionsFile                          string = "agentinstructions.file"
+	ResourceSriov                                          string = "sriov"
+	ResourceSriovPhysicalFunction                          string = "sriov.physicalFunction"
+	ResourceSriovVirtualFunction                           string = "sriov.virtualFunction"
+	ResourceOvs                                            string = "ovs"
+	ResourceOvsBridge                                      string = "ovs.bridge"
+	ResourceOvsPort                                        string = "ovs.port"
+	ResourceOvsInterface                                   string = "ovs.interface"
+	ResourceJavaKeystore                                   string = "java.keystore"
+	ResourceJavaKeystoreEntry                              string = "java.keystore.entry"
+	ResourceJavaTruststores                                string = "java.truststores"
+	ResourceAixInittab                                     string = "aix.inittab"
+	ResourceAixInittabEntry                                string = "aix.inittab.entry"
+	ResourceAixDevice                                      string = "aix.device"
+	ResourceAixSecurityUsers                               string = "aix.security.users"
+	ResourceAixSecurityUser                                string = "aix.security.user"
+	ResourceAixSecurityLoginCfg                            string = "aix.security.loginCfg"
+	ResourceAixSecurityLimits                              string = "aix.security.limits"
+	ResourceAixSecurityLimit                               string = "aix.security.limit"
+	ResourceAixSecurityPasswd                              string = "aix.security.passwd"
+	ResourceAixSecurityPasswdEntry                         string = "aix.security.passwd.entry"
+	ResourceAixTrustedExecution                            string = "aix.trustedExecution"
+	ResourceAixFilesystems                                 string = "aix.filesystems"
+	ResourceAixFilesystem                                  string = "aix.filesystem"
+	ResourceAixIpsec                                       string = "aix.ipsec"
+	ResourceAixIpsecFilter                                 string = "aix.ipsec.filter"
+	ResourceAixAudit                                       string = "aix.audit"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -2996,6 +3014,78 @@ func init() {
 		"windows.dnsServer.zone.signingKey": {
 			// to override args, implement: initWindowsDnsServerZoneSigningKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsDnsServerZoneSigningKey,
+		},
+		"windows.exchangeServer": {
+			// to override args, implement: initWindowsExchangeServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExchangeServer,
+		},
+		"windows.exchangeServer.organizationConfig": {
+			Init:   initWindowsExchangeServerOrganizationConfig,
+			Create: createWindowsExchangeServerOrganizationConfig,
+		},
+		"windows.exchangeServer.transportConfig": {
+			Init:   initWindowsExchangeServerTransportConfig,
+			Create: createWindowsExchangeServerTransportConfig,
+		},
+		"windows.exchangeServer.adminAuditLogConfig": {
+			Init:   initWindowsExchangeServerAdminAuditLogConfig,
+			Create: createWindowsExchangeServerAdminAuditLogConfig,
+		},
+		"windows.exchangeServer.contentFilterConfig": {
+			Init:   initWindowsExchangeServerContentFilterConfig,
+			Create: createWindowsExchangeServerContentFilterConfig,
+		},
+		"windows.exchangeServer.senderFilterConfig": {
+			Init:   initWindowsExchangeServerSenderFilterConfig,
+			Create: createWindowsExchangeServerSenderFilterConfig,
+		},
+		"windows.exchangeServer.senderIdConfig": {
+			Init:   initWindowsExchangeServerSenderIdConfig,
+			Create: createWindowsExchangeServerSenderIdConfig,
+		},
+		"windows.exchangeServer.senderReputationConfig": {
+			Init:   initWindowsExchangeServerSenderReputationConfig,
+			Create: createWindowsExchangeServerSenderReputationConfig,
+		},
+		"windows.exchangeServer.recipientFilterConfig": {
+			Init:   initWindowsExchangeServerRecipientFilterConfig,
+			Create: createWindowsExchangeServerRecipientFilterConfig,
+		},
+		"windows.exchangeServer.mobileDeviceMailboxPolicy": {
+			// to override args, implement: initWindowsExchangeServerMobileDeviceMailboxPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExchangeServerMobileDeviceMailboxPolicy,
+		},
+		"windows.exchangeServer.remoteDomain": {
+			// to override args, implement: initWindowsExchangeServerRemoteDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExchangeServerRemoteDomain,
+		},
+		"windows.exchangeServer.owaVirtualDirectory": {
+			// to override args, implement: initWindowsExchangeServerOwaVirtualDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExchangeServerOwaVirtualDirectory,
+		},
+		"windows.exchangeServer.transportAgent": {
+			// to override args, implement: initWindowsExchangeServerTransportAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExchangeServerTransportAgent,
+		},
+		"windows.exchangeServer.sendConnector": {
+			// to override args, implement: initWindowsExchangeServerSendConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExchangeServerSendConnector,
+		},
+		"windows.exchangeServer.receiveConnector": {
+			// to override args, implement: initWindowsExchangeServerReceiveConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExchangeServerReceiveConnector,
+		},
+		"windows.exchangeServer.transportService": {
+			// to override args, implement: initWindowsExchangeServerTransportService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExchangeServerTransportService,
+		},
+		"windows.exchangeServer.rpcClientAccess": {
+			// to override args, implement: initWindowsExchangeServerRpcClientAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExchangeServerRpcClientAccess,
+		},
+		"windows.exchangeServer.mailboxDatabase": {
+			// to override args, implement: initWindowsExchangeServerMailboxDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExchangeServerMailboxDatabase,
 		},
 		"windows.printerDrivers": {
 			// to override args, implement: initWindowsPrinterDrivers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -17477,6 +17567,399 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.dnsServer.zone.signingKey.zoneSignatureValidityPeriodSeconds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDnsServerZoneSigningKey).GetZoneSignatureValidityPeriodSeconds()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetInstalled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetVersion()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.installPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetInstallPath()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetRoles()).ToDataRes(types.Array(types.String))
+	},
+	"windows.exchangeServer.organizationConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetOrganizationConfig()).ToDataRes(types.Resource("windows.exchangeServer.organizationConfig"))
+	},
+	"windows.exchangeServer.transportConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetTransportConfig()).ToDataRes(types.Resource("windows.exchangeServer.transportConfig"))
+	},
+	"windows.exchangeServer.adminAuditLogConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetAdminAuditLogConfig()).ToDataRes(types.Resource("windows.exchangeServer.adminAuditLogConfig"))
+	},
+	"windows.exchangeServer.contentFilterConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetContentFilterConfig()).ToDataRes(types.Resource("windows.exchangeServer.contentFilterConfig"))
+	},
+	"windows.exchangeServer.senderFilterConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetSenderFilterConfig()).ToDataRes(types.Resource("windows.exchangeServer.senderFilterConfig"))
+	},
+	"windows.exchangeServer.senderIdConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetSenderIdConfig()).ToDataRes(types.Resource("windows.exchangeServer.senderIdConfig"))
+	},
+	"windows.exchangeServer.senderReputationConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetSenderReputationConfig()).ToDataRes(types.Resource("windows.exchangeServer.senderReputationConfig"))
+	},
+	"windows.exchangeServer.recipientFilterConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetRecipientFilterConfig()).ToDataRes(types.Resource("windows.exchangeServer.recipientFilterConfig"))
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetMobileDeviceMailboxPolicies()).ToDataRes(types.Array(types.Resource("windows.exchangeServer.mobileDeviceMailboxPolicy")))
+	},
+	"windows.exchangeServer.remoteDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetRemoteDomains()).ToDataRes(types.Array(types.Resource("windows.exchangeServer.remoteDomain")))
+	},
+	"windows.exchangeServer.owaVirtualDirectories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetOwaVirtualDirectories()).ToDataRes(types.Array(types.Resource("windows.exchangeServer.owaVirtualDirectory")))
+	},
+	"windows.exchangeServer.transportAgents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetTransportAgents()).ToDataRes(types.Array(types.Resource("windows.exchangeServer.transportAgent")))
+	},
+	"windows.exchangeServer.sendConnectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetSendConnectors()).ToDataRes(types.Array(types.Resource("windows.exchangeServer.sendConnector")))
+	},
+	"windows.exchangeServer.receiveConnectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetReceiveConnectors()).ToDataRes(types.Array(types.Resource("windows.exchangeServer.receiveConnector")))
+	},
+	"windows.exchangeServer.transportServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetTransportServices()).ToDataRes(types.Array(types.Resource("windows.exchangeServer.transportService")))
+	},
+	"windows.exchangeServer.rpcClientAccessSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetRpcClientAccessSettings()).ToDataRes(types.Array(types.Resource("windows.exchangeServer.rpcClientAccess")))
+	},
+	"windows.exchangeServer.mailboxDatabases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServer).GetMailboxDatabases()).ToDataRes(types.Array(types.Resource("windows.exchangeServer.mailboxDatabase")))
+	},
+	"windows.exchangeServer.organizationConfig.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerOrganizationConfig).GetName()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.organizationConfig.customerFeedbackEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerOrganizationConfig).GetCustomerFeedbackEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.organizationConfig.oAuth2ClientProfileEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerOrganizationConfig).GetOAuth2ClientProfileEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.organizationConfig.mapiHttpEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerOrganizationConfig).GetMapiHttpEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.transportConfig.maxReceiveSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerTransportConfig).GetMaxReceiveSizeBytes()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.transportConfig.maxSendSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerTransportConfig).GetMaxSendSizeBytes()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.transportConfig.maxRecipientEnvelopeLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerTransportConfig).GetMaxRecipientEnvelopeLimit()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.adminAuditLogConfig.adminAuditLogEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerAdminAuditLogConfig).GetAdminAuditLogEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.adminAuditLogConfig.adminAuditLogCmdlets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerAdminAuditLogConfig).GetAdminAuditLogCmdlets()).ToDataRes(types.Array(types.String))
+	},
+	"windows.exchangeServer.adminAuditLogConfig.adminAuditLogParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerAdminAuditLogConfig).GetAdminAuditLogParameters()).ToDataRes(types.Array(types.String))
+	},
+	"windows.exchangeServer.adminAuditLogConfig.adminAuditLogExcludedCmdlets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerAdminAuditLogConfig).GetAdminAuditLogExcludedCmdlets()).ToDataRes(types.Array(types.String))
+	},
+	"windows.exchangeServer.adminAuditLogConfig.adminAuditLogAgeLimitSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerAdminAuditLogConfig).GetAdminAuditLogAgeLimitSeconds()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.adminAuditLogConfig.logLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerAdminAuditLogConfig).GetLogLevel()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.contentFilterConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerContentFilterConfig).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.contentFilterConfig.sclQuarantineEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerContentFilterConfig).GetSclQuarantineEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.contentFilterConfig.sclQuarantineThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerContentFilterConfig).GetSclQuarantineThreshold()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.contentFilterConfig.sclRejectEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerContentFilterConfig).GetSclRejectEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.contentFilterConfig.sclDeleteEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerContentFilterConfig).GetSclDeleteEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.contentFilterConfig.quarantineMailbox": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerContentFilterConfig).GetQuarantineMailbox()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.senderFilterConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSenderFilterConfig).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.senderFilterConfig.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSenderFilterConfig).GetAction()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.senderFilterConfig.blankSenderBlockingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSenderFilterConfig).GetBlankSenderBlockingEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.senderFilterConfig.blockedSenders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSenderFilterConfig).GetBlockedSenders()).ToDataRes(types.Array(types.String))
+	},
+	"windows.exchangeServer.senderFilterConfig.blockedDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSenderFilterConfig).GetBlockedDomains()).ToDataRes(types.Array(types.String))
+	},
+	"windows.exchangeServer.senderIdConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSenderIdConfig).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.senderIdConfig.spoofedDomainAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSenderIdConfig).GetSpoofedDomainAction()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.senderIdConfig.tempErrorAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSenderIdConfig).GetTempErrorAction()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.senderReputationConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSenderReputationConfig).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.senderReputationConfig.senderBlockingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSenderReputationConfig).GetSenderBlockingEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.senderReputationConfig.openProxyDetectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSenderReputationConfig).GetOpenProxyDetectionEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.senderReputationConfig.srlBlockThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSenderReputationConfig).GetSrlBlockThreshold()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.senderReputationConfig.senderBlockingPeriodHours": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSenderReputationConfig).GetSenderBlockingPeriodHours()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.recipientFilterConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerRecipientFilterConfig).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.recipientFilterConfig.recipientValidationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerRecipientFilterConfig).GetRecipientValidationEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.recipientFilterConfig.blockListEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerRecipientFilterConfig).GetBlockListEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.recipientFilterConfig.blockedRecipients": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerRecipientFilterConfig).GetBlockedRecipients()).ToDataRes(types.Array(types.String))
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).GetName()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.passwordEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).GetPasswordEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.allowSimplePassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).GetAllowSimplePassword()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.alphanumericPasswordRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).GetAlphanumericPasswordRequired()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.minPasswordLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).GetMinPasswordLength()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.minPasswordComplexCharacters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).GetMinPasswordComplexCharacters()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.passwordHistory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).GetPasswordHistory()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.passwordExpirationSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).GetPasswordExpirationSeconds()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.maxPasswordFailedAttempts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).GetMaxPasswordFailedAttempts()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.maxInactivityTimeLockSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).GetMaxInactivityTimeLockSeconds()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.devicePolicyRefreshIntervalSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).GetDevicePolicyRefreshIntervalSeconds()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.requireDeviceEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).GetRequireDeviceEncryption()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.requireStorageCardEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).GetRequireStorageCardEncryption()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.allowNonProvisionableDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).GetAllowNonProvisionableDevices()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.remoteDomain.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerRemoteDomain).GetName()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.remoteDomain.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerRemoteDomain).GetDomainName()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.remoteDomain.allowedOOFType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerRemoteDomain).GetAllowedOOFType()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.remoteDomain.autoForwardEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerRemoteDomain).GetAutoForwardEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.remoteDomain.autoReplyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerRemoteDomain).GetAutoReplyEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.remoteDomain.ndrEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerRemoteDomain).GetNdrEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.remoteDomain.deliveryReportEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerRemoteDomain).GetDeliveryReportEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.owaVirtualDirectory.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerOwaVirtualDirectory).GetIdentity()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.owaVirtualDirectory.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerOwaVirtualDirectory).GetServer()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.owaVirtualDirectory.smimeEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerOwaVirtualDirectory).GetSmimeEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.owaVirtualDirectory.basicAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerOwaVirtualDirectory).GetBasicAuthentication()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.owaVirtualDirectory.formsAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerOwaVirtualDirectory).GetFormsAuthentication()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.transportAgent.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerTransportAgent).GetIdentity()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.transportAgent.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerTransportAgent).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.transportAgent.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerTransportAgent).GetPriority()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.sendConnector.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSendConnector).GetIdentity()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.sendConnector.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSendConnector).GetName()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.sendConnector.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSendConnector).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.sendConnector.dnsRoutingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSendConnector).GetDnsRoutingEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.sendConnector.domainSecureEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSendConnector).GetDomainSecureEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.sendConnector.ignoreStartTls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSendConnector).GetIgnoreStartTls()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.sendConnector.requireTls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSendConnector).GetRequireTls()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.sendConnector.tlsAuthLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSendConnector).GetTlsAuthLevel()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.sendConnector.maxMessageSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSendConnector).GetMaxMessageSizeBytes()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.sendConnector.protocolLoggingLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSendConnector).GetProtocolLoggingLevel()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.sendConnector.connectionInactivityTimeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSendConnector).GetConnectionInactivityTimeoutSeconds()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.sendConnector.addressSpaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSendConnector).GetAddressSpaces()).ToDataRes(types.Array(types.String))
+	},
+	"windows.exchangeServer.sendConnector.smartHosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerSendConnector).GetSmartHosts()).ToDataRes(types.Array(types.String))
+	},
+	"windows.exchangeServer.receiveConnector.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerReceiveConnector).GetIdentity()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.receiveConnector.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerReceiveConnector).GetName()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.receiveConnector.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerReceiveConnector).GetServer()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.receiveConnector.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerReceiveConnector).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.receiveConnector.authMechanism": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerReceiveConnector).GetAuthMechanism()).ToDataRes(types.Array(types.String))
+	},
+	"windows.exchangeServer.receiveConnector.permissionGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerReceiveConnector).GetPermissionGroups()).ToDataRes(types.Array(types.String))
+	},
+	"windows.exchangeServer.receiveConnector.banner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerReceiveConnector).GetBanner()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.receiveConnector.connectionTimeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerReceiveConnector).GetConnectionTimeoutSeconds()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.receiveConnector.maxMessageSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerReceiveConnector).GetMaxMessageSizeBytes()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.receiveConnector.protocolLoggingLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerReceiveConnector).GetProtocolLoggingLevel()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.receiveConnector.transportRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerReceiveConnector).GetTransportRole()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.receiveConnector.bindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerReceiveConnector).GetBindings()).ToDataRes(types.Array(types.String))
+	},
+	"windows.exchangeServer.receiveConnector.remoteIpRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerReceiveConnector).GetRemoteIpRanges()).ToDataRes(types.Array(types.String))
+	},
+	"windows.exchangeServer.receiveConnector.requireTls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerReceiveConnector).GetRequireTls()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.transportService.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerTransportService).GetName()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.transportService.messageTrackingLogEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerTransportService).GetMessageTrackingLogEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.transportService.connectivityLogEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerTransportService).GetConnectivityLogEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.transportService.pickupDirectoryPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerTransportService).GetPickupDirectoryPath()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.transportService.replayDirectoryPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerTransportService).GetReplayDirectoryPath()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.rpcClientAccess.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerRpcClientAccess).GetServer()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.rpcClientAccess.encryptionRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerRpcClientAccess).GetEncryptionRequired()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.rpcClientAccess.blockedClientVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerRpcClientAccess).GetBlockedClientVersions()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.mailboxDatabase.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMailboxDatabase).GetName()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.mailboxDatabase.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMailboxDatabase).GetServer()).ToDataRes(types.String)
+	},
+	"windows.exchangeServer.mailboxDatabase.retainDeletedItemsUntilBackup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMailboxDatabase).GetRetainDeletedItemsUntilBackup()).ToDataRes(types.Bool)
+	},
+	"windows.exchangeServer.mailboxDatabase.deletedItemRetentionSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMailboxDatabase).GetDeletedItemRetentionSeconds()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.mailboxDatabase.mailboxRetentionSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMailboxDatabase).GetMailboxRetentionSeconds()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.mailboxDatabase.issueWarningQuotaBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMailboxDatabase).GetIssueWarningQuotaBytes()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.mailboxDatabase.prohibitSendQuotaBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMailboxDatabase).GetProhibitSendQuotaBytes()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.mailboxDatabase.prohibitSendReceiveQuotaBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMailboxDatabase).GetProhibitSendReceiveQuotaBytes()).ToDataRes(types.Int)
+	},
+	"windows.exchangeServer.mailboxDatabase.circularLoggingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExchangeServerMailboxDatabase).GetCircularLoggingEnabled()).ToDataRes(types.Bool)
 	},
 	"windows.printerDrivers.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsPrinterDrivers).GetList()).ToDataRes(types.Array(types.Resource("windows.printerDriver")))
@@ -42101,6 +42584,602 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.dnsServer.zone.signingKey.zoneSignatureValidityPeriodSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDnsServerZoneSigningKey).ZoneSignatureValidityPeriodSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.installPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).InstallPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.organizationConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).OrganizationConfig, ok = plugin.RawToTValue[*mqlWindowsExchangeServerOrganizationConfig](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.transportConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).TransportConfig, ok = plugin.RawToTValue[*mqlWindowsExchangeServerTransportConfig](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.adminAuditLogConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).AdminAuditLogConfig, ok = plugin.RawToTValue[*mqlWindowsExchangeServerAdminAuditLogConfig](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.contentFilterConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).ContentFilterConfig, ok = plugin.RawToTValue[*mqlWindowsExchangeServerContentFilterConfig](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderFilterConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).SenderFilterConfig, ok = plugin.RawToTValue[*mqlWindowsExchangeServerSenderFilterConfig](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderIdConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).SenderIdConfig, ok = plugin.RawToTValue[*mqlWindowsExchangeServerSenderIdConfig](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderReputationConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).SenderReputationConfig, ok = plugin.RawToTValue[*mqlWindowsExchangeServerSenderReputationConfig](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.recipientFilterConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).RecipientFilterConfig, ok = plugin.RawToTValue[*mqlWindowsExchangeServerRecipientFilterConfig](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).MobileDeviceMailboxPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.remoteDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).RemoteDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.owaVirtualDirectories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).OwaVirtualDirectories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.transportAgents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).TransportAgents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.sendConnectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).SendConnectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.receiveConnectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).ReceiveConnectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.transportServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).TransportServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.rpcClientAccessSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).RpcClientAccessSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mailboxDatabases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServer).MailboxDatabases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.organizationConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerOrganizationConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.organizationConfig.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerOrganizationConfig).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.organizationConfig.customerFeedbackEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerOrganizationConfig).CustomerFeedbackEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.organizationConfig.oAuth2ClientProfileEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerOrganizationConfig).OAuth2ClientProfileEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.organizationConfig.mapiHttpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerOrganizationConfig).MapiHttpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.transportConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerTransportConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.transportConfig.maxReceiveSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerTransportConfig).MaxReceiveSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.transportConfig.maxSendSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerTransportConfig).MaxSendSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.transportConfig.maxRecipientEnvelopeLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerTransportConfig).MaxRecipientEnvelopeLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.adminAuditLogConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerAdminAuditLogConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.adminAuditLogConfig.adminAuditLogEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerAdminAuditLogConfig).AdminAuditLogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.adminAuditLogConfig.adminAuditLogCmdlets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerAdminAuditLogConfig).AdminAuditLogCmdlets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.adminAuditLogConfig.adminAuditLogParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerAdminAuditLogConfig).AdminAuditLogParameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.adminAuditLogConfig.adminAuditLogExcludedCmdlets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerAdminAuditLogConfig).AdminAuditLogExcludedCmdlets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.adminAuditLogConfig.adminAuditLogAgeLimitSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerAdminAuditLogConfig).AdminAuditLogAgeLimitSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.adminAuditLogConfig.logLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerAdminAuditLogConfig).LogLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.contentFilterConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerContentFilterConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.contentFilterConfig.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerContentFilterConfig).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.contentFilterConfig.sclQuarantineEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerContentFilterConfig).SclQuarantineEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.contentFilterConfig.sclQuarantineThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerContentFilterConfig).SclQuarantineThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.contentFilterConfig.sclRejectEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerContentFilterConfig).SclRejectEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.contentFilterConfig.sclDeleteEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerContentFilterConfig).SclDeleteEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.contentFilterConfig.quarantineMailbox": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerContentFilterConfig).QuarantineMailbox, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderFilterConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderFilterConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.senderFilterConfig.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderFilterConfig).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderFilterConfig.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderFilterConfig).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderFilterConfig.blankSenderBlockingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderFilterConfig).BlankSenderBlockingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderFilterConfig.blockedSenders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderFilterConfig).BlockedSenders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderFilterConfig.blockedDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderFilterConfig).BlockedDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderIdConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderIdConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.senderIdConfig.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderIdConfig).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderIdConfig.spoofedDomainAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderIdConfig).SpoofedDomainAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderIdConfig.tempErrorAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderIdConfig).TempErrorAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderReputationConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderReputationConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.senderReputationConfig.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderReputationConfig).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderReputationConfig.senderBlockingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderReputationConfig).SenderBlockingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderReputationConfig.openProxyDetectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderReputationConfig).OpenProxyDetectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderReputationConfig.srlBlockThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderReputationConfig).SrlBlockThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.senderReputationConfig.senderBlockingPeriodHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSenderReputationConfig).SenderBlockingPeriodHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.recipientFilterConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRecipientFilterConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.recipientFilterConfig.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRecipientFilterConfig).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.recipientFilterConfig.recipientValidationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRecipientFilterConfig).RecipientValidationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.recipientFilterConfig.blockListEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRecipientFilterConfig).BlockListEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.recipientFilterConfig.blockedRecipients": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRecipientFilterConfig).BlockedRecipients, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.passwordEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).PasswordEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.allowSimplePassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).AllowSimplePassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.alphanumericPasswordRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).AlphanumericPasswordRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.minPasswordLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).MinPasswordLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.minPasswordComplexCharacters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).MinPasswordComplexCharacters, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.passwordHistory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).PasswordHistory, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.passwordExpirationSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).PasswordExpirationSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.maxPasswordFailedAttempts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).MaxPasswordFailedAttempts, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.maxInactivityTimeLockSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).MaxInactivityTimeLockSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.devicePolicyRefreshIntervalSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).DevicePolicyRefreshIntervalSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.requireDeviceEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).RequireDeviceEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.requireStorageCardEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).RequireStorageCardEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mobileDeviceMailboxPolicy.allowNonProvisionableDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMobileDeviceMailboxPolicy).AllowNonProvisionableDevices, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.remoteDomain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRemoteDomain).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.remoteDomain.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRemoteDomain).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.remoteDomain.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRemoteDomain).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.remoteDomain.allowedOOFType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRemoteDomain).AllowedOOFType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.remoteDomain.autoForwardEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRemoteDomain).AutoForwardEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.remoteDomain.autoReplyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRemoteDomain).AutoReplyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.remoteDomain.ndrEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRemoteDomain).NdrEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.remoteDomain.deliveryReportEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRemoteDomain).DeliveryReportEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.owaVirtualDirectory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerOwaVirtualDirectory).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.owaVirtualDirectory.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerOwaVirtualDirectory).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.owaVirtualDirectory.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerOwaVirtualDirectory).Server, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.owaVirtualDirectory.smimeEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerOwaVirtualDirectory).SmimeEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.owaVirtualDirectory.basicAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerOwaVirtualDirectory).BasicAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.owaVirtualDirectory.formsAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerOwaVirtualDirectory).FormsAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.transportAgent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerTransportAgent).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.transportAgent.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerTransportAgent).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.transportAgent.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerTransportAgent).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.transportAgent.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerTransportAgent).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.sendConnector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSendConnector).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.sendConnector.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSendConnector).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.sendConnector.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSendConnector).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.sendConnector.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSendConnector).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.sendConnector.dnsRoutingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSendConnector).DnsRoutingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.sendConnector.domainSecureEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSendConnector).DomainSecureEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.sendConnector.ignoreStartTls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSendConnector).IgnoreStartTls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.sendConnector.requireTls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSendConnector).RequireTls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.sendConnector.tlsAuthLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSendConnector).TlsAuthLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.sendConnector.maxMessageSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSendConnector).MaxMessageSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.sendConnector.protocolLoggingLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSendConnector).ProtocolLoggingLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.sendConnector.connectionInactivityTimeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSendConnector).ConnectionInactivityTimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.sendConnector.addressSpaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSendConnector).AddressSpaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.sendConnector.smartHosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerSendConnector).SmartHosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.receiveConnector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerReceiveConnector).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.receiveConnector.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerReceiveConnector).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.receiveConnector.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerReceiveConnector).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.receiveConnector.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerReceiveConnector).Server, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.receiveConnector.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerReceiveConnector).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.receiveConnector.authMechanism": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerReceiveConnector).AuthMechanism, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.receiveConnector.permissionGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerReceiveConnector).PermissionGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.receiveConnector.banner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerReceiveConnector).Banner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.receiveConnector.connectionTimeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerReceiveConnector).ConnectionTimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.receiveConnector.maxMessageSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerReceiveConnector).MaxMessageSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.receiveConnector.protocolLoggingLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerReceiveConnector).ProtocolLoggingLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.receiveConnector.transportRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerReceiveConnector).TransportRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.receiveConnector.bindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerReceiveConnector).Bindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.receiveConnector.remoteIpRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerReceiveConnector).RemoteIpRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.receiveConnector.requireTls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerReceiveConnector).RequireTls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.transportService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerTransportService).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.transportService.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerTransportService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.transportService.messageTrackingLogEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerTransportService).MessageTrackingLogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.transportService.connectivityLogEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerTransportService).ConnectivityLogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.transportService.pickupDirectoryPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerTransportService).PickupDirectoryPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.transportService.replayDirectoryPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerTransportService).ReplayDirectoryPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.rpcClientAccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRpcClientAccess).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.rpcClientAccess.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRpcClientAccess).Server, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.rpcClientAccess.encryptionRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRpcClientAccess).EncryptionRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.rpcClientAccess.blockedClientVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerRpcClientAccess).BlockedClientVersions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mailboxDatabase.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMailboxDatabase).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exchangeServer.mailboxDatabase.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMailboxDatabase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mailboxDatabase.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMailboxDatabase).Server, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mailboxDatabase.retainDeletedItemsUntilBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMailboxDatabase).RetainDeletedItemsUntilBackup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mailboxDatabase.deletedItemRetentionSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMailboxDatabase).DeletedItemRetentionSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mailboxDatabase.mailboxRetentionSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMailboxDatabase).MailboxRetentionSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mailboxDatabase.issueWarningQuotaBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMailboxDatabase).IssueWarningQuotaBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mailboxDatabase.prohibitSendQuotaBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMailboxDatabase).ProhibitSendQuotaBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mailboxDatabase.prohibitSendReceiveQuotaBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMailboxDatabase).ProhibitSendReceiveQuotaBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.exchangeServer.mailboxDatabase.circularLoggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExchangeServerMailboxDatabase).CircularLoggingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.printerDrivers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -106725,6 +107804,1580 @@ func (c *mqlWindowsDnsServerZoneSigningKey) GetDsSignatureValidityPeriodSeconds(
 
 func (c *mqlWindowsDnsServerZoneSigningKey) GetZoneSignatureValidityPeriodSeconds() *plugin.TValue[int64] {
 	return &c.ZoneSignatureValidityPeriodSeconds
+}
+
+// mqlWindowsExchangeServer for the windows.exchangeServer resource
+type mqlWindowsExchangeServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsExchangeServerInternal
+	Installed                   plugin.TValue[bool]
+	Version                     plugin.TValue[string]
+	InstallPath                 plugin.TValue[string]
+	Roles                       plugin.TValue[[]any]
+	OrganizationConfig          plugin.TValue[*mqlWindowsExchangeServerOrganizationConfig]
+	TransportConfig             plugin.TValue[*mqlWindowsExchangeServerTransportConfig]
+	AdminAuditLogConfig         plugin.TValue[*mqlWindowsExchangeServerAdminAuditLogConfig]
+	ContentFilterConfig         plugin.TValue[*mqlWindowsExchangeServerContentFilterConfig]
+	SenderFilterConfig          plugin.TValue[*mqlWindowsExchangeServerSenderFilterConfig]
+	SenderIdConfig              plugin.TValue[*mqlWindowsExchangeServerSenderIdConfig]
+	SenderReputationConfig      plugin.TValue[*mqlWindowsExchangeServerSenderReputationConfig]
+	RecipientFilterConfig       plugin.TValue[*mqlWindowsExchangeServerRecipientFilterConfig]
+	MobileDeviceMailboxPolicies plugin.TValue[[]any]
+	RemoteDomains               plugin.TValue[[]any]
+	OwaVirtualDirectories       plugin.TValue[[]any]
+	TransportAgents             plugin.TValue[[]any]
+	SendConnectors              plugin.TValue[[]any]
+	ReceiveConnectors           plugin.TValue[[]any]
+	TransportServices           plugin.TValue[[]any]
+	RpcClientAccessSettings     plugin.TValue[[]any]
+	MailboxDatabases            plugin.TValue[[]any]
+}
+
+// createWindowsExchangeServer creates a new instance of this resource
+func createWindowsExchangeServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServer) MqlName() string {
+	return "windows.exchangeServer"
+}
+
+func (c *mqlWindowsExchangeServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServer) GetInstalled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Installed, func() (bool, error) {
+		return c.installed()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetInstallPath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InstallPath, func() (string, error) {
+		return c.installPath()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
+		return c.roles()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetOrganizationConfig() *plugin.TValue[*mqlWindowsExchangeServerOrganizationConfig] {
+	return plugin.GetOrCompute[*mqlWindowsExchangeServerOrganizationConfig](&c.OrganizationConfig, func() (*mqlWindowsExchangeServerOrganizationConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "organizationConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExchangeServerOrganizationConfig), nil
+			}
+		}
+
+		return c.organizationConfig()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetTransportConfig() *plugin.TValue[*mqlWindowsExchangeServerTransportConfig] {
+	return plugin.GetOrCompute[*mqlWindowsExchangeServerTransportConfig](&c.TransportConfig, func() (*mqlWindowsExchangeServerTransportConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "transportConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExchangeServerTransportConfig), nil
+			}
+		}
+
+		return c.transportConfig()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetAdminAuditLogConfig() *plugin.TValue[*mqlWindowsExchangeServerAdminAuditLogConfig] {
+	return plugin.GetOrCompute[*mqlWindowsExchangeServerAdminAuditLogConfig](&c.AdminAuditLogConfig, func() (*mqlWindowsExchangeServerAdminAuditLogConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "adminAuditLogConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExchangeServerAdminAuditLogConfig), nil
+			}
+		}
+
+		return c.adminAuditLogConfig()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetContentFilterConfig() *plugin.TValue[*mqlWindowsExchangeServerContentFilterConfig] {
+	return plugin.GetOrCompute[*mqlWindowsExchangeServerContentFilterConfig](&c.ContentFilterConfig, func() (*mqlWindowsExchangeServerContentFilterConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "contentFilterConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExchangeServerContentFilterConfig), nil
+			}
+		}
+
+		return c.contentFilterConfig()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetSenderFilterConfig() *plugin.TValue[*mqlWindowsExchangeServerSenderFilterConfig] {
+	return plugin.GetOrCompute[*mqlWindowsExchangeServerSenderFilterConfig](&c.SenderFilterConfig, func() (*mqlWindowsExchangeServerSenderFilterConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "senderFilterConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExchangeServerSenderFilterConfig), nil
+			}
+		}
+
+		return c.senderFilterConfig()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetSenderIdConfig() *plugin.TValue[*mqlWindowsExchangeServerSenderIdConfig] {
+	return plugin.GetOrCompute[*mqlWindowsExchangeServerSenderIdConfig](&c.SenderIdConfig, func() (*mqlWindowsExchangeServerSenderIdConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "senderIdConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExchangeServerSenderIdConfig), nil
+			}
+		}
+
+		return c.senderIdConfig()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetSenderReputationConfig() *plugin.TValue[*mqlWindowsExchangeServerSenderReputationConfig] {
+	return plugin.GetOrCompute[*mqlWindowsExchangeServerSenderReputationConfig](&c.SenderReputationConfig, func() (*mqlWindowsExchangeServerSenderReputationConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "senderReputationConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExchangeServerSenderReputationConfig), nil
+			}
+		}
+
+		return c.senderReputationConfig()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetRecipientFilterConfig() *plugin.TValue[*mqlWindowsExchangeServerRecipientFilterConfig] {
+	return plugin.GetOrCompute[*mqlWindowsExchangeServerRecipientFilterConfig](&c.RecipientFilterConfig, func() (*mqlWindowsExchangeServerRecipientFilterConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "recipientFilterConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExchangeServerRecipientFilterConfig), nil
+			}
+		}
+
+		return c.recipientFilterConfig()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetMobileDeviceMailboxPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MobileDeviceMailboxPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "mobileDeviceMailboxPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mobileDeviceMailboxPolicies()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetRemoteDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RemoteDomains, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "remoteDomains")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.remoteDomains()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetOwaVirtualDirectories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwaVirtualDirectories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "owaVirtualDirectories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.owaVirtualDirectories()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetTransportAgents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TransportAgents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "transportAgents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.transportAgents()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetSendConnectors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SendConnectors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "sendConnectors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sendConnectors()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetReceiveConnectors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReceiveConnectors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "receiveConnectors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.receiveConnectors()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetTransportServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TransportServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "transportServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.transportServices()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetRpcClientAccessSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RpcClientAccessSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "rpcClientAccessSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rpcClientAccessSettings()
+	})
+}
+
+func (c *mqlWindowsExchangeServer) GetMailboxDatabases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MailboxDatabases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exchangeServer", c.__id, "mailboxDatabases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mailboxDatabases()
+	})
+}
+
+// mqlWindowsExchangeServerOrganizationConfig for the windows.exchangeServer.organizationConfig resource
+type mqlWindowsExchangeServerOrganizationConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerOrganizationConfigInternal it will be used here
+	Name                       plugin.TValue[string]
+	CustomerFeedbackEnabled    plugin.TValue[bool]
+	OAuth2ClientProfileEnabled plugin.TValue[bool]
+	MapiHttpEnabled            plugin.TValue[bool]
+}
+
+// createWindowsExchangeServerOrganizationConfig creates a new instance of this resource
+func createWindowsExchangeServerOrganizationConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerOrganizationConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.organizationConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerOrganizationConfig) MqlName() string {
+	return "windows.exchangeServer.organizationConfig"
+}
+
+func (c *mqlWindowsExchangeServerOrganizationConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerOrganizationConfig) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsExchangeServerOrganizationConfig) GetCustomerFeedbackEnabled() *plugin.TValue[bool] {
+	return &c.CustomerFeedbackEnabled
+}
+
+func (c *mqlWindowsExchangeServerOrganizationConfig) GetOAuth2ClientProfileEnabled() *plugin.TValue[bool] {
+	return &c.OAuth2ClientProfileEnabled
+}
+
+func (c *mqlWindowsExchangeServerOrganizationConfig) GetMapiHttpEnabled() *plugin.TValue[bool] {
+	return &c.MapiHttpEnabled
+}
+
+// mqlWindowsExchangeServerTransportConfig for the windows.exchangeServer.transportConfig resource
+type mqlWindowsExchangeServerTransportConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerTransportConfigInternal it will be used here
+	MaxReceiveSizeBytes       plugin.TValue[int64]
+	MaxSendSizeBytes          plugin.TValue[int64]
+	MaxRecipientEnvelopeLimit plugin.TValue[int64]
+}
+
+// createWindowsExchangeServerTransportConfig creates a new instance of this resource
+func createWindowsExchangeServerTransportConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerTransportConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.transportConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerTransportConfig) MqlName() string {
+	return "windows.exchangeServer.transportConfig"
+}
+
+func (c *mqlWindowsExchangeServerTransportConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerTransportConfig) GetMaxReceiveSizeBytes() *plugin.TValue[int64] {
+	return &c.MaxReceiveSizeBytes
+}
+
+func (c *mqlWindowsExchangeServerTransportConfig) GetMaxSendSizeBytes() *plugin.TValue[int64] {
+	return &c.MaxSendSizeBytes
+}
+
+func (c *mqlWindowsExchangeServerTransportConfig) GetMaxRecipientEnvelopeLimit() *plugin.TValue[int64] {
+	return &c.MaxRecipientEnvelopeLimit
+}
+
+// mqlWindowsExchangeServerAdminAuditLogConfig for the windows.exchangeServer.adminAuditLogConfig resource
+type mqlWindowsExchangeServerAdminAuditLogConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerAdminAuditLogConfigInternal it will be used here
+	AdminAuditLogEnabled         plugin.TValue[bool]
+	AdminAuditLogCmdlets         plugin.TValue[[]any]
+	AdminAuditLogParameters      plugin.TValue[[]any]
+	AdminAuditLogExcludedCmdlets plugin.TValue[[]any]
+	AdminAuditLogAgeLimitSeconds plugin.TValue[int64]
+	LogLevel                     plugin.TValue[string]
+}
+
+// createWindowsExchangeServerAdminAuditLogConfig creates a new instance of this resource
+func createWindowsExchangeServerAdminAuditLogConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerAdminAuditLogConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.adminAuditLogConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerAdminAuditLogConfig) MqlName() string {
+	return "windows.exchangeServer.adminAuditLogConfig"
+}
+
+func (c *mqlWindowsExchangeServerAdminAuditLogConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerAdminAuditLogConfig) GetAdminAuditLogEnabled() *plugin.TValue[bool] {
+	return &c.AdminAuditLogEnabled
+}
+
+func (c *mqlWindowsExchangeServerAdminAuditLogConfig) GetAdminAuditLogCmdlets() *plugin.TValue[[]any] {
+	return &c.AdminAuditLogCmdlets
+}
+
+func (c *mqlWindowsExchangeServerAdminAuditLogConfig) GetAdminAuditLogParameters() *plugin.TValue[[]any] {
+	return &c.AdminAuditLogParameters
+}
+
+func (c *mqlWindowsExchangeServerAdminAuditLogConfig) GetAdminAuditLogExcludedCmdlets() *plugin.TValue[[]any] {
+	return &c.AdminAuditLogExcludedCmdlets
+}
+
+func (c *mqlWindowsExchangeServerAdminAuditLogConfig) GetAdminAuditLogAgeLimitSeconds() *plugin.TValue[int64] {
+	return &c.AdminAuditLogAgeLimitSeconds
+}
+
+func (c *mqlWindowsExchangeServerAdminAuditLogConfig) GetLogLevel() *plugin.TValue[string] {
+	return &c.LogLevel
+}
+
+// mqlWindowsExchangeServerContentFilterConfig for the windows.exchangeServer.contentFilterConfig resource
+type mqlWindowsExchangeServerContentFilterConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerContentFilterConfigInternal it will be used here
+	Enabled                plugin.TValue[bool]
+	SclQuarantineEnabled   plugin.TValue[bool]
+	SclQuarantineThreshold plugin.TValue[int64]
+	SclRejectEnabled       plugin.TValue[bool]
+	SclDeleteEnabled       plugin.TValue[bool]
+	QuarantineMailbox      plugin.TValue[string]
+}
+
+// createWindowsExchangeServerContentFilterConfig creates a new instance of this resource
+func createWindowsExchangeServerContentFilterConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerContentFilterConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.contentFilterConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerContentFilterConfig) MqlName() string {
+	return "windows.exchangeServer.contentFilterConfig"
+}
+
+func (c *mqlWindowsExchangeServerContentFilterConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerContentFilterConfig) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsExchangeServerContentFilterConfig) GetSclQuarantineEnabled() *plugin.TValue[bool] {
+	return &c.SclQuarantineEnabled
+}
+
+func (c *mqlWindowsExchangeServerContentFilterConfig) GetSclQuarantineThreshold() *plugin.TValue[int64] {
+	return &c.SclQuarantineThreshold
+}
+
+func (c *mqlWindowsExchangeServerContentFilterConfig) GetSclRejectEnabled() *plugin.TValue[bool] {
+	return &c.SclRejectEnabled
+}
+
+func (c *mqlWindowsExchangeServerContentFilterConfig) GetSclDeleteEnabled() *plugin.TValue[bool] {
+	return &c.SclDeleteEnabled
+}
+
+func (c *mqlWindowsExchangeServerContentFilterConfig) GetQuarantineMailbox() *plugin.TValue[string] {
+	return &c.QuarantineMailbox
+}
+
+// mqlWindowsExchangeServerSenderFilterConfig for the windows.exchangeServer.senderFilterConfig resource
+type mqlWindowsExchangeServerSenderFilterConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerSenderFilterConfigInternal it will be used here
+	Enabled                    plugin.TValue[bool]
+	Action                     plugin.TValue[string]
+	BlankSenderBlockingEnabled plugin.TValue[bool]
+	BlockedSenders             plugin.TValue[[]any]
+	BlockedDomains             plugin.TValue[[]any]
+}
+
+// createWindowsExchangeServerSenderFilterConfig creates a new instance of this resource
+func createWindowsExchangeServerSenderFilterConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerSenderFilterConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.senderFilterConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerSenderFilterConfig) MqlName() string {
+	return "windows.exchangeServer.senderFilterConfig"
+}
+
+func (c *mqlWindowsExchangeServerSenderFilterConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerSenderFilterConfig) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsExchangeServerSenderFilterConfig) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlWindowsExchangeServerSenderFilterConfig) GetBlankSenderBlockingEnabled() *plugin.TValue[bool] {
+	return &c.BlankSenderBlockingEnabled
+}
+
+func (c *mqlWindowsExchangeServerSenderFilterConfig) GetBlockedSenders() *plugin.TValue[[]any] {
+	return &c.BlockedSenders
+}
+
+func (c *mqlWindowsExchangeServerSenderFilterConfig) GetBlockedDomains() *plugin.TValue[[]any] {
+	return &c.BlockedDomains
+}
+
+// mqlWindowsExchangeServerSenderIdConfig for the windows.exchangeServer.senderIdConfig resource
+type mqlWindowsExchangeServerSenderIdConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerSenderIdConfigInternal it will be used here
+	Enabled             plugin.TValue[bool]
+	SpoofedDomainAction plugin.TValue[string]
+	TempErrorAction     plugin.TValue[string]
+}
+
+// createWindowsExchangeServerSenderIdConfig creates a new instance of this resource
+func createWindowsExchangeServerSenderIdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerSenderIdConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.senderIdConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerSenderIdConfig) MqlName() string {
+	return "windows.exchangeServer.senderIdConfig"
+}
+
+func (c *mqlWindowsExchangeServerSenderIdConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerSenderIdConfig) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsExchangeServerSenderIdConfig) GetSpoofedDomainAction() *plugin.TValue[string] {
+	return &c.SpoofedDomainAction
+}
+
+func (c *mqlWindowsExchangeServerSenderIdConfig) GetTempErrorAction() *plugin.TValue[string] {
+	return &c.TempErrorAction
+}
+
+// mqlWindowsExchangeServerSenderReputationConfig for the windows.exchangeServer.senderReputationConfig resource
+type mqlWindowsExchangeServerSenderReputationConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerSenderReputationConfigInternal it will be used here
+	Enabled                   plugin.TValue[bool]
+	SenderBlockingEnabled     plugin.TValue[bool]
+	OpenProxyDetectionEnabled plugin.TValue[bool]
+	SrlBlockThreshold         plugin.TValue[int64]
+	SenderBlockingPeriodHours plugin.TValue[int64]
+}
+
+// createWindowsExchangeServerSenderReputationConfig creates a new instance of this resource
+func createWindowsExchangeServerSenderReputationConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerSenderReputationConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.senderReputationConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerSenderReputationConfig) MqlName() string {
+	return "windows.exchangeServer.senderReputationConfig"
+}
+
+func (c *mqlWindowsExchangeServerSenderReputationConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerSenderReputationConfig) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsExchangeServerSenderReputationConfig) GetSenderBlockingEnabled() *plugin.TValue[bool] {
+	return &c.SenderBlockingEnabled
+}
+
+func (c *mqlWindowsExchangeServerSenderReputationConfig) GetOpenProxyDetectionEnabled() *plugin.TValue[bool] {
+	return &c.OpenProxyDetectionEnabled
+}
+
+func (c *mqlWindowsExchangeServerSenderReputationConfig) GetSrlBlockThreshold() *plugin.TValue[int64] {
+	return &c.SrlBlockThreshold
+}
+
+func (c *mqlWindowsExchangeServerSenderReputationConfig) GetSenderBlockingPeriodHours() *plugin.TValue[int64] {
+	return &c.SenderBlockingPeriodHours
+}
+
+// mqlWindowsExchangeServerRecipientFilterConfig for the windows.exchangeServer.recipientFilterConfig resource
+type mqlWindowsExchangeServerRecipientFilterConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerRecipientFilterConfigInternal it will be used here
+	Enabled                    plugin.TValue[bool]
+	RecipientValidationEnabled plugin.TValue[bool]
+	BlockListEnabled           plugin.TValue[bool]
+	BlockedRecipients          plugin.TValue[[]any]
+}
+
+// createWindowsExchangeServerRecipientFilterConfig creates a new instance of this resource
+func createWindowsExchangeServerRecipientFilterConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerRecipientFilterConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.recipientFilterConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerRecipientFilterConfig) MqlName() string {
+	return "windows.exchangeServer.recipientFilterConfig"
+}
+
+func (c *mqlWindowsExchangeServerRecipientFilterConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerRecipientFilterConfig) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsExchangeServerRecipientFilterConfig) GetRecipientValidationEnabled() *plugin.TValue[bool] {
+	return &c.RecipientValidationEnabled
+}
+
+func (c *mqlWindowsExchangeServerRecipientFilterConfig) GetBlockListEnabled() *plugin.TValue[bool] {
+	return &c.BlockListEnabled
+}
+
+func (c *mqlWindowsExchangeServerRecipientFilterConfig) GetBlockedRecipients() *plugin.TValue[[]any] {
+	return &c.BlockedRecipients
+}
+
+// mqlWindowsExchangeServerMobileDeviceMailboxPolicy for the windows.exchangeServer.mobileDeviceMailboxPolicy resource
+type mqlWindowsExchangeServerMobileDeviceMailboxPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerMobileDeviceMailboxPolicyInternal it will be used here
+	Name                               plugin.TValue[string]
+	IsDefault                          plugin.TValue[bool]
+	PasswordEnabled                    plugin.TValue[bool]
+	AllowSimplePassword                plugin.TValue[bool]
+	AlphanumericPasswordRequired       plugin.TValue[bool]
+	MinPasswordLength                  plugin.TValue[int64]
+	MinPasswordComplexCharacters       plugin.TValue[int64]
+	PasswordHistory                    plugin.TValue[int64]
+	PasswordExpirationSeconds          plugin.TValue[int64]
+	MaxPasswordFailedAttempts          plugin.TValue[int64]
+	MaxInactivityTimeLockSeconds       plugin.TValue[int64]
+	DevicePolicyRefreshIntervalSeconds plugin.TValue[int64]
+	RequireDeviceEncryption            plugin.TValue[bool]
+	RequireStorageCardEncryption       plugin.TValue[bool]
+	AllowNonProvisionableDevices       plugin.TValue[bool]
+}
+
+// createWindowsExchangeServerMobileDeviceMailboxPolicy creates a new instance of this resource
+func createWindowsExchangeServerMobileDeviceMailboxPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerMobileDeviceMailboxPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.mobileDeviceMailboxPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) MqlName() string {
+	return "windows.exchangeServer.mobileDeviceMailboxPolicy"
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) GetPasswordEnabled() *plugin.TValue[bool] {
+	return &c.PasswordEnabled
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) GetAllowSimplePassword() *plugin.TValue[bool] {
+	return &c.AllowSimplePassword
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) GetAlphanumericPasswordRequired() *plugin.TValue[bool] {
+	return &c.AlphanumericPasswordRequired
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) GetMinPasswordLength() *plugin.TValue[int64] {
+	return &c.MinPasswordLength
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) GetMinPasswordComplexCharacters() *plugin.TValue[int64] {
+	return &c.MinPasswordComplexCharacters
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) GetPasswordHistory() *plugin.TValue[int64] {
+	return &c.PasswordHistory
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) GetPasswordExpirationSeconds() *plugin.TValue[int64] {
+	return &c.PasswordExpirationSeconds
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) GetMaxPasswordFailedAttempts() *plugin.TValue[int64] {
+	return &c.MaxPasswordFailedAttempts
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) GetMaxInactivityTimeLockSeconds() *plugin.TValue[int64] {
+	return &c.MaxInactivityTimeLockSeconds
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) GetDevicePolicyRefreshIntervalSeconds() *plugin.TValue[int64] {
+	return &c.DevicePolicyRefreshIntervalSeconds
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) GetRequireDeviceEncryption() *plugin.TValue[bool] {
+	return &c.RequireDeviceEncryption
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) GetRequireStorageCardEncryption() *plugin.TValue[bool] {
+	return &c.RequireStorageCardEncryption
+}
+
+func (c *mqlWindowsExchangeServerMobileDeviceMailboxPolicy) GetAllowNonProvisionableDevices() *plugin.TValue[bool] {
+	return &c.AllowNonProvisionableDevices
+}
+
+// mqlWindowsExchangeServerRemoteDomain for the windows.exchangeServer.remoteDomain resource
+type mqlWindowsExchangeServerRemoteDomain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerRemoteDomainInternal it will be used here
+	Name                  plugin.TValue[string]
+	DomainName            plugin.TValue[string]
+	AllowedOOFType        plugin.TValue[string]
+	AutoForwardEnabled    plugin.TValue[bool]
+	AutoReplyEnabled      plugin.TValue[bool]
+	NdrEnabled            plugin.TValue[bool]
+	DeliveryReportEnabled plugin.TValue[bool]
+}
+
+// createWindowsExchangeServerRemoteDomain creates a new instance of this resource
+func createWindowsExchangeServerRemoteDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerRemoteDomain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.remoteDomain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerRemoteDomain) MqlName() string {
+	return "windows.exchangeServer.remoteDomain"
+}
+
+func (c *mqlWindowsExchangeServerRemoteDomain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerRemoteDomain) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsExchangeServerRemoteDomain) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
+}
+
+func (c *mqlWindowsExchangeServerRemoteDomain) GetAllowedOOFType() *plugin.TValue[string] {
+	return &c.AllowedOOFType
+}
+
+func (c *mqlWindowsExchangeServerRemoteDomain) GetAutoForwardEnabled() *plugin.TValue[bool] {
+	return &c.AutoForwardEnabled
+}
+
+func (c *mqlWindowsExchangeServerRemoteDomain) GetAutoReplyEnabled() *plugin.TValue[bool] {
+	return &c.AutoReplyEnabled
+}
+
+func (c *mqlWindowsExchangeServerRemoteDomain) GetNdrEnabled() *plugin.TValue[bool] {
+	return &c.NdrEnabled
+}
+
+func (c *mqlWindowsExchangeServerRemoteDomain) GetDeliveryReportEnabled() *plugin.TValue[bool] {
+	return &c.DeliveryReportEnabled
+}
+
+// mqlWindowsExchangeServerOwaVirtualDirectory for the windows.exchangeServer.owaVirtualDirectory resource
+type mqlWindowsExchangeServerOwaVirtualDirectory struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerOwaVirtualDirectoryInternal it will be used here
+	Identity            plugin.TValue[string]
+	Server              plugin.TValue[string]
+	SmimeEnabled        plugin.TValue[bool]
+	BasicAuthentication plugin.TValue[bool]
+	FormsAuthentication plugin.TValue[bool]
+}
+
+// createWindowsExchangeServerOwaVirtualDirectory creates a new instance of this resource
+func createWindowsExchangeServerOwaVirtualDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerOwaVirtualDirectory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.owaVirtualDirectory", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerOwaVirtualDirectory) MqlName() string {
+	return "windows.exchangeServer.owaVirtualDirectory"
+}
+
+func (c *mqlWindowsExchangeServerOwaVirtualDirectory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerOwaVirtualDirectory) GetIdentity() *plugin.TValue[string] {
+	return &c.Identity
+}
+
+func (c *mqlWindowsExchangeServerOwaVirtualDirectory) GetServer() *plugin.TValue[string] {
+	return &c.Server
+}
+
+func (c *mqlWindowsExchangeServerOwaVirtualDirectory) GetSmimeEnabled() *plugin.TValue[bool] {
+	return &c.SmimeEnabled
+}
+
+func (c *mqlWindowsExchangeServerOwaVirtualDirectory) GetBasicAuthentication() *plugin.TValue[bool] {
+	return &c.BasicAuthentication
+}
+
+func (c *mqlWindowsExchangeServerOwaVirtualDirectory) GetFormsAuthentication() *plugin.TValue[bool] {
+	return &c.FormsAuthentication
+}
+
+// mqlWindowsExchangeServerTransportAgent for the windows.exchangeServer.transportAgent resource
+type mqlWindowsExchangeServerTransportAgent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerTransportAgentInternal it will be used here
+	Identity plugin.TValue[string]
+	Enabled  plugin.TValue[bool]
+	Priority plugin.TValue[int64]
+}
+
+// createWindowsExchangeServerTransportAgent creates a new instance of this resource
+func createWindowsExchangeServerTransportAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerTransportAgent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.transportAgent", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerTransportAgent) MqlName() string {
+	return "windows.exchangeServer.transportAgent"
+}
+
+func (c *mqlWindowsExchangeServerTransportAgent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerTransportAgent) GetIdentity() *plugin.TValue[string] {
+	return &c.Identity
+}
+
+func (c *mqlWindowsExchangeServerTransportAgent) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsExchangeServerTransportAgent) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+// mqlWindowsExchangeServerSendConnector for the windows.exchangeServer.sendConnector resource
+type mqlWindowsExchangeServerSendConnector struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerSendConnectorInternal it will be used here
+	Identity                           plugin.TValue[string]
+	Name                               plugin.TValue[string]
+	Enabled                            plugin.TValue[bool]
+	DnsRoutingEnabled                  plugin.TValue[bool]
+	DomainSecureEnabled                plugin.TValue[bool]
+	IgnoreStartTls                     plugin.TValue[bool]
+	RequireTls                         plugin.TValue[bool]
+	TlsAuthLevel                       plugin.TValue[string]
+	MaxMessageSizeBytes                plugin.TValue[int64]
+	ProtocolLoggingLevel               plugin.TValue[string]
+	ConnectionInactivityTimeoutSeconds plugin.TValue[int64]
+	AddressSpaces                      plugin.TValue[[]any]
+	SmartHosts                         plugin.TValue[[]any]
+}
+
+// createWindowsExchangeServerSendConnector creates a new instance of this resource
+func createWindowsExchangeServerSendConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerSendConnector{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.sendConnector", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerSendConnector) MqlName() string {
+	return "windows.exchangeServer.sendConnector"
+}
+
+func (c *mqlWindowsExchangeServerSendConnector) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerSendConnector) GetIdentity() *plugin.TValue[string] {
+	return &c.Identity
+}
+
+func (c *mqlWindowsExchangeServerSendConnector) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsExchangeServerSendConnector) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsExchangeServerSendConnector) GetDnsRoutingEnabled() *plugin.TValue[bool] {
+	return &c.DnsRoutingEnabled
+}
+
+func (c *mqlWindowsExchangeServerSendConnector) GetDomainSecureEnabled() *plugin.TValue[bool] {
+	return &c.DomainSecureEnabled
+}
+
+func (c *mqlWindowsExchangeServerSendConnector) GetIgnoreStartTls() *plugin.TValue[bool] {
+	return &c.IgnoreStartTls
+}
+
+func (c *mqlWindowsExchangeServerSendConnector) GetRequireTls() *plugin.TValue[bool] {
+	return &c.RequireTls
+}
+
+func (c *mqlWindowsExchangeServerSendConnector) GetTlsAuthLevel() *plugin.TValue[string] {
+	return &c.TlsAuthLevel
+}
+
+func (c *mqlWindowsExchangeServerSendConnector) GetMaxMessageSizeBytes() *plugin.TValue[int64] {
+	return &c.MaxMessageSizeBytes
+}
+
+func (c *mqlWindowsExchangeServerSendConnector) GetProtocolLoggingLevel() *plugin.TValue[string] {
+	return &c.ProtocolLoggingLevel
+}
+
+func (c *mqlWindowsExchangeServerSendConnector) GetConnectionInactivityTimeoutSeconds() *plugin.TValue[int64] {
+	return &c.ConnectionInactivityTimeoutSeconds
+}
+
+func (c *mqlWindowsExchangeServerSendConnector) GetAddressSpaces() *plugin.TValue[[]any] {
+	return &c.AddressSpaces
+}
+
+func (c *mqlWindowsExchangeServerSendConnector) GetSmartHosts() *plugin.TValue[[]any] {
+	return &c.SmartHosts
+}
+
+// mqlWindowsExchangeServerReceiveConnector for the windows.exchangeServer.receiveConnector resource
+type mqlWindowsExchangeServerReceiveConnector struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerReceiveConnectorInternal it will be used here
+	Identity                 plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Server                   plugin.TValue[string]
+	Enabled                  plugin.TValue[bool]
+	AuthMechanism            plugin.TValue[[]any]
+	PermissionGroups         plugin.TValue[[]any]
+	Banner                   plugin.TValue[string]
+	ConnectionTimeoutSeconds plugin.TValue[int64]
+	MaxMessageSizeBytes      plugin.TValue[int64]
+	ProtocolLoggingLevel     plugin.TValue[string]
+	TransportRole            plugin.TValue[string]
+	Bindings                 plugin.TValue[[]any]
+	RemoteIpRanges           plugin.TValue[[]any]
+	RequireTls               plugin.TValue[bool]
+}
+
+// createWindowsExchangeServerReceiveConnector creates a new instance of this resource
+func createWindowsExchangeServerReceiveConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerReceiveConnector{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.receiveConnector", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) MqlName() string {
+	return "windows.exchangeServer.receiveConnector"
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) GetIdentity() *plugin.TValue[string] {
+	return &c.Identity
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) GetServer() *plugin.TValue[string] {
+	return &c.Server
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) GetAuthMechanism() *plugin.TValue[[]any] {
+	return &c.AuthMechanism
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) GetPermissionGroups() *plugin.TValue[[]any] {
+	return &c.PermissionGroups
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) GetBanner() *plugin.TValue[string] {
+	return &c.Banner
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) GetConnectionTimeoutSeconds() *plugin.TValue[int64] {
+	return &c.ConnectionTimeoutSeconds
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) GetMaxMessageSizeBytes() *plugin.TValue[int64] {
+	return &c.MaxMessageSizeBytes
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) GetProtocolLoggingLevel() *plugin.TValue[string] {
+	return &c.ProtocolLoggingLevel
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) GetTransportRole() *plugin.TValue[string] {
+	return &c.TransportRole
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) GetBindings() *plugin.TValue[[]any] {
+	return &c.Bindings
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) GetRemoteIpRanges() *plugin.TValue[[]any] {
+	return &c.RemoteIpRanges
+}
+
+func (c *mqlWindowsExchangeServerReceiveConnector) GetRequireTls() *plugin.TValue[bool] {
+	return &c.RequireTls
+}
+
+// mqlWindowsExchangeServerTransportService for the windows.exchangeServer.transportService resource
+type mqlWindowsExchangeServerTransportService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerTransportServiceInternal it will be used here
+	Name                      plugin.TValue[string]
+	MessageTrackingLogEnabled plugin.TValue[bool]
+	ConnectivityLogEnabled    plugin.TValue[bool]
+	PickupDirectoryPath       plugin.TValue[string]
+	ReplayDirectoryPath       plugin.TValue[string]
+}
+
+// createWindowsExchangeServerTransportService creates a new instance of this resource
+func createWindowsExchangeServerTransportService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerTransportService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.transportService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerTransportService) MqlName() string {
+	return "windows.exchangeServer.transportService"
+}
+
+func (c *mqlWindowsExchangeServerTransportService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerTransportService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsExchangeServerTransportService) GetMessageTrackingLogEnabled() *plugin.TValue[bool] {
+	return &c.MessageTrackingLogEnabled
+}
+
+func (c *mqlWindowsExchangeServerTransportService) GetConnectivityLogEnabled() *plugin.TValue[bool] {
+	return &c.ConnectivityLogEnabled
+}
+
+func (c *mqlWindowsExchangeServerTransportService) GetPickupDirectoryPath() *plugin.TValue[string] {
+	return &c.PickupDirectoryPath
+}
+
+func (c *mqlWindowsExchangeServerTransportService) GetReplayDirectoryPath() *plugin.TValue[string] {
+	return &c.ReplayDirectoryPath
+}
+
+// mqlWindowsExchangeServerRpcClientAccess for the windows.exchangeServer.rpcClientAccess resource
+type mqlWindowsExchangeServerRpcClientAccess struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerRpcClientAccessInternal it will be used here
+	Server                plugin.TValue[string]
+	EncryptionRequired    plugin.TValue[bool]
+	BlockedClientVersions plugin.TValue[string]
+}
+
+// createWindowsExchangeServerRpcClientAccess creates a new instance of this resource
+func createWindowsExchangeServerRpcClientAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerRpcClientAccess{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.rpcClientAccess", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerRpcClientAccess) MqlName() string {
+	return "windows.exchangeServer.rpcClientAccess"
+}
+
+func (c *mqlWindowsExchangeServerRpcClientAccess) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerRpcClientAccess) GetServer() *plugin.TValue[string] {
+	return &c.Server
+}
+
+func (c *mqlWindowsExchangeServerRpcClientAccess) GetEncryptionRequired() *plugin.TValue[bool] {
+	return &c.EncryptionRequired
+}
+
+func (c *mqlWindowsExchangeServerRpcClientAccess) GetBlockedClientVersions() *plugin.TValue[string] {
+	return &c.BlockedClientVersions
+}
+
+// mqlWindowsExchangeServerMailboxDatabase for the windows.exchangeServer.mailboxDatabase resource
+type mqlWindowsExchangeServerMailboxDatabase struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExchangeServerMailboxDatabaseInternal it will be used here
+	Name                          plugin.TValue[string]
+	Server                        plugin.TValue[string]
+	RetainDeletedItemsUntilBackup plugin.TValue[bool]
+	DeletedItemRetentionSeconds   plugin.TValue[int64]
+	MailboxRetentionSeconds       plugin.TValue[int64]
+	IssueWarningQuotaBytes        plugin.TValue[int64]
+	ProhibitSendQuotaBytes        plugin.TValue[int64]
+	ProhibitSendReceiveQuotaBytes plugin.TValue[int64]
+	CircularLoggingEnabled        plugin.TValue[bool]
+}
+
+// createWindowsExchangeServerMailboxDatabase creates a new instance of this resource
+func createWindowsExchangeServerMailboxDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExchangeServerMailboxDatabase{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exchangeServer.mailboxDatabase", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExchangeServerMailboxDatabase) MqlName() string {
+	return "windows.exchangeServer.mailboxDatabase"
+}
+
+func (c *mqlWindowsExchangeServerMailboxDatabase) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExchangeServerMailboxDatabase) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsExchangeServerMailboxDatabase) GetServer() *plugin.TValue[string] {
+	return &c.Server
+}
+
+func (c *mqlWindowsExchangeServerMailboxDatabase) GetRetainDeletedItemsUntilBackup() *plugin.TValue[bool] {
+	return &c.RetainDeletedItemsUntilBackup
+}
+
+func (c *mqlWindowsExchangeServerMailboxDatabase) GetDeletedItemRetentionSeconds() *plugin.TValue[int64] {
+	return &c.DeletedItemRetentionSeconds
+}
+
+func (c *mqlWindowsExchangeServerMailboxDatabase) GetMailboxRetentionSeconds() *plugin.TValue[int64] {
+	return &c.MailboxRetentionSeconds
+}
+
+func (c *mqlWindowsExchangeServerMailboxDatabase) GetIssueWarningQuotaBytes() *plugin.TValue[int64] {
+	return &c.IssueWarningQuotaBytes
+}
+
+func (c *mqlWindowsExchangeServerMailboxDatabase) GetProhibitSendQuotaBytes() *plugin.TValue[int64] {
+	return &c.ProhibitSendQuotaBytes
+}
+
+func (c *mqlWindowsExchangeServerMailboxDatabase) GetProhibitSendReceiveQuotaBytes() *plugin.TValue[int64] {
+	return &c.ProhibitSendReceiveQuotaBytes
+}
+
+func (c *mqlWindowsExchangeServerMailboxDatabase) GetCircularLoggingEnabled() *plugin.TValue[bool] {
+	return &c.CircularLoggingEnabled
 }
 
 // mqlWindowsPrinterDrivers for the windows.printerDrivers resource

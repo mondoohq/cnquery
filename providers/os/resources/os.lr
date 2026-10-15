@@ -19213,6 +19213,359 @@ private windows.dnsServer.zone.signingKey @defaults("keyType cryptoAlgorithm key
   zoneSignatureValidityPeriodSeconds int
 }
 
+// Microsoft Exchange Server (on-premises)
+//
+// Configuration of an on-premises Exchange Server 2016, 2019 or Subscription
+// Edition organization, read through the Exchange Management Shell on one of
+// its servers: transport limits and logging, send and receive connectors,
+// mailbox databases, Exchange ActiveSync device policies, remote domains,
+// Outlook on the web virtual directories, the anti-spam agents and the admin
+// audit log. `installed`, `version` and `roles` come from the registry and
+// never fail on a host without Exchange, so an audit can be gated on
+// `windows.exchangeServer.installed`. Every other field needs the Exchange
+// Management Shell and reports an error, not an empty value, on a host where
+// it cannot be loaded. Sizes are in bytes and durations in seconds; a value
+// Exchange reports as Unlimited is null. Organization-wide settings are the
+// same on every server; lists such as `mailboxDatabases` and
+// `receiveConnectors` cover the whole organization, with the server each
+// belongs to.
+windows.exchangeServer {
+  // Whether Exchange Server is installed on this host
+  installed() bool
+  // Installed Exchange Server build, such as 15.2.1544.4
+  version() string
+  // Directory Exchange Server is installed in
+  installPath() string
+  // Server roles installed on this host
+  //
+  // Any of Mailbox, EdgeTransport, ClientAccess and HubTransport, read from
+  // the role keys Exchange setup writes under
+  // HKLM\SOFTWARE\Microsoft\ExchangeServer\v15.
+  roles() []string
+  // Organization-wide settings from Get-OrganizationConfig
+  organizationConfig() windows.exchangeServer.organizationConfig
+  // Organization-wide transport settings from Get-TransportConfig
+  transportConfig() windows.exchangeServer.transportConfig
+  // Administrator audit logging settings from Get-AdminAuditLogConfig
+  adminAuditLogConfig() windows.exchangeServer.adminAuditLogConfig
+  // Content filter agent settings from Get-ContentFilterConfig
+  contentFilterConfig() windows.exchangeServer.contentFilterConfig
+  // Sender filter agent settings from Get-SenderFilterConfig
+  senderFilterConfig() windows.exchangeServer.senderFilterConfig
+  // Sender ID agent settings from Get-SenderIdConfig
+  senderIdConfig() windows.exchangeServer.senderIdConfig
+  // Protocol analysis agent settings from Get-SenderReputationConfig
+  senderReputationConfig() windows.exchangeServer.senderReputationConfig
+  // Recipient filter agent settings from Get-RecipientFilterConfig
+  recipientFilterConfig() windows.exchangeServer.recipientFilterConfig
+  // Exchange ActiveSync mobile device mailbox policies
+  mobileDeviceMailboxPolicies() []windows.exchangeServer.mobileDeviceMailboxPolicy
+  // Remote domains that control messages sent to external domains
+  remoteDomains() []windows.exchangeServer.remoteDomain
+  // Outlook on the web virtual directories on the organization's servers
+  owaVirtualDirectories() []windows.exchangeServer.owaVirtualDirectory
+  // Transport agents installed on this server
+  transportAgents() []windows.exchangeServer.transportAgent
+  // Send connectors of the organization
+  sendConnectors() []windows.exchangeServer.sendConnector
+  // Receive connectors of the organization's servers
+  receiveConnectors() []windows.exchangeServer.receiveConnector
+  // Transport service settings of each Mailbox and Edge Transport server
+  transportServices() []windows.exchangeServer.transportService
+  // MAPI client access settings of each Mailbox server, from Get-RpcClientAccess
+  rpcClientAccessSettings() []windows.exchangeServer.rpcClientAccess
+  // Mailbox databases of the organization
+  mailboxDatabases() []windows.exchangeServer.mailboxDatabase
+}
+
+// Exchange organization settings
+private windows.exchangeServer.organizationConfig {
+  // Organization name
+  name string
+  // Whether the organization sends Customer Experience Improvement Program data to Microsoft
+  customerFeedbackEnabled bool
+  // Whether modern authentication (OAuth 2.0) is enabled for Outlook clients
+  oAuth2ClientProfileEnabled bool
+  // Whether Outlook clients can connect with MAPI over HTTP
+  mapiHttpEnabled bool
+}
+
+// Exchange organization transport settings
+private windows.exchangeServer.transportConfig {
+  // Largest message, in bytes, the organization accepts; null when Unlimited
+  maxReceiveSizeBytes int
+  // Largest message, in bytes, the organization sends; null when Unlimited
+  maxSendSizeBytes int
+  // Most recipients a message may carry; null when Unlimited
+  maxRecipientEnvelopeLimit int
+}
+
+// Exchange administrator audit logging settings
+private windows.exchangeServer.adminAuditLogConfig {
+  // Whether administrator audit logging is enabled
+  adminAuditLogEnabled bool
+  // Cmdlets that are audited, "*" for all
+  adminAuditLogCmdlets []string
+  // Cmdlet parameters that are audited, "*" for all
+  adminAuditLogParameters []string
+  // Cmdlets excluded from auditing
+  adminAuditLogExcludedCmdlets []string
+  // Seconds audit log entries are kept; null when Unlimited
+  adminAuditLogAgeLimitSeconds int
+  // Detail recorded per entry: None or Verbose
+  logLevel string
+}
+
+// Exchange content filter agent settings
+private windows.exchangeServer.contentFilterConfig {
+  // Whether the content filter agent is enabled
+  enabled bool
+  // Whether messages at or above the quarantine SCL threshold are quarantined
+  sclQuarantineEnabled bool
+  // Spam confidence level at which messages are quarantined
+  sclQuarantineThreshold int
+  // Whether messages at or above the reject SCL threshold are rejected
+  sclRejectEnabled bool
+  // Whether messages at or above the delete SCL threshold are deleted
+  sclDeleteEnabled bool
+  // SMTP address of the spam quarantine mailbox; null when none is set
+  quarantineMailbox string
+}
+
+// Exchange sender filter agent settings
+private windows.exchangeServer.senderFilterConfig {
+  // Whether the sender filter agent is enabled
+  enabled bool
+  // Action for messages from blocked senders: Reject or StampStatus
+  action string
+  // Whether messages with an empty sender are blocked
+  blankSenderBlockingEnabled bool
+  // Blocked sender addresses
+  blockedSenders []string
+  // Blocked sender domains
+  blockedDomains []string
+}
+
+// Exchange Sender ID agent settings
+private windows.exchangeServer.senderIdConfig {
+  // Whether the Sender ID agent is enabled
+  enabled bool
+  // Action for messages whose sender domain is spoofed: StampStatus, Reject or Delete
+  spoofedDomainAction string
+  // Action for messages whose Sender ID check failed temporarily: StampStatus, Reject or Delete
+  tempErrorAction string
+}
+
+// Exchange protocol analysis agent (sender reputation) settings
+private windows.exchangeServer.senderReputationConfig {
+  // Whether sender reputation filtering is enabled
+  enabled bool
+  // Whether senders above the sender reputation level threshold are blocked
+  senderBlockingEnabled bool
+  // Whether the agent tests whether a sending host is an open proxy
+  openProxyDetectionEnabled bool
+  // Sender reputation level, 0 to 9, at or above which a sender is blocked
+  srlBlockThreshold int
+  // Hours a blocked sender stays blocked
+  senderBlockingPeriodHours int
+}
+
+// Exchange recipient filter agent settings
+private windows.exchangeServer.recipientFilterConfig {
+  // Whether the recipient filter agent is enabled
+  enabled bool
+  // Whether messages to recipients that do not exist in the organization are rejected
+  recipientValidationEnabled bool
+  // Whether the blocked recipients list is applied
+  blockListEnabled bool
+  // Recipient addresses that are blocked
+  blockedRecipients []string
+}
+
+// Exchange ActiveSync mobile device mailbox policy
+private windows.exchangeServer.mobileDeviceMailboxPolicy @defaults("name isDefault") {
+  // Policy name
+  name string
+  // Whether this is the organization's default policy
+  isDefault bool
+  // Whether devices must have a password
+  passwordEnabled bool
+  // Whether simple passwords such as 1234 are allowed
+  allowSimplePassword bool
+  // Whether the password must contain letters and numbers
+  alphanumericPasswordRequired bool
+  // Minimum password length; null when no minimum is set
+  minPasswordLength int
+  // Minimum number of complex characters in the password
+  minPasswordComplexCharacters int
+  // Number of previous passwords that cannot be reused
+  passwordHistory int
+  // Seconds before a password must be changed; null when Unlimited
+  passwordExpirationSeconds int
+  // Failed password attempts before the device is wiped; null when Unlimited
+  maxPasswordFailedAttempts int
+  // Seconds of inactivity before the device locks; null when Unlimited
+  maxInactivityTimeLockSeconds int
+  // Seconds between policy refreshes sent to the device; null when Unlimited
+  devicePolicyRefreshIntervalSeconds int
+  // Whether device encryption is required
+  requireDeviceEncryption bool
+  // Whether storage card encryption is required
+  requireStorageCardEncryption bool
+  // Whether devices that cannot apply every policy setting may synchronize
+  allowNonProvisionableDevices bool
+}
+
+// Exchange remote domain
+private windows.exchangeServer.remoteDomain @defaults("name domainName") {
+  // Remote domain name
+  name string
+  // Domain the settings apply to, "*" for every external domain
+  domainName string
+  // Out-of-office replies sent to the domain: External, ExternalLegacy, InternalLegacy or None
+  allowedOOFType string
+  // Whether messages are automatically forwarded to the domain
+  autoForwardEnabled bool
+  // Whether automatic replies are sent to the domain
+  autoReplyEnabled bool
+  // Whether non-delivery reports are sent to the domain
+  ndrEnabled bool
+  // Whether delivery reports are sent to the domain
+  deliveryReportEnabled bool
+}
+
+// Exchange Outlook on the web virtual directory
+private windows.exchangeServer.owaVirtualDirectory @defaults("identity smimeEnabled") {
+  // Virtual directory identity, such as EX01\owa (Default Web Site)
+  identity string
+  // Server the virtual directory is on
+  server string
+  // Whether S/MIME is available in Outlook on the web
+  smimeEnabled bool
+  // Whether Basic authentication is enabled
+  basicAuthentication bool
+  // Whether forms-based authentication is enabled
+  formsAuthentication bool
+}
+
+// Exchange transport agent
+private windows.exchangeServer.transportAgent @defaults("identity enabled") {
+  // Agent name, such as Malware Agent
+  identity string
+  // Whether the agent is enabled
+  enabled bool
+  // Order in which the agent runs, lowest first
+  priority int
+}
+
+// Exchange send connector
+private windows.exchangeServer.sendConnector @defaults("name enabled") {
+  // Connector identity
+  identity string
+  // Connector name
+  name string
+  // Whether the connector is enabled
+  enabled bool
+  // Whether the connector looks up MX records instead of using smart hosts
+  dnsRoutingEnabled bool
+  // Whether mutual TLS (Domain Security) is used for the domains the connector serves
+  domainSecureEnabled bool
+  // Whether STARTTLS is ignored, which sends mail unencrypted
+  ignoreStartTls bool
+  // Whether TLS is required for every message sent through the connector
+  requireTls bool
+  // TLS authentication level: EncryptionOnly, CertificateValidation or DomainValidation; null when not set
+  tlsAuthLevel string
+  // Largest message, in bytes, the connector sends; null when Unlimited
+  maxMessageSizeBytes int
+  // Protocol logging level: None or Verbose
+  protocolLoggingLevel string
+  // Seconds an idle connection stays open
+  connectionInactivityTimeoutSeconds int
+  // Address spaces the connector routes mail for, such as SMTP:*;1
+  addressSpaces []string
+  // Smart hosts mail is relayed through
+  smartHosts []string
+}
+
+// Exchange receive connector
+private windows.exchangeServer.receiveConnector @defaults("identity enabled") {
+  // Connector identity, such as EX01\Default Frontend EX01
+  identity string
+  // Connector name
+  name string
+  // Server the connector is on
+  server string
+  // Whether the connector is enabled
+  enabled bool
+  // Authentication mechanisms offered, such as Tls, BasicAuth and BasicAuthRequireTLS
+  authMechanism []string
+  // Permission groups allowed to use the connector, such as AnonymousUsers and ExchangeUsers
+  permissionGroups []string
+  // SMTP banner sent to connecting hosts; null when the default banner is used
+  banner string
+  // Seconds a connection may stay open before it is closed
+  connectionTimeoutSeconds int
+  // Largest message, in bytes, the connector accepts; null when Unlimited
+  maxMessageSizeBytes int
+  // Protocol logging level: None or Verbose
+  protocolLoggingLevel string
+  // Transport service the connector belongs to: FrontendTransport or HubTransport
+  transportRole string
+  // Local IP addresses and ports the connector listens on
+  bindings []string
+  // Remote IP ranges the connector accepts connections from
+  remoteIpRanges []string
+  // Whether TLS is required for every connection
+  requireTls bool
+}
+
+// Exchange transport service settings of one server
+private windows.exchangeServer.transportService @defaults("name") {
+  // Server name
+  name string
+  // Whether message tracking logging is enabled
+  messageTrackingLogEnabled bool
+  // Whether connectivity logging is enabled
+  connectivityLogEnabled bool
+  // Pickup directory path; null when the pickup directory is disabled
+  pickupDirectoryPath string
+  // Replay directory path; null when the replay directory is disabled
+  replayDirectoryPath string
+}
+
+// Exchange MAPI client access settings of one server
+private windows.exchangeServer.rpcClientAccess @defaults("server encryptionRequired") {
+  // Server name
+  server string
+  // Whether Outlook clients must use encrypted RPC connections
+  encryptionRequired bool
+  // Outlook client versions that are blocked from connecting
+  blockedClientVersions string
+}
+
+// Exchange mailbox database
+private windows.exchangeServer.mailboxDatabase @defaults("name server") {
+  // Database name
+  name string
+  // Server the database is mounted on
+  server string
+  // Whether deleted items are kept until the database has been backed up
+  retainDeletedItemsUntilBackup bool
+  // Seconds deleted items are kept; null when Unlimited
+  deletedItemRetentionSeconds int
+  // Seconds deleted mailboxes are kept; null when Unlimited
+  mailboxRetentionSeconds int
+  // Mailbox size, in bytes, at which users are warned; null when Unlimited
+  issueWarningQuotaBytes int
+  // Mailbox size, in bytes, at which users can no longer send; null when Unlimited
+  prohibitSendQuotaBytes int
+  // Mailbox size, in bytes, at which users can no longer send or receive; null when Unlimited
+  prohibitSendReceiveQuotaBytes int
+  // Whether circular logging is enabled, which prevents point-in-time recovery
+  circularLoggingEnabled bool
+}
+
 // Print drivers registered with the Windows spooler
 //
 // Print drivers as the spooler reports them, with the vendor version, the
