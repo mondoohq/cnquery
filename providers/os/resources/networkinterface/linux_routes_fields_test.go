@@ -23,7 +23,7 @@ func TestParseIpRouteJSON_TableFields(t *testing.T) {
 
 	routes, err := detector.parseIpRouteJSON(output)
 	require.NoError(t, err)
-	require.Len(t, routes, 3)
+	require.Len(t, routes, 2)
 
 	assert.Equal(t, "0.0.0.0", routes[0].Destination)
 	assert.Equal(t, "main", routes[0].Table)
@@ -37,8 +37,8 @@ func TestParseIpRouteJSON_TableFields(t *testing.T) {
 	assert.Equal(t, "10.100.0.5", routes[1].Source)
 	assert.Equal(t, "cluster", routes[1].Interface)
 
-	assert.Equal(t, "blackhole", routes[2].Type)
-	assert.Equal(t, "1007", routes[2].Table)
+	// Discard routes are filtered before they can be mistaken for usable
+	// forwarding or default routes.
 }
 
 // TestParseLinuxRoutesFromProc_MainTable pins that the IPv4 proc source

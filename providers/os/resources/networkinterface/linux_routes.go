@@ -109,6 +109,12 @@ func (l *linuxRouteDetector) convertJSONRouteToRoute(jsonRoute ipRouteJSON) *Rou
 	route := &Route{
 		Interface: jsonRoute.Dev,
 		Gateway:   jsonRoute.Gateway,
+		Table:     jsonRoute.Table,
+		Protocol:  jsonRoute.Protocol,
+		Scope:     jsonRoute.Scope,
+		Metric:    int64(jsonRoute.Metric),
+		Source:    jsonRoute.Prefsrc,
+		Type:      jsonRoute.Type,
 	}
 
 	dest := jsonRoute.Dst
@@ -209,12 +215,15 @@ func (l *linuxRouteDetector) parseLinuxRoutesFromProc(output string) ([]Route, e
 		if gateway.Equal(net.IPv4zero) {
 			gatewayStr = ""
 		}
+		metric, _ := strconv.ParseInt(line[6], 10, 64)
 
 		routes = append(routes, Route{
 			Destination: destStr,
 			Gateway:     gatewayStr,
 			Flags:       flags,
 			Interface:   iface,
+			Table:       "main",
+			Metric:      metric,
 		})
 	}
 
