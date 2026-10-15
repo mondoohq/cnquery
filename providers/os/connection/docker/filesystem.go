@@ -5,10 +5,12 @@ package docker
 
 import (
 	"errors"
+	"io"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/kballard/go-shellquote"
 	"github.com/moby/moby/client"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/providers/os/connection/ssh/cat"
@@ -19,6 +21,7 @@ type FS struct {
 	dockerClient *client.Client
 	Connection   *ContainerConnection
 	catFS        *cat.Fs
+	runner       cat.CommandRunner
 }
 
 func (fs *FS) Name() string {
@@ -44,7 +47,7 @@ func isDockerClientSupported(path string) bool {
 	// See https://docs.docker.com/reference/cli/docker/container/cp/#corner-cases
 	unsupported := []string{"/proc", "/dev", "/sys"}
 	for _, v := range unsupported {
-		if v == path || strings.HasPrefix(path, v) {
+		if v == path || strings.HasPrefix(path, v+"/") {
 			return false
 		}
 	}
@@ -93,4 +96,34 @@ func (fs *FS) Chown(name string, uid, gid int) error {
 
 func (fs *FS) ReadDir(name string) ([]os.FileInfo, error) {
 	return fs.catFS.ReadDir(name)
+}
+
+var _ afero.LinkReader = (*FS)(nil)
+
+// ReadlinkIfPossible returns the target a symlink points at, without
+// resolving it. The Docker archive API cannot read /proc, so the links
+// there (a process's open file descriptors, its cwd) are read inside the
+// container.
+func (fs *FS) ReadlinkIfPossible(name string) (string, error) {
+	cmd, err := fs.runner.RunCommand(shellquote.Join("readlink", argPath(name)))
+	if err != nil {
+		return "", &os.PathError{Op: "readlink", Path: name, Err: err}
+	}
+	out, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return "", &os.PathError{Op: "readlink", Path: name, Err: err}
+	}
+	if cmd.ExitStatus != 0 {
+		return "", &os.PathError{Op: "readlink", Path: name, Err: os.ErrInvalid}
+	}
+	return strings.TrimSuffix(string(out), "\n"), nil
+}
+
+// argPath keeps a path that starts with a dash from being parsed as an
+// option.
+func argPath(path string) string {
+	if strings.HasPrefix(path, "-") {
+		return "./" + path
+	}
+	return path
 }

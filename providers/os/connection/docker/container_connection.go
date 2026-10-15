@@ -118,6 +118,7 @@ func NewContainerConnection(id uint32, conf *inventory.Config, asset *inventory.
 		Container:    conn.container,
 		Connection:   conn,
 		catFS:        cat.New(conn),
+		runner:       conn,
 	}
 	return conn, nil
 }
