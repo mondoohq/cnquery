@@ -11,7 +11,8 @@ import (
 
 // BGP is one `router bgp <asn> [vrf <name>]` instance.
 type BGP struct {
-	ASN       int64
+	// ASN is nil when the block names no valid AS number.
+	ASN       *int64
 	VRF       string
 	RouterID  string
 	ClusterID string
@@ -45,8 +46,8 @@ type Neighbor struct {
 	// RemoteAs holds the raw value, which is a number or `internal` or
 	// `external`.
 	RemoteAs  string
-	RemoteASN int64
-	LocalASN  int64
+	RemoteASN *int64
+	LocalASN  *int64
 
 	Description     string
 	UpdateSource    string
@@ -142,7 +143,7 @@ type VRF struct {
 	StartLine    int
 	Raw          string
 
-	RouterASN          int64
+	RouterASN          *int64
 	RouteTargetsImport []string
 	RouteTargetsExport []string
 	ImportedVrfs       []string
@@ -280,9 +281,7 @@ func buildBGP(blk *Block) BGP {
 		StartLine:          blk.StartLine,
 		Raw:                blk.Raw,
 	}
-	if blk.Name != "" {
-		b.ASN, _ = strconv.ParseInt(blk.Name, 10, 64)
-	}
+	b.ASN = parseASN(blk.Name)
 
 	neighbors := newNeighborSet()
 
@@ -382,20 +381,34 @@ func applyNeighborLine(set *neighborSet, d *Directive) {
 
 	switch rest[0] {
 	case "interface":
-		n.Interface = true
+		n.Interface = !d.Negated
 		// `neighbor <if> interface remote-as <asn>` and
 		// `neighbor <if> interface peer-group <name>`.
 		if v := argAfter(rest, "remote-as"); v != "" {
-			n.setRemoteAs(v)
+			if !d.Negated {
+				n.setRemoteAs(v)
+			}
 		}
 		if v := argAfter(rest, "peer-group"); v != "" {
-			n.PeerGroup = v
+			if d.Negated {
+				if n.PeerGroup == v {
+					n.PeerGroup = ""
+				}
+			} else {
+				n.PeerGroup = v
+			}
 		}
 	case "peer-group":
 		if len(rest) == 1 {
-			n.IsPeerGroup = true
+			n.IsPeerGroup = !d.Negated
 		} else {
-			n.PeerGroup = rest[1]
+			if d.Negated {
+				if n.PeerGroup == rest[1] {
+					n.PeerGroup = ""
+				}
+			} else {
+				n.PeerGroup = rest[1]
+			}
 		}
 	case "remote-as":
 		if len(rest) > 1 {
@@ -403,7 +416,7 @@ func applyNeighborLine(set *neighborSet, d *Directive) {
 		}
 	case "local-as":
 		if len(rest) > 1 {
-			n.LocalASN, _ = strconv.ParseInt(rest[1], 10, 64)
+			n.LocalASN = parseASN(rest[1])
 		}
 	case "description":
 		n.Description = strings.Join(rest[1:], " ")
@@ -435,7 +448,36 @@ func applyNeighborLine(set *neighborSet, d *Directive) {
 
 func (n *Neighbor) setRemoteAs(v string) {
 	n.RemoteAs = v
-	n.RemoteASN, _ = strconv.ParseInt(v, 10, 64)
+	n.RemoteASN = parseASN(v)
+}
+
+// parseASN reads an AS number in asplain or asdot notation and returns nil
+// for values FRR does not treat as a numeric ASN.
+func parseASN(s string) *int64 {
+	high, low, dotted := strings.Cut(s, ".")
+	var asn uint64
+	if dotted {
+		h, err := strconv.ParseUint(high, 10, 16)
+		if err != nil {
+			return nil
+		}
+		l, err := strconv.ParseUint(low, 10, 16)
+		if err != nil {
+			return nil
+		}
+		asn = h<<16 | l
+	} else {
+		v, err := strconv.ParseUint(s, 10, 32)
+		if err != nil {
+			return nil
+		}
+		asn = v
+	}
+	if asn == 0 {
+		return nil
+	}
+	v := int64(asn)
+	return &v
 }
 
 func buildAddressFamily(blk *Block, neighbors *neighborSet) AddressFamily {
@@ -545,29 +587,67 @@ func applyNeighborAddressFamilyLine(set *neighborSet, afi, safi string, d *Direc
 		// `neighbor <n> route-map <name> in|out`
 		if len(rest) >= 3 {
 			if rest[2] == "in" {
-				naf.RouteMapIn = rest[1]
+				if d.Negated {
+					if naf.RouteMapIn == rest[1] {
+						naf.RouteMapIn = ""
+					}
+				} else {
+					naf.RouteMapIn = rest[1]
+				}
 			} else {
-				naf.RouteMapOut = rest[1]
+				if d.Negated {
+					if naf.RouteMapOut == rest[1] {
+						naf.RouteMapOut = ""
+					}
+				} else {
+					naf.RouteMapOut = rest[1]
+				}
 			}
 		}
 	case "prefix-list":
 		if len(rest) >= 3 {
 			if rest[2] == "in" {
-				naf.PrefixListIn = rest[1]
+				if d.Negated {
+					if naf.PrefixListIn == rest[1] {
+						naf.PrefixListIn = ""
+					}
+				} else {
+					naf.PrefixListIn = rest[1]
+				}
 			} else {
-				naf.PrefixListOut = rest[1]
+				if d.Negated {
+					if naf.PrefixListOut == rest[1] {
+						naf.PrefixListOut = ""
+					}
+				} else {
+					naf.PrefixListOut = rest[1]
+				}
 			}
 		}
 	case "filter-list":
 		if len(rest) >= 3 {
 			if rest[2] == "in" {
-				naf.FilterListIn = rest[1]
+				if d.Negated {
+					if naf.FilterListIn == rest[1] {
+						naf.FilterListIn = ""
+					}
+				} else {
+					naf.FilterListIn = rest[1]
+				}
 			} else {
-				naf.FilterListOut = rest[1]
+				if d.Negated {
+					if naf.FilterListOut == rest[1] {
+						naf.FilterListOut = ""
+					}
+				} else {
+					naf.FilterListOut = rest[1]
+				}
 			}
 		}
 	case "maximum-prefix":
-		if len(rest) > 1 {
+		if d.Negated {
+			naf.MaximumPrefix = 0
+		} else if len(rest) > 1 {
 			naf.MaximumPrefix, _ = strconv.ParseInt(rest[1], 10, 64)
 		}
 	case "route-reflector-client":

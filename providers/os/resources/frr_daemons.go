@@ -5,6 +5,7 @@ package resources
 
 import (
 	"strconv"
+	"strings"
 
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers/os/resources/frr"
@@ -15,6 +16,10 @@ import (
 // protocols, the BFD sessions, the policy based routing maps, the segment
 // routing block, and the settings of the daemon itself. They are read from
 // the same parsed file as the rest of frr.config, so they cost no extra read.
+
+func bfdPeerID(base string, p frr.BFDPeer) string {
+	return strings.Join([]string{base, "#bfd", p.Kind, p.Name, vrfKey(p.VRF), p.LocalAddress, p.Interface, strconv.FormatBool(p.MultiHop)}, "/")
+}
 
 func (s *mqlFrrConfig) ospf(file *mqlFile) ([]any, error) {
 	if err := s.parse(file); err != nil {
@@ -99,7 +104,7 @@ func (s *mqlFrrConfig) bfdPeers(file *mqlFile) ([]any, error) {
 	for i := range peers {
 		p := &peers[i]
 		obj, err := CreateResource(s.MqlRuntime, "frr.config.bfdPeer", map[string]*llx.RawData{
-			"__id":             llx.StringData(s.__id + "#bfd/" + p.Kind + "/" + p.Name),
+			"__id":             llx.StringData(bfdPeerID(s.__id, *p)),
 			"kind":             llx.StringData(p.Kind),
 			"name":             llx.StringData(p.Name),
 			"interface":        llx.StringData(p.Interface),

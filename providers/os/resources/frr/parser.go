@@ -114,9 +114,8 @@ const (
 	kindAddressFamily
 	kindVNI
 	kindBFDPeer
-	// kindNested is a block that lives inside another block and closes only
-	// on its own terminator or when a new top-level block starts. The
-	// segment routing tree uses it.
+	// kindKey is a `key <id>` block inside a `key chain`.
+	kindKey
 	kindNested
 )
 
@@ -189,23 +188,35 @@ func parseInto(filename string, r io.Reader, cfg *Config) error {
 			for len(stack) > 0 && stack[len(stack)-1].kind != kindTop {
 				closeTop(endLine)
 			}
-		case kindVNI, kindBFDPeer:
+		case kindVNI, kindBFDPeer, kindKey:
 			for len(stack) > 0 && stack[len(stack)-1].kind != kindAddressFamily &&
 				stack[len(stack)-1].kind != kindTop {
 				closeTop(endLine)
 			}
 		case kindNested:
-			// A nested block stays inside whatever is open.
+			// Nested segment-routing blocks remain below their current parent.
 		}
 	}
 
 	for scanner.Scan() {
 		lineNo++
 		raw := scanner.Text()
+		line := strings.TrimSpace(stripComment(raw))
+		// A secret never reaches a raw line, an argument or a param key. A
+		// comment is redacted too, since a block's raw text keeps it, and a
+		// commented-out `password` line still holds a real password.
+		indent := raw[:len(raw)-len(strings.TrimLeft(raw, " \t"))]
+		if line != "" {
+			if fields, redacted := redactSecrets(strings.Fields(line)); redacted {
+				line = strings.Join(fields, " ")
+				raw = indent + line
+			}
+		} else if text := strings.TrimSpace(raw); text != "" {
+			if fields, redacted := redactSecrets(strings.Fields(text[1:])); redacted {
+				raw = indent + text[:1] + " " + strings.Join(fields, " ")
+			}
+		}
 		rawLines = append(rawLines, raw)
-
-		line := stripComment(raw)
-		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
@@ -282,21 +293,7 @@ func parseInto(filename string, r io.Reader, cfg *Config) error {
 
 // blockHeader decides whether fields start a block. It returns the block
 // type, its primary name, the header arguments and where the block may nest.
-// nestedKeywords are the block keywords of the segment routing tree. They
-// only start a block inside another block.
-var nestedKeywords = map[string]bool{
-	"srv6":           true,
-	"locators":       true,
-	"locator":        true,
-	"traffic-eng":    true,
-	"policy":         true,
-	"candidate-path": true,
-	"segment-list":   true,
-}
-
 func blockHeader(fields []string, stack []frame) (string, string, []string, blockKind, bool) {
-	// The segment routing tree nests several levels deep, and its keywords
-	// mean nothing at the top level.
 	if len(stack) > 0 && nestedKeywords[fields[0]] {
 		name := ""
 		if len(fields) > 1 {
@@ -338,23 +335,26 @@ func blockHeader(fields []string, stack []frame) (string, string, []string, bloc
 		}
 		return "router " + fields[1], name, fields[2:], kindTop, true
 
-	case "vrf", "interface", "route-map", "pbr-map", "nexthop-group", "rpki":
+	case "vrf", "interface", "route-map", "pbr-map", "nexthop-group",
+		"rpki":
 		if len(fields) < 2 {
 			return "", "", nil, kindTop, false
 		}
 		return fields[0], fields[1], fields[1:], kindTop, true
 
 	case "bfd", "segment-routing":
-		// These take no name of their own, and they only start a block at
-		// the top level. Inside an interface block `bfd` is a directive that
-		// enables a session on the link.
 		if len(fields) != 1 || len(stack) > 0 {
 			return "", "", nil, kindTop, false
 		}
 		return fields[0], "", nil, kindTop, true
 
 	case "key", "line":
-		// `key chain <name>` and `line vty`.
+		// `key chain <name>` and `line vty`. Inside a key chain, `key <id>`
+		// opens the block of one key.
+		if fields[0] == "key" && len(fields) == 2 && len(stack) > 0 &&
+			(stack[len(stack)-1].block.Type == "key chain" || stack[len(stack)-1].kind == kindKey) {
+			return "key", fields[1], fields[1:], kindKey, true
+		}
 		if len(fields) < 2 {
 			return "", "", nil, kindTop, false
 		}
@@ -365,6 +365,11 @@ func blockHeader(fields []string, stack []frame) (string, string, []string, bloc
 		return fields[0] + " " + fields[1], name, fields[2:], kindTop, true
 	}
 	return "", "", nil, kindTop, false
+}
+
+var nestedKeywords = map[string]bool{
+	"srv6": true, "locators": true, "locator": true, "traffic-eng": true,
+	"policy": true, "candidate-path": true, "segment-list": true,
 }
 
 func makeDirective(file string, line int, raw string, fields []string) Directive {
@@ -391,6 +396,79 @@ func stripComment(line string) string {
 		return ""
 	}
 	return line
+}
+
+// redactedSecret replaces a password or key in the parsed config.
+const redactedSecret = "<redacted>"
+
+// secretKeywords are the keywords whose next token is a password or key:
+// `password` (vty, `enable password`, `neighbor <n> password`, `username`,
+// `isis password`), `area-password` and `domain-password` (IS-IS),
+// `ip ospf authentication-key`, `key-string` (key chains) and `secret`.
+var secretKeywords = map[string]bool{
+	"password":           true,
+	"area-password":      true,
+	"domain-password":    true,
+	"authentication-key": true,
+	"key-string":         true,
+	"secret":             true,
+}
+
+// secretTypes are the tokens that name how the secret after them is
+// encoded, as in `isis password md5 <secret>`, or `password 8 <hash>` as
+// `service password-encryption` writes it. They are not the secret, unless
+// nothing follows them.
+var secretTypes = map[string]bool{
+	"clear":    true,
+	"md5":      true,
+	"hmac-md5": true,
+	"8":        true,
+}
+
+// redactSecrets replaces the password or key in a line's fields, and
+// everything after it, with a single redactedSecret, and reports whether it
+// did. In every FRR command the secret is the last argument, and several take
+// it as LINE, which runs to the end of the line and may hold spaces
+// (`neighbor <n> password LINE`, `key-string LINE`, `ip rip authentication
+// string LINE`), so redacting one token would leave the rest of the secret.
+// Besides the keywords in secretKeywords it covers
+// `ip ospf message-digest-key <id> md5 <key>`, `ip rip authentication string
+// <key>`, `ip nhrp authentication <secret>` and ospf6
+// `authentication key-id <id> hash-algo <algo> key <key>`.
+func redactSecrets(fields []string) ([]string, bool) {
+	start := secretStart(fields)
+	if start < 0 {
+		return fields, false
+	}
+	out := make([]string, start, start+1)
+	copy(out, fields[:start])
+	return append(out, redactedSecret), true
+}
+
+// secretStart returns the index of the first token of the secret in fields,
+// or -1 when the line carries none.
+func secretStart(fields []string) int {
+	for i, f := range fields {
+		next := i + 1
+		if next >= len(fields) {
+			break
+		}
+		switch {
+		case secretKeywords[f]:
+			// an encoding token is followed by the secret, unless it is
+			// the last token and so the secret itself
+			if next+1 < len(fields) && secretTypes[fields[next]] {
+				next++
+			}
+			return next
+		case f == "md5" && i >= 2 && fields[i-2] == "message-digest-key",
+			f == "authentication" && i >= 1 && fields[i-1] == "nhrp",
+			f == "string" && i >= 1 && fields[i-1] == "authentication",
+			f == "key" && i >= 2 && fields[i-2] == "hash-algo":
+			return next
+		}
+	}
+	return -1
 }
 
 func errorList(errs []ParseError) error {
