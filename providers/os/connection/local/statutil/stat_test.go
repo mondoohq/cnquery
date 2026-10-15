@@ -168,3 +168,54 @@ func TestStatNameIsNotShellQuoted(t *testing.T) {
 		}
 	}
 }
+
+// dirStatRunner answers uname and the batch stat of a directory with what
+// alpine:3.22 prints for /t holding a file with a space, a file starting with
+// a dash, a link, a dangling link and a subdirectory ("gone" was asked for
+// and vanished).
+type dirStatRunner struct {
+	uname    string
+	commands []string
+}
+
+func (r *dirStatRunner) RunCommand(command string) (*shared.Command, error) {
+	r.commands = append(r.commands, command)
+	out := ""
+	switch {
+	case command == "uname -s":
+		out = r.uname + "\n"
+	case strings.HasPrefix(command, linuxStatDirScript):
+		out = "0.0.81a4.0.0.1792025285.1792025285.C/a b\n" +
+			"0.0.81a4.0.0.1792025285.1792025285.C/-dash\n" +
+			"1.0.81a4.0.0.1792025285.1792025285.C/lnk\n" +
+			"1.7.a1ff.0.0.1792025285.1792025285.C/dangling\n" +
+			"0.4096.41ed.1000.1000.1792025285.1792025285.C/sub\n"
+	}
+	return &shared.Command{Command: command, Stdout: bytes.NewBufferString(out), Stderr: &bytes.Buffer{}}, nil
+}
+
+func TestStatDir(t *testing.T) {
+	r := &dirStatRunner{uname: "Linux"}
+	infos, ok := New(r).StatDir("/t", []string{"a b", "-dash", "lnk", "dangling", "sub", "gone"})
+	require.True(t, ok)
+	assert.Len(t, infos, 5, "gone is left out")
+
+	assert.Equal(t, "a b", infos["a b"].Name())
+	assert.Equal(t, os.FileMode(0o644), infos["a b"].Mode())
+	assert.Equal(t, os.FileMode(0o644)|fs.ModeSymlink, infos["lnk"].Mode(), "a link reports its target's mode")
+	assert.True(t, infos["dangling"].Mode()&fs.ModeSymlink != 0)
+	assert.True(t, infos["sub"].IsDir())
+	assert.Equal(t, int64(1000), infos["sub"].Sys().(*shared.FileInfo).Uid)
+
+	// one command for the directory, after the dialect is known
+	require.Len(t, r.commands, 2)
+	assert.Contains(t, r.commands[1], `_ /t 'a b' -dash lnk dangling sub gone`)
+}
+
+// Only the Linux stat format can be batched; elsewhere each entry is stat'ed.
+func TestStatDirOnlyOnLinux(t *testing.T) {
+	_, ok := New(&dirStatRunner{uname: "FreeBSD"}).StatDir("/t", []string{"a"})
+	assert.False(t, ok)
+	_, ok = New(&dirStatRunner{uname: "AIX"}).StatDir("/t", []string{"a"})
+	assert.False(t, ok)
+}

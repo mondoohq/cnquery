@@ -245,3 +245,31 @@ func TestFileDecodesBinaryPlist(t *testing.T) {
 		assert.Equal(t, want, got, "base64=%v", useBase64)
 	}
 }
+
+// batchStat stats a directory in one go, leaving out what it could not stat.
+type batchStat struct {
+	fakeStat
+	batch map[string]os.FileInfo
+	calls int
+}
+
+func (s *batchStat) StatDir(dir string, names []string) (map[string]os.FileInfo, bool) {
+	s.calls++
+	return s.batch, true
+}
+
+// Readdir stats the directory with one command where the statter can, and
+// stats what the batch left out one by one.
+func TestReaddirStatsTheDirectoryInOneGo(t *testing.T) {
+	run := &fakeRun{stdout: "kept\nlate\ngone\n"}
+	st := &batchStat{
+		fakeStat: fakeStat{missing: map[string]bool{"/d/gone": true}},
+		batch:    map[string]os.FileInfo{"kept": &shared.FileInfo{FName: "kept", FSize: 7}},
+	}
+	infos, err := NewFile(&Fs{commandRunner: run, statter: st}, "/d", false).Readdir(-1)
+	require.NoError(t, err)
+	require.Len(t, infos, 2)
+	assert.Equal(t, int64(7), infos[0].Size(), "from the batch")
+	assert.Equal(t, "late", infos[1].Name(), "stat'ed on its own")
+	assert.Equal(t, 1, st.calls)
+}

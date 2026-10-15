@@ -115,8 +115,26 @@ func (f *File) Readdir(count int) (res []os.FileInfo, err error) {
 		return nil, err
 	}
 
+	// One command stats the whole directory where the target's stat allows
+	// it. Stat'ing each entry with its own command cost a round trip per
+	// entry: over docker exec a walk of / took minutes.
+	var batch map[string]os.FileInfo
+	if ds, ok := f.catfs.statter.(dirStatter); ok {
+		relative := make([]string, 0, len(names))
+		for _, name := range names {
+			if !filepath.IsAbs(name) {
+				relative = append(relative, name)
+			}
+		}
+		batch, _ = ds.StatDir(f.path, relative)
+	}
+
 	res = []os.FileInfo{}
 	for _, name := range names {
+		if fi, ok := batch[name]; ok {
+			res = append(res, fi)
+			continue
+		}
 		var statPath string
 		if filepath.IsAbs(name) {
 			statPath = name
@@ -136,6 +154,11 @@ func (f *File) Readdir(count int) (res []os.FileInfo, err error) {
 	}
 
 	return res, nil
+}
+
+// dirStatter stats the entries of a directory in one go.
+type dirStatter interface {
+	StatDir(dir string, names []string) (map[string]os.FileInfo, bool)
 }
 
 func (f *File) Readdirnames(n int) (names []string, err error) {
