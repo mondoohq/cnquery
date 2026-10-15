@@ -4,10 +4,18 @@
 package resources
 
 import (
+	"bytes"
 	"testing"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/fs"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/utils/syncx"
 )
 
 func TestFindNameMatcherIsABasenameGlob(t *testing.T) {
@@ -39,4 +47,59 @@ func TestFindNameMatcherIsABasenameGlob(t *testing.T) {
 
 	_, err = findNameMatcher("[")
 	assert.Error(t, err)
+}
+
+// noFindConnection is a host that runs commands but has no find, like the
+// Amazon Linux 2023 and UBI micro images: its shell answers exit 127.
+type noFindConnection struct {
+	*fs.FileSystemConnection
+}
+
+func (noFindConnection) Capabilities() shared.Capabilities {
+	return shared.Capability_File | shared.Capability_RunCommand
+}
+
+func (noFindConnection) RunCommand(command string) (*shared.Command, error) {
+	return &shared.Command{
+		Command:    command,
+		Stdout:     &bytes.Buffer{},
+		Stderr:     bytes.NewBufferString("sh: line 1: find: command not found\n"),
+		ExitStatus: 127,
+	}, nil
+}
+
+func TestFilesFindWithoutFindWalksTheFileSystem(t *testing.T) {
+	mockFS := afero.NewMemMapFs()
+	writeMemFSFile(t, mockFS, "/etc/passwd", []byte("root:x:0:0::/root:/bin/sh\n"))
+	writeMemFSFile(t, mockFS, "/etc/ssh/sshd_config", []byte("PermitRootLogin no\n"))
+	require.NoError(t, mockFS.Chmod("/etc/ssh/sshd_config", 0o600))
+	conn, err := fs.NewFileSystemConnectionWithFs(0, &inventory.Config{}, &inventory.Asset{
+		Platform: &inventory.Platform{Name: "amazonlinux", Family: []string{"redhat", "linux", "unix", "os"}},
+	}, "", nil, mockFS)
+	require.NoError(t, err)
+	runtime := &plugin.Runtime{
+		Resources:  &syncx.Map[plugin.Resource]{},
+		Connection: noFindConnection{conn},
+		Callback:   &providerCallbacks{},
+	}
+
+	find := func(args map[string]*llx.RawData) []string {
+		t.Helper()
+		res, err := CreateResource(runtime, "files.find", args)
+		require.NoError(t, err)
+		list := res.(*mqlFilesFind).GetList()
+		require.NoError(t, list.Error)
+		paths := []string{}
+		for _, f := range list.Data {
+			paths = append(paths, f.(*mqlFile).Path.Data)
+		}
+		return paths
+	}
+
+	assert.ElementsMatch(t, []string{"/etc/passwd", "/etc/ssh/sshd_config"},
+		find(map[string]*llx.RawData{"from": llx.StringData("/etc"), "type": llx.StringData("file")}))
+	assert.ElementsMatch(t, []string{"/etc/ssh/sshd_config"},
+		find(map[string]*llx.RawData{"from": llx.StringData("/etc"), "name": llx.StringData("sshd_*")}))
+	assert.ElementsMatch(t, []string{"/etc/passwd"},
+		find(map[string]*llx.RawData{"from": llx.StringData("/etc"), "type": llx.StringData("file"), "permissions": llx.IntData(0o644)}))
 }

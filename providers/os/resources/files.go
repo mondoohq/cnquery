@@ -13,9 +13,11 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/fsutil"
 	"go.mondoo.com/mql/providers/os/resources/filesfind"
 )
 
@@ -72,7 +74,7 @@ func (l *mqlFilesFind) list() ([]any, error) {
 			return nil, err
 		}
 	} else if conn.Capabilities().Has(shared.Capability_RunCommand) && pf.IsFamily("unix") {
-		foundFiles, err = l.unixFilesFindCmd()
+		foundFiles, err = l.unixFilesFindCmd(conn)
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +108,7 @@ func (l *mqlFilesFind) fsFilesFind(conn shared.Connection) ([]string, error) {
 	fs := conn.FileSystem()
 	fsSearch, ok := fs.(shared.FileSearch)
 	if !ok {
-		return nil, errors.New("find is not supported for your platform")
+		fsSearch = walkFileSearch{fs: fs}
 	}
 
 	var perm *uint32
@@ -168,7 +170,17 @@ func findNameMatcher(name string) (func(string) bool, error) {
 	}, nil
 }
 
-func (l *mqlFilesFind) unixFilesFindCmd() ([]string, error) {
+// walkFileSearch searches a file system that has no search of its own by
+// walking it.
+type walkFileSearch struct {
+	fs afero.Fs
+}
+
+func (w walkFileSearch) Find(from string, r *regexp.Regexp, typ string, perm *uint32, depth *int) ([]string, error) {
+	return fsutil.FindFiles(afero.NewIOFS(w.fs), from, r, typ, perm, depth)
+}
+
+func (l *mqlFilesFind) unixFilesFindCmd(conn shared.Connection) ([]string, error) {
 	var depth *int64
 	if l.Depth.IsSet() {
 		depth = &l.Depth.Data
@@ -186,6 +198,13 @@ func (l *mqlFilesFind) unixFilesFindCmd() ([]string, error) {
 	out := cmd.GetStdout()
 	if out.Error != nil {
 		return nil, out.Error
+	}
+	// Minimal images such as Amazon Linux 2023 and UBI micro have no find.
+	// Its output read as no files at all; the connection can still walk
+	// the file system itself.
+	if exit := cmd.GetExitcode(); exit.Error == nil && isCommandNotFound(exit.Data, cmd.GetStderr().Data) {
+		log.Debug().Str("from", l.From.Data).Msg("files.find> find is not installed, walking the file system instead")
+		return l.fsFilesFind(conn)
 	}
 
 	var foundFiles []string
