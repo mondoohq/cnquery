@@ -20,20 +20,20 @@ type mqlSnowflakeExternalTableInternal struct {
 
 func (r *mqlSnowflakeAccount) externalTables() ([]any, error) {
 	return listSnowflakeExternalTables(r.MqlRuntime,
-		sdk.NewShowExternalTableInRequest().WithAccount(true))
+		sdk.In{Account: sdk.Bool(true)})
 }
 
 func (r *mqlSnowflakeDatabase) externalTables() ([]any, error) {
 	return listSnowflakeExternalTables(r.MqlRuntime,
-		sdk.NewShowExternalTableInRequest().WithDatabase(sdk.NewAccountObjectIdentifier(r.Name.Data)))
+		sdk.In{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)})
 }
 
 // listSnowflakeExternalTables fetches external tables within the given scope
 // (account-wide or a single database) and maps them to resources.
-func listSnowflakeExternalTables(runtime *plugin.Runtime, in *sdk.ShowExternalTableInRequest) ([]any, error) {
+func listSnowflakeExternalTables(runtime *plugin.Runtime, in sdk.In) ([]any, error) {
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
 	tables, err := conn.Client().ExternalTables.Show(context.Background(),
-		sdk.NewShowExternalTableRequest().WithIn(*in))
+		sdk.NewShowExternalTableRequest().WithIn(in))
 	if err != nil {
 		return nil, err
 	}

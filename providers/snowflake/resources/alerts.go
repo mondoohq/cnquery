@@ -29,7 +29,7 @@ func (r *mqlSnowflakeDatabase) alerts() ([]any, error) {
 // single database) and maps them to resources.
 func listSnowflakeAlerts(runtime *plugin.Runtime, in *sdk.In) ([]any, error) {
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
-	alerts, err := conn.Client().Alerts.Show(context.Background(), &sdk.ShowAlertOptions{In: in})
+	alerts, err := conn.Client().Alerts.Show(context.Background(), &sdk.ShowAlertRequest{In: in})
 	if err != nil {
 		return nil, err
 	}

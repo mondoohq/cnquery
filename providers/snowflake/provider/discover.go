@@ -36,7 +36,7 @@ func (s *Service) discover(conn *connection.SnowflakeConnection) (*inventory.Inv
 		return nil, err
 	}
 
-	databases, err := conn.Client().Databases.Show(context.Background(), &sdk.ShowDatabasesOptions{})
+	databases, err := conn.Client().Databases.Show(context.Background(), &sdk.ShowDatabaseRequest{})
 	if err != nil {
 		return nil, err
 	}

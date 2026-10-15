@@ -47,7 +47,7 @@ func (r *mqlSnowflakeAccount) users() ([]any, error) {
 	client := conn.Client()
 	ctx := context.Background()
 
-	users, err := client.Users.Show(ctx, &sdk.ShowUserOptions{})
+	users, err := client.Users.Show(ctx, &sdk.ShowUserRequest{})
 	if err != nil {
 		return nil, err
 	}

@@ -198,7 +198,7 @@ func (r *mqlSnowflakeAccount) roleIndex() (map[string]sdk.Role, error) {
 func (r *mqlSnowflakeAccount) userIndex() (map[string]sdk.User, error) {
 	r.userIndexOnce.Do(func() {
 		conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-		users, err := conn.Client().Users.Show(context.Background(), &sdk.ShowUserOptions{})
+		users, err := conn.Client().Users.Show(context.Background(), &sdk.ShowUserRequest{})
 		if err != nil {
 			r.cachedUserIndexErr = err
 			return

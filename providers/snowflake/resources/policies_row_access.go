@@ -100,7 +100,7 @@ func (r *mqlSnowflakeRowAccessPolicy) gatherDescribe() error {
 
 	sig := make([]any, 0, len(details.Signature))
 	for _, s := range details.Signature {
-		sig = append(sig, s.Name+":"+string(s.Type))
+		sig = append(sig, s.Name+":"+legacyDataTypeName(s.Type))
 	}
 	r.descSignature = sig
 	r.descReturnType = details.ReturnType

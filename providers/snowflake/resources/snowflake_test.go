@@ -8,6 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/types"
 )
 
@@ -156,4 +159,38 @@ func TestParseSnowflakeTime(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLegacyDataTypeName(t *testing.T) {
+	cases := []struct {
+		raw  string
+		want string
+	}{
+		{"VARCHAR", "VARCHAR"},
+		{"VARCHAR(16777216)", "VARCHAR"},
+		{"STRING", "VARCHAR"},
+		{"NUMBER(38,0)", "NUMBER"},
+		{"BOOLEAN", "BOOLEAN"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.raw, func(t *testing.T) {
+			dt, err := datatypes.ParseDataType(tc.raw)
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, legacyDataTypeName(dt))
+		})
+	}
+
+	assert.Equal(t, "", legacyDataTypeName(nil))
+}
+
+func TestSnowflakeTimePtr(t *testing.T) {
+	assert.Equal(t, types.Nil, snowflakeTimePtr(nil).Type)
+
+	var zero time.Time
+	assert.Equal(t, types.Nil, snowflakeTimePtr(&zero).Type)
+
+	ts := time.Date(2026, 10, 15, 8, 0, 0, 0, time.UTC)
+	got := snowflakeTimePtr(&ts)
+	assert.Equal(t, types.Time, got.Type)
+	assert.Equal(t, &ts, got.Value)
 }

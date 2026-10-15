@@ -20,7 +20,7 @@ type mqlSnowflakeFailoverGroupInternal struct {
 
 func (r *mqlSnowflakeAccount) failoverGroups() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-	groups, err := conn.Client().FailoverGroups.Show(context.Background(), &sdk.ShowFailoverGroupOptions{})
+	groups, err := conn.Client().FailoverGroups.Show(context.Background(), &sdk.ShowFailoverGroupRequest{})
 	if err != nil {
 		return nil, err
 	}

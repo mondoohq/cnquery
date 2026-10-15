@@ -40,7 +40,7 @@ func (r *mqlSnowflakeDatabase) roles() ([]any, error) {
 
 	roles, err := conn.Client().DatabaseRoles.Show(
 		context.Background(),
-		sdk.NewShowDatabaseRoleRequest(dbID),
+		sdk.NewShowDatabaseRoleRequest().WithDatabase(dbID),
 	)
 	if err != nil {
 		return nil, err

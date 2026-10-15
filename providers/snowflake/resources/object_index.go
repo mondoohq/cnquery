@@ -140,7 +140,7 @@ func buildWarehouseIndex(warehouses []sdk.Warehouse) map[string]sdk.Warehouse {
 func (r *mqlSnowflakeAccount) databaseIndex() (map[string]sdk.Database, error) {
 	return r.cachedDatabaseIndex.get(func() (map[string]sdk.Database, error) {
 		conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-		databases, err := conn.Client().Databases.Show(context.Background(), &sdk.ShowDatabasesOptions{})
+		databases, err := conn.Client().Databases.Show(context.Background(), &sdk.ShowDatabaseRequest{})
 		if err != nil {
 			return nil, err
 		}
@@ -153,8 +153,8 @@ func (r *mqlSnowflakeAccount) databaseIndex() (map[string]sdk.Database, error) {
 func (r *mqlSnowflakeAccount) schemaIndex() (map[string]sdk.Schema, error) {
 	return r.cachedSchemaIndex.get(func() (map[string]sdk.Schema, error) {
 		conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-		schemas, err := conn.Client().Schemas.Show(context.Background(), &sdk.ShowSchemaOptions{
-			In: &sdk.SchemaIn{Account: sdk.Bool(true)},
+		schemas, err := conn.Client().Schemas.Show(context.Background(), &sdk.ShowSchemaRequest{
+			In: &sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}},
 		})
 		if err != nil {
 			return nil, err
@@ -168,7 +168,7 @@ func (r *mqlSnowflakeAccount) schemaIndex() (map[string]sdk.Schema, error) {
 func (r *mqlSnowflakeAccount) warehouseIndex() (map[string]sdk.Warehouse, error) {
 	return r.cachedWarehouseIndex.get(func() (map[string]sdk.Warehouse, error) {
 		conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-		warehouses, err := conn.Client().Warehouses.Show(context.Background(), &sdk.ShowWarehouseOptions{})
+		warehouses, err := conn.Client().Warehouses.Show(context.Background(), &sdk.ShowWarehouseRequest{})
 		if err != nil {
 			return nil, err
 		}

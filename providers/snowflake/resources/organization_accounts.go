@@ -27,7 +27,7 @@ func (r *mqlSnowflakeAccount) organizationAccounts() ([]any, error) {
 	client := conn.Client()
 	ctx := context.Background()
 
-	accounts, err := client.Accounts.Show(ctx, &sdk.ShowAccountOptions{})
+	accounts, err := client.Accounts.Show(ctx, &sdk.ShowAccountRequest{})
 	if err != nil {
 		if !isAccessDenied(err) {
 			return nil, err

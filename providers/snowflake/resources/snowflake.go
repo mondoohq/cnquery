@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers/snowflake/connection"
 )
@@ -58,6 +59,25 @@ func snowflakeTime(value time.Time) *llx.RawData {
 		return llx.NilData
 	}
 	return llx.TimeData(value)
+}
+
+// legacyDataTypeName renders a parsed Snowflake data type as its base type name
+// without arguments (VARCHAR rather than VARCHAR(16777216)), the form these
+// fields have always reported. A type the SDK could not parse is empty.
+func legacyDataTypeName(dt datatypes.DataType) string {
+	if dt == nil {
+		return ""
+	}
+	return dt.ToLegacyDataTypeSql()
+}
+
+// snowflakeTimePtr is snowflakeTime for an optional timestamp, which the SDK
+// leaves nil when Snowflake reports no value.
+func snowflakeTimePtr(value *time.Time) *llx.RawData {
+	if value == nil {
+		return llx.NilData
+	}
+	return snowflakeTime(*value)
 }
 
 // splitCommaList parses a comma-separated value from Snowflake DESCRIBE output

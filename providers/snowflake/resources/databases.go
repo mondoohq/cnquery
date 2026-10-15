@@ -42,7 +42,7 @@ func initSnowflakeDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData
 	client := conn.Client()
 	ctx := context.Background()
 
-	databases, err := client.Databases.Show(ctx, &sdk.ShowDatabasesOptions{
+	databases, err := client.Databases.Show(ctx, &sdk.ShowDatabaseRequest{
 		Like: &sdk.Like{Pattern: sdk.String(name)},
 	})
 	if err != nil {
@@ -89,7 +89,7 @@ func (r *mqlSnowflakeAccount) databases() ([]any, error) {
 	client := conn.Client()
 	ctx := context.Background()
 
-	databases, err := client.Databases.Show(ctx, &sdk.ShowDatabasesOptions{})
+	databases, err := client.Databases.Show(ctx, &sdk.ShowDatabaseRequest{})
 	if err != nil {
 		return nil, err
 	}

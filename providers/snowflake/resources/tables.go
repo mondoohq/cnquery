@@ -18,16 +18,16 @@ type mqlSnowflakeTableInternal struct {
 }
 
 func (r *mqlSnowflakeAccount) tables() ([]any, error) {
-	return listSnowflakeTables(r.MqlRuntime, &sdk.In{Account: sdk.Bool(true)})
+	return listSnowflakeTables(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}})
 }
 
 func (r *mqlSnowflakeDatabase) tables() ([]any, error) {
-	return listSnowflakeTables(r.MqlRuntime, &sdk.In{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)})
+	return listSnowflakeTables(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)}})
 }
 
 // listSnowflakeTables fetches tables within the given scope (account-wide or a
 // single database) and maps them to resources.
-func listSnowflakeTables(runtime *plugin.Runtime, in *sdk.In) ([]any, error) {
+func listSnowflakeTables(runtime *plugin.Runtime, in sdk.ExtendedIn) ([]any, error) {
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
 	tables, err := conn.Client().Tables.Show(context.Background(),
 		sdk.NewShowTableRequest().WithIn(in))
@@ -120,8 +120,8 @@ func initSnowflakeTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
 	tables, err := conn.Client().Tables.Show(context.Background(), sdk.NewShowTableRequest().
-		WithLikePattern(name).
-		WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)}))
+		WithLike(sdk.Like{Pattern: sdk.String(name)}).
+		WithIn(sdk.ExtendedIn{In: sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)}}))
 	if err != nil {
 		return nil, nil, err
 	}

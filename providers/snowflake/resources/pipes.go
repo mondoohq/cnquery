@@ -30,7 +30,7 @@ func (r *mqlSnowflakeDatabase) pipes() ([]any, error) {
 // single database) and maps them to resources.
 func listSnowflakePipes(runtime *plugin.Runtime, in *sdk.In) ([]any, error) {
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
-	pipes, err := conn.Client().Pipes.Show(context.Background(), &sdk.ShowPipeOptions{In: in})
+	pipes, err := conn.Client().Pipes.Show(context.Background(), &sdk.ShowPipeRequest{In: in})
 	if err != nil {
 		return nil, err
 	}

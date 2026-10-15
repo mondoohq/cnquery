@@ -46,9 +46,9 @@ func initSnowflakeSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	client := conn.Client()
 	ctx := context.Background()
 
-	schemas, err := client.Schemas.Show(ctx, &sdk.ShowSchemaOptions{
+	schemas, err := client.Schemas.Show(ctx, &sdk.ShowSchemaRequest{
 		Like: &sdk.Like{Pattern: sdk.String(name)},
-		In:   &sdk.SchemaIn{Database: sdk.Bool(true), Name: sdk.NewAccountObjectIdentifier(databaseName)},
+		In:   &sdk.ExtendedIn{In: sdk.In{Database: sdk.NewAccountObjectIdentifier(databaseName)}},
 	})
 	if err != nil {
 		return nil, nil, err
@@ -108,21 +108,20 @@ func (r *mqlSnowflakeSchema) database() (*mqlSnowflakeDatabase, error) {
 }
 
 func (r *mqlSnowflakeAccount) schemas() ([]any, error) {
-	return listSnowflakeSchemas(r.MqlRuntime, &sdk.SchemaIn{Account: sdk.Bool(true)})
+	return listSnowflakeSchemas(r.MqlRuntime, &sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}})
 }
 
 func (r *mqlSnowflakeDatabase) schemas() ([]any, error) {
-	return listSnowflakeSchemas(r.MqlRuntime, &sdk.SchemaIn{
-		Database: sdk.Bool(true),
-		Name:     sdk.NewAccountObjectIdentifier(r.Name.Data),
-	})
+	return listSnowflakeSchemas(r.MqlRuntime, &sdk.ExtendedIn{In: sdk.In{
+		Database: sdk.NewAccountObjectIdentifier(r.Name.Data),
+	}})
 }
 
 // listSnowflakeSchemas fetches schemas within the given scope (account-wide or a
 // single database) and maps them to resources.
-func listSnowflakeSchemas(runtime *plugin.Runtime, in *sdk.SchemaIn) ([]any, error) {
+func listSnowflakeSchemas(runtime *plugin.Runtime, in *sdk.ExtendedIn) ([]any, error) {
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
-	schemas, err := conn.Client().Schemas.Show(context.Background(), &sdk.ShowSchemaOptions{In: in})
+	schemas, err := conn.Client().Schemas.Show(context.Background(), &sdk.ShowSchemaRequest{In: in})
 	if err != nil {
 		return nil, err
 	}
