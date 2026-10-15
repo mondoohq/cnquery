@@ -324,3 +324,24 @@ func TestSudoPluginsOnAConnectionWithoutCommands(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, plugins)
 }
+
+func TestSudoPythonSupportOnAConnectionWithoutCommands(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{Platform: &inventory.Platform{Name: "fedora", Family: []string{"redhat", "linux", "unix"}}})
+	require.NoError(t, err)
+	newSudo := func() *mqlSudo {
+		return &mqlSudo{MqlRuntime: &plugin.Runtime{Connection: &noCommandConnection{Connection: conn}}}
+	}
+
+	withStructuredErrors(t, true)
+	_, err = newSudo().pythonSupport()
+	require.Error(t, err)
+	assert.Equal(t, llx.ErrorKind_ERROR_KIND_NOT_APPLICABLE, llx.KindOf(err))
+
+	// without structured errors it is null: nothing said whether the build
+	// has Python plugins
+	withStructuredErrors(t, false)
+	s := newSudo()
+	_, err = s.pythonSupport()
+	require.NoError(t, err)
+	assert.True(t, s.PythonSupport.IsNull())
+}
