@@ -2681,21 +2681,23 @@ func (c *compiler) postCompile() {
 		eps := block.Entrypoints
 
 		for _, ref := range eps {
-			if block == c.block {
-				if _, ok := varRefs[ref]; ok {
-					continue
-				}
-			}
-
 			chunk := code.Chunk(ref)
 
 			if chunk.Call != llx.Chunk_FUNCTION {
 				continue
 			}
 
+			// An assessment in a variable (`x = users.all(...)`) keeps its
+			// expansion: it adds the failing items' default fields as a
+			// datapoint without replacing the variable's ref.
+			if block == c.block {
+				if _, ok := varRefs[ref]; ok && !isAssessment(chunk.Id) {
+					continue
+				}
+			}
+
 			chunk, typ, ref := c.expandListResource(chunk, ref)
-			switch chunk.Id {
-			case "$one", "$all", "$none", "$any":
+			if isAssessment(chunk.Id) {
 				// default fields
 				ref = chunk.Function.Binding
 				chunk := code.Chunk(ref)
@@ -2711,11 +2713,20 @@ func (c *compiler) postCompile() {
 					block.Datapoints = append(block.Datapoints, autoExpandRef)
 					c.addValueFieldChunks(ref, autoExpandRef)
 				}
-			default:
+			} else {
 				c.expandResourceFields(chunk, typ, ref)
 			}
 		}
 	}
+}
+
+// isAssessment is true for the chunk IDs of .one/.all/.none/.any
+func isAssessment(id string) bool {
+	switch id {
+	case "$one", "$all", "$none", "$any":
+		return true
+	}
+	return false
 }
 
 // addValueFieldChunks takes the value fields of the assessment and adds them to the

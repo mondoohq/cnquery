@@ -581,6 +581,18 @@ func TestCompiler_ResourceAssignment(t *testing.T) {
 		})
 	})
 
+	t.Run("an assessment keeps the failing items' default fields", func(t *testing.T) {
+		compileT(t, "x = users.all(name != \"\")\nx", func(res *llx.CodeBundle) {
+			assert.Len(t, res.AutoExpand, 1)
+			block := res.CodeV2.Blocks[0]
+			assert.Equal(t, []uint64{(1 << 32) | 6}, block.Entrypoints)
+			require.Len(t, block.Datapoints, 1)
+			dp := res.CodeV2.Chunk(block.Datapoints[0])
+			assert.Equal(t, "{}", dp.Id)
+			assert.Equal(t, "list", res.CodeV2.Chunk(dp.Function.Binding).Id)
+		})
+	})
+
 	t.Run("a variable that is the result", func(t *testing.T) {
 		compileT(t, "x = mondoo\nx", func(res *llx.CodeBundle) {
 			assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Blocks[0].Entrypoints)
