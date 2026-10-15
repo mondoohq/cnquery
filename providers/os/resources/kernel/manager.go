@@ -5,6 +5,7 @@ package kernel
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"regexp"
@@ -139,8 +140,71 @@ func (s *LinuxKernelManager) ParametersWithDenied() (map[string]string, []string
 		}
 	}
 
+	// Minimal images have no sysctl (procps is not installed). Reading
+	// /proc/sys file by file costs a round trip per parameter, ~1900 of them,
+	// which over the docker-container transport took a minute and a half per
+	// read of kernel.parameters. One shell command reads them all.
+	if s.conn.Capabilities().Has(shared.Capability_RunCommand) {
+		cmd, err := s.conn.RunCommand(procSysDumpCommand)
+		if err == nil && cmd.ExitStatus == 0 {
+			log.Debug().Msg("using one shell command to read /proc/sys")
+			if params, denied, err := parseProcSysDump(cmd.Stdout); err == nil && len(params)+len(denied) > 0 {
+				return params, denied, nil
+			}
+		}
+	}
+
 	log.Debug().Msg("using /proc/sys walking to read kernel parameters")
 	return walkProcSysDenied(s.conn.FileSystem())
+}
+
+// procSysDumpCommand prints every parameter under /proc/sys that the walk in
+// walkProcSysDenied reads, in one command: "V<path>\0<value>\0" for each one
+// it can read and "D<path>\0\0" for each one it is denied. Only files with the
+// owner's read bit set are parameters; the write-only knobs (vm/drop_caches)
+// are not, though root can open them. POSIX sh and find, so it runs on
+// BusyBox as well.
+const procSysDumpCommand = `sh -c 'cd /proc/sys 2>/dev/null || exit 3; ` +
+	`find . -type f -perm -0400 2>/dev/null | while IFS= read -r f; do ` +
+	`if [ -r "$f" ]; then v=$(cat "$f" 2>/dev/null) && printf "V%s\0%s\0" "$f" "$v"; ` +
+	`else printf "D%s\0\0" "$f"; fi; done'`
+
+// parseProcSysDump reads the output of procSysDumpCommand into parameter
+// values, keyed and trimmed as walkProcSysDenied keys and trims them, and the
+// names of the parameters that could not be read.
+func parseProcSysDump(r io.Reader) (map[string]string, []string, error) {
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return nil, nil, err
+	}
+	params := map[string]string{}
+	var denied []string
+	if len(data) == 0 {
+		return params, denied, nil
+	}
+	// every entry ends in a NUL, so a complete dump ends in one: anything
+	// else is not the dump (an error message) or was cut short
+	fields := strings.Split(string(data), "\x00")
+	if fields[len(fields)-1] != "" || len(fields)%2 != 1 {
+		return nil, nil, fmt.Errorf("incomplete /proc/sys dump")
+	}
+	fields = fields[:len(fields)-1]
+	for i := 0; i+1 < len(fields); i += 2 {
+		entry, value := fields[i], fields[i+1]
+		if len(entry) < 3 || !strings.HasPrefix(entry[1:], "./") {
+			return nil, nil, fmt.Errorf("unexpected /proc/sys entry %q", entry)
+		}
+		name := procSysName(sysctlPath + entry[3:])
+		switch entry[0] {
+		case 'V':
+			params[name] = strings.TrimSpace(value)
+		case 'D':
+			denied = append(denied, name)
+		default:
+			return nil, nil, fmt.Errorf("unexpected /proc/sys entry %q", entry)
+		}
+	}
+	return params, denied, nil
 }
 
 var sysctlDeniedRegex = regexp.MustCompile(`^sysctl: permission denied on key '(.+)'$`)
