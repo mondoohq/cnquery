@@ -193,3 +193,13 @@ func TestContainerArchitecture(t *testing.T) {
 	assert.Equal(t, "arm64", containerArchitecture("", "", "arm64"), "the daemon's is the fallback")
 	assert.Equal(t, "", containerArchitecture("", "", ""))
 }
+
+func TestShellMissing(t *testing.T) {
+	// docker exec into gcr.io/distroless/static-debian12
+	assert.True(t, shellMissing(127, "OCI runtime exec failed: exec failed: unable to start container process: exec: \"/bin/sh\": stat /bin/sh: no such file or directory\r\n"))
+	assert.True(t, shellMissing(126, "OCI runtime exec failed: exec failed: unable to start container process: exec: \"/bin/sh\": permission denied\r\n"))
+	// the shell ran, and a command in it was not found
+	assert.False(t, shellMissing(127, "/bin/sh: 1: nonexistent: not found\n"))
+	assert.False(t, shellMissing(0, ""))
+	assert.False(t, shellMissing(1, "exec failed"))
+}
