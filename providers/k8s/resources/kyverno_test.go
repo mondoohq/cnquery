@@ -164,6 +164,26 @@ func TestKyvernoManifestResources(t *testing.T) {
 	assert.Contains(t, expiredException.GetStatusReasons().Data, "expired: valid-until is in the past")
 }
 
+func TestKyvernoMatchConditionExpressionRequiresCompleteConjunction(t *testing.T) {
+	result := &kyvernoResultData{scopeKind: "Pod", scopeNamespace: "prod", scopeName: "web"}
+	tests := []struct {
+		expression string
+		matches    bool
+	}{
+		{expression: "object.metadata.namespace == 'prod' && object.metadata.name == 'web'", matches: true},
+		{expression: "object.metadata.namespace == 'prod' && object.metadata.namespace == 'staging'", matches: false},
+		{expression: "object.metadata.namespace == 'prod' && unknown.expression == true", matches: false},
+		{expression: "object.metadata.namespace == 'prod' || object.metadata.namespace == 'staging'", matches: false},
+		{expression: "object.metadata.namespace == 'prod-*'", matches: false},
+		{expression: "object.kind == 'pods'", matches: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.expression, func(t *testing.T) {
+			assert.Equal(t, tt.matches, kyvernoMatchConditionExpressionMatches(tt.expression, result))
+		})
+	}
+}
+
 func TestKyvernoManifestResourcesWithConfiguredAnnotations(t *testing.T) {
 	kyverno := kyvernoTestResourceWithOptions(t, map[string]string{
 		shared.OPTION_KYVERNO_DEFAULT_MAPPINGS:                    "false",

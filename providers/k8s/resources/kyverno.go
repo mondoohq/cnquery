@@ -1245,7 +1245,8 @@ func (k *mqlK8sKyverno) installed() (bool, error) {
 		return false, err
 	}
 	for _, resource := range resources.Resources() {
-		if strings.HasSuffix(resource.GroupVersion.Group, ".kyverno.io") || resource.GroupVersion.Group == "wgpolicyk8s.io" {
+		group := resource.GroupVersion.Group
+		if group == "kyverno.io" || strings.HasSuffix(group, ".kyverno.io") || group == "wgpolicyk8s.io" || group == "openreports.io" || strings.HasSuffix(group, ".openreports.io") {
 			return true, nil
 		}
 	}
@@ -3707,15 +3708,45 @@ func kyvernoPolicyExceptionMatchConditionsMatchResult(match map[string]any, resu
 	conditions := sliceOfMapsFromAny(valueFromPath(match, "matchConditions"))
 	for _, condition := range conditions {
 		expression := stringFromMap(condition, "expression")
-		kinds := celStringEqualities(map[string]any{"expression": expression}, kyvernoCELKindEquals...)
-		namespaces := celStringEqualities(map[string]any{"expression": expression}, kyvernoCELNamespaceEquals...)
-		names := celStringEqualities(map[string]any{"expression": expression}, kyvernoCELNameEquals...)
-		if len(kinds) == 0 && len(namespaces) == 0 && len(names) == 0 {
+		if !kyvernoMatchConditionExpressionMatches(expression, result) {
 			return false
 		}
-		if !scopeValuesMatch(kinds, result.scopeKind, normalizeK8sKind) ||
-			!scopeValuesMatch(namespaces, result.scopeNamespace, normalizeScopeString) ||
-			!scopeValuesMatch(names, result.scopeName, normalizeScopeString) {
+	}
+	return true
+}
+
+func kyvernoMatchConditionExpressionMatches(expression string, result *kyvernoResultData) bool {
+	// MatchConditions are CEL conjunctions. Only accept the complete, simple
+	// equality forms we can evaluate; partial regex extraction would turn an
+	// unknown conjunct or contradictory equalities into a false positive.
+	if strings.Contains(expression, "||") {
+		return false
+	}
+	for _, clause := range strings.Split(expression, "&&") {
+		clause = strings.TrimSpace(strings.Trim(clause, "()"))
+		matched := false
+		for _, item := range []struct {
+			patterns []*regexp.Regexp
+			value    string
+		}{
+			{kyvernoCELKindEquals, result.scopeKind},
+			{kyvernoCELNamespaceEquals, result.scopeNamespace},
+			{kyvernoCELNameEquals, result.scopeName},
+		} {
+			for _, pattern := range item.patterns {
+				if found := pattern.FindStringSubmatch(clause); len(found) == 2 && strings.TrimSpace(pattern.FindString(clause)) == clause {
+					matched = found[1] == item.value
+					if !matched {
+						return false
+					}
+					break
+				}
+			}
+			if matched {
+				break
+			}
+		}
+		if !matched {
 			return false
 		}
 	}

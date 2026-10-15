@@ -188,7 +188,10 @@ func (t *ManifestParser) resources(kind string, name string, namespace string) (
 		return nil, err
 	}
 
-	res, err := resources.FilterResource(resType, t.Objects, name, namespace)
+	// Use the effective namespace for filtering. The caller may omit it while
+	// the connection is namespace-scoped; passing the raw argument would make
+	// every namespaced kind appear cluster-wide in that case.
+	res, err := resources.FilterResource(resType, t.Objects, name, ns)
 
 	return &ResourceResult{
 		Name:         name,
