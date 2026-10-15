@@ -55,7 +55,7 @@ func classifyFsError(err error) error {
 func globDir(fs afero.Fs, dir string, pattern string, dirsOnly bool) ([]string, error) {
 	entries, err := afero.ReadDir(fs, dir)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
+		if isAbsentPath(err) {
 			return nil, nil
 		}
 		return nil, classifyFsError(err)

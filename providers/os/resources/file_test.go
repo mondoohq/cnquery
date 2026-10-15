@@ -240,3 +240,14 @@ func TestIsAbsentPath(t *testing.T) {
 	assert.False(t, isAbsentPath(os.ErrPermission))
 	assert.False(t, isAbsentPath(nil))
 }
+
+// A directory below a file (a user whose home is /dev/null) has no matches,
+// like one that does not exist.
+func TestGlobDirBelowAFile(t *testing.T) {
+	file := filepath.Join(t.TempDir(), "null")
+	require.NoError(t, os.WriteFile(file, nil, 0o644))
+
+	matches, err := globDir(afero.NewOsFs(), filepath.Join(file, ".config"), "*", false)
+	require.NoError(t, err)
+	assert.Empty(t, matches)
+}
