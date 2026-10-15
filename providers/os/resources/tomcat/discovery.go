@@ -210,7 +210,29 @@ func PathsFromEnvFile(content string) (home string, base string) {
 // PathsFromSystemd scans the systemd unit directories for a unit that starts
 // Tomcat and reads CATALINA_HOME / CATALINA_BASE out of it.
 func PathsFromSystemd(fs afero.Fs) (string, string) {
+	for _, unit := range catalinaUnits(fs) {
+		if unit.Home != "" || unit.Base != "" {
+			return unit.Home, unit.Base
+		}
+	}
+	return "", ""
+}
+
+// CatalinaUnit is a systemd unit that starts Tomcat, with the paths it
+// declares directly or through its EnvironmentFile= targets.
+type CatalinaUnit struct {
+	Path     string
+	Content  string
+	Home     string
+	Base     string
+	EnvFiles []string
+}
+
+// catalinaUnits returns every systemd unit that starts Tomcat, in the order
+// the unit directories are scanned.
+func catalinaUnits(fs afero.Fs) []CatalinaUnit {
 	afs := &afero.Afero{Fs: fs}
+	res := []CatalinaUnit{}
 
 	for _, dir := range SystemdUnitDirs {
 		entries, err := afs.ReadDir(dir)
@@ -229,7 +251,8 @@ func PathsFromSystemd(fs afero.Fs) (string, string) {
 				continue
 			}
 
-			content, err := afs.ReadFile(path.Join(dir, name))
+			unitPath := path.Join(dir, name)
+			content, err := afs.ReadFile(unitPath)
 			if err != nil || !IsCatalinaUnit(string(content)) {
 				continue
 			}
@@ -252,13 +275,17 @@ func PathsFromSystemd(fs afero.Fs) (string, string) {
 				}
 			}
 
-			if home != "" || base != "" {
-				return home, base
-			}
+			res = append(res, CatalinaUnit{
+				Path:     unitPath,
+				Content:  string(content),
+				Home:     home,
+				Base:     base,
+				EnvFiles: envFiles,
+			})
 		}
 	}
 
-	return "", ""
+	return res
 }
 
 // PathsFromEnvConfigs reads the distribution-specific environment files that

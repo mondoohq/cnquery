@@ -6,6 +6,7 @@ package resources
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -281,4 +282,170 @@ func TestTomcatExplicitMissingConfigPaths(t *testing.T) {
 		require.NoError(t, users.Error)
 		assert.Empty(t, users.Data)
 	})
+}
+
+// tomcatPsCommand is the process listing the mock connection answers.
+const tomcatPsCommand = "ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command"
+
+// tomcatPs answers the process listing with the given processes, one
+// "pid command" per entry.
+func tomcatPs(procs ...string) map[string]*mock.Command {
+	stdout := "  PID %CPU %MEM    VSZ   RSS TT       STAT STIME     TIME   UID COMMAND\n"
+	for _, p := range procs {
+		pid, cmd, _ := strings.Cut(p, " ")
+		stdout += "  " + pid + " 0.0  0.1  12124  3232  ?        Ssl  07:48   00:00:00   997 " + cmd + "\n"
+	}
+	return map[string]*mock.Command{
+		tomcatPsCommand: {Stdout: stdout},
+		"find /proc/[0-9]*/fd -maxdepth 1 -lname 'socket:*' -printf '%f %l %h\\n' 2>/dev/null": {},
+	}
+}
+
+// ubuntuTomcat9 is the layout of Ubuntu 22.04's tomcat9 package: the unit
+// declares the paths, CATALINA_TMPDIR and a default JAVA_OPTS, and its start
+// script sources /etc/default/tomcat9, whose JAVA_OPTS replaces the unit's.
+func ubuntuTomcat9() map[string]string {
+	return map[string]string{
+		"/usr/share/tomcat9/lib/catalina.jar":  "jar",
+		"/usr/share/tomcat9/bin/bootstrap.jar": "jar",
+		"/var/lib/tomcat9/conf/server.xml":     "<Server port=\"-1\"/>",
+		"/lib/systemd/system/tomcat9.service": `[Service]
+Environment="CATALINA_HOME=/usr/share/tomcat9"
+Environment="CATALINA_BASE=/var/lib/tomcat9"
+Environment="CATALINA_TMPDIR=/tmp"
+Environment="JAVA_OPTS=-Djava.awt.headless=true"
+ExecStart=/bin/sh /usr/libexec/tomcat9/tomcat-start.sh
+`,
+		"/etc/default/tomcat9": `# You may pass JVM startup parameters to Java here.
+JAVA_OPTS="-Djava.awt.headless=true -Dorg.apache.catalina.connector.RECYCLE_FACADES=true"
+#JAVA_OPTS="${JAVA_OPTS} -Xdebug"
+`,
+	}
+}
+
+func tomcatStartupOf(t *testing.T, rt *plugin.Runtime, args map[string]*llx.RawData) *mqlTomcat {
+	t.Helper()
+	if args == nil {
+		args = map[string]*llx.RawData{}
+	}
+	raw, err := CreateResource(rt, "tomcat", args)
+	require.NoError(t, err)
+	return raw.(*mqlTomcat)
+}
+
+func assertTomcatStartup(t *testing.T, tc *mqlTomcat, opts []any, props map[string]any, tmpDir string) {
+	t.Helper()
+	jvmOptions := tc.GetJvmOptions()
+	require.NoError(t, jvmOptions.Error)
+	assert.Equal(t, opts, jvmOptions.Data)
+
+	systemProperties := tc.GetSystemProperties()
+	require.NoError(t, systemProperties.Error)
+	assert.Equal(t, props, systemProperties.Data)
+
+	dir := tc.GetTmpDir()
+	require.NoError(t, dir.Error)
+	assert.Equal(t, tmpDir, dir.Data)
+}
+
+func TestTomcatStartupFromEnvironmentFile(t *testing.T) {
+	rt := newLaunchRuntime(t, ubuntuTomcat9(), tomcatPs("1 /bin/bash"), nil)
+	tc := tomcatStartupOf(t, rt, nil)
+	assert.Equal(t, "/var/lib/tomcat9", tc.GetBase().Data)
+
+	assertTomcatStartup(t, tc,
+		[]any{"-Djava.awt.headless=true", "-Dorg.apache.catalina.connector.RECYCLE_FACADES=true"},
+		map[string]any{"java.awt.headless": "true", "org.apache.catalina.connector.RECYCLE_FACADES": "true"},
+		"/tmp")
+}
+
+func TestTomcatStartupFromSetenv(t *testing.T) {
+	files := map[string]string{
+		"/usr/local/tomcat/lib/catalina.jar": "jar",
+		"/usr/local/tomcat/conf/server.xml":  "<Server/>",
+		"/usr/local/tomcat/bin/setenv.sh": `#!/bin/sh
+CATALINA_OPTS="$CATALINA_OPTS -Dorg.apache.catalina.connector.RECYCLE_FACADES=true"
+CATALINA_OPTS="$CATALINA_OPTS -Djava.security.manager -Djava.security.policy==$CATALINA_BASE/conf/catalina.policy"
+export CATALINA_OPTS
+`,
+	}
+	// The process list cannot be read: the configuration still answers.
+	rt := newLaunchRuntime(t, files, map[string]*mock.Command{tomcatPsCommand: {ExitStatus: 1}}, nil)
+	tc := tomcatStartupOf(t, rt, nil)
+
+	assertTomcatStartup(t, tc,
+		[]any{
+			"-Dorg.apache.catalina.connector.RECYCLE_FACADES=true",
+			"-Djava.security.manager",
+			"-Djava.security.policy==/usr/local/tomcat/conf/catalina.policy",
+		},
+		map[string]any{
+			"org.apache.catalina.connector.RECYCLE_FACADES": "true",
+			"java.security.manager":                         "",
+			"java.security.policy":                          "=/usr/local/tomcat/conf/catalina.policy",
+		},
+		// catalina.sh's default
+		"/usr/local/tomcat/temp")
+}
+
+// The running JVM's command line wins over the configuration on disk, which
+// may have changed since Tomcat started.
+func TestTomcatStartupFromProcess(t *testing.T) {
+	files := ubuntuTomcat9()
+	argv := []string{
+		"/usr/lib/jvm/java-11-openjdk-amd64/bin/java",
+		"-Djava.util.logging.config.file=/var/lib/tomcat9/conf/logging.properties",
+		"-Djava.awt.headless=true",
+		"-Dmsg=two words",
+		"-classpath", "/usr/share/tomcat9/bin/bootstrap.jar:/usr/share/tomcat9/bin/tomcat-juli.jar",
+		"-Dcatalina.base=/var/lib/tomcat9",
+		"-Dcatalina.home=/usr/share/tomcat9",
+		"-Djava.io.tmpdir=/tmp",
+		"org.apache.catalina.startup.Bootstrap", "start",
+	}
+	files["/proc/4242/cmdline"] = strings.Join(argv, "\x00") + "\x00"
+	// A second instance, started for another CATALINA_BASE, is listed first.
+	// Its options are not this installation's.
+	other := []string{"java", "-Dcatalina.base=/srv/tomcat/other", "-Dother=1", "org.apache.catalina.startup.Bootstrap", "start"}
+	files["/proc/17/cmdline"] = strings.Join(other, "\x00") + "\x00"
+
+	rt := newLaunchRuntime(t, files, tomcatPs(
+		"1 /bin/sh /usr/libexec/tomcat9/tomcat-start.sh",
+		"17 "+strings.Join(other, " "),
+		"4242 "+strings.Join(argv, " "),
+	), nil)
+	tc := tomcatStartupOf(t, rt, map[string]*llx.RawData{
+		"home": llx.StringData("/usr/share/tomcat9"),
+		"base": llx.StringData("/var/lib/tomcat9"),
+	})
+
+	opts := []any{}
+	for _, a := range argv[1:9] {
+		opts = append(opts, a)
+	}
+	assertTomcatStartup(t, tc, opts,
+		map[string]any{
+			"java.util.logging.config.file": "/var/lib/tomcat9/conf/logging.properties",
+			"java.awt.headless":             "true",
+			// /proc/<pid>/cmdline keeps an argument with a space whole
+			"msg":            "two words",
+			"catalina.base":  "/var/lib/tomcat9",
+			"catalina.home":  "/usr/share/tomcat9",
+			"java.io.tmpdir": "/tmp",
+		},
+		"/tmp")
+}
+
+func TestTomcatStartupNotInstalled(t *testing.T) {
+	rt := newLaunchRuntime(t, map[string]string{"/etc/passwd": "root:x:0:0::/root:/bin/sh\n"}, tomcatPs(), nil)
+	tc := tomcatStartupOf(t, rt, nil)
+
+	jvmOptions := tc.GetJvmOptions()
+	require.NoError(t, jvmOptions.Error)
+	assert.Empty(t, jvmOptions.Data)
+	systemProperties := tc.GetSystemProperties()
+	require.NoError(t, systemProperties.Error)
+	assert.Empty(t, systemProperties.Data)
+	dir := tc.GetTmpDir()
+	requireResolvedNull(t, dir.State, dir.Error, nil, "tomcat.tmpDir")
 }

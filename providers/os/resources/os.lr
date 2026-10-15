@@ -2897,6 +2897,40 @@ tomcat @defaults("home version") {
   users() []tomcat.user
   // Applications deployed under each Host's appBase (exploded directories)
   webapps() []tomcat.webapp
+  // JVM options Tomcat runs with
+  //
+  // While the Catalina process of this installation runs, these are the
+  // arguments its command line passes to the JVM before the Bootstrap main
+  // class, including the ones the startup script adds itself (classpath,
+  // catalina.base, catalina.home, java.io.tmpdir, logging). Otherwise they are
+  // JAVA_OPTS followed by CATALINA_OPTS as the configuration sets them, applied
+  // in the order Tomcat starts: Environment= of the systemd unit that starts
+  // this installation, the unit's EnvironmentFile= targets, the distribution's
+  // environment file (/etc/default/tomcat*, /etc/sysconfig/tomcat*,
+  // /etc/tomcat*/tomcat.conf, /etc/tomcat*/conf.d/*.conf), and last
+  // bin/setenv.sh of CATALINA_BASE, or of CATALINA_HOME when the instance has
+  // none. The shell files are read as plain assignments: quotes, `$NAME`,
+  // `${NAME}` and `${NAME:-word}` references and appends such as
+  // `CATALINA_OPTS="$CATALINA_OPTS -Dname=value"` are evaluated. Conditions,
+  // command substitutions and other commands are not, so an assignment inside
+  // an `if` block always applies, and the options the startup script adds
+  // itself are not part of this configured list. Empty when nothing sets any.
+  jvmOptions() []string
+  // JVM system properties set with -D in jvmOptions
+  //
+  // `-Dname=value` becomes name: value and a bare `-Dname` (such as
+  // `-Djava.security.manager`) becomes name: "". When a property is given more
+  // than once, the last value wins, as in the JVM. Entries of
+  // conf/catalina.properties also become system properties when Tomcat starts;
+  // those are in properties.
+  systemProperties() map[string]string
+  // Temporary directory of the JVM (CATALINA_TMPDIR)
+  //
+  // The java.io.tmpdir system property of the running Catalina process.
+  // Otherwise CATALINA_TMPDIR from the same configuration as jvmOptions, or
+  // Tomcat's default of CATALINA_BASE/temp when nothing sets it. Null when no
+  // installation is found.
+  tmpDir() string
 }
 
 // Tomcat <Server> element of server.xml

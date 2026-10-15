@@ -5257,6 +5257,7 @@ tomcat.host.deployXML 13.40.8
 tomcat.host.name 13.40.8
 tomcat.host.unpackWARs 13.40.8
 tomcat.host.valves 13.40.8
+tomcat.jvmOptions 14.25.1
 tomcat.listener 13.40.8
 tomcat.listener.className 13.40.8
 tomcat.listener.params 13.40.8
@@ -5281,6 +5282,8 @@ tomcat.service 13.40.8
 tomcat.service.connectors 13.40.8
 tomcat.service.engines 13.40.8
 tomcat.service.name 13.40.8
+tomcat.systemProperties 14.25.1
+tomcat.tmpDir 14.25.1
 tomcat.user 13.40.8
 tomcat.user.password 13.40.8
 tomcat.user.roles 13.40.8
