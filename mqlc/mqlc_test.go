@@ -612,6 +612,15 @@ func TestCompiler_ResourceAssignment(t *testing.T) {
 		})
 	})
 
+	t.Run("a variable in an if block", func(t *testing.T) {
+		compileT(t, "if (true) { x = file(\"/a\")\nx.exists }", func(res *llx.CodeBundle) {
+			assert.Empty(t, res.AutoExpand)
+			require.Len(t, res.CodeV2.Blocks, 2)
+			require.Len(t, res.CodeV2.Blocks[1].Entrypoints, 1)
+			assert.Equal(t, "exists", res.CodeV2.Chunk(res.CodeV2.Blocks[1].Entrypoints[0]).Id)
+		})
+	})
+
 	t.Run("an assignment to _", func(t *testing.T) {
 		compileT(t, "_ = mondoo\nmondoo.version", func(res *llx.CodeBundle) {
 			assert.Empty(t, res.AutoExpand)
