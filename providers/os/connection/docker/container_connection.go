@@ -282,7 +282,9 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 		// a stopped container.
 		if !conn.hasShell() {
 			log.Info().Str("container", shortID).Msg("the container cannot start a shell, reading its filesystem from an export")
-			_ = conn.Client.Close()
+			if err := conn.Client.Close(); err != nil {
+				log.Debug().Err(err).Msg("docker> could not close the client of a container without a shell")
+			}
 			return newContainerSnapshot(id, conf, asset, ci.ID, platformID, shortID, ci.Labels)
 		}
 		return conn, nil
