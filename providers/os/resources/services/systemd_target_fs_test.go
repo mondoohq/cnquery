@@ -4,12 +4,12 @@
 package services
 
 import (
-	"go.mondoo.com/mql/providers/os/mountedfs"
 	"testing"
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/providers/os/mountedfs"
 )
 
 func targetFs(t *testing.T) afero.Fs {
