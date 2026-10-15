@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -554,6 +555,84 @@ func TestCompiler_Assignment(t *testing.T) {
 	compileT(t, "a = 123\na", func(res *llx.CodeBundle) {
 		assertPrimitive(t, llx.RefPrimitiveV2((1<<32)|1), res.CodeV2.Blocks[0].Chunks[1])
 		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
+	})
+}
+
+// A variable that holds a resource, or a list of resources, is not a result of
+// its own: it is neither expanded into its default fields nor an entrypoint.
+func TestCompiler_ResourceAssignment(t *testing.T) {
+	t.Run("resource", func(t *testing.T) {
+		compileT(t, "x = mondoo\nx.version != empty", func(res *llx.CodeBundle) {
+			assert.Empty(t, res.AutoExpand)
+			assert.Len(t, res.CodeV2.Blocks, 1)
+			require.Len(t, res.CodeV2.Blocks[0].Entrypoints, 1)
+			ep := res.CodeV2.Chunk(res.CodeV2.Blocks[0].Entrypoints[0])
+			assert.True(t, strings.HasPrefix(ep.Id, "!="), ep.Id)
+		})
+	})
+
+	t.Run("list of resources", func(t *testing.T) {
+		compileT(t, "x = users.list\nx.length > 0", func(res *llx.CodeBundle) {
+			assert.Empty(t, res.AutoExpand)
+			assert.Len(t, res.CodeV2.Blocks, 1)
+			require.Len(t, res.CodeV2.Blocks[0].Entrypoints, 1)
+			ep := res.CodeV2.Chunk(res.CodeV2.Blocks[0].Entrypoints[0])
+			assert.True(t, strings.HasPrefix(ep.Id, ">"), ep.Id)
+		})
+	})
+
+	t.Run("an assessment keeps the failing items' default fields", func(t *testing.T) {
+		compileT(t, "x = users.all(name != \"\")\nx", func(res *llx.CodeBundle) {
+			assert.Len(t, res.AutoExpand, 1)
+			block := res.CodeV2.Blocks[0]
+			assert.Equal(t, []uint64{(1 << 32) | 6}, block.Entrypoints)
+			require.Len(t, block.Datapoints, 1)
+			dp := res.CodeV2.Chunk(block.Datapoints[0])
+			assert.Equal(t, "{}", dp.Id)
+			assert.Equal(t, "list", res.CodeV2.Chunk(dp.Function.Binding).Id)
+		})
+	})
+
+	t.Run("a reassigned variable", func(t *testing.T) {
+		compileT(t, "x = mondoo\nx = users.list\nx.length > 0", func(res *llx.CodeBundle) {
+			assert.Empty(t, res.AutoExpand)
+			assert.Len(t, res.CodeV2.Blocks, 1)
+			require.Len(t, res.CodeV2.Blocks[0].Entrypoints, 1)
+			ep := res.CodeV2.Chunk(res.CodeV2.Blocks[0].Entrypoints[0])
+			assert.True(t, strings.HasPrefix(ep.Id, ">"), ep.Id)
+		})
+	})
+
+	t.Run("a reassigned variable in a block", func(t *testing.T) {
+		compileT(t, "users.list { x = name\nx = uid\nx > 0 }", func(res *llx.CodeBundle) {
+			require.Len(t, res.CodeV2.Blocks, 2)
+			require.Len(t, res.CodeV2.Blocks[1].Entrypoints, 1)
+			ep := res.CodeV2.Chunk(res.CodeV2.Blocks[1].Entrypoints[0])
+			assert.True(t, strings.HasPrefix(ep.Id, ">"), ep.Id)
+		})
+	})
+
+	t.Run("a variable in an if block", func(t *testing.T) {
+		compileT(t, "if (true) { x = file(\"/a\")\nx.exists }", func(res *llx.CodeBundle) {
+			assert.Empty(t, res.AutoExpand)
+			require.Len(t, res.CodeV2.Blocks, 2)
+			require.Len(t, res.CodeV2.Blocks[1].Entrypoints, 1)
+			assert.Equal(t, "exists", res.CodeV2.Chunk(res.CodeV2.Blocks[1].Entrypoints[0]).Id)
+		})
+	})
+
+	t.Run("an assignment to _", func(t *testing.T) {
+		compileT(t, "_ = mondoo\nmondoo.version", func(res *llx.CodeBundle) {
+			assert.Empty(t, res.AutoExpand)
+			require.Len(t, res.CodeV2.Blocks[0].Entrypoints, 1)
+			assert.Equal(t, "version", res.CodeV2.Chunk(res.CodeV2.Blocks[0].Entrypoints[0]).Id)
+		})
+	})
+
+	t.Run("a variable that is the result", func(t *testing.T) {
+		compileT(t, "x = mondoo\nx", func(res *llx.CodeBundle) {
+			assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Blocks[0].Entrypoints)
+		})
 	})
 }
 

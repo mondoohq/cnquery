@@ -107,6 +107,37 @@ func TestOS_Vars(t *testing.T) {
 	})
 }
 
+// A variable that holds a resource is not a result of its own, so it is
+// neither reported nor scored with the resource's default fields.
+func TestOS_ResourceVars(t *testing.T) {
+	t.Run("an empty file", func(t *testing.T) {
+		res := x.TestQuery(t, "f = file('/empty')\nf.exists")
+		// the result of f.exists and the query's score
+		require.Len(t, res, 2)
+		assert.Equal(t, true, res[0].Data.Value)
+		assert.Equal(t, true, res[1].Data.Value)
+	})
+
+	t.Run("a list of resources", func(t *testing.T) {
+		res := x.TestQuery(t, "u = users.list\nu.length > 0")
+		// the datapoint u.length, the result of the comparison, and the score
+		require.Len(t, res, 3)
+		assert.Equal(t, true, res[1].Data.Value)
+		assert.Equal(t, true, res[2].Data.Value)
+	})
+
+	t.Run("an assessment reports the failing items", func(t *testing.T) {
+		res := x.TestQuery(t, "a = users.all(uid < 0)\na")
+		// the result of a, the failing users with their default fields, and the score
+		require.Len(t, res, 3)
+		assert.Equal(t, false, res[0].Data.Value)
+		failing, ok := res[1].Data.Value.([]any)
+		require.True(t, ok, "%T", res[1].Data.Value)
+		assert.NotEmpty(t, failing)
+		assert.Equal(t, false, res[2].Data.Value)
+	})
+}
+
 func TestMap(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
