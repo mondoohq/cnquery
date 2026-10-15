@@ -482,41 +482,29 @@ func parseRpmCheckUpdateResult(cmd *shared.Command) (map[string]PackageUpdate, e
 	return nil, fmt.Errorf("%w: check-update exited with status %d: %s", ErrUpdateCheckFailed, cmd.ExitStatus, msg)
 }
 
-func (rpm *RpmPkgManager) staticList() ([]Package, error) {
-	rpmTmpDir, err := os.MkdirTemp(os.TempDir(), "mondoo-rpmdb")
-	if err != nil {
-		return nil, errors.Wrap(err, "could not create local temp directory")
-	}
-	log.Debug().Str("path", rpmTmpDir).Msg("mql[packages]> cache rpm library locally")
-	defer os.RemoveAll(rpmTmpDir)
+// rpmDBPaths are where rpm keeps its database, in the order they are read.
+var rpmDBPaths = []string{
+	"/usr/lib/sysimage/rpm/Packages",     // used on opensuse container
+	"/usr/lib/sysimage/rpm/Packages.db",  // used on SLES bci-base container
+	"/usr/lib/sysimage/rpm/rpmdb.sqlite", // used on fedora 36+ and photon4
+	"/var/lib/rpm/rpmdb.sqlite",          // used on fedora 33-35 and mageia
+	"/var/lib/rpm/Packages",              // used on fedora 32
+	"/var/lib/rpm/Packages.db",           // used on openeuler
+	"/usr/share/rpm/rpmdb.sqlite",        // used on ostree images (fedora coreos, bootc, uBlue)
+}
 
+func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	fs := rpm.conn.FileSystem()
 	afs := &afero.Afero{Fs: fs}
 
-	// fetch rpm database file and store it in local tmp file
-	// iterate over file paths to check if one exists
-	files := []string{
-		"/usr/lib/sysimage/rpm/Packages",     // used on opensuse container
-		"/usr/lib/sysimage/rpm/Packages.db",  // used on SLES bci-base container
-		"/usr/lib/sysimage/rpm/rpmdb.sqlite", // used on fedora 36+ and photon4
-		"/var/lib/rpm/rpmdb.sqlite",          // used on fedora 33-35 and mageia
-		"/var/lib/rpm/Packages",              // used on fedora 32
-		"/var/lib/rpm/Packages.db",           // used on openeuler
-		"/usr/share/rpm/rpmdb.sqlite",        // used on ostree images (fedora coreos, bootc, uBlue)
-	}
-	var tmpRpmDBFile string
-	var detectedPath string
-	for i := range files {
-		ok, err := afs.Exists(files[i])
-		if err == nil && ok {
-			splitPath := strings.Split(files[i], "/")
-			tmpRpmDBFile = filepath.Join(rpmTmpDir, splitPath[len(splitPath)-1])
-			detectedPath = files[i]
-			break
+	var found []string
+	for _, path := range rpmDBPaths {
+		if ok, err := afs.Exists(path); err == nil && ok {
+			found = append(found, path)
 		}
 	}
 
-	if len(detectedPath) == 0 {
+	if len(found) == 0 {
 		// Azure Linux and CBL-Mariner distroless images drop the rpm
 		// database and keep a manifest of what they installed.
 		if f, err := fs.Open(rpmManifestPath); err == nil {
@@ -528,13 +516,58 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 		// an rpm database listed no packages and no error
 		return nil, llx.NotFound(fmt.Errorf("could not find an rpm database on %s", rpm.platform.Name))
 	}
-	log.Debug().Str("path", detectedPath).Msg("found rpm packages location")
 
-	f, err := fs.Open(detectedPath)
+	// The first database that exists is not necessarily the one rpm uses. The
+	// oraclelinux:9 image (Oracle Linux 9.8, rpm 4.16, %_dbpath /var/lib/rpm)
+	// also carries an rpmdb.sqlite under /usr/lib/sysimage/rpm that no package
+	// owns and that holds no packages; reading only that one made the whole
+	// inventory empty, with no error. A database with packages is the one in
+	// use. An empty one is the answer only when no other database has any, and
+	// an unreadable one is an error only when no other can be read.
+	var empty []Package
+	var firstErr error
+	for _, path := range found {
+		pkgs, err := rpm.readRpmDB(path)
+		if err != nil {
+			log.Debug().Err(err).Str("path", path).Msg("mql[packages]> could not read rpm database")
+			if firstErr == nil {
+				firstErr = err
+			}
+			continue
+		}
+		if len(pkgs) > 0 {
+			return pkgs, nil
+		}
+		log.Debug().Str("path", path).Msg("mql[packages]> rpm database has no packages")
+		if empty == nil {
+			empty = pkgs
+		}
+	}
+	if empty != nil {
+		return empty, nil
+	}
+	return nil, firstErr
+}
+
+// readRpmDB lists the packages in the rpm database at path on the target. The
+// database is copied to a local temp file first, because the rpmdb reader
+// needs a local path.
+func (rpm *RpmPkgManager) readRpmDB(path string) ([]Package, error) {
+	rpmTmpDir, err := os.MkdirTemp(os.TempDir(), "mondoo-rpmdb")
+	if err != nil {
+		return nil, errors.Wrap(err, "could not create local temp directory")
+	}
+	log.Debug().Str("path", rpmTmpDir).Msg("mql[packages]> cache rpm library locally")
+	defer os.RemoveAll(rpmTmpDir)
+
+	log.Debug().Str("path", path).Msg("found rpm packages location")
+	f, err := rpm.conn.FileSystem().Open(path)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch rpm package list")
 	}
 	defer f.Close()
+
+	tmpRpmDBFile := filepath.Join(rpmTmpDir, filepath.Base(path))
 	fWriter, err := os.Create(tmpRpmDBFile)
 	if err != nil {
 		log.Error().Err(err).Msg("mql[packages]> could not create tmp file for rpm database")
@@ -560,9 +593,8 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 
 	resultList := []Package{}
 	for _, pkg := range pkgList {
-		resultList = append(resultList, newRpmPackageFromDB(rpm.platform, pkg, detectedPath))
+		resultList = append(resultList, newRpmPackageFromDB(rpm.platform, pkg, path))
 	}
-
 	return resultList, nil
 }
 
