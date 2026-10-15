@@ -47,6 +47,9 @@ type systemdUnitFile struct {
 	// rawDescription is Description= as the file sets it, which a
 	// template's instances expand
 	rawDescription string
+	// file is where the unit is on the search path, the link itself for a
+	// masked or aliased unit
+	file string
 }
 
 // unitInstall is what the [Install] section of a unit file says.
@@ -170,7 +173,7 @@ func readSystemdUnitFiles(fsys afero.Fs, suffix string) ([]*systemdUnitFile, err
 // readSystemdUnitFile reads the unit file at unitPath. The returned unit has
 // its State set when the file alone decides it (masked, alias, linked).
 func readSystemdUnitFile(fsys afero.Fs, unitPath string, name string, listedAsLink bool) (*systemdUnitFile, unitInstall) {
-	u := &systemdUnitFile{Name: name}
+	u := &systemdUnitFile{Name: name, file: unitPath}
 	resolved := unitPath
 	if target, isLink := readUnitLink(fsys, unitPath, listedAsLink); isLink {
 		if target == "/dev/null" {

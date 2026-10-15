@@ -4,6 +4,7 @@
 package services
 
 import (
+	"go.mondoo.com/mql/providers/os/mountedfs"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -94,4 +95,24 @@ func TestReadSystemdFSTargetProperties_MissingUnitFile(t *testing.T) {
 	props := ReadSystemdFSTargetProperties(targetFs(t), []string{"basic", "does-not-exist"})
 	assert.Contains(t, props, "basic")
 	assert.NotContains(t, props, "does-not-exist")
+}
+
+// AlmaLinux images mask getty.target with a link in /etc while the vendor
+// file stays in /usr/lib. The image has no /dev/null, and following the link
+// with a stat fell through to the vendor file: the target read as loaded.
+func TestReadSystemdFSTargetPropertiesMasked(t *testing.T) {
+	root := unitTree(t, map[string]string{
+		"usr/lib/systemd/system/getty.target":      "[Unit]\nDescription=Login Prompts\n",
+		"usr/lib/systemd/system/multi-user.target": "[Unit]\nDescription=Multi-User System\n",
+	}, map[string]string{
+		"etc/systemd/system/getty.target": "/dev/null",
+	})
+	props := ReadSystemdFSTargetProperties(mountedfs.NewMountedFs(root), []string{"getty", "multi-user"})
+	assert.Equal(t, map[string]string{
+		"FragmentPath":  "/etc/systemd/system/getty.target",
+		"LoadState":     "masked",
+		"UnitFileState": "masked",
+	}, props["getty"])
+	assert.Equal(t, "loaded", props["multi-user"]["LoadState"])
+	assert.Equal(t, "Multi-User System", props["multi-user"]["Description"])
 }

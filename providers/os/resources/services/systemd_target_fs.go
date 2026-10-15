@@ -5,7 +5,6 @@ package services
 
 import (
 	"os"
-	"path"
 	"sort"
 	"strings"
 
@@ -56,34 +55,42 @@ func ListSystemdFSTargetNames(fs afero.Fs) []string {
 // carries. A target whose file cannot be read is left out of the map rather
 // than reported as a target carrying nothing.
 func ReadSystemdFSTargetProperties(fs afero.Fs, names []string) map[string]map[string]string {
-	states := map[string]string{}
-	if units, err := readSystemdUnitFiles(fs, ".target"); err == nil {
-		for _, u := range units {
-			states[u.Name] = u.State
+	units := map[string]*systemdUnitFile{}
+	if list, err := readSystemdUnitFiles(fs, ".target"); err == nil {
+		for _, u := range list {
+			units[u.Name] = u
 		}
 	}
 	out := make(map[string]map[string]string, len(names))
 
 	for _, name := range names {
-		unitFile := name + ".target"
-		for _, searchPath := range systemdUnitSearchPath {
-			unitPath := path.Join(searchPath, unitFile)
-			if _, err := fs.Stat(unitPath); err != nil {
-				continue
-			}
-
-			props, err := readSystemdTargetUnit(fs, unitPath)
-			if err != nil {
-				break
-			}
-			// the state systemctl reports: a target without an [Install]
-			// section is static even when another target wants it
-			if state, ok := states[unitFile]; ok && state != "alias" && props["UnitFileState"] != "masked" {
-				props["UnitFileState"] = state
-			}
-			out[name] = props
-			break
+		u, ok := units[name+".target"]
+		if !ok {
+			continue
 		}
+		// A target masked with a link to /dev/null carries no settings. The
+		// link used to be followed with a stat, which fails in an image
+		// without /dev/null, and the vendor file of the same name was read
+		// instead: getty.target on AlmaLinux images read as loaded.
+		if u.State == "masked" {
+			out[name] = map[string]string{
+				"FragmentPath":  u.file,
+				"LoadState":     "masked",
+				"UnitFileState": "masked",
+			}
+			continue
+		}
+
+		props, err := readSystemdTargetUnit(fs, u.Path)
+		if err != nil {
+			continue
+		}
+		// the state systemctl reports: a target without an [Install]
+		// section is static even when another target wants it
+		if u.State != "alias" && props["UnitFileState"] != "masked" {
+			props["UnitFileState"] = u.State
+		}
+		out[name] = props
 	}
 
 	return out
