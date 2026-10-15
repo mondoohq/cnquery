@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 )
 
@@ -143,4 +144,18 @@ func TestValidateFrrLimitMatchesPlatformInt(t *testing.T) {
 	if strconv.IntSize == 32 {
 		assert.Error(t, validateFrrLimit("frr.routeTable", maxInt+1))
 	}
+}
+
+func TestRouteTableResourcesWithDifferentLimitsAreNotReused(t *testing.T) {
+	runtime := plugin.NewRuntime(nil, nil, false, nil, nil, nil, nil, nil)
+	first, err := NewResource(runtime, "frr.routeTable", map[string]*llx.RawData{
+		"vrf": llx.StringData("cluster"), "afi": llx.StringData("ipv4"), "limit": llx.IntData(10),
+	})
+	require.NoError(t, err)
+	second, err := NewResource(runtime, "frr.routeTable", map[string]*llx.RawData{
+		"vrf": llx.StringData("cluster"), "afi": llx.StringData("ipv4"), "limit": llx.IntData(100),
+	})
+	require.NoError(t, err)
+	assert.NotSame(t, first, second)
+	assert.NotEqual(t, first.MqlID(), second.MqlID())
 }
