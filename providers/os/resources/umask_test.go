@@ -129,7 +129,8 @@ func TestUmaskSettingFields(t *testing.T) {
 	unknown := settings.Data[1].(*mqlUmaskSetting)
 	assert.Equal(t, "$UMASK", unknown.Value.Data)
 	assert.True(t, unknown.Mode.IsNull(), "an expanded value is not a known mask")
-	assert.Equal(t, "", unknown.Octal.Data)
+	assert.True(t, unknown.Octal.IsNull())
+	assert.True(t, unknown.Relative.IsNull(), "an unknown mask is neither relative nor absolute")
 	assert.True(t, unknown.GroupWriteable.IsNull())
 	assert.True(t, unknown.OtherReadable.IsNull())
 }

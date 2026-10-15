@@ -376,7 +376,7 @@ func (st *shellState) statements(toks []token) []Statement {
 			continue
 		}
 		// the body of `function name {` opens after the name
-		if !start && !(t.text == "{" && st.funcPending) {
+		if !start && (t.text != "{" || !st.funcPending) {
 			continue
 		}
 		start = false

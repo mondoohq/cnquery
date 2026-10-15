@@ -11999,13 +11999,14 @@ private umask.setting @defaults("source value") {
   mode int
   // Mask in four-digit octal, such as 0027
   //
-  // Empty when value is not a mode.
+  // Null when value is not a mode.
   octal string
   // Whether the mask changes the umask it is applied to rather than replacing it
   //
   // True for a symbolic mask that leaves a class out (`g=rx,o=` keeps the
   // user bits) or adds or removes permissions (`o-rwx`). Then `mode` and the
-  // permission fields count only what the mask is known to set.
+  // permission fields count only what the mask is known to set. Null when
+  // value is not a mode.
   relative bool
   // Whether a shell statement may not run each time the file is read
   //

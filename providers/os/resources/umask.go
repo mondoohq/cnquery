@@ -518,7 +518,8 @@ func umaskUserHome(runtime *plugin.Runtime, name string) (string, error) {
 }
 
 // newUmaskSetting creates the umask.setting for one setting. maskErr is set
-// when value is not a mode, such as $UMASK; the mask fields are then null.
+// when value is not a mode, such as $UMASK; every field that describes the
+// mask is then null.
 func newUmaskSetting(runtime *plugin.Runtime, src umaskSourceFile, line int, ordinal int, value string, mask umask.Mask, maskErr error, conditional bool) (*mqlUmaskSetting, error) {
 	f, err := CreateResource(runtime, "file", map[string]*llx.RawData{"path": llx.StringData(src.path)})
 	if err != nil {
@@ -550,8 +551,8 @@ func newUmaskSetting(runtime *plugin.Runtime, src umaskSourceFile, line int, ord
 	}
 	if maskErr != nil {
 		args["mode"] = llx.IntDataPtr[int64](nil)
-		args["octal"] = llx.StringData("")
-		args["relative"] = llx.BoolData(false)
+		args["octal"] = llx.StringDataPtr(nil)
+		args["relative"] = llx.BoolDataPtr(nil)
 		for name := range perms {
 			args[name] = llx.BoolDataPtr(nil)
 		}
