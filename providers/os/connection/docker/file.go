@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"sync"
 	"syscall"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 	"github.com/spf13/afero"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/connection/ssh/cat"
 	"go.mondoo.com/mql/providers/os/fsutil"
 )
@@ -51,6 +53,8 @@ type File struct {
 	// viaCat is set for a file the Docker archive API cannot see, which is
 	// read from inside the container instead.
 	viaCat bool
+	// stat is what the archive API reported when the file was opened
+	stat container.PathStat
 
 	loadOnce sync.Once
 	reader   *bytes.Reader
@@ -77,6 +81,7 @@ func (f *File) Open() error {
 		return os.ErrNotExist
 	}
 	f.isDir = stat.Mode.IsDir()
+	f.stat = stat
 	return nil
 }
 
@@ -141,8 +146,24 @@ func (f *File) Name() string {
 	return f.path
 }
 
+// Stat reports what the archive API said when the file was opened. Reading
+// a file (afero.ReadFile) stats it for its size, and asking the container
+// again cost an exec per file read: most of the three minutes the npm
+// inventory of a running container took. The owner is not part of it, it
+// is -1; FileInfo, which reports ownership, stats through the container.
 func (f *File) Stat() (os.FileInfo, error) {
-	return f.catFs.Stat(f.path)
+	if f.viaCat {
+		return f.catFs.Stat(f.path)
+	}
+	return &shared.FileInfo{
+		FName:    path.Base(f.path),
+		FSize:    f.stat.Size,
+		FMode:    f.stat.Mode,
+		FIsDir:   f.stat.Mode.IsDir(),
+		FModTime: f.stat.Mtime,
+		Uid:      -1,
+		Gid:      -1,
+	}, nil
 }
 
 func (f *File) Sync() error {

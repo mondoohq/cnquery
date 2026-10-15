@@ -191,3 +191,37 @@ func TestOpenWhenTheDaemonFails(t *testing.T) {
 	assert.NotErrorIs(t, err, os.ErrNotExist)
 	assert.ErrorIs(t, err, cerrdefs.ErrUnavailable)
 }
+
+// countingContainer counts the commands run in the container.
+type countingContainer struct {
+	fakeContainer
+	commands int
+}
+
+func (c *countingContainer) RunCommand(command string) (*shared.Command, error) {
+	c.commands++
+	return c.fakeContainer.RunCommand(command)
+}
+
+// Reading a file stats it for its size. The stat comes from the archive API
+// answer Open already has, not from a command in the container per file.
+func TestStatOfAnOpenedFile(t *testing.T) {
+	runner := &countingContainer{}
+	f, err := FileOpen(etcArchive(), "/etc/hostname", "ctr", nil, cat.New(runner))
+	require.NoError(t, err)
+
+	fi, err := f.Stat()
+	require.NoError(t, err)
+	assert.Equal(t, "hostname", fi.Name())
+	assert.Equal(t, int64(13), fi.Size())
+	assert.Equal(t, os.FileMode(0o644), fi.Mode())
+	assert.False(t, fi.IsDir())
+	assert.Equal(t, 0, runner.commands)
+
+	dir, err := FileOpen(etcArchive(), "/etc", "ctr", nil, cat.New(runner))
+	require.NoError(t, err)
+	fi, err = dir.Stat()
+	require.NoError(t, err)
+	assert.True(t, fi.IsDir())
+	assert.Equal(t, 0, runner.commands)
+}
