@@ -4,6 +4,7 @@
 package services
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 
@@ -679,4 +680,28 @@ func TestSystemdCommandLine(t *testing.T) {
 	assert.Equal(t, "argv0 --flag", systemdCommandLine("@/usr/bin/real argv0 --flag"))
 	assert.Equal(t, "/usr/bin/x", systemdCommandLine("+!/usr/bin/x"))
 	assert.Equal(t, "/bin/first", systemdCommandLine("/bin/first\n/bin/second"))
+}
+
+// A systemd that predates a sandboxing setting ignores it, and keeps the
+// capabilities the setting would drop: ProtectClock= (245) on systemd 219.
+func TestSystemdFSUnitImplicitDropsFollowTheRelease(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	require.NoError(t, afero.WriteFile(fs, "/usr/lib/systemd/system/clock.service", []byte(
+		"[Service]\nExecStart=/bin/true\nProtectClock=yes\nPrivateDevices=yes\n"), 0o644))
+
+	u, err := (&SystemdFSUnitManager{Fs: fs, Version: 219}).Get("clock.service")
+	require.NoError(t, err)
+	assert.Contains(t, u.CapabilityBoundingSet, "cap_sys_time")
+	assert.NotContains(t, u.CapabilityBoundingSet, "cap_mknod", "PrivateDevices predates 219")
+
+	u, err = (&SystemdFSUnitManager{Fs: fs, Version: 252}).Get("clock.service")
+	require.NoError(t, err)
+	assert.NotContains(t, u.CapabilityBoundingSet, "cap_sys_time")
+}
+
+// systemd reads a capability given by its number like one given by name.
+func TestFoldSystemdCapabilitiesTakesNumbers(t *testing.T) {
+	mask, err := strconv.ParseUint(foldSystemdCapabilities("", false, "21 cap_chown"), 10, 64)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"cap_chown", "cap_sys_admin"}, decodeSystemdCapabilityMask(mask, -1))
 }

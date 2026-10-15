@@ -20,6 +20,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/systemd"
 )
 
 // SystemdUnit carries the execution and confinement settings of a systemd unit.
@@ -264,7 +265,11 @@ type SystemdUnitLister interface {
 // can run commands, otherwise one reading unit files from the filesystem.
 func ResolveSystemdUnitManager(conn shared.Connection) SystemdUnitLister {
 	if !conn.Capabilities().Has(shared.Capability_RunCommand) {
-		return &SystemdFSUnitManager{Fs: conn.FileSystem()}
+		// The release on disk decides which settings exist, as it does for
+		// systemctl: an image of CentOS 7 (systemd 219) reported settings
+		// added in later releases as if they applied.
+		fs := conn.FileSystem()
+		return &SystemdFSUnitManager{Fs: fs, Version: systemd.InstalledVersion(&afero.Afero{Fs: fs})}
 	}
 	return &SystemdUnitManager{conn: conn}
 }
@@ -1112,7 +1117,7 @@ func (m *SystemdFSUnitManager) readUnit(name string, unitPath string) (*SystemdU
 		props["UnitFileState"] = "masked"
 		props["Description"] = name
 		props["FragmentPath"] = unitPath
-		applySystemdExecDefaults(props, name)
+		applySystemdExecDefaults(props, name, m.Version)
 		return systemdUnitFromProperties(props, -1), nil
 	}
 
@@ -1129,7 +1134,7 @@ func (m *SystemdFSUnitManager) readUnit(name string, unitPath string) (*SystemdU
 			continue
 		}
 	}
-	applySystemdUnitDefaults(props, name)
+	applySystemdUnitDefaults(props, name, m.Version)
 	markUnsupportedFileProperties(props, m.Version)
 	if m.NoSeccomp {
 		markSeccompUnsupported(props)
@@ -1232,7 +1237,7 @@ var systemdExecUnitTypes = []string{".service", ".socket", ".mount", ".swap"}
 // the same unit on a running system: an image's unit with no ProtectSystem=
 // read as "" where systemd reports "no", and no CapabilityBoundingSet= read as
 // an empty set where systemd reports every capability.
-func applySystemdUnitDefaults(props map[string]string, name string) {
+func applySystemdUnitDefaults(props map[string]string, name string, version int) {
 	if props["Description"] == "" {
 		props["Description"] = name
 	}
@@ -1247,7 +1252,7 @@ func applySystemdUnitDefaults(props map[string]string, name string) {
 		return
 	}
 
-	applySystemdExecDefaults(props, name)
+	applySystemdExecDefaults(props, name, version)
 
 	if _, ok := props["ExecStart"]; ok {
 		props["ExecStart"] = systemdCommandLine(props["ExecStart"])
@@ -1274,8 +1279,9 @@ func applySystemdUnitDefaults(props map[string]string, name string) {
 
 // applySystemdExecDefaults fills in the execution settings of a unit type
 // that has them, as systemctl show reports them for a unit file that leaves
-// them unset, and applies the capabilities systemd drops implicitly.
-func applySystemdExecDefaults(props map[string]string, name string) {
+// them unset, and applies the capabilities systemd drops implicitly. version
+// is the target's systemd release, 0 when unknown.
+func applySystemdExecDefaults(props map[string]string, name string, version int) {
 	execUnit := false
 	for _, t := range systemdExecUnitTypes {
 		if strings.HasSuffix(name, t) {
@@ -1320,6 +1326,11 @@ func applySystemdExecDefaults(props map[string]string, name string) {
 	// settings that take capabilities away along with what they protect
 	// (systemd.exec(5))
 	for setting, caps := range systemdImplicitCapabilityDrops {
+		// a release that does not know the setting ignores it, and keeps
+		// the capabilities
+		if since := systemdPropertySince[setting]; version > 0 && since > version {
+			continue
+		}
 		if parseSystemdBool(props[setting]) {
 			for _, c := range caps {
 				bounding &^= 1 << uint(slices.Index(systemdCapabilityNames, c))
@@ -1451,6 +1462,13 @@ func foldSystemdCapabilities(current string, set bool, value string) string {
 
 	var mask uint64
 	for _, name := range strings.Fields(value) {
+		// systemd takes a capability's number as well as its name
+		if n, err := strconv.Atoi(name); err == nil {
+			if n >= 0 && n < len(systemdCapabilityNames) {
+				mask |= 1 << uint(n)
+			}
+			continue
+		}
 		name = strings.ToLower(name)
 		for bit, known := range systemdCapabilityNames {
 			if known == name {
