@@ -145,6 +145,10 @@ func (t *ManifestParser) resourceIndex() (*resources.ApiResourceIndex, error) {
 						Kind:         gvk.Kind,
 						Version:      gvk.Version,
 						Group:        gvk.Group,
+						// Manifest-only resources have no discovery metadata. Infer
+						// scope from the object's namespace so namespace-scoped
+						// Kyverno reports and exceptions remain filtered.
+						Namespaced: unstr.GetNamespace() != "",
 					},
 				}
 				resTypes.Add(apiRes)
