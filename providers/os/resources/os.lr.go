@@ -983,7 +983,7 @@ func init() {
 			Create: createParseOpenpgp,
 		},
 		"user": {
-			// to override args, implement: initUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initUser,
 			Create: createUser,
 		},
 		"privatekey": {
@@ -1047,7 +1047,7 @@ func init() {
 			Create: createSshd,
 		},
 		"sshd.config": {
-			// to override args, implement: initSshdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSshdConfig,
 			Create: createSshdConfig,
 		},
 		"sshd.config.matchBlock": {
@@ -1071,7 +1071,7 @@ func init() {
 			Create: createSnmpd,
 		},
 		"snmpd.config": {
-			// to override args, implement: initSnmpdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSnmpdConfig,
 			Create: createSnmpdConfig,
 		},
 		"snmpd.config.user": {
@@ -1187,11 +1187,11 @@ func init() {
 			Create: createNginxConfLocation,
 		},
 		"tomcat": {
-			// to override args, implement: initTomcat(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initTomcat,
 			Create: createTomcat,
 		},
 		"tomcat.server": {
-			// to override args, implement: initTomcatServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initTomcatServer,
 			Create: createTomcatServer,
 		},
 		"tomcat.listener": {
@@ -1223,11 +1223,11 @@ func init() {
 			Create: createTomcatRealm,
 		},
 		"tomcat.context": {
-			// to override args, implement: initTomcatContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initTomcatContext,
 			Create: createTomcatContext,
 		},
 		"tomcat.webxml": {
-			// to override args, implement: initTomcatWebxml(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initTomcatWebxml,
 			Create: createTomcatWebxml,
 		},
 		"tomcat.user": {
@@ -1375,7 +1375,7 @@ func init() {
 			Create: createSquid,
 		},
 		"squid.conf": {
-			// to override args, implement: initSquidConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSquidConf,
 			Create: createSquidConf,
 		},
 		"squid.conf.listen": {
@@ -1667,7 +1667,7 @@ func init() {
 			Create: createServices,
 		},
 		"systemd.timer": {
-			// to override args, implement: initSystemdTimer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSystemdTimer,
 			Create: createSystemdTimer,
 		},
 		"systemd.timers": {
@@ -1675,7 +1675,7 @@ func init() {
 			Create: createSystemdTimers,
 		},
 		"systemd.socket": {
-			// to override args, implement: initSystemdSocket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSystemdSocket,
 			Create: createSystemdSocket,
 		},
 		"systemd.sockets": {
@@ -1691,7 +1691,7 @@ func init() {
 			Create: createSystemdTargets,
 		},
 		"systemd.unit": {
-			// to override args, implement: initSystemdUnit(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSystemdUnit,
 			Create: createSystemdUnit,
 		},
 		"systemd.units": {
@@ -2107,7 +2107,7 @@ func init() {
 			Create: createSecbootImage,
 		},
 		"sysrc": {
-			// to override args, implement: initSysrc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSysrc,
 			Create: createSysrc,
 		},
 		"sysrc.entry": {
@@ -2199,7 +2199,7 @@ func init() {
 			Create: createLogindefs,
 		},
 		"umask": {
-			// to override args, implement: initUmask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initUmask,
 			Create: createUmask,
 		},
 		"umask.setting": {
@@ -2267,7 +2267,7 @@ func init() {
 			Create: createSudoValidationError,
 		},
 		"sudoers": {
-			// to override args, implement: initSudoers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSudoers,
 			Create: createSudoers,
 		},
 		"sudoers.userSpec": {
@@ -2431,11 +2431,11 @@ func init() {
 			Create: createYum,
 		},
 		"yum.repo": {
-			// to override args, implement: initYumRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initYumRepo,
 			Create: createYumRepo,
 		},
 		"yum.config": {
-			// to override args, implement: initYumConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initYumConfig,
 			Create: createYumConfig,
 		},
 		"apt": {
@@ -2543,7 +2543,7 @@ func init() {
 			Create: createGithubactionsPackage,
 		},
 		"swift.packages": {
-			// to override args, implement: initSwiftPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSwiftPackages,
 			Create: createSwiftPackages,
 		},
 		"swift.package": {
@@ -2551,7 +2551,7 @@ func init() {
 			Create: createSwiftPackage,
 		},
 		"terraform.packages": {
-			// to override args, implement: initTerraformPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initTerraformPackages,
 			Create: createTerraformPackages,
 		},
 		"terraform.package": {
@@ -2583,7 +2583,7 @@ func init() {
 			Create: createJenkinsPackage,
 		},
 		"wordpress.packages": {
-			// to override args, implement: initWordpressPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWordpressPackages,
 			Create: createWordpressPackages,
 		},
 		"wordpress.package": {
@@ -2647,7 +2647,7 @@ func init() {
 			Create: createCondaPackage,
 		},
 		"vcpkg.packages": {
-			// to override args, implement: initVcpkgPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initVcpkgPackages,
 			Create: createVcpkgPackages,
 		},
 		"vcpkg.package": {
@@ -2779,11 +2779,11 @@ func init() {
 			Create: createWindowsExploitProtection,
 		},
 		"windows.exploitProtection.dep": {
-			// to override args, implement: initWindowsExploitProtectionDep(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExploitProtectionDep,
 			Create: createWindowsExploitProtectionDep,
 		},
 		"windows.exploitProtection.aslr": {
-			// to override args, implement: initWindowsExploitProtectionAslr(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExploitProtectionAslr,
 			Create: createWindowsExploitProtectionAslr,
 		},
 		"windows.exploitProtection.cfg": {
@@ -2791,11 +2791,11 @@ func init() {
 			Create: createWindowsExploitProtectionCfg,
 		},
 		"windows.exploitProtection.sehop": {
-			// to override args, implement: initWindowsExploitProtectionSehop(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExploitProtectionSehop,
 			Create: createWindowsExploitProtectionSehop,
 		},
 		"windows.exploitProtection.heap": {
-			// to override args, implement: initWindowsExploitProtectionHeap(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExploitProtectionHeap,
 			Create: createWindowsExploitProtectionHeap,
 		},
 		"windows.smartScreen": {
@@ -2847,7 +2847,7 @@ func init() {
 			Create: createLaunchdJob,
 		},
 		"windows.hotfix": {
-			// to override args, implement: initWindowsHotfix(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsHotfix,
 			Create: createWindowsHotfix,
 		},
 		"windows.update": {
@@ -2859,11 +2859,11 @@ func init() {
 			Create: createWindowsUpdateEntry,
 		},
 		"windows.update.config": {
-			// to override args, implement: initWindowsUpdateConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsUpdateConfig,
 			Create: createWindowsUpdateConfig,
 		},
 		"windows.update.policy": {
-			// to override args, implement: initWindowsUpdatePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsUpdatePolicy,
 			Create: createWindowsUpdatePolicy,
 		},
 		"windows.hotpatch": {
@@ -2871,15 +2871,15 @@ func init() {
 			Create: createWindowsHotpatch,
 		},
 		"windows.serverFeature": {
-			// to override args, implement: initWindowsServerFeature(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsServerFeature,
 			Create: createWindowsServerFeature,
 		},
 		"windows.optionalFeature": {
-			// to override args, implement: initWindowsOptionalFeature(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsOptionalFeature,
 			Create: createWindowsOptionalFeature,
 		},
 		"windows.eventlog": {
-			// to override args, implement: initWindowsEventlog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsEventlog,
 			Create: createWindowsEventlog,
 		},
 		"windows.rdp": {
@@ -2895,15 +2895,15 @@ func init() {
 			Create: createWindowsWinrmListener,
 		},
 		"windows.winrm.client": {
-			// to override args, implement: initWindowsWinrmClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsWinrmClient,
 			Create: createWindowsWinrmClient,
 		},
 		"windows.winrm.service": {
-			// to override args, implement: initWindowsWinrmService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsWinrmService,
 			Create: createWindowsWinrmService,
 		},
 		"windows.deviceGuard": {
-			// to override args, implement: initWindowsDeviceGuard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDeviceGuard,
 			Create: createWindowsDeviceGuard,
 		},
 		"windows.lsa": {
@@ -2911,11 +2911,11 @@ func init() {
 			Create: createWindowsLsa,
 		},
 		"windows.lsa.ntlm": {
-			// to override args, implement: initWindowsLsaNtlm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsLsaNtlm,
 			Create: createWindowsLsaNtlm,
 		},
 		"windows.lsa.secureChannel": {
-			// to override args, implement: initWindowsLsaSecureChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsLsaSecureChannel,
 			Create: createWindowsLsaSecureChannel,
 		},
 		"windows.uac": {
@@ -2947,15 +2947,15 @@ func init() {
 			Create: createWindowsSpooler,
 		},
 		"windows.spooler.pointAndPrint": {
-			// to override args, implement: initWindowsSpoolerPointAndPrint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsSpoolerPointAndPrint,
 			Create: createWindowsSpoolerPointAndPrint,
 		},
 		"windows.spooler.rpc": {
-			// to override args, implement: initWindowsSpoolerRpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsSpoolerRpc,
 			Create: createWindowsSpoolerRpc,
 		},
 		"windows.spooler.ipp": {
-			// to override args, implement: initWindowsSpoolerIpp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsSpoolerIpp,
 			Create: createWindowsSpoolerIpp,
 		},
 		"windows.telemetry": {
@@ -2967,15 +2967,15 @@ func init() {
 			Create: createWindowsPowershell,
 		},
 		"windows.powershell.scriptBlockLogging": {
-			// to override args, implement: initWindowsPowershellScriptBlockLogging(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsPowershellScriptBlockLogging,
 			Create: createWindowsPowershellScriptBlockLogging,
 		},
 		"windows.powershell.transcription": {
-			// to override args, implement: initWindowsPowershellTranscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsPowershellTranscription,
 			Create: createWindowsPowershellTranscription,
 		},
 		"windows.powershell.moduleLogging": {
-			// to override args, implement: initWindowsPowershellModuleLogging(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsPowershellModuleLogging,
 			Create: createWindowsPowershellModuleLogging,
 		},
 		"windows.disk": {
@@ -2991,7 +2991,7 @@ func init() {
 			Create: createWindowsAuditPolicy,
 		},
 		"windows.auditPolicy.subcategory": {
-			// to override args, implement: initWindowsAuditPolicySubcategory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsAuditPolicySubcategory,
 			Create: createWindowsAuditPolicySubcategory,
 		},
 		"windows.firewall": {
@@ -3011,11 +3011,11 @@ func init() {
 			Create: createWindowsSmb,
 		},
 		"windows.smb.serverConfiguration": {
-			// to override args, implement: initWindowsSmbServerConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsSmbServerConfiguration,
 			Create: createWindowsSmbServerConfiguration,
 		},
 		"windows.smb.clientConfiguration": {
-			// to override args, implement: initWindowsSmbClientConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsSmbClientConfiguration,
 			Create: createWindowsSmbClientConfiguration,
 		},
 		"windows.smb.share": {
@@ -3047,31 +3047,31 @@ func init() {
 			Create: createWindowsDnsServer,
 		},
 		"windows.dnsServer.settings": {
-			// to override args, implement: initWindowsDnsServerSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerSettings,
 			Create: createWindowsDnsServerSettings,
 		},
 		"windows.dnsServer.recursion": {
-			// to override args, implement: initWindowsDnsServerRecursion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerRecursion,
 			Create: createWindowsDnsServerRecursion,
 		},
 		"windows.dnsServer.cache": {
-			// to override args, implement: initWindowsDnsServerCache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerCache,
 			Create: createWindowsDnsServerCache,
 		},
 		"windows.dnsServer.diagnostics": {
-			// to override args, implement: initWindowsDnsServerDiagnostics(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerDiagnostics,
 			Create: createWindowsDnsServerDiagnostics,
 		},
 		"windows.dnsServer.scavenging": {
-			// to override args, implement: initWindowsDnsServerScavenging(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerScavenging,
 			Create: createWindowsDnsServerScavenging,
 		},
 		"windows.dnsServer.responseRateLimiting": {
-			// to override args, implement: initWindowsDnsServerResponseRateLimiting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerResponseRateLimiting,
 			Create: createWindowsDnsServerResponseRateLimiting,
 		},
 		"windows.dnsServer.forwarderConfiguration": {
-			// to override args, implement: initWindowsDnsServerForwarderConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerForwarderConfiguration,
 			Create: createWindowsDnsServerForwarderConfiguration,
 		},
 		"windows.dnsServer.rootHint": {
@@ -3083,7 +3083,7 @@ func init() {
 			Create: createWindowsDnsServerZone,
 		},
 		"windows.dnsServer.zone.dnssec": {
-			// to override args, implement: initWindowsDnsServerZoneDnssec(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerZoneDnssec,
 			Create: createWindowsDnsServerZoneDnssec,
 		},
 		"windows.dnsServer.zone.signingKey": {
@@ -3095,35 +3095,35 @@ func init() {
 			Create: createWindowsExchangeServer,
 		},
 		"windows.exchangeServer.organizationConfig": {
-			// to override args, implement: initWindowsExchangeServerOrganizationConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExchangeServerOrganizationConfig,
 			Create: createWindowsExchangeServerOrganizationConfig,
 		},
 		"windows.exchangeServer.transportConfig": {
-			// to override args, implement: initWindowsExchangeServerTransportConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExchangeServerTransportConfig,
 			Create: createWindowsExchangeServerTransportConfig,
 		},
 		"windows.exchangeServer.adminAuditLogConfig": {
-			// to override args, implement: initWindowsExchangeServerAdminAuditLogConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExchangeServerAdminAuditLogConfig,
 			Create: createWindowsExchangeServerAdminAuditLogConfig,
 		},
 		"windows.exchangeServer.contentFilterConfig": {
-			// to override args, implement: initWindowsExchangeServerContentFilterConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExchangeServerContentFilterConfig,
 			Create: createWindowsExchangeServerContentFilterConfig,
 		},
 		"windows.exchangeServer.senderFilterConfig": {
-			// to override args, implement: initWindowsExchangeServerSenderFilterConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExchangeServerSenderFilterConfig,
 			Create: createWindowsExchangeServerSenderFilterConfig,
 		},
 		"windows.exchangeServer.senderIdConfig": {
-			// to override args, implement: initWindowsExchangeServerSenderIdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExchangeServerSenderIdConfig,
 			Create: createWindowsExchangeServerSenderIdConfig,
 		},
 		"windows.exchangeServer.senderReputationConfig": {
-			// to override args, implement: initWindowsExchangeServerSenderReputationConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExchangeServerSenderReputationConfig,
 			Create: createWindowsExchangeServerSenderReputationConfig,
 		},
 		"windows.exchangeServer.recipientFilterConfig": {
-			// to override args, implement: initWindowsExchangeServerRecipientFilterConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExchangeServerRecipientFilterConfig,
 			Create: createWindowsExchangeServerRecipientFilterConfig,
 		},
 		"windows.exchangeServer.mobileDeviceMailboxPolicy": {
@@ -3191,7 +3191,7 @@ func init() {
 			Create: createWindowsBitlocker,
 		},
 		"windows.bitlocker.policy": {
-			// to override args, implement: initWindowsBitlockerPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsBitlockerPolicy,
 			Create: createWindowsBitlockerPolicy,
 		},
 		"windows.bitlocker.policy.driveSettings": {
@@ -3215,7 +3215,7 @@ func init() {
 			Create: createWindowsSecurityProduct,
 		},
 		"windows.security.health": {
-			// to override args, implement: initWindowsSecurityHealth(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsSecurityHealth,
 			Create: createWindowsSecurityHealth,
 		},
 		"windows.defender": {
@@ -3223,11 +3223,11 @@ func init() {
 			Create: createWindowsDefender,
 		},
 		"windows.defender.status": {
-			// to override args, implement: initWindowsDefenderStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDefenderStatus,
 			Create: createWindowsDefenderStatus,
 		},
 		"windows.defender.preferences": {
-			// to override args, implement: initWindowsDefenderPreferences(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDefenderPreferences,
 			Create: createWindowsDefenderPreferences,
 		},
 		"windows.defender.scanSettings": {
@@ -3459,7 +3459,7 @@ func init() {
 			Create: createZfs,
 		},
 		"zfs.pool": {
-			// to override args, implement: initZfsPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initZfsPool,
 			Create: createZfsPool,
 		},
 		"zfs.pool.vdev": {
@@ -3467,7 +3467,7 @@ func init() {
 			Create: createZfsPoolVdev,
 		},
 		"zfs.dataset": {
-			// to override args, implement: initZfsDataset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initZfsDataset,
 			Create: createZfsDataset,
 		},
 		"solaris.zones": {
@@ -3475,7 +3475,7 @@ func init() {
 			Create: createSolarisZones,
 		},
 		"solaris.zone": {
-			// to override args, implement: initSolarisZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSolarisZone,
 			Create: createSolarisZone,
 		},
 		"solaris.zone.network": {
@@ -3627,7 +3627,7 @@ func init() {
 			Create: createGeminiSkill,
 		},
 		"windsurf": {
-			// to override args, implement: initWindsurf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindsurf,
 			Create: createWindsurf,
 		},
 		"windsurf.repo": {
@@ -3647,7 +3647,7 @@ func init() {
 			Create: createWindsurfSkill,
 		},
 		"zed": {
-			// to override args, implement: initZed(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initZed,
 			Create: createZed,
 		},
 		"zed.repo": {
@@ -51300,7 +51300,7 @@ func (c *mqlMondooEol) GetDate() *plugin.TValue[*time.Time] {
 type mqlVulnmgmt struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlVulnmgmtInternal it will be used here
+	mqlVulnmgmtInternal
 	Cves           plugin.TValue[[]any]
 	Advisories     plugin.TValue[[]any]
 	Packages       plugin.TValue[[]any]
@@ -51435,7 +51435,12 @@ func createVulnCve(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("vuln.cve", res.__id)
@@ -51508,7 +51513,12 @@ func createVulnAdvisory(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("vuln.advisory", res.__id)
@@ -51575,7 +51585,12 @@ func createVulnPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("vuln.package", res.__id)
@@ -54814,7 +54829,12 @@ func createUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("user", res.__id)
@@ -55032,7 +55052,7 @@ func (c *mqlPrivatekey) GetPublicKeyBits() *plugin.TValue[int64] {
 type mqlUsers struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlUsersInternal it will be used here
+	mqlUsersInternal
 	List plugin.TValue[[]any]
 }
 
@@ -56174,7 +56194,7 @@ func (c *mqlSshd) MqlID() string {
 type mqlSshdConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSshdConfigInternal it will be used here
+	mqlSshdConfigInternal
 	File              plugin.TValue[*mqlFile]
 	Files             plugin.TValue[[]any]
 	Params            plugin.TValue[map[string]any]
@@ -56201,7 +56221,12 @@ func createSshdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("sshd.config", res.__id)
@@ -56843,7 +56868,12 @@ func createSnmpdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("snmpd.config", res.__id)
@@ -59893,7 +59923,7 @@ func (c *mqlNginxConfLocation) GetParams() *plugin.TValue[map[string]any] {
 type mqlTomcat struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlTomcatInternal it will be used here
+	mqlTomcatInternal
 	Home       plugin.TValue[string]
 	Base       plugin.TValue[string]
 	Version    plugin.TValue[string]
@@ -59917,7 +59947,12 @@ func createTomcat(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("tomcat", res.__id)
@@ -60886,7 +60921,7 @@ func (c *mqlTomcatUser) GetRoles() *plugin.TValue[[]any] {
 type mqlTomcatWebapp struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlTomcatWebappInternal it will be used here
+	mqlTomcatWebappInternal
 	Name    plugin.TValue[string]
 	Path    plugin.TValue[string]
 	Host    plugin.TValue[string]
@@ -64103,7 +64138,12 @@ func createSquid(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("squid", res.__id)
@@ -64134,7 +64174,7 @@ func (c *mqlSquid) GetVersion() *plugin.TValue[string] {
 type mqlSquidConf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSquidConfInternal it will be used here
+	mqlSquidConfInternal
 	File                       plugin.TValue[*mqlFile]
 	Files                      plugin.TValue[[]any]
 	Params                     plugin.TValue[map[string]any]
@@ -64173,7 +64213,12 @@ func createSquidConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("squid.conf", res.__id)
@@ -75336,7 +75381,7 @@ func (c *mqlServices) GetList() *plugin.TValue[[]any] {
 type mqlSystemdTimer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSystemdTimerInternal it will be used here
+	mqlSystemdTimerInternal
 	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
 	Installed   plugin.TValue[bool]
@@ -75360,7 +75405,12 @@ func createSystemdTimer(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("systemd.timer", res.__id)
@@ -75446,7 +75496,12 @@ func createSystemdTimers(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("systemd.timers", res.__id)
@@ -75487,7 +75542,7 @@ func (c *mqlSystemdTimers) GetList() *plugin.TValue[[]any] {
 type mqlSystemdSocket struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSystemdSocketInternal it will be used here
+	mqlSystemdSocketInternal
 	Name            plugin.TValue[string]
 	Description     plugin.TValue[string]
 	Installed       plugin.TValue[bool]
@@ -75511,7 +75566,12 @@ func createSystemdSocket(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("systemd.socket", res.__id)
@@ -75597,7 +75657,12 @@ func createSystemdSockets(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("systemd.sockets", res.__id)
@@ -75663,7 +75728,12 @@ func createSystemdTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("systemd.target", res.__id)
@@ -75747,7 +75817,12 @@ func createSystemdTargets(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("systemd.targets", res.__id)
@@ -75846,7 +75921,12 @@ func createSystemdUnit(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("systemd.unit", res.__id)
@@ -76062,7 +76142,12 @@ func createSystemdUnits(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("systemd.units", res.__id)
@@ -76103,7 +76188,7 @@ func (c *mqlSystemdUnits) GetList() *plugin.TValue[[]any] {
 type mqlSystemdResolved struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSystemdResolvedInternal it will be used here
+	mqlSystemdResolvedInternal
 	Active           plugin.TValue[bool]
 	Dns              plugin.TValue[[]any]
 	CurrentDnsServer plugin.TValue[string]
@@ -76128,7 +76213,12 @@ func createSystemdResolved(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("systemd.resolved", res.__id)
@@ -76219,7 +76309,7 @@ func (c *mqlSystemdResolved) GetCache() *plugin.TValue[bool] {
 type mqlSystemdTimesyncd struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSystemdTimesyncdInternal it will be used here
+	mqlSystemdTimesyncdInternal
 	Active           plugin.TValue[bool]
 	Synchronized     plugin.TValue[bool]
 	Servers          plugin.TValue[[]any]
@@ -76241,7 +76331,12 @@ func createSystemdTimesyncd(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("systemd.timesyncd", res.__id)
@@ -76314,7 +76409,7 @@ func (c *mqlSystemdTimesyncd) GetLeapStatus() *plugin.TValue[string] {
 type mqlSystemdCoredump struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSystemdCoredumpInternal it will be used here
+	mqlSystemdCoredumpInternal
 	Active          plugin.TValue[bool]
 	Files           plugin.TValue[[]any]
 	Params          plugin.TValue[map[string]any]
@@ -76334,7 +76429,12 @@ func createSystemdCoredump(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("systemd.coredump", res.__id)
@@ -76405,7 +76505,7 @@ func (c *mqlSystemdCoredump) GetExternalSizeMax() *plugin.TValue[int64] {
 type mqlSystemdBoot struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSystemdBootInternal it will be used here
+	mqlSystemdBootInternal
 	Active        plugin.TValue[bool]
 	Installed     plugin.TValue[bool]
 	Version       plugin.TValue[string]
@@ -76426,7 +76526,12 @@ func createSystemdBoot(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("systemd.boot", res.__id)
@@ -76529,7 +76634,12 @@ func createSystemdBootEntry(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("systemd.boot.entry", res.__id)
@@ -85851,7 +85961,7 @@ func (c *mqlNftablesSet) GetTimeout() *plugin.TValue[int64] {
 type mqlUfw struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlUfwInternal it will be used here
+	mqlUfwInternal
 	Status          plugin.TValue[string]
 	DefaultIncoming plugin.TValue[string]
 	DefaultOutgoing plugin.TValue[string]
@@ -85872,7 +85982,12 @@ func createUfw(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("ufw", res.__id)
@@ -85983,7 +86098,12 @@ func createUfwRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("ufw.rule", res.__id)
@@ -86066,7 +86186,12 @@ func createUfwApplication(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("ufw.application", res.__id)
@@ -87254,7 +87379,12 @@ func createSysrc(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("sysrc", res.__id)
@@ -87344,7 +87474,12 @@ func createSysrcEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("sysrc.entry", res.__id)
@@ -89547,7 +89682,7 @@ func (c *mqlLogindefs) GetParams() *plugin.TValue[map[string]any] {
 type mqlUmask struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlUmaskInternal it will be used here
+	mqlUmaskInternal
 	User      plugin.TValue[string]
 	Files     plugin.TValue[[]any]
 	Settings  plugin.TValue[[]any]
@@ -89566,7 +89701,12 @@ func createUmask(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("umask", res.__id)
@@ -90791,7 +90931,7 @@ func (c *mqlLimitsEntry) GetValue() *plugin.TValue[string] {
 type mqlSudo struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSudoInternal it will be used here
+	mqlSudoInternal
 	Path            plugin.TValue[string]
 	Installed       plugin.TValue[bool]
 	Version         plugin.TValue[string]
@@ -90817,7 +90957,12 @@ func createSudo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("sudo", res.__id)
@@ -91022,7 +91167,12 @@ func createSudoPlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("sudo.plugin", res.__id)
@@ -91079,7 +91229,12 @@ func createSudoValidation(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("sudo.validation", res.__id)
@@ -91129,7 +91284,12 @@ func createSudoValidationError(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("sudo.validation.error", res.__id)
@@ -91185,7 +91345,12 @@ func createSudoers(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("sudoers", res.__id)
@@ -91322,7 +91487,12 @@ func createSudoersUserSpec(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("sudoers.userSpec", res.__id)
@@ -91402,7 +91572,12 @@ func createSudoersDefault(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("sudoers.default", res.__id)
@@ -91482,7 +91657,12 @@ func createSudoersAlias(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("sudoers.alias", res.__id)
@@ -94053,7 +94233,12 @@ func createShadow(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("shadow", res.__id)
@@ -94117,7 +94302,12 @@ func createShadowEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("shadow.entry", res.__id)
@@ -94615,7 +94805,12 @@ func createYum(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("yum", res.__id)
@@ -94687,7 +94882,12 @@ func createYumRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("yum.repo", res.__id)
@@ -94779,7 +94979,12 @@ func createYumConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("yum.config", res.__id)
@@ -97750,7 +97955,7 @@ func (c *mqlGithubactionsPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlSwiftPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSwiftPackagesInternal it will be used here
+	mqlSwiftPackagesInternal
 	Path  plugin.TValue[string]
 	Files plugin.TValue[[]any]
 	List  plugin.TValue[[]any]
@@ -97767,7 +97972,12 @@ func createSwiftPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("swift.packages", res.__id)
@@ -97848,7 +98058,12 @@ func createSwiftPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("swift.package", res.__id)
@@ -97927,7 +98142,7 @@ func (c *mqlSwiftPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlTerraformPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlTerraformPackagesInternal it will be used here
+	mqlTerraformPackagesInternal
 	Path  plugin.TValue[string]
 	Files plugin.TValue[[]any]
 	List  plugin.TValue[[]any]
@@ -97944,7 +98159,12 @@ func createTerraformPackages(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("terraform.packages", res.__id)
@@ -98027,7 +98247,12 @@ func createTerraformPackage(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("terraform.package", res.__id)
@@ -98620,7 +98845,7 @@ func (c *mqlJenkinsPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlWordpressPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWordpressPackagesInternal it will be used here
+	mqlWordpressPackagesInternal
 	Path  plugin.TValue[string]
 	Files plugin.TValue[[]any]
 	List  plugin.TValue[[]any]
@@ -98637,7 +98862,12 @@ func createWordpressPackages(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("wordpress.packages", res.__id)
@@ -100069,7 +100299,7 @@ func (c *mqlCondaPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlVcpkgPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlVcpkgPackagesInternal it will be used here
+	mqlVcpkgPackagesInternal
 	Path  plugin.TValue[string]
 	Files plugin.TValue[[]any]
 	List  plugin.TValue[[]any]
@@ -100086,7 +100316,12 @@ func createVcpkgPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("vcpkg.packages", res.__id)
@@ -100166,7 +100401,12 @@ func createVcpkgPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("vcpkg.package", res.__id)
@@ -102909,7 +103149,7 @@ func (c *mqlOpenBSMAudit) GetMemberClearSflagsMask() *plugin.TValue[[]any] {
 type mqlWindows struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsInternal it will be used here
+	mqlWindowsInternal
 	ComputerInfo      plugin.TValue[any]
 	Hotfixes          plugin.TValue[[]any]
 	ServerFeatures    plugin.TValue[[]any]
@@ -103108,7 +103348,7 @@ func (c *mqlWindows) GetDisks() *plugin.TValue[[]any] {
 type mqlWindowsExploitProtection struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsExploitProtectionInternal it will be used here
+	mqlWindowsExploitProtectionInternal
 	Available        plugin.TValue[bool]
 	DisallowOverride plugin.TValue[bool]
 	Dep              plugin.TValue[*mqlWindowsExploitProtectionDep]
@@ -103501,7 +103741,7 @@ func (c *mqlWindowsExploitProtectionHeap) GetTerminateOnError() *plugin.TValue[s
 type mqlWindowsSmartScreen struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsSmartScreenInternal it will be used here
+	mqlWindowsSmartScreenInternal
 	ExplorerEnabled             plugin.TValue[bool]
 	ExplorerLevel               plugin.TValue[string]
 	EdgeEnabled                 plugin.TValue[bool]
@@ -103522,7 +103762,12 @@ func createWindowsSmartScreen(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.smartScreen", res.__id)
@@ -103589,7 +103834,7 @@ func (c *mqlWindowsSmartScreen) GetStoreAppsEnabled() *plugin.TValue[bool] {
 type mqlWindowsScheduledTask struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsScheduledTaskInternal it will be used here
+	mqlWindowsScheduledTaskInternal
 	Name               plugin.TValue[string]
 	Path               plugin.TValue[string]
 	Uri                plugin.TValue[string]
@@ -104188,7 +104433,12 @@ func createWindowsLogonSession(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.logonSession", res.__id)
@@ -104743,7 +104993,12 @@ func createWindowsHotfix(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.hotfix", res.__id)
@@ -104806,7 +105061,12 @@ func createWindowsUpdate(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.update", res.__id)
@@ -104920,7 +105180,12 @@ func createWindowsUpdateEntry(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.update.entry", res.__id)
@@ -105015,7 +105280,12 @@ func createWindowsUpdateConfig(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.update.config", res.__id)
@@ -105127,7 +105397,12 @@ func createWindowsUpdatePolicy(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.update.policy", res.__id)
@@ -105204,7 +105479,7 @@ func (c *mqlWindowsUpdatePolicy) GetDisablePauseUXAccess() *plugin.TValue[bool] 
 type mqlWindowsHotpatch struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsHotpatchInternal it will be used here
+	mqlWindowsHotpatchInternal
 	Eligible                plugin.TValue[bool]
 	Enrolled                plugin.TValue[bool]
 	EnrollmentPackage       plugin.TValue[string]
@@ -105225,7 +105500,12 @@ func createWindowsHotpatch(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.hotpatch", res.__id)
@@ -105312,7 +105592,12 @@ func createWindowsServerFeature(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.serverFeature", res.__id)
@@ -105361,7 +105646,7 @@ func (c *mqlWindowsServerFeature) GetInstallState() *plugin.TValue[int64] {
 type mqlWindowsOptionalFeature struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsOptionalFeatureInternal it will be used here
+	mqlWindowsOptionalFeatureInternal
 	Name        plugin.TValue[string]
 	DisplayName plugin.TValue[string]
 	Description plugin.TValue[string]
@@ -105380,7 +105665,12 @@ func createWindowsOptionalFeature(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.optionalFeature", res.__id)
@@ -105429,7 +105719,7 @@ func (c *mqlWindowsOptionalFeature) GetState() *plugin.TValue[int64] {
 type mqlWindowsEventlog struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsEventlogInternal it will be used here
+	mqlWindowsEventlogInternal
 	Name              plugin.TValue[string]
 	MaxSizeKB         plugin.TValue[int64]
 	Retention         plugin.TValue[string]
@@ -105451,7 +105741,12 @@ func createWindowsEventlog(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.eventlog", res.__id)
@@ -105522,7 +105817,7 @@ func (c *mqlWindowsEventlog) GetRecordCount() *plugin.TValue[int64] {
 type mqlWindowsRdp struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsRdpInternal it will be used here
+	mqlWindowsRdpInternal
 	NetworkLevelAuthentication        plugin.TValue[bool]
 	AlwaysPromptForPassword           plugin.TValue[bool]
 	DriveRedirectionDisabled          plugin.TValue[bool]
@@ -105560,7 +105855,12 @@ func createWindowsRdp(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.rdp", res.__id)
@@ -105729,7 +106029,7 @@ func (c *mqlWindowsRdp) GetCloudClipboardIntegrationDisabled() *plugin.TValue[bo
 type mqlWindowsWinrm struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsWinrmInternal it will be used here
+	mqlWindowsWinrmInternal
 	Client           plugin.TValue[*mqlWindowsWinrmClient]
 	Service          plugin.TValue[*mqlWindowsWinrmService]
 	ServiceStartMode plugin.TValue[int64]
@@ -105747,7 +106047,12 @@ func createWindowsWinrm(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.winrm", res.__id)
@@ -105913,7 +106218,12 @@ func createWindowsWinrmClient(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.winrm.client", res.__id)
@@ -105983,7 +106293,12 @@ func createWindowsWinrmService(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.winrm.service", res.__id)
@@ -106046,7 +106361,7 @@ func (c *mqlWindowsWinrmService) GetIpv6Filter() *plugin.TValue[string] {
 type mqlWindowsDeviceGuard struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsDeviceGuardInternal it will be used here
+	mqlWindowsDeviceGuardInternal
 	VirtualizationBasedSecurityEnabled           plugin.TValue[bool]
 	RequirePlatformSecurityFeatures              plugin.TValue[int64]
 	HypervisorEnforcedCodeIntegrity              plugin.TValue[int64]
@@ -106073,7 +106388,12 @@ func createWindowsDeviceGuard(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.deviceGuard", res.__id)
@@ -106203,7 +106523,12 @@ func createWindowsLsa(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.lsa", res.__id)
@@ -106431,7 +106756,12 @@ func createWindowsLsaNtlm(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.lsa.ntlm", res.__id)
@@ -106508,7 +106838,12 @@ func createWindowsLsaSecureChannel(runtime *plugin.Runtime, args map[string]*llx
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.lsa.secureChannel", res.__id)
@@ -106598,7 +106933,12 @@ func createWindowsUac(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.uac", res.__id)
@@ -106711,7 +107051,12 @@ func createWindowsSchannel(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.schannel", res.__id)
@@ -106845,7 +107190,12 @@ func createWindowsSchannelProtocol(runtime *plugin.Runtime, args map[string]*llx
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.schannel.protocol", res.__id)
@@ -106915,7 +107265,12 @@ func createWindowsSchannelCipher(runtime *plugin.Runtime, args map[string]*llx.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.schannel.cipher", res.__id)
@@ -106969,7 +107324,12 @@ func createWindowsSchannelHash(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.schannel.hash", res.__id)
@@ -107025,7 +107385,12 @@ func createWindowsSchannelKeyExchangeAlgorithm(runtime *plugin.Runtime, args map
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.schannel.keyExchangeAlgorithm", res.__id)
@@ -107070,7 +107435,7 @@ func (c *mqlWindowsSchannelKeyExchangeAlgorithm) GetClientMinKeyBitLength() *plu
 type mqlWindowsSpooler struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsSpoolerInternal it will be used here
+	mqlWindowsSpoolerInternal
 	StartMode                             plugin.TValue[int64]
 	Disabled                              plugin.TValue[bool]
 	RegisterRemoteRpcEndpoint             plugin.TValue[bool]
@@ -107099,7 +107464,12 @@ func createWindowsSpooler(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.spooler", res.__id)
@@ -107261,7 +107631,12 @@ func createWindowsSpoolerPointAndPrint(runtime *plugin.Runtime, args map[string]
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.spooler.pointAndPrint", res.__id)
@@ -107317,7 +107692,12 @@ func createWindowsSpoolerRpc(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.spooler.rpc", res.__id)
@@ -107381,7 +107761,12 @@ func createWindowsSpoolerIpp(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.spooler.ipp", res.__id)
@@ -107450,7 +107835,12 @@ func createWindowsTelemetry(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.telemetry", res.__id)
@@ -107555,7 +107945,12 @@ func createWindowsPowershell(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.powershell", res.__id)
@@ -107662,7 +108057,12 @@ func createWindowsPowershellScriptBlockLogging(runtime *plugin.Runtime, args map
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.powershell.scriptBlockLogging", res.__id)
@@ -107712,7 +108112,12 @@ func createWindowsPowershellTranscription(runtime *plugin.Runtime, args map[stri
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.powershell.transcription", res.__id)
@@ -107765,7 +108170,12 @@ func createWindowsPowershellModuleLogging(runtime *plugin.Runtime, args map[stri
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.powershell.moduleLogging", res.__id)
@@ -107904,7 +108314,7 @@ func (c *mqlWindowsDisk) GetHealthStatus() *plugin.TValue[string] {
 type mqlWindowsTpm struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsTpmInternal it will be used here
+	mqlWindowsTpmInternal
 	Present             plugin.TValue[bool]
 	Ready               plugin.TValue[bool]
 	Enabled             plugin.TValue[bool]
@@ -107931,7 +108341,12 @@ func createWindowsTpm(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.tpm", res.__id)
@@ -108113,7 +108528,12 @@ func createWindowsAuditPolicySubcategory(runtime *plugin.Runtime, args map[strin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.auditPolicy.subcategory", res.__id)
@@ -108286,7 +108706,12 @@ func createWindowsFirewallProfile(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.firewall.profile", res.__id)
@@ -108425,7 +108850,12 @@ func createWindowsFirewallRule(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.firewall.rule", res.__id)
@@ -108582,7 +109012,12 @@ func createWindowsSmb(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.smb", res.__id)
@@ -108721,7 +109156,12 @@ func createWindowsSmbServerConfiguration(runtime *plugin.Runtime, args map[strin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.smb.serverConfiguration", res.__id)
@@ -108826,7 +109266,12 @@ func createWindowsSmbClientConfiguration(runtime *plugin.Runtime, args map[strin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.smb.clientConfiguration", res.__id)
@@ -109073,7 +109518,7 @@ func (c *mqlWindowsSmbConnection) GetDialect() *plugin.TValue[string] {
 type mqlWindowsAcl struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsAclInternal it will be used here
+	mqlWindowsAclInternal
 	Path                   plugin.TValue[string]
 	Owner                  plugin.TValue[string]
 	OwnerSid               plugin.TValue[string]
@@ -109096,7 +109541,12 @@ func createWindowsAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.acl", res.__id)
@@ -109391,7 +109841,7 @@ func (c *mqlWindowsAclAuditEntry) GetPropagationFlags() *plugin.TValue[string] {
 type mqlWindowsDnsServer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsDnsServerInternal it will be used here
+	mqlWindowsDnsServerInternal
 	Settings               plugin.TValue[*mqlWindowsDnsServerSettings]
 	Recursion              plugin.TValue[*mqlWindowsDnsServerRecursion]
 	Cache                  plugin.TValue[*mqlWindowsDnsServerCache]
@@ -109414,7 +109864,12 @@ func createWindowsDnsServer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.dnsServer", res.__id)
@@ -110632,7 +111087,7 @@ func (c *mqlWindowsDnsServerZoneSigningKey) GetZoneSignatureValidityPeriodSecond
 type mqlWindowsExchangeServer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsExchangeServerInternal it will be used here
+	mqlWindowsExchangeServerInternal
 	Installed                   plugin.TValue[bool]
 	Version                     plugin.TValue[string]
 	InstallPath                 plugin.TValue[string]
@@ -110667,7 +111122,12 @@ func createWindowsExchangeServer(runtime *plugin.Runtime, args map[string]*llx.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.exchangeServer", res.__id)
@@ -112283,7 +112743,12 @@ func createWindowsPrinterDriver(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.printerDriver", res.__id)
@@ -112439,7 +112904,12 @@ func createWindowsDriver(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.driver", res.__id)
@@ -112589,7 +113059,7 @@ func (c *mqlWindowsCertificates) GetList() *plugin.TValue[[]any] {
 type mqlWindowsCertificate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsCertificateInternal it will be used here
+	mqlWindowsCertificateInternal
 	Location      plugin.TValue[string]
 	Store         plugin.TValue[string]
 	Thumbprint    plugin.TValue[string]
@@ -112608,7 +113078,12 @@ func createWindowsCertificate(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.certificate", res.__id)
@@ -112665,7 +113140,7 @@ func (c *mqlWindowsCertificate) GetCertificate() *plugin.TValue[plugin.Resource]
 type mqlWindowsBitlocker struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsBitlockerInternal it will be used here
+	mqlWindowsBitlockerInternal
 	Available plugin.TValue[bool]
 	Volumes   plugin.TValue[[]any]
 	Policy    plugin.TValue[*mqlWindowsBitlockerPolicy]
@@ -112745,7 +113220,7 @@ func (c *mqlWindowsBitlocker) GetPolicy() *plugin.TValue[*mqlWindowsBitlockerPol
 type mqlWindowsBitlockerPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsBitlockerPolicyInternal it will be used here
+	mqlWindowsBitlockerPolicyInternal
 	UseAdvancedStartup            plugin.TValue[bool]
 	UseEnhancedPin                plugin.TValue[bool]
 	EnableBdeWithNoTpm            plugin.TValue[bool]
@@ -112767,7 +113242,12 @@ func createWindowsBitlockerPolicy(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.bitlocker.policy", res.__id)
@@ -112890,7 +113370,12 @@ func createWindowsBitlockerPolicyDriveSettings(runtime *plugin.Runtime, args map
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.bitlocker.policy.driveSettings", res.__id)
@@ -112979,7 +113464,7 @@ func (c *mqlWindowsBitlockerPolicyDriveSettings) GetDenyCrossOrg() *plugin.TValu
 type mqlWindowsBitlockerVolume struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsBitlockerVolumeInternal it will be used here
+	mqlWindowsBitlockerVolumeInternal
 	DeviceID           plugin.TValue[string]
 	DriveLetter        plugin.TValue[string]
 	ConversionStatus   plugin.TValue[any]
@@ -113002,7 +113487,12 @@ func createWindowsBitlockerVolume(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.bitlocker.volume", res.__id)
@@ -113206,7 +113696,12 @@ func createWindowsSecurityProduct(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.security.product", res.__id)
@@ -113731,7 +114226,7 @@ func (c *mqlWindowsDefenderStatus) GetTamperProtectionSource() *plugin.TValue[st
 type mqlWindowsDefenderPreferences struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsDefenderPreferencesInternal it will be used here
+	mqlWindowsDefenderPreferencesInternal
 	Scan                        plugin.TValue[*mqlWindowsDefenderScanSettings]
 	RealTimeProtection          plugin.TValue[*mqlWindowsDefenderRealTimeSettings]
 	CloudProtection             plugin.TValue[*mqlWindowsDefenderCloudSettings]
@@ -114380,7 +114875,7 @@ func (c *mqlWindowsDefenderSignatureSettings) GetMeteredConnectionUpdates() *plu
 type mqlWindowsDefenderThreatActionSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsDefenderThreatActionSettingsInternal it will be used here
+	mqlWindowsDefenderThreatActionSettingsInternal
 	SevereThreatDefaultAction   plugin.TValue[int64]
 	HighThreatDefaultAction     plugin.TValue[int64]
 	ModerateThreatDefaultAction plugin.TValue[int64]
@@ -115548,7 +116043,7 @@ func (c *mqlMdmIntune) GetTenantId() *plugin.TValue[string] {
 type mqlWinget struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWingetInternal it will be used here
+	mqlWingetInternal
 	Installed           plugin.TValue[bool]
 	Version             plugin.TValue[string]
 	Architecture        plugin.TValue[string]
@@ -115571,7 +116066,12 @@ func createWinget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("winget", res.__id)
@@ -115679,7 +116179,12 @@ func createWingetSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("winget.source", res.__id)
@@ -117774,7 +118279,12 @@ func createVscode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("vscode", res.__id)
@@ -117846,7 +118356,12 @@ func createVscodeExtension(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("vscode.extension", res.__id)
@@ -118656,7 +119171,7 @@ func (c *mqlMdadmDevice) GetState() *plugin.TValue[string] {
 type mqlZfs struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlZfsInternal it will be used here
+	mqlZfsInternal
 	Version  plugin.TValue[string]
 	Pools    plugin.TValue[[]any]
 	Datasets plugin.TValue[[]any]
@@ -118673,7 +119188,12 @@ func createZfs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("zfs", res.__id)
@@ -118765,7 +119285,12 @@ func createZfsPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("zfs.pool", res.__id)
@@ -118864,7 +119389,7 @@ func (c *mqlZfsPool) GetProperties() *plugin.TValue[map[string]any] {
 type mqlZfsPoolVdev struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlZfsPoolVdevInternal it will be used here
+	mqlZfsPoolVdevInternal
 	Name           plugin.TValue[string]
 	Type           plugin.TValue[string]
 	State          plugin.TValue[string]
@@ -118888,7 +119413,12 @@ func createZfsPoolVdev(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("zfs.pool.vdev", res.__id)
@@ -118984,7 +119514,12 @@ func createZfsDataset(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("zfs.dataset", res.__id)
@@ -119106,7 +119641,12 @@ func createSolarisZones(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("solaris.zones", res.__id)
@@ -119147,7 +119687,7 @@ func (c *mqlSolarisZones) GetList() *plugin.TValue[[]any] {
 type mqlSolarisZone struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSolarisZoneInternal it will be used here
+	mqlSolarisZoneInternal
 	Name                 plugin.TValue[string]
 	ZoneId               plugin.TValue[int64]
 	State                plugin.TValue[string]
@@ -119186,7 +119726,12 @@ func createSolarisZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("solaris.zone", res.__id)
@@ -123184,7 +123729,12 @@ func createWindsurf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windsurf", res.__id)
@@ -123329,7 +123879,12 @@ func createWindsurfRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windsurf.repo", res.__id)
@@ -123395,7 +123950,12 @@ func createWindsurfRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windsurf.rule", res.__id)
@@ -123453,7 +124013,12 @@ func createWindsurfMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windsurf.mcpServer", res.__id)
@@ -123530,7 +124095,12 @@ func createWindsurfSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windsurf.skill", res.__id)
@@ -123591,7 +124161,7 @@ func (c *mqlWindsurfSkill) GetPurl() *plugin.TValue[string] {
 type mqlZed struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlZedInternal it will be used here
+	mqlZedInternal
 	ConfigPath    plugin.TValue[string]
 	Package       plugin.TValue[*mqlPackage]
 	Runtime       plugin.TValue[*mqlExtensionRuntime]
@@ -123613,7 +124183,12 @@ func createZed(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("zed", res.__id)
@@ -123734,7 +124309,12 @@ func createZedRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("zed.repo", res.__id)
@@ -127625,7 +128205,7 @@ func (c *mqlAgentinstructionsFile) GetSha256() *plugin.TValue[string] {
 type mqlSriov struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSriovInternal it will be used here
+	mqlSriovInternal
 	PhysicalFunctions plugin.TValue[[]any]
 	VirtualFunctions  plugin.TValue[[]any]
 }
@@ -127641,7 +128221,12 @@ func createSriov(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("sriov", res.__id)
@@ -127698,7 +128283,7 @@ func (c *mqlSriov) GetVirtualFunctions() *plugin.TValue[[]any] {
 type mqlSriovPhysicalFunction struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSriovPhysicalFunctionInternal it will be used here
+	mqlSriovPhysicalFunctionInternal
 	Interface        plugin.TValue[string]
 	PciAddress       plugin.TValue[string]
 	Driver           plugin.TValue[string]
@@ -127809,7 +128394,7 @@ func (c *mqlSriovPhysicalFunction) GetVirtualFunctions() *plugin.TValue[[]any] {
 type mqlSriovVirtualFunction struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSriovVirtualFunctionInternal it will be used here
+	mqlSriovVirtualFunctionInternal
 	PciAddress            plugin.TValue[string]
 	Index                 plugin.TValue[int64]
 	PhysicalFunction      plugin.TValue[*mqlSriovPhysicalFunction]
