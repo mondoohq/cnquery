@@ -47,3 +47,16 @@ func TestLoginDefsParserKeepsKeysAfterLongLine(t *testing.T) {
 	assert.Equal(t, "022", entries["UMASK"])
 	assert.Equal(t, "0", entries["PASS_MIN_DAYS"])
 }
+
+// Entries keeps every setting line with its number, including a key set twice,
+// so a check can point at the line that sets a value.
+func TestLoginDefsEntries(t *testing.T) {
+	content := "# UMASK 000\nUMASK\t\t022\n\nPASS_MAX_DAYS 90 # policy\n  UMASK 027\nUMASK\n"
+
+	assert.Equal(t, []logindefs.Entry{
+		{Line: 2, Key: "UMASK", Value: "022"},
+		{Line: 4, Key: "PASS_MAX_DAYS", Value: "90"},
+		{Line: 5, Key: "UMASK", Value: "027"},
+	}, logindefs.Entries(strings.NewReader(content)))
+	assert.Equal(t, "027", logindefs.Parse(strings.NewReader(content))["UMASK"], "the last line wins")
+}

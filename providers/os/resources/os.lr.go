@@ -350,6 +350,9 @@ const (
 	ResourceRsyslogRuleset                                string = "rsyslog.ruleset"
 	ResourceRsyslogRule                                   string = "rsyslog.rule"
 	ResourceLogindefs                                     string = "logindefs"
+	ResourceUmask                                         string = "umask"
+	ResourceUmaskSetting                                  string = "umask.setting"
+	ResourceUmaskPamModule                                string = "umask.pamModule"
 	ResourcePwquality                                     string = "pwquality"
 	ResourcePwqualitySettings                             string = "pwquality.settings"
 	ResourcePwqualityPamModule                            string = "pwquality.pamModule"
@@ -2101,6 +2104,18 @@ func init() {
 		"logindefs": {
 			Init:   initLogindefs,
 			Create: createLogindefs,
+		},
+		"umask": {
+			Init:   initUmask,
+			Create: createUmask,
+		},
+		"umask.setting": {
+			// to override args, implement: initUmaskSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createUmaskSetting,
+		},
+		"umask.pamModule": {
+			// to override args, implement: initUmaskPamModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createUmaskPamModule,
 		},
 		"pwquality": {
 			// to override args, implement: initPwquality(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -12695,6 +12710,90 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"logindefs.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLogindefs).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"umask.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmask).GetUser()).ToDataRes(types.String)
+	},
+	"umask.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmask).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"umask.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmask).GetSettings()).ToDataRes(types.Array(types.Resource("umask.setting")))
+	},
+	"umask.loginDefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmask).GetLoginDefs()).ToDataRes(types.Resource("umask.setting"))
+	},
+	"umask.pam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmask).GetPam()).ToDataRes(types.Array(types.Resource("umask.pamModule")))
+	},
+	"umask.setting.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetSource()).ToDataRes(types.String)
+	},
+	"umask.setting.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"umask.setting.line": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetLine()).ToDataRes(types.Int)
+	},
+	"umask.setting.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetValue()).ToDataRes(types.String)
+	},
+	"umask.setting.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetMode()).ToDataRes(types.Int)
+	},
+	"umask.setting.octal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetOctal()).ToDataRes(types.String)
+	},
+	"umask.setting.relative": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetRelative()).ToDataRes(types.Bool)
+	},
+	"umask.setting.conditional": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetConditional()).ToDataRes(types.Bool)
+	},
+	"umask.setting.userReadable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetUserReadable()).ToDataRes(types.Bool)
+	},
+	"umask.setting.userWriteable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetUserWriteable()).ToDataRes(types.Bool)
+	},
+	"umask.setting.userExecutable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetUserExecutable()).ToDataRes(types.Bool)
+	},
+	"umask.setting.groupReadable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetGroupReadable()).ToDataRes(types.Bool)
+	},
+	"umask.setting.groupWriteable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetGroupWriteable()).ToDataRes(types.Bool)
+	},
+	"umask.setting.groupExecutable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetGroupExecutable()).ToDataRes(types.Bool)
+	},
+	"umask.setting.otherReadable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetOtherReadable()).ToDataRes(types.Bool)
+	},
+	"umask.setting.otherWriteable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetOtherWriteable()).ToDataRes(types.Bool)
+	},
+	"umask.setting.otherExecutable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskSetting).GetOtherExecutable()).ToDataRes(types.Bool)
+	},
+	"umask.pamModule.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskPamModule).GetService()).ToDataRes(types.String)
+	},
+	"umask.pamModule.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskPamModule).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"umask.pamModule.control": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskPamModule).GetControl()).ToDataRes(types.String)
+	},
+	"umask.pamModule.arguments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskPamModule).GetArguments()).ToDataRes(types.Array(types.String))
+	},
+	"umask.pamModule.setting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskPamModule).GetSetting()).ToDataRes(types.Resource("umask.setting"))
+	},
+	"umask.pamModule.usergroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUmaskPamModule).GetUsergroups()).ToDataRes(types.Bool)
 	},
 	"pwquality.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPwquality).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
@@ -34754,6 +34853,130 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"logindefs.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlLogindefs).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"umask.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmask).__id, ok = v.Value.(string)
+		return
+	},
+	"umask.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmask).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"umask.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmask).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"umask.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmask).Settings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"umask.loginDefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmask).LoginDefs, ok = plugin.RawToTValue[*mqlUmaskSetting](v.Value, v.Error)
+		return
+	},
+	"umask.pam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmask).Pam, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"umask.setting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"umask.setting.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"umask.setting.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"umask.setting.line": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).Line, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"umask.setting.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"umask.setting.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).Mode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"umask.setting.octal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).Octal, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"umask.setting.relative": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).Relative, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"umask.setting.conditional": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).Conditional, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"umask.setting.userReadable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).UserReadable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"umask.setting.userWriteable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).UserWriteable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"umask.setting.userExecutable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).UserExecutable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"umask.setting.groupReadable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).GroupReadable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"umask.setting.groupWriteable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).GroupWriteable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"umask.setting.groupExecutable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).GroupExecutable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"umask.setting.otherReadable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).OtherReadable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"umask.setting.otherWriteable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).OtherWriteable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"umask.setting.otherExecutable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskSetting).OtherExecutable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"umask.pamModule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskPamModule).__id, ok = v.Value.(string)
+		return
+	},
+	"umask.pamModule.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskPamModule).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"umask.pamModule.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskPamModule).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"umask.pamModule.control": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskPamModule).Control, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"umask.pamModule.arguments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskPamModule).Arguments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"umask.pamModule.setting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskPamModule).Setting, ok = plugin.RawToTValue[*mqlUmaskSetting](v.Value, v.Error)
+		return
+	},
+	"umask.pamModule.usergroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUmaskPamModule).Usergroups, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"pwquality.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -85097,6 +85320,326 @@ func (c *mqlLogindefs) GetParams() *plugin.TValue[map[string]any] {
 
 		return c.params(vargContent.Data)
 	})
+}
+
+// mqlUmask for the umask resource
+type mqlUmask struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlUmaskInternal
+	User      plugin.TValue[string]
+	Files     plugin.TValue[[]any]
+	Settings  plugin.TValue[[]any]
+	LoginDefs plugin.TValue[*mqlUmaskSetting]
+	Pam       plugin.TValue[[]any]
+}
+
+// createUmask creates a new instance of this resource
+func createUmask(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlUmask{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("umask", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlUmask) MqlName() string {
+	return "umask"
+}
+
+func (c *mqlUmask) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlUmask) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlUmask) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("umask", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlUmask) GetSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Settings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("umask", c.__id, "settings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.settings(vargFiles.Data)
+	})
+}
+
+func (c *mqlUmask) GetLoginDefs() *plugin.TValue[*mqlUmaskSetting] {
+	return plugin.GetOrCompute[*mqlUmaskSetting](&c.LoginDefs, func() (*mqlUmaskSetting, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("umask", c.__id, "loginDefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlUmaskSetting), nil
+			}
+		}
+
+		vargSettings := c.GetSettings()
+		if vargSettings.Error != nil {
+			return nil, vargSettings.Error
+		}
+
+		return c.loginDefs(vargSettings.Data)
+	})
+}
+
+func (c *mqlUmask) GetPam() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Pam, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("umask", c.__id, "pam")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pam()
+	})
+}
+
+// mqlUmaskSetting for the umask.setting resource
+type mqlUmaskSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlUmaskSettingInternal it will be used here
+	Source          plugin.TValue[string]
+	File            plugin.TValue[*mqlFile]
+	Line            plugin.TValue[int64]
+	Value           plugin.TValue[string]
+	Mode            plugin.TValue[int64]
+	Octal           plugin.TValue[string]
+	Relative        plugin.TValue[bool]
+	Conditional     plugin.TValue[bool]
+	UserReadable    plugin.TValue[bool]
+	UserWriteable   plugin.TValue[bool]
+	UserExecutable  plugin.TValue[bool]
+	GroupReadable   plugin.TValue[bool]
+	GroupWriteable  plugin.TValue[bool]
+	GroupExecutable plugin.TValue[bool]
+	OtherReadable   plugin.TValue[bool]
+	OtherWriteable  plugin.TValue[bool]
+	OtherExecutable plugin.TValue[bool]
+}
+
+// createUmaskSetting creates a new instance of this resource
+func createUmaskSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlUmaskSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("umask.setting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlUmaskSetting) MqlName() string {
+	return "umask.setting"
+}
+
+func (c *mqlUmaskSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlUmaskSetting) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlUmaskSetting) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlUmaskSetting) GetLine() *plugin.TValue[int64] {
+	return &c.Line
+}
+
+func (c *mqlUmaskSetting) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlUmaskSetting) GetMode() *plugin.TValue[int64] {
+	return &c.Mode
+}
+
+func (c *mqlUmaskSetting) GetOctal() *plugin.TValue[string] {
+	return &c.Octal
+}
+
+func (c *mqlUmaskSetting) GetRelative() *plugin.TValue[bool] {
+	return &c.Relative
+}
+
+func (c *mqlUmaskSetting) GetConditional() *plugin.TValue[bool] {
+	return &c.Conditional
+}
+
+func (c *mqlUmaskSetting) GetUserReadable() *plugin.TValue[bool] {
+	return &c.UserReadable
+}
+
+func (c *mqlUmaskSetting) GetUserWriteable() *plugin.TValue[bool] {
+	return &c.UserWriteable
+}
+
+func (c *mqlUmaskSetting) GetUserExecutable() *plugin.TValue[bool] {
+	return &c.UserExecutable
+}
+
+func (c *mqlUmaskSetting) GetGroupReadable() *plugin.TValue[bool] {
+	return &c.GroupReadable
+}
+
+func (c *mqlUmaskSetting) GetGroupWriteable() *plugin.TValue[bool] {
+	return &c.GroupWriteable
+}
+
+func (c *mqlUmaskSetting) GetGroupExecutable() *plugin.TValue[bool] {
+	return &c.GroupExecutable
+}
+
+func (c *mqlUmaskSetting) GetOtherReadable() *plugin.TValue[bool] {
+	return &c.OtherReadable
+}
+
+func (c *mqlUmaskSetting) GetOtherWriteable() *plugin.TValue[bool] {
+	return &c.OtherWriteable
+}
+
+func (c *mqlUmaskSetting) GetOtherExecutable() *plugin.TValue[bool] {
+	return &c.OtherExecutable
+}
+
+// mqlUmaskPamModule for the umask.pamModule resource
+type mqlUmaskPamModule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlUmaskPamModuleInternal it will be used here
+	Service    plugin.TValue[string]
+	LineNumber plugin.TValue[int64]
+	Control    plugin.TValue[string]
+	Arguments  plugin.TValue[[]any]
+	Setting    plugin.TValue[*mqlUmaskSetting]
+	Usergroups plugin.TValue[bool]
+}
+
+// createUmaskPamModule creates a new instance of this resource
+func createUmaskPamModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlUmaskPamModule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("umask.pamModule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlUmaskPamModule) MqlName() string {
+	return "umask.pamModule"
+}
+
+func (c *mqlUmaskPamModule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlUmaskPamModule) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlUmaskPamModule) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlUmaskPamModule) GetControl() *plugin.TValue[string] {
+	return &c.Control
+}
+
+func (c *mqlUmaskPamModule) GetArguments() *plugin.TValue[[]any] {
+	return &c.Arguments
+}
+
+func (c *mqlUmaskPamModule) GetSetting() *plugin.TValue[*mqlUmaskSetting] {
+	return &c.Setting
+}
+
+func (c *mqlUmaskPamModule) GetUsergroups() *plugin.TValue[bool] {
+	return &c.Usergroups
 }
 
 // mqlPwquality for the pwquality resource
