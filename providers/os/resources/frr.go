@@ -313,7 +313,11 @@ func (s *mqlFrrConfig) bgp(file *mqlFile) ([]any, error) {
 		// The id is built from what the instance is, not from where it
 		// sits, so reordering the blocks does not renumber the rest. An ASN
 		// and a VRF name identify an instance.
-		id := fmt.Sprintf("%s#bgp/%d/%s", s.__id, b.ASN, b.VRF)
+		asn := ""
+		if b.ASN != nil {
+			asn = strconv.FormatInt(*b.ASN, 10)
+		}
+		id := fmt.Sprintf("%s#bgp/%s/%s", s.__id, asn, b.VRF)
 
 		neighbors, err := s.createNeighbors(id, b.Neighbors)
 		if err != nil {
