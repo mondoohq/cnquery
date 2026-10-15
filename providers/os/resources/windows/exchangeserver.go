@@ -160,11 +160,11 @@ func decodeExchangeRecords(section json.RawMessage) ([]ExchangeRecord, error) {
 // list, which would let `list.all(...)` pass on a server that was never read.
 func (c *ExchangeCollection) Section(name string) ([]ExchangeRecord, error) {
 	if msg, ok := c.Errors[name]; ok {
-		return nil, fmt.Errorf("Exchange Management Shell failed to read %s: %s", name, strings.TrimSpace(msg))
+		return nil, fmt.Errorf("the Exchange Management Shell failed to read %s: %s", name, strings.TrimSpace(msg))
 	}
 	records, ok := c.Data[name]
 	if !ok {
-		return nil, fmt.Errorf("Exchange Management Shell returned no %s section", name)
+		return nil, fmt.Errorf("the Exchange Management Shell returned no %s section", name)
 	}
 	return records, nil
 }
@@ -177,7 +177,7 @@ func (c *ExchangeCollection) Single(name string) (ExchangeRecord, error) {
 		return nil, err
 	}
 	if len(records) == 0 {
-		return nil, fmt.Errorf("Exchange Management Shell returned no %s", name)
+		return nil, fmt.Errorf("the Exchange Management Shell returned no %s", name)
 	}
 	return records[0], nil
 }
