@@ -297,6 +297,9 @@ func (u *mqlUser) sshkeys() ([]any, error) {
 	// check if use ssh directory exists
 	exists, err := afutil.Exists(userSshPath)
 	if err != nil {
+		if isAbsentPath(err) {
+			return res, nil
+		}
 		return nil, classifyFsError(err)
 	}
 	if !exists {

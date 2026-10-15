@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"sort"
+	"syscall"
 
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/llx"
@@ -29,6 +30,14 @@ func newFile(runtime *plugin.Runtime, path string) (*mqlFile, error) {
 	return file, nil
 }
 
+// isAbsentPath reports whether err says the path is not there. A path below
+// a file that is not a directory (a user whose home is /dev/null, as sshd's
+// and guest's are on Alpine) fails with ENOTDIR, which os.IsNotExist does not
+// count: `test -e /dev/null/.ssh` is false all the same.
+func isAbsentPath(err error) bool {
+	return errors.Is(err, os.ErrNotExist) || errors.Is(err, syscall.ENOTDIR)
+}
+
 // classifyFsError marks a filesystem refusal (EACCES/EPERM) as forbidden and
 // returns any other error unchanged.
 func classifyFsError(err error) error {
@@ -46,7 +55,7 @@ func classifyFsError(err error) error {
 func globDir(fs afero.Fs, dir string, pattern string, dirsOnly bool) ([]string, error) {
 	entries, err := afero.ReadDir(fs, dir)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
+		if isAbsentPath(err) {
 			return nil, nil
 		}
 		return nil, classifyFsError(err)
@@ -191,7 +200,7 @@ func (s *mqlFile) loadStatFields(path string) (*shared.FileInfoDetails, bool, er
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 	stat, err := conn.FileInfo(path)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
+		if isAbsentPath(err) {
 			s.Exists = plugin.TValue[bool]{
 				Data:  false,
 				State: plugin.StateIsSet,
