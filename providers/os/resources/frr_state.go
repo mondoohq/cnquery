@@ -295,7 +295,7 @@ func (s *mqlFrrVrf) routes() (*mqlFrrRouteTable, error) {
 		return nil, name.Error
 	}
 	obj, err := CreateResource(s.MqlRuntime, "frr.routeTable", map[string]*llx.RawData{
-		"__id":  llx.StringData(frrRouteTableID(name.Data, "ipv4")),
+		"__id":  llx.StringData(frrRouteTableID(name.Data, "ipv4", int64(frr.DefaultRouteLimit))),
 		"vrf":   llx.StringData(name.Data),
 		"afi":   llx.StringData("ipv4"),
 		"limit": llx.IntData(int64(frr.DefaultRouteLimit)),
@@ -486,8 +486,8 @@ func anyMapToDict(in map[string]any) any {
 // frr.routeTable
 // ======================================================================
 
-func frrRouteTableID(vrf, afi string) string {
-	return "frr.routeTable/" + vrfKey(vrf) + "/" + afi
+func frrRouteTableID(vrf, afi string, limit int64) string {
+	return "frr.routeTable/" + vrfKey(vrf) + "/" + afi + "/limit/" + strconv.FormatInt(limit, 10)
 }
 
 // initFrrRouteTable fills the defaults of the query and validates the VRF
@@ -534,7 +534,7 @@ func initFrrRouteTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	args["vrf"] = llx.StringData(vrf)
 	args["afi"] = llx.StringData(afi)
 	args["limit"] = llx.IntData(limit)
-	args["__id"] = llx.StringData(frrRouteTableID(vrf, afi))
+	args["__id"] = llx.StringData(frrRouteTableID(vrf, afi, limit))
 	return args, nil, nil
 }
 

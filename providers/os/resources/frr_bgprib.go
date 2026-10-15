@@ -92,11 +92,12 @@ func createBGPRoutes(runtime *plugin.Runtime, prefix string, routes []frr.BGPRou
 // frr.evpn.routeTable
 // ======================================================================
 
-func frrEVPNRouteTableID(vni int64) string {
-	if vni == 0 {
-		return "frr.evpn.routeTable/all"
+func frrEVPNRouteTableID(vni, limit int64) string {
+	key := "frr.evpn.routeTable/all"
+	if vni != 0 {
+		key = "frr.evpn.routeTable/vni/" + strconv.FormatInt(vni, 10)
 	}
-	return "frr.evpn.routeTable/vni/" + strconv.FormatInt(vni, 10)
+	return key + "/limit/" + strconv.FormatInt(limit, 10)
 }
 
 // initFrrEvpnRouteTable fills the defaults of the query. The VNI is a number,
@@ -128,7 +129,7 @@ func initFrrEvpnRouteTable(runtime *plugin.Runtime, args map[string]*llx.RawData
 
 	args["vni"] = llx.IntData(vni)
 	args["limit"] = llx.IntData(limit)
-	args["__id"] = llx.StringData(frrEVPNRouteTableID(vni))
+	args["__id"] = llx.StringData(frrEVPNRouteTableID(vni, limit))
 	return args, nil, nil
 }
 
@@ -140,7 +141,7 @@ type mqlFrrEvpnRouteTableInternal struct {
 
 func (n *mqlFrr) evpnRoutes() (*mqlFrrEvpnRouteTable, error) {
 	obj, err := CreateResource(n.MqlRuntime, "frr.evpn.routeTable", map[string]*llx.RawData{
-		"__id":  llx.StringData(frrEVPNRouteTableID(0)),
+		"__id":  llx.StringData(frrEVPNRouteTableID(0, int64(frr.DefaultRIBLimit))),
 		"vni":   llx.IntData(0),
 		"limit": llx.IntData(int64(frr.DefaultRIBLimit)),
 	})
@@ -247,8 +248,8 @@ func (s *mqlFrrEvpnRouteTable) entries() ([]any, error) {
 // frr.bgp.peerRoutes
 // ======================================================================
 
-func frrPeerRoutesID(peer, direction, vrf, afi string) string {
-	return "frr.bgp.peerRoutes/" + vrfKey(vrf) + "/" + afi + "/" + direction + "/" + peer
+func frrPeerRoutesID(peer, direction, vrf, afi string, limit int64) string {
+	return "frr.bgp.peerRoutes/" + vrfKey(vrf) + "/" + afi + "/" + direction + "/" + peer + "/limit/" + strconv.FormatInt(limit, 10)
 }
 
 // initFrrBgpPeerRoutes validates the query. The peer and the VRF reach the
@@ -321,7 +322,7 @@ func initFrrBgpPeerRoutes(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	args["vrf"] = llx.StringData(vrf)
 	args["afi"] = llx.StringData(afi)
 	args["limit"] = llx.IntData(limit)
-	args["__id"] = llx.StringData(frrPeerRoutesID(peer, direction, vrf, afi))
+	args["__id"] = llx.StringData(frrPeerRoutesID(peer, direction, vrf, afi, limit))
 	return args, nil, nil
 }
 

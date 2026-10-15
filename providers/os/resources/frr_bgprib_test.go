@@ -17,7 +17,7 @@ func TestInitFrrEvpnRouteTable(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, int64(0), args["vni"].Value)
 	assert.Equal(t, int64(5000), args["limit"].Value)
-	assert.Equal(t, "frr.evpn.routeTable/all", args["__id"].Value)
+	assert.Equal(t, "frr.evpn.routeTable/all/limit/5000", args["__id"].Value)
 
 	args, _, err = initFrrEvpnRouteTable(nil, map[string]*llx.RawData{
 		"vni":   llx.IntData(4001),
@@ -25,7 +25,7 @@ func TestInitFrrEvpnRouteTable(t *testing.T) {
 	})
 	require.NoError(t, err)
 	assert.Equal(t, int64(4001), args["vni"].Value)
-	assert.Equal(t, "frr.evpn.routeTable/vni/4001", args["__id"].Value)
+	assert.Equal(t, "frr.evpn.routeTable/vni/4001/limit/50", args["__id"].Value)
 
 	for _, bad := range []map[string]*llx.RawData{
 		{"vni": llx.IntData(-1)},
@@ -47,7 +47,7 @@ func TestInitFrrBgpPeerRoutes(t *testing.T) {
 	assert.Equal(t, "ipv4", args["afi"].Value)
 	assert.Equal(t, "", args["vrf"].Value)
 	assert.Equal(t, int64(5000), args["limit"].Value)
-	assert.Equal(t, "frr.bgp.peerRoutes/default/ipv4/advertised/swp1", args["__id"].Value)
+	assert.Equal(t, "frr.bgp.peerRoutes/default/ipv4/advertised/swp1/limit/5000", args["__id"].Value)
 
 	args, _, err = initFrrBgpPeerRoutes(nil, map[string]*llx.RawData{
 		"peer":      llx.StringData("2001:db8::1"),
@@ -58,7 +58,7 @@ func TestInitFrrBgpPeerRoutes(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "received", args["direction"].Value)
 	assert.Equal(t, "ipv6", args["afi"].Value)
-	assert.Equal(t, "frr.bgp.peerRoutes/t-blue/ipv6/received/2001:db8::1", args["__id"].Value)
+	assert.Equal(t, "frr.bgp.peerRoutes/t-blue/ipv6/received/2001:db8::1/limit/5000", args["__id"].Value)
 }
 
 // TestInitFrrBgpPeerRoutes_Rejects covers the arguments that reach the vtysh
@@ -94,12 +94,15 @@ func TestInitFrrBgpPeerRoutes_Rejects(t *testing.T) {
 }
 
 func TestFrrRIBIDs(t *testing.T) {
-	assert.Equal(t, "frr.evpn.routeTable/all", frrEVPNRouteTableID(0))
-	assert.Equal(t, "frr.evpn.routeTable/vni/100", frrEVPNRouteTableID(100))
-	assert.Equal(t, "frr.bgp.peerRoutes/default/ipv4/advertised/swp1",
-		frrPeerRoutesID("swp1", "advertised", "", "ipv4"))
-	assert.Equal(t, "frr.bgp.peerRoutes/cluster/l2vpn/received/192.0.2.1",
-		frrPeerRoutesID("192.0.2.1", "received", "cluster", "l2vpn"))
+	assert.Equal(t, "frr.evpn.routeTable/all/limit/5000", frrEVPNRouteTableID(0, 5000))
+	assert.Equal(t, "frr.evpn.routeTable/vni/100/limit/5000", frrEVPNRouteTableID(100, 5000))
+	assert.Equal(t, "frr.bgp.peerRoutes/default/ipv4/advertised/swp1/limit/5000",
+		frrPeerRoutesID("swp1", "advertised", "", "ipv4", 5000))
+	assert.Equal(t, "frr.bgp.peerRoutes/cluster/l2vpn/received/192.0.2.1/limit/5000",
+		frrPeerRoutesID("192.0.2.1", "received", "cluster", "l2vpn", 5000))
+	assert.NotEqual(t, frrEVPNRouteTableID(100, 10), frrEVPNRouteTableID(100, 100))
+	assert.NotEqual(t, frrPeerRoutesID("swp1", "advertised", "", "ipv4", 10),
+		frrPeerRoutesID("swp1", "advertised", "", "ipv4", 100))
 }
 
 // TestFrrBgpPeerRoutesLoadValidates pins that the values which reach the

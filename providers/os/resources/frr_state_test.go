@@ -87,7 +87,7 @@ func TestInitFrrRouteTable_Defaults(t *testing.T) {
 	assert.Equal(t, "", args["vrf"].Value)
 	assert.Equal(t, "ipv4", args["afi"].Value)
 	assert.Equal(t, int64(5000), args["limit"].Value)
-	assert.Equal(t, "frr.routeTable/default/ipv4", args["__id"].Value)
+	assert.Equal(t, "frr.routeTable/default/ipv4/limit/5000", args["__id"].Value)
 }
 
 func TestInitFrrRouteTable_Arguments(t *testing.T) {
@@ -100,7 +100,7 @@ func TestInitFrrRouteTable_Arguments(t *testing.T) {
 	assert.Equal(t, "t-blue", args["vrf"].Value)
 	assert.Equal(t, "ipv6", args["afi"].Value)
 	assert.Equal(t, int64(10), args["limit"].Value)
-	assert.Equal(t, "frr.routeTable/t-blue/ipv6", args["__id"].Value)
+	assert.Equal(t, "frr.routeTable/t-blue/ipv6/limit/10", args["__id"].Value)
 }
 
 // TestInitFrrRouteTable_Rejects covers the arguments that reach the vtysh
@@ -128,8 +128,9 @@ func TestInitFrrRouteTable_Rejects(t *testing.T) {
 }
 
 func TestFrrRouteTableID(t *testing.T) {
-	assert.Equal(t, "frr.routeTable/default/ipv4", frrRouteTableID("", "ipv4"))
-	assert.Equal(t, "frr.routeTable/cluster/ipv6", frrRouteTableID("cluster", "ipv6"))
+	assert.Equal(t, "frr.routeTable/default/ipv4/limit/5000", frrRouteTableID("", "ipv4", 5000))
+	assert.Equal(t, "frr.routeTable/cluster/ipv6", frrRouteTableID("cluster", "ipv6", 10))
 	assert.Equal(t, "default", vrfKey(""))
 	assert.Equal(t, "cluster", vrfKey("cluster"))
+	assert.NotEqual(t, frrRouteTableID("cluster", "ipv4", 10), frrRouteTableID("cluster", "ipv4", 100))
 }
