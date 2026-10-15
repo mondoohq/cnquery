@@ -210,10 +210,14 @@ func exchangeInstallPath(items map[string]registry.RegistryKeyItem) string {
 
 // exchangeVersion assembles the build number from the four DWORDs setup
 // writes, the form Microsoft's build number table uses (15.2.1544.4). Empty
-// when Exchange is not installed.
+// when Exchange is not installed, and when setup was interrupted before it
+// wrote all four: a partial build such as 15.2.0.0 would compare as an old,
+// unpatched release.
 func exchangeVersion(items map[string]registry.RegistryKeyItem) string {
-	if !regHas(items, "MsiProductMajor") {
-		return ""
+	for _, name := range []string{"MsiProductMajor", "MsiProductMinor", "MsiBuildMajor", "MsiBuildMinor"} {
+		if !regHas(items, name) {
+			return ""
+		}
 	}
 	return fmt.Sprintf("%d.%d.%d.%d",
 		regInt(items, "MsiProductMajor"),

@@ -24,6 +24,12 @@ func TestExchangeVersionAndInstallPath(t *testing.T) {
 	assert.Equal(t, "15.2.1544.4", exchangeVersion(items))
 	assert.Equal(t, `C:\Program Files\Microsoft\Exchange Server\V15`, exchangeInstallPath(items))
 
+	partial := map[string]registry.RegistryKeyItem{
+		"msiproductmajor": items["msiproductmajor"],
+		"msiproductminor": items["msiproductminor"],
+	}
+	assert.Equal(t, "", exchangeVersion(partial), "an interrupted setup has no build, not 15.2.0.0")
+
 	empty := map[string]registry.RegistryKeyItem{}
 	assert.Equal(t, "", exchangeVersion(empty), "no version on a host without Exchange, not 0.0.0.0")
 	assert.Equal(t, "", exchangeInstallPath(empty))
