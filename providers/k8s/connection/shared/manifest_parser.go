@@ -145,10 +145,6 @@ func (t *ManifestParser) resourceIndex() (*resources.ApiResourceIndex, error) {
 						Kind:         gvk.Kind,
 						Version:      gvk.Version,
 						Group:        gvk.Group,
-						// Manifest-only resources have no discovery metadata. Infer
-						// scope from the object's namespace so namespace-scoped
-						// Kyverno reports and exceptions remain filtered.
-						Namespaced: unstr.GetNamespace() != "",
 					},
 				}
 				resTypes.Add(apiRes)
@@ -192,10 +188,7 @@ func (t *ManifestParser) resources(kind string, name string, namespace string) (
 		return nil, err
 	}
 
-	// Use the effective namespace for filtering. The caller may omit it while
-	// the connection is namespace-scoped; passing the raw argument would make
-	// every namespaced kind appear cluster-wide in that case.
-	res, err := resources.FilterResource(resType, t.Objects, name, ns)
+	res, err := resources.FilterResource(resType, t.Objects, name, namespace)
 
 	return &ResourceResult{
 		Name:         name,

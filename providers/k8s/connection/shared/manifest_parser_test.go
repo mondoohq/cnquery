@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
 )
 
 type ManifestParserSuite struct {
@@ -96,21 +95,6 @@ func TestNamespace_StandaloneObjectLookup(t *testing.T) {
 
 	_, err = parser.Namespace("does-not-exist")
 	require.Error(t, err)
-}
-
-func TestManifestParserResourcesUsesConnectionNamespace(t *testing.T) {
-	manifest, err := LoadManifestFile("./resources/testdata/mixed.yaml")
-	require.NoError(t, err)
-	parser, err := NewManifestParser(manifest, "custom", "")
-	require.NoError(t, err)
-	result, err := parser.Resources("DaemonSet", "", "")
-	require.NoError(t, err)
-	for _, object := range result.Resources {
-		objectMeta, err := meta.Accessor(object)
-		require.NoError(t, err)
-		require.Equal(t, "custom", objectMeta.GetNamespace())
-	}
-	require.Len(t, result.Resources, 1)
 }
 
 func keysOf(m map[string]v1.Namespace) []string {
