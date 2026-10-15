@@ -165,7 +165,7 @@ func compileAssignment(c *compiler, id string, call *parser.Call) (types.Type, e
 		return types.Nil, err
 	}
 
-	c.vars.add(name, variable{
+	c.vars.assign(name, variable{
 		name: name,
 		ref:  ref,
 		typ:  c.Result.CodeV2.Chunk(ref).Type(),

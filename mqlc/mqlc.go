@@ -244,6 +244,10 @@ type varmap struct {
 	blockref uint64
 	parent   *varmap
 	vars     map[string]variable
+	// assigned holds the refs of every `name = value` in this scope, including
+	// the ones a later assignment to the same name shadowed. A definition is
+	// never a result of its own.
+	assigned map[uint64]struct{}
 }
 
 func newvarmap(blockref uint64, parent *varmap) *varmap {
@@ -251,6 +255,7 @@ func newvarmap(blockref uint64, parent *varmap) *varmap {
 		blockref: blockref,
 		parent:   parent,
 		vars:     map[string]variable{},
+		assigned: map[uint64]struct{}{},
 	}
 }
 
@@ -268,8 +273,10 @@ func (vm *varmap) add(name string, v variable) {
 	vm.vars[name] = v
 }
 
-func (vm *varmap) len() int {
-	return len(vm.vars)
+// assign adds a variable the user defined with `name = value`
+func (vm *varmap) assign(name string, v variable) {
+	vm.vars[name] = v
+	vm.assigned[v.ref] = struct{}{}
 }
 
 type CompilerConfig struct {
@@ -2652,19 +2659,6 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 func (c *compiler) postCompile() {
 	code := c.Result.CodeV2
 
-	// A variable definition is not an entrypoint: updateEntrypoints removes
-	// it, but only after this pass. Expanding it here first replaced its ref
-	// with the expansion's, so it was never removed, and `x = file(...)`
-	// became a result of its own: evaluated and reported with the resource's
-	// default fields (an extra read per field, for every resource of a list),
-	// and scored, so a file of size 0 failed the query.
-	varRefs := make(map[uint64]struct{}, c.vars.len())
-	for name, v := range c.vars.vars {
-		if name != "_" {
-			varRefs[v.ref] = struct{}{}
-		}
-	}
-
 	// Use index-based loop instead of range so that blocks appended by
 	// expandResourceFields (nested @defaults) are visited in the same pass.
 	for i := 0; i < len(code.Blocks); i++ {
@@ -2687,11 +2681,14 @@ func (c *compiler) postCompile() {
 				continue
 			}
 
-			// An assessment in a variable (`x = users.all(...)`) keeps its
-			// expansion: it adds the failing items' default fields as a
-			// datapoint without replacing the variable's ref.
+			// A variable definition is not a result: updateEntrypoints removes
+			// it after this pass, and expanding it first would replace its ref,
+			// so `x = file(...)` was evaluated with the file's default fields and
+			// scored. An assessment in a variable (`x = users.all(...)`) still
+			// expands: that only adds the failing items' default fields as a
+			// datapoint.
 			if block == c.block {
-				if _, ok := varRefs[ref]; ok && !isAssessment(chunk.Id) {
+				if _, ok := c.vars.assigned[ref]; ok && !isAssessment(chunk.Id) {
 					continue
 				}
 			}
@@ -3044,21 +3041,10 @@ func (c *compiler) updateEntrypoints() {
 	code := c.Result.CodeV2
 
 	// 1. efficiently remove variable definitions from entrypoints
-	varsByRef := make(map[uint64]variable, c.vars.len())
-	for name, v := range c.vars.vars {
-		if name == "_" {
-			// We need to filter this out. It wasn't an assignment declared by the
-			// user. We will re-introduce it conceptually once we tackle context
-			// information for blocks.
-			continue
-		}
-		varsByRef[v.ref] = v
-	}
-
 	max := len(c.block.Entrypoints)
 	for i := 0; i < max; {
 		ref := c.block.Entrypoints[i]
-		if _, ok := varsByRef[ref]; ok {
+		if _, ok := c.vars.assigned[ref]; ok {
 			c.block.Entrypoints[i], c.block.Entrypoints[max-1] = c.block.Entrypoints[max-1], c.block.Entrypoints[i]
 			max--
 		} else {

@@ -593,6 +593,33 @@ func TestCompiler_ResourceAssignment(t *testing.T) {
 		})
 	})
 
+	t.Run("a reassigned variable", func(t *testing.T) {
+		compileT(t, "x = mondoo\nx = users.list\nx.length > 0", func(res *llx.CodeBundle) {
+			assert.Empty(t, res.AutoExpand)
+			assert.Len(t, res.CodeV2.Blocks, 1)
+			require.Len(t, res.CodeV2.Blocks[0].Entrypoints, 1)
+			ep := res.CodeV2.Chunk(res.CodeV2.Blocks[0].Entrypoints[0])
+			assert.True(t, strings.HasPrefix(ep.Id, ">"), ep.Id)
+		})
+	})
+
+	t.Run("a reassigned variable in a block", func(t *testing.T) {
+		compileT(t, "users.list { x = name\nx = uid\nx > 0 }", func(res *llx.CodeBundle) {
+			require.Len(t, res.CodeV2.Blocks, 2)
+			require.Len(t, res.CodeV2.Blocks[1].Entrypoints, 1)
+			ep := res.CodeV2.Chunk(res.CodeV2.Blocks[1].Entrypoints[0])
+			assert.True(t, strings.HasPrefix(ep.Id, ">"), ep.Id)
+		})
+	})
+
+	t.Run("an assignment to _", func(t *testing.T) {
+		compileT(t, "_ = mondoo\nmondoo.version", func(res *llx.CodeBundle) {
+			assert.Empty(t, res.AutoExpand)
+			require.Len(t, res.CodeV2.Blocks[0].Entrypoints, 1)
+			assert.Equal(t, "version", res.CodeV2.Chunk(res.CodeV2.Blocks[0].Entrypoints[0]).Id)
+		})
+	})
+
 	t.Run("a variable that is the result", func(t *testing.T) {
 		compileT(t, "x = mondoo\nx", func(res *llx.CodeBundle) {
 			assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Blocks[0].Entrypoints)
