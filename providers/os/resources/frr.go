@@ -224,6 +224,10 @@ func (s *mqlFrrConfig) markParseErrors(err error) {
 	s.RouteMaps = arrVal
 	s.Blocks = arrVal
 	s.Directives = arrVal
+	s.StaticRoutes = arrVal
+	s.CommunityLists = arrVal
+	s.AccessLists = arrVal
+	s.AsPathAccessLists = arrVal
 }
 
 func (s *mqlFrrConfig) hostname(file *mqlFile) (string, error) {
@@ -308,13 +312,8 @@ func (s *mqlFrrConfig) bgp(file *mqlFile) ([]any, error) {
 		b := &instances[i]
 		// The id is built from what the instance is, not from where it
 		// sits, so reordering the blocks does not renumber the rest. An ASN
-		// and a VRF name identify an instance; FRR allows one instance per
-		// VRF, so an instance without a valid ASN is still told apart.
-		asn := ""
-		if b.ASN != nil {
-			asn = strconv.FormatInt(*b.ASN, 10)
-		}
-		id := fmt.Sprintf("%s#bgp/%s/%s", s.__id, asn, b.VRF)
+		// and a VRF name identify an instance.
+		id := fmt.Sprintf("%s#bgp/%d/%s", s.__id, b.ASN, b.VRF)
 
 		neighbors, err := s.createNeighbors(id, b.Neighbors)
 		if err != nil {
@@ -327,7 +326,7 @@ func (s *mqlFrrConfig) bgp(file *mqlFile) ([]any, error) {
 
 		obj, err := CreateResource(s.MqlRuntime, "frr.config.router", map[string]*llx.RawData{
 			"__id":               llx.StringData(id),
-			"asn":                llx.IntDataPtr(b.ASN),
+			"asn":                llx.IntData(b.ASN),
 			"vrf":                llx.StringData(b.VRF),
 			"routerId":           llx.StringData(b.RouterID),
 			"clusterId":          llx.StringData(b.ClusterID),
@@ -390,8 +389,8 @@ func (s *mqlFrrConfig) createNeighbors(prefix string, neighbors []frr.Neighbor) 
 			"isPeerGroup":              llx.BoolData(n.IsPeerGroup),
 			"peerGroup":                llx.StringData(n.PeerGroup),
 			"remoteAs":                 llx.StringData(n.RemoteAs),
-			"remoteAsn":                llx.IntDataPtr(n.RemoteASN),
-			"localAsn":                 llx.IntDataPtr(n.LocalASN),
+			"remoteAsn":                llx.IntData(n.RemoteASN),
+			"localAsn":                 llx.IntData(n.LocalASN),
 			"description":              llx.StringData(n.Description),
 			"updateSource":             llx.StringData(n.UpdateSource),
 			"listenRange":              llx.StringData(n.ListenRange),
@@ -466,7 +465,7 @@ func (s *mqlFrrConfig) vrfs(file *mqlFile) ([]any, error) {
 			"name":               llx.StringData(v.Name),
 			"vni":                llx.IntData(v.VNI),
 			"staticRoutes":       llx.ArrayData(stringSliceToAny(v.StaticRoutes), types.String),
-			"routerAsn":          llx.IntDataPtr(v.RouterASN),
+			"routerAsn":          llx.IntData(v.RouterASN),
 			"routeTargetsImport": llx.ArrayData(stringSliceToAny(v.RouteTargetsImport), types.String),
 			"routeTargetsExport": llx.ArrayData(stringSliceToAny(v.RouteTargetsExport), types.String),
 			"importedVrfs":       llx.ArrayData(stringSliceToAny(v.ImportedVrfs), types.String),
@@ -553,7 +552,7 @@ func (s *mqlFrrConfig) routeMaps(file *mqlFile) ([]any, error) {
 		entries := make([]any, 0, len(rm.Entries))
 		for j := range rm.Entries {
 			e := &rm.Entries[j]
-			obj, err := CreateResource(s.MqlRuntime, "frr.config.routeMap.entry", map[string]*llx.RawData{
+			entryArgs := map[string]*llx.RawData{
 				"__id":      llx.StringData(id + "/" + strconv.FormatInt(e.Sequence, 10) + "/" + strconv.Itoa(j)),
 				"name":      llx.StringData(e.Name),
 				"action":    llx.StringData(e.Action),
@@ -565,7 +564,10 @@ func (s *mqlFrrConfig) routeMaps(file *mqlFile) ([]any, error) {
 				"file":      llx.StringData(e.File),
 				"startLine": llx.IntData(int64(e.StartLine)),
 				"raw":       llx.StringData(e.Raw),
-			})
+			}
+			routeMapClauseArgs(entryArgs, &e.Clauses)
+
+			obj, err := CreateResource(s.MqlRuntime, "frr.config.routeMap.entry", entryArgs)
 			if err != nil {
 				return nil, err
 			}

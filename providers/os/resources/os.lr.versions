@@ -3628,9 +3628,16 @@ networkNeighbor.mac 13.28.2
 networkNeighbor.state 13.28.2
 networkRoute 11.4.69
 networkRoute.destination 11.4.69
+networkRoute.device 13.40.8
 networkRoute.flags 11.4.69
 networkRoute.gateway 11.4.69
 networkRoute.iface 11.4.69
+networkRoute.metric 13.40.8
+networkRoute.protocol 13.40.8
+networkRoute.scope 13.40.8
+networkRoute.source 13.40.8
+networkRoute.table 13.40.8
+networkRoute.type 13.40.8
 networkRoutes 11.4.69
 networkRoutes.defaults 11.4.69
 networkRoutes.list 11.4.69

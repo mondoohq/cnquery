@@ -21064,6 +21064,24 @@ private networkRoute @defaults("destination flags"){
   flags []string
   // Network interface this route applies to
   iface() networkInterface
+  // Routing table holding the route, as a name or a numeric id (e.g. main, local, 1005); empty when the source does not report it
+  table string
+  // What installed the route (e.g. kernel, boot, static, bgp); empty when the source does not report it
+  protocol string
+  // Scope of the route (e.g. global, link, host); empty when the source does not report it
+  scope string
+  // Route priority, where a lower value wins; 0 when the source does not report it
+  metric int
+  // Preferred source address of the route; empty when the source does not report it
+  source string
+  // Route type (e.g. unicast, blackhole, unreachable); empty when the source does not report it
+  type string
+  // Name of the network interface this route applies to
+  //
+  // `iface` returns the same interface as a resource. This field is the
+  // plain name, so a query that only filters or groups by interface does
+  // not build a networkInterface resource per route.
+  device string
 }
 
 // Chromium-family browsers (Chrome, Brave, Edge variants)
