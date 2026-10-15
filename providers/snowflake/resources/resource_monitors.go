@@ -41,10 +41,6 @@ func newMqlSnowflakeResourceMonitor(runtime *plugin.Runtime, monitor sdk.Resourc
 	if monitor.Level != nil {
 		level = string(*monitor.Level)
 	}
-	frequency := ""
-	if monitor.Frequency != nil {
-		frequency = string(*monitor.Frequency)
-	}
 
 	notifyAt := make([]any, 0, len(monitor.NotifyAt))
 	for _, n := range monitor.NotifyAt {
@@ -63,7 +59,7 @@ func newMqlSnowflakeResourceMonitor(runtime *plugin.Runtime, monitor sdk.Resourc
 		"creditQuota":      llx.FloatData(monitor.CreditQuota),
 		"usedCredits":      llx.FloatData(monitor.UsedCredits),
 		"remainingCredits": llx.FloatData(monitor.RemainingCredits),
-		"frequency":        llx.StringData(frequency),
+		"frequency":        llx.StringDataPtr((*string)(monitor.Frequency)),
 		"startTime":        llx.StringData(monitor.StartTime),
 		"endTime":          llx.StringData(monitor.EndTime),
 		"comment":          llx.StringData(monitor.Comment),

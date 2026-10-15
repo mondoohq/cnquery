@@ -54,7 +54,7 @@ func newMqlSnowflakeFileFormat(runtime *plugin.Runtime, format sdk.FileFormat) (
 
 	options, err := fileFormatOptionsToDict(format.FormatOptions)
 	if err != nil {
-		log.Debug().Err(err).Str("fileFormat", snowflakeSchemaObjectID(databaseName, schemaName, name)).Msg("snowflake> could not parse file format options")
+		log.Warn().Err(err).Str("fileFormat", snowflakeSchemaObjectID(databaseName, schemaName, name)).Msg("snowflake> could not parse file format options")
 	}
 
 	r, err := CreateResource(runtime, "snowflake.fileFormat", map[string]*llx.RawData{
