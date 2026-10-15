@@ -35,6 +35,23 @@ func TestFindFilesPermissionFilter(t *testing.T) {
 	permFiles, err := FindFiles(afero.NewIOFS(fs), "root", nil, "f", &perm, nil)
 	require.NoError(t, err)
 	assert.ElementsMatch(t, permFiles, []string{"root/c/file4"})
+
+	// a mask of several bits needs every one of them, as `find -perm -0644`
+	// and the documented "at least these permission bits" do; one shared
+	// bit is not enough
+	for name, mode := range map[string]os.FileMode{
+		"root/file0":     0o600,
+		"root/a/file1":   0o644,
+		"root/a/file2":   0o640,
+		"root/b/file1":   0o664,
+		"root/c/d/file5": 0o004,
+	} {
+		require.NoError(t, fs.Chmod(name, mode))
+	}
+	perm = 0o644
+	permFiles, err = FindFiles(afero.NewIOFS(fs), "root", nil, "f", &perm, nil)
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []string{"root/a/file1", "root/b/file1"}, permFiles)
 }
 
 // TestFindFilesZeroPermissionMatchesAll is a regression test for

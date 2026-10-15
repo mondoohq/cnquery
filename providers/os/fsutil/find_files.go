@@ -171,11 +171,8 @@ func (m findFilesMatcher) matchesPerm(path string) bool {
 		return false
 	}
 
-	// If the permissions don't match continue
-	if uint32(info.Mode().Perm())&*m.perm == 0 {
-		return false
-	}
-	return true
+	// every bit of the mask must be set, as with `find -perm -mode`
+	return uint32(info.Mode().Perm())&*m.perm == *m.perm
 }
 
 func createFindFilesMatcher(iofs fs.FS, typeStr string, from string, r *regexp.Regexp, perm *uint32, depth *int) findFilesMatcher {
