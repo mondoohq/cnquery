@@ -567,6 +567,9 @@ const systemdNotBooted = "System has not been booted with systemd as init system
 // installed, where systemd is not PID 1. systemctl show needs the bus and
 // prints nothing; list-unit-files reads the unit files and works.
 func TestSystemDServiceManagerGetWithoutRunningSystemd(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("testdata needs Unix symlinks")
+	}
 	unitFiles, err := os.ReadFile("testdata/systemctl-list-unit-files-debian12-container.txt")
 	require.NoError(t, err)
 
@@ -585,11 +588,8 @@ func TestSystemDServiceManagerGetWithoutRunningSystemd(t *testing.T) {
 		},
 	}))
 	require.NoError(t, err)
-	mgr := &SystemDServiceManager{conn: mockConn}
-	if runtime.GOOS != "windows" {
-		// the unit files of the same container
-		mgr.conn = &unitFilesConn{Connection: mockConn, fs: mountedfs.NewMountedFs("testdata/systemd-debian12-container")}
-	}
+	// the unit files of the same container
+	mgr := &SystemDServiceManager{conn: &unitFilesConn{Connection: mockConn, fs: mountedfs.NewMountedFs("testdata/systemd-debian12-container")}}
 
 	ssh, err := mgr.Get("ssh")
 	require.NoError(t, err)
@@ -604,14 +604,12 @@ func TestSystemDServiceManagerGetWithoutRunningSystemd(t *testing.T) {
 	_, err = mgr.Get("missing")
 	require.ErrorIs(t, err, ErrServiceNotFound)
 
-	if runtime.GOOS != "windows" {
-		// systemctl show cannot answer without systemd, so the descriptions
-		// come from the unit files
-		assert.Equal(t, "OpenBSD Secure Shell server", ssh.Description)
-		sshd, err := mgr.Get("sshd")
-		require.NoError(t, err)
-		assert.True(t, sshd.Enabled)
-	}
+	// systemctl show cannot answer without systemd, so the descriptions
+	// come from the unit files
+	assert.Equal(t, "OpenBSD Secure Shell server", ssh.Description)
+	sshd, err := mgr.Get("sshd")
+	require.NoError(t, err)
+	assert.True(t, sshd.Enabled)
 }
 
 // The unit tree of the same container before systemd was installed: no

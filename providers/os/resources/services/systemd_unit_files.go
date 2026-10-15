@@ -335,7 +335,7 @@ func systemdEnablementLinks(fsys afero.Fs) enablementLinks {
 					continue
 				}
 				base := path.Base(target)
-				if base != w.Name() && !(isSystemdInstanceUnit(w.Name()) && systemdTemplateOf(w.Name()) == base) {
+				if base != w.Name() && (!isSystemdInstanceUnit(w.Name()) || systemdTemplateOf(w.Name()) != base) {
 					links.wants[base] = true
 				}
 			}
