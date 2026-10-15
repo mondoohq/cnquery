@@ -9,10 +9,12 @@ import (
 	"io"
 	"os"
 	"path"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
+	"unicode"
 
 	"github.com/coreos/go-systemd/unit"
 	"github.com/rs/zerolog/log"
@@ -1108,6 +1110,9 @@ func (m *SystemdFSUnitManager) readUnit(name string, unitPath string) (*SystemdU
 	if m.isMasked(unitPath) {
 		props["LoadState"] = "masked"
 		props["UnitFileState"] = "masked"
+		props["Description"] = name
+		props["FragmentPath"] = unitPath
+		applySystemdExecDefaults(props, name)
 		return systemdUnitFromProperties(props, -1), nil
 	}
 
@@ -1124,6 +1129,7 @@ func (m *SystemdFSUnitManager) readUnit(name string, unitPath string) (*SystemdU
 			continue
 		}
 	}
+	applySystemdUnitDefaults(props, name)
 	markUnsupportedFileProperties(props, m.Version)
 	if m.NoSeccomp {
 		markSeccompUnsupported(props)
@@ -1170,6 +1176,9 @@ func (m *SystemdFSUnitManager) foldUnitFile(props map[string]string, unitPath st
 	}
 
 	for _, opt := range opts {
+		// a line ending in a backslash continues on the next one, joined
+		// with a space
+		opt.Value = strings.ReplaceAll(opt.Value, "\\\n", " ")
 		switch opt.Section {
 		case "Unit":
 			if opt.Name == "Description" {
@@ -1184,7 +1193,23 @@ func (m *SystemdFSUnitManager) foldUnitFile(props map[string]string, unitPath st
 			// an empty assignment resets a list setting, so it clears what came
 			// before rather than appending to it
 			if opt.Value == "" {
+				// an empty capability set is a set, not an unset setting
+				if opt.Name == "CapabilityBoundingSet" || opt.Name == "AmbientCapabilities" {
+					props[opt.Name] = "0"
+					continue
+				}
 				delete(props, opt.Name)
+				continue
+			}
+			if opt.Name == "CapabilityBoundingSet" || opt.Name == "AmbientCapabilities" {
+				current, set := props[opt.Name]
+				props[opt.Name] = foldSystemdCapabilities(current, set, opt.Value)
+				continue
+			}
+			// a oneshot service runs several commands, in order; systemctl
+			// show reports the first
+			if existing, seen := props[opt.Name]; seen && opt.Name == "ExecStart" {
+				props[opt.Name] = existing + "\n" + opt.Value
 				continue
 			}
 			if existing, seen := props[opt.Name]; seen && systemdListProperty(opt.Name) {
@@ -1196,6 +1221,266 @@ func (m *SystemdFSUnitManager) foldUnitFile(props map[string]string, unitPath st
 	}
 
 	return nil
+}
+
+// systemdExecUnitTypes are the unit types with an execution context, the ones
+// the sandboxing and credential settings apply to.
+var systemdExecUnitTypes = []string{".service", ".socket", ".mount", ".swap"}
+
+// applySystemdUnitDefaults fills in what systemctl show reports for the
+// settings a unit file leaves unset, so a unit read from disk answers like
+// the same unit on a running system: an image's unit with no ProtectSystem=
+// read as "" where systemd reports "no", and no CapabilityBoundingSet= read as
+// an empty set where systemd reports every capability.
+func applySystemdUnitDefaults(props map[string]string, name string) {
+	if props["Description"] == "" {
+		props["Description"] = name
+	}
+
+	execUnit := false
+	for _, t := range systemdExecUnitTypes {
+		if strings.HasSuffix(name, t) {
+			execUnit = true
+		}
+	}
+	if !execUnit {
+		return
+	}
+
+	applySystemdExecDefaults(props, name)
+
+	if _, ok := props["ExecStart"]; ok {
+		props["ExecStart"] = systemdCommandLine(props["ExecStart"])
+	}
+	for _, key := range []string{"ReadWritePaths", "ReadOnlyPaths", "InaccessiblePaths"} {
+		if v, ok := props[key]; ok {
+			props[key] = cleanSystemdPaths(v)
+		}
+	}
+
+	if strings.HasSuffix(name, ".service") && !isSystemdTemplateUnit(name) {
+		if _, ok := props["Type"]; !ok {
+			switch {
+			case props["BusName"] != "":
+				props["Type"] = "dbus"
+			case props["ExecStart"] == "":
+				props["Type"] = "oneshot"
+			default:
+				props["Type"] = "simple"
+			}
+		}
+	}
+}
+
+// applySystemdExecDefaults fills in the execution settings of a unit type
+// that has them, as systemctl show reports them for a unit file that leaves
+// them unset, and applies the capabilities systemd drops implicitly.
+func applySystemdExecDefaults(props map[string]string, name string) {
+	execUnit := false
+	for _, t := range systemdExecUnitTypes {
+		if strings.HasSuffix(name, t) {
+			execUnit = true
+		}
+	}
+	if !execUnit {
+		return
+	}
+
+	for key, value := range map[string]string{
+		"UMask":                "0022",
+		"ProtectSystem":        "no",
+		"ProtectHome":          "no",
+		"ProtectControlGroups": "no",
+		"RestrictNamespaces":   "no",
+		"ProtectProc":          "default",
+		"ProcSubset":           "all",
+		"KeyringMode":          "private",
+	} {
+		if _, ok := props[key]; !ok {
+			props[key] = value
+		}
+	}
+	// "true" and "1" are written yes, as systemd prints them; these settings
+	// also take other words (strict, read-only, ...), kept as they are
+	for _, key := range []string{"ProtectSystem", "ProtectHome", "ProtectControlGroups", "RestrictNamespaces"} {
+		switch strings.ToLower(props[key]) {
+		case "yes", "true", "on", "1":
+			props[key] = "yes"
+		case "no", "false", "off", "0":
+			props[key] = "no"
+		}
+	}
+
+	bounding := systemdAllCapabilities()
+	if v, ok := props["CapabilityBoundingSet"]; ok {
+		if mask, err := strconv.ParseUint(v, 10, 64); err == nil {
+			bounding = mask
+		}
+	}
+	// settings that take capabilities away along with what they protect
+	// (systemd.exec(5))
+	for setting, caps := range systemdImplicitCapabilityDrops {
+		if parseSystemdBool(props[setting]) {
+			for _, c := range caps {
+				bounding &^= 1 << uint(slices.Index(systemdCapabilityNames, c))
+			}
+		}
+	}
+	props["CapabilityBoundingSet"] = strconv.FormatUint(bounding, 10)
+
+	if v, ok := props["RestrictAddressFamilies"]; ok {
+		props["RestrictAddressFamilies"] = sortSystemdAddressFamilies(v)
+	}
+}
+
+// systemdImplicitCapabilityDrops are the capabilities a sandboxing setting
+// removes from the bounding set.
+var systemdImplicitCapabilityDrops = map[string][]string{
+	"PrivateDevices":       {"cap_mknod", "cap_sys_rawio"},
+	"ProtectKernelModules": {"cap_sys_module"},
+	"ProtectKernelLogs":    {"cap_syslog"},
+	"ProtectClock":         {"cap_sys_time", "cap_wake_alarm"},
+}
+
+// systemdCommandLine is the command line of an Exec*= setting as systemctl
+// show prints its argv: the first line, without the prefixes that change how
+// it runs ("-", "@", "+", "!", ":"), its words unquoted and unescaped and
+// joined by spaces. With "@" the second word is argv[0].
+func systemdCommandLine(value string) string {
+	value = strings.TrimSpace(value)
+	if i := strings.IndexByte(value, '\n'); i >= 0 {
+		value = strings.TrimSpace(value[:i])
+	}
+	trimmed := strings.TrimLeft(value, "-@:+!")
+	argv0 := strings.Contains(value[:len(value)-len(trimmed)], "@")
+	words := splitSystemdWords(trimmed)
+	if argv0 && len(words) > 1 {
+		words = words[1:]
+	}
+	return strings.Join(words, " ")
+}
+
+// splitSystemdWords splits a command line the way systemd does: words are
+// separated by whitespace, single and double quotes group, and C escapes are
+// resolved inside quotes and out.
+func splitSystemdWords(s string) []string {
+	var words []string
+	var word strings.Builder
+	inWord := false
+	var quote rune
+	runes := []rune(s)
+	for i := 0; i < len(runes); i++ {
+		r := runes[i]
+		switch {
+		case r == '\\' && i+1 < len(runes):
+			i++
+			word.WriteString(unescapeSystemdChar(runes[i]))
+			inWord = true
+		case quote != 0 && r == quote:
+			quote = 0
+		case quote == 0 && (r == '\'' || r == '"'):
+			quote = r
+			inWord = true
+		case quote == 0 && unicode.IsSpace(r):
+			if inWord {
+				words = append(words, word.String())
+				word.Reset()
+				inWord = false
+			}
+		default:
+			word.WriteRune(r)
+			inWord = true
+		}
+	}
+	if inWord {
+		words = append(words, word.String())
+	}
+	return words
+}
+
+func unescapeSystemdChar(r rune) string {
+	switch r {
+	case 'n':
+		return "\n"
+	case 't':
+		return "\t"
+	case 'r':
+		return "\r"
+	case 's':
+		return " "
+	case 'a':
+		return "\a"
+	case 'b':
+		return "\b"
+	case 'f':
+		return "\f"
+	case 'v':
+		return "\v"
+	}
+	return string(r)
+}
+
+// cleanSystemdPaths drops a trailing slash from each path of a *Paths=
+// setting, as systemd normalizes them.
+func cleanSystemdPaths(value string) string {
+	fields := strings.Fields(value)
+	for i, f := range fields {
+		if len(f) > 1 {
+			fields[i] = strings.TrimRight(f, "/")
+			if fields[i] == "" || fields[i] == "-" || fields[i] == "+" {
+				fields[i] = f
+			}
+		}
+	}
+	return strings.Join(fields, " ")
+}
+
+// systemdAllCapabilities is the mask of every capability systemd names.
+func systemdAllCapabilities() uint64 {
+	return 1<<uint(len(systemdCapabilityNames)) - 1
+}
+
+// foldSystemdCapabilities applies one CapabilityBoundingSet= or
+// AmbientCapabilities= assignment to the set the earlier ones built, as a
+// decimal mask. A list starting with "~" is every capability but the ones it
+// names; a later assignment adds to the set.
+func foldSystemdCapabilities(current string, set bool, value string) string {
+	value = strings.TrimSpace(value)
+	invert := strings.HasPrefix(value, "~")
+	value = strings.TrimPrefix(value, "~")
+
+	var mask uint64
+	for _, name := range strings.Fields(value) {
+		name = strings.ToLower(name)
+		for bit, known := range systemdCapabilityNames {
+			if known == name {
+				mask |= 1 << uint(bit)
+			}
+		}
+	}
+	if invert {
+		mask = systemdAllCapabilities() &^ mask
+	}
+	if set {
+		if prev, err := strconv.ParseUint(current, 10, 64); err == nil {
+			mask |= prev
+		}
+	}
+	return strconv.FormatUint(mask, 10)
+}
+
+// sortSystemdAddressFamilies orders a RestrictAddressFamilies= list by name,
+// the way systemctl show prints it, keeping a leading "~".
+func sortSystemdAddressFamilies(value string) string {
+	value = strings.TrimSpace(value)
+	invert := strings.HasPrefix(value, "~")
+	families := strings.Fields(strings.TrimPrefix(value, "~"))
+	sort.Strings(families)
+	res := strings.Join(families, " ")
+	if invert {
+		res = "~" + res
+	}
+	return res
 }
 
 // dropInFiles returns the drop-in files for a unit, in the order systemd reads
