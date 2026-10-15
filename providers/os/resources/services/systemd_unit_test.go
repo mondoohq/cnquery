@@ -4,6 +4,7 @@
 package services
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 
@@ -301,9 +302,11 @@ func TestSystemdFSUnitManager_MaskedUnit(t *testing.T) {
 	// a masked unit is still installed: the name exists and carries a unit file,
 	// it just cannot be started
 	assert.True(t, unit.Installed)
-	// and none of its settings are reported as configured
-	assert.Empty(t, unit.ProtectSystem)
+	// and none of its settings are reported as configured: what it reports
+	// is systemd's default, as systemctl show prints it for a masked unit
+	assert.Equal(t, "no", unit.ProtectSystem)
 	assert.False(t, unit.NoNewPrivileges)
+	assert.Equal(t, "/etc/systemd/system/masked.service", unit.FragmentPath, "the mask link, as systemctl reports it")
 }
 
 func TestSystemdFSUnitManager_DropInOrderIsByFileNameAcrossDirectories(t *testing.T) {
@@ -573,4 +576,132 @@ func TestSystemdFSUnitManager_SeccompSettingsUnsupportedWithoutSeccomp(t *testin
 	require.NoError(t, err)
 	assert.True(t, u.Supports("RestrictAddressFamilies"))
 	assert.Equal(t, "AF_UNIX", u.RestrictAddressFamilies)
+}
+
+// Units read from disk report what systemctl show reports for them. The
+// expected values are systemd 252's (Debian 12) for these four unit files,
+// which set none of the sandboxing settings, an inverted bounding set, two
+// bounding set assignments, and BusName= with no Type=.
+func TestSystemdFSUnitReportsSystemdDefaults(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	for p, content := range map[string]string{
+		"/etc/systemd/system/zz-noexec.service": "[Unit]\nDescription=zz no exec\n[Service]\nExecStop=/bin/true\n",
+		"/etc/systemd/system/zz-bus.service":    "[Service]\nBusName=org.zz.Test\nExecStart=/bin/sleep 1\n",
+		"/etc/systemd/system/zz-caps.service":   "[Service]\nExecStart=/bin/sleep 1\nCapabilityBoundingSet=~CAP_SYS_ADMIN CAP_NET_RAW\nAmbientCapabilities=CAP_NET_RAW CAP_CHOWN\nRestrictAddressFamilies=AF_UNIX AF_NETLINK AF_INET\n",
+		"/etc/systemd/system/zz-caps2.service":  "[Service]\nExecStart=/bin/sleep 1\nCapabilityBoundingSet=CAP_NET_BIND_SERVICE\nCapabilityBoundingSet=CAP_CHOWN\nRestrictAddressFamilies=~AF_PACKET AF_INET6\n",
+	} {
+		require.NoError(t, afero.WriteFile(fs, p, []byte(content), 0o644))
+	}
+	m := &SystemdFSUnitManager{Fs: fs}
+	get := func(name string) *SystemdUnit {
+		u, err := m.Get(name)
+		require.NoError(t, err)
+		return u
+	}
+
+	noexec := get("zz-noexec.service")
+	assert.Equal(t, "oneshot", noexec.Type)
+	assert.Equal(t, "0022", noexec.UMask)
+	assert.Equal(t, "no", noexec.ProtectSystem)
+	assert.Equal(t, "no", noexec.ProtectHome)
+	assert.Equal(t, "no", noexec.ProtectControlGroups)
+	assert.Equal(t, "no", noexec.RestrictNamespaces)
+	assert.Equal(t, "default", noexec.ProtectProc)
+	assert.Equal(t, "all", noexec.ProcSubset)
+	assert.Equal(t, "private", noexec.KeyringMode)
+	assert.Equal(t, systemdCapabilityNames, noexec.CapabilityBoundingSet, "unset is every capability")
+	assert.Empty(t, noexec.AmbientCapabilities)
+	assert.Equal(t, "", noexec.RestrictAddressFamilies)
+	assert.Equal(t, "zz no exec", noexec.Description)
+
+	bus := get("zz-bus.service")
+	assert.Equal(t, "dbus", bus.Type)
+	assert.Equal(t, "zz-bus.service", bus.Description, "no Description= reads as the unit name")
+
+	caps := get("zz-caps.service")
+	assert.Equal(t, "simple", caps.Type)
+	assert.Len(t, caps.CapabilityBoundingSet, len(systemdCapabilityNames)-2)
+	assert.NotContains(t, caps.CapabilityBoundingSet, "cap_sys_admin")
+	assert.NotContains(t, caps.CapabilityBoundingSet, "cap_net_raw")
+	assert.Equal(t, []string{"cap_chown", "cap_net_raw"}, caps.AmbientCapabilities)
+	assert.Equal(t, "AF_INET AF_NETLINK AF_UNIX", caps.RestrictAddressFamilies)
+
+	caps2 := get("zz-caps2.service")
+	assert.Equal(t, []string{"cap_chown", "cap_net_bind_service"}, caps2.CapabilityBoundingSet)
+	assert.Equal(t, "~AF_INET6 AF_PACKET", caps2.RestrictAddressFamilies)
+}
+
+// systemd drops capabilities along with what a sandboxing setting protects,
+// and prints a command line unquoted (console-getty.service on Debian 12).
+func TestSystemdFSUnitImplicitCapabilitiesAndCommandLine(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	require.NoError(t, afero.WriteFile(fs, "/lib/systemd/system/logrotate.service", []byte(
+		"[Service]\nType=oneshot\nExecStart=/usr/sbin/logrotate /etc/logrotate.conf\nPrivateDevices=true\nProtectClock=true\nProtectKernelLogs=true\nProtectKernelModules=true\nProtectControlGroups=true\nReadWritePaths=/var/lib/logrotate/\n"), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/lib/systemd/system/console-getty.service", []byte(
+		"[Service]\nExecStart=-/sbin/agetty -o '-p -- \\\\u' --noclear --keep-baud - 115200,38400,9600 $TERM\n"), 0o644))
+	m := &SystemdFSUnitManager{Fs: fs}
+
+	u, err := m.Get("logrotate.service")
+	require.NoError(t, err)
+	for _, dropped := range []string{"cap_mknod", "cap_sys_rawio", "cap_sys_time", "cap_wake_alarm", "cap_syslog", "cap_sys_module"} {
+		assert.NotContains(t, u.CapabilityBoundingSet, dropped)
+	}
+	assert.Len(t, u.CapabilityBoundingSet, len(systemdCapabilityNames)-6)
+	assert.Equal(t, "yes", u.ProtectControlGroups)
+	assert.Equal(t, []string{"/var/lib/logrotate"}, u.ReadWritePaths)
+
+	u, err = m.Get("console-getty.service")
+	require.NoError(t, err)
+	// systemctl show console-getty -p ExecStart on Debian 12
+	assert.Equal(t, `/sbin/agetty -o -p -- \u --noclear --keep-baud - 115200,38400,9600 $TERM`, u.ExecStart)
+
+	// initrd-parse-etc.service: two commands, systemd reports the first,
+	// whose "@" makes the second word argv[0]
+	require.NoError(t, afero.WriteFile(fs, "/lib/systemd/system/initrd-parse-etc.service", []byte(
+		"[Service]\nType=oneshot\nExecStart=@/lib/systemd/system-generators/systemd-fstab-generator systemd-sysroot-fstab-check\nExecStart=systemctl --no-block start initrd-cleanup.service\n"), 0o644))
+	u, err = m.Get("initrd-parse-etc.service")
+	require.NoError(t, err)
+	assert.Equal(t, "systemd-sysroot-fstab-check", u.ExecStart)
+}
+
+// detect-part-label-duplicates.service on openSUSE Leap 15.6 continues its
+// command over several lines
+func TestSystemdFSUnitContinuedLines(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	require.NoError(t, afero.WriteFile(fs, "/usr/lib/systemd/system/cont.service", []byte(
+		"[Service]\nExecStart=/bin/sh -c \" \\\n    if true; then \\\n      echo a; fi\"\n"), 0o644))
+	u, err := (&SystemdFSUnitManager{Fs: fs}).Get("cont.service")
+	require.NoError(t, err)
+	assert.Equal(t, "/bin/sh -c       if true; then        echo a; fi", u.ExecStart)
+}
+
+func TestSystemdCommandLine(t *testing.T) {
+	assert.Equal(t, "/bin/sh -c echo a; echo b", systemdCommandLine(`/bin/sh -c "echo a; echo b"`))
+	assert.Equal(t, "argv0 --flag", systemdCommandLine("@/usr/bin/real argv0 --flag"))
+	assert.Equal(t, "/usr/bin/x", systemdCommandLine("+!/usr/bin/x"))
+	assert.Equal(t, "/bin/first", systemdCommandLine("/bin/first\n/bin/second"))
+}
+
+// A systemd that predates a sandboxing setting ignores it, and keeps the
+// capabilities the setting would drop: ProtectClock= (245) on systemd 219.
+func TestSystemdFSUnitImplicitDropsFollowTheRelease(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	require.NoError(t, afero.WriteFile(fs, "/usr/lib/systemd/system/clock.service", []byte(
+		"[Service]\nExecStart=/bin/true\nProtectClock=yes\nPrivateDevices=yes\n"), 0o644))
+
+	u, err := (&SystemdFSUnitManager{Fs: fs, Version: 219}).Get("clock.service")
+	require.NoError(t, err)
+	assert.Contains(t, u.CapabilityBoundingSet, "cap_sys_time")
+	assert.NotContains(t, u.CapabilityBoundingSet, "cap_mknod", "PrivateDevices predates 219")
+
+	u, err = (&SystemdFSUnitManager{Fs: fs, Version: 252}).Get("clock.service")
+	require.NoError(t, err)
+	assert.NotContains(t, u.CapabilityBoundingSet, "cap_sys_time")
+}
+
+// systemd reads a capability given by its number like one given by name.
+func TestFoldSystemdCapabilitiesTakesNumbers(t *testing.T) {
+	mask, err := strconv.ParseUint(foldSystemdCapabilities("", false, "21 cap_chown"), 10, 64)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"cap_chown", "cap_sys_admin"}, decodeSystemdCapabilityMask(mask, -1))
 }
