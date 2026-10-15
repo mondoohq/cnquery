@@ -194,6 +194,41 @@ func (c *ContainerConnection) FileSystem() afero.Fs {
 	return c.Fs
 }
 
+// hasShell reports whether the container can start /bin/sh, which every
+// command of this connection runs in. Docker answers an exec of a missing or
+// unusable binary with exit 126 or 127 and the runtime's "exec failed"
+// message. Anything else, an error reaching the daemon included, keeps the
+// exec-based connection.
+func (c *ContainerConnection) hasShell() bool {
+	cmd, err := (&Command{Client: c.Client, Container: c.container}).Exec("exit 0")
+	if err != nil || cmd.ExitStatus == 0 {
+		return true
+	}
+	var out []byte
+	if cmd.Stdout != nil {
+		out, _ = io.ReadAll(cmd.Stdout)
+	}
+	if cmd.Stderr != nil {
+		e, _ := io.ReadAll(cmd.Stderr)
+		out = append(out, e...)
+	}
+	return !shellMissing(cmd.ExitStatus, string(out))
+}
+
+// shellMissing reports whether an exec's result says the runtime could not
+// start the shell, not that the shell ran and failed: it is missing or not
+// executable ("exec failed", 126 or 127), or built for another architecture
+// the host cannot run ("exec format error", 255).
+func shellMissing(exitStatus int, output string) bool {
+	switch exitStatus {
+	case 126, 127:
+		return strings.Contains(output, "exec failed")
+	case 255:
+		return strings.Contains(output, "exec format error")
+	}
+	return false
+}
+
 func (c *ContainerConnection) RunCommand(command string) (*shared.Command, error) {
 	log.Debug().Str("command", command).Msg("docker> run command")
 	cmd := &Command{Client: c.Client, Container: c.container}
@@ -238,17 +273,36 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 		conn.PlatformIdentifier = platformID
 		conn.Metadata.Name = shortID
 		conn.Metadata.Labels = ci.Labels
+
+		// A container without a shell (distroless, a static binary on
+		// scratch) cannot run a command, and the file stats and directory
+		// listings of this connection run through one: every file read as
+		// unreadable and the package list failed, while a scan of its image
+		// read everything. Read its filesystem from an export instead, as for
+		// a stopped container.
+		if !conn.hasShell() {
+			log.Info().Str("container", shortID).Msg("the container cannot start a shell, reading its filesystem from an export")
+			if err := conn.Client.Close(); err != nil {
+				log.Debug().Err(err).Msg("docker> could not close the client of a container without a shell")
+			}
+			return newContainerSnapshot(id, conf, asset, ci.ID, platformID, shortID, ci.Labels)
+		}
 		return conn, nil
 	}
 
 	log.Debug().Msg("found stopped container " + ci.ID)
-	conn, err := NewSnapshotConnection(id, &inventory.Config{Host: ci.ID}, asset)
+	return newContainerSnapshot(id, conf, asset, ci.ID, platformID, shortID, ci.Labels)
+}
+
+// newContainerSnapshot scans a container from an export of its filesystem.
+func newContainerSnapshot(id uint32, conf *inventory.Config, asset *inventory.Asset, containerID string, platformID string, shortID string, labels map[string]string) (shared.Connection, error) {
+	conn, err := NewSnapshotConnection(id, &inventory.Config{Host: containerID}, asset)
 	if err != nil {
 		return nil, err
 	}
 	conn.PlatformIdentifier = platformID
 	conn.Metadata.Name = shortID
-	conn.Metadata.Labels = ci.Labels
+	conn.Metadata.Labels = labels
 	// FIXME: DEPRECATED, remove in v12.0 vv
 	// The DelayDiscovery flag should always be set from v12
 	if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
