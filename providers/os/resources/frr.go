@@ -323,7 +323,11 @@ func (s *mqlFrrConfig) bgp(file *mqlFile) ([]any, error) {
 		// The id is built from what the instance is, not from where it
 		// sits, so reordering the blocks does not renumber the rest. An ASN
 		// and a VRF name identify an instance.
-		id := fmt.Sprintf("%s#bgp/%d/%s", s.__id, b.ASN, b.VRF)
+		asn := ""
+		if b.ASN != nil {
+			asn = strconv.FormatInt(*b.ASN, 10)
+		}
+		id := fmt.Sprintf("%s#bgp/%s/%s", s.__id, asn, b.VRF)
 
 		neighbors, err := s.createNeighbors(id, b.Neighbors)
 		if err != nil {
@@ -336,7 +340,7 @@ func (s *mqlFrrConfig) bgp(file *mqlFile) ([]any, error) {
 
 		obj, err := CreateResource(s.MqlRuntime, "frr.config.router", map[string]*llx.RawData{
 			"__id":               llx.StringData(id),
-			"asn":                llx.IntData(b.ASN),
+			"asn":                llx.IntDataPtr(b.ASN),
 			"vrf":                llx.StringData(b.VRF),
 			"routerId":           llx.StringData(b.RouterID),
 			"clusterId":          llx.StringData(b.ClusterID),
@@ -399,8 +403,8 @@ func (s *mqlFrrConfig) createNeighbors(prefix string, neighbors []frr.Neighbor) 
 			"isPeerGroup":              llx.BoolData(n.IsPeerGroup),
 			"peerGroup":                llx.StringData(n.PeerGroup),
 			"remoteAs":                 llx.StringData(n.RemoteAs),
-			"remoteAsn":                llx.IntData(n.RemoteASN),
-			"localAsn":                 llx.IntData(n.LocalASN),
+			"remoteAsn":                llx.IntDataPtr(n.RemoteASN),
+			"localAsn":                 llx.IntDataPtr(n.LocalASN),
 			"description":              llx.StringData(n.Description),
 			"updateSource":             llx.StringData(n.UpdateSource),
 			"listenRange":              llx.StringData(n.ListenRange),
@@ -475,7 +479,7 @@ func (s *mqlFrrConfig) vrfs(file *mqlFile) ([]any, error) {
 			"name":               llx.StringData(v.Name),
 			"vni":                llx.IntData(v.VNI),
 			"staticRoutes":       llx.ArrayData(stringSliceToAny(v.StaticRoutes), types.String),
-			"routerAsn":          llx.IntData(v.RouterASN),
+			"routerAsn":          llx.IntDataPtr(v.RouterASN),
 			"routeTargetsImport": llx.ArrayData(stringSliceToAny(v.RouteTargetsImport), types.String),
 			"routeTargetsExport": llx.ArrayData(stringSliceToAny(v.RouteTargetsExport), types.String),
 			"importedVrfs":       llx.ArrayData(stringSliceToAny(v.ImportedVrfs), types.String),
