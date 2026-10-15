@@ -6,6 +6,7 @@ package resources
 import (
 	"os"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -753,4 +754,165 @@ func TestAuditdRuleIdentity(t *testing.T) {
 
 	withComparison := auditdRuleIdentity(false, "always", "exit", nil, nil, []string{"uid!=euid"}, "", "")
 	assert.NotEqual(t, withComparison, auditdRuleIdentity(false, "always", "exit", nil, nil, nil, "", ""))
+}
+
+func newAuditdLoadedRules(t *testing.T, cmd *mock.Command) *mqlAuditdLoadedRules {
+	t.Helper()
+	conn, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{Name: "rockylinux", Family: []string{"redhat", "linux", "unix"}},
+	}, mock.WithData(&mock.TomlData{
+		Commands: map[string]*mock.Command{"auditctl -l": cmd},
+	}))
+	require.NoError(t, err)
+	return &mqlAuditdLoadedRules{MqlRuntime: &plugin.Runtime{Connection: conn, Resources: &syncx.Map[plugin.Resource]{}}}
+}
+
+func readAuditctlList(t *testing.T, name string) string {
+	t.Helper()
+	data, err := os.ReadFile("testdata/auditctl-list/" + name)
+	require.NoError(t, err)
+	return string(data)
+}
+
+// The rules of testdata/auditctl-list/rules-loaded.txt as the kernel lists
+// them: a path or dir rule without arch or syscalls comes back as a -w watch,
+// `auid!=unset` as `auid!=-1`, `-k` on a syscall rule as `-F key=`, and the
+// task list first.
+func TestAuditdLoadedRules(t *testing.T) {
+	rules := newAuditdLoadedRules(t, &mock.Command{Stdout: readAuditctlList(t, "arm64.txt")})
+
+	syscalls, err := rules.syscalls()
+	require.NoError(t, err)
+	require.Len(t, syscalls, 12)
+
+	never := syscalls[0].(*mqlAuditdRuleSyscall)
+	assert.Equal(t, "never", never.Action.Data)
+	assert.Equal(t, "task", never.List.Data)
+	assert.Empty(t, never.Syscalls.Data)
+
+	timeChange := syscalls[1].(*mqlAuditdRuleSyscall)
+	assert.Equal(t, "b64", timeChange.Arch.Data)
+	assert.Equal(t, []any{"settimeofday", "adjtimex"}, timeChange.Syscalls.Data)
+	assert.Equal(t, "time-change", timeChange.Keyname.Data)
+
+	emulation := syscalls[4].(*mqlAuditdRuleSyscall)
+	assert.Equal(t, []any{"execve"}, emulation.Syscalls.Data)
+	assert.Equal(t, []any{map[string]any{"field1": "uid", "op": "!=", "field2": "euid"}}, emulation.Comparisons.Data)
+	assert.True(t, emulation.ExcludesUnsetAuid.Data, "auid!=-1 is auid!=unset")
+	assert.Equal(t, plugin.StateIsNull, emulation.AuidMin.State&plugin.StateIsNull)
+
+	access := syscalls[6].(*mqlAuditdRuleSyscall)
+	assert.Contains(t, access.Fields.Data, map[string]any{"key": "exit", "op": "=", "value": "-EACCES"})
+	assert.Equal(t, int64(1000), access.AuidMin.Data)
+
+	mounts := syscalls[10].(*mqlAuditdRuleSyscall)
+	assert.Equal(t, int64(1000), mounts.AuidMin.Data, "auid>999 is auid>=1000")
+
+	files, err := rules.files()
+	require.NoError(t, err)
+	assert.Len(t, files, 9)
+
+	watches, err := rules.watches()
+	require.NoError(t, err)
+	got := []string{}
+	for _, raw := range watches {
+		w := raw.(*mqlAuditdRuleWatch)
+		got = append(got, w.Type.Data+":"+w.Path.Data+":"+strings.Join(anyStrings(w.Permissions.Data), "")+":"+w.Keyname.Data)
+	}
+	assert.Equal(t, []string{
+		"watch:/etc/localtime:wa:time-change",
+		"watch:/etc/issue:wa:system-locale",
+		"watch:/etc/hosts:wa:system-locale",
+		"watch:/etc/sysconfig/network:wa:system-locale",
+		"watch:/etc/NetworkManager:wa:system-locale",
+		"watch:/etc/sudoers.d:wa:scope",
+		"watch:/etc/sudoers:wa:scope",
+		"path:/usr/bin/sudo:x:privileged",
+		"watch:/var/log/lastlog:wa:logins",
+		"watch:/var/run/faillock:wa:",
+	}, got)
+}
+
+func anyStrings(list []any) []string {
+	res := make([]string, len(list))
+	for i := range list {
+		res[i] = list[i].(string)
+	}
+	return res
+}
+
+// An auditctl whose syscall tables lack an architecture lists its rules by
+// number; the arch still reads b32 or b64.
+func TestAuditdLoadedRulesNumericArch(t *testing.T) {
+	rules := newAuditdLoadedRules(t, &mock.Command{Stdout: readAuditctlList(t, "arm64-numeric-compat.txt")})
+
+	syscalls, err := rules.syscalls()
+	require.NoError(t, err)
+	compat := syscalls[len(syscalls)-1].(*mqlAuditdRuleSyscall)
+	assert.Equal(t, "b32", compat.Arch.Data)
+	assert.Equal(t, []any{"74", "121"}, compat.Syscalls.Data)
+	assert.Contains(t, compat.Fields.Data, map[string]any{"key": "arch", "op": "=", "value": "0x40000028"})
+}
+
+func TestAuditdArchName(t *testing.T) {
+	assert.Equal(t, "b64", auditdArchName("b64"))
+	assert.Equal(t, "b32", auditdArchName("0x40000028")) // ARM
+	assert.Equal(t, "b32", auditdArchName("0x40000003")) // i386
+	assert.Equal(t, "b64", auditdArchName("0xc000003e")) // x86_64
+	assert.Equal(t, "b64", auditdArchName("0xC00000B7")) // aarch64
+	assert.Equal(t, "x86_64", auditdArchName("x86_64"))  // a machine name stays
+	assert.Equal(t, "0xzz", auditdArchName("0xzz"))      // not a number
+}
+
+func TestAuditdLoadedRulesNoRules(t *testing.T) {
+	rules := newAuditdLoadedRules(t, &mock.Command{Stdout: "No rules\n"})
+
+	syscalls, err := rules.syscalls()
+	require.NoError(t, err)
+	assert.NotNil(t, syscalls)
+	assert.Empty(t, syscalls)
+	watches, err := rules.watches()
+	require.NoError(t, err)
+	assert.Empty(t, watches)
+}
+
+func TestAuditdLoadedRulesErrors(t *testing.T) {
+	t.Run("the kernel refuses an unprivileged request", func(t *testing.T) {
+		rules := newAuditdLoadedRules(t, &mock.Command{
+			Stderr:     "Error sending rule list data request (Operation not permitted)\nThere was an error while processing parameters\n",
+			ExitStatus: 255,
+		})
+		_, err := rules.watches()
+		require.Error(t, err)
+		assert.Equal(t, llx.ErrorKind_ERROR_KIND_FORBIDDEN, llx.KindOf(err))
+	})
+
+	t.Run("auditctl refuses a user other than root", func(t *testing.T) {
+		rules := newAuditdLoadedRules(t, &mock.Command{Stderr: "You must be root to run this program.\n", ExitStatus: 4})
+		_, err := rules.syscalls()
+		assert.Equal(t, llx.ErrorKind_ERROR_KIND_FORBIDDEN, llx.KindOf(err))
+	})
+
+	t.Run("auditctl is not installed", func(t *testing.T) {
+		rules := newAuditdLoadedRules(t, &mock.Command{Stderr: "sh: line 1: auditctl: command not found\n", ExitStatus: 127})
+		_, err := rules.files()
+		assert.Equal(t, llx.ErrorKind_ERROR_KIND_NOT_FOUND, llx.KindOf(err))
+	})
+
+	t.Run("another failure is an unclassified error", func(t *testing.T) {
+		rules := newAuditdLoadedRules(t, &mock.Command{Stderr: "Error receiving audit netlink packet (No buffer space available)\n", ExitStatus: 1})
+		_, err := rules.files()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "No buffer space available")
+		assert.Equal(t, llx.ErrorKind_ERROR_KIND_UNSPECIFIED, llx.KindOf(err))
+	})
+
+	t.Run("a connection that cannot run commands", func(t *testing.T) {
+		conn, err := mock.New(0, &inventory.Asset{Platform: &inventory.Platform{Name: "debian", Family: []string{"debian", "linux", "unix"}}})
+		require.NoError(t, err)
+		rules := &mqlAuditdLoadedRules{MqlRuntime: &plugin.Runtime{Connection: &noCommandConnection{Connection: conn}}}
+		_, err = rules.watches()
+		require.Error(t, err)
+		assert.Equal(t, llx.ErrorKind_ERROR_KIND_NOT_APPLICABLE, llx.KindOf(err))
+	})
 }

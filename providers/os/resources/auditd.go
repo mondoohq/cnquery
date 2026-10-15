@@ -217,9 +217,29 @@ type mqlAuditdRulesInternal struct {
 	lock      sync.Mutex
 	loaded    bool
 	loadError error
+}
+
+// auditdRuleSet is the result of reading a list of audit rules, from the rules
+// files on disk or from the rules the kernel has loaded.
+type auditdRuleSet struct {
+	runtime  *plugin.Runtime
+	controls []any
+	files    []any
+	syscalls []any
+	watches  []any
 	// rules added so far in load order, so a later -d or -W can remove them
 	loadedRules      []auditdLoadedRule
 	lastRuleIdentity string
+}
+
+func newAuditdRuleSet(runtime *plugin.Runtime) *auditdRuleSet {
+	return &auditdRuleSet{
+		runtime:  runtime,
+		controls: []any{},
+		files:    []any{},
+		syscalls: []any{},
+		watches:  []any{},
+	}
 }
 
 // auditdLoadedRule is one added rule line and the resources it produced.
@@ -501,11 +521,22 @@ func parseKeyVal(line string) (string, string, int) {
 	return line[:keyend], line[valstart:valend], i
 }
 
+// parse reads the rules in content into the rule lists, without marking them
+// set.
+func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
+	rules := newAuditdRuleSet(s.MqlRuntime)
+	rules.parse(content, errors)
+	s.Controls.Data = rules.controls
+	s.Files.Data = rules.files
+	s.Syscalls.Data = rules.syscalls
+	s.Watches.Data = rules.watches
+}
+
 // Make sure this regex matches the most complete form first (ie >=) before
 // matching the shorter forms (ie =)
 var reOperator = regexp.MustCompile(`(!=|<=|>=|=|>|<)`)
 
-func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
+func (s *auditdRuleSet) parse(content string, errors *multierr.Errors) {
 	lines := strings.Split(content, "\n")
 	for _, rawline := range lines {
 		line := strings.TrimSpace(rawline)
@@ -604,12 +635,12 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 				args["keyname"] = llx.StringData("")
 			}
 
-			r, err := CreateResource(s.MqlRuntime, resourceName, args)
+			r, err := CreateResource(s.runtime, resourceName, args)
 			if err != nil {
 				errors.Add(err)
 				continue
 			}
-			s.Files.Data = append(s.Files.Data, r)
+			s.files = append(s.files, r)
 
 			// a watch without -p fires on every access type, as in auditctl
 			perm := "rwxa"
@@ -675,7 +706,7 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 				switch key {
 				case "arch":
 					if op == "=" {
-						arch = val
+						arch = auditdArchName(val)
 					}
 				case "path", "dir":
 					if op == "=" {
@@ -714,12 +745,12 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 				args["keyname"] = llx.StringData("")
 			}
 
-			r, err := CreateResource(s.MqlRuntime, resourceName, args)
+			r, err := CreateResource(s.runtime, resourceName, args)
 			if err != nil {
 				errors.Add(err)
 				continue
 			}
-			s.Syscalls.Data = append(s.Syscalls.Data, r)
+			s.syscalls = append(s.syscalls, r)
 
 			// `-a always,exit -F path=X -F perm=P` is the syscall form of `-w X -p P`
 			action, _ := args["action"].Value.(string)
@@ -733,7 +764,7 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 
 		default:
 			for io := range other {
-				r, err := CreateResource(s.MqlRuntime, resourceName, map[string]*llx.RawData{
+				r, err := CreateResource(s.runtime, resourceName, map[string]*llx.RawData{
 					"flag":  llx.StringData(other[io][0]),
 					"value": llx.StringData(other[io][1]),
 				})
@@ -741,10 +772,30 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 					errors.Add(err)
 					continue
 				}
-				s.Controls.Data = append(s.Controls.Data, r)
+				s.controls = append(s.controls, r)
 			}
 		}
 	}
+}
+
+// auditdArchName names an AUDIT_ARCH_* value the way auditctl's b32 and b64
+// aliases do. An auditctl without the syscall table of an architecture lists
+// a rule for it by number, such as `arch=0x40000028` for 32-bit ARM, where the
+// 64-bit flag tells b64 from b32. Other values are returned unchanged.
+func auditdArchName(v string) string {
+	hex, ok := strings.CutPrefix(strings.ToLower(v), "0x")
+	if !ok {
+		return v
+	}
+	n, err := strconv.ParseUint(hex, 16, 32)
+	if err != nil {
+		return v
+	}
+	const auditArch64Bit = 0x80000000
+	if n&auditArch64Bit != 0 {
+		return "b64"
+	}
+	return "b32"
 }
 
 var auditdRuleActions = []string{"always", "never"}
@@ -760,7 +811,7 @@ func splitAuditdRuleAction(v string) (string, string) {
 	return first, second
 }
 
-func (s *mqlAuditdRules) addWatch(watchType string, path string, perm string, keyname string, errors *multierr.Errors) plugin.Resource {
+func (s *auditdRuleSet) addWatch(watchType string, path string, perm string, keyname string, errors *multierr.Errors) plugin.Resource {
 	if trimmed := strings.TrimRight(path, "/"); trimmed != "" {
 		path = trimmed
 	}
@@ -772,7 +823,7 @@ func (s *mqlAuditdRules) addWatch(watchType string, path string, perm string, ke
 		}
 	}
 
-	r, err := CreateResource(s.MqlRuntime, "auditd.rule.watch", map[string]*llx.RawData{
+	r, err := CreateResource(s.runtime, "auditd.rule.watch", map[string]*llx.RawData{
 		"path":        llx.StringData(path),
 		"permissions": llx.ArrayData(permissions, types.String),
 		"keyname":     llx.StringData(keyname),
@@ -782,7 +833,7 @@ func (s *mqlAuditdRules) addWatch(watchType string, path string, perm string, ke
 		errors.Add(err)
 		return nil
 	}
-	s.Watches.Data = append(s.Watches.Data, r)
+	s.watches = append(s.watches, r)
 	return r
 }
 
@@ -797,7 +848,7 @@ func auditdArgString(args map[string]*llx.RawData, key string) string {
 
 // recordRule remembers the resources the last added rule line produced, so a
 // later -d or -W that matches it can remove them.
-func (s *mqlAuditdRules) recordRule(resources ...plugin.Resource) {
+func (s *auditdRuleSet) recordRule(resources ...plugin.Resource) {
 	rule := auditdLoadedRule{identity: s.lastRuleIdentity}
 	for _, r := range resources {
 		if r != nil {
@@ -811,7 +862,7 @@ func (s *mqlAuditdRules) recordRule(resources ...plugin.Resource) {
 // it exactly, so every earlier rule with the same identity is dropped from the
 // reported lists. A deletion that matches nothing is rejected by the kernel and
 // changes nothing.
-func (s *mqlAuditdRules) deleteRule(identity string) {
+func (s *auditdRuleSet) deleteRule(identity string) {
 	removed := map[plugin.Resource]bool{}
 	s.loadedRules = slices.DeleteFunc(s.loadedRules, func(r auditdLoadedRule) bool {
 		if r.identity != identity {
@@ -829,9 +880,9 @@ func (s *mqlAuditdRules) deleteRule(identity string) {
 		r, ok := x.(plugin.Resource)
 		return ok && removed[r]
 	}
-	s.Files.Data = slices.DeleteFunc(s.Files.Data, drop)
-	s.Syscalls.Data = slices.DeleteFunc(s.Syscalls.Data, drop)
-	s.Watches.Data = slices.DeleteFunc(s.Watches.Data, drop)
+	s.files = slices.DeleteFunc(s.files, drop)
+	s.syscalls = slices.DeleteFunc(s.syscalls, drop)
+	s.watches = slices.DeleteFunc(s.watches, drop)
 }
 
 // auditdRuleIdentity describes a rule the way the kernel compares rules when
@@ -988,6 +1039,105 @@ func (s *mqlAuditdRuleSyscall) id() (string, error) {
 	}
 
 	return f.String(), nil
+}
+
+type mqlAuditdLoadedRulesInternal struct {
+	lock    sync.Mutex
+	loaded  bool
+	rules   *auditdRuleSet
+	loadErr error
+}
+
+func (s *mqlAuditdLoadedRules) id() (string, error) {
+	return "auditd.loadedRules", nil
+}
+
+// load lists the rules the kernel has loaded with `auditctl -l`.
+func (s *mqlAuditdLoadedRules) load() (*auditdRuleSet, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if s.loaded {
+		return s.rules, s.loadErr
+	}
+	s.rules, s.loadErr = s.list()
+	s.loaded = true
+	return s.rules, s.loadErr
+}
+
+func (s *mqlAuditdLoadedRules) list() (*auditdRuleSet, error) {
+	conn := s.MqlRuntime.Connection.(shared.Connection)
+	if !conn.Capabilities().Has(shared.Capability_RunCommand) {
+		return nil, llx.NotApplicable(errors.New("the loaded audit rules need a running system, and this connection cannot run commands"))
+	}
+
+	cmd, err := conn.RunCommand("auditctl -l")
+	if err != nil {
+		return nil, err
+	}
+	stdout, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+	if cmd.ExitStatus != 0 {
+		stderr, _ := io.ReadAll(cmd.Stderr)
+		return nil, auditctlListError(cmd.ExitStatus, string(stdout)+string(stderr))
+	}
+
+	var errs multierr.Errors
+	rules := newAuditdRuleSet(s.MqlRuntime)
+	rules.parse(auditctlListedRules(string(stdout)), &errs)
+	if err := errs.Deduplicate(); err != nil {
+		return nil, err
+	}
+	return rules, nil
+}
+
+// auditctlListedRules returns the rule lines of `auditctl -l`, which prints
+// "No rules" when the kernel has none.
+func auditctlListedRules(out string) string {
+	if strings.TrimSpace(out) == "No rules" {
+		return ""
+	}
+	return out
+}
+
+// auditctlListError classifies a failed `auditctl -l`. auditctl refuses a user
+// other than root ("You must be root to run this program.") or fails to send
+// the request when the kernel refuses it ("Operation not permitted").
+func auditctlListError(exitStatus int, out string) error {
+	msg := strings.TrimSpace(out)
+	err := fmt.Errorf("auditctl -l failed: %s", msg)
+	switch {
+	case exitStatus == 127 || strings.Contains(msg, "command not found") || strings.Contains(msg, "No such file or directory"):
+		return llx.NotFound(errors.New("auditctl is not installed, so the loaded audit rules cannot be listed"))
+	case strings.Contains(msg, "must be root") || strings.Contains(msg, "Operation not permitted"):
+		return llx.Forbidden(err)
+	}
+	return err
+}
+
+func (s *mqlAuditdLoadedRules) files() ([]any, error) {
+	rules, err := s.load()
+	if err != nil {
+		return nil, err
+	}
+	return rules.files, nil
+}
+
+func (s *mqlAuditdLoadedRules) syscalls() ([]any, error) {
+	rules, err := s.load()
+	if err != nil {
+		return nil, err
+	}
+	return rules.syscalls, nil
+}
+
+func (s *mqlAuditdLoadedRules) watches() ([]any, error) {
+	rules, err := s.load()
+	if err != nil {
+		return nil, err
+	}
+	return rules.watches, nil
 }
 
 func (s *mqlAuditdStatus) id() (string, error) {

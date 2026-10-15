@@ -2088,6 +2088,39 @@ auditd.rules {
   immutable(path) bool
 }
 
+// Kernel audit rules in effect
+//
+// Rules the kernel audit subsystem has loaded, as `auditctl -l` lists them.
+// They can differ from the rules on disk that `auditd.rules` reads: rules
+// added or deleted with auditctl since boot, a rules file that failed to
+// load, or rules changed on disk and not loaded again. The fields have the
+// shape of the ones on `auditd.rules`, so a check of the rules on disk reads
+// the loaded rules by replacing `auditd.rules` with `auditd.loadedRules`.
+// The kernel keeps a syscall rule on a path or directory that has no
+// architecture or syscall filter as a watch, and auditctl lists it as a `-w`
+// rule, so compare paths through `watches`, which reads both forms. Whether
+// the configuration is locked is `auditd.status.enabled == 2`. Requires
+// running commands as root: the fields are an error when auditctl cannot
+// list the rules, and on a connection that cannot run commands, such as a
+// container image or a mounted disk.
+auditd.loadedRules {
+  // File watch rules (-w entries)
+  files() []auditd.rule.file
+  // Syscall audit rules (-a entries)
+  //
+  // Rules on the task list, such as `-a never,task`, are listed first, as
+  // the kernel orders them.
+  syscalls() []auditd.rule.syscall
+  // File watches in both syntaxes, normalized
+  //
+  // The -w rules together with the syscall rules on a path or directory
+  // (`-F path=` or `-F dir=` with `-F perm=`) that carry an architecture or
+  // syscall filter, which auditctl lists in the `-a` form. Paths lose any
+  // trailing slash and permissions become a set, so `-p aw` and `-p wa`
+  // compare equal.
+  watches() []auditd.rule.watch
+}
+
 // auditd (Linux Audit Daemon) rule
 private auditd.rule {}
 
@@ -2170,9 +2203,11 @@ private auditd.rule.syscall @defaults("action list") {
   keyname string
   // CPU architecture this rule is restricted to
   //
-  // The value of the `-F arch=` filter, normally `b64` or `b32`. Empty when
-  // the rule has no architecture filter and therefore applies to all
-  // architectures.
+  // The value of the `-F arch=` filter, normally `b64` or `b32`. An
+  // architecture number, which an auditctl without that architecture's
+  // syscall table lists (`arch=0x40000028`), reads `b64` or `b32` by its
+  // 64-bit flag. Empty when the rule has no architecture filter and therefore
+  // applies to all architectures.
   arch string
   // Minimum audit UID this rule is restricted to
   //
