@@ -12,6 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/mock"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/connection/tar"
 )
 
 func TestSplitPathList(t *testing.T) {
@@ -94,6 +97,39 @@ func TestPathFromEnv(t *testing.T) {
 		_, err := pathFromEnv(map[string]any{"PATH": 1}, false)
 		assert.Error(t, err)
 	})
+}
+
+func TestImageEnv(t *testing.T) {
+	newConn := func(image *tar.ImageConfig) shared.Connection {
+		conn, err := mock.New(0, &inventory.Asset{Platform: &inventory.Platform{Name: "debian", Family: []string{"debian", "linux", "unix"}}})
+		require.NoError(t, err)
+		return &launchTestConn{Connection: conn, image: image}
+	}
+
+	// the config of debian:12 with an ENV line added, as `docker inspect` shows it
+	env, ok := imageEnv(newConn(&tar.ImageConfig{Env: []string{
+		"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+		"DEBIAN_FRONTEND=noninteractive",
+		"OPTS=a=b",
+		"EMPTY=",
+	}}))
+	require.True(t, ok)
+	assert.Equal(t, map[string]any{
+		"PATH":            "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+		"DEBIAN_FRONTEND": "noninteractive",
+		"OPTS":            "a=b",
+		"EMPTY":           "",
+	}, env)
+
+	// a tar that is not an image (an exported filesystem) declares nothing
+	_, ok = imageEnv(newConn(nil))
+	assert.False(t, ok)
+
+	// a connection that runs commands asks the system
+	conn, err := mock.New(0, &inventory.Asset{Platform: &inventory.Platform{Name: "debian"}})
+	require.NoError(t, err)
+	_, ok = imageEnv(conn)
+	assert.False(t, ok)
 }
 
 // kernelsInstalled builds the value kernel.installed hands to os.rebootpending

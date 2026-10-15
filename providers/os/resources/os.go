@@ -110,10 +110,35 @@ func (p *mqlOs) env() (map[string]any, error) {
 	conn := p.MqlRuntime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
 
+	if env, ok := imageEnv(conn); ok {
+		return env, nil
+	}
 	if platform.IsFamily("windows") {
 		return p.getWindowsEnv()
 	}
 	return p.getUnixEnv()
+}
+
+// imageEnv returns the environment a scanned container image declares, which
+// is what its processes start with. An image scan cannot run `env`: the
+// command answered with no output, so os.env read as {} and os.path as [] on
+// every image, PATH included.
+func imageEnv(conn shared.Connection) (map[string]any, bool) {
+	il, ok := conn.(imageLauncher)
+	if !ok {
+		return nil, false
+	}
+	cfg := il.LaunchConfig()
+	if cfg == nil {
+		return nil, false
+	}
+	res := map[string]any{}
+	for _, entry := range cfg.Env {
+		if name, value, ok := strings.Cut(entry, "="); ok && name != "" {
+			res[name] = value
+		}
+	}
+	return res, true
 }
 
 func (p *mqlOs) path(env map[string]any) ([]any, error) {
@@ -494,6 +519,9 @@ func (p *mqlOsBase) env() (map[string]any, error) {
 	conn := p.MqlRuntime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
 
+	if env, ok := imageEnv(conn); ok {
+		return env, nil
+	}
 	if platform.IsFamily("windows") {
 		return p.getWindowsEnv()
 	}
