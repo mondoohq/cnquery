@@ -129,7 +129,7 @@ func TestInitFrrRouteTable_Rejects(t *testing.T) {
 
 func TestFrrRouteTableID(t *testing.T) {
 	assert.Equal(t, "frr.routeTable/default/ipv4/limit/5000", frrRouteTableID("", "ipv4", 5000))
-	assert.Equal(t, "frr.routeTable/cluster/ipv6", frrRouteTableID("cluster", "ipv6", 10))
+	assert.Equal(t, "frr.routeTable/cluster/ipv6/limit/10", frrRouteTableID("cluster", "ipv6", 10))
 	assert.Equal(t, "default", vrfKey(""))
 	assert.Equal(t, "cluster", vrfKey("cluster"))
 	assert.NotEqual(t, frrRouteTableID("cluster", "ipv4", 10), frrRouteTableID("cluster", "ipv4", 100))
