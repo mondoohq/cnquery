@@ -15342,6 +15342,91 @@ private macos.profile.payload @defaults("type displayName") {
   content dict
 }
 
+// macOS preference domain
+//
+// Values of one preference domain, such as `com.apple.screensaver`, read the
+// way macOS resolves them, for example
+// `macos.preferences("com.apple.screensaver").values["askForPassword"]`.
+// `managed` holds the values configuration profiles enforce for the computer
+// (/Library/Managed Preferences), `system` the values set for every user
+// (/Library/Preferences), and `values` the effective result: a managed value
+// overrides a system one, key by key. `sources` names where each effective
+// value comes from. `users` resolves the same domain for each local user,
+// including the values profiles enforce for that user and the user's own
+// preference files. `NSGlobalDomain` selects `.GlobalPreferences`. A domain no
+// file sets has empty values.
+macos.preferences @defaults("domain") {
+  init(domain string)
+  // Preference domain, such as `com.apple.screensaver`
+  domain string
+  // Values configuration profiles enforce for the computer
+  //
+  // Read from /Library/Managed Preferences/<domain>.plist, which macOS writes
+  // from the installed profiles. Empty when no profile manages the domain.
+  managed() dict
+  // Values set for every user of the computer
+  //
+  // Read from /Library/Preferences/<domain>.plist. Empty when the file does
+  // not exist.
+  system() dict
+  // Effective values for the computer
+  //
+  // The keys of `system` and `managed` merged, a managed value taking
+  // precedence. A key no file sets is absent, and the application's built-in
+  // default applies.
+  values() dict
+  // Where each effective value comes from
+  //
+  // Maps each key of `values` to `managed` or `system`.
+  sources() map[string]string
+  // Preferences of this domain for each local user
+  //
+  // One entry for every account with a home directory under /Users, except
+  // /Users/Shared.
+  users() []macos.preferences.user
+}
+
+// macOS preference domain of one user
+//
+// Values of a preference domain for one local user, resolved in the order
+// macOS applies them: values profiles enforce for the user or the computer
+// (`managed`), then the user's values for this Mac (`byHost`), then the user's
+// own values (`preferences`), then the computer's (`system` of the domain).
+// `values` holds the effective result and `sources` where each value comes
+// from.
+private macos.preferences.user @defaults("user.name domain") {
+  // User the preferences belong to
+  user() user
+  // Preference domain, such as `com.apple.screensaver`
+  domain string
+  // Values configuration profiles enforce for this user
+  //
+  // Read from /Library/Managed Preferences/<user>/<domain>.plist, which holds
+  // the values of user and computer profiles, and from the domain's entries
+  // that are always enforced in /Library/Managed Preferences/<user>/complete.plist.
+  // The computer's managed values apply when neither file sets a key.
+  managed() dict
+  // Values the user set for this Mac only
+  //
+  // Read from ~/Library/Preferences/ByHost/<domain>.<hardware UUID>.plist.
+  byHost() dict
+  // Values the user set
+  //
+  // Read from ~/Library/Preferences/<domain>.plist, or from the sandbox
+  // container ~/Library/Containers/<domain>/Data/Library/Preferences/<domain>.plist
+  // when the application is sandboxed and that file exists.
+  preferences() dict
+  // Effective values for this user
+  //
+  // The keys of every source merged, in precedence order: managed, byHost,
+  // preferences, then the computer's system values.
+  values() dict
+  // Where each effective value comes from
+  //
+  // Maps each key of `values` to `managed`, `byHost`, `preferences` or `system`.
+  sources() map[string]string
+}
+
 // macOS Software Update configuration and pending updates
 //
 // Automatic-update policy and the list of updates currently available
