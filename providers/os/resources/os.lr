@@ -99,6 +99,7 @@ alias os.unix.snmpd = snmpd
 alias os.unix.sudo = sudo
 alias os.unix.sudoers = sudoers
 alias os.unix.sysrc = sysrc
+alias os.unix.umask = umask
 alias os.unix.zfs = zfs
 alias os.linux.cgroups = cgroups
 alias os.linux.cryptoPolicy = cryptoPolicy
@@ -179,6 +180,7 @@ alias os.any.sudo = sudo
 alias os.any.sudoers = sudoers
 alias os.any.sysrc = sysrc
 alias os.any.ufw = ufw
+alias os.any.umask = umask
 alias os.any.usb = usb
 alias os.any.windows = windows
 alias os.any.zfs = zfs
@@ -11927,6 +11929,132 @@ logindefs {
   content(file) string
   // Parsed login.defs parameters as a name/value map (e.g. PASS_MAX_DAYS, UMASK, ENCRYPT_METHOD)
   params(content) map[string]string
+}
+
+// Default file creation mask (umask) of user sessions
+//
+// The umask settings that apply when users log in: UMASK in login.defs and
+// its drop-ins (the files `logindefs` reads), UMASK in /etc/default/login, the
+// pam_umask session lines, and umask statements in the startup files every
+// Bourne-compatible login or interactive shell reads: /etc/profile,
+// /etc/profile.local, the *.sh files of /etc/profile.d (and of SUSE's
+// /usr/etc/profile.d, unless /etc/profile.d has a file of the same name),
+// /etc/profile.d/sh.local, /etc/bashrc, /etc/bash.bashrc and
+// /etc/bash.bashrc.local. Each setting has its mask normalized from octal or
+// symbolic form, with the permissions new files keep, so a check for 027 or
+// more restrictive reads
+// `umask.settings.where(source == "shell").all(groupWriteable == false && otherReadable == false && otherWriteable == false && otherExecutable == false)`.
+// Initialize with a user name, `umask(user: "root")`, to also read that
+// user's ~/.bash_profile, ~/.bash_login, ~/.profile and ~/.bashrc.
+umask @defaults("loginDefs") {
+  init(user? string)
+  // User whose own shell startup files are read
+  //
+  // Empty when only the system-wide files are read.
+  user string
+  // Files that hold umask settings, in the order listed in the description
+  //
+  // Only those that exist. A user's startup files come last.
+  files() []file
+  // Every umask setting, in file order
+  //
+  // Includes a UMASK that a later login.defs line or drop-in overrides, and
+  // umask statements that run only under a condition (see `conditional`). A
+  // pam_umask line is listed when it has a `umask=` argument.
+  settings(files) []umask.setting
+  // UMASK that login.defs sets
+  //
+  // The last UMASK line of login.defs and its drop-ins, the value that the
+  // shadow tools and pam_umask read. Null when no file sets it.
+  loginDefs(settings) umask.setting
+  // pam_umask lines of the session stacks, with the mask each sets
+  //
+  // Every `session` line that loads pam_umask, in each PAM service file
+  // (`pam.conf.entries`). Empty when no service uses pam_umask.
+  pam() []umask.pamModule
+}
+
+// Umask setting
+//
+// One UMASK key or umask statement, with the mask it sets.
+private umask.setting @defaults("source value") {
+  // Where the setting is
+  //
+  // One of `login.defs` (login.defs or a drop-in), `default-login`
+  // (/etc/default/login), `pam` (a pam_umask `umask=` argument), `shell` (a
+  // system-wide shell startup file) or `user` (a startup file in the home
+  // directory of `umask.user`).
+  source string
+  // File the setting is in
+  file file
+  // Line number, counted from 1
+  line int
+  // Mask as written, such as 027, 0027 or u=rwx,g=rx,o=
+  value string
+  // Permission bits the mask removes from new files
+  //
+  // 0o027 for `027` and for `u=rwx,g=rx,o=`. For a relative mask, the bits
+  // it removes whatever the umask was before. Null when value is not a mode,
+  // such as $UMASK.
+  mode int
+  // Mask in four-digit octal, such as 0027
+  //
+  // Empty when value is not a mode.
+  octal string
+  // Whether the mask changes the umask it is applied to rather than replacing it
+  //
+  // True for a symbolic mask that leaves a class out (`g=rx,o=` keeps the
+  // user bits) or adds or removes permissions (`o-rwx`). Then `mode` and the
+  // permission fields count only what the mask is known to set.
+  relative bool
+  // Whether a shell statement may not run each time the file is read
+  //
+  // True inside an if, case, loop or function, in a subshell, or after `&&`
+  // or `||`. RHEL's /etc/bashrc sets `umask 022` only when the umask is 0.
+  // False for the other sources.
+  conditional bool
+  // Whether new files may be readable by their owner
+  userReadable bool
+  // Whether new files may be writeable by their owner
+  userWriteable bool
+  // Whether new files may be executable by their owner
+  userExecutable bool
+  // Whether new files may be readable by their group
+  groupReadable bool
+  // Whether new files may be writeable by their group
+  groupWriteable bool
+  // Whether new files may be executable by their group
+  groupExecutable bool
+  // Whether new files may be readable by others
+  otherReadable bool
+  // Whether new files may be writeable by others
+  otherWriteable bool
+  // Whether new files may be executable by others
+  otherExecutable bool
+}
+
+// pam_umask session line
+//
+// A `session` line of a PAM service that loads pam_umask, with the mask it
+// sets: its `umask=` argument, else UMASK of login.defs, else UMASK of
+// /etc/default/login, as pam_umask looks them up.
+private umask.pamModule @defaults("service setting.octal") {
+  // PAM service file of the line, such as /etc/pam.d/common-session
+  service string
+  // Line number in the file, counted from 0 as in pam.conf.serviceEntry
+  lineNumber int
+  // Control field of the line, such as optional
+  control string
+  // Module arguments, such as umask=0027 or usergroups
+  arguments []string
+  // Mask the line sets, null when none of the places pam_umask looks sets one
+  setting umask.setting
+  // Whether the line copies the user bits to the group bits for a user in a group of the same name
+  //
+  // From the `usergroups` and `nousergroups` arguments: 027 becomes 007 for
+  // such a user who is not root. A Linux-PAM build can turn it on by
+  // default; upstream it is off.
+  usergroups bool
 }
 
 // Password quality requirements of libpwquality (pwquality.conf)

@@ -74,28 +74,16 @@ func (s *mqlLogindefs) content(file *mqlFile) (string, error) {
 func (s *mqlLogindefs) params(content string) (map[string]any, error) {
 	params := logindefs.Parse(strings.NewReader(content))
 
-	if conn, ok := s.MqlRuntime.Connection.(shared.Connection); ok {
-		file := s.GetFile()
-		if file.Data != nil && isSystemLoginDefs(file.Data.Path.Data) {
-			platform := conn.Asset().GetPlatform()
-			fs := conn.FileSystem()
-			// Elsewhere than SUSE, whether shadow reads drop-ins depends on its
-			// build. Probe useradd only when there is a drop-in directory.
-			econf := false
-			if fs != nil && (platform == nil || !platform.IsFamily("suse")) {
-				if _, err := fs.Stat(logindefs.EtcDropInDir); err == nil {
-					econf = logindefs.ShadowLinksLibeconf(fs)
-				}
-			}
-			mode := loginDefsDropInMode(platform, file.Data.Path.Data, econf)
-			if mode != loginDefsNoDropIns {
-				layers, err := s.dropInParams(fs, mode == loginDefsVendorAndEtcDropIns)
-				if err != nil {
-					return nil, err
-				}
-				params = logindefs.Overlay(append([]map[string]string{params}, layers...)...)
-			}
+	paths, err := s.dropIns()
+	if err != nil {
+		return nil, err
+	}
+	if len(paths) > 0 {
+		layers, err := s.dropInParams(paths)
+		if err != nil {
+			return nil, err
 		}
+		params = logindefs.Overlay(append([]map[string]string{params}, layers...)...)
 	}
 
 	res := make(map[string]any, len(params))
@@ -103,6 +91,34 @@ func (s *mqlLogindefs) params(content string) (map[string]any, error) {
 		res[k] = v
 	}
 	return res, nil
+}
+
+// dropIns lists the login.defs drop-ins the shadow tools apply after the
+// system login.defs, in order. None for a login.defs passed by path.
+func (s *mqlLogindefs) dropIns() ([]string, error) {
+	conn, ok := s.MqlRuntime.Connection.(shared.Connection)
+	if !ok {
+		return nil, nil
+	}
+	file := s.GetFile()
+	if file.Data == nil || !isSystemLoginDefs(file.Data.Path.Data) {
+		return nil, nil
+	}
+	platform := conn.Asset().GetPlatform()
+	fs := conn.FileSystem()
+	// Elsewhere than SUSE, whether shadow reads drop-ins depends on its
+	// build. Probe useradd only when there is a drop-in directory.
+	econf := false
+	if fs != nil && (platform == nil || !platform.IsFamily("suse")) {
+		if _, err := fs.Stat(logindefs.EtcDropInDir); err == nil {
+			econf = logindefs.ShadowLinksLibeconf(fs)
+		}
+	}
+	mode := loginDefsDropInMode(platform, file.Data.Path.Data, econf)
+	if mode == loginDefsNoDropIns {
+		return nil, nil
+	}
+	return loginDefsDropInPaths(fs, mode == loginDefsVendorAndEtcDropIns)
 }
 
 // loginDefsDropIns says which login.defs.d directories the shadow tools read
@@ -145,11 +161,11 @@ func loginDefsDropInMode(platform *inventory.Platform, mainPath string, econf bo
 	return loginDefsNoDropIns
 }
 
-// dropInParams parses the login.defs drop-ins in the order shadow applies
-// them. The vendor drop-in directory is read only when withVendor is set and
-// the vendor login.defs exists: SLES 15 and Leap 15 build shadow without a
-// vendor directory and ignore /usr/etc/login.defs.d.
-func (s *mqlLogindefs) dropInParams(fs afero.Fs, withVendor bool) ([]map[string]string, error) {
+// loginDefsDropInPaths lists the login.defs drop-ins in the order shadow
+// applies them. The vendor drop-in directory is read only when withVendor is
+// set and the vendor login.defs exists: SLES 15 and Leap 15 build shadow
+// without a vendor directory and ignore /usr/etc/login.defs.d.
+func loginDefsDropInPaths(fs afero.Fs, withVendor bool) ([]string, error) {
 	if fs == nil {
 		return nil, nil
 	}
@@ -168,22 +184,35 @@ func (s *mqlLogindefs) dropInParams(fs afero.Fs, withVendor bool) ([]map[string]
 	if err != nil {
 		return nil, err
 	}
+	return logindefs.DropInPaths(vendorNames, etcNames), nil
+}
 
+// dropInParams parses the login.defs drop-ins at paths, in order.
+func (s *mqlLogindefs) dropInParams(paths []string) ([]map[string]string, error) {
 	var layers []map[string]string
-	for _, p := range logindefs.DropInPaths(vendorNames, etcNames) {
-		f, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
-			"path": llx.StringData(p),
-		})
+	for _, p := range paths {
+		content, err := s.readDropIn(p)
 		if err != nil {
 			return nil, err
 		}
-		content := f.(*mqlFile).GetContent()
-		if content.Error != nil {
-			return nil, fmt.Errorf("failed to read %s: %w", p, content.Error)
-		}
-		layers = append(layers, logindefs.Parse(strings.NewReader(content.Data)))
+		layers = append(layers, logindefs.Parse(strings.NewReader(content)))
 	}
 	return layers, nil
+}
+
+// readDropIn reads the login.defs drop-in at p.
+func (s *mqlLogindefs) readDropIn(p string) (string, error) {
+	f, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(p),
+	})
+	if err != nil {
+		return "", err
+	}
+	content := f.(*mqlFile).GetContent()
+	if content.Error != nil {
+		return "", fmt.Errorf("failed to read %s: %w", p, content.Error)
+	}
+	return content.Data, nil
 }
 
 // loginDefsDropInNames lists the entries of dir that are not directories. A missing directory has
