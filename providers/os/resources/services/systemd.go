@@ -5,18 +5,15 @@ package services
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
-	"os"
-	"path"
 	"regexp"
 	"sort"
 	"strings"
 	"sync"
 
-	"github.com/coreos/go-systemd/unit"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/providers/os/connection/shared"
@@ -24,8 +21,6 @@ import (
 
 var (
 	SYSTEMD_LIST_UNITS_REGEX = regexp.MustCompile(`(?m)^(?:[^\S\n]{2}|●[^\S\n]|)(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(.+)$`)
-	serviceNameRegex         = regexp.MustCompile(`(.*)\.(service|target|socket)$`)
-	errIgnored               = errors.New("ignored")
 )
 
 const (
@@ -453,6 +448,23 @@ func (s *SystemDServiceManager) Get(name string) (*Service, error) {
 	return service, nil
 }
 
+// systemctlNotBooted reports whether systemctl refused because systemd is not
+// the running init, as in a container started without it.
+func systemctlNotBooted(cmd *shared.Command) bool {
+	if cmd == nil || cmd.ExitStatus == 0 || cmd.Stderr == nil {
+		return false
+	}
+	stderr, err := io.ReadAll(cmd.Stderr)
+	if err != nil {
+		return false
+	}
+	cmd.Stderr = bytes.NewBuffer(stderr)
+	// systemd 220 and later say so; 219 (RHEL 7, Amazon Linux 2) only
+	// fails to reach the bus
+	return bytes.Contains(stderr, []byte("has not been booted with systemd")) ||
+		bytes.Contains(stderr, []byte("Failed to get D-Bus connection"))
+}
+
 // List returns a slice of Service structs representing the state of all services.
 // It uses list-unit-files for the complete set (including unloaded services) and
 // list-units for running state. This avoids batched "systemctl show" which fails
@@ -487,6 +499,17 @@ func (s *SystemDServiceManager) List() ([]*Service, error) {
 	cmdUnits, err := s.conn.RunCommand("systemctl list-units --type service --all")
 	if err != nil {
 		return nil, err
+	}
+	// list-unit-files reads the unit files, list-units asks the running
+	// systemd. In a container that has systemctl but was not booted with
+	// systemd only the first answers, and so does nothing that reads the
+	// rest of the state: enabled template instances (getty@tty1) went
+	// missing and every description read empty. Nothing runs there, and the
+	// unit files on disk say the rest.
+	if systemctlNotBooted(cmdUnits) {
+		log.Debug().Err(systemctlError("systemctl list-units", cmdUnits)).
+			Msg("systemd is not running, reading systemd units from disk instead")
+		return (&SystemdFSServiceManager{Fs: s.conn.FileSystem()}).List()
 	}
 
 	unitStates, err := ParseSystemdListUnits(cmdUnits.Stdout)
@@ -693,96 +716,55 @@ var systemdUnitSearchPath = []string{
 	"/lib/systemd/system",
 }
 
-type unitInfo struct {
-	// name is the name of the unit without the type extension
-	name string
-	// uType is the type extension, for example service, target, etc
-	uType string
-	// description is the description that is provided in the unit section
-	description string
-	// deps is a list of all name.type values found in the Wants and Requires
-	// fields of the Unit section
-	deps []string
-	// Orderings is a list of all name.type values found in the Before and
-	// After fields of the Unit section
-	orderings []string
-	// masked is set to true of a unit is symlinked to /dev/null
-	masked bool
-	// missing is set to true if we have a dependency on a unit, but that
-	// unit was not found in the search path
-	missing bool
-	// isDep is true of this unit is found in the dependency tree starting
-	// from the default.target
-	isDep bool
-	// hasInstall is true if the unit file has an [Install] section
-	hasInstall bool
-	// service is only set for socket units. It contains an optional name.target.
-	// If not provided, socketname.service is activated for the socket
-	service string
-}
-
-type stackEntry struct {
-	unit     string
-	critical bool
-}
-type stack []stackEntry
-
-func (s *stack) push(v stackEntry) {
-	*s = append(*s, v)
-}
-
-func (s *stack) pop() stackEntry {
-	n := len(*s) - 1
-	v := (*s)[n]
-	*s = (*s)[:n]
-	return v
-}
-
-func (s *stack) len() int {
-	return len(*s)
-}
-
 func (s *SystemdFSServiceManager) Name() string {
 	return "systemd FS Service Manager"
 }
 
+// List reports every service unit file the way `systemctl list-unit-files`
+// does, read from disk: enabled, static, masked and disabled as systemd
+// decides them from the unit files and the enablement links, an alias with
+// the state of the unit it names, and the enabled instances of templates.
+//
+// It used to walk the dependency graph from default.target and call a unit
+// enabled when the walk reached it. That differed from systemctl wherever the
+// two notions part: a unit without an [Install] section that something pulls
+// in (dbus.service) read as enabled where systemctl reports it static, a
+// template enabled for its default instance (getty@.service) read as
+// disabled, and its enabled instance (getty@tty1) as not installed.
 func (s *SystemdFSServiceManager) List() ([]*Service, error) {
-	enabledUnits, err := s.traverse()
+	units, err := readSystemdUnitFiles(s.Fs, ".service")
 	if err != nil {
 		return nil, err
 	}
-	if err := s.addUnreachedServices(enabledUnits); err != nil {
-		return nil, err
+	byName := make(map[string]*systemdUnitFile, len(units))
+	for _, u := range units {
+		byName[u.Name] = u
 	}
-	services := make([]*Service, 0, len(enabledUnits))
-	// A unit reached under an alias as well (syslog.service for
-	// rsyslog.service) is one service. Which copy came first depended on
-	// map order, so an alias reached only through an ordering could hide
-	// that the unit is enabled.
-	byName := map[string]*Service{}
-	for _, v := range enabledUnits {
-		if v.uType != "service" {
-			continue
-		}
+
+	services := make([]*Service, 0, len(units))
+	for _, u := range units {
 		svc := &Service{
-			Name:        v.name,
-			Type:        v.uType,
-			Description: v.description,
-			State:       ServiceUnknown,
-			Installed:   !v.missing,
-			Enabled:     !v.missing && v.isDep,
-			Masked:      v.masked,
-			Static:      !v.missing && !v.masked && !v.hasInstall,
+			Name:      strings.TrimSuffix(u.Name, ".service"),
+			Type:      "systemd",
+			State:     ServiceUnknown,
+			Installed: true,
 		}
-		if seen, ok := byName[v.name]; ok {
-			if !seen.Installed && svc.Installed {
-				*seen = *svc
-			} else if svc.Installed {
-				seen.Enabled = seen.Enabled || svc.Enabled
+		// an alias row takes all of its state from the unit it names, as
+		// the systemctl path reports it
+		state := u
+		if u.State == "alias" {
+			target, ok := byName[u.Target]
+			if !ok {
+				// a link to a unit that is not there: systemd cannot load it
+				svc.Installed = false
+				services = append(services, svc)
+				continue
 			}
-			continue
+			state = target
 		}
-		byName[v.name] = svc
+		svc.Description = state.Description
+		svc.Path = state.Path
+		applyUnitFileState(&svc.Enabled, &svc.Masked, &svc.Static, state.State)
 		services = append(services, svc)
 	}
 	return services, nil
@@ -790,358 +772,4 @@ func (s *SystemdFSServiceManager) List() ([]*Service, error) {
 
 func (s *SystemdFSServiceManager) Get(name string) (*Service, error) {
 	return getServiceFromList(name, s.List)
-}
-
-// traverse traverses the root target and finds units. This implementation is
-// incomplete. It only looks at targets, services, and sockets, so at least
-// mounts and timers are missing. Also, handling of templates is probably not
-// fully correct. The implicit and default dependencies for types are also
-// not accounted for
-func (s *SystemdFSServiceManager) traverse() (map[string]*unitInfo, error) {
-	loadedUnits := map[string]*unitInfo{}
-	stack := new(stack)
-	stack.push(stackEntry{
-		critical: true,
-		unit:     "default.target",
-	})
-	// default.target ships with the systemd package. An image built without
-	// it (debian, ubuntu and kali base images) still carries the enablement
-	// symlinks packages create in <target>.wants, which is what
-	// `systemctl is-enabled` reads. Walk from those instead.
-	if !s.unitFileExists("default.target") {
-		seeds, err := s.targetWants()
-		if err != nil {
-			return nil, err
-		}
-		for _, seed := range seeds {
-			stack.push(stackEntry{critical: true, unit: seed})
-		}
-	}
-	for stack.len() > 0 {
-		u := stack.pop()
-		if l, ok := loadedUnits[u.unit]; ok {
-			if !l.isDep && u.critical {
-				// We need to revisit all the already loaded units
-				// and mark them as a dependency
-				l.isDep = true
-				for _, v := range l.deps {
-					stack.push(stackEntry{
-						unit:     v,
-						critical: true,
-					})
-				}
-			}
-			continue
-		}
-		uInfo, err := s.findUnit(u.unit)
-		if err != nil {
-			if errors.Is(err, errIgnored) {
-				continue
-			}
-			return nil, err
-		}
-		for _, d := range uInfo.deps {
-			stack.push(stackEntry{
-				unit:     d,
-				critical: u.critical,
-			})
-		}
-		for _, d := range uInfo.orderings {
-			stack.push(stackEntry{
-				unit:     d,
-				critical: false,
-			})
-		}
-		if uInfo.uType == "socket" {
-			d := uInfo.service
-			if d == "" {
-				d = fmt.Sprintf("%s.service", uInfo.name)
-			}
-			stack.push(stackEntry{
-				unit:     d,
-				critical: u.critical,
-			})
-		}
-		uInfo.isDep = uInfo.isDep || u.critical
-		loadedUnits[u.unit] = uInfo
-	}
-	return loadedUnits, nil
-}
-
-// unitFileExists reports whether a unit file of that name is on the search
-// path.
-func (s *SystemdFSServiceManager) unitFileExists(unitName string) bool {
-	for _, p := range systemdUnitSearchPath {
-		if _, err := s.Fs.Stat(path.Join(p, unitName)); err == nil {
-			return true
-		}
-	}
-	return false
-}
-
-// targetWants returns the units linked from every <name>.target.wants and
-// <name>.target.requires directory on the search path.
-func (s *SystemdFSServiceManager) targetWants() ([]string, error) {
-	var units []string
-	// findDeps reads every search path for a target, so a target with a
-	// .wants directory on two of them is asked once
-	seenTarget := map[string]bool{}
-	seenUnit := map[string]bool{}
-	for _, p := range systemdUnitSearchPath {
-		entries, err := afero.ReadDir(s.Fs, p)
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-			return nil, err
-		}
-		for _, e := range entries {
-			if !e.IsDir() {
-				continue
-			}
-			target, ok := strings.CutSuffix(e.Name(), ".wants")
-			if !ok {
-				target, ok = strings.CutSuffix(e.Name(), ".requires")
-			}
-			if !ok || !strings.HasSuffix(target, ".target") || seenTarget[target] {
-				continue
-			}
-			seenTarget[target] = true
-			deps, err := s.findDeps(target)
-			if err != nil {
-				return nil, err
-			}
-			for _, d := range deps {
-				if !seenUnit[d] {
-					seenUnit[d] = true
-					units = append(units, d)
-				}
-			}
-		}
-	}
-	return units, nil
-}
-
-// addUnreachedServices adds the service unit files on the search path that
-// the walk from default.target did not reach. They are installed but not
-// enabled: a disabled unit, or a static one nothing pulls in. An alias of a
-// unit that is already listed is skipped.
-func (s *SystemdFSServiceManager) addUnreachedServices(units map[string]*unitInfo) error {
-	known := map[string]bool{}
-	for _, u := range units {
-		known[u.name+"."+u.uType] = true
-	}
-	for _, p := range systemdUnitSearchPath {
-		entries, err := afero.ReadDir(s.Fs, p)
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-			return err
-		}
-		for _, e := range entries {
-			unitName := e.Name()
-			if e.IsDir() || !strings.HasSuffix(unitName, ".service") {
-				continue
-			}
-			if _, ok := units[unitName]; ok {
-				continue
-			}
-			uInfo, err := s.findUnit(unitName)
-			if err != nil {
-				log.Debug().Err(err).Str("unit", unitName).Msg("could not read systemd unit file")
-				continue
-			}
-			if uInfo.missing || known[uInfo.name+"."+uInfo.uType] {
-				continue
-			}
-			known[uInfo.name+"."+uInfo.uType] = true
-			units[unitName] = uInfo
-		}
-	}
-	return nil
-}
-
-func (s *SystemdFSServiceManager) findUnit(unitName string) (*unitInfo, error) {
-	name, uType, ok := unitNameAndType(unitName)
-	if !ok {
-		return nil, errIgnored
-	}
-	uInfo := unitInfo{
-		name:  name,
-		uType: uType,
-	}
-
-	for _, p := range systemdUnitSearchPath {
-		var err error
-		var fsInfo fs.FileInfo
-
-		uName := unitName
-		unitPath := path.Join(p, unitName)
-
-		// We try to lstat if we can. We want to know if the file is
-		// a symlink because symlinks are aliases
-		if lstater, ok := s.Fs.(afero.Lstater); ok {
-			fsInfo, _, err = lstater.LstatIfPossible(unitPath)
-		} else {
-			fsInfo, err = s.Fs.Stat(unitPath)
-		}
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-			return nil, err
-		}
-
-		findNames := []string{uName}
-		if fsInfo.Mode()&fs.ModeSymlink != 0 {
-			// If its a symlink, we need to get the real name
-			// TODO: check if this needs to be done recursively
-			if lr, ok := s.Fs.(afero.LinkReader); ok {
-				linkPath, err := lr.ReadlinkIfPossible(unitPath)
-				if err != nil {
-					return nil, err
-				}
-				if linkPath == "/dev/null" {
-					uInfo.masked = true
-					return &uInfo, nil
-				} else {
-					linkedName := path.Base(linkPath)
-					name, uType, ok := unitNameAndType(linkedName)
-					// The rules for aliasing only allow same type to same
-					// type. So foo.service -> bar.service, but not
-					// foo.service -> bar.socket
-					if !ok || (uInfo.uType != uType) {
-						return nil, fmt.Errorf("invalid unit %s", linkedName)
-					}
-					uInfo.name = name
-					findNames = append(findNames, linkedName)
-				}
-			}
-		}
-
-		if err := s.readUnit(unitPath, &uInfo); err != nil {
-			return nil, err
-		}
-
-		// We need to search for deps from directories based on both the
-		// real name and aliased name
-		for _, n := range findNames {
-			dirDeps, err := s.findDeps(n)
-			if err != nil {
-				return nil, err
-			}
-			uInfo.deps = append(uInfo.deps, dirDeps...)
-		}
-
-		return &uInfo, nil
-	}
-
-	uInfo.missing = true
-	return &uInfo, nil
-}
-
-// readUnit reads the unit file:
-// deps are pulled from the Wants and Requires keys of the Unit section
-// description is pulled from the Description key of the Unit section
-// orderings are pulled from the Before and After keys of the Unit section
-func (s *SystemdFSServiceManager) readUnit(unitPath string, uInfo *unitInfo) error {
-	// First resolve the symlink in case the unitPath is actually a symlink.
-	if lr, ok := s.Fs.(afero.LinkReader); ok {
-		linkPath, err := lr.ReadlinkIfPossible(unitPath)
-		if err == nil {
-			// If the linkPath is not absolute, use the directory of unitPath and append the
-			// filename. The unit belongs to a Unix file system, so its paths are
-			// slash-separated whatever OS the scanner runs on: path, not
-			// path/filepath, which on Windows treats "/lib/..." as relative.
-			if !path.IsAbs(linkPath) {
-				directory := path.Dir(unitPath)
-				linkPath = path.Join(directory, linkPath)
-			}
-			unitPath = linkPath
-		}
-	}
-
-	f, err := s.Fs.Open(unitPath)
-	if err != nil {
-		return err
-	}
-	opts, err := unit.Deserialize(f)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range opts {
-		if o.Section == "Unit" && (o.Name == "Wants" || o.Name == "Requires") {
-			deps := strings.Fields(o.Value)
-			for _, d := range deps {
-				if serviceNameRegex.MatchString(d) {
-					uInfo.deps = append(uInfo.deps, d)
-				}
-			}
-		} else if o.Section == "Unit" && o.Name == "Description" {
-			uInfo.description = o.Value
-		} else if o.Section == "Unit" && (o.Name == "Before" || o.Name == "After") {
-			orderings := strings.Fields(o.Value)
-			for _, d := range orderings {
-				if serviceNameRegex.MatchString(d) {
-					uInfo.orderings = append(uInfo.orderings, d)
-				}
-			}
-		} else if o.Section == "Socket" && o.Name == "Service" {
-			uInfo.service = o.Value
-		} else if o.Section == "Install" {
-			uInfo.hasInstall = true
-		}
-	}
-
-	return nil
-}
-
-// findDeps looks up the dependencies for the given unit name (foo.service)
-// by looking up all the links in the foo.service.wants and foo.service.requires
-// directories
-func (s *SystemdFSServiceManager) findDeps(unitName string) ([]string, error) {
-	deps := []string{}
-	for _, searchPath := range systemdUnitSearchPath {
-		paths := []string{
-			path.Join(searchPath, fmt.Sprintf("%s.wants", unitName)),
-			path.Join(searchPath, fmt.Sprintf("%s.requires", unitName)),
-		}
-
-		for _, p := range paths {
-			_, err := s.Fs.Stat(p)
-			if err != nil {
-				if os.IsNotExist(err) {
-					continue
-				}
-				return nil, err
-			}
-			unitLinks, err := afero.ReadDir(s.Fs, p)
-			if err != nil {
-				return nil, err
-			}
-			for _, unitLink := range unitLinks {
-				if serviceNameRegex.MatchString(unitLink.Name()) {
-					deps = append(deps, unitLink.Name())
-				}
-			}
-		}
-	}
-
-	return deps, nil
-}
-
-func unitNameAndType(n string) (name string, uType string, ok bool) {
-	matches := serviceNameRegex.FindStringSubmatch(n)
-	if len(matches) > 1 {
-		name = matches[1]
-	}
-	if len(matches) > 2 {
-		uType = matches[2]
-	}
-	if len(matches) == 3 {
-		ok = true
-	}
-	return
 }
