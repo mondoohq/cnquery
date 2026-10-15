@@ -216,9 +216,17 @@ func (c *ContainerConnection) hasShell() bool {
 }
 
 // shellMissing reports whether an exec's result says the runtime could not
-// start the shell, not that the shell ran and failed.
+// start the shell, not that the shell ran and failed: it is missing or not
+// executable ("exec failed", 126 or 127), or built for another architecture
+// the host cannot run ("exec format error", 255).
 func shellMissing(exitStatus int, output string) bool {
-	return (exitStatus == 126 || exitStatus == 127) && strings.Contains(output, "exec failed")
+	switch exitStatus {
+	case 126, 127:
+		return strings.Contains(output, "exec failed")
+	case 255:
+		return strings.Contains(output, "exec format error")
+	}
+	return false
 }
 
 func (c *ContainerConnection) RunCommand(command string) (*shared.Command, error) {
@@ -273,7 +281,7 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 		// read everything. Read its filesystem from an export instead, as for
 		// a stopped container.
 		if !conn.hasShell() {
-			log.Info().Str("container", shortID).Msg("the container has no shell, reading its filesystem from an export")
+			log.Info().Str("container", shortID).Msg("the container cannot start a shell, reading its filesystem from an export")
 			_ = conn.Client.Close()
 			return newContainerSnapshot(id, conf, asset, ci.ID, platformID, shortID, ci.Labels)
 		}

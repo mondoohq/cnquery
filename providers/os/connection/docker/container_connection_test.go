@@ -198,6 +198,9 @@ func TestShellMissing(t *testing.T) {
 	// docker exec into gcr.io/distroless/static-debian12
 	assert.True(t, shellMissing(127, "OCI runtime exec failed: exec failed: unable to start container process: exec: \"/bin/sh\": stat /bin/sh: no such file or directory\r\n"))
 	assert.True(t, shellMissing(126, "OCI runtime exec failed: exec failed: unable to start container process: exec: \"/bin/sh\": permission denied\r\n"))
+	// an amd64 image's shell on an arm64 host without emulation
+	assert.True(t, shellMissing(255, "exec /bin/sh: exec format error\n"))
+	assert.False(t, shellMissing(255, "ssh: connect to host"))
 	// the shell ran, and a command in it was not found
 	assert.False(t, shellMissing(127, "/bin/sh: 1: nonexistent: not found\n"))
 	assert.False(t, shellMissing(0, ""))
