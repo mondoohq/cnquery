@@ -483,6 +483,8 @@ const (
 	ResourceMacosProfiles                                 string = "macos.profiles"
 	ResourceMacosProfile                                  string = "macos.profile"
 	ResourceMacosProfilePayload                           string = "macos.profile.payload"
+	ResourceMacosPreferences                              string = "macos.preferences"
+	ResourceMacosPreferencesUser                          string = "macos.preferences.user"
 	ResourceMacosSoftwareupdate                           string = "macos.softwareupdate"
 	ResourceMacosSoftwareupdateEntry                      string = "macos.softwareupdate.entry"
 	ResourceMacosTimemachine                              string = "macos.timemachine"
@@ -2631,6 +2633,14 @@ func init() {
 		"macos.profile.payload": {
 			// to override args, implement: initMacosProfilePayload(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMacosProfilePayload,
+		},
+		"macos.preferences": {
+			Init:   initMacosPreferences,
+			Create: createMacosPreferences,
+		},
+		"macos.preferences.user": {
+			// to override args, implement: initMacosPreferencesUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosPreferencesUser,
 		},
 		"macos.softwareupdate": {
 			// to override args, implement: initMacosSoftwareupdate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -15034,6 +15044,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"macos.profile.payload.content": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosProfilePayload).GetContent()).ToDataRes(types.Dict)
+	},
+	"macos.preferences.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosPreferences).GetDomain()).ToDataRes(types.String)
+	},
+	"macos.preferences.managed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosPreferences).GetManaged()).ToDataRes(types.Dict)
+	},
+	"macos.preferences.system": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosPreferences).GetSystem()).ToDataRes(types.Dict)
+	},
+	"macos.preferences.values": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosPreferences).GetValues()).ToDataRes(types.Dict)
+	},
+	"macos.preferences.sources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosPreferences).GetSources()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"macos.preferences.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosPreferences).GetUsers()).ToDataRes(types.Array(types.Resource("macos.preferences.user")))
+	},
+	"macos.preferences.user.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosPreferencesUser).GetUser()).ToDataRes(types.Resource("user"))
+	},
+	"macos.preferences.user.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosPreferencesUser).GetDomain()).ToDataRes(types.String)
+	},
+	"macos.preferences.user.managed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosPreferencesUser).GetManaged()).ToDataRes(types.Dict)
+	},
+	"macos.preferences.user.byHost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosPreferencesUser).GetByHost()).ToDataRes(types.Dict)
+	},
+	"macos.preferences.user.preferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosPreferencesUser).GetPreferences()).ToDataRes(types.Dict)
+	},
+	"macos.preferences.user.values": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosPreferencesUser).GetValues()).ToDataRes(types.Dict)
+	},
+	"macos.preferences.user.sources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosPreferencesUser).GetSources()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"macos.softwareupdate.autoCheckEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosSoftwareupdate).GetAutoCheckEnabled()).ToDataRes(types.Bool)
@@ -38369,6 +38418,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"macos.profile.payload.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosProfilePayload).Content, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"macos.preferences.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosPreferences).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.preferences.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosPreferences).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.preferences.managed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosPreferences).Managed, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"macos.preferences.system": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosPreferences).System, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"macos.preferences.values": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosPreferences).Values, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"macos.preferences.sources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosPreferences).Sources, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"macos.preferences.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosPreferences).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"macos.preferences.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosPreferencesUser).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.preferences.user.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosPreferencesUser).User, ok = plugin.RawToTValue[*mqlUser](v.Value, v.Error)
+		return
+	},
+	"macos.preferences.user.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosPreferencesUser).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.preferences.user.managed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosPreferencesUser).Managed, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"macos.preferences.user.byHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosPreferencesUser).ByHost, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"macos.preferences.user.preferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosPreferencesUser).Preferences, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"macos.preferences.user.values": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosPreferencesUser).Values, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"macos.preferences.user.sources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosPreferencesUser).Sources, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"macos.softwareupdate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -97261,6 +97370,196 @@ func (c *mqlMacosProfilePayload) GetDisplayName() *plugin.TValue[string] {
 
 func (c *mqlMacosProfilePayload) GetContent() *plugin.TValue[any] {
 	return &c.Content
+}
+
+// mqlMacosPreferences for the macos.preferences resource
+type mqlMacosPreferences struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMacosPreferencesInternal
+	Domain  plugin.TValue[string]
+	Managed plugin.TValue[any]
+	System  plugin.TValue[any]
+	Values  plugin.TValue[any]
+	Sources plugin.TValue[map[string]any]
+	Users   plugin.TValue[[]any]
+}
+
+// createMacosPreferences creates a new instance of this resource
+func createMacosPreferences(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosPreferences{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.preferences", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosPreferences) MqlName() string {
+	return "macos.preferences"
+}
+
+func (c *mqlMacosPreferences) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosPreferences) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlMacosPreferences) GetManaged() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Managed, func() (any, error) {
+		return c.managed()
+	})
+}
+
+func (c *mqlMacosPreferences) GetSystem() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.System, func() (any, error) {
+		return c.system()
+	})
+}
+
+func (c *mqlMacosPreferences) GetValues() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Values, func() (any, error) {
+		return c.values()
+	})
+}
+
+func (c *mqlMacosPreferences) GetSources() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Sources, func() (map[string]any, error) {
+		return c.sources()
+	})
+}
+
+func (c *mqlMacosPreferences) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("macos.preferences", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+// mqlMacosPreferencesUser for the macos.preferences.user resource
+type mqlMacosPreferencesUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMacosPreferencesUserInternal
+	User        plugin.TValue[*mqlUser]
+	Domain      plugin.TValue[string]
+	Managed     plugin.TValue[any]
+	ByHost      plugin.TValue[any]
+	Preferences plugin.TValue[any]
+	Values      plugin.TValue[any]
+	Sources     plugin.TValue[map[string]any]
+}
+
+// createMacosPreferencesUser creates a new instance of this resource
+func createMacosPreferencesUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosPreferencesUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.preferences.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosPreferencesUser) MqlName() string {
+	return "macos.preferences.user"
+}
+
+func (c *mqlMacosPreferencesUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosPreferencesUser) GetUser() *plugin.TValue[*mqlUser] {
+	return plugin.GetOrCompute[*mqlUser](&c.User, func() (*mqlUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("macos.preferences.user", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+func (c *mqlMacosPreferencesUser) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlMacosPreferencesUser) GetManaged() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Managed, func() (any, error) {
+		return c.managed()
+	})
+}
+
+func (c *mqlMacosPreferencesUser) GetByHost() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ByHost, func() (any, error) {
+		return c.byHost()
+	})
+}
+
+func (c *mqlMacosPreferencesUser) GetPreferences() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Preferences, func() (any, error) {
+		return c.preferences()
+	})
+}
+
+func (c *mqlMacosPreferencesUser) GetValues() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Values, func() (any, error) {
+		return c.values()
+	})
+}
+
+func (c *mqlMacosPreferencesUser) GetSources() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Sources, func() (map[string]any, error) {
+		return c.sources()
+	})
 }
 
 // mqlMacosSoftwareupdate for the macos.softwareupdate resource
