@@ -46,7 +46,7 @@ type mqlSnowflakeNetworkPolicyInternal struct {
 }
 
 func newMqlSnowflakeNetworkPolicy(runtime *plugin.Runtime, networkPolicy sdk.NetworkPolicy) (*mqlSnowflakeNetworkPolicy, error) {
-	createdAt := parseSnowflakeTime(networkPolicy.CreatedOn)
+	createdAt := snowflakeTime(networkPolicy.CreatedOn)
 
 	r, err := CreateResource(runtime, "snowflake.networkPolicy", map[string]*llx.RawData{
 		"__id":                         llx.StringData(networkPolicy.Name),

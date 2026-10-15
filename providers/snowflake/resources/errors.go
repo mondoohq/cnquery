@@ -6,7 +6,7 @@ package resources
 import (
 	"errors"
 
-	"github.com/snowflakedb/gosnowflake"
+	gosnowflake "github.com/snowflakedb/gosnowflake/v2"
 )
 
 // sqlStateInsufficientPrivilege is the SQL standard SQLSTATE for a statement

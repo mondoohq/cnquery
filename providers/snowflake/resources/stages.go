@@ -46,8 +46,8 @@ func newMqlSnowflakeStage(runtime *plugin.Runtime, user sdk.Stage) (*mqlSnowflak
 		"hasCredentials":   llx.BoolData(user.HasCredentials),
 		"hasEncryptionKey": llx.BoolData(user.HasEncryptionKey),
 		"url":              llx.StringData(user.Url),
-		"type":             llx.StringData(user.Type),
-		"cloud":            llx.StringDataPtr(user.Cloud),
+		"type":             llx.StringData(string(user.Type)),
+		"cloud":            llx.StringDataPtr((*string)(user.Cloud)),
 		"endpoint":         llx.StringDataPtr(user.Endpoint),
 		"ownerRoleType":    llx.StringDataPtr(user.OwnerRoleType),
 		"directoryEnabled": llx.BoolData(user.DirectoryEnabled),
@@ -57,7 +57,7 @@ func newMqlSnowflakeStage(runtime *plugin.Runtime, user sdk.Stage) (*mqlSnowflak
 	}
 	mqlResource := r.(*mqlSnowflakeStage)
 	if user.StorageIntegration != nil {
-		mqlResource.cacheStoreIntegration = *user.StorageIntegration
+		mqlResource.cacheStoreIntegration = user.StorageIntegration.Name()
 	}
 	return mqlResource, nil
 }
@@ -80,7 +80,7 @@ func resolveStageRef(runtime *plugin.Runtime, fqn string, field *plugin.TValue[*
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
 	stages, err := conn.Client().Stages.Show(context.Background(), &sdk.ShowStageRequest{
 		Like: &sdk.Like{Pattern: sdk.String(id.Name())},
-		In:   &sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())},
+		In:   &sdk.ExtendedIn{In: sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}},
 	})
 	if err != nil {
 		return nil, err

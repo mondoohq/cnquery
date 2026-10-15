@@ -19,7 +19,7 @@ func (r *mqlSnowflakeAccount) resourceMonitors() ([]any, error) {
 	client := conn.Client()
 	ctx := context.Background()
 
-	monitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{})
+	monitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func newMqlSnowflakeResourceMonitor(runtime *plugin.Runtime, monitor sdk.Resourc
 		"creditQuota":      llx.FloatData(monitor.CreditQuota),
 		"usedCredits":      llx.FloatData(monitor.UsedCredits),
 		"remainingCredits": llx.FloatData(monitor.RemainingCredits),
-		"frequency":        llx.StringData(string(monitor.Frequency)),
+		"frequency":        llx.StringDataPtr((*string)(monitor.Frequency)),
 		"startTime":        llx.StringData(monitor.StartTime),
 		"endTime":          llx.StringData(monitor.EndTime),
 		"comment":          llx.StringData(monitor.Comment),
@@ -82,8 +82,8 @@ func newMqlSnowflakeResourceMonitor(runtime *plugin.Runtime, monitor sdk.Resourc
 	} else {
 		mqlMonitor.SuspendAt = plugin.TValue[int64]{Data: 0, State: plugin.StateIsSet | plugin.StateIsNull}
 	}
-	if monitor.SuspendImmediateAt != nil {
-		mqlMonitor.SuspendImmediateAt = plugin.TValue[int64]{Data: int64(*monitor.SuspendImmediateAt), State: plugin.StateIsSet}
+	if monitor.SuspendImmediatelyAt != nil {
+		mqlMonitor.SuspendImmediateAt = plugin.TValue[int64]{Data: int64(*monitor.SuspendImmediatelyAt), State: plugin.StateIsSet}
 	} else {
 		mqlMonitor.SuspendImmediateAt = plugin.TValue[int64]{Data: 0, State: plugin.StateIsSet | plugin.StateIsNull}
 	}
@@ -122,7 +122,7 @@ func initSnowflakeResourceMonitor(runtime *plugin.Runtime, args map[string]*llx.
 	client := conn.Client()
 	ctx := context.Background()
 
-	monitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{Like: &sdk.Like{Pattern: sdk.String(name)}})
+	monitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorRequest{Like: &sdk.Like{Pattern: sdk.String(name)}})
 	if err != nil {
 		return nil, nil, err
 	}

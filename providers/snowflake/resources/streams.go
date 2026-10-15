@@ -84,9 +84,12 @@ func newMqlSnowflakeStream(runtime *plugin.Runtime, stream sdk.Stream) (*mqlSnow
 		mqlStream.cacheOwner = *stream.Owner
 	}
 	if stream.TableName != nil {
-		mqlStream.cacheTable = *stream.TableName
+		mqlStream.cacheTable = stream.TableName.FullyQualifiedName()
 	}
-	mqlStream.cacheBaseTables = stream.BaseTables
+	mqlStream.cacheBaseTables = make([]string, 0, len(stream.BaseTables))
+	for _, id := range stream.BaseTables {
+		mqlStream.cacheBaseTables = append(mqlStream.cacheBaseTables, id.FullyQualifiedName())
+	}
 	return mqlStream, nil
 }
 

@@ -42,7 +42,7 @@ func (r *mqlSnowflakeAccount) authenticationPolicies() ([]any, error) {
 	ctx := context.Background()
 
 	policies, err := client.AuthenticationPolicies.Show(ctx,
-		sdk.NewShowAuthenticationPolicyRequest().WithIn(sdk.In{Account: sdk.Bool(true)}),
+		sdk.NewShowAuthenticationPolicyRequest().WithIn(sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}}),
 	)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func newMqlSnowflakeAuthenticationPolicy(runtime *plugin.Runtime, policy sdk.Aut
 		"ownerRoleType": llx.StringData(policy.OwnerRoleType),
 		"comment":       llx.StringData(policy.Comment),
 		"options":       llx.StringData(policy.Options),
-		"createdAt":     parseSnowflakeTime(policy.CreatedOn),
+		"createdAt":     snowflakeTime(policy.CreatedOn),
 	})
 	if err != nil {
 		return nil, err

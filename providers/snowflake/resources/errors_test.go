@@ -9,7 +9,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/snowflakedb/gosnowflake"
+	gosnowflake "github.com/snowflakedb/gosnowflake/v2"
 )
 
 func TestIsAccessDenied(t *testing.T) {

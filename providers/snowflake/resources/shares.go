@@ -18,7 +18,7 @@ func (r *mqlSnowflakeAccount) shares() ([]any, error) {
 	client := conn.Client()
 	ctx := context.Background()
 
-	shares, err := client.Shares.Show(ctx, &sdk.ShowShareOptions{})
+	shares, err := client.Shares.Show(ctx, &sdk.ShowShareRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +47,8 @@ func newMqlSnowflakeShare(runtime *plugin.Runtime, share sdk.Share) (*mqlSnowfla
 	}
 
 	r, err := CreateResource(runtime, "snowflake.share", map[string]*llx.RawData{
-		"__id":      llx.StringData(string(share.Kind) + "/" + share.Name.FullyQualifiedName()),
-		"name":      llx.StringData(share.Name.FullyQualifiedName()),
+		"__id":      llx.StringData(string(share.Kind) + "/" + shareFullyQualifiedName(share)),
+		"name":      llx.StringData(shareFullyQualifiedName(share)),
 		"kind":      llx.StringData(string(share.Kind)),
 		"to":        llx.ArrayData(to, types.String),
 		"comment":   llx.StringData(share.Comment),
@@ -76,4 +76,14 @@ func (r *mqlSnowflakeShare) database() (*mqlSnowflakeDatabase, error) {
 
 func (r *mqlSnowflakeShare) ownerRole() (*mqlSnowflakeRole, error) {
 	return resolveOwnerRole(r.MqlRuntime, r.cacheOwner, &r.OwnerRole)
+}
+
+// shareFullyQualifiedName is the owner-account-qualified share name, such as
+// "ORG"."ACCOUNT"."SHARE", which tells an inbound share apart from an outbound
+// share of the same name.
+func shareFullyQualifiedName(share sdk.Share) string {
+	return sdk.NewExternalObjectIdentifier(
+		sdk.NewAccountIdentifierFromFullyQualifiedName(share.OwnerAccount),
+		sdk.NewAccountObjectIdentifier(share.Name),
+	).FullyQualifiedName()
 }

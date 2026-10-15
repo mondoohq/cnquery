@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/snowflakedb/gosnowflake"
+	gosnowflake "github.com/snowflakedb/gosnowflake/v2"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/snowflake/provider"
 )

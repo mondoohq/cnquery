@@ -34,7 +34,7 @@ func initSnowflakeWarehouse(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	client := conn.Client()
 	ctx := context.Background()
 
-	warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{Like: &sdk.Like{Pattern: sdk.String(name)}})
+	warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseRequest{Like: &sdk.Like{Pattern: sdk.String(name)}})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -67,7 +67,7 @@ func snowflakeWarehouseByName(runtime *plugin.Runtime, name string) (*mqlSnowfla
 		return newMqlSnowflakeWarehouse(runtime, warehouse)
 	}
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
-	warehouses, err := conn.Client().Warehouses.Show(context.Background(), &sdk.ShowWarehouseOptions{Like: &sdk.Like{Pattern: sdk.String(name)}})
+	warehouses, err := conn.Client().Warehouses.Show(context.Background(), &sdk.ShowWarehouseRequest{Like: &sdk.Like{Pattern: sdk.String(name)}})
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (r *mqlSnowflakeAccount) warehouses() ([]any, error) {
 	client := conn.Client()
 	ctx := context.Background()
 
-	warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseOptions{})
+	warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -126,15 +126,15 @@ func newMqlSnowflakeWarehouse(runtime *plugin.Runtime, warehouse sdk.Warehouse) 
 		"name":                            llx.StringData(warehouse.Name),
 		"state":                           llx.StringData(string(warehouse.State)),
 		"type":                            llx.StringData(string(warehouse.Type)),
-		"size":                            llx.StringData(string(warehouse.Size)),
-		"minClusterCount":                 llx.IntData(warehouse.MinClusterCount),
-		"maxClusterCount":                 llx.IntData(warehouse.MaxClusterCount),
-		"startedClusterCount":             llx.IntData(warehouse.StartedClusters),
-		"running":                         llx.IntData(warehouse.Running),
-		"queued":                          llx.IntData(warehouse.Queued),
+		"size":                            llx.StringDataPtr((*string)(warehouse.Size)),
+		"minClusterCount":                 llx.IntDataPtr(warehouse.MinClusterCount),
+		"maxClusterCount":                 llx.IntDataPtr(warehouse.MaxClusterCount),
+		"startedClusterCount":             llx.IntDataPtr(warehouse.StartedClusters),
+		"running":                         llx.IntDataPtr(warehouse.Running),
+		"queued":                          llx.IntDataPtr(warehouse.Queued),
 		"isDefault":                       llx.BoolData(warehouse.IsDefault),
 		"isCurrent":                       llx.BoolData(warehouse.IsCurrent),
-		"autoSuspend":                     llx.IntData(warehouse.AutoSuspend),
+		"autoSuspend":                     llx.IntDataPtr(warehouse.AutoSuspend),
 		"autoResume":                      llx.BoolData(warehouse.AutoResume),
 		"available":                       llx.FloatData(warehouse.Available),
 		"provisioning":                    llx.FloatData(warehouse.Provisioning),
@@ -143,9 +143,9 @@ func newMqlSnowflakeWarehouse(runtime *plugin.Runtime, warehouse sdk.Warehouse) 
 		"owner":                           llx.StringData(warehouse.Owner),
 		"ownerRoleType":                   llx.StringData(warehouse.OwnerRoleType),
 		"comment":                         llx.StringData(warehouse.Comment),
-		"enableQueryAcceleration":         llx.BoolData(warehouse.EnableQueryAcceleration),
-		"queryAccelerationMaxScaleFactor": llx.IntData(warehouse.QueryAccelerationMaxScaleFactor),
-		"scalingPolicy":                   llx.StringData(string(warehouse.ScalingPolicy)),
+		"enableQueryAcceleration":         llx.BoolDataPtr(warehouse.EnableQueryAcceleration),
+		"queryAccelerationMaxScaleFactor": llx.IntDataPtr(warehouse.QueryAccelerationMaxScaleFactor),
+		"scalingPolicy":                   llx.StringDataPtr((*string)(warehouse.ScalingPolicy)),
 		"createdAt":                       llx.TimeData(warehouse.CreatedOn),
 		"resumedAt":                       llx.TimeData(warehouse.ResumedOn),
 		"updatedAt":                       llx.TimeData(warehouse.UpdatedOn),

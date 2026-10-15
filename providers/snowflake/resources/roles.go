@@ -33,7 +33,7 @@ func initSnowflakeRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	client := conn.Client()
 	ctx := context.Background()
 
-	roles, err := client.Roles.Show(ctx, sdk.NewShowRoleRequest().WithLike(sdk.NewLikeRequest(name)))
+	roles, err := client.Roles.Show(ctx, sdk.NewShowRoleRequest().WithLike(sdk.Like{Pattern: sdk.String(name)}))
 	if err != nil {
 		return nil, nil, err
 	}

@@ -30,7 +30,7 @@ func (r *mqlSnowflakeDatabase) dynamicTables() ([]any, error) {
 func listSnowflakeDynamicTables(runtime *plugin.Runtime, in *sdk.In) ([]any, error) {
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
 	tables, err := conn.Client().DynamicTables.Show(context.Background(),
-		sdk.NewShowDynamicTableRequest().WithIn(in))
+		sdk.NewShowDynamicTableRequest().WithIn(*in))
 	if err != nil {
 		return nil, err
 	}
@@ -64,8 +64,8 @@ func newMqlSnowflakeDynamicTable(runtime *plugin.Runtime, table sdk.DynamicTable
 		"automaticClustering": llx.BoolData(table.AutomaticClustering),
 		"isClone":             llx.BoolData(table.IsClone),
 		"isReplica":           llx.BoolData(table.IsReplica),
-		"lastSuspendedOn":     snowflakeTime(table.LastSuspendedOn),
-		"dataTimestamp":       snowflakeTime(table.DataTimestamp),
+		"lastSuspendedOn":     snowflakeTimePtr(table.LastSuspendedOn),
+		"dataTimestamp":       snowflakeTimePtr(table.DataTimestamp),
 		"comment":             llx.StringData(table.Comment),
 		"createdAt":           snowflakeTime(table.CreatedOn),
 	})

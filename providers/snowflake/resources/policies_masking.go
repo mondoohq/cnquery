@@ -38,7 +38,7 @@ func (r *mqlSnowflakeDatabase) maskingPolicies() ([]any, error) {
 // (account-wide or a single database) and maps them to resources.
 func listSnowflakeMaskingPolicies(runtime *plugin.Runtime, in sdk.ExtendedIn) ([]any, error) {
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
-	policies, err := conn.Client().MaskingPolicies.Show(context.Background(), &sdk.ShowMaskingPolicyOptions{In: &in})
+	policies, err := conn.Client().MaskingPolicies.Show(context.Background(), &sdk.ShowMaskingPolicyRequest{In: &in})
 	if err != nil {
 		return nil, err
 	}
@@ -99,10 +99,10 @@ func (r *mqlSnowflakeMaskingPolicy) gatherDescribe() error {
 
 	sig := make([]any, 0, len(details.Signature))
 	for _, s := range details.Signature {
-		sig = append(sig, s.Name+":"+string(s.Type))
+		sig = append(sig, s.Name+":"+legacyDataTypeName(s.Type))
 	}
 	r.descSignature = sig
-	r.descReturnType = string(details.ReturnType)
+	r.descReturnType = legacyDataTypeName(details.ReturnType)
 	r.descBody = details.Body
 	r.descLoaded = true
 	return nil
