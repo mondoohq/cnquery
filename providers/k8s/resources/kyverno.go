@@ -3734,7 +3734,7 @@ func kyvernoMatchConditionExpressionMatches(expression string, result *kyvernoRe
 			{kyvernoCELNameEquals, result.scopeName},
 		} {
 			for _, pattern := range item.patterns {
-				if found := pattern.FindStringSubmatch(clause); len(found) == 2 && strings.TrimSpace(pattern.FindString(clause)) == clause {
+				if found := pattern.FindStringSubmatch(clause); len(found) == 2 && strings.TrimSpace(found[0]) == clause {
 					matched = found[1] == item.value
 					if !matched {
 						return false
