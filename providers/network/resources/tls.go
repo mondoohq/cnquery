@@ -399,7 +399,13 @@ func (s *mqlTls) extensions(params any) ([]any, error) {
 	return res, nil
 }
 
-func gatherTlsCertificates(proto, host, port, domainName string) ([]*x509.Certificate, []*x509.Certificate, error) {
+// gatherTlsCertificates returns the certificates the server presents with SNI
+// and, separately, those it presents without SNI that differ from them. A
+// failed handshake without SNI does not affect the SNI certificates: it is
+// returned as nonSniErr, and a server that refuses such clients with a TLS
+// alert, as Cloudflare does, presents no certificate to them at all, so that
+// case yields no non-SNI certificates and no error.
+func gatherTlsCertificates(proto, host, port, domainName string) (sniCerts, nonSniCerts []*x509.Certificate, nonSniErr, err error) {
 	isSNIcert := map[string]struct{}{}
 	dialer := &net.Dialer{Timeout: DefaultDialerTimeout}
 	addr := net.JoinHostPort(host, port)
@@ -413,20 +419,25 @@ func gatherTlsCertificates(proto, host, port, domainName string) ([]*x509.Certif
 		ServerName:         domainName,
 	})
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	defer conn.Close()
 
 	// Get the ConnectionState where we can find x509.Certificate(s)
-	sniCerts := conn.ConnectionState().PeerCertificates
-	for _, sniCerts := range sniCerts {
-		isSNIcert[sniCerts.SerialNumber.String()] = struct{}{}
+	sniCerts = conn.ConnectionState().PeerCertificates
+	for _, sniCert := range sniCerts {
+		isSNIcert[sniCert.SerialNumber.String()] = struct{}{}
 	}
 
-	nonSniCerts := []*x509.Certificate{}
+	nonSniCerts = []*x509.Certificate{}
 	potentialNonSniCerts, err := nonSniPeerCertificates(dialer, proto, addr)
 	if err != nil {
-		return nil, nil, err
+		// crypto/tls reports an alert the server sent as a "remote error".
+		var opErr *net.OpError
+		if errors.As(err, &opErr) && opErr.Op == "remote error" {
+			return sniCerts, nonSniCerts, nil, nil
+		}
+		return sniCerts, nil, err, nil
 	}
 	for _, nonSniCert := range potentialNonSniCerts {
 		if _, ok := isSNIcert[nonSniCert.SerialNumber.String()]; !ok {
@@ -434,7 +445,7 @@ func gatherTlsCertificates(proto, host, port, domainName string) ([]*x509.Certif
 		}
 	}
 
-	return sniCerts, nonSniCerts, nil
+	return sniCerts, nonSniCerts, nil, nil
 }
 
 // nonSniPeerCertificates returns the certificates the server presents to a
@@ -549,7 +560,7 @@ func (s *mqlTls) populateCertificates(socket *mqlSocket, domainName string) erro
 	port := socket.Port.Data
 	proto := socket.Protocol.Data
 
-	certs, nonSniCerts, err := gatherTlsCertificates(proto, host, strconv.FormatInt(port, 10), domainName)
+	certs, nonSniCerts, nonSniErr, err := gatherTlsCertificates(proto, host, strconv.FormatInt(port, 10), domainName)
 	if err != nil {
 		s.Certificates = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
 		s.NonSniCertificates = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
@@ -580,6 +591,10 @@ func (s *mqlTls) populateCertificates(socket *mqlSocket, domainName string) erro
 		s.Certificates = plugin.TValue[[]any]{Data: mqlCerts, State: plugin.StateIsSet}
 	}
 
+	if nonSniErr != nil {
+		s.NonSniCertificates = plugin.TValue[[]any]{Error: nonSniErr, State: plugin.StateIsSet}
+		return nil
+	}
 	mqlNonSniCerts, _, err := parseCertificates(s.MqlRuntime, nonSniCerts, revocations)
 	if err != nil {
 		s.NonSniCertificates = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
