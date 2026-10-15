@@ -811,7 +811,7 @@ func init() {
 			Create: createExtensionRuntime,
 		},
 		"asset.eol": {
-			// to override args, implement: initAssetEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAssetEol,
 			Create: createAssetEol,
 		},
 		"mondoo.eol": {
@@ -859,23 +859,23 @@ func init() {
 			Create: createMachine,
 		},
 		"machine.bios": {
-			// to override args, implement: initMachineBios(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMachineBios,
 			Create: createMachineBios,
 		},
 		"machine.system": {
-			// to override args, implement: initMachineSystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMachineSystem,
 			Create: createMachineSystem,
 		},
 		"machine.baseboard": {
-			// to override args, implement: initMachineBaseboard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMachineBaseboard,
 			Create: createMachineBaseboard,
 		},
 		"machine.chassis": {
-			// to override args, implement: initMachineChassis(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMachineChassis,
 			Create: createMachineChassis,
 		},
 		"machine.cpu": {
-			// to override args, implement: initMachineCpu(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMachineCpu,
 			Create: createMachineCpu,
 		},
 		"machine.secureboot": {
@@ -923,7 +923,7 @@ func init() {
 			Create: createOsAny,
 		},
 		"os.rootCertificates": {
-			// to override args, implement: initOsRootCertificates(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOsRootCertificates,
 			Create: createOsRootCertificates,
 		},
 		"command": {
@@ -951,35 +951,35 @@ func init() {
 			Create: createFiles,
 		},
 		"files.find": {
-			// to override args, implement: initFilesFind(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initFilesFind,
 			Create: createFilesFind,
 		},
 		"parse.ini": {
-			// to override args, implement: initParseIni(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initParseIni,
 			Create: createParseIni,
 		},
 		"parse.json": {
-			// to override args, implement: initParseJson(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initParseJson,
 			Create: createParseJson,
 		},
 		"parse.xml": {
-			// to override args, implement: initParseXml(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initParseXml,
 			Create: createParseXml,
 		},
 		"parse.plist": {
-			// to override args, implement: initParsePlist(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initParsePlist,
 			Create: createParsePlist,
 		},
 		"parse.yaml": {
-			// to override args, implement: initParseYaml(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initParseYaml,
 			Create: createParseYaml,
 		},
 		"parse.certificates": {
-			// to override args, implement: initParseCertificates(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initParseCertificates,
 			Create: createParseCertificates,
 		},
 		"parse.openpgp": {
-			// to override args, implement: initParseOpenpgp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initParseOpenpgp,
 			Create: createParseOpenpgp,
 		},
 		"user": {
@@ -987,7 +987,7 @@ func init() {
 			Create: createUser,
 		},
 		"privatekey": {
-			// to override args, implement: initPrivatekey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPrivatekey,
 			Create: createPrivatekey,
 		},
 		"users": {
@@ -995,7 +995,7 @@ func init() {
 			Create: createUsers,
 		},
 		"authorizedkeys": {
-			// to override args, implement: initAuthorizedkeys(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAuthorizedkeys,
 			Create: createAuthorizedkeys,
 		},
 		"authorizedkeys.entry": {
@@ -1003,7 +1003,7 @@ func init() {
 			Create: createAuthorizedkeysEntry,
 		},
 		"group": {
-			// to override args, implement: initGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGroup,
 			Create: createGroup,
 		},
 		"groups": {
@@ -1011,11 +1011,11 @@ func init() {
 			Create: createGroups,
 		},
 		"package": {
-			// to override args, implement: initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPackage,
 			Create: createPackage,
 		},
 		"package.macos": {
-			// to override args, implement: initPackageMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPackageMacos,
 			Create: createPackageMacos,
 		},
 		"pkgFileInfo": {
@@ -1027,7 +1027,7 @@ func init() {
 			Create: createPackages,
 		},
 		"pam.conf": {
-			// to override args, implement: initPamConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPamConf,
 			Create: createPamConf,
 		},
 		"pam.conf.serviceEntry": {
@@ -1035,11 +1035,11 @@ func init() {
 			Create: createPamConfServiceEntry,
 		},
 		"pam.conf.service": {
-			// to override args, implement: initPamConfService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPamConfService,
 			Create: createPamConfService,
 		},
 		"pam.module": {
-			// to override args, implement: initPamModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPamModule,
 			Create: createPamModule,
 		},
 		"sshd": {
@@ -1059,7 +1059,7 @@ func init() {
 			Create: createInetd,
 		},
 		"inetd.config": {
-			// to override args, implement: initInetdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initInetdConfig,
 			Create: createInetdConfig,
 		},
 		"inetd.config.entry": {
@@ -1079,7 +1079,7 @@ func init() {
 			Create: createSnmpdConfigUser,
 		},
 		"auditd.config": {
-			// to override args, implement: initAuditdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAuditdConfig,
 			Create: createAuditdConfig,
 		},
 		"auditd.rules": {
@@ -1111,7 +1111,7 @@ func init() {
 			Create: createAuditdRuleSyscall,
 		},
 		"auditd.status": {
-			// to override args, implement: initAuditdStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAuditdStatus,
 			Create: createAuditdStatus,
 		},
 		"apache2": {
@@ -1119,11 +1119,11 @@ func init() {
 			Create: createApache2,
 		},
 		"apache2.conf": {
-			// to override args, implement: initApache2Conf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initApache2Conf,
 			Create: createApache2Conf,
 		},
 		"apache2.conf.envvars": {
-			// to override args, implement: initApache2ConfEnvvars(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initApache2ConfEnvvars,
 			Create: createApache2ConfEnvvars,
 		},
 		"apache2.conf.module": {
@@ -1143,7 +1143,7 @@ func init() {
 			Create: createApache2ConfLocation,
 		},
 		"bind9": {
-			// to override args, implement: initBind9(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initBind9,
 			Create: createBind9,
 		},
 		"bind9.zone": {
@@ -1171,7 +1171,7 @@ func init() {
 			Create: createNginx,
 		},
 		"nginx.conf": {
-			// to override args, implement: initNginxConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initNginxConf,
 			Create: createNginxConf,
 		},
 		"nginx.conf.server": {
@@ -1267,15 +1267,15 @@ func init() {
 			Create: createIisConfiguration,
 		},
 		"jboss": {
-			// to override args, implement: initJboss(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initJboss,
 			Create: createJboss,
 		},
 		"jboss.config": {
-			// to override args, implement: initJbossConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initJbossConfig,
 			Create: createJbossConfig,
 		},
 		"jboss.management": {
-			// to override args, implement: initJbossManagement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initJbossManagement,
 			Create: createJbossManagement,
 		},
 		"jboss.managementInterface": {
@@ -1523,7 +1523,7 @@ func init() {
 			Create: createHaproxy,
 		},
 		"haproxy.config": {
-			// to override args, implement: initHaproxyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initHaproxyConfig,
 			Create: createHaproxyConfig,
 		},
 		"haproxy.config.section": {
@@ -1531,7 +1531,7 @@ func init() {
 			Create: createHaproxyConfigSection,
 		},
 		"haproxy.config.global": {
-			// to override args, implement: initHaproxyConfigGlobal(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initHaproxyConfigGlobal,
 			Create: createHaproxyConfigGlobal,
 		},
 		"haproxy.config.defaultsSection": {
@@ -1571,11 +1571,11 @@ func init() {
 			Create: createHaproxyConfigPeersSection,
 		},
 		"postgresql.conf": {
-			// to override args, implement: initPostgresqlConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPostgresqlConf,
 			Create: createPostgresqlConf,
 		},
 		"postgresql.hba": {
-			// to override args, implement: initPostgresqlHba(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPostgresqlHba,
 			Create: createPostgresqlHba,
 		},
 		"postgresql.hba.rule": {
@@ -1583,7 +1583,7 @@ func init() {
 			Create: createPostgresqlHbaRule,
 		},
 		"postgresql.ident": {
-			// to override args, implement: initPostgresqlIdent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPostgresqlIdent,
 			Create: createPostgresqlIdent,
 		},
 		"postgresql.ident.mapping": {
@@ -1595,7 +1595,7 @@ func init() {
 			Create: createMysql,
 		},
 		"mysql.conf": {
-			// to override args, implement: initMysqlConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMysqlConf,
 			Create: createMysqlConf,
 		},
 		"mysql.conf.section": {
@@ -1611,7 +1611,7 @@ func init() {
 			Create: createMariadb,
 		},
 		"mariadb.conf": {
-			// to override args, implement: initMariadbConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMariadbConf,
 			Create: createMariadbConf,
 		},
 		"mariadb.conf.section": {
@@ -1627,7 +1627,7 @@ func init() {
 			Create: createMongodb,
 		},
 		"mongodb.conf": {
-			// to override args, implement: initMongodbConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMongodbConf,
 			Create: createMongodbConf,
 		},
 		"cassandra": {
@@ -1635,19 +1635,19 @@ func init() {
 			Create: createCassandra,
 		},
 		"cassandra.conf": {
-			// to override args, implement: initCassandraConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initCassandraConf,
 			Create: createCassandraConf,
 		},
 		"cassandra.env": {
-			// to override args, implement: initCassandraEnv(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initCassandraEnv,
 			Create: createCassandraEnv,
 		},
 		"cassandra.rackdc": {
-			// to override args, implement: initCassandraRackdc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initCassandraRackdc,
 			Create: createCassandraRackdc,
 		},
 		"journald.config": {
-			// to override args, implement: initJournaldConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initJournaldConfig,
 			Create: createJournaldConfig,
 		},
 		"journald.config.section": {
@@ -1659,7 +1659,7 @@ func init() {
 			Create: createJournaldConfigSectionParam,
 		},
 		"service": {
-			// to override args, implement: initService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initService,
 			Create: createService,
 		},
 		"services": {
@@ -1719,11 +1719,11 @@ func init() {
 			Create: createSystemdBootEntry,
 		},
 		"kernel": {
-			// to override args, implement: initKernel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initKernel,
 			Create: createKernel,
 		},
 		"kernel.parameter": {
-			// to override args, implement: initKernelParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initKernelParameter,
 			Create: createKernelParameter,
 		},
 		"kernel.parameter.setting": {
@@ -1731,7 +1731,7 @@ func init() {
 			Create: createKernelParameterSetting,
 		},
 		"kernel.module": {
-			// to override args, implement: initKernelModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initKernelModule,
 			Create: createKernelModule,
 		},
 		"kernel.cmdline": {
@@ -1743,7 +1743,7 @@ func init() {
 			Create: createKernelTaint,
 		},
 		"kernel.livepatch": {
-			// to override args, implement: initKernelLivepatch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initKernelLivepatch,
 			Create: createKernelLivepatch,
 		},
 		"kernel.livepatch.patch": {
@@ -1771,7 +1771,7 @@ func init() {
 			Create: createDocker,
 		},
 		"docker.file": {
-			// to override args, implement: initDockerFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDockerFile,
 			Create: createDockerFile,
 		},
 		"docker.file.stage": {
@@ -1871,7 +1871,7 @@ func init() {
 			Create: createDockerContainerMount,
 		},
 		"docker.network": {
-			// to override args, implement: initDockerNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDockerNetwork,
 			Create: createDockerNetwork,
 		},
 		"docker.network.subnet": {
@@ -1879,11 +1879,11 @@ func init() {
 			Create: createDockerNetworkSubnet,
 		},
 		"docker.volume": {
-			// to override args, implement: initDockerVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDockerVolume,
 			Create: createDockerVolume,
 		},
 		"docker.daemon": {
-			// to override args, implement: initDockerDaemon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDockerDaemon,
 			Create: createDockerDaemon,
 		},
 		"docker.daemon.ulimit": {
@@ -1951,7 +1951,7 @@ func init() {
 			Create: createContainersRegistryMirror,
 		},
 		"containers.policy": {
-			// to override args, implement: initContainersPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initContainersPolicy,
 			Create: createContainersPolicy,
 		},
 		"containers.policy.scope": {
@@ -1975,7 +1975,7 @@ func init() {
 			Create: createPodman,
 		},
 		"podman.container": {
-			// to override args, implement: initPodmanContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPodmanContainer,
 			Create: createPodmanContainer,
 		},
 		"podman.container.ulimit": {
@@ -1991,19 +1991,19 @@ func init() {
 			Create: createPodmanContainerMount,
 		},
 		"podman.image": {
-			// to override args, implement: initPodmanImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPodmanImage,
 			Create: createPodmanImage,
 		},
 		"podman.pod": {
-			// to override args, implement: initPodmanPod(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPodmanPod,
 			Create: createPodmanPod,
 		},
 		"podman.volume": {
-			// to override args, implement: initPodmanVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPodmanVolume,
 			Create: createPodmanVolume,
 		},
 		"podman.network": {
-			// to override args, implement: initPodmanNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPodmanNetwork,
 			Create: createPodmanNetwork,
 		},
 		"iptables": {
@@ -2063,7 +2063,7 @@ func init() {
 			Create: createFirewalld,
 		},
 		"firewalld.zone": {
-			// to override args, implement: initFirewalldZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initFirewalldZone,
 			Create: createFirewalldZone,
 		},
 		"firewalld.richrule": {
@@ -2083,7 +2083,7 @@ func init() {
 			Create: createPfTable,
 		},
 		"fstab": {
-			// to override args, implement: initFstab(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initFstab,
 			Create: createFstab,
 		},
 		"fstab.entry": {
@@ -2091,7 +2091,7 @@ func init() {
 			Create: createFstabEntry,
 		},
 		"grub.config": {
-			// to override args, implement: initGrubConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGrubConfig,
 			Create: createGrubConfig,
 		},
 		"grub.config.entry": {
@@ -2099,7 +2099,7 @@ func init() {
 			Create: createGrubConfigEntry,
 		},
 		"secboot.config": {
-			// to override args, implement: initSecbootConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSecbootConfig,
 			Create: createSecbootConfig,
 		},
 		"secboot.image": {
@@ -2119,11 +2119,11 @@ func init() {
 			Create: createJails,
 		},
 		"jail": {
-			// to override args, implement: initJail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initJail,
 			Create: createJail,
 		},
 		"process": {
-			// to override args, implement: initProcess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initProcess,
 			Create: createProcess,
 		},
 		"processes": {
@@ -2151,15 +2151,15 @@ func init() {
 			Create: createSecpol,
 		},
 		"ntp.conf": {
-			// to override args, implement: initNtpConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initNtpConf,
 			Create: createNtpConf,
 		},
 		"chrony.conf": {
-			// to override args, implement: initChronyConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initChronyConf,
 			Create: createChronyConf,
 		},
 		"postfix": {
-			// to override args, implement: initPostfix(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPostfix,
 			Create: createPostfix,
 		},
 		"postfix.service": {
@@ -2167,7 +2167,7 @@ func init() {
 			Create: createPostfixService,
 		},
 		"exim": {
-			// to override args, implement: initExim(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initExim,
 			Create: createExim,
 		},
 		"rsyslog.conf": {
@@ -2195,7 +2195,7 @@ func init() {
 			Create: createRsyslogRule,
 		},
 		"logindefs": {
-			// to override args, implement: initLogindefs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initLogindefs,
 			Create: createLogindefs,
 		},
 		"umask": {
@@ -2215,7 +2215,7 @@ func init() {
 			Create: createPwquality,
 		},
 		"pwquality.settings": {
-			// to override args, implement: initPwqualitySettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPwqualitySettings,
 			Create: createPwqualitySettings,
 		},
 		"pwquality.pamModule": {
@@ -2227,7 +2227,7 @@ func init() {
 			Create: createCryptoPolicy,
 		},
 		"cryptoPolicy.scope": {
-			// to override args, implement: initCryptoPolicyScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initCryptoPolicyScope,
 			Create: createCryptoPolicyScope,
 		},
 		"dconf": {
@@ -2235,7 +2235,7 @@ func init() {
 			Create: createDconf,
 		},
 		"dconf.profile": {
-			// to override args, implement: initDconfProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDconfProfile,
 			Create: createDconfProfile,
 		},
 		"dconf.database": {
@@ -2243,7 +2243,7 @@ func init() {
 			Create: createDconfDatabase,
 		},
 		"limits": {
-			// to override args, implement: initLimits(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initLimits,
 			Create: createLimits,
 		},
 		"limits.entry": {
@@ -2355,7 +2355,7 @@ func init() {
 			Create: createAideRule,
 		},
 		"modprobe": {
-			// to override args, implement: initModprobe(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initModprobe,
 			Create: createModprobe,
 		},
 		"modprobe.install": {
@@ -2399,7 +2399,7 @@ func init() {
 			Create: createNfsMount,
 		},
 		"mount.point": {
-			// to override args, implement: initMountPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMountPoint,
 			Create: createMountPoint,
 		},
 		"shadow": {
@@ -2411,7 +2411,7 @@ func init() {
 			Create: createShadowEntry,
 		},
 		"masterpasswd": {
-			// to override args, implement: initMasterpasswd(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMasterpasswd,
 			Create: createMasterpasswd,
 		},
 		"masterpasswd.entry": {
@@ -2419,11 +2419,11 @@ func init() {
 			Create: createMasterpasswdEntry,
 		},
 		"loginconf": {
-			// to override args, implement: initLoginconf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initLoginconf,
 			Create: createLoginconf,
 		},
 		"loginconf.class": {
-			// to override args, implement: initLoginconfClass(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initLoginconfClass,
 			Create: createLoginconfClass,
 		},
 		"yum": {
@@ -2463,11 +2463,11 @@ func init() {
 			Create: createRegistrykey,
 		},
 		"registrykey.property": {
-			// to override args, implement: initRegistrykeyProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initRegistrykeyProperty,
 			Create: createRegistrykeyProperty,
 		},
 		"container.image": {
-			// to override args, implement: initContainerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initContainerImage,
 			Create: createContainerImage,
 		},
 		"container.repository": {
@@ -2475,19 +2475,19 @@ func init() {
 			Create: createContainerRepository,
 		},
 		"kubelet": {
-			// to override args, implement: initKubelet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initKubelet,
 			Create: createKubelet,
 		},
 		"python": {
-			// to override args, implement: initPython(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPython,
 			Create: createPython,
 		},
 		"python.package": {
-			// to override args, implement: initPythonPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPythonPackage,
 			Create: createPythonPackage,
 		},
 		"npm.packages": {
-			// to override args, implement: initNpmPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initNpmPackages,
 			Create: createNpmPackages,
 		},
 		"npm.package": {
@@ -2495,7 +2495,7 @@ func init() {
 			Create: createNpmPackage,
 		},
 		"go.packages": {
-			// to override args, implement: initGoPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGoPackages,
 			Create: createGoPackages,
 		},
 		"go.package": {
@@ -2503,7 +2503,7 @@ func init() {
 			Create: createGoPackage,
 		},
 		"java.packages": {
-			// to override args, implement: initJavaPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initJavaPackages,
 			Create: createJavaPackages,
 		},
 		"java.package": {
@@ -2511,7 +2511,7 @@ func init() {
 			Create: createJavaPackage,
 		},
 		"rust.packages": {
-			// to override args, implement: initRustPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initRustPackages,
 			Create: createRustPackages,
 		},
 		"rust.package": {
@@ -2519,7 +2519,7 @@ func init() {
 			Create: createRustPackage,
 		},
 		"dotnet.packages": {
-			// to override args, implement: initDotnetPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDotnetPackages,
 			Create: createDotnetPackages,
 		},
 		"dotnet.package": {
@@ -2527,7 +2527,7 @@ func init() {
 			Create: createDotnetPackage,
 		},
 		"php.packages": {
-			// to override args, implement: initPhpPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPhpPackages,
 			Create: createPhpPackages,
 		},
 		"php.package": {
@@ -2535,7 +2535,7 @@ func init() {
 			Create: createPhpPackage,
 		},
 		"githubactions.packages": {
-			// to override args, implement: initGithubactionsPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGithubactionsPackages,
 			Create: createGithubactionsPackages,
 		},
 		"githubactions.package": {
@@ -2575,7 +2575,7 @@ func init() {
 			Create: createChocolateyPackage,
 		},
 		"jenkins.packages": {
-			// to override args, implement: initJenkinsPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initJenkinsPackages,
 			Create: createJenkinsPackages,
 		},
 		"jenkins.package": {
@@ -2591,7 +2591,7 @@ func init() {
 			Create: createWordpressPackage,
 		},
 		"ruby.packages": {
-			// to override args, implement: initRubyPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initRubyPackages,
 			Create: createRubyPackages,
 		},
 		"ruby.package": {
@@ -2599,7 +2599,7 @@ func init() {
 			Create: createRubyPackage,
 		},
 		"dart.packages": {
-			// to override args, implement: initDartPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDartPackages,
 			Create: createDartPackages,
 		},
 		"dart.package": {
@@ -2607,7 +2607,7 @@ func init() {
 			Create: createDartPackage,
 		},
 		"haskell.packages": {
-			// to override args, implement: initHaskellPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initHaskellPackages,
 			Create: createHaskellPackages,
 		},
 		"haskell.package": {
@@ -2615,7 +2615,7 @@ func init() {
 			Create: createHaskellPackage,
 		},
 		"elixir.packages": {
-			// to override args, implement: initElixirPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initElixirPackages,
 			Create: createElixirPackages,
 		},
 		"elixir.package": {
@@ -2623,7 +2623,7 @@ func init() {
 			Create: createElixirPackage,
 		},
 		"erlang.packages": {
-			// to override args, implement: initErlangPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initErlangPackages,
 			Create: createErlangPackages,
 		},
 		"erlang.package": {
@@ -2631,7 +2631,7 @@ func init() {
 			Create: createErlangPackage,
 		},
 		"prolog.packages": {
-			// to override args, implement: initPrologPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPrologPackages,
 			Create: createPrologPackages,
 		},
 		"prolog.package": {
@@ -2639,7 +2639,7 @@ func init() {
 			Create: createPrologPackage,
 		},
 		"conda.packages": {
-			// to override args, implement: initCondaPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initCondaPackages,
 			Create: createCondaPackages,
 		},
 		"conda.package": {
@@ -2655,7 +2655,7 @@ func init() {
 			Create: createVcpkgPackage,
 		},
 		"opam.packages": {
-			// to override args, implement: initOpamPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOpamPackages,
 			Create: createOpamPackages,
 		},
 		"opam.package": {
@@ -2663,7 +2663,7 @@ func init() {
 			Create: createOpamPackage,
 		},
 		"julia.packages": {
-			// to override args, implement: initJuliaPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initJuliaPackages,
 			Create: createJuliaPackages,
 		},
 		"julia.package": {
@@ -2671,7 +2671,7 @@ func init() {
 			Create: createJuliaPackage,
 		},
 		"r.packages": {
-			// to override args, implement: initRPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initRPackages,
 			Create: createRPackages,
 		},
 		"r.package": {
@@ -2679,7 +2679,7 @@ func init() {
 			Create: createRPackage,
 		},
 		"lua.packages": {
-			// to override args, implement: initLuaPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initLuaPackages,
 			Create: createLuaPackages,
 		},
 		"lua.package": {
@@ -2691,11 +2691,11 @@ func init() {
 			Create: createMacos,
 		},
 		"macos.hardware": {
-			// to override args, implement: initMacosHardware(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMacosHardware,
 			Create: createMacosHardware,
 		},
 		"macos.alf": {
-			// to override args, implement: initMacosAlf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMacosAlf,
 			Create: createMacosAlf,
 		},
 		"macos.firewall": {
@@ -2727,11 +2727,11 @@ func init() {
 			Create: createMacosSharing,
 		},
 		"macos.mdm": {
-			// to override args, implement: initMacosMdm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMacosMdm,
 			Create: createMacosMdm,
 		},
 		"macos.profiles": {
-			// to override args, implement: initMacosProfiles(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMacosProfiles,
 			Create: createMacosProfiles,
 		},
 		"macos.profile": {
@@ -2743,7 +2743,7 @@ func init() {
 			Create: createMacosProfilePayload,
 		},
 		"macos.preferences": {
-			// to override args, implement: initMacosPreferences(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMacosPreferences,
 			Create: createMacosPreferences,
 		},
 		"macos.preferences.user": {
@@ -2767,7 +2767,7 @@ func init() {
 			Create: createMacosSystemsetup,
 		},
 		"openBSMAudit": {
-			// to override args, implement: initOpenBSMAudit(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOpenBSMAudit,
 			Create: createOpenBSMAudit,
 		},
 		"windows": {
@@ -2839,7 +2839,7 @@ func init() {
 			Create: createSafariExtension,
 		},
 		"launchd": {
-			// to override args, implement: initLaunchd(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initLaunchd,
 			Create: createLaunchd,
 		},
 		"launchd.job": {
@@ -3303,7 +3303,7 @@ func init() {
 			Create: createMdm,
 		},
 		"mdm.intune": {
-			// to override args, implement: initMdmIntune(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMdmIntune,
 			Create: createMdmIntune,
 		},
 		"winget": {
@@ -3319,11 +3319,11 @@ func init() {
 			Create: createIdp,
 		},
 		"idp.entra": {
-			// to override args, implement: initIdpEntra(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initIdpEntra,
 			Create: createIdpEntra,
 		},
 		"idp.activeDirectory": {
-			// to override args, implement: initIdpActiveDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initIdpActiveDirectory,
 			Create: createIdpActiveDirectory,
 		},
 		"cloud": {
@@ -3419,7 +3419,7 @@ func init() {
 			Create: createVscodeExtension,
 		},
 		"logrotate": {
-			// to override args, implement: initLogrotate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initLogrotate,
 			Create: createLogrotate,
 		},
 		"logrotate.entry": {
@@ -3507,7 +3507,7 @@ func init() {
 			Create: createOllamaConfigIntegration,
 		},
 		"claude.code": {
-			// to override args, implement: initClaudeCode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initClaudeCode,
 			Create: createClaudeCode,
 		},
 		"claude.code.plugin": {
@@ -3535,7 +3535,7 @@ func init() {
 			Create: createClaudeCodeMcpServer,
 		},
 		"claude.desktop": {
-			// to override args, implement: initClaudeDesktop(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initClaudeDesktop,
 			Create: createClaudeDesktop,
 		},
 		"claude.desktop.mcpServer": {
@@ -3543,7 +3543,7 @@ func init() {
 			Create: createClaudeDesktopMcpServer,
 		},
 		"openai.codex": {
-			// to override args, implement: initOpenaiCodex(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOpenaiCodex,
 			Create: createOpenaiCodex,
 		},
 		"openai.codex.plugin": {
@@ -3567,7 +3567,7 @@ func init() {
 			Create: createOpenaiCodexRepo,
 		},
 		"cursor": {
-			// to override args, implement: initCursor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initCursor,
 			Create: createCursor,
 		},
 		"cursor.repo": {
@@ -3587,7 +3587,7 @@ func init() {
 			Create: createCursorSkill,
 		},
 		"github.copilot": {
-			// to override args, implement: initGithubCopilot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGithubCopilot,
 			Create: createGithubCopilot,
 		},
 		"github.copilot.account": {
@@ -3603,7 +3603,7 @@ func init() {
 			Create: createGithubCopilotSkill,
 		},
 		"goose": {
-			// to override args, implement: initGoose(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGoose,
 			Create: createGoose,
 		},
 		"goose.extension": {
@@ -3615,7 +3615,7 @@ func init() {
 			Create: createGooseSkill,
 		},
 		"gemini": {
-			// to override args, implement: initGemini(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGemini,
 			Create: createGemini,
 		},
 		"gemini.mcpServer": {
@@ -3655,7 +3655,7 @@ func init() {
 			Create: createZedRepo,
 		},
 		"roo": {
-			// to override args, implement: initRoo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initRoo,
 			Create: createRoo,
 		},
 		"roo.skill": {
@@ -3663,7 +3663,7 @@ func init() {
 			Create: createRooSkill,
 		},
 		"cline": {
-			// to override args, implement: initCline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initCline,
 			Create: createCline,
 		},
 		"cline.skill": {
@@ -3671,7 +3671,7 @@ func init() {
 			Create: createClineSkill,
 		},
 		"kiro": {
-			// to override args, implement: initKiro(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initKiro,
 			Create: createKiro,
 		},
 		"kiro.skill": {
@@ -3679,7 +3679,7 @@ func init() {
 			Create: createKiroSkill,
 		},
 		"continuedev": {
-			// to override args, implement: initContinuedev(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initContinuedev,
 			Create: createContinuedev,
 		},
 		"continuedev.skill": {
@@ -3687,7 +3687,7 @@ func init() {
 			Create: createContinuedevSkill,
 		},
 		"trae": {
-			// to override args, implement: initTrae(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initTrae,
 			Create: createTrae,
 		},
 		"trae.skill": {
@@ -3695,7 +3695,7 @@ func init() {
 			Create: createTraeSkill,
 		},
 		"opencode": {
-			// to override args, implement: initOpencode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOpencode,
 			Create: createOpencode,
 		},
 		"opencode.skill": {
@@ -3703,7 +3703,7 @@ func init() {
 			Create: createOpencodeSkill,
 		},
 		"pi": {
-			// to override args, implement: initPi(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPi,
 			Create: createPi,
 		},
 		"pi.skill": {
@@ -3711,7 +3711,7 @@ func init() {
 			Create: createPiSkill,
 		},
 		"mistral.vibe": {
-			// to override args, implement: initMistralVibe(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMistralVibe,
 			Create: createMistralVibe,
 		},
 		"mistral.vibe.skill": {
@@ -3719,7 +3719,7 @@ func init() {
 			Create: createMistralVibeSkill,
 		},
 		"antigravity": {
-			// to override args, implement: initAntigravity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAntigravity,
 			Create: createAntigravity,
 		},
 		"antigravity.skill": {
@@ -3727,7 +3727,7 @@ func init() {
 			Create: createAntigravitySkill,
 		},
 		"ibm.bob": {
-			// to override args, implement: initIbmBob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initIbmBob,
 			Create: createIbmBob,
 		},
 		"ibm.bob.skill": {
@@ -3735,11 +3735,11 @@ func init() {
 			Create: createIbmBobSkill,
 		},
 		"aider": {
-			// to override args, implement: initAider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAider,
 			Create: createAider,
 		},
 		"openclaw": {
-			// to override args, implement: initOpenclaw(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOpenclaw,
 			Create: createOpenclaw,
 		},
 		"openclaw.skill": {
@@ -3747,7 +3747,7 @@ func init() {
 			Create: createOpenclawSkill,
 		},
 		"snowflake.cortex": {
-			// to override args, implement: initSnowflakeCortex(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initSnowflakeCortex,
 			Create: createSnowflakeCortex,
 		},
 		"snowflake.cortex.skill": {
@@ -3755,7 +3755,7 @@ func init() {
 			Create: createSnowflakeCortexSkill,
 		},
 		"junie": {
-			// to override args, implement: initJunie(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initJunie,
 			Create: createJunie,
 		},
 		"junie.skill": {
@@ -3763,7 +3763,7 @@ func init() {
 			Create: createJunieSkill,
 		},
 		"augment": {
-			// to override args, implement: initAugment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAugment,
 			Create: createAugment,
 		},
 		"augment.skill": {
@@ -3771,7 +3771,7 @@ func init() {
 			Create: createAugmentSkill,
 		},
 		"warp": {
-			// to override args, implement: initWarp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWarp,
 			Create: createWarp,
 		},
 		"warp.skill": {
@@ -3779,7 +3779,7 @@ func init() {
 			Create: createWarpSkill,
 		},
 		"kilocode": {
-			// to override args, implement: initKilocode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initKilocode,
 			Create: createKilocode,
 		},
 		"kilocode.skill": {
@@ -3787,7 +3787,7 @@ func init() {
 			Create: createKilocodeSkill,
 		},
 		"openhands": {
-			// to override args, implement: initOpenhands(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOpenhands,
 			Create: createOpenhands,
 		},
 		"openhands.skill": {
@@ -3795,7 +3795,7 @@ func init() {
 			Create: createOpenhandsSkill,
 		},
 		"qwen.code": {
-			// to override args, implement: initQwenCode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initQwenCode,
 			Create: createQwenCode,
 		},
 		"qwen.code.skill": {
@@ -3847,7 +3847,7 @@ func init() {
 			Create: createOvsInterface,
 		},
 		"java.keystore": {
-			// to override args, implement: initJavaKeystore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initJavaKeystore,
 			Create: createJavaKeystore,
 		},
 		"java.keystore.entry": {
@@ -3867,7 +3867,7 @@ func init() {
 			Create: createAixInittabEntry,
 		},
 		"aix.device": {
-			// to override args, implement: initAixDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAixDevice,
 			Create: createAixDevice,
 		},
 		"aix.security.users": {
@@ -3875,7 +3875,7 @@ func init() {
 			Create: createAixSecurityUsers,
 		},
 		"aix.security.user": {
-			// to override args, implement: initAixSecurityUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAixSecurityUser,
 			Create: createAixSecurityUser,
 		},
 		"aix.security.loginCfg": {
@@ -3887,7 +3887,7 @@ func init() {
 			Create: createAixSecurityLimits,
 		},
 		"aix.security.limit": {
-			// to override args, implement: initAixSecurityLimit(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAixSecurityLimit,
 			Create: createAixSecurityLimit,
 		},
 		"aix.security.passwd": {
@@ -3907,7 +3907,7 @@ func init() {
 			Create: createAixFilesystems,
 		},
 		"aix.filesystem": {
-			// to override args, implement: initAixFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAixFilesystem,
 			Create: createAixFilesystem,
 		},
 		"aix.ipsec": {
@@ -51256,7 +51256,12 @@ func createMondooEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mondoo.eol", res.__id)
@@ -51628,7 +51633,12 @@ func createPlatformAdvisories(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("platform.advisories", res.__id)
@@ -51708,7 +51718,12 @@ func createPlatformCves(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("platform.cves", res.__id)
@@ -51973,7 +51988,7 @@ func (c *mqlAuditCve) GetWorstScore() *plugin.TValue[*mqlAuditCvss] {
 type mqlMachine struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMachineInternal it will be used here
+	mqlMachineInternal
 }
 
 // createMachine creates a new instance of this resource
@@ -52327,7 +52342,7 @@ func (c *mqlMachineCpu) GetMaxClockSpeed() *plugin.TValue[int64] {
 type mqlMachineSecureboot struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMachineSecurebootInternal it will be used here
+	mqlMachineSecurebootInternal
 	Efi       plugin.TValue[bool]
 	Enabled   plugin.TValue[bool]
 	SetupMode plugin.TValue[bool]
@@ -52344,7 +52359,12 @@ func createMachineSecureboot(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("machine.secureboot", res.__id)
@@ -52387,7 +52407,7 @@ func (c *mqlMachineSecureboot) GetSetupMode() *plugin.TValue[bool] {
 type mqlMemory struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMemoryInternal it will be used here
+	mqlMemoryInternal
 	Total       plugin.TValue[int64]
 	Available   plugin.TValue[int64]
 	Committed   plugin.TValue[int64]
@@ -52405,7 +52425,12 @@ func createMemory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("memory", res.__id)
@@ -52454,7 +52479,7 @@ func (c *mqlMemory) GetCommitLimit() *plugin.TValue[int64] {
 type mqlOs struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOsInternal it will be used here
+	mqlOsInternal
 	Name             plugin.TValue[string]
 	Env              plugin.TValue[map[string]any]
 	Path             plugin.TValue[[]any]
@@ -52609,7 +52634,7 @@ func (c *mqlOs) GetDate() *plugin.TValue[*mqlOsDate] {
 type mqlOsDate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOsDateInternal it will be used here
+	mqlOsDateInternal
 	Time     plugin.TValue[*time.Time]
 	Timezone plugin.TValue[string]
 }
@@ -52625,7 +52650,12 @@ func createOsDate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("os.date", res.__id)
@@ -52681,7 +52711,12 @@ func createOsUpdate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("os.update", res.__id)
@@ -52726,7 +52761,7 @@ func (c *mqlOsUpdate) GetFormat() *plugin.TValue[string] {
 type mqlOsBase struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOsBaseInternal it will be used here
+	mqlOsBaseInternal
 	Machine          plugin.TValue[*mqlMachine]
 	Hypervisor       plugin.TValue[string]
 	Machineid        plugin.TValue[string]
@@ -52756,7 +52791,12 @@ func createOsBase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("os.base", res.__id)
@@ -52947,7 +52987,12 @@ func createOsUnix(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("os.unix", res.__id)
@@ -53010,7 +53055,12 @@ func createOsLinux(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("os.linux", res.__id)
@@ -53178,7 +53228,12 @@ func createOsWindows(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("os.windows", res.__id)
@@ -53234,7 +53289,12 @@ func createOsMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("os.macos", res.__id)
@@ -53290,7 +53350,12 @@ func createOsAny(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("os.any", res.__id)
@@ -53349,7 +53414,12 @@ func createOsRootCertificates(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("os.rootCertificates", res.__id)
@@ -53421,7 +53491,7 @@ func (c *mqlOsRootCertificates) GetList() *plugin.TValue[[]any] {
 type mqlCommand struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlCommandInternal it will be used here
+	mqlCommandInternal
 	Command  plugin.TValue[string]
 	Stdout   plugin.TValue[string]
 	Stderr   plugin.TValue[string]
@@ -53439,7 +53509,12 @@ func createCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("command", res.__id)
@@ -53501,7 +53576,7 @@ func (c *mqlCommand) GetExitcode() *plugin.TValue[int64] {
 type mqlPowershell struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPowershellInternal it will be used here
+	mqlPowershellInternal
 	Script   plugin.TValue[string]
 	Stdout   plugin.TValue[string]
 	Stderr   plugin.TValue[string]
@@ -53519,7 +53594,12 @@ func createPowershell(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("powershell", res.__id)
@@ -53566,7 +53646,7 @@ func (c *mqlPowershell) GetExitcode() *plugin.TValue[int64] {
 type mqlFile struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFileInternal it will be used here
+	mqlFileInternal
 	Path        plugin.TValue[string]
 	Basename    plugin.TValue[string]
 	Dirname     plugin.TValue[string]
@@ -53591,7 +53671,12 @@ func createFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("file", res.__id)
@@ -53782,7 +53867,12 @@ func createFileContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("file.context", res.__id)
@@ -53862,7 +53952,12 @@ func createFilePermissions(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("file.permissions", res.__id)
@@ -54018,7 +54113,12 @@ func createFilesFind(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("files.find", res.__id)
@@ -54106,7 +54206,12 @@ func createParseIni(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("parse.ini", res.__id)
@@ -54194,7 +54299,12 @@ func createParseJson(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("parse.json", res.__id)
@@ -54262,7 +54372,12 @@ func createParseXml(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("parse.xml", res.__id)
@@ -54330,7 +54445,12 @@ func createParsePlist(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("parse.plist", res.__id)
@@ -54399,7 +54519,12 @@ func createParseYaml(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("parse.yaml", res.__id)
@@ -54480,7 +54605,12 @@ func createParseCertificates(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("parse.certificates", res.__id)
@@ -54590,7 +54720,12 @@ func createParseOpenpgp(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("parse.openpgp", res.__id)
@@ -54819,7 +54954,7 @@ func (c *mqlUser) GetHasLoginShell() *plugin.TValue[bool] {
 type mqlPrivatekey struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPrivatekeyInternal it will be used here
+	mqlPrivatekeyInternal
 	Pem                plugin.TValue[string]
 	Path               plugin.TValue[string]
 	File               plugin.TValue[*mqlFile]
@@ -54839,7 +54974,12 @@ func createPrivatekey(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("privatekey", res.__id)
@@ -54966,7 +55106,12 @@ func createAuthorizedkeys(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("authorizedkeys", res.__id)
@@ -55057,7 +55202,12 @@ func createAuthorizedkeysEntry(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("authorizedkeys.entry", res.__id)
@@ -55110,7 +55260,7 @@ func (c *mqlAuthorizedkeysEntry) GetBits() *plugin.TValue[int64] {
 type mqlGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGroupInternal it will be used here
+	mqlGroupInternal
 	Gid     plugin.TValue[int64]
 	Sid     plugin.TValue[string]
 	Name    plugin.TValue[string]
@@ -55128,7 +55278,12 @@ func createGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("group", res.__id)
@@ -55181,7 +55336,7 @@ func (c *mqlGroup) GetMembers() *plugin.TValue[[]any] {
 type mqlGroups struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGroupsInternal it will be used here
+	mqlGroupsInternal
 	List plugin.TValue[[]any]
 }
 
@@ -55237,7 +55392,7 @@ func (c *mqlGroups) GetList() *plugin.TValue[[]any] {
 type mqlPackage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPackageInternal it will be used here
+	mqlPackageInternal
 	Name         plugin.TValue[string]
 	Description  plugin.TValue[string]
 	Version      plugin.TValue[string]
@@ -55272,7 +55427,12 @@ func createPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("package", res.__id)
@@ -55501,7 +55661,12 @@ func createPkgFileInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("pkgFileInfo", res.__id)
@@ -55530,7 +55695,7 @@ func (c *mqlPkgFileInfo) GetPath() *plugin.TValue[string] {
 type mqlPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPackagesInternal it will be used here
+	mqlPackagesInternal
 	List plugin.TValue[[]any]
 }
 
@@ -55606,7 +55771,12 @@ func createPamConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("pam.conf", res.__id)
@@ -55739,7 +55909,12 @@ func createPamConfServiceEntry(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("pam.conf.serviceEntry", res.__id)
@@ -55822,7 +55997,12 @@ func createPamConfService(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("pam.conf.service", res.__id)
@@ -55909,7 +56089,12 @@ func createPamModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("pam.module", res.__id)
@@ -56390,7 +56575,12 @@ func createInetdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("inetd.config", res.__id)
@@ -56903,7 +57093,7 @@ func (c *mqlSnmpdConfigUser) GetContext() *plugin.TValue[*mqlFileContext] {
 type mqlAuditdConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAuditdConfigInternal it will be used here
+	mqlAuditdConfigInternal
 	File                 plugin.TValue[*mqlFile]
 	Params               plugin.TValue[map[string]any]
 	MaxLogFile           plugin.TValue[int64]
@@ -56927,7 +57117,12 @@ func createAuditdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("auditd.config", res.__id)
@@ -57067,7 +57262,7 @@ func (c *mqlAuditdConfig) GetActionMailAcct() *plugin.TValue[string] {
 type mqlAuditdRules struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAuditdRulesInternal it will be used here
+	mqlAuditdRulesInternal
 	Path      plugin.TValue[string]
 	Controls  plugin.TValue[[]any]
 	Files     plugin.TValue[[]any]
@@ -57088,7 +57283,12 @@ func createAuditdRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("auditd.rules", res.__id)
@@ -57225,7 +57425,7 @@ func (c *mqlAuditdRules) GetImmutable() *plugin.TValue[bool] {
 type mqlAuditdLoadedRules struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAuditdLoadedRulesInternal it will be used here
+	mqlAuditdLoadedRulesInternal
 	Files    plugin.TValue[[]any]
 	Syscalls plugin.TValue[[]any]
 	Watches  plugin.TValue[[]any]
@@ -57242,7 +57442,12 @@ func createAuditdLoadedRules(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("auditd.loadedRules", res.__id)
@@ -57370,7 +57575,12 @@ func createAuditdRuleControl(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("auditd.rule.control", res.__id)
@@ -57420,7 +57630,12 @@ func createAuditdRuleFile(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("auditd.rule.file", res.__id)
@@ -57475,7 +57690,12 @@ func createAuditdRuleWatch(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("auditd.rule.watch", res.__id)
@@ -57539,7 +57759,12 @@ func createAuditdRuleSyscall(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("auditd.rule.syscall", res.__id)
@@ -57621,7 +57846,12 @@ func createAuditdStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("auditd.status", res.__id)
@@ -57689,7 +57919,12 @@ func createApache2(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("apache2", res.__id)
@@ -57720,7 +57955,7 @@ func (c *mqlApache2) GetVersion() *plugin.TValue[string] {
 type mqlApache2Conf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlApache2ConfInternal it will be used here
+	mqlApache2ConfInternal
 	File            plugin.TValue[*mqlFile]
 	Files           plugin.TValue[[]any]
 	Params          plugin.TValue[map[string]any]
@@ -57747,7 +57982,12 @@ func createApache2Conf(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("apache2.conf", res.__id)
@@ -57991,7 +58231,12 @@ func createApache2ConfEnvvars(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("apache2.conf.envvars", res.__id)
@@ -58351,7 +58596,7 @@ func (c *mqlApache2ConfLocation) GetParams() *plugin.TValue[map[string]any] {
 type mqlBind9 struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlBind9Internal it will be used here
+	mqlBind9Internal
 	File             plugin.TValue[*mqlFile]
 	Files            plugin.TValue[[]any]
 	Recursion        plugin.TValue[bool]
@@ -58389,7 +58634,12 @@ func createBind9(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("bind9", res.__id)
@@ -58628,7 +58878,7 @@ func (c *mqlBind9) GetLogCategories() *plugin.TValue[map[string]any] {
 type mqlBind9Zone struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlBind9ZoneInternal it will be used here
+	mqlBind9ZoneInternal
 	Name          plugin.TValue[string]
 	Class         plugin.TValue[string]
 	View          plugin.TValue[string]
@@ -58788,7 +59038,7 @@ func (c *mqlBind9Acl) GetEntries() *plugin.TValue[[]any] {
 type mqlBind9Key struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlBind9KeyInternal it will be used here
+	mqlBind9KeyInternal
 	File      plugin.TValue[*mqlFile]
 	Name      plugin.TValue[string]
 	View      plugin.TValue[string]
@@ -58948,7 +59198,7 @@ func (c *mqlBind9Channel) GetPrintSeverity() *plugin.TValue[bool] {
 type mqlBind9DnssecKey struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlBind9DnssecKeyInternal it will be used here
+	mqlBind9DnssecKeyInternal
 	Zone            plugin.TValue[string]
 	KeyTag          plugin.TValue[int64]
 	Algorithm       plugin.TValue[int64]
@@ -59046,7 +59296,7 @@ func (c *mqlBind9DnssecKey) GetPrivateFile() *plugin.TValue[*mqlFile] {
 type mqlNginx struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlNginxInternal it will be used here
+	mqlNginxInternal
 	Version plugin.TValue[string]
 	Modules plugin.TValue[[]any]
 }
@@ -59099,7 +59349,7 @@ func (c *mqlNginx) GetModules() *plugin.TValue[[]any] {
 type mqlNginxConf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlNginxConfInternal it will be used here
+	mqlNginxConfInternal
 	File            plugin.TValue[*mqlFile]
 	Files           plugin.TValue[[]any]
 	Params          plugin.TValue[map[string]any]
@@ -59126,7 +59376,12 @@ func createNginxConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("nginx.conf", res.__id)
@@ -60726,7 +60981,7 @@ func (c *mqlTomcatWebapp) GetLogging() *plugin.TValue[map[string]any] {
 type mqlIis struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlIisInternal it will be used here
+	mqlIisInternal
 	Installed       plugin.TValue[bool]
 	Version         plugin.TValue[string]
 	ApplicationHost plugin.TValue[*mqlFile]
@@ -60746,7 +61001,12 @@ func createIis(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("iis", res.__id)
@@ -60847,7 +61107,7 @@ func (c *mqlIis) GetAppPools() *plugin.TValue[[]any] {
 type mqlIisSite struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlIisSiteInternal it will be used here
+	mqlIisSiteInternal
 	Name                 plugin.TValue[string]
 	Id                   plugin.TValue[int64]
 	State                plugin.TValue[string]
@@ -60988,7 +61248,7 @@ func (c *mqlIisSite) GetConfig() *plugin.TValue[*mqlIisConfiguration] {
 type mqlIisApplication struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlIisApplicationInternal it will be used here
+	mqlIisApplicationInternal
 	Path               plugin.TValue[string]
 	PhysicalPath       plugin.TValue[string]
 	EnabledProtocols   plugin.TValue[string]
@@ -61620,7 +61880,7 @@ func (c *mqlIisConfiguration) GetSections() *plugin.TValue[any] {
 type mqlJboss struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlJbossInternal it will be used here
+	mqlJbossInternal
 	Home                   plugin.TValue[string]
 	ConfigFile             plugin.TValue[string]
 	Product                plugin.TValue[string]
@@ -61656,7 +61916,12 @@ func createJboss(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("jboss", res.__id)
@@ -68003,7 +68268,7 @@ func (c *mqlHaproxy) GetVersion() *plugin.TValue[string] {
 type mqlHaproxyConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlHaproxyConfigInternal it will be used here
+	mqlHaproxyConfigInternal
 	File      plugin.TValue[*mqlFile]
 	Files     plugin.TValue[[]any]
 	Global    plugin.TValue[*mqlHaproxyConfigGlobal]
@@ -68028,7 +68293,12 @@ func createHaproxyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("haproxy.config", res.__id)
@@ -69693,7 +69963,7 @@ func (c *mqlHaproxyConfigPeersSection) GetFile() *plugin.TValue[string] {
 type mqlPostgresqlConf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPostgresqlConfInternal it will be used here
+	mqlPostgresqlConfInternal
 	File                   plugin.TValue[*mqlFile]
 	Files                  plugin.TValue[[]any]
 	Params                 plugin.TValue[map[string]any]
@@ -69728,7 +69998,12 @@ func createPostgresqlConf(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("postgresql.conf", res.__id)
@@ -70015,7 +70290,12 @@ func createPostgresqlHba(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("postgresql.hba", res.__id)
@@ -70099,7 +70379,12 @@ func createPostgresqlHbaRule(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("postgresql.hba.rule", res.__id)
@@ -70172,7 +70457,12 @@ func createPostgresqlIdent(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("postgresql.ident", res.__id)
@@ -70253,7 +70543,12 @@ func createPostgresqlIdentMapping(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("postgresql.ident.mapping", res.__id)
@@ -70298,7 +70593,7 @@ func (c *mqlPostgresqlIdentMapping) GetPgUsername() *plugin.TValue[string] {
 type mqlMysql struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMysqlInternal it will be used here
+	mqlMysqlInternal
 	Version plugin.TValue[string]
 	Flavor  plugin.TValue[string]
 }
@@ -70314,7 +70609,12 @@ func createMysql(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mysql", res.__id)
@@ -70351,7 +70651,7 @@ func (c *mqlMysql) GetFlavor() *plugin.TValue[string] {
 type mqlMysqlConf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMysqlConfInternal it will be used here
+	mqlMysqlConfInternal
 	File                          plugin.TValue[*mqlFile]
 	Files                         plugin.TValue[[]any]
 	Sections                      plugin.TValue[[]any]
@@ -70439,7 +70739,12 @@ func createMysqlConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mysql.conf", res.__id)
@@ -71337,7 +71642,12 @@ func createMysqlConfSection(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mysql.conf.section", res.__id)
@@ -71400,7 +71710,12 @@ func createMysqlConfUserOptionFile(runtime *plugin.Runtime, args map[string]*llx
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mysql.conf.userOptionFile", res.__id)
@@ -71453,7 +71768,7 @@ func (c *mqlMysqlConfUserOptionFile) GetSections() *plugin.TValue[[]any] {
 type mqlMariadb struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMariadbInternal it will be used here
+	mqlMariadbInternal
 	Version plugin.TValue[string]
 }
 
@@ -71468,7 +71783,12 @@ func createMariadb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mariadb", res.__id)
@@ -71499,7 +71819,7 @@ func (c *mqlMariadb) GetVersion() *plugin.TValue[string] {
 type mqlMariadbConf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMariadbConfInternal it will be used here
+	mqlMariadbConfInternal
 	File                               plugin.TValue[*mqlFile]
 	Files                              plugin.TValue[[]any]
 	Sections                           plugin.TValue[[]any]
@@ -71584,7 +71904,12 @@ func createMariadbConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mariadb.conf", res.__id)
@@ -72449,7 +72774,12 @@ func createMariadbConfSection(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mariadb.conf.section", res.__id)
@@ -72512,7 +72842,12 @@ func createMariadbConfUserOptionFile(runtime *plugin.Runtime, args map[string]*l
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mariadb.conf.userOptionFile", res.__id)
@@ -72580,7 +72915,12 @@ func createMongodb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mongodb", res.__id)
@@ -72611,7 +72951,7 @@ func (c *mqlMongodb) GetVersion() *plugin.TValue[string] {
 type mqlMongodbConf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMongodbConfInternal it will be used here
+	mqlMongodbConfInternal
 	File                                   plugin.TValue[*mqlFile]
 	Params                                 plugin.TValue[any]
 	Port                                   plugin.TValue[int64]
@@ -72684,7 +73024,12 @@ func createMongodbConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mongodb.conf", res.__id)
@@ -73383,7 +73728,12 @@ func createCassandra(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cassandra", res.__id)
@@ -73498,7 +73848,12 @@ func createCassandraConf(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cassandra.conf", res.__id)
@@ -74324,7 +74679,12 @@ func createCassandraEnv(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cassandra.env", res.__id)
@@ -74506,7 +74866,12 @@ func createCassandraRackdc(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cassandra.rackdc", res.__id)
@@ -74602,7 +74967,7 @@ func (c *mqlCassandraRackdc) GetDcSuffix() *plugin.TValue[string] {
 type mqlJournaldConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlJournaldConfigInternal it will be used here
+	mqlJournaldConfigInternal
 	File            plugin.TValue[*mqlFile]
 	Params          plugin.TValue[map[string]any]
 	Sections        plugin.TValue[[]any]
@@ -74622,7 +74987,12 @@ func createJournaldConfig(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("journald.config", res.__id)
@@ -74848,7 +75218,12 @@ func createService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("service", res.__id)
@@ -74905,7 +75280,7 @@ func (c *mqlService) GetStatic() *plugin.TValue[bool] {
 type mqlServices struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlServicesInternal it will be used here
+	mqlServicesInternal
 	List plugin.TValue[[]any]
 }
 
@@ -76227,7 +76602,7 @@ func (c *mqlSystemdBootEntry) GetInitrd() *plugin.TValue[string] {
 type mqlKernel struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlKernelInternal it will be used here
+	mqlKernelInternal
 	Info       plugin.TValue[any]
 	Parameters plugin.TValue[map[string]any]
 	Sysctls    plugin.TValue[[]any]
@@ -76470,7 +76845,7 @@ func (c *mqlKernelParameter) GetSettings() *plugin.TValue[[]any] {
 type mqlKernelParameterSetting struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlKernelParameterSettingInternal it will be used here
+	mqlKernelParameterSettingInternal
 	Key          plugin.TValue[string]
 	Value        plugin.TValue[string]
 	File         plugin.TValue[*mqlFile]
@@ -76573,7 +76948,12 @@ func createKernelModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("kernel.module", res.__id)
@@ -76657,7 +77037,12 @@ func createKernelCmdline(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("kernel.cmdline", res.__id)
@@ -76711,7 +77096,12 @@ func createKernelTaint(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("kernel.taint", res.__id)
@@ -76748,7 +77138,7 @@ func (c *mqlKernelTaint) GetReasons() *plugin.TValue[[]any] {
 type mqlKernelLivepatch struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlKernelLivepatchInternal it will be used here
+	mqlKernelLivepatchInternal
 	Active   plugin.TValue[bool]
 	Provider plugin.TValue[string]
 	Patches  plugin.TValue[[]any]
@@ -76768,7 +77158,12 @@ func createKernelLivepatch(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("kernel.livepatch", res.__id)
@@ -76841,7 +77236,12 @@ func createKernelLivepatchPatch(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("kernel.livepatch.patch", res.__id)
@@ -76898,7 +77298,12 @@ func createKernelLockdown(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("kernel.lockdown", res.__id)
@@ -76948,7 +77353,12 @@ func createKernelAslr(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("kernel.aslr", res.__id)
@@ -76985,7 +77395,7 @@ func (c *mqlKernelAslr) GetEnabled() *plugin.TValue[bool] {
 type mqlCgroups struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlCgroupsInternal it will be used here
+	mqlCgroupsInternal
 	Version     plugin.TValue[int64]
 	Controllers plugin.TValue[[]any]
 	Root        plugin.TValue[*mqlCgroup]
@@ -77003,7 +77413,12 @@ func createCgroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cgroups", res.__id)
@@ -77072,7 +77487,7 @@ func (c *mqlCgroups) GetList() *plugin.TValue[[]any] {
 type mqlCgroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlCgroupInternal it will be used here
+	mqlCgroupInternal
 	Path             plugin.TValue[string]
 	Type             plugin.TValue[string]
 	UnitType         plugin.TValue[string]
@@ -77101,7 +77516,12 @@ func createCgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cgroup", res.__id)
@@ -77198,7 +77618,7 @@ func (c *mqlCgroup) GetChildren() *plugin.TValue[[]any] {
 type mqlDocker struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDockerInternal it will be used here
+	mqlDockerInternal
 	Images     plugin.TValue[[]any]
 	Containers plugin.TValue[[]any]
 	Daemon     plugin.TValue[*mqlDockerDaemon]
@@ -77322,7 +77742,7 @@ func (c *mqlDocker) GetVolumes() *plugin.TValue[[]any] {
 type mqlDockerFile struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDockerFileInternal it will be used here
+	mqlDockerFileInternal
 	File               plugin.TValue[*mqlFile]
 	Instructions       plugin.TValue[any]
 	Stages             plugin.TValue[[]any]
@@ -77343,7 +77763,12 @@ func createDockerFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("docker.file", res.__id)
@@ -78930,7 +79355,7 @@ func (c *mqlDockerFileOnbuild) GetContext() *plugin.TValue[*mqlFileContext] {
 type mqlDockerImage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDockerImageInternal it will be used here
+	mqlDockerImageInternal
 	Id                  plugin.TValue[string]
 	Size                plugin.TValue[int64]
 	RepoDigests         plugin.TValue[[]any]
@@ -78965,7 +79390,12 @@ func createDockerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("docker.image", res.__id)
@@ -79116,7 +79546,7 @@ func (c *mqlDockerImage) GetContainers() *plugin.TValue[[]any] {
 type mqlDockerContainer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDockerContainerInternal it will be used here
+	mqlDockerContainerInternal
 	Running             plugin.TValue[*llx.AssetValue]
 	Id                  plugin.TValue[string]
 	Command             plugin.TValue[string]
@@ -79171,7 +79601,12 @@ func createDockerContainer(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("docker.container", res.__id)
@@ -79768,7 +80203,12 @@ func createDockerNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("docker.network", res.__id)
@@ -79956,7 +80396,12 @@ func createDockerVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("docker.volume", res.__id)
@@ -80029,7 +80474,7 @@ func (c *mqlDockerVolume) GetContainers() *plugin.TValue[[]any] {
 type mqlDockerDaemon struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDockerDaemonInternal it will be used here
+	mqlDockerDaemonInternal
 	ConfigFile           plugin.TValue[*mqlFile]
 	Process              plugin.TValue[*mqlProcess]
 	Configuration        plugin.TValue[any]
@@ -80406,7 +80851,7 @@ func (c *mqlDockerDaemonUlimit) GetHard() *plugin.TValue[int64] {
 type mqlContainerd struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlContainerdInternal it will be used here
+	mqlContainerdInternal
 	Containers                         plugin.TValue[[]any]
 	Images                             plugin.TValue[[]any]
 	Version                            plugin.TValue[string]
@@ -80900,7 +81345,7 @@ func (c *mqlContainerdRegistryHost) GetFile() *plugin.TValue[*mqlFile] {
 type mqlContainerdContainer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlContainerdContainerInternal it will be used here
+	mqlContainerdContainerInternal
 	Id                   plugin.TValue[string]
 	Image                plugin.TValue[string]
 	Status               plugin.TValue[string]
@@ -80946,7 +81391,12 @@ func createContainerdContainer(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("containerd.container", res.__id)
@@ -81167,7 +81617,7 @@ func (c *mqlContainerdContainer) GetSourceImage() *plugin.TValue[*mqlContainerdI
 type mqlContainerdImage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlContainerdImageInternal it will be used here
+	mqlContainerdImageInternal
 	Name         plugin.TValue[string]
 	Namespace    plugin.TValue[string]
 	Digest       plugin.TValue[string]
@@ -81773,7 +82223,7 @@ func (c *mqlCrioRuntime) GetIsDefault() *plugin.TValue[bool] {
 type mqlCrioContainer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlCrioContainerInternal it will be used here
+	mqlCrioContainerInternal
 	Id                   plugin.TValue[string]
 	Name                 plugin.TValue[string]
 	PodName              plugin.TValue[string]
@@ -82025,7 +82475,7 @@ func (c *mqlCrioContainer) GetSourceImage() *plugin.TValue[*mqlCrioImage] {
 type mqlCrioImage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlCrioImageInternal it will be used here
+	mqlCrioImageInternal
 	Id           plugin.TValue[string]
 	Names        plugin.TValue[[]any]
 	RepoDigests  plugin.TValue[[]any]
@@ -82057,7 +82507,12 @@ func createCrioImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("crio.image", res.__id)
@@ -82259,7 +82714,7 @@ func (c *mqlCrioContainerMount) GetSelinuxRelabel() *plugin.TValue[bool] {
 type mqlContainersRegistries struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlContainersRegistriesInternal it will be used here
+	mqlContainersRegistriesInternal
 	Files                       plugin.TValue[[]any]
 	UnqualifiedSearchRegistries plugin.TValue[[]any]
 	ShortNameMode               plugin.TValue[string]
@@ -82476,7 +82931,7 @@ func (c *mqlContainersRegistryMirror) GetPullFromMirror() *plugin.TValue[string]
 type mqlContainersPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlContainersPolicyInternal it will be used here
+	mqlContainersPolicyInternal
 	Path                plugin.TValue[string]
 	File                plugin.TValue[*mqlFile]
 	DefaultRequirements plugin.TValue[[]any]
@@ -82494,7 +82949,12 @@ func createContainersPolicy(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("containers.policy", res.__id)
@@ -82721,7 +83181,7 @@ func (c *mqlContainersPolicyRequirement) GetSignedIdentity() *plugin.TValue[any]
 type mqlContainersConf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlContainersConfInternal it will be used here
+	mqlContainersConfInternal
 	Files               plugin.TValue[[]any]
 	Privileged          plugin.TValue[bool]
 	DefaultCapabilities plugin.TValue[[]any]
@@ -82959,7 +83419,7 @@ func (c *mqlContainersConf) GetDefaultNetwork() *plugin.TValue[string] {
 type mqlContainersStorage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlContainersStorageInternal it will be used here
+	mqlContainersStorageInternal
 	Files                 plugin.TValue[[]any]
 	Configuration         plugin.TValue[any]
 	Driver                plugin.TValue[string]
@@ -83092,7 +83552,7 @@ func (c *mqlContainersStorage) GetPullOptions() *plugin.TValue[map[string]any] {
 type mqlPodman struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPodmanInternal it will be used here
+	mqlPodmanInternal
 	Installed          plugin.TValue[bool]
 	Version            plugin.TValue[string]
 	Rootless           plugin.TValue[bool]
@@ -83123,7 +83583,12 @@ func createPodman(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("podman", res.__id)
@@ -83300,7 +83765,7 @@ func (c *mqlPodman) GetNetworks() *plugin.TValue[[]any] {
 type mqlPodmanContainer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPodmanContainerInternal it will be used here
+	mqlPodmanContainerInternal
 	Id                    plugin.TValue[string]
 	Name                  plugin.TValue[string]
 	Names                 plugin.TValue[[]any]
@@ -83359,7 +83824,12 @@ func createPodmanContainer(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("podman.container", res.__id)
@@ -83888,7 +84358,12 @@ func createPodmanImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("podman.image", res.__id)
@@ -83957,7 +84432,7 @@ func (c *mqlPodmanImage) GetCreatedAt() *plugin.TValue[*time.Time] {
 type mqlPodmanPod struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPodmanPodInternal it will be used here
+	mqlPodmanPodInternal
 	Id             plugin.TValue[string]
 	Name           plugin.TValue[string]
 	Status         plugin.TValue[string]
@@ -83978,7 +84453,12 @@ func createPodmanPod(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("podman.pod", res.__id)
@@ -84077,7 +84557,12 @@ func createPodmanVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("podman.volume", res.__id)
@@ -84157,7 +84642,12 @@ func createPodmanNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("podman.network", res.__id)
@@ -84218,7 +84708,7 @@ func (c *mqlPodmanNetwork) GetCreatedAt() *plugin.TValue[*time.Time] {
 type mqlIptables struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlIptablesInternal it will be used here
+	mqlIptablesInternal
 	Tables        plugin.TValue[[]any]
 	Input         plugin.TValue[[]any]
 	Output        plugin.TValue[[]any]
@@ -84346,7 +84836,7 @@ func (c *mqlIptables) GetOutputPolicy() *plugin.TValue[string] {
 type mqlIp6tables struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlIp6tablesInternal it will be used here
+	mqlIp6tablesInternal
 	Tables        plugin.TValue[[]any]
 	Input         plugin.TValue[[]any]
 	Output        plugin.TValue[[]any]
@@ -84474,7 +84964,7 @@ func (c *mqlIp6tables) GetOutputPolicy() *plugin.TValue[string] {
 type mqlIptablesTable struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlIptablesTableInternal it will be used here
+	mqlIptablesTableInternal
 	Name   plugin.TValue[string]
 	Chains plugin.TValue[[]any]
 }
@@ -84490,7 +84980,12 @@ func createIptablesTable(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("iptables.table", res.__id)
@@ -84523,7 +85018,7 @@ func (c *mqlIptablesTable) GetChains() *plugin.TValue[[]any] {
 type mqlIptablesChain struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlIptablesChainInternal it will be used here
+	mqlIptablesChainInternal
 	Table  plugin.TValue[string]
 	Name   plugin.TValue[string]
 	Policy plugin.TValue[string]
@@ -84541,7 +85036,12 @@ func createIptablesChain(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("iptables.chain", res.__id)
@@ -84620,7 +85120,12 @@ func createIptablesEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("iptables.entry", res.__id)
@@ -84741,7 +85246,7 @@ func (c *mqlIptablesEntry) GetRaw() *plugin.TValue[string] {
 type mqlNftables struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlNftablesInternal it will be used here
+	mqlNftablesInternal
 	Version plugin.TValue[string]
 	Tables  plugin.TValue[[]any]
 	Chains  plugin.TValue[[]any]
@@ -84760,7 +85265,12 @@ func createNftables(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("nftables", res.__id)
@@ -84876,7 +85386,12 @@ func createNftablesTable(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("nftables.table", res.__id)
@@ -84954,7 +85469,12 @@ func createNftablesChain(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("nftables.chain", res.__id)
@@ -85035,7 +85555,7 @@ func (c *mqlNftablesChain) GetRules() *plugin.TValue[[]any] {
 type mqlNftablesRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlNftablesRuleInternal it will be used here
+	mqlNftablesRuleInternal
 	Family        plugin.TValue[string]
 	Table         plugin.TValue[string]
 	TableRef      plugin.TValue[*mqlNftablesTable]
@@ -85070,7 +85590,12 @@ func createNftablesRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("nftables.rule", res.__id)
@@ -85240,7 +85765,12 @@ func createNftablesSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("nftables.set", res.__id)
@@ -85577,7 +86107,7 @@ func (c *mqlUfwApplication) GetPorts() *plugin.TValue[string] {
 type mqlFirewalld struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFirewalldInternal it will be used here
+	mqlFirewalldInternal
 	Status      plugin.TValue[string]
 	DefaultZone plugin.TValue[string]
 	Zones       plugin.TValue[[]any]
@@ -85594,7 +86124,12 @@ func createFirewalld(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("firewalld", res.__id)
@@ -85675,7 +86210,12 @@ func createFirewalldZone(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("firewalld.zone", res.__id)
@@ -85777,7 +86317,12 @@ func createFirewalldRichrule(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("firewalld.richrule", res.__id)
@@ -85830,7 +86375,7 @@ func (c *mqlFirewalldRichrule) GetAction() *plugin.TValue[string] {
 type mqlPf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPfInternal it will be used here
+	mqlPfInternal
 	Enabled        plugin.TValue[bool]
 	File           plugin.TValue[*mqlFile]
 	Rules          plugin.TValue[[]any]
@@ -85849,7 +86394,12 @@ func createPf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Res
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("pf", res.__id)
@@ -86053,7 +86603,7 @@ func (c *mqlPfRule) GetAnchor() *plugin.TValue[string] {
 type mqlPfTable struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPfTableInternal it will be used here
+	mqlPfTableInternal
 	Name      plugin.TValue[string]
 	Addresses plugin.TValue[[]any]
 }
@@ -86120,7 +86670,12 @@ func createFstab(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("fstab", res.__id)
@@ -86185,7 +86740,12 @@ func createFstabEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("fstab.entry", res.__id)
@@ -86234,7 +86794,7 @@ func (c *mqlFstabEntry) GetFsck() *plugin.TValue[int64] {
 type mqlGrubConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGrubConfigInternal it will be used here
+	mqlGrubConfigInternal
 	DefaultsPath      plugin.TValue[string]
 	GrubPath          plugin.TValue[string]
 	Params            plugin.TValue[map[string]any]
@@ -86253,7 +86813,12 @@ func createGrubConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("grub.config", res.__id)
@@ -86339,7 +86904,12 @@ func createGrubConfigEntry(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("grub.config.entry", res.__id)
@@ -86408,7 +86978,7 @@ func (c *mqlGrubConfigEntry) GetIsSubmenu() *plugin.TValue[bool] {
 type mqlSecbootConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSecbootConfigInternal it will be used here
+	mqlSecbootConfigInternal
 	Path                 plugin.TValue[string]
 	KernelParams         plugin.TValue[string]
 	Parameters           plugin.TValue[map[string]any]
@@ -86441,7 +87011,12 @@ func createSecbootConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("secboot.config", res.__id)
@@ -86608,7 +87183,12 @@ func createSecbootImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("secboot.image", res.__id)
@@ -86857,7 +87437,7 @@ func (c *mqlJails) GetList() *plugin.TValue[[]any] {
 type mqlJail struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlJailInternal it will be used here
+	mqlJailInternal
 	Jid           plugin.TValue[int64]
 	Name          plugin.TValue[string]
 	Hostname      plugin.TValue[string]
@@ -86998,7 +87578,7 @@ func (c *mqlJail) GetParent() *plugin.TValue[*mqlJail] {
 type mqlProcess struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlProcessInternal it will be used here
+	mqlProcessInternal
 	Pid        plugin.TValue[int64]
 	State      plugin.TValue[string]
 	Executable plugin.TValue[string]
@@ -87017,7 +87597,12 @@ func createProcess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("process", res.__id)
@@ -87070,7 +87655,7 @@ func (c *mqlProcess) GetFlags() *plugin.TValue[map[string]any] {
 type mqlProcesses struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlProcessesInternal it will be used here
+	mqlProcessesInternal
 	List plugin.TValue[[]any]
 }
 
@@ -87126,7 +87711,7 @@ func (c *mqlProcesses) GetList() *plugin.TValue[[]any] {
 type mqlPort struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPortInternal it will be used here
+	mqlPortInternal
 	Protocol      plugin.TValue[string]
 	Port          plugin.TValue[int64]
 	Address       plugin.TValue[string]
@@ -87149,7 +87734,12 @@ func createPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("port", res.__id)
@@ -87249,7 +87839,7 @@ func (c *mqlPort) GetTls() *plugin.TValue[plugin.Resource] {
 type mqlPorts struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPortsInternal it will be used here
+	mqlPortsInternal
 	Listening plugin.TValue[[]any]
 	List      plugin.TValue[[]any]
 }
@@ -87401,7 +87991,12 @@ func createAuditpolEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("auditpol.entry", res.__id)
@@ -87466,7 +88061,7 @@ func (c *mqlAuditpolEntry) GetFailure() *plugin.TValue[bool] {
 type mqlSecpol struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSecpolInternal it will be used here
+	mqlSecpolInternal
 	Systemaccess    plugin.TValue[map[string]any]
 	Eventaudit      plugin.TValue[map[string]any]
 	Registryvalues  plugin.TValue[map[string]any]
@@ -87555,7 +88150,12 @@ func createNtpConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("ntp.conf", res.__id)
@@ -87673,7 +88273,7 @@ func (c *mqlNtpConf) GetFudge() *plugin.TValue[[]any] {
 type mqlChronyConf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlChronyConfInternal it will be used here
+	mqlChronyConfInternal
 	File             plugin.TValue[*mqlFile]
 	Files            plugin.TValue[[]any]
 	Content          plugin.TValue[string]
@@ -87700,7 +88300,12 @@ func createChronyConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("chrony.conf", res.__id)
@@ -87902,7 +88507,12 @@ func createPostfix(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("postfix", res.__id)
@@ -87989,7 +88599,12 @@ func createPostfixService(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("postfix.service", res.__id)
@@ -88063,7 +88678,12 @@ func createExim(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("exim", res.__id)
@@ -88106,7 +88726,7 @@ func (c *mqlExim) GetLocalInterfaces() *plugin.TValue[[]any] {
 type mqlRsyslogConf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlRsyslogConfInternal it will be used here
+	mqlRsyslogConfInternal
 	Path     plugin.TValue[string]
 	Files    plugin.TValue[[]any]
 	Content  plugin.TValue[string]
@@ -88131,7 +88751,12 @@ func createRsyslogConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("rsyslog.conf", res.__id)
@@ -88350,7 +88975,12 @@ func createRsyslogModule(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("rsyslog.module", res.__id)
@@ -88391,7 +89021,7 @@ func (c *mqlRsyslogModule) GetSourceLine() *plugin.TValue[int64] {
 type mqlRsyslogInput struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlRsyslogInputInternal it will be used here
+	mqlRsyslogInputInternal
 	Type             plugin.TValue[string]
 	Port             plugin.TValue[int64]
 	Address          plugin.TValue[string]
@@ -88414,7 +89044,12 @@ func createRsyslogInput(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("rsyslog.input", res.__id)
@@ -88487,7 +89122,7 @@ func (c *mqlRsyslogInput) GetBoundRuleset() *plugin.TValue[*mqlRsyslogRuleset] {
 type mqlRsyslogAction struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlRsyslogActionInternal it will be used here
+	mqlRsyslogActionInternal
 	Type                 plugin.TValue[string]
 	Target               plugin.TValue[string]
 	Protocol             plugin.TValue[string]
@@ -88520,7 +89155,12 @@ func createRsyslogAction(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("rsyslog.action", res.__id)
@@ -88633,7 +89273,7 @@ func (c *mqlRsyslogAction) GetRules() *plugin.TValue[[]any] {
 type mqlRsyslogRuleset struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlRsyslogRulesetInternal it will be used here
+	mqlRsyslogRulesetInternal
 	Name       plugin.TValue[string]
 	Parameters plugin.TValue[any]
 	SourceFile plugin.TValue[string]
@@ -88653,7 +89293,12 @@ func createRsyslogRuleset(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("rsyslog.ruleset", res.__id)
@@ -88726,7 +89371,7 @@ func (c *mqlRsyslogRuleset) GetInputs() *plugin.TValue[[]any] {
 type mqlRsyslogRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlRsyslogRuleInternal it will be used here
+	mqlRsyslogRuleInternal
 	Facilities plugin.TValue[[]any]
 	Severities plugin.TValue[[]any]
 	Target     plugin.TValue[string]
@@ -88747,7 +89392,12 @@ func createRsyslogRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("rsyslog.rule", res.__id)
@@ -88829,7 +89479,12 @@ func createLogindefs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("logindefs", res.__id)
@@ -89207,7 +89862,7 @@ func (c *mqlUmaskPamModule) GetUsergroups() *plugin.TValue[bool] {
 type mqlPwquality struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPwqualityInternal it will be used here
+	mqlPwqualityInternal
 	Files    plugin.TValue[[]any]
 	Settings plugin.TValue[*mqlPwqualitySettings]
 	Pam      plugin.TValue[[]any]
@@ -89224,7 +89879,12 @@ func createPwquality(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("pwquality", res.__id)
@@ -89510,7 +90170,7 @@ func (c *mqlPwqualityPamModule) GetSettings() *plugin.TValue[*mqlPwqualitySettin
 type mqlCryptoPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlCryptoPolicyInternal it will be used here
+	mqlCryptoPolicyInternal
 	Installed   plugin.TValue[bool]
 	File        plugin.TValue[*mqlFile]
 	Configured  plugin.TValue[string]
@@ -89534,7 +90194,12 @@ func createCryptoPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cryptoPolicy", res.__id)
@@ -89749,7 +90414,12 @@ func createDconf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("dconf", res.__id)
@@ -89870,7 +90540,7 @@ func (c *mqlDconfProfile) GetLocks() *plugin.TValue[[]any] {
 type mqlDconfDatabase struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDconfDatabaseInternal it will be used here
+	mqlDconfDatabaseInternal
 	Type            plugin.TValue[string]
 	Name            plugin.TValue[string]
 	Path            plugin.TValue[string]
@@ -89894,7 +90564,12 @@ func createDconfDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("dconf.database", res.__id)
@@ -89975,7 +90650,12 @@ func createLimits(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("limits", res.__id)
@@ -90057,7 +90737,12 @@ func createLimitsEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("limits.entry", res.__id)
@@ -90842,7 +91527,7 @@ func (c *mqlSudoersAlias) GetMembers() *plugin.TValue[[]any] {
 type mqlLsblk struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlLsblkInternal it will be used here
+	mqlLsblkInternal
 	List plugin.TValue[[]any]
 }
 
@@ -90857,7 +91542,12 @@ func createLsblk(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("lsblk", res.__id)
@@ -90898,7 +91588,7 @@ func (c *mqlLsblk) GetList() *plugin.TValue[[]any] {
 type mqlLsblkEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlLsblkEntryInternal it will be used here
+	mqlLsblkEntryInternal
 	Name        plugin.TValue[string]
 	Fstype      plugin.TValue[string]
 	Label       plugin.TValue[string]
@@ -90921,7 +91611,12 @@ func createLsblkEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("lsblk.entry", res.__id)
@@ -91023,7 +91718,12 @@ func createLuks(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("luks", res.__id)
@@ -91064,7 +91764,7 @@ func (c *mqlLuks) GetVolumes() *plugin.TValue[[]any] {
 type mqlLuksVolume struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlLuksVolumeInternal it will be used here
+	mqlLuksVolumeInternal
 	Name          plugin.TValue[string]
 	Uuid          plugin.TValue[string]
 	Version       plugin.TValue[int64]
@@ -91089,7 +91789,12 @@ func createLuksVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("luks.volume", res.__id)
@@ -91347,7 +92052,7 @@ func (c *mqlLuksKeyslot) GetKeyMaterialOffset() *plugin.TValue[int64] {
 type mqlApparmor struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlApparmorInternal it will be used here
+	mqlApparmorInternal
 	Installed plugin.TValue[bool]
 	Version   plugin.TValue[string]
 	Profiles  plugin.TValue[[]any]
@@ -91365,7 +92070,12 @@ func createApparmor(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("apparmor", res.__id)
@@ -91450,7 +92160,12 @@ func createApparmorProfile(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("apparmor.profile", res.__id)
@@ -91501,7 +92216,12 @@ func createApparmorProcess(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("apparmor.process", res.__id)
@@ -91542,7 +92262,7 @@ func (c *mqlApparmorProcess) GetStatus() *plugin.TValue[string] {
 type mqlSelinux struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSelinuxInternal it will be used here
+	mqlSelinuxInternal
 	Installed  plugin.TValue[bool]
 	Mode       plugin.TValue[string]
 	ConfigMode plugin.TValue[string]
@@ -91562,7 +92282,12 @@ func createSelinux(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("selinux", res.__id)
@@ -91659,7 +92384,12 @@ func createSelinuxBoolean(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("selinux.boolean", res.__id)
@@ -91709,7 +92439,12 @@ func createSelinuxModule(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("selinux.module", res.__id)
@@ -91766,7 +92501,12 @@ func createPolkit(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("polkit", res.__id)
@@ -92089,7 +92829,7 @@ func (c *mqlPolkitLocalAuthorityRule) GetFile() *plugin.TValue[*mqlFile] {
 type mqlAide struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAideInternal it will be used here
+	mqlAideInternal
 	Installed   plugin.TValue[bool]
 	Version     plugin.TValue[string]
 	ConfigFile  plugin.TValue[*mqlFile]
@@ -92112,7 +92852,12 @@ func createAide(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aide", res.__id)
@@ -92336,7 +93081,12 @@ func createModprobe(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("modprobe", res.__id)
@@ -92521,7 +93271,12 @@ func createModprobeInstall(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("modprobe.install", res.__id)
@@ -92580,7 +93335,12 @@ func createModprobeRemove(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("modprobe.remove", res.__id)
@@ -92638,7 +93398,12 @@ func createModprobeBlacklist(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("modprobe.blacklist", res.__id)
@@ -92694,7 +93459,12 @@ func createModprobeOption(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("modprobe.option", res.__id)
@@ -92759,7 +93529,12 @@ func createModprobeAlias(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("modprobe.alias", res.__id)
@@ -92819,7 +93594,12 @@ func createModprobeSoftdep(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("modprobe.softdep", res.__id)
@@ -92864,7 +93644,7 @@ func (c *mqlModprobeSoftdep) GetPost() *plugin.TValue[[]any] {
 type mqlMount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMountInternal it will be used here
+	mqlMountInternal
 	List plugin.TValue[[]any]
 }
 
@@ -92879,7 +93659,12 @@ func createMount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mount", res.__id)
@@ -92936,7 +93721,12 @@ func createNfs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("nfs", res.__id)
@@ -93164,7 +93954,12 @@ func createMountPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mount.point", res.__id)
@@ -93383,7 +94178,7 @@ func (c *mqlShadowEntry) GetReserved() *plugin.TValue[string] {
 type mqlMasterpasswd struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMasterpasswdInternal it will be used here
+	mqlMasterpasswdInternal
 	File         plugin.TValue[*mqlFile]
 	InvalidLines plugin.TValue[int64]
 	List         plugin.TValue[[]any]
@@ -93400,7 +94195,12 @@ func createMasterpasswd(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("masterpasswd", res.__id)
@@ -93638,7 +94438,7 @@ func (c *mqlMasterpasswdEntry) GetShell() *plugin.TValue[string] {
 type mqlLoginconf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlLoginconfInternal it will be used here
+	mqlLoginconfInternal
 	File plugin.TValue[*mqlFile]
 	List plugin.TValue[[]any]
 }
@@ -93654,7 +94454,12 @@ func createLoginconf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("loginconf", res.__id)
@@ -93716,7 +94521,7 @@ func (c *mqlLoginconf) GetList() *plugin.TValue[[]any] {
 type mqlLoginconfClass struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlLoginconfClassInternal it will be used here
+	mqlLoginconfClassInternal
 	Name         plugin.TValue[string]
 	Aliases      plugin.TValue[[]any]
 	Capabilities plugin.TValue[any]
@@ -94096,7 +94901,12 @@ func createApt(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("apt", res.__id)
@@ -94158,7 +94968,12 @@ func createAptConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("apt.config", res.__id)
@@ -94374,7 +95189,12 @@ func createPkg(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("pkg", res.__id)
@@ -94415,7 +95235,7 @@ func (c *mqlPkg) GetRepos() *plugin.TValue[[]any] {
 type mqlPkgRepo struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPkgRepoInternal it will be used here
+	mqlPkgRepoInternal
 	Name          plugin.TValue[string]
 	Url           plugin.TValue[string]
 	Enabled       plugin.TValue[bool]
@@ -94544,7 +95364,12 @@ func createRegistrykey(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("registrykey", res.__id)
@@ -94637,7 +95462,12 @@ func createRegistrykeyProperty(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("registrykey.property", res.__id)
@@ -94721,7 +95551,12 @@ func createContainerImage(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("container.image", res.__id)
@@ -94796,7 +95631,12 @@ func createContainerRepository(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("container.repository", res.__id)
@@ -95184,7 +96024,12 @@ func createPython(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("python", res.__id)
@@ -95245,7 +96090,7 @@ func (c *mqlPython) GetToplevel() *plugin.TValue[[]any] {
 type mqlPythonPackage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPythonPackageInternal it will be used here
+	mqlPythonPackageInternal
 	Id             plugin.TValue[string]
 	Name           plugin.TValue[string]
 	File           plugin.TValue[*mqlFile]
@@ -95272,7 +96117,12 @@ func createPythonPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("python.package", res.__id)
@@ -95361,7 +96211,7 @@ func (c *mqlPythonPackage) GetDependencies() *plugin.TValue[[]any] {
 type mqlNpmPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlNpmPackagesInternal it will be used here
+	mqlNpmPackagesInternal
 	Path               plugin.TValue[string]
 	Paths              plugin.TValue[[]any]
 	Root               plugin.TValue[*mqlNpmPackage]
@@ -95382,7 +96232,12 @@ func createNpmPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("npm.packages", res.__id)
@@ -95510,7 +96365,12 @@ func createNpmPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("npm.package", res.__id)
@@ -95601,7 +96461,7 @@ func (c *mqlNpmPackage) GetLicense() *plugin.TValue[string] {
 type mqlGoPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGoPackagesInternal it will be used here
+	mqlGoPackagesInternal
 	Path               plugin.TValue[string]
 	Root               plugin.TValue[*mqlGoPackage]
 	DirectDependencies plugin.TValue[[]any]
@@ -95620,7 +96480,12 @@ func createGoPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("go.packages", res.__id)
@@ -95733,7 +96598,12 @@ func createGoPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("go.package", res.__id)
@@ -95812,7 +96682,7 @@ func (c *mqlGoPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlJavaPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlJavaPackagesInternal it will be used here
+	mqlJavaPackagesInternal
 	Path               plugin.TValue[string]
 	Root               plugin.TValue[*mqlJavaPackage]
 	DirectDependencies plugin.TValue[[]any]
@@ -95831,7 +96701,12 @@ func createJavaPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("java.packages", res.__id)
@@ -95944,7 +96819,12 @@ func createJavaPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("java.package", res.__id)
@@ -96023,7 +96903,7 @@ func (c *mqlJavaPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlRustPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlRustPackagesInternal it will be used here
+	mqlRustPackagesInternal
 	Path               plugin.TValue[string]
 	Root               plugin.TValue[*mqlRustPackage]
 	DirectDependencies plugin.TValue[[]any]
@@ -96042,7 +96922,12 @@ func createRustPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("rust.packages", res.__id)
@@ -96155,7 +97040,12 @@ func createRustPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("rust.package", res.__id)
@@ -96234,7 +97124,7 @@ func (c *mqlRustPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlDotnetPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDotnetPackagesInternal it will be used here
+	mqlDotnetPackagesInternal
 	Path               plugin.TValue[string]
 	Root               plugin.TValue[*mqlDotnetPackage]
 	DirectDependencies plugin.TValue[[]any]
@@ -96253,7 +97143,12 @@ func createDotnetPackages(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("dotnet.packages", res.__id)
@@ -96366,7 +97261,12 @@ func createDotnetPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("dotnet.package", res.__id)
@@ -96445,7 +97345,7 @@ func (c *mqlDotnetPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlPhpPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPhpPackagesInternal it will be used here
+	mqlPhpPackagesInternal
 	Path               plugin.TValue[string]
 	Root               plugin.TValue[*mqlPhpPackage]
 	DirectDependencies plugin.TValue[[]any]
@@ -96464,7 +97364,12 @@ func createPhpPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("php.packages", res.__id)
@@ -96579,7 +97484,12 @@ func createPhpPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("php.package", res.__id)
@@ -96670,7 +97580,7 @@ func (c *mqlPhpPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlGithubactionsPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGithubactionsPackagesInternal it will be used here
+	mqlGithubactionsPackagesInternal
 	Path  plugin.TValue[string]
 	Files plugin.TValue[[]any]
 	List  plugin.TValue[[]any]
@@ -96687,7 +97597,12 @@ func createGithubactionsPackages(runtime *plugin.Runtime, args map[string]*llx.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("githubactions.packages", res.__id)
@@ -96767,7 +97682,12 @@ func createGithubactionsPackage(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("githubactions.package", res.__id)
@@ -97213,7 +98133,12 @@ func createHomebrewPackages(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("homebrew.packages", res.__id)
@@ -97284,7 +98209,12 @@ func createHomebrewPackage(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("homebrew.package", res.__id)
@@ -97533,7 +98463,7 @@ func (c *mqlChocolateyPackage) GetProjectUrl() *plugin.TValue[string] {
 type mqlJenkinsPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlJenkinsPackagesInternal it will be used here
+	mqlJenkinsPackagesInternal
 	Path  plugin.TValue[string]
 	Files plugin.TValue[[]any]
 	List  plugin.TValue[[]any]
@@ -97550,7 +98480,12 @@ func createJenkinsPackages(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("jenkins.packages", res.__id)
@@ -97842,7 +98777,7 @@ func (c *mqlWordpressPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlRubyPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlRubyPackagesInternal it will be used here
+	mqlRubyPackagesInternal
 	Path               plugin.TValue[string]
 	Root               plugin.TValue[*mqlRubyPackage]
 	DirectDependencies plugin.TValue[[]any]
@@ -97861,7 +98796,12 @@ func createRubyPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("ruby.packages", res.__id)
@@ -97974,7 +98914,12 @@ func createRubyPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("ruby.package", res.__id)
@@ -98053,7 +98998,7 @@ func (c *mqlRubyPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlDartPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDartPackagesInternal it will be used here
+	mqlDartPackagesInternal
 	Path               plugin.TValue[string]
 	Root               plugin.TValue[*mqlDartPackage]
 	DirectDependencies plugin.TValue[[]any]
@@ -98072,7 +99017,12 @@ func createDartPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("dart.packages", res.__id)
@@ -98185,7 +99135,12 @@ func createDartPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("dart.package", res.__id)
@@ -98264,7 +99219,7 @@ func (c *mqlDartPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlHaskellPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlHaskellPackagesInternal it will be used here
+	mqlHaskellPackagesInternal
 	Path  plugin.TValue[string]
 	Files plugin.TValue[[]any]
 	List  plugin.TValue[[]any]
@@ -98281,7 +99236,12 @@ func createHaskellPackages(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("haskell.packages", res.__id)
@@ -98361,7 +99321,12 @@ func createHaskellPackage(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("haskell.package", res.__id)
@@ -98424,7 +99389,7 @@ func (c *mqlHaskellPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlElixirPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlElixirPackagesInternal it will be used here
+	mqlElixirPackagesInternal
 	Path  plugin.TValue[string]
 	Files plugin.TValue[[]any]
 	List  plugin.TValue[[]any]
@@ -98441,7 +99406,12 @@ func createElixirPackages(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("elixir.packages", res.__id)
@@ -98521,7 +99491,12 @@ func createElixirPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("elixir.package", res.__id)
@@ -98584,7 +99559,7 @@ func (c *mqlElixirPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlErlangPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlErlangPackagesInternal it will be used here
+	mqlErlangPackagesInternal
 	Path  plugin.TValue[string]
 	Files plugin.TValue[[]any]
 	List  plugin.TValue[[]any]
@@ -98601,7 +99576,12 @@ func createErlangPackages(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("erlang.packages", res.__id)
@@ -98681,7 +99661,12 @@ func createErlangPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("erlang.package", res.__id)
@@ -98744,7 +99729,7 @@ func (c *mqlErlangPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlPrologPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPrologPackagesInternal it will be used here
+	mqlPrologPackagesInternal
 	Path  plugin.TValue[string]
 	Files plugin.TValue[[]any]
 	List  plugin.TValue[[]any]
@@ -98761,7 +99746,12 @@ func createPrologPackages(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("prolog.packages", res.__id)
@@ -98841,7 +99831,12 @@ func createPrologPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("prolog.package", res.__id)
@@ -98904,7 +99899,7 @@ func (c *mqlPrologPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlCondaPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlCondaPackagesInternal it will be used here
+	mqlCondaPackagesInternal
 	Path  plugin.TValue[string]
 	Files plugin.TValue[[]any]
 	List  plugin.TValue[[]any]
@@ -98921,7 +99916,12 @@ func createCondaPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("conda.packages", res.__id)
@@ -99001,7 +100001,12 @@ func createCondaPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("conda.package", res.__id)
@@ -99224,7 +100229,7 @@ func (c *mqlVcpkgPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlOpamPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOpamPackagesInternal it will be used here
+	mqlOpamPackagesInternal
 	Path  plugin.TValue[string]
 	Files plugin.TValue[[]any]
 	List  plugin.TValue[[]any]
@@ -99241,7 +100246,12 @@ func createOpamPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("opam.packages", res.__id)
@@ -99321,7 +100331,12 @@ func createOpamPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("opam.package", res.__id)
@@ -99384,7 +100399,7 @@ func (c *mqlOpamPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlJuliaPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlJuliaPackagesInternal it will be used here
+	mqlJuliaPackagesInternal
 	Path  plugin.TValue[string]
 	Files plugin.TValue[[]any]
 	List  plugin.TValue[[]any]
@@ -99401,7 +100416,12 @@ func createJuliaPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("julia.packages", res.__id)
@@ -99481,7 +100501,12 @@ func createJuliaPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("julia.package", res.__id)
@@ -99544,7 +100569,7 @@ func (c *mqlJuliaPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlRPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlRPackagesInternal it will be used here
+	mqlRPackagesInternal
 	Path  plugin.TValue[string]
 	Files plugin.TValue[[]any]
 	List  plugin.TValue[[]any]
@@ -99561,7 +100586,12 @@ func createRPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("r.packages", res.__id)
@@ -99641,7 +100671,12 @@ func createRPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("r.package", res.__id)
@@ -99704,7 +100739,7 @@ func (c *mqlRPackage) GetFiles() *plugin.TValue[[]any] {
 type mqlLuaPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlLuaPackagesInternal it will be used here
+	mqlLuaPackagesInternal
 	Path  plugin.TValue[string]
 	Files plugin.TValue[[]any]
 	List  plugin.TValue[[]any]
@@ -99721,7 +100756,12 @@ func createLuaPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("lua.packages", res.__id)
@@ -99801,7 +100841,12 @@ func createLuaPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("lua.package", res.__id)
@@ -100141,7 +101186,7 @@ func (c *mqlMacosAlf) GetApplications() *plugin.TValue[[]any] {
 type mqlMacosFirewall struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMacosFirewallInternal it will be used here
+	mqlMacosFirewallInternal
 	Enabled                 plugin.TValue[bool]
 	BlockAllIncoming        plugin.TValue[bool]
 	StealthEnabled          plugin.TValue[bool]
@@ -100291,7 +101336,12 @@ func createMacosFirewallApp(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("macos.firewall.app", res.__id)
@@ -100328,7 +101378,7 @@ func (c *mqlMacosFirewallApp) GetState() *plugin.TValue[int64] {
 type mqlMacosFilevault struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMacosFilevaultInternal it will be used here
+	mqlMacosFilevaultInternal
 	Enabled                     plugin.TValue[bool]
 	Status                      plugin.TValue[string]
 	HasPersonalRecoveryKey      plugin.TValue[bool]
@@ -100402,7 +101452,7 @@ func (c *mqlMacosFilevault) GetUsers() *plugin.TValue[[]any] {
 type mqlMacosGatekeeper struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMacosGatekeeperInternal it will be used here
+	mqlMacosGatekeeperInternal
 	Enabled plugin.TValue[bool]
 	Status  plugin.TValue[string]
 }
@@ -100455,7 +101505,7 @@ func (c *mqlMacosGatekeeper) GetStatus() *plugin.TValue[string] {
 type mqlMacosSip struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMacosSipInternal it will be used here
+	mqlMacosSipInternal
 	Enabled plugin.TValue[bool]
 	Status  plugin.TValue[string]
 }
@@ -100508,7 +101558,7 @@ func (c *mqlMacosSip) GetStatus() *plugin.TValue[string] {
 type mqlMacosXprotect struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMacosXprotectInternal it will be used here
+	mqlMacosXprotectInternal
 	Version     plugin.TValue[string]
 	Modified    plugin.TValue[*time.Time]
 	MrtVersion  plugin.TValue[string]
@@ -100526,7 +101576,12 @@ func createMacosXprotect(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("macos.xprotect", res.__id)
@@ -100575,7 +101630,7 @@ func (c *mqlMacosXprotect) GetMrtModified() *plugin.TValue[*time.Time] {
 type mqlMacosSharing struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMacosSharingInternal it will be used here
+	mqlMacosSharingInternal
 	ScreenSharing    plugin.TValue[bool]
 	RemoteManagement plugin.TValue[bool]
 	FileSharing      plugin.TValue[bool]
@@ -100599,7 +101654,12 @@ func createMacosSharing(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("macos.sharing", res.__id)
@@ -100684,7 +101744,7 @@ func (c *mqlMacosSharing) GetDvdSharing() *plugin.TValue[bool] {
 type mqlMacosMdm struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMacosMdmInternal it will be used here
+	mqlMacosMdmInternal
 	Enrolled     plugin.TValue[bool]
 	Dep          plugin.TValue[bool]
 	UserApproved plugin.TValue[bool]
@@ -100702,7 +101762,12 @@ func createMacosMdm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("macos.mdm", res.__id)
@@ -100766,7 +101831,12 @@ func createMacosProfiles(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("macos.profiles", res.__id)
@@ -100830,7 +101900,12 @@ func createMacosProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("macos.profile", res.__id)
@@ -100910,7 +101985,12 @@ func createMacosProfilePayload(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("macos.profile.payload", res.__id)
@@ -100955,7 +102035,7 @@ func (c *mqlMacosProfilePayload) GetContent() *plugin.TValue[any] {
 type mqlMacosPreferences struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMacosPreferencesInternal it will be used here
+	mqlMacosPreferencesInternal
 	Domain  plugin.TValue[string]
 	Managed plugin.TValue[any]
 	System  plugin.TValue[any]
@@ -100975,7 +102055,12 @@ func createMacosPreferences(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("macos.preferences", res.__id)
@@ -101044,7 +102129,7 @@ func (c *mqlMacosPreferences) GetUsers() *plugin.TValue[[]any] {
 type mqlMacosPreferencesUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMacosPreferencesUserInternal it will be used here
+	mqlMacosPreferencesUserInternal
 	User        plugin.TValue[*mqlUser]
 	Domain      plugin.TValue[string]
 	Managed     plugin.TValue[any]
@@ -101140,7 +102225,7 @@ func (c *mqlMacosPreferencesUser) GetSources() *plugin.TValue[map[string]any] {
 type mqlMacosSoftwareupdate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMacosSoftwareupdateInternal it will be used here
+	mqlMacosSoftwareupdateInternal
 	AutoCheckEnabled         plugin.TValue[bool]
 	AutoDownloadEnabled      plugin.TValue[bool]
 	AutoInstallMacOSUpdates  plugin.TValue[bool]
@@ -101161,7 +102246,12 @@ func createMacosSoftwareupdate(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("macos.softwareupdate", res.__id)
@@ -101258,7 +102348,12 @@ func createMacosSoftwareupdateEntry(runtime *plugin.Runtime, args map[string]*ll
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("macos.softwareupdate.entry", res.__id)
@@ -101566,7 +102661,12 @@ func createOpenBSMAudit(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("openBSMAudit", res.__id)
@@ -103414,7 +104514,12 @@ func createLaunchd(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("launchd", res.__id)
@@ -103493,7 +104598,12 @@ func createLaunchdJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("launchd.job", res.__id)
@@ -114026,7 +115136,7 @@ func (c *mqlWindowsDefenderThreatDetection) GetResources() *plugin.TValue[[]any]
 type mqlEdr struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlEdrInternal it will be used here
+	mqlEdrInternal
 	Products  plugin.TValue[[]any]
 	Installed plugin.TValue[bool]
 	Healthy   plugin.TValue[bool]
@@ -114043,7 +115153,12 @@ func createEdr(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("edr", res.__id)
@@ -114096,7 +115211,7 @@ func (c *mqlEdr) GetHealthy() *plugin.TValue[bool] {
 type mqlEdrProduct struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlEdrProductInternal it will be used here
+	mqlEdrProductInternal
 	Id                 plugin.TValue[string]
 	Name               plugin.TValue[string]
 	Vendor             plugin.TValue[string]
@@ -114130,7 +115245,12 @@ func createEdrProduct(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("edr.product", res.__id)
@@ -114283,7 +115403,7 @@ func (c *mqlEdrProduct) GetSystemExtensions() *plugin.TValue[[]any] {
 type mqlMdm struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMdmInternal it will be used here
+	mqlMdmInternal
 	Enrolled  plugin.TValue[bool]
 	Vendor    plugin.TValue[string]
 	ServerUrl plugin.TValue[string]
@@ -114303,7 +115423,12 @@ func createMdm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mdm", res.__id)
@@ -114599,7 +115724,7 @@ func (c *mqlWingetSource) GetExplicit() *plugin.TValue[bool] {
 type mqlIdp struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlIdpInternal it will be used here
+	mqlIdpInternal
 	Joined          plugin.TValue[bool]
 	Entra           plugin.TValue[*mqlIdpEntra]
 	ActiveDirectory plugin.TValue[*mqlIdpActiveDirectory]
@@ -114616,7 +115741,12 @@ func createIdp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("idp", res.__id)
@@ -114845,7 +115975,7 @@ func (c *mqlCloud) GetInstance() *plugin.TValue[*mqlCloudInstance] {
 type mqlCloudInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlCloudInstanceInternal it will be used here
+	mqlCloudInstanceInternal
 	PublicHostname  plugin.TValue[string]
 	PublicIpv4      plugin.TValue[[]any]
 	PrivateHostname plugin.TValue[string]
@@ -114864,7 +115994,12 @@ func createCloudInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cloudInstance", res.__id)
@@ -115438,7 +116573,7 @@ func (c *mqlNetworkRoute) GetDevice() *plugin.TValue[string] {
 type mqlChrome struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlChromeInternal it will be used here
+	mqlChromeInternal
 	Extensions              plugin.TValue[[]any]
 	ExtensionContentScripts plugin.TValue[[]any]
 }
@@ -115454,7 +116589,12 @@ func createChrome(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("chrome", res.__id)
@@ -115744,7 +116884,7 @@ func (c *mqlChromeExtensionContentScript) GetPath() *plugin.TValue[string] {
 type mqlFirefox struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFirefoxInternal it will be used here
+	mqlFirefoxInternal
 	Addons           plugin.TValue[[]any]
 	UnreadableAddons plugin.TValue[int64]
 }
@@ -115760,7 +116900,12 @@ func createFirefox(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("firefox", res.__id)
@@ -115951,7 +117096,7 @@ func (c *mqlFirefoxAddon) GetUid() *plugin.TValue[int64] {
 type mqlFirefoxPolicies struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFirefoxPoliciesInternal it will be used here
+	mqlFirefoxPoliciesInternal
 	Configured plugin.TValue[bool]
 	Source     plugin.TValue[string]
 	File       plugin.TValue[*mqlFile]
@@ -115970,7 +117115,12 @@ func createFirefoxPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("firefox.policies", res.__id)
@@ -116062,7 +117212,12 @@ func createFirefoxPoliciesInput(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("firefox.policies.input", res.__id)
@@ -116270,7 +117425,12 @@ func createCrontab(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("crontab", res.__id)
@@ -116350,7 +117510,12 @@ func createCrontabEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("crontab.entry", res.__id)
@@ -116427,7 +117592,12 @@ func createJetbrains(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("jetbrains", res.__id)
@@ -116502,7 +117672,12 @@ func createJetbrainsPlugin(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("jetbrains.plugin", res.__id)
@@ -116759,7 +117934,12 @@ func createLogrotate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("logrotate", res.__id)
@@ -116850,7 +118030,12 @@ func createLogrotateEntry(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("logrotate.entry", res.__id)
@@ -116908,7 +118093,12 @@ func createLvm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("lvm", res.__id)
@@ -117002,7 +118192,12 @@ func createLvmPhysicalVolume(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("lvm.physicalVolume", res.__id)
@@ -117077,7 +118272,12 @@ func createLvmVolumeGroup(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("lvm.volumeGroup", res.__id)
@@ -117134,7 +118334,7 @@ func (c *mqlLvmVolumeGroup) GetSnapshotCount() *plugin.TValue[int64] {
 type mqlLvmLogicalVolume struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlLvmLogicalVolumeInternal it will be used here
+	mqlLvmLogicalVolumeInternal
 	Name            plugin.TValue[string]
 	Path            plugin.TValue[string]
 	Uuid            plugin.TValue[string]
@@ -117157,7 +118357,12 @@ func createLvmLogicalVolume(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("lvm.logicalVolume", res.__id)
@@ -117235,7 +118440,12 @@ func createMdadm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mdadm", res.__id)
@@ -117276,7 +118486,7 @@ func (c *mqlMdadm) GetArrays() *plugin.TValue[[]any] {
 type mqlMdadmArray struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMdadmArrayInternal it will be used here
+	mqlMdadmArrayInternal
 	Name           plugin.TValue[string]
 	Level          plugin.TValue[string]
 	State          plugin.TValue[string]
@@ -117301,7 +118511,12 @@ func createMdadmArray(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mdadm.array", res.__id)
@@ -117382,7 +118597,7 @@ func (c *mqlMdadmArray) GetDevices() *plugin.TValue[[]any] {
 type mqlMdadmDevice struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMdadmDeviceInternal it will be used here
+	mqlMdadmDeviceInternal
 	Name  plugin.TValue[string]
 	Role  plugin.TValue[int64]
 	State plugin.TValue[string]
@@ -117399,7 +118614,12 @@ func createMdadmDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mdadm.device", res.__id)
@@ -118389,7 +119609,12 @@ func createAi(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Res
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("ai", res.__id)
@@ -118459,7 +119684,12 @@ func createAiModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("ai.model", res.__id)
@@ -118544,7 +119774,7 @@ func (c *mqlAiModel) GetDescription() *plugin.TValue[string] {
 type mqlOllamaConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOllamaConfigInternal it will be used here
+	mqlOllamaConfigInternal
 	Installed              plugin.TValue[bool]
 	BinaryPath             plugin.TValue[string]
 	Service                plugin.TValue[*mqlService]
@@ -118599,7 +119829,12 @@ func createOllamaConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("ollama.config", res.__id)
@@ -118930,7 +120165,12 @@ func createOllamaConfigIntegration(runtime *plugin.Runtime, args map[string]*llx
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("ollama.config.integration", res.__id)
@@ -118991,7 +120231,7 @@ func (c *mqlOllamaConfigIntegration) GetOnboarded() *plugin.TValue[bool] {
 type mqlClaudeCode struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlClaudeCodeInternal it will be used here
+	mqlClaudeCodeInternal
 	ConfigPath     plugin.TValue[string]
 	Package        plugin.TValue[*mqlPackage]
 	Runtime        plugin.TValue[*mqlExtensionRuntime]
@@ -119023,7 +120263,12 @@ func createClaudeCode(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("claude.code", res.__id)
@@ -119256,7 +120501,12 @@ func createClaudeCodePlugin(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("claude.code.plugin", res.__id)
@@ -119335,7 +120585,12 @@ func createClaudeCodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("claude.code.skill", res.__id)
@@ -119396,7 +120651,7 @@ func (c *mqlClaudeCodeSkill) GetPurl() *plugin.TValue[string] {
 type mqlClaudeCodeProject struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlClaudeCodeProjectInternal it will be used here
+	mqlClaudeCodeProjectInternal
 	Path      plugin.TValue[string]
 	HasMemory plugin.TValue[bool]
 	Models    plugin.TValue[[]any]
@@ -119413,7 +120668,12 @@ func createClaudeCodeProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("claude.code.project", res.__id)
@@ -119556,7 +120816,12 @@ func createClaudeCodeRepo(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("claude.code.repo", res.__id)
@@ -119629,7 +120894,12 @@ func createClaudeCodeMcpServer(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("claude.code.mcpServer", res.__id)
@@ -119714,7 +120984,12 @@ func createClaudeDesktop(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("claude.desktop", res.__id)
@@ -119812,7 +121087,12 @@ func createClaudeDesktopMcpServer(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("claude.desktop.mcpServer", res.__id)
@@ -119867,7 +121147,7 @@ func (c *mqlClaudeDesktopMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue]
 type mqlOpenaiCodex struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOpenaiCodexInternal it will be used here
+	mqlOpenaiCodexInternal
 	ConfigPath    plugin.TValue[string]
 	Package       plugin.TValue[*mqlPackage]
 	Runtime       plugin.TValue[*mqlExtensionRuntime]
@@ -119894,7 +121174,12 @@ func createOpenaiCodex(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("openai.codex", res.__id)
@@ -120088,7 +121373,12 @@ func createOpenaiCodexPlugin(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("openai.codex.plugin", res.__id)
@@ -120170,7 +121460,12 @@ func createOpenaiCodexSkill(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("openai.codex.skill", res.__id)
@@ -120250,7 +121545,12 @@ func createOpenaiCodexMcpServer(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("openai.codex.mcpServer", res.__id)
@@ -120330,7 +121630,12 @@ func createOpenaiCodexConnector(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("openai.codex.connector", res.__id)
@@ -120387,7 +121692,12 @@ func createOpenaiCodexRepo(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("openai.codex.repo", res.__id)
@@ -120457,7 +121767,12 @@ func createCursor(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cursor", res.__id)
@@ -120602,7 +121917,12 @@ func createCursorRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cursor.repo", res.__id)
@@ -120672,7 +121992,12 @@ func createCursorMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cursor.mcpServer", res.__id)
@@ -120744,7 +122069,12 @@ func createCursorRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cursor.rule", res.__id)
@@ -120803,7 +122133,12 @@ func createCursorSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cursor.skill", res.__id)
@@ -120884,7 +122219,12 @@ func createGithubCopilot(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("github.copilot", res.__id)
@@ -121009,7 +122349,12 @@ func createGithubCopilotAccount(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("github.copilot.account", res.__id)
@@ -121063,7 +122408,12 @@ func createGithubCopilotMcpServer(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("github.copilot.mcpServer", res.__id)
@@ -121140,7 +122490,12 @@ func createGithubCopilotSkill(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("github.copilot.skill", res.__id)
@@ -121223,7 +122578,12 @@ func createGoose(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("goose", res.__id)
@@ -121354,7 +122714,12 @@ func createGooseExtension(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("goose.extension", res.__id)
@@ -121425,7 +122790,12 @@ func createGooseSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("goose.skill", res.__id)
@@ -121508,7 +122878,12 @@ func createGemini(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gemini", res.__id)
@@ -121640,7 +123015,12 @@ func createGeminiMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gemini.mcpServer", res.__id)
@@ -121717,7 +123097,12 @@ func createGeminiSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gemini.skill", res.__id)
@@ -122416,7 +123801,12 @@ func createRoo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("roo", res.__id)
@@ -122515,7 +123905,12 @@ func createRooSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("roo.skill", res.__id)
@@ -122594,7 +123989,12 @@ func createCline(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cline", res.__id)
@@ -122693,7 +124093,12 @@ func createClineSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cline.skill", res.__id)
@@ -122772,7 +124177,12 @@ func createKiro(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("kiro", res.__id)
@@ -122871,7 +124281,12 @@ func createKiroSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("kiro.skill", res.__id)
@@ -122950,7 +124365,12 @@ func createContinuedev(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("continuedev", res.__id)
@@ -123049,7 +124469,12 @@ func createContinuedevSkill(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("continuedev.skill", res.__id)
@@ -123128,7 +124553,12 @@ func createTrae(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("trae", res.__id)
@@ -123227,7 +124657,12 @@ func createTraeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("trae.skill", res.__id)
@@ -123306,7 +124741,12 @@ func createOpencode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("opencode", res.__id)
@@ -123405,7 +124845,12 @@ func createOpencodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("opencode.skill", res.__id)
@@ -123484,7 +124929,12 @@ func createPi(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Res
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("pi", res.__id)
@@ -123583,7 +125033,12 @@ func createPiSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("pi.skill", res.__id)
@@ -123662,7 +125117,12 @@ func createMistralVibe(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mistral.vibe", res.__id)
@@ -123761,7 +125221,12 @@ func createMistralVibeSkill(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mistral.vibe.skill", res.__id)
@@ -123840,7 +125305,12 @@ func createAntigravity(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("antigravity", res.__id)
@@ -123939,7 +125409,12 @@ func createAntigravitySkill(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("antigravity.skill", res.__id)
@@ -124018,7 +125493,12 @@ func createIbmBob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("ibm.bob", res.__id)
@@ -124117,7 +125597,12 @@ func createIbmBobSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("ibm.bob.skill", res.__id)
@@ -124178,7 +125663,7 @@ func (c *mqlIbmBobSkill) GetPurl() *plugin.TValue[string] {
 type mqlAider struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAiderInternal it will be used here
+	mqlAiderInternal
 	ConfigPath plugin.TValue[string]
 	Package    plugin.TValue[*mqlPackage]
 	Runtime    plugin.TValue[*mqlExtensionRuntime]
@@ -124197,7 +125682,12 @@ func createAider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aider", res.__id)
@@ -124288,7 +125778,12 @@ func createOpenclaw(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("openclaw", res.__id)
@@ -124387,7 +125882,12 @@ func createOpenclawSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("openclaw.skill", res.__id)
@@ -124466,7 +125966,12 @@ func createSnowflakeCortex(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("snowflake.cortex", res.__id)
@@ -124565,7 +126070,12 @@ func createSnowflakeCortexSkill(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("snowflake.cortex.skill", res.__id)
@@ -124644,7 +126154,12 @@ func createJunie(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("junie", res.__id)
@@ -124743,7 +126258,12 @@ func createJunieSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("junie.skill", res.__id)
@@ -124822,7 +126342,12 @@ func createAugment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("augment", res.__id)
@@ -124921,7 +126446,12 @@ func createAugmentSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("augment.skill", res.__id)
@@ -125000,7 +126530,12 @@ func createWarp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("warp", res.__id)
@@ -125099,7 +126634,12 @@ func createWarpSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("warp.skill", res.__id)
@@ -125178,7 +126718,12 @@ func createKilocode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("kilocode", res.__id)
@@ -125277,7 +126822,12 @@ func createKilocodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("kilocode.skill", res.__id)
@@ -125356,7 +126906,12 @@ func createOpenhands(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("openhands", res.__id)
@@ -125455,7 +127010,12 @@ func createOpenhandsSkill(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("openhands.skill", res.__id)
@@ -125534,7 +127094,12 @@ func createQwenCode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("qwen.code", res.__id)
@@ -125633,7 +127198,12 @@ func createQwenCodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("qwen.code.skill", res.__id)
@@ -125710,7 +127280,12 @@ func createAgentskills(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("agentskills", res.__id)
@@ -125788,7 +127363,12 @@ func createAgentskillsSkill(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("agentskills.skill", res.__id)
@@ -125919,7 +127499,12 @@ func createAgentinstructions(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("agentinstructions", res.__id)
@@ -125984,7 +127569,12 @@ func createAgentinstructionsFile(runtime *plugin.Runtime, args map[string]*llx.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("agentinstructions.file", res.__id)
@@ -126360,7 +127950,7 @@ func (c *mqlSriovVirtualFunction) GetMaxTxRate() *plugin.TValue[int64] {
 type mqlOvs struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOvsInternal it will be used here
+	mqlOvsInternal
 	Version    plugin.TValue[string]
 	Bridges    plugin.TValue[[]any]
 	Ports      plugin.TValue[[]any]
@@ -126378,7 +127968,12 @@ func createOvs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("ovs", res.__id)
@@ -126457,7 +128052,7 @@ func (c *mqlOvs) GetInterfaces() *plugin.TValue[[]any] {
 type mqlOvsBridge struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOvsBridgeInternal it will be used here
+	mqlOvsBridgeInternal
 	Name         plugin.TValue[string]
 	Uuid         plugin.TValue[string]
 	DatapathType plugin.TValue[string]
@@ -126558,7 +128153,7 @@ func (c *mqlOvsBridge) GetPorts() *plugin.TValue[[]any] {
 type mqlOvsPort struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOvsPortInternal it will be used here
+	mqlOvsPortInternal
 	Name        plugin.TValue[string]
 	Uuid        plugin.TValue[string]
 	BridgeName  plugin.TValue[string]
@@ -126676,7 +128271,7 @@ func (c *mqlOvsPort) GetInterfaces() *plugin.TValue[[]any] {
 type mqlOvsInterface struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOvsInterfaceInternal it will be used here
+	mqlOvsInterfaceInternal
 	Name        plugin.TValue[string]
 	Uuid        plugin.TValue[string]
 	PortName    plugin.TValue[string]
@@ -126797,7 +128392,7 @@ func (c *mqlOvsInterface) GetOptions() *plugin.TValue[map[string]any] {
 type mqlJavaKeystore struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlJavaKeystoreInternal it will be used here
+	mqlJavaKeystoreInternal
 	Path                   plugin.TValue[string]
 	File                   plugin.TValue[*mqlFile]
 	Format                 plugin.TValue[string]
@@ -126817,7 +128412,12 @@ func createJavaKeystore(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("java.keystore", res.__id)
@@ -126906,7 +128506,7 @@ func (c *mqlJavaKeystore) GetUnreadableCertificates() *plugin.TValue[int64] {
 type mqlJavaKeystoreEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlJavaKeystoreEntryInternal it will be used here
+	mqlJavaKeystoreEntryInternal
 	Alias                plugin.TValue[string]
 	IsTrustedCertificate plugin.TValue[bool]
 	CreatedAt            plugin.TValue[*time.Time]
@@ -126924,7 +128524,12 @@ func createJavaKeystoreEntry(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("java.keystore.entry", res.__id)
@@ -126993,7 +128598,12 @@ func createJavaTruststores(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("java.truststores", res.__id)
@@ -127060,7 +128670,12 @@ func createAixInittab(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aix.inittab", res.__id)
@@ -127181,7 +128796,12 @@ func createAixDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aix.device", res.__id)
@@ -127216,7 +128836,7 @@ func (c *mqlAixDevice) GetAttributes() *plugin.TValue[map[string]any] {
 type mqlAixSecurityUsers struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAixSecurityUsersInternal it will be used here
+	mqlAixSecurityUsersInternal
 	Defaults plugin.TValue[map[string]any]
 	List     plugin.TValue[[]any]
 }
@@ -127232,7 +128852,12 @@ func createAixSecurityUsers(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aix.security.users", res.__id)
@@ -127323,7 +128948,12 @@ func createAixSecurityUser(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aix.security.user", res.__id)
@@ -127480,7 +129110,7 @@ func (c *mqlAixSecurityUser) GetPwdwarntime() *plugin.TValue[int64] {
 type mqlAixSecurityLoginCfg struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAixSecurityLoginCfgInternal it will be used here
+	mqlAixSecurityLoginCfgInternal
 	File          plugin.TValue[*mqlFile]
 	Stanzas       plugin.TValue[map[string]any]
 	Shells        plugin.TValue[[]any]
@@ -127507,7 +129137,12 @@ func createAixSecurityLoginCfg(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aix.security.loginCfg", res.__id)
@@ -127620,7 +129255,7 @@ func (c *mqlAixSecurityLoginCfg) GetSakEnabled() *plugin.TValue[bool] {
 type mqlAixSecurityLimits struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAixSecurityLimitsInternal it will be used here
+	mqlAixSecurityLimitsInternal
 	Defaults plugin.TValue[map[string]any]
 	List     plugin.TValue[[]any]
 }
@@ -127636,7 +129271,12 @@ func createAixSecurityLimits(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aix.security.limits", res.__id)
@@ -127714,7 +129354,12 @@ func createAixSecurityLimit(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aix.security.limit", res.__id)
@@ -127834,7 +129479,12 @@ func createAixSecurityPasswd(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aix.security.passwd", res.__id)
@@ -127956,7 +129606,7 @@ func (c *mqlAixSecurityPasswdEntry) GetFlags() *plugin.TValue[[]any] {
 type mqlAixTrustedExecution struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAixTrustedExecutionInternal it will be used here
+	mqlAixTrustedExecutionInternal
 	Enabled                     plugin.TValue[bool]
 	SignatureVerification       plugin.TValue[bool]
 	CheckExecutables            plugin.TValue[bool]
@@ -127983,7 +129633,12 @@ func createAixTrustedExecution(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aix.trustedExecution", res.__id)
@@ -128101,7 +129756,12 @@ func createAixFilesystems(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aix.filesystems", res.__id)
@@ -128167,7 +129827,12 @@ func createAixFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aix.filesystem", res.__id)
@@ -128253,7 +129918,12 @@ func createAixIpsec(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aix.ipsec", res.__id)
@@ -128425,7 +130095,7 @@ func (c *mqlAixIpsecFilter) GetDescription() *plugin.TValue[string] {
 type mqlAixAudit struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAixAuditInternal it will be used here
+	mqlAixAuditInternal
 	Running    plugin.TValue[bool]
 	BinMode    plugin.TValue[bool]
 	StreamMode plugin.TValue[bool]
@@ -128444,7 +130114,12 @@ func createAixAudit(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aix.audit", res.__id)
