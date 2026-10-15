@@ -120,7 +120,7 @@ func (f *File) Readdir(count int) (res []os.FileInfo, err error) {
 	// entry: over docker exec a walk of / took minutes.
 	var batch map[string]os.FileInfo
 	if ds, ok := f.catfs.statter.(dirStatter); ok {
-		relative := make([]string, 0, len(names))
+		var relative []string
 		for _, name := range names {
 			if !filepath.IsAbs(name) {
 				relative = append(relative, name)
