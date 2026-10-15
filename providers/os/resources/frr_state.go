@@ -490,6 +490,19 @@ func frrRouteTableID(vrf, afi string, limit int64) string {
 	return "frr.routeTable/" + vrfKey(vrf) + "/" + afi + "/limit/" + strconv.FormatInt(limit, 10)
 }
 
+// validateFrrLimit keeps the resource identity and the parser bound equal on
+// every supported architecture. The parser APIs take int, while MQL integer
+// arguments are int64; reject values that would wrap on 32-bit builds.
+func validateFrrLimit(kind string, limit int64) error {
+	if limit <= 0 {
+		return fmt.Errorf("'limit' in %s initialization must be greater than zero", kind)
+	}
+	if uint64(limit) > uint64(^uint(0)>>1) {
+		return fmt.Errorf("'limit' in %s initialization is too large for this platform", kind)
+	}
+	return nil
+}
+
 // initFrrRouteTable fills the defaults of the query and validates the VRF
 // name, which becomes part of the vtysh command.
 func initFrrRouteTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -525,8 +538,8 @@ func initFrrRouteTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		if !ok {
 			return nil, nil, errors.New("wrong type for 'limit' in frr.routeTable initialization, it must be an int")
 		}
-		if v <= 0 {
-			return nil, nil, errors.New("'limit' in frr.routeTable initialization must be greater than zero")
+		if err := validateFrrLimit("frr.routeTable", v); err != nil {
+			return nil, nil, err
 		}
 		limit = v
 	}
@@ -565,6 +578,9 @@ func (s *mqlFrrRouteTable) load() (*frr.RouteTable, error) {
 	limit := s.GetLimit()
 	if limit.Error != nil {
 		return nil, limit.Error
+	}
+	if err := validateFrrLimit("frr.routeTable", limit.Data); err != nil {
+		return nil, err
 	}
 
 	command := "show ip route"

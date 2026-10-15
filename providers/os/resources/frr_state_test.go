@@ -6,6 +6,7 @@ package resources
 import (
 	"bytes"
 	"errors"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -133,4 +134,13 @@ func TestFrrRouteTableID(t *testing.T) {
 	assert.Equal(t, "default", vrfKey(""))
 	assert.Equal(t, "cluster", vrfKey("cluster"))
 	assert.NotEqual(t, frrRouteTableID("cluster", "ipv4", 10), frrRouteTableID("cluster", "ipv4", 100))
+}
+
+func TestValidateFrrLimitMatchesPlatformInt(t *testing.T) {
+	maxInt := int64(^uint(0) >> 1)
+	assert.NoError(t, validateFrrLimit("frr.routeTable", maxInt))
+	assert.Error(t, validateFrrLimit("frr.routeTable", 0))
+	if strconv.IntSize == 32 {
+		assert.Error(t, validateFrrLimit("frr.routeTable", maxInt+1))
+	}
 }

@@ -121,8 +121,8 @@ func initFrrEvpnRouteTable(runtime *plugin.Runtime, args map[string]*llx.RawData
 		if !ok {
 			return nil, nil, errors.New("wrong type for 'limit' in frr.evpn.routeTable initialization, it must be an int")
 		}
-		if v <= 0 {
-			return nil, nil, errors.New("'limit' in frr.evpn.routeTable initialization must be greater than zero")
+		if err := validateFrrLimit("frr.evpn.routeTable", v); err != nil {
+			return nil, nil, err
 		}
 		limit = v
 	}
@@ -166,6 +166,9 @@ func (s *mqlFrrEvpnRouteTable) load() (*frr.EVPNRouteSet, error) {
 	limit := s.GetLimit()
 	if limit.Error != nil {
 		return nil, limit.Error
+	}
+	if err := validateFrrLimit("frr.evpn.routeTable", limit.Data); err != nil {
+		return nil, err
 	}
 
 	command := "show bgp l2vpn evpn json"
@@ -311,8 +314,8 @@ func initFrrBgpPeerRoutes(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		if !ok {
 			return nil, nil, errors.New("wrong type for 'limit' in frr.bgp.peerRoutes initialization, it must be an int")
 		}
-		if v <= 0 {
-			return nil, nil, errors.New("'limit' in frr.bgp.peerRoutes initialization must be greater than zero")
+		if err := validateFrrLimit("frr.bgp.peerRoutes", v); err != nil {
+			return nil, nil, err
 		}
 		limit = v
 	}
@@ -362,6 +365,9 @@ func (s *mqlFrrBgpPeerRoutes) load() (*frr.RouteSet, bool, error) {
 	limit := s.GetLimit()
 	if limit.Error != nil {
 		return nil, false, limit.Error
+	}
+	if err := validateFrrLimit("frr.bgp.peerRoutes", limit.Data); err != nil {
+		return nil, false, err
 	}
 
 	// The values are validated in init, and again here because a resource
