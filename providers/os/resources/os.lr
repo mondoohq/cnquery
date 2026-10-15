@@ -4565,6 +4565,14 @@ frr {
   evpnRoutes() frr.evpn.routeTable
   // Policy routing rules of the kernel at scan time
   routingRules() []frr.routingRule
+  // OSPF and OSPFv3 adjacencies at scan time
+  ospfNeighbors() []frr.ospf.neighbor
+  // IS-IS adjacencies at scan time
+  isisNeighbors() []frr.isis.neighbor
+  // BFD sessions at scan time
+  bfdSessions() []frr.bfd.session
+  // Interfaces the routing daemon knows at scan time
+  interfaces() []frr.interface
 }
 
 // FRR configuration
@@ -4864,6 +4872,42 @@ private frr.config.interface @defaults("name vrf") {
   shutdown bool
   // `pbr-policy` map applied to the interface
   pbrPolicy string
+  // OSPF area of the interface
+  ospfArea string
+  // OSPF authentication mode of the interface, empty when the link takes none
+  ospfAuthentication string
+  // An OSPF authentication key is set. The value stays out of the resource.
+  ospfAuthenticationKeySet bool
+  // An OSPF message digest key is set. The value stays out of the resource.
+  ospfMessageDigestKeySet bool
+  // OSPF cost of the interface, -1 when the link leaves it at the default
+  ospfCost int
+  // OSPF priority of the interface, -1 when the link leaves it at the default
+  ospfPriority int
+  // OSPF hello interval in seconds, -1 when the link leaves it at the default
+  ospfHelloInterval int
+  // OSPF dead interval in seconds, -1 when the link leaves it at the default
+  ospfDeadInterval int
+  // OSPF network type of the interface (e.g. point-to-point)
+  ospfNetworkType string
+  // Interface is passive in OSPF, so it announces the link without speaking on it
+  ospfPassive bool
+  // IS-IS instance tag of the interface
+  isisTag string
+  // An IS-IS link password is set. The value stays out of the resource.
+  isisPasswordSet bool
+  // IS-IS authentication mode of the interface
+  isisAuthenticationMode string
+  // IS-IS network type of the interface
+  isisNetworkType string
+  // IS-IS circuit type of the interface (level-1, level-2-only, level-1-2)
+  isisCircuitType string
+  // PIM is enabled on the interface
+  pimEnabled bool
+  // IGMP is enabled on the interface
+  igmpEnabled bool
+  // A BFD session runs on the interface
+  bfdEnabled bool
   // Flat directive map of the interface block (name -> value)
   params map[string]string
   // Source file path
@@ -4920,6 +4964,70 @@ private frr.config.routeMap.entry @defaults("name action sequence") {
   match []string
   // `set` statements without the leading keyword
   set []string
+  // Prefix lists named by a `match ip|ipv6 address prefix-list` statement
+  matchPrefixLists []string
+  // Access lists named by a `match ip|ipv6 address` statement
+  matchAccessLists []string
+  // Community lists named by a `match community` statement
+  matchCommunityLists []string
+  // Large community lists named by a `match large-community` statement
+  matchLargeCommunities []string
+  // Extended community lists named by a `match extcommunity` statement
+  matchExtCommunities []string
+  // AS path access lists named by a `match as-path` statement
+  matchAsPathLists []string
+  // `match source-vrf` value, which is what makes a clause act on leaked routes
+  matchSourceVrf string
+  // `match interface` value
+  matchInterface string
+  // `match peer` value
+  matchPeer string
+  // `match evpn route-type` value
+  matchEvpnRouteType string
+  // `match evpn vni` value, -1 when the clause does not set it
+  matchEvpnVni int
+  // `match tag` value, -1 when the clause does not set it
+  matchTag int
+  // `match metric` value, -1 when the clause does not set it
+  matchMetric int
+  // `match local-preference` value, -1 when the clause does not set it
+  matchLocalPreference int
+  // Community values of a `set community` statement
+  setCommunities []string
+  // `set community` carries `additive`, so it keeps the communities of the route
+  setCommunityAdditive bool
+  // `set community none` strips every community from the route
+  setCommunityNone bool
+  // Values of a `set large-community` statement
+  setLargeCommunities []string
+  // Values of a `set extcommunity` statement, including route targets
+  setExtCommunities []string
+  // Community list of a `set comm-list <name> delete` statement
+  setCommunityDelete string
+  // `set local-preference` value, -1 when the clause does not set it
+  setLocalPreference int
+  // `set metric` value, which can be relative (e.g. "+10")
+  setMetric string
+  // `set weight` value, -1 when the clause does not set it
+  setWeight int
+  // `set origin` value
+  setOrigin string
+  // AS numbers of a `set as-path prepend` statement
+  setAsPathPrepend []string
+  // AS numbers of a `set as-path exclude` statement
+  setAsPathExclude []string
+  // Next hop of a `set ip|ipv6|ipv4 next-hop` statement
+  setNextHop string
+  // `set src` value
+  setSourceAddress string
+  // `set tag` value, -1 when the clause does not set it
+  setTag int
+  // `set table` value, -1 when the clause does not set it
+  setTable int
+  // `set distance` value, -1 when the clause does not set it
+  setDistance int
+  // `set atomic-aggregate` is present
+  setAtomicAggregate bool
   // `call <name>` target, which runs another route map
   call string
   // `on-match` statement without the leading keyword
@@ -26193,4 +26301,126 @@ private frr.bgp.route @defaults("prefix nexthop asPath bestPath") {
   extendedCommunities []string
   // Route targets of the path, taken from the extended communities
   routeTargets []string
+}
+
+
+// Restored FRR daemon runtime schema declarations from #9942.
+private frr.ospf.neighbor @defaults("neighborId state interface") {
+  // Protocol version: 2 for OSPF, 3 for OSPFv3
+  version int
+  // Router id of the neighbor
+  neighborId string
+  // Adjacency state (e.g. Full, ExStart, Init)
+  state string
+  // Adjacency reached Full and carries traffic
+  full bool
+  // Designated router role (e.g. DR, BDR, DROther)
+  role string
+  // Election priority of the neighbor
+  priority int
+  // Address of the neighbor
+  address string
+  // Address of the local side
+  localAddress string
+  // Interface the adjacency runs on
+  interface string
+  // How long the adjacency has held its state, in milliseconds
+  uptimeMsec int
+  // Time left before the neighbor is declared down, in milliseconds
+  deadTimeMsec int
+  // Length of the retransmit queue, which grows when a link drops packets
+  retransmitCount int
+  // Raw neighbor object, which keeps the fields a given FRR version adds
+  details dict
+}
+
+private frr.isis.neighbor @defaults("systemId state interface") {
+  // Instance tag the adjacency belongs to
+  area string
+  // System id or hostname of the neighbor
+  systemId string
+  // Circuit the adjacency runs on
+  interface string
+  // IS-IS level of the adjacency (1, 2 or 1-2)
+  level string
+  // Adjacency state (e.g. Up, Init)
+  state string
+  // Adjacency is up
+  up bool
+  // Hold time left, as FRR prints it
+  expiresIn string
+  // Subnetwork point of attachment, which is the MAC address on Ethernet
+  snpa string
+  // Raw circuit object, which keeps the fields a given FRR version adds
+  details dict
+}
+
+private frr.bfd.session @defaults("peer status interface") {
+  // Peer address
+  peer string
+  // Local address of the session
+  local string
+  // VRF of the session
+  vrf string
+  // Interface the session runs on
+  interface string
+  // Session crosses more than one hop
+  multiHop bool
+  // Session status (up or down)
+  status string
+  // Session is up
+  up bool
+  // How long the session has been up, in seconds
+  uptimeSec int
+  // Local diagnostic of the last state change
+  diagnostic string
+  // Diagnostic the peer reported
+  remoteDiagnostic string
+  // Local detect multiplier
+  detectMultiplier int
+  // Local receive interval in milliseconds
+  receiveInterval int
+  // Local transmit interval in milliseconds
+  transmitInterval int
+  // Local echo interval in milliseconds
+  echoInterval int
+  // Detect multiplier the peer asked for
+  remoteDetectMultiplier int
+  // Receive interval the peer asked for, in milliseconds
+  remoteReceiveInterval int
+  // Transmit interval the peer asked for, in milliseconds
+  remoteTransmitInterval int
+  // Raw session object, which keeps the fields a given FRR version adds
+  details dict
+}
+
+private frr.interface @defaults("name vrf operUp") {
+  // Interface name
+  name string
+  // Interface is administratively up
+  adminUp bool
+  // Interface is operationally up
+  operUp bool
+  // VRF the interface belongs to
+  vrf string
+  // Interface index
+  ifindex int
+  // Maximum transmission unit
+  mtu int
+  // Link speed in megabits per second, 0 when the driver reports none
+  speed int
+  // Interface type as zebra reports it
+  type string
+  // Hardware address of the interface
+  hardwareAddress string
+  // Addresses zebra knows for the interface
+  addresses []string
+  // How often the link went down, which is how a flapping link shows up
+  linkDowns int
+  // How often the link came up
+  linkUps int
+  // A protocol has taken the interface down, which is not an operator shutdown
+  protocolDown bool
+  // Raw interface object, which keeps the fields a given FRR version adds
+  details dict
 }
