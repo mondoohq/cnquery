@@ -10243,6 +10243,12 @@ podman.network @defaults("name driver internal") {
 // default `inputPolicy` of `ACCEPT` with no restricting rules is a common
 // firewall-hardening finding.
 iptables {
+  // Whether the iptables binary is present on the system
+  //
+  // The other fields return an error rather than an empty result when iptables
+  // is missing, so check this first to tell a host without iptables from one
+  // whose ruleset could not be read.
+  installed() bool
   // All tables (filter, nat, mangle, raw)
   tables() []iptables.table
   // IPv4 input chain entries (filter table)
@@ -10266,6 +10272,12 @@ iptables {
 // `input`, `output`, and `forward` chains and their default policies. Audit it
 // alongside `iptables` so IPv6 traffic is filtered as strictly as IPv4.
 ip6tables {
+  // Whether the ip6tables binary is present on the system
+  //
+  // The other fields return an error rather than an empty result when ip6tables
+  // is missing, so check this first to tell a host without ip6tables from one
+  // whose ruleset could not be read.
+  installed() bool
   // All tables (filter, nat, mangle, raw)
   tables() []iptables.table
   // IPv6 input chain entries (filter table)
@@ -10438,6 +10450,12 @@ iptables.entry {
 // those hosts tables, chains, and sets are read from the text listing and
 // every `rules` field returns an error.
 nftables @defaults("tables") {
+  // Whether the nft binary is present on the system
+  //
+  // The other fields, version included, return an error rather than an empty
+  // result when nft is missing, so check this first to tell a host without
+  // nftables from one whose ruleset could not be read.
+  installed() bool
   // nft version string (e.g., "1.0.2")
   version() string
   // All nftables tables

@@ -2386,6 +2386,7 @@ ip6tables.forward 13.2.9
 ip6tables.forwardPolicy 13.2.9
 ip6tables.input 9.0.0
 ip6tables.inputPolicy 13.2.9
+ip6tables.installed 14.25.1
 ip6tables.output 9.0.0
 ip6tables.outputPolicy 13.2.9
 ip6tables.tables 13.15.2
@@ -2430,6 +2431,7 @@ iptables.forward 13.2.9
 iptables.forwardPolicy 13.2.9
 iptables.input 9.0.0
 iptables.inputPolicy 13.2.9
+iptables.installed 14.25.1
 iptables.output 9.0.0
 iptables.outputPolicy 13.2.9
 iptables.table 13.15.2
@@ -3667,6 +3669,7 @@ nftables.chain.table 11.8.14
 nftables.chain.tableRef 13.17.1
 nftables.chain.type 11.8.14
 nftables.chains 13.2.9
+nftables.installed 14.25.1
 nftables.rule 11.8.14
 nftables.rule.bytes 14.20.2
 nftables.rule.chain 11.8.14

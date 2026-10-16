@@ -8,11 +8,14 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/os/connection/shared"
@@ -560,6 +563,47 @@ func entriesFromSavedChain(runtime *plugin.Runtime, ch *SavedChain, chainID stri
 	return entries, nil
 }
 
+// firewallBinaryDirs are the directories iptables, ip6tables, and nft are
+// installed into. Distributions put them in sbin, but merged-/usr systems and
+// source builds also reach bin and /usr/local.
+var firewallBinaryDirs = []string{
+	"/usr/sbin",
+	"/sbin",
+	"/usr/bin",
+	"/bin",
+	"/usr/local/sbin",
+	"/usr/local/bin",
+}
+
+// binaryInstalled reports whether the named binary is on the asset. The known
+// directories are probed on the filesystem first, so the answer holds on an
+// image or a mounted filesystem where nothing runs. A symlink counts without
+// being followed: Debian points iptables at /etc/alternatives, which an
+// absolute link on a mounted filesystem would resolve against the scanning
+// host. Where commands run, `command -v` finds an install anywhere on $PATH.
+func binaryInstalled(conn shared.Connection, name string) bool {
+	fs := conn.FileSystem()
+	for _, dir := range firewallBinaryDirs {
+		p := dir + "/" + name
+		var err error
+		if lfs, ok := fs.(afero.Lstater); ok {
+			_, _, err = lfs.LstatIfPossible(p)
+		} else {
+			_, err = fs.Stat(p)
+		}
+		if err == nil {
+			return true
+		}
+		if !os.IsNotExist(err) {
+			log.Debug().Err(err).Str("path", p).Msg("os> cannot check firewall binary path")
+		}
+	}
+	if conn.Capabilities().Has(shared.Capability_RunCommand) {
+		return lookupViaCommand(conn, name) != ""
+	}
+	return false
+}
+
 // --- iptables (IPv4) ---
 
 // loadDump runs iptables-save -c at most once and caches the result.
@@ -684,6 +728,10 @@ func (i *mqlIptables) forwardPolicy() (string, error) {
 	return i.forwardCache.policy, i.forwardCache.err
 }
 
+func (i *mqlIptables) installed() (bool, error) {
+	return binaryInstalled(i.MqlRuntime.Connection.(shared.Connection), "iptables"), nil
+}
+
 func (i *mqlIptables) tables() ([]any, error) {
 	if _, _, err := i.loadDump(); err != nil {
 		return nil, err
@@ -696,6 +744,10 @@ func (i *mqlIptables) tables() ([]any, error) {
 }
 
 // --- ip6tables (IPv6) ---
+
+func (i *mqlIp6tables) installed() (bool, error) {
+	return binaryInstalled(i.MqlRuntime.Connection.(shared.Connection), "ip6tables"), nil
+}
 
 func (i *mqlIp6tables) loadDump() (*SavedDump, bool, error) {
 	i.saveCache.once.Do(func() {
