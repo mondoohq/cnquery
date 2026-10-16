@@ -561,8 +561,8 @@ func TestRedHatModularParser(t *testing.T) {
 // nothing at all to stdout, and still exited 0 - so `packages` came back as an
 // empty list, with no error, on a host with a fully populated rpm database.
 func TestModularitySupportedByPlatform(t *testing.T) {
-	// every distro name the modularity switch knows about
-	modularDistros := []string{"oraclelinux", "almalinux", "redhat", "centos", "centos-stream", "rocky"}
+	// the platform names the detector emits for these distros
+	modularDistros := []string{"oraclelinux", "almalinux", "redhat", "centos", "centos-stream", "rockylinux"}
 
 	versions := []struct {
 		version string
