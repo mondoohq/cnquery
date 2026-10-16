@@ -27,9 +27,9 @@ func (r *mqlIbm) id() (string, error) {
 func (r *mqlIbm) resourceGroups() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	accountID := c.AccountID()
-	res, _, err := c.ResourceManager().ListResourceGroups(&resourcemanagerv2.ListResourceGroupsOptions{AccountID: &accountID})
+	res, resp, err := c.ResourceManager().ListResourceGroups(&resourcemanagerv2.ListResourceGroupsOptions{AccountID: &accountID})
 	if err != nil {
-		return nil, classifyError(err, "resource-controller.group.retrieve")
+		return nil, classifyError(withStatus(err, resp), "resource-controller.group.retrieve")
 	}
 	out := make([]any, 0, len(res.Resources))
 	for _, g := range res.Resources {

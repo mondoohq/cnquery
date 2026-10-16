@@ -25,6 +25,7 @@ const (
 	ResourceIbmIamPolicy            string = "ibm.iam.policy"
 	ResourceIbmIamServiceId         string = "ibm.iam.serviceId"
 	ResourceIbmIamApiKey            string = "ibm.iam.apiKey"
+	ResourceIbmIamUser              string = "ibm.iam.user"
 	ResourceIbmIamTrustedProfile    string = "ibm.iam.trustedProfile"
 	ResourceIbmRegion               string = "ibm.region"
 	ResourceIbmVpc                  string = "ibm.vpc"
@@ -96,6 +97,10 @@ func init() {
 		"ibm.iam.apiKey": {
 			// to override args, implement: initIbmIamApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createIbmIamApiKey,
+		},
+		"ibm.iam.user": {
+			// to override args, implement: initIbmIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIbmIamUser,
 		},
 		"ibm.iam.trustedProfile": {
 			// to override args, implement: initIbmIamTrustedProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -314,6 +319,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ibm.iamTrustedProfiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIbm).GetIamTrustedProfiles()).ToDataRes(types.Array(types.Resource("ibm.iam.trustedProfile")))
+	},
+	"ibm.iamUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbm).GetIamUsers()).ToDataRes(types.Array(types.Resource("ibm.iam.user")))
 	},
 	"ibm.vpcRegions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIbm).GetVpcRegions()).ToDataRes(types.Array(types.Resource("ibm.region")))
@@ -629,6 +637,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ibm.iam.apiKey.serviceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIbmIamApiKey).GetServiceId()).ToDataRes(types.Resource("ibm.iam.serviceId"))
+	},
+	"ibm.iam.apiKey.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmIamApiKey).GetUser()).ToDataRes(types.Resource("ibm.iam.user"))
+	},
+	"ibm.iam.user.iamId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmIamUser).GetIamId()).ToDataRes(types.String)
+	},
+	"ibm.iam.user.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmIamUser).GetUserId()).ToDataRes(types.String)
+	},
+	"ibm.iam.user.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmIamUser).GetEmail()).ToDataRes(types.String)
+	},
+	"ibm.iam.user.firstName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmIamUser).GetFirstName()).ToDataRes(types.String)
+	},
+	"ibm.iam.user.lastName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmIamUser).GetLastName()).ToDataRes(types.String)
+	},
+	"ibm.iam.user.realm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmIamUser).GetRealm()).ToDataRes(types.String)
+	},
+	"ibm.iam.user.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmIamUser).GetState()).ToDataRes(types.String)
+	},
+	"ibm.iam.user.addedOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmIamUser).GetAddedOn()).ToDataRes(types.Time)
+	},
+	"ibm.iam.user.accountOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmIamUser).GetAccountOwner()).ToDataRes(types.Bool)
+	},
+	"ibm.iam.user.mfa": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmIamUser).GetMfa()).ToDataRes(types.String)
+	},
+	"ibm.iam.user.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmIamUser).GetPolicies()).ToDataRes(types.Array(types.Resource("ibm.iam.policy")))
+	},
+	"ibm.iam.user.accessGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmIamUser).GetAccessGroups()).ToDataRes(types.Array(types.Resource("ibm.iam.accessGroup")))
+	},
+	"ibm.iam.user.apiKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmIamUser).GetApiKeys()).ToDataRes(types.Array(types.Resource("ibm.iam.apiKey")))
 	},
 	"ibm.iam.trustedProfile.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIbmIamTrustedProfile).GetId()).ToDataRes(types.String)
@@ -1145,6 +1195,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ibm.vpc.volume.attachmentState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIbmVpcVolume).GetAttachmentState()).ToDataRes(types.String)
+	},
+	"ibm.vpc.volume.attachmentTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmVpcVolume).GetAttachmentTypes()).ToDataRes(types.Array(types.String))
 	},
 	"ibm.vpc.volume.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIbmVpcVolume).GetCreatedAt()).ToDataRes(types.Time)
@@ -1858,6 +1911,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIbm).IamTrustedProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"ibm.iamUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbm).IamUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"ibm.vpcRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIbm).VpcRegions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2308,6 +2365,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ibm.iam.apiKey.serviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIbmIamApiKey).ServiceId, ok = plugin.RawToTValue[*mqlIbmIamServiceId](v.Value, v.Error)
+		return
+	},
+	"ibm.iam.apiKey.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmIamApiKey).User, ok = plugin.RawToTValue[*mqlIbmIamUser](v.Value, v.Error)
+		return
+	},
+	"ibm.iam.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmIamUser).__id, ok = v.Value.(string)
+		return
+	},
+	"ibm.iam.user.iamId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmIamUser).IamId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.iam.user.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmIamUser).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.iam.user.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmIamUser).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.iam.user.firstName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmIamUser).FirstName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.iam.user.lastName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmIamUser).LastName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.iam.user.realm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmIamUser).Realm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.iam.user.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmIamUser).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.iam.user.addedOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmIamUser).AddedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"ibm.iam.user.accountOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmIamUser).AccountOwner, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ibm.iam.user.mfa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmIamUser).Mfa, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.iam.user.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmIamUser).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ibm.iam.user.accessGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmIamUser).AccessGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ibm.iam.user.apiKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmIamUser).ApiKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ibm.iam.trustedProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3052,6 +3169,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ibm.vpc.volume.attachmentState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIbmVpcVolume).AttachmentState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.vpc.volume.attachmentTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmVpcVolume).AttachmentTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ibm.vpc.volume.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4036,6 +4157,7 @@ type mqlIbm struct {
 	IamServiceIds        plugin.TValue[[]any]
 	IamApiKeys           plugin.TValue[[]any]
 	IamTrustedProfiles   plugin.TValue[[]any]
+	IamUsers             plugin.TValue[[]any]
 	VpcRegions           plugin.TValue[[]any]
 	Vpcs                 plugin.TValue[[]any]
 	VpcSubnets           plugin.TValue[[]any]
@@ -4224,6 +4346,22 @@ func (c *mqlIbm) GetIamTrustedProfiles() *plugin.TValue[[]any] {
 		}
 
 		return c.iamTrustedProfiles()
+	})
+}
+
+func (c *mqlIbm) GetIamUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamUsers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ibm", c.__id, "iamUsers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamUsers()
 	})
 }
 
@@ -5252,6 +5390,7 @@ type mqlIbmIamApiKey struct {
 	LastAuthentication  plugin.TValue[*time.Time]
 	AuthenticationCount plugin.TValue[int64]
 	ServiceId           plugin.TValue[*mqlIbmIamServiceId]
+	User                plugin.TValue[*mqlIbmIamUser]
 }
 
 // createIbmIamApiKey creates a new instance of this resource
@@ -5359,6 +5498,166 @@ func (c *mqlIbmIamApiKey) GetServiceId() *plugin.TValue[*mqlIbmIamServiceId] {
 		}
 
 		return c.serviceId()
+	})
+}
+
+func (c *mqlIbmIamApiKey) GetUser() *plugin.TValue[*mqlIbmIamUser] {
+	return plugin.GetOrCompute[*mqlIbmIamUser](&c.User, func() (*mqlIbmIamUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ibm.iam.apiKey", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlIbmIamUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+// mqlIbmIamUser for the ibm.iam.user resource
+type mqlIbmIamUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlIbmIamUserInternal it will be used here
+	IamId        plugin.TValue[string]
+	UserId       plugin.TValue[string]
+	Email        plugin.TValue[string]
+	FirstName    plugin.TValue[string]
+	LastName     plugin.TValue[string]
+	Realm        plugin.TValue[string]
+	State        plugin.TValue[string]
+	AddedOn      plugin.TValue[*time.Time]
+	AccountOwner plugin.TValue[bool]
+	Mfa          plugin.TValue[string]
+	Policies     plugin.TValue[[]any]
+	AccessGroups plugin.TValue[[]any]
+	ApiKeys      plugin.TValue[[]any]
+}
+
+// createIbmIamUser creates a new instance of this resource
+func createIbmIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIbmIamUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ibm.iam.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIbmIamUser) MqlName() string {
+	return "ibm.iam.user"
+}
+
+func (c *mqlIbmIamUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIbmIamUser) GetIamId() *plugin.TValue[string] {
+	return &c.IamId
+}
+
+func (c *mqlIbmIamUser) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+func (c *mqlIbmIamUser) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlIbmIamUser) GetFirstName() *plugin.TValue[string] {
+	return &c.FirstName
+}
+
+func (c *mqlIbmIamUser) GetLastName() *plugin.TValue[string] {
+	return &c.LastName
+}
+
+func (c *mqlIbmIamUser) GetRealm() *plugin.TValue[string] {
+	return &c.Realm
+}
+
+func (c *mqlIbmIamUser) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlIbmIamUser) GetAddedOn() *plugin.TValue[*time.Time] {
+	return &c.AddedOn
+}
+
+func (c *mqlIbmIamUser) GetAccountOwner() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AccountOwner, func() (bool, error) {
+		return c.accountOwner()
+	})
+}
+
+func (c *mqlIbmIamUser) GetMfa() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Mfa, func() (string, error) {
+		return c.mfa()
+	})
+}
+
+func (c *mqlIbmIamUser) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ibm.iam.user", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policies()
+	})
+}
+
+func (c *mqlIbmIamUser) GetAccessGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ibm.iam.user", c.__id, "accessGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessGroups()
+	})
+}
+
+func (c *mqlIbmIamUser) GetApiKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApiKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ibm.iam.user", c.__id, "apiKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.apiKeys()
 	})
 }
 
@@ -7068,6 +7367,7 @@ type mqlIbmVpcVolume struct {
 	EncryptionKey   plugin.TValue[*mqlIbmKmsKey]
 	Status          plugin.TValue[string]
 	AttachmentState plugin.TValue[string]
+	AttachmentTypes plugin.TValue[[]any]
 	CreatedAt       plugin.TValue[*time.Time]
 	ResourceGroup   plugin.TValue[*mqlIbmResourceGroup]
 	Instances       plugin.TValue[[]any]
@@ -7165,6 +7465,10 @@ func (c *mqlIbmVpcVolume) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlIbmVpcVolume) GetAttachmentState() *plugin.TValue[string] {
 	return &c.AttachmentState
+}
+
+func (c *mqlIbmVpcVolume) GetAttachmentTypes() *plugin.TValue[[]any] {
+	return &c.AttachmentTypes
 }
 
 func (c *mqlIbmVpcVolume) GetCreatedAt() *plugin.TValue[*time.Time] {

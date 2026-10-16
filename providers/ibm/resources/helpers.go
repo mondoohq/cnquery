@@ -384,6 +384,28 @@ func crnSegment(crn string, i int) string {
 	return ""
 }
 
+// statusError keeps the HTTP status of a failed call whose error does not
+// expose it. Older generated IBM SDKs (User Management, Resource Manager)
+// return the core's problem unchanged, which hides the HTTP problem it
+// carries, so classifyError would not see a refusal as one.
+type statusError struct {
+	err    error
+	status int
+}
+
+func (e *statusError) Error() string   { return e.err.Error() }
+func (e *statusError) Unwrap() error   { return e.err }
+func (e *statusError) StatusCode() int { return e.status }
+
+// withStatus attaches the response's status to err when err does not carry
+// one itself.
+func withStatus(err error, resp *core.DetailedResponse) error {
+	if err == nil || resp == nil || resp.StatusCode == 0 || connection.StatusCode(err) != 0 {
+		return err
+	}
+	return &statusError{err: err, status: resp.StatusCode}
+}
+
 // pageToken extracts the paging token from the next-page URL the IAM APIs
 // return.
 func pageToken(next *string, param string) *string {
