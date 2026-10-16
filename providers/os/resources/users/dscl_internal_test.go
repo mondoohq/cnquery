@@ -34,6 +34,9 @@ func TestOSXUserManagerList_SkewedLists(t *testing.T) {
 			"dscl . -list /Users PrimaryGroupID": {
 				Stdout: "root 0\n_www 70\n",
 			},
+			"dscl . -list /Users AuthenticationAuthority": {
+				Stdout: "_www ;ShadowHash;\nghost ;ShadowHash;\n",
+			},
 		},
 	}))
 	require.NoError(t, err)
@@ -61,4 +64,26 @@ func TestOSXUserManagerList_SkewedLists(t *testing.T) {
 	assert.Equal(t, "/usr/bin/false", byName["_www"].Shell)
 	assert.Equal(t, "/Library/WebServer", byName["_www"].Home)
 	assert.Equal(t, int64(70), byName["_www"].Gid)
+	assert.True(t, byName["_www"].Enabled)
+	assert.False(t, byName["root"].Enabled)
+}
+
+func TestDsclAuthorityEnabled(t *testing.T) {
+	tests := []struct {
+		name      string
+		authority string
+		want      bool
+	}{
+		{name: "empty", authority: "", want: false},
+		{name: "whitespace", authority: "   ", want: false},
+		{name: "shadow hash", authority: ";ShadowHash;HASHLIST:<SALTED-SHA512-PBKDF2> ;SecureToken;", want: true},
+		{name: "disabled before shadow hash", authority: ";DisabledUser;;ShadowHash;HASHLIST:<SALTED-SHA512-PBKDF2>", want: false},
+		{name: "disabled only", authority: ";DisabledUser;", want: false},
+		{name: "kerberos", authority: ";Kerberosv5;;alice@LKDC:SHA1.0000;LKDC:SHA1.0000;", want: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, dsclAuthorityEnabled(tt.authority))
+		})
+	}
 }
