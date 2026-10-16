@@ -726,8 +726,10 @@ const zypperListUpdatesCommand = "zypper -n --xmlout list-updates"
 func modularitySupportedByPlatform(platform *inventory.Platform) bool {
 	supported := false
 
+	// The names are the detector's platform names, not os-release IDs: Rocky Linux
+	// is "rockylinux" (its os-release ID "rocky" is renamed during detection).
 	switch platform.Name {
-	case "oraclelinux", "almalinux", "redhat", "centos", "centos-stream", "rocky":
+	case "oraclelinux", "almalinux", "redhat", "centos", "centos-stream", "rockylinux":
 		// The window is [8, 10): modularity was introduced with RHEL 8 and
 		// removed again in RHEL 10. Do not widen it. On RHEL 7 and older rpm is
 		// 4.11, which has no %{MODULARITYLABEL} tag: it writes an error per
