@@ -20,7 +20,8 @@ option root = "ibm"
 // workspaces are found through the resource controller and queried in their
 // own zone. Cloud Object Storage buckets, Key Protect keys, Activity Tracker
 // Event Routing, and IBM Cloud Databases cover data protection and audit
-// logging.
+// logging. IBM Cloud Kubernetes Service and Red Hat OpenShift on IBM Cloud
+// clusters are listed once for every region.
 ibm @root {
   // Account ID
   accountId string
@@ -82,6 +83,8 @@ ibm @root {
   atrackerSettings() ibm.atracker.settings
   // IBM Cloud Databases deployments
   databases() []ibm.database
+  // IBM Cloud Kubernetes Service and Red Hat OpenShift on IBM Cloud clusters, on VPC and classic infrastructure, in every region
+  kubernetesClusters() []ibm.kubernetes.cluster
 }
 
 // IBM Cloud IAM account settings
@@ -1354,4 +1357,98 @@ private ibm.database @defaults("name type version region") {
   tags() []string
   // Access management tags, which IAM policies can grant access by
   accessTags() []string
+}
+
+// IBM Cloud Kubernetes Service cluster
+//
+// A cluster of IBM Cloud Kubernetes Service or Red Hat OpenShift on IBM Cloud,
+// on VPC or classic infrastructure, with its master version, public and
+// private service endpoints, the key management service that encrypts its
+// Kubernetes secrets, the image pull secret for IBM Cloud Container Registry,
+// and its worker nodes.
+private ibm.kubernetes.cluster @defaults("name region state") {
+  // Cluster ID
+  id string
+  // Cluster name
+  name string
+  // Region of the cluster, for example us-south
+  region string
+  // Infrastructure provider: vpc-gen2 or classic
+  provider string
+  // Container platform: kubernetes or openshift
+  type string
+  // Lifecycle state, for example normal, warning, critical, deploying, or updating
+  state string
+  // Status message of the cluster
+  status string
+  // Kubernetes or OpenShift version of the master, for example 1.33.4_1532
+  masterKubeVersion string
+  // Version the master is updated to next; empty when the master is current
+  targetKubeVersion string
+  // Creation timestamp
+  createdAt time
+  // Cluster CRN
+  crn() string
+  // Whether the master is reachable through the public service endpoint
+  publicServiceEndpointEnabled() bool
+  // Whether the master is reachable through the private service endpoint
+  privateServiceEndpointEnabled() bool
+  // URL of the public service endpoint; empty when it is disabled
+  publicServiceEndpointUrl() string
+  // URL of the private service endpoint; empty when it is disabled
+  privateServiceEndpointUrl() string
+  // Whether Kubernetes secrets are encrypted with a root key from Key Protect or Hyper Protect Crypto Services
+  kmsEnabled() bool
+  // Key management instance that holds the root key, as the API reports it; empty without a KMS provider
+  kmsInstanceId() string
+  // ID of the root key encrypting the Kubernetes secrets; empty without a KMS provider
+  kmsRootKeyId() string
+  // Key management instance that holds the root key; null without a KMS provider or when the instance is not in the account
+  kmsInstance() ibm.kms.instance
+  // Root key encrypting the Kubernetes secrets; null without a KMS provider or when the key is not listed
+  kmsKey() ibm.kms.key
+  // Whether the image pull secret for IBM Cloud Container Registry is applied in the default namespace
+  imagePullSecretsEnabled() bool
+  // Resource group of the cluster
+  resourceGroup() ibm.resourceGroup
+  // Worker nodes of the cluster
+  workers() []ibm.kubernetes.worker
+  // User tags, for example env:prod
+  tags() []string
+  // Access management tags, which IAM policies can grant access by
+  accessTags() []string
+}
+
+// IBM Cloud Kubernetes Service worker node
+//
+// A worker node of a cluster with its health, flavor, zone, worker pool,
+// operating system, and the Kubernetes version it runs compared to the version
+// IBM Cloud would update it to.
+private ibm.kubernetes.worker @defaults("id state kubeVersion") {
+  // Worker ID
+  id string
+  // Health state, for example normal, warning, or critical
+  state string
+  // Health message, for example Ready
+  status string
+  // Lifecycle state, for example deployed, deploying, or reloading
+  lifecycleState string
+  // Flavor (machine type), for example bx2.4x16
+  flavor string
+  // Zone of the worker, for example us-south-1
+  zone string
+  // Name of the worker pool
+  poolName string
+  // ID of the worker pool
+  poolId string
+  // Operating system, for example UBUNTU_24_64 or RHCOS
+  operatingSystem string
+  // Kubernetes version the worker runs, for example 1.33.4_1534
+  kubeVersion string
+  // Kubernetes version IBM Cloud would update the worker to
+  targetKubeVersion string
+  // Whether a worker update is available: the worker runs a version other than its target
+  updateAvailable bool
+  // Cluster the worker belongs to
+  cluster() ibm.kubernetes.cluster
 }
