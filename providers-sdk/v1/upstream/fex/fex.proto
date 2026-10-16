@@ -411,6 +411,29 @@ message Evidence {
   }
   // Additional properties specific to this evidence
   map<string, string> properties = 4;
+
+  // Optional. Version-control provenance for this evidence: the commit (and
+  // its author) that introduced the evidenced content. Set by a history-aware
+  // or blame-based scan; absent when no VCS attribution is available.
+  SourceVersion source_version = 5;
+}
+
+// Experimental. Version-control provenance for a piece of evidence — the commit
+// that introduced the evidenced content and who authored it. For a secret
+// finding, this is the commit that first added the matched line, so the finding
+// can name the introducing commit and author, not just the file and line.
+message SourceVersion {
+  // Commit identifier that introduced the evidenced content (e.g. a full git
+  // commit SHA).
+  string commit = 1;
+  // Name of the commit author.
+  string author = 2;
+  // Email of the commit author. Consumers decide any display/redaction policy.
+  string email = 3;
+  // Author date, RFC3339 (e.g. "2026-01-02T10:00:00Z").
+  string date = 4;
+  // Optional. Deep link to the commit (e.g. a GitHub commit URL).
+  string url = 5;
 }
 
 // Experimental. File information

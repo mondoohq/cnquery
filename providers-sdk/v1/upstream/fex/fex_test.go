@@ -89,3 +89,35 @@ func TestHttpRequestEvidenceRoundTrip(t *testing.T) {
 	assert.Equal(t, "q", hr.GetParam())
 	assert.Equal(t, "https://example.com/search?q=x", hr.GetUrl())
 }
+
+func TestSourceVersionEvidenceRoundTrip(t *testing.T) {
+	f := &FindingExchange{
+		Id: "secret-1",
+		Evidences: []*Evidence{{
+			Details: &Evidence_File{File: &File{
+				Path:     "config.env",
+				Contents: "sk_live_...",
+			}},
+			SourceVersion: &SourceVersion{
+				Commit: "096bccac898275dadd52c326756d98249599f534",
+				Author: "Alice Introducer",
+				Email:  "alice@example.com",
+				Date:   "2026-01-02T10:00:00Z",
+				Url:    "https://github.com/acme/repo/commit/096bccac",
+			},
+		}},
+	}
+	data, err := f.MarshalVT()
+	require.NoError(t, err)
+
+	out := &FindingExchange{}
+	require.NoError(t, out.UnmarshalVT(data))
+
+	sv := out.GetEvidences()[0].GetSourceVersion()
+	require.NotNil(t, sv)
+	assert.Equal(t, "096bccac898275dadd52c326756d98249599f534", sv.GetCommit())
+	assert.Equal(t, "Alice Introducer", sv.GetAuthor())
+	assert.Equal(t, "alice@example.com", sv.GetEmail())
+	assert.Equal(t, "2026-01-02T10:00:00Z", sv.GetDate())
+	assert.Equal(t, "https://github.com/acme/repo/commit/096bccac", sv.GetUrl())
+}
