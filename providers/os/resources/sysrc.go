@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/checksums"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -563,7 +564,9 @@ func (s *mqlSysrc) values(files []any) (map[string]any, error) {
 	return res, nil
 }
 
-// readFile returns a file's content and whether it exists.
+// readFile returns a file's content and whether it exists. rc_conf_files is
+// read from the target, so anything other than a regular file (a device such
+// as /dev/zero, a FIFO) is treated as missing rather than read without end.
 func (s *mqlSysrc) readFile(path string) (string, bool, error) {
 	fileRes, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
 		"path": llx.StringData(path),
@@ -577,6 +580,14 @@ func (s *mqlSysrc) readFile(path string) (string, bool, error) {
 		return "", false, exists.Error
 	}
 	if !exists.Data {
+		return "", false, nil
+	}
+	perm := f.GetPermissions()
+	if perm.Error != nil {
+		return "", false, perm.Error
+	}
+	if perm.Data == nil || !perm.Data.IsFile.Data {
+		log.Debug().Str("path", path).Msg("sysrc> skipping rc.conf path that is not a regular file")
 		return "", false, nil
 	}
 	content := f.GetContent()
