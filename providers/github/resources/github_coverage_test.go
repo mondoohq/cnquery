@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-github/v92/github"
+	"github.com/google/go-github/v93/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -241,12 +241,13 @@ func TestActionsAllowedDecoding(t *testing.T) {
 func TestActionsAccessLevelDecoding(t *testing.T) {
 	var level github.RepositoryActionsAccessLevel
 	require.NoError(t, json.Unmarshal([]byte(`{"access_level": "organization"}`), &level))
-	require.NotNil(t, level.AccessLevel)
-	assert.Equal(t, "organization", *level.AccessLevel)
+	assert.Equal(t, "organization", level.AccessLevel)
 
+	// The SDK no longer uses a pointer here, so an unreported access level
+	// decodes as "". accessLevel() maps that to null rather than a value.
 	var absent github.RepositoryActionsAccessLevel
 	require.NoError(t, json.Unmarshal([]byte(`{}`), &absent))
-	assert.Nil(t, absent.AccessLevel, "an unreported access level must stay absent, not none")
+	assert.Empty(t, absent.AccessLevel, "an unreported access level must decode empty, not a level")
 }
 
 func TestImmutableReleaseSettingsDecoding(t *testing.T) {
