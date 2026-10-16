@@ -215,7 +215,10 @@ func (s *mqlFrrEvpnRouteTable) entries() ([]any, error) {
 		return nil, err
 	}
 
-	res := make([]any, 0, len(table.Routes))
+	// The route count comes from vtysh output. Avoid using it as an allocation
+	// hint: the parser already enforces the query limit, and append grows the
+	// result safely as routes are converted.
+	res := make([]any, 0)
 	for i := range table.Routes {
 		r := &table.Routes[i]
 		id := fmt.Sprintf("%s/%d/%s/%s", s.__id, i, r.RD, r.Prefix)
