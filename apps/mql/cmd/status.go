@@ -285,7 +285,7 @@ func checkStatus(ctx context.Context) (Status, error) {
 	// mirror.
 	s.Client.ProvidersURL = cliproviders.RegistryURL()
 	if s.Client.ProvidersURL == "" {
-		s.Client.ProvidersURL = providers.DefaultProviderRegistryURL
+		s.Client.ProvidersURL = providers.DefaultUpdatesURL
 	}
 
 	// gather installed providers and their version drift up front, so rendering
