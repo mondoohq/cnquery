@@ -102,7 +102,7 @@ func (l *linuxRouteDetector) convertJSONRouteToRoute(jsonRoute ipRouteJSON) *Rou
 	// an unreachable ::/0 as a default route makes a host without IPv6
 	// connectivity look like it has some.
 	switch jsonRoute.Type {
-	case "unreachable", "prohibit", "throw":
+	case "unreachable", "blackhole", "prohibit", "throw":
 		return nil
 	}
 
