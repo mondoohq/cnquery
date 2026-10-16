@@ -265,10 +265,10 @@ private ibm.iam.serviceId @defaults("name") {
   createdAt time
   // Last modification timestamp
   modifiedAt time
-  // Time of the last authentication; null when the service ID never authenticated or activity tracking is off
-  lastAuthentication time
+  // Time of the last authentication; null when the service ID never authenticated or IBM Cloud has no activity data for it
+  lastAuthentication() time
   // Number of authentications recorded for the service ID
-  authenticationCount int
+  authenticationCount() int
   // API keys issued for the service ID
   apiKeys() []ibm.iam.apiKey
 }
@@ -303,10 +303,10 @@ private ibm.iam.apiKey @defaults("name iamId") {
   actionWhenLeaked string
   // Whether the key can be used for support sessions
   supportSessions bool
-  // Time of the last authentication with the key; null when never used or activity tracking is off
-  lastAuthentication time
+  // Time of the last authentication with the key; null when never used or IBM Cloud has no activity data for it
+  lastAuthentication() time
   // Number of authentications recorded for the key
-  authenticationCount int
+  authenticationCount() int
   // Service ID that owns the key; null when a user owns it
   serviceId() ibm.iam.serviceId
 }
@@ -328,10 +328,10 @@ private ibm.iam.trustedProfile @defaults("name") {
   crn string
   // Creation timestamp
   createdAt time
-  // Time of the last authentication; null when never used or activity tracking is off
-  lastAuthentication time
+  // Time of the last authentication; null when never used or IBM Cloud has no activity data for it
+  lastAuthentication() time
   // Number of authentications recorded for the profile
-  authenticationCount int
+  authenticationCount() int
 }
 
 // IBM Cloud VPC region
