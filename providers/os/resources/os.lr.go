@@ -11702,6 +11702,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"podman.network.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPodmanNetwork).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"iptables.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptables).GetInstalled()).ToDataRes(types.Bool)
+	},
 	"iptables.tables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptables).GetTables()).ToDataRes(types.Array(types.Resource("iptables.table")))
 	},
@@ -11722,6 +11725,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"iptables.outputPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptables).GetOutputPolicy()).ToDataRes(types.String)
+	},
+	"ip6tables.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIp6tables).GetInstalled()).ToDataRes(types.Bool)
 	},
 	"ip6tables.tables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIp6tables).GetTables()).ToDataRes(types.Array(types.Resource("iptables.table")))
@@ -11833,6 +11839,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"iptables.entry.raw": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptablesEntry).GetRaw()).ToDataRes(types.String)
+	},
+	"nftables.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftables).GetInstalled()).ToDataRes(types.Bool)
 	},
 	"nftables.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNftables).GetVersion()).ToDataRes(types.String)
@@ -33689,6 +33698,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIptables).__id, ok = v.Value.(string)
 		return
 	},
+	"iptables.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptables).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"iptables.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIptables).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -33719,6 +33732,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ip6tables.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIp6tables).__id, ok = v.Value.(string)
+		return
+	},
+	"ip6tables.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIp6tables).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ip6tables.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33883,6 +33900,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"nftables.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNftables).__id, ok = v.Value.(string)
+		return
+	},
+	"nftables.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftables).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"nftables.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -81565,6 +81586,7 @@ type mqlIptables struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlIptablesInternal
+	Installed     plugin.TValue[bool]
 	Tables        plugin.TValue[[]any]
 	Input         plugin.TValue[[]any]
 	Output        plugin.TValue[[]any]
@@ -81604,6 +81626,12 @@ func (c *mqlIptables) MqlName() string {
 
 func (c *mqlIptables) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlIptables) GetInstalled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Installed, func() (bool, error) {
+		return c.installed()
+	})
 }
 
 func (c *mqlIptables) GetTables() *plugin.TValue[[]any] {
@@ -81693,6 +81721,7 @@ type mqlIp6tables struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlIp6tablesInternal
+	Installed     plugin.TValue[bool]
 	Tables        plugin.TValue[[]any]
 	Input         plugin.TValue[[]any]
 	Output        plugin.TValue[[]any]
@@ -81732,6 +81761,12 @@ func (c *mqlIp6tables) MqlName() string {
 
 func (c *mqlIp6tables) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlIp6tables) GetInstalled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Installed, func() (bool, error) {
+		return c.installed()
+	})
 }
 
 func (c *mqlIp6tables) GetTables() *plugin.TValue[[]any] {
@@ -82103,11 +82138,12 @@ type mqlNftables struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlNftablesInternal
-	Version plugin.TValue[string]
-	Tables  plugin.TValue[[]any]
-	Chains  plugin.TValue[[]any]
-	Rules   plugin.TValue[[]any]
-	Sets    plugin.TValue[[]any]
+	Installed plugin.TValue[bool]
+	Version   plugin.TValue[string]
+	Tables    plugin.TValue[[]any]
+	Chains    plugin.TValue[[]any]
+	Rules     plugin.TValue[[]any]
+	Sets      plugin.TValue[[]any]
 }
 
 // createNftables creates a new instance of this resource
@@ -82145,6 +82181,12 @@ func (c *mqlNftables) MqlName() string {
 
 func (c *mqlNftables) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlNftables) GetInstalled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Installed, func() (bool, error) {
+		return c.installed()
+	})
 }
 
 func (c *mqlNftables) GetVersion() *plugin.TValue[string] {

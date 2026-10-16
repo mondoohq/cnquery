@@ -346,3 +346,41 @@ func TestLoadSavedDump_EmptyOutputIsNotAnEmptyRuleset(t *testing.T) {
 	assert.True(t, available)
 	require.Len(t, dump.Tables, 1)
 }
+
+func TestBinaryInstalled(t *testing.T) {
+	newConn := func(files map[string]*mock.MockFileData, commands map[string]*mock.Command) *mock.Connection {
+		conn, err := mock.New(0, &inventory.Asset{
+			Platform: &inventory.Platform{Name: "ubuntu", Family: []string{"debian", "linux", "unix"}},
+		}, mock.WithData(&mock.TomlData{Files: files, Commands: commands}))
+		require.NoError(t, err)
+		return conn
+	}
+
+	t.Run("binary in sbin", func(t *testing.T) {
+		conn := newConn(map[string]*mock.MockFileData{
+			"/usr/sbin/iptables": {Path: "/usr/sbin/iptables", StatData: mock.FileInfo{Mode: 0o755}},
+		}, nil)
+		assert.True(t, binaryInstalled(conn, "iptables"))
+		assert.False(t, binaryInstalled(conn, "ip6tables"))
+	})
+
+	t.Run("binary in /usr/local", func(t *testing.T) {
+		conn := newConn(map[string]*mock.MockFileData{
+			"/usr/local/sbin/nft": {Path: "/usr/local/sbin/nft", StatData: mock.FileInfo{Mode: 0o755}},
+		}, nil)
+		assert.True(t, binaryInstalled(conn, "nft"))
+	})
+
+	t.Run("binary only on PATH", func(t *testing.T) {
+		conn := newConn(nil, map[string]*mock.Command{
+			lookupViaCommandLine("nft"): {Stdout: "/opt/nftables/bin/nft\n"},
+		})
+		assert.True(t, binaryInstalled(conn, "nft"))
+	})
+
+	t.Run("binary absent", func(t *testing.T) {
+		conn := newConn(nil, nil)
+		assert.False(t, binaryInstalled(conn, "iptables"))
+		assert.False(t, binaryInstalled(conn, "nft"))
+	})
+}

@@ -1211,6 +1211,10 @@ func nftHandleData(handle int64, noHandle bool) *llx.RawData {
 	return llx.IntData(handle)
 }
 
+func (n *mqlNftables) installed() (bool, error) {
+	return binaryInstalled(n.MqlRuntime.Connection.(shared.Connection), "nft"), nil
+}
+
 func (n *mqlNftables) version() (string, error) {
 	return n.fetchVersion()
 }
