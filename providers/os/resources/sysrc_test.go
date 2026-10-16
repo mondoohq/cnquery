@@ -300,6 +300,25 @@ empty_kept="${unset_var-}"
 		require.Equal(t, "/opt", values["x"])
 	})
 
+	t.Run("nested references expand", func(t *testing.T) {
+		values, err := ResolveSysrcValues(reader(map[string]string{
+			"/etc/defaults/rc.conf": "b=\"inner\"\nx=\"${unset_a:-${b:-none}}/end\"\ny=\"${unset_a:-${unset_b:-none}}\"\n",
+		}), nil)
+		require.NoError(t, err)
+		require.Equal(t, "inner/end", values["x"])
+		require.Equal(t, "none", values["y"])
+	})
+
+	t.Run("default assignment without colon keeps an empty value", func(t *testing.T) {
+		values, err := ResolveSysrcValues(reader(map[string]string{
+			"/etc/defaults/rc.conf": "empty=\"\"\n: ${empty=\"x\"}\n: ${unset_v=\"y\"}\n: ${empty2:=\"z\"}\nempty2=\"\"\n: ${empty2:=\"z\"}\n",
+		}), nil)
+		require.NoError(t, err)
+		require.Equal(t, "", values["empty"])
+		require.Equal(t, "y", values["unset_v"])
+		require.Equal(t, "z", values["empty2"])
+	})
+
 	t.Run("read errors are returned", func(t *testing.T) {
 		_, err := ResolveSysrcValues(func(string) (string, bool, error) {
 			return "", false, errors.New("permission denied")

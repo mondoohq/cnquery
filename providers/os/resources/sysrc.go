@@ -241,7 +241,7 @@ func ParseSysrc(content string) []SysrcEntry {
 	for _, a := range parseSysrcAssignments(content) {
 		value, _ := parseShellWord(a.word, nil)
 		if idx, ok := seen[a.name]; ok {
-			if !a.ifUnset || entries[idx].Value == "" {
+			if a.applies(entries[idx].Value, true) {
 				// Update existing entry in place (last assignment wins)
 				entries[idx].Value = value
 			}
@@ -259,9 +259,23 @@ type sysrcAssignment struct {
 	name string
 	// word is the unparsed value, starting right after `=`
 	word string
-	// ifUnset marks `: ${name:=word}`, which assigns only when name is unset
-	// or empty
-	ifUnset bool
+	// cond is the operator of a `: ${name<cond>word}` default: ":=" assigns
+	// when name is unset or empty, "=" only when it is unset. Empty for a
+	// plain assignment.
+	cond string
+}
+
+// applies reports whether the assignment takes effect given the variable's
+// current value and whether it is set.
+func (a sysrcAssignment) applies(current string, set bool) bool {
+	switch a.cond {
+	case ":=":
+		return current == ""
+	case "=":
+		return !set
+	default:
+		return true
+	}
 }
 
 // parseSysrcAssignments returns the top-level variable assignments in
@@ -294,16 +308,25 @@ func parseSysrcAssignments(content string) []sysrcAssignment {
 		}
 
 		// `: ${name:="value"}` sets a default, as /etc/defaults/rc.conf does
-		// for _localbase
-		if rest, ok := strings.CutPrefix(line, ": ${"); ok {
-			name, word, ok := strings.Cut(rest, ":=")
-			end := strings.LastIndexByte(word, '}')
-			if !ok || !isShellName(name) || end < 0 {
+		// for _localbase, and `: ${name="value"}` sets one only when unset
+		if strings.HasPrefix(line, ": ${") {
+			end := matchingBrace(line[2:])
+			n := shellNamePrefix(line[4:])
+			if end < 0 || n == 0 {
 				continue
 			}
-			word = word[:end]
+			name, rest := line[4:4+n], line[4+n:2+end]
+			cond := ":="
+			word, ok := strings.CutPrefix(rest, cond)
+			if !ok {
+				cond = "="
+				word, ok = strings.CutPrefix(rest, cond)
+			}
+			if !ok {
+				continue
+			}
 			if _, ok := parseShellWord(word, nil); ok {
-				res = append(res, sysrcAssignment{name: name, word: word, ifUnset: true})
+				res = append(res, sysrcAssignment{name: name, word: word, cond: cond})
 			}
 			continue
 		}
@@ -350,6 +373,35 @@ func sysrcBlockDelta(line string) int {
 		return 1
 	}
 	return 0
+}
+
+// shellNamePrefix returns the length of the shell variable name at the start
+// of s, or 0 if there is none.
+func shellNamePrefix(s string) int {
+	n := 0
+	for n < len(s) && isShellName(s[:n+1]) {
+		n++
+	}
+	return n
+}
+
+// matchingBrace returns the index of the `}` closing the `${` at the start of
+// s, counting nested `${...}`, or -1 if it is never closed.
+func matchingBrace(s string) int {
+	depth := 0
+	for i := 0; i < len(s); i++ {
+		switch {
+		case s[i] == '$' && i+1 < len(s) && s[i+1] == '{':
+			depth++
+			i++
+		case s[i] == '}':
+			depth--
+			if depth == 0 {
+				return i
+			}
+		}
+	}
+	return -1
 }
 
 // isShellName reports whether s is a valid shell variable name.
@@ -428,16 +480,13 @@ func parseShellWord(s string, lookup func(name string) (string, bool)) (string, 
 // it does not recognize is written as is.
 func expandShellParam(b *strings.Builder, s string, lookup func(name string) (string, bool)) int {
 	if strings.HasPrefix(s, "${") {
-		end := strings.IndexByte(s, '}')
+		end := matchingBrace(s)
 		if end < 0 {
 			b.WriteByte('$')
 			return 1
 		}
 		inner := s[2:end]
-		n := 0
-		for n < len(inner) && isShellName(inner[:n+1]) {
-			n++
-		}
+		n := shellNamePrefix(inner)
 		name, op := inner[:n], inner[n:]
 		value, set := lookup(name)
 		switch {
@@ -461,17 +510,14 @@ func expandShellParam(b *strings.Builder, s string, lookup func(name string) (st
 		return end + 1
 	}
 
-	n := 1
-	for n < len(s) && isShellName(s[1:n+1]) {
-		n++
-	}
-	if n == 1 {
+	n := shellNamePrefix(s[1:])
+	if n == 0 {
 		b.WriteByte('$')
 		return 1
 	}
-	value, _ := lookup(s[1:n])
+	value, _ := lookup(s[1 : n+1])
 	b.WriteString(value)
-	return n
+	return n + 1
 }
 
 // ResolveSysrcValues returns the effective value of every variable the way
@@ -492,7 +538,7 @@ func ResolveSysrcValues(read func(path string) (string, bool, error), rcConfs []
 			return ok, err
 		}
 		for _, a := range parseSysrcAssignments(content) {
-			if a.ifUnset && values[a.name] != "" {
+			if current, set := values[a.name]; !a.applies(current, set) {
 				continue
 			}
 			values[a.name], _ = parseShellWord(a.word, lookup)
