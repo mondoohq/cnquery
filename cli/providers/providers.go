@@ -17,7 +17,6 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/mql/cli/components"
 	"go.mondoo.com/mql/cli/config"
-	"go.mondoo.com/mql/cli/selfupdate"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -122,7 +121,7 @@ func EffectiveRegistryURL() string {
 	if registryURL := RegistryURL(); registryURL != "" {
 		return registryURL
 	}
-	return strings.TrimSuffix(selfupdate.DefaultUpdatesURL, "/") + "/providers"
+	return providers.NewMondooProviderRegistry().BaseURL
 }
 
 func detectConnectorName(args []string, rootCmd *cobra.Command, commands []*Command, existing providers.Providers) cliPreflight {
