@@ -98,6 +98,20 @@ mql> ibm.iamPolicies.where(roles.contains("Administrator")) { subjectAttributes 
 mql> ibm.iamApiKeys.where(expiresAt == null) { name iamId createdAt lastAuthentication }
 ```
 
+**API keys and service IDs not used in the last 90 days**
+
+```shell
+mql> ibm.iamApiKeys.where(lastAuthentication == null || lastAuthentication < time.now - 90 * time.day) { name iamId lastAuthentication authenticationCount }
+mql> ibm.iamServiceIds.where(lastAuthentication == null || lastAuthentication < time.now - 90 * time.day) { name lastAuthentication }
+```
+
+`lastAuthentication` and `authenticationCount` of API keys, service IDs, and trusted profiles come
+from IBM Cloud's activity data, which the list calls do not return. They are read with one extra
+call per identity, and only when a query asks for them. IBM Cloud records activity only while it
+has activity data for the identity: a key that never authenticated, or one IBM Cloud has no
+activity data for, has a null `lastAuthentication`. Reading activity needs the same Viewer role on
+IAM Identity as listing the identities; a refused call is an error on the field.
+
 **Security group rules open to the internet**
 
 ```shell

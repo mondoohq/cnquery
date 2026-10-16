@@ -4,10 +4,14 @@
 package resources
 
 import (
+	"time"
+
+	"github.com/IBM/go-sdk-core/v5/core"
 	"github.com/IBM/platform-services-go-sdk/iamaccessgroupsv2"
 	"github.com/IBM/platform-services-go-sdk/iamidentityv1"
 	"github.com/IBM/platform-services-go-sdk/iampolicymanagementv1"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 // pageSize is the largest page the IAM identity APIs accept.
@@ -219,12 +223,30 @@ func policyArgs(p iampolicymanagementv1.PolicyTemplateMetaData) map[string]*llx.
 
 func (r *mqlIbm) iamServiceIds() ([]any, error) {
 	c := conn(r.MqlRuntime)
-	accountID := c.AccountID()
+	all, err := listServiceIDs(c.IamIdentity(), c.AccountID())
+	if err != nil {
+		return nil, err
+	}
+	out := make([]any, 0, len(all))
+	for _, s := range all {
+		res, err := CreateResource(r.MqlRuntime, "ibm.iam.serviceId", serviceIDArgs(s))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// listServiceIDs reads every service ID of the account. The list call carries
+// no activity; lastAuthentication and authenticationCount are read per
+// service ID.
+func listServiceIDs(svc *iamidentityv1.IamIdentityV1, accountID string) ([]iamidentityv1.ServiceID, error) {
 	size := pageSize
 	opts := &iamidentityv1.ListServiceIdsOptions{AccountID: &accountID, Pagesize: &size}
 	var all []iamidentityv1.ServiceID
 	for {
-		res, _, err := c.IamIdentity().ListServiceIds(opts)
+		res, _, err := svc.ListServiceIds(opts)
 		if err != nil {
 			return nil, classifyError(err, "iam-identity.serviceid.get")
 		}
@@ -235,32 +257,41 @@ func (r *mqlIbm) iamServiceIds() ([]any, error) {
 		}
 		opts.Pagetoken = next
 	}
-	out := make([]any, 0, len(all))
-	for _, s := range all {
-		args := map[string]*llx.RawData{
-			"__id":                llx.StringData("ibm.iam.serviceId/" + derefStr(s.ID)),
-			"id":                  strData(s.ID),
-			"iamId":               strData(s.IamID),
-			"name":                strData(s.Name),
-			"description":         strData(s.Description),
-			"crn":                 strData(s.CRN),
-			"locked":              llx.BoolDataPtr(s.Locked),
-			"createdAt":           dateTimeData(s.CreatedAt),
-			"modifiedAt":          dateTimeData(s.ModifiedAt),
-			"lastAuthentication":  llx.NilData,
-			"authenticationCount": llx.NilData,
-		}
-		if s.Activity != nil {
-			args["lastAuthentication"] = rfc3339Data(s.Activity.LastAuthn)
-			args["authenticationCount"] = intPtrData(s.Activity.AuthnCount)
-		}
-		res, err := CreateResource(r.MqlRuntime, "ibm.iam.serviceId", args)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, res)
+	return all, nil
+}
+
+func serviceIDArgs(s iamidentityv1.ServiceID) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":        llx.StringData("ibm.iam.serviceId/" + derefStr(s.ID)),
+		"id":          strData(s.ID),
+		"iamId":       strData(s.IamID),
+		"name":        strData(s.Name),
+		"description": strData(s.Description),
+		"crn":         strData(s.CRN),
+		"locked":      llx.BoolDataPtr(s.Locked),
+		"createdAt":   dateTimeData(s.CreatedAt),
+		"modifiedAt":  dateTimeData(s.ModifiedAt),
 	}
-	return out, nil
+}
+
+func (r *mqlIbmIamServiceId) activity() (*iamidentityv1.Activity, error) {
+	return identityActivity(r.MqlRuntime, "serviceid", r.Id.Data, serviceIDActivity)
+}
+
+func (r *mqlIbmIamServiceId) lastAuthentication() (*time.Time, error) {
+	a, err := r.activity()
+	if err != nil {
+		return nil, err
+	}
+	return lastAuthn(a, &r.LastAuthentication), nil
+}
+
+func (r *mqlIbmIamServiceId) authenticationCount() (int64, error) {
+	a, err := r.activity()
+	if err != nil {
+		return 0, err
+	}
+	return authnCount(a, &r.AuthenticationCount), nil
 }
 
 // apiKeys scans the listed API keys for the ones owned by this service ID.
@@ -286,22 +317,9 @@ func (r *mqlIbmIamServiceId) apiKeys() ([]any, error) {
 
 func (r *mqlIbm) iamApiKeys() ([]any, error) {
 	c := conn(r.MqlRuntime)
-	accountID := c.AccountID()
-	size := pageSize
-	scope := "account"
-	opts := &iamidentityv1.ListAPIKeysOptions{AccountID: &accountID, Pagesize: &size, Scope: &scope}
-	var all []iamidentityv1.APIKey
-	for {
-		res, _, err := c.IamIdentity().ListAPIKeys(opts)
-		if err != nil {
-			return nil, classifyError(err, "iam-identity.apikey.list")
-		}
-		all = append(all, res.Apikeys...)
-		next := pageToken(res.Next, "pagetoken")
-		if !advances(opts.Pagetoken, next) {
-			break
-		}
-		opts.Pagetoken = next
+	all, err := listAPIKeys(c.IamIdentity(), c.AccountID())
+	if err != nil {
+		return nil, err
 	}
 	out := make([]any, 0, len(all))
 	for _, k := range all {
@@ -314,31 +332,66 @@ func (r *mqlIbm) iamApiKeys() ([]any, error) {
 	return out, nil
 }
 
+// listAPIKeys reads every API key of the account. The list call carries no
+// activity; lastAuthentication and authenticationCount are read per key.
+func listAPIKeys(svc *iamidentityv1.IamIdentityV1, accountID string) ([]iamidentityv1.APIKey, error) {
+	size := pageSize
+	scope := "account"
+	opts := &iamidentityv1.ListAPIKeysOptions{AccountID: &accountID, Pagesize: &size, Scope: &scope}
+	var all []iamidentityv1.APIKey
+	for {
+		res, _, err := svc.ListAPIKeys(opts)
+		if err != nil {
+			return nil, classifyError(err, "iam-identity.apikey.list")
+		}
+		all = append(all, res.Apikeys...)
+		next := pageToken(res.Next, "pagetoken")
+		if !advances(opts.Pagetoken, next) {
+			break
+		}
+		opts.Pagetoken = next
+	}
+	return all, nil
+}
+
 // apiKeyArgs maps an API key's metadata. The key value itself is never read:
 // the list call does not return it, and nothing here asks for it.
 func apiKeyArgs(k iamidentityv1.APIKey) map[string]*llx.RawData {
-	args := map[string]*llx.RawData{
-		"__id":                llx.StringData("ibm.iam.apiKey/" + derefStr(k.ID)),
-		"id":                  strData(k.ID),
-		"name":                strData(k.Name),
-		"description":         strData(k.Description),
-		"crn":                 strData(k.CRN),
-		"iamId":               strData(k.IamID),
-		"locked":              llx.BoolDataPtr(k.Locked),
-		"disabled":            llx.BoolDataPtr(k.Disabled),
-		"createdAt":           dateTimeData(k.CreatedAt),
-		"createdBy":           strData(k.CreatedBy),
-		"expiresAt":           rfc3339Data(k.ExpiresAt),
-		"actionWhenLeaked":    strData(k.ActionWhenLeaked),
-		"supportSessions":     llx.BoolDataPtr(k.SupportSessions),
-		"lastAuthentication":  llx.NilData,
-		"authenticationCount": llx.NilData,
+	return map[string]*llx.RawData{
+		"__id":             llx.StringData("ibm.iam.apiKey/" + derefStr(k.ID)),
+		"id":               strData(k.ID),
+		"name":             strData(k.Name),
+		"description":      strData(k.Description),
+		"crn":              strData(k.CRN),
+		"iamId":            strData(k.IamID),
+		"locked":           llx.BoolDataPtr(k.Locked),
+		"disabled":         llx.BoolDataPtr(k.Disabled),
+		"createdAt":        dateTimeData(k.CreatedAt),
+		"createdBy":        strData(k.CreatedBy),
+		"expiresAt":        rfc3339Data(k.ExpiresAt),
+		"actionWhenLeaked": strData(k.ActionWhenLeaked),
+		"supportSessions":  llx.BoolDataPtr(k.SupportSessions),
 	}
-	if k.Activity != nil {
-		args["lastAuthentication"] = rfc3339Data(k.Activity.LastAuthn)
-		args["authenticationCount"] = intPtrData(k.Activity.AuthnCount)
+}
+
+func (r *mqlIbmIamApiKey) activity() (*iamidentityv1.Activity, error) {
+	return identityActivity(r.MqlRuntime, "apikey", r.Id.Data, apiKeyActivity)
+}
+
+func (r *mqlIbmIamApiKey) lastAuthentication() (*time.Time, error) {
+	a, err := r.activity()
+	if err != nil {
+		return nil, err
 	}
-	return args
+	return lastAuthn(a, &r.LastAuthentication), nil
+}
+
+func (r *mqlIbmIamApiKey) authenticationCount() (int64, error) {
+	a, err := r.activity()
+	if err != nil {
+		return 0, err
+	}
+	return authnCount(a, &r.AuthenticationCount), nil
 }
 
 // serviceId resolves the owning service ID through the listed service IDs. A
@@ -363,12 +416,30 @@ func (r *mqlIbmIamApiKey) serviceId() (*mqlIbmIamServiceId, error) {
 
 func (r *mqlIbm) iamTrustedProfiles() ([]any, error) {
 	c := conn(r.MqlRuntime)
-	accountID := c.AccountID()
+	all, err := listTrustedProfiles(c.IamIdentity(), c.AccountID())
+	if err != nil {
+		return nil, err
+	}
+	out := make([]any, 0, len(all))
+	for _, p := range all {
+		res, err := CreateResource(r.MqlRuntime, "ibm.iam.trustedProfile", trustedProfileArgs(p))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// listTrustedProfiles reads every trusted profile of the account. The list
+// call carries no activity; lastAuthentication and authenticationCount are
+// read per profile.
+func listTrustedProfiles(svc *iamidentityv1.IamIdentityV1, accountID string) ([]iamidentityv1.TrustedProfile, error) {
 	size := pageSize
 	opts := &iamidentityv1.ListProfilesOptions{AccountID: &accountID, Pagesize: &size}
 	var all []iamidentityv1.TrustedProfile
 	for {
-		res, _, err := c.IamIdentity().ListProfiles(opts)
+		res, _, err := svc.ListProfiles(opts)
 		if err != nil {
 			return nil, classifyError(err, "iam-identity.profile.get")
 		}
@@ -379,28 +450,110 @@ func (r *mqlIbm) iamTrustedProfiles() ([]any, error) {
 		}
 		opts.Pagetoken = next
 	}
-	out := make([]any, 0, len(all))
-	for _, p := range all {
-		args := map[string]*llx.RawData{
-			"__id":                llx.StringData("ibm.iam.trustedProfile/" + derefStr(p.ID)),
-			"id":                  strData(p.ID),
-			"iamId":               strData(p.IamID),
-			"name":                strData(p.Name),
-			"description":         strData(p.Description),
-			"crn":                 strData(p.CRN),
-			"createdAt":           dateTimeData(p.CreatedAt),
-			"lastAuthentication":  llx.NilData,
-			"authenticationCount": llx.NilData,
-		}
-		if p.Activity != nil {
-			args["lastAuthentication"] = rfc3339Data(p.Activity.LastAuthn)
-			args["authenticationCount"] = intPtrData(p.Activity.AuthnCount)
-		}
-		res, err := CreateResource(r.MqlRuntime, "ibm.iam.trustedProfile", args)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, res)
+	return all, nil
+}
+
+func trustedProfileArgs(p iamidentityv1.TrustedProfile) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":        llx.StringData("ibm.iam.trustedProfile/" + derefStr(p.ID)),
+		"id":          strData(p.ID),
+		"iamId":       strData(p.IamID),
+		"name":        strData(p.Name),
+		"description": strData(p.Description),
+		"crn":         strData(p.CRN),
+		"createdAt":   dateTimeData(p.CreatedAt),
 	}
-	return out, nil
+}
+
+func (r *mqlIbmIamTrustedProfile) activity() (*iamidentityv1.Activity, error) {
+	return identityActivity(r.MqlRuntime, "profile", r.Id.Data, trustedProfileActivity)
+}
+
+func (r *mqlIbmIamTrustedProfile) lastAuthentication() (*time.Time, error) {
+	a, err := r.activity()
+	if err != nil {
+		return nil, err
+	}
+	return lastAuthn(a, &r.LastAuthentication), nil
+}
+
+func (r *mqlIbmIamTrustedProfile) authenticationCount() (int64, error) {
+	a, err := r.activity()
+	if err != nil {
+		return 0, err
+	}
+	return authnCount(a, &r.AuthenticationCount), nil
+}
+
+// ---- activity ----
+
+// IBM Cloud returns an identity's activity (its last authentication and
+// authentication count) only from the identity's own get call, and only when
+// asked with include_activity=true. The list calls never carry it, so these
+// fields are read per identity, once, and both share the one call.
+
+// identityActivity runs get once per identity for the lifetime of the
+// connection. An identity without an id has no activity.
+func identityActivity(runtime *plugin.Runtime, kind string, id string, get func(*iamidentityv1.IamIdentityV1, string) (*iamidentityv1.Activity, error)) (*iamidentityv1.Activity, error) {
+	if id == "" {
+		return nil, nil
+	}
+	c := conn(runtime)
+	v, err := c.Memo("iam/activity/"+kind+"/"+id, func() (any, error) {
+		return get(c.IamIdentity(), id)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return v.(*iamidentityv1.Activity), nil
+}
+
+func apiKeyActivity(svc *iamidentityv1.IamIdentityV1, id string) (*iamidentityv1.Activity, error) {
+	k, _, err := svc.GetAPIKey(&iamidentityv1.GetAPIKeyOptions{ID: &id, IncludeActivity: core.BoolPtr(true)})
+	if err != nil {
+		return nil, classifyError(err, "iam-identity.apikey.get")
+	}
+	return k.Activity, nil
+}
+
+func serviceIDActivity(svc *iamidentityv1.IamIdentityV1, id string) (*iamidentityv1.Activity, error) {
+	s, _, err := svc.GetServiceID(&iamidentityv1.GetServiceIDOptions{ID: &id, IncludeActivity: core.BoolPtr(true)})
+	if err != nil {
+		return nil, classifyError(err, "iam-identity.serviceid.get")
+	}
+	return s.Activity, nil
+}
+
+func trustedProfileActivity(svc *iamidentityv1.IamIdentityV1, id string) (*iamidentityv1.Activity, error) {
+	p, _, err := svc.GetProfile(&iamidentityv1.GetProfileOptions{ProfileID: &id, IncludeActivity: core.BoolPtr(true)})
+	if err != nil {
+		return nil, classifyError(err, "iam-identity.profile.get")
+	}
+	return p.Activity, nil
+}
+
+// lastAuthn reads the last authentication; an identity that never
+// authenticated, or that IBM Cloud has no activity for, reads as null rather
+// than the zero time.
+func lastAuthn(a *iamidentityv1.Activity, field *plugin.TValue[*time.Time]) *time.Time {
+	if a == nil || a.LastAuthn == nil || *a.LastAuthn == "" {
+		nullResource(field)
+		return nil
+	}
+	t, err := time.Parse(time.RFC3339, *a.LastAuthn)
+	if err != nil {
+		nullResource(field)
+		return nil
+	}
+	return &t
+}
+
+// authnCount reads the authentication count; without activity data it is
+// null.
+func authnCount(a *iamidentityv1.Activity, field *plugin.TValue[int64]) int64 {
+	if a == nil || a.AuthnCount == nil {
+		nullResource(field)
+		return 0
+	}
+	return *a.AuthnCount
 }

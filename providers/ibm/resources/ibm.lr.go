@@ -5205,11 +5205,15 @@ func (c *mqlIbmIamServiceId) GetModifiedAt() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlIbmIamServiceId) GetLastAuthentication() *plugin.TValue[*time.Time] {
-	return &c.LastAuthentication
+	return plugin.GetOrCompute[*time.Time](&c.LastAuthentication, func() (*time.Time, error) {
+		return c.lastAuthentication()
+	})
 }
 
 func (c *mqlIbmIamServiceId) GetAuthenticationCount() *plugin.TValue[int64] {
-	return &c.AuthenticationCount
+	return plugin.GetOrCompute[int64](&c.AuthenticationCount, func() (int64, error) {
+		return c.authenticationCount()
+	})
 }
 
 func (c *mqlIbmIamServiceId) GetApiKeys() *plugin.TValue[[]any] {
@@ -5331,11 +5335,15 @@ func (c *mqlIbmIamApiKey) GetSupportSessions() *plugin.TValue[bool] {
 }
 
 func (c *mqlIbmIamApiKey) GetLastAuthentication() *plugin.TValue[*time.Time] {
-	return &c.LastAuthentication
+	return plugin.GetOrCompute[*time.Time](&c.LastAuthentication, func() (*time.Time, error) {
+		return c.lastAuthentication()
+	})
 }
 
 func (c *mqlIbmIamApiKey) GetAuthenticationCount() *plugin.TValue[int64] {
-	return &c.AuthenticationCount
+	return plugin.GetOrCompute[int64](&c.AuthenticationCount, func() (int64, error) {
+		return c.authenticationCount()
+	})
 }
 
 func (c *mqlIbmIamApiKey) GetServiceId() *plugin.TValue[*mqlIbmIamServiceId] {
@@ -5426,11 +5434,15 @@ func (c *mqlIbmIamTrustedProfile) GetCreatedAt() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlIbmIamTrustedProfile) GetLastAuthentication() *plugin.TValue[*time.Time] {
-	return &c.LastAuthentication
+	return plugin.GetOrCompute[*time.Time](&c.LastAuthentication, func() (*time.Time, error) {
+		return c.lastAuthentication()
+	})
 }
 
 func (c *mqlIbmIamTrustedProfile) GetAuthenticationCount() *plugin.TValue[int64] {
-	return &c.AuthenticationCount
+	return plugin.GetOrCompute[int64](&c.AuthenticationCount, func() (int64, error) {
+		return c.authenticationCount()
+	})
 }
 
 // mqlIbmRegion for the ibm.region resource
