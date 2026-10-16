@@ -15218,6 +15218,25 @@ macos.hardware @defaults("machineName chipType physicalMemory serialNumber") {
   serialNumber string
 }
 
+// macOS system profiler report for one data type
+//
+// The records `system_profiler` reports for a single data type, as
+// dicts with the keys macOS uses in its JSON output. The `dataType`
+// field selects the report, for example
+// `macos.systemProfiler("SPStorageDataType").items` for mounted
+// volumes and their physical drives, `SPPowerDataType` for battery
+// health and power settings, or `SPNetworkDataType` for network
+// services with their DNS and proxy settings. Run
+// `system_profiler -listDataTypes` for the names a Mac supports. An
+// unknown data type is an error, not an empty list.
+macos.systemProfiler @defaults("dataType") {
+  init(dataType string)
+  // Name of the system_profiler data type, for example SPPowerDataType
+  dataType string
+  // Records reported for the data type
+  items() []dict
+}
+
 // macOS application layer firewall (raw ALF preference values)
 //
 // Raw integer flags read from the Application Layer Firewall plist

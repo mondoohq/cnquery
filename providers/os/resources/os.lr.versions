@@ -3217,6 +3217,9 @@ macos.systemExtension.teamID 11.2.20
 macos.systemExtension.uuid 11.2.20
 macos.systemExtension.version 11.2.20
 macos.systemExtensions 11.2.20
+macos.systemProfiler 14.25.1
+macos.systemProfiler.dataType 14.25.1
+macos.systemProfiler.items 14.25.1
 macos.systemsetup 9.0.1
 macos.systemsetup.allowPowerButtonToSleepComputer 9.0.1
 macos.systemsetup.computerName 9.0.1
