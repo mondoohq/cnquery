@@ -11219,12 +11219,15 @@ private secboot.image @defaults("path kernel signed") {
 
 // FreeBSD rc.conf system configuration
 //
-// FreeBSD service and system configuration merged from rc.conf and
-// rc.conf.local. The `entries` accessor exposes each variable assignment as
-// a structured name/value pair (with the file it came from), so audits can
-// assert on individual settings such as sshd_enable or a firewall being
-// turned on. `content` returns the concatenated raw text. Point at a
-// specific file with `sysrc(path: "...")`.
+// FreeBSD service and system configuration from rc.conf, rc.conf.local,
+// /usr/local/etc/rc.conf and rc.conf.d. `values` holds the effective value of
+// every variable the way `sysrc -n` reports it: /etc/defaults/rc.conf first,
+// then each file in rc_conf_files, the last assignment winning. For example
+// `sysrc.values["syslogd_flags"] == "-s"` passes on a host that keeps the
+// stock default. `entries` lists each assignment per file, without defaults
+// or precedence, and `content` returns the concatenated raw text. Point at a
+// specific file with `sysrc("/path/to/rc.conf")`; its `values` then apply
+// that file over the defaults, as `sysrc -f` does.
 sysrc @defaults("files") {
   init(path? string)
   // List of rc.conf files that make up the configuration
@@ -11233,6 +11236,14 @@ sysrc @defaults("files") {
   content(files) string
   // Parsed key-value entries from all rc.conf files
   entries(files) []sysrc.entry
+  // Effective value of every rc.conf variable
+  //
+  // Variable name to the value `sysrc -n` reports: /etc/defaults/rc.conf and
+  // /etc/defaults/vendor.conf, overridden by each file in rc_conf_files in
+  // order, the last assignment winning. A variable no file sets is absent.
+  // References such as `${_localbase}` expand to the value set before them.
+  // Assignments inside shell conditionals or functions are not evaluated.
+  values(files) map[string]string
 }
 
 // Single rc.conf variable entry
