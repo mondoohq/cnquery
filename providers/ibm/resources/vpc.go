@@ -1058,6 +1058,7 @@ func (r *mqlIbm) vpcVolumes() ([]any, error) {
 			"encryption":      strData(v.Encryption),
 			"status":          strData(v.Status),
 			"attachmentState": strData(v.AttachmentState),
+			"attachmentTypes": stringsData(volumeAttachmentTypes(v)),
 			"createdAt":       dateTimeData(v.CreatedAt),
 		}
 		if v.Profile != nil {
@@ -1080,6 +1081,18 @@ func (r *mqlIbm) vpcVolumes() ([]any, error) {
 		out = append(out, m)
 	}
 	return out, nil
+}
+
+// volumeAttachmentTypes returns the type of each of a volume's attachments,
+// boot or data, so a boot volume can be told from a data volume.
+func volumeAttachmentTypes(v vpcv1.Volume) []string {
+	out := make([]string, 0, len(v.VolumeAttachments))
+	for _, a := range v.VolumeAttachments {
+		if a.Type != nil && *a.Type != "" {
+			out = append(out, *a.Type)
+		}
+	}
+	return out
 }
 
 func (r *mqlIbmVpcVolume) resourceGroup() (*mqlIbmResourceGroup, error) {

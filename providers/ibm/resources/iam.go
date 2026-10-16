@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"github.com/IBM/go-sdk-core/v5/core"
+	"github.com/IBM/platform-services-go-sdk/accountmanagementv4"
 	"github.com/IBM/platform-services-go-sdk/iamaccessgroupsv2"
 	"github.com/IBM/platform-services-go-sdk/iamidentityv1"
 	"github.com/IBM/platform-services-go-sdk/iampolicymanagementv1"
+	"github.com/IBM/platform-services-go-sdk/usermanagementv1"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -306,13 +308,21 @@ func (r *mqlIbmIamServiceId) apiKeys() ([]any, error) {
 	if list.Error != nil {
 		return nil, list.Error
 	}
+	return apiKeysOf(list.Data, r.IamId.Data), nil
+}
+
+// apiKeysOf returns the listed API keys owned by an IAM ID.
+func apiKeysOf(keys []any, iamID string) []any {
 	out := []any{}
-	for _, e := range list.Data {
-		if k := e.(*mqlIbmIamApiKey); k.IamId.Data == r.IamId.Data {
+	if iamID == "" {
+		return out
+	}
+	for _, e := range keys {
+		if k, ok := e.(*mqlIbmIamApiKey); ok && k.IamId.Data == iamID {
 			out = append(out, k)
 		}
 	}
-	return out, nil
+	return out
 }
 
 // ---- API keys ----
@@ -412,6 +422,220 @@ func (r *mqlIbmIamApiKey) serviceId() (*mqlIbmIamServiceId, error) {
 	}
 	nullResource(&r.ServiceId)
 	return nil, nil
+}
+
+// user resolves the owning user through the listed users. A key owned by a
+// service ID has no user and reads as null.
+func (r *mqlIbmIamApiKey) user() (*mqlIbmIamUser, error) {
+	ns, err := root(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	return resolveOne(&r.User, ns.GetIamUsers(), r.IamId.Data, func(u *mqlIbmIamUser) string { return u.IamId.Data })
+}
+
+// ---- users ----
+
+// listUsers reads every user of the account, following the next_url cursor.
+// A refusal is returned as an error, not as an empty list.
+func listUsers(svc *usermanagementv1.UserManagementV1, accountID string) ([]usermanagementv1.UserProfile, error) {
+	limit := pageSize
+	opts := &usermanagementv1.ListUsersOptions{AccountID: &accountID, Limit: &limit}
+	var all []usermanagementv1.UserProfile
+	for {
+		res, resp, err := svc.ListUsers(opts)
+		if err != nil {
+			return nil, classifyError(withStatus(err, resp), "user-management.user.read")
+		}
+		all = append(all, res.Resources...)
+		next := pageToken(res.NextURL, "_start")
+		if !advances(opts.Start, next) {
+			break
+		}
+		opts.Start = next
+	}
+	return all, nil
+}
+
+func userArgs(u usermanagementv1.UserProfile) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":      llx.StringData("ibm.iam.user/" + derefStr(u.IamID)),
+		"iamId":     strData(u.IamID),
+		"userId":    strData(u.UserID),
+		"email":     strData(u.Email),
+		"firstName": strData(u.Firstname),
+		"lastName":  strData(u.Lastname),
+		"realm":     strData(u.Realm),
+		"state":     strData(u.State),
+		"addedOn":   rfc3339Data(u.AddedOn),
+	}
+}
+
+func (r *mqlIbm) iamUsers() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	svc, err := c.UserManagement()
+	if err != nil {
+		return nil, err
+	}
+	users, err := listUsers(svc, c.AccountID())
+	if err != nil {
+		return nil, err
+	}
+	out := make([]any, 0, len(users))
+	for _, u := range users {
+		res, err := CreateResource(r.MqlRuntime, "ibm.iam.user", userArgs(u))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// accountOwnerIamID reads the IAM ID of the account's owner.
+func accountOwnerIamID(svc *accountmanagementv4.AccountManagementV4, accountID string) (string, error) {
+	res, _, err := svc.GetAccount(&accountmanagementv4.GetAccountOptions{AccountID: &accountID})
+	if err != nil {
+		return "", classifyError(err, "")
+	}
+	return derefStr(res.OwnerIamid), nil
+}
+
+// accountOwner compares the user with the account's owner, which is read once
+// per connection.
+func (r *mqlIbmIamUser) accountOwner() (bool, error) {
+	c := conn(r.MqlRuntime)
+	v, err := c.Memo("accountOwnerIamId", func() (any, error) {
+		svc, err := c.AccountManagement()
+		if err != nil {
+			return nil, err
+		}
+		return accountOwnerIamID(svc, c.AccountID())
+	})
+	if err != nil {
+		return false, err
+	}
+	return isAccountOwner(r.IamId.Data, v.(string)), nil
+}
+
+func isAccountOwner(iamID, ownerIamID string) bool {
+	return iamID != "" && iamID == ownerIamID
+}
+
+// mfa looks the user up in the account settings' per-user MFA list.
+func (r *mqlIbmIamUser) mfa() (string, error) {
+	ns, err := root(r.MqlRuntime)
+	if err != nil {
+		return "", err
+	}
+	s := ns.GetIamAccountSettings()
+	if s.Error != nil {
+		return "", s.Error
+	}
+	um := s.Data.GetUserMfa()
+	if um.Error != nil {
+		return "", um.Error
+	}
+	if v, ok := userMfaOf(um.Data, r.IamId.Data); ok {
+		return v, nil
+	}
+	nullResource(&r.Mfa)
+	return "", nil
+}
+
+// userMfaOf returns a user's own MFA setting from the per-user MFA map.
+func userMfaOf(userMfa map[string]any, iamID string) (string, bool) {
+	if iamID == "" {
+		return "", false
+	}
+	v, ok := userMfa[iamID].(string)
+	if !ok || v == "" {
+		return "", false
+	}
+	return v, true
+}
+
+// policies scans the listed policies for the ones whose subject is the user.
+func (r *mqlIbmIamUser) policies() ([]any, error) {
+	ns, err := root(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	list := ns.GetIamPolicies()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+	return policiesForIamID(list.Data, r.IamId.Data), nil
+}
+
+// policiesForIamID returns the policies assigned to an IAM ID directly.
+func policiesForIamID(policies []any, iamID string) []any {
+	out := []any{}
+	if iamID == "" {
+		return out
+	}
+	for _, e := range policies {
+		if p, ok := e.(*mqlIbmIamPolicy); ok {
+			if v, ok := p.SubjectAttributes.Data["iam_id"]; ok && v == iamID {
+				out = append(out, p)
+			}
+		}
+	}
+	return out
+}
+
+// accessGroups scans the listed access groups for the ones that list the user
+// as a member.
+func (r *mqlIbmIamUser) accessGroups() ([]any, error) {
+	ns, err := root(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	list := ns.GetIamAccessGroups()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+	return accessGroupsWithMember(list.Data, r.IamId.Data)
+}
+
+// accessGroupsWithMember returns the access groups an IAM ID is a member of.
+// A group whose members cannot be read fails the whole answer, so a refusal is
+// not mistaken for "not a member".
+func accessGroupsWithMember(groups []any, iamID string) ([]any, error) {
+	out := []any{}
+	if iamID == "" {
+		return out, nil
+	}
+	for _, e := range groups {
+		g, ok := e.(*mqlIbmIamAccessGroup)
+		if !ok {
+			continue
+		}
+		members := g.GetMembers()
+		if members.Error != nil {
+			return nil, members.Error
+		}
+		for _, m := range members.Data {
+			if mm, ok := m.(*mqlIbmIamAccessGroupMember); ok && mm.IamId.Data == iamID {
+				out = append(out, g)
+				break
+			}
+		}
+	}
+	return out, nil
+}
+
+// apiKeys scans the listed API keys for the ones owned by the user.
+func (r *mqlIbmIamUser) apiKeys() ([]any, error) {
+	ns, err := root(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	list := ns.GetIamApiKeys()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+	return apiKeysOf(list.Data, r.IamId.Data), nil
 }
 
 // ---- trusted profiles ----

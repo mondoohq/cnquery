@@ -10,9 +10,9 @@ option root = "ibm"
 // IBM Cloud account
 //
 // Root of the IBM Cloud provider, scoped to the account the API key belongs
-// to. Account-wide resources (IAM account settings, access groups, access and
-// authorization policies, service IDs, API keys, trusted profiles, resource
-// groups, and resource instances) are listed once. VPC infrastructure (VPCs,
+// to. Account-wide resources (IAM account settings, users, access groups,
+// access and authorization policies, service IDs, API keys, trusted profiles,
+// resource groups, and resource instances) are listed once. VPC infrastructure (VPCs,
 // subnets, virtual server instances, security groups, network ACLs, floating
 // IPs, public gateways, load balancers, block storage volumes, SSH keys, and
 // flow log collectors) is collected from every VPC region the connection is
@@ -40,6 +40,8 @@ ibm @root {
   iamApiKeys() []ibm.iam.apiKey
   // IAM trusted profiles
   iamTrustedProfiles() []ibm.iam.trustedProfile
+  // Users of the account
+  iamUsers() []ibm.iam.user
   // VPC regions the connection queries
   vpcRegions() []ibm.region
   // VPCs in all regions
@@ -309,6 +311,45 @@ private ibm.iam.apiKey @defaults("name iamId") {
   authenticationCount() int
   // Service ID that owns the key; null when a user owns it
   serviceId() ibm.iam.serviceId
+  // User that owns the key; null when a service ID owns it
+  user() ibm.iam.user
+}
+
+// IBM Cloud IAM user
+//
+// A user of the account, with their state, whether they own the account,
+// their own MFA setting, and the policies, access groups, and API keys that
+// apply to them.
+private ibm.iam.user @defaults("userId state") {
+  // IAM ID of the user
+  iamId string
+  // Login of the user, usually an email address or IBMid
+  userId string
+  // Email address
+  email string
+  // First name
+  firstName string
+  // Last name
+  lastName string
+  // Identity realm the user signs in through, for example IBMid
+  realm string
+  // State as IBM Cloud reports it: ACTIVE, PENDING, SUSPENDED, VPN_ONLY, or DISABLED_CLASSIC_INFRASTRUCTURE
+  state string
+  // Time the user was added to the account
+  addedOn time
+  // Whether the user owns the account
+  accountOwner() bool
+  // The user's own MFA setting, which overrides the account setting; null when the user has none
+  //
+  // One of NONE, NONE_NO_ROPC, TOTP, TOTP4ALL, LEVEL1, LEVEL2, or LEVEL3, as
+  // listed in the IAM account settings' per-user MFA list.
+  mfa() string
+  // Access policies assigned to the user directly, not through an access group
+  policies() []ibm.iam.policy
+  // Access groups the user is a member of
+  accessGroups() []ibm.iam.accessGroup
+  // API keys of the user
+  apiKeys() []ibm.iam.apiKey
 }
 
 // IBM Cloud IAM trusted profile
@@ -751,6 +792,8 @@ private ibm.vpc.volume @defaults("name zone capacity") {
   status string
   // Attachment state: attached, unattached, or unusable
   attachmentState string
+  // Type of each of the volume's attachments: boot or data
+  attachmentTypes []string
   // Creation timestamp
   createdAt time
   // Resource group of the volume

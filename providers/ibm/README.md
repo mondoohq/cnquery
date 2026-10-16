@@ -1,7 +1,7 @@
 # IBM Cloud Provider
 
 The `ibm` provider connects to an [IBM Cloud](https://cloud.ibm.com/) account and inventories its
-IAM configuration, resource groups and instances, VPC infrastructure, Power Virtual Server
+IAM configuration and users, resource groups and instances, VPC infrastructure, Power Virtual Server
 workspaces, Cloud Object Storage buckets, Key Protect keys, Activity Tracker Event Routing, and
 IBM Cloud Databases through read-only API calls. Use it to audit account settings such as MFA and session
 limits, who holds which roles, network exposure in VPCs, and Power Virtual Server workloads.
@@ -11,7 +11,9 @@ limits, who holds which roles, network exposure in VPCs, and Power Virtual Serve
 An IBM Cloud API key. A key whose identity has the Viewer role on IAM Identity, IAM Access Groups,
 and the services you query, plus Reader on VPC Infrastructure, Power Virtual Server, Key Protect,
 Activity Tracker Event Routing, and IBM Cloud Databases, is enough. Reading a bucket's firewall and
-activity tracking settings needs the Manager role on Cloud Object Storage. The provider only reads.
+activity tracking settings needs the Manager role on Cloud Object Storage. Listing every user of the
+account (`ibm.iamUsers`) needs the Viewer role on User Management; without it, IBM Cloud may return
+only the key's own user when the account lets users see each other. The provider only reads.
 
 ## Authentication
 
@@ -112,6 +114,27 @@ has activity data for the identity: a key that never authenticated, or one IBM C
 activity data for, has a null `lastAuthentication`. Reading activity needs the same Viewer role on
 IAM Identity as listing the identities; a refused call is an error on the field.
 
+**Users and the account owner**
+
+```shell
+mql> ibm.iamUsers { userId state accountOwner mfa }
+```
+
+`mfa` is the user's own MFA setting from the account settings' per-user list, which overrides the
+account-wide `ibm.iamAccountSettings.mfa`; it is null when the user has none.
+
+**Does the account owner have API keys?**
+
+```shell
+mql> ibm.iamUsers.where(accountOwner) { userId apiKeys { name createdAt } }
+```
+
+**Users with policies assigned directly instead of through an access group**
+
+```shell
+mql> ibm.iamUsers.where(policies.length > 0) { userId policies { roles resourceAttributes } accessGroups { name } }
+```
+
 **Security group rules open to the internet**
 
 ```shell
@@ -147,6 +170,15 @@ resources, and Power Virtual Server resources.
 ```shell
 mql> ibm.cosBuckets.where(!kmsEnabled || !activityTrackingManagementEvents) { name location kmsKey { name } }
 ```
+
+**Boot volumes without a customer-managed key**
+
+```shell
+mql> ibm.vpcVolumes.where(attachmentTypes.contains("boot") && encryption != "user_managed") { name region instances { name } }
+```
+
+`attachmentTypes` lists the type of each of the volume's attachments, `boot` or `data`. An unattached
+volume has none; its `attachmentState` is `unattached`.
 
 **Root keys that do not rotate**
 

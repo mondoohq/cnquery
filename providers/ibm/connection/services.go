@@ -13,7 +13,9 @@ import (
 	"github.com/IBM/ibm-cos-sdk-go/aws/session"
 	"github.com/IBM/ibm-cos-sdk-go/service/s3"
 	"github.com/IBM/keyprotect-go-client/ibmkeyprotectapiv2"
+	"github.com/IBM/platform-services-go-sdk/accountmanagementv4"
 	"github.com/IBM/platform-services-go-sdk/atrackerv2"
+	"github.com/IBM/platform-services-go-sdk/usermanagementv1"
 )
 
 // iamTokenURL is where the Cloud Object Storage S3 client exchanges the API
@@ -126,4 +128,38 @@ func (c *IbmConnection) Atracker() (*atrackerv2.AtrackerV2, error) {
 		return nil, err
 	}
 	return v.(*atrackerv2.AtrackerV2), nil
+}
+
+// UserManagement returns the User Management client, which lists the users of
+// the account.
+func (c *IbmConnection) UserManagement() (*usermanagementv1.UserManagementV1, error) {
+	v, err := c.Memo("userManagement", func() (any, error) {
+		svc, err := usermanagementv1.NewUserManagementV1(&usermanagementv1.UserManagementV1Options{Authenticator: c.auth})
+		if err != nil {
+			return nil, err
+		}
+		configure(svc.Service)
+		return svc, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return v.(*usermanagementv1.UserManagementV1), nil
+}
+
+// AccountManagement returns the Account Management client, which reads the
+// account itself, such as its owner.
+func (c *IbmConnection) AccountManagement() (*accountmanagementv4.AccountManagementV4, error) {
+	v, err := c.Memo("accountManagement", func() (any, error) {
+		svc, err := accountmanagementv4.NewAccountManagementV4(&accountmanagementv4.AccountManagementV4Options{Authenticator: c.auth})
+		if err != nil {
+			return nil, err
+		}
+		configure(svc.Service)
+		return svc, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return v.(*accountmanagementv4.AccountManagementV4), nil
 }
