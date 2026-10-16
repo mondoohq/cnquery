@@ -57,6 +57,15 @@ func TestManagerMacos(t *testing.T) {
 	assert.Equal(t, "/var/root /private/var/root", usr.Home)
 	assert.Equal(t, "root", usr.Name)
 	assert.Equal(t, "/bin/sh", usr.Shell)
+	assert.False(t, usr.Enabled, "root has no AuthenticationAuthority")
+
+	byName := map[string]*users.User{}
+	for _, u := range userList {
+		byName[u.Name] = u
+	}
+	assert.True(t, byName["daemon"].Enabled)
+	assert.False(t, byName["_www"].Enabled, "DisabledUser alone")
+	assert.False(t, byName["nobody"].Enabled, "DisabledUser before ShadowHash")
 
 	assert.Equal(t, 8, len(userList))
 }
