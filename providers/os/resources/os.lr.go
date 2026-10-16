@@ -474,6 +474,7 @@ const (
 	ResourceLuaPackage                                     string = "lua.package"
 	ResourceMacos                                          string = "macos"
 	ResourceMacosHardware                                  string = "macos.hardware"
+	ResourceMacosSystemProfiler                            string = "macos.systemProfiler"
 	ResourceMacosAlf                                       string = "macos.alf"
 	ResourceMacosFirewall                                  string = "macos.firewall"
 	ResourceMacosFirewallApp                               string = "macos.firewall.app"
@@ -2618,6 +2619,10 @@ func init() {
 		"macos.hardware": {
 			Init:   initMacosHardware,
 			Create: createMacosHardware,
+		},
+		"macos.systemProfiler": {
+			Init:   initMacosSystemProfiler,
+			Create: createMacosSystemProfiler,
 		},
 		"macos.alf": {
 			Init:   initMacosAlf,
@@ -15029,6 +15034,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"macos.hardware.serialNumber": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosHardware).GetSerialNumber()).ToDataRes(types.String)
+	},
+	"macos.systemProfiler.dataType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemProfiler).GetDataType()).ToDataRes(types.String)
+	},
+	"macos.systemProfiler.items": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemProfiler).GetItems()).ToDataRes(types.Array(types.Dict))
 	},
 	"macos.alf.allowDownloadSignedEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosAlf).GetAllowDownloadSignedEnabled()).ToDataRes(types.Int)
@@ -38804,6 +38815,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"macos.hardware.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosHardware).SerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemProfiler.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemProfiler).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.systemProfiler.dataType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemProfiler).DataType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemProfiler.items": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemProfiler).Items, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.alf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -98049,6 +98072,62 @@ func (c *mqlMacosHardware) GetProvisioningUDID() *plugin.TValue[string] {
 
 func (c *mqlMacosHardware) GetSerialNumber() *plugin.TValue[string] {
 	return &c.SerialNumber
+}
+
+// mqlMacosSystemProfiler for the macos.systemProfiler resource
+type mqlMacosSystemProfiler struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMacosSystemProfilerInternal it will be used here
+	DataType plugin.TValue[string]
+	Items    plugin.TValue[[]any]
+}
+
+// createMacosSystemProfiler creates a new instance of this resource
+func createMacosSystemProfiler(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosSystemProfiler{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.systemProfiler", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosSystemProfiler) MqlName() string {
+	return "macos.systemProfiler"
+}
+
+func (c *mqlMacosSystemProfiler) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosSystemProfiler) GetDataType() *plugin.TValue[string] {
+	return &c.DataType
+}
+
+func (c *mqlMacosSystemProfiler) GetItems() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Items, func() ([]any, error) {
+		return c.items()
+	})
 }
 
 // mqlMacosAlf for the macos.alf resource
