@@ -5,9 +5,11 @@ package fex
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestFexToDocument(t *testing.T) {
@@ -91,6 +93,7 @@ func TestHttpRequestEvidenceRoundTrip(t *testing.T) {
 }
 
 func TestSourceVersionEvidenceRoundTrip(t *testing.T) {
+	when := time.Date(2026, 1, 2, 10, 0, 0, 0, time.UTC)
 	f := &FindingExchange{
 		Id: "secret-1",
 		Evidences: []*Evidence{{
@@ -102,7 +105,7 @@ func TestSourceVersionEvidenceRoundTrip(t *testing.T) {
 				Commit: "096bccac898275dadd52c326756d98249599f534",
 				Author: "Alice Introducer",
 				Email:  "alice@example.com",
-				Date:   "2026-01-02T10:00:00Z",
+				Date:   timestamppb.New(when),
 				Url:    "https://github.com/acme/repo/commit/096bccac",
 			},
 		}},
@@ -118,6 +121,6 @@ func TestSourceVersionEvidenceRoundTrip(t *testing.T) {
 	assert.Equal(t, "096bccac898275dadd52c326756d98249599f534", sv.GetCommit())
 	assert.Equal(t, "Alice Introducer", sv.GetAuthor())
 	assert.Equal(t, "alice@example.com", sv.GetEmail())
-	assert.Equal(t, "2026-01-02T10:00:00Z", sv.GetDate())
+	assert.True(t, when.Equal(sv.GetDate().AsTime()))
 	assert.Equal(t, "https://github.com/acme/repo/commit/096bccac", sv.GetUrl())
 }

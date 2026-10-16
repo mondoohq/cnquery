@@ -2338,8 +2338,8 @@ type SourceVersion struct {
 	Author string `protobuf:"bytes,2,opt,name=author,proto3" json:"author,omitempty"`
 	// Email of the commit author. Consumers decide any display/redaction policy.
 	Email string `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
-	// Author date, RFC3339 (e.g. "2026-01-02T10:00:00Z").
-	Date string `protobuf:"bytes,4,opt,name=date,proto3" json:"date,omitempty"`
+	// Author date of the commit.
+	Date *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=date,proto3" json:"date,omitempty"`
 	// Optional. Deep link to the commit (e.g. a GitHub commit URL).
 	Url           string `protobuf:"bytes,5,opt,name=url,proto3" json:"url,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -2397,11 +2397,11 @@ func (x *SourceVersion) GetEmail() string {
 	return ""
 }
 
-func (x *SourceVersion) GetDate() string {
+func (x *SourceVersion) GetDate() *timestamppb.Timestamp {
 	if x != nil {
 		return x.Date
 	}
-	return ""
+	return nil
 }
 
 func (x *SourceVersion) GetUrl() string {
@@ -4240,12 +4240,12 @@ const file_fex_proto_rawDesc = "" +
 	"\x0fPropertiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\t\n" +
-	"\adetails\"{\n" +
+	"\adetails\"\x97\x01\n" +
 	"\rSourceVersion\x12\x16\n" +
 	"\x06commit\x18\x01 \x01(\tR\x06commit\x12\x16\n" +
 	"\x06author\x18\x02 \x01(\tR\x06author\x12\x14\n" +
-	"\x05email\x18\x03 \x01(\tR\x05email\x12\x12\n" +
-	"\x04date\x18\x04 \x01(\tR\x04date\x12\x10\n" +
+	"\x05email\x18\x03 \x01(\tR\x05email\x12.\n" +
+	"\x04date\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x04date\x12\x10\n" +
 	"\x03url\x18\x05 \x01(\tR\x03url\"\xa7\x01\n" +
 	"\x04File\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\x12\x12\n" +
@@ -4551,26 +4551,27 @@ var file_fex_proto_depIdxs = []int32{
 	39, // 64: mql.fex.v1.Evidence.ai_agent:type_name -> mql.fex.v1.AiAgent
 	47, // 65: mql.fex.v1.Evidence.properties:type_name -> mql.fex.v1.Evidence.PropertiesEntry
 	23, // 66: mql.fex.v1.Evidence.source_version:type_name -> mql.fex.v1.SourceVersion
-	48, // 67: mql.fex.v1.User.properties:type_name -> mql.fex.v1.User.PropertiesEntry
-	24, // 68: mql.fex.v1.Process.binary:type_name -> mql.fex.v1.File
-	24, // 69: mql.fex.v1.Process.script:type_name -> mql.fex.v1.File
-	25, // 70: mql.fex.v1.Process.user:type_name -> mql.fex.v1.User
-	26, // 71: mql.fex.v1.Process.parent:type_name -> mql.fex.v1.Process
-	49, // 72: mql.fex.v1.Kubernetes.pods:type_name -> mql.fex.v1.Kubernetes.Pod
-	50, // 73: mql.fex.v1.Kubernetes.nodes:type_name -> mql.fex.v1.Kubernetes.Node
-	6,  // 74: mql.fex.v1.Connection.protocol:type_name -> mql.fex.v1.Connection.ConnectionProtocol
-	51, // 75: mql.fex.v1.Certificate.not_before:type_name -> google.protobuf.Timestamp
-	51, // 76: mql.fex.v1.Certificate.not_after:type_name -> google.protobuf.Timestamp
-	51, // 77: mql.fex.v1.DomainRegistration.created_at:type_name -> google.protobuf.Timestamp
-	51, // 78: mql.fex.v1.DomainRegistration.updated_at:type_name -> google.protobuf.Timestamp
-	51, // 79: mql.fex.v1.DomainRegistration.expires_at:type_name -> google.protobuf.Timestamp
-	51, // 80: mql.fex.v1.ThreatIntelIndicator.last_observed_at:type_name -> google.protobuf.Timestamp
-	27, // 81: mql.fex.v1.Kubernetes.Pod.containers:type_name -> mql.fex.v1.Container
-	82, // [82:82] is the sub-list for method output_type
-	82, // [82:82] is the sub-list for method input_type
-	82, // [82:82] is the sub-list for extension type_name
-	82, // [82:82] is the sub-list for extension extendee
-	0,  // [0:82] is the sub-list for field type_name
+	51, // 67: mql.fex.v1.SourceVersion.date:type_name -> google.protobuf.Timestamp
+	48, // 68: mql.fex.v1.User.properties:type_name -> mql.fex.v1.User.PropertiesEntry
+	24, // 69: mql.fex.v1.Process.binary:type_name -> mql.fex.v1.File
+	24, // 70: mql.fex.v1.Process.script:type_name -> mql.fex.v1.File
+	25, // 71: mql.fex.v1.Process.user:type_name -> mql.fex.v1.User
+	26, // 72: mql.fex.v1.Process.parent:type_name -> mql.fex.v1.Process
+	49, // 73: mql.fex.v1.Kubernetes.pods:type_name -> mql.fex.v1.Kubernetes.Pod
+	50, // 74: mql.fex.v1.Kubernetes.nodes:type_name -> mql.fex.v1.Kubernetes.Node
+	6,  // 75: mql.fex.v1.Connection.protocol:type_name -> mql.fex.v1.Connection.ConnectionProtocol
+	51, // 76: mql.fex.v1.Certificate.not_before:type_name -> google.protobuf.Timestamp
+	51, // 77: mql.fex.v1.Certificate.not_after:type_name -> google.protobuf.Timestamp
+	51, // 78: mql.fex.v1.DomainRegistration.created_at:type_name -> google.protobuf.Timestamp
+	51, // 79: mql.fex.v1.DomainRegistration.updated_at:type_name -> google.protobuf.Timestamp
+	51, // 80: mql.fex.v1.DomainRegistration.expires_at:type_name -> google.protobuf.Timestamp
+	51, // 81: mql.fex.v1.ThreatIntelIndicator.last_observed_at:type_name -> google.protobuf.Timestamp
+	27, // 82: mql.fex.v1.Kubernetes.Pod.containers:type_name -> mql.fex.v1.Container
+	83, // [83:83] is the sub-list for method output_type
+	83, // [83:83] is the sub-list for method input_type
+	83, // [83:83] is the sub-list for extension type_name
+	83, // [83:83] is the sub-list for extension extendee
+	0,  // [0:83] is the sub-list for field type_name
 }
 
 func init() { file_fex_proto_init() }

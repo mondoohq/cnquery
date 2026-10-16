@@ -2025,10 +2025,13 @@ func (m *SourceVersion) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x2a
 	}
-	if len(m.Date) > 0 {
-		i -= len(m.Date)
-		copy(dAtA[i:], m.Date)
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Date)))
+	if m.Date != nil {
+		size, err := (*timestamppb.Timestamp)(m.Date).MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
 		dAtA[i] = 0x22
 	}
@@ -4322,8 +4325,8 @@ func (m *SourceVersion) SizeVT() (n int) {
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	l = len(m.Date)
-	if l > 0 {
+	if m.Date != nil {
+		l = (*timestamppb.Timestamp)(m.Date).SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	l = len(m.Url)
@@ -10280,7 +10283,7 @@ func (m *SourceVersion) UnmarshalVT(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Date", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -10290,23 +10293,27 @@ func (m *SourceVersion) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return protohelpers.ErrInvalidLength
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return protohelpers.ErrInvalidLength
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Date = string(dAtA[iNdEx:postIndex])
+			if m.Date == nil {
+				m.Date = &timestamppb1.Timestamp{}
+			}
+			if err := (*timestamppb.Timestamp)(m.Date).UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {

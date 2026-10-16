@@ -430,8 +430,8 @@ message SourceVersion {
   string author = 2;
   // Email of the commit author. Consumers decide any display/redaction policy.
   string email = 3;
-  // Author date, RFC3339 (e.g. "2026-01-02T10:00:00Z").
-  string date = 4;
+  // Author date of the commit.
+  google.protobuf.Timestamp date = 4;
   // Optional. Deep link to the commit (e.g. a GitHub commit URL).
   string url = 5;
 }
