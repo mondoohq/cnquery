@@ -12354,6 +12354,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"sysrc.entries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSysrc).GetEntries()).ToDataRes(types.Array(types.Resource("sysrc.entry")))
 	},
+	"sysrc.values": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSysrc).GetValues()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"sysrc.entry.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSysrcEntry).GetName()).ToDataRes(types.String)
 	},
@@ -34652,6 +34655,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"sysrc.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSysrc).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sysrc.values": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSysrc).Values, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"sysrc.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -84085,10 +84092,11 @@ func (c *mqlSecbootImage) GetSigned() *plugin.TValue[bool] {
 type mqlSysrc struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSysrcInternal it will be used here
+	mqlSysrcInternal
 	Files   plugin.TValue[[]any]
 	Content plugin.TValue[string]
 	Entries plugin.TValue[[]any]
+	Values  plugin.TValue[map[string]any]
 }
 
 // createSysrc creates a new instance of this resource
@@ -84173,6 +84181,17 @@ func (c *mqlSysrc) GetEntries() *plugin.TValue[[]any] {
 		}
 
 		return c.entries(vargFiles.Data)
+	})
+}
+
+func (c *mqlSysrc) GetValues() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Values, func() (map[string]any, error) {
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.values(vargFiles.Data)
 	})
 }
 

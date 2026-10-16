@@ -5061,6 +5061,7 @@ sysrc.entry.file 13.2.6
 sysrc.entry.name 13.2.6
 sysrc.entry.value 13.2.6
 sysrc.files 13.2.6
+sysrc.values 14.25.1
 systemd.boot 14.0.0
 systemd.boot.active 14.0.0
 systemd.boot.bootPath 14.0.0
