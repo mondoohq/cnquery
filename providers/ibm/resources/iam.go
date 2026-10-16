@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"github.com/rs/zerolog/log"
 	"regexp"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/IBM/platform-services-go-sdk/iamaccessgroupsv2"
 	"github.com/IBM/platform-services-go-sdk/iamidentityv1"
 	"github.com/IBM/platform-services-go-sdk/iampolicymanagementv1"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
