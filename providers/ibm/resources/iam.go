@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"github.com/rs/zerolog/log"
+	"regexp"
 	"time"
 
 	"github.com/IBM/go-sdk-core/v5/core"
@@ -540,12 +542,38 @@ func lastAuthn(a *iamidentityv1.Activity, field *plugin.TValue[*time.Time]) *tim
 		nullResource(field)
 		return nil
 	}
-	t, err := time.Parse(time.RFC3339, *a.LastAuthn)
-	if err != nil {
+	t, ok := parseIAMTime(*a.LastAuthn)
+	if !ok {
+		log.Debug().Str("last_authn", *a.LastAuthn).Msg("ibm> cannot parse the last authentication time")
 		nullResource(field)
 		return nil
 	}
 	return &t
+}
+
+// iamTimeLayouts are the forms IAM Identity writes activity times in. Its
+// last_authn has milliseconds after a colon (2026-10-16T06:40:12:345+0000),
+// which iamMillis turns into a decimal point first; RFC 3339 and the API
+// reference's form to the minute (2026-10-16T06:40+0000) are accepted too.
+var iamTimeLayouts = []string{
+	time.RFC3339Nano,
+	"2006-01-02T15:04:05.999999999Z0700",
+	"2006-01-02T15:04Z07:00",
+	"2006-01-02T15:04Z0700",
+}
+
+// iamMillis is the colon before the milliseconds of an IAM activity time.
+var iamMillis = regexp.MustCompile(`^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}):(\d+)`)
+
+// parseIAMTime parses an activity time in any of iamTimeLayouts.
+func parseIAMTime(s string) (time.Time, bool) {
+	s = iamMillis.ReplaceAllString(s, "$1.$2")
+	for _, layout := range iamTimeLayouts {
+		if t, err := time.Parse(layout, s); err == nil {
+			return t, true
+		}
+	}
+	return time.Time{}, false
 }
 
 // authnCount reads the authentication count; without activity data it is

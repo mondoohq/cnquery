@@ -188,3 +188,25 @@ func TestIdentityActivityRefused(t *testing.T) {
 	_, err = trustedProfileActivity(svc, "Profile-1")
 	assert.Equal(t, llx.ErrorKind_ERROR_KIND_FORBIDDEN, llx.KindOf(err))
 }
+
+func TestParseIAMTime(t *testing.T) {
+	want := time.Date(2026, 10, 16, 6, 40, 0, 0, time.UTC)
+	for _, in := range []string{
+		"2026-10-16T06:40:00Z",
+		"2026-10-16T06:40:00.000Z",
+		"2026-10-16T06:40+0000",
+		"2026-10-16T08:40+0200",
+		"2026-10-16T06:40Z",
+		"2026-10-16T06:40:00+0000",
+		"2026-10-16T06:40:00:000+0000",
+	} {
+		got, ok := parseIAMTime(in)
+		assert.True(t, ok, in)
+		assert.True(t, want.Equal(got), in)
+	}
+	got, ok := parseIAMTime("2026-10-16T08:40:12:345+0200")
+	assert.True(t, ok)
+	assert.True(t, time.Date(2026, 10, 16, 6, 40, 12, 345e6, time.UTC).Equal(got))
+	_, ok = parseIAMTime("yesterday")
+	assert.False(t, ok)
+}
