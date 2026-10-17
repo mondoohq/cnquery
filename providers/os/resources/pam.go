@@ -671,15 +671,7 @@ func parsePamFile(runtime *plugin.Runtime, filePath, content string, singleFile 
 			continue
 		}
 
-		pamEntry, err := CreateResource(runtime, "pam.conf.serviceEntry", map[string]*llx.RawData{
-			"service":       llx.StringData(service),
-			"lineNumber":    llx.IntData(int64(i)), // Used for ID
-			"pamType":       llx.StringData(entry.PamType),
-			"ignoreMissing": llx.BoolData(entry.IgnoreMissing),
-			"control":       llx.StringData(entry.Control),
-			"module":        llx.StringData(entry.Module),
-			"options":       llx.ArrayData(entry.Options, types.String),
-		})
+		pamEntry, err := CreateResource(runtime, "pam.conf.serviceEntry", pamServiceEntryArgs(service, i, entry))
 		if err != nil {
 			return err
 		}
@@ -688,6 +680,20 @@ func parsePamFile(runtime *plugin.Runtime, filePath, content string, singleFile 
 		services[service] = append(list, pamEntry.(*mqlPamConfServiceEntry))
 	}
 	return nil
+}
+
+// pamServiceEntryArgs are the fields of the pam.conf.serviceEntry for one
+// parsed line. lineNumber is zero-based.
+func pamServiceEntryArgs(service string, lineNumber int, entry *pam.PamLine) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"service":       llx.StringData(service),
+		"lineNumber":    llx.IntData(int64(lineNumber)), // Used for ID
+		"pamType":       llx.StringData(entry.PamType),
+		"ignoreMissing": llx.BoolData(entry.IgnoreMissing),
+		"control":       llx.StringData(entry.Control),
+		"module":        llx.StringData(entry.Module),
+		"options":       llx.ArrayData(entry.Options, types.String),
+	}
 }
 
 const (

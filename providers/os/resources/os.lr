@@ -101,6 +101,7 @@ alias os.unix.sudoers = sudoers
 alias os.unix.sysrc = sysrc
 alias os.unix.umask = umask
 alias os.unix.zfs = zfs
+alias os.linux.authselect = authselect
 alias os.linux.cgroups = cgroups
 alias os.linux.cryptoPolicy = cryptoPolicy
 alias os.linux.dconf = dconf
@@ -1755,6 +1756,96 @@ private pam.module @defaults("name enabled entries.length") {
   // `pamType`, `control`, and raw `options` so callers can drill back
   // into the underlying line if `params` aggregation isn't enough.
   entries []pam.conf.serviceEntry
+}
+
+// authselect profile that generates the PAM and nsswitch configuration
+//
+// The authselect profile selected on RHEL 8 and later, Fedora, and their
+// rebuilds, read from `/etc/authselect/authselect.conf` without running a
+// command. `profileId` and `features` are the selected profile and its enabled
+// features, such as `with-faillock`; `isCustom` reports a profile under
+// `/etc/authselect/custom`, whose changes survive `authselect apply-changes`.
+// `templates` are the profile's template files with the features applied, so
+// a check reads the PAM entries authselect generates (what persists) next to
+// `pam.conf` (what is active), for example
+// `authselect.templates.where(name == "system-auth").any(entries.any(module == "pam_faillock.so"))`.
+// `intact` reports whether the generated files still match the profile. Every
+// field except `configured` is null on a system that authselect does not
+// manage.
+authselect @defaults("profileId features") {
+  // Whether authselect manages this system
+  //
+  // True when `/etc/authselect/authselect.conf` names a profile. False when
+  // the file is missing (authselect is not installed, no profile was ever
+  // selected, or `authselect opt-out` was run).
+  configured() bool
+  // Selected profile, such as `sssd`, `local` or `custom/hardened`
+  profileId() string
+  // Whether the selected profile is a custom profile (`custom/<name>`)
+  isCustom() bool
+  // Enabled features of the selected profile, such as `with-faillock` or `without-nullok`
+  //
+  // As listed in authselect.conf, in order and without duplicates. Features a
+  // template enables with `{imply ...}` are not listed.
+  features() []string
+  // Directory of the selected profile
+  //
+  // `/etc/authselect/custom/<name>` for a custom profile, otherwise
+  // `/usr/share/authselect/vendor/<id>` when it exists, or
+  // `/usr/share/authselect/default/<id>`, the order authselect looks them up
+  // in. `profileDir.exists` is false when the profile is missing.
+  profileDir() file
+  // Template files of the selected profile
+  //
+  // One entry per file authselect generates: system-auth, password-auth,
+  // fingerprint-auth, smartcard-auth, postlogin, nsswitch.conf, dconf-db and
+  // dconf-locks, in that order, including those the profile does not ship.
+  // An error when the profile directory is missing.
+  templates() []authselect.template
+  // Whether every generated file matches the profile, and every link points to it
+  //
+  // True when `intact` is true for all `templates`. False when the profile
+  // directory is missing. Stricter than `authselect check` from authselect 1.4
+  // on, which does not compare the content of the generated files.
+  intact() bool
+}
+
+// authselect profile template
+private authselect.template @defaults("name intact") {
+  // Name of the template, such as `system-auth` or `nsswitch.conf`
+  name string
+  // Template file in the profile directory
+  //
+  // `file.exists` is false when the profile does not ship this template;
+  // authselect then generates an empty file.
+  file() file
+  // Content authselect generates from the template with the profile's features applied
+  //
+  // The `{include if ...}`, `{exclude if ...}`, `{if ...:...|...}`,
+  // `{imply ...}`, `{continue if ...}` and `{stop if ...}` operators resolved
+  // against `features`, as authselect does when it generates the file,
+  // without the comment header authselect adds. Empty when the profile does
+  // not ship the template. For nsswitch.conf on RHEL 8 and 9, it ends with
+  // the lines of `/etc/authselect/user-nsswitch.conf` whose maps the profile
+  // does not set, as authselect merges them there.
+  content() string
+  // PAM entries of the template with the profile's features applied
+  //
+  // Parsed from `content`. `service` is the path of the template file and
+  // `lineNumber` the zero-based line of the template the entry comes from.
+  // Empty for nsswitch.conf, dconf-db and dconf-locks.
+  entries() []pam.conf.serviceEntry
+  // File authselect generates from this template, `/etc/authselect/<name>`
+  generatedFile() file
+  // Whether the generated file matches the template and the system path links to it
+  //
+  // True when `generatedFile` is a regular file with mode 0644 whose content
+  // equals `content`, ignoring comments, empty lines and surrounding spaces,
+  // and the path that uses it (`/etc/pam.d/<name>`, `/etc/nsswitch.conf`, or
+  // the authselect file under `/etc/dconf/db/distro.d`) is a symbolic link to
+  // `generatedFile`. False after a direct edit of the generated file, or when
+  // an edit replaced the link with a regular file.
+  intact() bool
 }
 
 // OpenSSH server (sshd) namespace

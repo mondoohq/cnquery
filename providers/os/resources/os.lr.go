@@ -76,6 +76,8 @@ const (
 	ResourcePamConfServiceEntry                            string = "pam.conf.serviceEntry"
 	ResourcePamConfService                                 string = "pam.conf.service"
 	ResourcePamModule                                      string = "pam.module"
+	ResourceAuthselect                                     string = "authselect"
+	ResourceAuthselectTemplate                             string = "authselect.template"
 	ResourceSshd                                           string = "sshd"
 	ResourceSshdConfig                                     string = "sshd.config"
 	ResourceSshdConfigMatchBlock                           string = "sshd.config.matchBlock"
@@ -1027,6 +1029,14 @@ func init() {
 		"pam.module": {
 			Init:   initPamModule,
 			Create: createPamModule,
+		},
+		"authselect": {
+			// to override args, implement: initAuthselect(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAuthselect,
+		},
+		"authselect.template": {
+			// to override args, implement: initAuthselectTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAuthselectTemplate,
 		},
 		"sshd": {
 			// to override args, implement: initSshd(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4816,6 +4826,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"pam.module.entries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPamModule).GetEntries()).ToDataRes(types.Array(types.Resource("pam.conf.serviceEntry")))
+	},
+	"authselect.configured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthselect).GetConfigured()).ToDataRes(types.Bool)
+	},
+	"authselect.profileId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthselect).GetProfileId()).ToDataRes(types.String)
+	},
+	"authselect.isCustom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthselect).GetIsCustom()).ToDataRes(types.Bool)
+	},
+	"authselect.features": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthselect).GetFeatures()).ToDataRes(types.Array(types.String))
+	},
+	"authselect.profileDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthselect).GetProfileDir()).ToDataRes(types.Resource("file"))
+	},
+	"authselect.templates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthselect).GetTemplates()).ToDataRes(types.Array(types.Resource("authselect.template")))
+	},
+	"authselect.intact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthselect).GetIntact()).ToDataRes(types.Bool)
+	},
+	"authselect.template.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthselectTemplate).GetName()).ToDataRes(types.String)
+	},
+	"authselect.template.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthselectTemplate).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"authselect.template.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthselectTemplate).GetContent()).ToDataRes(types.String)
+	},
+	"authselect.template.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthselectTemplate).GetEntries()).ToDataRes(types.Array(types.Resource("pam.conf.serviceEntry")))
+	},
+	"authselect.template.generatedFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthselectTemplate).GetGeneratedFile()).ToDataRes(types.Resource("file"))
+	},
+	"authselect.template.intact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthselectTemplate).GetIntact()).ToDataRes(types.Bool)
 	},
 	"sshd.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfig).GetFile()).ToDataRes(types.Resource("file"))
@@ -23620,6 +23669,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"pam.module.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPamModule).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"authselect.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthselect).__id, ok = v.Value.(string)
+		return
+	},
+	"authselect.configured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthselect).Configured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"authselect.profileId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthselect).ProfileId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"authselect.isCustom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthselect).IsCustom, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"authselect.features": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthselect).Features, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"authselect.profileDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthselect).ProfileDir, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"authselect.templates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthselect).Templates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"authselect.intact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthselect).Intact, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"authselect.template.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthselectTemplate).__id, ok = v.Value.(string)
+		return
+	},
+	"authselect.template.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthselectTemplate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"authselect.template.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthselectTemplate).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"authselect.template.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthselectTemplate).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"authselect.template.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthselectTemplate).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"authselect.template.generatedFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthselectTemplate).GeneratedFile, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"authselect.template.intact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthselectTemplate).Intact, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"sshd.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54700,6 +54809,228 @@ func (c *mqlPamModule) GetEnabled() *plugin.TValue[bool] {
 
 func (c *mqlPamModule) GetEntries() *plugin.TValue[[]any] {
 	return &c.Entries
+}
+
+// mqlAuthselect for the authselect resource
+type mqlAuthselect struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAuthselectInternal
+	Configured plugin.TValue[bool]
+	ProfileId  plugin.TValue[string]
+	IsCustom   plugin.TValue[bool]
+	Features   plugin.TValue[[]any]
+	ProfileDir plugin.TValue[*mqlFile]
+	Templates  plugin.TValue[[]any]
+	Intact     plugin.TValue[bool]
+}
+
+// createAuthselect creates a new instance of this resource
+func createAuthselect(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuthselect{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("authselect", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuthselect) MqlName() string {
+	return "authselect"
+}
+
+func (c *mqlAuthselect) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuthselect) GetConfigured() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Configured, func() (bool, error) {
+		return c.configured()
+	})
+}
+
+func (c *mqlAuthselect) GetProfileId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ProfileId, func() (string, error) {
+		return c.profileId()
+	})
+}
+
+func (c *mqlAuthselect) GetIsCustom() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsCustom, func() (bool, error) {
+		return c.isCustom()
+	})
+}
+
+func (c *mqlAuthselect) GetFeatures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Features, func() ([]any, error) {
+		return c.features()
+	})
+}
+
+func (c *mqlAuthselect) GetProfileDir() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.ProfileDir, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("authselect", c.__id, "profileDir")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.profileDir()
+	})
+}
+
+func (c *mqlAuthselect) GetTemplates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Templates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("authselect", c.__id, "templates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.templates()
+	})
+}
+
+func (c *mqlAuthselect) GetIntact() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Intact, func() (bool, error) {
+		return c.intact()
+	})
+}
+
+// mqlAuthselectTemplate for the authselect.template resource
+type mqlAuthselectTemplate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAuthselectTemplateInternal
+	Name          plugin.TValue[string]
+	File          plugin.TValue[*mqlFile]
+	Content       plugin.TValue[string]
+	Entries       plugin.TValue[[]any]
+	GeneratedFile plugin.TValue[*mqlFile]
+	Intact        plugin.TValue[bool]
+}
+
+// createAuthselectTemplate creates a new instance of this resource
+func createAuthselectTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuthselectTemplate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("authselect.template", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuthselectTemplate) MqlName() string {
+	return "authselect.template"
+}
+
+func (c *mqlAuthselectTemplate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuthselectTemplate) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAuthselectTemplate) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("authselect.template", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlAuthselectTemplate) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		return c.content()
+	})
+}
+
+func (c *mqlAuthselectTemplate) GetEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Entries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("authselect.template", c.__id, "entries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.entries()
+	})
+}
+
+func (c *mqlAuthselectTemplate) GetGeneratedFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.GeneratedFile, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("authselect.template", c.__id, "generatedFile")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.generatedFile()
+	})
+}
+
+func (c *mqlAuthselectTemplate) GetIntact() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Intact, func() (bool, error) {
+		return c.intact()
+	})
 }
 
 // mqlSshd for the sshd resource
