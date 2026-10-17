@@ -336,6 +336,9 @@ func TestHelperTargetsEmbedCompartmentRef(t *testing.T) {
 	var _ ociCompartmentSetter = (*mqlOciOkeNodePool)(nil)                      // oci.oke.nodePool
 	var _ ociCompartmentSetter = (*mqlOciOnsTopic)(nil)                         // oci.ons.topic
 	var _ ociCompartmentSetter = (*mqlOciRedisCluster)(nil)                     // oci.redis.cluster
+	var _ ociCompartmentSetter = (*mqlOciIntegrationInstance)(nil)              // oci.integration.instance
+	var _ ociCompartmentSetter = (*mqlOciAnalyticsInstance)(nil)                // oci.analytics.instance
+	var _ ociCompartmentSetter = (*mqlOciIdentityTagDefault)(nil)               // oci.identity.tagDefault
 	var _ ociCompartmentSetter = (*mqlOciVaultSecret)(nil)                      // oci.vault.secret
 	var _ ociCompartmentSetter = (*mqlOciWafFirewall)(nil)                      // oci.waf.firewall
 	var _ ociCompartmentSetter = (*mqlOciWafPolicy)(nil)                        // oci.waf.policy

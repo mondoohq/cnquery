@@ -48,6 +48,7 @@ const (
 	ResourceOciIdentityDynamicGroup                                            string = "oci.identity.dynamicGroup"
 	ResourceOciIdentityIdentityProvider                                        string = "oci.identity.identityProvider"
 	ResourceOciIdentityNetworkSource                                           string = "oci.identity.networkSource"
+	ResourceOciIdentityTagDefault                                              string = "oci.identity.tagDefault"
 	ResourceOciIdentityAuthenticationPolicy                                    string = "oci.identity.authenticationPolicy"
 	ResourceOciCompute                                                         string = "oci.compute"
 	ResourceOciNetworkExposure                                                 string = "oci.network.exposure"
@@ -244,6 +245,10 @@ const (
 	ResourceOciCertificatesCaBundle                                            string = "oci.certificates.caBundle"
 	ResourceOciRedis                                                           string = "oci.redis"
 	ResourceOciRedisCluster                                                    string = "oci.redis.cluster"
+	ResourceOciIntegration                                                     string = "oci.integration"
+	ResourceOciIntegrationInstance                                             string = "oci.integration.instance"
+	ResourceOciAnalytics                                                       string = "oci.analytics"
+	ResourceOciAnalyticsInstance                                               string = "oci.analytics.instance"
 	ResourceOciDataSafe                                                        string = "oci.dataSafe"
 	ResourceOciDataSafeConfiguration                                           string = "oci.dataSafe.configuration"
 	ResourceOciDataSafeTargetDatabase                                          string = "oci.dataSafe.targetDatabase"
@@ -490,6 +495,10 @@ func init() {
 		"oci.identity.networkSource": {
 			// to override args, implement: initOciIdentityNetworkSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciIdentityNetworkSource,
+		},
+		"oci.identity.tagDefault": {
+			// to override args, implement: initOciIdentityTagDefault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciIdentityTagDefault,
 		},
 		"oci.identity.authenticationPolicy": {
 			Init:   initOciIdentityAuthenticationPolicy,
@@ -1275,6 +1284,22 @@ func init() {
 			Init:   initOciRedisCluster,
 			Create: createOciRedisCluster,
 		},
+		"oci.integration": {
+			// to override args, implement: initOciIntegration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciIntegration,
+		},
+		"oci.integration.instance": {
+			Init:   initOciIntegrationInstance,
+			Create: createOciIntegrationInstance,
+		},
+		"oci.analytics": {
+			// to override args, implement: initOciAnalytics(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciAnalytics,
+		},
+		"oci.analytics.instance": {
+			Init:   initOciAnalyticsInstance,
+			Create: createOciAnalyticsInstance,
+		},
 		"oci.dataSafe": {
 			// to override args, implement: initOciDataSafe(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciDataSafe,
@@ -1822,6 +1847,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.tenancy.definedTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciTenancy).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
 	},
+	"oci.tenancy.tagDefaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciTenancy).GetTagDefaults()).ToDataRes(types.Array(types.Resource("oci.identity.tagDefault")))
+	},
 	"oci.region.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciRegion).GetId()).ToDataRes(types.String)
 	},
@@ -1884,6 +1912,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.identity.domains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentity).GetDomains()).ToDataRes(types.Array(types.Resource("oci.identity.domain")))
+	},
+	"oci.identity.tagDefaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentity).GetTagDefaults()).ToDataRes(types.Array(types.Resource("oci.identity.tagDefault")))
 	},
 	"oci.identity.domain.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityDomain).GetId()).ToDataRes(types.String)
@@ -2916,6 +2947,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.identity.networkSource.definedTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityNetworkSource).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.identity.tagDefault.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityTagDefault).GetId()).ToDataRes(types.String)
+	},
+	"oci.identity.tagDefault.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityTagDefault).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.identity.tagDefault.tagNamespaceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityTagDefault).GetTagNamespaceId()).ToDataRes(types.String)
+	},
+	"oci.identity.tagDefault.tagDefinitionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityTagDefault).GetTagDefinitionId()).ToDataRes(types.String)
+	},
+	"oci.identity.tagDefault.tagDefinitionName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityTagDefault).GetTagDefinitionName()).ToDataRes(types.String)
+	},
+	"oci.identity.tagDefault.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityTagDefault).GetValue()).ToDataRes(types.String)
+	},
+	"oci.identity.tagDefault.isRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityTagDefault).GetIsRequired()).ToDataRes(types.Bool)
+	},
+	"oci.identity.tagDefault.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityTagDefault).GetState()).ToDataRes(types.String)
+	},
+	"oci.identity.tagDefault.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityTagDefault).GetCreated()).ToDataRes(types.Time)
 	},
 	"oci.identity.authenticationPolicy.compartmentID": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityAuthenticationPolicy).GetCompartmentID()).ToDataRes(types.String)
@@ -9892,6 +9950,156 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.redis.cluster.systemTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciRedisCluster).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
 	},
+	"oci.integration.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegration).GetInstances()).ToDataRes(types.Array(types.Resource("oci.integration.instance")))
+	},
+	"oci.integration.instance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetId()).ToDataRes(types.String)
+	},
+	"oci.integration.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetName()).ToDataRes(types.String)
+	},
+	"oci.integration.instance.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.integration.instance.integrationInstanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetIntegrationInstanceType()).ToDataRes(types.String)
+	},
+	"oci.integration.instance.shape": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetShape()).ToDataRes(types.String)
+	},
+	"oci.integration.instance.consumptionModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetConsumptionModel()).ToDataRes(types.String)
+	},
+	"oci.integration.instance.isByol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetIsByol()).ToDataRes(types.Bool)
+	},
+	"oci.integration.instance.messagePacks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetMessagePacks()).ToDataRes(types.Int)
+	},
+	"oci.integration.instance.instanceUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetInstanceUrl()).ToDataRes(types.String)
+	},
+	"oci.integration.instance.instanceDesignTimeUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetInstanceDesignTimeUrl()).ToDataRes(types.String)
+	},
+	"oci.integration.instance.isFileServerEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetIsFileServerEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.integration.instance.isVisualBuilderEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetIsVisualBuilderEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.integration.instance.isDisasterRecoveryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetIsDisasterRecoveryEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.integration.instance.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetState()).ToDataRes(types.String)
+	},
+	"oci.integration.instance.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.integration.instance.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.integration.instance.networkEndpointType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetNetworkEndpointType()).ToDataRes(types.String)
+	},
+	"oci.integration.instance.allowlistedHttpIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetAllowlistedHttpIps()).ToDataRes(types.Array(types.String))
+	},
+	"oci.integration.instance.allowlistedHttpVcns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetAllowlistedHttpVcns()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.integration.instance.isIntegrationVcnAllowlisted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetIsIntegrationVcnAllowlisted()).ToDataRes(types.Bool)
+	},
+	"oci.integration.instance.networkEndpointDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetNetworkEndpointDetails()).ToDataRes(types.Dict)
+	},
+	"oci.integration.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetInternetReachable()).ToDataRes(types.Bool)
+	},
+	"oci.integration.instance.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.integration.instance.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.integration.instance.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIntegrationInstance).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.analytics.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalytics).GetInstances()).ToDataRes(types.Array(types.Resource("oci.analytics.instance")))
+	},
+	"oci.analytics.instance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetId()).ToDataRes(types.String)
+	},
+	"oci.analytics.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetName()).ToDataRes(types.String)
+	},
+	"oci.analytics.instance.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.analytics.instance.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.analytics.instance.featureSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetFeatureSet()).ToDataRes(types.String)
+	},
+	"oci.analytics.instance.capacityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetCapacityType()).ToDataRes(types.String)
+	},
+	"oci.analytics.instance.capacityValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetCapacityValue()).ToDataRes(types.Int)
+	},
+	"oci.analytics.instance.licenseType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetLicenseType()).ToDataRes(types.String)
+	},
+	"oci.analytics.instance.serviceUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetServiceUrl()).ToDataRes(types.String)
+	},
+	"oci.analytics.instance.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetState()).ToDataRes(types.String)
+	},
+	"oci.analytics.instance.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.analytics.instance.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.analytics.instance.networkEndpointType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetNetworkEndpointType()).ToDataRes(types.String)
+	},
+	"oci.analytics.instance.whitelistedIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetWhitelistedIps()).ToDataRes(types.Array(types.String))
+	},
+	"oci.analytics.instance.whitelistedVcns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetWhitelistedVcns()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.analytics.instance.whitelistedServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetWhitelistedServices()).ToDataRes(types.Array(types.String))
+	},
+	"oci.analytics.instance.vcn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetVcn()).ToDataRes(types.Resource("oci.network.vcn"))
+	},
+	"oci.analytics.instance.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetSubnet()).ToDataRes(types.Resource("oci.network.subnet"))
+	},
+	"oci.analytics.instance.networkSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetNetworkSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
+	},
+	"oci.analytics.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetInternetReachable()).ToDataRes(types.Bool)
+	},
+	"oci.analytics.instance.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.analytics.instance.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.analytics.instance.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAnalyticsInstance).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
 	"oci.dataSafe.configurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafe).GetConfigurations()).ToDataRes(types.Array(types.Resource("oci.dataSafe.configuration")))
 	},
@@ -13802,6 +14010,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciTenancy).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"oci.tenancy.tagDefaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciTenancy).TagDefaults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"oci.region.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciRegion).__id, ok = v.Value.(string)
 		return
@@ -13896,6 +14108,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.identity.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentity).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.tagDefaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentity).TagDefaults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.identity.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15380,6 +15596,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.identity.networkSource.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityNetworkSource).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.tagDefault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityTagDefault).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.identity.tagDefault.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityTagDefault).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.tagDefault.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityTagDefault).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.identity.tagDefault.tagNamespaceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityTagDefault).TagNamespaceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.tagDefault.tagDefinitionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityTagDefault).TagDefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.tagDefault.tagDefinitionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityTagDefault).TagDefinitionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.tagDefault.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityTagDefault).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.tagDefault.isRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityTagDefault).IsRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.tagDefault.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityTagDefault).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.tagDefault.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityTagDefault).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"oci.identity.authenticationPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25466,6 +25722,222 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciRedisCluster).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"oci.integration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegration).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.integration.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegration).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.integration.instance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.integrationInstanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).IntegrationInstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.shape": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).Shape, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.consumptionModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).ConsumptionModel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.isByol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).IsByol, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.messagePacks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).MessagePacks, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.instanceUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).InstanceUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.instanceDesignTimeUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).InstanceDesignTimeUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.isFileServerEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).IsFileServerEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.isVisualBuilderEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).IsVisualBuilderEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.isDisasterRecoveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).IsDisasterRecoveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.networkEndpointType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).NetworkEndpointType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.allowlistedHttpIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).AllowlistedHttpIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.allowlistedHttpVcns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).AllowlistedHttpVcns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.isIntegrationVcnAllowlisted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).IsIntegrationVcnAllowlisted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.networkEndpointDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).NetworkEndpointDetails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.integration.instance.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIntegrationInstance).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalytics).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.analytics.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalytics).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.analytics.instance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.featureSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).FeatureSet, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.capacityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).CapacityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.capacityValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).CapacityValue, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.licenseType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).LicenseType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.serviceUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).ServiceUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.networkEndpointType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).NetworkEndpointType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.whitelistedIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).WhitelistedIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.whitelistedVcns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).WhitelistedVcns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.whitelistedServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).WhitelistedServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.vcn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).Vcn, ok = plugin.RawToTValue[*mqlOciNetworkVcn](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).Subnet, ok = plugin.RawToTValue[*mqlOciNetworkSubnet](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.networkSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).NetworkSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.analytics.instance.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAnalyticsInstance).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"oci.dataSafe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDataSafe).__id, ok = v.Value.(string)
 		return
@@ -31175,6 +31647,7 @@ type mqlOciTenancy struct {
 	RetentionPeriod plugin.TValue[*time.Time]
 	FreeformTags    plugin.TValue[map[string]any]
 	DefinedTags     plugin.TValue[map[string]any]
+	TagDefaults     plugin.TValue[[]any]
 }
 
 // createOciTenancy creates a new instance of this resource
@@ -31238,6 +31711,22 @@ func (c *mqlOciTenancy) GetFreeformTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlOciTenancy) GetDefinedTags() *plugin.TValue[map[string]any] {
 	return &c.DefinedTags
+}
+
+func (c *mqlOciTenancy) GetTagDefaults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagDefaults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.tenancy", c.__id, "tagDefaults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagDefaults()
+	})
 }
 
 // mqlOciRegion for the oci.region resource
@@ -31420,6 +31909,7 @@ type mqlOciIdentity struct {
 	NetworkSources       plugin.TValue[[]any]
 	AuthenticationPolicy plugin.TValue[*mqlOciIdentityAuthenticationPolicy]
 	Domains              plugin.TValue[[]any]
+	TagDefaults          plugin.TValue[[]any]
 }
 
 // createOciIdentity creates a new instance of this resource
@@ -31584,6 +32074,22 @@ func (c *mqlOciIdentity) GetDomains() *plugin.TValue[[]any] {
 		}
 
 		return c.domains()
+	})
+}
+
+func (c *mqlOciIdentity) GetTagDefaults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagDefaults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity", c.__id, "tagDefaults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagDefaults()
 	})
 }
 
@@ -34962,6 +35468,107 @@ func (c *mqlOciIdentityNetworkSource) GetFreeformTags() *plugin.TValue[map[strin
 
 func (c *mqlOciIdentityNetworkSource) GetDefinedTags() *plugin.TValue[map[string]any] {
 	return &c.DefinedTags
+}
+
+// mqlOciIdentityTagDefault for the oci.identity.tagDefault resource
+type mqlOciIdentityTagDefault struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciIdentityTagDefaultInternal
+	Id                plugin.TValue[string]
+	Compartment       plugin.TValue[*mqlOciCompartment]
+	TagNamespaceId    plugin.TValue[string]
+	TagDefinitionId   plugin.TValue[string]
+	TagDefinitionName plugin.TValue[string]
+	Value             plugin.TValue[string]
+	IsRequired        plugin.TValue[bool]
+	State             plugin.TValue[string]
+	Created           plugin.TValue[*time.Time]
+}
+
+// createOciIdentityTagDefault creates a new instance of this resource
+func createOciIdentityTagDefault(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciIdentityTagDefault{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.identity.tagDefault", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciIdentityTagDefault) MqlName() string {
+	return "oci.identity.tagDefault"
+}
+
+func (c *mqlOciIdentityTagDefault) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciIdentityTagDefault) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciIdentityTagDefault) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.tagDefault", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciIdentityTagDefault) GetTagNamespaceId() *plugin.TValue[string] {
+	return &c.TagNamespaceId
+}
+
+func (c *mqlOciIdentityTagDefault) GetTagDefinitionId() *plugin.TValue[string] {
+	return &c.TagDefinitionId
+}
+
+func (c *mqlOciIdentityTagDefault) GetTagDefinitionName() *plugin.TValue[string] {
+	return &c.TagDefinitionName
+}
+
+func (c *mqlOciIdentityTagDefault) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlOciIdentityTagDefault) GetIsRequired() *plugin.TValue[bool] {
+	return &c.IsRequired
+}
+
+func (c *mqlOciIdentityTagDefault) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciIdentityTagDefault) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
 }
 
 // mqlOciIdentityAuthenticationPolicy for the oci.identity.authenticationPolicy resource
@@ -61303,6 +61910,520 @@ func (c *mqlOciRedisCluster) GetDefinedTags() *plugin.TValue[map[string]any] {
 }
 
 func (c *mqlOciRedisCluster) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciIntegration for the oci.integration resource
+type mqlOciIntegration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciIntegrationInternal it will be used here
+	Instances plugin.TValue[[]any]
+}
+
+// createOciIntegration creates a new instance of this resource
+func createOciIntegration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciIntegration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.integration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciIntegration) MqlName() string {
+	return "oci.integration"
+}
+
+func (c *mqlOciIntegration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciIntegration) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.integration", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+// mqlOciIntegrationInstance for the oci.integration.instance resource
+type mqlOciIntegrationInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciIntegrationInstanceInternal
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Compartment                 plugin.TValue[*mqlOciCompartment]
+	IntegrationInstanceType     plugin.TValue[string]
+	Shape                       plugin.TValue[string]
+	ConsumptionModel            plugin.TValue[string]
+	IsByol                      plugin.TValue[bool]
+	MessagePacks                plugin.TValue[int64]
+	InstanceUrl                 plugin.TValue[string]
+	InstanceDesignTimeUrl       plugin.TValue[string]
+	IsFileServerEnabled         plugin.TValue[bool]
+	IsVisualBuilderEnabled      plugin.TValue[bool]
+	IsDisasterRecoveryEnabled   plugin.TValue[bool]
+	State                       plugin.TValue[string]
+	Created                     plugin.TValue[*time.Time]
+	TimeUpdated                 plugin.TValue[*time.Time]
+	NetworkEndpointType         plugin.TValue[string]
+	AllowlistedHttpIps          plugin.TValue[[]any]
+	AllowlistedHttpVcns         plugin.TValue[[]any]
+	IsIntegrationVcnAllowlisted plugin.TValue[bool]
+	NetworkEndpointDetails      plugin.TValue[any]
+	InternetReachable           plugin.TValue[bool]
+	FreeformTags                plugin.TValue[map[string]any]
+	DefinedTags                 plugin.TValue[map[string]any]
+	SystemTags                  plugin.TValue[map[string]any]
+}
+
+// createOciIntegrationInstance creates a new instance of this resource
+func createOciIntegrationInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciIntegrationInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.integration.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciIntegrationInstance) MqlName() string {
+	return "oci.integration.instance"
+}
+
+func (c *mqlOciIntegrationInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciIntegrationInstance) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciIntegrationInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciIntegrationInstance) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.integration.instance", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciIntegrationInstance) GetIntegrationInstanceType() *plugin.TValue[string] {
+	return &c.IntegrationInstanceType
+}
+
+func (c *mqlOciIntegrationInstance) GetShape() *plugin.TValue[string] {
+	return &c.Shape
+}
+
+func (c *mqlOciIntegrationInstance) GetConsumptionModel() *plugin.TValue[string] {
+	return &c.ConsumptionModel
+}
+
+func (c *mqlOciIntegrationInstance) GetIsByol() *plugin.TValue[bool] {
+	return &c.IsByol
+}
+
+func (c *mqlOciIntegrationInstance) GetMessagePacks() *plugin.TValue[int64] {
+	return &c.MessagePacks
+}
+
+func (c *mqlOciIntegrationInstance) GetInstanceUrl() *plugin.TValue[string] {
+	return &c.InstanceUrl
+}
+
+func (c *mqlOciIntegrationInstance) GetInstanceDesignTimeUrl() *plugin.TValue[string] {
+	return &c.InstanceDesignTimeUrl
+}
+
+func (c *mqlOciIntegrationInstance) GetIsFileServerEnabled() *plugin.TValue[bool] {
+	return &c.IsFileServerEnabled
+}
+
+func (c *mqlOciIntegrationInstance) GetIsVisualBuilderEnabled() *plugin.TValue[bool] {
+	return &c.IsVisualBuilderEnabled
+}
+
+func (c *mqlOciIntegrationInstance) GetIsDisasterRecoveryEnabled() *plugin.TValue[bool] {
+	return &c.IsDisasterRecoveryEnabled
+}
+
+func (c *mqlOciIntegrationInstance) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciIntegrationInstance) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciIntegrationInstance) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciIntegrationInstance) GetNetworkEndpointType() *plugin.TValue[string] {
+	return &c.NetworkEndpointType
+}
+
+func (c *mqlOciIntegrationInstance) GetAllowlistedHttpIps() *plugin.TValue[[]any] {
+	return &c.AllowlistedHttpIps
+}
+
+func (c *mqlOciIntegrationInstance) GetAllowlistedHttpVcns() *plugin.TValue[[]any] {
+	return &c.AllowlistedHttpVcns
+}
+
+func (c *mqlOciIntegrationInstance) GetIsIntegrationVcnAllowlisted() *plugin.TValue[bool] {
+	return &c.IsIntegrationVcnAllowlisted
+}
+
+func (c *mqlOciIntegrationInstance) GetNetworkEndpointDetails() *plugin.TValue[any] {
+	return &c.NetworkEndpointDetails
+}
+
+func (c *mqlOciIntegrationInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
+func (c *mqlOciIntegrationInstance) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciIntegrationInstance) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciIntegrationInstance) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciAnalytics for the oci.analytics resource
+type mqlOciAnalytics struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciAnalyticsInternal it will be used here
+	Instances plugin.TValue[[]any]
+}
+
+// createOciAnalytics creates a new instance of this resource
+func createOciAnalytics(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAnalytics{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.analytics", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAnalytics) MqlName() string {
+	return "oci.analytics"
+}
+
+func (c *mqlOciAnalytics) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAnalytics) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.analytics", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+// mqlOciAnalyticsInstance for the oci.analytics.instance resource
+type mqlOciAnalyticsInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciAnalyticsInstanceInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Compartment           plugin.TValue[*mqlOciCompartment]
+	FeatureSet            plugin.TValue[string]
+	CapacityType          plugin.TValue[string]
+	CapacityValue         plugin.TValue[int64]
+	LicenseType           plugin.TValue[string]
+	ServiceUrl            plugin.TValue[string]
+	State                 plugin.TValue[string]
+	Created               plugin.TValue[*time.Time]
+	TimeUpdated           plugin.TValue[*time.Time]
+	NetworkEndpointType   plugin.TValue[string]
+	WhitelistedIps        plugin.TValue[[]any]
+	WhitelistedVcns       plugin.TValue[[]any]
+	WhitelistedServices   plugin.TValue[[]any]
+	Vcn                   plugin.TValue[*mqlOciNetworkVcn]
+	Subnet                plugin.TValue[*mqlOciNetworkSubnet]
+	NetworkSecurityGroups plugin.TValue[[]any]
+	InternetReachable     plugin.TValue[bool]
+	FreeformTags          plugin.TValue[map[string]any]
+	DefinedTags           plugin.TValue[map[string]any]
+	SystemTags            plugin.TValue[map[string]any]
+}
+
+// createOciAnalyticsInstance creates a new instance of this resource
+func createOciAnalyticsInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAnalyticsInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.analytics.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAnalyticsInstance) MqlName() string {
+	return "oci.analytics.instance"
+}
+
+func (c *mqlOciAnalyticsInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAnalyticsInstance) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAnalyticsInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAnalyticsInstance) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciAnalyticsInstance) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.analytics.instance", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAnalyticsInstance) GetFeatureSet() *plugin.TValue[string] {
+	return &c.FeatureSet
+}
+
+func (c *mqlOciAnalyticsInstance) GetCapacityType() *plugin.TValue[string] {
+	return &c.CapacityType
+}
+
+func (c *mqlOciAnalyticsInstance) GetCapacityValue() *plugin.TValue[int64] {
+	return &c.CapacityValue
+}
+
+func (c *mqlOciAnalyticsInstance) GetLicenseType() *plugin.TValue[string] {
+	return &c.LicenseType
+}
+
+func (c *mqlOciAnalyticsInstance) GetServiceUrl() *plugin.TValue[string] {
+	return &c.ServiceUrl
+}
+
+func (c *mqlOciAnalyticsInstance) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAnalyticsInstance) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAnalyticsInstance) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciAnalyticsInstance) GetNetworkEndpointType() *plugin.TValue[string] {
+	return &c.NetworkEndpointType
+}
+
+func (c *mqlOciAnalyticsInstance) GetWhitelistedIps() *plugin.TValue[[]any] {
+	return &c.WhitelistedIps
+}
+
+func (c *mqlOciAnalyticsInstance) GetWhitelistedVcns() *plugin.TValue[[]any] {
+	return &c.WhitelistedVcns
+}
+
+func (c *mqlOciAnalyticsInstance) GetWhitelistedServices() *plugin.TValue[[]any] {
+	return &c.WhitelistedServices
+}
+
+func (c *mqlOciAnalyticsInstance) GetVcn() *plugin.TValue[*mqlOciNetworkVcn] {
+	return plugin.GetOrCompute[*mqlOciNetworkVcn](&c.Vcn, func() (*mqlOciNetworkVcn, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.analytics.instance", c.__id, "vcn")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkVcn), nil
+			}
+		}
+
+		return c.vcn()
+	})
+}
+
+func (c *mqlOciAnalyticsInstance) GetSubnet() *plugin.TValue[*mqlOciNetworkSubnet] {
+	return plugin.GetOrCompute[*mqlOciNetworkSubnet](&c.Subnet, func() (*mqlOciNetworkSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.analytics.instance", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlOciAnalyticsInstance) GetNetworkSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkSecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.analytics.instance", c.__id, "networkSecurityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkSecurityGroups()
+	})
+}
+
+func (c *mqlOciAnalyticsInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
+func (c *mqlOciAnalyticsInstance) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAnalyticsInstance) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciAnalyticsInstance) GetSystemTags() *plugin.TValue[map[string]any] {
 	return &c.SystemTags
 }
 

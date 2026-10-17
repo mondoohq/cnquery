@@ -14,6 +14,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/ailanguage"
 	"github.com/oracle/oci-go-sdk/v65/aispeech"
 	"github.com/oracle/oci-go-sdk/v65/aivision"
+	"github.com/oracle/oci-go-sdk/v65/analytics"
 	"github.com/oracle/oci-go-sdk/v65/apiaccesscontrol"
 	"github.com/oracle/oci-go-sdk/v65/apigateway"
 	"github.com/oracle/oci-go-sdk/v65/artifacts"
@@ -38,6 +39,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/goldengate"
 	"github.com/oracle/oci-go-sdk/v65/identity"
 	"github.com/oracle/oci-go-sdk/v65/identitydomains"
+	"github.com/oracle/oci-go-sdk/v65/integration"
 	"github.com/oracle/oci-go-sdk/v65/keymanagement"
 	"github.com/oracle/oci-go-sdk/v65/loadbalancer"
 	"github.com/oracle/oci-go-sdk/v65/lockbox"
@@ -318,6 +320,16 @@ func (c *OciConnection) GoldenGateClient(region string) (*goldengate.GoldenGateC
 
 func (c *OciConnection) DataSafeClient(region string) (*datasafe.DataSafeClient, error) {
 	return regionalClient(c, "datasafe", region, datasafe.NewDataSafeClientWithConfigurationProvider)
+}
+
+// --- Integration and analytics ----------------------------------------------
+
+func (c *OciConnection) IntegrationInstanceClient(region string) (*integration.IntegrationInstanceClient, error) {
+	return regionalClient(c, "integration", region, integration.NewIntegrationInstanceClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) AnalyticsClient(region string) (*analytics.AnalyticsClient, error) {
+	return regionalClient(c, "analytics", region, analytics.NewAnalyticsClientWithConfigurationProvider)
 }
 
 // --- Messaging --------------------------------------------------------------
