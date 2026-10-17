@@ -197,3 +197,36 @@ func TestIsBinaryFileFromTreeEntry(t *testing.T) {
 	assert.False(t, isBinaryFile("dir", "tools/vendor/bin"))
 	assert.False(t, isBinaryFile("submodule", "third_party/dep"))
 }
+
+func TestSecretScanningAlertMetadata(t *testing.T) {
+	t.Run("pairs become a map", func(t *testing.T) {
+		got := secretScanningAlertMetadata([]*github.SecretScanningAlertMetadata{
+			{Key: "owner_email", Value: "dev@example.com"},
+			{Key: "environment", Value: "production"},
+		})
+		assert.Equal(t, map[string]any{
+			"owner_email": "dev@example.com",
+			"environment": "production",
+		}, got)
+	})
+
+	t.Run("nil entries and entries without a key are dropped", func(t *testing.T) {
+		got := secretScanningAlertMetadata([]*github.SecretScanningAlertMetadata{
+			nil,
+			{Value: "orphan"},
+			{Key: "", Value: "orphan"},
+			{Key: "kept"},
+		})
+		assert.Equal(t, map[string]any{"kept": ""}, got)
+	})
+
+	t.Run("no metadata is an empty map", func(t *testing.T) {
+		assert.Empty(t, secretScanningAlertMetadata(nil))
+	})
+}
+
+func TestAlertUserAbsent(t *testing.T) {
+	u, err := alertUser(nil, nil)
+	assert.NoError(t, err)
+	assert.Nil(t, u)
+}

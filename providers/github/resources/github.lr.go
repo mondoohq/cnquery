@@ -1073,6 +1073,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.organization.customProperty.required": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganizationCustomProperty).GetRequired()).ToDataRes(types.Bool)
 	},
+	"github.organization.customProperty.requireExplicitValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCustomProperty).GetRequireExplicitValues()).ToDataRes(types.Bool)
+	},
 	"github.organization.customProperty.defaultValue": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganizationCustomProperty).GetDefaultValue()).ToDataRes(types.String)
 	},
@@ -2525,6 +2528,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.secretScanningAlert.resolutionComment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubSecretScanningAlert).GetResolutionComment()).ToDataRes(types.String)
 	},
+	"github.secretScanningAlert.assignedTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubSecretScanningAlert).GetAssignedTo()).ToDataRes(types.Resource("github.user"))
+	},
+	"github.secretScanningAlert.closureRequestComment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubSecretScanningAlert).GetClosureRequestComment()).ToDataRes(types.String)
+	},
+	"github.secretScanningAlert.closureRequestReviewer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubSecretScanningAlert).GetClosureRequestReviewer()).ToDataRes(types.Resource("github.user"))
+	},
+	"github.secretScanningAlert.closureRequestReviewerComment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubSecretScanningAlert).GetClosureRequestReviewerComment()).ToDataRes(types.String)
+	},
+	"github.secretScanningAlert.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubSecretScanningAlert).GetProvider()).ToDataRes(types.String)
+	},
+	"github.secretScanningAlert.providerSlug": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubSecretScanningAlert).GetProviderSlug()).ToDataRes(types.String)
+	},
+	"github.secretScanningAlert.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubSecretScanningAlert).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"github.codeScanningAlert.number": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCodeScanningAlert).GetNumber()).ToDataRes(types.Int)
 	},
@@ -3876,6 +3900,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.organization.customProperty.required": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubOrganizationCustomProperty).Required, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.organization.customProperty.requireExplicitValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCustomProperty).RequireExplicitValues, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.organization.customProperty.defaultValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5972,6 +6000,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.secretScanningAlert.resolutionComment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubSecretScanningAlert).ResolutionComment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.secretScanningAlert.assignedTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubSecretScanningAlert).AssignedTo, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
+		return
+	},
+	"github.secretScanningAlert.closureRequestComment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubSecretScanningAlert).ClosureRequestComment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.secretScanningAlert.closureRequestReviewer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubSecretScanningAlert).ClosureRequestReviewer, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
+		return
+	},
+	"github.secretScanningAlert.closureRequestReviewerComment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubSecretScanningAlert).ClosureRequestReviewerComment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.secretScanningAlert.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubSecretScanningAlert).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.secretScanningAlert.providerSlug": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubSecretScanningAlert).ProviderSlug, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.secretScanningAlert.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubSecretScanningAlert).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"github.codeScanningAlert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8935,14 +8991,15 @@ type mqlGithubOrganizationCustomProperty struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGithubOrganizationCustomPropertyInternal it will be used here
-	Name             plugin.TValue[string]
-	Description      plugin.TValue[string]
-	SourceType       plugin.TValue[string]
-	ValueType        plugin.TValue[string]
-	Required         plugin.TValue[bool]
-	DefaultValue     plugin.TValue[string]
-	AllowedValues    plugin.TValue[[]any]
-	ValuesEditableBy plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Description           plugin.TValue[string]
+	SourceType            plugin.TValue[string]
+	ValueType             plugin.TValue[string]
+	Required              plugin.TValue[bool]
+	RequireExplicitValues plugin.TValue[bool]
+	DefaultValue          plugin.TValue[string]
+	AllowedValues         plugin.TValue[[]any]
+	ValuesEditableBy      plugin.TValue[string]
 }
 
 // createGithubOrganizationCustomProperty creates a new instance of this resource
@@ -9000,6 +9057,10 @@ func (c *mqlGithubOrganizationCustomProperty) GetValueType() *plugin.TValue[stri
 
 func (c *mqlGithubOrganizationCustomProperty) GetRequired() *plugin.TValue[bool] {
 	return &c.Required
+}
+
+func (c *mqlGithubOrganizationCustomProperty) GetRequireExplicitValues() *plugin.TValue[bool] {
+	return &c.RequireExplicitValues
 }
 
 func (c *mqlGithubOrganizationCustomProperty) GetDefaultValue() *plugin.TValue[string] {
@@ -13856,26 +13917,33 @@ func (c *mqlGithubDependabotAlert) GetDismissedComment() *plugin.TValue[string] 
 type mqlGithubSecretScanningAlert struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGithubSecretScanningAlertInternal it will be used here
-	Number                   plugin.TValue[int64]
-	State                    plugin.TValue[string]
-	Resolution               plugin.TValue[string]
-	SecretType               plugin.TValue[string]
-	SecretTypeDisplayName    plugin.TValue[string]
-	Secret                   plugin.TValue[string]
-	Validity                 plugin.TValue[string]
-	PubliclyLeaked           plugin.TValue[bool]
-	MultiRepo                plugin.TValue[bool]
-	Url                      plugin.TValue[string]
-	HtmlUrl                  plugin.TValue[string]
-	CreatedAt                plugin.TValue[*time.Time]
-	UpdatedAt                plugin.TValue[*time.Time]
-	ResolvedAt               plugin.TValue[*time.Time]
-	ResolvedBy               plugin.TValue[*mqlGithubUser]
-	PushProtectionBypassed   plugin.TValue[bool]
-	PushProtectionBypassedBy plugin.TValue[*mqlGithubUser]
-	PushProtectionBypassedAt plugin.TValue[*time.Time]
-	ResolutionComment        plugin.TValue[string]
+	mqlGithubSecretScanningAlertInternal
+	Number                        plugin.TValue[int64]
+	State                         plugin.TValue[string]
+	Resolution                    plugin.TValue[string]
+	SecretType                    plugin.TValue[string]
+	SecretTypeDisplayName         plugin.TValue[string]
+	Secret                        plugin.TValue[string]
+	Validity                      plugin.TValue[string]
+	PubliclyLeaked                plugin.TValue[bool]
+	MultiRepo                     plugin.TValue[bool]
+	Url                           plugin.TValue[string]
+	HtmlUrl                       plugin.TValue[string]
+	CreatedAt                     plugin.TValue[*time.Time]
+	UpdatedAt                     plugin.TValue[*time.Time]
+	ResolvedAt                    plugin.TValue[*time.Time]
+	ResolvedBy                    plugin.TValue[*mqlGithubUser]
+	PushProtectionBypassed        plugin.TValue[bool]
+	PushProtectionBypassedBy      plugin.TValue[*mqlGithubUser]
+	PushProtectionBypassedAt      plugin.TValue[*time.Time]
+	ResolutionComment             plugin.TValue[string]
+	AssignedTo                    plugin.TValue[*mqlGithubUser]
+	ClosureRequestComment         plugin.TValue[string]
+	ClosureRequestReviewer        plugin.TValue[*mqlGithubUser]
+	ClosureRequestReviewerComment plugin.TValue[string]
+	Provider                      plugin.TValue[string]
+	ProviderSlug                  plugin.TValue[string]
+	Metadata                      plugin.TValue[map[string]any]
 }
 
 // createGithubSecretScanningAlert creates a new instance of this resource
@@ -13989,6 +14057,36 @@ func (c *mqlGithubSecretScanningAlert) GetPushProtectionBypassedAt() *plugin.TVa
 
 func (c *mqlGithubSecretScanningAlert) GetResolutionComment() *plugin.TValue[string] {
 	return &c.ResolutionComment
+}
+
+func (c *mqlGithubSecretScanningAlert) GetAssignedTo() *plugin.TValue[*mqlGithubUser] {
+	return &c.AssignedTo
+}
+
+func (c *mqlGithubSecretScanningAlert) GetClosureRequestComment() *plugin.TValue[string] {
+	return &c.ClosureRequestComment
+}
+
+func (c *mqlGithubSecretScanningAlert) GetClosureRequestReviewer() *plugin.TValue[*mqlGithubUser] {
+	return &c.ClosureRequestReviewer
+}
+
+func (c *mqlGithubSecretScanningAlert) GetClosureRequestReviewerComment() *plugin.TValue[string] {
+	return &c.ClosureRequestReviewerComment
+}
+
+func (c *mqlGithubSecretScanningAlert) GetProvider() *plugin.TValue[string] {
+	return &c.Provider
+}
+
+func (c *mqlGithubSecretScanningAlert) GetProviderSlug() *plugin.TValue[string] {
+	return &c.ProviderSlug
+}
+
+func (c *mqlGithubSecretScanningAlert) GetMetadata() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Metadata, func() (map[string]any, error) {
+		return c.metadata()
+	})
 }
 
 // mqlGithubCodeScanningAlert for the github.codeScanningAlert resource

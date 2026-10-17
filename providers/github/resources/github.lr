@@ -667,6 +667,10 @@ private github.organization.customProperty @defaults("name required") {
   valueType string
   // Whether the property is required
   required bool
+  // Whether each repository must set a value explicitly
+  //
+  // When true, a repository does not inherit `defaultValue` and has no value until one is set on it.
+  requireExplicitValues bool
   // Default value of the property
   defaultValue string
   // An ordered list of the allowed values of the property
@@ -2375,6 +2379,22 @@ private github.secretScanningAlert @defaults("number state") {
   pushProtectionBypassedAt time
   // Comment on resolution
   resolutionComment string
+  // User the alert is assigned to
+  assignedTo github.user
+  // Comment the requester gave when asking for the alert to be closed
+  closureRequestComment string
+  // User who reviewed the request to close the alert
+  closureRequestReviewer github.user
+  // Comment the reviewer gave on the request to close the alert
+  closureRequestReviewerComment string
+  // Name of the provider that issued the secret
+  provider string
+  // Provider identifier in lowercase with underscores
+  //
+  // For example `slack` or `github_secret_scanning`. This is the value the `providers` filter of the secret scanning API accepts.
+  providerSlug string
+  // Metadata GitHub attaches to the alert, keyed by name
+  metadata() map[string]string
 }
 
 // GitHub code scanning alert

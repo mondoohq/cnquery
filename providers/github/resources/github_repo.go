@@ -2463,59 +2463,113 @@ func (g *mqlGithubRepository) secretScanningAlerts() ([]any, error) {
 
 	res := []any{}
 	for _, alert := range allAlerts {
-		var resolvedBy any
-		if alert.ResolvedBy != nil {
-			var err error
-			resolvedBy, err = NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
-				"id":    llx.IntDataPtr(alert.ResolvedBy.ID),
-				"login": llx.StringDataPtr(alert.ResolvedBy.Login),
-			})
-			if err != nil {
-				return nil, err
-			}
+		resolvedBy, err := alertUser(g.MqlRuntime, alert.ResolvedBy)
+		if err != nil {
+			return nil, err
 		}
-
-		var pushProtectionBypassedBy any
-		if alert.PushProtectionBypassedBy != nil {
-			var err error
-			pushProtectionBypassedBy, err = NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
-				"id":    llx.IntDataPtr(alert.PushProtectionBypassedBy.ID),
-				"login": llx.StringDataPtr(alert.PushProtectionBypassedBy.Login),
-			})
-			if err != nil {
-				return nil, err
-			}
+		pushProtectionBypassedBy, err := alertUser(g.MqlRuntime, alert.PushProtectionBypassedBy)
+		if err != nil {
+			return nil, err
+		}
+		assignedTo, err := alertUser(g.MqlRuntime, alert.AssignedTo)
+		if err != nil {
+			return nil, err
+		}
+		closureRequestReviewer, err := alertUser(g.MqlRuntime, alert.ClosureRequestReviewer)
+		if err != nil {
+			return nil, err
 		}
 
 		mqlAlert, err := CreateResource(g.MqlRuntime, "github.secretScanningAlert", map[string]*llx.RawData{
-			"__id":                     llx.StringData(alertID("github.secretScanningAlert", ownerLogin, repoName, int64(alert.GetNumber()))),
-			"number":                   llx.IntData(int64(alert.GetNumber())),
-			"state":                    llx.StringData(alert.GetState()),
-			"resolution":               llx.StringData(alert.GetResolution()),
-			"secretType":               llx.StringData(alert.GetSecretType()),
-			"secretTypeDisplayName":    llx.StringData(alert.GetSecretTypeDisplayName()),
-			"secret":                   llx.StringData(alert.GetSecret()),
-			"validity":                 llx.StringData(alert.GetValidity()),
-			"publiclyLeaked":           llx.BoolData(alert.GetPubliclyLeaked()),
-			"multiRepo":                llx.BoolData(alert.GetMultiRepo()),
-			"url":                      llx.StringData(alert.GetURL()),
-			"htmlUrl":                  llx.StringData(alert.GetHTMLURL()),
-			"createdAt":                llx.TimeDataPtr(githubTimestamp(alert.CreatedAt)),
-			"updatedAt":                llx.TimeDataPtr(githubTimestamp(alert.UpdatedAt)),
-			"resolvedAt":               llx.TimeDataPtr(githubTimestamp(alert.ResolvedAt)),
-			"resolvedBy":               llx.AnyData(resolvedBy),
-			"pushProtectionBypassed":   llx.BoolData(alert.GetPushProtectionBypassed()),
-			"pushProtectionBypassedBy": llx.AnyData(pushProtectionBypassedBy),
-			"pushProtectionBypassedAt": llx.TimeDataPtr(githubTimestamp(alert.PushProtectionBypassedAt)),
-			"resolutionComment":        llx.StringData(alert.GetResolutionComment()),
+			"__id":                          llx.StringData(alertID("github.secretScanningAlert", ownerLogin, repoName, int64(alert.GetNumber()))),
+			"number":                        llx.IntData(int64(alert.GetNumber())),
+			"state":                         llx.StringData(alert.GetState()),
+			"resolution":                    llx.StringData(alert.GetResolution()),
+			"secretType":                    llx.StringData(alert.GetSecretType()),
+			"secretTypeDisplayName":         llx.StringData(alert.GetSecretTypeDisplayName()),
+			"secret":                        llx.StringData(alert.GetSecret()),
+			"validity":                      llx.StringData(alert.GetValidity()),
+			"publiclyLeaked":                llx.BoolData(alert.GetPubliclyLeaked()),
+			"multiRepo":                     llx.BoolData(alert.GetMultiRepo()),
+			"url":                           llx.StringData(alert.GetURL()),
+			"htmlUrl":                       llx.StringData(alert.GetHTMLURL()),
+			"createdAt":                     llx.TimeDataPtr(githubTimestamp(alert.CreatedAt)),
+			"updatedAt":                     llx.TimeDataPtr(githubTimestamp(alert.UpdatedAt)),
+			"resolvedAt":                    llx.TimeDataPtr(githubTimestamp(alert.ResolvedAt)),
+			"resolvedBy":                    llx.AnyData(resolvedBy),
+			"pushProtectionBypassed":        llx.BoolData(alert.GetPushProtectionBypassed()),
+			"pushProtectionBypassedBy":      llx.AnyData(pushProtectionBypassedBy),
+			"pushProtectionBypassedAt":      llx.TimeDataPtr(githubTimestamp(alert.PushProtectionBypassedAt)),
+			"resolutionComment":             llx.StringData(alert.GetResolutionComment()),
+			"assignedTo":                    llx.AnyData(assignedTo),
+			"closureRequestComment":         llx.StringDataPtr(alert.ClosureRequestComment),
+			"closureRequestReviewer":        llx.AnyData(closureRequestReviewer),
+			"closureRequestReviewerComment": llx.StringDataPtr(alert.ClosureRequestReviewerComment),
+			"provider":                      llx.StringDataPtr(alert.Provider),
+			"providerSlug":                  llx.StringDataPtr(alert.ProviderSlug),
 		})
 		if err != nil {
 			return nil, err
 		}
+		a := mqlAlert.(*mqlGithubSecretScanningAlert)
+		a.ownerLogin = ownerLogin
+		a.repoName = repoName
 		res = append(res, mqlAlert)
 	}
 
 	return res, nil
+}
+
+type mqlGithubSecretScanningAlertInternal struct {
+	ownerLogin string
+	repoName   string
+}
+
+// alertUser resolves a user an alert refers to, or nil when the alert names
+// none.
+func alertUser(runtime *plugin.Runtime, u *github.User) (any, error) {
+	if u == nil {
+		return nil, nil
+	}
+	return NewResource(runtime, "github.user", map[string]*llx.RawData{
+		"id":    llx.IntDataPtr(u.ID),
+		"login": llx.StringDataPtr(u.Login),
+	})
+}
+
+// metadata reads the key/value metadata of a secret scanning alert. GitHub
+// returns it only from the single-alert endpoint, not from the alert list, so
+// it is fetched when queried.
+func (g *mqlGithubSecretScanningAlert) metadata() (map[string]any, error) {
+	if g.Number.Error != nil {
+		return nil, g.Number.Error
+	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	alert, _, err := conn.Client().SecretScanning.GetAlert(conn.Context(), g.ownerLogin, g.repoName, g.Number.Data)
+	if err != nil {
+		if githubForbidden(err) {
+			return nil, llx.Forbidden(err)
+		}
+		if githubNotAvailable(err) {
+			g.Metadata.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	return secretScanningAlertMetadata(alert.Metadata), nil
+}
+
+// secretScanningAlertMetadata turns the metadata pairs of an alert into a map.
+// Entries without a key are dropped, since nothing could look them up.
+func secretScanningAlertMetadata(pairs []*github.SecretScanningAlertMetadata) map[string]any {
+	res := make(map[string]any, len(pairs))
+	for _, p := range pairs {
+		if p == nil || p.GetKey() == "" {
+			continue
+		}
+		res[p.GetKey()] = p.GetValue()
+	}
+	return res
 }
 
 func (g *mqlGithubCodeScanningAlert) id() (string, error) {
