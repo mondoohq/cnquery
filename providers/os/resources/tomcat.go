@@ -18,6 +18,7 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/haproxy"
 	"go.mondoo.com/mql/providers/os/resources/tomcat"
 	"go.mondoo.com/mql/types"
 )
@@ -29,6 +30,9 @@ type mqlTomcatInternal struct {
 	basePath   string
 	// parsedServer is server.xml as server() parsed it, for webapps()
 	parsedServer *tomcat.Server
+	// startup is the JVM configuration, resolved once for jvmOptions(),
+	// systemProperties() and tmpDir()
+	startup *tomcatStartup
 }
 
 // mqlTomcatWebappInternal keeps the installation paths on each webapp so that
@@ -295,6 +299,157 @@ func (t *mqlTomcat) pathsFromProcesses(afs *afero.Afero) (string, string) {
 	}
 
 	return "", ""
+}
+
+// tomcatStartup is the JVM configuration of an installation.
+type tomcatStartup struct {
+	// jvmOptions are the JVM options of the running Catalina process, or the
+	// ones the configuration sets when it does not run
+	jvmOptions []string
+	// tmpDir is the JVM's temporary directory, "" when no installation is found
+	tmpDir string
+}
+
+// startupSettings resolves the JVM configuration once. A running Catalina
+// process of this installation is authoritative, since its command line is
+// what the JVM actually received; the configuration on disk is what it would
+// start with otherwise, and the only source in a container image or a
+// filesystem snapshot.
+func (t *mqlTomcat) startupSettings() (*tomcatStartup, error) {
+	if err := t.explicitPathsExist(); err != nil {
+		return nil, err
+	}
+	p := t.installPaths()
+
+	t.lock.Lock()
+	cached := t.startup
+	t.lock.Unlock()
+	if cached != nil {
+		return cached, nil
+	}
+
+	res := &tomcatStartup{jvmOptions: []string{}}
+	conn, ok := t.MqlRuntime.Connection.(shared.Connection)
+	if ok && (p.Home != "" || p.Base != "") {
+		afs := &afero.Afero{Fs: conn.FileSystem()}
+		cfg := tomcat.StartupConfig(conn.FileSystem(), p)
+		if opts, ok := t.runningJVMOptions(afs, p); ok {
+			res.jvmOptions = opts
+			res.tmpDir = tomcat.SystemProperties(opts)["java.io.tmpdir"]
+		} else {
+			res.jvmOptions = cfg.JVMOptions()
+		}
+		if res.tmpDir == "" {
+			res.tmpDir = cfg.TmpDir(p.Base)
+		}
+	}
+
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	if t.startup == nil {
+		t.startup = res
+	}
+	return t.startup, nil
+}
+
+// runningJVMOptions returns the JVM options of the running Catalina process
+// whose catalina.base is this installation's. The second return value is false
+// when no such process runs, or the process list cannot be read.
+func (t *mqlTomcat) runningJVMOptions(afs *afero.Afero, p tomcat.Paths) ([]string, bool) {
+	raw, err := CreateResource(t.MqlRuntime, "processes", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, false
+	}
+	procs, ok := raw.(*mqlProcesses)
+	if !ok {
+		return nil, false
+	}
+	list := procs.GetList()
+	if list.Error != nil {
+		return nil, false
+	}
+
+	for i := range list.Data {
+		proc, ok := list.Data[i].(*mqlProcess)
+		if !ok {
+			continue
+		}
+		cmd := proc.GetCommand()
+		if cmd.Error != nil || !strings.Contains(cmd.Data, tomcat.BootstrapClass) {
+			continue
+		}
+		pid := proc.GetPid()
+		if pid.Error != nil {
+			continue
+		}
+
+		opts, ok := tomcat.JVMOptionsFromArgs(processArgs(afs, pid.Data, cmd.Data))
+		if !ok {
+			continue
+		}
+
+		// Several instances may run side by side; only the one started for
+		// this CATALINA_BASE describes this installation.
+		props := tomcat.SystemProperties(opts)
+		procBase := firstNonEmpty(props["catalina.base"], props["catalina.home"])
+		if procBase == "" {
+			if environ, err := afs.ReadFile(path.Join("/proc", strconv.FormatInt(pid.Data, 10), "environ")); err == nil {
+				home, base := tomcat.PathsFromEnviron(string(environ))
+				procBase = firstNonEmpty(base, home)
+			}
+		}
+		if procBase != "" && p.Base != "" && path.Clean(procBase) != path.Clean(p.Base) {
+			continue
+		}
+		return opts, true
+	}
+	return nil, false
+}
+
+// processArgs returns the arguments of a process. /proc/<pid>/cmdline keeps
+// them apart even when one contains a space; it is used when it belongs to the
+// listed command, which it does not where the process list comes from another
+// pid namespace (a running container listed from the host). The command split
+// at whitespace is the fallback.
+func processArgs(afs *afero.Afero, pid int64, command string) []string {
+	fields := strings.Fields(command)
+	raw, err := afs.ReadFile(path.Join("/proc", strconv.FormatInt(pid, 10), "cmdline"))
+	if err != nil {
+		return fields
+	}
+	argv := haproxy.SplitProcCmdline(raw)
+	if strings.Join(strings.Fields(strings.Join(argv, " ")), " ") != strings.Join(fields, " ") {
+		return fields
+	}
+	return argv
+}
+
+func (t *mqlTomcat) jvmOptions() ([]any, error) {
+	startup, err := t.startupSettings()
+	if err != nil {
+		return nil, err
+	}
+	return convert.SliceAnyToInterface(startup.jvmOptions), nil
+}
+
+func (t *mqlTomcat) systemProperties() (map[string]any, error) {
+	startup, err := t.startupSettings()
+	if err != nil {
+		return nil, err
+	}
+	return propertiesToDict(tomcat.SystemProperties(startup.jvmOptions)), nil
+}
+
+func (t *mqlTomcat) tmpDir() (string, error) {
+	startup, err := t.startupSettings()
+	if err != nil {
+		return "", err
+	}
+	if startup.tmpDir == "" {
+		t.TmpDir = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return "", nil
+	}
+	return startup.tmpDir, nil
 }
 
 func fileExistsOn(afs *afero.Afero, filePath string) bool {

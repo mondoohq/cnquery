@@ -5597,6 +5597,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"tomcat.webapps": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTomcat).GetWebapps()).ToDataRes(types.Array(types.Resource("tomcat.webapp")))
 	},
+	"tomcat.jvmOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcat).GetJvmOptions()).ToDataRes(types.Array(types.String))
+	},
+	"tomcat.systemProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcat).GetSystemProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"tomcat.tmpDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcat).GetTmpDir()).ToDataRes(types.String)
+	},
 	"tomcat.server.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTomcatServer).GetFile()).ToDataRes(types.Resource("file"))
 	},
@@ -24799,6 +24808,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"tomcat.webapps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTomcat).Webapps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.jvmOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcat).JvmOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.systemProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcat).SystemProperties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.tmpDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcat).TmpDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"tomcat.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -58454,16 +58475,19 @@ type mqlTomcat struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlTomcatInternal
-	Home       plugin.TValue[string]
-	Base       plugin.TValue[string]
-	Version    plugin.TValue[string]
-	Server     plugin.TValue[*mqlTomcatServer]
-	WebXml     plugin.TValue[*mqlTomcatWebxml]
-	Context    plugin.TValue[*mqlTomcatContext]
-	Properties plugin.TValue[map[string]any]
-	Logging    plugin.TValue[map[string]any]
-	Users      plugin.TValue[[]any]
-	Webapps    plugin.TValue[[]any]
+	Home             plugin.TValue[string]
+	Base             plugin.TValue[string]
+	Version          plugin.TValue[string]
+	Server           plugin.TValue[*mqlTomcatServer]
+	WebXml           plugin.TValue[*mqlTomcatWebxml]
+	Context          plugin.TValue[*mqlTomcatContext]
+	Properties       plugin.TValue[map[string]any]
+	Logging          plugin.TValue[map[string]any]
+	Users            plugin.TValue[[]any]
+	Webapps          plugin.TValue[[]any]
+	JvmOptions       plugin.TValue[[]any]
+	SystemProperties plugin.TValue[map[string]any]
+	TmpDir           plugin.TValue[string]
 }
 
 // createTomcat creates a new instance of this resource
@@ -58610,6 +58634,24 @@ func (c *mqlTomcat) GetWebapps() *plugin.TValue[[]any] {
 		}
 
 		return c.webapps()
+	})
+}
+
+func (c *mqlTomcat) GetJvmOptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.JvmOptions, func() ([]any, error) {
+		return c.jvmOptions()
+	})
+}
+
+func (c *mqlTomcat) GetSystemProperties() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.SystemProperties, func() (map[string]any, error) {
+		return c.systemProperties()
+	})
+}
+
+func (c *mqlTomcat) GetTmpDir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TmpDir, func() (string, error) {
+		return c.tmpDir()
 	})
 }
 
