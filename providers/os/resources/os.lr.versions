@@ -1603,6 +1603,7 @@ file.permissions.isDirectory 9.0.0
 file.permissions.isFile 9.0.0
 file.permissions.isSymlink 9.0.0
 file.permissions.mode 9.0.0
+file.permissions.octal 14.25.1
 file.permissions.other_executable 9.0.0
 file.permissions.other_readable 9.0.0
 file.permissions.other_writeable 9.0.0

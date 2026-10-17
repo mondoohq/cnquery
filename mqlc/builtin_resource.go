@@ -678,6 +678,52 @@ func compileResourceParseDuration(c *compiler, typ types.Type, ref uint64, id st
 	return types.Time, nil
 }
 
+// compileFilePermissionsMask compiles file.permissions.atMost(mask) and
+// file.permissions.atLeast(mask). MQL has no bitwise operators, so the mask
+// test runs in the executor against the resource's `mode` field, which is
+// read first and passed as the first argument.
+func compileFilePermissionsMask(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	if call == nil || len(call.Function) != 1 {
+		return types.Nil, errors.New("function " + id + " expects one argument, the octal mask (e.g. 0640)")
+	}
+	if call.Function[0].Name != "" {
+		return types.Nil, errors.New("function " + id + " does not take named arguments")
+	}
+
+	mask, err := c.compileExpression(call.Function[0].Value)
+	if err != nil {
+		return types.Nil, err
+	}
+	sig := FunctionSignature{Required: 1, Args: []types.Type{types.Int}}
+	if err := sig.Validate([]*llx.Primitive{mask}, c); err != nil {
+		return types.Nil, errors.New("function " + id + ": " + err.Error())
+	}
+	if types.Type(mask.Type) == types.Int {
+		if v, ok := mask.RawData().Value.(int64); ok && (v < 0 || v > 0o7777) {
+			return types.Nil, errors.New("function " + id + ": mask 0" + strconv.FormatInt(v, 8) + " is outside the permission bits 0-07777")
+		}
+	}
+
+	if _, err := compileResourceDefault(c, typ, ref, "mode", nil); err != nil {
+		return types.Nil, err
+	}
+	modeRef := c.tailRef()
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   string(typ) + "." + id,
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: ref,
+			Args: []*llx.Primitive{
+				llx.RefPrimitiveV2(modeRef),
+				mask,
+			},
+		},
+	})
+	return types.Bool, nil
+}
+
 func compileResourceCmpEmpty(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	var label string
 	switch id {

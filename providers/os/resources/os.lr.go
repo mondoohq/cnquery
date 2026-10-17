@@ -4454,6 +4454,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"file.permissions.string": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFilePermissions).GetString()).ToDataRes(types.String)
 	},
+	"file.permissions.octal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetOctal()).ToDataRes(types.String)
+	},
 	"files.find.from": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFilesFind).GetFrom()).ToDataRes(types.String)
 	},
@@ -23040,6 +23043,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"file.permissions.string": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFilePermissions).String, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"file.permissions.octal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).Octal, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"files.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52505,6 +52512,7 @@ type mqlFilePermissions struct {
 	IsFile           plugin.TValue[bool]
 	IsSymlink        plugin.TValue[bool]
 	String           plugin.TValue[string]
+	Octal            plugin.TValue[string]
 }
 
 // createFilePermissions creates a new instance of this resource
@@ -52611,6 +52619,12 @@ func (c *mqlFilePermissions) GetIsSymlink() *plugin.TValue[bool] {
 func (c *mqlFilePermissions) GetString() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.String, func() (string, error) {
 		return c.string()
+	})
+}
+
+func (c *mqlFilePermissions) GetOctal() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Octal, func() (string, error) {
+		return c.octal()
 	})
 }
 

@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -442,6 +443,16 @@ func (l *mqlFilePermissions) modeString() string {
 
 func (l *mqlFilePermissions) string() (string, error) {
 	return l.modeString(), nil
+}
+
+func (l *mqlFilePermissions) octal() (string, error) {
+	return octalMode(l.Mode.Data), nil
+}
+
+// octalMode formats the permission bits as a zero-padded four-digit octal
+// string, such as "0640" or "1777".
+func octalMode(mode int64) string {
+	return fmt.Sprintf("%04o", mode&0o7777)
 }
 
 func (r *mqlFileContext) id() (string, error) {
