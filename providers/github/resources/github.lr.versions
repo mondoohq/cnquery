@@ -397,6 +397,7 @@ github.organization.customProperty.allowedValues 11.4.47
 github.organization.customProperty.defaultValue 11.4.47
 github.organization.customProperty.description 11.4.47
 github.organization.customProperty.name 11.4.47
+github.organization.customProperty.requireExplicitValues 14.0.5
 github.organization.customProperty.required 11.4.47
 github.organization.customProperty.sourceType 11.4.47
 github.organization.customProperty.valueType 11.4.47
@@ -820,10 +821,17 @@ github.runnerLabel.id 11.4.123
 github.runnerLabel.name 11.4.123
 github.runnerLabel.type 11.4.123
 github.secretScanningAlert 11.4.121
+github.secretScanningAlert.assignedTo 14.0.5
+github.secretScanningAlert.closureRequestComment 14.0.5
+github.secretScanningAlert.closureRequestReviewer 14.0.5
+github.secretScanningAlert.closureRequestReviewerComment 14.0.5
 github.secretScanningAlert.createdAt 11.4.121
 github.secretScanningAlert.htmlUrl 11.4.121
+github.secretScanningAlert.metadata 14.0.5
 github.secretScanningAlert.multiRepo 11.4.121
 github.secretScanningAlert.number 11.4.121
+github.secretScanningAlert.provider 14.0.5
+github.secretScanningAlert.providerSlug 14.0.5
 github.secretScanningAlert.publiclyLeaked 11.4.121
 github.secretScanningAlert.pushProtectionBypassed 11.4.121
 github.secretScanningAlert.pushProtectionBypassedAt 11.4.121

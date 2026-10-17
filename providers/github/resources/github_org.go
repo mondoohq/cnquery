@@ -154,14 +154,15 @@ func (g *mqlGithubOrganization) customProperties() ([]any, error) {
 		}
 
 		r, err := CreateResource(g.MqlRuntime, "github.organization.customProperty", map[string]*llx.RawData{
-			"name":             llx.StringDataPtr(property.PropertyName),
-			"description":      llx.StringDataPtr(property.Description),
-			"sourceType":       llx.StringDataPtr(property.SourceType),
-			"valueType":        llx.StringData(string(property.ValueType)),
-			"required":         llx.BoolDataPtr(property.Required),
-			"defaultValue":     llx.StringData(defaultValue),
-			"allowedValues":    llx.ArrayData(convert.SliceAnyToInterface[string](property.AllowedValues), types.String),
-			"valuesEditableBy": llx.StringDataPtr(property.ValuesEditableBy),
+			"name":                  llx.StringDataPtr(property.PropertyName),
+			"description":           llx.StringDataPtr(property.Description),
+			"sourceType":            llx.StringDataPtr(property.SourceType),
+			"valueType":             llx.StringData(string(property.ValueType)),
+			"required":              llx.BoolDataPtr(property.Required),
+			"requireExplicitValues": llx.BoolDataPtr(property.RequireExplicitValues),
+			"defaultValue":          llx.StringData(defaultValue),
+			"allowedValues":         llx.ArrayData(convert.SliceAnyToInterface[string](property.AllowedValues), types.String),
+			"valuesEditableBy":      llx.StringDataPtr(property.ValuesEditableBy),
 		})
 		if err != nil {
 			return nil, err
