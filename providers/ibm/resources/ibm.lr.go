@@ -1964,6 +1964,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ibm.kubernetes.cluster.workers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIbmKubernetesCluster).GetWorkers()).ToDataRes(types.Array(types.Resource("ibm.kubernetes.worker")))
 	},
+	"ibm.kubernetes.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"ibm.kubernetes.cluster.accessTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetAccessTags()).ToDataRes(types.Array(types.String))
+	},
 	"ibm.cis.instance.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIbmCisInstance).GetId()).ToDataRes(types.String)
 	},
@@ -4494,6 +4500,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ibm.kubernetes.cluster.workers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIbmKubernetesCluster).Workers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.accessTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).AccessTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ibm.cis.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10346,6 +10360,8 @@ type mqlIbmKubernetesCluster struct {
 	ImagePullSecretsEnabled       plugin.TValue[bool]
 	ResourceGroup                 plugin.TValue[*mqlIbmResourceGroup]
 	Workers                       plugin.TValue[[]any]
+	Tags                          plugin.TValue[[]any]
+	AccessTags                    plugin.TValue[[]any]
 }
 
 // createIbmKubernetesCluster creates a new instance of this resource
@@ -10535,6 +10551,18 @@ func (c *mqlIbmKubernetesCluster) GetWorkers() *plugin.TValue[[]any] {
 		}
 
 		return c.workers()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetTags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tags, func() ([]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetAccessTags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessTags, func() ([]any, error) {
+		return c.accessTags()
 	})
 }
 

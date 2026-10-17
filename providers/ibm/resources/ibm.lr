@@ -1418,6 +1418,10 @@ private ibm.kubernetes.cluster @defaults("name region state") {
   resourceGroup() ibm.resourceGroup
   // Worker nodes of the cluster
   workers() []ibm.kubernetes.worker
+  // User tags, for example env:prod
+  tags() []string
+  // Access management tags, which IAM policies can grant access by
+  accessTags() []string
 }
 
 // IBM Cloud Internet Services instance
