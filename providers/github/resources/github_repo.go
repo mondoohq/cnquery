@@ -2541,6 +2541,9 @@ func alertUser(runtime *plugin.Runtime, u *github.User) (any, error) {
 // returns it only from the single-alert endpoint, not from the alert list, so
 // it is fetched when queried.
 func (g *mqlGithubSecretScanningAlert) metadata() (map[string]any, error) {
+	if g.Number.Error != nil {
+		return nil, g.Number.Error
+	}
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	alert, _, err := conn.Client().SecretScanning.GetAlert(conn.Context(), g.ownerLogin, g.repoName, g.Number.Data)
 	if err != nil {
