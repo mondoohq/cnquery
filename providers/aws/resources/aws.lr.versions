@@ -4064,6 +4064,7 @@ aws.ec2.securitygroup.instances 13.37.1
 aws.ec2.securitygroup.ipPermissions 11.15.2
 aws.ec2.securitygroup.ipPermissionsEgress 11.15.2
 aws.ec2.securitygroup.ippermission 11.15.2
+aws.ec2.securitygroup.ippermission.allPorts 14.4.5
 aws.ec2.securitygroup.ippermission.fromPort 11.15.2
 aws.ec2.securitygroup.ippermission.id 11.15.2
 aws.ec2.securitygroup.ippermission.includesPublicSource 13.33.2
@@ -4082,6 +4083,8 @@ aws.ec2.securitygroup.ippermission.peer.peeringStatus 13.52.2
 aws.ec2.securitygroup.ippermission.peer.securityGroup 13.52.2
 aws.ec2.securitygroup.ippermission.peer.vpc 13.52.2
 aws.ec2.securitygroup.ippermission.peers 13.52.2
+aws.ec2.securitygroup.ippermission.portRangeEnd 14.4.5
+aws.ec2.securitygroup.ippermission.portRangeStart 14.4.5
 aws.ec2.securitygroup.ippermission.prefixListIds 11.15.2
 aws.ec2.securitygroup.ippermission.prefixLists 13.23.2
 aws.ec2.securitygroup.ippermission.toPort 11.15.2

@@ -2402,6 +2402,35 @@ func (a *mqlAwsEc2SecuritygroupIppermission) includesPublicSource() (bool, error
 	return false, nil
 }
 
+// tcpUdpPorts returns the TCP and UDP ports the rule admits, with ok false for
+// a protocol that carries no ports.
+func (a *mqlAwsEc2SecuritygroupIppermission) tcpUdpPorts() (portRange, bool) {
+	return securityGroupRulePorts(a.IpProtocol.Data, a.FromPort.Data, a.ToPort.Data)
+}
+
+func (a *mqlAwsEc2SecuritygroupIppermission) allPorts() (bool, error) {
+	r, ok := a.tcpUdpPorts()
+	return ok && r.from == 0 && r.to == maxPort, nil
+}
+
+func (a *mqlAwsEc2SecuritygroupIppermission) portRangeStart() (int64, error) {
+	r, ok := a.tcpUdpPorts()
+	if !ok {
+		a.PortRangeStart.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return r.from, nil
+}
+
+func (a *mqlAwsEc2SecuritygroupIppermission) portRangeEnd() (int64, error) {
+	r, ok := a.tcpUdpPorts()
+	if !ok {
+		a.PortRangeEnd.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return r.to, nil
+}
+
 // anyStringEquals reports whether any element of the slice equals target.
 func anyStringEquals(list []any, target string) bool {
 	for _, item := range list {

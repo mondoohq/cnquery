@@ -145,6 +145,32 @@ func newPortRange(from, to int64) portRange {
 	return portRange{from: from, to: to}
 }
 
+// maxPort is the highest TCP or UDP port number.
+const maxPort = 65535
+
+// securityGroupRulePorts returns the TCP and UDP ports a security group rule
+// admits. ok is false for a rule whose protocol carries no ports: ICMP, where
+// fromPort and toPort hold the ICMP type and code, and any other IP protocol
+// such as ESP. An all-traffic rule admits every port, and so does a TCP or UDP
+// rule whose range is unset.
+func securityGroupRulePorts(protocol string, from, to int64) (portRange, bool) {
+	if strings.TrimSpace(protocol) == "" {
+		return portRange{}, false
+	}
+	switch normalizeProtocol(protocol) {
+	case protocolAll:
+		return portRange{from: 0, to: maxPort}, true
+	case protocolTcp, protocolUdp:
+		r := newPortRange(from, to)
+		if r.all {
+			return portRange{from: 0, to: maxPort}, true
+		}
+		return r, true
+	default:
+		return portRange{}, false
+	}
+}
+
 // covers reports whether every port in other falls inside r.
 func (r portRange) covers(other portRange) bool {
 	if r.all {
