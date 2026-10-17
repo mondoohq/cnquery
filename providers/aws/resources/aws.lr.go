@@ -26564,6 +26564,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.securitygroup.ippermission.includesPublicSource": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2SecuritygroupIppermission).GetIncludesPublicSource()).ToDataRes(types.Bool)
 	},
+	"aws.ec2.securitygroup.ippermission.allPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2SecuritygroupIppermission).GetAllPorts()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.securitygroup.ippermission.portRangeStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2SecuritygroupIppermission).GetPortRangeStart()).ToDataRes(types.Int)
+	},
+	"aws.ec2.securitygroup.ippermission.portRangeEnd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2SecuritygroupIppermission).GetPortRangeEnd()).ToDataRes(types.Int)
+	},
 	"aws.ec2.securitygroup.ippermission.peer.groupId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2SecuritygroupIppermissionPeer).GetGroupId()).ToDataRes(types.String)
 	},
@@ -70128,6 +70137,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.securitygroup.ippermission.includesPublicSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2SecuritygroupIppermission).IncludesPublicSource, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.ippermission.allPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermission).AllPorts, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.ippermission.portRangeStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermission).PortRangeStart, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.ippermission.portRangeEnd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermission).PortRangeEnd, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.securitygroup.ippermission.peer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -169198,6 +169219,9 @@ type mqlAwsEc2SecuritygroupIppermission struct {
 	UserIdGroupPairs     plugin.TValue[[]any]
 	Peers                plugin.TValue[[]any]
 	IncludesPublicSource plugin.TValue[bool]
+	AllPorts             plugin.TValue[bool]
+	PortRangeStart       plugin.TValue[int64]
+	PortRangeEnd         plugin.TValue[int64]
 }
 
 // createAwsEc2SecuritygroupIppermission creates a new instance of this resource
@@ -169300,6 +169324,24 @@ func (c *mqlAwsEc2SecuritygroupIppermission) GetPeers() *plugin.TValue[[]any] {
 func (c *mqlAwsEc2SecuritygroupIppermission) GetIncludesPublicSource() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IncludesPublicSource, func() (bool, error) {
 		return c.includesPublicSource()
+	})
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermission) GetAllPorts() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllPorts, func() (bool, error) {
+		return c.allPorts()
+	})
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermission) GetPortRangeStart() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PortRangeStart, func() (int64, error) {
+		return c.portRangeStart()
+	})
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermission) GetPortRangeEnd() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PortRangeEnd, func() (int64, error) {
+		return c.portRangeEnd()
 	})
 }
 

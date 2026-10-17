@@ -94,6 +94,39 @@ func TestNewPortRange(t *testing.T) {
 	assert.Equal(t, int64(443), reversed.to)
 }
 
+func TestSecurityGroupRulePorts(t *testing.T) {
+	tests := []struct {
+		name     string
+		protocol string
+		from, to int64
+		wantOk   bool
+		want     portRange
+	}{
+		{"all traffic", "-1", -1, -1, true, portRange{from: 0, to: maxPort}},
+		{"tcp single port", "tcp", 22, 22, true, portRange{from: 22, to: 22}},
+		{"tcp range", "tcp", 20, 25, true, portRange{from: 20, to: 25}},
+		{"tcp by number", "6", 3389, 3389, true, portRange{from: 3389, to: 3389}},
+		{"udp full range", "udp", 0, 65535, true, portRange{from: 0, to: maxPort}},
+		{"udp by number", "17", 53, 53, true, portRange{from: 53, to: 53}},
+		{"tcp unset range", "tcp", -1, -1, true, portRange{from: 0, to: maxPort}},
+		// ICMP reuses fromPort and toPort for type and code: type 8 code 0 is
+		// echo request, not a port range 0 to 8.
+		{"icmp echo", "icmp", 8, 0, false, portRange{}},
+		{"icmp all types", "icmp", -1, -1, false, portRange{}},
+		{"icmpv6", "icmpv6", -1, -1, false, portRange{}},
+		{"icmp by number", "1", 3, 4, false, portRange{}},
+		{"esp", "50", -1, -1, false, portRange{}},
+		{"unset protocol", "", -1, -1, false, portRange{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := securityGroupRulePorts(tt.protocol, tt.from, tt.to)
+			assert.Equal(t, tt.wantOk, ok)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func TestPortRangeCovers(t *testing.T) {
 	all := portRange{all: true}
 	assert.True(t, all.covers(newPortRange(443, 443)))

@@ -21752,6 +21752,26 @@ private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProto
   // True when the IPv4 ranges include `0.0.0.0/0` or the IPv6 ranges include
   // `::/0`.
   includesPublicSource() bool
+  // Whether the rule admits every TCP and UDP port
+  //
+  // True for an all-traffic rule (`ipProtocol` is `-1`) and for a TCP or UDP
+  // rule spanning ports 0 to 65535. False for ICMP and other protocols without
+  // ports.
+  allPorts() bool
+  // First TCP or UDP port the rule admits
+  //
+  // 0 for an all-traffic rule (`ipProtocol` is `-1`), the start of the range
+  // for a TCP or UDP rule, and null for ICMP and other protocols without ports,
+  // where fromPort carries an ICMP type rather than a port. With portRangeEnd
+  // it answers whether the rule admits a port, for example
+  // `portRangeStart <= 22 && portRangeEnd >= 22`.
+  portRangeStart() int
+  // Last TCP or UDP port the rule admits
+  //
+  // 65535 for an all-traffic rule (`ipProtocol` is `-1`), the end of the range
+  // for a TCP or UDP rule, and null for ICMP and other protocols without ports,
+  // where toPort carries an ICMP code rather than a port.
+  portRangeEnd() int
 }
 
 // Security group named by a security group rule
