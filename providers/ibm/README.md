@@ -2,18 +2,20 @@
 
 The `ibm` provider connects to an [IBM Cloud](https://cloud.ibm.com/) account and inventories its
 IAM configuration and users, resource groups and instances, VPC infrastructure, Power Virtual Server
-workspaces, Cloud Object Storage buckets, Key Protect keys, Activity Tracker Event Routing, and
-IBM Cloud Databases through read-only API calls. Use it to audit account settings such as MFA and session
+workspaces, Cloud Object Storage buckets, Key Protect keys, Activity Tracker Event Routing,
+IBM Cloud Databases, and IBM Cloud Kubernetes Service and Red Hat OpenShift on IBM Cloud clusters
+through read-only API calls. Use it to audit account settings such as MFA and session
 limits, who holds which roles, network exposure in VPCs, and Power Virtual Server workloads.
 
 ## Prerequisites
 
 An IBM Cloud API key. A key whose identity has the Viewer role on IAM Identity, IAM Access Groups,
 and the services you query, plus Reader on VPC Infrastructure, Power Virtual Server, Key Protect,
-Activity Tracker Event Routing, and IBM Cloud Databases, is enough. Reading a bucket's firewall and
-activity tracking settings needs the Manager role on Cloud Object Storage. Listing every user of the
-account (`ibm.iamUsers`) needs the Viewer role on User Management; without it, IBM Cloud may return
-only the key's own user when the account lets users see each other. The provider only reads.
+Activity Tracker Event Routing, and IBM Cloud Databases, and Viewer on Kubernetes Service, is
+enough. Reading a bucket's firewall and activity tracking settings needs the Manager role on Cloud
+Object Storage. Listing every user of the account (`ibm.iamUsers`) needs the Viewer role on User
+Management; without it, IBM Cloud may return only the key's own user when the account lets users
+see each other. The provider only reads.
 
 ## Authentication
 
@@ -22,8 +24,8 @@ Arguments:
 - `--api-key` - the API key.
 - `--api-key-file` - the JSON file the IBM Cloud console downloads, or that
   `ibmcloud iam api-key-create <name> --file <path>` writes.
-- `--regions` - optional, restricts the VPC regions queried (repeatable or comma-separated).
-  Defaults to every region.
+- `--regions` - optional, restricts the VPC regions queried (repeatable or comma-separated), and
+  the regions whose Kubernetes Service clusters are listed. Defaults to every region.
 
 ```shell
 mql shell ibm --api-key-file apikey.json
@@ -45,7 +47,8 @@ mql shell ibm --api-key-file apikey.json
 Account-wide resources (IAM, resource groups, resource instances) are read once. VPC resources are
 collected from every VPC region in parallel, and each carries its `region`. A region that refuses a
 call is skipped and the other regions still answer. Power Virtual Server workspaces are found
-through the resource controller and queried in their own zone.
+through the resource controller and queried in their own zone. Kubernetes Service clusters, VPC
+and classic, are listed once for every region through the global Kubernetes Service API.
 
 ## Discovery
 
@@ -197,6 +200,31 @@ mql> ibm.atrackerRoutes { name rules { locations targets { name type writeStatus
 ```shell
 mql> ibm.databases.where(publicEndpointEnabled && allowlist.length == 0) { name type version region }
 ```
+
+**Kubernetes workers with an update available**
+
+```shell
+mql> ibm.kubernetesClusters { name workers.where(updateAvailable) { id kubeVersion targetKubeVersion } }
+```
+
+`updateAvailable` is true when a worker runs a version other than the one IBM Cloud would update it
+to, which `ibmcloud ks workers` marks with an asterisk.
+
+**Clusters whose master is reachable through the public service endpoint**
+
+```shell
+mql> ibm.kubernetesClusters.where(publicServiceEndpointEnabled) { name region provider publicServiceEndpointUrl }
+```
+
+**Clusters without KMS encryption of their secrets, or without the image pull secret**
+
+```shell
+mql> ibm.kubernetesClusters.where(!kmsEnabled || !imagePullSecretsEnabled) { name type kmsKey { name } }
+```
+
+Monitoring and logging agents are not visible through the Kubernetes Service API: IBM retired the
+observability endpoints (`v2/observe`) and the `ibmcloud ob` plug-in, and the agents are now
+installed into the cluster. Check them with the `k8s` provider against the cluster itself.
 
 **Power Virtual Server workspaces and their images**
 

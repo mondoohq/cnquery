@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/IBM/cloud-databases-go-sdk/clouddatabasesv5"
+	"github.com/IBM/go-sdk-core/v5/core"
 	"github.com/IBM/ibm-cos-sdk-go-config/v2/resourceconfigurationv1"
 	"github.com/IBM/ibm-cos-sdk-go/aws"
 	"github.com/IBM/ibm-cos-sdk-go/aws/credentials/ibmiam"
@@ -162,4 +163,27 @@ func (c *IbmConnection) AccountManagement() (*accountmanagementv4.AccountManagem
 		return nil, err
 	}
 	return v.(*accountmanagementv4.AccountManagementV4), nil
+}
+
+// KubernetesServiceURL is the global IBM Cloud Kubernetes Service API. It
+// answers for the clusters of every region, Kubernetes and OpenShift alike.
+const KubernetesServiceURL = "https://containers.cloud.ibm.com/global"
+
+// KubernetesService returns a client for the IBM Cloud Kubernetes Service
+// API. IBM's Go SDK for it drops a cluster's KMS configuration and the list's
+// service endpoints, so resources read the API's JSON through this client,
+// which shares the connection's authentication, retries, and timeout.
+func (c *IbmConnection) KubernetesService() (*core.BaseService, error) {
+	v, err := c.Memo("kubernetes", func() (any, error) {
+		svc, err := core.NewBaseService(&core.ServiceOptions{Authenticator: c.auth, URL: KubernetesServiceURL})
+		if err != nil {
+			return nil, err
+		}
+		configure(svc)
+		return svc, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return v.(*core.BaseService), nil
 }

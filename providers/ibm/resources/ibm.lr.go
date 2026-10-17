@@ -56,6 +56,8 @@ const (
 	ResourceIbmAtrackerRouteRule    string = "ibm.atracker.route.rule"
 	ResourceIbmAtrackerSettings     string = "ibm.atracker.settings"
 	ResourceIbmDatabase             string = "ibm.database"
+	ResourceIbmKubernetesCluster    string = "ibm.kubernetes.cluster"
+	ResourceIbmKubernetesWorker     string = "ibm.kubernetes.worker"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -222,6 +224,14 @@ func init() {
 			// to override args, implement: initIbmDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createIbmDatabase,
 		},
+		"ibm.kubernetes.cluster": {
+			// to override args, implement: initIbmKubernetesCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIbmKubernetesCluster,
+		},
+		"ibm.kubernetes.worker": {
+			// to override args, implement: initIbmKubernetesWorker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIbmKubernetesWorker,
+		},
 	}
 }
 
@@ -382,6 +392,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ibm.databases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIbm).GetDatabases()).ToDataRes(types.Array(types.Resource("ibm.database")))
+	},
+	"ibm.kubernetesClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbm).GetKubernetesClusters()).ToDataRes(types.Array(types.Resource("ibm.kubernetes.cluster")))
 	},
 	"ibm.iam.accountSettings.mfa": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIbmIamAccountSettings).GetMfa()).ToDataRes(types.String)
@@ -1859,6 +1872,120 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ibm.database.accessTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIbmDatabase).GetAccessTags()).ToDataRes(types.Array(types.String))
 	},
+	"ibm.kubernetes.cluster.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetId()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetName()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetRegion()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.cluster.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetProvider()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.cluster.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetType()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.cluster.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetState()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.cluster.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetStatus()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.cluster.masterKubeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetMasterKubeVersion()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.cluster.targetKubeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetTargetKubeVersion()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.cluster.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"ibm.kubernetes.cluster.crn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetCrn()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.cluster.publicServiceEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetPublicServiceEndpointEnabled()).ToDataRes(types.Bool)
+	},
+	"ibm.kubernetes.cluster.privateServiceEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetPrivateServiceEndpointEnabled()).ToDataRes(types.Bool)
+	},
+	"ibm.kubernetes.cluster.publicServiceEndpointUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetPublicServiceEndpointUrl()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.cluster.privateServiceEndpointUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetPrivateServiceEndpointUrl()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.cluster.kmsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetKmsEnabled()).ToDataRes(types.Bool)
+	},
+	"ibm.kubernetes.cluster.kmsInstanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetKmsInstanceId()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.cluster.kmsRootKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetKmsRootKeyId()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.cluster.kmsInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetKmsInstance()).ToDataRes(types.Resource("ibm.kms.instance"))
+	},
+	"ibm.kubernetes.cluster.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetKmsKey()).ToDataRes(types.Resource("ibm.kms.key"))
+	},
+	"ibm.kubernetes.cluster.imagePullSecretsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetImagePullSecretsEnabled()).ToDataRes(types.Bool)
+	},
+	"ibm.kubernetes.cluster.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetResourceGroup()).ToDataRes(types.Resource("ibm.resourceGroup"))
+	},
+	"ibm.kubernetes.cluster.workers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetWorkers()).ToDataRes(types.Array(types.Resource("ibm.kubernetes.worker")))
+	},
+	"ibm.kubernetes.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"ibm.kubernetes.cluster.accessTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesCluster).GetAccessTags()).ToDataRes(types.Array(types.String))
+	},
+	"ibm.kubernetes.worker.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesWorker).GetId()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.worker.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesWorker).GetState()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.worker.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesWorker).GetStatus()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.worker.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesWorker).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.worker.flavor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesWorker).GetFlavor()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.worker.zone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesWorker).GetZone()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.worker.poolName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesWorker).GetPoolName()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.worker.poolId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesWorker).GetPoolId()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.worker.operatingSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesWorker).GetOperatingSystem()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.worker.kubeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesWorker).GetKubeVersion()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.worker.targetKubeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesWorker).GetTargetKubeVersion()).ToDataRes(types.String)
+	},
+	"ibm.kubernetes.worker.updateAvailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesWorker).GetUpdateAvailable()).ToDataRes(types.Bool)
+	},
+	"ibm.kubernetes.worker.cluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmKubernetesWorker).GetCluster()).ToDataRes(types.Resource("ibm.kubernetes.cluster"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1993,6 +2120,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ibm.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIbm).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetesClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbm).KubernetesClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ibm.iam.accountSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4119,6 +4250,166 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIbmDatabase).AccessTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"ibm.kubernetes.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"ibm.kubernetes.cluster.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.masterKubeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).MasterKubeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.targetKubeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).TargetKubeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.crn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).Crn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.publicServiceEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).PublicServiceEndpointEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.privateServiceEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).PrivateServiceEndpointEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.publicServiceEndpointUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).PublicServiceEndpointUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.privateServiceEndpointUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).PrivateServiceEndpointUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.kmsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).KmsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.kmsInstanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).KmsInstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.kmsRootKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).KmsRootKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.kmsInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).KmsInstance, ok = plugin.RawToTValue[*mqlIbmKmsInstance](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).KmsKey, ok = plugin.RawToTValue[*mqlIbmKmsKey](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.imagePullSecretsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).ImagePullSecretsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).ResourceGroup, ok = plugin.RawToTValue[*mqlIbmResourceGroup](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.workers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).Workers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.cluster.accessTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesCluster).AccessTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.worker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesWorker).__id, ok = v.Value.(string)
+		return
+	},
+	"ibm.kubernetes.worker.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesWorker).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.worker.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesWorker).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.worker.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesWorker).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.worker.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesWorker).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.worker.flavor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesWorker).Flavor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.worker.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesWorker).Zone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.worker.poolName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesWorker).PoolName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.worker.poolId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesWorker).PoolId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.worker.operatingSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesWorker).OperatingSystem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.worker.kubeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesWorker).KubeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.worker.targetKubeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesWorker).TargetKubeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.worker.updateAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesWorker).UpdateAvailable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ibm.kubernetes.worker.cluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmKubernetesWorker).Cluster, ok = plugin.RawToTValue[*mqlIbmKubernetesCluster](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -4178,6 +4469,7 @@ type mqlIbm struct {
 	AtrackerRoutes       plugin.TValue[[]any]
 	AtrackerSettings     plugin.TValue[*mqlIbmAtrackerSettings]
 	Databases            plugin.TValue[[]any]
+	KubernetesClusters   plugin.TValue[[]any]
 }
 
 // createIbm creates a new instance of this resource
@@ -4682,6 +4974,22 @@ func (c *mqlIbm) GetDatabases() *plugin.TValue[[]any] {
 		}
 
 		return c.databases()
+	})
+}
+
+func (c *mqlIbm) GetKubernetesClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KubernetesClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ibm", c.__id, "kubernetesClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.kubernetesClusters()
 	})
 }
 
@@ -9660,5 +9968,355 @@ func (c *mqlIbmDatabase) GetTags() *plugin.TValue[[]any] {
 func (c *mqlIbmDatabase) GetAccessTags() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.AccessTags, func() ([]any, error) {
 		return c.accessTags()
+	})
+}
+
+// mqlIbmKubernetesCluster for the ibm.kubernetes.cluster resource
+type mqlIbmKubernetesCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlIbmKubernetesClusterInternal
+	Id                            plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	Region                        plugin.TValue[string]
+	Provider                      plugin.TValue[string]
+	Type                          plugin.TValue[string]
+	State                         plugin.TValue[string]
+	Status                        plugin.TValue[string]
+	MasterKubeVersion             plugin.TValue[string]
+	TargetKubeVersion             plugin.TValue[string]
+	CreatedAt                     plugin.TValue[*time.Time]
+	Crn                           plugin.TValue[string]
+	PublicServiceEndpointEnabled  plugin.TValue[bool]
+	PrivateServiceEndpointEnabled plugin.TValue[bool]
+	PublicServiceEndpointUrl      plugin.TValue[string]
+	PrivateServiceEndpointUrl     plugin.TValue[string]
+	KmsEnabled                    plugin.TValue[bool]
+	KmsInstanceId                 plugin.TValue[string]
+	KmsRootKeyId                  plugin.TValue[string]
+	KmsInstance                   plugin.TValue[*mqlIbmKmsInstance]
+	KmsKey                        plugin.TValue[*mqlIbmKmsKey]
+	ImagePullSecretsEnabled       plugin.TValue[bool]
+	ResourceGroup                 plugin.TValue[*mqlIbmResourceGroup]
+	Workers                       plugin.TValue[[]any]
+	Tags                          plugin.TValue[[]any]
+	AccessTags                    plugin.TValue[[]any]
+}
+
+// createIbmKubernetesCluster creates a new instance of this resource
+func createIbmKubernetesCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIbmKubernetesCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ibm.kubernetes.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIbmKubernetesCluster) MqlName() string {
+	return "ibm.kubernetes.cluster"
+}
+
+func (c *mqlIbmKubernetesCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIbmKubernetesCluster) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlIbmKubernetesCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlIbmKubernetesCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlIbmKubernetesCluster) GetProvider() *plugin.TValue[string] {
+	return &c.Provider
+}
+
+func (c *mqlIbmKubernetesCluster) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlIbmKubernetesCluster) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlIbmKubernetesCluster) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlIbmKubernetesCluster) GetMasterKubeVersion() *plugin.TValue[string] {
+	return &c.MasterKubeVersion
+}
+
+func (c *mqlIbmKubernetesCluster) GetTargetKubeVersion() *plugin.TValue[string] {
+	return &c.TargetKubeVersion
+}
+
+func (c *mqlIbmKubernetesCluster) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlIbmKubernetesCluster) GetCrn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Crn, func() (string, error) {
+		return c.crn()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetPublicServiceEndpointEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PublicServiceEndpointEnabled, func() (bool, error) {
+		return c.publicServiceEndpointEnabled()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetPrivateServiceEndpointEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PrivateServiceEndpointEnabled, func() (bool, error) {
+		return c.privateServiceEndpointEnabled()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetPublicServiceEndpointUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PublicServiceEndpointUrl, func() (string, error) {
+		return c.publicServiceEndpointUrl()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetPrivateServiceEndpointUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PrivateServiceEndpointUrl, func() (string, error) {
+		return c.privateServiceEndpointUrl()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetKmsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.KmsEnabled, func() (bool, error) {
+		return c.kmsEnabled()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetKmsInstanceId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KmsInstanceId, func() (string, error) {
+		return c.kmsInstanceId()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetKmsRootKeyId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KmsRootKeyId, func() (string, error) {
+		return c.kmsRootKeyId()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetKmsInstance() *plugin.TValue[*mqlIbmKmsInstance] {
+	return plugin.GetOrCompute[*mqlIbmKmsInstance](&c.KmsInstance, func() (*mqlIbmKmsInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ibm.kubernetes.cluster", c.__id, "kmsInstance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlIbmKmsInstance), nil
+			}
+		}
+
+		return c.kmsInstance()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetKmsKey() *plugin.TValue[*mqlIbmKmsKey] {
+	return plugin.GetOrCompute[*mqlIbmKmsKey](&c.KmsKey, func() (*mqlIbmKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ibm.kubernetes.cluster", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlIbmKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetImagePullSecretsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ImagePullSecretsEnabled, func() (bool, error) {
+		return c.imagePullSecretsEnabled()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetResourceGroup() *plugin.TValue[*mqlIbmResourceGroup] {
+	return plugin.GetOrCompute[*mqlIbmResourceGroup](&c.ResourceGroup, func() (*mqlIbmResourceGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ibm.kubernetes.cluster", c.__id, "resourceGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlIbmResourceGroup), nil
+			}
+		}
+
+		return c.resourceGroup()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetWorkers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ibm.kubernetes.cluster", c.__id, "workers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workers()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetTags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tags, func() ([]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlIbmKubernetesCluster) GetAccessTags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessTags, func() ([]any, error) {
+		return c.accessTags()
+	})
+}
+
+// mqlIbmKubernetesWorker for the ibm.kubernetes.worker resource
+type mqlIbmKubernetesWorker struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlIbmKubernetesWorkerInternal
+	Id                plugin.TValue[string]
+	State             plugin.TValue[string]
+	Status            plugin.TValue[string]
+	LifecycleState    plugin.TValue[string]
+	Flavor            plugin.TValue[string]
+	Zone              plugin.TValue[string]
+	PoolName          plugin.TValue[string]
+	PoolId            plugin.TValue[string]
+	OperatingSystem   plugin.TValue[string]
+	KubeVersion       plugin.TValue[string]
+	TargetKubeVersion plugin.TValue[string]
+	UpdateAvailable   plugin.TValue[bool]
+	Cluster           plugin.TValue[*mqlIbmKubernetesCluster]
+}
+
+// createIbmKubernetesWorker creates a new instance of this resource
+func createIbmKubernetesWorker(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIbmKubernetesWorker{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ibm.kubernetes.worker", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIbmKubernetesWorker) MqlName() string {
+	return "ibm.kubernetes.worker"
+}
+
+func (c *mqlIbmKubernetesWorker) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIbmKubernetesWorker) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlIbmKubernetesWorker) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlIbmKubernetesWorker) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlIbmKubernetesWorker) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlIbmKubernetesWorker) GetFlavor() *plugin.TValue[string] {
+	return &c.Flavor
+}
+
+func (c *mqlIbmKubernetesWorker) GetZone() *plugin.TValue[string] {
+	return &c.Zone
+}
+
+func (c *mqlIbmKubernetesWorker) GetPoolName() *plugin.TValue[string] {
+	return &c.PoolName
+}
+
+func (c *mqlIbmKubernetesWorker) GetPoolId() *plugin.TValue[string] {
+	return &c.PoolId
+}
+
+func (c *mqlIbmKubernetesWorker) GetOperatingSystem() *plugin.TValue[string] {
+	return &c.OperatingSystem
+}
+
+func (c *mqlIbmKubernetesWorker) GetKubeVersion() *plugin.TValue[string] {
+	return &c.KubeVersion
+}
+
+func (c *mqlIbmKubernetesWorker) GetTargetKubeVersion() *plugin.TValue[string] {
+	return &c.TargetKubeVersion
+}
+
+func (c *mqlIbmKubernetesWorker) GetUpdateAvailable() *plugin.TValue[bool] {
+	return &c.UpdateAvailable
+}
+
+func (c *mqlIbmKubernetesWorker) GetCluster() *plugin.TValue[*mqlIbmKubernetesCluster] {
+	return plugin.GetOrCompute[*mqlIbmKubernetesCluster](&c.Cluster, func() (*mqlIbmKubernetesCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ibm.kubernetes.worker", c.__id, "cluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlIbmKubernetesCluster), nil
+			}
+		}
+
+		return c.cluster()
 	})
 }
