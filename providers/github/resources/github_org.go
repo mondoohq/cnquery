@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-github/v92/github"
+	"github.com/google/go-github/v93/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/logger"
@@ -764,7 +764,7 @@ func (g *mqlGithubOrganization) actionsSettings() (*mqlGithubOrganizationActions
 
 	res, err := CreateResource(g.MqlRuntime, "github.organizationActionsSettings", map[string]*llx.RawData{
 		"__id":                         llx.StringData("github.organizationActionsSettings/" + orgLogin),
-		"enabledRepositories":          llx.StringDataPtr(perms.EnabledRepositories),
+		"enabledRepositories":          llx.StringData(perms.EnabledRepositories),
 		"allowedActions":               llx.StringDataPtr(perms.AllowedActions),
 		"shaPinningRequired":           llx.BoolDataPtr(perms.SHAPinningRequired),
 		"defaultWorkflowPermissions":   llx.StringData(defaultWfPerms),

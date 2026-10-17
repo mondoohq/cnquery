@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/google/go-github/v92/github"
+	"github.com/google/go-github/v93/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
@@ -161,11 +161,11 @@ func (g *mqlGithubRepositoryActionsSettings) accessLevel() (string, error) {
 		g.AccessLevel.State = plugin.StateIsSet | plugin.StateIsNull
 		return "", nil
 	}
-	if level == nil || level.AccessLevel == nil {
+	if level == nil || level.AccessLevel == "" {
 		g.AccessLevel.State = plugin.StateIsSet | plugin.StateIsNull
 		return "", nil
 	}
-	return *level.AccessLevel, nil
+	return level.AccessLevel, nil
 }
 
 // ---------- organization ----------
