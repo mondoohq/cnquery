@@ -139,12 +139,21 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 				}
 			}
 
-			modularity := ""
+			// The trailing group is "src=<SOURCERPM>" then, optionally, the
+			// modularity label; a line from the format before the source was
+			// added (captured output, the "__" format) carries only the label.
+			rest, modularity, sourceRpm := "", "", ""
 			if len(m) > 9 {
-				modularity = m[9]
+				rest = m[9]
+			}
+			if src, ok := strings.CutPrefix(rest, rpmSourceTag); ok {
+				sourceRpm, modularity, _ = strings.Cut(src, rpmFieldSep)
+			} else {
+				modularity = rest
 			}
 
 			pkg := newRpmPackage(pf, name, version, arch, epoch, vendor, m[6], license, modularity, installTime)
+			pkg.Origin = rpmSourceName(sourceRpm)
 			pkg.FilesAvailable = PkgFilesAsync // when we use commands we need to fetch the files async
 			pkgs = append(pkgs, pkg)
 
@@ -171,6 +180,44 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 			Msg("mql[rpm]> some package lines could not be parsed, packages are missing from the inventory")
 	}
 	return pkgs
+}
+
+// rpmSourceTag marks the %{SOURCERPM} field in queryFormat() output. It is a
+// tag rather than a bare position because the field after it, the modularity
+// label, is only present on some platforms, and output from before the field
+// existed must still parse; a modularity label (name:stream:version:context)
+// never contains "=".
+const rpmSourceTag = "src="
+
+// rpmSourceName is the source package an rpm was built from, read from its
+// SOURCERPM tag: "openssl-3.0.1-23.el9_0.src.rpm" -> "openssl".
+//
+// It becomes the package's Origin. rpm advisories are filed against the source
+// package -- Microsoft's Azure Linux feed and Rocky's both name `openssl`,
+// never `openssl-libs` -- so without it a subpackage built from a
+// differently-named source can only be looked up by its own name, under which
+// no advisory is ever filed.
+//
+// The tag is <name>-<version>-<release>.src.rpm (or .nosrc.rpm). A name may
+// contain hyphens, a version and a release cannot, so the name is everything
+// before the last two. Anything else -- "(none)", the empty tag gpg-pubkey
+// carries -- is no source.
+func rpmSourceName(sourceRpm string) string {
+	s := strings.TrimSpace(strings.TrimRight(sourceRpm, "\x00"))
+	var ok bool
+	if s, ok = strings.CutSuffix(s, ".src.rpm"); !ok {
+		if s, ok = strings.CutSuffix(s, ".nosrc.rpm"); !ok {
+			return ""
+		}
+	}
+	for range 2 { // drop the release, then the version
+		i := strings.LastIndex(s, "-")
+		if i <= 0 {
+			return ""
+		}
+		s = s[:i]
+	}
+	return s
 }
 
 // normalizeRpmEpoch collapses rpm's spellings of "this package has no epoch"
@@ -206,6 +253,7 @@ func newRpmPackageFromDB(pf *inventory.Platform, pkg *rpmdb.PackageInfo, rpmDBPa
 
 	rpmPkg := newRpmPackage(pf, pkg.Name, version, pkg.Arch, epoch, cleanupVendorName(pkg.Vendor),
 		pkg.Summary, pkg.License, pkg.Modularitylabel, int64(pkg.InstallTime))
+	rpmPkg.Origin = rpmSourceName(pkg.SourceRpm)
 
 	rpmPkg.FilesAvailable = PkgFilesIncluded
 	rpmPkg.Files = []FileRecord{
@@ -403,14 +451,14 @@ func (rpm *RpmPkgManager) queryFormat() string {
 	// this format should work everywhere
 	// fall-back to epoch instead of epochnum for 6 ish platforms, latest 6 platforms also support epochnum, but we
 	// save 1 call by not detecting the available keyword via rpm --querytags
-	format := "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH}" + rpmFieldSep + "%{VENDOR}" + rpmFieldSep + "%{SUMMARY}" + rpmFieldSep + "%{LICENSE}" + rpmFieldSep + "%{INSTALLTIME}" + modularity + "\\n"
+	format := "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH}" + rpmFieldSep + "%{VENDOR}" + rpmFieldSep + "%{SUMMARY}" + rpmFieldSep + "%{LICENSE}" + rpmFieldSep + "%{INSTALLTIME}" + rpmFieldSep + rpmSourceTag + "%{SOURCERPM}" + modularity + "\\n"
 
 	// ATTENTION: EPOCHNUM is only available since later version of rpm in RedHat 6 and Suse 12
 	// we can only expect if for rhel 7+, therefore we need to run an extra test
 	// be aware that this method is also used for non-redhat systems like suse
 	i, err := strconv.ParseInt(rpm.platform.Version, 0, 32)
 	if err == nil && (rpm.platform.Name == "centos" || rpm.platform.Name == "centos-stream" || rpm.platform.Name == "redhat") && i >= 7 {
-		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}" + rpmFieldSep + "%{VENDOR}" + rpmFieldSep + "%{SUMMARY}" + rpmFieldSep + "%{LICENSE}" + rpmFieldSep + "%{INSTALLTIME}" + modularity + "\\n"
+		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}" + rpmFieldSep + "%{VENDOR}" + rpmFieldSep + "%{SUMMARY}" + rpmFieldSep + "%{LICENSE}" + rpmFieldSep + "%{INSTALLTIME}" + rpmFieldSep + rpmSourceTag + "%{SOURCERPM}" + modularity + "\\n"
 	}
 
 	return format
