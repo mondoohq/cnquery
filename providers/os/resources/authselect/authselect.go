@@ -212,14 +212,14 @@ func (e *evaluator) next() (token, string, error) {
 	if e.pos >= len(e.s) {
 		return tokEnd, "", nil
 	}
-	switch c := e.s[e.pos]; {
-	case c == '(':
+	switch e.s[e.pos] {
+	case '(':
 		e.pos++
 		return tokOpen, "", nil
-	case c == ')':
+	case ')':
 		e.pos++
 		return tokClose, "", nil
-	case c == '"':
+	case '"':
 		end := strings.IndexByte(e.s[e.pos+1:], '"')
 		if end < 0 {
 			return tokEnd, "", errExpression
