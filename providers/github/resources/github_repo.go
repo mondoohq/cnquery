@@ -2463,30 +2463,14 @@ func (g *mqlGithubRepository) secretScanningAlerts() ([]any, error) {
 
 	res := []any{}
 	for _, alert := range allAlerts {
-		var resolvedBy any
-		if alert.ResolvedBy != nil {
-			var err error
-			resolvedBy, err = NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
-				"id":    llx.IntDataPtr(alert.ResolvedBy.ID),
-				"login": llx.StringDataPtr(alert.ResolvedBy.Login),
-			})
-			if err != nil {
-				return nil, err
-			}
+		resolvedBy, err := alertUser(g.MqlRuntime, alert.ResolvedBy)
+		if err != nil {
+			return nil, err
 		}
-
-		var pushProtectionBypassedBy any
-		if alert.PushProtectionBypassedBy != nil {
-			var err error
-			pushProtectionBypassedBy, err = NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
-				"id":    llx.IntDataPtr(alert.PushProtectionBypassedBy.ID),
-				"login": llx.StringDataPtr(alert.PushProtectionBypassedBy.Login),
-			})
-			if err != nil {
-				return nil, err
-			}
+		pushProtectionBypassedBy, err := alertUser(g.MqlRuntime, alert.PushProtectionBypassedBy)
+		if err != nil {
+			return nil, err
 		}
-
 		assignedTo, err := alertUser(g.MqlRuntime, alert.AssignedTo)
 		if err != nil {
 			return nil, err
