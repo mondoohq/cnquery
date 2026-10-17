@@ -139,6 +139,15 @@ func createLabel(res *llx.CodeBundle, ref uint64, schema resources.ResourcesSche
 	case "if":
 		label = "if"
 	default:
+		// Builtins specific to one resource (parse.date,
+		// file.permissions.atMost) carry the resource name in their id, and
+		// the author wrote only the function after it.
+		if chunk.Function.Binding != 0 {
+			if typ := code.Chunk(chunk.Function.Binding).Type(); typ.IsResource() {
+				id = strings.TrimPrefix(id, string(typ)+".")
+			}
+		}
+
 		if x, ok := llx.ComparableLabel(id); ok {
 			arg := chunk.Function.Args[0].LabelV2(code)
 			label = parentLabel + " " + x + " " + arg

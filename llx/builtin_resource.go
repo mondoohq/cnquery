@@ -315,6 +315,55 @@ func resourceDuration(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 	return TimeData(t), 0, nil
 }
 
+// permissionBits are the bits file.permissions.mode carries: the nine
+// rwx bits plus setuid, setgid and sticky.
+const permissionBits = 0o7777
+
+// permissionsAtMost reports whether mode sets no bit outside mask.
+func permissionsAtMost(mode int64, mask int64) bool {
+	return mode&permissionBits&^mask == 0
+}
+
+// permissionsAtLeast reports whether mode sets every bit of mask.
+func permissionsAtLeast(mode int64, mask int64) bool {
+	return mode&permissionBits&mask == mask
+}
+
+func filePermissionsAtMost(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return filePermissionsMask(e, chunk, ref, permissionsAtMost)
+}
+
+func filePermissionsAtLeast(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return filePermissionsMask(e, chunk, ref, permissionsAtLeast)
+}
+
+// filePermissionsMask evaluates a mask test against the mode the compiler
+// passes as the first argument. A null mode (no file, or no permissions read)
+// stays null, so the check fails instead of passing.
+func filePermissionsMask(e *blockExecutor, chunk *Chunk, ref uint64, test func(mode int64, mask int64) bool) (*RawData, uint64, error) {
+	if len(chunk.Function.Args) != 2 {
+		return nil, 0, errors.New("file.permissions mask test needs the mode and a mask")
+	}
+	args, rref, err := primitive2array(e, ref, chunk.Function.Args)
+	if err != nil || rref != 0 {
+		return nil, rref, err
+	}
+
+	mask, ok := args[1].(int64)
+	if !ok {
+		return nil, 0, errors.New("file.permissions mask must be an int")
+	}
+	if mask < 0 || mask > permissionBits {
+		return nil, 0, errors.New("file.permissions mask 0" + strconv.FormatInt(mask, 8) + " is outside the permission bits 0-07777")
+	}
+
+	mode, ok := args[0].(int64)
+	if !ok {
+		return &RawData{Type: types.Bool}, 0, nil
+	}
+	return BoolData(test(mode, mask)), 0, nil
+}
+
 // RuntimeBoundResource is a resource that names the runtime which answers its
 // fields, instead of leaving that to the executor's own runtime.
 //

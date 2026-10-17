@@ -1510,6 +1510,149 @@ func TestResource_File_Permissions(t *testing.T) {
 	}
 }
 
+// permissionsMaskMock records one file per mode, keyed by path, so the mask
+// builtins run through the compiler and executor against a real mode.
+func permissionsMaskMock(t *testing.T, modes map[string]int64) llx.Runtime {
+	t.Helper()
+
+	recorded := []iisRecordingResource{}
+	for path, mode := range modes {
+		permID := fmt.Sprintf("%o", mode)
+		recorded = append(recorded,
+			iisRecordingResource{
+				Resource: "file",
+				ID:       path,
+				Fields: map[string]*llx.RawData{
+					"path":        llx.StringData(path),
+					"exists":      llx.BoolData(true),
+					"permissions": llx.ResourceData(&llx.MockResource{Name: "file.permissions", ID: permID}, "file.permissions"),
+				},
+			},
+			iisRecordingResource{
+				Resource: "file.permissions",
+				ID:       permID,
+				Fields: map[string]*llx.RawData{
+					"mode": llx.IntData(mode),
+				},
+			},
+		)
+	}
+
+	rec := iisRecording{
+		Assets: []iisRecordingAsset{{
+			Asset: &inventory.Asset{
+				Id:          "linux-permissions",
+				PlatformIds: []string{"linux-permissions"},
+				Name:        "linux",
+				Platform: &inventory.Platform{
+					Name:   "debian",
+					Arch:   "x86_64",
+					Family: []string{"debian", "linux", "unix", "os"},
+				},
+			},
+			Connections: []iisRecordingConnection{{Url: "local://", ProviderID: "os", Connector: "local"}},
+			Resources:   recorded,
+		}},
+	}
+
+	data, err := json.Marshal(rec)
+	require.NoError(t, err)
+	path := filepath.Join(t.TempDir(), "permissions-recording.json")
+	require.NoError(t, os.WriteFile(path, data, 0o600))
+	return testutils.RecordingMock(path)
+}
+
+func TestResource_File_Permissions_Masks(t *testing.T) {
+	tester := testutils.InitTester(permissionsMaskMock(t, map[string]int64{
+		"/etc/shadow":      0o640,
+		"/etc/other-read":  0o604,
+		"/etc/ssh/key":     0o600,
+		"/usr/bin/su":      0o4755,
+		"/usr/bin/crontab": 0o2755,
+		"/tmp":             0o1777,
+	}))
+
+	tester.TestSimple(t, []testutils.SimpleTest{
+		{Code: `file("/etc/shadow").permissions.atMost(0640)`, ResultIndex: 0, Expectation: true},
+		{Code: `file("/etc/shadow").permissions.atMost(0600)`, ResultIndex: 0, Expectation: false},
+		{Code: `file("/etc/ssh/key").permissions.atMost(0640)`, ResultIndex: 0, Expectation: true},
+		{Code: `file("/etc/shadow").permissions.atLeast(0600)`, ResultIndex: 0, Expectation: true},
+		{Code: `file("/etc/shadow").permissions.atLeast(0660)`, ResultIndex: 0, Expectation: false},
+
+		// A numeric comparison is not a subset test: 0604 is below 0640 and
+		// other-readable.
+		{Code: `file("/etc/other-read").permissions.mode <= 0640`, ResultIndex: 1, Expectation: true},
+		{Code: `file("/etc/other-read").permissions.atMost(0640)`, ResultIndex: 0, Expectation: false},
+
+		// the special bits count against atMost
+		{Code: `file("/usr/bin/su").permissions.atMost(0755)`, ResultIndex: 0, Expectation: false},
+		{Code: `file("/usr/bin/su").permissions.atMost(04755)`, ResultIndex: 0, Expectation: true},
+		{Code: `file("/usr/bin/su").permissions.atLeast(04000)`, ResultIndex: 0, Expectation: true},
+		{Code: `file("/usr/bin/crontab").permissions.atMost(0755)`, ResultIndex: 0, Expectation: false},
+		{Code: `file("/usr/bin/crontab").permissions.atLeast(04000)`, ResultIndex: 0, Expectation: false},
+		{Code: `file("/tmp").permissions.atLeast(01000)`, ResultIndex: 0, Expectation: true},
+		{Code: `file("/tmp").permissions.atMost(0777)`, ResultIndex: 0, Expectation: false},
+		{Code: `file("/etc/shadow").permissions.atLeast(01000)`, ResultIndex: 0, Expectation: false},
+
+		// the ends of the mask range
+		{Code: `file("/etc/shadow").permissions.atMost(0)`, ResultIndex: 0, Expectation: false},
+		{Code: `file("/etc/shadow").permissions.atLeast(0)`, ResultIndex: 0, Expectation: true},
+		{Code: `file("/tmp").permissions.atMost(07777)`, ResultIndex: 0, Expectation: true},
+		{Code: `file("/tmp").permissions.atLeast(07777)`, ResultIndex: 0, Expectation: false},
+		{Code: `file("/usr/bin/su").permissions.atLeast(04755)`, ResultIndex: 0, Expectation: true},
+
+		// the mask may come from a variable
+		{Code: "m = 0640\nfile(\"/etc/shadow\").permissions.atMost(m)", ResultIndex: 1, Expectation: true},
+	})
+
+	// inside a block bound to the file, as files.find(...).all(...) runs it
+	for query, want := range map[string]bool{
+		`file("/etc/other-read") { permissions.atMost(0644) }`: true,
+		`file("/etc/other-read") { permissions.atMost(0640) }`: false,
+	} {
+		res := tester.TestQuery(t, query)
+		require.NotEmpty(t, res)
+		block, ok := res[0].Data.Value.(map[string]any)
+		require.True(t, ok, query)
+		got := []any{}
+		for k, v := range block {
+			if raw, ok := v.(*llx.RawData); ok && raw.Type == types.Bool && k != "__t" && k != "__s" {
+				require.NoError(t, raw.Error, query)
+				got = append(got, raw.Value)
+			}
+		}
+		assert.Equal(t, []any{want}, got, query)
+	}
+}
+
+func TestResource_File_Permissions_MasksNotExist(t *testing.T) {
+	x.TestSimple(t, []testutils.SimpleTest{
+		{Code: "file('Nope').permissions.atMost(0640)", ResultIndex: 0, Expectation: nil},
+		{Code: "file('Nope').permissions.atLeast(01000)", ResultIndex: 0, Expectation: nil},
+	})
+}
+
+func TestResource_File_Permissions_MaskErrors(t *testing.T) {
+	for query, want := range map[string]string{
+		"file('/etc/passwd').permissions.atMost()":           "function atMost expects one argument, the octal mask (e.g. 0640)",
+		"file('/etc/passwd').permissions.atMost(0640, 0600)": "function atMost expects one argument, the octal mask (e.g. 0640)",
+		"file('/etc/passwd').permissions.atMost('0640')":     "function atMost: incorrect argument 0: expected int got string",
+		"file('/etc/passwd').permissions.atLeast(010000)":    "function atLeast: mask 010000 is outside the permission bits 0-07777",
+		"file('/etc/passwd').permissions.atMost(mask: 0640)": "function atMost does not take named arguments",
+	} {
+		_, err := x.Compile(query)
+		assert.ErrorContains(t, err, want, query)
+	}
+
+	// a mask from a variable is only known when the query runs
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "m = 010000\nfile('/etc/passwd').permissions.atLeast(m)",
+			ResultIndex: 1, Error: "file.permissions mask 010000 is outside the permission bits 0-07777",
+		},
+	})
+}
+
 // A symlink's permissions are "l" and its target's bits, so a symlink to a
 // directory and one to a file can print the same. They must stay two
 // resources: one shared resource answered isDirectory for both with the value

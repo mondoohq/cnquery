@@ -265,6 +265,10 @@ func init() {
 			"date":     {compile: compileResourceParseDate, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String, types.String}}},
 			"duration": {compile: compileResourceParseDuration, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 		},
+		types.Resource("file.permissions"): {
+			"atMost":  {compile: compileFilePermissionsMask, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
+			"atLeast": {compile: compileFilePermissionsMask, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
+		},
 	}
 }
 

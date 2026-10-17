@@ -252,3 +252,21 @@ func TestLabels(t *testing.T) {
 		})
 	}
 }
+
+// A builtin specific to one resource carries the resource name in its id, but
+// the label is what the author wrote.
+func TestLabels_ResourceBuiltins(t *testing.T) {
+	for src, want := range map[string]string{
+		`file("/etc/passwd").permissions.atMost(0644)`:  "file.permissions.atMost",
+		`file("/etc/passwd").permissions.atLeast(0600)`: "file.permissions.atLeast",
+		`parse.date("2024-01-01T00:00:00Z")`:            "parse.date",
+	} {
+		label(t, src, func(res *llx.Labels) {
+			labels := []string{}
+			for _, v := range res.Labels {
+				labels = append(labels, v)
+			}
+			assert.Contains(t, labels, want)
+		})
+	}
+}

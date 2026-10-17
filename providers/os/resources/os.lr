@@ -964,8 +964,22 @@ private file.context @defaults("file.path range content") {
 }
 
 // Access permissions for a given file
+//
+// Permission bits of a file, as the nine owner, group and other bits plus
+// suid, sgid and sticky, with `mode` holding all of them as one number. For a
+// symlink they are the target's bits. `atMost(mask)` is true when no bit
+// outside `mask` is set, so `file("/etc/shadow").permissions.atMost(0640)`
+// checks for 0640 or more restrictive, rejecting suid, sgid and sticky as well.
+// `atLeast(mask)` is true when every bit of `mask` is set, for example
+// `file("/tmp").permissions.atLeast(01000)` for the sticky bit. Compare masks
+// with these rather than `mode <= 0640`, which passes for 0604. When the file
+// does not exist, both return null, which fails the check.
 private file.permissions @defaults("string") {
-  // POSIX file mode as a decimal integer (e.g., 33188 = 0100644)
+  // Permission bits as a decimal integer
+  //
+  // Holds the permission and special bits only (07777), not the file type: a
+  // 0644 regular file reports 420 and a 1777 directory 1023. Read `octal` for
+  // the familiar form.
   mode int
   // Whether the file is readable by its owner
   user_readable bool
@@ -999,6 +1013,8 @@ private file.permissions @defaults("string") {
   isSymlink bool
   // Symbolic permission string in ls -l form (e.g., "-rw-r--r--")
   string() string
+  // Permission bits as a four-digit octal string (e.g., "0640", "1777")
+  octal() string
 }
 
 // File search and discovery namespace
@@ -1017,7 +1033,7 @@ files {}
 // `xdev` (whether to cross into other mounted filesystems). Resolves
 // to the matching `[]file` list, so content, ownership, and permission
 // checks can be layered on the result. For example
-// `files.find(from: "/etc", type: "file", permissions: 0o002) { path }`
+// `files.find(from: "/etc", type: "file", permissions: 0002) { path }`
 // finds every world-writable file under /etc.
 files.find {
   []file
@@ -1037,8 +1053,8 @@ files.find {
   regex string
   // Octal mode floor: matches files that have at least these permission bits set
   //
-  // Given as an octal literal (e.g., 0o002 for world-writable). Defaults
-  // to 0o777, which matches every file.
+  // Given as an octal literal (e.g., 0002 for world-writable). Defaults
+  // to 0777, which matches every file.
   permissions int
   // Filename glob matched against each file's basename (e.g., "*.conf")
   name string

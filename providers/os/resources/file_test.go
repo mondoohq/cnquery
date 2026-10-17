@@ -251,3 +251,17 @@ func TestGlobDirBelowAFile(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, matches)
 }
+
+func TestOctalMode(t *testing.T) {
+	for mode, want := range map[int64]string{
+		0:        "0000",
+		0o7:      "0007",
+		0o640:    "0640",
+		0o4755:   "4755",
+		0o1777:   "1777",
+		0o7777:   "7777",
+		0o100644: "0644", // file type bits are not permission bits
+	} {
+		assert.Equal(t, want, octalMode(mode), "%o", mode)
+	}
+}
