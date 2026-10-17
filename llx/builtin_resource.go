@@ -326,7 +326,7 @@ func permissionsAtMost(mode int64, mask int64) bool {
 
 // permissionsAtLeast reports whether mode sets every bit of mask.
 func permissionsAtLeast(mode int64, mask int64) bool {
-	return mode&mask == mask
+	return mode&permissionBits&mask == mask
 }
 
 func filePermissionsAtMost(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {

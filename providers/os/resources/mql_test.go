@@ -1594,6 +1594,13 @@ func TestResource_File_Permissions_Masks(t *testing.T) {
 		{Code: `file("/tmp").permissions.atMost(0777)`, ResultIndex: 0, Expectation: false},
 		{Code: `file("/etc/shadow").permissions.atLeast(01000)`, ResultIndex: 0, Expectation: false},
 
+		// the ends of the mask range
+		{Code: `file("/etc/shadow").permissions.atMost(0)`, ResultIndex: 0, Expectation: false},
+		{Code: `file("/etc/shadow").permissions.atLeast(0)`, ResultIndex: 0, Expectation: true},
+		{Code: `file("/tmp").permissions.atMost(07777)`, ResultIndex: 0, Expectation: true},
+		{Code: `file("/tmp").permissions.atLeast(07777)`, ResultIndex: 0, Expectation: false},
+		{Code: `file("/usr/bin/su").permissions.atLeast(04755)`, ResultIndex: 0, Expectation: true},
+
 		// the mask may come from a variable
 		{Code: "m = 0640\nfile(\"/etc/shadow\").permissions.atMost(m)", ResultIndex: 1, Expectation: true},
 	})
