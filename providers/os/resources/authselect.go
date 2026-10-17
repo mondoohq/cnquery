@@ -138,9 +138,9 @@ func (a *mqlAuthselect) features() ([]any, error) {
 		a.Features.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	res := make([]any, len(cfg.Features))
-	for i := range cfg.Features {
-		res[i] = cfg.Features[i]
+	res := []any{}
+	for _, f := range cfg.Features {
+		res = append(res, f)
 	}
 	return res, nil
 }
