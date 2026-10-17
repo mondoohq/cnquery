@@ -7533,6 +7533,29 @@ private gcp.project.iamService.serviceAccount @defaults("displayName name") {
   // `roles/iam.serviceAccountUser` granted at the project level. Requires the
   // Cloud Asset API to be enabled and costs one analysis call per account.
   impersonators() []string
+  // Bindings in the project IAM policy that grant roles to this service account
+  //
+  // The bindings of the enclosing project's IAM policy (the policy that
+  // `gcp.project.iamPolicy` reads) whose members include
+  // `serviceAccount:<email>`. Conditional bindings are included, with the
+  // condition in `conditionExpression`. Members of the form
+  // `deleted:serviceAccount:...` do not match. Roles granted on folders or the
+  // organization are not included.
+  projectBindings() []gcp.resourcemanager.binding
+  // Roles this service account holds in the project IAM policy
+  //
+  // The distinct roles of `projectBindings`, for example
+  // `["roles/editor", "roles/storage.objectViewer"]`. A role granted only
+  // under an IAM condition is listed.
+  projectRoles() []string
+  // Whether this service account holds an administrative role on the project
+  //
+  // True when any of `projectRoles` is `roles/owner` or `roles/editor`, or
+  // contains `admin` in any case, which matches predefined roles such as
+  // `roles/compute.admin` and `roles/iam.serviceAccountAdmin`. Custom roles are
+  // matched by name only, not by the permissions they carry. Roles granted
+  // on folders or the organization are not considered.
+  hasAdminRole() bool
 }
 
 // Google Cloud (GCP) IAM service account key

@@ -9325,6 +9325,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.iamService.serviceAccount.impersonators": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetImpersonators()).ToDataRes(types.Array(types.String))
 	},
+	"gcp.project.iamService.serviceAccount.projectBindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetProjectBindings()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
+	"gcp.project.iamService.serviceAccount.projectRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetProjectRoles()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.iamService.serviceAccount.hasAdminRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetHasAdminRole()).ToDataRes(types.Bool)
+	},
 	"gcp.project.iamService.serviceAccount.key.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetName()).ToDataRes(types.String)
 	},
@@ -29575,6 +29584,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.iamService.serviceAccount.impersonators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceServiceAccount).Impersonators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.serviceAccount.projectBindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceServiceAccount).ProjectBindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.serviceAccount.projectRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceServiceAccount).ProjectRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.serviceAccount.hasAdminRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceServiceAccount).HasAdminRole, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.iamService.serviceAccount.key.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -68757,6 +68778,9 @@ type mqlGcpProjectIamServiceServiceAccount struct {
 	IamPolicy             plugin.TValue[[]any]
 	CanBeImpersonated     plugin.TValue[bool]
 	Impersonators         plugin.TValue[[]any]
+	ProjectBindings       plugin.TValue[[]any]
+	ProjectRoles          plugin.TValue[[]any]
+	HasAdminRole          plugin.TValue[bool]
 }
 
 // createGcpProjectIamServiceServiceAccount creates a new instance of this resource
@@ -68919,6 +68943,34 @@ func (c *mqlGcpProjectIamServiceServiceAccount) GetCanBeImpersonated() *plugin.T
 func (c *mqlGcpProjectIamServiceServiceAccount) GetImpersonators() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Impersonators, func() ([]any, error) {
 		return c.impersonators()
+	})
+}
+
+func (c *mqlGcpProjectIamServiceServiceAccount) GetProjectBindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProjectBindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.iamService.serviceAccount", c.__id, "projectBindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.projectBindings()
+	})
+}
+
+func (c *mqlGcpProjectIamServiceServiceAccount) GetProjectRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProjectRoles, func() ([]any, error) {
+		return c.projectRoles()
+	})
+}
+
+func (c *mqlGcpProjectIamServiceServiceAccount) GetHasAdminRole() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasAdminRole, func() (bool, error) {
+		return c.hasAdminRole()
 	})
 }
 
