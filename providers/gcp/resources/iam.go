@@ -993,6 +993,106 @@ func (g *mqlGcpProjectIamServiceServiceAccount) canBeImpersonated() (bool, error
 	return false, nil
 }
 
+// projectBindings filters the enclosing project's IAM policy, which
+// gcp.project caches, down to the bindings that name this service account.
+func (g *mqlGcpProjectIamServiceServiceAccount) projectBindings() ([]any, error) {
+	if g.Email.Error != nil {
+		return nil, g.Email.Error
+	}
+	res := []any{}
+	if g.Email.Data == "" {
+		return res, nil
+	}
+	proj := g.GetProject()
+	if proj.Error != nil {
+		return nil, proj.Error
+	}
+	if proj.Data == nil {
+		return res, nil
+	}
+	bindings := proj.Data.GetIamPolicy()
+	if bindings.Error != nil {
+		return nil, bindings.Error
+	}
+	member := "serviceAccount:" + g.Email.Data
+	for _, raw := range bindings.Data {
+		b, ok := raw.(*mqlGcpResourcemanagerBinding)
+		if !ok || b == nil {
+			continue
+		}
+		members := b.GetMembers()
+		if members.Error != nil {
+			return nil, members.Error
+		}
+		if bindingMembersInclude(members.Data, member) {
+			res = append(res, b)
+		}
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectIamServiceServiceAccount) projectRoles() ([]any, error) {
+	bindings := g.GetProjectBindings()
+	if bindings.Error != nil {
+		return nil, bindings.Error
+	}
+	res := []any{}
+	seen := map[string]bool{}
+	for _, raw := range bindings.Data {
+		b, ok := raw.(*mqlGcpResourcemanagerBinding)
+		if !ok || b == nil {
+			continue
+		}
+		role := b.GetRole()
+		if role.Error != nil {
+			return nil, role.Error
+		}
+		if role.Data == "" || seen[role.Data] {
+			continue
+		}
+		seen[role.Data] = true
+		res = append(res, role.Data)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectIamServiceServiceAccount) hasAdminRole() (bool, error) {
+	roles := g.GetProjectRoles()
+	if roles.Error != nil {
+		return false, roles.Error
+	}
+	for _, r := range roles.Data {
+		if s, ok := r.(string); ok && isAdminRole(s) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// bindingMembersInclude reports whether an IAM binding's members contain the
+// given principal. Emails in IAM members are case-insensitive. A deleted
+// principal (deleted:serviceAccount:...?uid=...) never matches.
+func bindingMembersInclude(members []any, member string) bool {
+	for _, m := range members {
+		if s, ok := m.(string); ok && strings.EqualFold(s, member) {
+			return true
+		}
+	}
+	return false
+}
+
+// isAdminRole reports whether a role grants administrative access by name:
+// the owner and editor primitive roles, or any role whose name contains
+// "admin" (roles/compute.admin, roles/iam.serviceAccountAdmin, custom roles
+// that follow the naming).
+func isAdminRole(role string) bool {
+	switch role {
+	case "roles/owner", "roles/editor":
+		return true
+	}
+	return strings.Contains(strings.ToLower(role), "admin")
+}
+
 // isEnabled reports whether the API is enabled on this project.
 func (g *mqlGcpProjectIamService) isEnabled() (bool, error) {
 	return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_iam)

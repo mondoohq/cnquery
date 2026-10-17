@@ -4006,6 +4006,7 @@ gcp.project.iamService.serviceAccount.description 9.0.0
 gcp.project.iamService.serviceAccount.disabled 9.0.0
 gcp.project.iamService.serviceAccount.displayName 9.0.0
 gcp.project.iamService.serviceAccount.email 9.0.0
+gcp.project.iamService.serviceAccount.hasAdminRole 14.4.6
 gcp.project.iamService.serviceAccount.hasUserManagedKeys 13.12.2
 gcp.project.iamService.serviceAccount.iamPolicy 13.19.2
 gcp.project.iamService.serviceAccount.impersonators 13.34.2
@@ -4028,7 +4029,9 @@ gcp.project.iamService.serviceAccount.lastAuthenticatedTime 13.9.1
 gcp.project.iamService.serviceAccount.name 9.0.0
 gcp.project.iamService.serviceAccount.oauth2ClientId 9.0.0
 gcp.project.iamService.serviceAccount.project 13.27.2
+gcp.project.iamService.serviceAccount.projectBindings 14.4.6
 gcp.project.iamService.serviceAccount.projectId 9.0.0
+gcp.project.iamService.serviceAccount.projectRoles 14.4.6
 gcp.project.iamService.serviceAccount.uniqueId 9.0.0
 gcp.project.iamService.serviceAccounts 9.0.0
 gcp.project.iamService.workloadIdentityPool 13.13.4
