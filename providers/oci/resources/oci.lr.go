@@ -209,6 +209,8 @@ const (
 	ResourceOciOkeCluster                                                      string = "oci.oke.cluster"
 	ResourceOciOkeNodePool                                                     string = "oci.oke.nodePool"
 	ResourceOciOkeNodeSizing                                                   string = "oci.oke.nodeSizing"
+	ResourceOciOkeAddon                                                        string = "oci.oke.addon"
+	ResourceOciOkeAddonVersion                                                 string = "oci.oke.addonVersion"
 	ResourceOciWaf                                                             string = "oci.waf"
 	ResourceOciWafFirewall                                                     string = "oci.waf.firewall"
 	ResourceOciWafPolicy                                                       string = "oci.waf.policy"
@@ -1139,6 +1141,14 @@ func init() {
 		"oci.oke.nodeSizing": {
 			// to override args, implement: initOciOkeNodeSizing(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciOkeNodeSizing,
+		},
+		"oci.oke.addon": {
+			// to override args, implement: initOciOkeAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciOkeAddon,
+		},
+		"oci.oke.addonVersion": {
+			// to override args, implement: initOciOkeAddonVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciOkeAddonVersion,
 		},
 		"oci.waf": {
 			// to override args, implement: initOciWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8396,6 +8406,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.oke.cluster.nodePools": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeCluster).GetNodePools()).ToDataRes(types.Array(types.Resource("oci.oke.nodePool")))
 	},
+	"oci.oke.cluster.addons": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeCluster).GetAddons()).ToDataRes(types.Array(types.Resource("oci.oke.addon")))
+	},
 	"oci.oke.cluster.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeCluster).GetCreated()).ToDataRes(types.Time)
 	},
@@ -8500,6 +8513,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.oke.nodeSizing.memoryInGBs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeNodeSizing).GetMemoryInGBs()).ToDataRes(types.Float)
+	},
+	"oci.oke.addon.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeAddon).GetName()).ToDataRes(types.String)
+	},
+	"oci.oke.addon.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeAddon).GetVersion()).ToDataRes(types.String)
+	},
+	"oci.oke.addon.currentInstalledVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeAddon).GetCurrentInstalledVersion()).ToDataRes(types.String)
+	},
+	"oci.oke.addon.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeAddon).GetState()).ToDataRes(types.String)
+	},
+	"oci.oke.addon.errorCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeAddon).GetErrorCode()).ToDataRes(types.String)
+	},
+	"oci.oke.addon.errorMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeAddon).GetErrorMessage()).ToDataRes(types.String)
+	},
+	"oci.oke.addon.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeAddon).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.oke.addon.isEssential": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeAddon).GetIsEssential()).ToDataRes(types.Bool)
+	},
+	"oci.oke.addon.availableVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeAddon).GetAvailableVersions()).ToDataRes(types.Array(types.Resource("oci.oke.addonVersion")))
+	},
+	"oci.oke.addonVersion.number": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeAddonVersion).GetNumber()).ToDataRes(types.String)
+	},
+	"oci.oke.addonVersion.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeAddonVersion).GetStatus()).ToDataRes(types.String)
+	},
+	"oci.oke.addonVersion.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeAddonVersion).GetDescription()).ToDataRes(types.String)
 	},
 	"oci.waf.firewalls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciWaf).GetFirewalls()).ToDataRes(types.Array(types.Resource("oci.waf.firewall")))
@@ -23498,6 +23547,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciOkeCluster).NodePools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"oci.oke.cluster.addons": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeCluster).Addons, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"oci.oke.cluster.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciOkeCluster).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -23644,6 +23697,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.oke.nodeSizing.memoryInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciOkeNodeSizing).MemoryInGBs, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"oci.oke.addon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeAddon).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.oke.addon.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeAddon).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.oke.addon.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeAddon).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.oke.addon.currentInstalledVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeAddon).CurrentInstalledVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.oke.addon.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeAddon).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.oke.addon.errorCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeAddon).ErrorCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.oke.addon.errorMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeAddon).ErrorMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.oke.addon.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeAddon).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.oke.addon.isEssential": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeAddon).IsEssential, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.oke.addon.availableVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeAddon).AvailableVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.oke.addonVersion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeAddonVersion).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.oke.addonVersion.number": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeAddonVersion).Number, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.oke.addonVersion.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeAddonVersion).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.oke.addonVersion.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeAddonVersion).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.waf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56091,6 +56200,7 @@ type mqlOciOkeCluster struct {
 	TimeUpdated                    plugin.TValue[*time.Time]
 	TimeCredentialExpiration       plugin.TValue[*time.Time]
 	NodePools                      plugin.TValue[[]any]
+	Addons                         plugin.TValue[[]any]
 	Created                        plugin.TValue[*time.Time]
 	FreeformTags                   plugin.TValue[map[string]any]
 	DefinedTags                    plugin.TValue[map[string]any]
@@ -56387,6 +56497,22 @@ func (c *mqlOciOkeCluster) GetNodePools() *plugin.TValue[[]any] {
 		}
 
 		return c.nodePools()
+	})
+}
+
+func (c *mqlOciOkeCluster) GetAddons() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Addons, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.oke.cluster", c.__id, "addons")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.addons()
 	})
 }
 
@@ -56736,6 +56862,163 @@ func (c *mqlOciOkeNodeSizing) GetOcpus() *plugin.TValue[float64] {
 
 func (c *mqlOciOkeNodeSizing) GetMemoryInGBs() *plugin.TValue[float64] {
 	return &c.MemoryInGBs
+}
+
+// mqlOciOkeAddon for the oci.oke.addon resource
+type mqlOciOkeAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciOkeAddonInternal
+	Name                    plugin.TValue[string]
+	Version                 plugin.TValue[string]
+	CurrentInstalledVersion plugin.TValue[string]
+	State                   plugin.TValue[string]
+	ErrorCode               plugin.TValue[string]
+	ErrorMessage            plugin.TValue[string]
+	Created                 plugin.TValue[*time.Time]
+	IsEssential             plugin.TValue[bool]
+	AvailableVersions       plugin.TValue[[]any]
+}
+
+// createOciOkeAddon creates a new instance of this resource
+func createOciOkeAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciOkeAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.oke.addon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciOkeAddon) MqlName() string {
+	return "oci.oke.addon"
+}
+
+func (c *mqlOciOkeAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciOkeAddon) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciOkeAddon) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlOciOkeAddon) GetCurrentInstalledVersion() *plugin.TValue[string] {
+	return &c.CurrentInstalledVersion
+}
+
+func (c *mqlOciOkeAddon) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciOkeAddon) GetErrorCode() *plugin.TValue[string] {
+	return &c.ErrorCode
+}
+
+func (c *mqlOciOkeAddon) GetErrorMessage() *plugin.TValue[string] {
+	return &c.ErrorMessage
+}
+
+func (c *mqlOciOkeAddon) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciOkeAddon) GetIsEssential() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsEssential, func() (bool, error) {
+		return c.isEssential()
+	})
+}
+
+func (c *mqlOciOkeAddon) GetAvailableVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AvailableVersions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.oke.addon", c.__id, "availableVersions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.availableVersions()
+	})
+}
+
+// mqlOciOkeAddonVersion for the oci.oke.addonVersion resource
+type mqlOciOkeAddonVersion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciOkeAddonVersionInternal it will be used here
+	Number      plugin.TValue[string]
+	Status      plugin.TValue[string]
+	Description plugin.TValue[string]
+}
+
+// createOciOkeAddonVersion creates a new instance of this resource
+func createOciOkeAddonVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciOkeAddonVersion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.oke.addonVersion", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciOkeAddonVersion) MqlName() string {
+	return "oci.oke.addonVersion"
+}
+
+func (c *mqlOciOkeAddonVersion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciOkeAddonVersion) GetNumber() *plugin.TValue[string] {
+	return &c.Number
+}
+
+func (c *mqlOciOkeAddonVersion) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOciOkeAddonVersion) GetDescription() *plugin.TValue[string] {
+	return &c.Description
 }
 
 // mqlOciWaf for the oci.waf resource
