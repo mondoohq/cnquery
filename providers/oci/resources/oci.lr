@@ -44,6 +44,14 @@ oci.tenancy @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+  // Tag defaults of the root compartment
+  //
+  // The tag defaults that apply to every resource created in the tenancy,
+  // as the tenancy's own configuration: they are read whatever the
+  // compartment filters select, as `retentionPeriod` is. Check for one
+  // that records the creating principal:
+  // `oci.tenancy.tagDefaults.any(state == "ACTIVE" && value == '${iam.principal.name}')`
+  tagDefaults() []oci.identity.tagDefault
 }
 
 // Oracle Cloud Infrastructure (OCI) region
@@ -116,8 +124,10 @@ private oci.compartment @defaults("id name") {
 // access to compute and service principals, identityProviders are the
 // federated SAML2 providers, networkSources are the IP and VCN
 // allowlists that constrain where console and API requests may
-// originate, and authenticationPolicy holds the tenancy's
-// password-strength and network-restriction rules.
+// originate, authenticationPolicy holds the tenancy's
+// password-strength and network-restriction rules, and tagDefaults are
+// the defined tags OCI applies to every resource created in a
+// compartment.
 oci.identity {
   // IAM users
   users() []oci.identity.user
@@ -140,6 +150,12 @@ oci.identity {
   // domain. Any tenancy with more than one domain holds principals those
   // fields never return, so `domains` is where the full picture lives.
   domains() []oci.identity.domain
+  // Tag defaults of every compartment the compartment filters select
+  //
+  // A tag default makes OCI apply a defined tag to every resource created
+  // in its compartment and the compartments beneath it. The root
+  // compartment's are also `oci.tenancy.tagDefaults`.
+  tagDefaults() []oci.identity.tagDefault
 }
 
 // Oracle Cloud Infrastructure (OCI) identity domain
@@ -1231,6 +1247,34 @@ private oci.identity.networkSource @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) tag default
+//
+// A defined tag that OCI applies to every resource created in the tag
+// default's compartment and the compartments beneath it. The value is
+// static or one of OCI's tag variables, such as `${iam.principal.name}`
+// (the principal that created the resource) or `${oci.datetime}`. A
+// required tag default makes the caller supply the value instead.
+private oci.identity.tagDefault @defaults("tagDefinitionName value state") {
+  // Tag default OCID
+  id string
+  // Compartment the tag default applies to
+  compartment() oci.compartment
+  // OCID of the tag namespace holding the tag definition
+  tagNamespaceId string
+  // OCID of the tag definition (tag key) the default sets
+  tagDefinitionId string
+  // Name of the tag definition (tag key)
+  tagDefinitionName string
+  // Value the default applies, static or a tag variable such as ${iam.principal.name}
+  value string
+  // Whether the user must supply the value when creating a resource
+  isRequired bool
+  // Lifecycle state (ACTIVE)
+  state string
+  // Creation time
+  created time
 }
 
 // Oracle Cloud Infrastructure (OCI) tenancy authentication policy
@@ -9631,6 +9675,179 @@ private oci.redis.cluster @defaults("name softwareVersion state") {
   created time
   // Last update time
   timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Integration
+//
+// Oracle Integration (OIC) instances in the tenancy. Each instance runs in
+// an Oracle-managed network with a public endpoint; network access
+// restriction (an allowlist of IP addresses, CIDR blocks and VCNs) limits
+// who can reach it. Check that no instance is reachable from the
+// internet: `oci.integration.instances.all(internetReachable == false)`
+oci.integration {
+  // Oracle Integration instances
+  instances() []oci.integration.instance
+}
+
+// Oracle Integration instance
+//
+// A single Oracle Integration (OIC) instance, selected by its OCID with
+// `oci.integration.instance(id: "ocid1.integrationinstance.oc1...")`.
+// Reports the edition, shape and lifecycle state, the instance URLs, and
+// its network access restriction: `networkEndpointType` is `PUBLIC` when
+// access is restricted to the allowlisted IP addresses and VCNs, and empty
+// when the instance accepts traffic from anywhere.
+private oci.integration.instance @defaults("name integrationInstanceType state networkEndpointType") {
+  init(id? string)
+  // Integration instance OCID
+  id string
+  // Display name
+  name string
+  // Compartment containing the instance
+  compartment() oci.compartment
+  // Edition (STANDARD, ENTERPRISE, STANDARDX, ENTERPRISEX, HEALTHCARE)
+  integrationInstanceType string
+  // Shape (DEVELOPMENT or PRODUCTION)
+  shape string
+  // Consumption model (UCM, GOV, OIC4SAAS)
+  consumptionModel string
+  // Whether the instance uses a bring-your-own-license model
+  isByol bool
+  // Number of message packs
+  messagePacks int
+  // Runtime URL of the instance
+  instanceUrl string
+  // Design-time URL of the instance
+  instanceDesignTimeUrl string
+  // Whether the file server is enabled
+  isFileServerEnabled bool
+  // Whether Visual Builder is enabled
+  isVisualBuilderEnabled bool
+  // Whether disaster recovery is enabled
+  isDisasterRecoveryEnabled bool
+  // Lifecycle state (CREATING, UPDATING, ACTIVE, INACTIVE, DELETING, DELETED, FAILED, STANDBY, FAILOVER)
+  state string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Type of the network access restriction
+  //
+  // `PUBLIC` when the instance restricts access to the allowlisted
+  // sources below; empty when network access is not restricted and the
+  // instance accepts traffic from any address.
+  networkEndpointType string
+  // IP addresses and CIDR blocks allowed to reach the instance
+  allowlistedHttpIps []string
+  // VCNs allowed to reach the instance
+  //
+  // Each entry has the VCN's `id` and the `allowlistedIps` of that VCN
+  // that may connect; no `allowlistedIps` admits the whole VCN.
+  allowlistedHttpVcns []dict
+  // Whether the instance's own VCN is allowlisted (for self-invocation)
+  isIntegrationVcnAllowlisted bool
+  // The full network access restriction, as the API returns it
+  //
+  // Includes the separate `runtime` and `designTime` allowlists of
+  // instances that restrict the two endpoints differently. Null when
+  // network access is not restricted.
+  networkEndpointDetails dict
+  // Whether the instance is reachable from the public internet
+  //
+  // True when network access is not restricted, or when an allowlist
+  // (the instance's own, or its runtime or design-time one) admits any
+  // address (0.0.0.0/0).
+  internetReachable() bool
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Analytics Cloud
+//
+// Oracle Analytics Cloud (OAC) instances in the tenancy. An instance has a
+// public endpoint, optionally limited by access control rules (allowlisted
+// IP addresses, VCNs and Oracle services), or a private endpoint in a
+// subnet of a VCN. Check that no instance is reachable from the internet:
+// `oci.analytics.instances.all(internetReachable == false)`
+oci.analytics {
+  // Oracle Analytics Cloud instances
+  instances() []oci.analytics.instance
+}
+
+// Oracle Analytics Cloud instance
+//
+// A single Oracle Analytics Cloud (OAC) instance, selected by its OCID with
+// `oci.analytics.instance(id: "ocid1.analyticsinstance.oc1...")`. Reports
+// the feature set, capacity, license and lifecycle state, and its network
+// endpoint: `PUBLIC` with its access control rules, or `PRIVATE` with the
+// VCN, subnet and network security groups of the private endpoint.
+private oci.analytics.instance @defaults("name featureSet state networkEndpointType") {
+  init(id? string)
+  // Analytics instance OCID
+  id string
+  // Instance name
+  name string
+  // Description
+  description string
+  // Compartment containing the instance
+  compartment() oci.compartment
+  // Feature set (SELF_SERVICE_ANALYTICS, ENTERPRISE_ANALYTICS)
+  featureSet string
+  // Capacity type (OLPU_COUNT, USER_COUNT)
+  capacityType string
+  // Capacity value: OLPUs or users, depending on the capacity type
+  capacityValue int
+  // License type (LICENSE_INCLUDED, BRING_YOUR_OWN_LICENSE)
+  licenseType string
+  // URL of the instance
+  serviceUrl string
+  // Lifecycle state (ACTIVE, CREATING, DELETED, DELETING, FAILED, INACTIVE, UPDATING)
+  state string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Network endpoint type (PUBLIC or PRIVATE)
+  networkEndpointType string
+  // IP addresses and CIDR blocks the access control rules of a public endpoint allow
+  whitelistedIps []string
+  // VCNs the access control rules of a public endpoint allow
+  //
+  // Each entry has the VCN's `id` and the `whitelistedIps` of that VCN
+  // that may connect; no `whitelistedIps` admits the whole VCN.
+  whitelistedVcns []dict
+  // Oracle services the access control rules of a public endpoint allow (ALL_SERVICES)
+  whitelistedServices []string
+  // VCN of a private endpoint
+  vcn() oci.network.vcn
+  // Subnet of a private endpoint
+  subnet() oci.network.subnet
+  // Network security groups of a private endpoint
+  networkSecurityGroups() []oci.network.networkSecurityGroup
+  // Whether the instance is reachable from the public internet
+  //
+  // True for a public endpoint without access control rules, or with a
+  // rule that admits any address (0.0.0.0/0). False for a private
+  // endpoint.
+  internetReachable() bool
   // Free-form tags for resource management
   freeformTags map[string]string
   // Defined tags for governance and cost tracking

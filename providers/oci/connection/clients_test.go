@@ -126,6 +126,10 @@ var regionalAccessors = map[string]func(*OciConnection, string) (endpointer, err
 	"GoldenGateClient":        func(c *OciConnection, r string) (endpointer, error) { return c.GoldenGateClient(r) },
 	"DataSafeClient":          func(c *OciConnection, r string) (endpointer, error) { return c.DataSafeClient(r) },
 
+	// Integration and analytics
+	"IntegrationInstanceClient": func(c *OciConnection, r string) (endpointer, error) { return c.IntegrationInstanceClient(r) },
+	"AnalyticsClient":           func(c *OciConnection, r string) (endpointer, error) { return c.AnalyticsClient(r) },
+
 	// Messaging
 	"StreamAdminClient":              func(c *OciConnection, r string) (endpointer, error) { return c.StreamAdminClient(r) },
 	"QueueAdminClient":               func(c *OciConnection, r string) (endpointer, error) { return c.QueueAdminClient(r) },
