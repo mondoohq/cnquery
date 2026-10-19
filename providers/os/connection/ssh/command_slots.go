@@ -4,6 +4,7 @@
 package ssh
 
 import (
+	"context"
 	"os"
 	"strconv"
 	"strings"
@@ -67,14 +68,23 @@ func startsPowershell(command string) bool {
 // Only a PowerShell command detects the shell: a Unix target never gets one,
 // so it never pays for the probe.
 func (c *Connection) acquireCommandSlot(command string) func() {
+	release, _ := c.acquireCommandSlotContext(context.Background(), command)
+	return release
+}
+
+func (c *Connection) acquireCommandSlotContext(ctx context.Context, command string) (func(), error) {
 	var windows bool
 	if startsPowershell(command) {
-		windows = c.remoteShell().isWindows()
+		shell, err := c.remoteShellContext(ctx)
+		if err != nil {
+			return nil, err
+		}
+		windows = shell.isWindows()
 	} else {
 		windows = c.shellDetected.Load() && c.shell.isWindows()
 	}
 	if !windows {
-		return func() {}
+		return func() {}, nil
 	}
 
 	c.slotsOnce.Do(func() {
@@ -88,8 +98,12 @@ func (c *Connection) acquireCommandSlot(command string) func() {
 		}
 	})
 	if c.slots == nil {
-		return func() {}
+		return func() {}, nil
 	}
-	c.slots <- struct{}{}
-	return func() { <-c.slots }
+	select {
+	case c.slots <- struct{}{}:
+		return func() { <-c.slots }, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
 }

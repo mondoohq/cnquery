@@ -238,9 +238,13 @@ func shellMissing(exitStatus int, output string) bool {
 }
 
 func (c *ContainerConnection) RunCommand(command string) (*shared.Command, error) {
+	return c.RunCommandContext(context.Background(), command)
+}
+
+func (c *ContainerConnection) RunCommandContext(ctx context.Context, command string) (*shared.Command, error) {
 	log.Debug().Str("command", command).Msg("docker> run command")
 	cmd := &Command{Client: c.Client, Container: c.container}
-	res, err := cmd.Exec(command)
+	res, err := cmd.ExecContext(ctx, command)
 	// this happens, when we try to run /bin/sh in a container, which does not have it
 	if err == nil && res.ExitStatus == 126 {
 		output := ""

@@ -5,6 +5,7 @@ package ssh
 
 import (
 	"bytes"
+	"context"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -132,4 +133,20 @@ func TestCommandSlotsNotOnUnix(t *testing.T) {
 	c := &Connection{conf: &inventory.Config{Options: map[string]string{windowsMaxCommandsOption: "1"}}, rawRunner: r.run}
 	runConcurrently(t, c, "uname -s", powershell.EncodeUnix("Get-Date"))
 	assert.Greater(t, r.max.Load(), int32(1))
+}
+
+func TestCommandSlotCancellation(t *testing.T) {
+	conn := &Connection{conf: &inventory.Config{Options: map[string]string{windowsMaxCommandsOption: "1"}}}
+	conn.shell = shellWindowsPowerShell
+	conn.shellDetected.Store(true)
+	release, err := conn.acquireCommandSlotContext(context.Background(), "hostname")
+	require.NoError(t, err)
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+	_, err = conn.acquireCommandSlotContext(ctx, "hostname")
+	assert.ErrorIs(t, err, context.DeadlineExceeded)
+	release()
+	release, err = conn.acquireCommandSlotContext(context.Background(), "hostname")
+	require.NoError(t, err)
+	release()
 }

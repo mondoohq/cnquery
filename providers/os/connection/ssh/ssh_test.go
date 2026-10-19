@@ -9,6 +9,7 @@ import (
 	"crypto/rand"
 	"io"
 	"net"
+	"sync"
 	"testing"
 	"time"
 
@@ -313,4 +314,108 @@ func TestDialSSHContextCancellation(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("cancelled handshake did not return")
 	}
+}
+
+// commandSSHClient speaks real SSH while the handler controls process lifetime.
+func commandSSHClient(t *testing.T, handler func(ssh.Channel, string, <-chan struct{})) *ssh.Client {
+	t.Helper()
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	signer := startupSigner(t)
+	var peerMu sync.Mutex
+	var peer net.Conn
+	go func() {
+		conn, err := ln.Accept()
+		if err != nil {
+			return
+		}
+		peerMu.Lock()
+		peer = conn
+		peerMu.Unlock()
+		cfg := &ssh.ServerConfig{NoClientAuth: true}
+		cfg.AddHostKey(signer)
+		server, channels, requests, err := ssh.NewServerConn(conn, cfg)
+		if err != nil {
+			conn.Close()
+			return
+		}
+		defer server.Close()
+		go ssh.DiscardRequests(requests)
+		for offered := range channels {
+			channel, requests, err := offered.Accept()
+			if err != nil {
+				continue
+			}
+			go func() {
+				closed := make(chan struct{})
+				defer close(closed)
+				for req := range requests {
+					if req.Type != "exec" {
+						_ = req.Reply(false, nil)
+						continue
+					}
+					var payload struct{ Command string }
+					_ = ssh.Unmarshal(req.Payload, &payload)
+					_ = req.Reply(true, nil)
+					go handler(channel, payload.Command, closed)
+				}
+			}()
+		}
+	}()
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	client, err := dialSSHContext(ctx, ln.Addr().String(), &ssh.ClientConfig{User: "test", HostKeyCallback: ssh.InsecureIgnoreHostKey()})
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		client.Close()
+		ln.Close()
+		peerMu.Lock()
+		if peer != nil {
+			peer.Close()
+		}
+		peerMu.Unlock()
+	})
+	return client
+}
+func TestSSHCommandCancellation(t *testing.T) {
+	stopped := make(chan struct{})
+	client := commandSSHClient(t, func(channel ssh.Channel, command string, closed <-chan struct{}) {
+		defer channel.Close()
+		if command == "hang" {
+			select {
+			case <-closed:
+				close(stopped)
+			case <-time.After(5 * time.Second):
+			}
+			return
+		}
+		_, _ = io.WriteString(channel, "ready")
+		_, _ = channel.SendRequest("exit-status", false, ssh.Marshal(struct{ Code uint32 }{0}))
+	})
+	conn := &Connection{SSHClient: client}
+	ctx, cancel := context.WithTimeout(context.Background(), 75*time.Millisecond)
+	defer cancel()
+	_, err := conn.RunCommandContext(ctx, "hang")
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+	select {
+	case <-stopped:
+	case <-time.After(time.Second):
+		t.Fatal("cancelled SSH channel remained open")
+	}
+	res, err := conn.RunCommand("ready")
+	require.NoError(t, err)
+	got, err := io.ReadAll(res.Stdout)
+	require.NoError(t, err)
+	assert.Equal(t, "ready", string(got))
+}
+func TestSSHCommandOutputLimit(t *testing.T) {
+	t.Setenv("MONDOO_COMMAND_OUTPUT_LIMIT", "32")
+	client := commandSSHClient(t, func(channel ssh.Channel, _ string, _ <-chan struct{}) {
+		defer channel.Close()
+		_, _ = channel.Write(make([]byte, 4096))
+		_, _ = channel.SendRequest("exit-status", false, ssh.Marshal(struct{ Code uint32 }{0}))
+	})
+	conn := &Connection{SSHClient: client}
+	_, err := conn.RunCommand("large-output")
+	assert.ErrorIs(t, err, shared.ErrCommandOutputLimit)
 }

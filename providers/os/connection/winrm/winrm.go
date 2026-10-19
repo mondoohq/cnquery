@@ -4,10 +4,12 @@
 package winrm
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"math"
+	"net"
+	"sync"
 	"time"
 
 	"github.com/masterzen/winrm"
@@ -60,19 +62,26 @@ func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*
 	// set default config if required
 	winrmEndpoint = DefaultConfig(winrmEndpoint)
 
-	params := winrm.DefaultParameters
-	params.TransportDecorator = func() winrm.Transporter { return &winrm.ClientNTLM{} }
-
 	// search for password secret
 	c, err := vault.GetPassword(conf.Credentials)
 	if err != nil {
 		return nil, errors.New("missing password for winrm transport")
 	}
 
-	client, err := winrm.NewClientWithParameters(winrmEndpoint, c.User, string(c.Secret), params)
+	ctx, cancel, err := shared.CommandContext(context.Background())
 	if err != nil {
 		return nil, err
 	}
+	defer cancel()
+	factory := func(ctx context.Context) (*winrm.Client, func(), error) {
+		return newClientWithContext(ctx, winrmEndpoint, c.User, string(c.Secret))
+	}
+	client, closeTransport, err := factory(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	defer closeTransport()
 
 	// test connection
 	log.Debug().Str("user", c.User).Str("host", conf.Host).Msg("winrm> connecting to remote shell via WinRM")
@@ -88,11 +97,12 @@ func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*
 
 	log.Debug().Msg("winrm> connection established")
 	return &Connection{
-		Connection: plugin.NewConnection(id, asset),
-		conf:       conf,
-		asset:      asset,
-		Endpoint:   winrmEndpoint,
-		Client:     client,
+		Connection:    plugin.NewConnection(id, asset),
+		conf:          conf,
+		asset:         asset,
+		Endpoint:      winrmEndpoint,
+		Client:        client,
+		clientFactory: factory,
 	}, nil
 }
 
@@ -103,8 +113,9 @@ type Connection struct {
 
 	fs afero.Fs
 
-	Endpoint *winrm.Endpoint
-	Client   *winrm.Client
+	Endpoint      *winrm.Endpoint
+	Client        *winrm.Client
+	clientFactory func(context.Context) (*winrm.Client, func(), error)
 }
 
 func (c *Connection) Name() string {
@@ -150,10 +161,23 @@ func utf16Len(s string) int {
 }
 
 func (p *Connection) RunCommand(command string) (*shared.Command, error) {
+	return p.RunCommandContext(context.Background(), command)
+}
+
+func (p *Connection) RunCommandContext(parent context.Context, command string) (*shared.Command, error) {
+	ctx, cancel, err := shared.CommandContext(parent)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+
 	log.Debug().Str("command", command).Str("provider", "winrm").Msg("winrm> run command")
 
-	stdoutBuffer := &bytes.Buffer{}
-	stderrBuffer := &bytes.Buffer{}
+	output, err := shared.NewCommandOutput(cancel)
+	if err != nil {
+		return nil, err
+	}
+	stdoutBuffer, stderrBuffer := output.Stdout, output.Stderr
 
 	res := &shared.Command{
 		Command: command,
@@ -181,8 +205,26 @@ func (p *Connection) RunCommand(command string) (*shared.Command, error) {
 		return res, err
 	}
 
+	if p.clientFactory == nil {
+		return nil, errors.New("WinRM connection is missing its client factory")
+	}
+	client, closeTransport, err := p.clientFactory(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer closeTransport()
+
 	// Note: winrm does not return err of the command was executed with a non-zero exit code
-	exitCode, err := p.Client.RunWithContext(context.Background(), command, stdoutBuffer, stderrBuffer)
+	exitCode, err := client.RunWithContext(ctx, command, stdoutBuffer, stderrBuffer)
+	if err := output.Error(); err != nil {
+		return res, err
+	}
+	if errors.Is(err, shared.ErrCommandOutputLimit) {
+		return res, err
+	}
+	if ctx.Err() != nil {
+		return res, ctx.Err()
+	}
 	if err != nil {
 		log.Error().Err(err).Str("command", command).Msg("could not execute winrm command")
 		return res, err
@@ -218,4 +260,100 @@ func (p *Connection) FileSystem() afero.Fs {
 		p.fs = cat.New(p)
 	}
 	return p.fs
+}
+
+// The SDK's context does not reach shell creation or HTTP requests. Each
+// command owns its transport: cancellation closes its sockets without racing
+// other commands, and the socket deadline also bounds TLS/HTTP body reads.
+func newClientWithContext(ctx context.Context, endpoint *winrm.Endpoint, user, password string) (*winrm.Client, func(), error) {
+	dial, cleanup := commandDialer(ctx)
+	params := *winrm.DefaultParameters
+	params.TransportDecorator = func() winrm.Transporter { return winrm.NewClientNTLMWithDial(dial) }
+	client, err := winrm.NewClientWithParameters(endpoint, user, password, &params)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	return client, cleanup, nil
+}
+
+func commandDialer(ctx context.Context) (func(string, string) (net.Conn, error), func()) {
+	output, limitErr := shared.NewCommandOutput(nil)
+	// WSMan base64 encoding and SOAP/HTTP framing are larger than decoded
+	// output. Bound this earlier allocation too, allowing twice the decoded
+	// budget plus 64 KiB of protocol overhead for normal small commands.
+	wireLimit := int64(math.MaxInt64)
+	if limitErr == nil && output.Limit() <= (math.MaxInt64-65536)/2 {
+		wireLimit = output.Limit()*2 + 65536
+	}
+	wireBudget := &commandResponseBudget{limit: wireLimit}
+	var mu sync.Mutex
+	var connections []net.Conn
+	closed := false
+	closeAll := func() {
+		mu.Lock()
+		defer mu.Unlock()
+		closed = true
+		for _, conn := range connections {
+			_ = conn.Close()
+		}
+	}
+	stop := context.AfterFunc(ctx, closeAll)
+	cleanup := func() { stop(); closeAll() }
+	dial := func(network, addr string) (net.Conn, error) {
+		if limitErr != nil {
+			return nil, limitErr
+		}
+		conn, err := (&net.Dialer{}).DialContext(ctx, network, addr)
+		if err != nil {
+			return nil, err
+		}
+		if deadline, ok := ctx.Deadline(); ok {
+			if err := conn.SetDeadline(deadline); err != nil {
+				conn.Close()
+				return nil, err
+			}
+		}
+		mu.Lock()
+		defer mu.Unlock()
+		if closed || ctx.Err() != nil {
+			conn.Close()
+			if err := ctx.Err(); err != nil {
+				return nil, err
+			}
+			return nil, net.ErrClosed
+		}
+		conn = &commandResponseConn{Conn: conn, budget: wireBudget}
+		connections = append(connections, conn)
+		return conn, nil
+	}
+	return dial, cleanup
+}
+
+type commandResponseBudget struct {
+	mu          sync.Mutex
+	limit, size int64
+	err         error
+}
+type commandResponseConn struct {
+	net.Conn
+	budget *commandResponseBudget
+}
+
+func (c *commandResponseConn) Read(p []byte) (int, error) {
+	n, err := c.Conn.Read(p)
+	c.budget.mu.Lock()
+	if c.budget.err == nil && int64(n) > c.budget.limit-c.budget.size {
+		c.budget.err = fmt.Errorf("%w (WinRM encoded response exceeds %d bytes)", shared.ErrCommandOutputLimit, c.budget.limit)
+	}
+	if c.budget.err == nil {
+		c.budget.size += int64(n)
+	}
+	budgetErr := c.budget.err
+	c.budget.mu.Unlock()
+	if budgetErr != nil {
+		_ = c.Conn.Close()
+		return 0, budgetErr
+	}
+	return n, err
 }

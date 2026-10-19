@@ -5,6 +5,7 @@ package ssh
 
 import (
 	"bufio"
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -13,9 +14,11 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/resources/powershell"
 	"golang.org/x/text/encoding/unicode"
 )
@@ -406,4 +409,29 @@ func directCommand(t *testing.T, cmd string) string {
 	d, ok := directPowershell(cmd)
 	require.True(t, ok)
 	return d
+}
+
+func TestPersistentSessionCancellationDoesNotReplay(t *testing.T) {
+	raw := &fakeRunner{shell: "%OS%\r\nDesktop\r\n"}
+	release := make(chan struct{})
+	defer close(release)
+	conn, _ := sessionConnection(t, raw, func(string) fakeReply { <-release; return fakeReply{stdout: "late"} })
+	ctx, cancel := context.WithTimeout(context.Background(), 75*time.Millisecond)
+	defer cancel()
+	_, err := conn.RunCommandContext(ctx, powershell.Encode("Start-Sleep -Seconds 20"))
+	assert.ErrorIs(t, err, context.DeadlineExceeded)
+	assert.Equal(t, []string{shellProbe}, raw.sent, "cancelled command must not fall back to a fresh unbounded process")
+}
+func TestPersistentFrameOutputLimit(t *testing.T) {
+	t.Setenv("MONDOO_COMMAND_OUTPUT_LIMIT", "128")
+	_, err := readUntilLine(bufio.NewReaderSize(strings.NewReader(strings.Repeat("x", 4096)), 32), func([]byte) bool { return false })
+	assert.ErrorIs(t, err, shared.ErrCommandOutputLimit, "a line without a newline must be capped before ReadBytes could allocate it")
+}
+func TestPersistentSessionOutputLimitDoesNotReplay(t *testing.T) {
+	t.Setenv("MONDOO_COMMAND_OUTPUT_LIMIT", "512")
+	raw := &fakeRunner{shell: "%OS%\r\nDesktop\r\n"}
+	conn, _ := sessionConnection(t, raw, func(string) fakeReply { return fakeReply{stdout: strings.Repeat("x", 4096)} })
+	_, err := conn.RunCommand(powershell.Encode("Get-Date"))
+	assert.ErrorIs(t, err, shared.ErrCommandOutputLimit)
+	assert.Equal(t, []string{shellProbe}, raw.sent)
 }
