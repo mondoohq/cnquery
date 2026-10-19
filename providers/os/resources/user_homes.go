@@ -178,6 +178,9 @@ func windowsProfileHomes(runtime *plugin.Runtime) ([]targetUser, error) {
 func expandWindowsProfilePath(path string, env map[string]any) (string, error) {
 	var err error
 	expanded := windowsProfileEnvPattern.ReplaceAllStringFunc(path, func(variable string) string {
+		if err != nil {
+			return variable
+		}
 		name := variable[1 : len(variable)-1]
 		for key, value := range env {
 			if strings.EqualFold(key, name) {

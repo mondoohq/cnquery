@@ -17,6 +17,35 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
+func TestExpandWindowsProfilePath(t *testing.T) {
+	env := map[string]any{"SystemDrive": "C:", "empty": "", "invalid": 42}
+	for _, path := range []string{`%missing%\Users\alice`, `%empty%\Users\alice`, `%invalid%\Users\alice`} {
+		_, err := expandWindowsProfilePath(path, env)
+		require.Error(t, err)
+	}
+	path, err := expandWindowsProfilePath(`%systemdrive%\Users\alice`, env)
+	require.NoError(t, err)
+	assert.Equal(t, `C:\Users\alice`, path)
+}
+
+func TestExpandWindowsProfilePathFirstUnavailableVariable(t *testing.T) {
+	env := map[string]any{"SystemDrive": "C:", "empty": "", "invalid": 42}
+	for _, tc := range []struct {
+		path     string
+		variable string
+	}{
+		{`%missing1%\%missing2%\Users\alice`, "missing1"},
+		{`%empty%\%missing%\Users\alice`, "empty"},
+		{`%invalid%\%missing%\Users\alice`, "invalid"},
+		{`%systemdrive%\%missing1%\%missing2%\alice`, "missing1"},
+	} {
+		t.Run(tc.path, func(t *testing.T) {
+			_, err := expandWindowsProfilePath(tc.path, env)
+			require.ErrorContains(t, err, "environment variable "+tc.variable+" is unavailable")
+		})
+	}
+}
+
 func cacheProfileRegistryName(t *testing.T, runtime *plugin.Runtime, path, name, value string) {
 	t.Helper()
 	if strings.HasPrefix(path, `HKEY_USERS\`) {

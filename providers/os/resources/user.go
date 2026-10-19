@@ -179,6 +179,8 @@ func (x *mqlUsers) list() ([]any, error) {
 	return res, x.refreshCache(res)
 }
 
+// refreshCache publishes the account indexes. The caller must hold x.lock when
+// all is non-nil. With nil, it reads GetList before acquiring the lock itself.
 func (x *mqlUsers) refreshCache(all []any) error {
 	if all == nil {
 		raw := x.GetList()
