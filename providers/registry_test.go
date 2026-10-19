@@ -427,3 +427,41 @@ func TestRegistryChannelReadAtFetchTime(t *testing.T) {
 	pinned := NewMondooProviderRegistry(WithChannel(config.ChannelStable))
 	assert.Equal(t, "latest.json", pinned.pointerDocument())
 }
+
+func TestMondooProviderRegistry_DownloadProviderCancellation(t *testing.T) {
+	for _, phase := range []string{"headers", "body"} {
+		t.Run(phase, func(t *testing.T) {
+			release := make(chan struct{})
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if phase == "body" {
+					w.Header().Set("Content-Length", "10")
+					w.WriteHeader(200)
+					w.(http.Flusher).Flush()
+				}
+				select {
+				case <-release:
+				case <-r.Context().Done():
+				}
+			}))
+			defer srv.Close()
+			defer close(release)
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+			defer cancel()
+			done := make(chan error, 1)
+			go func() {
+				body, err := NewMondooProviderRegistry(WithBaseURL(srv.URL)).DownloadProvider(ctx, "os", "1", "linux", "amd64")
+				if body != nil {
+					defer body.Close()
+					_, err = io.ReadAll(body)
+				}
+				done <- err
+			}()
+			select {
+			case err := <-done:
+				require.ErrorIs(t, err, context.DeadlineExceeded)
+			case <-time.After(time.Second):
+				t.Fatal("download ignored request cancellation")
+			}
+		})
+	}
+}

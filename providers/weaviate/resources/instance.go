@@ -51,7 +51,11 @@ func initWeaviateInstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	args["version"] = llx.StringData(meta.Version)
 	args["hostname"] = llx.StringData(meta.Hostname)
 	args["modules"] = llx.ArrayData(moduleNames(meta.Modules), types.String)
-	args["anonymousAccessEnabled"] = llx.BoolData(conn.AnonymousAccessEnabled())
+	anonymous, err := conn.AnonymousAccessEnabled()
+	if err != nil {
+		return nil, nil, err
+	}
+	args["anonymousAccessEnabled"] = llx.BoolData(anonymous)
 	args["oidcEnabled"] = llx.BoolData(oidcEnabled)
 	args["oidcIssuer"] = llx.StringData(oidcIssuer)
 	args["oidcClientId"] = llx.StringData(oidcClientID)

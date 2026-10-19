@@ -4,7 +4,13 @@
 package resources
 
 import (
+	"context"
+	"github.com/stretchr/testify/require"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -144,6 +150,68 @@ func TestSumPaidLicenses(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, sumPaidLicenses(tc.in))
+		})
+	}
+}
+
+func TestQueryUserRealmInfo(t *testing.T) {
+	require.Greater(t, tenantRealmHTTPClient.Timeout, time.Duration(0))
+	for _, tc := range []struct {
+		name, body string
+		status     int
+		wantError  string
+	}{
+		{"complete", `{"DomainName":"example.com","NameSpaceType":"Managed"}`, 200, ""},
+		{"invalid", `{`, 200, "failed to parse userrealm response"},
+		{"refusal", `{}`, 503, "userrealm endpoint returned status 503"},
+		{"non-JSON refusal", `<html>unavailable</html>`, 503, "userrealm endpoint returned status 503"},
+		{"oversize", strings.Repeat(" ", (1<<20)+1), 200, "exceeds"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tc.status)
+				_, _ = w.Write([]byte(tc.body))
+			}))
+			defer srv.Close()
+			got, err := queryUserRealmInfo(t.Context(), srv.Client(), srv.URL)
+			if tc.wantError != "" {
+				require.ErrorContains(t, err, tc.wantError)
+				require.Nil(t, got)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, "example.com", got.DomainName)
+				require.Equal(t, "Managed", got.NameSpaceType)
+			}
+		})
+	}
+}
+func TestQueryUserRealmInfoCancellation(t *testing.T) {
+	for _, phase := range []string{"headers", "body"} {
+		t.Run(phase, func(t *testing.T) {
+			release := make(chan struct{})
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if phase == "body" {
+					w.Header().Set("Content-Length", "20")
+					w.WriteHeader(200)
+					w.(http.Flusher).Flush()
+				}
+				select {
+				case <-release:
+				case <-r.Context().Done():
+				}
+			}))
+			defer srv.Close()
+			defer close(release)
+			ctx, cancel := context.WithTimeout(t.Context(), 20*time.Millisecond)
+			defer cancel()
+			done := make(chan error, 1)
+			go func() { _, err := queryUserRealmInfo(ctx, srv.Client(), srv.URL); done <- err }()
+			select {
+			case err := <-done:
+				require.ErrorIs(t, err, context.DeadlineExceeded)
+			case <-time.After(time.Second):
+				t.Fatal("realm probe ignored cancellation")
+			}
 		})
 	}
 }

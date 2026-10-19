@@ -5,8 +5,12 @@ package resources
 
 import (
 	"errors"
+	"io"
 	"net"
+	"net/http"
 	"net/url"
+	"strings"
+	"sync"
 	"syscall"
 	"testing"
 
@@ -56,7 +60,8 @@ func TestHttpNotReachable(t *testing.T) {
 		{"connection refused", &url.Error{Op: "Get", Err: &net.OpError{Op: "dial", Err: syscall.ECONNREFUSED}}, true},
 		{"connection reset", &net.OpError{Op: "read", Err: syscall.ECONNRESET}, true},
 		{"dns not found", &url.Error{Op: "Get", Err: &net.DNSError{Err: "no such host", IsNotFound: true}}, true},
-		{"dial timeout", &url.Error{Op: "Get", Err: timeoutErr{}}, true},
+		{"dial timeout", &url.Error{Op: "Get", Err: timeoutErr{}}, false},
+		{"read timeout", &net.OpError{Op: "read", Err: timeoutErr{}}, false},
 		// Genuine errors stay errors (not "no HTTP here").
 		{"redirect loop", &url.Error{Op: "Get", Err: errors.New("stopped after 10 redirects")}, false},
 		{"generic", errors.New("boom"), false},
@@ -328,4 +333,67 @@ func TestParseCspDirectives(t *testing.T) {
 		m := parseCspDirectives([]any{"Default-Src 'self'; SCRIPT-SRC https://CDN.example.com"})
 		assert.Equal(t, map[string]any{"default-src": "'self'", "script-src": "https://CDN.example.com"}, m)
 	})
+}
+
+func TestHttpBodyRejectsOversize(t *testing.T) {
+	get := &mqlHttpGet{mqlHttpGetInternal: mqlHttpGetInternal{resp: plugin.TValue[*http.Response]{Data: &http.Response{Body: io.NopCloser(strings.NewReader(strings.Repeat("x", (16<<20)+1)))}, State: plugin.StateIsSet}}}
+	body, err := get.body()
+	require.ErrorContains(t, err, "exceeds")
+	require.Empty(t, body)
+}
+
+type countedHTTPBody struct {
+	io.Reader
+	closes int
+}
+
+func (b *countedHTTPBody) Close() error {
+	b.closes++
+	return nil
+}
+
+func TestHttpBodyCachedAfterClose(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		size      int
+		wantError bool
+	}{
+		{"complete", 7, false},
+		{"oversize", (16 << 20) + 1, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			body := &countedHTTPBody{Reader: strings.NewReader(strings.Repeat("x", tc.size))}
+			get := &mqlHttpGet{mqlHttpGetInternal: mqlHttpGetInternal{resp: plugin.TValue[*http.Response]{
+				Data: &http.Response{Body: body}, State: plugin.StateIsSet,
+			}}}
+			for range 2 {
+				got := get.GetBody()
+				if tc.wantError {
+					require.ErrorContains(t, got.Error, "exceeds")
+					require.Empty(t, got.Data)
+				} else {
+					require.NoError(t, got.Error)
+					require.Equal(t, "xxxxxxx", got.Data)
+				}
+				require.Equal(t, 1, body.closes, "cached access must not reopen or close the response again")
+			}
+		})
+	}
+}
+
+func TestHttpBodyReadOnceForConcurrentCalls(t *testing.T) {
+	body := &countedHTTPBody{Reader: strings.NewReader("complete")}
+	get := &mqlHttpGet{mqlHttpGetInternal: mqlHttpGetInternal{resp: plugin.TValue[*http.Response]{
+		Data: &http.Response{Body: body}, State: plugin.StateIsSet,
+	}}}
+	var workers sync.WaitGroup
+	for range 8 {
+		workers.Go(func() {
+			got, err := get.body()
+			assert.NoError(t, err)
+			assert.Equal(t, "complete", got)
+		})
+	}
+	workers.Wait()
+	require.Equal(t, 1, body.closes)
 }
