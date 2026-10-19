@@ -8,7 +8,9 @@ package fsutil
 
 import (
 	"errors"
+	"io/fs"
 	"os"
+	"syscall"
 
 	"golang.org/x/sys/unix"
 )
@@ -25,4 +27,12 @@ func handleFsError(err error) (bool, error) {
 		return true, err
 	}
 	return false, nil
+}
+
+func fileDeviceID(info fs.FileInfo) (uint64, bool) {
+	stat, ok := info.Sys().(*syscall.Stat_t)
+	if !ok {
+		return 0, false
+	} // in-memory/archive filesystems have no host mounts
+	return uint64(stat.Dev), true
 }
