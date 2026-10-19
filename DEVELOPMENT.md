@@ -578,6 +578,25 @@ func (g *mqlGcpProjectComputeServiceAddress) network() (*mqlGcpProjectComputeSer
 
 ```
 
+## Query deadlines
+
+The graph builder's query timeout (five minutes by default) covers synchronous
+resource creation, provider field reads, and waiting for the query's datapoints.
+Stopping the execution manager also cancels the active query. Results arriving
+after cancellation are discarded.
+
+`llx.ContextRuntime` binds one query's context without changing shared runtime
+state. The host runtime carries it through provider reads and writes; the gRPC
+client sends the deadline to the provider. Providers can implement the optional
+`plugin.ContextDataReader` and `plugin.ContextDataWriter` interfaces to receive it.
+The existing provider interface and wire format remain compatible.
+
+A deadline bounds the host's wait even for a legacy provider, but cannot forcibly
+stop arbitrary Go code. A legacy in-process call can keep its worker until it
+returns, and an older provider may continue its backend operation after the RPC
+is cancelled. Transport and I/O implementations therefore also need their own
+finite budgets and cancellation cleanup.
+
 ## Metrics (Prometheus + Grafana)
 
 When debugging `mql`, you can monitor and profile memory and CPU usage using [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/). The setup provides visibility into application performance metrics and allows us to diagnose bottlenecks, memory leaks, and high CPU usage.

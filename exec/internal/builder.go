@@ -33,8 +33,8 @@ type GraphBuilder struct {
 	// progressReporter is a configured interface to receive progress
 	// updates
 	progressReporter ProgressReporter
-	// queryTimeout is the amount of time to wait for the underlying lumi
-	// runtime to send all the expected datapoints.
+	// queryTimeout bounds query execution, including synchronous provider calls
+	// and delivery of all expected datapoints.
 	queryTimeout time.Duration
 }
 

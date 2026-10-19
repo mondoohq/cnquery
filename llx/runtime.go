@@ -4,6 +4,8 @@
 package llx
 
 import (
+	"context"
+
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/resources"
 )
@@ -21,6 +23,12 @@ type Runtime interface {
 	Recording() Recording
 	SetRecording(recording Recording) error
 	AssetUpdated(asset *inventory.Asset)
+}
+
+// ContextRuntime binds provider calls to one query's lifetime without changing
+// the shared runtime or requiring existing embedders to implement cancellation.
+type ContextRuntime interface {
+	WithContext(context.Context) Runtime
 }
 
 // AssetRootSource reports the resource that roots the connected asset's tree

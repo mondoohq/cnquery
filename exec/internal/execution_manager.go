@@ -4,6 +4,7 @@
 package internal
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"runtime"
@@ -32,11 +33,14 @@ type executionManager struct {
 	// errChan is used to signal an unrecoverable error. The execution
 	// manager writes to this channel
 	errChan chan error
-	// timeout is the amount of time the executor will wait for a query
-	// to return all the results after
+	// timeout covers starting a query, synchronous provider calls and waiting
+	// for its remaining results.
 	timeout time.Duration
 	// stopChan is a channel that is closed when a stop is requested
 	stopChan chan struct{}
+	ctx      context.Context
+	cancel   context.CancelFunc
+	stopOnce sync.Once
 	wg       sync.WaitGroup
 }
 
@@ -48,6 +52,7 @@ type runQueueItem struct {
 func newExecutionManager(schema resources.ResourcesSchema, runtime llx.Runtime, runQueue chan runQueueItem,
 	resultChan chan *llx.RawResult, timeout time.Duration,
 ) *executionManager {
+	ctx, cancel := context.WithCancel(context.Background())
 	return &executionManager{
 		runQueue:   runQueue,
 		schema:     schema,
@@ -55,6 +60,8 @@ func newExecutionManager(schema resources.ResourcesSchema, runtime llx.Runtime, 
 		resultChan: resultChan,
 		errChan:    make(chan error, 1),
 		stopChan:   make(chan struct{}),
+		ctx:        ctx,
+		cancel:     cancel,
 		timeout:    timeout,
 	}
 }
@@ -142,7 +149,10 @@ func (em *executionManager) Err() chan error {
 }
 
 func (em *executionManager) Stop() {
-	close(em.stopChan)
+	em.stopOnce.Do(func() {
+		em.cancel()
+		close(em.stopChan)
+	})
 	em.wg.Wait()
 }
 
@@ -202,15 +212,26 @@ func panicSite() string {
 	}
 }
 
-func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props map[string]*llx.Primitive, errMsg string) (rerr error) {
+func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props map[string]*llx.Primitive, errMsg string) error {
+	// Start the budget before Run: provider calls made while starting a query
+	// are synchronous, so starting a timer afterwards cannot bound them.
+	ctx, cancel := context.WithTimeout(em.ctx, em.timeout)
+	defer cancel()
 	wg := NewWaitGroup()
+	var resultMu sync.Mutex
+	finished := false
 
 	sendResult := func(rr *llx.RawResult) {
+		resultMu.Lock()
+		defer resultMu.Unlock()
+		if finished || ctx.Err() != nil {
+			return
+		}
 		log.Trace().Str("codeID", rr.CodeID).Msg("received result from executor")
-		wg.Done(rr.CodeID)
 		select {
 		case em.resultChan <- rr:
-		case <-em.stopChan:
+			wg.Done(rr.CodeID)
+		case <-ctx.Done():
 		}
 	}
 
@@ -241,87 +262,88 @@ func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props 
 		return nil
 	}
 
-	var executor iExecutor
-	var err error
-
 	codeID := codeBundle.CodeV2.GetId()
 	log.Debug().Str("qrid", codeID).Msg("starting query execution")
 	defer func() {
 		log.Debug().Str("qrid", codeID).Msg("finished query execution")
 	}()
 
-	// A panic while this query runs fails this query only: every datapoint it
-	// has not reported gets the panic as its error, and the manager goes on
-	// with the next query. Giving up on the whole run instead would drop the
-	// results of every other query on the asset. The executor is unregistered,
-	// so nothing it registered calls back afterwards.
-	defer func() {
-		r := recover()
-		if r == nil {
+	runtime := em.runtime
+	if contextual, ok := runtime.(llx.ContextRuntime); ok {
+		runtime = contextual.WithContext(ctx)
+	}
+
+	// The worker owns the executor, including unregistering it. Older in-process
+	// runtimes cannot be forcibly interrupted; if one eventually returns, its
+	// late callbacks are discarded and it still unregisters its own watchers.
+	type executionResult struct {
+		err      error
+		panicErr error
+	}
+	run := func() (out executionResult) {
+		defer func() {
+			if r := recover(); r != nil {
+				out.panicErr = reportPanic(codeBundle, r)
+			}
+		}()
+		x, err := llx.NewExecutorV2WithSkew(codeBundle.CodeV2, runtime, props, sendResult,
+			skewPolicyFor(codeBundle, runtime))
+		if err != nil {
+			out.err = err
 			return
 		}
-		perr := reportPanic(codeBundle, r)
-		if executor != nil {
-			if err := executor.Unregister(); err != nil {
-				log.Warn().Err(err).Str("qrid", codeID).Msg("failed to unregister the executor of a query that panicked")
+		defer func() {
+			if err := x.Unregister(); err != nil && out.err == nil {
+				out.err = err
 			}
+		}()
+		out.err = x.RunWithContext(ctx)
+		if out.err == nil {
+			wg.Wait()
 		}
-		for _, checksum := range wg.Decommission() {
-			sendResult(&llx.RawResult{
-				CodeID: checksum,
-				Data:   &llx.RawData{Error: perr},
-			})
-		}
-		rerr = nil
-	}()
-
-	// TODO(jaym): sendResult may not be correct. We may need to fill in the
-	// checksum
-	x, err := llx.NewExecutorV2WithSkew(codeBundle.CodeV2, em.runtime, props, sendResult,
-		skewPolicyFor(codeBundle, em.runtime))
-	if err == nil {
-		executor = x
-		err = x.Run()
+		return
 	}
+	done := make(chan executionResult, 1)
+	go func() { done <- run() }()
 
-	if err != nil {
-		return err
-	}
-
-	execDoneChan := make(chan struct{})
-	go func() {
-		wg.Wait()
-		close(execDoneChan)
-	}()
-
-	var errOut error
-
-	timer := time.NewTimer(em.timeout)
-	defer timer.Stop()
+	var out executionResult
 	select {
-	case <-timer.C:
-		log.Error().Dur("timeout", em.timeout).Str("qrid", codeID).Msg("execution timed out")
-		errOut = errQueryTimeout
-	case <-execDoneChan:
+	case out = <-done:
+	case <-ctx.Done():
 	}
-
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		log.Error().Dur("timeout", em.timeout).Str("qrid", codeID).Msg("execution timed out")
+		out.err = errQueryTimeout
+	} else if ctx.Err() != nil {
+		out.err = ctx.Err()
+	}
+	// Release any callback blocked on a full result channel before closing the
+	// gate. No worker is allowed to report a successful result after this point.
+	cancel()
+	resultMu.Lock()
+	finished = true
 	unreported := wg.Decommission()
+	resultMu.Unlock()
 	if len(unreported) > 0 {
 		log.Warn().Strs("missing", unreported).Str("qrid", codeID).Msg("unreported datapoints")
 	}
-
-	if err := executor.Unregister(); err != nil {
-		return err
+	if out.panicErr != nil {
+		// A recovered panic fails this query's remaining datapoints and allows
+		// the next query to run. A deadline, like other fatal execution errors,
+		// returns through Err instead so the graph cannot finish successfully
+		// before it observes that error.
+		for _, checksum := range unreported {
+			select {
+			case em.resultChan <- &llx.RawResult{CodeID: checksum, Data: &llx.RawData{Error: out.panicErr}}:
+			case <-em.stopChan:
+				return out.err
+			}
+		}
 	}
-
-	return errOut
+	return out.err
 }
 
 var errQueryTimeout = errors.New("query execution timed out")
-
-type iExecutor interface {
-	Unregister() error
-}
 
 // skewPolicyFor compares what a bundle says it needs against what this build
 // has, and returns a policy naming every provider the reader is behind on
