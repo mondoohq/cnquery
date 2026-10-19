@@ -113,6 +113,11 @@ func (o *CommandOutput) Error() error {
 	defer o.mu.Unlock()
 	return o.err
 }
+
+// Write deliberately drains/discards after Reserve has recorded the failure
+// and cancelled execution. Some SDKs ignore destination errors; returning one
+// here could leave their producer blocked on an unread pipe. Every transport
+// checks CommandOutput.Error before returning a successful result.
 func (b *commandOutputBuffer) Write(p []byte) (int, error) {
 	if err := b.output.Reserve(len(p)); err != nil {
 		return len(p), nil

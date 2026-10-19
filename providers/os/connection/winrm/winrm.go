@@ -101,7 +101,6 @@ func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*
 		conf:          conf,
 		asset:         asset,
 		Endpoint:      winrmEndpoint,
-		Client:        client,
 		clientFactory: factory,
 	}, nil
 }
@@ -114,7 +113,6 @@ type Connection struct {
 	fs afero.Fs
 
 	Endpoint      *winrm.Endpoint
-	Client        *winrm.Client
 	clientFactory func(context.Context) (*winrm.Client, func(), error)
 }
 

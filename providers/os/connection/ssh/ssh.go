@@ -212,6 +212,8 @@ func (c *Connection) runRawCommand(command string) (*shared.Command, error) {
 }
 
 func (c *Connection) runRawCommandContext(parent context.Context, command string) (*shared.Command, error) {
+	// Raw probes and connection verification also enter with Background, so
+	// this guard is required even when RunCommandContext already bounded it.
 	ctx, cancel, err := shared.CommandContext(parent)
 	if err != nil {
 		return nil, err
@@ -327,6 +329,8 @@ func (c *Connection) newSessionContext(ctx context.Context) (*ssh.Session, error
 
 // A stalled peer can also stop reading channel-close messages. Escalate to
 // closing the transport rather than letting cancellation itself block.
+// Session.Close sends a channel-close message without waiting for a remote
+// reply; this grace bounds a blocked local transport write, not a network RTT.
 func (c *Connection) closeSession(session *ssh.Session) {
 	if session == nil {
 		return

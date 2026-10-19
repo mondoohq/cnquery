@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
+	"sync"
 	"testing"
 	"time"
 )
@@ -70,4 +71,29 @@ func TestCommandOutputInvalidLimit(t *testing.T) {
 		_, err := NewCommandOutput(nil)
 		assert.Error(t, err)
 	}
+}
+
+func TestCommandOutputConcurrentBudget(t *testing.T) {
+	t.Setenv("MONDOO_COMMAND_OUTPUT_LIMIT", "64")
+	output, err := NewCommandOutput(nil)
+	require.NoError(t, err)
+	var writers sync.WaitGroup
+	for i := range 64 {
+		writers.Add(1)
+		go func() {
+			defer writers.Done()
+			stream := output.Stdout
+			if i%2 == 0 {
+				stream = output.Stderr
+			}
+			_, _ = stream.Write([]byte("data"))
+		}()
+	}
+	writers.Wait()
+	assert.ErrorIs(t, output.Error(), ErrCommandOutputLimit)
+	stdout, err := io.ReadAll(output.Stdout)
+	require.NoError(t, err)
+	stderr, err := io.ReadAll(output.Stderr)
+	require.NoError(t, err)
+	assert.Len(t, append(stdout, stderr...), 64, "concurrent accepted writes must fit the combined budget even before cancellation propagates")
 }
