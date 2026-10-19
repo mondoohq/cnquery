@@ -398,3 +398,21 @@ func TestResolvePerUserDirsWindowsDefaultIncludesEveryProfile(t *testing.T) {
 	require.NoError(t, err)
 	assert.ElementsMatch(t, []string{filepath.Join(`C:\Users\alice`, ".cursor/skills"), filepath.Join(`C:\Users\domain.user`, ".cursor/skills")}, dirs)
 }
+
+func TestReadJSONFileAferoRefusesUnsafeConfig(t *testing.T) {
+	mem := afero.NewMemMapFs()
+	require.NoError(t, afero.WriteFile(mem, "/settings.json", []byte(`{"enabled":true}`), 0o644))
+	for _, tc := range []struct {
+		mode os.FileMode
+		size int64
+	}{
+		{os.ModeNamedPipe, 0}, {0o644, maxConfigFileSize + 1},
+	} {
+		fs := &boundedReadFS{Fs: mem, path: "/settings.json", mode: tc.mode, size: tc.size}
+		var config map[string]any
+		err := readJSONFileAfero(&afero.Afero{Fs: fs}, "/", "settings.json", &config)
+		require.Error(t, err)
+		assert.Nil(t, config)
+		assert.Zero(t, fs.opens)
+	}
+}

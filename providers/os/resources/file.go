@@ -138,7 +138,7 @@ func (s *mqlFile) content(path string, exists bool) (string, error) {
 
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 	afs := &afero.Afero{Fs: conn.FileSystem()}
-	res, err := afs.ReadFile(path)
+	res, err := readBoundedRegularFile(afs, path, maxFileContentSize)
 	return string(res), err
 }
 
@@ -480,6 +480,59 @@ func (r *mqlFileContext) content(file *mqlFile, rnge llx.Range) (string, error) 
 	}
 
 	return rnge.ExtractString(fileContent.Data, llx.DefaultExtractConfig), nil
+}
+
+// maxFileContentSize bounds a general file.content result. Virtual regular
+// files (including procfs files reporting size 0) are bounded by bytes read.
+const maxFileContentSize int64 = 128 << 20
+
+// Configuration and extension manifests are much smaller than arbitrary files.
+const maxConfigFileSize int64 = 32 << 20
+const maxExtensionManifestSize int64 = 8 << 20
+
+// readBoundedRegularFile checks before Open so a FIFO without a writer cannot
+// block a scan. Follow symlinks, including command-backed filesystems that keep
+// the symlink bit on the target mode, but refuse devices, sockets and directories.
+// Recheck the opened object and cap the actual bytes: files can grow or report
+// size zero, and Stat's size is only an early rejection, never the read budget.
+func readBoundedRegularFile(afs *afero.Afero, path string, limit int64) ([]byte, error) {
+	stat, err := afs.Stat(path)
+	if err != nil {
+		return nil, classifyFsError(err)
+	}
+	if err := checkFileReadBounds(path, stat, limit); err != nil {
+		return nil, err
+	}
+	file, err := afs.Open(path)
+	if err != nil {
+		return nil, classifyFsError(err)
+	}
+	defer file.Close()
+	stat, err = file.Stat()
+	if err != nil {
+		return nil, classifyFsError(err)
+	}
+	if err := checkFileReadBounds(path, stat, limit); err != nil {
+		return nil, err
+	}
+	data, err := io.ReadAll(io.LimitReader(file, limit+1))
+	if err != nil {
+		return nil, classifyFsError(err)
+	}
+	if int64(len(data)) > limit {
+		return nil, fmt.Errorf("file %q exceeds the %d byte read limit", path, limit)
+	}
+	return data, nil
+}
+
+func checkFileReadBounds(path string, stat os.FileInfo, limit int64) error {
+	if !isRegularTarget(stat) {
+		return fmt.Errorf("cannot read file %q: content requires a regular file (mode %s)", path, stat.Mode())
+	}
+	if limit < 0 || stat.Size() > limit {
+		return fmt.Errorf("file %q exceeds the %d byte read limit", path, limit)
+	}
+	return nil
 }
 
 // maxSmallFileSize is the most readSmallRegularFile reads. The files it is

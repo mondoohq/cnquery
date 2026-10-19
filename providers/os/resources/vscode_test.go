@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"os"
 	"path/filepath"
 	"sort"
 	"testing"
@@ -249,4 +250,48 @@ func TestVscodeUserHomePathsUnix(t *testing.T) {
 	homes, err := vscodeUserHomePaths(runtime)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"/home/alice"}, homes)
+}
+
+func TestReadVSCodePackageJSONRejectsSpecialOrOversize(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		mode os.FileMode
+		size int64
+	}{
+		{"fifo", os.ModeNamedPipe, 0}, {"oversize", 0o644, maxExtensionManifestSize + 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			mem := afero.NewMemMapFs()
+			require.NoError(t, afero.WriteFile(mem, "/package.json", []byte(`{"publisher":"example","name":"extension"}`), 0o644))
+			fs := &boundedReadFS{Fs: mem, path: "/package.json", mode: tc.mode, size: tc.size}
+			pkg, err := readVSCodePackageJSON(&afero.Afero{Fs: fs}, "/package.json")
+			require.Error(t, err)
+			assert.Nil(t, pkg)
+			assert.Zero(t, fs.opens)
+		})
+	}
+}
+
+func TestVscodeExtensionsUnreadableManifestErrors(t *testing.T) {
+	for _, mode := range []os.FileMode{os.ModeNamedPipe, 0o644} {
+		t.Run(mode.String(), func(t *testing.T) {
+			mem := afero.NewMemMapFs()
+			home := "/home/alice"
+			manifest := filepath.Join(home, ".vscode", "extensions", "example.extension-1.0.0", "package.json")
+			writeMemFSFile(t, mem, manifest, []byte(`{"publisher":"example","name":"extension"}`))
+			size := int64(0)
+			if mode.IsRegular() {
+				size = maxExtensionManifestSize + 1
+			}
+			fs := &boundedReadFS{Fs: mem, path: manifest, mode: mode, size: size}
+			runtime := memFSRuntime(t, fs)
+			seedUsersCache(t, runtime, &mqlUser{Name: plugin.TValue[string]{Data: "alice", State: plugin.StateIsSet}, Home: plugin.TValue[string]{Data: home, State: plugin.StateIsSet}})
+			raw, err := CreateResource(runtime, "vscode", nil)
+			require.NoError(t, err)
+			result := raw.(*mqlVscode).GetExtensions()
+			require.Error(t, result.Error, "an incomplete inventory must not satisfy a none() assertion")
+			assert.Nil(t, result.Data)
+			assert.Zero(t, fs.opens)
+		})
+	}
 }

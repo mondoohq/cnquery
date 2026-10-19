@@ -102,7 +102,7 @@ type subdirEntry struct {
 // readJSONFileAfero reads and unmarshals a JSON file relative to a base directory
 // using the provided afero filesystem (which may be remote via SSH, container, etc.).
 func readJSONFileAfero(afs *afero.Afero, baseDir string, relPath string, v interface{}) error {
-	data, err := afs.ReadFile(filepath.Join(baseDir, relPath))
+	data, err := readBoundedRegularFile(afs, filepath.Join(baseDir, relPath), maxConfigFileSize)
 	if err != nil {
 		return err
 	}

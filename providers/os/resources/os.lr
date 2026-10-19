@@ -932,6 +932,10 @@ file @defaults("path size permissions.string") {
   // Path to the folder containing this file
   dirname(path) string
   // Contents of this file
+  //
+  // Contents of a regular file, following symbolic links, up to 128 MiB.
+  // FIFOs, devices, sockets and larger files return an error. Virtual regular
+  // files, such as procfs files that report size zero, are limited by bytes read.
   content(path, exists) string
   // Whether this file exists on the system
   exists(path) bool

@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 func TestParseOllamaVersion(t *testing.T) {
@@ -55,11 +57,13 @@ func TestFindVSCodeExtension(t *testing.T) {
 	writeVSCodeExtension(t, alice, ".vscode/extensions", "saoudrizwan.claude-devtools-1.0.0",
 		`{"name":"claude-devtools","publisher":"saoudrizwan","version":"9.9.9"}`)
 
-	v, ok := findVSCodeExtension(afs, []string{alice, bob}, []string{"saoudrizwan.claude-dev"})
+	v, ok, err := findVSCodeExtension(afs, []string{alice, bob}, []string{"saoudrizwan.claude-dev"})
+	require.NoError(t, err)
 	assert.True(t, ok)
 	assert.Equal(t, "4.1.20", v, "the highest installed version across users and editors")
 
-	_, ok = findVSCodeExtension(afs, []string{alice, bob}, []string{"Continue.continue"})
+	_, ok, err = findVSCodeExtension(afs, []string{alice, bob}, []string{"Continue.continue"})
+	require.NoError(t, err)
 	assert.False(t, ok)
 }
 
@@ -71,7 +75,8 @@ func TestFindVSCodeExtensionCaseInsensitive(t *testing.T) {
 	writeVSCodeExtension(t, home, ".vscode/extensions", "continue.continue-2.0.0-win32-x64",
 		`{"name":"continue","publisher":"Continue","version":"2.0.0"}`)
 
-	v, ok := findVSCodeExtension(testAfero(), []string{home}, []string{"Continue.continue"})
+	v, ok, err := findVSCodeExtension(testAfero(), []string{home}, []string{"Continue.continue"})
+	require.NoError(t, err)
 	assert.True(t, ok)
 	assert.Equal(t, "2.0.0", v)
 }
@@ -84,7 +89,8 @@ func TestFindVSCodeExtensionChecksPackageJSON(t *testing.T) {
 		`{"name":"other","publisher":"someone","version":"1.0.0"}`)
 	mkdirAllTest(t, home, ".vscode/extensions/saoudrizwan.claude-dev-4.1.19")
 
-	_, ok := findVSCodeExtension(testAfero(), []string{home}, []string{"saoudrizwan.claude-dev"})
+	_, ok, err := findVSCodeExtension(testAfero(), []string{home}, []string{"saoudrizwan.claude-dev"})
+	require.NoError(t, err)
 	assert.False(t, ok)
 }
 
@@ -272,4 +278,43 @@ func TestClaudeNativeVersionWithoutLinkReader(t *testing.T) {
 func TestClaudeNativeVersionAbsent(t *testing.T) {
 	afs := &afero.Afero{Fs: afero.NewMemMapFs()}
 	assert.Equal(t, "", claudeNativeVersion(afs, "/root/.claude"))
+}
+
+func TestFindVSCodeExtensionUnreadableManifestErrors(t *testing.T) {
+	mem := afero.NewMemMapFs()
+	manifest := filepath.Join("/home/alice", ".vscode", "extensions", "example.extension-1.0.0", "package.json")
+	writeMemFSFile(t, mem, manifest, []byte(`{"publisher":"example","name":"extension"}`))
+	fs := &boundedReadFS{Fs: mem, path: manifest, mode: os.ModeNamedPipe}
+	_, found, err := findVSCodeExtension(&afero.Afero{Fs: fs}, []string{"/home/alice"}, []string{"example.extension"})
+	require.Error(t, err)
+	assert.False(t, found)
+	assert.Zero(t, fs.opens)
+}
+
+func TestToolPackageUnreadableManifestErrors(t *testing.T) {
+	mem := afero.NewMemMapFs()
+	home := "/home/alice"
+	manifest := filepath.Join(home, ".vscode", "extensions", "rooveterinaryinc.roo-cline-1.0.0", "package.json")
+	writeMemFSFile(t, mem, manifest, []byte(`{"publisher":"RooVeterinaryInc","name":"roo-cline","version":"1.0.0"}`))
+	for _, tc := range []struct {
+		name string
+		mode os.FileMode
+		size int64
+	}{
+		{"fifo", os.ModeNamedPipe, 0}, {"oversize", 0o644, maxExtensionManifestSize + 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			fs := &boundedReadFS{Fs: mem, path: manifest, mode: tc.mode, size: tc.size}
+			runtime := memFSRuntime(t, fs)
+			seedUsersCache(t, runtime, &mqlUser{
+				Name: plugin.TValue[string]{Data: "alice", State: plugin.StateIsSet}, Home: plugin.TValue[string]{Data: home, State: plugin.StateIsSet},
+			})
+			raw, err := NewResource(runtime, "roo", map[string]*llx.RawData{"configPath": llx.StringData(filepath.Join(home, ".roo"))})
+			require.NoError(t, err)
+			result := raw.(*mqlRoo).GetPackage()
+			require.Error(t, result.Error, "an unreadable manifest cannot report an uninstalled package")
+			assert.Nil(t, result.Data)
+			assert.Zero(t, fs.opens)
+		})
+	}
 }
