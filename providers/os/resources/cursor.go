@@ -114,7 +114,11 @@ func (r *mqlCursor) skills() ([]interface{}, error) {
 // Child resource ID methods
 
 func (r *mqlCursor) repos() ([]interface{}, error) {
-	return gitReposFromPaths(r.MqlRuntime, "cursor.repo", vscodeWorkspaceFolders(r.MqlRuntime, "Cursor"))
+	folders, err := vscodeWorkspaceFolders(r.MqlRuntime, "Cursor")
+	if err != nil {
+		return nil, err
+	}
+	return gitReposFromPaths(r.MqlRuntime, "cursor.repo", folders)
 }
 
 func (r *mqlCursorRepo) id() (string, error) {

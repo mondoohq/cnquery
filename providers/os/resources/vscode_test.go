@@ -89,7 +89,7 @@ func vscodeProfileRuntime(t *testing.T, profiles map[string]string) (*plugin.Run
 	users.(*mqlUsers).List.Error = errors.New("full account enumeration must not be used")
 
 	root, err := CreateResource(runtime, "registrykey", map[string]*llx.RawData{
-		"path": llx.StringData(vscodeProfileListPath),
+		"path": llx.StringData(windowsProfileListPath),
 	})
 	require.NoError(t, err)
 	sids := make([]string, 0, len(profiles))
@@ -101,7 +101,7 @@ func vscodeProfileRuntime(t *testing.T, profiles map[string]string) (*plugin.Run
 	for _, sid := range sids {
 		children = append(children, sid)
 		key, err := CreateResource(runtime, "registrykey", map[string]*llx.RawData{
-			"path": llx.StringData(vscodeProfileListPath + `\` + sid),
+			"path": llx.StringData(windowsProfileListPath + `\` + sid),
 		})
 		require.NoError(t, err)
 		key.(*mqlRegistrykey).Items = plugin.TValue[[]any]{State: plugin.StateIsSet, Data: []any{
@@ -168,7 +168,7 @@ func TestVscodeWindowsProfileReadErrors(t *testing.T) {
 		t.Run(map[bool]string{true: "profile list", false: "profile"}[rootDenied], func(t *testing.T) {
 			runtime, _ := vscodeProfileRuntime(t, map[string]string{"S-1-5-21-1-2-3-1001": `C:\Users\alice`})
 			denied := llx.Forbidden(errors.New("registry access denied"))
-			path := vscodeProfileListPath
+			path := windowsProfileListPath
 			if !rootDenied {
 				path += `\S-1-5-21-1-2-3-1001`
 			}
@@ -202,7 +202,7 @@ func TestVscodeWindowsProfileEnvironment(t *testing.T) {
 func TestVscodeWindowsProfileValueError(t *testing.T) {
 	runtime, _ := vscodeProfileRuntime(t, map[string]string{"S-1-5-21-1-2-3-1001": `C:\Users\alice`})
 	key, err := CreateResource(runtime, "registrykey", map[string]*llx.RawData{
-		"path": llx.StringData(vscodeProfileListPath + `\S-1-5-21-1-2-3-1001`),
+		"path": llx.StringData(windowsProfileListPath + `\S-1-5-21-1-2-3-1001`),
 	})
 	require.NoError(t, err)
 	property := key.(*mqlRegistrykey).Items.Data[0].(*mqlRegistrykeyProperty)
@@ -213,9 +213,9 @@ func TestVscodeWindowsProfileValueError(t *testing.T) {
 }
 
 func TestVscodeWindowsProfilePathsRemote(t *testing.T) {
-	profilePath := vscodeProfileListPath + `\S-1-5-21-1-2-3-1001`
+	profilePath := windowsProfileListPath + `\S-1-5-21-1-2-3-1001`
 	runtime, conn := newRemoteWindowsRuntime(t, map[string]*mock.Command{
-		powershell.Encode(registry.GetRegistryKeyChildItemsScript(vscodeProfileListPath)): {
+		powershell.Encode(registry.GetRegistryKeyChildItemsScript(windowsProfileListPath)): {
 			Stdout: `[{"name":"S-1-5-21-1-2-3-1001"}]`,
 		},
 		powershell.Encode(registry.GetRegistryKeyItemScript(profilePath)): {

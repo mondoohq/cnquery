@@ -4,9 +4,13 @@
 package resources
 
 import (
+	"errors"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"go.mondoo.com/mql/llx"
 
 	"github.com/package-url/packageurl-go"
 	"github.com/spf13/afero"
@@ -373,4 +377,24 @@ func TestReadJSONFileAferoEmptyFile(t *testing.T) {
 	var settings geminiSettings
 	require.NoError(t, readJSONFileAfero(afs, dir, "settings.json", &settings))
 	assert.Empty(t, settings.Theme)
+}
+
+func TestResolvePerUserDirsCustomSkipsEnumeration(t *testing.T) {
+	runtime, _ := vscodeProfileRuntime(t, nil)
+	raw, err := CreateResource(runtime, "registrykey", map[string]*llx.RawData{"path": llx.StringData(windowsProfileListPath)})
+	require.NoError(t, err)
+	raw.(*mqlRegistrykey).Children.Error = errors.New("must not enumerate profiles for a custom override")
+	dirs, err := resolvePerUserDirs(runtime, `C:\custom`, ".cursor", ".cursor/skills", `C:\custom\skills`)
+	require.NoError(t, err)
+	assert.Equal(t, []string{`C:\custom\skills`}, dirs)
+}
+
+func TestResolvePerUserDirsWindowsDefaultIncludesEveryProfile(t *testing.T) {
+	runtime, _ := vscodeProfileRuntime(t, map[string]string{
+		"S-1-5-21-1-2-3-1001": `C:\Users\alice`, "S-1-5-21-4-5-6-1001": `C:\Users\domain.user`,
+	})
+	config := filepath.Join(`C:\Users\alice`, ".cursor")
+	dirs, err := resolvePerUserDirs(runtime, config, ".cursor", ".cursor/skills", filepath.Join(config, "skills"))
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []string{filepath.Join(`C:\Users\alice`, ".cursor/skills"), filepath.Join(`C:\Users\domain.user`, ".cursor/skills")}, dirs)
 }

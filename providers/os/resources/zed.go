@@ -176,7 +176,11 @@ func (r *mqlZedRepo) id() (string, error) {
 }
 
 func (r *mqlZed) repos() ([]interface{}, error) {
-	return gitReposFromPaths(r.MqlRuntime, "zed.repo", r.workspacePaths())
+	paths, err := r.workspacePaths()
+	if err != nil {
+		return nil, err
+	}
+	return gitReposFromPaths(r.MqlRuntime, "zed.repo", paths)
 }
 
 // zedDataDir returns the platform-specific data directory Zed stores its
@@ -199,15 +203,14 @@ func zedDataDir(home, osFamily string) string {
 // the workspaces table as a binary blob, so they are recovered best-effort by
 // extracting absolute-path substrings (see extractZedPaths). Unreadable or
 // missing databases are skipped.
-func (r *mqlZed) workspacePaths() []string {
+func (r *mqlZed) workspacePaths() ([]string, error) {
 	conn := r.MqlRuntime.Connection.(shared.Connection)
 	osFamily := targetOSFamily(conn)
 	afs := connectionAfs(r.MqlRuntime)
 
 	users, err := targetUserHomes(r.MqlRuntime)
 	if err != nil {
-		log.Debug().Err(err).Msg("cannot enumerate users for zed workspaces")
-		return nil
+		return nil, err
 	}
 
 	seen := map[string]struct{}{}
@@ -229,7 +232,7 @@ func (r *mqlZed) workspacePaths() []string {
 			}
 		}
 	}
-	return paths
+	return paths, nil
 }
 
 // readZedWorkspacePaths copies the Zed SQLite database to a local temp file

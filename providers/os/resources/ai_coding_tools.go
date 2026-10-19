@@ -358,11 +358,17 @@ func readSkillsFromDirs(runtime *plugin.Runtime, skillsDirs []string, resourceTy
 // some enumerated user — it returns homeRelDir under every user's home, deduped.
 // Otherwise (a custom configPath override, or no users could be enumerated) it
 // returns just overrideDir, honoring the override exactly.
-func resolvePerUserDirs(runtime *plugin.Runtime, configPath, defaultConfigDir, homeRelDir, overrideDir string) []string {
+func resolvePerUserDirs(runtime *plugin.Runtime, configPath, defaultConfigDir, homeRelDir, overrideDir string) ([]string, error) {
+	// An override outside the default layout cannot refer to a per-user
+	// default. Honor it without enumerating profiles or accounts.
+	normalized := strings.TrimRight(strings.ReplaceAll(configPath, `\`, "/"), "/")
+	defaultSuffix := "/" + strings.Trim(strings.ReplaceAll(defaultConfigDir, `\`, "/"), "/")
+	if !strings.HasSuffix(normalized, defaultSuffix) {
+		return []string{overrideDir}, nil
+	}
 	users, err := targetUserHomes(runtime)
 	if err != nil {
-		log.Debug().Err(err).Msg("cannot enumerate users; using configPath only")
-		return []string{overrideDir}
+		return nil, err
 	}
 
 	// Detect the default case first so the per-user list is built only when used.
@@ -375,7 +381,7 @@ func resolvePerUserDirs(runtime *plugin.Runtime, configPath, defaultConfigDir, h
 		}
 	}
 	if !isDefault {
-		return []string{overrideDir}
+		return []string{overrideDir}, nil
 	}
 
 	seen := map[string]struct{}{}
@@ -388,13 +394,16 @@ func resolvePerUserDirs(runtime *plugin.Runtime, configPath, defaultConfigDir, h
 		seen[d] = struct{}{}
 		dirs = append(dirs, d)
 	}
-	return dirs
+	return dirs, nil
 }
 
 // agentSkills reads an agent's skills across every user, honoring a configPath
 // override. For agents whose skills sit at a fixed path under each home.
 func agentSkills(runtime *plugin.Runtime, resourceType, configPath, defaultConfigDir, homeRelSkillsDir, overrideSkillsDir string) ([]interface{}, error) {
-	dirs := resolvePerUserDirs(runtime, configPath, defaultConfigDir, homeRelSkillsDir, overrideSkillsDir)
+	dirs, err := resolvePerUserDirs(runtime, configPath, defaultConfigDir, homeRelSkillsDir, overrideSkillsDir)
+	if err != nil {
+		return nil, err
+	}
 	return readSkillsFromDirs(runtime, dirs, resourceType)
 }
 
@@ -403,8 +412,7 @@ func agentSkills(runtime *plugin.Runtime, resourceType, configPath, defaultConfi
 func skillsAllUsers(runtime *plugin.Runtime, homeRelSkillsDir, resourceType string) ([]interface{}, error) {
 	users, err := targetUserHomes(runtime)
 	if err != nil {
-		log.Debug().Err(err).Msg("cannot enumerate users for AI agent skills")
-		return nil, nil
+		return nil, err
 	}
 	dirs := make([]string, 0, len(users))
 	for _, u := range users {
@@ -833,15 +841,14 @@ func vscodeUserDataDir(home, osFamily, appName string) string {
 // from User/globalStorage/storage.json, stripping the file:// scheme.
 // Multi-root workspaces (a `workspace` key pointing at a .code-workspace file)
 // are not expanded. Unreadable stores are skipped.
-func vscodeWorkspaceFolders(runtime *plugin.Runtime, appName string) []string {
+func vscodeWorkspaceFolders(runtime *plugin.Runtime, appName string) ([]string, error) {
 	conn := runtime.Connection.(shared.Connection)
 	osFamily := targetOSFamily(conn)
 	afs := connectionAfs(runtime)
 
 	users, err := targetUserHomes(runtime)
 	if err != nil {
-		log.Debug().Err(err).Msg("cannot enumerate users for editor workspaces")
-		return nil
+		return nil, err
 	}
 
 	seen := map[string]struct{}{}
@@ -888,7 +895,7 @@ func vscodeWorkspaceFolders(runtime *plugin.Runtime, appName string) []string {
 			}
 		}
 	}
-	return folders
+	return folders, nil
 }
 
 // fileURIToPath converts a file:// URI to a local filesystem path, decoding
