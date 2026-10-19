@@ -157,7 +157,7 @@ func (x *mqlUsers) list() ([]any, error) {
 		return nil, multierr.Wrap(err, "could not retrieve users list")
 	}
 
-	var res []any
+	res := make([]any, 0, len(users))
 	for i := range users {
 		user := users[i]
 		nu, err := CreateResource(x.MqlRuntime, "user", map[string]*llx.RawData{
@@ -184,6 +184,15 @@ func (x *mqlUsers) refreshCache(all []any) error {
 		raw := x.GetList()
 		if raw.Error != nil {
 			return raw.Error
+		}
+		// list() publishes the indexes while holding this lock. A recording
+		// can supply List without indexes, so initialize that case once here.
+		// Completed indexes are immutable; a profile-only reader may copy them
+		// under TryLock without racing a redundant refresh.
+		x.lock.Lock()
+		defer x.lock.Unlock()
+		if x.usersByID != nil {
+			return nil
 		}
 		all = raw.Data
 	}

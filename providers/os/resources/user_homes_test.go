@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -97,7 +98,7 @@ func TestTargetUserHomesDoesNotWaitForAccountEnumeration(t *testing.T) {
 		require.NoError(t, err)
 	case <-time.After(time.Second):
 		users.lock.Unlock()
-		<-result
+		require.NoError(t, <-result)
 		t.Fatal("profile inventory waited for the account enumeration lock")
 	}
 }
@@ -137,4 +138,40 @@ func TestWindowsProfileErrorsFailInventory(t *testing.T) {
 			require.ErrorIs(t, got, llx.ErrForbidden)
 		})
 	}
+}
+
+func TestWindowsCachedProfileIdentityConcurrentRefresh(t *testing.T) {
+	sid := "S-1-5-21-1-2-3-1001"
+	runtime, _ := vscodeProfileRuntime(t, map[string]string{sid: `C:\Users\old.name`})
+	seedUsersCache(t, runtime, &mqlUser{
+		Name: plugin.TValue[string]{Data: "current.account", State: plugin.StateIsSet},
+		Sid:  plugin.TValue[string]{Data: sid, State: plugin.StateIsSet},
+		Uid:  plugin.TValue[int64]{Data: -1, State: plugin.StateIsSet},
+		Home: plugin.TValue[string]{Data: `C:\Users\old.name`, State: plugin.StateIsSet},
+	})
+	raw, _ := runtime.Resources.Get("users\x00")
+	users := raw.(*mqlUsers)
+	require.NoError(t, users.refreshCache(nil))
+	hive, err := CreateResource(runtime, "registrykey", map[string]*llx.RawData{"path": llx.StringData("HKEY_USERS")})
+	require.NoError(t, err)
+	hive.(*mqlRegistrykey).Children = plugin.TValue[[]any]{State: plugin.StateIsSet}
+	var wg sync.WaitGroup
+	wg.Go(func() {
+		for range 1000 {
+			if err := users.refreshCache(nil); err != nil {
+				t.Error(err)
+				return
+			}
+		}
+	})
+	for range 1000 {
+		profiles := []targetUser{{sid: sid, name: "old.name", home: `C:\Users\old.name`, uid: -1}}
+		enrichWindowsProfileNames(runtime, profiles)
+		assert.Contains(t, []string{"current.account", "old.name"}, profiles[0].name)
+	}
+	wg.Wait()
+	homes, err := targetUserHomes(runtime)
+	require.NoError(t, err)
+	require.Len(t, homes, 1)
+	assert.Equal(t, "current.account", homes[0].name)
 }
