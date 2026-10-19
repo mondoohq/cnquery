@@ -52,7 +52,7 @@ func TestLocalCommandWindowsProcessTree(t *testing.T) {
 	require.NoError(t, err)
 	handle, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
 	if err == nil {
-		defer windows.CloseHandle(handle)
+		defer func() { assert.NoError(t, windows.CloseHandle(handle)) }()
 		var code uint32
 		require.NoError(t, windows.GetExitCodeProcess(handle, &code))
 		assert.NotEqual(t, uint32(259), code, "descendant is still running after cancellation")
@@ -109,7 +109,7 @@ func TestLocalCommandWindowsSuspendsUntilAssigned(t *testing.T) {
 	require.Error(t, cmd.Wait())
 	handle, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
 	if err == nil {
-		defer windows.CloseHandle(handle)
+		defer func() { assert.NoError(t, windows.CloseHandle(handle)) }()
 		var code uint32
 		require.NoError(t, windows.GetExitCodeProcess(handle, &code))
 		assert.NotEqual(t, uint32(259), code, "fast descendant escaped cancellation job")

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"sync"
 	"syscall"
 	"unsafe"
@@ -38,8 +39,13 @@ func newCommandProcess(cmd *exec.Cmd) (*commandProcess, error) {
 	}
 	limits := windows.JOBOBJECT_EXTENDED_LIMIT_INFORMATION{}
 	limits.BasicLimitInformation.LimitFlags = windows.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+	// SetInformationJobObject accepts uintptr; pin the typed input so it
+	// stays alive at a fixed address throughout the call.
+	var pinned runtime.Pinner
+	pinned.Pin(&limits)
+	defer pinned.Unpin()
 	if _, err := windows.SetInformationJobObject(job, windows.JobObjectExtendedLimitInformation, uintptr(unsafe.Pointer(&limits)), uint32(unsafe.Sizeof(limits))); err != nil {
-		windows.CloseHandle(job)
+		_ = windows.CloseHandle(job)
 		return nil, err
 	}
 	// Go closes the initial thread handle before Start returns. Keep that
@@ -58,7 +64,7 @@ func (p *commandProcess) started() error {
 	if err != nil {
 		return err
 	}
-	defer windows.CloseHandle(handle)
+	defer func() { _ = windows.CloseHandle(handle) }()
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	if err := windows.AssignProcessToJobObject(p.job, handle); err != nil {
@@ -87,7 +93,7 @@ func resumeCommandThread(pid uint32) error {
 	if err != nil {
 		return err
 	}
-	defer windows.CloseHandle(snapshot)
+	defer func() { _ = windows.CloseHandle(snapshot) }()
 	thread := windows.ThreadEntry32{Size: uint32(unsafe.Sizeof(windows.ThreadEntry32{}))}
 	for err := windows.Thread32First(snapshot, &thread); err == nil; err = windows.Thread32Next(snapshot, &thread) {
 		if thread.OwnerProcessID != pid {
@@ -98,7 +104,7 @@ func resumeCommandThread(pid uint32) error {
 			return err
 		}
 		suspended, err := windows.ResumeThread(handle)
-		windows.CloseHandle(handle)
+		_ = windows.CloseHandle(handle)
 		if err != nil {
 			return err
 		}
