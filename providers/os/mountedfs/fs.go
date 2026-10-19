@@ -121,3 +121,7 @@ func (t *MountedFs) Find(from string, r *regexp.Regexp, typ string, perm *uint32
 	iofs := afero.NewIOFS(t)
 	return fsutil.FindFiles(iofs, from, r, typ, perm, depth)
 }
+
+func (t *MountedFs) FindWithOptions(from string, r *regexp.Regexp, typ string, perm *uint32, depth *int, options fsutil.FindOptions) ([]string, error) {
+	return fsutil.FindFilesWithOptions(afero.NewIOFS(t), from, r, typ, perm, depth, options)
+}

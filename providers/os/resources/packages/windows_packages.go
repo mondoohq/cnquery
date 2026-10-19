@@ -5,6 +5,7 @@ package packages
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -25,6 +26,7 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/detector/windows"
+	"go.mondoo.com/mql/providers/os/fsutil"
 	"go.mondoo.com/mql/providers/os/registry"
 	"go.mondoo.com/mql/providers/os/resources/cpe"
 	"go.mondoo.com/mql/providers/os/resources/powershell"
@@ -1232,6 +1234,10 @@ func (w *WinPkgManager) getFsAppxPackages() ([]Package, error) {
 	for p, depth := range paths {
 		res, err := fsSearch.Find(p, appxManifestPattern, "f", nil, &depth)
 		if err != nil {
+			// A capped search is incomplete, not an empty optional app directory.
+			if errors.Is(err, fsutil.ErrFindLimit) || errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				return nil, err
+			}
 			continue
 		}
 		for _, r := range res {

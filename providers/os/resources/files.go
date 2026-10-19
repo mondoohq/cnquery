@@ -106,7 +106,9 @@ func (l *mqlFilesFind) list() ([]any, error) {
 func (l *mqlFilesFind) fsFilesFind(conn shared.Connection) ([]string, error) {
 	log.Debug().Msgf("use native files find approach")
 	fs := conn.FileSystem()
-	fsSearch, ok := fs.(shared.FileSearch)
+	fsSearch, ok := fs.(interface {
+		FindWithOptions(string, *regexp.Regexp, string, *uint32, *int, fsutil.FindOptions) ([]string, error)
+	})
 	if !ok {
 		fsSearch = walkFileSearch{fs: fs}
 	}
@@ -137,7 +139,7 @@ func (l *mqlFilesFind) fsFilesFind(conn shared.Connection) ([]string, error) {
 		return nil, err
 	}
 
-	found, err := fsSearch.Find(l.From.Data, compiledRegexp, l.Type.Data, perm, depth)
+	found, err := fsSearch.FindWithOptions(l.From.Data, compiledRegexp, l.Type.Data, perm, depth, fsutil.FindOptions{CrossFileSystems: l.Xdev.Data})
 	if err != nil || matchesName == nil {
 		return found, err
 	}
@@ -176,8 +178,8 @@ type walkFileSearch struct {
 	fs afero.Fs
 }
 
-func (w walkFileSearch) Find(from string, r *regexp.Regexp, typ string, perm *uint32, depth *int) ([]string, error) {
-	return fsutil.FindFiles(afero.NewIOFS(w.fs), from, r, typ, perm, depth)
+func (w walkFileSearch) FindWithOptions(from string, r *regexp.Regexp, typ string, perm *uint32, depth *int, options fsutil.FindOptions) ([]string, error) {
+	return fsutil.FindFilesWithOptions(afero.NewIOFS(w.fs), from, r, typ, perm, depth, options)
 }
 
 func (l *mqlFilesFind) unixFilesFindCmd(conn shared.Connection) ([]string, error) {

@@ -434,6 +434,18 @@ func (fs *FS) open(header *tar.Header) (io.Reader, error) {
 // -L, a start path that links to a directory (/bin -> usr/bin on a usr-merged
 // image) is searched, and its entries are reported below from.
 func (fs *FS) Find(from string, r *regexp.Regexp, typ string, perm *uint32, depth *int) ([]string, error) {
+	return fs.FindWithOptions(from, r, typ, perm, depth, fsutil.FindOptions{CrossFileSystems: true})
+}
+
+func (fs *FS) FindWithOptions(from string, r *regexp.Regexp, typ string, perm *uint32, depth *int, options fsutil.FindOptions) ([]string, error) {
+	// An archive has no mounted sub-filesystems. Keep its indexed search, but
+	// apply the same cancellation and result budgets as a live filesystem.
+	budget, cancel := fsutil.NewFindBudget(options)
+	defer cancel()
+	if err := budget.Check(); err != nil {
+		return nil, err
+	}
+
 	from = Abs(from)
 	root := fs.findRoot(from)
 	prefix := root
@@ -451,6 +463,9 @@ func (fs *FS) Find(from string, r *regexp.Regexp, typ string, perm *uint32, dept
 
 	list := []string{}
 	for k, entry := range fs.FileMap {
+		if err := budget.Visit(); err != nil {
+			return nil, err
+		}
 		if k != root && !strings.HasPrefix(k, prefix) {
 			continue
 		}
@@ -485,6 +500,9 @@ func (fs *FS) Find(from string, r *regexp.Regexp, typ string, perm *uint32, dept
 		}
 		if perm != nil && *perm != 0 && uint32(target.Mode)&*perm != *perm {
 			continue
+		}
+		if err := budget.Match(); err != nil {
+			return nil, err
 		}
 		list = append(list, p)
 	}

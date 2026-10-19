@@ -4,12 +4,15 @@
 package fsutil
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
 	"os"
 	"regexp"
 	"strings"
 	"testing"
+	"testing/synctest"
+	"time"
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -229,4 +232,89 @@ func mkDir(t *testing.T, fs afero.Fs, name string) {
 	t.Helper()
 	err := fs.MkdirAll(name, os.ModePerm)
 	require.NoError(t, err)
+}
+
+func TestFindFilesBudgets(t *testing.T) {
+	f := afero.NewMemMapFs()
+	mkDir(t, f, "root")
+	mkFile(t, f, "root/a")
+	mkFile(t, f, "root/b")
+	for _, tc := range []struct {
+		name    string
+		options FindOptions
+	}{
+		{"visited", FindOptions{MaxEntries: 2}}, {"matches", FindOptions{MaxMatches: 1}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			found, err := FindFilesWithOptions(afero.NewIOFS(f), "root", nil, "file", nil, nil, tc.options)
+			require.ErrorContains(t, err, "exceeds")
+			require.Nil(t, found, "a partial list must never look complete")
+		})
+	}
+	found, err := FindFilesWithOptions(afero.NewIOFS(f), "root", nil, "file", nil, nil, FindOptions{MaxEntries: 3, MaxMatches: 2})
+	require.NoError(t, err)
+	require.ElementsMatch(t, []string{"root/a", "root/b"}, found)
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	found, err = FindFilesWithOptions(afero.NewIOFS(f), "root", nil, "file", nil, nil, FindOptions{Context: ctx})
+	require.ErrorIs(t, err, context.Canceled)
+	require.Nil(t, found)
+}
+
+type delayedFindFS struct{ fs.FS }
+
+func (f delayedFindFS) ReadDir(name string) ([]fs.DirEntry, error) {
+	time.Sleep(time.Second)
+	return fs.ReadDir(f.FS, name)
+}
+func TestFindFilesDeadline(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		f := afero.NewMemMapFs()
+		mkDir(t, f, "root")
+		mkFile(t, f, "root/a")
+		found, err := FindFilesWithOptions(delayedFindFS{afero.NewIOFS(f)}, "root", nil, "file", nil, nil, FindOptions{Timeout: time.Millisecond, SingleFileSystem: true})
+		require.ErrorIs(t, err, context.DeadlineExceeded)
+		require.Nil(t, found)
+	})
+}
+
+type unsupportedFindInfo struct{ fs.FileInfo }
+
+func (unsupportedFindInfo) Sys() any { return struct{ Opaque bool }{true} }
+
+type unsupportedFindFS struct{ fs.FS }
+
+func (f unsupportedFindFS) Stat(name string) (fs.FileInfo, error) {
+	info, err := fs.Stat(f.FS, name)
+	if err != nil {
+		return nil, err
+	}
+	return unsupportedFindInfo{info}, nil
+}
+func TestFindFilesRejectsUnknownMountMetadata(t *testing.T) {
+	f := afero.NewMemMapFs()
+	mkDir(t, f, "root")
+	mkFile(t, f, "root/a")
+	target := unsupportedFindFS{afero.NewIOFS(f)}
+	found, err := FindFilesWithOptions(target, "root", nil, "file", nil, nil, FindOptions{})
+	require.ErrorContains(t, err, "cannot enforce xdev:false")
+	require.Nil(t, found)
+	found, err = FindFilesWithOptions(target, "root", nil, "file", nil, nil, FindOptions{CrossFileSystems: true})
+	require.NoError(t, err)
+	require.Equal(t, []string{"root/a"}, found)
+}
+
+type opaqueFindFS struct{ fs.FS }
+
+func TestFindFilesRejectsOpaqueNilStatMetadata(t *testing.T) {
+	f := afero.NewMemMapFs()
+	mkDir(t, f, "root")
+	mkFile(t, f, "root/a")
+	target := opaqueFindFS{afero.NewIOFS(f)}
+	found, err := FindFilesWithOptions(target, "root", nil, "file", nil, nil, FindOptions{})
+	require.ErrorContains(t, err, "cannot enforce xdev:false")
+	require.Nil(t, found)
+	found, err = FindFilesWithOptions(target, "root", nil, "file", nil, nil, FindOptions{SingleFileSystem: true})
+	require.NoError(t, err)
+	require.Equal(t, []string{"root/a"}, found)
 }

@@ -5,6 +5,8 @@ package resources
 
 import (
 	"bytes"
+	"go.mondoo.com/mql/providers/os/fsutil"
+	"regexp"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -102,4 +104,26 @@ func TestFilesFindWithoutFindWalksTheFileSystem(t *testing.T) {
 		find(map[string]*llx.RawData{"from": llx.StringData("/etc"), "name": llx.StringData("sshd_*")}))
 	assert.ElementsMatch(t, []string{"/etc/passwd"},
 		find(map[string]*llx.RawData{"from": llx.StringData("/etc"), "type": llx.StringData("file"), "permissions": llx.IntData(0o644)}))
+}
+
+type optionFindFS struct {
+	afero.Fs
+	cross []bool
+}
+
+func (f *optionFindFS) FindWithOptions(from string, r *regexp.Regexp, typ string, perm *uint32, depth *int, options fsutil.FindOptions) ([]string, error) {
+	f.cross = append(f.cross, options.CrossFileSystems)
+	return []string{"/etc/example.conf"}, nil
+}
+func TestFilesFindForwardsMountScope(t *testing.T) {
+	for _, cross := range []bool{false, true} {
+		f := &optionFindFS{Fs: afero.NewMemMapFs()}
+		rt := memFSRuntime(t, f)
+		res, err := CreateResource(rt, "files.find", map[string]*llx.RawData{"from": llx.StringData("/etc"), "xdev": llx.BoolData(cross)})
+		require.NoError(t, err)
+		found, err := res.(*mqlFilesFind).fsFilesFind(rt.Connection.(shared.Connection))
+		require.NoError(t, err)
+		require.Equal(t, []string{"/etc/example.conf"}, found)
+		require.Equal(t, []bool{cross}, f.cross)
+	}
 }
