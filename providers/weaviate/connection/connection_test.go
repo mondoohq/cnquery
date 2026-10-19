@@ -5,6 +5,7 @@ package connection
 
 import (
 	"context"
+	"crypto/tls"
 	"github.com/stretchr/testify/require"
 	"net"
 	"net/http"
@@ -114,5 +115,44 @@ func TestHTTPClientWithCustomDefaultTransport(t *testing.T) {
 	client, err := (&WeaviateConnection{scheme: "https", tlsInsecure: true}).httpClient()
 	require.NoError(t, err)
 	require.Positive(t, client.Timeout)
-	require.IsType(t, &http.Transport{}, client.Transport)
+	transport, ok := client.Transport.(*http.Transport)
+	require.True(t, ok)
+	require.NotNil(t, transport.Proxy)
+	require.NotNil(t, transport.DialContext)
+	require.Equal(t, 10*time.Second, transport.TLSHandshakeTimeout)
+	require.True(t, transport.TLSClientConfig.InsecureSkipVerify)
+}
+
+func TestHTTPClientPreservesDefaultTransport(t *testing.T) {
+	original := http.DefaultTransport
+	defaults := &http.Transport{ResponseHeaderTimeout: 7 * time.Second, TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12}}
+	http.DefaultTransport = defaults
+	defer func() { http.DefaultTransport = original }()
+	client, err := (&WeaviateConnection{scheme: "https", tlsInsecure: true}).httpClient()
+	require.NoError(t, err)
+	transport, ok := client.Transport.(*http.Transport)
+	require.True(t, ok)
+	require.NotSame(t, defaults, transport)
+	require.Equal(t, 7*time.Second, transport.ResponseHeaderTimeout)
+	require.True(t, transport.TLSClientConfig.InsecureSkipVerify)
+	require.False(t, defaults.TLSClientConfig.InsecureSkipVerify, "connection TLS settings must not mutate the shared transport")
+	require.Equal(t, uint16(tls.VersionTLS12), defaults.TLSClientConfig.MinVersion)
+}
+
+func TestHTTPClientPreservesCustomRoundTripperWithoutTLSOverrides(t *testing.T) {
+	original := http.DefaultTransport
+	called := false
+	http.DefaultTransport = probeRoundTripper(func(*http.Request) (*http.Response, error) {
+		called = true
+		return nil, context.Canceled
+	})
+	defer func() { http.DefaultTransport = original }()
+	for _, scheme := range []string{"http", "https"} {
+		client, err := (&WeaviateConnection{scheme: scheme}).httpClient()
+		require.NoError(t, err)
+		called = false
+		_, err = client.Get(scheme + "://example.invalid/v1/meta")
+		require.ErrorIs(t, err, context.Canceled)
+		require.True(t, called, "without TLS overrides, preserve the embedder's RoundTripper")
+	}
 }

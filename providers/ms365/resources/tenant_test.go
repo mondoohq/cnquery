@@ -159,10 +159,13 @@ func TestQueryUserRealmInfo(t *testing.T) {
 	for _, tc := range []struct {
 		name, body string
 		status     int
-		fail       bool
+		wantError  string
 	}{
-		{"complete", `{"DomainName":"example.com","NameSpaceType":"Managed"}`, 200, false},
-		{"invalid", `{`, 200, true}, {"refusal", `{}`, 503, true}, {"oversize", strings.Repeat(" ", (1<<20)+1), 200, true},
+		{"complete", `{"DomainName":"example.com","NameSpaceType":"Managed"}`, 200, ""},
+		{"invalid", `{`, 200, "failed to parse userrealm response"},
+		{"refusal", `{}`, 503, "userrealm endpoint returned status 503"},
+		{"non-JSON refusal", `<html>unavailable</html>`, 503, "userrealm endpoint returned status 503"},
+		{"oversize", strings.Repeat(" ", (1<<20)+1), 200, "exceeds"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -171,8 +174,8 @@ func TestQueryUserRealmInfo(t *testing.T) {
 			}))
 			defer srv.Close()
 			got, err := queryUserRealmInfo(t.Context(), srv.Client(), srv.URL)
-			if tc.fail {
-				require.Error(t, err)
+			if tc.wantError != "" {
+				require.ErrorContains(t, err, tc.wantError)
 				require.Nil(t, got)
 			} else {
 				require.NoError(t, err)

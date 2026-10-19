@@ -139,9 +139,16 @@ func (c *WeaviateConnection) httpClient() (*http.Client, error) {
 		}
 		cfg.RootCAs = pool
 	}
-	transport := &http.Transport{Proxy: http.ProxyFromEnvironment, DialContext: (&net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}).DialContext, TLSHandshakeTimeout: 10 * time.Second}
+	var transport *http.Transport
 	if defaults, ok := http.DefaultTransport.(*http.Transport); ok {
 		transport = defaults.Clone()
+	} else {
+		// A custom RoundTripper cannot carry this connection's TLS settings.
+		transport = &http.Transport{
+			Proxy:               http.ProxyFromEnvironment,
+			DialContext:         (&net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}).DialContext,
+			TLSHandshakeTimeout: 10 * time.Second,
+		}
 	}
 	transport.TLSClientConfig = cfg
 	return &http.Client{Transport: transport, Timeout: 30 * time.Second}, nil

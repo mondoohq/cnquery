@@ -23,8 +23,11 @@ import (
 )
 
 type mqlHttpGetInternal struct {
-	lock sync.Mutex
-	resp plugin.TValue[*http.Response]
+	lock         sync.Mutex
+	resp         plugin.TValue[*http.Response]
+	bodyOnce     sync.Once
+	responseBody string
+	bodyError    error
 }
 
 func initHttpGet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -233,9 +236,12 @@ func (x *mqlHttpGet) body() (string, error) {
 		}
 		return "", err
 	}
-	defer x.resp.Data.Body.Close()
-	raw, err := iox.ReadAllLimit(x.resp.Data.Body, 16<<20)
-	return string(raw), err
+	x.bodyOnce.Do(func() {
+		defer x.resp.Data.Body.Close()
+		raw, err := iox.ReadAllLimit(x.resp.Data.Body, 16<<20)
+		x.responseBody, x.bodyError = string(raw), err
+	})
+	return x.responseBody, x.bodyError
 }
 
 func parseHeaderFields(raw []any, f func(key string, value string)) {

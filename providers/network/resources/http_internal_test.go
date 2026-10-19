@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"syscall"
 	"testing"
 
@@ -339,4 +340,60 @@ func TestHttpBodyRejectsOversize(t *testing.T) {
 	body, err := get.body()
 	require.ErrorContains(t, err, "exceeds")
 	require.Empty(t, body)
+}
+
+type countedHTTPBody struct {
+	io.Reader
+	closes int
+}
+
+func (b *countedHTTPBody) Close() error {
+	b.closes++
+	return nil
+}
+
+func TestHttpBodyCachedAfterClose(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		size      int
+		wantError bool
+	}{
+		{"complete", 7, false},
+		{"oversize", (16 << 20) + 1, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			body := &countedHTTPBody{Reader: strings.NewReader(strings.Repeat("x", tc.size))}
+			get := &mqlHttpGet{mqlHttpGetInternal: mqlHttpGetInternal{resp: plugin.TValue[*http.Response]{
+				Data: &http.Response{Body: body}, State: plugin.StateIsSet,
+			}}}
+			for range 2 {
+				got := get.GetBody()
+				if tc.wantError {
+					require.ErrorContains(t, got.Error, "exceeds")
+					require.Empty(t, got.Data)
+				} else {
+					require.NoError(t, got.Error)
+					require.Equal(t, "xxxxxxx", got.Data)
+				}
+				require.Equal(t, 1, body.closes, "cached access must not reopen or close the response again")
+			}
+		})
+	}
+}
+
+func TestHttpBodyReadOnceForConcurrentCalls(t *testing.T) {
+	body := &countedHTTPBody{Reader: strings.NewReader("complete")}
+	get := &mqlHttpGet{mqlHttpGetInternal: mqlHttpGetInternal{resp: plugin.TValue[*http.Response]{
+		Data: &http.Response{Body: body}, State: plugin.StateIsSet,
+	}}}
+	var workers sync.WaitGroup
+	for range 8 {
+		workers.Go(func() {
+			got, err := get.body()
+			assert.NoError(t, err)
+			assert.Equal(t, "complete", got)
+		})
+	}
+	workers.Wait()
+	require.Equal(t, 1, body.closes)
 }
