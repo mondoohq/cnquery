@@ -137,6 +137,14 @@ func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Co
 			asset.Labels = make(map[string]string)
 		}
 		asset.Labels[plugin.GitUrlOptionKey] = trimGitPath(gitPath)
+		// The clone is a temporary directory that is new on every scan, so a
+		// file is reported by its path within the repository: the path a user
+		// can open, and the same one on the next scan.
+		for i, src := range c.sources {
+			if rel, err := filepath.Rel(c.manifestFile, src.Path); err == nil && rel != "." {
+				c.sources[i].Path = filepath.ToSlash(rel)
+			}
+		}
 	}
 	c.ManifestParser, err = shared.NewManifestParser(manifest, c.namespace, "")
 	if err != nil {
