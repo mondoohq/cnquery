@@ -223,6 +223,7 @@ PROVIDERS := \
 	clickhousedb \
 	cloudflare \
 	cloudformation \
+	cockroachdb \
 	databricks \
 	datadog \
 	depsdev \

@@ -349,6 +349,22 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"cockroachdb": {
+		Provider: &plugin.Provider{
+			Name:            "cockroachdb",
+			ID:              "go.mondoo.com/mql/providers/cockroachdb",
+			ConnectionTypes: []string{"cockroachdb"},
+			Connectors: []plugin.Connector{
+
+				{
+					Name:  "cockroachdb",
+					Use:   "cockroachdb [host]",
+					Short: "a CockroachDB cluster",
+				},
+			},
+		},
+	},
+
 	"core": {
 		Provider: &plugin.Provider{
 			Name:            "core",
