@@ -55,7 +55,7 @@ aws license-manager list-received-licenses --region us-west-2 \
 ```
 
 **If you cannot subscribe**, MikroTik publishes the CHR raw disk image and
-there is an official guide for [importing it as your own AMI](https://help.mikrotik.com/docs/spaces/RKB/pages/161611810/Create+an+RouterOS+CHR+7.6+AMI)
+there is an official guide for [importing it as your own AMI](https://manual.mikrotik.com/docs/getting-started/installation-and-upgrade/install/chr-installation/aws/)
 via S3 and VM Import/Export. That needs a `vmimport` IAM role and takes longer,
 but requires no Marketplace subscription at all.
 
