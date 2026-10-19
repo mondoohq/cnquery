@@ -148,6 +148,10 @@ func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Co
 	if err != nil {
 		return nil, err
 	}
+	// A namespaced object that names no namespace is created in "default".
+	if err := c.ManifestParser.SetDefaultNamespaces(); err != nil {
+		return nil, err
+	}
 
 	// Zero objects means nothing Kubernetes was here, and connecting anyway
 	// would pass every policy on a folder nothing was ever read from. For a
@@ -176,7 +180,7 @@ func (c *Connection) ManifestSource() (map[string]string, map[string]shared.Sour
 		c.positions = map[string]shared.SourcePosition{}
 		for _, src := range c.sources {
 			c.contents[src.Path] = string(src.Content)
-			for id, pos := range shared.BuildManifestPositionIndex(src.Content, src.Path) {
+			for id, pos := range shared.BuildManifestPositionIndex(src.Content, src.Path, c.ManifestParser.EffectiveNamespace) {
 				c.positions[id] = pos
 			}
 		}
