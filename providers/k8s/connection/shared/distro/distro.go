@@ -16,6 +16,8 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 )
 
 // Distribution names.
@@ -83,6 +85,18 @@ type Result struct {
 	Identity Identity
 	// Evidence holds one entry per probe that ran, keyed by probe name.
 	Evidence map[string]Evidence
+}
+
+// AssetAnnotations returns the annotations the cluster's cloud identity puts
+// on the cluster asset and on everything discovered in it: the AWS account id
+// (inventory.AnnotationAwsAccountId) for a cluster that runs in AWS. It is nil
+// when the cloud is not AWS or the account is unknown, so callers can add it
+// unconditionally.
+func (r *Result) AssetAnnotations() map[string]string {
+	if r == nil || CloudOf(r.Name) != "aws" || r.Identity.Account == "" {
+		return nil
+	}
+	return map[string]string{inventory.AnnotationAwsAccountId: r.Identity.Account}
 }
 
 // Node is the part of a node the nodes probe reads.

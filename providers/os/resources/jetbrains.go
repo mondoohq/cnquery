@@ -346,10 +346,9 @@ func (j *mqlJetbrains) plugins() ([]any, error) {
 				continue
 			}
 
-			// A plugin can be installed into several products and for several
-			// users, and the same id in two products is two installations with
-			// their own enablement, so the key carries all three.
-			key := fmt.Sprintf("%d|%s|%s", dir.uid, dir.product, plugin.Identifier)
+			// Windows profiles all have uid -1. The installation path, product
+			// and plugin identity keep each user's installation distinct.
+			key := fmt.Sprintf("%s|%s|%s", candidate, dir.product, plugin.Identifier)
 			if seen[key] {
 				continue
 			}
@@ -401,8 +400,7 @@ func (j *mqlJetbrains) pluginDirs() ([]jetbrainsPluginsDir, error) {
 
 	users, err := targetUserHomes(j.MqlRuntime)
 	if err != nil {
-		log.Debug().Err(err).Msg("could not retrieve users list")
-		return nil, nil
+		return nil, err
 	}
 
 	afs := &afero.Afero{Fs: conn.FileSystem()}

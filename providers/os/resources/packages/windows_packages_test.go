@@ -4,10 +4,15 @@
 package packages
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/afero"
+	fsconn "go.mondoo.com/mql/providers/os/connection/fs"
+	"go.mondoo.com/mql/providers/os/fsutil"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -1899,5 +1904,25 @@ func TestWindowsAppInstallDateNativeAndPowerShellAgree(t *testing.T) {
 				assert.True(t, native.InstallDate.IsZero())
 			}
 		})
+	}
+}
+
+type interruptedAppxFS struct {
+	afero.Fs
+	err error
+}
+
+func (f interruptedAppxFS) Find(string, *regexp.Regexp, string, *uint32, *int) ([]string, error) {
+	return nil, f.err
+}
+func TestGetFsAppxPackagesPropagatesInterruptedSearch(t *testing.T) {
+	for _, failure := range []error{fsutil.ErrFindLimit, context.Canceled, context.DeadlineExceeded} {
+		target := interruptedAppxFS{Fs: afero.NewMemMapFs(), err: failure}
+		conn, err := fsconn.NewFileSystemConnectionWithFs(1, &inventory.Config{}, &inventory.Asset{}, "", nil, target)
+		require.NoError(t, err)
+		w := &WinPkgManager{conn: conn}
+		pkgs, err := w.getFsAppxPackages()
+		require.ErrorIs(t, err, failure)
+		require.Nil(t, pkgs)
 	}
 }

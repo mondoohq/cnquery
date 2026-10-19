@@ -138,14 +138,21 @@ func Discover(runtime *plugin.Runtime, features mql.Features) (*inventory.Invent
 
 // addDistroMetadata records the cluster's distribution on every asset
 // discovered through the API, so that policies can select the cluster, its
-// namespaces and its workloads by it (asset.platformMetadata).
+// namespaces and its workloads by it (asset.platformMetadata), and annotates
+// each with the cloud account the cluster runs in (distro.Result.AssetAnnotations),
+// which a workload's own identity never names.
 func addDistroMetadata(conn shared.Connection, in *inventory.Inventory) {
 	if in == nil || in.Spec == nil || conn.Runtime() != "k8s-cluster" {
 		return
 	}
 	d := conn.Distro()
+	annotations := d.AssetAnnotations()
 	for _, a := range in.Spec.Assets {
-		if a == nil || a.Platform == nil {
+		if a == nil {
+			continue
+		}
+		a.AddAnnotations(annotations)
+		if a.Platform == nil {
 			continue
 		}
 		if a.Platform.Metadata == nil {

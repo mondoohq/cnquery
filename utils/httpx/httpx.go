@@ -77,6 +77,7 @@ func ClientForDownload() (*http.Client, error) {
 			IdleConnTimeout:       defaultIdleConnTimeout,
 			TLSHandshakeTimeout:   defaultTLSHandshakeTimeout,
 			ExpectContinueTimeout: 1 * time.Second,
+			ResponseHeaderTimeout: defaultHttpTimeout,
 		},
 	}
 	return retryClient.StandardClient(), nil

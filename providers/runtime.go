@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net"
@@ -579,6 +580,10 @@ func syncAssetMetadata(provider *ConnectedProvider, asset *inventory.Asset) {
 }
 
 func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (llx.Resource, error) {
+	return r.createResource(context.Background(), name, args)
+}
+
+func (r *Runtime) createResource(ctx context.Context, name string, args map[string]*llx.Primitive) (llx.Resource, error) {
 	provider, info, err := r.lookupResourceProvider(name)
 	if err != nil {
 		return nil, err
@@ -609,7 +614,7 @@ func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (l
 		Resource:   name,
 		Args:       args,
 	}
-	res, err := provider.Instance.Plugin.GetData(req)
+	res, err := plugin.GetDataContext(ctx, provider.Instance.Plugin, req)
 	if err != nil {
 		_, err = r.handlePluginError(err, provider, name, "")
 		return nil, err
@@ -640,6 +645,10 @@ func PrimitiveArgsToResultArgs(args map[string]*llx.Primitive) map[string]*llx.R
 }
 
 func (r *Runtime) CloneResource(src llx.Resource, id string, fields []string, args map[string]*llx.Primitive) (llx.Resource, error) {
+	return r.cloneResource(context.Background(), src, id, fields, args)
+}
+
+func (r *Runtime) cloneResource(ctx context.Context, src llx.Resource, id string, fields []string, args map[string]*llx.Primitive) (llx.Resource, error) {
 	name := src.MqlName()
 	srcID := src.MqlID()
 
@@ -654,7 +663,7 @@ func (r *Runtime) CloneResource(src llx.Resource, id string, fields []string, ar
 
 	for i := range fields {
 		field := fields[i]
-		data, err := provider.Instance.Plugin.GetData(&plugin.DataReq{
+		data, err := plugin.GetDataContext(ctx, provider.Instance.Plugin, &plugin.DataReq{
 			Connection: provider.Connection.Id,
 			Resource:   name,
 			ResourceId: srcID,
@@ -669,7 +678,7 @@ func (r *Runtime) CloneResource(src llx.Resource, id string, fields []string, ar
 
 	args["__id"] = llx.StringPrimitive(id)
 
-	_, err = provider.Instance.Plugin.StoreData(&plugin.StoreReq{
+	_, err = plugin.StoreDataContext(ctx, provider.Instance.Plugin, &plugin.StoreReq{
 		Connection: provider.Connection.Id,
 		Resources: []*plugin.ResourceData{{
 			Name:   name,
@@ -692,7 +701,11 @@ func (r *Runtime) Unregister(watcherUID string) error {
 
 // WatchAndUpdate a resource field and call the function if it changes with its current value
 func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID string, callback func(res any, err error)) error {
-	raw, err := r.watchAndUpdate(resource.MqlName(), resource.MqlID(), field, watcherUID)
+	return r.watchAndUpdateCallback(context.Background(), resource, field, watcherUID, callback)
+}
+
+func (r *Runtime) watchAndUpdateCallback(ctx context.Context, resource llx.Resource, field string, watcherUID string, callback func(res any, err error)) error {
+	raw, err := r.watchAndUpdateContext(ctx, resource.MqlName(), resource.MqlID(), field, watcherUID)
 	if raw != nil {
 		fieldErr := raw.Error
 		if fieldErr == nil && len(raw.CoverageGaps) != 0 {
@@ -711,6 +724,10 @@ func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID
 }
 
 func (r *Runtime) watchAndUpdate(resource string, resourceID string, field string, watcherUID string) (*llx.RawData, error) {
+	return r.watchAndUpdateContext(context.Background(), resource, resourceID, field, watcherUID)
+}
+
+func (r *Runtime) watchAndUpdateContext(ctx context.Context, resource string, resourceID string, field string, watcherUID string) (*llx.RawData, error) {
 	provider, info, fieldInfo, err := r.lookupFieldProvider(resource, field)
 	if err != nil {
 		return nil, err
@@ -726,7 +743,7 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 	if info.Provider != fieldInfo.Provider {
 		// technically we don't need to look up the resource provider, since
 		// it had to have been called beforehand to get here
-		_, err := provider.Instance.Plugin.StoreData(&plugin.StoreReq{
+		_, err := plugin.StoreDataContext(ctx, provider.Instance.Plugin, &plugin.StoreReq{
 			Connection: provider.Connection.Id,
 			Resources: []*plugin.ResourceData{{
 				Name: resource,
@@ -766,7 +783,7 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 		return raw, nil
 	}
 
-	data, err := provider.Instance.Plugin.GetData(req)
+	data, err := plugin.GetDataContext(ctx, provider.Instance.Plugin, req)
 	if err != nil {
 		// Recoverable errors can continue with the execution,
 		// they only store errors in the place of actual data.

@@ -237,6 +237,7 @@ func (o *mqlOciOke) clusters() ([]any, error) {
 type mqlOciOkeClusterInternal struct {
 	ociCompartmentRef
 	cluster                 ociRetryLazy[*containerengine.Cluster]
+	addonOptions            ociRetryLazy[map[string]containerengine.AddonOptionSummary]
 	cacheVcnID              string
 	cacheRegion             string
 	cacheServiceLbSubnetIDs []string

@@ -61,12 +61,13 @@ cassandra.cluster.security: {
 Find the superuser roles, including the default `cassandra` account that CIS recommends securing.
 
 ```shell
-mql> cassandra.cluster.roles.where(isSuperuser) { name canLogin hasPassword }
+mql> cassandra.cluster.roles.where(isSuperuser) { name canLogin hasPassword hasDefaultPassword }
 cassandra.cluster.roles.where: [
   0: {
     name: "cassandra"
     canLogin: true
     hasPassword: true
+    hasDefaultPassword: true
   }
 ]
 ```
@@ -112,5 +113,5 @@ If `cassandra.cluster.roles` comes back empty on an authenticated cluster, the c
 
 ## Notes
 
-- Password hashes are never exposed. Each role reports only whether it `hasPassword`, from the presence of its `salted_hash`.
+- Password hashes are never exposed. Each role reports whether it `hasPassword`, from the presence of its `salted_hash`, and whether it `hasDefaultPassword`: the provider compares that bcrypt hash with Cassandra's default password `cassandra` locally, so no login is attempted.
 - File-level CIS items (cassandra.yaml and keystore permissions, JMX configuration) are not reachable over CQL and are out of scope for this provider.

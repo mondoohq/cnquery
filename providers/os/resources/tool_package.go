@@ -187,15 +187,17 @@ func resolveToolPackage(runtime *plugin.Runtime, configPath string, spec toolPac
 	installed := configPresent(runtime, configPath, spec.configIsFile)
 	version := ""
 	if len(spec.vscodeExtensionIDs) > 0 {
-		if homes, err := targetUserHomes(runtime); err == nil {
-			dirs := make([]string, 0, len(homes))
-			for _, u := range homes {
-				dirs = append(dirs, u.home)
-			}
-			if v, ok := findVSCodeExtension(connectionAfs(runtime), dirs, spec.vscodeExtensionIDs); ok {
-				installed = true
-				version = v
-			}
+		homes, err := targetUserHomes(runtime)
+		if err != nil {
+			return nil, err
+		}
+		dirs := make([]string, 0, len(homes))
+		for _, u := range homes {
+			dirs = append(dirs, u.home)
+		}
+		if v, ok := findVSCodeExtension(connectionAfs(runtime), dirs, spec.vscodeExtensionIDs); ok {
+			installed = true
+			version = v
 		}
 	}
 	if installed && version == "" && spec.inferVersion != nil {

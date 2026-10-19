@@ -467,3 +467,29 @@ func TestJetBrainsProductInfoNoName(t *testing.T) {
 	_, ok := readJetBrainsProductInfo(afs, "/app")
 	assert.False(t, ok)
 }
+
+func TestJetBrainsPluginsKeepDistinctWindowsProfiles(t *testing.T) {
+	runtime, mem := vscodeProfileRuntime(t, map[string]string{
+		"S-1-5-21-1-2-3-1001": `C:\Users\alice`, "S-1-5-21-4-5-6-1001": `C:\Users\domain.user`,
+	})
+	for i, home := range []string{`C:\Users\alice`, `C:\Users\domain.user`} {
+		version := []string{"1.0.0", "2.0.0"}[i]
+		descriptor := `<idea-plugin><id>example.shared-plugin</id><name>Shared Plugin</name><version>` + version + `</version><vendor>Example</vendor></idea-plugin>`
+		writeMemFSFile(t, mem, filepath.Join(home, "AppData/Roaming/JetBrains/PyCharm2026.2/plugins/shared/META-INF/plugin.xml"), []byte(descriptor))
+	}
+	raw, err := CreateResource(runtime, "jetbrains", nil)
+	require.NoError(t, err)
+	plugins := raw.(*mqlJetbrains).GetPlugins()
+	require.NoError(t, plugins.Error)
+	require.Len(t, plugins.Data, 2, "the same plugin for uid -1 must not collapse across Windows profiles")
+	versions := []string{}
+	ids := map[string]bool{}
+	for _, entry := range plugins.Data {
+		plugin := entry.(*mqlJetbrainsPlugin)
+		versions = append(versions, plugin.GetVersion().Data)
+		assert.Equal(t, int64(-1), plugin.GetUid().Data)
+		ids[plugin.MqlID()] = true
+	}
+	assert.ElementsMatch(t, []string{"1.0.0", "2.0.0"}, versions)
+	assert.Len(t, ids, 2)
+}
