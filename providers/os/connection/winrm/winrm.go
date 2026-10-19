@@ -352,7 +352,7 @@ func (c *commandResponseConn) Read(p []byte) (int, error) {
 	budgetErr := c.budget.err
 	c.budget.mu.Unlock()
 	if budgetErr != nil {
-		_ = c.Conn.Close()
+		_ = c.Close()
 		return 0, budgetErr
 	}
 	return n, err
