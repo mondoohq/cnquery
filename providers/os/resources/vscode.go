@@ -5,8 +5,10 @@ package resources
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -100,21 +102,133 @@ func (c *mqlVscode) id() (string, error) {
 	return "vscode", nil
 }
 
+// vscodeUserHomePaths needs the profiles on disk, not account details. On
+// Windows, users.list also runs Get-LocalUser, which can block a scan before
+// it ever looks for extensions. ProfileList already contains the paths for
+// local, domain and Entra ID users, including users who are not logged in.
+func vscodeUserHomePaths(runtime *plugin.Runtime) ([]string, error) {
+	conn := runtime.Connection.(shared.Connection)
+	if asset := conn.Asset(); asset != nil && asset.Platform != nil && asset.Platform.IsFamily("windows") {
+		return vscodeWindowsProfilePaths(runtime)
+	}
+
+	users, err := targetUserHomes(runtime)
+	if err != nil {
+		return nil, err
+	}
+	homes := make([]string, 0, len(users))
+	for _, user := range users {
+		homes = append(homes, user.home)
+	}
+	return homes, nil
+}
+
+const vscodeProfileListPath = `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList`
+
+var windowsProfileEnvPattern = regexp.MustCompile(`%([^%]+)%`)
+
+func vscodeWindowsProfilePaths(runtime *plugin.Runtime) ([]string, error) {
+	root, err := CreateResource(runtime, "registrykey", map[string]*llx.RawData{
+		"path": llx.StringData(vscodeProfileListPath),
+	})
+	if err != nil {
+		return nil, err
+	}
+	children := root.(*mqlRegistrykey).GetChildren()
+	if children.Error != nil {
+		return nil, fmt.Errorf("cannot list Windows profiles: %w", children.Error)
+	}
+
+	seen := map[string]struct{}{}
+	var homes []string
+	for _, child := range children.Data {
+		sid, ok := child.(string)
+		if !ok {
+			return nil, fmt.Errorf("invalid Windows profile key: %T", child)
+		}
+		switch sid {
+		case "S-1-5-18", "S-1-5-19", "S-1-5-20":
+			continue
+		}
+		key, err := CreateResource(runtime, "registrykey", map[string]*llx.RawData{
+			"path": llx.StringData(vscodeProfileListPath + `\` + sid),
+		})
+		if err != nil {
+			return nil, err
+		}
+		items := key.(*mqlRegistrykey).GetItems()
+		if items.Error != nil {
+			return nil, fmt.Errorf("cannot read Windows profile %s: %w", sid, items.Error)
+		}
+		for _, item := range items.Data {
+			property := item.(*mqlRegistrykeyProperty)
+			if !strings.EqualFold(property.Name.Data, "ProfileImagePath") {
+				continue
+			}
+			value := property.GetValue()
+			if value.Error != nil {
+				return nil, fmt.Errorf("cannot read Windows profile path %s: %w", sid, value.Error)
+			}
+			home := value.Data
+			if windowsProfileEnvPattern.MatchString(home) {
+				// Expand against the target, which can be a remote Windows host.
+				// The scanner's own environment would point at the wrong machine.
+				osResource, err := CreateResource(runtime, "os.base", map[string]*llx.RawData{})
+				if err != nil {
+					return nil, err
+				}
+				env := osResource.(*mqlOsBase).GetEnv()
+				if env.Error != nil {
+					return nil, fmt.Errorf("cannot expand Windows profile path: %w", env.Error)
+				}
+				home, err = expandWindowsProfilePath(home, env.Data)
+				if err != nil {
+					return nil, err
+				}
+			}
+			home = strings.TrimRight(home, `\/`)
+			if !isRealUserHome(home) {
+				continue
+			}
+			normalized := strings.ToLower(strings.ReplaceAll(home, `\`, "/"))
+			if _, exists := seen[normalized]; !exists {
+				seen[normalized] = struct{}{}
+				homes = append(homes, home)
+			}
+		}
+	}
+	return homes, nil
+}
+
+func expandWindowsProfilePath(path string, env map[string]any) (string, error) {
+	var err error
+	expanded := windowsProfileEnvPattern.ReplaceAllStringFunc(path, func(variable string) string {
+		name := variable[1 : len(variable)-1]
+		for key, value := range env {
+			if strings.EqualFold(key, name) {
+				if text, ok := value.(string); ok && text != "" {
+					return text
+				}
+			}
+		}
+		err = fmt.Errorf("cannot expand Windows profile path %q: environment variable %s is unavailable", path, name)
+		return variable
+	})
+	return expanded, err
+}
+
 func (c *mqlVscode) paths() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(shared.Connection)
 	afs := &afero.Afero{Fs: conn.FileSystem()}
 
-	// Enumerate all users so extension paths are found for every account.
-	users, err := targetUserHomes(c.MqlRuntime)
+	homes, err := vscodeUserHomePaths(c.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
 
 	var paths []string
 
-	for _, u := range users {
-		homeDir := u.home
-
+	for _, homeDir := range homes {
 		for _, editor := range vsCodeEditors {
 			extensionsDir := filepath.Join(homeDir, editor.dir)
 			// Use DirExists which is more efficient than Exists for directories
@@ -139,8 +253,7 @@ func (c *mqlVscode) extensions() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(shared.Connection)
 	afs := &afero.Afero{Fs: conn.FileSystem()}
 
-	// Enumerate all users so extensions are discovered for every account.
-	users, err := targetUserHomes(c.MqlRuntime)
+	homes, err := vscodeUserHomePaths(c.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -148,9 +261,7 @@ func (c *mqlVscode) extensions() ([]any, error) {
 	var extensions []any
 	seen := make(map[string]bool)
 
-	for _, u := range users {
-		homeDir := u.home
-
+	for _, homeDir := range homes {
 		for _, editor := range vsCodeEditors {
 			extensionsDir := filepath.Join(homeDir, editor.dir)
 
