@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"maps"
 	"net/http"
 	"slices"
@@ -34,6 +33,7 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/vault"
 	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/utils/iox"
 )
 
 type AwsConnection struct {
@@ -535,7 +535,7 @@ func (h *AwsConnection) fallbackGetEnabledRegions(ctx context.Context) (regions 
 	log.Warn().Err(err).Msg("unable to list account regions")
 
 	// 2. Public regional table + region access verification
-	regionsFromTable, err := getRegionsFromRegionalTable()
+	regionsFromTable, err := fetchRegionsFromRegionalTable(ctx, regionalTableHTTPClient, "https://api.regional-table.region-services.aws.a2z.com/index.json")
 	if err != nil {
 		return
 	}
@@ -583,13 +583,26 @@ type regionalTable struct {
 //
 // NOTE: if we need to validate that we have access to that region or, that the region is
 // enabled, we can improve this function to do STS identity calls for all regions.
-func getRegionsFromRegionalTable() (regions []string, err error) {
-	resp, err := http.Get("https://api.regional-table.region-services.aws.a2z.com/index.json")
+var regionalTableHTTPClient = &http.Client{Timeout: 30 * time.Second}
+
+func getRegionsFromRegionalTable() ([]string, error) {
+	return fetchRegionsFromRegionalTable(context.Background(), regionalTableHTTPClient, "https://api.regional-table.region-services.aws.a2z.com/index.json")
+}
+
+func fetchRegionsFromRegionalTable(ctx context.Context, client *http.Client, endpoint string) (regions []string, err error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("regional table returned HTTP %d", resp.StatusCode)
+	}
+	body, err := iox.ReadAllLimit(resp.Body, 16<<20)
 	if err != nil {
 		return
 	}

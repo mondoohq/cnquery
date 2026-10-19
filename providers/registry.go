@@ -353,12 +353,17 @@ func (r *MondooProviderRegistry) DownloadProvider(ctx context.Context, name, ver
 		return nil, err
 	}
 
-	res, err := client.Get(downloadURL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, downloadURL, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create provider download request")
+	}
+	res, err := client.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to download "+name+"-"+version)
 	}
 
 	if res.StatusCode == http.StatusNotFound {
+		res.Body.Close()
 		return nil, errors.New("cannot find provider " + name + "-" + version + " under url " + downloadURL)
 	} else if res.StatusCode != http.StatusOK {
 		log.Debug().Str("url", downloadURL).Int("status", res.StatusCode).Msg("failed to download from URL (status code)")

@@ -5,7 +5,10 @@ package httpx
 
 import (
 	"bytes"
+	"github.com/hashicorp/go-retryablehttp"
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -198,4 +201,28 @@ func TestIdleTimeoutReader_ClosesBodyOnce(t *testing.T) {
 			assert.Equal(t, int32(1), body.closes.Load())
 		}
 	})
+}
+
+func TestClientForDownloadBoundsHeaders(t *testing.T) {
+	release := make(chan struct{})
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case <-release:
+		case <-r.Context().Done():
+		}
+	}))
+	defer srv.Close()
+	defer close(release)
+	client, err := ClientForDownload()
+	require.NoError(t, err)
+	retry := client.Transport.(*retryablehttp.RoundTripper).Client
+	tr := retry.HTTPClient.Transport.(*http.Transport)
+	require.Greater(t, tr.ResponseHeaderTimeout, time.Duration(0))
+	require.LessOrEqual(t, tr.ResponseHeaderTimeout, time.Minute)
+	require.Zero(t, retry.HTTPClient.Timeout, "active downloads must not have a total duration limit")
+	tr.ResponseHeaderTimeout = 20 * time.Millisecond
+	retry.RetryMax = 0
+	_, err = client.Get(srv.URL)
+	require.Error(t, err)
+	require.ErrorContains(t, err, "timeout awaiting response headers")
 }

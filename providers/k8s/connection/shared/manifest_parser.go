@@ -305,6 +305,17 @@ func MergeManifests(files []ManifestFile) []byte {
 	return buf.Bytes()
 }
 
+// RepositoryPath returns path as a user sees it in the repository cloned at
+// root: relative to root, with forward slashes. root itself and a path that is
+// not under root are returned as given.
+func RepositoryPath(root, path string) string {
+	rel, err := filepath.Rel(root, path)
+	if err != nil || rel == "." || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return path
+	}
+	return filepath.ToSlash(rel)
+}
+
 // LoadManifestFiles reads a manifest file, or every Kubernetes manifest in a
 // directory, keeping each file separate so a position within it can be
 // reported against the file it was read from.

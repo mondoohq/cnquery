@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"maps"
 	"os"
 	"path/filepath"
 	"testing"
@@ -20,12 +21,16 @@ import (
 
 const sourceContextFixture = "testdata/source-context"
 
-func manifestRuntime(t *testing.T, opt manifest.Option) *plugin.Runtime {
+// manifestRuntime connects to a manifest. Further connection options, such as
+// the URL of the repository a clone came from, are added to the asset.
+func manifestRuntime(t *testing.T, opt manifest.Option, options ...map[string]string) *plugin.Runtime {
 	t.Helper()
+	all := map[string]string{shared.OPTION_NAMESPACE: "default"}
+	for _, o := range options {
+		maps.Copy(all, o)
+	}
 	conn, err := manifest.NewConnection(0, &inventory.Asset{
-		Connections: []*inventory.Config{{
-			Options: map[string]string{shared.OPTION_NAMESPACE: "default"},
-		}},
+		Connections: []*inventory.Config{{Options: all}},
 	}, opt)
 	require.NoError(t, err)
 	runtime := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
@@ -79,4 +84,29 @@ func TestSourceContext_ManifestContent(t *testing.T) {
 	runtime := manifestRuntime(t, manifest.WithManifestContent(content))
 
 	assert.Nil(t, deploymentContext(t, runtime, "web-a"))
+}
+
+func TestSourceContext_GitClone(t *testing.T) {
+	// A repository is cloned into a temporary directory that is new on every
+	// scan, so an object declared there reports its path within the
+	// repository, not within the clone.
+	clone := t.TempDir()
+	dir := filepath.Join(clone, "deploy")
+	require.NoError(t, os.Mkdir(dir, 0o750))
+	for _, name := range []string{"a.yaml", "b.yaml"} {
+		data, err := os.ReadFile(filepath.Join(sourceContextFixture, name))
+		require.NoError(t, err)
+		require.NoError(t, os.WriteFile(filepath.Join(dir, name), data, 0o600))
+	}
+	runtime := manifestRuntime(t, manifest.WithManifestFile(clone), map[string]string{
+		shared.OPTION_MANIFEST: clone,
+		plugin.GitUrlOptionKey: "https://github.com/org/repo.git",
+	})
+
+	ctx := deploymentContext(t, runtime, "web-b")
+	require.NotNil(t, ctx)
+	assert.Equal(t, "deploy/b.yaml", ctx.Path.Data)
+	assert.Equal(t, llx.NewRange().AddLineRange(1, 17).String(), ctx.Range.Data.String())
+	// The excerpt is still found under the repository path.
+	assert.Contains(t, ctx.Content.Data, "17:            image: nginx:1.27")
 }

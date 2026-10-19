@@ -72,3 +72,22 @@ func TestRefusedIsForbidden(t *testing.T) {
 		t.Errorf("permission not named: %+v", le)
 	}
 }
+
+// Hashes Cassandra 5.0.9 wrote to system_auth.roles for the "cassandra" role:
+// the factory default on a new cluster, and after ALTER ROLE changed it.
+func TestIsDefaultPassword(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		hash string
+		want bool
+	}{
+		{"default", "$2a$10$V7jQpHoilVfIYHQ5YOUHpeAvfjfArxysI7Yf4lxiYFdtVQDkLkbG2", true},
+		{"changed", "$2a$10$2pRE5OctL.UDsR26s4R9EOWgNmvtpHJYQQiQh6CZOz.1pcgHwGG/i", false},
+		{"no password", "", false},
+		{"not a bcrypt hash", "cassandra", false},
+	} {
+		if got := isDefaultPassword(tc.hash); got != tc.want {
+			t.Errorf("%s: isDefaultPassword(%q) = %v, want %v", tc.name, tc.hash, got, tc.want)
+		}
+	}
+}
