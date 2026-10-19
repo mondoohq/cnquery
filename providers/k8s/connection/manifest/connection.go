@@ -141,9 +141,7 @@ func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Co
 		// file is reported by its path within the repository: the path a user
 		// can open, and the same one on the next scan.
 		for i, src := range c.sources {
-			if rel, err := filepath.Rel(c.manifestFile, src.Path); err == nil && rel != "." {
-				c.sources[i].Path = filepath.ToSlash(rel)
-			}
+			c.sources[i].Path = shared.RepositoryPath(c.manifestFile, src.Path)
 		}
 	}
 	c.ManifestParser, err = shared.NewManifestParser(manifest, c.namespace, "")
