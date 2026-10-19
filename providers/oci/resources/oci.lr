@@ -7898,6 +7898,13 @@ private oci.oke.cluster @defaults("name") {
   timeCredentialExpiration time
   // Node pools in the cluster
   nodePools() []oci.oke.nodePool
+  // Add-ons installed on the cluster
+  //
+  // Includes the essential add-ons OKE installs on every cluster, such as
+  // the cluster's CNI plugin (OciVcnIpNative or Flannel), CoreDNS and
+  // KubeProxy, each with the version that runs and the versions Oracle
+  // offers for the cluster's Kubernetes version.
+  addons() []oci.oke.addon
   // Creation time
   created time
   // Free-form tags for resource management
@@ -8035,6 +8042,55 @@ private oci.oke.nodeSizing @defaults("ocpus memoryInGBs") {
   ocpus float
   // Memory available to each node in the pool, in gigabytes
   memoryInGBs float
+}
+
+// Oracle Cloud Infrastructure (OCI) OKE cluster add-on
+//
+// Software OKE installs and updates on a cluster, such as its CNI plugin,
+// CoreDNS or kube-proxy. `currentInstalledVersion` is the version that runs;
+// `availableVersions` lists the versions Oracle offers for the cluster's
+// Kubernetes version, each with its status, so an add-on running a version
+// Oracle deprecated or recalled, or no longer offers for that Kubernetes
+// version, can be told from one on a supported version.
+private oci.oke.addon @defaults("name currentInstalledVersion state") {
+  // Add-on name, such as OciVcnIpNative, Flannel, CoreDNS or KubeProxy
+  name string
+  // Version the add-on is pinned to
+  //
+  // Empty when the add-on follows the versions Oracle releases for it.
+  version string
+  // Version installed on the cluster
+  currentInstalledVersion string
+  // Lifecycle state (CREATING, ACTIVE, DELETING, DELETED, UPDATING, NEEDS_ATTENTION, FAILED)
+  state string
+  // Error code the add-on reports
+  //
+  // Empty when the add-on reports no error.
+  errorCode string
+  // Error message the add-on reports
+  errorMessage string
+  // Creation time
+  created time
+  // Whether the add-on is essential, which OKE installs on every cluster
+  isEssential() bool
+  // Versions of the add-on Oracle offers for the cluster's Kubernetes version
+  //
+  // Every version whose Kubernetes version filters admit the cluster's
+  // Kubernetes version, deprecated and recalled ones included, each with its
+  // status.
+  availableVersions() []oci.oke.addonVersion
+}
+
+// Version of an OKE cluster add-on
+//
+// One version Oracle offers for an add-on, with its support status.
+private oci.oke.addonVersion @defaults("number status") {
+  // Version number, as currentInstalledVersion reports it
+  number string
+  // Support status (ACTIVE, DEPRECATED, PREVIEW, RECALLED)
+  status string
+  // Description of the version
+  description string
 }
 
 
