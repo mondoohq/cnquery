@@ -119,6 +119,7 @@ func (r *mqlCockroachdbRole) memberOf() ([]any, error) {
 		for _, row := range rows {
 			if row.name == r.Name.Data {
 				names = row.memberOf
+				break
 			}
 		}
 	}

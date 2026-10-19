@@ -62,6 +62,9 @@ func activeVersion(runtime *plugin.Runtime) (string, error) {
 	if err := rows.Err(); err != nil {
 		return "", err
 	}
+	if raw == nil {
+		return "", errors.New("crdb_internal.active_version() returned no rows")
+	}
 	return formatClusterVersion(raw)
 }
 
