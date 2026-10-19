@@ -45,6 +45,7 @@ package ssh
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
@@ -264,12 +265,13 @@ const sessionDetachStdin = "try { & { $ErrorActionPreference = 'Stop'; " +
 
 // psSession is one long-lived powershell.exe.
 type psSession struct {
-	session *ssh.Session
-	stdin   io.WriteCloser
-	stdout  *bufio.Reader
-	stderr  *bufio.Reader
-	id      string
-	seq     uint64
+	session  *ssh.Session
+	closeSSH func(*ssh.Session)
+	stdin    io.WriteCloser
+	stdout   *bufio.Reader
+	stderr   *bufio.Reader
+	id       string
+	seq      uint64
 }
 
 // sessionIO is what a session needs from its transport. *ssh.Session
@@ -300,6 +302,14 @@ func newPSSession(t sessionIO) (*psSession, error) {
 // run runs one script and returns its stdout, stderr and exit code. Any error
 // means the session can no longer be trusted.
 func (s *psSession) run(script sessionScript) ([]byte, []byte, int, error) {
+	output, err := shared.NewCommandOutput(nil)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	return s.runOutput(script, output)
+}
+
+func (s *psSession) runOutput(script sessionScript, output *shared.CommandOutput) ([]byte, []byte, int, error) {
 	s.seq++
 	m := newSessionMarkers(s.id, s.seq)
 	if _, err := io.WriteString(s.stdin, sessionFrame(m, s.id+"-"+strconv.FormatUint(s.seq, 10), script)+"\r\n"); err != nil {
@@ -311,14 +321,14 @@ func (s *psSession) run(script sessionScript) ([]byte, []byte, int, error) {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		stderr, errErr = readUntilLine(s.stderr, func(line []byte) bool { return string(line) == m.errEnd })
+		stderr, errErr = readUntilLineLimited(s.stderr, func(line []byte) bool { return string(line) == m.errEnd }, output)
 	}()
 
-	stdout, code, outErr := readFrame(s.stdout, m)
-	<-done
+	stdout, code, outErr := readFrameLimited(s.stdout, m, output)
 	if outErr != nil {
 		return nil, nil, 0, outErr
 	}
+	<-done
 	if errErr != nil {
 		return nil, nil, 0, errErr
 	}
@@ -328,8 +338,16 @@ func (s *psSession) run(script sessionScript) ([]byte, []byte, int, error) {
 // readFrame reads one command's stdout: everything after the start marker up
 // to the end marker, and the exit code from the end marker.
 func readFrame(r *bufio.Reader, m sessionMarkers) ([]byte, int, error) {
+	output, err := shared.NewCommandOutput(nil)
+	if err != nil {
+		return nil, 0, err
+	}
+	return readFrameLimited(r, m, output)
+}
+
+func readFrameLimited(r *bufio.Reader, m sessionMarkers, output *shared.CommandOutput) ([]byte, int, error) {
 	// anything before the start marker is not the command's
-	stray, err := readUntilLine(r, func(line []byte) bool { return string(line) == m.start })
+	stray, err := readUntilLineLimited(r, func(line []byte) bool { return string(line) == m.start }, output)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -338,7 +356,7 @@ func readFrame(r *bufio.Reader, m sessionMarkers) ([]byte, int, error) {
 	}
 
 	code := 0
-	out, err := readUntilLine(r, func(line []byte) bool {
+	out, err := readUntilLineLimited(r, func(line []byte) bool {
 		rest, ok := bytes.CutPrefix(line, []byte(m.endPrefix))
 		if !ok {
 			return false
@@ -353,7 +371,7 @@ func readFrame(r *bufio.Reader, m sessionMarkers) ([]byte, int, error) {
 		}
 		code = n
 		return true
-	})
+	}, output)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -363,9 +381,24 @@ func readFrame(r *bufio.Reader, m sessionMarkers) ([]byte, int, error) {
 // readUntilLine reads lines until isEnd matches one, and returns what came
 // before it.
 func readUntilLine(r *bufio.Reader, isEnd func(line []byte) bool) ([]byte, error) {
-	var buf []byte
+	output, err := shared.NewCommandOutput(nil)
+	if err != nil {
+		return nil, err
+	}
+	return readUntilLineLimited(r, isEnd, output)
+}
+
+func readUntilLineLimited(r *bufio.Reader, isEnd func(line []byte) bool, output *shared.CommandOutput) ([]byte, error) {
+	var buf, line []byte
 	for {
-		line, err := r.ReadBytes('\n')
+		chunk, err := r.ReadSlice('\n')
+		if err := output.Reserve(len(chunk)); err != nil {
+			return nil, err
+		}
+		line = append(line, chunk...)
+		if err == bufio.ErrBufferFull {
+			continue
+		}
 		if err != nil {
 			if err == io.EOF {
 				err = io.ErrUnexpectedEOF
@@ -376,6 +409,7 @@ func readUntilLine(r *bufio.Reader, isEnd func(line []byte) bool) ([]byte, error
 			return buf, nil
 		}
 		buf = append(buf, line...)
+		line = line[:0]
 	}
 }
 
@@ -386,11 +420,16 @@ func trimInsertedCRLF(b []byte) []byte {
 }
 
 func (s *psSession) close() {
-	if s.stdin != nil {
-		s.stdin.Close()
-	}
 	if s.session != nil {
-		s.session.Close()
+		if s.closeSSH != nil {
+			s.closeSSH(s.session)
+		} else {
+			_ = s.session.Close()
+		}
+		return
+	}
+	if s.stdin != nil {
+		_ = s.stdin.Close()
 	}
 }
 
@@ -401,10 +440,18 @@ type psSessionPool struct {
 	failures int
 	disabled bool
 	// open starts a session; tests replace it
-	open func() (*psSession, error)
+	open        func() (*psSession, error)
+	openContext func(context.Context) (*psSession, error)
 }
 
 func (p *psSessionPool) get() (*psSession, error) {
+	return p.getContext(context.Background())
+}
+
+func (p *psSessionPool) getContext(ctx context.Context) (*psSession, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	p.mu.Lock()
 	if p.disabled {
 		p.mu.Unlock()
@@ -418,7 +465,13 @@ func (p *psSessionPool) get() (*psSession, error) {
 	}
 	p.mu.Unlock()
 
-	s, err := p.open()
+	var s *psSession
+	var err error
+	if p.openContext != nil {
+		s, err = p.openContext(ctx)
+	} else {
+		s, err = p.open()
+	}
 	if err != nil {
 		p.fail(err)
 		return nil, err
@@ -463,10 +516,14 @@ func (p *psSessionPool) closeAll() {
 
 // openPSSession starts a session over the connection's SSH client.
 func (c *Connection) openPSSession() (*psSession, error) {
+	return c.openPSSessionContext(context.Background())
+}
+
+func (c *Connection) openPSSessionContext(ctx context.Context) (*psSession, error) {
 	if c.SSHClient == nil {
 		return nil, errors.New("SSH session not established")
 	}
-	sess, err := c.SSHClient.NewSession()
+	sess, err := c.newSessionContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -485,16 +542,37 @@ func (c *Connection) openPSSession() (*psSession, error) {
 		sess.Close()
 		return nil, err
 	}
-	if err := sess.Start(sessionCommand); err != nil {
-		sess.Close()
-		return nil, err
+	type result struct {
+		session *psSession
+		err     error
 	}
-	s, err := newPSSession(sessionIO{stdin: stdin, stdout: stdout, stderr: stderr})
-	if err != nil {
-		sess.Close()
-		return nil, err
+	done := make(chan result, 1)
+	go func() {
+		if err := sess.Start(sessionCommand); err != nil {
+			done <- result{err: err}
+			return
+		}
+		s, err := newPSSession(sessionIO{stdin: stdin, stdout: stdout, stderr: stderr})
+		done <- result{s, err}
+	}()
+	var s *psSession
+	select {
+	case result := <-done:
+		s, err = result.session, result.err
+		if ctx.Err() != nil {
+			c.closeSession(sess)
+			return nil, ctx.Err()
+		}
+		if err != nil {
+			c.closeSession(sess)
+			return nil, err
+		}
+	case <-ctx.Done():
+		c.closeSession(sess)
+		return nil, ctx.Err()
 	}
 	s.session = sess
+	s.closeSSH = c.closeSession
 	log.Debug().Str("session", s.id).Msg("ssh> started a persistent PowerShell session")
 	return s, nil
 }
@@ -506,9 +584,10 @@ func (c *Connection) sessions() *psSessionPool {
 		if !persistentShellEnabled() {
 			return
 		}
-		c.sessionPool = &psSessionPool{open: c.openPSSession}
+		c.sessionPool = &psSessionPool{open: c.openPSSession, openContext: c.openPSSessionContext}
 		if c.openSession != nil {
 			c.sessionPool.open = c.openSession
+			c.sessionPool.openContext = nil
 		}
 	})
 	return c.sessionPool
@@ -538,17 +617,36 @@ func (c *Connection) sessionScriptFor(command string) (sessionScript, bool) {
 // PowerShell, any command that does not start PowerShell itself. ok is false
 // when it did not, and the caller runs the command as a process.
 func (c *Connection) runInSession(command string) (*shared.Command, bool) {
+	res, ok, _ := c.runInSessionContext(context.Background(), command)
+	return res, ok
+}
+
+func (c *Connection) runInSessionContext(parent context.Context, command string) (*shared.Command, bool, error) {
+	ctx, cancel := context.WithCancel(parent)
+	defer cancel()
+	output, err := shared.NewCommandOutput(cancel)
+	if err != nil {
+		return nil, true, err
+	}
 	pool := c.sessions()
 	if pool == nil {
-		return nil, false
+		return nil, false, nil
+	}
+	if startsPowershell(command) {
+		if _, err := c.remoteShellContext(ctx); err != nil {
+			return nil, true, err
+		}
 	}
 	script, ok := c.sessionScriptFor(command)
 	if !ok {
-		return nil, false
+		return nil, false, nil
 	}
-	s, err := pool.get()
+	s, err := pool.getContext(ctx)
 	if err != nil {
-		return nil, false
+		if ctx.Err() != nil {
+			return nil, true, ctx.Err()
+		}
+		return nil, false, nil
 	}
 
 	// Logged like a command that runs as its own process (runRawCommand), so
@@ -556,14 +654,39 @@ func (c *Connection) runInSession(command string) (*shared.Command, bool) {
 	// way it ran.
 	log.Debug().Str("command", command).Str("provider", "ssh").Str("session", s.id).Msg("run command")
 	start := time.Now()
-	stdout, stderr, code, err := s.run(script)
+	type result struct {
+		stdout, stderr []byte
+		code           int
+		err            error
+	}
+	done := make(chan result, 1)
+	go func() { out, stderr, code, err := s.runOutput(script, output); done <- result{out, stderr, code, err} }()
+	var reply result
+	select {
+	case reply = <-done:
+	case <-ctx.Done():
+		s.close()
+		if err := output.Error(); err != nil {
+			return nil, true, err
+		}
+		return nil, true, ctx.Err()
+	}
+	stdout, stderr, code, err := reply.stdout, reply.stderr, reply.code, reply.err
+	if output.Error() != nil {
+		s.close()
+		return nil, true, output.Error()
+	}
+	if ctx.Err() != nil {
+		s.close()
+		return nil, true, ctx.Err()
+	}
 	if err != nil {
 		s.close()
 		pool.fail(fmt.Errorf("session %s: %w", s.id, err))
 		// The script may have run in part before the session broke. Scan
 		// scripts only read, so it runs again, from the start, as a process.
 		log.Debug().Str("session", s.id).Msg("ssh> running the command again as its own process")
-		return nil, false
+		return nil, false, nil
 	}
 	pool.put(s)
 
@@ -573,5 +696,5 @@ func (c *Connection) runInSession(command string) (*shared.Command, bool) {
 		Stderr:     bytes.NewBuffer(stderr),
 		ExitStatus: code,
 		Stats:      shared.PerfStats{Start: start, Duration: time.Since(start)},
-	}, true
+	}, true, nil
 }

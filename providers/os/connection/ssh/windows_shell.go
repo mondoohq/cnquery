@@ -4,6 +4,7 @@
 package ssh
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/binary"
 	"io"
@@ -93,11 +94,25 @@ func parseShellProbe(stdout string) remoteShell {
 // (verify). Anywhere else it runs on the first PowerShell command only, so a
 // Unix target, which never gets one, never pays for it.
 func (c *Connection) remoteShell() remoteShell {
-	c.shellOnce.Do(func() {
-		res, err := c.runRaw(shellProbe)
-		c.detectShell(res, err)
-	})
-	return c.shell
+	shell, _ := c.remoteShellContext(context.Background())
+	return shell
+}
+
+func (c *Connection) remoteShellContext(ctx context.Context) (remoteShell, error) {
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		c.shellOnce.Do(func() {
+			res, err := c.runRawContext(ctx, shellProbe)
+			c.detectShell(res, err)
+		})
+	}()
+	select {
+	case <-done:
+		return c.shell, nil
+	case <-ctx.Done():
+		return shellUnknown, ctx.Err()
+	}
 }
 
 // detectShell reads the result of shellProbe. Call it inside shellOnce.
@@ -145,10 +160,17 @@ func (c *Connection) verifyWindows() (*shared.Command, error) {
 
 // runRaw runs a command exactly as given. Tests replace it.
 func (c *Connection) runRaw(command string) (*shared.Command, error) {
+	return c.runRawContext(context.Background(), command)
+}
+
+func (c *Connection) runRawContext(ctx context.Context, command string) (*shared.Command, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if c.rawRunner != nil {
 		return c.rawRunner(command)
 	}
-	return c.runRawCommand(command)
+	return c.runRawCommandContext(ctx, command)
 }
 
 // directPowershell turns a command built by powershell.Encode into one that
@@ -229,11 +251,22 @@ var directExitCheckUTF16 = func() []byte {
 // that is not rewritten: err is the command failing to run, and res may be
 // nil with it.
 func (c *Connection) runPowershellDirect(command string) (*shared.Command, bool, error) {
+	return c.runPowershellDirectContext(context.Background(), command)
+}
+
+func (c *Connection) runPowershellDirectContext(ctx context.Context, command string) (*shared.Command, bool, error) {
 	direct, ok := directPowershell(command)
-	if !ok || c.remoteShell() != shellWindowsPowerShell {
+	if !ok {
 		return nil, false, nil
 	}
-	res, err := c.runRaw(direct)
+	shell, err := c.remoteShellContext(ctx)
+	if err != nil {
+		return nil, true, err
+	}
+	if shell != shellWindowsPowerShell {
+		return nil, false, nil
+	}
+	res, err := c.runRawContext(ctx, direct)
 	if res != nil {
 		// the command is what the caller asked for, not how it traveled
 		res.Command = command

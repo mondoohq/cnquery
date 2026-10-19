@@ -4,6 +4,9 @@
 package winrm
 
 import (
+	"context"
+	"errors"
+	"github.com/masterzen/winrm"
 	"testing"
 	"unicode/utf16"
 
@@ -84,20 +87,15 @@ func TestMaxCommandLengthLeavesRoomForCmdExe(t *testing.T) {
 	assert.Equal(t, 8160, maxCommandLength)
 }
 
-// The boundary case. A command exactly at the limit is allowed through, which
-// here means it reaches the nil client and panics - that panic is the
-// observation: the guard is not what stopped it. An off-by-one in the
-// comparison would return an error instead and fail this.
+// A command at exactly the limit must reach client creation. An off-by-one
+// guard would return a command-length error before the sentinel transport error.
 func TestRunCommandAllowsCommandAtTheLimit(t *testing.T) {
-	defer func() {
-		assert.NotNil(t, recover(),
-			"a command at exactly the limit must pass the guard and reach the client")
-	}()
-
-	conn := &Connection{}
-	_, _ = conn.RunCommand(strings.Repeat("a", maxCommandLength))
-
-	t.Fatal("expected to reach the client rather than return from the guard")
+	want := errors.New("client creation reached")
+	conn := &Connection{clientFactory: func(context.Context) (*winrm.Client, func(), error) {
+		return nil, nil, want
+	}}
+	_, err := conn.RunCommand(strings.Repeat("a", maxCommandLength))
+	require.ErrorIs(t, err, want)
 }
 
 // The limit is measured in UTF-16 code units, which is what Windows counts.

@@ -5,6 +5,7 @@ package ssh
 
 import (
 	"bufio"
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -13,9 +14,11 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/resources/powershell"
 	"golang.org/x/text/encoding/unicode"
 )
@@ -406,4 +409,80 @@ func directCommand(t *testing.T, cmd string) string {
 	d, ok := directPowershell(cmd)
 	require.True(t, ok)
 	return d
+}
+
+func TestPersistentSessionCancellationDoesNotReplay(t *testing.T) {
+	raw := &fakeRunner{shell: "%OS%\r\nDesktop\r\n"}
+	release := make(chan struct{})
+	defer close(release)
+	conn, _ := sessionConnection(t, raw, func(string) fakeReply { <-release; return fakeReply{stdout: "late"} })
+	ctx, cancel := context.WithTimeout(context.Background(), 75*time.Millisecond)
+	defer cancel()
+	_, err := conn.RunCommandContext(ctx, powershell.Encode("Start-Sleep -Seconds 20"))
+	assert.ErrorIs(t, err, context.DeadlineExceeded)
+	assert.Equal(t, []string{shellProbe}, raw.sent, "cancelled command must not fall back to a fresh unbounded process")
+}
+func TestPersistentFrameOutputLimit(t *testing.T) {
+	t.Setenv("MONDOO_COMMAND_OUTPUT_LIMIT", "128")
+	_, err := readUntilLine(bufio.NewReaderSize(strings.NewReader(strings.Repeat("x", 4096)), 32), func([]byte) bool { return false })
+	assert.ErrorIs(t, err, shared.ErrCommandOutputLimit, "a line without a newline must be capped before ReadBytes could allocate it")
+}
+func TestPersistentSessionOutputLimitDoesNotReplay(t *testing.T) {
+	t.Setenv("MONDOO_COMMAND_OUTPUT_LIMIT", "512")
+	raw := &fakeRunner{shell: "%OS%\r\nDesktop\r\n"}
+	conn, _ := sessionConnection(t, raw, func(string) fakeReply { return fakeReply{stdout: strings.Repeat("x", 4096)} })
+	_, err := conn.RunCommand(powershell.Encode("Get-Date"))
+	assert.ErrorIs(t, err, shared.ErrCommandOutputLimit)
+	assert.Equal(t, []string{shellProbe}, raw.sent)
+}
+
+func TestPersistentSessionStdoutFailureClosesStderrBeforeFallback(t *testing.T) {
+	t.Setenv(persistentShellEnv, "1")
+	raw := &fakeRunner{shell: "%OS%\r\nDesktop\r\n"}
+	conn := newFakeConnection(raw)
+	peerStopped := make(chan struct{})
+	conn.openSession = func() (*psSession, error) {
+		stdinR, stdinW := io.Pipe()
+		stdoutR, stdoutW := io.Pipe()
+		stderrR, stderrW := io.Pipe()
+		t.Cleanup(func() {
+			stdinR.Close()
+			stdinW.Close()
+			stdoutR.Close()
+			stdoutW.Close()
+			stderrR.Close()
+			stderrW.Close()
+		})
+		go func() {
+			defer close(peerStopped)
+			defer stderrW.Close()
+			defer stdoutW.Close()
+			defer stdinR.Close()
+			reader := bufio.NewReader(stdinR)
+			// Consume setup and the command, then fail stdout while stderr stays
+			// open. It closes only when the caller disposes the broken session.
+			if _, err := reader.ReadString('\n'); err != nil {
+				return
+			}
+			if _, err := reader.ReadString('\n'); err != nil {
+				return
+			}
+			stdoutW.Close()
+			_, _ = io.Copy(io.Discard, reader)
+		}()
+		return newPSSession(sessionIO{stdin: stdinW, stdout: stdoutR, stderr: stderrR})
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	result, err := conn.RunCommandContext(ctx, powershell.Encode("Get-Date"))
+	require.NoError(t, err, "stdout failure must return before waiting for stderr, allowing session closure and fallback")
+	out, err := io.ReadAll(result.Stdout)
+	require.NoError(t, err)
+	assert.Equal(t, "ran", string(out))
+	select {
+	case <-peerStopped:
+	case <-time.After(time.Second):
+		t.Fatal("stderr producer leaked after the broken session was closed")
+	}
+	assert.Len(t, raw.sent, 2, "the shell probe and one standalone fallback should run")
 }

@@ -4,7 +4,8 @@
 package local
 
 import (
-	"bytes"
+	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"runtime"
@@ -127,6 +128,10 @@ func (p *LocalConnection) Capabilities() shared.Capabilities {
 }
 
 func (p *LocalConnection) RunCommand(command string) (*shared.Command, error) {
+	return p.RunCommandContext(context.Background(), command)
+}
+
+func (p *LocalConnection) RunCommandContext(ctx context.Context, command string) (*shared.Command, error) {
 	if p.Sudo != nil {
 		command = shared.BuildSudoCommand(p.Sudo, command)
 	}
@@ -134,8 +139,10 @@ func (p *LocalConnection) RunCommand(command string) (*shared.Command, error) {
 	c := &CommandRunner{Shell: p.shell}
 	args := []string{}
 
-	res, err := c.Exec(command, args)
-	powershell.DecodeStderr(res)
+	res, err := c.ExecContext(ctx, command, args)
+	if err == nil {
+		powershell.DecodeStderr(res)
+	}
 	return res, err
 }
 
@@ -222,6 +229,15 @@ type CommandRunner struct {
 }
 
 func (c *CommandRunner) Exec(usercmd string, args []string) (*shared.Command, error) {
+	return c.ExecContext(context.Background(), usercmd, args)
+}
+
+func (c *CommandRunner) ExecContext(parent context.Context, usercmd string, args []string) (*shared.Command, error) {
+	ctx, cancel, err := shared.CommandContext(parent)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
 	c.Stats.Start = time.Now()
 
 	var cmd string
@@ -247,20 +263,46 @@ func (c *CommandRunner) Exec(usercmd string, args []string) (*shared.Command, er
 
 	// this only stores the user command, not the shell
 	c.Command.Command = usercmd + " " + strings.Join(args, " ")
-	c.cmdExecutor = exec.Command(cmd, cmdArgs...)
+	c.cmdExecutor = exec.CommandContext(ctx, cmd, cmdArgs...)
+	// A command's descendants may keep inherited output pipes open after its
+	// main process exits. Bound that drain as well as the process itself.
+	c.cmdExecutor.WaitDelay = time.Second
+	process, err := newCommandProcess(c.cmdExecutor)
+	if err != nil {
+		return nil, err
+	}
+	defer process.close()
 
-	var stdoutBuffer bytes.Buffer
-	var stderrBuffer bytes.Buffer
-
-	// create buffered stream
-	c.Stdout = &stdoutBuffer
-	c.Stderr = &stderrBuffer
+	output, err := shared.NewCommandOutput(cancel)
+	if err != nil {
+		return nil, err
+	}
+	c.Stdout = output.Stdout
+	c.Stderr = output.Stderr
 
 	c.cmdExecutor.Stdout = c.Stdout
 	c.cmdExecutor.Stderr = c.Stderr
 
-	err := c.cmdExecutor.Run()
+	err = c.cmdExecutor.Start()
+	if err == nil {
+		if err = process.started(); err != nil {
+			_ = c.cmdExecutor.Process.Kill()
+			_ = c.cmdExecutor.Wait()
+		} else {
+			err = c.cmdExecutor.Wait()
+		}
+	}
 	c.Stats.Duration = time.Since(c.Stats.Start)
+
+	if err := output.Error(); err != nil {
+		return &c.Command, err
+	}
+	if ctx.Err() != nil {
+		return &c.Command, ctx.Err()
+	}
+	if errors.Is(err, exec.ErrWaitDelay) {
+		return &c.Command, err
+	}
 
 	// command completed successfully, great :-)
 	if err == nil {

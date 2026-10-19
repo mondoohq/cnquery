@@ -106,13 +106,12 @@ func DecodeStderr(cmd *shared.Command) {
 	if cmd == nil {
 		return
 	}
-	buf, ok := cmd.Stderr.(*bytes.Buffer)
+	buf, ok := cmd.Stderr.(interface{ Bytes() []byte })
 	if !ok || !IsCLIXML(buf.Bytes()) {
 		return
 	}
 	decoded := DecodeCLIXML(buf.Bytes())
-	buf.Reset()
-	buf.Write(decoded)
+	cmd.Stderr = bytes.NewBuffer(decoded)
 }
 
 // stripHeaders removes CLIXML header lines from text that sits between

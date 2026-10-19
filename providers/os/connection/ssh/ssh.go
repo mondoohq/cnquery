@@ -4,7 +4,6 @@
 package ssh
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -166,6 +165,15 @@ func (p *Connection) Capabilities() shared.Capabilities {
 }
 
 func (c *Connection) RunCommand(command string) (*shared.Command, error) {
+	return c.RunCommandContext(context.Background(), command)
+}
+
+func (c *Connection) RunCommandContext(parent context.Context, command string) (*shared.Command, error) {
+	ctx, cancel, err := shared.CommandContext(parent)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
 	sudo := c.Sudo != nil && c.Sudo.Active
 	if sudo {
 		command = shared.BuildSudoCommand(c.Sudo, command)
@@ -173,62 +181,101 @@ func (c *Connection) RunCommand(command string) (*shared.Command, error) {
 	// Every path takes a slot. A sudo command does not start with
 	// powershell, so it never probes the shell; it is limited once another
 	// command has found the target to be Windows.
-	release := c.acquireCommandSlot(command)
+	release, err := c.acquireCommandSlotContext(ctx, command)
+	if err != nil {
+		return nil, err
+	}
 	defer release()
 	if !sudo {
-		if res, ok := c.runInSession(command); ok {
-			powershell.DecodeStderr(res)
-			return res, nil
+		if res, ok, err := c.runInSessionContext(ctx, command); ok {
+			if err == nil {
+				powershell.DecodeStderr(res)
+			}
+			return res, err
 		}
-		if res, ok, err := c.runPowershellDirect(command); ok {
-			powershell.DecodeStderr(res)
+		if res, ok, err := c.runPowershellDirectContext(ctx, command); ok {
+			if err == nil {
+				powershell.DecodeStderr(res)
+			}
 			return res, err
 		}
 	}
-	res, err := c.runRaw(command)
-	powershell.DecodeStderr(res)
+	res, err := c.runRawContext(ctx, command)
+	if err == nil {
+		powershell.DecodeStderr(res)
+	}
 	return res, err
 }
 
 func (c *Connection) runRawCommand(command string) (*shared.Command, error) {
+	return c.runRawCommandContext(context.Background(), command)
+}
+
+func (c *Connection) runRawCommandContext(parent context.Context, command string) (*shared.Command, error) {
+	// Raw probes and connection verification also enter with Background, so
+	// this guard is required even when RunCommandContext already bounded it.
+	ctx, cancel, err := shared.CommandContext(parent)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
 	log.Debug().Str("command", command).Str("provider", "ssh").Msg("run command")
 
 	if c.SSHClient == nil {
 		return nil, errors.New("SSH session not established")
 	}
 
+	output, err := shared.NewCommandOutput(cancel)
+	if err != nil {
+		return nil, err
+	}
 	res := shared.Command{
 		Command: command,
 		Stats: shared.PerfStats{
 			Start: time.Now(),
 		},
-		Stdout: &bytes.Buffer{},
-		Stderr: &bytes.Buffer{},
+		Stdout: output.Stdout,
+		Stderr: output.Stderr,
 	}
 	defer func() {
 		res.Stats.Duration = time.Since(res.Stats.Start)
 	}()
 
-	session, err := c.SSHClient.NewSession()
-	if err != nil {
-		log.Debug().Msg("could not open new session, try to re-establish connection")
-
+	session, err := c.newSessionContext(ctx)
+	if err != nil && ctx.Err() == nil {
+		// Preserve reconnection without giving it a fresh command budget.
+		_ = c.SSHClient.Close()
 		c.Close()
-		if err = c.Connect(); err != nil {
-			return nil, multierr.Wrap(err, "failed to open SSH session (reconnect failed)")
-		}
-
-		session, err = c.SSHClient.NewSession()
-		if err != nil {
+		if err = c.ConnectContext(ctx); err != nil {
 			return nil, err
 		}
+		session, err = c.newSessionContext(ctx)
 	}
-	defer session.Close()
+	if err != nil {
+		return nil, err
+	}
+	defer c.closeSession(session)
 
 	// start ssh call
 	session.Stdout = res.Stdout
 	session.Stderr = res.Stderr
-	err = session.Run(res.Command)
+	done := make(chan error, 1)
+	go func() { done <- session.Run(res.Command) }()
+	select {
+	case err = <-done:
+	case <-ctx.Done():
+		c.closeSession(session)
+		if err := output.Error(); err != nil {
+			return nil, err
+		}
+		return nil, ctx.Err()
+	}
+	if err := output.Error(); err != nil {
+		return &res, err
+	}
+	if ctx.Err() != nil {
+		return &res, ctx.Err()
+	}
 	if err == nil {
 		return &res, nil
 	}
@@ -243,6 +290,60 @@ func (c *Connection) runRawCommand(command string) (*shared.Command, error) {
 
 	// all other errors are real errors and not expected
 	return &res, err
+}
+
+// newSessionContext also bounds waiting for the server to acknowledge a new
+// SSH channel. Closing the transport is required when no channel exists yet.
+func (c *Connection) newSessionContext(ctx context.Context) (*ssh.Session, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	client := c.SSHClient
+	if client == nil {
+		return nil, errors.New("SSH session not established")
+	}
+	type result struct {
+		session *ssh.Session
+		err     error
+	}
+	done := make(chan result, 1)
+	go func() {
+		session, err := client.NewSession()
+		if ctx.Err() != nil && session != nil {
+			_ = session.Close()
+		}
+		done <- result{session, err}
+	}()
+	select {
+	case result := <-done:
+		if ctx.Err() != nil {
+			c.closeSession(result.session)
+			return nil, ctx.Err()
+		}
+		return result.session, result.err
+	case <-ctx.Done():
+		_ = client.Close()
+		return nil, ctx.Err()
+	}
+}
+
+// A stalled peer can also stop reading channel-close messages. Escalate to
+// closing the transport rather than letting cancellation itself block.
+// Session.Close sends a channel-close message without waiting for a remote
+// reply; this grace bounds a blocked local transport write, not a network RTT.
+func (c *Connection) closeSession(session *ssh.Session) {
+	if session == nil {
+		return
+	}
+	done := make(chan struct{})
+	go func() { _ = session.Close(); close(done) }()
+	select {
+	case <-done:
+	case <-time.After(100 * time.Millisecond):
+		if c.SSHClient != nil {
+			_ = c.SSHClient.Close()
+		}
+	}
 }
 
 func (c *Connection) FileSystem() afero.Fs {
