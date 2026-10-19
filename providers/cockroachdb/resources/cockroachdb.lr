@@ -58,6 +58,10 @@ cockroachdb.cluster @defaults("id version") {
   // Roles and users
   roles() []cockroachdb.role
   // Databases
+  //
+  // CockroachDB lists only the databases the connecting user has a privilege
+  // on, and only their tables and grants the user may see, without an error
+  // for the rest. Connect as a member of the admin role to read them all.
   databases() []cockroachdb.database
   // Nodes in the cluster
   nodes() []cockroachdb.node

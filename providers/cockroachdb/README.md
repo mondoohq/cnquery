@@ -10,7 +10,8 @@ What the connecting user can read decides what the provider can report:
 
 | Reads | Needs |
 | --- | --- |
-| cluster id and version, roles, memberships, administrator status, databases, tables, privileges | nothing beyond `CONNECT` |
+| cluster id and version, roles, memberships, administrator status | nothing |
+| databases, tables, privileges | a privilege on each database; without the `admin` role, CockroachDB leaves out what the user may not see, without an error |
 | cluster settings and host-based authentication rules | `VIEWCLUSTERSETTING` |
 | insecure mode, nodes, certificates, stores | `VIEWCLUSTERMETADATA` |
 | role options, password storage, role session defaults, backup schedules | the `admin` role |
@@ -22,7 +23,7 @@ CREATE USER auditor;
 GRANT SYSTEM VIEWCLUSTERSETTING, VIEWCLUSTERMETADATA TO auditor;
 ```
 
-A field the user may not read reports an access-denied error naming the privilege, never an empty answer.
+A field the user may not read reports an access-denied error naming the privilege, never an empty answer. Databases, tables, and privileges are the exception: CockroachDB itself filters them to what the user may see, so audit them as a member of the `admin` role.
 
 ## Authentication
 
