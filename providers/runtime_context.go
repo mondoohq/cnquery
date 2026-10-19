@@ -21,15 +21,15 @@ type contextRuntime struct {
 }
 
 func (r *contextRuntime) CreateResource(name string, args map[string]*llx.Primitive) (llx.Resource, error) {
-	return r.Runtime.createResource(r.ctx, name, args)
+	return r.createResource(r.ctx, name, args)
 }
 
 func (r *contextRuntime) CloneResource(src llx.Resource, id string, fields []string, args map[string]*llx.Primitive) (llx.Resource, error) {
-	return r.Runtime.cloneResource(r.ctx, src, id, fields, args)
+	return r.cloneResource(r.ctx, src, id, fields, args)
 }
 
 func (r *contextRuntime) WatchAndUpdate(resource llx.Resource, field, watcherUID string, callback func(any, error)) error {
-	return r.Runtime.watchAndUpdateCallback(r.ctx, resource, field, watcherUID, callback)
+	return r.watchAndUpdateCallback(r.ctx, resource, field, watcherUID, callback)
 }
 
 func (r *contextRuntime) ResolveAssetRoot(v *llx.AssetValue, root string) (llx.Resource, error) {
