@@ -29,3 +29,12 @@ Cancellation and budget checks run between filesystem operations. A single
 kernel-blocked `Stat` or `ReadDir` cannot be interrupted through `io/fs`; a
 directory backend can also allocate its listing before the entry budget is
 checked.
+
+## SSH connection timeout
+
+SSH banner probing, TCP connection establishment, the handshake and authentication
+share a 30-second timeout. Set the `ssh_connect_timeout` inventory connection option
+or `MONDOO_SSH_CONNECT_TIMEOUT` environment variable to a positive Go duration such
+as `60s` to allow slower connections. The inventory option takes precedence. The
+banner probe also has a five-second limit. The startup deadline is cleared after
+authentication so it does not expire a healthy scan connection.
