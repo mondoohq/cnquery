@@ -200,6 +200,46 @@ func TestGetCtyValue_JsonencodeMap(t *testing.T) {
 	assert.Equal(t, "Allow", elem["Effect"])
 }
 
+// TestGetCtyValue_JsonencodeWithReference verifies that a jsonencode()
+// argument that references another resource still surfaces its document: the
+// call cannot be evaluated statically, and the argument used to come back empty.
+func TestGetCtyValue_JsonencodeWithReference(t *testing.T) {
+	attrs := parseAttrs(t, `configuration = jsonencode({
+  EncryptionConfiguration = {
+    EnableAtRestEncryption = true
+    AwsKmsKey              = aws_kms_key.k.arn
+  }
+})`)
+	got, err := hclResolvedAttributesToDict(attrs, nil)
+	require.NoError(t, err)
+
+	list, ok := got["configuration"].([]any)
+	require.True(t, ok, "expected a list-wrapped map, got: %#v", got["configuration"])
+	require.Len(t, list, 1)
+	elem, ok := list[0].(map[string]any)
+	require.True(t, ok, "expected a map element, got: %#v", list[0])
+	enc, ok := elem["EncryptionConfiguration"].(map[string]any)
+	require.True(t, ok, "expected the nested object, got: %#v", elem["EncryptionConfiguration"])
+	assert.Equal(t, true, enc["EnableAtRestEncryption"])
+	assert.Equal(t, "aws_kms_key.k.arn", enc["AwsKmsKey"])
+}
+
+// TestGetCtyValue_JsonencodeListWithReference verifies the list form with a
+// reference stays an iterable list of its elements.
+func TestGetCtyValue_JsonencodeListWithReference(t *testing.T) {
+	attrs := parseAttrs(t, `container_definitions = jsonencode([{ name = "app", image = aws_ecr_repository.r.repository_url, privileged = true }])`)
+	got, err := hclResolvedAttributesToDict(attrs, nil)
+	require.NoError(t, err)
+
+	list, ok := got["container_definitions"].([]any)
+	require.True(t, ok, "expected a list, got: %#v", got["container_definitions"])
+	require.Len(t, list, 1)
+	elem, ok := list[0].(map[string]any)
+	require.True(t, ok, "expected a map element, got: %#v", list[0])
+	assert.Equal(t, true, elem["privileged"])
+	assert.Equal(t, "aws_ecr_repository.r.repository_url", elem["image"])
+}
+
 // TestGetCtyValue_ConditionalExpr_UnboundVars verifies that ternaries
 // involving unbound variables return the references in the branches instead
 // of an empty list.
