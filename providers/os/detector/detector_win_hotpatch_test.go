@@ -27,6 +27,9 @@ func TestWindowsHotpatchLabels(t *testing.T) {
 	}{
 		{"detect-windows2025-hotpatch.toml", "true", "true"},
 		{"detect-azure-windows2025.toml", "true", "false"},
+		// Azure Edition has no enrollment package; the hotpatch servicing branch decides.
+		{"detect-windows2025-azure-edition-hotpatch.toml", "true", "true"},
+		{"detect-windows2025-azure-edition-baseline.toml", "true", "false"},
 		{"detect-windows2025.toml", "true", "false"},
 		{"detect-windows2022.toml", "true", "false"},
 		{"detect-windows11-24h2.toml", "true", "false"},

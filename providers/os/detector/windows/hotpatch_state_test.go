@@ -43,6 +43,13 @@ func TestHotpatchStateRules(t *testing.T) {
 		{"client policy absent", HotpatchState{VirtualizationBasedSecurityStatus: i64(2)}, true, false},
 		{"client ignores the server package", HotpatchState{EnrollmentPackage: pkg, EnableVirtualizationBasedSecurity: i64(1), HotPatchTableSize: i64(4096)}, true, false},
 		{"empty state", HotpatchState{}, true, false},
+		// Azure Edition has no enrollment package; the servicing branch is the signal.
+		{"server on the hotpatch branch without package", HotpatchState{ServicingBranch: str("lt_release_svc_hotpatch_prod1")}, false, true},
+		{"server hotpatch branch is case-insensitive", HotpatchState{ServicingBranch: str("LT_Release_SVC_HotPatch_prod1")}, false, true},
+		{"server on the baseline branch without package", HotpatchState{ServicingBranch: str("lt_release_svc_prod1"), EnableVirtualizationBasedSecurity: i64(1), HotPatchTableSize: i64(8192)}, false, false},
+		{"server baseline branch keeps the package rule", HotpatchState{ServicingBranch: str("lt_release_svc_prod1"), EnrollmentPackage: pkg, EnableVirtualizationBasedSecurity: i64(1), HotPatchTableSize: i64(4096)}, false, true},
+		{"server with nil branch and no package", HotpatchState{EnableVirtualizationBasedSecurity: i64(1), HotPatchTableSize: i64(8192)}, false, false},
+		{"client ignores the servicing branch", HotpatchState{ServicingBranch: str("lt_release_svc_hotpatch_prod1")}, true, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -79,6 +86,21 @@ func TestParseHotpatchState(t *testing.T) {
 		assert.Equal(t, int64(1), *st.EnableVirtualizationBasedSecurity)
 		assert.Equal(t, int64(2), *st.VirtualizationBasedSecurityStatus)
 		assert.Equal(t, int64(0), *st.AllowRebootlessUpdates)
+	})
+
+	t.Run("servicing branch", func(t *testing.T) {
+		st, err := ParseHotpatchState(strings.NewReader(`{"Branch":"lt_release_svc_hotpatch_prod1","HotPatchTableSize":"8192"}`))
+		require.NoError(t, err)
+		require.NotNil(t, st.ServicingBranch)
+		assert.Equal(t, "lt_release_svc_hotpatch_prod1", *st.ServicingBranch)
+		assert.True(t, st.ServerEnrolled())
+
+		st, err = ParseHotpatchState(strings.NewReader(`{"Branch":"","HotPatchTableSize":"8192"}`))
+		require.NoError(t, err)
+		assert.Nil(t, st.ServicingBranch, "an empty branch is absent")
+		st, err = ParseHotpatchState(strings.NewReader(`{"HotPatchTableSize":"8192"}`))
+		require.NoError(t, err)
+		assert.Nil(t, st.ServicingBranch)
 	})
 
 	t.Run("numeric values", func(t *testing.T) {
@@ -166,6 +188,27 @@ func TestReadStaticHotpatchState(t *testing.T) {
 		require.NotNil(t, st.EnrollmentPackage)
 	})
 
+	t.Run("servicing branch is read from the arch-specific key", func(t *testing.T) {
+		hive := fakeHotpatchHive{items: map[string][]registry.RegistryKeyItem{
+			sw + servicingBranchKeyPrefix + "amd64": {sz("Branch", "lt_release_svc_hotpatch_prod1"), sz("Version", "10.0.26100.33222")},
+			sw + servicingBranchKeyPrefix + "arm64": {sz("branch", "lt_release_svc_prod1")},
+		}}
+		st := ReadStaticHotpatchState(hive, "AMD64")
+		require.NotNil(t, st.ServicingBranch)
+		assert.Equal(t, "lt_release_svc_hotpatch_prod1", *st.ServicingBranch)
+		assert.True(t, st.ServerEnrolled(), "Azure Edition: no package, hotpatch branch")
+
+		st = ReadStaticHotpatchState(hive, "ARM64")
+		require.NotNil(t, st.ServicingBranch)
+		assert.Equal(t, "lt_release_svc_prod1", *st.ServicingBranch, "value names are case-insensitive")
+		assert.False(t, st.ServerEnrolled())
+
+		hive = fakeHotpatchHive{items: map[string][]registry.RegistryKeyItem{
+			sw + servicingBranchKeyPrefix + "amd64": {sz("Version", "10.0.26100.33222")},
+		}}
+		assert.Nil(t, ReadStaticHotpatchState(hive, "AMD64").ServicingBranch, "a key without Branch leaves it nil")
+	})
+
 	t.Run("configured client", func(t *testing.T) {
 		hive := fakeHotpatchHive{items: map[string][]registry.RegistryKeyItem{
 			sw + rebootlessUpdatesKey:                 {dword("AllowRebootlessUpdates", 1)},
@@ -219,6 +262,7 @@ func TestGetHotpatchStateOverPowerShell(t *testing.T) {
 
 func TestGetWindowsHotpatch(t *testing.T) {
 	serverEnrolled := `{"Name":"Hotpatch Enrollment Package","HotPatchTableSize":"4096","EnableVirtualizationBasedSecurity":"1"}`
+	azureEdition := `{"Branch":"lt_release_svc_hotpatch_prod1","HotPatchTableSize":"8192","EnableVirtualizationBasedSecurity":"1"}`
 	clientConfigured := `{"AllowRebootlessUpdates":"1","VirtualizationBasedSecurityStatus":"2"}`
 
 	cases := []struct {
@@ -230,6 +274,8 @@ func TestGetWindowsHotpatch(t *testing.T) {
 		{"Server 2022 enrolled", &inventory.Platform{Title: "Windows Server 2022 Datacenter: Azure Edition", Version: "20348", Build: "2762", Arch: "AMD64", Labels: map[string]string{"windows.mondoo.com/product-type": "3"}}, serverEnrolled, true},
 		{"Server 2025 enrolled", &inventory.Platform{Title: "Windows Server 2025 Datacenter", Version: "26100", Build: "4000", Arch: "AMD64", Labels: map[string]string{"windows.mondoo.com/product-type": "3"}}, serverEnrolled, true},
 		{"domain controller enrolled", &inventory.Platform{Title: "Windows Server 2022 Datacenter", Version: "20348", Build: "2762", Arch: "AMD64", Labels: map[string]string{"windows.mondoo.com/product-type": "2"}}, serverEnrolled, true},
+		{"Azure Edition on the hotpatch branch", &inventory.Platform{Title: "Windows Server 2025 Datacenter Azure Edition", Version: "26100", Build: "33222", Arch: "AMD64", Labels: map[string]string{"windows.mondoo.com/product-type": "3"}}, azureEdition, true},
+		{"Azure Edition on the baseline branch", &inventory.Platform{Title: "Windows Server 2025 Datacenter Azure Edition", Version: "26100", Build: "33650", Arch: "AMD64", Labels: map[string]string{"windows.mondoo.com/product-type": "3"}}, `{"Branch":"lt_release_svc_prod1","HotPatchTableSize":"8192","EnableVirtualizationBasedSecurity":"1"}`, false},
 		{"Server 2019 is never enrolled", &inventory.Platform{Title: "Windows Server 2019 Datacenter", Version: "17763", Build: "1", Arch: "AMD64", Labels: map[string]string{"windows.mondoo.com/product-type": "3"}}, serverEnrolled, false},
 		{"server with client values", &inventory.Platform{Title: "Windows Server 2022 Datacenter", Version: "20348", Build: "2762", Arch: "AMD64", Labels: map[string]string{"windows.mondoo.com/product-type": "3"}}, clientConfigured, false},
 		{"client x64 configured", &inventory.Platform{Title: "Windows 11 Enterprise", Version: "26100", Build: "2033", Arch: "AMD64", Labels: map[string]string{"windows.mondoo.com/product-type": "1"}}, clientConfigured, true},

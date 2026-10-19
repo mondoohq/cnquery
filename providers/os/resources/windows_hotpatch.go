@@ -125,6 +125,18 @@ func (w *mqlWindowsHotpatch) enrollmentPackage() (string, error) {
 	return *st.EnrollmentPackage, nil
 }
 
+func (w *mqlWindowsHotpatch) servicingBranch() (string, error) {
+	st, _, err := w.load()
+	if err != nil {
+		return "", err
+	}
+	if st.ServicingBranch == nil {
+		w.ServicingBranch.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	return *st.ServicingBranch, nil
+}
+
 func (w *mqlWindowsHotpatch) hotPatchTableSize() (int64, error) {
 	st, _, err := w.load()
 	if err != nil {

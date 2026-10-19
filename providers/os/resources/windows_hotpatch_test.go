@@ -63,6 +63,20 @@ func TestWindowsHotpatchServer(t *testing.T) {
 		assert.True(t, r.GetHotPatchTableSize().IsNull())
 		assert.True(t, r.GetVbsConfigured().IsNull())
 		assert.True(t, r.GetVbsRunning().IsNull(), "without a WMI answer the running state is null, not false")
+		assert.True(t, r.GetServicingBranch().IsNull(), "an absent branch is null")
+	})
+
+	t.Run("Azure Edition on the hotpatch branch", func(t *testing.T) {
+		r := newWindowsHotpatch(t, pf, `{"Branch":"lt_release_svc_hotpatch_prod1","HotPatchTableSize":"8192","EnableVirtualizationBasedSecurity":"1"}`)
+		assert.True(t, r.GetEnrolled().Data)
+		assert.Equal(t, "lt_release_svc_hotpatch_prod1", r.GetServicingBranch().Data)
+		assert.True(t, r.GetEnrollmentPackage().IsNull())
+	})
+
+	t.Run("baseline branch is reported and not enrolled", func(t *testing.T) {
+		r := newWindowsHotpatch(t, pf, `{"Branch":"lt_release_svc_prod1","HotPatchTableSize":"8192","EnableVirtualizationBasedSecurity":"1"}`)
+		assert.False(t, r.GetEnrolled().Data)
+		assert.Equal(t, "lt_release_svc_prod1", r.GetServicingBranch().Data)
 	})
 
 	t.Run("enrollment needs a non-zero table size", func(t *testing.T) {
