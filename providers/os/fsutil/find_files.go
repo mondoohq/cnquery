@@ -117,10 +117,10 @@ func FindFilesWithOptions(iofs fs.FS, from string, r *regexp.Regexp, typ string,
 	if !options.CrossFileSystems {
 		info, err := fs.Stat(iofs, from)
 		if err != nil {
-			skip, err := handleFsError(err)
-			if skip {
-				return nil, err
+			if errors.Is(err, fs.ErrNotExist) {
+				return nil, nil
 			}
+			return nil, fmt.Errorf("native file search cannot stat root %q: %w", from, err)
 		}
 		if info != nil {
 			rootDevice, hasDevice = fileDeviceID(info)
@@ -146,6 +146,11 @@ func FindFilesWithOptions(iofs fs.FS, from string, r *regexp.Regexp, typ string,
 			return fs.SkipDir
 		}
 
+		// An absent root has no matches; a root we cannot inspect must not
+		// look like a successfully completed, empty search.
+		if err != nil && p == from && !errors.Is(err, fs.ErrNotExist) {
+			return fmt.Errorf("native file search cannot read root %q: %w", from, err)
+		}
 		skipFile, err := handleFsError(err)
 		if err != nil {
 			return err
@@ -158,17 +163,16 @@ func FindFilesWithOptions(iofs fs.FS, from string, r *regexp.Regexp, typ string,
 		if hasDevice && d.IsDir() && p != from {
 			info, err := d.Info()
 			if err != nil {
-				skip, err := handleFsError(err)
-				if skip {
-					return err
-				}
+				// ReadDir may still succeed when stat is denied. Without device
+				// metadata we cannot prove that descending preserves xdev.
+				return fmt.Errorf("native file search cannot determine filesystem boundary at %q: %w", p, err)
 			}
 			if info != nil {
 				device, ok := fileDeviceID(info)
 				if !ok {
 					return fmt.Errorf("native file search cannot determine filesystem boundary at %q", p)
 				}
-				pruneMount = ok && device != rootDevice
+				pruneMount = device != rootDevice
 			}
 		}
 		if matcher.Match(p, d.Type()) {

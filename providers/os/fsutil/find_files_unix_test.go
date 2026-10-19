@@ -201,3 +201,34 @@ func TestFindFilesMountBoundary(t *testing.T) {
 		})
 	}
 }
+
+type deniedDeviceEntry struct{ fs.DirEntry }
+
+func (e deniedDeviceEntry) Info() (fs.FileInfo, error) {
+	return nil, &fs.PathError{Op: "stat", Path: e.Name(), Err: fs.ErrPermission}
+}
+
+type deniedDeviceFindFS struct{ *deviceFindFS }
+
+func (f deniedDeviceFindFS) ReadDir(name string) ([]fs.DirEntry, error) {
+	entries, err := f.deviceFindFS.ReadDir(name)
+	for i, entry := range entries {
+		if entry.IsDir() {
+			entries[i] = deniedDeviceEntry{entry}
+		}
+	}
+	return entries, err
+}
+
+func TestFindFilesDeniedDeviceMetadata(t *testing.T) {
+	f := afero.NewMemMapFs()
+	mkDir(t, f, "root/mount")
+	mkFile(t, f, "root/local")
+	mkFile(t, f, "root/mount/foreign")
+	deviceFS := &deviceFindFS{FS: afero.NewIOFS(f)}
+	found, err := FindFilesWithOptions(deniedDeviceFindFS{deviceFS}, "root", nil, "file", nil, nil, FindOptions{})
+	require.ErrorIs(t, err, fs.ErrPermission)
+	require.ErrorContains(t, err, `filesystem boundary at "root/mount"`)
+	require.Nil(t, found, "a strict search must not succeed without proving each boundary")
+	require.NotContains(t, deviceFS.reads, "root/mount", "stat refusal does not imply ReadDir would also be denied")
+}

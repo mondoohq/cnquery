@@ -318,3 +318,55 @@ func TestFindFilesRejectsOpaqueNilStatMetadata(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []string{"root/a"}, found)
 }
+
+type inaccessibleFindFS struct {
+	fs.FS
+	statError error
+	readError error
+}
+
+func (f inaccessibleFindFS) Stat(name string) (fs.FileInfo, error) {
+	if f.statError != nil {
+		return nil, &fs.PathError{Op: "stat", Path: name, Err: f.statError}
+	}
+	return fs.Stat(f.FS, name)
+}
+
+func (f inaccessibleFindFS) ReadDir(name string) ([]fs.DirEntry, error) {
+	if f.readError != nil {
+		return nil, &fs.PathError{Op: "readdir", Path: name, Err: f.readError}
+	}
+	return fs.ReadDir(f.FS, name)
+}
+
+func TestFindFilesInaccessibleRoot(t *testing.T) {
+	for _, cross := range []bool{false, true} {
+		for _, phase := range []string{"stat", "read"} {
+			t.Run(fmt.Sprintf("cross=%v/%s", cross, phase), func(t *testing.T) {
+				f := afero.NewMemMapFs()
+				mkDir(t, f, "root")
+				mkFile(t, f, "root/a")
+				target := inaccessibleFindFS{FS: afero.NewIOFS(f)}
+				if phase == "stat" {
+					target.statError = fs.ErrPermission
+				} else {
+					target.readError = fs.ErrPermission
+				}
+				found, err := FindFilesWithOptions(target, "root", nil, "file", nil, nil, FindOptions{
+					CrossFileSystems: cross, SingleFileSystem: true,
+				})
+				require.ErrorIs(t, err, fs.ErrPermission)
+				require.ErrorContains(t, err, `root "root"`)
+				require.Nil(t, found, "an inaccessible root must not report a complete empty inventory")
+			})
+		}
+	}
+}
+
+func TestFindFilesAbsentRoot(t *testing.T) {
+	for _, cross := range []bool{false, true} {
+		found, err := FindFilesWithOptions(afero.NewIOFS(afero.NewMemMapFs()), "absent", nil, "file", nil, nil, FindOptions{CrossFileSystems: cross})
+		require.NoError(t, err)
+		require.Empty(t, found)
+	}
+}
