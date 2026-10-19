@@ -274,6 +274,7 @@ type boundedReadFS struct {
 	mode      os.FileMode
 	size      int64
 	opens     int
+	stats     int
 	bytesRead int
 }
 
@@ -287,6 +288,7 @@ func (s boundedReadInfo) Mode() os.FileMode { return s.mode }
 func (s boundedReadInfo) Size() int64       { return s.size }
 func (s boundedReadInfo) IsDir() bool       { return s.mode.IsDir() }
 func (fs *boundedReadFS) Stat(path string) (os.FileInfo, error) {
+	fs.stats++
 	info, err := fs.Fs.Stat(path)
 	if err != nil || path != fs.path {
 		return info, err
@@ -379,4 +381,13 @@ func TestFileContentRefusesSpecialOrOversize(t *testing.T) {
 			assert.Zero(t, fs.opens)
 		})
 	}
+}
+
+func TestReadBoundedRegularFileRejectsNegativeLimitBeforeIO(t *testing.T) {
+	fs := &boundedReadFS{Fs: afero.NewMemMapFs(), path: "/config"}
+	data, err := readBoundedRegularFile(&afero.Afero{Fs: fs}, "/config", -1)
+	require.ErrorContains(t, err, "invalid negative read limit -1")
+	assert.Nil(t, data)
+	assert.Zero(t, fs.stats, "an invalid internal budget must fail before inspecting a target")
+	assert.Zero(t, fs.opens)
 }

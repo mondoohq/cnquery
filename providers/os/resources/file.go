@@ -490,12 +490,17 @@ const maxFileContentSize int64 = 128 << 20
 const maxConfigFileSize int64 = 32 << 20
 const maxExtensionManifestSize int64 = 8 << 20
 
-// readBoundedRegularFile checks before Open so a FIFO without a writer cannot
-// block a scan. Follow symlinks, including command-backed filesystems that keep
-// the symlink bit on the target mode, but refuse devices, sockets and directories.
-// Recheck the opened object and cap the actual bytes: files can grow or report
-// size zero, and Stat's size is only an early rejection, never the read budget.
+// readBoundedRegularFile rejects a known special target before Open and follows
+// symlinks, including command-backed filesystems that keep the symlink bit on
+// the target mode. This pathname check is not atomic with Open: replacing the
+// path with a FIFO between those calls can still block an unbounded Open.
+// The opened-object check below only runs after Open returns. It rejects mode
+// changes and early oversize results; the actual byte cap also handles growing
+// files and virtual regular files reporting size zero.
 func readBoundedRegularFile(afs *afero.Afero, path string, limit int64) ([]byte, error) {
+	if limit < 0 {
+		return nil, fmt.Errorf("cannot read file %q: invalid negative read limit %d", path, limit)
+	}
 	stat, err := afs.Stat(path)
 	if err != nil {
 		return nil, classifyFsError(err)
@@ -529,7 +534,7 @@ func checkFileReadBounds(path string, stat os.FileInfo, limit int64) error {
 	if !isRegularTarget(stat) {
 		return fmt.Errorf("cannot read file %q: content requires a regular file (mode %s)", path, stat.Mode())
 	}
-	if limit < 0 || stat.Size() > limit {
+	if stat.Size() > limit {
 		return fmt.Errorf("file %q exceeds the %d byte read limit", path, limit)
 	}
 	return nil
