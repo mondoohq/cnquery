@@ -118,7 +118,7 @@ func TestMountedWindowsRegistryHive(t *testing.T) {
 	assert.Error(t, err, "no SYSTEM hive on this disk")
 
 	rh := registry.NewRegistryHandler()
-	t.Cleanup(func() { rh.UnloadSubkeys() })
+	t.Cleanup(func() { assert.NoError(t, rh.UnloadSubkeys()) })
 	require.NoError(t, rh.LoadSubkey(registry.Software, fi.Path))
 	items, err := rh.GetNativeRegistryKeyItems(registry.Software, "Values")
 	require.NoError(t, err)

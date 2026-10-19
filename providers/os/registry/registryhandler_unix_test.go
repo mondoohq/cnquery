@@ -100,7 +100,7 @@ func TestHandlerLoadErrors(t *testing.T) {
 func TestHandlerLoadUserHive(t *testing.T) {
 	path := fixtureHive(t, t.TempDir())
 	rh := NewRegistryHandler()
-	t.Cleanup(func() { rh.UnloadSubkeys() })
+	t.Cleanup(func() { assert.NoError(t, rh.UnloadSubkeys()) })
 	sid := "S-1-5-21-1-2-3-1001"
 	require.NoError(t, rh.LoadUserHive(sid, path))
 	// loading again is a no-op

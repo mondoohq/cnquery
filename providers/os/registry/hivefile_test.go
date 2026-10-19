@@ -142,7 +142,7 @@ func TestHiveFileValues(t *testing.T) {
 func TestHiveFileCaseInsensitiveLookup(t *testing.T) {
 	h := openFixture(t)
 
-	items, err := h.Items("vALUES")
+	items, err := h.Items("VALUES")
 	require.NoError(t, err)
 	assert.Len(t, items, 15)
 

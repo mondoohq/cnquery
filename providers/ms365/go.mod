@@ -19,7 +19,11 @@ require (
 	go.mondoo.com/mql v0.0.0-20261019065417-1fcdd84493fd
 )
 
-require go.opentelemetry.io/otel/log v1.47.0 // indirect
+require (
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	go.opentelemetry.io/otel/log v1.47.0 // indirect
+	www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7 // indirect
+)
 
 require (
 	dario.cat/mergo v1.0.2 // indirect
