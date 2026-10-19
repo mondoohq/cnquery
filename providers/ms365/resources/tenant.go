@@ -7,11 +7,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/directory"
@@ -23,6 +23,7 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/ms365/connection"
 	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/iox"
 )
 
 type mqlMicrosoftTenantInternal struct {
@@ -517,13 +518,23 @@ func (a *mqlMicrosoftTenant) fetchRealmData() error {
 func (a *mqlMicrosoftTenant) getUserRealmInfoForDomain(domainName string) (*userRealmResponse, error) {
 	url := fmt.Sprintf("https://login.microsoftonline.com/common/userrealm/%s?api-version=2.0", domainName)
 
-	resp, err := http.Get(url)
+	return queryUserRealmInfo(context.Background(), tenantRealmHTTPClient, url)
+}
+
+var tenantRealmHTTPClient = &http.Client{Timeout: 30 * time.Second}
+
+func queryUserRealmInfo(ctx context.Context, client *http.Client, endpoint string) (*userRealmResponse, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query userrealm endpoint: %w", err)
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	body, err := iox.ReadAllLimit(resp.Body, 1<<20)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}

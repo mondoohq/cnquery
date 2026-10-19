@@ -5,8 +5,11 @@ package resources
 
 import (
 	"errors"
+	"io"
 	"net"
+	"net/http"
 	"net/url"
+	"strings"
 	"syscall"
 	"testing"
 
@@ -56,7 +59,8 @@ func TestHttpNotReachable(t *testing.T) {
 		{"connection refused", &url.Error{Op: "Get", Err: &net.OpError{Op: "dial", Err: syscall.ECONNREFUSED}}, true},
 		{"connection reset", &net.OpError{Op: "read", Err: syscall.ECONNRESET}, true},
 		{"dns not found", &url.Error{Op: "Get", Err: &net.DNSError{Err: "no such host", IsNotFound: true}}, true},
-		{"dial timeout", &url.Error{Op: "Get", Err: timeoutErr{}}, true},
+		{"dial timeout", &url.Error{Op: "Get", Err: timeoutErr{}}, false},
+		{"read timeout", &net.OpError{Op: "read", Err: timeoutErr{}}, false},
 		// Genuine errors stay errors (not "no HTTP here").
 		{"redirect loop", &url.Error{Op: "Get", Err: errors.New("stopped after 10 redirects")}, false},
 		{"generic", errors.New("boom"), false},
@@ -328,4 +332,11 @@ func TestParseCspDirectives(t *testing.T) {
 		m := parseCspDirectives([]any{"Default-Src 'self'; SCRIPT-SRC https://CDN.example.com"})
 		assert.Equal(t, map[string]any{"default-src": "'self'", "script-src": "https://CDN.example.com"}, m)
 	})
+}
+
+func TestHttpBodyRejectsOversize(t *testing.T) {
+	get := &mqlHttpGet{mqlHttpGetInternal: mqlHttpGetInternal{resp: plugin.TValue[*http.Response]{Data: &http.Response{Body: io.NopCloser(strings.NewReader(strings.Repeat("x", (16<<20)+1)))}, State: plugin.StateIsSet}}}
+	body, err := get.body()
+	require.ErrorContains(t, err, "exceeds")
+	require.Empty(t, body)
 }

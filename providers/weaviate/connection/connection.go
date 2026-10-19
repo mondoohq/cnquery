@@ -7,11 +7,13 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/weaviate/weaviate-go-client/v5/weaviate"
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/auth"
@@ -120,10 +122,10 @@ func (c *WeaviateConnection) ServerID() string {
 }
 
 // httpClient builds an HTTP client carrying the TLS configuration for an https
-// connection, or nil to use the default client for plain http.
+// connection. Every request, including response reads, has a finite budget.
 func (c *WeaviateConnection) httpClient() (*http.Client, error) {
 	if c.scheme != "https" || (c.tlsCA == "" && !c.tlsInsecure) {
-		return nil, nil
+		return &http.Client{Timeout: 30 * time.Second}, nil
 	}
 	cfg := &tls.Config{InsecureSkipVerify: c.tlsInsecure}
 	if c.tlsCA != "" {
@@ -137,31 +139,42 @@ func (c *WeaviateConnection) httpClient() (*http.Client, error) {
 		}
 		cfg.RootCAs = pool
 	}
-	return &http.Client{Transport: &http.Transport{TLSClientConfig: cfg}}, nil
+	transport := &http.Transport{Proxy: http.ProxyFromEnvironment, DialContext: (&net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}).DialContext, TLSHandshakeTimeout: 10 * time.Second}
+	if defaults, ok := http.DefaultTransport.(*http.Transport); ok {
+		transport = defaults.Clone()
+	}
+	transport.TLSClientConfig = cfg
+	return &http.Client{Transport: transport, Timeout: 30 * time.Second}, nil
 }
 
-// AnonymousAccessEnabled probes whether the server answers an unauthenticated
-// request. It issues a GET to /v1/meta with no credentials: a 2xx response
-// means anonymous access is enabled, anything else (typically 401) means
-// authentication is required. Any transport error is reported as not enabled.
-func (c *WeaviateConnection) AnonymousAccessEnabled() bool {
-	httpClient, err := c.httpClient()
+// AnonymousAccessEnabled probes /v1/meta without credentials. Only an explicit
+// authentication refusal proves anonymous access is disabled; failed probes
+// remain errors rather than turning an incomplete audit into a clean result.
+func (c *WeaviateConnection) AnonymousAccessEnabled() (bool, error) {
+	client, err := c.httpClient()
 	if err != nil {
-		return false
+		return false, err
 	}
-	if httpClient == nil {
-		httpClient = &http.Client{}
-	}
-	req, err := http.NewRequest(http.MethodGet, c.ServerID()+"/v1/meta", nil)
+	return probeAnonymousAccess(context.Background(), client, c.ServerID()+"/v1/meta")
+}
+
+func probeAnonymousAccess(ctx context.Context, client *http.Client, endpoint string) (bool, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
-		return false
+		return false, err
 	}
-	resp, err := httpClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
-		return false
+		return false, fmt.Errorf("anonymous access probe failed: %w", err)
 	}
 	defer resp.Body.Close()
-	return resp.StatusCode >= 200 && resp.StatusCode < 300
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		return true, nil
+	}
+	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+		return false, nil
+	}
+	return false, fmt.Errorf("anonymous access probe returned HTTP %d", resp.StatusCode)
 }
 
 // Roles returns every role defined on the server, with its permissions, read
@@ -227,9 +240,22 @@ func (c *WeaviateConnection) Client() (*weaviate.Client, error) {
 			Host:             net.JoinHostPort(c.host, strconv.Itoa(c.port)),
 			Scheme:           c.scheme,
 			ConnectionClient: httpClient,
+			Timeout:          30 * time.Second,
 		}
 		if c.apiKey != "" {
-			cfg.AuthConfig = auth.ApiKey{Value: c.apiKey}
+			if c.scheme != "https" || (c.tlsCA == "" && !c.tlsInsecure) {
+				// The SDK rejects AuthConfig together with ConnectionClient.
+				// Its own client uses cfg.Timeout, preserving API-key/cloud headers.
+				cfg.ConnectionClient = nil
+				cfg.AuthConfig = auth.ApiKey{Value: c.apiKey}
+			} else {
+				// API-key auth only supplies headers. Keep the bounded TLS client
+				// when a private CA or explicit TLS override is required.
+				_, cfg.Headers, c.clientErr = (auth.ApiKey{Value: c.apiKey}).GetAuthInfo(nil)
+				if c.clientErr != nil {
+					return
+				}
+			}
 		}
 		client, err := weaviate.NewClient(cfg)
 		if err != nil {

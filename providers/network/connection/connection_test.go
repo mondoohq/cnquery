@@ -5,9 +5,12 @@ package connection
 
 import (
 	"crypto/tls"
+	"github.com/stretchr/testify/require"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 )
@@ -47,5 +50,50 @@ func TestClientVerifiesCertificatesByDefault(t *testing.T) {
 	if resp, err := conn.Client(false).Get(srv.URL); err == nil {
 		resp.Body.Close()
 		t.Fatal("GET to a self-signed server succeeded without --insecure")
+	}
+}
+
+func TestClientBoundsHeadersAndBody(t *testing.T) {
+	for _, phase := range []string{"headers", "body"} {
+		t.Run(phase, func(t *testing.T) {
+			release := make(chan struct{})
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if phase == "body" {
+					w.Header().Set("Content-Length", "10")
+					w.WriteHeader(200)
+					w.(http.Flusher).Flush()
+				}
+				select {
+				case <-release:
+				case <-r.Context().Done():
+				}
+			}))
+			defer srv.Close()
+			defer close(release)
+			conn := NewHostConnection(1, &inventory.Asset{}, &inventory.Config{})
+			c := conn.Client(false)
+			require.Greater(t, c.Timeout, time.Duration(0))
+			require.LessOrEqual(t, c.Timeout, time.Minute)
+			require.Greater(t, conn.transport.ResponseHeaderTimeout, time.Duration(0))
+			c.Timeout = 30 * time.Millisecond
+			if phase == "headers" {
+				conn.transport.ResponseHeaderTimeout = 20 * time.Millisecond
+			}
+			done := make(chan error, 1)
+			go func() {
+				resp, err := c.Get(srv.URL)
+				if resp != nil {
+					defer resp.Body.Close()
+					_, err = io.ReadAll(resp.Body)
+				}
+				done <- err
+			}()
+			select {
+			case err := <-done:
+				require.Error(t, err)
+			case <-time.After(time.Second):
+				t.Fatal("HTTP phase was not bounded")
+			}
+		})
 	}
 }
