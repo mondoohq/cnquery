@@ -182,6 +182,46 @@ func TestExecutionManagerStopCancelsProviderCall(t *testing.T) {
 	awaitSignal(t, blocked.returned)
 }
 
+func TestExecutionManagerPropertyErrorDeliveryHonorsCancellation(t *testing.T) {
+	for _, stopped := range []bool{false, true} {
+		t.Run(map[bool]string{false: "deadline", true: "stop"}[stopped], func(t *testing.T) {
+			bundle := compileStatic(t, "true")
+			// No consumer can accept the property error. The manager must
+			// publish a fatal execution error instead of dropping it silently.
+			em := newExecutionManager(emptySchema, staticRuntime{}, nil, make(chan *llx.RawResult), 20*time.Millisecond)
+			defer em.Stop()
+			want := errQueryTimeout
+			if stopped {
+				em.Stop()
+				want = context.Canceled
+			}
+			require.ErrorIs(t, em.executeCodeBundle(bundle, nil, "property failed"), want)
+		})
+	}
+}
+
+type asynchronousRuntime struct{ *blockedRuntime }
+
+func (asynchronousRuntime) WatchAndUpdate(_ llx.Resource, _, _ string, callback func(any, error)) error {
+	go callback(true, nil)
+	return nil
+}
+
+func TestExecutionManagerWaitsForAsynchronousResultDelivery(t *testing.T) {
+	runtime := asynchronousRuntime{newBlockedRuntime("")}
+	bundle := compileProbe(t, runtime)
+	count := len(CodepointChecksums(bundle))
+	require.Positive(t, count)
+	// Hold exactly the final handoff. Marking the last datapoint complete
+	// before sending it would let the manager cancel this still-blocked send
+	// and return success while the graph is missing a required result.
+	results := make(chan *llx.RawResult, count-1)
+	em := newExecutionManager(runtime.Schema(), runtime, nil, results, 20*time.Millisecond)
+	defer em.Stop()
+	require.ErrorIs(t, em.executeCodeBundle(bundle, nil, ""), errQueryTimeout)
+	awaitSignal(t, runtime.unregistered)
+}
+
 func TestExecutionManagerRecoversPanic(t *testing.T) {
 	runQueue := make(chan runQueueItem, 1)
 	resultChan := make(chan *llx.RawResult, 1)

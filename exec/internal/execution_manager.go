@@ -218,6 +218,7 @@ func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props 
 	ctx, cancel := context.WithTimeout(em.ctx, em.timeout)
 	defer cancel()
 	wg := NewWaitGroup()
+	checksums := map[string]struct{}{}
 	var resultMu sync.Mutex
 	finished := false
 
@@ -228,6 +229,11 @@ func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props 
 			return
 		}
 		log.Trace().Str("codeID", rr.CodeID).Msg("received result from executor")
+		// Validate the checksum before the graph receives it. An unknown
+		// checksum must fail here rather than index a missing graph node.
+		if _, ok := checksums[rr.CodeID]; !ok {
+			panic(fmt.Sprintf("unexpected datapoint checksum %q", rr.CodeID))
+		}
 		select {
 		case em.resultChan <- rr:
 			wg.Done(rr.CodeID)
@@ -235,7 +241,6 @@ func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props 
 		}
 	}
 
-	checksums := map[string]struct{}{}
 	// Find the list of things we must wait for before execution of this codebundle is considered done
 	for _, checksum := range CodepointChecksums(codeBundle) {
 		if _, ok := checksums[checksum]; !ok {
@@ -259,7 +264,13 @@ func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props 
 	}
 
 	if errMsg != "" {
-		return nil
+		// Property failures still have to deliver their datapoints. A deadline
+		// while the result channel is full must fail the execution; returning
+		// success would leave the graph waiting for the dropped datapoints.
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return errQueryTimeout
+		}
+		return ctx.Err()
 	}
 
 	codeID := codeBundle.CodeV2.GetId()
