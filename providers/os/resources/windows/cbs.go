@@ -202,12 +202,17 @@ func (o *OfflineCBSReader) PackageNames() ([]string, error) {
 	names := make([]string, 0, len(kids))
 	for _, k := range kids {
 		names = append(names, k.Name)
-		// The child comes back with a fully-qualified path (hive root
-		// resolved into it), so its values must be read through the
-		// package-level reader, not through the handler again.
-		o.paths[k.Name] = k.Path
+		o.paths[k.Name] = cbsChildKeyPath(k)
 	}
 	return names, nil
+}
+
+// cbsChildKeyPath returns the full path of a child key. A child's Path is its
+// PARENT's fully-qualified path (hive root resolved into it), so the name has
+// to be appended, and the values must be read through the package-level
+// reader, not through the handler again.
+func cbsChildKeyPath(k registry.RegistryKeyChild) string {
+	return k.Path + `\` + k.Name
 }
 
 func (o *OfflineCBSReader) PackageValues(name string) (CBSPackageValues, error) {

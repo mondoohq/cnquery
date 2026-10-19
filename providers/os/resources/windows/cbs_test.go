@@ -17,6 +17,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/providers/os/registry"
 )
 
 // fakeCBS is an in-memory CBSReader. A package with no entry in mum has no
@@ -269,4 +270,16 @@ func TestInstalledCBSUpdates_Parity(t *testing.T) {
 	assert.Equal(t, "Security Update", byKB["KB5120228"].ReleaseType)
 	require.NotNil(t, byKB["KB5120228"].InstalledOn)
 	assert.Equal(t, time.Date(2026, 8, 10, 15, 49, 51, 376640800, time.UTC), *byKB["KB5120228"].InstalledOn)
+}
+
+func TestCBSChildKeyPath(t *testing.T) {
+	// GetNativeRegistryKeyChildren returns the parent's path on each child;
+	// reading values from that path reads the Packages key itself.
+	k := registry.RegistryKeyChild{
+		Path: `HKEY_LOCAL_MACHINE\TmpReg_SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages`,
+		Name: "Package_for_HotpatchFix_33222~31bf3856ad364e35~amd64~~26100.33222.1.16",
+	}
+	assert.Equal(t,
+		`HKEY_LOCAL_MACHINE\TmpReg_SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages\Package_for_HotpatchFix_33222~31bf3856ad364e35~amd64~~26100.33222.1.16`,
+		cbsChildKeyPath(k))
 }
