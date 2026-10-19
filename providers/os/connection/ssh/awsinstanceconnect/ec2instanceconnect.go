@@ -34,7 +34,10 @@ type InstanceCredentials struct {
 
 // Note: target can either be the IP (ipv4) address or the instance id of the machine
 func (c *generator) GenerateCredentials(target string, user string) (*InstanceCredentials, error) {
-	ctx := context.Background()
+	return c.GenerateCredentialsContext(context.Background(), target, user)
+}
+
+func (c *generator) GenerateCredentialsContext(ctx context.Context, target string, user string) (*InstanceCredentials, error) {
 	ec2srv := ec2.NewFromConfig(c.cfg)
 	input := &ec2.DescribeInstancesInput{}
 	ip := net.ParseIP(target)
