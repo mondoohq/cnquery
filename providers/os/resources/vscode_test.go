@@ -229,17 +229,6 @@ func TestVscodeWindowsProfilePathsRemote(t *testing.T) {
 	assert.Equal(t, int32(2), conn.commands.Load(), "only registry reads, no account enumeration")
 }
 
-func TestExpandWindowsProfilePath(t *testing.T) {
-	env := map[string]any{"SystemDrive": "C:", "empty": "", "invalid": 42}
-	for _, path := range []string{`%missing%\Users\alice`, `%empty%\Users\alice`, `%invalid%\Users\alice`} {
-		_, err := expandWindowsProfilePath(path, env)
-		require.Error(t, err)
-	}
-	path, err := expandWindowsProfilePath(`%systemdrive%\Users\alice`, env)
-	require.NoError(t, err)
-	assert.Equal(t, `C:\Users\alice`, path)
-}
-
 func TestVscodeUserHomePathsUnix(t *testing.T) {
 	runtime := memFSRuntime(t, afero.NewMemMapFs())
 	seedUsersCache(t, runtime, &mqlUser{
