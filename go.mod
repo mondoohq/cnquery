@@ -131,6 +131,7 @@ require (
 	github.com/zclconf/go-cty v1.19.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20261012220534-4341edf3f941
 	software.sslmate.com/src/go-pkcs12 v0.7.4
+	www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7
 )
 
 require (
