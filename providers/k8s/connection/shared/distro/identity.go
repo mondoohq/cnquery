@@ -35,6 +35,13 @@ var (
 // probe reports it when the instance carries no distribution mark.
 var cloudOf = map[string]string{AKS: "azure", EKS: "aws", GKE: "gcp"}
 
+// CloudOf returns the cloud whose managed service runs the distribution:
+// "aws" for EKS, "azure" for AKS, "gcp" for GKE, and "" for every other
+// distribution, including the EKS Distro that runs outside AWS.
+func CloudOf(name string) string {
+	return cloudOf[name]
+}
+
 // identify works out the cluster's name, region and account. It reads the
 // kubeconfig only for a distribution the server itself confirmed, so a cluster
 // entry named like a managed cluster never makes one: the names in a kubeconfig

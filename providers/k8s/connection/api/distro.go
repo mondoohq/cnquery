@@ -270,9 +270,10 @@ func azureMetadata(ctx context.Context, client *http.Client, base string) (*dist
 	return res, nil
 }
 
-// awsMetadata reads the instance's tags (when the instance publishes them to
-// the metadata service) for the tag EKS sets on its nodes. IMDSv2 needs a
-// token first; from a pod, that needs a hop limit of 2.
+// awsMetadata reads the instance identity document for the account and
+// region, and the instance's tags (when the instance publishes them to the
+// metadata service) for the tag EKS sets on its nodes. IMDSv2 needs a token
+// first; from a pod, that needs a hop limit of 2.
 func awsMetadata(ctx context.Context, client *http.Client, base string) (*distro.MetadataResult, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, base+"/latest/api/token", nil)
 	if err != nil {
@@ -297,6 +298,20 @@ func awsMetadata(ctx context.Context, client *http.Client, base string) (*distro
 		return strings.TrimSpace(string(body))
 	}
 	res := &distro.MetadataResult{Value: "aws", Identity: distro.Identity{Region: get("placement/region")}}
+	// The identity document is the one metadata path that names the account.
+	// It is served under /latest/dynamic, not /latest/meta-data.
+	if body, status, err := metadataGet(ctx, client, base+"/latest/dynamic/instance-identity/document", h); err == nil && status == http.StatusOK {
+		var doc struct {
+			AccountID string `json:"accountId"`
+			Region    string `json:"region"`
+		}
+		if json.Unmarshal(body, &doc) == nil {
+			res.Identity.Account = doc.AccountID
+			if res.Identity.Region == "" {
+				res.Identity.Region = doc.Region
+			}
+		}
+	}
 	if name := get("tags/instance/eks:cluster-name"); name != "" {
 		res.Distro = distro.EKS
 		res.Value = "aws instance tag eks:cluster-name"

@@ -205,9 +205,50 @@ func TestDetectMetadataNamesInClusterManagedCluster(t *testing.T) {
 	res = Detect(context.Background(), Probes{Version: version("v1.33.5-eks-113cf36"), Metadata: aws})
 	assert.Equal(t, EKS, res.Name)
 	assert.Equal(t, Identity{Region: "us-east-1", Source: IdentityMetadata}, res.Identity)
+	assert.Nil(t, res.AssetAnnotations(), "no account known, nothing to annotate")
+
+	// EC2 whose identity document names the account: the workloads of this
+	// cluster can be attributed to it
+	awsAccount := func(context.Context) (*MetadataResult, error) {
+		return &MetadataResult{Value: "aws", Identity: Identity{Region: "us-east-1", Account: "111111111111"}}, nil
+	}
+	res = Detect(context.Background(), Probes{Version: version("v1.33.5-eks-113cf36"), Metadata: awsAccount})
+	assert.Equal(t, EKS, res.Name)
+	assert.Equal(t, Identity{Region: "us-east-1", Account: "111111111111", Source: IdentityMetadata}, res.Identity)
+	assert.Equal(t, map[string]string{"mondoo.com/aws-account-id": "111111111111"}, res.AssetAnnotations())
 
 	// a self-managed cluster in a cloud is not named after the instance
 	res = Detect(context.Background(), Probes{Version: version("v1.33.4+k3s1"), Metadata: md})
 	assert.Equal(t, K3s, res.Name)
 	assert.Equal(t, Identity{}, res.Identity)
+}
+
+func TestCloudOf(t *testing.T) {
+	assert.Equal(t, "aws", CloudOf(EKS))
+	assert.Equal(t, "azure", CloudOf(AKS))
+	assert.Equal(t, "gcp", CloudOf(GKE))
+	// EKS Distro runs anywhere, so it has no cloud
+	assert.Equal(t, "", CloudOf(EKSD))
+	assert.Equal(t, "", CloudOf(OpenShift))
+	assert.Equal(t, "", CloudOf(Unknown))
+}
+
+func TestResultAssetAnnotations(t *testing.T) {
+	eks := &Result{Name: EKS, Identity: Identity{Account: "111111111111", Region: "eu-central-1"}}
+	assert.Equal(t, map[string]string{"mondoo.com/aws-account-id": "111111111111"}, eks.AssetAnnotations())
+
+	t.Run("no account, no annotation", func(t *testing.T) {
+		assert.Nil(t, (&Result{Name: EKS, Identity: Identity{Region: "eu-central-1"}}).AssetAnnotations())
+	})
+	t.Run("another cloud's account is not an AWS account", func(t *testing.T) {
+		assert.Nil(t, (&Result{Name: GKE, Identity: Identity{Account: "my-project"}}).AssetAnnotations())
+		assert.Nil(t, (&Result{Name: AKS, Identity: Identity{Account: "00000000-0000-0000-0000-000000000000"}}).AssetAnnotations())
+	})
+	t.Run("EKS Distro outside AWS", func(t *testing.T) {
+		assert.Nil(t, (&Result{Name: EKSD, Identity: Identity{Account: "111111111111"}}).AssetAnnotations())
+	})
+	t.Run("nil result", func(t *testing.T) {
+		var r *Result
+		assert.Nil(t, r.AssetAnnotations())
+	})
 }
