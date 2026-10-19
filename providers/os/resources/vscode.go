@@ -5,6 +5,7 @@ package resources
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -206,10 +207,10 @@ func (c *mqlVscode) extensions() ([]any, error) {
 				// ReadFile will fail if file doesn't exist - no need for separate Exists check
 				pkgJSON, err := readVSCodePackageJSON(afs, packageJSONPath)
 				if err != nil {
-					if !os.IsNotExist(err) {
-						log.Debug().Err(err).Str("path", packageJSONPath).Msg("failed to parse VS Code extension package.json")
+					if os.IsNotExist(err) {
+						continue
 					}
-					continue
+					return nil, fmt.Errorf("cannot inspect VS Code extension manifest %s: %w", packageJSONPath, err)
 				}
 
 				// Create unique identifier
@@ -276,7 +277,7 @@ func (e *mqlVscodeExtension) purl() (string, error) {
 
 // readVSCodePackageJSON reads and parses a VS Code extension package.json file
 func readVSCodePackageJSON(afs *afero.Afero, path string) (*vscodePackageJSON, error) {
-	data, err := afs.ReadFile(path)
+	data, err := readBoundedRegularFile(afs, path, maxExtensionManifestSize)
 	if err != nil {
 		return nil, err
 	}

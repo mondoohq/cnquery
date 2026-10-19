@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -195,7 +197,11 @@ func resolveToolPackage(runtime *plugin.Runtime, configPath string, spec toolPac
 		for _, u := range homes {
 			dirs = append(dirs, u.home)
 		}
-		if v, ok := findVSCodeExtension(connectionAfs(runtime), dirs, spec.vscodeExtensionIDs); ok {
+		v, ok, err := findVSCodeExtension(connectionAfs(runtime), dirs, spec.vscodeExtensionIDs)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
 			installed = true
 			version = v
 		}
@@ -394,7 +400,7 @@ func configPresent(runtime *plugin.Runtime, configPath string, isFile bool) bool
 // only "<id>-<version>" by convention and its case differs between editors.
 // Ids compare case-insensitively, as the marketplace does. ok is true when an
 // extension is found, even if its package.json carries no version.
-func findVSCodeExtension(afs *afero.Afero, homes []string, ids []string) (version string, ok bool) {
+func findVSCodeExtension(afs *afero.Afero, homes []string, ids []string) (version string, ok bool, err error) {
 	want := make(map[string]struct{}, len(ids))
 	for _, id := range ids {
 		want[strings.ToLower(id)] = struct{}{}
@@ -404,7 +410,10 @@ func findVSCodeExtension(afs *afero.Afero, homes []string, ids []string) (versio
 			extensionsDir := filepath.Join(home, editor.dir)
 			entries, err := afs.ReadDir(extensionsDir)
 			if err != nil {
-				continue
+				if os.IsNotExist(err) {
+					continue
+				}
+				return "", false, fmt.Errorf("cannot inspect VS Code extension directory %s: %w", extensionsDir, err)
 			}
 			for _, entry := range entries {
 				if !entry.IsDir() || !hasExtensionIDPrefix(entry.Name(), want) {
@@ -412,7 +421,10 @@ func findVSCodeExtension(afs *afero.Afero, homes []string, ids []string) (versio
 				}
 				pkg, err := readVSCodePackageJSON(afs, filepath.Join(extensionsDir, entry.Name(), "package.json"))
 				if err != nil {
-					continue
+					if os.IsNotExist(err) {
+						continue
+					}
+					return "", false, fmt.Errorf("cannot inspect VS Code extension manifest in %s: %w", entry.Name(), err)
 				}
 				if _, match := want[strings.ToLower(pkg.Publisher+"."+pkg.Name)]; !match {
 					continue
@@ -424,7 +436,7 @@ func findVSCodeExtension(afs *afero.Afero, homes []string, ids []string) (versio
 			}
 		}
 	}
-	return version, ok
+	return version, ok, nil
 }
 
 // hasExtensionIDPrefix is a cheap pre-filter on an extension directory name

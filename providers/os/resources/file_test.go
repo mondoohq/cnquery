@@ -265,3 +265,129 @@ func TestOctalMode(t *testing.T) {
 		assert.Equal(t, want, octalMode(mode), "%o", mode)
 	}
 }
+
+// boundedReadFS can model a virtual file (size zero), a growing file, or a
+// special target without ever opening a real FIFO and risking a stuck test.
+type boundedReadFS struct {
+	afero.Fs
+	path      string
+	mode      os.FileMode
+	size      int64
+	opens     int
+	stats     int
+	bytesRead int
+}
+
+type boundedReadInfo struct {
+	os.FileInfo
+	mode os.FileMode
+	size int64
+}
+
+func (s boundedReadInfo) Mode() os.FileMode { return s.mode }
+func (s boundedReadInfo) Size() int64       { return s.size }
+func (s boundedReadInfo) IsDir() bool       { return s.mode.IsDir() }
+func (fs *boundedReadFS) Stat(path string) (os.FileInfo, error) {
+	fs.stats++
+	info, err := fs.Fs.Stat(path)
+	if err != nil || path != fs.path {
+		return info, err
+	}
+	return boundedReadInfo{FileInfo: info, mode: fs.mode, size: fs.size}, nil
+}
+func (fs *boundedReadFS) Open(path string) (afero.File, error) {
+	if path == fs.path {
+		fs.opens++
+	}
+	file, err := fs.Fs.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	return &boundedReadFile{File: file, fs: fs, path: path}, nil
+}
+
+type boundedReadFile struct {
+	afero.File
+	fs   *boundedReadFS
+	path string
+}
+
+func (f *boundedReadFile) Stat() (os.FileInfo, error) { return f.fs.Stat(f.path) }
+func (f *boundedReadFile) Read(p []byte) (int, error) {
+	n, err := f.File.Read(p)
+	f.fs.bytesRead += n
+	return n, err
+}
+
+func TestReadBoundedRegularFileRejectsSpecialBeforeOpen(t *testing.T) {
+	for _, mode := range []os.FileMode{os.ModeNamedPipe, os.ModeDevice | os.ModeCharDevice, os.ModeSocket, os.ModeDir, os.ModeNamedPipe | os.ModeSymlink} {
+		t.Run(mode.String(), func(t *testing.T) {
+			mem := afero.NewMemMapFs()
+			require.NoError(t, afero.WriteFile(mem, "/config", []byte("secret"), 0o644))
+			fs := &boundedReadFS{Fs: mem, path: "/config", mode: mode}
+			data, err := readBoundedRegularFile(&afero.Afero{Fs: fs}, "/config", 1024)
+			require.ErrorContains(t, err, "regular file")
+			assert.Nil(t, data)
+			assert.Zero(t, fs.opens, "a FIFO must be rejected before an Open can block")
+		})
+	}
+}
+
+func TestReadBoundedRegularFileLimitsActualBytes(t *testing.T) {
+	mem := afero.NewMemMapFs()
+	require.NoError(t, afero.WriteFile(mem, "/config", []byte("123456789"), 0o644))
+	fs := &boundedReadFS{Fs: mem, path: "/config", mode: 0o644, size: 0}
+	data, err := readBoundedRegularFile(&afero.Afero{Fs: fs}, "/config", 8)
+	require.ErrorContains(t, err, "8 byte read limit")
+	assert.Nil(t, data, "never return a truncated configuration as complete")
+	assert.Equal(t, 9, fs.bytesRead, "read only the budget plus one overflow byte")
+	fs.bytesRead = 0
+	data, err = readBoundedRegularFile(&afero.Afero{Fs: fs}, "/config", 9)
+	require.NoError(t, err)
+	assert.Equal(t, "123456789", string(data), "zero-size virtual regular files remain readable")
+	fs.mode = os.ModeSymlink | 0o644
+	data, err = readBoundedRegularFile(&afero.Afero{Fs: fs}, "/config", 9)
+	require.NoError(t, err)
+	assert.Equal(t, "123456789", string(data), "command-backed target modes may retain the symlink bit")
+}
+
+func TestReadBoundedRegularFileRejectsOversizeBeforeOpen(t *testing.T) {
+	mem := afero.NewMemMapFs()
+	require.NoError(t, afero.WriteFile(mem, "/config", []byte("x"), 0o644))
+	fs := &boundedReadFS{Fs: mem, path: "/config", mode: 0o644, size: 4096}
+	_, err := readBoundedRegularFile(&afero.Afero{Fs: fs}, "/config", 1024)
+	require.ErrorContains(t, err, "1024 byte read limit")
+	assert.Zero(t, fs.opens)
+}
+
+func TestFileContentRefusesSpecialOrOversize(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		mode os.FileMode
+		size int64
+	}{
+		{"fifo", os.ModeNamedPipe, 0}, {"device", os.ModeDevice | os.ModeCharDevice, 0}, {"oversize", 0o644, maxFileContentSize + 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			mem := afero.NewMemMapFs()
+			require.NoError(t, afero.WriteFile(mem, "/config", []byte("x"), 0o644))
+			fs := &boundedReadFS{Fs: mem, path: "/config", mode: tc.mode, size: tc.size}
+			runtime := memFSRuntime(t, fs)
+			raw, err := CreateResource(runtime, "file", map[string]*llx.RawData{"path": llx.StringData("/config"), "exists": llx.BoolData(true)})
+			require.NoError(t, err)
+			result := raw.(*mqlFile).GetContent()
+			require.Error(t, result.Error)
+			assert.Empty(t, result.Data)
+			assert.Zero(t, fs.opens)
+		})
+	}
+}
+
+func TestReadBoundedRegularFileRejectsNegativeLimitBeforeIO(t *testing.T) {
+	fs := &boundedReadFS{Fs: afero.NewMemMapFs(), path: "/config"}
+	data, err := readBoundedRegularFile(&afero.Afero{Fs: fs}, "/config", -1)
+	require.ErrorContains(t, err, "invalid negative read limit -1")
+	assert.Nil(t, data)
+	assert.Zero(t, fs.stats, "an invalid internal budget must fail before inspecting a target")
+	assert.Zero(t, fs.opens)
+}
