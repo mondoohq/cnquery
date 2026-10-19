@@ -11,7 +11,18 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/cassandra/connection"
 	"go.mondoo.com/mql/types"
+	"golang.org/x/crypto/bcrypt"
 )
+
+// factoryDefault is what Cassandra sets as the default "cassandra" role's
+// password on a new cluster with PasswordAuthenticator; it is public.
+const factoryDefault = "cassandra"
+
+type mqlCassandraRoleInternal struct {
+	// saltedHash is the role's bcrypt hash from system_auth.roles, kept only
+	// for hasDefaultPassword and never exposed.
+	saltedHash string
+}
 
 func (r *mqlCassandraCluster) roles() ([]any, error) {
 	conn := cassandraConnection(r.MqlRuntime)
@@ -26,6 +37,7 @@ func (r *mqlCassandraCluster) roles() ([]any, error) {
 		isSuperuser bool
 		memberOf    []string
 		hasPassword bool
+		saltedHash  string
 	}
 	var rows []roleRow
 	// system_auth is replicated with SimpleStrategy by default, so in a
@@ -46,6 +58,7 @@ func (r *mqlCassandraCluster) roles() ([]any, error) {
 			memberOf:    mo,
 			// salted_hash is the bcrypt hash; expose only its presence, never the value.
 			hasPassword: saltedHash != "",
+			saltedHash:  saltedHash,
 		})
 	}
 	if err := iter.Close(); err != nil {
@@ -86,9 +99,25 @@ func (r *mqlCassandraCluster) roles() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		res.(*mqlCassandraRole).saltedHash = row.saltedHash
 		list = append(list, res)
 	}
 	return list, nil
+}
+
+func (r *mqlCassandraRole) hasDefaultPassword() (bool, error) {
+	return isDefaultPassword(r.saltedHash), nil
+}
+
+// isDefaultPassword reports whether a salted_hash from system_auth.roles is the
+// bcrypt hash of the default password. Cassandra writes jBCrypt's $2a$
+// hashes, which bcrypt compares like its own. A role without a password has an
+// empty hash.
+func isDefaultPassword(saltedHash string) bool {
+	if saltedHash == "" {
+		return false
+	}
+	return bcrypt.CompareHashAndPassword([]byte(saltedHash), []byte(factoryDefault)) == nil
 }
 
 func (r *mqlCassandraRole) permissions() ([]any, error) {
