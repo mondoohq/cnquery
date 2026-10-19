@@ -6,6 +6,7 @@ package llx
 //go:generate protoc --plugin=protoc-gen-go=../scripts/protoc/protoc-gen-go --plugin=protoc-gen-rangerrpc=../scripts/protoc/protoc-gen-rangerrpc --plugin=protoc-gen-go-vtproto=../scripts/protoc/protoc-gen-go-vtproto --proto_path=. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. --go-vtproto_out=. --go-vtproto_opt=paths=source_relative --go-vtproto_opt=features=marshal+unmarshal+size llx.proto
 
 import (
+	"context"
 	"errors"
 	"sort"
 	"strconv"
@@ -131,6 +132,7 @@ type blockExecutor struct {
 type MQLExecutorV2 struct {
 	id      string
 	runtime Runtime
+	runCtx  context.Context
 	code    *CodeV2
 	props   map[string]*Primitive
 	// skew excuses fields this build was never going to have, because the
@@ -350,13 +352,24 @@ func (c *MQLExecutorV2) Unregister() error {
 
 // Run a given set of code. Only returns an error if the couldn't be started.
 func (c *MQLExecutorV2) Run() error {
+	return c.RunWithContext(context.Background())
+}
+
+// RunWithContext stops scheduling further VM steps when the query is cancelled.
+// Provider operations also need a context-bound Runtime to interrupt their I/O.
+func (c *MQLExecutorV2) RunWithContext(ctx context.Context) error {
 	if len(c.blockExecutors) == 0 {
 		return errors.New("cannot find initial block executor for running this code")
 	}
+	c.runCtx = ctx
 
 	core := c.blockExecutors[0]
 	core.run()
-	return nil
+	return ctx.Err()
+}
+
+func (c *MQLExecutorV2) cancelled() bool {
+	return c.runCtx != nil && c.runCtx.Err() != nil
 }
 
 func (b *blockExecutor) newBlockExecutor(blockRef uint64, callback ResultCallback) (*blockExecutor, error) {
@@ -399,6 +412,9 @@ func (b *blockExecutor) mustLookup(ref uint64) *RawData {
 // run code with a runtime and return results
 func (b *blockExecutor) run() {
 	defer logger.FuncDur(time.Now(), "llx.blockExecutor.run")
+	if b.ctx.cancelled() {
+		return
+	}
 
 	for ref, codeID := range b.callbackPoints {
 		if !b.isInMyBlock(ref) {
@@ -423,6 +439,9 @@ func (b *blockExecutor) run() {
 	sort.Slice(refs, func(i, j int) bool { return refs[i] > refs[j] })
 
 	for _, ref := range refs {
+		if b.ctx.cancelled() {
+			return
+		}
 		// if this entrypoint is already connected, don't add it again
 		if _, ok := b.stepTracker.Load(ref); ok {
 			continue
@@ -974,6 +993,9 @@ func (e *blockExecutor) runChain(start uint64) {
 	var remaining []uint64
 
 	for nextRef != 0 {
+		if e.ctx.cancelled() {
+			return
+		}
 		curRef = nextRef
 		e.stepTracker.Store(curRef, nil)
 		// log.Trace().Uint64("ref", curRef).Msg("exec> run chain")

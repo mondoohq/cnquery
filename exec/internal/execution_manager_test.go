@@ -4,8 +4,10 @@
 package internal
 
 import (
+	"context"
 	"errors"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -16,6 +18,209 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/resources"
 )
+
+type blockedRuntime struct {
+	staticRuntime
+	schema       *resources.Schema
+	phase        string
+	entered      chan struct{}
+	release      chan struct{}
+	returned     chan struct{}
+	unregistered chan struct{}
+	unregister   sync.Once
+}
+
+func newBlockedRuntime(phase string) *blockedRuntime {
+	return &blockedRuntime{
+		schema: &resources.Schema{Resources: map[string]*resources.ResourceInfo{
+			"probe": {Id: "probe", Name: "probe", Global: true, Fields: map[string]*resources.Field{
+				"value": {Name: "value", Type: "bool"},
+			}},
+		}},
+		phase: phase, entered: make(chan struct{}), release: make(chan struct{}),
+		returned: make(chan struct{}), unregistered: make(chan struct{}),
+	}
+}
+
+func (r *blockedRuntime) Schema() resources.ResourcesSchema { return r.schema }
+func (r *blockedRuntime) Unregister(string) error {
+	r.unregister.Do(func() { close(r.unregistered) })
+	return nil
+}
+func (r *blockedRuntime) wait(ctx context.Context) error {
+	close(r.entered)
+	defer close(r.returned)
+	select {
+	case <-r.release:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+func (r *blockedRuntime) CreateResource(string, map[string]*llx.Primitive) (llx.Resource, error) {
+	if r.phase == "create" {
+		if err := r.wait(context.Background()); err != nil {
+			return nil, err
+		}
+	}
+	return &llx.MockResource{Name: "probe", ID: "one"}, nil
+}
+func (r *blockedRuntime) WatchAndUpdate(_ llx.Resource, _, _ string, callback func(any, error)) error {
+	if err := r.wait(context.Background()); err != nil {
+		return err
+	}
+	callback(true, nil)
+	return nil
+}
+
+type cancellableRuntime struct {
+	*blockedRuntime
+	ctx context.Context
+}
+
+func (r *cancellableRuntime) WithContext(ctx context.Context) llx.Runtime {
+	return &cancellableRuntime{blockedRuntime: r.blockedRuntime, ctx: ctx}
+}
+func (r *cancellableRuntime) CreateResource(name string, args map[string]*llx.Primitive) (llx.Resource, error) {
+	if r.phase == "create" {
+		if err := r.wait(r.ctx); err != nil {
+			return nil, err
+		}
+		return &llx.MockResource{Name: "probe", ID: "one"}, nil
+	}
+	return r.blockedRuntime.CreateResource(name, args)
+}
+func (r *cancellableRuntime) WatchAndUpdate(_ llx.Resource, _, _ string, callback func(any, error)) error {
+	if err := r.wait(r.ctx); err != nil {
+		return err
+	}
+	callback(true, nil)
+	return nil
+}
+
+func compileProbe(t *testing.T, runtime llx.Runtime) *llx.CodeBundle {
+	t.Helper()
+	bundle, err := mqlc.Compile("probe.value", nil, mqlc.NewConfig(runtime.Schema(), mql.DefaultFeatures))
+	require.NoError(t, err)
+	return bundle
+}
+
+func awaitSignal(t *testing.T, signal <-chan struct{}) {
+	t.Helper()
+	select {
+	case <-signal:
+	case <-time.After(5 * time.Second):
+		t.Fatal("blocked operation did not reach the expected state")
+	}
+}
+
+func TestExecutionManagerDeadlineIncludesSynchronousProviderCalls(t *testing.T) {
+	for _, phase := range []string{"create", "field"} {
+		t.Run(phase, func(t *testing.T) {
+			blocked := newBlockedRuntime(phase)
+			runtime := &cancellableRuntime{blockedRuntime: blocked}
+			bundle := compileProbe(t, runtime)
+			results := make(chan *llx.RawResult, 16)
+			em := newExecutionManager(runtime.Schema(), runtime, nil, results, 100*time.Millisecond)
+			defer em.Stop()
+			done := make(chan error, 1)
+			go func() { done <- em.executeCodeBundle(bundle, nil, "") }()
+			awaitSignal(t, blocked.entered)
+			select {
+			case err := <-done:
+				require.ErrorIs(t, err, errQueryTimeout)
+			case <-time.After(5 * time.Second):
+				t.Fatal("query deadline did not bound the synchronous provider call")
+			}
+			awaitSignal(t, blocked.returned)
+			select {
+			case result := <-results:
+				t.Fatalf("timed-out call reported a result: %+v", result)
+			default:
+			}
+		})
+	}
+}
+
+func TestExecutionManagerDiscardsLateLegacyResults(t *testing.T) {
+	runtime := newBlockedRuntime("field")
+	bundle := compileProbe(t, runtime)
+	results := make(chan *llx.RawResult, 16)
+	em := newExecutionManager(runtime.Schema(), runtime, nil, results, 100*time.Millisecond)
+	defer em.Stop()
+	t.Cleanup(func() { close(runtime.release) })
+	done := make(chan error, 1)
+	go func() { done <- em.executeCodeBundle(bundle, nil, "") }()
+	awaitSignal(t, runtime.entered)
+	select {
+	case err := <-done:
+		require.ErrorIs(t, err, errQueryTimeout)
+	case <-time.After(5 * time.Second):
+		t.Fatal("legacy provider prevented the query deadline")
+	}
+	runtime.release <- struct{}{}
+	awaitSignal(t, runtime.unregistered)
+	select {
+	case result := <-results:
+		t.Fatalf("late result escaped the completed query: %+v", result)
+	default:
+	}
+}
+
+func TestExecutionManagerStopCancelsProviderCall(t *testing.T) {
+	blocked := newBlockedRuntime("field")
+	runtime := &cancellableRuntime{blockedRuntime: blocked}
+	bundle := compileProbe(t, runtime)
+	queue := make(chan runQueueItem, 1)
+	em := newExecutionManager(runtime.Schema(), runtime, queue, make(chan *llx.RawResult, 16), time.Hour)
+	em.Start()
+	queue <- runQueueItem{codeBundle: bundle}
+	awaitSignal(t, blocked.entered)
+	stopped := make(chan struct{})
+	go func() { em.Stop(); close(stopped) }()
+	awaitSignal(t, stopped)
+	awaitSignal(t, blocked.returned)
+}
+
+func TestExecutionManagerPropertyErrorDeliveryHonorsCancellation(t *testing.T) {
+	for _, stopped := range []bool{false, true} {
+		t.Run(map[bool]string{false: "deadline", true: "stop"}[stopped], func(t *testing.T) {
+			bundle := compileStatic(t, "true")
+			// No consumer can accept the property error. The manager must
+			// publish a fatal execution error instead of dropping it silently.
+			em := newExecutionManager(emptySchema, staticRuntime{}, nil, make(chan *llx.RawResult), 20*time.Millisecond)
+			defer em.Stop()
+			want := errQueryTimeout
+			if stopped {
+				em.Stop()
+				want = context.Canceled
+			}
+			require.ErrorIs(t, em.executeCodeBundle(bundle, nil, "property failed"), want)
+		})
+	}
+}
+
+type asynchronousRuntime struct{ *blockedRuntime }
+
+func (asynchronousRuntime) WatchAndUpdate(_ llx.Resource, _, _ string, callback func(any, error)) error {
+	go callback(true, nil)
+	return nil
+}
+
+func TestExecutionManagerWaitsForAsynchronousResultDelivery(t *testing.T) {
+	runtime := asynchronousRuntime{newBlockedRuntime("")}
+	bundle := compileProbe(t, runtime)
+	count := len(CodepointChecksums(bundle))
+	require.Positive(t, count)
+	// Hold exactly the final handoff. Marking the last datapoint complete
+	// before sending it would let the manager cancel this still-blocked send
+	// and return success while the graph is missing a required result.
+	results := make(chan *llx.RawResult, count-1)
+	em := newExecutionManager(runtime.Schema(), runtime, nil, results, 20*time.Millisecond)
+	defer em.Stop()
+	require.ErrorIs(t, em.executeCodeBundle(bundle, nil, ""), errQueryTimeout)
+	awaitSignal(t, runtime.unregistered)
+}
 
 func TestExecutionManagerRecoversPanic(t *testing.T) {
 	runQueue := make(chan runQueueItem, 1)
