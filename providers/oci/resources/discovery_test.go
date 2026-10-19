@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 // TestDiscoveryPlatformIDFormat pins the platform id every discovery target
@@ -302,5 +303,41 @@ func TestTagsToLabels(t *testing.T) {
 	got := tagsToLabels(map[string]any{"env": "prod", "count": 3})
 	if len(got) != 1 || got["env"] != "prod" {
 		t.Errorf("got %v, want only the string-valued tag", got)
+	}
+}
+
+// TestDiscoveryGone pins which lifecycle states discovery skips: those of a
+// resource that is deleted or being deleted, in any case OCI spells them, and
+// not those of one that still exists (an inactive user, a secret scheduled
+// for deletion, a resource that failed to provision) or that has no state.
+func TestDiscoveryGone(t *testing.T) {
+	for _, s := range []string{"DELETED", "DELETING", "TERMINATED", "TERMINATING", "deleted"} {
+		if !ociDiscoveryGone(s) {
+			t.Errorf("ociDiscoveryGone(%q) = false, want true", s)
+		}
+	}
+	for _, s := range []string{"", "ACTIVE", "AVAILABLE", "INACTIVE", "CREATING", "UPDATING", "FAILED", "PENDING_DELETION", "SCHEDULING_DELETION"} {
+		if ociDiscoveryGone(s) {
+			t.Errorf("ociDiscoveryGone(%q) = true, want false", s)
+		}
+	}
+}
+
+// TestDiscoveryExtractCarriesState checks that a target's extractor hands the
+// lifecycle state to discover(), which skips the resource on it: a deleted OCI
+// Cache cluster keeps its tags, so a tag filter alone would still pick it.
+func TestDiscoveryExtractCarriesState(t *testing.T) {
+	target := ociDiscoveryTargetsByName[DiscoveryRedisClusters]
+	obj, ok := target.Extract(&mqlOciRedisCluster{
+		Id:           plugin.TValue[string]{Data: "ocid1.rediscluster.oc1..example", State: plugin.StateIsSet},
+		Name:         plugin.TValue[string]{Data: "cache", State: plugin.StateIsSet},
+		State:        plugin.TValue[string]{Data: "DELETED", State: plugin.StateIsSet},
+		FreeformTags: plugin.TValue[map[string]any]{Data: map[string]any{"env": "prod"}, State: plugin.StateIsSet},
+	})
+	if !ok {
+		t.Fatal("the redis-clusters extractor rejected an oci.redis.cluster")
+	}
+	if obj.state != "DELETED" || !ociDiscoveryGone(obj.state) {
+		t.Errorf("extracted state %q, want DELETED, which discovery skips", obj.state)
 	}
 }
