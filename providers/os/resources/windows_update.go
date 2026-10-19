@@ -202,6 +202,22 @@ func (w *mqlWindowsUpdate) config() (*mqlWindowsUpdateConfig, error) {
 	install, _ := w.readRegistryKey(wuResultsInstall)
 	wufb, okWufb := w.readRegistryKey(wufbPolicyState)
 
+	// Windows 10 and later no longer write the registry result times, so ask
+	// the Windows Update Agent when commands can run. The registry is only
+	// the fallback when the agent cannot be asked.
+	var wua *windows.WUAResults
+	if conn, ok := w.MqlRuntime.Connection.(shared.Connection); ok && conn.Capabilities().Has(shared.Capability_RunCommand) {
+		res, err := w.readWUAResults(conn)
+		if err != nil {
+			log.Debug().Err(err).Msg("windows.update.config> could not read Windows Update Agent results, using registry")
+		} else {
+			wua = res
+		}
+	}
+	lastDetection, lastInstall := wuResultTimes(wua,
+		parseWULastSuccessTime(regString(detect, "LastSuccessTime")),
+		parseWULastSuccessTime(regString(install, "LastSuccessTime")))
+
 	// "read" is true when we were able to query the registry at all, even if
 	// the keys are absent (a default direct-Windows-Update host has no policy
 	// keys). It is false only when the registry could not be read.
@@ -241,10 +257,10 @@ func (w *mqlWindowsUpdate) config() (*mqlWindowsUpdateConfig, error) {
 		"wsusStatusServerUrl":  llx.StringData(wsusStatusServerURL),
 		"useWUServer":          llx.BoolData(useWUServer),
 		"auOptions":            llx.IntData(auOptions),
-		"lastDetectionSuccess": llx.TimeDataPtr(parseWULastSuccessTime(regString(detect, "LastSuccessTime"))),
+		"lastDetectionSuccess": llx.TimeDataPtr(lastDetection),
 		"lastDetectionError":   llx.StringData(formatWULastError(regInt(detect, "LastError"))),
 		"lastDownloadSuccess":  llx.TimeDataPtr(parseWULastSuccessTime(regString(download, "LastSuccessTime"))),
-		"lastInstallSuccess":   llx.TimeDataPtr(parseWULastSuccessTime(regString(install, "LastSuccessTime"))),
+		"lastInstallSuccess":   llx.TimeDataPtr(lastInstall),
 		"rebootPending":        llx.BoolData(rebootPending),
 		"policyState":          intPtrData(policyState),
 	})
@@ -252,6 +268,31 @@ func (w *mqlWindowsUpdate) config() (*mqlWindowsUpdateConfig, error) {
 		return nil, err
 	}
 	return o.(*mqlWindowsUpdateConfig), nil
+}
+
+// wuResultTimes picks the last detection and install times. Once the Windows
+// Update Agent answered, its values are used as they are, including a nil
+// for "never": the registry keys Windows 10 and later stopped writing can
+// still hold a value frozen years ago, and reporting that would make a host
+// that never detected look like one that detected long ago.
+func wuResultTimes(wua *windows.WUAResults, regDetection, regInstall *time.Time) (detection, install *time.Time) {
+	if wua != nil {
+		return wua.LastSearchSuccess, wua.LastInstallationSuccess
+	}
+	return regDetection, regInstall
+}
+
+// readWUAResults runs WINDOWS_QUERY_WUA_RESULTS and parses its output.
+func (w *mqlWindowsUpdate) readWUAResults(conn shared.Connection) (*windows.WUAResults, error) {
+	cmd, err := conn.RunCommand(powershell.Encode(windows.WINDOWS_QUERY_WUA_RESULTS))
+	if err != nil {
+		return nil, err
+	}
+	if cmd.ExitStatus != 0 {
+		stderr, _ := io.ReadAll(cmd.Stderr)
+		return nil, fmt.Errorf("failed to read windows update agent results: %s", string(stderr))
+	}
+	return windows.ParseWUAResults(cmd.Stdout)
 }
 
 func (c *mqlWindowsUpdateConfig) service() (*mqlService, error) {

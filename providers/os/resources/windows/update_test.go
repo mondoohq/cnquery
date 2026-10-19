@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -305,4 +306,55 @@ func TestUpdateHistoryQueryStopsOnError(t *testing.T) {
 	// $count -gt 0 guard false, and an empty history: a host whose update
 	// agent could not be reached reports that nothing was ever installed.
 	assert.Contains(t, WINDOWS_QUERY_UPDATE_HISTORY, "$ErrorActionPreference='Stop'")
+}
+
+func TestParseWUAResults(t *testing.T) {
+	t.Run("both dates set", func(t *testing.T) {
+		res, err := ParseWUAResults(strings.NewReader(`{"LastSearchSuccessDate":"2026-10-19 06:25:42","LastInstallationSuccessDate":"2026-10-19 06:25:56"}`))
+		require.NoError(t, err)
+		require.NotNil(t, res.LastSearchSuccess)
+		require.NotNil(t, res.LastInstallationSuccess)
+		assert.Equal(t, time.Date(2026, 10, 19, 6, 25, 42, 0, time.UTC), *res.LastSearchSuccess)
+		assert.Equal(t, time.Date(2026, 10, 19, 6, 25, 56, 0, time.UTC), *res.LastInstallationSuccess)
+		assert.Equal(t, time.UTC, res.LastSearchSuccess.Location())
+	})
+	t.Run("null dates", func(t *testing.T) {
+		res, err := ParseWUAResults(strings.NewReader(`{"LastSearchSuccessDate":null,"LastInstallationSuccessDate":null}`))
+		require.NoError(t, err)
+		assert.Nil(t, res.LastSearchSuccess)
+		assert.Nil(t, res.LastInstallationSuccess)
+	})
+	t.Run("one null one set", func(t *testing.T) {
+		res, err := ParseWUAResults(strings.NewReader(`{"LastSearchSuccessDate":"2026-01-02 03:04:05","LastInstallationSuccessDate":null}`))
+		require.NoError(t, err)
+		require.NotNil(t, res.LastSearchSuccess)
+		assert.Equal(t, time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC), *res.LastSearchSuccess)
+		assert.Nil(t, res.LastInstallationSuccess)
+	})
+	t.Run("missing keys", func(t *testing.T) {
+		res, err := ParseWUAResults(strings.NewReader(`{}`))
+		require.NoError(t, err)
+		assert.Nil(t, res.LastSearchSuccess)
+		assert.Nil(t, res.LastInstallationSuccess)
+	})
+	t.Run("malformed json", func(t *testing.T) {
+		_, err := ParseWUAResults(strings.NewReader(`{"LastSearchSuccessDate":`))
+		assert.Error(t, err)
+	})
+	t.Run("empty output", func(t *testing.T) {
+		_, err := ParseWUAResults(strings.NewReader(""))
+		assert.Error(t, err)
+	})
+	t.Run("unparseable date", func(t *testing.T) {
+		_, err := ParseWUAResults(strings.NewReader(`{"LastSearchSuccessDate":"yesterday"}`))
+		assert.Error(t, err)
+	})
+}
+
+// The query must not convert time zones: a COM DateTime with Kind=Unspecified
+// would be shifted by the host offset.
+func TestWUAResultsQueryNoTimeZoneConversion(t *testing.T) {
+	assert.NotContains(t, WINDOWS_QUERY_WUA_RESULTS, "ToUniversalTime")
+	assert.NotContains(t, WINDOWS_QUERY_WUA_RESULTS, "ToLocalTime")
+	assert.Contains(t, WINDOWS_QUERY_WUA_RESULTS, "'yyyy-MM-dd HH:mm:ss'")
 }
