@@ -16,34 +16,34 @@ require (
 	github.com/alibabacloud-go/cr-20181201/v3 v3.2.3
 	github.com/alibabacloud-go/cs-20151215/v8 v8.2.0
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.4
-	github.com/alibabacloud-go/ddoscoo-20200101/v5 v5.0.2
-	github.com/alibabacloud-go/dds-20151201/v10 v10.4.2
+	github.com/alibabacloud-go/ddoscoo-20200101/v5 v5.0.3
+	github.com/alibabacloud-go/dds-20151201/v10 v10.5.0
 	github.com/alibabacloud-go/ecs-20140526/v7 v7.11.5
 	github.com/alibabacloud-go/elasticsearch-20170613/v6 v6.4.0
 	github.com/alibabacloud-go/ess-20220222/v2 v2.13.3
 	github.com/alibabacloud-go/fc-20230330/v4 v4.8.3
 	github.com/alibabacloud-go/ims-20190815/v4 v4.4.2
-	github.com/alibabacloud-go/kms-20160120/v4 v4.3.0
-	github.com/alibabacloud-go/nas-20170626/v4 v4.7.3
+	github.com/alibabacloud-go/kms-20160120/v4 v4.3.1
+	github.com/alibabacloud-go/nas-20170626/v4 v4.7.4
 	github.com/alibabacloud-go/nlb-20220430/v4 v4.1.3
-	github.com/alibabacloud-go/polardb-20170801/v9 v9.3.3
+	github.com/alibabacloud-go/polardb-20170801/v9 v9.4.0
 	github.com/alibabacloud-go/privatelink-20200415/v5 v5.0.11
 	github.com/alibabacloud-go/r-kvstore-20150101/v7 v7.6.0
 	github.com/alibabacloud-go/ram-20150501/v2 v2.2.1
 	github.com/alibabacloud-go/rds-20140815/v16 v16.9.1
-	github.com/alibabacloud-go/resourcemanager-20200331/v3 v3.5.1
-	github.com/alibabacloud-go/sas-20181203/v10 v10.2.1
+	github.com/alibabacloud-go/resourcemanager-20200331/v3 v3.5.2
+	github.com/alibabacloud-go/sas-20181203/v10 v10.3.1
 	github.com/alibabacloud-go/slb-20140515/v4 v4.0.14
 	github.com/alibabacloud-go/sls-20201230/v6 v6.15.1
 	github.com/alibabacloud-go/sts-20150401/v2 v2.1.0
 	github.com/alibabacloud-go/tea v1.5.3
 	github.com/alibabacloud-go/vpc-20160428/v7 v7.3.1
 	github.com/alibabacloud-go/waf-openapi-20211001/v7 v7.8.6
-	github.com/aliyun/alibabacloud-oss-go-sdk-v2 v1.6.0
+	github.com/aliyun/alibabacloud-oss-go-sdk-v2 v1.6.1
 	github.com/aliyun/credentials-go v1.4.13
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20261012063653-19e08148bb9f
+	go.mondoo.com/mql v0.0.0-20261019065417-1fcdd84493fd
 )
 
 require go.opentelemetry.io/otel/log v1.47.0 // indirect
@@ -51,7 +51,7 @@ require go.opentelemetry.io/otel/log v1.47.0 // indirect
 require (
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/Microsoft/go-winio v0.6.3 // indirect
+	github.com/Microsoft/go-winio v0.6.4 // indirect
 	github.com/ProtonMail/go-crypto v1.5.2 // indirect
 	github.com/alibabacloud-go/alibabacloud-gateway-pop v0.0.8 // indirect
 	github.com/alibabacloud-go/alibabacloud-gateway-sls v0.4.0 // indirect
@@ -153,7 +153,7 @@ require (
 	golang.org/x/text v0.43.0 // indirect
 	golang.org/x/time v0.16.0 // indirect
 	golang.org/x/tools v0.52.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20261005182115-fad411399dd8 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261012220534-4341edf3f941 // indirect
 	google.golang.org/grpc v1.84.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
