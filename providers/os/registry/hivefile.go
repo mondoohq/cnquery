@@ -264,15 +264,18 @@ func valueBytes(vk *regparser.CM_KEY_VALUE) []byte {
 	return data
 }
 
-// Item returns the named value, matching the name case-insensitively.
+// Item returns the named value, matching the name case-insensitively. Only the
+// matching value is decoded.
 func (h *hiveFile) Item(keyPath, name string) (RegistryKeyItem, error) {
-	items, err := h.Items(keyPath)
+	nk, err := h.mustOpenKey(keyPath)
 	if err != nil {
 		return RegistryKeyItem{}, err
 	}
-	for _, item := range items {
-		if strings.EqualFold(item.Key, name) {
-			return item, nil
+	if nk.ValueList().Count() > 0 {
+		for _, vk := range nk.Values() {
+			if vn := valueName(vk); strings.EqualFold(vn, name) {
+				return RegistryKeyItem{Key: vn, Value: decodeRawRegistryValue(vk.Type(), valueBytes(vk))}, nil
+			}
 		}
 	}
 	return RegistryKeyItem{}, status.Error(codes.NotFound, fmt.Sprintf("registry value %s not found under %s", name, keyPath))

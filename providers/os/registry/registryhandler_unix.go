@@ -16,6 +16,11 @@ import (
 // lower-cased mount key (e.g. "tmpreg_software"). There is no registry to mount
 // them in on non-windows platforms, so the native readers in registrykey_unix.go
 // resolve paths under HKLM\<mount key> against this map instead.
+//
+// It is package-level on purpose: it stands in for the machine-wide HKLM that
+// RegLoadKey mounts into on Windows, where a mount key is just as global. Two
+// loads of the same mount key conflict on both platforms, so tests that load a
+// hive under the same id must not run in parallel.
 var (
 	loadedHivesLock sync.Mutex
 	loadedHives     = map[string]*hiveFile{}
