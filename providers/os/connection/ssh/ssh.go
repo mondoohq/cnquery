@@ -6,6 +6,7 @@ package ssh
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"os"
@@ -56,6 +57,8 @@ type Connection struct {
 	UseScpFilesystem bool
 	HostKey          ssh.PublicKey
 	SSHClient        *ssh.Client
+	closersMu        sync.Mutex
+	closers          []io.Closer
 
 	// the shell the server runs commands in, detected once (windows_shell.go)
 	shellOnce     sync.Once
@@ -379,6 +382,13 @@ func (c *Connection) Close() {
 	if c.SSHClient != nil {
 		c.SSHClient.Close()
 	}
+	c.closersMu.Lock()
+	closers := c.closers
+	c.closers = nil
+	c.closersMu.Unlock()
+	for _, closer := range closers {
+		_ = closer.Close()
+	}
 }
 
 // checks the connection config and set default values if not provided by the user
@@ -391,6 +401,10 @@ func (c *Connection) setDefaultSettings() {
 }
 
 func (c *Connection) Connect() error {
+	return c.ConnectContext(context.Background())
+}
+
+func (c *Connection) ConnectContext(ctx context.Context) error {
 	cc := c.conf
 
 	c.setDefaultSettings()
@@ -433,8 +447,11 @@ func (c *Connection) Connect() error {
 	}
 
 	// establish connection
-	conn, _, err := establishClientConnection(cc, hostkeyCallback)
+	conn, closers, err := establishClientConnectionContext(ctx, cc, hostkeyCallback)
 	if err != nil {
+		for _, closer := range closers {
+			_ = closer.Close()
+		}
 		log.Debug().Err(err).Str("provider", "ssh").Str("host", cc.Host).Int32("port", cc.Port).Bool("insecure", cc.Insecure).Msg("could not establish ssh session")
 		if strings.ContainsAny(cc.Host, "[]") {
 			log.Info().Str("host", cc.Host).Int32("port", cc.Port).Msg("ensure proper []s when combining IPv6 with port numbers")
@@ -442,6 +459,9 @@ func (c *Connection) Connect() error {
 		return err
 	}
 	c.SSHClient = conn
+	c.closersMu.Lock()
+	c.closers = append(c.closers, closers...)
+	c.closersMu.Unlock()
 	c.HostKey = hostkey
 	c.serverVersion = string(conn.ServerVersion())
 	log.Debug().Str("provider", "ssh").Str("host", cc.Host).Int32("port", cc.Port).Str("server", c.serverVersion).Msg("ssh session established")
@@ -573,9 +593,19 @@ func knownHostsCallback() (ssh.HostKeyCallback, error) {
 }
 
 func establishClientConnection(pCfg *inventory.Config, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, []io.Closer, error) {
-	authMethods, closer, err := prepareConnection(pCfg)
+	return establishClientConnectionContext(context.Background(), pCfg, hostKeyCallback)
+}
+
+func establishClientConnectionContext(parent context.Context, pCfg *inventory.Config, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, []io.Closer, error) {
+	timeout, err := sshConnectTimeout(pCfg.Options)
 	if err != nil {
 		return nil, nil, err
+	}
+	ctx, cancel := context.WithTimeout(parent, timeout)
+	defer cancel()
+	authMethods, closer, err := prepareConnectionContext(ctx, pCfg)
+	if err != nil {
+		return nil, closer, err
 	}
 
 	if len(authMethods) == 0 {
@@ -597,7 +627,10 @@ func establishClientConnection(pCfg *inventory.Config, hostKeyCallback ssh.HostK
 		HostKeyCallback: hostKeyCallback,
 	}
 
-	supportsHybrid, err := serverSupportsHybridKEX(addr)
+	supportsHybrid, err := serverSupportsHybridKEXContext(ctx, addr)
+	if ctx.Err() != nil {
+		return nil, closer, fmt.Errorf("SSH banner probe: %w", ctx.Err())
+	}
 	if err == nil && supportsHybrid {
 		// force the Key Exchange Algorithm to a compatible one
 		sshClientConfig.Config = ssh.Config{
@@ -615,18 +648,88 @@ func establishClientConnection(pCfg *inventory.Config, hostKeyCallback ssh.HostK
 		Str("user", user).
 		Bool("hybrid_key_exchange", supportsHybrid).
 		Msg("connect to remote ssh")
-	conn, err := ssh.Dial("tcp", addr, sshClientConfig)
+	conn, err := dialSSHContext(ctx, addr, sshClientConfig)
 	return conn, closer, err
+}
+
+const defaultSSHConnectTimeout = 30 * time.Second
+
+// sshConnectTimeout bounds the banner probe, TCP dial, SSH handshake and
+// authentication together. A zero duration would disable the protection.
+func sshConnectTimeout(options map[string]string) (time.Duration, error) {
+	value := strings.TrimSpace(options["ssh_connect_timeout"])
+	if value == "" {
+		value = strings.TrimSpace(os.Getenv("MONDOO_SSH_CONNECT_TIMEOUT"))
+	}
+	if value == "" {
+		return defaultSSHConnectTimeout, nil
+	}
+	timeout, err := time.ParseDuration(value)
+	if err != nil || timeout <= 0 {
+		return 0, fmt.Errorf("invalid SSH connect timeout %q: expected a positive duration", value)
+	}
+	return timeout, nil
+}
+
+// dialSSHContext keeps a deadline on the socket until authentication finishes.
+// ssh.ClientConfig.Timeout covers only TCP dialing, not the SSH handshake.
+func dialSSHContext(ctx context.Context, addr string, config *ssh.ClientConfig) (*ssh.Client, error) {
+	conn, err := (&net.Dialer{}).DialContext(ctx, "tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+	if deadline, ok := ctx.Deadline(); ok {
+		if err := conn.SetDeadline(deadline); err != nil {
+			conn.Close()
+			return nil, err
+		}
+	}
+	cancelled := make(chan struct{})
+	stop := context.AfterFunc(ctx, func() {
+		conn.Close()
+		close(cancelled)
+	})
+	client, channels, requests, err := ssh.NewClientConn(conn, addr, config)
+	if !stop() {
+		<-cancelled
+		conn.Close()
+		return nil, ctx.Err()
+	}
+	if err != nil {
+		conn.Close()
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		return nil, err
+	}
+	// The startup budget must not become an expiry for a healthy connection.
+	if err := conn.SetDeadline(time.Time{}); err != nil {
+		client.Close()
+		return nil, err
+	}
+	return ssh.NewClient(client, channels, requests), nil
 }
 
 // Detects if the remote server offers hybrid PQ KEX algorithms
 func serverSupportsHybridKEX(addr string) (bool, error) {
-	conn, err := net.DialTimeout("tcp", addr, 5*time.Second)
+	return serverSupportsHybridKEXContext(context.Background(), addr)
+}
+
+func serverSupportsHybridKEXContext(parent context.Context, addr string) (bool, error) {
+	ctx, cancel := context.WithTimeout(parent, 5*time.Second)
+	defer cancel()
+	conn, err := (&net.Dialer{}).DialContext(ctx, "tcp", addr)
 	if err != nil {
 		log.Debug().Err(err).Msg("fail to verify KEX algorithms")
 		return false, err
 	}
 	defer conn.Close()
+	deadline, _ := ctx.Deadline()
+	if err := conn.SetDeadline(deadline); err != nil {
+		return false, err
+	}
+	stop := context.AfterFunc(ctx, func() { _ = conn.Close() })
+	defer stop()
 
 	// Read the server's version string
 	var buf [256]byte
@@ -649,6 +752,12 @@ func serverSupportsHybridKEX(addr string) (bool, error) {
 // prepareConnection determines the auth methods required for a ssh connection and also prepares any other
 // pre-conditions for the connection like tunnelling the connection via AWS SSM session
 func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultSSHConnectTimeout)
+	defer cancel()
+	return prepareConnectionContext(ctx, conf)
+}
+
+func prepareConnectionContext(ctx context.Context, conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, error) {
 	auths := []ssh.AuthMethod{}
 	closer := []io.Closer{}
 
@@ -657,7 +766,7 @@ func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, e
 
 	// if no credential was provided, fallback to ssh-agent and ssh-config
 	if len(conf.Credentials) == 0 {
-		sshSigners = append(sshSigners, signers.GetSignersFromSSHAgent()...)
+		sshSigners = append(sshSigners, signers.GetSignersFromSSHAgentContext(ctx)...)
 	}
 
 	// use key auth, only load if the key was not found in ssh agent
@@ -696,14 +805,14 @@ func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, e
 			}
 		case vault.CredentialType_ssh_agent:
 			log.Debug().Msg("enabled ssh agent authentication")
-			sshSigners = append(sshSigners, signers.GetSignersFromSSHAgent()...)
+			sshSigners = append(sshSigners, signers.GetSignersFromSSHAgentContext(ctx)...)
 		case vault.CredentialType_aws_ec2_ssm_session:
 			// when the user establishes the ssm session we do the following
 			// 1. start websocket connection and start the session-manager-plugin to map the websocket to a local port
 			// 2. create new ssh key via instance connect so that we do not rely on any pre-existing ssh key
-			err := awsssmsession.CheckPlugin()
+			err := awsssmsession.CheckPluginContext(ctx)
 			if err != nil {
-				return nil, nil, errors.New("Local AWS Session Manager plugin is missing. See https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html for information on the AWS Session Manager plugin and installation instructions")
+				return nil, closer, errors.New("Local AWS Session Manager plugin is missing. See https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html for information on the AWS Session Manager plugin and installation instructions")
 			}
 
 			loadOpts := []func(*awsconf.LoadOptions) error{}
@@ -717,9 +826,9 @@ func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, e
 			}
 			log.Debug().Str("profile", conf.Options["profile"]).Str("region", conf.Options["region"]).Msg("using aws creds")
 
-			cfg, err := awsconf.LoadDefaultConfig(context.Background(), loadOpts...)
+			cfg, err := awsconf.LoadDefaultConfig(ctx, loadOpts...)
 			if err != nil {
-				return nil, nil, err
+				return nil, closer, err
 			}
 
 			// we use ec2 instance connect api to create credentials for an aws instance
@@ -728,15 +837,15 @@ func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, e
 			if id, ok := conf.Options["instance"]; ok {
 				host = id
 			}
-			creds, err := eic.GenerateCredentials(host, credential.User)
+			creds, err := eic.GenerateCredentialsContext(ctx, host, credential.User)
 			if err != nil {
-				return nil, nil, err
+				return nil, closer, err
 			}
 
 			// we use ssm session manager to connect to instance via websockets
 			sManager, err := awsssmsession.NewAwsSsmSessionManager(cfg, profile)
 			if err != nil {
-				return nil, nil, err
+				return nil, closer, err
 			}
 
 			// prepare websocket connection and bind it to a free local port
@@ -746,11 +855,11 @@ func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, e
 			conf.Host = creds.InstanceId
 			localPort, err := awsssmsession.GetAvailablePort()
 			if err != nil {
-				return nil, nil, errors.New("could not find an available port to start the ssm proxy")
+				return nil, closer, errors.New("could not find an available port to start the ssm proxy")
 			}
-			ssmConn, err := sManager.Dial(conf, strconv.Itoa(localPort), remotePort)
+			ssmConn, err := sManager.DialContext(ctx, conf, strconv.Itoa(localPort), remotePort)
 			if err != nil {
-				return nil, nil, err
+				return nil, closer, err
 			}
 
 			// update endpoint information for ssh to connect via local ssm proxy
@@ -766,7 +875,7 @@ func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, e
 			// use the generated ssh credentials for authentication
 			priv, err := signers.GetSignerFromPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
 			if err != nil {
-				return nil, nil, multierr.Wrap(err, "could not read generated private key")
+				return nil, closer, multierr.Wrap(err, "could not read generated private key")
 			}
 			sshSigners = append(sshSigners, priv)
 			closer = append(closer, ssmConn)
@@ -780,9 +889,9 @@ func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, e
 			if conf.Options != nil && conf.Options["profile"] != "" {
 				loadOpts = append(loadOpts, awsconf.WithSharedConfigProfile(conf.Options["profile"]))
 			}
-			cfg, err := awsconf.LoadDefaultConfig(context.Background(), loadOpts...)
+			cfg, err := awsconf.LoadDefaultConfig(ctx, loadOpts...)
 			if err != nil {
-				return nil, nil, err
+				return nil, closer, err
 			}
 			log.Debug().Msg("generating instance connect credentials")
 			eic := awsinstanceconnect.New(cfg)
@@ -790,21 +899,21 @@ func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, e
 			if id, ok := conf.Options["instance"]; ok {
 				host = id
 			}
-			creds, err := eic.GenerateCredentials(host, credential.User)
+			creds, err := eic.GenerateCredentialsContext(ctx, host, credential.User)
 			if err != nil {
-				return nil, nil, err
+				return nil, closer, err
 			}
 
 			priv, err := signers.GetSignerFromPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
 			if err != nil {
-				return nil, nil, multierr.Wrap(err, "could not read generated private key")
+				return nil, closer, multierr.Wrap(err, "could not read generated private key")
 			}
 			sshSigners = append(sshSigners, priv)
 
 			// NOTE: this creates a side-effect where the host is overwritten
 			conf.Host = creds.PublicIpAddress
 		default:
-			return nil, nil, errors.New("unsupported authentication mechanism for ssh: " + credential.Type.String())
+			return nil, closer, errors.New("unsupported authentication mechanism for ssh: " + credential.Type.String())
 		}
 	}
 

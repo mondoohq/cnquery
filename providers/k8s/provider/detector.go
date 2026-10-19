@@ -10,6 +10,9 @@ import (
 
 func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	asset.Platform = conn.Platform()
+	// the cloud account the cluster runs in; discovery copies a root asset's
+	// annotations onto everything found under it
+	asset.AddAnnotations(conn.Distro().AssetAnnotations())
 
 	return nil
 }

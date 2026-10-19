@@ -5,7 +5,6 @@ package resources
 
 import (
 	"errors"
-	"io"
 	"net"
 	"net/http"
 	"net/textproto"
@@ -19,12 +18,16 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/network/connection"
 	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/iox"
 	"go.mondoo.com/mql/utils/sortx"
 )
 
 type mqlHttpGetInternal struct {
-	lock sync.Mutex
-	resp plugin.TValue[*http.Response]
+	lock         sync.Mutex
+	resp         plugin.TValue[*http.Response]
+	bodyOnce     sync.Once
+	responseBody string
+	bodyError    error
 }
 
 func initHttpGet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -141,6 +144,11 @@ func httpNotReachable(err error) bool {
 	if err == nil {
 		return false
 	}
+	// A timeout is an incomplete inspection, not proof that HTTP is absent.
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		return false
+	}
 	var dnsErr *net.DNSError
 	if errors.As(err, &dnsErr) {
 		return true
@@ -148,10 +156,6 @@ func httpNotReachable(err error) bool {
 	var opErr *net.OpError
 	if errors.As(err, &opErr) {
 		// dial/read/write at the socket level: connection refused, reset, no route
-		return true
-	}
-	var netErr net.Error
-	if errors.As(err, &netErr) && netErr.Timeout() {
 		return true
 	}
 	return false
@@ -232,8 +236,12 @@ func (x *mqlHttpGet) body() (string, error) {
 		}
 		return "", err
 	}
-	raw, err := io.ReadAll(x.resp.Data.Body)
-	return string(raw), err
+	x.bodyOnce.Do(func() {
+		defer x.resp.Data.Body.Close()
+		raw, err := iox.ReadAllLimit(x.resp.Data.Body, 16<<20)
+		x.responseBody, x.bodyError = string(raw), err
+	})
+	return x.responseBody, x.bodyError
 }
 
 func parseHeaderFields(raw []any, f func(key string, value string)) {

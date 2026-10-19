@@ -154,6 +154,52 @@ func TestCloudMetadataAWSWithoutTags(t *testing.T) {
 	require.NotNil(t, res)
 	assert.Equal(t, "", res.Distro)
 	assert.Equal(t, "aws", res.Value)
+	assert.Equal(t, "", res.Identity.Account, "no identity document, no account")
+}
+
+func TestCloudMetadataAWSIdentityDocument(t *testing.T) {
+	srv := metadataServer(t, map[string]string{
+		"PUT /latest/api/token":                            "token",
+		"/latest/meta-data/placement/region":               "eu-central-1",
+		"/latest/meta-data/tags/instance/eks:cluster-name": "prod",
+		"/latest/dynamic/instance-identity/document": `{"accountId":"111111111111","region":"eu-central-1",
+			"instanceId":"i-0123456789abcdef0","imageId":"ami-0123"}`,
+	}, [2]string{"X-aws-ec2-metadata-token", "token"})
+	defer srv.Close()
+
+	res, err := cloudMetadata(context.Background(), srv.Client(), srv.URL)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.Equal(t, distro.EKS, res.Distro)
+	assert.Equal(t, distro.Identity{ClusterName: "prod", Region: "eu-central-1", Account: "111111111111"}, res.Identity)
+}
+
+func TestCloudMetadataAWSIdentityDocumentRegionFallback(t *testing.T) {
+	srv := metadataServer(t, map[string]string{
+		"PUT /latest/api/token":                      "token",
+		"/latest/dynamic/instance-identity/document": `{"accountId":"111111111111","region":"us-west-2"}`,
+	}, [2]string{"X-aws-ec2-metadata-token", "token"})
+	defer srv.Close()
+
+	res, err := cloudMetadata(context.Background(), srv.Client(), srv.URL)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.Equal(t, "", res.Distro)
+	assert.Equal(t, distro.Identity{Region: "us-west-2", Account: "111111111111"}, res.Identity)
+}
+
+func TestCloudMetadataAWSMalformedIdentityDocument(t *testing.T) {
+	srv := metadataServer(t, map[string]string{
+		"PUT /latest/api/token":                      "token",
+		"/latest/meta-data/placement/region":         "us-east-1",
+		"/latest/dynamic/instance-identity/document": `not json`,
+	}, [2]string{"X-aws-ec2-metadata-token", "token"})
+	defer srv.Close()
+
+	res, err := cloudMetadata(context.Background(), srv.Client(), srv.URL)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.Equal(t, distro.Identity{Region: "us-east-1"}, res.Identity, "a bad document costs the account, not the probe")
 }
 
 func TestCloudMetadataNone(t *testing.T) {

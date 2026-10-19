@@ -59,6 +59,28 @@ type ociDiscovered struct {
 	compartment string
 	region      string
 	labels      map[string]string
+	// state is the resource's lifecycle state, empty for an object type that
+	// has none (buckets). discover() skips a resource that is deleted or
+	// being deleted; see ociDiscoveryGone.
+	state string
+}
+
+// ociDiscoveryGone reports whether a lifecycle state means the resource no
+// longer exists, or is on its way out. OCI keeps listing a deleted resource
+// for a while (a deleted OCI Cache cluster, API Gateway deployment or OKE
+// cluster; a terminated security list), with the settings and tags it had.
+// Emitting it as an asset scored a resource that is not there, and since
+// tags are the usual way to pick a deployment's assets, a deleted resource
+// carrying the same tags as its live replacement was scored as if it were
+// that replacement. States such as INACTIVE (an identity user) or
+// PENDING_DELETION (a vault secret) still describe a resource that exists and
+// are kept.
+func ociDiscoveryGone(state string) bool {
+	switch strings.ToUpper(state) {
+	case "DELETED", "DELETING", "TERMINATED", "TERMINATING":
+		return true
+	}
+	return false
 }
 
 // ociDiscoveryTarget describes one fine-grained discovery target end to end.
@@ -117,6 +139,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 				id: sl.Id.Data, name: sl.Name.Data,
 				compartment: sl.cacheCompartmentID, region: sl.cacheRegion,
 				labels: tagsToLabels(sl.FreeformTags.Data),
+				state:  sl.State.Data,
 			}, true
 		},
 	},
@@ -138,6 +161,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 				id: u.Id.Data, name: u.Name.Data,
 				compartment: u.cacheCompartmentID, region: "global",
 				labels: tagsToLabels(u.FreeformTags.Data),
+				state:  u.State.Data,
 			}, true
 		},
 	},
@@ -156,6 +180,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 				id: p.Id.Data, name: p.Name.Data,
 				compartment: p.cacheCompartmentID, region: "global",
 				labels: tagsToLabels(p.FreeformTags.Data),
+				state:  p.State.Data,
 			}, true
 		},
 	},
@@ -201,6 +226,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 				id: d.Id.Data, name: d.Name.Data,
 				compartment: d.cacheCompartmentID, region: d.cacheRegion,
 				labels: tagsToLabels(d.FreeformTags.Data),
+				state:  d.State.Data,
 			}, true
 		},
 	},
@@ -219,6 +245,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 				id: lb.Id.Data, name: lb.Name.Data,
 				compartment: lb.cacheCompartmentID, region: lb.cacheRegion,
 				labels: tagsToLabels(lb.FreeformTags.Data),
+				state:  lb.State.Data,
 			}, true
 		},
 	},
@@ -237,6 +264,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 				id: c.Id.Data, name: c.Name.Data,
 				compartment: c.cacheCompartmentID, region: c.cacheRegion,
 				labels: tagsToLabels(c.FreeformTags.Data),
+				state:  c.State.Data,
 			}, true
 		},
 	},
@@ -255,6 +283,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 				id: s.Id.Data, name: s.Name.Data,
 				compartment: s.cacheCompartmentID, region: s.cacheRegion,
 				labels: tagsToLabels(s.FreeformTags.Data),
+				state:  s.State.Data,
 			}, true
 		},
 	},
@@ -273,6 +302,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 				id: c.Id.Data, name: c.Name.Data,
 				compartment: c.cacheCompartmentID, region: c.cacheRegion,
 				labels: tagsToLabels(c.FreeformTags.Data),
+				state:  c.State.Data,
 			}, true
 		},
 	},
@@ -291,6 +321,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 				id: e.Id.Data, name: e.Name.Data,
 				compartment: e.CompartmentID.Data, region: e.cacheRegion,
 				labels: tagsToLabels(e.FreeformTags.Data),
+				state:  e.State.Data,
 			}, true
 		},
 	},
@@ -417,6 +448,11 @@ func discover(runtime *plugin.Runtime, conn *connection.OciConnection, target st
 		if !ok {
 			log.Warn().Str("target", target).
 				Msgf("oci discovery: unexpected item type %T in the collection; skipping", items[i])
+			continue
+		}
+		if ociDiscoveryGone(obj.state) {
+			log.Debug().Str("target", target).Str("id", obj.id).Str("state", obj.state).
+				Msg("oci discovery: skipping a deleted resource")
 			continue
 		}
 		appendIfNotNil(&assetList, ociObjectToAsset(ociObject{

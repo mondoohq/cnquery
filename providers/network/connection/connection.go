@@ -39,6 +39,7 @@ func NewHostConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 		IdleConnTimeout:       90 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
+		ResponseHeaderTimeout: 30 * time.Second,
 	}
 	// A scanner has to read servers that only speak TLS 1.0/1.1 or offer only
 	// RSA-key-exchange and CBC suites (an Apache 2.2 / OpenSSL 0.9.8 stack): Go's
@@ -84,6 +85,7 @@ func (p *HostConnection) FQDN() string {
 func (p *HostConnection) Client(followRedirects bool) *http.Client {
 	c := &http.Client{
 		Transport: p.transport,
+		Timeout:   30 * time.Second,
 	}
 
 	if !followRedirects {

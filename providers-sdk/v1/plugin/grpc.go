@@ -96,11 +96,19 @@ func (m *GRPCClient) Shutdown(req *ShutdownReq) (*ShutdownRes, error) {
 }
 
 func (m *GRPCClient) GetData(req *DataReq) (*DataRes, error) {
-	return m.client.GetData(context.Background(), req)
+	return m.GetDataContext(context.Background(), req)
+}
+
+func (m *GRPCClient) GetDataContext(ctx context.Context, req *DataReq) (*DataRes, error) {
+	return m.client.GetData(ctx, req)
 }
 
 func (m *GRPCClient) StoreData(req *StoreReq) (*StoreRes, error) {
-	return m.client.StoreData(context.Background(), req)
+	return m.StoreDataContext(context.Background(), req)
+}
+
+func (m *GRPCClient) StoreDataContext(ctx context.Context, req *StoreReq) (*StoreRes, error) {
+	return m.client.StoreData(ctx, req)
 }
 
 func (m *GRPCClient) Translations(req *TranslationsReq) (*TranslationsRes, error) {
@@ -230,7 +238,7 @@ func (m *GRPCServer) Shutdown(ctx context.Context, req *ShutdownReq) (resp *Shut
 func (m *GRPCServer) GetData(ctx context.Context, req *DataReq) (resp *DataRes, err error) {
 	defer m.trackRequest()()
 	defer recoverPanic("GetData", &err)
-	resp, err = m.Impl.GetData(req)
+	resp, err = GetDataContext(ctx, m.Impl, req)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +249,7 @@ func (m *GRPCServer) GetData(ctx context.Context, req *DataReq) (resp *DataRes, 
 func (m *GRPCServer) StoreData(ctx context.Context, req *StoreReq) (resp *StoreRes, err error) {
 	defer m.trackRequest()()
 	defer recoverPanic("StoreData", &err)
-	return m.Impl.StoreData(req)
+	return StoreDataContext(ctx, m.Impl, req)
 }
 
 // GRPCClient is an implementation of ProviderCallback that talks over RPC.

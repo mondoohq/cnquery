@@ -5,6 +5,7 @@ package tar_test
 
 import (
 	archivetar "archive/tar"
+	"context"
 	"debug/elf"
 	"fmt"
 	"io"
@@ -19,6 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers/os/connection/tar"
+	"go.mondoo.com/mql/providers/os/fsutil"
 )
 
 // deactivate test for now for speedier testing
@@ -573,4 +575,23 @@ func BenchmarkTarWalk(b *testing.B) {
 			b.Fatalf("walked %d entries", n)
 		}
 	}
+}
+
+func TestFindWithOptionsBudgets(t *testing.T) {
+	f := tar.NewFs("")
+	f.FileMap["/etc/a"] = &archivetar.Header{Name: "etc/a", Typeflag: archivetar.TypeReg, Mode: 0o644}
+	f.FileMap["/etc/b"] = &archivetar.Header{Name: "etc/b", Typeflag: archivetar.TypeReg, Mode: 0o644}
+	for _, options := range []fsutil.FindOptions{{MaxEntries: 1}, {MaxMatches: 1}} {
+		found, err := f.FindWithOptions("/etc", nil, "file", nil, nil, options)
+		require.ErrorContains(t, err, "exceeds")
+		require.Nil(t, found)
+	}
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	found, err := f.FindWithOptions("/etc", nil, "file", nil, nil, fsutil.FindOptions{Context: ctx})
+	require.ErrorIs(t, err, context.Canceled)
+	require.Nil(t, found)
+	found, err = f.FindWithOptions("/etc", nil, "file", nil, nil, fsutil.FindOptions{MaxEntries: 2, MaxMatches: 2})
+	require.NoError(t, err)
+	require.Equal(t, []string{"/etc/a", "/etc/b"}, found)
 }

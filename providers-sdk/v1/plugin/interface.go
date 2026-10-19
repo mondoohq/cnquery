@@ -60,6 +60,55 @@ type ProviderPlugin interface {
 	ResolveAsset(req *ResolveAssetReq) (*ResolveAssetRes, error)
 }
 
+// ContextDataReader optionally carries cancellation through a provider call.
+// ProviderPlugin remains compatible with providers that predate this interface.
+type ContextDataReader interface {
+	GetDataContext(context.Context, *DataReq) (*DataRes, error)
+}
+
+// ContextDataWriter optionally carries cancellation through resource storage.
+type ContextDataWriter interface {
+	StoreDataContext(context.Context, *StoreReq) (*StoreRes, error)
+}
+
+// GetDataContext uses cancellation when the provider supports it. Legacy
+// in-process implementations must finish their own work; a host-side deadline
+// cannot terminate an arbitrary Go function.
+func GetDataContext(ctx context.Context, provider ProviderPlugin, req *DataReq) (*DataRes, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	var res *DataRes
+	var err error
+	if contextual, ok := provider.(ContextDataReader); ok {
+		res, err = contextual.GetDataContext(ctx, req)
+	} else {
+		res, err = provider.GetData(req)
+	}
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	return res, err
+}
+
+// StoreDataContext uses cancellation when the provider supports it.
+func StoreDataContext(ctx context.Context, provider ProviderPlugin, req *StoreReq) (*StoreRes, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	var res *StoreRes
+	var err error
+	if contextual, ok := provider.(ContextDataWriter); ok {
+		res, err = contextual.StoreDataContext(ctx, req)
+	} else {
+		res, err = provider.StoreData(req)
+	}
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	return res, err
+}
+
 // This is the implementation of plugin.Plugin so we can serve/consume this.
 // We also implement GRPCPlugin so that this plugin can be served over
 // gRPC.
