@@ -51,6 +51,9 @@ var defaultNpmPaths = []string{
 	"/home/*/.npm-global/lib",
 	// Windows
 	"C:\\Users\\*\\AppData\\Roaming\\npm",
+	// npm install -g run as LocalSystem (e.g. by a software deployment tool)
+	// uses the SYSTEM profile's AppData, which is not under C:\Users
+	"C:\\Windows\\System32\\config\\systemprofile\\AppData\\Roaming\\npm",
 	"C:\\Program Files\\nodejs\\node_modules\\npm",
 	"C:\\Users\\*\\node_modules",
 	// macOS
