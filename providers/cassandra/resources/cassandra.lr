@@ -104,6 +104,14 @@ cassandra.role @defaults("name isSuperuser canLogin") {
   // superuser role such as the default "cassandra" with a password should have
   // that default password changed.
   hasPassword bool
+  // Whether the role's password is still Cassandra's default
+  //
+  // True when the role's stored bcrypt hash matches "cassandra", the password a
+  // new cluster gives its default "cassandra" role. The hash read from
+  // system_auth.roles is compared locally, so no login is attempted and no
+  // failed authentication is logged; the hash itself is never exposed. False
+  // for a role without a password.
+  hasDefaultPassword() bool
   // Roles this role is a member of
   memberOf []string
   // Permissions granted to the role

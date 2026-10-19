@@ -196,6 +196,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cassandra.role.hasPassword": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCassandraRole).GetHasPassword()).ToDataRes(types.Bool)
 	},
+	"cassandra.role.hasDefaultPassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraRole).GetHasDefaultPassword()).ToDataRes(types.Bool)
+	},
 	"cassandra.role.memberOf": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCassandraRole).GetMemberOf()).ToDataRes(types.Array(types.String))
 	},
@@ -359,6 +362,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cassandra.role.hasPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCassandraRole).HasPassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.role.hasDefaultPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraRole).HasDefaultPassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"cassandra.role.memberOf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -721,12 +728,13 @@ func (c *mqlCassandraSecurity) GetAuditLoggingEnabled() *plugin.TValue[bool] {
 type mqlCassandraRole struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlCassandraRoleInternal it will be used here
+	mqlCassandraRoleInternal
 	Name                 plugin.TValue[string]
 	CanLogin             plugin.TValue[bool]
 	IsSuperuser          plugin.TValue[bool]
 	IsEffectiveSuperuser plugin.TValue[bool]
 	HasPassword          plugin.TValue[bool]
+	HasDefaultPassword   plugin.TValue[bool]
 	MemberOf             plugin.TValue[[]any]
 	Permissions          plugin.TValue[[]any]
 }
@@ -781,6 +789,12 @@ func (c *mqlCassandraRole) GetIsEffectiveSuperuser() *plugin.TValue[bool] {
 
 func (c *mqlCassandraRole) GetHasPassword() *plugin.TValue[bool] {
 	return &c.HasPassword
+}
+
+func (c *mqlCassandraRole) GetHasDefaultPassword() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasDefaultPassword, func() (bool, error) {
+		return c.hasDefaultPassword()
+	})
 }
 
 func (c *mqlCassandraRole) GetMemberOf() *plugin.TValue[[]any] {
