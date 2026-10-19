@@ -220,6 +220,7 @@ func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props 
 	wg := NewWaitGroup()
 	checksums := map[string]struct{}{}
 	var resultMu sync.Mutex
+	var resultErr error
 	finished := false
 
 	sendResult := func(rr *llx.RawResult) {
@@ -229,10 +230,15 @@ func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props 
 			return
 		}
 		log.Trace().Str("codeID", rr.CodeID).Msg("received result from executor")
-		// Validate the checksum before the graph receives it. An unknown
-		// checksum must fail here rather than index a missing graph node.
+		// Callbacks can run on provider goroutines, outside the worker's
+		// recovery. Fail execution without panicking or forwarding an unknown
+		// checksum to the graph, and wake the manager without waiting for its
+		// deadline or a potentially blocked Unregister.
 		if _, ok := checksums[rr.CodeID]; !ok {
-			panic(fmt.Sprintf("unexpected datapoint checksum %q", rr.CodeID))
+			resultErr = fmt.Errorf("unexpected datapoint checksum %q", rr.CodeID)
+			log.Error().Err(resultErr).Msg("invalid result from executor")
+			cancel()
+			return
 		}
 		select {
 		case em.resultChan <- rr:
@@ -287,6 +293,8 @@ func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props 
 	// The worker owns the executor, including unregistering it. Older in-process
 	// runtimes cannot be forcibly interrupted; if one eventually returns, its
 	// late callbacks are discarded and it still unregisters its own watchers.
+	// Unregister stays in this worker so blocked cleanup cannot prevent the
+	// manager from returning on the deadline or Stop.
 	type executionResult struct {
 		err      error
 		panicErr error
@@ -333,6 +341,11 @@ func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props 
 	cancel()
 	resultMu.Lock()
 	finished = true
+	if resultErr != nil {
+		// Preserve the callback failure rather than its cancellation side
+		// effect, including when the worker completed at the same time.
+		out.err = resultErr
+	}
 	unreported := wg.Decommission()
 	resultMu.Unlock()
 	if len(unreported) > 0 {

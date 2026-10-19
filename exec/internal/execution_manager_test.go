@@ -207,6 +207,114 @@ func (asynchronousRuntime) WatchAndUpdate(_ llx.Resource, _, _ string, callback 
 	return nil
 }
 
+// unexpectedChecksumRuntime changes the VM's callback checksum after the
+// manager captures its expected checksums, before the worker builds the VM.
+// This injects an invalid asynchronous result without mutating running code.
+type unexpectedChecksumRuntime struct {
+	asynchronousRuntime
+	bundle        *llx.CodeBundle
+	callbackPanic chan any
+}
+
+func (r *unexpectedChecksumRuntime) WithContext(context.Context) llx.Runtime {
+	ref := r.bundle.CodeV2.Blocks[0].Entrypoints[0]
+	r.bundle.CodeV2.Checksums[ref] = "unexpected-checksum"
+	return r
+}
+
+func (r *unexpectedChecksumRuntime) WatchAndUpdate(_ llx.Resource, _, _ string, callback func(any, error)) error {
+	go func() {
+		defer func() { r.callbackPanic <- recover() }()
+		callback(true, nil)
+	}()
+	return nil
+}
+
+func TestExecutionManagerRejectsUnexpectedAsynchronousChecksum(t *testing.T) {
+	runtime := &unexpectedChecksumRuntime{
+		asynchronousRuntime: asynchronousRuntime{newBlockedRuntime("")},
+		callbackPanic:       make(chan any, 1),
+	}
+	bundle := compileProbe(t, runtime)
+	runtime.bundle = bundle
+	expected := CodepointChecksums(bundle)
+	results := make(chan *llx.RawResult, 16)
+	em := newExecutionManager(runtime.Schema(), runtime, nil, results, time.Hour)
+	t.Cleanup(func() {
+		em.Stop()
+		awaitSignal(t, runtime.unregistered)
+	})
+	done := make(chan error, 1)
+	go func() { done <- em.executeCodeBundle(bundle, nil, "") }()
+	select {
+	case recovered := <-runtime.callbackPanic:
+		require.Nil(t, recovered, "a provider callback must not panic outside the worker's recovery")
+	case <-time.After(5 * time.Second):
+		t.Fatal("asynchronous callback did not return")
+	}
+	select {
+	case err := <-done:
+		require.ErrorContains(t, err, `unexpected datapoint checksum "unexpected-checksum"`)
+	case <-time.After(5 * time.Second):
+		t.Fatal("invalid checksum waited for the query deadline instead of failing execution")
+	}
+	for len(results) > 0 {
+		result := <-results
+		require.Contains(t, expected, result.CodeID, "an unknown checksum must not reach the graph")
+	}
+}
+
+type blockedUnregisterRuntime struct{ asynchronousRuntime }
+
+func (r blockedUnregisterRuntime) Unregister(string) error {
+	r.unregister.Do(func() {
+		close(r.entered)
+		<-r.release
+		close(r.returned)
+	})
+	return nil
+}
+
+func TestExecutionManagerUnregisterCannotBlockDeadlineOrStop(t *testing.T) {
+	for _, stopped := range []bool{false, true} {
+		t.Run(map[bool]string{false: "deadline", true: "stop"}[stopped], func(t *testing.T) {
+			runtime := blockedUnregisterRuntime{asynchronousRuntime{newBlockedRuntime("")}}
+			bundle := compileProbe(t, runtime)
+			queue := make(chan runQueueItem, 1)
+			timeout := time.Second
+			if stopped {
+				timeout = time.Hour
+			}
+			em := newExecutionManager(runtime.Schema(), runtime, queue, make(chan *llx.RawResult, 16), timeout)
+			t.Cleanup(func() {
+				close(runtime.release)
+				em.Stop()
+				awaitSignal(t, runtime.returned)
+			})
+			em.Start()
+			queue <- runQueueItem{codeBundle: bundle}
+			awaitSignal(t, runtime.entered)
+			if stopped {
+				stopDone := make(chan struct{})
+				go func() { em.Stop(); close(stopDone) }()
+				awaitSignal(t, stopDone)
+			} else {
+				select {
+				case err := <-em.Err():
+					require.ErrorIs(t, err, errQueryTimeout)
+				case <-time.After(5 * time.Second):
+					t.Fatal("blocked Unregister prevented the query deadline")
+				}
+			}
+			select {
+			case <-runtime.returned:
+				t.Fatal("cleanup was not held open while the manager returned")
+			default:
+			}
+		})
+	}
+}
+
 func TestExecutionManagerWaitsForAsynchronousResultDelivery(t *testing.T) {
 	runtime := asynchronousRuntime{newBlockedRuntime("")}
 	bundle := compileProbe(t, runtime)
