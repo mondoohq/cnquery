@@ -200,11 +200,7 @@ func (c *mqlChrome) fetchAll() ([]any, []any, error) {
 	// Enumerate all users so extensions are discovered for every account.
 	users, err := targetUserHomes(c.MqlRuntime)
 	if err != nil {
-		log.Debug().Err(err).Msg("could not retrieve users list")
-		c.fetched = true
-		c.cachedExtensions = []any{}
-		c.cachedContentScripts = []any{}
-		return c.cachedExtensions, c.cachedContentScripts, nil
+		return nil, nil, err
 	}
 
 	var extensions []any

@@ -227,8 +227,7 @@ func (f *mqlFirefox) addons() ([]any, error) {
 	// Enumerate all users so addons are discovered for every account.
 	users, err := targetUserHomes(f.MqlRuntime)
 	if err != nil {
-		log.Debug().Err(err).Msg("could not retrieve users list")
-		return []any{}, nil
+		return nil, err
 	}
 
 	addons := make([]any, 0, 32) // Pre-allocate with reasonable capacity

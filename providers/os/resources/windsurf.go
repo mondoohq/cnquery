@@ -122,7 +122,11 @@ func (r *mqlWindsurfRule) id() (string, error) {
 }
 
 func (r *mqlWindsurf) repos() ([]interface{}, error) {
-	return gitReposFromPaths(r.MqlRuntime, "windsurf.repo", vscodeWorkspaceFolders(r.MqlRuntime, "Windsurf"))
+	folders, err := vscodeWorkspaceFolders(r.MqlRuntime, "Windsurf")
+	if err != nil {
+		return nil, err
+	}
+	return gitReposFromPaths(r.MqlRuntime, "windsurf.repo", folders)
 }
 
 func (r *mqlWindsurfRepo) id() (string, error) {

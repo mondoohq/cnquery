@@ -100,21 +100,51 @@ func (c *mqlVscode) id() (string, error) {
 	return "vscode", nil
 }
 
+// vscodeUserHomePaths needs the profiles on disk, not account details. On
+// Windows, users.list also runs Get-LocalUser, which can block a scan before
+// it ever looks for extensions. ProfileList already contains the paths for
+// local, domain and Entra ID users, including users who are not logged in.
+func vscodeUserHomePaths(runtime *plugin.Runtime) ([]string, error) {
+	conn := runtime.Connection.(shared.Connection)
+	if asset := conn.Asset(); asset != nil && asset.Platform != nil && asset.Platform.IsFamily("windows") {
+		return vscodeWindowsProfilePaths(runtime)
+	}
+
+	users, err := targetUserHomes(runtime)
+	if err != nil {
+		return nil, err
+	}
+	homes := make([]string, 0, len(users))
+	for _, user := range users {
+		homes = append(homes, user.home)
+	}
+	return homes, nil
+}
+
+func vscodeWindowsProfilePaths(runtime *plugin.Runtime) ([]string, error) {
+	profiles, err := windowsProfileHomes(runtime)
+	if err != nil {
+		return nil, err
+	}
+	homes := make([]string, 0, len(profiles))
+	for _, profile := range profiles {
+		homes = append(homes, profile.home)
+	}
+	return homes, nil
+}
+
 func (c *mqlVscode) paths() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(shared.Connection)
 	afs := &afero.Afero{Fs: conn.FileSystem()}
 
-	// Enumerate all users so extension paths are found for every account.
-	users, err := targetUserHomes(c.MqlRuntime)
+	homes, err := vscodeUserHomePaths(c.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
 
 	var paths []string
 
-	for _, u := range users {
-		homeDir := u.home
-
+	for _, homeDir := range homes {
 		for _, editor := range vsCodeEditors {
 			extensionsDir := filepath.Join(homeDir, editor.dir)
 			// Use DirExists which is more efficient than Exists for directories
@@ -139,8 +169,7 @@ func (c *mqlVscode) extensions() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(shared.Connection)
 	afs := &afero.Afero{Fs: conn.FileSystem()}
 
-	// Enumerate all users so extensions are discovered for every account.
-	users, err := targetUserHomes(c.MqlRuntime)
+	homes, err := vscodeUserHomePaths(c.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -148,9 +177,7 @@ func (c *mqlVscode) extensions() ([]any, error) {
 	var extensions []any
 	seen := make(map[string]bool)
 
-	for _, u := range users {
-		homeDir := u.home
-
+	for _, homeDir := range homes {
 		for _, editor := range vsCodeEditors {
 			extensionsDir := filepath.Join(homeDir, editor.dir)
 

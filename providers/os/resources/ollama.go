@@ -115,6 +115,11 @@ func (c *mqlOllamaConfig) resolve() (*ollama.Config, error) {
 	}
 	c.isInstalled = hasUnit || launched || c.serverBinary != ""
 
+	if !c.isInstalled {
+		c.resolved = true
+		return nil, nil
+	}
+
 	// The daemon's home decides where the default model store and server.json
 	// sit. The server's environment states it outright on most installations;
 	// failing that it is the home of the account named by User=, and failing
@@ -130,11 +135,6 @@ func (c *mqlOllamaConfig) resolve() (*ollama.Config, error) {
 	}
 	if home != "" {
 		c.ollamaDir = path.Join(home, ".ollama")
-	}
-
-	if !c.isInstalled {
-		c.resolved = true
-		return nil, nil
 	}
 
 	var settings *ollama.ServerSettings
@@ -588,8 +588,7 @@ func (c *mqlOllamaConfig) integrations() ([]any, error) {
 
 	users, err := targetUserHomes(c.MqlRuntime)
 	if err != nil {
-		log.Debug().Err(err).Msg("mql[ollama.config]> cannot enumerate users for Ollama integrations")
-		return []any{}, nil
+		return nil, err
 	}
 
 	afs := connectionAfs(c.MqlRuntime)
@@ -711,7 +710,7 @@ func (i *mqlOllamaConfigIntegration) id() (string, error) {
 // server is configured with, plus each user's own. A user who runs `ollama
 // serve` themselves keeps models under their home, while the packaged service
 // keeps them wherever its unit says, so neither location alone is enough.
-func ollamaModelDirs(runtime *plugin.Runtime) []string {
+func ollamaModelDirs(runtime *plugin.Runtime) ([]string, error) {
 	seen := map[string]struct{}{}
 	var dirs []string
 	add := func(d string) {
@@ -735,11 +734,10 @@ func ollamaModelDirs(runtime *plugin.Runtime) []string {
 
 	users, err := targetUserHomes(runtime)
 	if err != nil {
-		log.Debug().Err(err).Msg("mql[ollama]> cannot enumerate users for Ollama model stores")
-		return dirs
+		return nil, err
 	}
 	for _, u := range users {
 		add(path.Join(u.home, ".ollama", "models"))
 	}
-	return dirs
+	return dirs, nil
 }
