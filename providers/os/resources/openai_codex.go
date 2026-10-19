@@ -212,7 +212,11 @@ func (r *mqlOpenaiCodex) skills() ([]interface{}, error) {
 	var result []interface{}
 	seen := map[string]struct{}{}
 
-	for _, codexDir := range r.codexDirs() {
+	dirs, err := r.codexDirs()
+	if err != nil {
+		return nil, err
+	}
+	for _, codexDir := range dirs {
 		for _, dir := range codexSkillDirs(afs, codexDir) {
 			res, err := r.readCodexSkill(afs, dir.name, dir.path, dir.plugin, seen)
 			if err != nil {
@@ -279,7 +283,7 @@ func codexSkillDirs(afs *afero.Afero, codexDir string) []codexSkillDir {
 
 // codexDirs returns the codex config dirs to scan: every user's ~/.codex, or
 // the explicit configPath override when it is not a per-user default.
-func (r *mqlOpenaiCodex) codexDirs() []string {
+func (r *mqlOpenaiCodex) codexDirs() ([]string, error) {
 	return resolvePerUserDirs(r.MqlRuntime, r.codexDir(), defaultCodexConfigDir, defaultCodexConfigDir, r.codexDir())
 }
 

@@ -95,6 +95,12 @@ func TestGroupMembers_WindowsMembersBySid(t *testing.T) {
 	}
 	require.NotNil(t, alice)
 	alice.Sid = plugin.TValue[string]{Data: "S-1-5-21-1-2-3-500", State: plugin.StateIsSet}
+	// This fixture adds a SID after enumeration. Publish its account indexes
+	// once here, as list() does for the complete measured record.
+	users := raw.(*mqlUsers)
+	users.lock.Lock()
+	require.NoError(t, users.refreshCache(list.Data))
+	users.lock.Unlock()
 
 	newGroup := func(name, sid string) *mqlGroup {
 		raw, err := CreateResource(runtime, "group", map[string]*llx.RawData{
