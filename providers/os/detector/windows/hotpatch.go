@@ -38,6 +38,7 @@ const (
 // HKLM\SOFTWARE, system paths to the active control set of HKLM\SYSTEM.
 const (
 	hotpatchPackageKeyPrefix = `Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\DynamicInstalled\Hotpatch.`
+	servicingBranchKeyPrefix = `Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed\Server.OS.`
 	rebootlessUpdatesKey     = `Microsoft\PolicyManager\current\device\Update`
 	deviceGuardSystemKey     = `Control\DeviceGuard`
 	memoryManagementKey      = `Control\Session Manager\Memory Management`
@@ -60,6 +61,11 @@ type HotpatchState struct {
 	// EnrollmentPackage is the Name value under
 	// HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\DynamicInstalled\Hotpatch.<arch>.
 	EnrollmentPackage *string
+	// ServicingBranch is the Branch value under
+	// HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed\Server.OS.<arch>,
+	// such as lt_release_svc_hotpatch_prod1 while a hotpatch is applied and
+	// lt_release_svc_prod1 on the baseline branch.
+	ServicingBranch *string
 	// HotPatchTableSize is the value under
 	// HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management.
 	HotPatchTableSize *int64
@@ -128,8 +134,20 @@ func (s *HotpatchState) ClientEnrolled() bool {
 
 // ServerEnrolled reports whether a server is enrolled in hotpatch: the
 // Hotpatch Enrollment Package is installed, VBS is configured, and the
-// HotPatchTableSize is non-zero.
+// HotPatchTableSize is non-zero. It is also true when the OS currently runs
+// from the hotpatch servicing branch.
+//
+// The second signal exists because Windows Server Azure Edition has no
+// enrollment package, and enrollment itself is not visible in the guest. What
+// is visible is the servicing branch: it switches to a hotpatch branch (its
+// name contains "hotpatch") while a hotpatch is applied. During baseline
+// months an enrolled server runs on the regular branch and still reads as not
+// enrolled. That is harmless downstream, since the baseline is the cumulative
+// update for both the hotpatch and the non-hotpatch track.
 func (s *HotpatchState) ServerEnrolled() bool {
+	if s.ServicingBranch != nil && strings.Contains(strings.ToLower(*s.ServicingBranch), "hotpatch") {
+		return true
+	}
 	return s.EnrollmentPackage != nil && *s.EnrollmentPackage == HotpatchPackage &&
 		s.EnableVirtualizationBasedSecurity != nil && *s.EnableVirtualizationBasedSecurity == 1 &&
 		s.HotPatchTableSize != nil && *s.HotPatchTableSize != 0
@@ -163,6 +181,9 @@ func ParseHotpatchState(r io.Reader) (*HotpatchState, error) {
 	}
 	if v, ok := raw["Name"].(string); ok && v != "" {
 		st.EnrollmentPackage = &v
+	}
+	if v, ok := raw["Branch"].(string); ok && v != "" {
+		st.ServicingBranch = &v
 	}
 	log.Debug().Interface("hotpatch", st).Msg("parsed windows hotpatch state")
 	return st, nil
@@ -332,6 +353,8 @@ const hotpatchStateScript = `
 $result = @{}
 $pkg = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\DynamicInstalled\Hotpatch.%s' -Name Name -ErrorAction SilentlyContinue
 if ($pkg -and $null -ne $pkg.Name) { $result.Name = [string]$pkg.Name }
+$branch = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed\Server.OS.%s' -Name Branch -ErrorAction SilentlyContinue
+if ($branch -and $null -ne $branch.Branch) { $result.Branch = [string]$branch.Branch }
 $mm = Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -Name HotPatchTableSize -ErrorAction SilentlyContinue
 if ($mm -and $null -ne $mm.HotPatchTableSize) { $result.HotPatchTableSize = [string]$mm.HotPatchTableSize }
 $rebootless = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device\Update' -Name AllowRebootlessUpdates -ErrorAction SilentlyContinue
@@ -346,7 +369,7 @@ $result | ConvertTo-Json
 // HotpatchStateCommand returns the encoded PowerShell command that reads the
 // hotpatch state for the given architecture.
 func HotpatchStateCommand(arch string) string {
-	return powershell.Encode(fmt.Sprintf(hotpatchStateScript, hotpatchArch(arch)))
+	return powershell.Encode(fmt.Sprintf(hotpatchStateScript, hotpatchArch(arch), hotpatchArch(arch)))
 }
 
 // powershellGetHotpatchState reads the hotpatch state over PowerShell.
@@ -383,6 +406,14 @@ func readHotpatchRegistry(r hotpatchRegistry, arch string) *HotpatchState {
 		}
 	} else {
 		log.Debug().Err(err).Msg("could not read the hotpatch enrollment package key")
+	}
+	if items, err := r.softwareItems(servicingBranchKeyPrefix + hotpatchArch(arch)); err == nil {
+		if it, ok := findRegistryItem(items, "Branch"); ok && it.Value.String != "" {
+			branch := it.Value.String
+			st.ServicingBranch = &branch
+		}
+	} else {
+		log.Debug().Err(err).Msg("could not read the servicing branch key")
 	}
 	st.AllowRebootlessUpdates = registryInt(r.softwareItems, rebootlessUpdatesKey, "AllowRebootlessUpdates")
 	st.EnableVirtualizationBasedSecurity = registryInt(r.systemItems, deviceGuardSystemKey, "EnableVirtualizationBasedSecurity")

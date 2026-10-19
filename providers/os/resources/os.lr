@@ -16756,7 +16756,10 @@ windows.hotpatch @defaults("eligible enrolled") {
   // False when the host is not `eligible`. On servers, true when the
   // Hotpatch Enrollment Package is installed (`enrollmentPackage`),
   // Virtualization-Based Security is configured (`vbsConfigured`), and
-  // `hotPatchTableSize` is non-zero. On clients, true when the
+  // `hotPatchTableSize` is non-zero, or when the OS currently runs from the
+  // hotpatch servicing branch (`servicingBranch`), which is the only signal on
+  // Azure Edition. In baseline months an enrolled server runs on the regular
+  // branch and reads false. On clients, true when the
   // AllowRebootlessUpdates policy is on (`rebootlessUpdatesPolicy`) and VBS is
   // running (`vbsRunning`, or `vbsConfigured` when the running state cannot be
   // read). On clients this means the device is configured for hotpatch, not
@@ -16770,6 +16773,13 @@ windows.hotpatch @defaults("eligible enrolled") {
   // which reads `Hotpatch Enrollment Package` on an enrolled server. Null
   // when the value is absent, which is normal on clients.
   enrollmentPackage() string
+  // Servicing branch the OS currently runs from
+  //
+  // The Branch value under HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed\Server.OS.<arch>.
+  // It contains `hotpatch`, such as `lt_release_svc_hotpatch_prod1`, while a
+  // hotpatch is applied, and reads `lt_release_svc_prod1` on the baseline
+  // branch. Null when the value is absent, which is normal on clients.
+  servicingBranch() string
   // Size of the hotpatch table reserved by the memory manager
   //
   // HotPatchTableSize under HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management.

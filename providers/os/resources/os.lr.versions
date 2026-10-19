@@ -6222,6 +6222,7 @@ windows.hotpatch.enrolled 14.19.3
 windows.hotpatch.enrollmentPackage 14.19.3
 windows.hotpatch.hotPatchTableSize 14.19.3
 windows.hotpatch.rebootlessUpdatesPolicy 14.19.3
+windows.hotpatch.servicingBranch 14.26.1
 windows.hotpatch.vbsConfigured 14.19.3
 windows.hotpatch.vbsRunning 14.19.3
 windows.logonSession 13.40.10

@@ -16131,6 +16131,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.hotpatch.enrollmentPackage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsHotpatch).GetEnrollmentPackage()).ToDataRes(types.String)
 	},
+	"windows.hotpatch.servicingBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsHotpatch).GetServicingBranch()).ToDataRes(types.String)
+	},
 	"windows.hotpatch.hotPatchTableSize": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsHotpatch).GetHotPatchTableSize()).ToDataRes(types.Int)
 	},
@@ -40524,6 +40527,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.hotpatch.enrollmentPackage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsHotpatch).EnrollmentPackage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.hotpatch.servicingBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsHotpatch).ServicingBranch, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.hotpatch.hotPatchTableSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -102733,6 +102740,7 @@ type mqlWindowsHotpatch struct {
 	Eligible                plugin.TValue[bool]
 	Enrolled                plugin.TValue[bool]
 	EnrollmentPackage       plugin.TValue[string]
+	ServicingBranch         plugin.TValue[string]
 	HotPatchTableSize       plugin.TValue[int64]
 	RebootlessUpdatesPolicy plugin.TValue[bool]
 	VbsConfigured           plugin.TValue[bool]
@@ -102791,6 +102799,12 @@ func (c *mqlWindowsHotpatch) GetEnrolled() *plugin.TValue[bool] {
 func (c *mqlWindowsHotpatch) GetEnrollmentPackage() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.EnrollmentPackage, func() (string, error) {
 		return c.enrollmentPackage()
+	})
+}
+
+func (c *mqlWindowsHotpatch) GetServicingBranch() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServicingBranch, func() (string, error) {
+		return c.servicingBranch()
 	})
 }
 

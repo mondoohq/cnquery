@@ -12,7 +12,7 @@ stdout="""
 }
 """
 
-[commands."9a68779f67ef5a486a1d60fd8355e4f524f9419cb5b5baa1e9896011c32da75d"]
+[commands."e96b1a0fd8be3aac8ea39250e33ce03fa1b4b3897bf207e36a1545c22b67ca42"]
 stdout="""
 {
     "AllowRebootlessUpdates":  "1",
