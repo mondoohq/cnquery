@@ -76,7 +76,7 @@ cockroachdb.setting 14.0.0
 cockroachdb.setting.defaultValue 14.0.0
 cockroachdb.setting.description 14.0.0
 cockroachdb.setting.isDefault 14.0.0
-cockroachdb.setting.isPublic 14.0.0
+cockroachdb.setting.isDocumented 14.0.0
 cockroachdb.setting.isSensitive 14.0.0
 cockroachdb.setting.name 14.0.0
 cockroachdb.setting.origin 14.0.0

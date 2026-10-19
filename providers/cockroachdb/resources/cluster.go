@@ -94,18 +94,21 @@ func (r *mqlCockroachdbCluster) insecure() (bool, error) {
 		return false, refused(err, viewClusterMetadata)
 	}
 	defer rows.Close()
-	insecure := false
+	var url string
+	found := false
 	for rows.Next() {
-		var raw string
-		if err := rows.Scan(&raw); err != nil {
+		if err := rows.Scan(&url); err != nil {
 			return false, err
 		}
-		insecure = isInsecureURL(raw)
+		found = true
 	}
 	if err := rows.Err(); err != nil {
 		return false, refused(err, viewClusterMetadata)
 	}
-	return insecure, nil
+	if !found {
+		return false, errors.New("crdb_internal.node_runtime_info reported no SQL URL")
+	}
+	return isInsecureURL(url), nil
 }
 
 // isInsecureURL reports whether a node's SQL URL is one CockroachDB reports in
@@ -141,7 +144,7 @@ func (r *mqlCockroachdbCluster) settings() ([]any, error) {
 			"type":         llx.StringData(settingType(typ)),
 			"origin":       llx.StringData(origin),
 			"isDefault":    llx.BoolData(origin == "default"),
-			"isPublic":     llx.BoolData(public),
+			"isDocumented": llx.BoolData(public),
 			"isSensitive":  llx.BoolData(sensitive),
 			"description":  llx.StringData(description),
 		})

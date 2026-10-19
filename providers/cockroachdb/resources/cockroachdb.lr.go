@@ -207,8 +207,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cockroachdb.setting.isDefault": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCockroachdbSetting).GetIsDefault()).ToDataRes(types.Bool)
 	},
-	"cockroachdb.setting.isPublic": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCockroachdbSetting).GetIsPublic()).ToDataRes(types.Bool)
+	"cockroachdb.setting.isDocumented": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCockroachdbSetting).GetIsDocumented()).ToDataRes(types.Bool)
 	},
 	"cockroachdb.setting.isSensitive": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCockroachdbSetting).GetIsSensitive()).ToDataRes(types.Bool)
@@ -495,8 +495,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCockroachdbSetting).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"cockroachdb.setting.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCockroachdbSetting).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"cockroachdb.setting.isDocumented": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCockroachdbSetting).IsDocumented, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"cockroachdb.setting.isSensitive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1039,7 +1039,7 @@ type mqlCockroachdbSetting struct {
 	Type         plugin.TValue[string]
 	Origin       plugin.TValue[string]
 	IsDefault    plugin.TValue[bool]
-	IsPublic     plugin.TValue[bool]
+	IsDocumented plugin.TValue[bool]
 	IsSensitive  plugin.TValue[bool]
 	Description  plugin.TValue[string]
 }
@@ -1100,8 +1100,8 @@ func (c *mqlCockroachdbSetting) GetIsDefault() *plugin.TValue[bool] {
 	return &c.IsDefault
 }
 
-func (c *mqlCockroachdbSetting) GetIsPublic() *plugin.TValue[bool] {
-	return &c.IsPublic
+func (c *mqlCockroachdbSetting) GetIsDocumented() *plugin.TValue[bool] {
+	return &c.IsDocumented
 }
 
 func (c *mqlCockroachdbSetting) GetIsSensitive() *plugin.TValue[bool] {

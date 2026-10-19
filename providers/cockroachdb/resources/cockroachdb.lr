@@ -87,8 +87,11 @@ cockroachdb.setting @defaults("name value") {
   //
   // True when origin is "default", meaning no one set the setting.
   isDefault bool
-  // Whether the setting is documented and supported for public use
-  isPublic bool
+  // Whether the setting is documented and supported for use
+  //
+  // CockroachDB's public setting class: settings outside it are internal and
+  // may change without notice.
+  isDocumented bool
   // Whether the setting holds sensitive data
   isSensitive bool
   // Setting description
