@@ -90,6 +90,21 @@ func (a *Asset) AddLabels(labels map[string]string) {
 	}
 }
 
+// AnnotationAwsAccountId is the asset annotation naming the AWS account an
+// asset belongs to, as the 12-digit account id. It gives every AWS-hosted
+// asset, whatever scanned it, one key to be grouped by.
+//
+// A provider sets it where it knows the account and the asset's own identity
+// does not name it, such as the workloads of an EKS cluster. Assets whose
+// platform identifiers carry the account (every resource the aws provider
+// discovers, EC2 instances) need no provider to set it: the platform derives
+// it from those identifiers on ingest.
+//
+// It is an annotation rather than a label because the platform replaces an
+// asset's labels on every scan but merges its annotations, so the account
+// survives a later scan by a path that does not know it.
+const AnnotationAwsAccountId = "mondoo.com/aws-account-id"
+
 func (a *Asset) AddAnnotations(annotations map[string]string) {
 	if len(annotations) == 0 {
 		return
