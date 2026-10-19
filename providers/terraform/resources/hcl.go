@@ -825,6 +825,15 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) any {
 			} else {
 				results = append(results, subVal.AsString())
 			}
+		} else if t.Name == "jsonencode" && len(t.Args) == 1 {
+			// The call cannot be evaluated statically when its argument
+			// references a resource or data source (`aws_kms_key.k.arn`),
+			// which is the common case for policies and security
+			// configurations. Returning the empty result here dropped the
+			// whole document, so every check reading it saw nothing. Walk the
+			// argument instead, surfacing references as dotted strings like
+			// every other expression, in the same shape as the evaluated case.
+			appendCtyResult(&results, getCtyValue(t.Args[0], ctx))
 		}
 		return results
 	case *hclsyntax.ConditionalExpr:
