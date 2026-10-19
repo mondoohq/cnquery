@@ -6,6 +6,7 @@ package providers
 import (
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/cockroachdb/errors"
@@ -13,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -338,4 +340,131 @@ func TestUnsafeStartProviderSchemaOnly(t *testing.T) {
 		assert.Contains(t, err.Error(), "completing its installation failed")
 		assert.Equal(t, 1, reg.downloads, "it must have tried to complete the install")
 	})
+}
+
+// TestClassifyProviderStartFailure pins the classification of real start
+// failure shapes: the fork/exec errors come from os/exec, the handshake and
+// timeout messages verbatim from hashicorp/go-plugin's client.go, the
+// schema-only and not-found messages from this package.
+func TestClassifyProviderStartFailure(t *testing.T) {
+	cases := []struct {
+		name string
+		msg  string
+		want string
+	}{
+		{
+			// The shape from server#22011: binary killed before writing its
+			// handshake line (security software, OOM), go-plugin reads nothing.
+			name: "handshake failure",
+			msg: "failed to initialize plugin client: Unrecognized remote plugin message: \n" +
+				"Failed to read any lines from plugin's stdout\nThis usually means\n" +
+				"  the plugin was not compiled for this architecture,\n" +
+				"  the plugin is missing dynamic-link libraries necessary to run,\n" +
+				"  the plugin is not executable by this process due to file permissions, or\n" +
+				"  the plugin failed to negotiate the initial go-plugin protocol handshake\n",
+			want: "handshake",
+		},
+		{
+			name: "plugin start timeout",
+			msg:  "failed to initialize plugin client: timeout while waiting for plugin to start",
+			want: "timeout",
+		},
+		{
+			name: "wrong architecture",
+			msg:  "failed to initialize plugin client: fork/exec /opt/mondoo/providers/os/os: exec format error",
+			want: "exec_format",
+		},
+		{
+			name: "binary not executable",
+			msg:  "failed to initialize plugin client: fork/exec /opt/mondoo/providers/os/os: permission denied",
+			want: "permission",
+		},
+		{
+			name: "binary missing",
+			msg:  "failed to initialize plugin client: fork/exec /opt/mondoo/providers/os/os: no such file or directory",
+			want: "missing_binary",
+		},
+		{
+			name: "other exec failure",
+			msg:  "failed to initialize plugin client: fork/exec /opt/mondoo/providers/os/os: too many open files",
+			want: "exec",
+		},
+		{
+			name: "schema-only install, auto-update off",
+			msg:  "provider 'os' is installed schema-only and has no binary to run; install it fully or enable auto-update",
+			want: "incomplete_install",
+		},
+		{
+			name: "schema-only install, completing download failed",
+			msg:  "provider 'os' is installed schema-only and completing its installation failed",
+			want: "incomplete_install",
+		},
+		{
+			name: "provider not installed",
+			msg:  "cannot find provider os",
+			want: "not_installed",
+		},
+		{
+			// "permission denied" or "no such file or directory" outside a
+			// fork/exec error (e.g. reading the resources json) must not be
+			// classified as a binary problem.
+			name: "unrelated file error stays unclassified",
+			msg:  "failed to load provider os resources info: failed to read provider resources json from /x/os.resources.json: open /x/os.resources.json: no such file or directory",
+			want: "",
+		},
+		{
+			name: "unknown failure stays unclassified",
+			msg:  "something else entirely",
+			want: "",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, classifyProviderStartFailure(tc.msg))
+		})
+	}
+}
+
+func TestGetRunningProvider_ReportsStartFailureOnce(t *testing.T) {
+	type report struct {
+		msg  string
+		tags map[string]string
+	}
+	var reports []report
+	orig := sendProviderStartFailureFn
+	sendProviderStartFailureFn = func(errMsg string, tags map[string]string) {
+		reports = append(reports, report{msg: errMsg, tags: tags})
+	}
+	t.Cleanup(func() { sendProviderStartFailureFn = orig })
+
+	// A provider that claims to have a binary but whose path doesn't exist:
+	// the exec fails and GetRunningProvider surfaces a genuine start failure.
+	p := &Provider{
+		Provider:  &pp.Provider{Name: "testp", ID: "testp", Version: "1.2.3"},
+		Path:      filepath.Join(t.TempDir(), "testp"),
+		HasBinary: true,
+		Schema:    &resources.Schema{},
+	}
+	c := &coordinator{
+		runningByID: map[string]*RunningProvider{},
+		runtimes:    map[string]*Runtime{},
+	}
+	c.SetProviders(Providers{p.ID: p})
+
+	_, err := c.GetRunningProvider("testp", UpdateProvidersConfig{Enabled: false})
+	require.Error(t, err)
+
+	require.Len(t, reports, 1)
+	assert.Contains(t, reports[0].msg, "failed to initialize plugin client")
+	assert.Equal(t, "provider_start_failure", reports[0].tags["reportKind"])
+	assert.Equal(t, "testp", reports[0].tags["provider"])
+	assert.Equal(t, "missing_binary", reports[0].tags["failureKind"])
+	assert.Equal(t, runtime.GOOS, reports[0].tags["os"])
+	assert.Equal(t, runtime.GOARCH, reports[0].tags["arch"])
+
+	// A broken provider is retried on every asset of an inventory; the
+	// repeat failure must not send a second report.
+	_, err = c.GetRunningProvider("testp", UpdateProvidersConfig{Enabled: false})
+	require.Error(t, err)
+	assert.Len(t, reports, 1, "a repeated start failure for the same provider must not re-report")
 }
