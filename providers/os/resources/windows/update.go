@@ -333,12 +333,11 @@ const wuaResultsTimeFormat = "2006-01-02 15:04:05"
 // as the Store and OS flighting channels, are not the operating system's
 // updates and are left out.
 const (
-	WUServiceWindowsUpdate    = "9482f4b4-e343-43b6-b170-9a65bc822c77"
-	WUServiceMicrosoftUpdate  = "7971f918-a847-4430-9279-4a52d1efe18d"
-	WUServiceManagedWSUS      = "3da21691-e39d-4da6-8a4b-b43877bcb1b7"
-	wuaScanSuccessEventID     = 26
-	wuaScanFailureEventID     = 25
-	wuaScanEventsMaxToInspect = 200
+	WUServiceWindowsUpdate   = "9482f4b4-e343-43b6-b170-9a65bc822c77"
+	WUServiceMicrosoftUpdate = "7971f918-a847-4430-9279-4a52d1efe18d"
+	WUServiceManagedWSUS     = "3da21691-e39d-4da6-8a4b-b43877bcb1b7"
+	wuaScanSuccessEventID    = 26
+	wuaScanFailureEventID    = 25
 )
 
 // WINDOWS_QUERY_WUA_RESULTS reads IAutomaticUpdatesResults from the Windows
@@ -357,8 +356,10 @@ const (
 // successfully found N updates") with the scanned service in serviceGuid.
 // TimeCreated of an event is a local DateTime, so it is converted with
 // ToUniversalTime. Event 25 ("Windows Update failed to check for updates with
-// error 0x...") carries the code in errorCode. A missing log or a failure
-// reading it yields null scan fields and does not fail the query.
+// error 0x...") carries the code in errorCode. Each event is found with one
+// server-side filtered lookup of the newest match; no events are looped over.
+// A missing log, no match or a failure reading it yields null scan fields and
+// does not fail the query.
 var WINDOWS_QUERY_WUA_RESULTS = fmt.Sprintf(`
 $ErrorActionPreference='Stop';
 $ProgressPreference='SilentlyContinue';
@@ -376,24 +377,17 @@ try {
   $fail = $null
   $failCode = ''
   try {
-    $osServices = @('%s', '%s', '%s')
-    $events = @(Get-WinEvent -FilterHashtable @{ LogName = 'Microsoft-Windows-WindowsUpdateClient/Operational'; Id = %d, %d } -MaxEvents %d -ErrorAction SilentlyContinue)
-    foreach ($e in $events) {
-      $guid = $null
+    $log = 'Microsoft-Windows-WindowsUpdateClient/Operational'
+    $e = Get-WinEvent -LogName $log -FilterXPath "%s" -MaxEvents 1 -ErrorAction SilentlyContinue
+    if ($e) { $scan = $e.TimeCreated.ToUniversalTime().ToString($fmt, $inv) }
+    $e = Get-WinEvent -LogName $log -FilterXPath "%s" -MaxEvents 1 -ErrorAction SilentlyContinue
+    if ($e) {
+      $fail = $e.TimeCreated.ToUniversalTime().ToString($fmt, $inv)
       $code = ''
       foreach ($data in ([xml]$e.ToXml()).Event.EventData.Data) {
-        if ($data.Name -eq 'serviceGuid') { $guid = [string]$data.'#text' }
-        if ($data.Name -eq 'errorCode') { $code = [string]$data.'#text' }
+        if ($data.Name -eq 'errorCode') { $code = ([string]$data.'#text').Trim() }
       }
-      if ($guid -eq $null -or -not ($osServices -contains $guid.Trim('{', '}').ToLowerInvariant())) { continue }
-      if ($e.Id -eq %d -and $scan -eq $null) {
-        $scan = $e.TimeCreated.ToUniversalTime().ToString($fmt, $inv)
-      } elseif ($e.Id -eq %d -and $fail -eq $null) {
-        $fail = $e.TimeCreated.ToUniversalTime().ToString($fmt, $inv)
-        $code = $code.Trim()
-        if ($code -match '^(0[xX])?([0-9a-fA-F]+)$') { $failCode = '0x' + $Matches[2].ToUpperInvariant() }
-      }
-      if ($scan -ne $null -and $fail -ne $null) { break }
+      if ($code -match '^(0[xX])?([0-9a-fA-F]+)$') { $failCode = '0x' + $Matches[2].ToUpperInvariant() }
     }
   } catch { $scan = $null; $fail = $null; $failCode = '' }
   [pscustomobject]@{
@@ -406,9 +400,21 @@ try {
 } catch {
   [Console]::Error.WriteLine($_.Exception.Message)
   exit 1
-}`, WUServiceWindowsUpdate, WUServiceMicrosoftUpdate, WUServiceManagedWSUS,
-	wuaScanSuccessEventID, wuaScanFailureEventID, wuaScanEventsMaxToInspect,
-	wuaScanSuccessEventID, wuaScanFailureEventID)
+}`, wuaScanXPath(wuaScanSuccessEventID), wuaScanXPath(wuaScanFailureEventID))
+
+// wuaScanXPath selects the events with the given id whose serviceGuid is one of
+// the OS update services. XPath string comparison is case-sensitive and the
+// log writes the GUID lower-case in braces, so the upper-case form is matched
+// too. The server-side filter plus -MaxEvents 1 keeps the read to one event.
+func wuaScanXPath(eventID int) string {
+	var conds []string
+	for _, g := range []string{WUServiceWindowsUpdate, WUServiceMicrosoftUpdate, WUServiceManagedWSUS} {
+		for _, v := range []string{strings.ToLower(g), strings.ToUpper(g)} {
+			conds = append(conds, fmt.Sprintf("Data[@Name='serviceGuid']='{%s}'", v))
+		}
+	}
+	return fmt.Sprintf("*[System[EventID=%d]] and *[EventData[%s]]", eventID, strings.Join(conds, " or "))
+}
 
 // WUAResults holds the Windows Update Agent's last successful search and
 // installation times and the newest successful scan the event log records for

@@ -418,22 +418,30 @@ func TestWUAResultsQueryFiltersOSServices(t *testing.T) {
 		"7971f918-a847-4430-9279-4a52d1efe18d",
 		"3da21691-e39d-4da6-8a4b-b43877bcb1b7",
 	} {
-		assert.Contains(t, q, "'"+guid+"'")
+		// the log writes the GUID lower-case in braces; XPath compares case-sensitively
+		assert.Contains(t, q, "Data[@Name='serviceGuid']='{"+guid+"}'")
+		assert.Contains(t, q, "Data[@Name='serviceGuid']='{"+strings.ToUpper(guid)+"}'")
 	}
 	assert.NotContains(t, q, "855e8a7c-ecb4-4ca3-b045-1dfa50104289")
 	assert.NotContains(t, q, "8b24b027-1dee-babb-9a95-3517dfb9c552")
+	assert.NotContains(t, q, "855E8A7C-ECB4-4CA3-B045-1DFA50104289")
+	assert.NotContains(t, q, "8B24B027-1DEE-BABB-9A95-3517DFB9C552")
 	assert.Contains(t, q, "Microsoft-Windows-WindowsUpdateClient/Operational")
-	assert.Contains(t, q, "Id = 26, 25 }")
-	assert.Contains(t, q, "$e.Id -eq 26")
-	assert.Contains(t, q, "$e.Id -eq 25")
+	// one server-side filtered lookup per event id, newest match only
+	assert.Equal(t, 2, strings.Count(q, "Get-WinEvent"))
+	assert.Equal(t, 2, strings.Count(q, "-MaxEvents 1 "))
+	assert.Equal(t, 2, strings.Count(q, "-FilterXPath"))
+	assert.Contains(t, q, "*[System[EventID=26]] and *[EventData[")
+	assert.Contains(t, q, "*[System[EventID=25]] and *[EventData[")
+	assert.NotContains(t, q, "-MaxEvents 200")
+	assert.NotContains(t, q, "FilterHashtable")
+	// no loop over events, and the event XML is read once, for the failure code only
+	assert.NotContains(t, q, "foreach ($e ")
+	assert.Equal(t, 1, strings.Count(q, "ToXml()"))
 	assert.Contains(t, q, "'errorCode'")
 	assert.Contains(t, q, `"LastScanFailure" = $fail`)
 	assert.Contains(t, q, `"LastScanFailureCode" = $failCode`)
-	// the OS service filter runs before either event id is looked at
-	assert.Less(t, strings.Index(q, "$osServices -contains"), strings.Index(q, "$e.Id -eq 26"))
-	assert.Contains(t, q, "-MaxEvents 200")
-	assert.Contains(t, q, "serviceGuid")
-	assert.Contains(t, q, "ToLowerInvariant()")
+	assert.Contains(t, q, "-ErrorAction SilentlyContinue")
 	for _, r := range q {
 		assert.Less(t, r, rune(128), "script must be ASCII")
 	}
