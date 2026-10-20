@@ -133,7 +133,6 @@ func newSnapPkgManagerForTest(fs afero.Fs, capabilities shared.Capabilities, com
 			asset:        asset,
 			commands:     commands,
 		},
-		platform: platform,
 	}
 }
 

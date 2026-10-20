@@ -185,7 +185,7 @@ func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManag
 		pms = append(pms, &DebPkgManager{conn: conn, platform: asset.Platform})
 		// This is supported in Debian and Ubuntu:
 		// https: // snapcraft.io/docs/distro-support
-		pms = append(pms, &SnapPkgManager{conn: conn, platform: asset.Platform})
+		pms = append(pms, &SnapPkgManager{conn: conn})
 	// ALT Linux is rpm based but is not in the redhat family: it ships
 	// /etc/redhat-release and /etc/fedora-release carrying only "ALT Container"
 	// with no distro name, so detection gives it a resolver of its own under
@@ -205,7 +205,7 @@ func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManag
 		pms = append(pms, &RpmPkgManager{conn: conn, platform: asset.Platform})
 		if asset.Platform.Name == "fedora" {
 			// https: // snapcraft.io/docs/distro-support
-			pms = append(pms, &SnapPkgManager{conn: conn, platform: asset.Platform})
+			pms = append(pms, &SnapPkgManager{conn: conn})
 		}
 	case asset.Platform.IsFamily("suse"): // suse handling
 		pms = append(pms, &SusePkgManager{RpmPkgManager{conn: conn, platform: asset.Platform}})

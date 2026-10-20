@@ -16,7 +16,6 @@ import (
 	"github.com/package-url/packageurl-go"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/resources/purl"
 	"gopkg.in/yaml.v3"
@@ -27,8 +26,7 @@ const (
 )
 
 type SnapPkgManager struct {
-	conn     shared.Connection
-	platform *inventory.Platform
+	conn shared.Connection
 }
 
 type snapListEntry struct {
