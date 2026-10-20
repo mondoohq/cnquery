@@ -7393,7 +7393,8 @@ private azure.subscription.storageService.account.blobAccessPoint @defaults("nam
   // Azure resource ID of the Private Link target, for a Private Link connection
   //
   // Empty for an endpoint connection. When the target is a Private Link
-  // service, privateLinkService resolves it.
+  // service, privateLinkService resolves it. The target can also be another
+  // kind of Azure resource, which only this field names.
   privateLinkId string
   // Private Link service the connection goes through
   //

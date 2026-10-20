@@ -59,6 +59,9 @@ func isBlobAccessPointUnavailable(err error) bool {
 	if !errors.As(err, &respErr) {
 		return false
 	}
+	// The switch covers the codes the shared allowlist does not: the
+	// account-level refusal, and the unknown-resource-type answers ARM gives
+	// with 404 as well as 400. azureFeatureNotApplicable only matches 400.
 	switch strings.ToLower(azureErrorCode(respErr)) {
 	case "featurenotsupportedforaccount":
 		return true
