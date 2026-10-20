@@ -561,6 +561,20 @@ func TestInstallDependenciesKeepsCurrentPeer(t *testing.T) {
 	assert.Equal(t, "13.4.0", existing.Lookup(ProviderLookup{ProviderName: "network"}).Version)
 }
 
+// When the registry's latest release is itself below the floor, downloading
+// it cannot help: the peer is left alone and the floor check reports the
+// mismatch as before.
+func TestInstallDependenciesSkipsPeerUpdateWhenLatestIsBelowFloor(t *testing.T) {
+	reg, _, caller, stale := outdatedPeerFixture(t)
+	reg.latest = "13.3.0"
+	existing := Providers{caller.ID: caller, stale.ID: stale}
+
+	err := installDependencies(caller, existing)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "requires network >= 13.4.0, but 13.2.4 is installed")
+	assert.Equal(t, 0, reg.downloads, "a release that cannot meet the floor is not downloaded")
+}
+
 // A builtin ships inside this executor, so an outdated one cannot be fixed by
 // downloading a provider. It is reported by the floor check, never installed.
 func TestInstallDependenciesNeverInstallsOutdatedBuiltin(t *testing.T) {

@@ -728,12 +728,14 @@ func installDependencies(provider *Provider, existing Providers) error {
 	}
 
 	if installed || updated {
-		// `existing` is the caller's own map, which the coordinator never sees.
+		// `existing` already carries what was installed above, and the floor
+		// check below reads it. The re-list is for the coordinator: `existing`
+		// is the caller's own map, which the coordinator never sees, while
 		// Runtime.AddConnection takes a clone of the published snapshot once
-		// per connection, so without this it keeps finding the version
-		// published before the install and installs the same provider again,
-		// once per call. Install reset CachedProviders, so this re-scans disk
-		// and publishes what is installed now.
+		// per connection. Without this it keeps finding the version published
+		// before the install and installs the same provider again, once per
+		// call. Install reset CachedProviders, so this re-scans disk and
+		// publishes what is installed now.
 		if _, err := ListActive(); err != nil {
 			return err
 		}
@@ -774,11 +776,26 @@ func updateOutdatedPeers(provider *Provider, existing Providers) (bool, error) {
 			continue
 		}
 
+		// A release that cannot meet the floor is not worth downloading; the
+		// floor check reports the mismatch, and this says why it was left.
+		latest, err := LatestVersion(context.Background(), dep.Name)
+		if err != nil {
+			return updated, err
+		}
+		if peerBelowFloor(latest, dep.MinVersion) {
+			log.Warn().
+				Str("installed", peer.Version).
+				Str("latest", latest).
+				Str("required", dep.MinVersion).
+				Msg("provider '" + provider.Name + "' needs a newer '" + dep.Name + "' provider, but its latest release is below that too, not updating it")
+			continue
+		}
+
 		log.Info().
 			Str("installed", peer.Version).
 			Str("required", dep.MinVersion).
 			Msg("provider '" + provider.Name + "' needs a newer '" + dep.Name + "' provider, updating it")
-		fresh, err := Install(dep.Name, "")
+		fresh, err := Install(dep.Name, latest)
 		if err != nil {
 			return updated, err
 		}
