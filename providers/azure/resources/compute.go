@@ -55,6 +55,15 @@ func vmOsType(props *compute.VirtualMachineProperties) *string {
 	return stringEnumPtr(props.StorageProfile.OSDisk.OSType)
 }
 
+// vmFlexPreferredSize returns the preferred VM size from the VM's flex
+// profile, or nil when the VM has no flex profile.
+func vmFlexPreferredSize(props *compute.VirtualMachineProperties) *string {
+	if props == nil || props.FlexProfile == nil {
+		return nil
+	}
+	return props.FlexProfile.PreferredVMSize
+}
+
 // powerStatePrefix marks the instance-view status codes that carry the VM's
 // power state. The same status list also carries ProvisioningState/* codes,
 // which must not be mistaken for it.
@@ -283,6 +292,7 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 		"computerName":                  llx.StringDataPtr(computerName),
 		"adminUsername":                 llx.StringDataPtr(adminUsername),
 		"licenseType":                   llx.StringDataPtr(licenseType),
+		"flexProfilePreferredVmSize":    llx.StringDataPtr(vmFlexPreferredSize(vm.Properties)),
 		"managedBy":                     llx.StringDataPtr(vm.ManagedBy),
 		"vmId":                          llx.StringDataPtr(vmId),
 		"provisioningState":             llx.StringDataPtr(provisioningState),

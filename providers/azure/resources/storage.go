@@ -34,6 +34,25 @@ type (
 	Kind                          storage.Kind
 )
 
+// storageTurboTier returns whether Turbo Tier is enabled and its target fill
+// percentage. Each value is nil when the account does not report it.
+func storageTurboTier(tt *storage.TurboTier) (*bool, *int64) {
+	if tt == nil {
+		return nil, nil
+	}
+	var enabled *bool
+	if tt.Status != nil {
+		v := *tt.Status == storage.TurboTierStatusEnabled
+		enabled = &v
+	}
+	var target *int64
+	if tt.TargetPercent != nil {
+		v := int64(*tt.TargetPercent)
+		target = &v
+	}
+	return enabled, target
+}
+
 func (a *mqlAzureSubscriptionStorageService) id() (string, error) {
 	return "azure.subscription.storage/" + a.SubscriptionId.Data, nil
 }
@@ -884,6 +903,8 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 	var defaultToOAuthAuthentication *bool
 	var enableNfsV3 *bool
 	var largeFileSharesState *string
+	var turboTierEnabled *bool
+	var turboTierTargetPercent *int64
 	var lastGeoFailoverTime *time.Time
 	var allowedCopyScope, sasExpirationPeriod, sasExpirationAction string
 	var requireInfraEnc bool
@@ -915,6 +936,7 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 		defaultToOAuthAuthentication = account.Properties.DefaultToOAuthAuthentication
 		enableNfsV3 = account.Properties.EnableNfsV3
 		largeFileSharesState = (*string)(account.Properties.LargeFileSharesState)
+		turboTierEnabled, turboTierTargetPercent = storageTurboTier(account.Properties.TurboTier)
 		lastGeoFailoverTime = account.Properties.LastGeoFailoverTime
 		if account.Properties.AllowedCopyScope != nil {
 			allowedCopyScope = string(*account.Properties.AllowedCopyScope)
@@ -1112,6 +1134,8 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 		"defaultToOAuthAuthentication":         llx.BoolDataPtr(defaultToOAuthAuthentication),
 		"enableNfsV3":                          llx.BoolDataPtr(enableNfsV3),
 		"largeFileSharesState":                 llx.StringDataPtr(largeFileSharesState),
+		"turboTierEnabled":                     llx.BoolDataPtr(turboTierEnabled),
+		"turboTierTargetPercent":               llx.IntDataPtr(turboTierTargetPercent),
 		"lastGeoFailoverTime":                  llx.TimeDataPtr(lastGeoFailoverTime),
 		"allowedCopyScope":                     llx.StringData(allowedCopyScope),
 		"requireInfrastructureEncryption":      llx.BoolData(requireInfraEnc),
