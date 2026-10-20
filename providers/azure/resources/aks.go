@@ -318,10 +318,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				serviceMeshMode = (*string)(entry.Properties.ServiceMeshProfile.Mode)
 			}
 
-			var skuTier string
-			if entry.SKU != nil && entry.SKU.Tier != nil {
-				skuTier = string(*entry.SKU.Tier)
-			}
+			skuName, skuTier := aksSku(entry.SKU)
 
 			var powerState *string
 			if entry.Properties.PowerState != nil {
@@ -407,6 +404,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"disableLocalAccounts":              llx.BoolData(convert.ToValue(entry.Properties.DisableLocalAccounts)),
 					"publicNetworkAccess":               llx.StringDataPtr((*string)(entry.Properties.PublicNetworkAccess)),
 					"skuTier":                           llx.StringData(skuTier),
+					"skuName":                           llx.StringData(skuName),
 					"networkPlugin":                     llx.StringDataPtr(networkPlugin),
 					"networkPolicy":                     llx.StringDataPtr(networkPolicy),
 					"oidcIssuerEnabled":                 llx.BoolData(convert.ToValue(oidcIssuerEnabled)),
@@ -824,4 +822,19 @@ func aksDiskCsiDriverEnabled(sp *clusters.ManagedClusterStorageProfile) *bool {
 		return nil
 	}
 	return sp.DiskCSIDriver.Enabled
+}
+
+// aksSku returns the SKU name ("Base" or "Automatic") and tier of a managed
+// cluster. Both are empty when Azure does not report them.
+func aksSku(sku *clusters.ManagedClusterSKU) (name string, tier string) {
+	if sku == nil {
+		return "", ""
+	}
+	if sku.Name != nil {
+		name = string(*sku.Name)
+	}
+	if sku.Tier != nil {
+		tier = string(*sku.Tier)
+	}
+	return name, tier
 }

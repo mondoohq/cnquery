@@ -13554,6 +13554,12 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   publicNetworkAccess string
   // SKU tier for the AKS cluster ("Free", "Standard", or "Premium")
   skuTier string
+  // SKU name for the AKS cluster ("Base" or "Automatic")
+  //
+  // "Automatic" marks an AKS Automatic cluster, where Azure manages the
+  // node pools, scaling and a preset of security settings. "Base" is a
+  // standard cluster. Empty when Azure does not report a SKU.
+  skuName string
   // Key Vault key used for Azure Key Vault KMS encryption (null if not enabled)
   azureKeyVaultKmsKey() azure.subscription.keyVaultService.key
   // Network plugin used for building the Kubernetes network ("azure", "kubenet", "none")

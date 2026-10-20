@@ -55,6 +55,34 @@ func TestAksKubernetesResourceObjectEncryption(t *testing.T) {
 	})
 }
 
+func TestAksSku(t *testing.T) {
+	t.Run("nil sku", func(t *testing.T) {
+		name, tier := aksSku(nil)
+		assert.Empty(t, name)
+		assert.Empty(t, tier)
+	})
+	t.Run("standard cluster from ARM response", func(t *testing.T) {
+		var sku clusters.ManagedClusterSKU
+		require.NoError(t, json.Unmarshal([]byte(`{"name":"Base","tier":"Free"}`), &sku))
+		name, tier := aksSku(&sku)
+		assert.Equal(t, "Base", name)
+		assert.Equal(t, "Free", tier)
+	})
+	t.Run("AKS Automatic cluster from ARM response", func(t *testing.T) {
+		var mc clusters.ManagedCluster
+		require.NoError(t, json.Unmarshal([]byte(`{"name":"automatic","sku":{"name":"Automatic","tier":"Standard"},"properties":{}}`), &mc))
+		name, tier := aksSku(mc.SKU)
+		assert.Equal(t, "Automatic", name)
+		assert.Equal(t, "Standard", tier)
+	})
+	t.Run("tier without a name", func(t *testing.T) {
+		tierValue := clusters.ManagedClusterSKUTierPremium
+		name, tier := aksSku(&clusters.ManagedClusterSKU{Tier: &tierValue})
+		assert.Empty(t, name)
+		assert.Equal(t, "Premium", tier)
+	})
+}
+
 // A discovered AKS cluster asset carries the id from the ARM resource listing
 // (".../resourceGroups/..."), while the AKS API that lists the clusters spells
 // it ".../resourcegroups/...". The cluster must still resolve on its own asset.

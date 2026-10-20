@@ -194,6 +194,7 @@ azure.subscription.aksService.cluster.resourceIdentity 13.36.1
 azure.subscription.aksService.cluster.securityProfile 9.0.1
 azure.subscription.aksService.cluster.serviceMeshMode 13.1.8
 azure.subscription.aksService.cluster.servicePrincipalClientId 13.22.1
+azure.subscription.aksService.cluster.skuName 14.3.10
 azure.subscription.aksService.cluster.skuTier 13.1.8
 azure.subscription.aksService.cluster.storageProfile 9.0.1
 azure.subscription.aksService.cluster.supportPlan 13.1.8
