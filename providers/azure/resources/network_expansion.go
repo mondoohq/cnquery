@@ -965,6 +965,15 @@ func initAzureSubscriptionNetworkServiceExpressRouteCircuit(runtime *plugin.Runt
 	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceExpressRouteCircuit, id); cached != nil {
 		return args, cached, nil
 	}
+	// The subscription's circuit list answers every reference into it (from
+	// ports, LAGs, and LAG authorizations) with one call. Only pay for a Get
+	// when the list cannot answer: a circuit in another subscription, or one
+	// since deleted.
+	if circuit := lookupInServiceList(runtime, ResourceAzureSubscriptionNetworkService,
+		func(s *mqlAzureSubscriptionNetworkService) *plugin.TValue[[]any] { return s.GetExpressRouteCircuits() },
+		id); circuit != nil {
+		return args, circuit, nil
+	}
 
 	client, err := network.NewExpressRouteCircuitsClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
