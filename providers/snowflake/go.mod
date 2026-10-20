@@ -10,7 +10,7 @@ replace github.com/apache/thrift => github.com/apache/thrift v0.22.0
 go 1.26.8
 
 require (
-	github.com/Snowflake-Labs/terraform-provider-snowflake v1.2.3
+	github.com/Snowflake-Labs/terraform-provider-snowflake v1.2.2-0.20261013103929-accf5ace6131
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/stretchr/testify v1.12.1
 	go.mondoo.com/mql v0.0.0-20261019065417-1fcdd84493fd
@@ -25,16 +25,13 @@ require (
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/internal v0.1.0 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.23.14 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.4.16 // indirect
+	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/gopherjs/gopherjs v1.21.0 // indirect
+	github.com/hashicorp/go-uuid v1.0.4 // indirect
 	github.com/hashicorp/terraform-json v0.29.0 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.11.0 // indirect
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1 // indirect
-	github.com/hashicorp/terraform-plugin-testing v1.16.0 // indirect
 	github.com/hashicorp/terraform-registry-address v0.5.0 // indirect
-	github.com/sirupsen/logrus v1.10.2 // indirect
-	github.com/snowflakedb/gosnowflake v1.19.1 // indirect
 	go.opentelemetry.io/otel/log v1.47.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 )
