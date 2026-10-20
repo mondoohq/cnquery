@@ -5313,6 +5313,18 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   databaseEncryption dict
   // Etcd encryption state (ENCRYPTED, DECRYPTED, ALL_OBJECTS_ENCRYPTION_ENABLED)
   databaseEncryptionState string
+  // Current state of etcd encryption, as GKE reports it
+  //
+  // Application-layer Secrets encryption is only in effect once this is
+  // CURRENT_STATE_ENCRYPTED (or CURRENT_STATE_ALL_OBJECTS_ENCRYPTION_ENABLED).
+  // `databaseEncryptionState` is the requested state; while encryption or
+  // decryption runs, or after it failed, this reports
+  // CURRENT_STATE_ENCRYPTION_PENDING, CURRENT_STATE_ENCRYPTION_ERROR,
+  // CURRENT_STATE_DECRYPTION_PENDING, CURRENT_STATE_DECRYPTION_ERROR,
+  // CURRENT_STATE_ALL_OBJECTS_ENCRYPTION_PENDING or
+  // CURRENT_STATE_ALL_OBJECTS_ENCRYPTION_ERROR. Empty when the cluster
+  // reports no database encryption configuration.
+  databaseEncryptionCurrentState string
   // Cloud KMS key used for etcd encryption
   databaseEncryptionKey() gcp.project.kmsService.keyring.cryptokey
   // Infrastructure-management system that provisioned the resource
