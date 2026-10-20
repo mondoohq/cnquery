@@ -121,6 +121,7 @@ func newSnapPkgManagerForTest(fs afero.Fs, capabilities shared.Capabilities, com
 		Version: "22.04",
 		Arch:    "amd64",
 		Family:  []string{"debian", "linux", "unix", "os"},
+		Labels:  map[string]string{"distro-id": "ubuntu"},
 	}
 
 	asset := &inventory.Asset{Platform: platform}
@@ -169,14 +170,14 @@ func TestParseSnapMeta(t *testing.T) {
 	require.NoError(t, err)
 	defer manifestFile.Close()
 
-	pkg, err := spm.parseSnapManifest(manifestFile)
+	pkg, err := spm.parseSnapManifest(manifestFile, "")
 	require.NoError(t, err)
 
 	assert.Equal(t, "dbgate", pkg.Name)
 	assert.Equal(t, "6.1.0", pkg.Version)
 	assert.Equal(t, SnapPkgFormat, pkg.Format)
 	assert.Contains(t, pkg.Description, "database")
-	assert.Equal(t, "pkg:snap/ubuntu/dbgate@6.1.0?arch=amd64", pkg.PUrl)
+	assert.Equal(t, "pkg:snap/dbgate@6.1.0?arch=amd64", pkg.PUrl)
 }
 
 func TestParseSnapListOutput(t *testing.T) {
@@ -251,7 +252,7 @@ func TestSnapPkgManagerList_UsesCLIManifestEnrichment(t *testing.T) {
 	assert.Equal(t, "121.0", firefox.Version)
 	assert.Equal(t, "Firefox browser", firefox.Description)
 	assert.Equal(t, "amd64", firefox.Arch)
-	assert.Equal(t, "pkg:snap/ubuntu/firefox@121.0?arch=amd64", firefox.PUrl)
+	assert.Equal(t, "pkg:snap/firefox@121.0?arch=amd64&revision=42", firefox.PUrl)
 
 	store := findPkg(pkgs, "snap-store")
 	assert.Equal(t, "Snap Store", store.Description)
@@ -286,6 +287,7 @@ func TestSnapPkgManagerListFromFS_PrefersCurrentSymlink(t *testing.T) {
 	require.Len(t, pkgs, 1)
 	assert.Equal(t, "10.0", pkgs[0].Version)
 	assert.Equal(t, "Current Firefox", pkgs[0].Description)
+	assert.Equal(t, "pkg:snap/firefox@10.0?arch=amd64&revision=10", pkgs[0].PUrl)
 }
 
 func TestSnapPkgManagerListFromFS_FallsBackToHighestValidRevision(t *testing.T) {
@@ -299,6 +301,7 @@ func TestSnapPkgManagerListFromFS_FallsBackToHighestValidRevision(t *testing.T) 
 	require.NoError(t, err)
 	require.Len(t, pkgs, 1)
 	assert.Equal(t, "9.0", pkgs[0].Version)
+	assert.Equal(t, "pkg:snap/firefox@9.0?arch=amd64&revision=9", pkgs[0].PUrl)
 }
 
 func TestSnapPkgManagerList_SkipsMalformedManifest(t *testing.T) {
@@ -423,4 +426,10 @@ func TestSnapPkgManagerAvailable(t *testing.T) {
 		require.NoError(t, err)
 		assert.Nil(t, updates)
 	})
+}
+
+func TestNewSnapPurl(t *testing.T) {
+	assert.Equal(t, "pkg:snap/firefox@121.0?arch=amd64&revision=42", newSnapPurl("firefox", "121.0", "amd64", "42"))
+	assert.Equal(t, "pkg:snap/firefox@121.0?arch=amd64", newSnapPurl("firefox", "121.0", "amd64", ""))
+	assert.Equal(t, "pkg:snap/firefox@121.0?revision=42", newSnapPurl("firefox", "121.0", "", "42"))
 }

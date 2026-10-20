@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/purl"
 )
 
 // newHomebrewPurl creates a PURL for a Homebrew package.
@@ -21,7 +22,7 @@ import (
 // pkg:brew/homebrew/cask/firefox@120.0
 func newHomebrewPurl(name, version, tap string) string {
 	return packageurl.NewPackageURL(
-		"brew",
+		string(purl.TypeBrew),
 		tap,
 		name,
 		version,

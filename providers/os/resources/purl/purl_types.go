@@ -32,6 +32,10 @@ var (
 	Type_X_Platform Type = "platform"
 	// TypeSnap is a pkg:snap purl.
 	TypeSnap Type = "snap"
+	// TypeBrew is a pkg:brew purl.
+	TypeBrew Type = "brew"
+	// TypeChocolatey is a pkg:chocolatey purl.
+	TypeChocolatey Type = "chocolatey"
 	// TypeFlatpak is a pkg:flatpak purl.
 	//
 	// The namespace is the REMOTE the application was installed from, not a
@@ -71,6 +75,8 @@ var (
 		TypeRPM:           {},
 		TypeCos:           {},
 		TypeSnap:          {},
+		TypeBrew:          {},
+		TypeChocolatey:    {},
 		TypeGithub:        {},
 	}
 )

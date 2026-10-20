@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/package-url/packageurl-go"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
@@ -98,7 +99,7 @@ func (spm *SnapPkgManager) listFromCLI() ([]Package, error) {
 			continue
 		}
 
-		pkg, err := spm.parseSnapManifest(manifest)
+		pkg, err := spm.parseSnapManifest(manifest, entry.rev)
 		manifest.Close()
 		if err != nil {
 			log.Debug().Err(err).Str("path", manifestPath).Msg("mql[snap]> could not parse snap manifest from cli revision")
@@ -172,7 +173,7 @@ func (spm *SnapPkgManager) listFromFS() ([]Package, error) {
 		currentManifestPath := path.Join(snapDir, name, "current", "meta", "snap.yaml")
 		manifest, err := afs.Open(currentManifestPath)
 		if err == nil {
-			pkg, err := spm.parseSnapManifest(manifest)
+			pkg, err := spm.parseSnapManifest(manifest, currentSnapRevision(afs, path.Join(snapDir, name, "current")))
 			manifest.Close()
 			if err != nil {
 				log.Debug().Err(err).Str("path", currentManifestPath).Msg("mql[snap]> could not parse current snap manifest")
@@ -222,7 +223,7 @@ func (spm *SnapPkgManager) listFromFS() ([]Package, error) {
 				continue
 			}
 
-			pkg, err := spm.parseSnapManifest(manifest)
+			pkg, err := spm.parseSnapManifest(manifest, strconv.Itoa(revision))
 			manifest.Close()
 			if err != nil {
 				log.Debug().Err(err).Str("path", manifestPath).Msg("mql[snap]> could not parse snap manifest from revision fallback")
@@ -291,7 +292,7 @@ func (spm *SnapPkgManager) installedArch(afs *afero.Afero, name string) string {
 		return ""
 	}
 	defer f.Close()
-	pkg, err := spm.parseSnapManifest(f)
+	pkg, err := spm.parseSnapManifest(f, "")
 	if err != nil {
 		log.Debug().Err(err).Str("path", manifestPath).Msg("mql[snap]> could not parse snap manifest for update")
 		return ""
@@ -349,8 +350,42 @@ type SnapManifest struct {
 	Architectures []string `yaml:"architectures"`
 }
 
-// parseSnapManifest parses a snap manifest file and returns a package
-func (spm *SnapPkgManager) parseSnapManifest(manifest io.Reader) (Package, error) {
+// currentSnapRevision returns the revision the "current" symlink of a snap
+// points at, "" when it is not a symlink to a numeric revision directory.
+func currentSnapRevision(afs *afero.Afero, currentPath string) string {
+	lr, ok := afs.Fs.(afero.LinkReader)
+	if !ok {
+		return ""
+	}
+	target, err := lr.ReadlinkIfPossible(currentPath)
+	if err != nil {
+		return ""
+	}
+	rev := path.Base(target)
+	if _, err := strconv.Atoi(rev); err != nil {
+		return ""
+	}
+	return rev
+}
+
+// newSnapPurl builds the purl of a snap. Snap is distribution-independent: the
+// same name, version and revision are the same bits on every host, so the purl
+// carries neither the scanning host's distro as namespace nor as qualifier.
+// The revision qualifier is omitted when it is unknown.
+func newSnapPurl(name, version, arch, revision string) string {
+	qualifiers := packageurl.Qualifiers{}
+	if arch != "" {
+		qualifiers = append(qualifiers, packageurl.Qualifier{Key: "arch", Value: arch})
+	}
+	if revision != "" {
+		qualifiers = append(qualifiers, packageurl.Qualifier{Key: "revision", Value: revision})
+	}
+	return packageurl.NewPackageURL(string(purl.TypeSnap), "", name, version, qualifiers, "").String()
+}
+
+// parseSnapManifest parses a snap manifest file and returns a package. The
+// revision is not part of the manifest; "" when unknown.
+func (spm *SnapPkgManager) parseSnapManifest(manifest io.Reader, revision string) (Package, error) {
 	manifestBytes, err := io.ReadAll(manifest)
 	if err != nil {
 		return Package{}, err
@@ -372,12 +407,6 @@ func (spm *SnapPkgManager) parseSnapManifest(manifest io.Reader) (Package, error
 		Format:      SnapPkgFormat,
 		Description: snapManifest.Description,
 		Arch:        arch,
-		PUrl: purl.NewPackageURL(
-			spm.platform,
-			purl.TypeSnap,
-			snapManifest.Name,
-			snapManifest.Version,
-			purl.WithArch(arch),
-		).String(),
+		PUrl:        newSnapPurl(snapManifest.Name, snapManifest.Version, arch, revision),
 	}, nil
 }
