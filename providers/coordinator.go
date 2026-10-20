@@ -8,6 +8,8 @@ import (
 	"math"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -329,11 +331,13 @@ var sendProviderStartFailureFn = func(errMsg string, tags map[string]string) {
 func (c *coordinator) reportProviderStartFailure(id string, err error) {
 	name := id
 	version := ""
+	providerPath := ""
 	if provider, ok := c.lookupProvider(id); ok {
 		if provider.Name != "" {
 			name = provider.Name
 		}
 		version = provider.Version
+		providerPath = provider.Path
 	}
 	tags := map[string]string{
 		health.TagReportKind: health.ReportKindProviderStartFailure,
@@ -347,7 +351,34 @@ func (c *coordinator) reportProviderStartFailure(id string, err error) {
 	if kind := classifyProviderStartFailure(err.Error()); kind != "" {
 		tags[health.TagFailureKind] = kind
 	}
-	sendProviderStartFailureFn("failed to start provider '"+name+"': "+err.Error(), tags)
+	home, _ := os.UserHomeDir()
+	msg := scrubStartFailureReport("failed to start provider '"+name+"': "+err.Error(), providerPath, home)
+	sendProviderStartFailureFn(msg, tags)
+}
+
+// ownerGroupNameRe matches the bracketed user/group names in go-plugin's
+// "Additional notes about plugin" block ("Owner: 501 [jsmith] (current: 501
+// [jsmith])"), keeping the numeric ids.
+var ownerGroupNameRe = regexp.MustCompile(`\b((?:Owner|Group|current): -?[0-9]+) \[[^\]]*\]`)
+
+// scrubStartFailureReport redacts host-identifying detail from a start
+// failure report before it is sent upstream: the provider's install path
+// (which on a user install sits under the home directory and names the
+// user — in the fork/exec error and in go-plugin's "Path:" note), the home
+// directory anywhere else in the message (e.g. in dynamic linker stderr
+// lines), and the local user/group names go-plugin prints. The numeric
+// ids and everything diagnostic stay. The local log line is NOT scrubbed —
+// the operator debugging their own host wants the real paths.
+func scrubStartFailureReport(msg, providerPath, home string) string {
+	// The provider path first: it usually sits under home, and replacing
+	// home first would break the match.
+	if providerPath != "" {
+		msg = strings.ReplaceAll(msg, providerPath, "<providers>/"+filepath.Base(providerPath))
+	}
+	if home != "" {
+		msg = strings.ReplaceAll(msg, home, "~")
+	}
+	return ownerGroupNameRe.ReplaceAllString(msg, "$1")
 }
 
 // startFailureDiagnostics renders what was observed of a plugin subprocess
