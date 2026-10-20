@@ -8,7 +8,7 @@ import (
 
 	armautomation "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/automation/armautomation"
 	armbatch "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v4"
-	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8"
+	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v9"
 	armredis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
