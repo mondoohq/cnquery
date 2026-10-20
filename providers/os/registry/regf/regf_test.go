@@ -214,9 +214,10 @@ func setChecksum(b []byte) {
 	for i := 0; i < 508; i += 4 {
 		sum ^= le32(b, i)
 	}
-	if sum == 0xFFFFFFFF {
+	switch sum {
+	case 0xFFFFFFFF:
 		sum = 0xFFFFFFFE
-	} else if sum == 0 {
+	case 0:
 		sum = 1
 	}
 	put32(b, 508, sum)

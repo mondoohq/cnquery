@@ -74,9 +74,10 @@ func parseLog(l Log) ([]logEntry, error) {
 	for i := 0; i < 508; i += 4 {
 		sum ^= binary.LittleEndian.Uint32(hdr[i:])
 	}
-	if sum == 0xFFFFFFFF {
+	switch sum {
+	case 0xFFFFFFFF:
 		sum = 0xFFFFFFFE
-	} else if sum == 0 {
+	case 0:
 		sum = 1
 	}
 	if sum != binary.LittleEndian.Uint32(hdr[508:]) {
