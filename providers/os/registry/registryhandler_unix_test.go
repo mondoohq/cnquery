@@ -117,3 +117,33 @@ func TestHandlerLoadUserHive(t *testing.T) {
 	require.Len(t, children, 1)
 	assert.Equal(t, "Level2", children[0].Name)
 }
+
+func TestHandlerUnloadSubkeysUnloadsEveryHiveWhenOneFails(t *testing.T) {
+	path := fixtureHive(t, t.TempDir())
+	rh := NewRegistryHandler()
+	require.NoError(t, rh.LoadSubkey(Software, path))
+	require.NoError(t, rh.LoadSubkey(System, path))
+
+	// make both unloads fail: their files are already closed
+	loadedHivesLock.Lock()
+	for _, id := range []string{"tmpreg_software", "tmpreg_system"} {
+		require.Contains(t, loadedHives, id)
+		require.NoError(t, loadedHives[id].file.Close())
+	}
+	loadedHivesLock.Unlock()
+
+	require.Error(t, rh.UnloadSubkeys())
+
+	// Every hive was released, not only the first one that failed: both ids
+	// can be mounted again. Returning on the first error left the other one
+	// mounted, and loading it again failed with "already loaded".
+	other := NewRegistryHandler()
+	t.Cleanup(func() { assert.NoError(t, other.UnloadSubkeys()) })
+	require.NoError(t, other.LoadSubkey(Software, path))
+	require.NoError(t, other.LoadSubkey(System, path))
+
+	// the hives that failed stay in the handler, and a retry clears them
+	assert.NoError(t, rh.UnloadSubkeys())
+	_, err := rh.GetNativeRegistryKeyItems(Software, "Values")
+	assert.Error(t, err)
+}

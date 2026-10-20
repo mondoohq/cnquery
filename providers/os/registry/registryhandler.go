@@ -149,18 +149,25 @@ func (r *RegistryHandler) userHiveKeyPath(sid, path string) (string, error) {
 func (r *RegistryHandler) UnloadSubkeys() error {
 	r.lock.Lock()
 	defer r.lock.Unlock()
+	// Unload every hive even when one fails: returning early would leave the
+	// rest mounted, and on non-windows a hive still mounted under its id makes
+	// the next LoadSubkey for that id fail. A hive that failed to unload stays
+	// in the map so a later call can retry it.
+	var errs []error
 	for id, regPath := range r.registries {
-		err := UnloadRegistrySubkey(regPath)
-		if err != nil {
-			return err
+		if err := UnloadRegistrySubkey(regPath); err != nil {
+			errs = append(errs, err)
+			continue
 		}
 		delete(r.registries, id)
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 // Gets a fully qualified registry path for a given registry id, including the root (HKLM).
 func (r *RegistryHandler) getRegistryPath(id string) (string, error) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
 	if path, ok := r.registries[id]; ok {
 		// we always point the syscalls to HKEY_LOCAL_MACHINE so we can safely prefix it here
 		return fmt.Sprintf("HKLM\\%s", path), nil
