@@ -34,11 +34,14 @@ func TestCommandRunnerCancelsProcessGroup(t *testing.T) {
 	require.NoError(t, err)
 	pid, err := strconv.Atoi(strings.TrimSpace(string(raw)))
 	require.NoError(t, err)
-	// A killed child can briefly remain a zombie until the OS reaps it. It
-	// must not execute, so inspect its process state rather than kill(0) alone.
-	state, err := os.ReadFile("/proc/" + strconv.Itoa(pid) + "/stat")
-	if err == nil {
-		assert.Contains(t, string(state), ") Z ")
+	// SIGKILL to the process group is delivered asynchronously: on a loaded
+	// machine the child can still be running right after ExecContext returns.
+	// Wait for it to stop executing instead of sampling its state once. A
+	// killed child can briefly remain a zombie until the OS reaps it, so
+	// inspect its process state rather than kill(0) alone.
+	if _, err := os.Stat("/proc/self/stat"); err == nil {
+		state, ok := waitProcStopped(pid, 2*time.Second)
+		assert.True(t, ok, "child %d still executing after cancellation, last state %q", pid, state)
 	} else {
 		// macOS has no procfs; a fully reaped child returns ESRCH.
 		deadline := time.Now().Add(time.Second)
@@ -48,6 +51,47 @@ func TestCommandRunnerCancelsProcessGroup(t *testing.T) {
 		assert.True(t, errors.Is(syscall.Kill(pid, 0), syscall.ESRCH))
 	}
 }
+
+// procState returns the state field of /proc/<pid>/stat. The comm field is
+// parenthesized and may itself contain spaces or parens, so the state is the
+// first field after the last ')'. gone is true once the process is reaped.
+func procState(pid int) (state string, gone bool) {
+	raw, err := os.ReadFile("/proc/" + strconv.Itoa(pid) + "/stat")
+	if err != nil {
+		return "", errors.Is(err, os.ErrNotExist)
+	}
+	s := string(raw)
+	i := strings.LastIndexByte(s, ')')
+	if i < 0 {
+		return s, false
+	}
+	fields := strings.Fields(s[i+1:])
+	if len(fields) == 0 {
+		return s, false
+	}
+	return fields[0], false
+}
+
+// waitProcStopped polls until the process is a zombie (Z), dead (X) or reaped,
+// and reports the last observed state.
+func waitProcStopped(pid int, timeout time.Duration) (last string, stopped bool) {
+	deadline := time.Now().Add(timeout)
+	for {
+		state, gone := procState(pid)
+		if gone {
+			return "reaped", true
+		}
+		last = state
+		if state == "Z" || state == "X" {
+			return last, true
+		}
+		if !time.Now().Before(deadline) {
+			return last, false
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
 func TestCommandRunnerBoundsOutput(t *testing.T) {
 	t.Setenv("MONDOO_COMMAND_OUTPUT_LIMIT", "32")
 	runner := &CommandRunner{Shell: []string{"sh", "-c"}}
