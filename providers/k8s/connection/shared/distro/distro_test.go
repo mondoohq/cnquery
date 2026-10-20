@@ -252,3 +252,202 @@ func TestResultAssetAnnotations(t *testing.T) {
 		assert.Nil(t, r.AssetAnnotations())
 	})
 }
+
+// groupResources serves the given resources per API group.
+func groupResources(byGroup map[string][]string) func(context.Context, string) ([]string, error) {
+	return func(_ context.Context, group string) ([]string, error) {
+		return byGroup[group], nil
+	}
+}
+
+func failingGroups(msg string) func(context.Context, string) ([]string, error) {
+	return func(context.Context, string) ([]string, error) { return nil, errors.New(msg) }
+}
+
+func nodesOf(n ...Node) func(context.Context) ([]Node, error) {
+	return func(context.Context) ([]Node, error) { return n, nil }
+}
+
+// API groups a GKE 1.35 cluster serves, Autopilot and Standard alike.
+var gkeGroups = []string{"apps", "auto.gke.io", "cloud.google.com", "hub.gke.io", "networking.gke.io", "node.gke.io", "nodemanagement.gke.io", "warden.gke.io"}
+
+func gkeNode(name string) Node {
+	return Node{
+		Name:       name,
+		ProviderID: "gce://project/us-central1-a/" + name,
+		Labels:     map[string]string{"cloud.google.com/gke-nodepool": "pool-2", "cloud.google.com/gke-provisioning": "standard"},
+	}
+}
+
+func eksNode(name, computeType string) Node {
+	labels := map[string]string{"topology.kubernetes.io/region": "us-west-2"}
+	if computeType != "" {
+		labels["eks.amazonaws.com/compute-type"] = computeType
+	} else {
+		labels["eks.amazonaws.com/nodegroup"] = "ng-1"
+	}
+	return Node{Name: name, ProviderID: "aws:///us-west-2a/i-0123456789abcdef0", Labels: labels}
+}
+
+func TestManagedModeFromNodes(t *testing.T) {
+	cases := []struct {
+		name   string
+		distro string
+		nodes  []Node
+		want   string
+	}{
+		{"eks auto mode node", EKS, []Node{eksNode("i-1", ""), eksNode("i-2", "auto")}, ModeEKSAutoMode},
+		{"eks managed node group", EKS, []Node{eksNode("i-1", "")}, ""},
+		{"eks fargate", EKS, []Node{eksNode("fargate-ip-10-0-1-1", "fargate")}, ""},
+		{"gke autopilot", GKE, []Node{gkeNode("gk3-shop-pool-2-1c9908f0-o10s"), gkeNode("gk3-shop-pool-2-7d0c8137-asi2")}, ModeGKEAutopilot},
+		{"gke standard", GKE, []Node{gkeNode("gke-shop-default-pool-41881a33-79uo")}, ""},
+		{"gke standard with an autopilot compute class node", GKE, []Node{gkeNode("gke-shop-default-pool-41881a33-79uo"), gkeNode("gk3-shop-nap-1c9908f0-o10s")}, ""},
+		{"gk3 name outside gke", AKS, []Node{gkeNode("gk3-node")}, ""},
+		{"no nodes", GKE, nil, ""},
+	}
+	for _, tc := range cases {
+		mode, value := ManagedModeFromNodes(tc.distro, tc.nodes)
+		assert.Equal(t, tc.want, mode, tc.name)
+		if tc.want == "" {
+			assert.Empty(t, value, tc.name)
+		} else {
+			assert.NotEmpty(t, value, tc.name)
+		}
+	}
+}
+
+func TestDetectGKEAutopilot(t *testing.T) {
+	t.Run("from API discovery, without node access", func(t *testing.T) {
+		res := Detect(context.Background(), Probes{
+			Version:   version("v1.35.8-gke.1439001"),
+			APIGroups: names(gkeGroups...),
+			GroupResources: groupResources(map[string][]string{
+				"auto.gke.io": {"allowlistedv2workloads", "allowlistedworkloads", "allowlistsynchronizers", "workloadallowlists"},
+			}),
+			Nodes: failing[[]Node]("nodes is forbidden"),
+		})
+		assert.Equal(t, GKE, res.Name)
+		assert.Equal(t, ModeGKEAutopilot, res.ManagedMode)
+		assert.Equal(t, Evidence{Distro: GKE, Value: "allowlistedworkloads.auto.gke.io"}, res.Evidence[ProbeManagedMode])
+		assert.Equal(t, ModeGKEAutopilot, res.PlatformMetadata()[MetadataManagedMode])
+	})
+
+	t.Run("from node names when discovery has no signal", func(t *testing.T) {
+		res := Detect(context.Background(), Probes{
+			Version:        version("v1.35.8-gke.1439001"),
+			APIGroups:      names(gkeGroups...),
+			GroupResources: failingGroups("discovery failed"),
+			Nodes:          nodesOf(gkeNode("gk3-shop-pool-2-1c9908f0-o10s")),
+		})
+		assert.Equal(t, ModeGKEAutopilot, res.ManagedMode)
+		assert.Equal(t, "node name prefix gk3-", res.Evidence[ProbeManagedMode].Value)
+	})
+
+	t.Run("standard cluster", func(t *testing.T) {
+		res := Detect(context.Background(), Probes{
+			Version:   version("v1.35.8-gke.1439001"),
+			APIGroups: names(gkeGroups...),
+			GroupResources: groupResources(map[string][]string{
+				"auto.gke.io": {"allowlistsynchronizers", "workloadallowlists"},
+			}),
+			Nodes: nodesOf(gkeNode("gke-shop-my-node-pool-41881a33-79uo")),
+		})
+		assert.Equal(t, GKE, res.Name)
+		assert.Empty(t, res.ManagedMode)
+		assert.NotContains(t, res.Evidence, ProbeManagedMode)
+		assert.NotContains(t, res.PlatformMetadata(), MetadataManagedMode)
+	})
+
+	t.Run("discovery error without another signal is recorded", func(t *testing.T) {
+		res := Detect(context.Background(), Probes{
+			Version:        version("v1.35.8-gke.1439001"),
+			APIGroups:      names(gkeGroups...),
+			GroupResources: failingGroups("the server is currently unable to handle the request"),
+			Nodes:          failing[[]Node]("nodes is forbidden"),
+		})
+		assert.Equal(t, GKE, res.Name)
+		assert.Empty(t, res.ManagedMode)
+		assert.Equal(t, "the server is currently unable to handle the request", res.Evidence[ProbeManagedMode].Error)
+	})
+}
+
+func TestDetectEKSAutoMode(t *testing.T) {
+	t.Run("from API discovery", func(t *testing.T) {
+		res := Detect(context.Background(), Probes{
+			Version:   version("v1.34.1-eks-113cf36"),
+			APIGroups: names("apps", "eks.amazonaws.com", "karpenter.sh", "vpcresources.k8s.aws"),
+			GroupResources: groupResources(map[string][]string{
+				"eks.amazonaws.com": {"nodeclasses", "nodediagnostics"},
+			}),
+			Nodes: failing[[]Node]("nodes is forbidden"),
+		})
+		assert.Equal(t, EKS, res.Name)
+		assert.Equal(t, ModeEKSAutoMode, res.ManagedMode)
+		assert.Equal(t, "nodeclasses.eks.amazonaws.com", res.Evidence[ProbeManagedMode].Value)
+	})
+
+	t.Run("from the compute-type node label", func(t *testing.T) {
+		res := Detect(context.Background(), Probes{
+			Version:        version("v1.34.1-eks-113cf36"),
+			APIGroups:      names("apps", "vpcresources.k8s.aws"),
+			GroupResources: groupResources(nil),
+			Nodes:          nodesOf(eksNode("i-0123456789abcdef0", "auto")),
+		})
+		assert.Equal(t, ModeEKSAutoMode, res.ManagedMode)
+		assert.Equal(t, "eks.amazonaws.com/compute-type=auto", res.Evidence[ProbeManagedMode].Value)
+	})
+
+	t.Run("standard cluster with managed node groups", func(t *testing.T) {
+		res := Detect(context.Background(), Probes{
+			Version:        version("v1.34.1-eks-113cf36"),
+			APIGroups:      names("apps", "vpcresources.k8s.aws"),
+			GroupResources: groupResources(nil),
+			Nodes:          nodesOf(eksNode("i-0123456789abcdef0", "")),
+		})
+		assert.Equal(t, EKS, res.Name)
+		assert.Empty(t, res.ManagedMode)
+		assert.NotContains(t, res.Evidence, ProbeManagedMode)
+	})
+}
+
+func TestDetectManagedModeOnlyAsksOwnGroups(t *testing.T) {
+	asked := []string{}
+	res := Detect(context.Background(), Probes{
+		Host:      "https://aks-test-dns-z659aolw.hcp.westus3.azmk8s.io:443",
+		APIGroups: names("apps", "auto.gke.io", "eks.amazonaws.com", "karpenter.azure.com"),
+		GroupResources: func(_ context.Context, group string) ([]string, error) {
+			asked = append(asked, group)
+			return []string{"allowlistedworkloads", "nodeclasses"}, nil
+		},
+	})
+	assert.Equal(t, AKS, res.Name)
+	assert.Empty(t, res.ManagedMode, "AKS Automatic is not detected from the Kubernetes API")
+	assert.Empty(t, asked)
+
+	// a group the server does not serve is never asked for
+	asked = asked[:0]
+	res = Detect(context.Background(), Probes{
+		Version:   version("v1.35.8-gke.1439001"),
+		APIGroups: names("apps"),
+		GroupResources: func(_ context.Context, group string) ([]string, error) {
+			asked = append(asked, group)
+			return nil, nil
+		},
+	})
+	assert.Equal(t, GKE, res.Name)
+	assert.Empty(t, asked)
+}
+
+func TestResultPlatformMetadata(t *testing.T) {
+	var nilResult *Result
+	assert.Equal(t, map[string]string{}, nilResult.PlatformMetadata())
+	assert.Equal(t, map[string]string{
+		MetadataDistribution:       EKS,
+		MetadataDistributionSource: ProbeVersion,
+	}, (&Result{Name: EKS, Source: ProbeVersion}).PlatformMetadata())
+	assert.Equal(t, map[string]string{
+		MetadataDistribution:       EKS,
+		MetadataDistributionSource: ProbeVersion,
+		MetadataManagedMode:        ModeEKSAutoMode,
+	}, (&Result{Name: EKS, Source: ProbeVersion, ManagedMode: ModeEKSAutoMode}).PlatformMetadata())
+}

@@ -683,6 +683,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.distro.source": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDistro).GetSource()).ToDataRes(types.String)
 	},
+	"k8s.distro.managedMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDistro).GetManagedMode()).ToDataRes(types.String)
+	},
 	"k8s.distro.clusterName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDistro).GetClusterName()).ToDataRes(types.String)
 	},
@@ -6032,6 +6035,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.distro.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDistro).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.distro.managedMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDistro).ManagedMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"k8s.distro.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14188,6 +14195,7 @@ type mqlK8sDistro struct {
 	// optional: if you define mqlK8sDistroInternal it will be used here
 	Name           plugin.TValue[string]
 	Source         plugin.TValue[string]
+	ManagedMode    plugin.TValue[string]
 	ClusterName    plugin.TValue[string]
 	Region         plugin.TValue[string]
 	Account        plugin.TValue[string]
@@ -14241,6 +14249,12 @@ func (c *mqlK8sDistro) GetName() *plugin.TValue[string] {
 func (c *mqlK8sDistro) GetSource() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Source, func() (string, error) {
 		return c.source()
+	})
+}
+
+func (c *mqlK8sDistro) GetManagedMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedMode, func() (string, error) {
+		return c.managedMode()
 	})
 }
 

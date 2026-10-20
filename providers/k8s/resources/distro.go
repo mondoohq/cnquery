@@ -35,6 +35,14 @@ func (k *mqlK8sDistro) source() (string, error) {
 	return r.Source, nil
 }
 
+func (k *mqlK8sDistro) managedMode() (string, error) {
+	r, err := k.result()
+	if err != nil {
+		return "", err
+	}
+	return r.ManagedMode, nil
+}
+
 func (k *mqlK8sDistro) clusterName() (string, error) {
 	r, err := k.result()
 	if err != nil {

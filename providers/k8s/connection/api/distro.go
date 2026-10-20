@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -85,6 +86,9 @@ func (c *Connection) distroProbes() distro.Probes {
 		Nodes: func(ctx context.Context) ([]distro.Node, error) {
 			return listNodes(ctx, c.clientset)
 		},
+		GroupResources: func(ctx context.Context, group string) ([]string, error) {
+			return apiGroupResources(c.config, group)
+		},
 	}
 	if c.inCluster {
 		client := &http.Client{Timeout: metadataTimeout}
@@ -139,6 +143,60 @@ func apiGroupNames(config *rest.Config) ([]string, error) {
 	return names, nil
 }
 
+// apiGroupResources returns the resource names the server serves in one API
+// group, across the group's versions. Discovery needs no permission.
+func apiGroupResources(config *rest.Config, group string) ([]string, error) {
+	cfg := rest.CopyConfig(config)
+	cfg.Timeout = probeTimeout
+	dc, err := discovery.NewDiscoveryClientForConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+	groups, err := dc.ServerGroups()
+	if err != nil {
+		return nil, err
+	}
+	var versions []string
+	for _, g := range groups.Groups {
+		if g.Name != group {
+			continue
+		}
+		for _, v := range g.Versions {
+			versions = append(versions, v.GroupVersion)
+		}
+	}
+	return groupVersionResources(versions, dc.ServerResourcesForGroupVersion)
+}
+
+// groupVersionResources lists the resources of each group version. A version
+// that can't be read is skipped; the error is returned only when none could
+// be read.
+func groupVersionResources(versions []string, list func(groupVersion string) (*metav1.APIResourceList, error)) ([]string, error) {
+	var names []string
+	var firstErr error
+	read := false
+	for _, gv := range versions {
+		rl, err := list(gv)
+		if err != nil {
+			if firstErr == nil {
+				firstErr = err
+			}
+			continue
+		}
+		read = true
+		for _, r := range rl.APIResources {
+			if strings.Contains(r.Name, "/") || slices.Contains(names, r.Name) {
+				continue
+			}
+			names = append(names, r.Name)
+		}
+	}
+	if !read && firstErr != nil {
+		return nil, firstErr
+	}
+	return names, nil
+}
+
 func listNodes(ctx context.Context, client kubernetes.Interface) ([]distro.Node, error) {
 	ctx, cancel := context.WithTimeout(ctx, probeTimeout)
 	defer cancel()
@@ -148,7 +206,7 @@ func listNodes(ctx context.Context, client kubernetes.Interface) ([]distro.Node,
 	}
 	nodes := make([]distro.Node, 0, len(list.Items))
 	for _, n := range list.Items {
-		nodes = append(nodes, distro.Node{ProviderID: n.Spec.ProviderID, Labels: n.Labels})
+		nodes = append(nodes, distro.Node{Name: n.Name, ProviderID: n.Spec.ProviderID, Labels: n.Labels})
 	}
 	return nodes, nil
 }

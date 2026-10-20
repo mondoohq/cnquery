@@ -476,6 +476,7 @@ k8s.distro.account 14.1.3
 k8s.distro.clusterName 14.1.3
 k8s.distro.evidence 14.1.3
 k8s.distro.identitySource 14.1.3
+k8s.distro.managedMode 14.1.9
 k8s.distro.name 14.1.3
 k8s.distro.region 14.1.3
 k8s.distro.source 14.1.3
