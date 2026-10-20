@@ -69,6 +69,23 @@ const (
 	TagQuerySource = "querySource"
 )
 
+// Tags for provider start failure reports (server#22011). The platform's
+// error report handler branches on TagReportKind =
+// ReportKindProviderStartFailure to emit a dedicated provider_start.failed
+// record instead of a generic error report; the other tags become that
+// record's attributes. TagOS/TagArch carry the client's GOOS/GOARCH — a
+// wrong-architecture binary is one of the failure causes — using the same
+// keys panic reports set (see panicEvent).
+const (
+	TagReportKind  = "reportKind"
+	TagProvider    = "provider"
+	TagFailureKind = "failureKind"
+	TagOS          = "os"
+	TagArch        = "arch"
+
+	ReportKindProviderStartFailure = "provider_start_failure"
+)
+
 // querySourceMax bounds the query source attached to a panic report,
 // mirroring the platform's slow-query text bound. Large enough for any
 // real check; bounded so a pathological bundle can't bloat the report.

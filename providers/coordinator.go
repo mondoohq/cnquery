@@ -7,7 +7,9 @@ import (
 	"maps"
 	"math"
 	"os/exec"
+	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/cockroachdb/errors"
@@ -16,11 +18,13 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql"
 	"go.mondoo.com/mql/logger"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/recording"
 	"go.mondoo.com/mql/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/providers-sdk/v1/upstream/health"
 	coreconf "go.mondoo.com/mql/providers/core/config"
 )
 
@@ -90,6 +94,13 @@ type coordinator struct {
 	// scans in an ABBA deadlock; see TestCoordinatorSchemaLockOrder.
 	mutex  sync.Mutex
 	schema extensibleSchema
+
+	// reportedStartFailures remembers which providers already had a start
+	// failure reported to the Mondoo Platform, so a broken provider that is
+	// retried on every asset of an inventory reports once per process, not
+	// once per asset. Guarded by mutex; initialized lazily so bare
+	// &coordinator{} literals (tests) stay valid.
+	reportedStartFailures map[string]struct{}
 }
 
 type builtinProvider struct {
@@ -269,16 +280,98 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 
 func (c *coordinator) GetRunningProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
 	c.mutex.Lock()
-	defer c.mutex.Unlock()
 	running := c.runningByID[id]
+	var err error
 	if running == nil {
-		var err error
 		running, err = c.unsafeStartProvider(id, update)
-		if err != nil {
-			return nil, err
+	}
+
+	// Decide under the lock whether this is the provider's first start
+	// failure; the report itself (a synchronous HTTP call) runs after the
+	// unlock so it never stalls other providers' starts.
+	firstFailure := false
+	if err != nil {
+		if c.reportedStartFailures == nil {
+			c.reportedStartFailures = map[string]struct{}{}
+		}
+		if _, reported := c.reportedStartFailures[id]; !reported {
+			c.reportedStartFailures[id] = struct{}{}
+			firstFailure = true
 		}
 	}
+	c.mutex.Unlock()
+
+	if err != nil {
+		if firstFailure {
+			c.reportProviderStartFailure(id, err)
+		}
+		return nil, err
+	}
 	return running, nil
+}
+
+// sendProviderStartFailureFn is a seam over health.ReportError so tests can
+// observe what gets reported without a configured service account or a live
+// network call. health.ReportError swallows its own errors and returns
+// nothing, and it no-ops when no service account is configured.
+var sendProviderStartFailureFn = func(errMsg string, tags map[string]string) {
+	health.ReportError("mql", mql.Version, mql.Build, errMsg, health.WithTags(tags))
+}
+
+// reportProviderStartFailure reports a provider that never came up to the
+// Mondoo Platform, tagged so the platform classifies it as a dedicated
+// provider_start.failed record instead of a generic error report
+// (server#22011). Without this, a provider whose go-plugin subprocess fails
+// the initial handshake — killed binary, wrong architecture, missing
+// libraries — is invisible fleet-wide. Called once per provider per process
+// (see reportedStartFailures) and without coordinator locks held.
+func (c *coordinator) reportProviderStartFailure(id string, err error) {
+	name := id
+	if provider, ok := c.lookupProvider(id); ok && provider.Name != "" {
+		name = provider.Name
+	}
+	tags := map[string]string{
+		health.TagReportKind: health.ReportKindProviderStartFailure,
+		health.TagProvider:   name,
+		health.TagOS:         runtime.GOOS,
+		health.TagArch:       runtime.GOARCH,
+	}
+	if kind := classifyProviderStartFailure(err.Error()); kind != "" {
+		tags[health.TagFailureKind] = kind
+	}
+	sendProviderStartFailureFn("failed to start provider '"+name+"': "+err.Error(), tags)
+}
+
+// classifyProviderStartFailure maps a start failure's error text to a coarse
+// failure kind for the platform's provider_start.failed record. It matches
+// the Unix os/exec error shapes (gated on "fork/exec" so a file error from,
+// say, reading a resources json is not mistaken for a binary problem) and
+// go-plugin's handshake messages. Anything it does not recognize stays
+// unclassified ("") — the full message travels with the report either way,
+// and a wrong kind is worse than none.
+func classifyProviderStartFailure(msg string) string {
+	if strings.Contains(msg, "fork/exec") {
+		switch {
+		case strings.Contains(msg, "exec format error"):
+			return "exec_format"
+		case strings.Contains(msg, "permission denied"):
+			return "permission"
+		case strings.Contains(msg, "no such file or directory"):
+			return "missing_binary"
+		}
+		return "exec"
+	}
+	switch {
+	case strings.Contains(msg, "Unrecognized remote plugin message"):
+		return "handshake"
+	case strings.Contains(msg, "timeout while waiting for plugin to start"):
+		return "timeout"
+	case strings.Contains(msg, "installed schema-only"):
+		return "incomplete_install"
+	case strings.Contains(msg, "cannot find provider"):
+		return "not_installed"
+	}
+	return ""
 }
 
 // lookupProvider reads a single entry from the published snapshot. Callers on
