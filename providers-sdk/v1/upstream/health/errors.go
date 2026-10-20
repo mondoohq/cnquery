@@ -77,11 +77,12 @@ const (
 // wrong-architecture binary is one of the failure causes — using the same
 // keys panic reports set (see panicEvent).
 const (
-	TagReportKind  = "reportKind"
-	TagProvider    = "provider"
-	TagFailureKind = "failureKind"
-	TagOS          = "os"
-	TagArch        = "arch"
+	TagReportKind      = "reportKind"
+	TagProvider        = "provider"
+	TagProviderVersion = "providerVersion"
+	TagFailureKind     = "failureKind"
+	TagOS              = "os"
+	TagArch            = "arch"
 
 	ReportKindProviderStartFailure = "provider_start_failure"
 )

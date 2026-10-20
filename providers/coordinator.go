@@ -4,9 +4,13 @@
 package providers
 
 import (
+	"fmt"
 	"maps"
 	"math"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -327,8 +331,14 @@ var sendProviderStartFailureFn = func(errMsg string, tags map[string]string) {
 // (see reportedStartFailures) and without coordinator locks held.
 func (c *coordinator) reportProviderStartFailure(id string, err error) {
 	name := id
-	if provider, ok := c.lookupProvider(id); ok && provider.Name != "" {
-		name = provider.Name
+	version := ""
+	providerPath := ""
+	if provider, ok := c.lookupProvider(id); ok {
+		if provider.Name != "" {
+			name = provider.Name
+		}
+		version = provider.Version
+		providerPath = provider.Path
 	}
 	tags := map[string]string{
 		health.TagReportKind: health.ReportKindProviderStartFailure,
@@ -336,10 +346,91 @@ func (c *coordinator) reportProviderStartFailure(id string, err error) {
 		health.TagOS:         runtime.GOOS,
 		health.TagArch:       runtime.GOARCH,
 	}
+	if version != "" {
+		tags[health.TagProviderVersion] = version
+	}
 	if kind := classifyProviderStartFailure(err.Error()); kind != "" {
 		tags[health.TagFailureKind] = kind
 	}
-	sendProviderStartFailureFn("failed to start provider '"+name+"': "+err.Error(), tags)
+	home, _ := os.UserHomeDir()
+	msg := scrubStartFailureReport("failed to start provider '"+name+"': "+err.Error(), providerPath, home)
+	sendProviderStartFailureFn(msg, tags)
+}
+
+// ownerGroupNameRe matches the bracketed user/group names in go-plugin's
+// "Additional notes about plugin" block ("Owner: 501 [jsmith] (current: 501
+// [jsmith])"), keeping the numeric ids.
+var ownerGroupNameRe = regexp.MustCompile(`\b((?:Owner|Group|current): -?[0-9]+) \[[^\]]*\]`)
+
+// scrubStartFailureReport redacts host-identifying detail from a start
+// failure report before it is sent upstream: the provider's install path
+// (which on a user install sits under the home directory and names the
+// user — in the fork/exec error and in go-plugin's "Path:" note), the home
+// directory anywhere else in the message (e.g. in dynamic linker stderr
+// lines), and the local user/group names go-plugin prints. The numeric
+// ids and everything diagnostic stay. The local log line is NOT scrubbed —
+// the operator debugging their own host wants the real paths.
+func scrubStartFailureReport(msg, providerPath, home string) string {
+	// The provider path first: it usually sits under home, and replacing
+	// home first would break the match.
+	if providerPath != "" {
+		msg = strings.ReplaceAll(msg, providerPath, "<providers>/"+filepath.Base(providerPath))
+	}
+	if home != "" {
+		msg = strings.ReplaceAll(msg, home, "~")
+	}
+	return ownerGroupNameRe.ReplaceAllString(msg, "$1")
+}
+
+// enrichStartFailure attaches what was observed of a failed subprocess start
+// — exit disposition and a stderr tail — to the error itself, so both the
+// local log line and the platform report carry it. The dynamic linker's
+// "cannot open shared object file" lines land in stderr, which is the whole
+// diagnosis for the missing-libraries cause. Wraps with %w so the original
+// chain (e.g. os.ErrNotExist under a fork/exec failure) stays reachable for
+// errors.Is/As; returns the error unchanged when nothing was observed.
+func enrichStartFailure(err error, ps *os.ProcessState, stderr []string) error {
+	diag := startFailureDiagnostics(ps, stderr)
+	if diag == "" {
+		return err
+	}
+	return fmt.Errorf("%w%s", err, diag)
+}
+
+// startFailureDiagnostics renders what was observed of a plugin subprocess
+// that failed to start: its exit disposition when it ran at all, and a
+// bounded tail of its stderr. Returns "" when nothing was observed, so a
+// binary that never started adds no noise.
+func startFailureDiagnostics(ps *os.ProcessState, stderr []string) string {
+	var sb strings.Builder
+	if ps != nil {
+		sb.WriteString("\n[exit=")
+		sb.WriteString(formatExitStatus(ps))
+		if rss := maxRSSBytes(ps); rss > 0 {
+			sb.WriteString(" max_rss=")
+			sb.WriteString(strconv.FormatInt(rss, 10))
+		}
+		sb.WriteString("]")
+	}
+	if len(stderr) > 0 {
+		// Keep the LAST lines: with a line budget, what the process printed
+		// just before it died says more than its startup banner.
+		const maxTail = 20
+		truncated := false
+		if len(stderr) > maxTail {
+			stderr = stderr[len(stderr)-maxTail:]
+			truncated = true
+		}
+		sb.WriteString("\nplugin stderr:")
+		if truncated {
+			sb.WriteString("\n... (truncated)")
+		}
+		for _, line := range stderr {
+			sb.WriteString("\n")
+			sb.WriteString(line)
+		}
+	}
+	return sb.String()
 }
 
 // classifyProviderStartFailure maps a start failure's error text to a coarse
@@ -499,8 +590,15 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 		return nil, errors.Wrap(err, "failed to start provider "+id)
 	}
 
+	// lastCmd remembers the subprocess of the most recent connect attempt so
+	// the initial-start failure path below can report how it ended. Written
+	// again by reconnect attempts later, but only read here, before the
+	// supervised provider exists.
+	var lastCmd *exec.Cmd
+
 	connectFunc := func() (pp.ProviderPlugin, *plugin.Client, error) {
 		pluginCmd := exec.Command(provider.binPath(), []string{"run_as_plugin", "--log-level", zerolog.GlobalLevel().String()}...)
+		lastCmd = pluginCmd
 
 		addColorConfig(pluginCmd)
 		addProxyConfig(pluginCmd)
@@ -547,7 +645,11 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 
 	plug, client, err := connectFunc()
 	if err != nil {
-		return nil, err
+		var ps *os.ProcessState
+		if lastCmd != nil {
+			ps = lastCmd.ProcessState
+		}
+		return nil, enrichStartFailure(err, ps, crashLog.Snapshot())
 	}
 
 	c.schema.Add(provider.ID, provider.Schema)

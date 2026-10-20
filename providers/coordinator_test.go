@@ -439,9 +439,10 @@ func TestGetRunningProvider_ReportsStartFailureOnce(t *testing.T) {
 
 	// A provider that claims to have a binary but whose path doesn't exist:
 	// the exec fails and GetRunningProvider surfaces a genuine start failure.
+	providerPath := filepath.Join(t.TempDir(), "testp")
 	p := &Provider{
 		Provider:  &pp.Provider{Name: "testp", ID: "testp", Version: "1.2.3"},
-		Path:      filepath.Join(t.TempDir(), "testp"),
+		Path:      providerPath,
 		HasBinary: true,
 		Schema:    &resources.Schema{},
 	}
@@ -456,8 +457,12 @@ func TestGetRunningProvider_ReportsStartFailureOnce(t *testing.T) {
 
 	require.Len(t, reports, 1)
 	assert.Contains(t, reports[0].msg, "failed to initialize plugin client")
+	// The report must not carry the host-local install path.
+	assert.NotContains(t, reports[0].msg, providerPath)
+	assert.Contains(t, reports[0].msg, "<providers>/testp")
 	assert.Equal(t, "provider_start_failure", reports[0].tags["reportKind"])
 	assert.Equal(t, "testp", reports[0].tags["provider"])
+	assert.Equal(t, "1.2.3", reports[0].tags["providerVersion"])
 	assert.Equal(t, "missing_binary", reports[0].tags["failureKind"])
 	assert.Equal(t, runtime.GOOS, reports[0].tags["os"])
 	assert.Equal(t, runtime.GOARCH, reports[0].tags["arch"])
@@ -467,4 +472,100 @@ func TestGetRunningProvider_ReportsStartFailureOnce(t *testing.T) {
 	_, err = c.GetRunningProvider("testp", UpdateProvidersConfig{Enabled: false})
 	require.Error(t, err)
 	assert.Len(t, reports, 1, "a repeated start failure for the same provider must not re-report")
+}
+
+// TestStartFailureDiagnostics covers the stderr-tail half of the start-failure
+// diagnostics (the exit-disposition half is formatExitStatus, tested with the
+// other exit-status helpers). The tail is what carries the dynamic linker's
+// "cannot open shared object file" lines for the missing-libraries cause.
+func TestStartFailureDiagnostics(t *testing.T) {
+	t.Run("nothing observed, nothing appended", func(t *testing.T) {
+		assert.Equal(t, "", startFailureDiagnostics(nil, nil))
+	})
+
+	t.Run("stderr tail is appended", func(t *testing.T) {
+		got := startFailureDiagnostics(nil, []string{
+			"error while loading shared libraries: libxyz.so.1",
+			"cannot open shared object file: No such file or directory",
+		})
+		assert.Equal(t, "\nplugin stderr:\nerror while loading shared libraries: libxyz.so.1\ncannot open shared object file: No such file or directory", got)
+	})
+
+	t.Run("stderr tail is bounded", func(t *testing.T) {
+		lines := make([]string, 30)
+		for i := range lines {
+			lines[i] = fmt.Sprintf("line-%d", i)
+		}
+		got := startFailureDiagnostics(nil, lines)
+		// Keeps the LAST lines: with a line budget, the lines printed just
+		// before the process died say more than the startup banner.
+		assert.Contains(t, got, "line-29")
+		assert.NotContains(t, got, "line-9\n")
+		assert.Contains(t, got, "truncated")
+	})
+}
+
+// TestScrubStartFailureReport pins the redaction of host-identifying detail
+// from reports sent upstream: the provider install path (which on a user
+// install sits under the home directory and names the user), the home
+// directory anywhere else in the message (e.g. in linker stderr lines), and
+// the local user/group names go-plugin prints in its "Additional notes"
+// block. The local log line keeps the full detail; only the report is
+// scrubbed. Message shapes are copied from real go-plugin output.
+func TestScrubStartFailureReport(t *testing.T) {
+	const home = "/Users/jsmith"
+	const providerPath = "/Users/jsmith/.config/mondoo/providers/os"
+
+	t.Run("fork-exec path and go-plugin notes", func(t *testing.T) {
+		msg := "failed to initialize plugin client: fork/exec /Users/jsmith/.config/mondoo/providers/os/os: exec format error\n" +
+			"\nAdditional notes about plugin:\n" +
+			"  Path: /Users/jsmith/.config/mondoo/providers/os/os\n" +
+			"  Mode: -rwxr-xr-x\n" +
+			"  Owner: 501 [jsmith] (current: 501 [jsmith])\n" +
+			"  Group: 0 [wheel] (current: 20 [staff])\n"
+		got := scrubStartFailureReport(msg, providerPath, home)
+		assert.NotContains(t, got, "jsmith")
+		assert.NotContains(t, got, "wheel")
+		assert.Contains(t, got, "fork/exec <providers>/os/os: exec format error")
+		assert.Contains(t, got, "  Path: <providers>/os/os\n")
+		assert.Contains(t, got, "  Owner: 501 (current: 501)\n")
+		assert.Contains(t, got, "  Group: 0 (current: 20)\n")
+	})
+
+	t.Run("home directory in stderr lines", func(t *testing.T) {
+		msg := "plugin stderr:\ndyld: Library not loaded: /Users/jsmith/lib/libtest.dylib"
+		got := scrubStartFailureReport(msg, providerPath, home)
+		assert.Equal(t, "plugin stderr:\ndyld: Library not loaded: ~/lib/libtest.dylib", got)
+	})
+
+	t.Run("negative uid keeps its id, drops the name", func(t *testing.T) {
+		msg := "  Owner: -1 [nobody] (current: -1 [nobody])\n"
+		got := scrubStartFailureReport(msg, providerPath, home)
+		assert.Equal(t, "  Owner: -1 (current: -1)\n", got)
+	})
+
+	t.Run("empty inputs scrub nothing", func(t *testing.T) {
+		msg := "failed to start provider 'os': cannot find provider os"
+		assert.Equal(t, msg, scrubStartFailureReport(msg, "", ""))
+	})
+}
+
+// TestEnrichStartFailure pins two properties of the diagnostics wrapper: the
+// original error chain stays intact (errors.Is must keep working through the
+// enrichment), and an error with nothing observed is returned unchanged.
+func TestEnrichStartFailure(t *testing.T) {
+	sentinel := errors.New("boom")
+	wrapped := fmt.Errorf("failed to initialize plugin client: %w", sentinel)
+
+	t.Run("preserves the error chain", func(t *testing.T) {
+		got := enrichStartFailure(wrapped, nil, []string{"dyld: Library not loaded"})
+		assert.ErrorIs(t, got, sentinel)
+		assert.Contains(t, got.Error(), "failed to initialize plugin client: boom")
+		assert.Contains(t, got.Error(), "plugin stderr:\ndyld: Library not loaded")
+	})
+
+	t.Run("nothing observed returns the error unchanged", func(t *testing.T) {
+		got := enrichStartFailure(wrapped, nil, nil)
+		assert.Same(t, wrapped, got)
+	})
 }
