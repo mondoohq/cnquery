@@ -64,6 +64,9 @@ func TestScriptsQuoteTheFileName(t *testing.T) {
 			content := decodeCommand(t, getContentScript(test.file))
 			assert.Contains(t, content, "Get-Content -LiteralPath "+test.expected)
 
+			directory := decodeCommand(t, getDirectoryScript(test.file))
+			assert.Contains(t, directory, "Get-ChildItem -Force -LiteralPath "+test.expected+" -ErrorAction Stop")
+
 			item := decodeCommand(t, getItemScript(test.file))
 			assert.Contains(t, item, "Get-Item -LiteralPath "+test.expected+" | ConvertTo-JSON")
 		})
