@@ -40,7 +40,7 @@ metadata:
   namespace: web
 `)
 
-	index := BuildManifestPositionIndex(manifest, "deploy/web.yaml")
+	index := BuildManifestPositionIndex(manifest, "deploy/web.yaml", nil)
 
 	assert.Equal(t, map[string]SourcePosition{
 		"namespace:web":          {Path: "deploy/web.yaml", StartLine: 1, EndLine: 4},
@@ -50,7 +50,7 @@ metadata:
 }
 
 func TestBuildManifestPositionIndex_Empty(t *testing.T) {
-	assert.Empty(t, BuildManifestPositionIndex(nil, "x.yaml"))
+	assert.Empty(t, BuildManifestPositionIndex(nil, "x.yaml", nil))
 }
 
 func TestLoadManifestFiles_Directory(t *testing.T) {
