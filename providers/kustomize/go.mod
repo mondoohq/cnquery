@@ -1,6 +1,6 @@
 module go.mondoo.com/mql/providers/kustomize
 
-go 1.26.8
+go 1.26.10
 
 replace go.mondoo.com/mql => ../..
 

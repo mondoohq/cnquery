@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/hetzner
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.8
+go 1.26.10
 
 require (
 	github.com/hetznercloud/hcloud-go/v2 v2.52.0

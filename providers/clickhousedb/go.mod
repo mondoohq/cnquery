@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/clickhousedb
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.8
+go 1.26.10
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.49.0

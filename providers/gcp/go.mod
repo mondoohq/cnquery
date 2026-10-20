@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/gcp
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.8
+go 1.26.10
 
 require (
 	cloud.google.com/go/accessapproval v1.14.0
