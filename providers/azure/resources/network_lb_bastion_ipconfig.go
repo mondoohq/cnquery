@@ -14,8 +14,9 @@ import (
 // -----------------------------------------------------------------------------
 
 type mqlAzureSubscriptionNetworkServiceFrontendIpConfigInternal struct {
-	cachePublicIpAddressID *string
-	cacheSubnetID          *string
+	cachePublicIpAddressID  *string
+	cacheSubnetID           *string
+	cacheDdosCustomPolicyID *string
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceFrontendIpConfig) publicIpAddress() (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {

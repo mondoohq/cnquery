@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "14.3.9",
-  "generated_at": "2026-10-19T20:40:15-07:00",
+  "generated_at": "2026-10-19T20:57:27-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.ApiManagement/service/apis/policies/read",
@@ -191,6 +191,7 @@
     "Microsoft.Network/bastionHosts/read",
     "Microsoft.Network/connections/read",
     "Microsoft.Network/customIpPrefixes/read",
+    "Microsoft.Network/ddosCustomPolicies/read",
     "Microsoft.Network/ddosProtectionPlans/read",
     "Microsoft.Network/dnsZones/recordsets/read",
     "Microsoft.Network/dnszones/read",
@@ -1503,6 +1504,12 @@
       "service": "Microsoft.Network",
       "action": "Get",
       "source_file": "network_ip_prefixes.go"
+    },
+    {
+      "permission": "Microsoft.Network/ddosCustomPolicies/read",
+      "service": "Microsoft.Network",
+      "action": "Get",
+      "source_file": "network_ddos_custom_policy.go"
     },
     {
       "permission": "Microsoft.Network/ddosProtectionPlans/read",

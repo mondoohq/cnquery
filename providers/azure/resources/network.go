@@ -828,7 +828,7 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) frontendIpConfigs() ([]
 		isPublic := false
 		var privateIpAddress string
 		var ddosCustomPolicyId string
-		var publicIpAddressIDPtr, subnetIDPtr *string
+		var publicIpAddressIDPtr, subnetIDPtr, ddosCustomPolicyIDPtr *string
 		var enableConnectionTracking *bool
 		if ipConfig.Properties != nil {
 			enableConnectionTracking = ipConfig.Properties.EnableConnectionTracking
@@ -843,7 +843,8 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) frontendIpConfigs() ([]
 				privateIpAddress = *ipConfig.Properties.PrivateIPAddress
 			}
 			if ds := ipConfig.Properties.DdosSettings; ds != nil && ds.DdosCustomPolicy != nil {
-				ddosCustomPolicyId = convert.ToValue(ds.DdosCustomPolicy.ID)
+				ddosCustomPolicyIDPtr = ds.DdosCustomPolicy.ID
+				ddosCustomPolicyId = convert.ToValue(ddosCustomPolicyIDPtr)
 			}
 		}
 
@@ -867,6 +868,7 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) frontendIpConfigs() ([]
 		fic := mqlIpConfig.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig)
 		fic.cachePublicIpAddressID = publicIpAddressIDPtr
 		fic.cacheSubnetID = subnetIDPtr
+		fic.cacheDdosCustomPolicyID = ddosCustomPolicyIDPtr
 		res = append(res, mqlIpConfig)
 	}
 	return res, nil
@@ -4848,7 +4850,7 @@ func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolic
 
 func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
 	var ipAllocationMethod, ipVersion, ddosProtectionMode, associatedResourceId string
-	var ipAddr, publicIpPrefixId, natGatewayId *string
+	var ipAddr, publicIpPrefixId, natGatewayId, ddosCustomPolicyId *string
 	var upgradedToV2 *bool
 	var idleTimeoutInMinutes int64
 	ipTags := []any{}
@@ -4861,8 +4863,13 @@ func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzur
 		if ip.Properties.PublicIPAddressVersion != nil {
 			ipVersion = string(*ip.Properties.PublicIPAddressVersion)
 		}
-		if ip.Properties.DdosSettings != nil && ip.Properties.DdosSettings.ProtectionMode != nil {
-			ddosProtectionMode = string(*ip.Properties.DdosSettings.ProtectionMode)
+		if ds := ip.Properties.DdosSettings; ds != nil {
+			if ds.ProtectionMode != nil {
+				ddosProtectionMode = string(*ds.ProtectionMode)
+			}
+			if ds.DdosCustomPolicy != nil {
+				ddosCustomPolicyId = ds.DdosCustomPolicy.ID
+			}
 		}
 		if ip.Properties.IPConfiguration != nil && ip.Properties.IPConfiguration.ID != nil {
 			associatedResourceId = *ip.Properties.IPConfiguration.ID
@@ -4922,12 +4929,14 @@ func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzur
 	mqlIp := mqlAzure.(*mqlAzureSubscriptionNetworkServiceIpAddress)
 	mqlIp.cachePublicIpPrefixID = publicIpPrefixId
 	mqlIp.cacheNatGatewayID = natGatewayId
+	mqlIp.cacheDdosCustomPolicyID = ddosCustomPolicyId
 	return mqlIp, nil
 }
 
 type mqlAzureSubscriptionNetworkServiceIpAddressInternal struct {
-	cachePublicIpPrefixID *string
-	cacheNatGatewayID     *string
+	cachePublicIpPrefixID   *string
+	cacheNatGatewayID       *string
+	cacheDdosCustomPolicyID *string
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceIpAddress) natGateway() (*mqlAzureSubscriptionNetworkServiceNatGateway, error) {
