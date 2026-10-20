@@ -337,12 +337,14 @@ const (
 	WUServiceMicrosoftUpdate  = "7971f918-a847-4430-9279-4a52d1efe18d"
 	WUServiceManagedWSUS      = "3da21691-e39d-4da6-8a4b-b43877bcb1b7"
 	wuaScanSuccessEventID     = 26
+	wuaScanFailureEventID     = 25
 	wuaScanEventsMaxToInspect = 200
 )
 
 // WINDOWS_QUERY_WUA_RESULTS reads IAutomaticUpdatesResults from the Windows
-// Update Agent (Microsoft.Update.AutoUpdate) and the newest successful scan of
-// an OS update service from the WindowsUpdateClient Operational event log.
+// Update Agent (Microsoft.Update.AutoUpdate) and the newest successful and the
+// newest failed scan of an OS update service from the WindowsUpdateClient
+// Operational event log.
 //
 // The COM dates are documented as UTC, but the COM DateTime can come back with
 // Kind=Unspecified, so no ToUniversalTime/ToLocalTime call is made on them:
@@ -354,8 +356,9 @@ const (
 // the COM values on Windows 10 and later; they log event 26 ("Windows Update
 // successfully found N updates") with the scanned service in serviceGuid.
 // TimeCreated of an event is a local DateTime, so it is converted with
-// ToUniversalTime. A missing log or a failure reading it yields null for
-// LastScanSuccess and does not fail the query.
+// ToUniversalTime. Event 25 ("Windows Update failed to check for updates with
+// error 0x...") carries the code in errorCode. A missing log or a failure
+// reading it yields null scan fields and does not fail the query.
 var WINDOWS_QUERY_WUA_RESULTS = fmt.Sprintf(`
 $ErrorActionPreference='Stop';
 $ProgressPreference='SilentlyContinue';
@@ -370,29 +373,42 @@ try {
   $d = $results.LastInstallationSuccessDate
   if ($d -ne $null -and ([datetime]$d).Year -ge 1980) { $install = ([datetime]$d).ToString($fmt, $inv) }
   $scan = $null
+  $fail = $null
+  $failCode = ''
   try {
     $osServices = @('%s', '%s', '%s')
-    $events = @(Get-WinEvent -FilterHashtable @{ LogName = 'Microsoft-Windows-WindowsUpdateClient/Operational'; Id = %d } -MaxEvents %d -ErrorAction SilentlyContinue)
+    $events = @(Get-WinEvent -FilterHashtable @{ LogName = 'Microsoft-Windows-WindowsUpdateClient/Operational'; Id = %d, %d } -MaxEvents %d -ErrorAction SilentlyContinue)
     foreach ($e in $events) {
       $guid = $null
+      $code = ''
       foreach ($data in ([xml]$e.ToXml()).Event.EventData.Data) {
-        if ($data.Name -eq 'serviceGuid') { $guid = [string]$data.'#text'; break }
+        if ($data.Name -eq 'serviceGuid') { $guid = [string]$data.'#text' }
+        if ($data.Name -eq 'errorCode') { $code = [string]$data.'#text' }
       }
-      if ($guid -ne $null -and $osServices -contains $guid.Trim('{', '}').ToLowerInvariant()) {
+      if ($guid -eq $null -or -not ($osServices -contains $guid.Trim('{', '}').ToLowerInvariant())) { continue }
+      if ($e.Id -eq %d -and $scan -eq $null) {
         $scan = $e.TimeCreated.ToUniversalTime().ToString($fmt, $inv)
-        break
+      } elseif ($e.Id -eq %d -and $fail -eq $null) {
+        $fail = $e.TimeCreated.ToUniversalTime().ToString($fmt, $inv)
+        $code = $code.Trim()
+        if ($code -match '^(0[xX])?([0-9a-fA-F]+)$') { $failCode = '0x' + $Matches[2].ToUpperInvariant() }
       }
+      if ($scan -ne $null -and $fail -ne $null) { break }
     }
-  } catch { $scan = $null }
+  } catch { $scan = $null; $fail = $null; $failCode = '' }
   [pscustomobject]@{
     "LastSearchSuccessDate" = $search
     "LastInstallationSuccessDate" = $install
     "LastScanSuccess" = $scan
+    "LastScanFailure" = $fail
+    "LastScanFailureCode" = $failCode
   } | ConvertTo-Json -Compress
 } catch {
   [Console]::Error.WriteLine($_.Exception.Message)
   exit 1
-}`, WUServiceWindowsUpdate, WUServiceMicrosoftUpdate, WUServiceManagedWSUS, wuaScanSuccessEventID, wuaScanEventsMaxToInspect)
+}`, WUServiceWindowsUpdate, WUServiceMicrosoftUpdate, WUServiceManagedWSUS,
+	wuaScanSuccessEventID, wuaScanFailureEventID, wuaScanEventsMaxToInspect,
+	wuaScanSuccessEventID, wuaScanFailureEventID)
 
 // WUAResults holds the Windows Update Agent's last successful search and
 // installation times and the newest successful scan the event log records for
@@ -401,12 +417,19 @@ type WUAResults struct {
 	LastSearchSuccess       *time.Time
 	LastInstallationSuccess *time.Time
 	LastScanSuccess         *time.Time
+	// LastScanFailure is the newest failed scan (event 25) of an OS update
+	// service and LastScanFailureCode its error code ("0x80240438"), empty
+	// when the event carried none.
+	LastScanFailure     *time.Time
+	LastScanFailureCode string
 }
 
 type wuaResultsJSON struct {
 	LastSearchSuccessDate       *string `json:"LastSearchSuccessDate"`
 	LastInstallationSuccessDate *string `json:"LastInstallationSuccessDate"`
 	LastScanSuccess             *string `json:"LastScanSuccess"`
+	LastScanFailure             *string `json:"LastScanFailure"`
+	LastScanFailureCode         *string `json:"LastScanFailureCode"`
 }
 
 // ParseWUAResults parses the output of WINDOWS_QUERY_WUA_RESULTS. Missing or
@@ -436,7 +459,21 @@ func ParseWUAResults(input io.Reader) (*WUAResults, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &WUAResults{LastSearchSuccess: search, LastInstallationSuccess: install, LastScanSuccess: scan}, nil
+	failure, err := parseWUAResultsTime(raw.LastScanFailure)
+	if err != nil {
+		return nil, err
+	}
+	code := ""
+	if raw.LastScanFailureCode != nil {
+		code = strings.TrimSpace(*raw.LastScanFailureCode)
+	}
+	return &WUAResults{
+		LastSearchSuccess:       search,
+		LastInstallationSuccess: install,
+		LastScanSuccess:         scan,
+		LastScanFailure:         failure,
+		LastScanFailureCode:     code,
+	}, nil
 }
 
 func parseWUAResultsTime(s *string) (*time.Time, error) {

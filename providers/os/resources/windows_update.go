@@ -258,7 +258,7 @@ func (w *mqlWindowsUpdate) config() (*mqlWindowsUpdateConfig, error) {
 		"useWUServer":          llx.BoolData(useWUServer),
 		"auOptions":            llx.IntData(auOptions),
 		"lastDetectionSuccess": llx.TimeDataPtr(lastDetection),
-		"lastDetectionError":   llx.StringData(formatWULastError(regInt(detect, "LastError"))),
+		"lastDetectionError":   llx.StringData(wuDetectionError(wua, formatWULastError(regInt(detect, "LastError")))),
 		"lastDownloadSuccess":  llx.TimeDataPtr(parseWULastSuccessTime(regString(download, "LastSuccessTime"))),
 		"lastInstallSuccess":   llx.TimeDataPtr(lastInstall),
 		"rebootPending":        llx.BoolData(rebootPending),
@@ -284,6 +284,25 @@ func wuResultTimes(wua *windows.WUAResults, regDetection, regInstall *time.Time)
 		return laterTime(wua.LastSearchSuccess, wua.LastScanSuccess), wua.LastInstallationSuccess
 	}
 	return regDetection, regInstall
+}
+
+// wuDetectionError picks the last detection error. Once the Windows Update
+// Agent query answered, the error is the code of the newest failed scan of an
+// OS update service, but only while that failure is newer than the last
+// successful detection (the later of the agent's search and the event log
+// scan); a host that never succeeded reports its failure. Otherwise it is
+// empty. The registry value only backs the case where the query failed.
+func wuDetectionError(wua *windows.WUAResults, regError string) string {
+	if wua == nil {
+		return regError
+	}
+	if wua.LastScanFailure == nil {
+		return ""
+	}
+	if success := laterTime(wua.LastSearchSuccess, wua.LastScanSuccess); success != nil && !wua.LastScanFailure.After(*success) {
+		return ""
+	}
+	return wua.LastScanFailureCode
 }
 
 // laterTime returns the later of two optional times, nil only when both are nil.

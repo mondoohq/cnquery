@@ -16682,9 +16682,11 @@ private windows.update.config @defaults("catalogSource rebootPending") {
   lastDetectionSuccess time
   // Last detection error code (e.g., "0x80244022"); empty when the last detection succeeded
   //
-  // Read from the Automatic Updates results in the registry. Windows 10 and
-  // later no longer write them, so it is usually empty there, and it does not
-  // reflect failed scans started by the Update Orchestrator.
+  // The error code of the newest failed scan of Windows Update, Microsoft
+  // Update or WSUS in the Windows Update client event log (event 25), when it
+  // is newer than the last successful detection. Without command execution it
+  // is read from the Automatic Updates results in the registry, which Windows
+  // 10 and later no longer write, so it is usually empty there.
   lastDetectionError string
   // Time of the last successful update download
   //

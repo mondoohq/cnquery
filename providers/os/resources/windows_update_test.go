@@ -219,3 +219,31 @@ func TestWUResultTimes(t *testing.T) {
 		assert.Equal(t, &regInstall, i)
 	})
 }
+
+func TestWUDetectionError(t *testing.T) {
+	success := time.Date(2026, 10, 20, 9, 0, 0, 0, time.UTC)
+	later := success.Add(time.Hour)
+	earlier := success.Add(-time.Hour)
+
+	t.Run("failure newer than agent search", func(t *testing.T) {
+		assert.Equal(t, "0x80240438", wuDetectionError(&windows.WUAResults{LastSearchSuccess: &success, LastScanFailure: &later, LastScanFailureCode: "0x80240438"}, "0x1"))
+	})
+	t.Run("failure newer than agent search but older than event scan", func(t *testing.T) {
+		assert.Equal(t, "", wuDetectionError(&windows.WUAResults{LastSearchSuccess: &earlier, LastScanSuccess: &later, LastScanFailure: &success, LastScanFailureCode: "0x80240438"}, "0x1"))
+	})
+	t.Run("failure older than success", func(t *testing.T) {
+		assert.Equal(t, "", wuDetectionError(&windows.WUAResults{LastScanSuccess: &success, LastScanFailure: &earlier, LastScanFailureCode: "0x80240438"}, "0x1"))
+	})
+	t.Run("failure at the same time as success is not an error", func(t *testing.T) {
+		assert.Equal(t, "", wuDetectionError(&windows.WUAResults{LastScanSuccess: &success, LastScanFailure: &success, LastScanFailureCode: "0x80240438"}, ""))
+	})
+	t.Run("failure without any success", func(t *testing.T) {
+		assert.Equal(t, "0x80072EE2", wuDetectionError(&windows.WUAResults{LastScanFailure: &success, LastScanFailureCode: "0x80072EE2"}, ""))
+	})
+	t.Run("no failure, stale registry error is not used", func(t *testing.T) {
+		assert.Equal(t, "", wuDetectionError(&windows.WUAResults{LastScanSuccess: &success}, "0x80244022"))
+	})
+	t.Run("query failed, registry fallback", func(t *testing.T) {
+		assert.Equal(t, "0x80244022", wuDetectionError(nil, "0x80244022"))
+	})
+}

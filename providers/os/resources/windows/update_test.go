@@ -363,6 +363,27 @@ func TestParseWUAResults(t *testing.T) {
 		_, err := ParseWUAResults(strings.NewReader(`{"LastScanSuccess":"soon"}`))
 		assert.Error(t, err)
 	})
+	t.Run("scan failure fields", func(t *testing.T) {
+		res, err := ParseWUAResults(strings.NewReader("\xef\xbb\xbf{\"LastScanFailure\":\"2026-10-20 09:10:11\",\"LastScanFailureCode\":\"0x80240438\"}\r\n"))
+		require.NoError(t, err)
+		require.NotNil(t, res.LastScanFailure)
+		assert.Equal(t, time.Date(2026, 10, 20, 9, 10, 11, 0, time.UTC), *res.LastScanFailure)
+		assert.Equal(t, "0x80240438", res.LastScanFailureCode)
+	})
+	t.Run("scan failure null or absent", func(t *testing.T) {
+		res, err := ParseWUAResults(strings.NewReader(`{"LastScanFailure":null,"LastScanFailureCode":null}`))
+		require.NoError(t, err)
+		assert.Nil(t, res.LastScanFailure)
+		assert.Equal(t, "", res.LastScanFailureCode)
+		res, err = ParseWUAResults(strings.NewReader(`{}`))
+		require.NoError(t, err)
+		assert.Nil(t, res.LastScanFailure)
+		assert.Equal(t, "", res.LastScanFailureCode)
+	})
+	t.Run("unparseable scan failure time", func(t *testing.T) {
+		_, err := ParseWUAResults(strings.NewReader(`{"LastScanFailure":"later"}`))
+		assert.Error(t, err)
+	})
 	t.Run("malformed json", func(t *testing.T) {
 		_, err := ParseWUAResults(strings.NewReader(`{"LastSearchSuccessDate":`))
 		assert.Error(t, err)
@@ -383,8 +404,9 @@ func TestParseWUAResults(t *testing.T) {
 func TestWUAResultsQueryTimeZones(t *testing.T) {
 	assert.NotContains(t, WINDOWS_QUERY_WUA_RESULTS, "ToLocalTime")
 	assert.Contains(t, WINDOWS_QUERY_WUA_RESULTS, "'yyyy-MM-dd HH:mm:ss'")
-	assert.Equal(t, 1, strings.Count(WINDOWS_QUERY_WUA_RESULTS, "ToUniversalTime"))
-	assert.Contains(t, WINDOWS_QUERY_WUA_RESULTS, "$e.TimeCreated.ToUniversalTime()")
+	// one conversion for the success time, one for the failure time
+	assert.Equal(t, 2, strings.Count(WINDOWS_QUERY_WUA_RESULTS, "ToUniversalTime"))
+	assert.Equal(t, 2, strings.Count(WINDOWS_QUERY_WUA_RESULTS, "$e.TimeCreated.ToUniversalTime()"))
 }
 
 // Only scans of the OS update services count; Store and flighting channels
@@ -401,7 +423,14 @@ func TestWUAResultsQueryFiltersOSServices(t *testing.T) {
 	assert.NotContains(t, q, "855e8a7c-ecb4-4ca3-b045-1dfa50104289")
 	assert.NotContains(t, q, "8b24b027-1dee-babb-9a95-3517dfb9c552")
 	assert.Contains(t, q, "Microsoft-Windows-WindowsUpdateClient/Operational")
-	assert.Contains(t, q, "Id = 26 }")
+	assert.Contains(t, q, "Id = 26, 25 }")
+	assert.Contains(t, q, "$e.Id -eq 26")
+	assert.Contains(t, q, "$e.Id -eq 25")
+	assert.Contains(t, q, "'errorCode'")
+	assert.Contains(t, q, `"LastScanFailure" = $fail`)
+	assert.Contains(t, q, `"LastScanFailureCode" = $failCode`)
+	// the OS service filter runs before either event id is looked at
+	assert.Less(t, strings.Index(q, "$osServices -contains"), strings.Index(q, "$e.Id -eq 26"))
 	assert.Contains(t, q, "-MaxEvents 200")
 	assert.Contains(t, q, "serviceGuid")
 	assert.Contains(t, q, "ToLowerInvariant()")
