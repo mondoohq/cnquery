@@ -34,7 +34,6 @@ const (
 	wufbPolicyState  = `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsUpdate\UpdatePolicy\PolicyState`
 	wuRebootCBS      = `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending`
 	wuRebootAU       = `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired`
-	cbsPackagesKey   = `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages`
 )
 
 // LastSuccessTime values are stored in UTC as "yyyy-MM-dd HH:mm:ss".
@@ -399,72 +398,65 @@ func (w *mqlWindowsUpdate) installedFromWUA(conn shared.Connection) ([]any, erro
 	return res, nil
 }
 
-// installedFromCBS enumerates installed packages from the Component Based
-// Servicing store in the registry. This path needs no command execution, so
-// it backs connections (such as snapshot scans) that cannot run PowerShell —
-// it is effective wherever the registry is readable.
+// installedFromCBS enumerates installed updates from the Component Based
+// Servicing store of an offline target (snapshot, disk image, mounted
+// volume), which cannot run PowerShell. The package keys come from the
+// SOFTWARE hive and the KB from each package's servicing manifest, since the
+// key name does not carry it for the cumulative and hotpatch updates. Loading
+// the hive requires the scanner to run on Windows; elsewhere, or when the hive
+// cannot be read, the list is empty.
 func (w *mqlWindowsUpdate) installedFromCBS() ([]any, error) {
-	o, err := CreateResource(w.MqlRuntime, "registrykey", map[string]*llx.RawData{
-		"path": llx.StringData(cbsPackagesKey),
-	})
+	conn := w.MqlRuntime.Connection.(shared.Connection)
+	if !conn.Capabilities().Has(shared.Capability_File) {
+		return []any{}, nil
+	}
+	fi, err := conn.FileInfo(registry.SoftwareRegPath)
 	if err != nil {
-		log.Debug().Err(err).Msg("windows.update> could not access CBS package store")
+		log.Debug().Err(err).Msg("windows.update> could not find SOFTWARE registry file")
 		return []any{}, nil
 	}
-	children := o.(*mqlRegistrykey).GetChildren()
-	if children.Error != nil {
-		log.Debug().Err(children.Error).Msg("windows.update> could not list CBS packages")
+	reader, unload, err := windows.LoadOfflineCBSReader(fi.Path, conn.FileSystem())
+	if err != nil {
+		log.Debug().Err(err).Msg("windows.update> could not load SOFTWARE registry file")
+		return []any{}, nil
+	}
+	defer unload()
+	updates, err := windows.InstalledCBSUpdates(reader)
+	if err != nil {
+		log.Debug().Err(err).Msg("windows.update> could not list CBS packages")
 		return []any{}, nil
 	}
 
-	seen := map[string]struct{}{}
-	res := []any{}
-	for i := range children.Data {
-		childPath, ok := children.Data[i].(string)
-		if !ok {
-			continue
-		}
-		name := childPath
-		if idx := strings.LastIndex(childPath, `\`); idx >= 0 {
-			name = childPath[idx+1:]
-		}
-
-		kbID := windows.ParseKBID(name)
-		if kbID == "" {
-			// CBS holds thousands of component packages; without a KB there is
-			// nothing actionable to report as an installed update.
-			continue
-		}
-
-		items, _ := w.readRegistryKey(childPath)
-		if regInt(items, "CurrentState") != windows.CBSStateInstalled {
-			continue
-		}
-
-		if _, ok := seen[kbID]; ok {
-			continue
-		}
-		seen[kbID] = struct{}{}
-
-		mqlEntry, err := w.newEntry(updateEntryInstalled, 0, map[string]*llx.RawData{
-			"updateId":       llx.StringData(name),
-			"kbId":           llx.StringData(kbID),
-			"title":          llx.StringData(name),
-			"classification": llx.StringData(windows.ClassifyUpdate("", name)),
-			"severity":       llx.StringData(""),
-			"supportUrl":     llx.StringData(""),
-			"cveIds":         llx.ArrayData([]any{}, types.String),
-			"date":           llx.TimeDataPtr(nil),
-			"operation":      llx.StringData("Installation"),
-			"rebootRequired": llx.BoolData(false),
-			"categories":     llx.ArrayData([]any{}, types.String),
-		})
+	res := make([]any, 0, len(updates))
+	for _, u := range updates {
+		mqlEntry, err := w.newEntry(updateEntryInstalled, 0, cbsEntryArgs(u))
 		if err != nil {
 			return nil, err
 		}
 		res = append(res, mqlEntry)
 	}
 	return res, nil
+}
+
+// cbsEntryArgs maps a CBS update onto the fields of a windows.update.entry.
+// The manifest's release type ("Security Update") is not the vocabulary of the
+// Windows Update Agent ("Security Updates"), so the classification is derived
+// from a title that leads with it.
+func cbsEntryArgs(u windows.CBSUpdate) map[string]*llx.RawData {
+	title := strings.TrimSpace(u.ReleaseType + " (" + u.KB + ")")
+	return map[string]*llx.RawData{
+		"updateId":       llx.StringData(u.PackageName),
+		"kbId":           llx.StringData(u.KB),
+		"title":          llx.StringData(title),
+		"classification": llx.StringData(windows.ClassifyUpdate("", title)),
+		"severity":       llx.StringData(""),
+		"supportUrl":     llx.StringData(""),
+		"cveIds":         llx.ArrayData([]any{}, types.String),
+		"date":           llx.TimeDataPtr(u.InstalledOn),
+		"operation":      llx.StringData("Installation"),
+		"rebootRequired": llx.BoolData(false),
+		"categories":     llx.ArrayData([]any{}, types.String),
+	}
 }
 
 func (w *mqlWindowsUpdate) available() ([]any, error) {

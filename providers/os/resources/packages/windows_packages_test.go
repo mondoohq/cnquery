@@ -26,6 +26,7 @@ import (
 	"go.mondoo.com/mql/providers/os/registry"
 	"go.mondoo.com/mql/providers/os/resources/cpe"
 	"go.mondoo.com/mql/providers/os/resources/powershell"
+	winres "go.mondoo.com/mql/providers/os/resources/windows"
 )
 
 func TestWindowsAppPackagesParser(t *testing.T) {
@@ -1925,4 +1926,23 @@ func TestGetFsAppxPackagesPropagatesInterruptedSearch(t *testing.T) {
 		require.ErrorIs(t, err, failure)
 		require.Nil(t, pkgs)
 	}
+}
+
+func TestCBSUpdatesToHotfixPackages(t *testing.T) {
+	installed := time.Date(2026, 8, 10, 15, 49, 51, 376640800, time.UTC)
+	pkgs := HotFixesToPackages(CBSUpdatesToHotfixes([]winres.CBSUpdate{
+		{KB: "KB5120228", ReleaseType: "Security Update", InstalledOn: &installed, PackageName: "Package_for_HotpatchFix_33222~x"},
+		{KB: "KB5120708", ReleaseType: "Update"},
+	}))
+	require.Len(t, pkgs, 2)
+
+	assert.Equal(t, "KB5120228", pkgs[0].Name)
+	assert.Equal(t, "Security Update", pkgs[0].Description)
+	assert.Equal(t, "windows/hotfix", pkgs[0].Format)
+	assert.Equal(t, installScopeMachine, pkgs[0].InstallScope)
+	// like Get-HotFix, the calendar day at UTC midnight
+	assert.Equal(t, time.Date(2026, 8, 10, 0, 0, 0, 0, time.UTC), pkgs[0].InstallDate)
+
+	assert.Equal(t, "KB5120708", pkgs[1].Name)
+	assert.True(t, pkgs[1].InstallDate.IsZero(), "no install time is null, not a made-up date")
 }

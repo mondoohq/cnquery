@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers/os/registry"
+	"go.mondoo.com/mql/providers/os/resources/windows"
 )
 
 // regItems builds a name->item map mirroring readRegistryKey output (keys are
@@ -149,4 +150,24 @@ func TestFormatWULastError(t *testing.T) {
 	assert.Equal(t, "", formatWULastError(0))
 	assert.Equal(t, "0x80244022", formatWULastError(0x80244022))
 	assert.Equal(t, "0xD", formatWULastError(13))
+}
+
+func TestCBSEntryArgs(t *testing.T) {
+	installed := time.Date(2026, 8, 10, 15, 49, 51, 0, time.UTC)
+	args := cbsEntryArgs(windows.CBSUpdate{
+		KB:          "KB5120228",
+		ReleaseType: "Security Update",
+		InstalledOn: &installed,
+		PackageName: "Package_for_HotpatchFix_33222~31bf3856ad364e35~amd64~~26100.33222.1.16",
+	})
+	assert.Equal(t, "KB5120228", args["kbId"].Value)
+	assert.Equal(t, "Package_for_HotpatchFix_33222~31bf3856ad364e35~amd64~~26100.33222.1.16", args["updateId"].Value)
+	assert.Equal(t, "Security Update (KB5120228)", args["title"].Value)
+	assert.Equal(t, "Security Updates", args["classification"].Value)
+	assert.Equal(t, &installed, args["date"].Value)
+
+	// a plain "Update" has no classification, and no install time stays null
+	args = cbsEntryArgs(windows.CBSUpdate{KB: "KB5120708", ReleaseType: "Update"})
+	assert.Equal(t, "", args["classification"].Value)
+	assert.Nil(t, args["date"].Value)
 }

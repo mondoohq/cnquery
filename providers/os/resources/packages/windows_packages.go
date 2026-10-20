@@ -31,6 +31,7 @@ import (
 	"go.mondoo.com/mql/providers/os/resources/cpe"
 	"go.mondoo.com/mql/providers/os/resources/powershell"
 	"go.mondoo.com/mql/providers/os/resources/purl"
+	winres "go.mondoo.com/mql/providers/os/resources/windows"
 )
 
 const (
@@ -423,6 +424,42 @@ func offsetFromMidnight(t time.Time) (time.Duration, bool) {
 		return 0, true // same UTC calendar day already
 	}
 	return 0, false
+}
+
+// getOfflineHotfixes lists the installed updates of an offline target from its
+// Component Based Servicing store, in the shape Get-HotFix reports them.
+func (w *WinPkgManager) getOfflineHotfixes() ([]PowershellWinHotFix, error) {
+	fi, err := w.conn.FileInfo(registry.SoftwareRegPath)
+	if err != nil {
+		return nil, err
+	}
+	reader, unload, err := winres.LoadOfflineCBSReader(fi.Path, w.conn.FileSystem())
+	if err != nil {
+		return nil, err
+	}
+	defer unload()
+	updates, err := winres.InstalledCBSUpdates(reader)
+	if err != nil {
+		return nil, err
+	}
+	return CBSUpdatesToHotfixes(updates), nil
+}
+
+// CBSUpdatesToHotfixes maps CBS updates onto what Get-HotFix returns: the KB as
+// HotFixId, the manifest's release type as Description, and the install time as
+// InstalledOn, so they become packages through HotFixesToPackages.
+func CBSUpdatesToHotfixes(updates []winres.CBSUpdate) []PowershellWinHotFix {
+	res := make([]PowershellWinHotFix, 0, len(updates))
+	for _, u := range updates {
+		hf := PowershellWinHotFix{HotFixId: u.KB, Description: u.ReleaseType}
+		if u.InstalledOn != nil {
+			utc := u.InstalledOn.UTC()
+			hf.InstalledOn.Value = fmt.Sprintf("/Date(%d)/", utc.UnixMilli())
+			hf.InstalledOn.DateTime = utc.Format(time.RFC3339)
+		}
+		res = append(res, hf)
+	}
+	return res
 }
 
 func HotFixesToPackages(hotfixes []PowershellWinHotFix) []Package {
@@ -1620,7 +1657,19 @@ func (w *WinPkgManager) List() ([]Package, error) {
 
 	canRunCmd := w.conn.Capabilities().Has(shared.Capability_RunCommand)
 	if !canRunCmd {
-		log.Debug().Msg("cannot run command on windows, skipping hotfixes list")
+		// Without PowerShell the hotfixes come from the CBS store of the
+		// target (offline hive plus servicing manifests). A failure here
+		// must not fail the package list.
+		if w.conn.Capabilities().Has(shared.Capability_File) {
+			hotfixes, err := w.getOfflineHotfixes()
+			if err != nil {
+				log.Debug().Err(err).Msg("could not read hotfixes from the CBS store")
+			} else {
+				pkgs = append(pkgs, HotFixesToPackages(hotfixes)...)
+			}
+		} else {
+			log.Debug().Msg("cannot run command on windows, skipping hotfixes list")
+		}
 		// Collapse even on this early return: the .NET runtime's two
 		// Add/Remove-Programs entries per install (see collapsePackages)
 		// come from the app-listing path above, which ran regardless of
