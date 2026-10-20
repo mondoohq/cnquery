@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "14.3.9",
-  "generated_at": "2026-10-19T19:57:01-07:00",
+  "generated_at": "2026-10-19T20:20:10-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.ApiManagement/service/apis/policies/read",
@@ -237,6 +237,8 @@
     "Microsoft.Network/virtualHubs/hubRouteTables/read",
     "Microsoft.Network/virtualHubs/hubVirtualNetworkConnections/read",
     "Microsoft.Network/virtualHubs/read",
+    "Microsoft.Network/virtualNetworkAppliances/capabilities/read",
+    "Microsoft.Network/virtualNetworkAppliances/read",
     "Microsoft.Network/virtualNetworkGateways/read",
     "Microsoft.Network/virtualNetworkTaps/read",
     "Microsoft.Network/virtualNetworks/read",
@@ -1799,6 +1801,18 @@
       "service": "Microsoft.Network",
       "action": "Get",
       "source_file": "network_expansion.go"
+    },
+    {
+      "permission": "Microsoft.Network/virtualNetworkAppliances/capabilities/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network_vnet_appliances.go"
+    },
+    {
+      "permission": "Microsoft.Network/virtualNetworkAppliances/read",
+      "service": "Microsoft.Network",
+      "action": "NewListAllPager",
+      "source_file": "network_vnet_appliances.go"
     },
     {
       "permission": "Microsoft.Network/virtualNetworkGateways/read",
