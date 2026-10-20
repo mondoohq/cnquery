@@ -249,7 +249,7 @@ func TestHiveFileDirtyWithoutLogsReadsAsIs(t *testing.T) {
 	h, err := openHiveFile(path)
 	require.NoError(t, err)
 	defer h.Close()
-	assert.Empty(t, h.tmpPath, "no logs, so nothing to recover into")
+	assert.Zero(t, h.recovered, "no logs, so nothing to recover into")
 	item, err := h.Item("Values", "Sz")
 	require.NoError(t, err)
 	assert.Equal(t, "hello world", item.Value.String)
@@ -258,4 +258,58 @@ func TestHiveFileDirtyWithoutLogsReadsAsIs(t *testing.T) {
 func TestDecodeHiveName(t *testing.T) {
 	assert.Equal(t, "café", decodeHiveName("caf\xe9", true))
 	assert.Equal(t, "ab", decodeHiveName("a\x00b\x00", false))
+}
+
+// A DWORD whose data cell lies outside the hive fails that value with an
+// error, it does not crash the reader and the other values stay readable.
+func TestHiveFileValueWithUnreadableDataFailsAlone(t *testing.T) {
+	path := fixtureHive(t, t.TempDir())
+	raw, err := os.ReadFile(path)
+	require.NoError(t, err)
+	// find the vk cell of the "Dword" value (name length 5, then "Dword" at +20)
+	at := -1
+	for i := 0; i+25 < len(raw); i++ {
+		if string(raw[i:i+2]) == "vk" && raw[i+2] == 5 && string(raw[i+20:i+25]) == "Dword" {
+			at = i
+			break
+		}
+	}
+	require.GreaterOrEqual(t, at, 0)
+	// 4 bytes of data, stored in a cell, at an offset far beyond the file
+	raw[at+4], raw[at+5], raw[at+6], raw[at+7] = 4, 0, 0, 0
+	raw[at+8], raw[at+9], raw[at+10], raw[at+11] = 0xF8, 0xFF, 0xFF, 0x7F
+	require.NoError(t, os.WriteFile(path, raw, 0o600))
+
+	h, err := openHiveFile(path)
+	require.NoError(t, err)
+	defer h.Close()
+	items, err := h.Items("Values")
+	require.NoError(t, err)
+	assert.Len(t, items, 15)
+	assert.Error(t, itemByName(t, items, "Dword").Value.Err)
+	assert.Equal(t, "hello world", itemByName(t, items, "Sz").Value.String)
+	item, err := h.Item("Values", "Dword")
+	require.NoError(t, err)
+	assert.Error(t, item.Value.Err)
+}
+
+// Windows images commonly hold empty .LOG1 and .LOG2 files, which are no log.
+func TestHiveFileEmptyLogsAreIgnored(t *testing.T) {
+	path := fixtureHive(t, t.TempDir())
+	f, err := os.OpenFile(path, os.O_RDWR, 0)
+	require.NoError(t, err)
+	_, err = f.WriteAt([]byte{0x7f, 0x7f, 0x7f, 0x7f}, 4)
+	require.NoError(t, err)
+	require.NoError(t, f.Close())
+	require.NoError(t, os.WriteFile(path+".LOG1", nil, 0o600))
+	require.NoError(t, os.WriteFile(path+".LOG2", nil, 0o600))
+
+	h, err := openHiveFile(path)
+	require.NoError(t, err)
+	defer h.Close()
+	assert.Zero(t, h.recovered)
+	assert.Empty(t, h.logs, "log files that were not used are closed")
+	item, err := h.Item("Values", "Sz")
+	require.NoError(t, err)
+	assert.Equal(t, "hello world", item.Value.String)
 }

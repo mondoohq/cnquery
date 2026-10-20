@@ -280,10 +280,8 @@ require (
 )
 
 require (
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/microsoft/wmi v0.45.0 // indirect
 	go.opentelemetry.io/otel/log v1.47.0 // indirect
-	www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7 // indirect
 )
 
 replace github.com/hnakamur/go-scp => github.com/mondoohq/go-scp v1.0.4
