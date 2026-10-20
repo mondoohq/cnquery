@@ -275,11 +275,29 @@ func (w *mqlWindowsUpdate) config() (*mqlWindowsUpdateConfig, error) {
 // for "never": the registry keys Windows 10 and later stopped writing can
 // still hold a value frozen years ago, and reporting that would make a host
 // that never detected look like one that detected long ago.
+//
+// The detection time is the later of the agent's own last search and the
+// newest successful scan of an OS update service in the event log, because
+// Update Orchestrator scans only show up in the log.
 func wuResultTimes(wua *windows.WUAResults, regDetection, regInstall *time.Time) (detection, install *time.Time) {
 	if wua != nil {
-		return wua.LastSearchSuccess, wua.LastInstallationSuccess
+		return laterTime(wua.LastSearchSuccess, wua.LastScanSuccess), wua.LastInstallationSuccess
 	}
 	return regDetection, regInstall
+}
+
+// laterTime returns the later of two optional times, nil only when both are nil.
+func laterTime(a, b *time.Time) *time.Time {
+	switch {
+	case a == nil:
+		return b
+	case b == nil:
+		return a
+	case b.After(*a):
+		return b
+	default:
+		return a
+	}
 }
 
 // readWUAResults runs WINDOWS_QUERY_WUA_RESULTS and parses its output.

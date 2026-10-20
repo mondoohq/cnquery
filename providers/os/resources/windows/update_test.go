@@ -344,6 +344,25 @@ func TestParseWUAResults(t *testing.T) {
 		assert.Equal(t, time.Date(2026, 10, 19, 6, 25, 42, 0, time.UTC), *res.LastSearchSuccess)
 		assert.Nil(t, res.LastInstallationSuccess)
 	})
+	t.Run("scan success from event log", func(t *testing.T) {
+		res, err := ParseWUAResults(strings.NewReader("\xef\xbb\xbf{\"LastSearchSuccessDate\":null,\"LastInstallationSuccessDate\":null,\"LastScanSuccess\":\"2026-10-20 08:09:10\"}\r\n"))
+		require.NoError(t, err)
+		assert.Nil(t, res.LastSearchSuccess)
+		require.NotNil(t, res.LastScanSuccess)
+		assert.Equal(t, time.Date(2026, 10, 20, 8, 9, 10, 0, time.UTC), *res.LastScanSuccess)
+	})
+	t.Run("scan success null or absent", func(t *testing.T) {
+		res, err := ParseWUAResults(strings.NewReader(`{"LastSearchSuccessDate":"2026-01-02 03:04:05","LastScanSuccess":null}`))
+		require.NoError(t, err)
+		assert.Nil(t, res.LastScanSuccess)
+		res, err = ParseWUAResults(strings.NewReader(`{"LastSearchSuccessDate":"2026-01-02 03:04:05"}`))
+		require.NoError(t, err)
+		assert.Nil(t, res.LastScanSuccess)
+	})
+	t.Run("unparseable scan time", func(t *testing.T) {
+		_, err := ParseWUAResults(strings.NewReader(`{"LastScanSuccess":"soon"}`))
+		assert.Error(t, err)
+	})
 	t.Run("malformed json", func(t *testing.T) {
 		_, err := ParseWUAResults(strings.NewReader(`{"LastSearchSuccessDate":`))
 		assert.Error(t, err)
@@ -358,10 +377,35 @@ func TestParseWUAResults(t *testing.T) {
 	})
 }
 
-// The query must not convert time zones: a COM DateTime with Kind=Unspecified
-// would be shifted by the host offset.
-func TestWUAResultsQueryNoTimeZoneConversion(t *testing.T) {
-	assert.NotContains(t, WINDOWS_QUERY_WUA_RESULTS, "ToUniversalTime")
+// The COM dates must not be converted: a COM DateTime with Kind=Unspecified
+// would be shifted by the host offset. Event log times are local DateTimes and
+// must be converted, exactly once.
+func TestWUAResultsQueryTimeZones(t *testing.T) {
 	assert.NotContains(t, WINDOWS_QUERY_WUA_RESULTS, "ToLocalTime")
 	assert.Contains(t, WINDOWS_QUERY_WUA_RESULTS, "'yyyy-MM-dd HH:mm:ss'")
+	assert.Equal(t, 1, strings.Count(WINDOWS_QUERY_WUA_RESULTS, "ToUniversalTime"))
+	assert.Contains(t, WINDOWS_QUERY_WUA_RESULTS, "$e.TimeCreated.ToUniversalTime()")
+}
+
+// Only scans of the OS update services count; Store and flighting channels
+// log event 26 too.
+func TestWUAResultsQueryFiltersOSServices(t *testing.T) {
+	q := WINDOWS_QUERY_WUA_RESULTS
+	for _, guid := range []string{
+		"9482f4b4-e343-43b6-b170-9a65bc822c77",
+		"7971f918-a847-4430-9279-4a52d1efe18d",
+		"3da21691-e39d-4da6-8a4b-b43877bcb1b7",
+	} {
+		assert.Contains(t, q, "'"+guid+"'")
+	}
+	assert.NotContains(t, q, "855e8a7c-ecb4-4ca3-b045-1dfa50104289")
+	assert.NotContains(t, q, "8b24b027-1dee-babb-9a95-3517dfb9c552")
+	assert.Contains(t, q, "Microsoft-Windows-WindowsUpdateClient/Operational")
+	assert.Contains(t, q, "Id = 26 }")
+	assert.Contains(t, q, "-MaxEvents 200")
+	assert.Contains(t, q, "serviceGuid")
+	assert.Contains(t, q, "ToLowerInvariant()")
+	for _, r := range q {
+		assert.Less(t, r, rune(128), "script must be ASCII")
+	}
 }

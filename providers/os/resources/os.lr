@@ -16673,14 +16673,18 @@ private windows.update.config @defaults("catalogSource rebootPending") {
   service() service
   // Time of the last successful update detection
   //
-  // Read from the Windows Update Agent when commands can run, otherwise from
-  // the registry. Only the Automatic Updates agent advances this value, so it
-  // can lag scans started by the Update Orchestrator.
+  // The later of the last search recorded by the Automatic Updates agent and
+  // the newest successful scan of Windows Update, Microsoft Update or WSUS in
+  // the Windows Update client event log (event 26). Scans started by the Update
+  // Orchestrator appear only in the event log. Offline scans without command
+  // execution read the registry instead, which is usually empty on Windows 10
+  // and later.
   lastDetectionSuccess time
   // Last detection error code (e.g., "0x80244022"); empty when the last detection succeeded
   //
-  // Read from a registry key that Windows 10 and later no longer write, so it
-  // is usually empty there.
+  // Read from the Automatic Updates results in the registry. Windows 10 and
+  // later no longer write them, so it is usually empty there, and it does not
+  // reflect failed scans started by the Update Orchestrator.
   lastDetectionError string
   // Time of the last successful update download
   //

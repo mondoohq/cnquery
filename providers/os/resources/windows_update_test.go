@@ -190,6 +190,29 @@ func TestWUResultTimes(t *testing.T) {
 		assert.Equal(t, &comInstall, i)
 	})
 
+	t.Run("event log scan newer than agent search", func(t *testing.T) {
+		scan := comDetect.Add(time.Hour)
+		d, _ := wuResultTimes(&windows.WUAResults{LastSearchSuccess: &comDetect, LastScanSuccess: &scan}, &regDetect, &regInstall)
+		assert.Equal(t, &scan, d)
+	})
+
+	t.Run("agent search newer than event log scan", func(t *testing.T) {
+		scan := comDetect.Add(-time.Hour)
+		d, _ := wuResultTimes(&windows.WUAResults{LastSearchSuccess: &comDetect, LastScanSuccess: &scan}, &regDetect, &regInstall)
+		assert.Equal(t, &comDetect, d)
+	})
+
+	t.Run("only the event log scan present", func(t *testing.T) {
+		scan := comDetect.Add(time.Hour)
+		d, _ := wuResultTimes(&windows.WUAResults{LastScanSuccess: &scan}, &regDetect, &regInstall)
+		assert.Equal(t, &scan, d)
+	})
+
+	t.Run("neither present, registry is not used", func(t *testing.T) {
+		d, _ := wuResultTimes(&windows.WUAResults{}, &regDetect, &regInstall)
+		assert.Nil(t, d)
+	})
+
 	t.Run("agent unavailable, registry fallback", func(t *testing.T) {
 		d, i := wuResultTimes(nil, &regDetect, &regInstall)
 		assert.Equal(t, &regDetect, d)

@@ -326,44 +326,87 @@ func titleProduct(title string) string {
 // with and ParseWUAResults reads them back in. The value is UTC.
 const wuaResultsTimeFormat = "2006-01-02 15:04:05"
 
+// Service IDs of the update services that deliver the operating system's own
+// updates, as the WindowsUpdateClient event log records them in the
+// serviceGuid field: Windows Update, Microsoft Update and WSUS or Configuration
+// Manager (see "How Windows Update works" on Microsoft Learn). Other IDs, such
+// as the Store and OS flighting channels, are not the operating system's
+// updates and are left out.
+const (
+	WUServiceWindowsUpdate    = "9482f4b4-e343-43b6-b170-9a65bc822c77"
+	WUServiceMicrosoftUpdate  = "7971f918-a847-4430-9279-4a52d1efe18d"
+	WUServiceManagedWSUS      = "3da21691-e39d-4da6-8a4b-b43877bcb1b7"
+	wuaScanSuccessEventID     = 26
+	wuaScanEventsMaxToInspect = 200
+)
+
 // WINDOWS_QUERY_WUA_RESULTS reads IAutomaticUpdatesResults from the Windows
-// Update Agent (Microsoft.Update.AutoUpdate). Both dates are documented as UTC,
-// but the COM DateTime can come back with Kind=Unspecified, so no
-// ToUniversalTime/ToLocalTime call is made: converting would shift the value by
-// the host's offset. The date is formatted as it is. A value of $null or a
+// Update Agent (Microsoft.Update.AutoUpdate) and the newest successful scan of
+// an OS update service from the WindowsUpdateClient Operational event log.
+//
+// The COM dates are documented as UTC, but the COM DateTime can come back with
+// Kind=Unspecified, so no ToUniversalTime/ToLocalTime call is made on them:
+// converting would shift the value by the host's offset. A value of $null or a
 // "never" sentinel (DateTime.MinValue, 1601, the 1899-12-30 OLE zero) is
 // emitted as null. A COM failure exits non-zero.
-const WINDOWS_QUERY_WUA_RESULTS = `
+//
+// Update Orchestrator scans and online IUpdateSearcher searches do not update
+// the COM values on Windows 10 and later; they log event 26 ("Windows Update
+// successfully found N updates") with the scanned service in serviceGuid.
+// TimeCreated of an event is a local DateTime, so it is converted with
+// ToUniversalTime. A missing log or a failure reading it yields null for
+// LastScanSuccess and does not fail the query.
+var WINDOWS_QUERY_WUA_RESULTS = fmt.Sprintf(`
 $ErrorActionPreference='Stop';
 $ProgressPreference='SilentlyContinue';
 try {
   $results = (New-Object -ComObject Microsoft.Update.AutoUpdate).Results
   $fmt = 'yyyy-MM-dd HH:mm:ss'
+  $inv = [System.Globalization.CultureInfo]::InvariantCulture
   $search = $null
   $install = $null
   $d = $results.LastSearchSuccessDate
-  if ($d -ne $null -and ([datetime]$d).Year -ge 1980) { $search = ([datetime]$d).ToString($fmt, [System.Globalization.CultureInfo]::InvariantCulture) }
+  if ($d -ne $null -and ([datetime]$d).Year -ge 1980) { $search = ([datetime]$d).ToString($fmt, $inv) }
   $d = $results.LastInstallationSuccessDate
-  if ($d -ne $null -and ([datetime]$d).Year -ge 1980) { $install = ([datetime]$d).ToString($fmt, [System.Globalization.CultureInfo]::InvariantCulture) }
+  if ($d -ne $null -and ([datetime]$d).Year -ge 1980) { $install = ([datetime]$d).ToString($fmt, $inv) }
+  $scan = $null
+  try {
+    $osServices = @('%s', '%s', '%s')
+    $events = @(Get-WinEvent -FilterHashtable @{ LogName = 'Microsoft-Windows-WindowsUpdateClient/Operational'; Id = %d } -MaxEvents %d -ErrorAction SilentlyContinue)
+    foreach ($e in $events) {
+      $guid = $null
+      foreach ($data in ([xml]$e.ToXml()).Event.EventData.Data) {
+        if ($data.Name -eq 'serviceGuid') { $guid = [string]$data.'#text'; break }
+      }
+      if ($guid -ne $null -and $osServices -contains $guid.Trim('{', '}').ToLowerInvariant()) {
+        $scan = $e.TimeCreated.ToUniversalTime().ToString($fmt, $inv)
+        break
+      }
+    }
+  } catch { $scan = $null }
   [pscustomobject]@{
     "LastSearchSuccessDate" = $search
     "LastInstallationSuccessDate" = $install
+    "LastScanSuccess" = $scan
   } | ConvertTo-Json -Compress
 } catch {
   [Console]::Error.WriteLine($_.Exception.Message)
   exit 1
-}`
+}`, WUServiceWindowsUpdate, WUServiceMicrosoftUpdate, WUServiceManagedWSUS, wuaScanSuccessEventID, wuaScanEventsMaxToInspect)
 
 // WUAResults holds the Windows Update Agent's last successful search and
-// installation times, in UTC. A nil field means the agent reported none.
+// installation times and the newest successful scan the event log records for
+// an OS update service, in UTC. A nil field means none was reported.
 type WUAResults struct {
 	LastSearchSuccess       *time.Time
 	LastInstallationSuccess *time.Time
+	LastScanSuccess         *time.Time
 }
 
 type wuaResultsJSON struct {
 	LastSearchSuccessDate       *string `json:"LastSearchSuccessDate"`
 	LastInstallationSuccessDate *string `json:"LastInstallationSuccessDate"`
+	LastScanSuccess             *string `json:"LastScanSuccess"`
 }
 
 // ParseWUAResults parses the output of WINDOWS_QUERY_WUA_RESULTS. Missing or
@@ -389,7 +432,11 @@ func ParseWUAResults(input io.Reader) (*WUAResults, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &WUAResults{LastSearchSuccess: search, LastInstallationSuccess: install}, nil
+	scan, err := parseWUAResultsTime(raw.LastScanSuccess)
+	if err != nil {
+		return nil, err
+	}
+	return &WUAResults{LastSearchSuccess: search, LastInstallationSuccess: install, LastScanSuccess: scan}, nil
 }
 
 func parseWUAResultsTime(s *string) (*time.Time, error) {
