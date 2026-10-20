@@ -333,10 +333,9 @@ func TestGetProfileInstalledAppsNotLiveEmptyProfilePath(t *testing.T) {
 // whose hive cannot be loaded (locked, missing NTUSER.DAT) surfaces as an
 // error from getProfileInstalledApps that the caller
 // (getPerProfileInstalledAppsWith) logs and skips, never as a failed scan.
-// LoadRegistrySubkey has no real implementation on a non-Windows build (see
-// registry/registryhandler_unix.go), so newDefaultUserHiveHandler's real
-// RegistryHandler exercises the real failure path here without needing
-// Windows.
+// C:\Users\alice\NTUSER.DAT does not exist on the test machine, so
+// newDefaultUserHiveHandler's real RegistryHandler exercises the real failure
+// path here without needing Windows.
 func TestGetProfileInstalledAppsHiveLoadFailureIsSkippedNotFatal(t *testing.T) {
 	w := &WinPkgManager{platform: testWinPlatform()}
 
