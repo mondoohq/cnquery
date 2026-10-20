@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/openai
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.8
+go 1.26.10
 
 require (
 	github.com/openai/openai-go/v3 v3.82.0

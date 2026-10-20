@@ -1,6 +1,6 @@
 module go.mondoo.com/mql
 
-go 1.26.8
+go 1.26.10
 
 require (
 	cloud.google.com/go/logging v1.13.2

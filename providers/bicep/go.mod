@@ -1,6 +1,6 @@
 module go.mondoo.com/mql/providers/bicep
 
-go 1.26.8
+go 1.26.10
 
 replace go.mondoo.com/mql => ../..
 

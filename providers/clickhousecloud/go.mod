@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/clickhousecloud
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.8
+go 1.26.10
 
 require (
 	go.mondoo.com/mql v0.0.0-20261019065417-1fcdd84493fd

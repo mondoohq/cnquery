@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/ibm
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.8
+go 1.26.10
 
 require (
 	github.com/IBM-Cloud/power-go-client v1.17.0

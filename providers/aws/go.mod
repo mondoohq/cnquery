@@ -14,7 +14,7 @@ replace go.mondoo.com/mql => ../..
 // `version mod-update` job from advancing it. Drop both once #3501 is fixed.
 replace github.com/aws/aws-sdk-go-v2/service/appstream => github.com/aws/aws-sdk-go-v2/service/appstream v1.63.0
 
-go 1.26.8
+go 1.26.10
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.47.3

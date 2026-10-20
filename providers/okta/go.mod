@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/okta
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.8
+go 1.26.10
 
 require (
 	github.com/okta/okta-sdk-golang/v6 v6.1.7
