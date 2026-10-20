@@ -458,6 +458,7 @@ func TestGetRunningProvider_ReportsStartFailureOnce(t *testing.T) {
 	assert.Contains(t, reports[0].msg, "failed to initialize plugin client")
 	assert.Equal(t, "provider_start_failure", reports[0].tags["reportKind"])
 	assert.Equal(t, "testp", reports[0].tags["provider"])
+	assert.Equal(t, "1.2.3", reports[0].tags["providerVersion"])
 	assert.Equal(t, "missing_binary", reports[0].tags["failureKind"])
 	assert.Equal(t, runtime.GOOS, reports[0].tags["os"])
 	assert.Equal(t, runtime.GOARCH, reports[0].tags["arch"])
@@ -467,4 +468,35 @@ func TestGetRunningProvider_ReportsStartFailureOnce(t *testing.T) {
 	_, err = c.GetRunningProvider("testp", UpdateProvidersConfig{Enabled: false})
 	require.Error(t, err)
 	assert.Len(t, reports, 1, "a repeated start failure for the same provider must not re-report")
+}
+
+// TestStartFailureDiagnostics covers the stderr-tail half of the start-failure
+// diagnostics (the exit-disposition half is formatExitStatus, tested with the
+// other exit-status helpers). The tail is what carries the dynamic linker's
+// "cannot open shared object file" lines for the missing-libraries cause.
+func TestStartFailureDiagnostics(t *testing.T) {
+	t.Run("nothing observed, nothing appended", func(t *testing.T) {
+		assert.Equal(t, "", startFailureDiagnostics(nil, nil))
+	})
+
+	t.Run("stderr tail is appended", func(t *testing.T) {
+		got := startFailureDiagnostics(nil, []string{
+			"error while loading shared libraries: libxyz.so.1",
+			"cannot open shared object file: No such file or directory",
+		})
+		assert.Equal(t, "\nplugin stderr:\nerror while loading shared libraries: libxyz.so.1\ncannot open shared object file: No such file or directory", got)
+	})
+
+	t.Run("stderr tail is bounded", func(t *testing.T) {
+		lines := make([]string, 30)
+		for i := range lines {
+			lines[i] = fmt.Sprintf("line-%d", i)
+		}
+		got := startFailureDiagnostics(nil, lines)
+		// Keeps the LAST lines: with a line budget, the lines printed just
+		// before the process died say more than the startup banner.
+		assert.Contains(t, got, "line-29")
+		assert.NotContains(t, got, "line-9\n")
+		assert.Contains(t, got, "truncated")
+	})
 }
