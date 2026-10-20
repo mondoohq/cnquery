@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"strings"
@@ -284,9 +283,8 @@ func parseSysrcAssignments(content string) []sysrcAssignment {
 	var res []sysrcAssignment
 	depth := 0
 
-	scanner := bufio.NewScanner(strings.NewReader(content))
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
+	for raw := range strings.Lines(content) {
+		line := strings.TrimSpace(raw)
 
 		// Skip empty lines and comments
 		if line == "" || strings.HasPrefix(line, "#") {
