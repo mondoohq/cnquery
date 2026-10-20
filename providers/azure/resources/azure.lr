@@ -2474,6 +2474,8 @@ private azure.subscription.networkService {
   expressRouteGateways() []azure.subscription.networkService.expressRouteGateway
   // List of ExpressRoute Direct ports
   expressRoutePorts() []azure.subscription.networkService.expressRoutePort
+  // List of ExpressRoute link aggregation groups (LAGs)
+  expressRouteLags() []azure.subscription.networkService.expressRouteLag
   // List of route filters
   routeFilters() []azure.subscription.networkService.routeFilter
   // List of network virtual appliances
@@ -6331,6 +6333,132 @@ azure.subscription.networkService.expressRoutePort @defaults("id name location")
   links []dict
   // ExpressRoute circuits provisioned on the port
   circuits() []azure.subscription.networkService.expressRouteCircuit
+}
+
+// Azure ExpressRoute link aggregation group
+//
+// An ExpressRoute link aggregation group (LAG) that bundles ExpressRoute Direct
+// physical ports at a peering location into one logical connection. Surfaces
+// the procured and provisioned bandwidth, the number of ports and how many must
+// stay active, the encapsulation, billing model and LACP timer, the managed
+// identity used to read MACsec keys from Key Vault, the links and their MACsec
+// settings, the ExpressRoute circuits provisioned on the LAG, and the
+// authorizations issued so other subscriptions can provision circuits on it.
+// An authorization whose `authorizationUseStatus` is `Available` was issued but
+// never redeemed. Select by the LAG's Azure resource ID.
+azure.subscription.networkService.expressRouteLag @defaults("id name location") {
+  // ExpressRoute LAG ID
+  id string
+  // ExpressRoute LAG name
+  name string
+  // ExpressRoute LAG location
+  location string
+  // ExpressRoute LAG tags
+  tags map[string]string
+  // ExpressRoute LAG resource type
+  type string
+  // ExpressRoute LAG etag
+  etag string
+  // Provisioning state of the LAG
+  provisioningState string
+  // Bandwidth of the procured LAG in Gbps
+  bandwidthInGbps int
+  // Aggregate bandwidth of the circuits provisioned on the LAG in Gbps
+  provisionedBandwidthInGbps float
+  // Number of physical ports in the LAG
+  numberOfPorts int
+  // Minimum number of active ports the LAG requires
+  minimumActivePortsRequired int
+  // Encapsulation method on the LAG (Dot1Q, QinQ)
+  encapsulation string
+  // Billing model of the LAG (MeteredData, UnlimitedData)
+  billingType string
+  // LACP timer setting (Fast, Slow)
+  lacpTimer string
+  // Peering location the LAG is physically mapped to
+  peeringLocation string
+  // Maximum transmission unit of the LAG
+  mtu string
+  // Ether type of the LAG
+  etherType string
+  // Resource GUID of the LAG
+  resourceGuid string
+  // Date and time the LAG was allocated, as reported by Azure
+  allocationDate string
+  // Managed identity type: None, SystemAssigned, UserAssigned, or "SystemAssigned, UserAssigned"
+  identityType string
+  // Object ID (principal ID) of the system-assigned managed identity, when one is configured
+  principalId string
+  // User-assigned managed identities associated with the LAG
+  userAssignedIdentities() []azure.subscription.managedIdentity
+  // Links of the LAG with their MACsec settings
+  links() []azure.subscription.networkService.expressRouteLag.link
+  // ExpressRoute circuits provisioned on the LAG
+  circuits() []azure.subscription.networkService.expressRouteCircuit
+  // Authorizations issued on the LAG
+  authorizations() []azure.subscription.networkService.expressRouteLag.authorization
+}
+
+// ExpressRoute LAG link
+//
+// A link of an ExpressRoute link aggregation group, terminating on one Azure
+// router. Surfaces the administrative state, the router and interface names,
+// the MACsec cipher and SCI state, the Key Vault secrets holding the MACsec CAK
+// and CKN, and the member ports with their physical patching details.
+private azure.subscription.networkService.expressRouteLag.link @defaults("name adminState macSecCipher") {
+  // Link ID
+  id string
+  // Link name
+  name string
+  // Link resource type
+  type string
+  // Link etag
+  etag string
+  // Administrative state of the link (Enabled, Disabled)
+  adminState string
+  // Provisioning state of the link
+  provisioningState string
+  // Name of the Azure router the link terminates on
+  routerName string
+  // Name of the Azure router interface
+  interfaceName string
+  // MACsec cipher (GcmAes128, GcmAes256, GcmAesXpn128, GcmAesXpn256), empty when MACsec is not configured
+  macSecCipher string
+  // MACsec secure channel identifier state (Enabled, Disabled)
+  macSecSciState string
+  // Key Vault secret holding the MACsec connectivity association key (CAK), null when not configured
+  macSecCakSecret() azure.subscription.keyVaultService.secret
+  // Key Vault secret holding the MACsec connectivity association key name (CKN), null when not configured
+  macSecCknSecret() azure.subscription.keyVaultService.secret
+  // Member ports of the link
+  //
+  // Each entry carries the member name and ID, admin state, connector type,
+  // interface name, colocation, patch panel ID, rack ID, and provisioning state.
+  members []dict
+}
+
+// ExpressRoute LAG authorization
+//
+// An authorization issued on an ExpressRoute link aggregation group, letting
+// another subscription provision an ExpressRoute circuit on the LAG.
+// Surfaces whether it has been redeemed (`authorizationUseStatus`), the
+// provisioning state, and the circuit that redeemed it. The authorization key
+// is not exposed.
+private azure.subscription.networkService.expressRouteLag.authorization @defaults("name authorizationUseStatus provisioningState") {
+  // Authorization ID
+  id string
+  // Authorization name
+  name string
+  // Authorization resource type
+  type string
+  // Authorization etag
+  etag string
+  // Whether the authorization has been redeemed (Available, InUse)
+  authorizationUseStatus string
+  // Provisioning state of the authorization
+  provisioningState string
+  // ExpressRoute circuit that redeemed the authorization, null when unused
+  circuit() azure.subscription.networkService.expressRouteCircuit
 }
 
 // Azure route filter

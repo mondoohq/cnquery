@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "14.3.9",
-  "generated_at": "2026-10-19T20:20:10-07:00",
+  "generated_at": "2026-10-19T20:40:15-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.ApiManagement/service/apis/policies/read",
@@ -198,6 +198,8 @@
     "Microsoft.Network/expressRouteCircuits/peerings/read",
     "Microsoft.Network/expressRouteCircuits/read",
     "Microsoft.Network/expressRouteGateways/read",
+    "Microsoft.Network/expressRouteLags/authorizations/read",
+    "Microsoft.Network/expressRouteLags/read",
     "Microsoft.Network/firewallPolicies/read",
     "Microsoft.Network/firewallPolicies/ruleCollectionGroups/read",
     "Microsoft.Network/ipGroups/read",
@@ -1543,6 +1545,18 @@
       "service": "Microsoft.Network",
       "action": "ListBySubscription",
       "source_file": "network_connectivity.go"
+    },
+    {
+      "permission": "Microsoft.Network/expressRouteLags/authorizations/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network_expressroute_lag.go"
+    },
+    {
+      "permission": "Microsoft.Network/expressRouteLags/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network_expressroute_lag.go"
     },
     {
       "permission": "Microsoft.Network/firewallPolicies/read",
