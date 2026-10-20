@@ -441,3 +441,194 @@ func TestValidateDeclaredPeers(t *testing.T) {
 	assert.Contains(t, err.Error(), "requires network >= 13.0.0")
 	assert.Contains(t, err.Error(), "12.4.0 is installed")
 }
+
+// A provider update has to pull along the peers it declares a floor for.
+// Before this, installDependencies only installed peers that were missing: a
+// scan on a host whose providers had not been updated in a while installed
+// the newer `os`, found the already-installed `network` below the floor the
+// new `os` declares, and refused to start with "requires network >= 13.4.0,
+// but 13.2.4 is installed" until the user ran `providers update` by hand.
+func TestInstallDependenciesUpdatesOutdatedPeer(t *testing.T) {
+	reg, dir, caller, stale := outdatedPeerFixture(t)
+	const floor = "13.4.0"
+	existing := Providers{caller.ID: caller, stale.ID: stale}
+
+	require.NoError(t, installDependencies(caller, existing))
+
+	assert.Equal(t, 1, reg.downloads, "the outdated peer is downloaded once")
+	assert.FileExists(t, filepath.Join(dir, "network", "network.json"))
+	peer := existing.Lookup(ProviderLookup{ProviderName: "network"})
+	require.NotNil(t, peer)
+	assert.Equal(t, floor, peer.Version)
+
+	// The stale entry is keyed by its old ID, so adding the new one beside it
+	// would leave two providers named network and a name lookup could still
+	// return the old one.
+	networks := 0
+	for _, p := range existing {
+		if p.Name == "network" {
+			networks++
+		}
+	}
+	assert.Equal(t, 1, networks, "the stale entry is replaced, not kept beside the new one")
+}
+
+// Runtime.AddConnection takes its provider list from the coordinator, as a
+// clone of the published snapshot, once per connection. The snapshot was
+// published before the peer was updated, so unless the update republishes
+// it, every one of those callers finds the old version and installs the peer
+// again: one scan downloaded network four times.
+func TestInstallDependenciesPublishesUpdatedPeer(t *testing.T) {
+	reg, _, caller, stale := outdatedPeerFixture(t)
+	const floor = "13.4.0"
+
+	orig := Coordinator.Providers()
+	t.Cleanup(func() { Coordinator.SetProviders(orig) })
+	Coordinator.SetProviders(Providers{caller.ID: caller, stale.ID: stale})
+
+	require.NoError(t, installDependencies(caller, Coordinator.Providers()))
+
+	published := Coordinator.Providers().Lookup(ProviderLookup{ProviderName: "network"})
+	require.NotNil(t, published)
+	assert.Equal(t, floor, published.Version, "the published list carries the update")
+
+	require.NoError(t, installDependencies(caller, Coordinator.Providers()))
+	assert.Equal(t, 1, reg.downloads, "a later caller with a fresh clone does not download again")
+}
+
+// outdatedPeerFixture is the reproduction in miniature: a registry serving
+// network at the floor, and an os that declares that floor over a network
+// installed below it. The installed network carries the ID that older
+// releases had, which is what a host that has not updated in a while has on
+// disk; it is found by name.
+func outdatedPeerFixture(t *testing.T) (reg *fakeRegistry, dir string, caller, stale *Provider) {
+	t.Helper()
+	const floor = "13.4.0"
+	confJSON := []byte(`{"Name":"network","ID":"go.mondoo.com/mql/providers/network","Version":"` + floor + `"}`)
+	archive, err := buildTarXz(map[string][]byte{
+		"network":                []byte(`fake-binary`),
+		"network.json":           confJSON,
+		"network.resources.json": []byte(`{"resources":{}}`),
+	})
+	require.NoError(t, err)
+	reg = &fakeRegistry{latest: floor, archive: archive, confJSON: confJSON}
+	dir = useTestProviderPath(t, reg)
+
+	caller = &Provider{
+		Provider: &plugin.Provider{
+			Name: "os", ID: "go.mondoo.com/mql/providers/os", Version: "14.0.0",
+			Requires: []plugin.ProviderDep{
+				{ID: "go.mondoo.com/mql/providers/network", Name: "network", MinVersion: floor},
+			},
+		},
+		Schema: &resources.Schema{
+			Dependencies: map[string]*resources.ProviderInfo{
+				"network": {Id: "go.mondoo.com/mql/providers/network", Name: "network"},
+			},
+		},
+	}
+	stale = &Provider{Provider: &plugin.Provider{
+		Name: "network", ID: "go.mondoo.com/cnquery/v9/providers/network", Version: "13.2.4",
+	}}
+	return reg, dir, caller, stale
+}
+
+// A peer that meets the floor is left alone: no download, same version.
+func TestInstallDependenciesKeepsCurrentPeer(t *testing.T) {
+	reg := &fakeRegistry{latest: "13.9.0"}
+	useTestProviderPath(t, reg)
+
+	caller := &Provider{
+		Provider: &plugin.Provider{
+			Name: "os", ID: "go.mondoo.com/mql/providers/os",
+			Requires: []plugin.ProviderDep{
+				{ID: "go.mondoo.com/mql/providers/network", Name: "network", MinVersion: "13.4.0"},
+			},
+		},
+		Schema: &resources.Schema{
+			Dependencies: map[string]*resources.ProviderInfo{
+				"network": {Id: "go.mondoo.com/mql/providers/network", Name: "network"},
+			},
+		},
+	}
+	peer := &Provider{Provider: &plugin.Provider{
+		Name: "network", ID: "go.mondoo.com/mql/providers/network", Version: "13.4.0",
+	}}
+	existing := Providers{caller.ID: caller, peer.ID: peer}
+
+	require.NoError(t, installDependencies(caller, existing))
+	assert.Equal(t, 0, reg.downloads, "a peer at the floor is not downloaded")
+	assert.Equal(t, "13.4.0", existing.Lookup(ProviderLookup{ProviderName: "network"}).Version)
+}
+
+// When the registry's latest release is itself below the floor, downloading
+// it cannot help: the peer is left alone and the floor check reports the
+// mismatch as before.
+func TestInstallDependenciesSkipsPeerUpdateWhenLatestIsBelowFloor(t *testing.T) {
+	reg, _, caller, stale := outdatedPeerFixture(t)
+	reg.latest = "13.3.0"
+	existing := Providers{caller.ID: caller, stale.ID: stale}
+
+	err := installDependencies(caller, existing)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "requires network >= 13.4.0, but 13.2.4 is installed")
+	assert.Equal(t, 0, reg.downloads, "a release that cannot meet the floor is not downloaded")
+}
+
+// A builtin ships inside this executor, so an outdated one cannot be fixed by
+// downloading a provider. It is reported by the floor check, never installed.
+func TestInstallDependenciesNeverInstallsOutdatedBuiltin(t *testing.T) {
+	coreID := ""
+	for id := range builtinProviders {
+		if strings.HasSuffix(id, "/core") {
+			coreID = id
+			break
+		}
+	}
+	require.NotEmpty(t, coreID, "core must be registered as a builtin")
+
+	reg := &fakeRegistry{latest: "14.0.0"}
+	useTestProviderPath(t, reg)
+
+	caller := &Provider{
+		Provider: &plugin.Provider{
+			Name: "os", ID: "go.mondoo.com/mql/providers/os",
+			Requires: []plugin.ProviderDep{{ID: coreID, Name: "core", MinVersion: "14.0.0"}},
+		},
+		Schema: &resources.Schema{
+			Dependencies: map[string]*resources.ProviderInfo{"core": {Id: coreID, Name: "core"}},
+		},
+	}
+	core := &Provider{Provider: &plugin.Provider{Name: "core", ID: coreID, Version: "13.0.0"}}
+	existing := Providers{caller.ID: caller, core.ID: core}
+
+	err := installDependencies(caller, existing)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "requires core >= 14.0.0")
+	assert.Equal(t, 0, reg.downloads, "a builtin is never downloaded")
+}
+
+func TestPeerBelowFloor(t *testing.T) {
+	tests := []struct {
+		name      string
+		installed string
+		floor     string
+		below     bool
+	}{
+		{"below", "13.2.4", "13.4.0", true},
+		{"at the floor", "13.4.0", "13.4.0", false},
+		{"above", "14.0.6", "13.4.0", false},
+		{"no floor is no constraint", "0.0.1", "", false},
+		{"unknown installed version is not a mismatch", "", "13.4.0", false},
+		{"unparseable installed version is not a mismatch", "unstable", "13.4.0", false},
+		{"unparseable floor is not a mismatch", "1.0.0", "latest", false},
+		{"build metadata orders equal to the release", "v13.4.0+rolling", "13.4.0", false},
+		{"pre-release orders behind its own release", "14.0.0-rc.1", "14.0.0", true},
+		{"pre-release of a newer major clears an older floor", "14.0.0-rc.1", "13.4.0", false},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.below, peerBelowFloor(test.installed, test.floor))
+		})
+	}
+}
