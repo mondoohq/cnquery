@@ -23,6 +23,7 @@ func TestValidType(t *testing.T) {
 			purl.TypeApk, purl.TypeDebian, purl.TypeAlpm, purl.TypeRPM,
 			purl.Type_X_Platform, purl.TypeSnap, purl.TypeFlatpak, purl.TypeCos,
 			purl.TypeWindowsDriver, purl.TypeEbuild, purl.TypeNix, purl.TypeGithub,
+			purl.TypeBrew, purl.TypeChocolatey,
 		}
 
 		for _, validType := range validTypes {
