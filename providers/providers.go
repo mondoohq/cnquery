@@ -804,7 +804,7 @@ func updateOutdatedPeers(provider *Provider, existing Providers) (bool, error) {
 		// adding the new one beside it would leave two providers of this name
 		// in the list and a name lookup could still return the old one.
 		for key, p := range existing {
-			if p == peer {
+			if p.ID == peer.ID {
 				delete(existing, key)
 			}
 		}
