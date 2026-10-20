@@ -184,7 +184,38 @@ func TestCollapseThenIdentityKeepsDotNetPairsFolded(t *testing.T) {
 		require.Len(t, out, 1)
 		assert.Equal(t, "1E7D98FD-97A9-4EE3-B08E-F53E96DF3491", purlQualifier(t, out[0].PUrl, "product_code"))
 		assert.Equal(t, "msi", purlQualifier(t, out[0].PUrl, "installer"))
+		assert.Equal(t, normalizeGUID(vcBundleUpgradeCode), purlQualifier(t, out[0].PUrl, "bundle_upgrade_code"),
+			"the folded bundle entry stays visible on the surviving MSI row")
 	}
+}
+
+// An MSI with no bundle entry of its own (chained into another product's setup)
+// gets no bundle_upgrade_code, and neither does a bundle that stands alone.
+func TestBundleUpgradeCodeOnlyWhenABundleWasFolded(t *testing.T) {
+	pf := &inventory.Platform{Name: "windows", Arch: "x86_64", Family: []string{"windows"}}
+	msi := createPackage("Microsoft .NET Runtime - 8.0.21 (x64)", "8.0.21", "windows/app", "x86_64", "Microsoft Corporation", "", pf)
+	msi.installIdentity = newInstallIdentity(vcRuntimeProductKey, true, "", "")
+	bundle := createPackage("Microsoft Visual C++ 2022 Redistributable (x64) - 14.42.34438", "14.42.34438", "windows/app", "x86_64", "Microsoft Corporation", "", pf)
+	bundle.installIdentity = newInstallIdentity(vcBundleKey, false, vcBundleUpgradeCode, "")
+
+	w := &WinPkgManager{}
+	out := w.withInstallIdentity(collapsePackages([]Package{*msi, *bundle}))
+	require.Len(t, out, 2)
+	for _, p := range out {
+		assert.False(t, hasPurlQualifier(t, p.PUrl, "bundle_upgrade_code"), p.Name)
+	}
+	assert.Equal(t, "msi", purlQualifier(t, out[0].PUrl, "installer"))
+	assert.Equal(t, "burn", purlQualifier(t, out[1].PUrl, "installer"))
+}
+
+// Folding must not write through to the identity of a row it did not keep.
+func TestMergeInstallIdentityDoesNotMutateTheDroppedRow(t *testing.T) {
+	msiID := newInstallIdentity(vcRuntimeProductKey, true, "", "")
+	keep := Package{installIdentity: msiID}
+	dup := Package{installIdentity: newInstallIdentity(vcBundleKey, false, vcBundleUpgradeCode, "")}
+	mergeInstallIdentity(&keep, dup)
+	assert.Empty(t, msiID.foldedBundleUpgradeCode, "the original identity is copied, not changed")
+	assert.Equal(t, normalizeGUID(vcBundleUpgradeCode), normalizeGUID(keep.installIdentity.foldedBundleUpgradeCode))
 }
 
 func TestParseWindowsAppPackagesReadsIdentity(t *testing.T) {

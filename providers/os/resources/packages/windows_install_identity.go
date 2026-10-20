@@ -31,6 +31,14 @@ import (
 //	              Stays the same across every release of a product line; it is
 //	              the identifier Windows Installer itself uses to find the
 //	              product a newer release replaces.
+//	bundle_upgrade_code
+//	              The BundleUpgradeCode of a WiX Burn bundle whose own
+//	              Add/Remove Programs entry was folded into this MSI entry
+//	              because both describe one install (same name and version,
+//	              see collapsePackages). Only on msi entries. It tells an MSI
+//	              that a standalone bundle installed apart from the same MSI
+//	              chained into another product's setup, which has no bundle
+//	              entry of its own.
 //	app_id        Every other installer: the Uninstall key name the installer
 //	              chose (Inno Setup's AppId with its "_is1" suffix removed, the
 //	              key NSIS, install4j or a custom installer writes). Stable for
@@ -41,9 +49,10 @@ import (
 // The name stays the package name: qualifiers add identity, they do not
 // replace the DisplayName consumers already match on.
 const (
-	qualifierProductCode = "product_code"
-	qualifierUpgradeCode = "upgrade_code"
-	qualifierAppID       = "app_id"
+	qualifierProductCode       = "product_code"
+	qualifierUpgradeCode       = "upgrade_code"
+	qualifierBundleUpgradeCode = "bundle_upgrade_code"
+	qualifierAppID             = "app_id"
 )
 
 // The installer qualifier says which installer technology wrote the entry, so
@@ -119,6 +128,9 @@ type installIdentity struct {
 	// innoSetup records that uninstallKey ended in "_is1", the Inno Setup
 	// naming, before the suffix is stripped to form app_id.
 	innoSetup bool
+	// foldedBundleUpgradeCode is the BundleUpgradeCode of a Burn bundle entry
+	// collapsePackages folded into this MSI entry (mergeInstallIdentity).
+	foldedBundleUpgradeCode string
 	// uninstaller is the installer value the UninstallString identifies
 	// (installshield, squirrel or chromium), "" when it identifies none. The
 	// command line itself is not kept.
@@ -304,6 +316,9 @@ func (id *installIdentity) qualifiers(upgradeCodes map[string]string) map[string
 				q[qualifierUpgradeCode] = uc
 			}
 			q[qualifierInstaller] = installerMsi
+			if bundle := normalizeGUID(id.foldedBundleUpgradeCode); bundle != "" {
+				q[qualifierBundleUpgradeCode] = bundle
+			}
 			return q
 		}
 	}
@@ -488,7 +503,9 @@ func applyInstallIdentityQualifiers(pkgs []Package, upgradeCodes map[string]stri
 // when it folds a duplicate into it. The two rows of one .NET install are an
 // MSI entry and a Burn bundle entry; the MSI entry's identity (ProductCode plus
 // the product line's UpgradeCode) is the more precise one, so it wins whichever
-// row arrived first. Otherwise the survivor keeps its own.
+// row arrived first. Otherwise the survivor keeps its own. When an MSI entry
+// absorbs a Burn bundle entry, the bundle's upgrade code is kept on the MSI
+// identity (bundle_upgrade_code), so the bundle is not lost from the report.
 func mergeInstallIdentity(keep *Package, dup Package) {
 	if dup.installIdentity == nil {
 		return
@@ -496,9 +513,25 @@ func mergeInstallIdentity(keep *Package, dup Package) {
 	isMsi := func(id *installIdentity) bool {
 		return id != nil && id.windowsInstaller && normalizeGUID(id.uninstallKey) != ""
 	}
+	bundleCode := func(id *installIdentity) string {
+		if id == nil {
+			return ""
+		}
+		return normalizeGUID(id.bundleUpgradeCode)
+	}
+	folded := bundleCode(keep.installIdentity)
+	if folded == "" {
+		folded = bundleCode(dup.installIdentity)
+	}
 	if keep.installIdentity == nil || (!isMsi(keep.installIdentity) && isMsi(dup.installIdentity)) {
 		c := *dup.installIdentity
 		keep.installIdentity = &c
+	} else {
+		c := *keep.installIdentity
+		keep.installIdentity = &c
+	}
+	if folded != "" && isMsi(keep.installIdentity) && keep.installIdentity.foldedBundleUpgradeCode == "" {
+		keep.installIdentity.foldedBundleUpgradeCode = folded
 	}
 }
 
