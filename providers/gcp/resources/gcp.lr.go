@@ -7579,6 +7579,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.databaseEncryptionState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetDatabaseEncryptionState()).ToDataRes(types.String)
 	},
+	"gcp.project.gkeService.cluster.databaseEncryptionCurrentState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetDatabaseEncryptionCurrentState()).ToDataRes(types.String)
+	},
 	"gcp.project.gkeService.cluster.databaseEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetDatabaseEncryptionKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
@@ -26936,6 +26939,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.gkeService.cluster.databaseEncryptionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceCluster).DatabaseEncryptionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.databaseEncryptionCurrentState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).DatabaseEncryptionCurrentState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.databaseEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -61618,6 +61625,7 @@ type mqlGcpProjectGkeServiceCluster struct {
 	SatisfiesPzs                             plugin.TValue[bool]
 	DatabaseEncryption                       plugin.TValue[any]
 	DatabaseEncryptionState                  plugin.TValue[string]
+	DatabaseEncryptionCurrentState           plugin.TValue[string]
 	DatabaseEncryptionKey                    plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	ManagedBy                                plugin.TValue[string]
 	ShieldedNodesConfig                      plugin.TValue[any]
@@ -61939,6 +61947,10 @@ func (c *mqlGcpProjectGkeServiceCluster) GetDatabaseEncryption() *plugin.TValue[
 
 func (c *mqlGcpProjectGkeServiceCluster) GetDatabaseEncryptionState() *plugin.TValue[string] {
 	return &c.DatabaseEncryptionState
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetDatabaseEncryptionCurrentState() *plugin.TValue[string] {
+	return &c.DatabaseEncryptionCurrentState
 }
 
 func (c *mqlGcpProjectGkeServiceCluster) GetDatabaseEncryptionKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {

@@ -612,17 +612,8 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			}
 		}
 
-		var databaseEncryption map[string]any
-		var databaseEncryptionState string
-		var databaseEncryptionKeyName string
-		if c.DatabaseEncryption != nil {
-			databaseEncryptionState = c.DatabaseEncryption.State.String()
-			databaseEncryptionKeyName = c.DatabaseEncryption.KeyName
-			databaseEncryption = map[string]any{
-				"state":   databaseEncryptionState,
-				"keyName": databaseEncryptionKeyName,
-			}
-		}
+		dbEnc := newGkeDatabaseEncryption(c.DatabaseEncryption)
+		databaseEncryptionKeyName := dbEnc.keyName
 
 		var shieldedNodesConfig map[string]any
 		var shieldedNodesEnabled bool
@@ -870,8 +861,9 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"clientCertificateEnabled":                 llx.BoolData(clientCertificateEnabled),
 			"basicAuthEnabled":                         llx.BoolData(basicAuthEnabled),
 			"privateClusterConfig":                     llx.DictData(privateClusterCfg),
-			"databaseEncryption":                       llx.DictData(databaseEncryption),
-			"databaseEncryptionState":                  llx.StringData(databaseEncryptionState),
+			"databaseEncryption":                       llx.DictData(dbEnc.dict),
+			"databaseEncryptionState":                  llx.StringData(dbEnc.state),
+			"databaseEncryptionCurrentState":           llx.StringData(dbEnc.currentState),
 			"shieldedNodesConfig":                      llx.DictData(shieldedNodesConfig),
 			"shieldedNodesEnabled":                     llx.BoolData(shieldedNodesEnabled),
 			"costManagementConfig":                     llx.DictData(costManagementConfig),
@@ -1573,4 +1565,35 @@ func (g *mqlGcpProjectGkeServiceClusterNodeAutoprovisioningConfig) serviceAccoun
 		g.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
 	}
 	return sa, nil
+}
+
+// gkeDatabaseEncryption is the etcd (application-layer Secrets) encryption
+// configuration of a GKE cluster.
+type gkeDatabaseEncryption struct {
+	dict         map[string]any
+	state        string
+	currentState string
+	keyName      string
+}
+
+// newGkeDatabaseEncryption reads the etcd encryption configuration of a
+// cluster. `state` is the requested state, `currentState` the one GKE reports
+// as in effect. All fields are empty when the cluster reports none.
+func newGkeDatabaseEncryption(de *containerpb.DatabaseEncryption) gkeDatabaseEncryption {
+	if de == nil {
+		return gkeDatabaseEncryption{}
+	}
+	res := gkeDatabaseEncryption{
+		state:   de.State.String(),
+		keyName: de.KeyName,
+	}
+	if de.CurrentState != nil {
+		res.currentState = de.GetCurrentState().String()
+	}
+	res.dict = map[string]any{
+		"state":        res.state,
+		"keyName":      res.keyName,
+		"currentState": res.currentState,
+	}
+	return res
 }
