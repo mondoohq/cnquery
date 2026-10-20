@@ -15,7 +15,6 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/k8s/connection/shared"
-	"go.mondoo.com/mql/providers/k8s/connection/shared/distro"
 	"go.mondoo.com/mql/providers/k8s/connection/shared/resources"
 	"go.mondoo.com/mql/types"
 	"go.mondoo.com/mql/utils/stringx"
@@ -158,8 +157,9 @@ func addDistroMetadata(conn shared.Connection, in *inventory.Inventory) {
 		if a.Platform.Metadata == nil {
 			a.Platform.Metadata = map[string]string{}
 		}
-		a.Platform.Metadata[distro.MetadataDistribution] = d.Name
-		a.Platform.Metadata[distro.MetadataDistributionSource] = d.Source
+		for k, v := range d.PlatformMetadata() {
+			a.Platform.Metadata[k] = v
+		}
 	}
 }
 

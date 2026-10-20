@@ -263,10 +263,7 @@ func (c *Connection) Platform() *inventory.Platform {
 	v := c.ServerVersion()
 	d := c.Distro()
 	return &inventory.Platform{
-		Metadata: map[string]string{
-			distro.MetadataDistribution:       d.Name,
-			distro.MetadataDistributionSource: d.Source,
-		},
+		Metadata:              d.PlatformMetadata(),
 		Name:                  "k8s-cluster",
 		Build:                 v.BuildDate,
 		Version:               v.GitVersion,

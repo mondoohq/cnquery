@@ -5,9 +5,12 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -86,8 +89,93 @@ func TestListNodes(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, nodes, 1)
 	assert.Equal(t, "gce://p/us-central1-a/n1", nodes[0].ProviderID)
+	assert.Equal(t, "n1", nodes[0].Name)
 	d, _ := distro.FromNodes(nodes)
 	assert.Equal(t, distro.GKE, d)
+}
+
+// discoveryServer serves API discovery for the given group versions.
+func discoveryServer(t *testing.T, resources map[string][]string) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/api":
+			_ = json.NewEncoder(w).Encode(metav1.APIVersions{Versions: []string{"v1"}})
+			return
+		case "/apis":
+			groups := map[string]*metav1.APIGroup{}
+			var order []string
+			for gv := range resources {
+				group, version, _ := strings.Cut(gv, "/")
+				g, ok := groups[group]
+				if !ok {
+					g = &metav1.APIGroup{Name: group}
+					groups[group] = g
+					order = append(order, group)
+				}
+				g.Versions = append(g.Versions, metav1.GroupVersionForDiscovery{GroupVersion: gv, Version: version})
+			}
+			list := metav1.APIGroupList{}
+			for _, name := range order {
+				list.Groups = append(list.Groups, *groups[name])
+			}
+			_ = json.NewEncoder(w).Encode(list)
+			return
+		}
+		gv := strings.TrimPrefix(r.URL.Path, "/apis/")
+		names, ok := resources[gv]
+		if !ok {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		list := metav1.APIResourceList{GroupVersion: gv}
+		for _, n := range names {
+			list.APIResources = append(list.APIResources, metav1.APIResource{Name: n})
+		}
+		_ = json.NewEncoder(w).Encode(list)
+	}))
+}
+
+func TestAPIGroupResources(t *testing.T) {
+	// what a GKE Autopilot cluster serves in auto.gke.io
+	srv := discoveryServer(t, map[string][]string{
+		"auto.gke.io/v1":       {"allowlistedv2workloads", "allowlistedworkloads", "allowlistsynchronizers"},
+		"auto.gke.io/v1alpha1": {"workloadallowlists", "workloadallowlists/status"},
+		"apps/v1":              {"deployments"},
+	})
+	defer srv.Close()
+
+	names, err := apiGroupResources(&rest.Config{Host: srv.URL}, "auto.gke.io")
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []string{"allowlistedv2workloads", "allowlistedworkloads", "allowlistsynchronizers", "workloadallowlists"}, names)
+
+	names, err = apiGroupResources(&rest.Config{Host: srv.URL}, "eks.amazonaws.com")
+	require.NoError(t, err)
+	assert.Empty(t, names)
+}
+
+func TestGroupVersionResources(t *testing.T) {
+	list := func(gv string) (*metav1.APIResourceList, error) {
+		switch gv {
+		case "eks.amazonaws.com/v1":
+			return &metav1.APIResourceList{APIResources: []metav1.APIResource{{Name: "nodeclasses"}, {Name: "nodeclasses/status"}}}, nil
+		case "eks.amazonaws.com/v1beta1":
+			return &metav1.APIResourceList{APIResources: []metav1.APIResource{{Name: "nodeclasses"}, {Name: "nodediagnostics"}}}, nil
+		}
+		return nil, errors.New("unavailable")
+	}
+
+	names, err := groupVersionResources([]string{"eks.amazonaws.com/v1", "eks.amazonaws.com/v1beta1", "eks.amazonaws.com/v2"}, list)
+	require.NoError(t, err, "a version that can't be read is skipped")
+	assert.Equal(t, []string{"nodeclasses", "nodediagnostics"}, names)
+
+	_, err = groupVersionResources([]string{"eks.amazonaws.com/v2"}, list)
+	assert.Error(t, err, "no version could be read")
+
+	names, err = groupVersionResources(nil, list)
+	require.NoError(t, err)
+	assert.Empty(t, names)
 }
 
 func metadataServer(t *testing.T, routes map[string]string, header [2]string) *httptest.Server {

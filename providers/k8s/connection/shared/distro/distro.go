@@ -45,12 +45,25 @@ const (
 	ProbeAuth        = "auth"
 	ProbeMetadata    = "metadata"
 	ProbeKubeconfig  = "kubeconfig"
+	// ProbeManagedMode records what decided the managed mode. It never
+	// decides the distribution.
+	ProbeManagedMode = "managedMode"
+)
+
+// Managed modes, in which the cloud provider operates the nodes.
+const (
+	// ModeGKEAutopilot is a GKE Autopilot cluster.
+	ModeGKEAutopilot = "autopilot"
+	// ModeEKSAutoMode is an EKS cluster with EKS Auto Mode enabled.
+	ModeEKSAutoMode = "auto-mode"
 )
 
 // Platform metadata keys under which the cluster asset records the result.
 const (
 	MetadataDistribution       = "k8s.mondoo.com/distribution"
 	MetadataDistributionSource = "k8s.mondoo.com/distribution-source"
+	// MetadataManagedMode is set only when a managed mode was detected.
+	MetadataManagedMode = "k8s.mondoo.com/managed-mode"
 )
 
 // Evidence is what one probe saw.
@@ -80,9 +93,12 @@ type Identity struct {
 
 // Result is the detected distribution.
 type Result struct {
-	Name     string
-	Source   string
-	Identity Identity
+	Name   string
+	Source string
+	// ManagedMode is ModeGKEAutopilot or ModeEKSAutoMode when the cluster
+	// runs in that mode, empty when no signal showed one.
+	ManagedMode string
+	Identity    Identity
 	// Evidence holds one entry per probe that ran, keyed by probe name.
 	Evidence map[string]Evidence
 }
@@ -99,8 +115,26 @@ func (r *Result) AssetAnnotations() map[string]string {
 	return map[string]string{inventory.AnnotationAwsAccountId: r.Identity.Account}
 }
 
+// PlatformMetadata returns the platform metadata the result puts on the
+// cluster asset and the assets discovered in it. The managed mode is only
+// included when one was detected.
+func (r *Result) PlatformMetadata() map[string]string {
+	if r == nil {
+		return map[string]string{}
+	}
+	res := map[string]string{
+		MetadataDistribution:       r.Name,
+		MetadataDistributionSource: r.Source,
+	}
+	if r.ManagedMode != "" {
+		res[MetadataManagedMode] = r.ManagedMode
+	}
+	return res
+}
+
 // Node is the part of a node the nodes probe reads.
 type Node struct {
+	Name       string
 	ProviderID string
 	Labels     map[string]string
 }
@@ -141,6 +175,10 @@ type Probes struct {
 	APIGroups func(ctx context.Context) ([]string, error)
 	// Nodes returns a few of the cluster's nodes.
 	Nodes func(ctx context.Context) ([]Node, error)
+	// GroupResources returns the resource names (plural, without
+	// subresources) the server serves in one API group, across its versions.
+	// It is only asked for groups that APIGroups returned.
+	GroupResources func(ctx context.Context, group string) ([]string, error)
 	// Metadata asks the cloud metadata service. It is only set for in-cluster
 	// connections and only runs when no other probe decided.
 	Metadata func(ctx context.Context) (*MetadataResult, error)
@@ -364,8 +402,10 @@ func Detect(ctx context.Context, p Probes) *Result {
 		decide(ProbeHost, Evidence{Value: h, Distro: FromHostname(h)})
 	}
 
+	var groups []string
 	if p.APIGroups != nil {
-		groups, err := p.APIGroups(ctx)
+		var err error
+		groups, err = p.APIGroups(ctx)
 		ev := Evidence{}
 		if err != nil {
 			ev.Error = err.Error()
@@ -421,5 +461,87 @@ func Detect(ctx context.Context, p Probes) *Result {
 	}
 
 	res.Identity = identify(res.Name, p.Host, certName, p.Kubeconfig, nodes, md)
+
+	groupResources := func(group string) ([]string, error) {
+		if p.GroupResources == nil || !contains(groups, group) {
+			return nil, nil
+		}
+		return p.GroupResources(ctx, group)
+	}
+	if mode, ev := managedMode(res.Name, groupResources, nodes); ev != nil {
+		res.ManagedMode = mode
+		res.Evidence[ProbeManagedMode] = *ev
+	}
 	return res
+}
+
+// API resources that only a managed mode's control plane serves.
+var managedModeResources = []struct {
+	distro   string
+	group    string
+	resource string
+	mode     string
+}{
+	// AllowlistedWorkload, the Autopilot allowlist for privileged partner
+	// workloads. Standard clusters serve auto.gke.io too, but not this type.
+	{GKE, "auto.gke.io", "allowlistedworkloads", ModeGKEAutopilot},
+	// NodeClass of EKS Auto Mode, referenced by its NodePools.
+	{EKS, "eks.amazonaws.com", "nodeclasses", ModeEKSAutoMode},
+}
+
+// managedMode detects whether a GKE or EKS cluster runs in its managed mode
+// (GKE Autopilot, EKS Auto Mode). It first asks API discovery, which needs no
+// permission, then the nodes. It returns the mode and the evidence for it, or
+// no evidence when no signal was seen.
+func managedMode(name string, groupResources func(group string) ([]string, error), nodes []Node) (string, *Evidence) {
+	var errs []string
+	for _, r := range managedModeResources {
+		if r.distro != name {
+			continue
+		}
+		resources, err := groupResources(r.group)
+		if err != nil {
+			errs = append(errs, err.Error())
+			continue
+		}
+		if contains(resources, r.resource) {
+			return r.mode, &Evidence{Distro: name, Value: r.resource + "." + r.group}
+		}
+	}
+
+	if mode, value := ManagedModeFromNodes(name, nodes); mode != "" {
+		return mode, &Evidence{Distro: name, Value: value}
+	}
+	if len(errs) > 0 {
+		return "", &Evidence{Error: strings.Join(errs, "; ")}
+	}
+	return "", nil
+}
+
+// ManagedModeFromNodes detects the managed mode of a GKE or EKS cluster from
+// its nodes. EKS labels the nodes it runs in Auto Mode with
+// eks.amazonaws.com/compute-type=auto, so one such node is enough. GKE names
+// the nodes Autopilot manages gk3-*; a Standard cluster can run some
+// Autopilot nodes for workloads that ask for an Autopilot compute class, so
+// every node has to be one.
+func ManagedModeFromNodes(name string, nodes []Node) (string, string) {
+	if len(nodes) == 0 {
+		return "", ""
+	}
+	switch name {
+	case EKS:
+		for _, n := range nodes {
+			if n.Labels["eks.amazonaws.com/compute-type"] == "auto" {
+				return ModeEKSAutoMode, "eks.amazonaws.com/compute-type=auto"
+			}
+		}
+	case GKE:
+		for _, n := range nodes {
+			if !strings.HasPrefix(n.Name, "gk3-") {
+				return "", ""
+			}
+		}
+		return ModeGKEAutopilot, "node name prefix gk3-"
+	}
+	return "", ""
 }

@@ -169,6 +169,19 @@ k8s.distro @defaults("name source") {
   // One of version, certificate, host, apiGroups, nodes, auth, or metadata.
   // Empty when the name is unknown.
   source() string
+  // Managed mode the cloud provider runs the cluster in
+  //
+  // autopilot for a GKE Autopilot cluster, auto-mode for an EKS cluster with
+  // EKS Auto Mode enabled. Empty for a standard cluster, and when no signal
+  // showed a managed mode. GKE Autopilot is detected from the
+  // allowlistedworkloads.auto.gke.io API resource, or from all listed nodes
+  // being named gk3-*; EKS Auto Mode from the nodeclasses.eks.amazonaws.com
+  // API resource, or from a node labeled eks.amazonaws.com/compute-type=auto.
+  // AKS Automatic shows no such signal in the Kubernetes API; the Azure API
+  // reports it as the managed cluster's SKU name. evidence.managedMode says
+  // what decided. The asset carries the same value as the platform
+  // metadata k8s.mondoo.com/managed-mode.
+  managedMode() string
   // Cluster name in its cloud, empty when unknown
   clusterName() string
   // Cloud region of the cluster, or the GKE cluster's location, empty when unknown
