@@ -77,6 +77,9 @@ const (
 	ResourceAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup                            string = "azure.subscription.networkService.firewallPolicy.ruleCollectionGroup"
 	ResourceAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule                                 string = "azure.subscription.networkService.firewallPolicy.idpsBypassRule"
 	ResourceAzureSubscriptionNetworkServiceDdosProtectionPlan                                           string = "azure.subscription.networkService.ddosProtectionPlan"
+	ResourceAzureSubscriptionNetworkServiceDdosCustomPolicy                                             string = "azure.subscription.networkService.ddosCustomPolicy"
+	ResourceAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule                               string = "azure.subscription.networkService.ddosCustomPolicy.mitigationRule"
+	ResourceAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride                         string = "azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride"
 	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicy                                        string = "azure.subscription.networkService.serviceEndpointPolicy"
 	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition                              string = "azure.subscription.networkService.serviceEndpointPolicy.definition"
 	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig                                string = "azure.subscription.networkService.virtualNetworkGateway.ipConfig"
@@ -869,6 +872,18 @@ func init() {
 		"azure.subscription.networkService.ddosProtectionPlan": {
 			Init:   initAzureSubscriptionNetworkServiceDdosProtectionPlan,
 			Create: createAzureSubscriptionNetworkServiceDdosProtectionPlan,
+		},
+		"azure.subscription.networkService.ddosCustomPolicy": {
+			Init:   initAzureSubscriptionNetworkServiceDdosCustomPolicy,
+			Create: createAzureSubscriptionNetworkServiceDdosCustomPolicy,
+		},
+		"azure.subscription.networkService.ddosCustomPolicy.mitigationRule": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule,
+		},
+		"azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride,
 		},
 		"azure.subscription.networkService.serviceEndpointPolicy": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceServiceEndpointPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5399,6 +5414,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.ddosProtectionPlans": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkService).GetDdosProtectionPlans()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.ddosProtectionPlan")))
 	},
+	"azure.subscription.networkService.ddosCustomPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkService).GetDdosCustomPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.ddosCustomPolicy")))
+	},
 	"azure.subscription.networkService.serviceEndpointPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkService).GetServiceEndpointPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.serviceEndpointPolicy")))
 	},
@@ -6142,6 +6160,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.ddosProtectionPlan.publicIpAddresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).GetPublicIpAddresses()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.ipAddress")))
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.resourceGuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).GetResourceGuid()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).GetMitigationRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.ddosCustomPolicy.mitigationRule")))
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.publicIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).GetPublicIpAddresses()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.ipAddress")))
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.trafficScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).GetTrafficScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.tcpPerSourceConnectionsPerSecond": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).GetTcpPerSourceConnectionsPerSecond()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.tcpPerSourcePacketsPerSecond": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).GetTcpPerSourcePacketsPerSecond()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.udpPerSourcePacketsPerSecond": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).GetUdpPerSourcePacketsPerSecond()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.sourcePolicyOverrides": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).GetSourcePolicyOverrides()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride")))
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride).GetAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride.ipPrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride).GetIpPrefixes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride.continents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride).GetContinents()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride.countryCodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride).GetCountryCodes()).ToDataRes(types.Array(types.String))
 	},
 	"azure.subscription.networkService.serviceEndpointPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).GetId()).ToDataRes(types.String)
@@ -6893,6 +6980,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.frontendIpConfig.ddosCustomPolicyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).GetDdosCustomPolicyId()).ToDataRes(types.String)
 	},
+	"azure.subscription.networkService.frontendIpConfig.ddosCustomPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).GetDdosCustomPolicy()).ToDataRes(types.Resource("azure.subscription.networkService.ddosCustomPolicy"))
+	},
 	"azure.subscription.networkService.frontendIpConfig.enableConnectionTracking": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).GetEnableConnectionTracking()).ToDataRes(types.Bool)
 	},
@@ -7210,6 +7300,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.ipAddress.ddosProtectionMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceIpAddress).GetDdosProtectionMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ipAddress.ddosCustomPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpAddress).GetDdosCustomPolicy()).ToDataRes(types.Resource("azure.subscription.networkService.ddosCustomPolicy"))
 	},
 	"azure.subscription.networkService.ipAddress.associatedResourceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceIpAddress).GetAssociatedResourceId()).ToDataRes(types.String)
@@ -27947,6 +28040,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkService).DdosProtectionPlans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.ddosCustomPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkService).DdosCustomPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.serviceEndpointPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkService).ServiceEndpointPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -29013,6 +29110,110 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.ddosProtectionPlan.publicIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).PublicIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.resourceGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).ResourceGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).MitigationRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.publicIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy).PublicIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.trafficScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).TrafficScope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.tcpPerSourceConnectionsPerSecond": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).TcpPerSourceConnectionsPerSecond, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.tcpPerSourcePacketsPerSecond": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).TcpPerSourcePacketsPerSecond, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.udpPerSourcePacketsPerSecond": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).UdpPerSourcePacketsPerSecond, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.mitigationRule.sourcePolicyOverrides": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule).SourcePolicyOverrides, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride.ipPrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride).IpPrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride.continents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride).Continents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride.countryCodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride).CountryCodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.serviceEndpointPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30103,6 +30304,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).DdosCustomPolicyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.frontendIpConfig.ddosCustomPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).DdosCustomPolicy, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.frontendIpConfig.enableConnectionTracking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).EnableConnectionTracking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -30553,6 +30758,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.ipAddress.ddosProtectionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceIpAddress).DdosProtectionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipAddress.ddosCustomPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpAddress).DdosCustomPolicy, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.ipAddress.associatedResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -63133,6 +63342,7 @@ type mqlAzureSubscriptionNetworkService struct {
 	PrivateLinkServices         plugin.TValue[[]any]
 	RouteTables                 plugin.TValue[[]any]
 	DdosProtectionPlans         plugin.TValue[[]any]
+	DdosCustomPolicies          plugin.TValue[[]any]
 	ServiceEndpointPolicies     plugin.TValue[[]any]
 	TrafficManagerProfiles      plugin.TValue[[]any]
 	VirtualWans                 plugin.TValue[[]any]
@@ -63499,6 +63709,22 @@ func (c *mqlAzureSubscriptionNetworkService) GetDdosProtectionPlans() *plugin.TV
 		}
 
 		return c.ddosProtectionPlans()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkService) GetDdosCustomPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DdosCustomPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService", c.__id, "ddosCustomPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ddosCustomPolicies()
 	})
 }
 
@@ -66282,6 +66508,279 @@ func (c *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) GetPublicIpAddres
 	})
 }
 
+// mqlAzureSubscriptionNetworkServiceDdosCustomPolicy for the azure.subscription.networkService.ddosCustomPolicy resource
+type mqlAzureSubscriptionNetworkServiceDdosCustomPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceDdosCustomPolicyInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Location          plugin.TValue[string]
+	Tags              plugin.TValue[map[string]any]
+	Type              plugin.TValue[string]
+	Etag              plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+	ResourceGuid      plugin.TValue[string]
+	MitigationRules   plugin.TValue[[]any]
+	PublicIpAddresses plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceDdosCustomPolicy creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceDdosCustomPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceDdosCustomPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.ddosCustomPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicy) MqlName() string {
+	return "azure.subscription.networkService.ddosCustomPolicy"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicy) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicy) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicy) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicy) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicy) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicy) GetResourceGuid() *plugin.TValue[string] {
+	return &c.ResourceGuid
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicy) GetMitigationRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MitigationRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.ddosCustomPolicy", c.__id, "mitigationRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mitigationRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicy) GetPublicIpAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PublicIpAddresses, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.ddosCustomPolicy", c.__id, "publicIpAddresses")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.publicIpAddresses()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule for the azure.subscription.networkService.ddosCustomPolicy.mitigationRule resource
+type mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRuleInternal
+	Id                               plugin.TValue[string]
+	Name                             plugin.TValue[string]
+	Etag                             plugin.TValue[string]
+	TrafficScope                     plugin.TValue[string]
+	ProvisioningState                plugin.TValue[string]
+	TcpPerSourceConnectionsPerSecond plugin.TValue[int64]
+	TcpPerSourcePacketsPerSecond     plugin.TValue[int64]
+	UdpPerSourcePacketsPerSecond     plugin.TValue[int64]
+	SourcePolicyOverrides            plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.ddosCustomPolicy.mitigationRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule) MqlName() string {
+	return "azure.subscription.networkService.ddosCustomPolicy.mitigationRule"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule) GetTrafficScope() *plugin.TValue[string] {
+	return &c.TrafficScope
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule) GetTcpPerSourceConnectionsPerSecond() *plugin.TValue[int64] {
+	return &c.TcpPerSourceConnectionsPerSecond
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule) GetTcpPerSourcePacketsPerSecond() *plugin.TValue[int64] {
+	return &c.TcpPerSourcePacketsPerSecond
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule) GetUdpPerSourcePacketsPerSecond() *plugin.TValue[int64] {
+	return &c.UdpPerSourcePacketsPerSecond
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicyMitigationRule) GetSourcePolicyOverrides() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SourcePolicyOverrides, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.ddosCustomPolicy.mitigationRule", c.__id, "sourcePolicyOverrides")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sourcePolicyOverrides()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride for the azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride resource
+type mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverrideInternal it will be used here
+	Action       plugin.TValue[string]
+	IpPrefixes   plugin.TValue[[]any]
+	Continents   plugin.TValue[[]any]
+	CountryCodes plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride) MqlName() string {
+	return "azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride) GetIpPrefixes() *plugin.TValue[[]any] {
+	return &c.IpPrefixes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride) GetContinents() *plugin.TValue[[]any] {
+	return &c.Continents
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosCustomPolicySourcePolicyOverride) GetCountryCodes() *plugin.TValue[[]any] {
+	return &c.CountryCodes
+}
+
 // mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy for the azure.subscription.networkService.serviceEndpointPolicy resource
 type mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy struct {
 	MqlRuntime *plugin.Runtime
@@ -68827,6 +69326,7 @@ type mqlAzureSubscriptionNetworkServiceFrontendIpConfig struct {
 	Subnet                   plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
 	PrivateIpAddress         plugin.TValue[string]
 	DdosCustomPolicyId       plugin.TValue[string]
+	DdosCustomPolicy         plugin.TValue[*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy]
 	EnableConnectionTracking plugin.TValue[bool]
 }
 
@@ -68933,6 +69433,22 @@ func (c *mqlAzureSubscriptionNetworkServiceFrontendIpConfig) GetPrivateIpAddress
 
 func (c *mqlAzureSubscriptionNetworkServiceFrontendIpConfig) GetDdosCustomPolicyId() *plugin.TValue[string] {
 	return &c.DdosCustomPolicyId
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFrontendIpConfig) GetDdosCustomPolicy() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy](&c.DdosCustomPolicy, func() (*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.frontendIpConfig", c.__id, "ddosCustomPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy), nil
+			}
+		}
+
+		return c.ddosCustomPolicy()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceFrontendIpConfig) GetEnableConnectionTracking() *plugin.TValue[bool] {
@@ -69893,6 +70409,7 @@ type mqlAzureSubscriptionNetworkServiceIpAddress struct {
 	IpVersion            plugin.TValue[string]
 	Zones                plugin.TValue[[]any]
 	DdosProtectionMode   plugin.TValue[string]
+	DdosCustomPolicy     plugin.TValue[*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy]
 	AssociatedResourceId plugin.TValue[string]
 	PublicIpPrefix       plugin.TValue[*mqlAzureSubscriptionNetworkServicePublicIpPrefix]
 	SkuName              plugin.TValue[string]
@@ -69978,6 +70495,22 @@ func (c *mqlAzureSubscriptionNetworkServiceIpAddress) GetZones() *plugin.TValue[
 
 func (c *mqlAzureSubscriptionNetworkServiceIpAddress) GetDdosProtectionMode() *plugin.TValue[string] {
 	return &c.DdosProtectionMode
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpAddress) GetDdosCustomPolicy() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy](&c.DdosCustomPolicy, func() (*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.ipAddress", c.__id, "ddosCustomPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceDdosCustomPolicy), nil
+			}
+		}
+
+		return c.ddosCustomPolicy()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceIpAddress) GetAssociatedResourceId() *plugin.TValue[string] {

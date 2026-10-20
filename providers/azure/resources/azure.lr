@@ -2450,6 +2450,8 @@ private azure.subscription.networkService {
   routeTables() []azure.subscription.networkService.routeTable
   // List of DDoS protection plans
   ddosProtectionPlans() []azure.subscription.networkService.ddosProtectionPlan
+  // List of DDoS custom policies
+  ddosCustomPolicies() []azure.subscription.networkService.ddosCustomPolicy
   // List of service endpoint policies
   serviceEndpointPolicies() []azure.subscription.networkService.serviceEndpointPolicy
   // List of Traffic Manager profiles
@@ -3166,6 +3168,84 @@ azure.subscription.networkService.ddosProtectionPlan @defaults("name location") 
   virtualNetworks() []azure.subscription.networkService.virtualNetwork
   // Associated public IP addresses
   publicIpAddresses() []azure.subscription.networkService.ipAddress
+}
+
+// Azure DDoS custom policy
+//
+// DDoS custom policy that tunes how Azure DDoS Protection mitigates traffic
+// to the public IP addresses and load balancer frontends bound to it. Each
+// entry in mitigationRules covers one protocol (TCP or UDP) with per-source
+// rate limits and source policy overrides that permit or deny traffic by IP
+// prefix, continent, or country. A Permit override exempts matching sources
+// from mitigation, so a broad prefix or a whole continent in one is the
+// finding to look for. publicIpAddresses lists the addresses that use the
+// policy.
+azure.subscription.networkService.ddosCustomPolicy @defaults("name location") {
+  // DDoS custom policy ID
+  id string
+  // DDoS custom policy name
+  name string
+  // DDoS custom policy location
+  location string
+  // DDoS custom policy tags
+  tags map[string]string
+  // DDoS custom policy type
+  type string
+  // DDoS custom policy etag
+  etag string
+  // Provisioning state ("Succeeded", "Updating", "Deleting", or "Failed")
+  provisioningState string
+  // Resource GUID, stable across renames and subscription moves
+  resourceGuid string
+  // Mitigation rules, at most one per protocol
+  mitigationRules() []azure.subscription.networkService.ddosCustomPolicy.mitigationRule
+  // Public IP addresses that use this policy
+  publicIpAddresses() []azure.subscription.networkService.ipAddress
+}
+
+// Azure DDoS custom policy mitigation rule
+//
+// Default per-source rate limits for one protocol, set by trafficScope, and
+// the source policy overrides that take precedence over them. The TCP limits
+// are set only on a TCP rule and the UDP limit only on a UDP rule; the others
+// read null.
+private azure.subscription.networkService.ddosCustomPolicy.mitigationRule @defaults("name trafficScope") {
+  // Mitigation rule ID
+  id string
+  // Mitigation rule name
+  name string
+  // Mitigation rule etag
+  etag string
+  // Protocol the rule applies to ("Tcp" or "Udp")
+  trafficScope string
+  // Provisioning state ("Succeeded", "Updating", "Deleting", or "Failed")
+  provisioningState string
+  // Maximum new TCP connections per second from a single source IP
+  tcpPerSourceConnectionsPerSecond int
+  // Maximum TCP packets per second from a single source IP
+  tcpPerSourcePacketsPerSecond int
+  // Maximum UDP packets per second from a single source IP
+  udpPerSourcePacketsPerSecond int
+  // Source policy overrides, at most one Permit and one Deny
+  sourcePolicyOverrides() []azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride
+}
+
+// Azure DDoS custom policy source policy override
+//
+// Action applied to traffic from matching sources instead of the rule's
+// default mitigations. A source matches when it falls in any of ipPrefixes or
+// is located in any of continents or countryCodes. `action == "Permit"` with
+// a wide prefix such as `0.0.0.0/0` or any continent exempts that traffic
+// from mitigation.
+private azure.subscription.networkService.ddosCustomPolicy.sourcePolicyOverride @defaults("action") {
+  // Action for matching traffic ("Permit" or "Deny")
+  action string
+  // IPv4 or IPv6 CIDR prefixes matched by the override
+  ipPrefixes []string
+  // Continents matched by the override ("Africa", "Antarctica", "Asia", "Europe", "NorthAmerica", "Oceania", or "SouthAmerica")
+  continents []string
+  // Uppercase ISO 3166-1 alpha-2 country or territory codes matched by the override
+  countryCodes []string
 }
 
 // Azure service endpoint policy
@@ -3944,8 +4024,12 @@ private azure.subscription.networkService.frontendIpConfig @defaults("id name") 
   subnet() azure.subscription.networkService.subnet
   // Private IP address (empty if public)
   privateIpAddress string
-  // Resource ID of the DDoS custom policy bound to this frontend IP configuration (empty when none)
-  ddosCustomPolicyId string
+  // Resource ID of the DDoS custom policy bound to this frontend IP configuration
+  //
+  // Deprecated in favor of ddosCustomPolicy.
+  ddosCustomPolicyId @maturity("deprecated") string
+  // DDoS custom policy bound to this frontend IP configuration; null when none is bound
+  ddosCustomPolicy() azure.subscription.networkService.ddosCustomPolicy
   // Whether connection tracking is enabled on this frontend
   //
   // Connection tracking keeps per-flow state so that return traffic is
@@ -4303,6 +4387,8 @@ private azure.subscription.networkService.ipAddress @defaults("name location ipA
   zones []string
   // DDoS protection mode ("VirtualNetworkInherited", "Enabled", "Disabled")
   ddosProtectionMode string
+  // DDoS custom policy bound to this public IP address; null when none is bound
+  ddosCustomPolicy() azure.subscription.networkService.ddosCustomPolicy
   // ARM ID of the IP configuration this public IP is attached to
   //
   // Identifies the NIC, load balancer frontend, NAT gateway, Bastion,
