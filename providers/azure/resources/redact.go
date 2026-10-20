@@ -5,6 +5,7 @@ package resources
 
 import (
 	"net/url"
+	"regexp"
 	"strings"
 
 	"go.mondoo.com/mql/llx"
@@ -37,6 +38,23 @@ func stripURLCredentials(raw string) (string, bool) {
 	u.Fragment = ""
 	u.RawFragment = ""
 	return u.String(), hadQuery
+}
+
+// urlInText matches a URL with a scheme inside free text, up to the first
+// whitespace, quote or angle bracket.
+var urlInText = regexp.MustCompile(`[A-Za-z][A-Za-z0-9+.-]*://[^\s"'<>]+`)
+
+// stripURLCredentialsInText applies stripURLCredentials to every URL found in
+// free text, such as an error message a service echoes back, so credentials
+// embedded in a URL it quotes do not leak through the message.
+func stripURLCredentialsInText(text string) string {
+	if !strings.Contains(text, "://") {
+		return text
+	}
+	return urlInText.ReplaceAllStringFunc(text, func(u string) string {
+		clean, _ := stripURLCredentials(u)
+		return clean
+	})
 }
 
 // urlHasSASToken reports whether a URL carries an Azure shared access

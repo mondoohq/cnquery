@@ -127,7 +127,9 @@ func (a *mqlAzureSubscriptionStorageServiceAccountContainer) id() (string, error
 }
 
 type mqlAzureSubscriptionStorageServiceAccountContainerInternal struct {
-	cacheSystemData any
+	cacheSystemData              any
+	cacheBlobAccessPointName     string
+	cacheBlobAccessPointUniqueID string
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccountContainer) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
@@ -410,7 +412,12 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 			if err != nil {
 				return nil, err
 			}
-			mqlAzure.(*mqlAzureSubscriptionStorageServiceAccountContainer).cacheSystemData = sysData
+			mqlContainer := mqlAzure.(*mqlAzureSubscriptionStorageServiceAccountContainer)
+			mqlContainer.cacheSystemData = sysData
+			if containerProps != nil && containerProps.BlobAccessPointConfiguration != nil {
+				mqlContainer.cacheBlobAccessPointName = convert.ToValue(containerProps.BlobAccessPointConfiguration.BlobAccessPointConfigurationName)
+				mqlContainer.cacheBlobAccessPointUniqueID = convert.ToValue(containerProps.BlobAccessPointConfiguration.BlobAccessPointConfigurationUniqueID)
+			}
 			res = append(res, mqlAzure)
 		}
 	}
