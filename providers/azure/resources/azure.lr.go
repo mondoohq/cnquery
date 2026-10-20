@@ -15831,6 +15831,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.aksService.cluster.skuTier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetSkuTier()).ToDataRes(types.String)
 	},
+	"azure.subscription.aksService.cluster.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetSkuName()).ToDataRes(types.String)
+	},
 	"azure.subscription.aksService.cluster.azureKeyVaultKmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetAzureKeyVaultKmsKey()).ToDataRes(types.Resource("azure.subscription.keyVaultService.key"))
 	},
@@ -42772,6 +42775,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.aksService.cluster.skuTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAksServiceCluster).SkuTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.aksService.cluster.azureKeyVaultKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -99049,6 +99056,7 @@ type mqlAzureSubscriptionAksServiceCluster struct {
 	DisableLocalAccounts               plugin.TValue[bool]
 	PublicNetworkAccess                plugin.TValue[string]
 	SkuTier                            plugin.TValue[string]
+	SkuName                            plugin.TValue[string]
 	AzureKeyVaultKmsKey                plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
 	NetworkPlugin                      plugin.TValue[string]
 	NetworkPolicy                      plugin.TValue[string]
@@ -99291,6 +99299,10 @@ func (c *mqlAzureSubscriptionAksServiceCluster) GetPublicNetworkAccess() *plugin
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetSkuTier() *plugin.TValue[string] {
 	return &c.SkuTier
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
 }
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetAzureKeyVaultKmsKey() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey] {
