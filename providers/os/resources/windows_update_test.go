@@ -171,3 +171,28 @@ func TestCBSEntryArgs(t *testing.T) {
 	assert.Equal(t, "", args["classification"].Value)
 	assert.Nil(t, args["date"].Value)
 }
+
+func TestWUResultTimes(t *testing.T) {
+	comDetect := time.Date(2026, 10, 19, 6, 25, 42, 0, time.UTC)
+	comInstall := time.Date(2026, 10, 19, 6, 25, 56, 0, time.UTC)
+	regDetect := time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC)
+	regInstall := time.Date(2025, 3, 2, 0, 0, 0, 0, time.UTC)
+
+	t.Run("agent answered", func(t *testing.T) {
+		d, i := wuResultTimes(&windows.WUAResults{LastSearchSuccess: &comDetect, LastInstallationSuccess: &comInstall}, &regDetect, &regInstall)
+		assert.Equal(t, &comDetect, d)
+		assert.Equal(t, &comInstall, i)
+	})
+
+	t.Run("agent reports never, stale registry value is not used", func(t *testing.T) {
+		d, i := wuResultTimes(&windows.WUAResults{LastInstallationSuccess: &comInstall}, &regDetect, &regInstall)
+		assert.Nil(t, d)
+		assert.Equal(t, &comInstall, i)
+	})
+
+	t.Run("agent unavailable, registry fallback", func(t *testing.T) {
+		d, i := wuResultTimes(nil, &regDetect, &regInstall)
+		assert.Equal(t, &regDetect, d)
+		assert.Equal(t, &regInstall, i)
+	})
+}

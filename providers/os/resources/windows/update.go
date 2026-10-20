@@ -4,10 +4,13 @@
 package windows
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"regexp"
 	"strings"
+	"time"
 
 	"go.mondoo.com/mql/providers/os/resources/powershell"
 )
@@ -317,4 +320,85 @@ func titleProduct(title string) string {
 		rest = product
 	}
 	return strings.TrimSpace(rest)
+}
+
+// wuaResultsTimeFormat is the layout WINDOWS_QUERY_WUA_RESULTS formats dates
+// with and ParseWUAResults reads them back in. The value is UTC.
+const wuaResultsTimeFormat = "2006-01-02 15:04:05"
+
+// WINDOWS_QUERY_WUA_RESULTS reads IAutomaticUpdatesResults from the Windows
+// Update Agent (Microsoft.Update.AutoUpdate). Both dates are documented as UTC,
+// but the COM DateTime can come back with Kind=Unspecified, so no
+// ToUniversalTime/ToLocalTime call is made: converting would shift the value by
+// the host's offset. The date is formatted as it is. A value of $null or a
+// "never" sentinel (DateTime.MinValue, 1601, the 1899-12-30 OLE zero) is
+// emitted as null. A COM failure exits non-zero.
+const WINDOWS_QUERY_WUA_RESULTS = `
+$ErrorActionPreference='Stop';
+$ProgressPreference='SilentlyContinue';
+try {
+  $results = (New-Object -ComObject Microsoft.Update.AutoUpdate).Results
+  $fmt = 'yyyy-MM-dd HH:mm:ss'
+  $search = $null
+  $install = $null
+  $d = $results.LastSearchSuccessDate
+  if ($d -ne $null -and ([datetime]$d).Year -ge 1980) { $search = ([datetime]$d).ToString($fmt, [System.Globalization.CultureInfo]::InvariantCulture) }
+  $d = $results.LastInstallationSuccessDate
+  if ($d -ne $null -and ([datetime]$d).Year -ge 1980) { $install = ([datetime]$d).ToString($fmt, [System.Globalization.CultureInfo]::InvariantCulture) }
+  [pscustomobject]@{
+    "LastSearchSuccessDate" = $search
+    "LastInstallationSuccessDate" = $install
+  } | ConvertTo-Json -Compress
+} catch {
+  [Console]::Error.WriteLine($_.Exception.Message)
+  exit 1
+}`
+
+// WUAResults holds the Windows Update Agent's last successful search and
+// installation times, in UTC. A nil field means the agent reported none.
+type WUAResults struct {
+	LastSearchSuccess       *time.Time
+	LastInstallationSuccess *time.Time
+}
+
+type wuaResultsJSON struct {
+	LastSearchSuccessDate       *string `json:"LastSearchSuccessDate"`
+	LastInstallationSuccessDate *string `json:"LastInstallationSuccessDate"`
+}
+
+// ParseWUAResults parses the output of WINDOWS_QUERY_WUA_RESULTS. Missing or
+// null fields yield nil times; empty output is an error, as is malformed JSON
+// or a date that does not match the format.
+func ParseWUAResults(input io.Reader) (*WUAResults, error) {
+	data, err := io.ReadAll(input)
+	if err != nil {
+		return nil, err
+	}
+	// json.Unmarshal accepts surrounding whitespace but not a UTF-8 byte order
+	// mark, which some PowerShell hosts put in front of the output.
+	data = bytes.TrimPrefix(bytes.TrimSpace(data), []byte("\xef\xbb\xbf"))
+	var raw wuaResultsJSON
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return nil, fmt.Errorf("failed to parse windows update agent results: %w", err)
+	}
+	search, err := parseWUAResultsTime(raw.LastSearchSuccessDate)
+	if err != nil {
+		return nil, err
+	}
+	install, err := parseWUAResultsTime(raw.LastInstallationSuccessDate)
+	if err != nil {
+		return nil, err
+	}
+	return &WUAResults{LastSearchSuccess: search, LastInstallationSuccess: install}, nil
+}
+
+func parseWUAResultsTime(s *string) (*time.Time, error) {
+	if s == nil || strings.TrimSpace(*s) == "" {
+		return nil, nil
+	}
+	t, err := time.ParseInLocation(wuaResultsTimeFormat, strings.TrimSpace(*s), time.UTC)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse windows update agent time %q: %w", *s, err)
+	}
+	return &t, nil
 }

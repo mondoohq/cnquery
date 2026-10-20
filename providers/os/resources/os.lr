@@ -16672,12 +16672,25 @@ private windows.update.config @defaults("catalogSource rebootPending") {
   // The Windows Update service (wuauserv)
   service() service
   // Time of the last successful update detection
+  //
+  // Read from the Windows Update Agent when commands can run, otherwise from
+  // the registry. Only the Automatic Updates agent advances this value, so it
+  // can lag scans started by the Update Orchestrator.
   lastDetectionSuccess time
   // Last detection error code (e.g., "0x80244022"); empty when the last detection succeeded
+  //
+  // Read from a registry key that Windows 10 and later no longer write, so it
+  // is usually empty there.
   lastDetectionError string
   // Time of the last successful update download
+  //
+  // Read from a registry key that Windows 10 and later no longer write, so it
+  // is usually empty there. The Windows Update Agent does not report a download time.
   lastDownloadSuccess time
   // Time of the last successful update install
+  //
+  // Read from the Windows Update Agent when commands can run, otherwise from
+  // the registry.
   lastInstallSuccess time
   // Whether a reboot is pending from a previous update
   rebootPending bool
