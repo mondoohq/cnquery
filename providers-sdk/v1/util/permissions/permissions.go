@@ -1825,6 +1825,7 @@ var azureUnregisteredOperations = map[string]string{
 	"microsoft.documentdb/databaseaccounts/tableroleassignments/read":                    "preview data-plane RBAC API",
 	"microsoft.documentdb/databaseaccounts/tableroledefinitions/read":                    "preview data-plane RBAC API",
 	"microsoft.fileshares/fileshares/filesharesnapshots/read":                            "preview",
+	"microsoft.storage/storageaccounts/blobaccesspointconfigurations/read":               "preview, not registered as of 2026-10-19",
 	// Microsoft.Cdn's registry has listed only its diagnostic-settings
 	// operations since at least 2026-10-19, and a custom role naming
 	// Microsoft.Cdn/profiles/read fails with InvalidActionOrNotAction.

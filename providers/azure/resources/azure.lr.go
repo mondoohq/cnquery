@@ -189,6 +189,7 @@ const (
 	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy                      string = "azure.subscription.storageService.account.service.properties.retentionPolicy"
 	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesLogging                              string = "azure.subscription.storageService.account.service.properties.logging"
 	ResourceAzureSubscriptionStorageServiceAccountContainer                                             string = "azure.subscription.storageService.account.container"
+	ResourceAzureSubscriptionStorageServiceAccountBlobAccessPoint                                       string = "azure.subscription.storageService.account.blobAccessPoint"
 	ResourceAzureSubscriptionStorageServiceAccountFileShare                                             string = "azure.subscription.storageService.account.fileShare"
 	ResourceAzureSubscriptionStorageServiceAccountPrivateEndpointConnection                             string = "azure.subscription.storageService.account.privateEndpointConnection"
 	ResourceAzureSubscriptionStorageServiceAccountObjectReplicationPolicy                               string = "azure.subscription.storageService.account.objectReplicationPolicy"
@@ -1310,6 +1311,10 @@ func init() {
 		"azure.subscription.storageService.account.container": {
 			Init:   initAzureSubscriptionStorageServiceAccountContainer,
 			Create: createAzureSubscriptionStorageServiceAccountContainer,
+		},
+		"azure.subscription.storageService.account.blobAccessPoint": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountBlobAccessPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountBlobAccessPoint,
 		},
 		"azure.subscription.storageService.account.fileShare": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountFileShare(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -9648,6 +9653,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.networkSecurityPerimeterConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetNetworkSecurityPerimeterConfigurations()).ToDataRes(types.Array(types.Resource("azure.subscription.storageService.account.networkSecurityPerimeterConfiguration")))
 	},
+	"azure.subscription.storageService.account.blobAccessPoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetBlobAccessPoints()).ToDataRes(types.Array(types.Resource("azure.subscription.storageService.account.blobAccessPoint")))
+	},
 	"azure.subscription.storageService.account.blobInventoryPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetBlobInventoryPolicy()).ToDataRes(types.Resource("azure.subscription.storageService.account.blobInventoryPolicy"))
 	},
@@ -10070,6 +10078,90 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.storageService.account.container.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.storageService.account.container.blobAccessPoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetBlobAccessPoint()).ToDataRes(types.Resource("azure.subscription.storageService.account.blobAccessPoint"))
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.uniqueId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetUniqueId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetSourceType()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.connectionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetConnectionType()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetEndpoint()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.endpointHost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetEndpointHost()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.tlsVerification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetTlsVerification()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.privateLinkId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetPrivateLinkId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.privateLinkService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetPrivateLinkService()).ToDataRes(types.Resource("azure.subscription.networkService.privateLinkService"))
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.privateLinkGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetPrivateLinkGroupId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.privateLinkLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetPrivateLinkLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.privateEndpointName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetPrivateEndpointName()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.authType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetAuthType()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.accessKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetAccessKeyId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.signingRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetSigningRegion()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.signingHostOverride": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetSigningHostOverride()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.lastConnectionTestStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetLastConnectionTestStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.lastConnectionTestTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetLastConnectionTestTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.lastConnectionTestErrorMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetLastConnectionTestErrorMessage()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
 	"azure.subscription.storageService.account.fileShare.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountFileShare).GetId()).ToDataRes(types.String)
@@ -33747,6 +33839,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccount).NetworkSecurityPerimeterConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.storageService.account.blobAccessPoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).BlobAccessPoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.storageService.account.blobInventoryPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccount).BlobInventoryPolicy, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy](v.Value, v.Error)
 		return
@@ -34389,6 +34485,122 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.container.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountContainer).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.container.blobAccessPoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountContainer).BlobAccessPoint, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.uniqueId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).UniqueId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.connectionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).ConnectionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.endpointHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).EndpointHost, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.tlsVerification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).TlsVerification, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.privateLinkId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).PrivateLinkId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.privateLinkService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).PrivateLinkService, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServicePrivateLinkService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.privateLinkGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).PrivateLinkGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.privateLinkLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).PrivateLinkLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.privateEndpointName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).PrivateEndpointName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.authType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).AuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.accessKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).AccessKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.signingRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).SigningRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.signingHostOverride": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).SigningHostOverride, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.lastConnectionTestStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).LastConnectionTestStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.lastConnectionTestTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).LastConnectionTestTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.lastConnectionTestErrorMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).LastConnectionTestErrorMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.blobAccessPoint.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.fileShare.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -76379,6 +76591,7 @@ type mqlAzureSubscriptionStorageServiceAccount struct {
 	PrivateEndpointConnections                       plugin.TValue[[]any]
 	ObjectReplicationPolicies                        plugin.TValue[[]any]
 	NetworkSecurityPerimeterConfigurations           plugin.TValue[[]any]
+	BlobAccessPoints                                 plugin.TValue[[]any]
 	BlobInventoryPolicy                              plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy]
 	DefenderForStorage                               plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting]
 	SystemMetadata                                   plugin.TValue[*mqlAzureSubscriptionSystemData]
@@ -76971,6 +77184,22 @@ func (c *mqlAzureSubscriptionStorageServiceAccount) GetNetworkSecurityPerimeterC
 		}
 
 		return c.networkSecurityPerimeterConfigurations()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetBlobAccessPoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BlobAccessPoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account", c.__id, "blobAccessPoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.blobAccessPoints()
 	})
 }
 
@@ -78511,6 +78740,7 @@ type mqlAzureSubscriptionStorageServiceAccountContainer struct {
 	RemainingRetentionDays                          plugin.TValue[int64]
 	StoredAccessPolicies                            plugin.TValue[[]any]
 	SystemMetadata                                  plugin.TValue[*mqlAzureSubscriptionSystemData]
+	BlobAccessPoint                                 plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint]
 }
 
 // createAzureSubscriptionStorageServiceAccountContainer creates a new instance of this resource
@@ -78666,6 +78896,225 @@ func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetSystemMetadata()
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account.container", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetBlobAccessPoint() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint](&c.BlobAccessPoint, func() (*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account.container", c.__id, "blobAccessPoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint), nil
+			}
+		}
+
+		return c.blobAccessPoint()
+	})
+}
+
+// mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint for the azure.subscription.storageService.account.blobAccessPoint resource
+type mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionStorageServiceAccountBlobAccessPointInternal
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Type                           plugin.TValue[string]
+	Location                       plugin.TValue[string]
+	Tags                           plugin.TValue[map[string]any]
+	Description                    plugin.TValue[string]
+	UniqueId                       plugin.TValue[string]
+	State                          plugin.TValue[string]
+	ProvisioningState              plugin.TValue[string]
+	SourceType                     plugin.TValue[string]
+	ConnectionType                 plugin.TValue[string]
+	Endpoint                       plugin.TValue[string]
+	EndpointHost                   plugin.TValue[string]
+	TlsVerification                plugin.TValue[string]
+	PrivateLinkId                  plugin.TValue[string]
+	PrivateLinkService             plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateLinkService]
+	PrivateLinkGroupId             plugin.TValue[string]
+	PrivateLinkLocation            plugin.TValue[string]
+	PrivateEndpointName            plugin.TValue[string]
+	AuthType                       plugin.TValue[string]
+	AccessKeyId                    plugin.TValue[string]
+	SigningRegion                  plugin.TValue[string]
+	SigningHostOverride            plugin.TValue[string]
+	LastConnectionTestStatus       plugin.TValue[string]
+	LastConnectionTestTime         plugin.TValue[*time.Time]
+	LastConnectionTestErrorMessage plugin.TValue[string]
+	SystemMetadata                 plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionStorageServiceAccountBlobAccessPoint creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountBlobAccessPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.blobAccessPoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) MqlName() string {
+	return "azure.subscription.storageService.account.blobAccessPoint"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetUniqueId() *plugin.TValue[string] {
+	return &c.UniqueId
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetConnectionType() *plugin.TValue[string] {
+	return &c.ConnectionType
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetEndpointHost() *plugin.TValue[string] {
+	return &c.EndpointHost
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetTlsVerification() *plugin.TValue[string] {
+	return &c.TlsVerification
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetPrivateLinkId() *plugin.TValue[string] {
+	return &c.PrivateLinkId
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetPrivateLinkService() *plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateLinkService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServicePrivateLinkService](&c.PrivateLinkService, func() (*mqlAzureSubscriptionNetworkServicePrivateLinkService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account.blobAccessPoint", c.__id, "privateLinkService")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServicePrivateLinkService), nil
+			}
+		}
+
+		return c.privateLinkService()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetPrivateLinkGroupId() *plugin.TValue[string] {
+	return &c.PrivateLinkGroupId
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetPrivateLinkLocation() *plugin.TValue[string] {
+	return &c.PrivateLinkLocation
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetPrivateEndpointName() *plugin.TValue[string] {
+	return &c.PrivateEndpointName
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetAuthType() *plugin.TValue[string] {
+	return &c.AuthType
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetAccessKeyId() *plugin.TValue[string] {
+	return &c.AccessKeyId
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetSigningRegion() *plugin.TValue[string] {
+	return &c.SigningRegion
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetSigningHostOverride() *plugin.TValue[string] {
+	return &c.SigningHostOverride
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetLastConnectionTestStatus() *plugin.TValue[string] {
+	return &c.LastConnectionTestStatus
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetLastConnectionTestTime() *plugin.TValue[*time.Time] {
+	return &c.LastConnectionTestTime
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetLastConnectionTestErrorMessage() *plugin.TValue[string] {
+	return &c.LastConnectionTestErrorMessage
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountBlobAccessPoint) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account.blobAccessPoint", c.__id, "systemMetadata")
 			if err != nil {
 				return nil, err
 			}

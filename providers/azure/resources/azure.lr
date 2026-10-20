@@ -6863,6 +6863,13 @@ private azure.subscription.storageService.account @defaults("id name location") 
   objectReplicationPolicies() []azure.subscription.storageService.account.objectReplicationPolicy
   // Network Security Perimeter configurations associated with the storage account
   networkSecurityPerimeterConfigurations() []azure.subscription.storageService.account.networkSecurityPerimeterConfiguration
+  // Blob access point configurations on the storage account
+  //
+  // Each configuration connects the account to an external S3-compatible data
+  // source (NetApp ONTAP, Azure NetApp Files, Dell OneFS, Qumulo, Nasuni,
+  // Commvault, or another S3-compatible store) whose objects containers can
+  // then serve as blobs. Empty when the account has none.
+  blobAccessPoints() []azure.subscription.storageService.account.blobAccessPoint
   // Blob inventory policy configured on the storage account, if any
   blobInventoryPolicy() azure.subscription.storageService.account.blobInventoryPolicy
   // Microsoft Defender for Storage configuration for this account
@@ -7319,6 +7326,104 @@ private azure.subscription.storageService.account.container @defaults("id name")
   // container carries no policies. Read from the blob service rather than
   // Azure Resource Manager, so it needs data access to the container.
   storedAccessPolicies() []azure.subscription.storageService.account.storedAccessPolicy
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+  // Blob access point configuration whose external data source this container serves
+  //
+  // Null when the container is not connected to a blob access point, or when
+  // the configuration it names no longer exists on the storage account.
+  blobAccessPoint() azure.subscription.storageService.account.blobAccessPoint
+}
+
+// Azure Storage blob access point configuration
+//
+// Connection from a storage account to an external S3-compatible data source,
+// keyed by ARM id. Fields cover the kind of source (`sourceType`), how it is
+// reached (`connectionType` of "Endpoint" or "PrivateLink", with `endpoint`
+// and `endpointHost`), whether the TLS certificate of the source is verified
+// (`tlsVerification` of "Perform" or "Skip"), the authentication used against
+// it (`authType`, `accessKeyId`; the secret key is never returned), whether
+// the configuration is active, and the outcome of the most recent connection
+// test. For example, find configurations that skip certificate checks with
+// `azure.subscription.storageService.accounts { blobAccessPoints.where(tlsVerification == "Skip") }`.
+private azure.subscription.storageService.account.blobAccessPoint @defaults("name sourceType connectionType endpointHost state") {
+  // ARM resource ID
+  id string
+  // Configuration name
+  name string
+  // Resource type
+  type string
+  // Azure region of the configuration
+  location string
+  // Resource tags
+  tags map[string]string
+  // Free-form description of the configuration
+  description string
+  // System-generated unique identifier of the configuration
+  //
+  // Changes when a configuration is deleted and recreated under the same
+  // name, which is how a container's connection tells the two apart.
+  uniqueId string
+  // Configuration state ("Active" or "Inactive")
+  state string
+  // Provisioning state ("Succeeded", "Failed", "Canceled", or an in-progress state)
+  provisioningState string
+  // Kind of backing data source
+  //
+  // One of "NetAppOntap", "AzureNetAppFiles", "DellOneFs", "Qumulo",
+  // "Nasuni", "Commvault", or "S3Compatible". New kinds may be added.
+  sourceType string
+  // How the backing data source is reached ("Endpoint" or "PrivateLink")
+  connectionType string
+  // URL of the backing data source, including protocol, host, optional port, and optional path
+  //
+  // For a Private Link connection this is the endpoint as seen by the target
+  // of the Private Link. Credentials embedded in the URL (user information,
+  // query string, fragment) are removed.
+  endpoint string
+  // Host name of the backing data source, without protocol, port, or path
+  endpointHost string
+  // TLS certificate verification against the backing data source ("Perform" or "Skip")
+  //
+  // "Skip" accepts any certificate the source presents, so traffic between
+  // Azure Storage and the source is not protected against interception.
+  // Empty when the service did not report a value; the documented default
+  // is "Perform".
+  tlsVerification string
+  // Azure resource ID of the Private Link target, for a Private Link connection
+  //
+  // Empty for an endpoint connection. When the target is a Private Link
+  // service, privateLinkService resolves it.
+  privateLinkId string
+  // Private Link service the connection goes through
+  //
+  // Null for an endpoint connection, or when the Private Link target is not
+  // a Private Link service.
+  privateLinkService() azure.subscription.networkService.privateLinkService
+  // Private Link group ID required by the backing resource; empty when not used
+  privateLinkGroupId string
+  // Azure region in which the private endpoint is provisioned
+  privateLinkLocation string
+  // Name of the private endpoint created by Azure Storage for the connection
+  privateEndpointName string
+  // Authentication type used against the backing data source (currently only "AccessKey")
+  authType string
+  // Access key ID used to sign requests to the backing data source
+  //
+  // Only the key ID is reported; Azure never returns the secret access key.
+  accessKeyId string
+  // Region used by the request-signing algorithm; empty means the service default of "us-east-1"
+  signingRegion string
+  // Host used when computing request signatures; empty means the endpoint host
+  signingHostOverride string
+  // Status of the most recent connection test ("Succeeded" or "Failed")
+  lastConnectionTestStatus string
+  // Time of the most recent connection test
+  lastConnectionTestTime time
+  // Redacted error message from the most recent failed connection test
+  //
+  // Credentials embedded in any URL the message quotes are removed.
+  lastConnectionTestErrorMessage string
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
