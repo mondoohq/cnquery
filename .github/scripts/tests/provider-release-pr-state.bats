@@ -29,10 +29,10 @@ base_state() {
       mergeable: "MERGEABLE",
       headRefOid: $h,
       reviews: [{
-        author: {login: "mondoo-code-review"},
+        user: {login: "mondoo-code-review[bot]", id: 260646430, type: "Bot"},
         state: "APPROVED",
-        submittedAt: "2026-01-01T10:05:00Z",
-        commit: {oid: $h}
+        submitted_at: "2026-01-01T10:05:00Z",
+        commit_id: $h
       }],
       statusCheckRollup: [$a, $b]
     }'
@@ -133,12 +133,12 @@ decide() {
 }
 
 @test "latest review wins over an earlier approval on the same commit" {
-  decide '.reviews += [{author:{login:"mondoo-code-review"},state:"CHANGES_REQUESTED",submittedAt:"2026-01-01T10:30:00Z",commit:{oid:.headRefOid}}]'
+  decide '.reviews += [{user:{login:"mondoo-code-review[bot]",id:260646430,type:"Bot"},state:"CHANGES_REQUESTED",submitted_at:"2026-01-01T10:30:00Z",commit_id:.headRefOid}]'
   [ "$output" = "fail review bot requested changes" ]
 }
 
 @test "approval of an older commit waits" {
-  decide ".reviews[0].commit.oid = \"$OLD_SHA\""
+  decide ".reviews[0].commit_id = \"$OLD_SHA\""
   [ "$output" = "wait review bot has not approved 111111111" ]
 }
 
@@ -148,19 +148,29 @@ decide() {
 }
 
 @test "approval by someone else does not count" {
-  decide '.reviews[0].author.login = "someone-else"'
+  decide '.reviews[0].user = {login:"someone-else",id:1,type:"User"}'
   [ "$output" = "wait review bot has not approved 111111111" ]
 }
 
-@test "approval by the bot login with [bot] suffix counts" {
-  decide '.reviews[0].author.login = "mondoo-code-review[bot]"'
+@test "approval by a user account with the bot login does not count" {
+  decide '.reviews[0].user.type = "User"'
+  [ "$output" = "wait review bot has not approved 111111111" ]
+}
+
+@test "approval by a bot with another id does not count" {
+  decide '.reviews[0].user.id = 123'
+  [ "$output" = "wait review bot has not approved 111111111" ]
+}
+
+@test "approval by the bot id and type counts under a different login" {
+  decide '.reviews[0].user.login = "renamed-review-app[bot]"'
   [ "$output" = "merge" ]
 }
 
-@test "REVIEW_BOT overrides the bot login" {
-  PR_STATE_JSON="$(base_state | jq -c '.reviews[0].author.login = "other-bot"')"
+@test "REVIEW_BOT_ID overrides the bot id" {
+  PR_STATE_JSON="$(base_state | jq -c '.reviews[0].user.id = 42')"
   export PR_STATE_JSON
-  REVIEW_BOT=other-bot run bash "$SCRIPT"
+  REVIEW_BOT_ID=42 run bash "$SCRIPT"
   [ "$output" = "merge" ]
 }
 
