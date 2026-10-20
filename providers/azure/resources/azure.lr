@@ -887,6 +887,12 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   //
   // Null if using standard Azure licensing. Possible values: "Windows_Client", "Windows_Server", "RHEL_BYOS", "SLES_BYOS".
   licenseType string
+  // Preferred VM size requested through a flex profile
+  //
+  // With a flex profile, Azure may deploy a compatible alternative size based
+  // on capacity, so the size actually running can differ from this value.
+  // Null when the VM does not use a flex profile.
+  flexProfilePreferredVmSize string
   // ID of the resource that manages this VM (e.g. VMSS ARM resource ID)
   managedBy string
   // Unique 128-bit VM identifier
@@ -6773,6 +6779,15 @@ private azure.subscription.storageService.account @defaults("id name location") 
   dnsEndpointType string
   // Whether large file shares are enabled (Enabled, Disabled)
   largeFileSharesState string
+  // Whether Turbo Tier is enabled for the storage account
+  //
+  // Null when the account reports no Turbo Tier configuration.
+  turboTierEnabled bool
+  // Target fill percentage used for Turbo Tier placement
+  //
+  // Between 10 and 100. Null when the account reports no target, including
+  // an enabled Turbo Tier that relies on the service default of 20.
+  turboTierTargetPercent int
   // When the last geo-failover occurred
   lastGeoFailoverTime time
   // Encryption key source for the storage account ("Microsoft.Storage" or "Microsoft.Keyvault")
@@ -7456,8 +7471,9 @@ private azure.subscription.storageService.account.networkSecurityPerimeterConfig
   // Access rules attached to the profile
   //
   // Each entry has keys: name; direction ("Inbound" or "Outbound");
-  // addressPrefixes (inbound CIDRs); subscriptions (inbound, each with an
-  // ARM subscription id); fullyQualifiedDomainNames (outbound FQDNs); and
+  // addressPrefixes (inbound CIDRs); serviceTags (inbound Azure service tags,
+  // such as AzureCloud); subscriptions (inbound, each with an ARM subscription
+  // id); fullyQualifiedDomainNames (outbound FQDNs); and
   // networkSecurityPerimeters (inbound, each with id, location, perimeterGuid).
   accessRules []dict
   // Resource association name
