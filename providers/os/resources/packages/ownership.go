@@ -152,6 +152,11 @@ var systemBinaryDirs = []string{
 // `command -v` resolves it on the scan's PATH, otherwise the first of
 // systemBinaryDirs that holds it. Empty when it is found in neither.
 func FindBinary(conn shared.Connection, binaryName string) string {
+	// This lookup only understands POSIX paths and command -v. Windows
+	// package attribution falls back to its installed-package inventory.
+	if asset := conn.Asset(); asset != nil && asset.Platform != nil && asset.Platform.IsFamily("windows") {
+		return ""
+	}
 	if !conn.Capabilities().Has(shared.Capability_RunCommand) {
 		return ""
 	}

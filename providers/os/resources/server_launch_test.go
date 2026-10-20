@@ -163,6 +163,17 @@ func TestFindServerLaunches(t *testing.T) {
 	})
 }
 
+func TestFindServerLaunchesWindowsSkipsUnixProbes(t *testing.T) {
+	rt := newLaunchRuntime(t, nil, nil, nil)
+	base := rt.Connection.(*mock.Connection)
+	base.Asset().Platform = &inventory.Platform{Name: "windows", Family: []string{"windows", "os"}}
+	conn := &serviceRecordingConnection{Connection: base}
+	rt.Connection = conn
+
+	assert.Empty(t, findServerLaunches(rt, ollamaLaunch))
+	assert.Empty(t, conn.commands, "Windows must not run pgrep or Unix ps through PowerShell")
+}
+
 func TestServerLaunchResolve(t *testing.T) {
 	assert.Equal(t, "/etc/haproxy/haproxy.cfg", serverLaunch{}.resolve("etc/haproxy/haproxy.cfg"), "systemd and a container without WORKDIR start in /")
 	assert.Equal(t, "/var/lib/haproxy/a.cfg", serverLaunch{Dir: "/var/lib/haproxy"}.resolve("a.cfg"))
