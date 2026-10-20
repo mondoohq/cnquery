@@ -29,6 +29,20 @@ func shellSingleQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }
 
+// globEscape escapes the characters find's -path treats as a pattern, so
+// the start path matches only itself.
+func globEscape(s string) string {
+	var b strings.Builder
+	for _, r := range s {
+		switch r {
+		case '\\', '*', '?', '[':
+			b.WriteRune('\\')
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
+}
+
 // FindFlavor says what the target's find supports.
 type FindFlavor struct {
 	// GNU is GNU findutils, which has -xtype.
@@ -62,6 +76,8 @@ func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, pe
 	// `-xtype l` is still true for a symlink, so GNU find prunes on it: the
 	// tests see the target, but the walk never descends through a link.
 	// -prune suppresses the implicit -print, so the command ends with one.
+	// The start path is exempt from the prune: on a usr-merged host /bin,
+	// /sbin and /lib are themselves symlinks, and pruning them found nothing.
 	//
 	// Link searches: GNU find uses -L -xtype l, which follows all symlinks and
 	// finds them. BSD and BusyBox find have no -xtype. They fall back to -H
@@ -80,7 +96,9 @@ func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, pe
 
 	pruneLinks := !isLinkSearch && hasGNUFind
 	if pruneLinks {
-		call.WriteString(" \\( -xtype l -prune -o -true \\)")
+		call.WriteString(" \\( -path ")
+		call.WriteString(shellSingleQuote(globEscape(from)))
+		call.WriteString(" -o -xtype l -prune -o -true \\)")
 	}
 
 	// -prune suppresses find's implicit -print, so the command ends with one.
