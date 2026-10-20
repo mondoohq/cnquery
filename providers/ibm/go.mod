@@ -7,24 +7,24 @@ go 1.26.8
 require (
 	github.com/IBM-Cloud/power-go-client v1.17.0
 	github.com/IBM/cloud-databases-go-sdk v0.8.1
-	github.com/IBM/go-sdk-core/v5 v5.25.0
+	github.com/IBM/go-sdk-core/v5 v5.25.1
 	github.com/IBM/ibm-cos-sdk-go v1.15.1
 	github.com/IBM/ibm-cos-sdk-go-config/v2 v2.3.1
 	github.com/IBM/keyprotect-go-client v1.0.2
-	github.com/IBM/networking-go-sdk v0.55.2
+	github.com/IBM/networking-go-sdk v0.55.3
 	github.com/IBM/platform-services-go-sdk v0.103.4
 	github.com/IBM/vpc-go-sdk v0.93.0
 	github.com/go-openapi/runtime v0.33.3
 	github.com/go-openapi/strfmt v0.27.3
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20261012063653-19e08148bb9f
+	go.mondoo.com/mql v0.0.0-20261019065417-1fcdd84493fd
 )
 
 require (
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/Microsoft/go-winio v0.6.3 // indirect
+	github.com/Microsoft/go-winio v0.6.4 // indirect
 	github.com/ProtonMail/go-crypto v1.5.2 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.47.3 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.33.9 // indirect
@@ -134,7 +134,7 @@ require (
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
 	golang.org/x/tools v0.52.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20261005182115-fad411399dd8 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261012220534-4341edf3f941 // indirect
 	google.golang.org/grpc v1.84.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
