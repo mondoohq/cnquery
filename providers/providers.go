@@ -663,6 +663,7 @@ func buildTarXz(files map[string][]byte) ([]byte, error) {
 }
 
 // installDependencies ensures all dependencies of a provider are installed
+// and that every declared peer meets the version floor the provider declares.
 func installDependencies(provider *Provider, existing Providers) error {
 	// Builtins have no file-backed schema; their Schema is set at init time
 	// in builtinProviders and never mutated again, so reading it is safe.
@@ -679,6 +680,7 @@ func installDependencies(provider *Provider, existing Providers) error {
 		return nil
 	}
 
+	installed := false
 	for _, dependency := range provider.Schema.AllDependencies() {
 		// A builtin ships inside this executor; there is no separate binary to
 		// download, and asking the installer for one would fail (or worse,
@@ -717,9 +719,97 @@ func installDependencies(provider *Provider, existing Providers) error {
 
 		existing.Add(depProvider)
 		PrintInstallResults([]*Provider{depProvider})
+		installed = true
 	}
 
+	updated, err := updateOutdatedPeers(provider, existing)
+	if err != nil {
+		return err
+	}
+
+	if installed || updated {
+		// `existing` is the caller's own map, which the coordinator never sees.
+		// Runtime.AddConnection takes a clone of the published snapshot once
+		// per connection, so without this it keeps finding the version
+		// published before the install and installs the same provider again,
+		// once per call. Install reset CachedProviders, so this re-scans disk
+		// and publishes what is installed now.
+		if _, err := ListActive(); err != nil {
+			return err
+		}
+	}
 	return validateDeclaredPeers(provider, existing)
+}
+
+// updateOutdatedPeers installs the latest release of every declared peer that
+// is installed below the floor the provider declares for it (ADR 042), so a
+// provider update pulls along the peers it needs. Before this, only missing
+// peers were installed: a scan on a host whose providers had not been updated
+// in a while installed the newer provider, found its already-installed peer
+// below the new floor, and refused to start until the user ran
+// `providers update` by hand.
+//
+// Peers that are not installed are left to installDependencies. A builtin
+// ships inside this executor and cannot be replaced by a download, so it is
+// left to the floor check, which also reports a registry whose latest release
+// is still too old.
+func updateOutdatedPeers(provider *Provider, existing Providers) (bool, error) {
+	if provider.Provider == nil {
+		return false, nil
+	}
+
+	updated := false
+	for _, dep := range provider.Requires {
+		if _, isBuiltin := builtinProviders[dep.ID]; isBuiltin {
+			continue
+		}
+		peer := existing.Lookup(ProviderLookup{ID: dep.ID, ProviderName: dep.Name})
+		if peer == nil || peer.Provider == nil {
+			continue
+		}
+		if _, isBuiltin := builtinProviders[peer.ID]; isBuiltin {
+			continue
+		}
+		if !peerBelowFloor(peer.Version, dep.MinVersion) {
+			continue
+		}
+
+		log.Info().
+			Str("installed", peer.Version).
+			Str("required", dep.MinVersion).
+			Msg("provider '" + provider.Name + "' needs a newer '" + dep.Name + "' provider, updating it")
+		fresh, err := Install(dep.Name, "")
+		if err != nil {
+			return updated, err
+		}
+
+		// The stale entry may sit under an ID that older releases carried, so
+		// adding the new one beside it would leave two providers of this name
+		// in the list and a name lookup could still return the old one.
+		for key, p := range existing {
+			if p == peer {
+				delete(existing, key)
+			}
+		}
+		existing.Add(fresh)
+		PrintInstallResults([]*Provider{fresh})
+		updated = true
+	}
+	return updated, nil
+}
+
+// peerBelowFloor reports whether an installed peer version is below the floor
+// a provider declares for it. An empty floor is no constraint, and a version
+// that does not parse on either side is not evidence of a mismatch.
+func peerBelowFloor(installed, floor string) bool {
+	if floor == "" || installed == "" {
+		return false
+	}
+	diff, err := (semver.Parser{}).Compare(installed, floor)
+	if err != nil {
+		return false
+	}
+	return diff < 0
 }
 
 // validateDeclaredPeers checks each declared peer that is already installed
@@ -736,19 +826,11 @@ func validateDeclaredPeers(provider *Provider, existing Providers) error {
 	}
 
 	for _, dep := range provider.Requires {
-		if dep.MinVersion == "" {
-			continue
-		}
 		peer := existing.Lookup(ProviderLookup{ID: dep.ID, ProviderName: dep.Name})
-		if peer == nil || peer.Provider == nil || peer.Version == "" {
+		if peer == nil || peer.Provider == nil {
 			continue
 		}
-		diff, err := (semver.Parser{}).Compare(peer.Version, dep.MinVersion)
-		if err != nil {
-			// unparseable on either side is not evidence of a mismatch
-			continue
-		}
-		if diff < 0 {
+		if peerBelowFloor(peer.Version, dep.MinVersion) {
 			return errors.Newf("provider %s requires %s >= %s, but %s is installed",
 				provider.Name, dep.Name, dep.MinVersion, peer.Version)
 		}
