@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math"
 	"net"
+	"os"
 	"sync"
 	"time"
 
@@ -222,6 +223,11 @@ func (p *Connection) RunCommandContext(parent context.Context, command string) (
 	}
 	if ctx.Err() != nil {
 		return res, ctx.Err()
+	}
+	// The socket deadline is the context's and can fire just before the
+	// context's own timer, leaving ctx.Err() nil for an i/o timeout.
+	if errors.Is(err, os.ErrDeadlineExceeded) {
+		return res, context.DeadlineExceeded
 	}
 	if err != nil {
 		log.Error().Err(err).Str("command", command).Msg("could not execute winrm command")
