@@ -206,6 +206,16 @@ name {
 		assert.Contains(t, err.Error(), "missing the required blank `//` separator")
 	})
 
+	t.Run("accepts a blank separator with CRLF line endings", func(t *testing.T) {
+		src := "option provider = \"test\"\r\n\r\n" +
+			"// Resource title\r\n//\r\n// The longer description.\r\n" +
+			"name {\r\n\t// Field title\r\n\t//\r\n\t// The field description.\r\n\tfield string\r\n}\r\n"
+		ast, err := Parse(src)
+		require.NoError(t, err)
+		_, err = Schema(ast)
+		require.NoError(t, err)
+	})
+
 	t.Run("rejects multi-line field comment without blank separator", func(t *testing.T) {
 		ast, err := Parse(`
 option provider = "test"
