@@ -2478,6 +2478,8 @@ private azure.subscription.networkService {
   routeFilters() []azure.subscription.networkService.routeFilter
   // List of network virtual appliances
   virtualAppliances() []azure.subscription.networkService.virtualAppliance
+  // List of virtual network appliances
+  virtualNetworkAppliances() []azure.subscription.networkService.virtualNetworkAppliance
   // List of virtual routers
   virtualRouters() []azure.subscription.networkService.virtualRouter
   // List of public IP prefixes
@@ -6438,6 +6440,100 @@ azure.subscription.networkService.virtualAppliance @defaults("id name location")
   migrationType string
   // Virtual hub the appliance is deployed in
   virtualHub() azure.subscription.networkService.virtualHub
+}
+
+// Azure virtual network appliance
+//
+// A platform-managed appliance deployed into a subnet of a virtual network
+// that provides network functions such as NAT64 translation and Private Link
+// gateways. Surfaces the appliance bandwidth, IP version, provisioning state,
+// the subnet it is deployed in, its IP configurations, and the capabilities
+// enabled on it. Select by the appliance's Azure resource ID.
+azure.subscription.networkService.virtualNetworkAppliance @defaults("id name location") {
+  // Virtual network appliance ID
+  id string
+  // Virtual network appliance name
+  name string
+  // Virtual network appliance location
+  location string
+  // Virtual network appliance tags
+  tags map[string]string
+  // Virtual network appliance resource type
+  type string
+  // Virtual network appliance etag
+  etag string
+  // Provisioning state of the appliance
+  provisioningState string
+  // Resource GUID of the appliance
+  resourceGuid string
+  // Bandwidth of the appliance in Gbps
+  bandwidthInGbps float
+  // IP version of the appliance
+  //
+  // "IPv4" or "DualStack". Azure defaults to IPv4 when unset.
+  privateIpAddressVersion string
+  // Azure resource ID of the capacity provider backing the appliance
+  //
+  // Empty when the appliance names no capacity provider.
+  capacityProviderId string
+  // Subnet the appliance is deployed in
+  subnet() azure.subscription.networkService.subnet
+  // IP configurations of the appliance
+  ipConfigurations() []azure.subscription.networkService.virtualNetworkAppliance.ipConfiguration
+  // Capabilities enabled on the appliance
+  capabilities() []azure.subscription.networkService.virtualNetworkAppliance.capability
+}
+
+// Azure virtual network appliance IP configuration
+private azure.subscription.networkService.virtualNetworkAppliance.ipConfiguration @defaults("name privateIpAddress") {
+  // IP configuration ID
+  id string
+  // IP configuration name
+  name string
+  // IP configuration resource type
+  type string
+  // IP configuration etag
+  etag string
+  // Whether this is the primary IP configuration of the appliance
+  primary bool
+  // Private IP address of the IP configuration
+  privateIpAddress string
+  // IP version of the private IP address ("IPv4" or "IPv6")
+  privateIpAddressVersion string
+  // Private IP address allocation method ("Static" or "Dynamic")
+  privateIpAllocationMethod string
+  // Provisioning state of the IP configuration
+  provisioningState string
+}
+
+// Azure virtual network appliance capability
+//
+// A network function enabled on a virtual network appliance. The `kind`
+// field names the function: NAT64 (IPv6-to-IPv4 translation), PLGateway
+// (Private Link gateway), PLGatewayFastpath (Private Link gateway FastPath),
+// or PLIPForwarders (Private Link IP forwarders). An appliance carries at most
+// one capability of each kind.
+private azure.subscription.networkService.virtualNetworkAppliance.capability @defaults("name kind") {
+  // Capability ID
+  id string
+  // Capability name
+  name string
+  // Capability resource type
+  type string
+  // Kind of capability
+  //
+  // One of NAT64, PLGateway, PLGatewayFastpath, or PLIPForwarders.
+  kind string
+  // IP version the capability applies to
+  //
+  // "DualStack" or "IPv6". Empty for NAT64, which takes no IP version.
+  ipVersion string
+  // Provisioning state of the capability
+  provisioningState string
+  // Virtual network the capability is linked to
+  virtualNetwork() azure.subscription.networkService.virtualNetwork
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure virtual router
