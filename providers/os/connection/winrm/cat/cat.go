@@ -5,9 +5,11 @@ package cat
 
 import (
 	"bytes"
+	"encoding/base64"
 	"io"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -49,27 +51,99 @@ const dirExitStatus = 64
 // larger than maxOpenSize.
 const tooLargeExitStatus = 65
 
-// maxOpenSize is the largest file Open reads. WinRM can only return a file
-// whole, as Get-Content text: a 105 MB model file had not finished after ten
-// minutes, and a binary read that way arrives altered anyway. Past this a
-// read fails at once with ErrFileTooLarge instead of stalling the scan.
+// maxOpenSize is the largest file Open reads. WinRM returns a file whole, in
+// the command's output: a 105 MB model file had not finished after ten
+// minutes. Past this a read fails at once with ErrFileTooLarge instead of
+// stalling the scan.
 const maxOpenSize = 32 << 20
 
 // ErrFileTooLarge is returned by Open for a file larger than maxOpenSize.
 var ErrFileTooLarge = errors.New("file is too large to read over WinRM")
 
+// notFoundExitStatus and accessDeniedExitStatus are the exit statuses
+// openScript ends with when the file cannot be opened because it is missing
+// or because the account may not read it. Any other failure, such as a file
+// another process holds open without sharing it, ends with exit status 1 and
+// the reason on stderr.
+const (
+	notFoundExitStatus     = 66
+	accessDeniedExitStatus = 67
+)
+
+// readChunkSize is how many bytes openScript reads and writes out at a time,
+// so that PowerShell never holds a whole large file as one base64 string.
+const readChunkSize = 3 << 20
+
 // openScript reads a file, or reports a directory through dirExitStatus or a
-// file over maxOpenSize through tooLargeExitStatus, in one round trip. A
-// missing path still fails in Get-Content, as before.
+// file over maxOpenSize through tooLargeExitStatus, in one round trip.
+//
+// The file's bytes are written as base64, one line per chunk. Get-Content
+// would decode them as text in the console code page and write each line
+// back with CRLF, so UTF-8 without a BOM came back garbled, LF line endings
+// turned into CRLF, a CRLF was added at the end and binary files were
+// corrupted. The file is opened with the sharing Get-Content uses, so a log
+// another process is writing to still reads.
 func openScript(name string) string {
 	quoted := powershell.SingleQuote(name)
 	return powershell.Encode("if (Test-Path -LiteralPath " + quoted + " -PathType Container) { exit " +
 		strconv.Itoa(dirExitStatus) + " }; " +
 		"$i = Get-Item -LiteralPath " + quoted + " -Force -ErrorAction SilentlyContinue; " +
 		"if ($i -and $i.Length -gt " + strconv.Itoa(maxOpenSize) + ") { exit " + strconv.Itoa(tooLargeExitStatus) + " }; " +
-		"Get-Content -LiteralPath " + quoted)
+		"$s = $null; try { " +
+		"$s = [IO.File]::Open(" + quoted + ", [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]'ReadWrite, Delete'); " +
+		"$b = New-Object byte[] " + strconv.Itoa(readChunkSize) + "; " +
+		"while (($n = $s.Read($b, 0, $b.Length)) -gt 0) { [Console]::Out.WriteLine([Convert]::ToBase64String($b, 0, $n)) } " +
+		"} catch { " +
+		"$x = $_.Exception; while ($x.InnerException) { $x = $x.InnerException }; " +
+		"[Console]::Error.WriteLine($x.Message); " +
+		"if ($x -is [IO.FileNotFoundException] -or $x -is [IO.DirectoryNotFoundException]) { exit " + strconv.Itoa(notFoundExitStatus) + " }; " +
+		"if ($x -is [UnauthorizedAccessException]) { exit " + strconv.Itoa(accessDeniedExitStatus) + " }; " +
+		"exit 1 " +
+		"} finally { if ($s) { $s.Dispose() } }")
 }
 
+// decodeContent turns openScript's output back into the file's bytes.
+func decodeContent(out []byte) ([]byte, error) {
+	var data []byte
+	for _, line := range bytes.Fields(out) {
+		chunk := make([]byte, base64.StdEncoding.DecodedLen(len(line)))
+		n, err := base64.StdEncoding.Decode(chunk, line)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not decode file content read over WinRM")
+		}
+		data = append(data, chunk[:n]...)
+	}
+	return data, nil
+}
+
+// openError reports why openScript could not read a file.
+func openError(name string, cmd *shared.Command) error {
+	var reason error
+	switch cmd.ExitStatus {
+	case notFoundExitStatus:
+		reason = os.ErrNotExist
+	case accessDeniedExitStatus:
+		reason = os.ErrPermission
+	default:
+		msg := ""
+		if cmd.Stderr != nil {
+			if stderr, err := io.ReadAll(cmd.Stderr); err == nil {
+				msg = strings.TrimSpace(string(stderr))
+			}
+		}
+		if msg == "" {
+			msg = "exit status " + strconv.Itoa(cmd.ExitStatus)
+		}
+		reason = errors.New(msg)
+	}
+	return &os.PathError{Op: "open", Path: name, Err: reason}
+}
+
+// getItemScript stats one path. -Force is required: without it Get-Item does
+// not return hidden or system items (C:\ProgramData, the "Application Data"
+// junctions), so they would read as missing. Windows PowerShell 5.1 still
+// reports a file the system holds open exclusively, such as pagefile.sys, as
+// missing even with -Force.
 func getItemScript(name string) string {
 	return powershell.Encode("Get-Item -LiteralPath " + powershell.SingleQuote(name) + " -Force | ConvertTo-JSON")
 }
@@ -110,10 +184,14 @@ func (cat *Fs) Open(name string) (afero.File, error) {
 		return nil, &os.PathError{Op: "open", Path: name, Err: ErrFileTooLarge}
 	}
 	if cmd.ExitStatus != 0 {
-		return nil, os.ErrNotExist
+		return nil, openError(name, cmd)
 	}
 
-	data, err := io.ReadAll(cmd.Stdout)
+	out, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+	data, err := decodeContent(out)
 	if err != nil {
 		return nil, err
 	}

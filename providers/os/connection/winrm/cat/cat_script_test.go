@@ -63,7 +63,8 @@ func TestScriptsQuoteTheFileName(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			content := decodeCommand(t, openScript(test.file))
 			assert.Contains(t, content, "Test-Path -LiteralPath "+test.expected+" -PathType Container")
-			assert.Contains(t, content, "Get-Content -LiteralPath "+test.expected)
+			assert.Contains(t, content, "[IO.File]::Open("+test.expected+", ")
+			assert.NotContains(t, content, "Get-Content")
 			assert.Contains(t, content, "$i = Get-Item -LiteralPath "+test.expected+" -Force")
 			assert.Contains(t, content, "$i.Length -gt 33554432) { exit 65 }")
 
