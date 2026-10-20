@@ -258,7 +258,7 @@ func (w *mqlWindowsUpdate) config() (*mqlWindowsUpdateConfig, error) {
 		"useWUServer":          llx.BoolData(useWUServer),
 		"auOptions":            llx.IntData(auOptions),
 		"lastDetectionSuccess": llx.TimeDataPtr(lastDetection),
-		"lastDetectionError":   llx.StringData(formatWULastError(regInt(detect, "LastError"))),
+		"lastDetectionError":   llx.StringData(wuDetectionError(wua, formatWULastError(regInt(detect, "LastError")))),
 		"lastDownloadSuccess":  llx.TimeDataPtr(parseWULastSuccessTime(regString(download, "LastSuccessTime"))),
 		"lastInstallSuccess":   llx.TimeDataPtr(lastInstall),
 		"rebootPending":        llx.BoolData(rebootPending),
@@ -275,11 +275,48 @@ func (w *mqlWindowsUpdate) config() (*mqlWindowsUpdateConfig, error) {
 // for "never": the registry keys Windows 10 and later stopped writing can
 // still hold a value frozen years ago, and reporting that would make a host
 // that never detected look like one that detected long ago.
+//
+// The detection time is the later of the agent's own last search and the
+// newest successful scan of an OS update service in the event log, because
+// Update Orchestrator scans only show up in the log.
 func wuResultTimes(wua *windows.WUAResults, regDetection, regInstall *time.Time) (detection, install *time.Time) {
 	if wua != nil {
-		return wua.LastSearchSuccess, wua.LastInstallationSuccess
+		return laterTime(wua.LastSearchSuccess, wua.LastScanSuccess), wua.LastInstallationSuccess
 	}
 	return regDetection, regInstall
+}
+
+// wuDetectionError picks the last detection error. Once the Windows Update
+// Agent query answered, the error is the code of the newest failed scan of an
+// OS update service, but only while that failure is newer than the last
+// successful detection (the later of the agent's search and the event log
+// scan); a host that never succeeded reports its failure. Otherwise it is
+// empty. The registry value only backs the case where the query failed.
+func wuDetectionError(wua *windows.WUAResults, regError string) string {
+	if wua == nil {
+		return regError
+	}
+	if wua.LastScanFailure == nil {
+		return ""
+	}
+	if success := laterTime(wua.LastSearchSuccess, wua.LastScanSuccess); success != nil && !wua.LastScanFailure.After(*success) {
+		return ""
+	}
+	return wua.LastScanFailureCode
+}
+
+// laterTime returns the later of two optional times, nil only when both are nil.
+func laterTime(a, b *time.Time) *time.Time {
+	switch {
+	case a == nil:
+		return b
+	case b == nil:
+		return a
+	case b.After(*a):
+		return b
+	default:
+		return a
+	}
 }
 
 // readWUAResults runs WINDOWS_QUERY_WUA_RESULTS and parses its output.
