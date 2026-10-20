@@ -289,8 +289,12 @@ func (w *mqlWindowsUpdate) readWUAResults(conn shared.Connection) (*windows.WUAR
 		return nil, err
 	}
 	if cmd.ExitStatus != 0 {
-		stderr, _ := io.ReadAll(cmd.Stderr)
-		return nil, fmt.Errorf("failed to read windows update agent results: %s", string(stderr))
+		stderr, _ := io.ReadAll(io.LimitReader(cmd.Stderr, 1024))
+		msg := strings.TrimSpace(string(stderr))
+		if msg == "" {
+			msg = fmt.Sprintf("exit status %d", cmd.ExitStatus)
+		}
+		return nil, fmt.Errorf("failed to read windows update agent results: %s", msg)
 	}
 	return windows.ParseWUAResults(cmd.Stdout)
 }

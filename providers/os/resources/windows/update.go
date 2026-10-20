@@ -4,6 +4,7 @@
 package windows
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -373,6 +374,9 @@ func ParseWUAResults(input io.Reader) (*WUAResults, error) {
 	if err != nil {
 		return nil, err
 	}
+	// json.Unmarshal accepts surrounding whitespace but not a UTF-8 byte order
+	// mark, which some PowerShell hosts put in front of the output.
+	data = bytes.TrimPrefix(bytes.TrimSpace(data), []byte("\xef\xbb\xbf"))
 	var raw wuaResultsJSON
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, fmt.Errorf("failed to parse windows update agent results: %w", err)

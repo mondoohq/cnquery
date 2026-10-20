@@ -337,6 +337,13 @@ func TestParseWUAResults(t *testing.T) {
 		assert.Nil(t, res.LastSearchSuccess)
 		assert.Nil(t, res.LastInstallationSuccess)
 	})
+	t.Run("byte order mark and CRLF", func(t *testing.T) {
+		res, err := ParseWUAResults(strings.NewReader("\xef\xbb\xbf{\"LastSearchSuccessDate\":\"2026-10-19 06:25:42\",\"LastInstallationSuccessDate\":null}\r\n"))
+		require.NoError(t, err)
+		require.NotNil(t, res.LastSearchSuccess)
+		assert.Equal(t, time.Date(2026, 10, 19, 6, 25, 42, 0, time.UTC), *res.LastSearchSuccess)
+		assert.Nil(t, res.LastInstallationSuccess)
+	})
 	t.Run("malformed json", func(t *testing.T) {
 		_, err := ParseWUAResults(strings.NewReader(`{"LastSearchSuccessDate":`))
 		assert.Error(t, err)
