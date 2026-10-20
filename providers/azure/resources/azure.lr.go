@@ -3783,6 +3783,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.vm.licenseType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetLicenseType()).ToDataRes(types.String)
 	},
+	"azure.subscription.computeService.vm.flexProfilePreferredVmSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetFlexProfilePreferredVmSize()).ToDataRes(types.String)
+	},
 	"azure.subscription.computeService.vm.managedBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetManagedBy()).ToDataRes(types.String)
 	},
@@ -9539,6 +9542,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.storageService.account.largeFileSharesState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetLargeFileSharesState()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.turboTierEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetTurboTierEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.storageService.account.turboTierTargetPercent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetTurboTierTargetPercent()).ToDataRes(types.Int)
 	},
 	"azure.subscription.storageService.account.lastGeoFailoverTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetLastGeoFailoverTime()).ToDataRes(types.Time)
@@ -25374,6 +25383,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceVm).LicenseType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.computeService.vm.flexProfilePreferredVmSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).FlexProfilePreferredVmSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.computeService.vm.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVm).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -33592,6 +33605,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.largeFileSharesState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccount).LargeFileSharesState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.turboTierEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).TurboTierEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.turboTierTargetPercent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).TurboTierTargetPercent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.lastGeoFailoverTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -57772,6 +57793,7 @@ type mqlAzureSubscriptionComputeServiceVm struct {
 	ComputerName                         plugin.TValue[string]
 	AdminUsername                        plugin.TValue[string]
 	LicenseType                          plugin.TValue[string]
+	FlexProfilePreferredVmSize           plugin.TValue[string]
 	ManagedBy                            plugin.TValue[string]
 	VmId                                 plugin.TValue[string]
 	ProvisioningState                    plugin.TValue[string]
@@ -58096,6 +58118,10 @@ func (c *mqlAzureSubscriptionComputeServiceVm) GetAdminUsername() *plugin.TValue
 
 func (c *mqlAzureSubscriptionComputeServiceVm) GetLicenseType() *plugin.TValue[string] {
 	return &c.LicenseType
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetFlexProfilePreferredVmSize() *plugin.TValue[string] {
+	return &c.FlexProfilePreferredVmSize
 }
 
 func (c *mqlAzureSubscriptionComputeServiceVm) GetManagedBy() *plugin.TValue[string] {
@@ -76318,6 +76344,8 @@ type mqlAzureSubscriptionStorageServiceAccount struct {
 	EnableExtendedGroups                             plugin.TValue[bool]
 	DnsEndpointType                                  plugin.TValue[string]
 	LargeFileSharesState                             plugin.TValue[string]
+	TurboTierEnabled                                 plugin.TValue[bool]
+	TurboTierTargetPercent                           plugin.TValue[int64]
 	LastGeoFailoverTime                              plugin.TValue[*time.Time]
 	EncryptionKeySource                              plugin.TValue[string]
 	EncryptionKey                                    plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
@@ -76610,6 +76638,14 @@ func (c *mqlAzureSubscriptionStorageServiceAccount) GetDnsEndpointType() *plugin
 
 func (c *mqlAzureSubscriptionStorageServiceAccount) GetLargeFileSharesState() *plugin.TValue[string] {
 	return &c.LargeFileSharesState
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetTurboTierEnabled() *plugin.TValue[bool] {
+	return &c.TurboTierEnabled
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetTurboTierTargetPercent() *plugin.TValue[int64] {
+	return &c.TurboTierTargetPercent
 }
 
 func (c *mqlAzureSubscriptionStorageServiceAccount) GetLastGeoFailoverTime() *plugin.TValue[*time.Time] {
