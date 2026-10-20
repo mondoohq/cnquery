@@ -46,7 +46,6 @@ jobs:
     outputs:
       pr-number: ${{ steps.cpr.outputs.pull-request-number }}
       pr-url: ${{ steps.cpr.outputs.pull-request-url }}
-      pr-operation: ${{ steps.cpr.outputs.pull-request-operation }}
       title: ${{ steps.branch.outputs.COMMIT_TITLE }}
     steps:
       # Sparse-checkout the scripts dir from main first, so we can run
