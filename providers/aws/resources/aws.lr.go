@@ -22259,6 +22259,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecr.registry.replicationConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrRegistry).GetReplicationConfiguration()).ToDataRes(types.Dict)
 	},
+	"aws.ecr.registry.scanningConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrRegistry).GetScanningConfiguration()).ToDataRes(types.Resource("aws.ecr.scanningConfiguration"))
+	},
 	"aws.ecr.pullThroughCacheRule.ecrRepositoryPrefix": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrPullThroughCacheRule).GetEcrRepositoryPrefix()).ToDataRes(types.String)
 	},
@@ -22504,6 +22507,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecr.image.scanFinding.attributes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrImageScanFinding).GetAttributes()).ToDataRes(types.Dict)
+	},
+	"aws.ecr.scanningConfiguration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrScanningConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ecr.scanningConfiguration.registryId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrScanningConfiguration).GetRegistryId()).ToDataRes(types.String)
 	},
 	"aws.ecr.scanningConfiguration.scanType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrScanningConfiguration).GetScanType()).ToDataRes(types.String)
@@ -63887,6 +63896,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcrRegistry).ReplicationConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.ecr.registry.scanningConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrRegistry).ScanningConfiguration, ok = plugin.RawToTValue[*mqlAwsEcrScanningConfiguration](v.Value, v.Error)
+		return
+	},
 	"aws.ecr.pullThroughCacheRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcrPullThroughCacheRule).__id, ok = v.Value.(string)
 		return
@@ -64245,6 +64258,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecr.scanningConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcrScanningConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecr.scanningConfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrScanningConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.scanningConfiguration.registryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrScanningConfiguration).RegistryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.scanningConfiguration.scanType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -153787,6 +153808,7 @@ type mqlAwsEcrRegistry struct {
 	Policy                   plugin.TValue[string]
 	SigningRules             plugin.TValue[[]any]
 	ReplicationConfiguration plugin.TValue[any]
+	ScanningConfiguration    plugin.TValue[*mqlAwsEcrScanningConfiguration]
 }
 
 // createAwsEcrRegistry creates a new instance of this resource
@@ -153848,6 +153870,22 @@ func (c *mqlAwsEcrRegistry) GetSigningRules() *plugin.TValue[[]any] {
 
 func (c *mqlAwsEcrRegistry) GetReplicationConfiguration() *plugin.TValue[any] {
 	return &c.ReplicationConfiguration
+}
+
+func (c *mqlAwsEcrRegistry) GetScanningConfiguration() *plugin.TValue[*mqlAwsEcrScanningConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEcrScanningConfiguration](&c.ScanningConfiguration, func() (*mqlAwsEcrScanningConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecr.registry", c.__id, "scanningConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcrScanningConfiguration), nil
+			}
+		}
+
+		return c.scanningConfiguration()
+	})
 }
 
 // mqlAwsEcrPullThroughCacheRule for the aws.ecr.pullThroughCacheRule resource
@@ -154729,8 +154767,10 @@ type mqlAwsEcrScanningConfiguration struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsEcrScanningConfigurationInternal it will be used here
-	ScanType plugin.TValue[string]
-	Rules    plugin.TValue[[]any]
+	Region     plugin.TValue[string]
+	RegistryId plugin.TValue[string]
+	ScanType   plugin.TValue[string]
+	Rules      plugin.TValue[[]any]
 }
 
 // createAwsEcrScanningConfiguration creates a new instance of this resource
@@ -154768,6 +154808,14 @@ func (c *mqlAwsEcrScanningConfiguration) MqlName() string {
 
 func (c *mqlAwsEcrScanningConfiguration) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsEcrScanningConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEcrScanningConfiguration) GetRegistryId() *plugin.TValue[string] {
+	return &c.RegistryId
 }
 
 func (c *mqlAwsEcrScanningConfiguration) GetScanType() *plugin.TValue[string] {

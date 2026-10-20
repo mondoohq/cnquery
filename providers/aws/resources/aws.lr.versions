@@ -4363,6 +4363,7 @@ aws.ecr.registry.policy 14.1.1
 aws.ecr.registry.region 14.1.1
 aws.ecr.registry.registryId 14.1.1
 aws.ecr.registry.replicationConfiguration 14.1.1
+aws.ecr.registry.scanningConfiguration 14.5.1
 aws.ecr.registry.signingRules 14.1.1
 aws.ecr.replicationConfiguration 13.6.3
 aws.ecr.repository 11.15.2
@@ -4407,6 +4408,8 @@ aws.ecr.repositoryCreationTemplate.resourceTags 14.1.1
 aws.ecr.repositoryCreationTemplate.updatedAt 14.1.1
 aws.ecr.repositoryCreationTemplates 14.1.1
 aws.ecr.scanningConfiguration 13.12.1
+aws.ecr.scanningConfiguration.region 14.5.1
+aws.ecr.scanningConfiguration.registryId 14.5.1
 aws.ecr.scanningConfiguration.rule 13.12.1
 aws.ecr.scanningConfiguration.rule.repositoryFilters 13.12.1
 aws.ecr.scanningConfiguration.rule.scanFrequency 13.12.1

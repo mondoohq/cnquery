@@ -17406,12 +17406,16 @@ aws.ecr {
   // `repositoryFilters` ({filter, filterType} entries) that scope which
   // repositories replicate.
   replicationConfiguration() dict
-  // Registry-level scanning configuration
+  // Registry-level scanning configuration of the connection's region
+  //
+  // ECR keeps the scanning configuration per region. This field reads the
+  // region the connection is configured with; use
+  // `registries { scanningConfiguration }` for every enabled region.
   scanningConfiguration() aws.ecr.scanningConfiguration
   // Private registry of each enabled region
   //
-  // Carries the registry permissions policy and the image signing
-  // configuration, which are set per region.
+  // Carries the registry permissions policy, the image signing
+  // configuration and the scanning configuration, which are set per region.
   registries() []aws.ecr.registry
   // Pull-through cache rules across all enabled regions
   pullThroughCacheRules() []aws.ecr.pullThroughCacheRule
@@ -17448,6 +17452,12 @@ private aws.ecr.registry @defaults("registryId region") {
   // entries carry `destinations` and `repositoryFilters`. Null when
   // replication is not configured.
   replicationConfiguration dict
+  // Scanning configuration of the registry in this region
+  //
+  // `scanType` is BASIC or ENHANCED (Amazon Inspector); `rules` decide which
+  // repositories are scanned on push or continuously. Null when the
+  // configuration can't be read.
+  scanningConfiguration() aws.ecr.scanningConfiguration
 }
 
 // Amazon ECR pull-through cache rule
@@ -17714,7 +17724,13 @@ private aws.ecr.image.scanFinding @defaults("severity name") {
 }
 
 // AWS ECR registry scanning configuration
-private aws.ecr.scanningConfiguration @defaults("scanType") {
+//
+// The scanning configuration of the private registry in one region.
+private aws.ecr.scanningConfiguration @defaults("region scanType") {
+  // Region of the registry
+  region string
+  // ID of the registry (the account ID)
+  registryId string
   // Scan type for the registry: BASIC or ENHANCED
   scanType string
   // Scanning rules applied to repositories
