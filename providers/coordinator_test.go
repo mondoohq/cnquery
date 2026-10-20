@@ -538,8 +538,34 @@ func TestScrubStartFailureReport(t *testing.T) {
 		assert.Equal(t, "plugin stderr:\ndyld: Library not loaded: ~/lib/libtest.dylib", got)
 	})
 
+	t.Run("negative uid keeps its id, drops the name", func(t *testing.T) {
+		msg := "  Owner: -1 [nobody] (current: -1 [nobody])\n"
+		got := scrubStartFailureReport(msg, providerPath, home)
+		assert.Equal(t, "  Owner: -1 (current: -1)\n", got)
+	})
+
 	t.Run("empty inputs scrub nothing", func(t *testing.T) {
 		msg := "failed to start provider 'os': cannot find provider os"
 		assert.Equal(t, msg, scrubStartFailureReport(msg, "", ""))
+	})
+}
+
+// TestEnrichStartFailure pins two properties of the diagnostics wrapper: the
+// original error chain stays intact (errors.Is must keep working through the
+// enrichment), and an error with nothing observed is returned unchanged.
+func TestEnrichStartFailure(t *testing.T) {
+	sentinel := errors.New("boom")
+	wrapped := fmt.Errorf("failed to initialize plugin client: %w", sentinel)
+
+	t.Run("preserves the error chain", func(t *testing.T) {
+		got := enrichStartFailure(wrapped, nil, []string{"dyld: Library not loaded"})
+		assert.ErrorIs(t, got, sentinel)
+		assert.Contains(t, got.Error(), "failed to initialize plugin client: boom")
+		assert.Contains(t, got.Error(), "plugin stderr:\ndyld: Library not loaded")
+	})
+
+	t.Run("nothing observed returns the error unchanged", func(t *testing.T) {
+		got := enrichStartFailure(wrapped, nil, nil)
+		assert.Same(t, wrapped, got)
 	})
 }

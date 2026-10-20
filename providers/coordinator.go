@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"fmt"
 	"maps"
 	"math"
 	"os"
@@ -381,6 +382,21 @@ func scrubStartFailureReport(msg, providerPath, home string) string {
 	return ownerGroupNameRe.ReplaceAllString(msg, "$1")
 }
 
+// enrichStartFailure attaches what was observed of a failed subprocess start
+// — exit disposition and a stderr tail — to the error itself, so both the
+// local log line and the platform report carry it. The dynamic linker's
+// "cannot open shared object file" lines land in stderr, which is the whole
+// diagnosis for the missing-libraries cause. Wraps with %w so the original
+// chain (e.g. os.ErrNotExist under a fork/exec failure) stays reachable for
+// errors.Is/As; returns the error unchanged when nothing was observed.
+func enrichStartFailure(err error, ps *os.ProcessState, stderr []string) error {
+	diag := startFailureDiagnostics(ps, stderr)
+	if diag == "" {
+		return err
+	}
+	return fmt.Errorf("%w%s", err, diag)
+}
+
 // startFailureDiagnostics renders what was observed of a plugin subprocess
 // that failed to start: its exit disposition when it ran at all, and a
 // bounded tail of its stderr. Returns "" when nothing was observed, so a
@@ -629,19 +645,11 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 
 	plug, client, err := connectFunc()
 	if err != nil {
-		// Attach what was observed of the subprocess — exit disposition and
-		// a stderr tail — to the error itself, so both the local log line
-		// and the platform report carry it. The dynamic linker's "cannot
-		// open shared object file" lines land in stderr, which is the whole
-		// diagnosis for the missing-libraries cause.
 		var ps *os.ProcessState
 		if lastCmd != nil {
 			ps = lastCmd.ProcessState
 		}
-		if diag := startFailureDiagnostics(ps, crashLog.Snapshot()); diag != "" {
-			err = errors.New(err.Error() + diag)
-		}
-		return nil, err
+		return nil, enrichStartFailure(err, ps, crashLog.Snapshot())
 	}
 
 	c.schema.Add(provider.ID, provider.Schema)
