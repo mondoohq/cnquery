@@ -68,7 +68,7 @@ func TestScriptsQuoteTheFileName(t *testing.T) {
 			assert.Contains(t, content, "$i.Length -gt 33554432) { exit 65 }")
 
 			item := decodeCommand(t, getItemScript(test.file))
-			assert.Contains(t, item, "Get-Item -LiteralPath "+test.expected+" | ConvertTo-JSON")
+			assert.Contains(t, item, "Get-Item -LiteralPath "+test.expected+" -Force | ConvertTo-JSON")
 
 			list := decodeCommand(t, listDirScript(test.file))
 			assert.Contains(t, list, "Get-ChildItem -LiteralPath "+test.expected+" -Force")

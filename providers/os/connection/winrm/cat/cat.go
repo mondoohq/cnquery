@@ -71,7 +71,7 @@ func openScript(name string) string {
 }
 
 func getItemScript(name string) string {
-	return powershell.Encode("Get-Item -LiteralPath " + powershell.SingleQuote(name) + " | ConvertTo-JSON")
+	return powershell.Encode("Get-Item -LiteralPath " + powershell.SingleQuote(name) + " -Force | ConvertTo-JSON")
 }
 
 // listDirScript lists a directory as a JSON array, one object per entry, with
