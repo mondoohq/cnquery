@@ -5,6 +5,8 @@ package cat
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"time"
@@ -48,6 +50,33 @@ func getItemScript(name string) string {
 }
 
 func (cat *Fs) Open(name string) (afero.File, error) {
+	info, err := cat.Stat(name)
+	if err != nil {
+		return nil, err
+	}
+	if info.IsDir() {
+		cmd, err := cat.commandRunner.RunCommand(getDirectoryScript(name))
+		if err != nil {
+			return nil, err
+		}
+		if cmd.ExitStatus != 0 {
+			message, err := io.ReadAll(cmd.Stderr)
+			if err != nil {
+				return nil, err
+			}
+			return nil, &os.PathError{Op: "readdir", Path: name, Err: fmt.Errorf("directory listing failed: %s", message)}
+		}
+		var items []GetItem
+		if err := json.NewDecoder(cmd.Stdout).Decode(&items); err != nil {
+			return nil, fmt.Errorf("cannot parse directory listing for %s: %w", name, err)
+		}
+		entries := make([]os.FileInfo, len(items))
+		for i := range items {
+			entries[i] = itemFileInfo(&items[i])
+		}
+		return &File{path: name, info: info, entries: entries}, nil
+	}
+
 	// NOTE: do not use type here since it does not work well with file names like 'C:\Program Files\New Text Document.txt'
 	cmd, err := cat.commandRunner.RunCommand(getContentScript(name))
 	if err != nil {
@@ -63,7 +92,14 @@ func (cat *Fs) Open(name string) (afero.File, error) {
 		return nil, err
 	}
 
-	return NewFile(name, bytes.NewBuffer(data)), nil
+	file := NewFile(name, bytes.NewBuffer(data))
+	file.info = info
+	return file, nil
+}
+
+func getDirectoryScript(name string) string {
+	return powershell.Encode("$items = @(Get-ChildItem -Force -LiteralPath " + powershell.SingleQuote(name) +
+		" -ErrorAction Stop | Select-Object Name,Length,Attributes,CreationTime,LastAccessTime,LastWriteTime); ConvertTo-Json -Compress -InputObject $items")
 }
 
 func (cat *Fs) Stat(name string) (os.FileInfo, error) {
@@ -81,14 +117,18 @@ func (cat *Fs) Stat(name string) (os.FileInfo, error) {
 		return nil, err
 	}
 
+	return itemFileInfo(item), nil
+}
+
+func itemFileInfo(item *GetItem) os.FileInfo {
 	return &fileStat{
-		name:           item.BaseName,
+		name:           item.Name,
 		FileSize:       item.Length,
 		FileAttributes: item.Attributes,
 		CreationTime:   powershell.PSJsonTimestamp(item.CreationTime),
 		LastAccessTime: powershell.PSJsonTimestamp(item.LastAccessTime),
 		LastWriteTime:  powershell.PSJsonTimestamp(item.LastWriteTime),
-	}, nil
+	}
 }
 
 var NotImplemented = errors.New("not implemented")

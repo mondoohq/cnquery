@@ -6,6 +6,7 @@ package cat
 import (
 	"bytes"
 	"errors"
+	"io"
 	"os"
 )
 
@@ -14,8 +15,11 @@ func NewFile(name string, buf *bytes.Buffer) *File {
 }
 
 type File struct {
-	buf  *bytes.Buffer
-	path string
+	buf       *bytes.Buffer
+	path      string
+	info      os.FileInfo
+	entries   []os.FileInfo
+	dirOffset int
 }
 
 func (f *File) Close() error {
@@ -27,6 +31,9 @@ func (f *File) Name() string {
 }
 
 func (f *File) Stat() (os.FileInfo, error) {
+	if f.info != nil {
+		return f.info, nil
+	}
 	return nil, errors.New("not implemented")
 }
 
@@ -39,6 +46,9 @@ func (f *File) Truncate(size int64) error {
 }
 
 func (f *File) Read(b []byte) (n int, err error) {
+	if f.info != nil && f.info.IsDir() {
+		return 0, &os.PathError{Op: "read", Path: f.path, Err: os.ErrInvalid}
+	}
 	return f.buf.Read(b)
 }
 
@@ -47,11 +57,28 @@ func (f *File) ReadAt(b []byte, off int64) (n int, err error) {
 }
 
 func (f *File) Readdir(count int) (res []os.FileInfo, err error) {
-	return nil, errors.New("not implemented")
+	if f.info == nil || !f.info.IsDir() {
+		return nil, &os.PathError{Op: "readdir", Path: f.path, Err: os.ErrInvalid}
+	}
+	if count > 0 && f.dirOffset == len(f.entries) {
+		return nil, io.EOF
+	}
+	end := len(f.entries)
+	if count > 0 && count < end-f.dirOffset {
+		end = f.dirOffset + count
+	}
+	res = f.entries[f.dirOffset:end]
+	f.dirOffset = end
+	return res, nil
 }
 
-func (f *File) Readdirnames(n int) (names []string, err error) {
-	return nil, errors.New("not implemented")
+func (f *File) Readdirnames(n int) ([]string, error) {
+	entries, err := f.Readdir(n)
+	names := make([]string, len(entries))
+	for i, entry := range entries {
+		names[i] = entry.Name()
+	}
+	return names, err
 }
 
 func (f *File) Seek(offset int64, whence int) (int64, error) {

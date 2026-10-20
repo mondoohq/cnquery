@@ -7,6 +7,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/os/connection/mock"
 )
 
 func TestParsePacmanOwner(t *testing.T) {
@@ -147,4 +150,28 @@ func TestLocateBinary(t *testing.T) {
 	// absent everywhere, and names that are not plain binary names
 	assert.Equal(t, "", locateBinary("codex", notOnPath, onDisk()))
 	assert.Equal(t, "", locateBinary("../codex", notOnPath, func(string) bool { return true }))
+}
+
+func TestFindBinarySkipsUnixLookupOnWindows(t *testing.T) {
+	for _, platform := range []string{"windows", "linux"} {
+		t.Run(platform, func(t *testing.T) {
+			const command = "command -v 'ollama'"
+			base, err := mock.New(0, &inventory.Asset{Platform: &inventory.Platform{
+				Name: platform, Family: []string{platform},
+			}}, mock.WithData(&mock.TomlData{Commands: map[string]*mock.Command{
+				command: {Stdout: "/usr/bin/ollama\n"},
+			}}))
+			require.NoError(t, err)
+			conn := &countingConnection{Connection: base}
+
+			got := FindBinary(conn, "ollama")
+			if platform == "windows" {
+				assert.Empty(t, got)
+				assert.Zero(t, conn.count(command), "Windows cannot use the POSIX ownership lookup")
+			} else {
+				assert.Equal(t, "/usr/bin/ollama", got)
+				assert.Equal(t, 1, conn.count(command))
+			}
+		})
+	}
 }

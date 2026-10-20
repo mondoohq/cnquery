@@ -100,6 +100,12 @@ func findServerLaunches(runtime *plugin.Runtime, spec serverLaunchSpec) []server
 // gone by now. A /proc without command lines (AIX) is not walked: ps lists
 // the processes instead, in one command rather than one read per process.
 func runningServerLaunches(runtime *plugin.Runtime, conn shared.Connection, afs *afero.Afero, spec serverLaunchSpec) []serverLaunch {
+	// This backend reads Unix process data. Windows has neither /proc nor
+	// these command interfaces, and PowerShell's ps alias is Get-Process.
+	if isWindowsAsset(conn) {
+		return nil
+	}
+
 	var procs []serverlaunch.Process
 	pids, listed := pgrepPids(runtime, conn, spec.Names)
 	switch {
