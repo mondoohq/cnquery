@@ -11,15 +11,24 @@
 # checks and auto-merge is disabled, so this script is the gate.
 #
 # Inputs:
-#   $PR_STATE_JSON    PR state as printed by
-#                       gh pr view <n> --json state,isDraft,mergeable,headRefOid,reviews,statusCheckRollup
+#   $PR_STATE_JSON    PR state as one JSON object: the output of
+#                       gh pr view <n> --json state,isDraft,mergeable,headRefOid,statusCheckRollup
+#                     plus a "reviews" array in the shape of the REST API
+#                     (GET /repos/{owner}/{repo}/pulls/{n}/reviews).
 #                     If set, used as is (tests set this to run offline).
 #   $1                PR number; used when $PR_STATE_JSON is unset. The state
-#                     is fetched with `gh pr view` ($GH_REPO, $GH_TOKEN).
+#                     is fetched with `gh pr view` and `gh api` ($GH_REPO,
+#                     $GH_TOKEN).
 #   $REQUIRED_CHECKS  space-separated check run names that must be present
 #                     and successful (default: "go-test go-test-providers")
-#   $REVIEW_BOT       login of the review bot (default: mondoo-code-review);
-#                     reviews by "<login>" and "<login>[bot]" both count
+#   $REVIEW_BOT_ID    numeric account id of the review bot (default:
+#                     260646430, the user mondoo-code-review[bot])
+#
+# The bot is identified by account id and type "Bot", not by login. The
+# reviews in `gh pr view --json reviews` (GraphQL) carry only a login, which
+# a user account could share, so they cannot tell the bot from an impostor.
+# The REST review has user.id and user.type, which only the real App bot has.
+# A renamed app keeps its id, so the match survives a rename.
 #
 # Output: exactly one line on stdout, exit 0:
 #   merge             approved on head, checks green: merge now
@@ -30,13 +39,15 @@
 set -euo pipefail
 
 REQUIRED_CHECKS="${REQUIRED_CHECKS-go-test go-test-providers}"
-REVIEW_BOT="${REVIEW_BOT:-mondoo-code-review}"
+REVIEW_BOT_ID="${REVIEW_BOT_ID:-260646430}"
 
 if [ -n "${PR_STATE_JSON+set}" ]; then
   STATE="$PR_STATE_JSON"
 else
   PR="${1:?PR number required as first argument (or set PR_STATE_JSON)}"
-  STATE=$(gh pr view "$PR" --json state,isDraft,mergeable,headRefOid,reviews,statusCheckRollup)
+  PR_VIEW=$(gh pr view "$PR" --json state,isDraft,mergeable,headRefOid,statusCheckRollup)
+  REVIEWS=$(gh api --paginate "repos/{owner}/{repo}/pulls/$PR/reviews" --jq '.[]' | jq -s .)
+  STATE=$(jq -c --argjson reviews "$REVIEWS" '.reviews = $reviews' <<<"$PR_VIEW")
 fi
 
 if ! jq -e 'type == "object" and has("state")' >/dev/null 2>&1 <<<"$STATE"; then
@@ -44,7 +55,7 @@ if ! jq -e 'type == "object" and has("state")' >/dev/null 2>&1 <<<"$STATE"; then
   exit 1
 fi
 
-jq -r --arg required "$REQUIRED_CHECKS" --arg bot "$REVIEW_BOT" '
+jq -r --arg required "$REQUIRED_CHECKS" --arg bot_id "$REVIEW_BOT_ID" '
   def failing: . as $c | ["FAILURE","CANCELLED","TIMED_OUT","ACTION_REQUIRED","STARTUP_FAILURE"] | index($c) != null;
 
   # The rollup keeps stale runs of the same check (a cancelled earlier run
@@ -67,9 +78,9 @@ jq -r --arg required "$REQUIRED_CHECKS" --arg bot "$REVIEW_BOT" '
       | $r ] as $missing
   | .headRefOid as $head
   | ([ (.reviews // [])[]
-       | select((.author.login // "") == $bot or (.author.login // "") == ($bot + "[bot]"))
-       | select(.commit.oid == $head) ]
-     | sort_by(.submittedAt) | last) as $review
+       | select(.user.type == "Bot" and .user.id == ($bot_id | tonumber))
+       | select(.commit_id == $head) ]
+     | sort_by(.submitted_at) | last) as $review
 
   | if .state == "MERGED" then "merged"
     elif .state == "CLOSED" then "fail PR was closed without merging"
