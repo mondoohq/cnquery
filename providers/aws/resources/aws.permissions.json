@@ -3600,6 +3600,12 @@
       "source_file": "aws_ecr.go"
     },
     {
+      "permission": "ecr:GetRegistryScanningConfiguration",
+      "service": "ecr",
+      "action": "GetRegistryScanningConfiguration",
+      "source_file": "aws_ecr_registry.go"
+    },
+    {
       "permission": "ecr:GetRepositoryPolicy",
       "service": "ecr",
       "action": "GetRepositoryPolicy",

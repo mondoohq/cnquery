@@ -74,6 +74,30 @@ func (a *mqlAwsEcrRegistry) policy() (string, error) {
 	return *out.PolicyText, nil
 }
 
+func (a *mqlAwsEcrRegistry) scanningConfiguration() (*mqlAwsEcrScanningConfiguration, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ecr(a.Region.Data)
+	out, err := svc.GetRegistryScanningConfiguration(context.Background(), &ecr.GetRegistryScanningConfigurationInput{})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			if !plugin.StructuredErrors() {
+				a.ScanningConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
+				return nil, nil
+			}
+			return nil, llx.Forbidden(err, llx.WithPermissions("ecr:GetRegistryScanningConfiguration"))
+		}
+		return nil, err
+	}
+	res, err := newMqlEcrScanningConfiguration(a.MqlRuntime, a.Region.Data, out)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.ScanningConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
+}
+
 // ecrSigningRulesToDicts renders the registry signing rules with the keys the
 // schema documents; the SDK structs carry no json tags.
 func ecrSigningRulesToDicts(cfg *ecrtypes.SigningConfiguration) []any {

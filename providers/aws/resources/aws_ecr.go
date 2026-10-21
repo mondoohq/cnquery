@@ -1133,6 +1133,9 @@ func (a *mqlAwsEcrImageScanFinding) id() (string, error) {
 
 // ==================== ECR Registry Scanning Configuration ====================
 
+// scanningConfiguration is the registry scanning configuration of the
+// connection's region. The configuration is set per region; see
+// aws.ecr.registry.scanningConfiguration for every enabled region.
 func (a *mqlAwsEcr) scanningConfiguration() (*mqlAwsEcrScanningConfiguration, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Ecr("")
@@ -1146,10 +1149,25 @@ func (a *mqlAwsEcr) scanningConfiguration() (*mqlAwsEcrScanningConfiguration, er
 		}
 		return nil, err
 	}
-	if resp.ScanningConfiguration == nil {
+	res, err := newMqlEcrScanningConfiguration(a.MqlRuntime, conn.Region(), resp)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
 		a.ScanningConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return res, nil
+}
+
+// newMqlEcrScanningConfiguration creates the scanning configuration of the
+// registry in one region. It returns nil when the response carries no
+// configuration.
+func newMqlEcrScanningConfiguration(runtime *plugin.Runtime, region string, resp *ecr.GetRegistryScanningConfigurationOutput) (*mqlAwsEcrScanningConfiguration, error) {
+	if resp == nil || resp.ScanningConfiguration == nil {
 		return nil, nil
 	}
+	registryID := convert.ToValue(resp.RegistryId)
+	id := "aws.ecr.scanningConfiguration/" + region + "/" + registryID
 
 	rules := make([]any, 0, len(resp.ScanningConfiguration.Rules))
 	for i, rule := range resp.ScanningConfiguration.Rules {
@@ -1161,9 +1179,9 @@ func (a *mqlAwsEcr) scanningConfiguration() (*mqlAwsEcrScanningConfiguration, er
 			})
 		}
 
-		mqlRule, err := CreateResource(a.MqlRuntime, "aws.ecr.scanningConfiguration.rule",
+		mqlRule, err := CreateResource(runtime, ResourceAwsEcrScanningConfigurationRule,
 			map[string]*llx.RawData{
-				"__id":              llx.StringData(fmt.Sprintf("aws.ecr.scanningConfiguration.rule/%d", i)),
+				"__id":              llx.StringData(fmt.Sprintf("%s/rule/%d", id, i)),
 				"scanFrequency":     llx.StringData(string(rule.ScanFrequency)),
 				"repositoryFilters": llx.ArrayData(filters, types.Dict),
 			})
@@ -1173,11 +1191,13 @@ func (a *mqlAwsEcr) scanningConfiguration() (*mqlAwsEcrScanningConfiguration, er
 		rules = append(rules, mqlRule)
 	}
 
-	mqlConfig, err := CreateResource(a.MqlRuntime, "aws.ecr.scanningConfiguration",
+	mqlConfig, err := CreateResource(runtime, ResourceAwsEcrScanningConfiguration,
 		map[string]*llx.RawData{
-			"__id":     llx.StringData("aws.ecr.scanningConfiguration"),
-			"scanType": llx.StringData(string(resp.ScanningConfiguration.ScanType)),
-			"rules":    llx.ArrayData(rules, types.Resource("aws.ecr.scanningConfiguration.rule")),
+			"__id":       llx.StringData(id),
+			"region":     llx.StringData(region),
+			"registryId": llx.StringData(registryID),
+			"scanType":   llx.StringData(string(resp.ScanningConfiguration.ScanType)),
+			"rules":      llx.ArrayData(rules, types.Resource(ResourceAwsEcrScanningConfigurationRule)),
 		})
 	if err != nil {
 		return nil, err
@@ -1186,7 +1206,7 @@ func (a *mqlAwsEcr) scanningConfiguration() (*mqlAwsEcrScanningConfiguration, er
 }
 
 func (a *mqlAwsEcrScanningConfiguration) id() (string, error) {
-	return "aws.ecr.scanningConfiguration", nil
+	return a.__id, nil
 }
 
 func (a *mqlAwsEcrScanningConfigurationRule) id() (string, error) {
