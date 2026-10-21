@@ -26,6 +26,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.25.0 // indirect
 	github.com/microsoft/wmi v0.45.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
+	github.com/pierrec/lz4/v4 v4.1.33 // indirect
 	github.com/zclconf/go-cty v1.19.0 // indirect
 	go.opentelemetry.io/otel/log v1.47.0 // indirect
 )
