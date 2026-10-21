@@ -347,6 +347,30 @@ func TestManagerCloudLinux(t *testing.T) {
 	assert.True(t, ok, "SystemDServiceManager used for CloudLinux")
 }
 
+// Alibaba Cloud Linux reports VERSION_ID 3, which the redhat branch read as a
+// RHEL major below 7 and handed to upstart: services came back empty on a
+// systemd host.
+func TestManagerAlibabaCloudLinux(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "alinux",
+			Version: "3",
+			Family:  []string{"redhat", "linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for Alibaba Cloud Linux")
+}
+
 func TestManagerElementary(t *testing.T) {
 	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{

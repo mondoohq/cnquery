@@ -1809,6 +1809,31 @@ func TestAnolisDetector(t *testing.T) {
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
+// Alibaba Cloud Linux links /etc/centos-release to its own release file, so the
+// centos resolver used to claim it and emit "alinux", a name not in the tree.
+func TestAlibabaCloudLinux3Detector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-alinux-3.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "alinux", di.Name, "os name should be identified")
+	assert.Equal(t, "Alibaba Cloud Linux 3.2104 U13.4 (OpenAnolis Edition)", di.Title, "os title should be identified")
+	assert.Equal(t, "3", di.Version, "os version should be identified")
+	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
+// A host with no /etc/os-release still reaches the resolver with the title the
+// redhat family parsed out of /etc/redhat-release.
+func TestAlibabaCloudLinuxDetectFromReleaseTitle(t *testing.T) {
+	name, _, err := ParseRhelVersion("Alibaba Cloud Linux release 3 (OpenAnolis Edition)")
+	require.NoError(t, err)
+
+	pf := &inventory.Platform{Title: name}
+	detected, err := alinux.Detect(alinux, pf, nil)
+	assert.NoError(t, err)
+	assert.True(t, detected, "alinux should be detected from the release title")
+	assert.Equal(t, "alinux", pf.Name, "os name should be set")
+}
+
 // OpenCloudOS ships no /etc/redhat-release, so the redhat family declines it
 // before its children are consulted. It resolves as a platform of its own and
 // packages.go names it to get the rpm package manager back.

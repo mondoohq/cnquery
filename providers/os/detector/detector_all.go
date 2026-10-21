@@ -924,6 +924,36 @@ var anolis = &PlatformResolver{
 	},
 }
 
+// Alibaba Cloud Linux (os-release ID=alinux, ID_LIKE="rhel fedora centos
+// anolis") is the distribution Alibaba Cloud ships on ECS. It links
+// /etc/redhat-release, /etc/centos-release and /etc/anolis-release to
+// /etc/alinux-release, so it resolves inside the redhat family. Without a
+// resolver of its own the centos resolver claimed it through
+// /etc/centos-release and emitted "alinux", a name the tree does not know. It
+// is resolved before centos for that reason.
+//
+// Its releases are numbered 2 and 3, not after the RHEL release they track
+// (3 is built on Anolis OS 8), so anything that reads a redhat version number
+// as a RHEL major has to treat it separately.
+var alinux = &PlatformResolver{
+	Name:     "alinux",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "alinux" {
+			return true, nil
+		}
+
+		// fallback for systems that ship no os-release, only
+		// /etc/redhat-release ("Alibaba Cloud Linux release 3 (OpenAnolis Edition)")
+		if strings.HasPrefix(pf.Title, "Alibaba Cloud Linux") {
+			pf.Name = "alinux"
+			return true, nil
+		}
+
+		return false, nil
+	},
+}
+
 var fedora = &PlatformResolver{
 	Name:     "fedora",
 	IsFamily: false,
@@ -1678,9 +1708,9 @@ var redhatFamily = &PlatformResolver{
 	// want to check that platform before redhat. rhcos has the same problem: its
 	// /etc/redhat-release is stock RHEL and its PRETTY_NAME starts with "Red Hat",
 	// so it also has to be resolved before redhat.
-	// NOTE: cloudlinux runs before centos, whose last resort is the mere existence of
-	// /etc/centos-release, which a rebuild may ship for compatibility
-	Children: []*PlatformResolver{oracle, rhcos, rhel, cloudlinux, anolis, centos, fedora, scientific, eurolinux, nobara, qubes},
+	// NOTE: cloudlinux, anolis and alinux run before centos, whose last resort is the
+	// mere existence of /etc/centos-release, which a rebuild may ship for compatibility
+	Children: []*PlatformResolver{oracle, rhcos, rhel, cloudlinux, anolis, alinux, centos, fedora, scientific, eurolinux, nobara, qubes},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		f, err := conn.FileSystem().Open("/etc/redhat-release")
 		if err != nil {

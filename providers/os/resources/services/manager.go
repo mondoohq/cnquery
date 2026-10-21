@@ -141,6 +141,11 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 		} else {
 			osm = ResolveSystemdServiceManager(conn)
 		}
+	// Alibaba Cloud Linux numbers its releases 2 and 3, which the redhat branch
+	// below would read as pre-systemd RHEL majors and hand to upstart. Every
+	// release of it runs systemd.
+	case asset.Platform.Name == "alinux":
+		osm = ResolveSystemdServiceManager(conn)
 	// NOTE: we need to check fedora before rhel family, since its also rhel family
 	case asset.Platform.Name == "fedora":
 		rv := detector.ParseOsVersion(asset.Platform.Version)
