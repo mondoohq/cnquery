@@ -831,6 +831,8 @@ func TestDetectDeviceType_EnterpriseLinux(t *testing.T) {
 		{"eurolinux 9", "eurolinux", "EuroLinux 9.1 (Stockholm)", []string{"redhat", "linux", "unix", "os"}},
 		// detect-cloudlinux-9.toml
 		{"cloudlinux 9", "cloudlinux", "CloudLinux 9.6 (Vladimir Lyakhov)", []string{"redhat", "linux", "unix", "os"}},
+		// detect-alinux-3.toml
+		{"alibaba cloud linux 3", "alinux", "Alibaba Cloud Linux 3.2104 U13.4 (OpenAnolis Edition)", []string{"redhat", "linux", "unix", "os"}},
 		// detect-scientific.toml
 		{"scientific linux", "scientific", "Scientific Linux CERN SLC", []string{"redhat", "linux", "unix", "os"}},
 		// detect-centos-9-stream.toml
