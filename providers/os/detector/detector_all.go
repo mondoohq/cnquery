@@ -2024,13 +2024,13 @@ var solaris = &PlatformResolver{
 		// version ("Oracle Solaris 11.4") where /etc/release's title does not.
 		// Its ID feeds the distro qualifier of package URLs.
 		if osr, err := osrd.osrelease(); err == nil {
+			if pf.Labels == nil {
+				pf.Labels = map[string]string{}
+			}
+			if pf.Metadata == nil {
+				pf.Metadata = map[string]string{}
+			}
 			if osr["ID"] != "" {
-				if pf.Labels == nil {
-					pf.Labels = map[string]string{}
-				}
-				if pf.Metadata == nil {
-					pf.Metadata = map[string]string{}
-				}
 				pf.Labels[LabelDistroID] = osr["ID"]
 				pf.Metadata[LabelDistroID] = osr["ID"]
 			}
