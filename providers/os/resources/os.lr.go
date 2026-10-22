@@ -759,6 +759,14 @@ const (
 	ResourceOpenhandsSkill                                 string = "openhands.skill"
 	ResourceQwenCode                                       string = "qwen.code"
 	ResourceQwenCodeSkill                                  string = "qwen.code.skill"
+	ResourceDevinDesktop                                   string = "devin.desktop"
+	ResourceDevinDesktopSkill                              string = "devin.desktop.skill"
+	ResourceZcode                                          string = "zcode"
+	ResourceZcodeSkill                                     string = "zcode.skill"
+	ResourceQualia                                         string = "qualia"
+	ResourceBuilderio                                      string = "builderio"
+	ResourceBuilderioSkill                                 string = "builderio.skill"
+	ResourceAnthropicCli                                   string = "anthropic.cli"
 	ResourceAgentskills                                    string = "agentskills"
 	ResourceAgentskillsSkill                               string = "agentskills.skill"
 	ResourceAgentinstructions                              string = "agentinstructions"
@@ -3766,6 +3774,38 @@ func init() {
 		"qwen.code.skill": {
 			// to override args, implement: initQwenCodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createQwenCodeSkill,
+		},
+		"devin.desktop": {
+			Init:   initDevinDesktop,
+			Create: createDevinDesktop,
+		},
+		"devin.desktop.skill": {
+			// to override args, implement: initDevinDesktopSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDevinDesktopSkill,
+		},
+		"zcode": {
+			Init:   initZcode,
+			Create: createZcode,
+		},
+		"zcode.skill": {
+			// to override args, implement: initZcodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createZcodeSkill,
+		},
+		"qualia": {
+			Init:   initQualia,
+			Create: createQualia,
+		},
+		"builderio": {
+			Init:   initBuilderio,
+			Create: createBuilderio,
+		},
+		"builderio.skill": {
+			// to override args, implement: initBuilderioSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBuilderioSkill,
+		},
+		"anthropic.cli": {
+			Init:   initAnthropicCli,
+			Create: createAnthropicCli,
 		},
 		"agentskills": {
 			// to override args, implement: initAgentskills(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -21642,6 +21682,132 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"qwen.code.skill.purl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlQwenCodeSkill).GetPurl()).ToDataRes(types.String)
+	},
+	"devin.desktop.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDevinDesktop).GetConfigPath()).ToDataRes(types.String)
+	},
+	"devin.desktop.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDevinDesktop).GetPackage()).ToDataRes(types.Resource("package"))
+	},
+	"devin.desktop.runtime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDevinDesktop).GetRuntime()).ToDataRes(types.Resource("extensionRuntime"))
+	},
+	"devin.desktop.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDevinDesktop).GetSkills()).ToDataRes(types.Array(types.Resource("devin.desktop.skill")))
+	},
+	"devin.desktop.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDevinDesktopSkill).GetName()).ToDataRes(types.String)
+	},
+	"devin.desktop.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDevinDesktopSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"devin.desktop.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDevinDesktopSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"devin.desktop.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDevinDesktopSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"devin.desktop.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDevinDesktopSkill).GetSource()).ToDataRes(types.String)
+	},
+	"devin.desktop.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDevinDesktopSkill).GetContent()).ToDataRes(types.String)
+	},
+	"devin.desktop.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDevinDesktopSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"devin.desktop.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDevinDesktopSkill).GetPurl()).ToDataRes(types.String)
+	},
+	"zcode.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZcode).GetConfigPath()).ToDataRes(types.String)
+	},
+	"zcode.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZcode).GetPackage()).ToDataRes(types.Resource("package"))
+	},
+	"zcode.runtime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZcode).GetRuntime()).ToDataRes(types.Resource("extensionRuntime"))
+	},
+	"zcode.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZcode).GetSkills()).ToDataRes(types.Array(types.Resource("zcode.skill")))
+	},
+	"zcode.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZcodeSkill).GetName()).ToDataRes(types.String)
+	},
+	"zcode.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZcodeSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"zcode.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZcodeSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"zcode.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZcodeSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"zcode.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZcodeSkill).GetSource()).ToDataRes(types.String)
+	},
+	"zcode.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZcodeSkill).GetContent()).ToDataRes(types.String)
+	},
+	"zcode.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZcodeSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"zcode.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZcodeSkill).GetPurl()).ToDataRes(types.String)
+	},
+	"qualia.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQualia).GetConfigPath()).ToDataRes(types.String)
+	},
+	"qualia.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQualia).GetPackage()).ToDataRes(types.Resource("package"))
+	},
+	"qualia.runtime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQualia).GetRuntime()).ToDataRes(types.Resource("extensionRuntime"))
+	},
+	"builderio.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBuilderio).GetConfigPath()).ToDataRes(types.String)
+	},
+	"builderio.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBuilderio).GetPackage()).ToDataRes(types.Resource("package"))
+	},
+	"builderio.runtime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBuilderio).GetRuntime()).ToDataRes(types.Resource("extensionRuntime"))
+	},
+	"builderio.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBuilderio).GetSkills()).ToDataRes(types.Array(types.Resource("builderio.skill")))
+	},
+	"builderio.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBuilderioSkill).GetName()).ToDataRes(types.String)
+	},
+	"builderio.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBuilderioSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"builderio.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBuilderioSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"builderio.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBuilderioSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"builderio.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBuilderioSkill).GetSource()).ToDataRes(types.String)
+	},
+	"builderio.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBuilderioSkill).GetContent()).ToDataRes(types.String)
+	},
+	"builderio.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBuilderioSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"builderio.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBuilderioSkill).GetPurl()).ToDataRes(types.String)
+	},
+	"anthropic.cli.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnthropicCli).GetConfigPath()).ToDataRes(types.String)
+	},
+	"anthropic.cli.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnthropicCli).GetPackage()).ToDataRes(types.Resource("package"))
+	},
+	"anthropic.cli.runtime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnthropicCli).GetRuntime()).ToDataRes(types.Resource("extensionRuntime"))
 	},
 	"agentskills.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAgentskills).GetPath()).ToDataRes(types.String)
@@ -48925,6 +49091,206 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"qwen.code.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlQwenCodeSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"devin.desktop.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDevinDesktop).__id, ok = v.Value.(string)
+		return
+	},
+	"devin.desktop.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDevinDesktop).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"devin.desktop.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDevinDesktop).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
+	"devin.desktop.runtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDevinDesktop).Runtime, ok = plugin.RawToTValue[*mqlExtensionRuntime](v.Value, v.Error)
+		return
+	},
+	"devin.desktop.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDevinDesktop).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"devin.desktop.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDevinDesktopSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"devin.desktop.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDevinDesktopSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"devin.desktop.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDevinDesktopSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"devin.desktop.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDevinDesktopSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"devin.desktop.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDevinDesktopSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"devin.desktop.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDevinDesktopSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"devin.desktop.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDevinDesktopSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"devin.desktop.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDevinDesktopSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"devin.desktop.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDevinDesktopSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zcode.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZcode).__id, ok = v.Value.(string)
+		return
+	},
+	"zcode.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZcode).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zcode.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZcode).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
+	"zcode.runtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZcode).Runtime, ok = plugin.RawToTValue[*mqlExtensionRuntime](v.Value, v.Error)
+		return
+	},
+	"zcode.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZcode).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"zcode.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZcodeSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"zcode.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZcodeSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zcode.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZcodeSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zcode.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZcodeSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"zcode.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZcodeSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zcode.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZcodeSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zcode.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZcodeSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zcode.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZcodeSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zcode.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZcodeSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qualia.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQualia).__id, ok = v.Value.(string)
+		return
+	},
+	"qualia.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQualia).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qualia.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQualia).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
+	"qualia.runtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQualia).Runtime, ok = plugin.RawToTValue[*mqlExtensionRuntime](v.Value, v.Error)
+		return
+	},
+	"builderio.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBuilderio).__id, ok = v.Value.(string)
+		return
+	},
+	"builderio.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBuilderio).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"builderio.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBuilderio).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
+	"builderio.runtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBuilderio).Runtime, ok = plugin.RawToTValue[*mqlExtensionRuntime](v.Value, v.Error)
+		return
+	},
+	"builderio.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBuilderio).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"builderio.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBuilderioSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"builderio.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBuilderioSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"builderio.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBuilderioSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"builderio.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBuilderioSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"builderio.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBuilderioSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"builderio.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBuilderioSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"builderio.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBuilderioSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"builderio.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBuilderioSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"builderio.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBuilderioSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"anthropic.cli.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnthropicCli).__id, ok = v.Value.(string)
+		return
+	},
+	"anthropic.cli.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnthropicCli).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"anthropic.cli.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnthropicCli).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
+	"anthropic.cli.runtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnthropicCli).Runtime, ok = plugin.RawToTValue[*mqlExtensionRuntime](v.Value, v.Error)
 		return
 	},
 	"agentskills.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -125837,6 +126203,736 @@ func (c *mqlQwenCodeSkill) GetSha256() *plugin.TValue[string] {
 func (c *mqlQwenCodeSkill) GetPurl() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
 		return c.purl()
+	})
+}
+
+// mqlDevinDesktop for the devin.desktop resource
+type mqlDevinDesktop struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDevinDesktopInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
+	Runtime    plugin.TValue[*mqlExtensionRuntime]
+	Skills     plugin.TValue[[]any]
+}
+
+// createDevinDesktop creates a new instance of this resource
+func createDevinDesktop(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDevinDesktop{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("devin.desktop", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDevinDesktop) MqlName() string {
+	return "devin.desktop"
+}
+
+func (c *mqlDevinDesktop) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDevinDesktop) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlDevinDesktop) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("devin.desktop", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
+}
+
+func (c *mqlDevinDesktop) GetRuntime() *plugin.TValue[*mqlExtensionRuntime] {
+	return plugin.GetOrCompute[*mqlExtensionRuntime](&c.Runtime, func() (*mqlExtensionRuntime, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("devin.desktop", c.__id, "runtime")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlExtensionRuntime), nil
+			}
+		}
+
+		return c.runtime()
+	})
+}
+
+func (c *mqlDevinDesktop) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("devin.desktop", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlDevinDesktopSkill for the devin.desktop.skill resource
+type mqlDevinDesktopSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDevinDesktopSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
+}
+
+// createDevinDesktopSkill creates a new instance of this resource
+func createDevinDesktopSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDevinDesktopSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("devin.desktop.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDevinDesktopSkill) MqlName() string {
+	return "devin.desktop.skill"
+}
+
+func (c *mqlDevinDesktopSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDevinDesktopSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDevinDesktopSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlDevinDesktopSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlDevinDesktopSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlDevinDesktopSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlDevinDesktopSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlDevinDesktopSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+func (c *mqlDevinDesktopSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+// mqlZcode for the zcode resource
+type mqlZcode struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlZcodeInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
+	Runtime    plugin.TValue[*mqlExtensionRuntime]
+	Skills     plugin.TValue[[]any]
+}
+
+// createZcode creates a new instance of this resource
+func createZcode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlZcode{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("zcode", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlZcode) MqlName() string {
+	return "zcode"
+}
+
+func (c *mqlZcode) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlZcode) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlZcode) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("zcode", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
+}
+
+func (c *mqlZcode) GetRuntime() *plugin.TValue[*mqlExtensionRuntime] {
+	return plugin.GetOrCompute[*mqlExtensionRuntime](&c.Runtime, func() (*mqlExtensionRuntime, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("zcode", c.__id, "runtime")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlExtensionRuntime), nil
+			}
+		}
+
+		return c.runtime()
+	})
+}
+
+func (c *mqlZcode) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("zcode", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlZcodeSkill for the zcode.skill resource
+type mqlZcodeSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlZcodeSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
+}
+
+// createZcodeSkill creates a new instance of this resource
+func createZcodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlZcodeSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("zcode.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlZcodeSkill) MqlName() string {
+	return "zcode.skill"
+}
+
+func (c *mqlZcodeSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlZcodeSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlZcodeSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlZcodeSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlZcodeSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlZcodeSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlZcodeSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlZcodeSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+func (c *mqlZcodeSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+// mqlQualia for the qualia resource
+type mqlQualia struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlQualiaInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
+	Runtime    plugin.TValue[*mqlExtensionRuntime]
+}
+
+// createQualia creates a new instance of this resource
+func createQualia(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlQualia{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("qualia", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlQualia) MqlName() string {
+	return "qualia"
+}
+
+func (c *mqlQualia) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlQualia) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlQualia) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("qualia", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
+}
+
+func (c *mqlQualia) GetRuntime() *plugin.TValue[*mqlExtensionRuntime] {
+	return plugin.GetOrCompute[*mqlExtensionRuntime](&c.Runtime, func() (*mqlExtensionRuntime, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("qualia", c.__id, "runtime")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlExtensionRuntime), nil
+			}
+		}
+
+		return c.runtime()
+	})
+}
+
+// mqlBuilderio for the builderio resource
+type mqlBuilderio struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlBuilderioInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
+	Runtime    plugin.TValue[*mqlExtensionRuntime]
+	Skills     plugin.TValue[[]any]
+}
+
+// createBuilderio creates a new instance of this resource
+func createBuilderio(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBuilderio{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("builderio", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBuilderio) MqlName() string {
+	return "builderio"
+}
+
+func (c *mqlBuilderio) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBuilderio) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlBuilderio) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("builderio", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
+}
+
+func (c *mqlBuilderio) GetRuntime() *plugin.TValue[*mqlExtensionRuntime] {
+	return plugin.GetOrCompute[*mqlExtensionRuntime](&c.Runtime, func() (*mqlExtensionRuntime, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("builderio", c.__id, "runtime")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlExtensionRuntime), nil
+			}
+		}
+
+		return c.runtime()
+	})
+}
+
+func (c *mqlBuilderio) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("builderio", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlBuilderioSkill for the builderio.skill resource
+type mqlBuilderioSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlBuilderioSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
+}
+
+// createBuilderioSkill creates a new instance of this resource
+func createBuilderioSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBuilderioSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("builderio.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBuilderioSkill) MqlName() string {
+	return "builderio.skill"
+}
+
+func (c *mqlBuilderioSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBuilderioSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlBuilderioSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlBuilderioSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlBuilderioSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlBuilderioSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlBuilderioSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlBuilderioSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+func (c *mqlBuilderioSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+// mqlAnthropicCli for the anthropic.cli resource
+type mqlAnthropicCli struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAnthropicCliInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
+	Runtime    plugin.TValue[*mqlExtensionRuntime]
+}
+
+// createAnthropicCli creates a new instance of this resource
+func createAnthropicCli(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAnthropicCli{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("anthropic.cli", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAnthropicCli) MqlName() string {
+	return "anthropic.cli"
+}
+
+func (c *mqlAnthropicCli) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAnthropicCli) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlAnthropicCli) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("anthropic.cli", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
+}
+
+func (c *mqlAnthropicCli) GetRuntime() *plugin.TValue[*mqlExtensionRuntime] {
+	return plugin.GetOrCompute[*mqlExtensionRuntime](&c.Runtime, func() (*mqlExtensionRuntime, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("anthropic.cli", c.__id, "runtime")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlExtensionRuntime), nil
+			}
+		}
+
+		return c.runtime()
 	})
 }
 

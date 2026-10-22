@@ -28,6 +28,7 @@ alias os.base.augment = augment
 alias os.base.authorizedkeys = authorizedkeys
 alias os.base.bind9 = bind9
 alias os.base.breezell = breezell
+alias os.base.builderio = builderio
 alias os.base.cassandra = cassandra
 alias os.base.chrome = chrome
 alias os.base.cline = cline
@@ -71,6 +72,7 @@ alias os.base.privatekey = privatekey
 alias os.base.process = process
 alias os.base.processes = processes
 alias os.base.python = python
+alias os.base.qualia = qualia
 alias os.base.roo = roo
 alias os.base.squid = squid
 alias os.base.tomcat = tomcat
@@ -81,6 +83,7 @@ alias os.base.warp = warp
 alias os.base.windsurf = windsurf
 alias os.base.winget = winget
 alias os.base.yum = yum
+alias os.base.zcode = zcode
 alias os.base.zed = zed
 alias os.unix.aide = aide
 alias os.unix.crontab = crontab
@@ -25472,6 +25475,331 @@ private qwen.code.skill @defaults("name") @maturity("preview") {
   sha256() string
   // Package URL identifying the skill's git origin
   purl() string
+}
+
+// Devin Desktop (Cognition) instance
+//
+// Devin Desktop, Cognition's desktop application for running AI coding agents
+// (the successor to the Windsurf editor), installed on the target. Reports its
+// presence and version via package, the host it runs in via runtime, and the
+// SKILL.md definitions installed for it via skills. Skills are scanned under
+// the configuration directory (default .config/devin in the user's home,
+// AppData\Roaming\devin on Windows), which the Devin CLI shares, so only a
+// Devin Desktop package counts as an install. Pass configPath to target a
+// non-default directory.
+// URL: https://devin.ai/desktop
+devin.desktop @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Devin configuration directory
+  configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional; null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
+  // Skills installed for the agent, one resource per discovered SKILL.md file
+  skills() []devin.desktop.skill
+}
+
+// Devin Desktop skill
+//
+// A single SKILL.md definition discovered for the Devin Desktop agent. Each skill
+// is a Markdown file with YAML frontmatter that adds instructions and tool
+// access to the assistant; auditing them surfaces the capabilities granted.
+private devin.desktop.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  //
+  // Name from the SKILL.md YAML frontmatter `name` field, falling back to
+  // the skill's directory name when the frontmatter omits it.
+  name string
+  // Skill description
+  //
+  // Free-text summary from the frontmatter `description` field, stating what
+  // the skill does and when the agent should invoke it.
+  description string
+  // Tools the skill is allowed to use
+  //
+  // Tool identifiers parsed from the frontmatter `allowed-tools` field (a
+  // comma-separated list), naming the capabilities the skill may invoke such
+  // as file edits, shell commands, or web access. Empty when the skill
+  // declares no restriction. The key field for reviewing what an installed
+  // skill is permitted to do.
+  allowedTools []string
+  // Hint for expected arguments
+  //
+  // Usage hint from the frontmatter `argument-hint` field, shown when the
+  // skill is invoked. Empty when unset.
+  argumentHint string
+  // Filesystem path to the SKILL.md file that defines the skill
+  source string
+  // Full raw content of the SKILL.md file
+  //
+  // Complete Markdown body of the skill, including the YAML frontmatter and
+  // the prose instructions the agent follows. Inspect it to review exactly
+  // what an installed skill tells the agent to do.
+  content string
+  // SHA-256 hash of the skill content
+  //
+  // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
+  // known-good skill definition against a baseline.
+  sha256() string
+  // Package URL identifying the skill's git origin
+  purl() string
+}
+
+// ZCode (Z.ai) instance
+//
+// ZCode, Z.ai's agentic development environment built around its GLM models,
+// installed on the target. Reports its presence and version via package, the
+// host it runs in via runtime, and the SKILL.md definitions installed for it
+// via skills. Skills are scanned under the configuration directory (default
+// .zcode in the user's home); pass configPath to target a non-default install.
+// Auditing this resource shows whether the agent is present and what skills
+// extend it.
+// URL: https://zcode.z.ai/en
+zcode @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the ZCode configuration directory
+  configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional; null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
+  // Skills installed for the agent, one resource per discovered SKILL.md file
+  skills() []zcode.skill
+}
+
+// ZCode skill
+//
+// A single SKILL.md definition discovered for the ZCode agent. Each skill
+// is a Markdown file with YAML frontmatter that adds instructions and tool
+// access to the assistant; auditing them surfaces the capabilities granted.
+private zcode.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  //
+  // Name from the SKILL.md YAML frontmatter `name` field, falling back to
+  // the skill's directory name when the frontmatter omits it.
+  name string
+  // Skill description
+  //
+  // Free-text summary from the frontmatter `description` field, stating what
+  // the skill does and when the agent should invoke it.
+  description string
+  // Tools the skill is allowed to use
+  //
+  // Tool identifiers parsed from the frontmatter `allowed-tools` field (a
+  // comma-separated list), naming the capabilities the skill may invoke such
+  // as file edits, shell commands, or web access. Empty when the skill
+  // declares no restriction. The key field for reviewing what an installed
+  // skill is permitted to do.
+  allowedTools []string
+  // Hint for expected arguments
+  //
+  // Usage hint from the frontmatter `argument-hint` field, shown when the
+  // skill is invoked. Empty when unset.
+  argumentHint string
+  // Filesystem path to the SKILL.md file that defines the skill
+  source string
+  // Full raw content of the SKILL.md file
+  //
+  // Complete Markdown body of the skill, including the YAML frontmatter and
+  // the prose instructions the agent follows. Inspect it to review exactly
+  // what an installed skill tells the agent to do.
+  content string
+  // SHA-256 hash of the skill content
+  //
+  // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
+  // known-good skill definition against a baseline.
+  sha256() string
+  // Package URL identifying the skill's git origin
+  purl() string
+}
+
+// Qualia (Quadrillion) instance
+//
+// Qualia, Quadrillion's AI research assistant that runs agents against Jupyter
+// notebooks, installed on the target. Reports its presence and version via
+// package and the host it runs in via runtime. Its settings directory is
+// io.quadrillion.qualia under the platform's per-user application-data
+// directory (Library/Application Support on macOS, AppData\Roaming on Windows,
+// .config elsewhere); pass configPath to target a non-default install.
+// URL: https://quadrillion.ai/qualia
+qualia @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Qualia settings directory
+  configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional; null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
+}
+
+// Builder.io instance
+//
+// Builder.io's desktop app and CLI, which build and change software with AI
+// agents, installed on the target. Reports its presence and version via
+// package, the host it runs in via runtime, and the SKILL.md definitions
+// installed for it via skills. Skills are scanned under the configuration
+// directory (default .builder in the user's home), which the desktop app and
+// the CLI share; pass configPath to target a non-default install.
+// URL: https://www.builder.io/desktop-app
+builderio @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Builder.io configuration directory
+  configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional; null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
+  // Skills installed for the agent, one resource per discovered SKILL.md file
+  skills() []builderio.skill
+}
+
+// Builder.io skill
+//
+// A single SKILL.md definition discovered for the Builder.io agent. Each skill
+// is a Markdown file with YAML frontmatter that adds instructions and tool
+// access to the assistant; auditing them surfaces the capabilities granted.
+private builderio.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  //
+  // Name from the SKILL.md YAML frontmatter `name` field, falling back to
+  // the skill's directory name when the frontmatter omits it.
+  name string
+  // Skill description
+  //
+  // Free-text summary from the frontmatter `description` field, stating what
+  // the skill does and when the agent should invoke it.
+  description string
+  // Tools the skill is allowed to use
+  //
+  // Tool identifiers parsed from the frontmatter `allowed-tools` field (a
+  // comma-separated list), naming the capabilities the skill may invoke such
+  // as file edits, shell commands, or web access. Empty when the skill
+  // declares no restriction. The key field for reviewing what an installed
+  // skill is permitted to do.
+  allowedTools []string
+  // Hint for expected arguments
+  //
+  // Usage hint from the frontmatter `argument-hint` field, shown when the
+  // skill is invoked. Empty when unset.
+  argumentHint string
+  // Filesystem path to the SKILL.md file that defines the skill
+  source string
+  // Full raw content of the SKILL.md file
+  //
+  // Complete Markdown body of the skill, including the YAML frontmatter and
+  // the prose instructions the agent follows. Inspect it to review exactly
+  // what an installed skill tells the agent to do.
+  content string
+  // SHA-256 hash of the skill content
+  //
+  // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
+  // known-good skill definition against a baseline.
+  sha256() string
+  // Package URL identifying the skill's git origin
+  purl() string
+}
+
+// Claude Platform CLI (Anthropic) instance
+//
+// The Claude Platform CLI (`ant`), Anthropic's command line client for the
+// Claude API, which manages agents, sessions and files, installed on the
+// target. Reports its presence and version via package and the host it runs in
+// via runtime. Its profiles and credentials live in the anthropic-sdk-go
+// configuration directory (default .config/anthropic in the user's home,
+// AppData\Roaming\Anthropic on Windows), which other SDK clients share, so
+// presence also requires `ant --version` to answer in the CLI's format; Apache
+// Ant ships a binary of the same name. Pass configPath to target a
+// non-default directory.
+// URL: https://github.com/anthropics/anthropic-cli
+anthropic.cli @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Anthropic configuration directory
+  configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional; null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
 }
 
 // Agent Skills under a directory

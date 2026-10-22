@@ -88,6 +88,17 @@ type toolPackageSpec struct {
 	// configIsFile marks a tool whose configPath names a file rather than a
 	// directory (Aider's .aider.conf.yml), so presence is the file existing.
 	configIsFile bool
+	// configShared marks a tool whose configPath directory other software
+	// creates too (Devin Desktop shares ~/.config/devin with the Devin CLI;
+	// every anthropic-sdk-go client writes ~/.config/anthropic), so the
+	// directory existing is not an install signal. The abstract package then
+	// counts as installed only when inferVersion finds a version.
+	configShared bool
+	// versionedCandidates are names a Windows installer registers with the
+	// release appended ("Qualia 0.8.14"), which the exact managerCandidates
+	// lookup cannot reach. A package matches when its name is the candidate,
+	// a space, and the package's own version, so "ZCode Helper 3.15.1" does not.
+	versionedCandidates []string
 }
 
 // toolPackageSpecs is keyed by MQL resource name.
@@ -140,6 +151,26 @@ var toolPackageSpecs = map[string]toolPackageSpec{
 	// Aider installs with pip/pipx/uv, which OS package managers do not track;
 	// "aider-chat" (AUR) and "aider" (Homebrew) are its names where one does.
 	"aider": {packageName: "aider", binaryNames: []string{"aider"}, managerCandidates: []string{"aider-chat", "aider"}, configIsFile: true},
+	// Devin Desktop continues Windsurf's release line and shares its
+	// ~/.codeium/windsurf directory, so its configPath is ~/.config/devin, where
+	// its MCP servers and skills live. The Devin CLI uses that directory too,
+	// hence configShared: only a Devin Desktop package proves the install.
+	// "devin-desktop" is the deb, rpm and Homebrew cask name and the binary.
+	"devin.desktop": {packageName: "devin-desktop", binaryNames: []string{"devin-desktop"}, managerCandidates: []string{"devin-desktop", "Devin", "Devin (User)"}, vendor: "Cognition", configShared: true},
+	// "zcode" is the deb, rpm and Homebrew cask name, "ZCode" the macOS app; the
+	// Windows installer registers "ZCode <version>".
+	"zcode": {packageName: "zcode", binaryNames: []string{"zcode"}, managerCandidates: []string{"zcode", "ZCode"}, versionedCandidates: []string{"ZCode"}, vendor: "Zhipu AI"},
+	// "qualia" is the deb, "Qualia" the macOS app; the per-user Windows
+	// installer registers "Qualia <version>".
+	"qualia": {packageName: "qualia", binaryNames: []string{"qualia"}, managerCandidates: []string{"qualia", "Qualia"}, versionedCandidates: []string{"Qualia"}, vendor: "Quadrillion Labs"},
+	// The desktop app registers as "Builder.io" (Windows MSI, macOS app). The
+	// CLI ships on npm, which no OS package manager tracks.
+	"builderio": {packageName: "builderio", managerCandidates: []string{"Builder.io"}, vendor: "Builder.io"},
+	// Every package name the Claude Platform CLI ships under ("ant": Homebrew
+	// cask, deb, rpm, apk) is also Apache Ant's (Homebrew formula, Debian,
+	// Fedora), and so is the binary, so neither is used. Presence is the
+	// config directory plus `ant --version` answering in the CLI's own format.
+	"anthropic.cli": {packageName: "anthropic-cli", vendor: "Anthropic", inferVersion: inferAnthropicCLIVersion, configShared: true},
 	// Ollama is a model server rather than a coding agent, but it is installed
 	// and versioned the same way, so it resolves through the same path.
 	"ollama": {packageName: "ollama", binaryNames: []string{"ollama"}, managerCandidates: []string{"ollama", "Ollama", "ollama-app"}, vendor: "Ollama", inferVersion: inferOllamaVersion},
@@ -184,10 +215,21 @@ func resolveToolPackage(runtime *plugin.Runtime, configPath string, spec toolPac
 		}
 	}
 
+	for _, name := range spec.versionedCandidates {
+		pkg, err := lookupVersionedPackage(runtime, name)
+		if err != nil {
+			return nil, err
+		}
+		if pkg != nil {
+			return pkg, nil
+		}
+	}
+
 	// (c) Not attributable to any manager — detect presence and, where
 	// possible, a version, then synthesize an abstract package. An installed
 	// editor extension is both a presence signal and the version source.
-	installed := configPresent(runtime, configPath, spec.configIsFile)
+	configFound := configPresent(runtime, configPath, spec.configIsFile)
+	installed := configFound && !spec.configShared
 	version := ""
 	if len(spec.vscodeExtensionIDs) > 0 {
 		homes, err := targetUserHomes(runtime)
@@ -207,12 +249,15 @@ func resolveToolPackage(runtime *plugin.Runtime, configPath string, spec toolPac
 			version = v
 		}
 	}
-	if installed && version == "" && spec.inferVersion != nil {
+	if (installed || configFound) && version == "" && spec.inferVersion != nil {
 		v, err := spec.inferVersion(runtime, configPath)
 		if err != nil {
 			return nil, err
 		}
 		version = v
+		if v != "" {
+			installed = true
+		}
 	}
 
 	// synthetic id; distinct from the real "format://name/version/arch" scheme
@@ -370,6 +415,35 @@ func lookupInstalledPackage(runtime *plugin.Runtime, name string) (*mqlPackage, 
 		return pkg, nil
 	}
 	return nil, nil
+}
+
+// lookupVersionedPackage resolves a package registered as "<name> <version>",
+// where version is the package's own version, from the `packages` collection.
+// Returns nil when none is installed.
+func lookupVersionedPackage(runtime *plugin.Runtime, name string) (*mqlPackage, error) {
+	raw, err := CreateResource(runtime, "packages", nil)
+	if err != nil {
+		return nil, err
+	}
+	pkgs := raw.(*mqlPackages)
+	if err := pkgs.refreshCache(nil); err != nil {
+		return nil, err
+	}
+	return versionedPackageMatch(pkgs.packagesByName, name), nil
+}
+
+// versionedPackageMatch picks the package named name + " " + its own version.
+func versionedPackageMatch(byName map[string]*mqlPackage, name string) *mqlPackage {
+	prefix := name + " "
+	for pkgName, pkg := range byName {
+		if pkg == nil || !pkg.Installed.Data || pkg.Version.Data == "" {
+			continue
+		}
+		if strings.HasPrefix(pkgName, prefix) && pkgName[len(prefix):] == pkg.Version.Data {
+			return pkg
+		}
+	}
+	return nil
 }
 
 // configDirPresent is the presence signal for the abstract-package fallback:
@@ -550,6 +624,36 @@ func inferClaudeVersion(runtime *plugin.Runtime, configPath string) (string, err
 	return version, nil
 }
 
+// inferAnthropicCLIVersion runs `ant --version`. The Claude Platform CLI answers
+// "ant version 2.1.0"; Apache Ant, which installs a binary of the same name,
+// rejects --version with a usage error, so only the CLI's own format counts.
+func inferAnthropicCLIVersion(runtime *plugin.Runtime, configPath string) (string, error) {
+	o, err := CreateResource(runtime, "command", map[string]*llx.RawData{
+		"command": llx.StringData(toolVersionCommand(runtime, "ant")),
+	})
+	if err != nil {
+		return "", nil
+	}
+	cmd := o.(*mqlCommand)
+	if cmd.GetExitcode().Data != 0 {
+		return "", nil
+	}
+	return parseAnthropicCLIVersion(cmd.GetStdout().Data), nil
+}
+
+// parseAnthropicCLIVersion returns the version from "ant version X.Y.Z", or ""
+// for any other output.
+func parseAnthropicCLIVersion(out string) string {
+	fields := strings.Fields(out)
+	if len(fields) < 3 || fields[0] != "ant" || fields[1] != "version" {
+		return ""
+	}
+	if _, err := (semver.Parser{}).Compare(fields[2], fields[2]); err != nil {
+		return ""
+	}
+	return fields[2]
+}
+
 // compute_package accessors — one per tool resource. Each delegates to the
 // shared resolver with the tool's spec. The method name is compute_package (not
 // package) because `package` is a Go keyword; the generator's fieldCall prefixes
@@ -661,6 +765,26 @@ func (r *mqlOpenhands) compute_package() (*mqlPackage, error) {
 
 func (r *mqlQwenCode) compute_package() (*mqlPackage, error) {
 	return resolveToolPackage(r.MqlRuntime, r.ConfigPath.Data, toolPackageSpecs["qwen.code"])
+}
+
+func (r *mqlDevinDesktop) compute_package() (*mqlPackage, error) {
+	return resolveToolPackage(r.MqlRuntime, r.ConfigPath.Data, toolPackageSpecs["devin.desktop"])
+}
+
+func (r *mqlZcode) compute_package() (*mqlPackage, error) {
+	return resolveToolPackage(r.MqlRuntime, r.ConfigPath.Data, toolPackageSpecs["zcode"])
+}
+
+func (r *mqlQualia) compute_package() (*mqlPackage, error) {
+	return resolveToolPackage(r.MqlRuntime, r.ConfigPath.Data, toolPackageSpecs["qualia"])
+}
+
+func (r *mqlBuilderio) compute_package() (*mqlPackage, error) {
+	return resolveToolPackage(r.MqlRuntime, r.ConfigPath.Data, toolPackageSpecs["builderio"])
+}
+
+func (r *mqlAnthropicCli) compute_package() (*mqlPackage, error) {
+	return resolveToolPackage(r.MqlRuntime, r.ConfigPath.Data, toolPackageSpecs["anthropic.cli"])
 }
 
 func (r *mqlClaudeDesktop) compute_package() (*mqlPackage, error) {
@@ -782,6 +906,26 @@ func (r *mqlOpenhands) runtime() (*mqlExtensionRuntime, error) {
 
 func (r *mqlQwenCode) runtime() (*mqlExtensionRuntime, error) {
 	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["qwen.code"])
+}
+
+func (r *mqlDevinDesktop) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["devin.desktop"])
+}
+
+func (r *mqlZcode) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["zcode"])
+}
+
+func (r *mqlQualia) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["qualia"])
+}
+
+func (r *mqlBuilderio) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["builderio"])
+}
+
+func (r *mqlAnthropicCli) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["anthropic.cli"])
 }
 
 func (r *mqlClaudeDesktop) runtime() (*mqlExtensionRuntime, error) {
