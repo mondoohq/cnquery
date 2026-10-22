@@ -27,6 +27,7 @@ alias os.base.apt = apt
 alias os.base.augment = augment
 alias os.base.authorizedkeys = authorizedkeys
 alias os.base.bind9 = bind9
+alias os.base.breezell = breezell
 alias os.base.cassandra = cassandra
 alias os.base.chrome = chrome
 alias os.base.cline = cline
