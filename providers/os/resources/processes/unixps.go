@@ -321,9 +321,7 @@ func (upm *UnixProcessManager) runList() ([]*OSProcess, error) {
 	switch {
 	case upm.platform.Name == "solaris":
 		// Solaris ships an SVR4 ps that rejects the BSD-style "axo" cluster with
-		// "ps: illegal option -- o", and has no /usr/ucb/ps to fall back on. This
-		// has to be tested before the linux family, because Solaris 11.4 ships an
-		// /etc/os-release and is therefore reported as part of it.
+		// "ps: illegal option -- o", and has no /usr/ucb/ps to fall back on.
 		stdout, err := upm.runPs("ps -eo pid,pcpu,pmem,vsz,rss,tty,s,time,uid,args")
 		if err != nil {
 			return nil, err

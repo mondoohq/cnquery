@@ -491,11 +491,9 @@ func TestParseSolarisMemoryMalformed(t *testing.T) {
 	}
 }
 
-func TestMemorySolarisInLinuxFamily(t *testing.T) {
-	// Solaris 11.4 ships an os-release and is detected into the linux family.
-	// It must still read the Solaris counters, not /proc/meminfo, which it
-	// does not have.
-	solaris := &inventory.Platform{Name: "solaris", Family: []string{"linux", "unix", "os"}}
+func TestMemorySolaris(t *testing.T) {
+	// Solaris reads its own counters; it has no /proc/meminfo.
+	solaris := &inventory.Platform{Name: "solaris", Family: []string{"unix", "os"}}
 	m := newMemoryResource(t, newMemoryMockData(t, solaris, &mock.TomlData{
 		Commands: map[string]*mock.Command{solarisMemoryCommand: {Stdout: solarisMemoryOutput}},
 	}))

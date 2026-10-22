@@ -54,8 +54,6 @@ func Routes(conn shared.Connection, pf *inventory.Platform) ([]Route, error) {
 	var detector operatingSystemRouteDetector
 
 	switch {
-	// Solaris 11.4 ships /etc/os-release and is detected into the linux
-	// family, so it is matched by name first.
 	case pf.Name == "solaris":
 		detector = &solarisRouteDetector{conn: conn, platform: pf}
 	case pf.Name == "aix":

@@ -76,8 +76,7 @@ func initOsRootCertificates(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	platform := conn.Asset().Platform
 
 	var paths []string
-	// Solaris 11.4 ships /etc/os-release and is detected into the linux
-	// family, so it is matched by name first.
+	// Solaris keeps its bundle under /etc/certs, which no other path names.
 	if platform.Name == "solaris" {
 		paths = SolarisCertFiles
 	} else if platform.IsFamily("linux") {

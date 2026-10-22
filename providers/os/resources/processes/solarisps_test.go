@@ -13,8 +13,8 @@ import (
 	"go.mondoo.com/mql/providers/os/resources/processes"
 )
 
-// Solaris 11.4 ships an /etc/os-release and so lands in the linux family, but
-// its SVR4 ps rejects the BSD-style "axo" cluster the linux branch uses:
+// The Solaris SVR4 ps rejects the BSD-style "axo" cluster the linux branch
+// uses:
 //
 //	ps: illegal option -- o
 //	usage: ps [ -aceglnrSuUvwx ] [ -t term ] ...
@@ -25,7 +25,7 @@ func solarisMock(t *testing.T) *mock.Connection {
 	conn, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "solaris",
-			Family: []string{"linux", "unix", "os"},
+			Family: []string{"unix", "os"},
 		},
 	}, mock.WithData(&mock.TomlData{
 		Commands: map[string]*mock.Command{

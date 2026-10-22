@@ -76,8 +76,7 @@ func readMemoryInfo(conn shared.Connection) (*memoryInfo, error) {
 	}
 	pf := asset.Platform
 
-	// Solaris comes first: 11.4 ships an os-release and is detected into the
-	// linux family, but has no /proc/meminfo.
+	// Solaris has no /proc/meminfo; it reads its own counters.
 	switch {
 	case pf.Name == "solaris":
 		out, err := runMemoryCommand(conn, solarisMemoryCommand)
