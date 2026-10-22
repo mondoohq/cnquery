@@ -26,6 +26,58 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// FindingKind is a kind of document a FindingsUploadRequest carries.
+type FindingKind int32
+
+const (
+	FindingKind_FINDING_KIND_UNSPECIFIED FindingKind = 0
+	// FindingExchange (FEX) documents.
+	FindingKind_FINDING_KIND_FINDING FindingKind = 1
+	// VulnerabilityExchange (VEX) documents.
+	FindingKind_FINDING_KIND_VULNERABILITY FindingKind = 2
+)
+
+// Enum value maps for FindingKind.
+var (
+	FindingKind_name = map[int32]string{
+		0: "FINDING_KIND_UNSPECIFIED",
+		1: "FINDING_KIND_FINDING",
+		2: "FINDING_KIND_VULNERABILITY",
+	}
+	FindingKind_value = map[string]int32{
+		"FINDING_KIND_UNSPECIFIED":   0,
+		"FINDING_KIND_FINDING":       1,
+		"FINDING_KIND_VULNERABILITY": 2,
+	}
+)
+
+func (x FindingKind) Enum() *FindingKind {
+	p := new(FindingKind)
+	*p = x
+	return p
+}
+
+func (x FindingKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (FindingKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_fex_proto_enumTypes[0].Descriptor()
+}
+
+func (FindingKind) Type() protoreflect.EnumType {
+	return &file_fex_proto_enumTypes[0]
+}
+
+func (x FindingKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use FindingKind.Descriptor instead.
+func (FindingKind) EnumDescriptor() ([]byte, []int) {
+	return file_fex_proto_rawDescGZIP(), []int{0}
+}
+
 // Status is used to identify the status of the vulnerability.
 type Status int32
 
@@ -79,11 +131,11 @@ func (x Status) String() string {
 }
 
 func (Status) Descriptor() protoreflect.EnumDescriptor {
-	return file_fex_proto_enumTypes[0].Descriptor()
+	return file_fex_proto_enumTypes[1].Descriptor()
 }
 
 func (Status) Type() protoreflect.EnumType {
-	return &file_fex_proto_enumTypes[0]
+	return &file_fex_proto_enumTypes[1]
 }
 
 func (x Status) Number() protoreflect.EnumNumber {
@@ -92,7 +144,7 @@ func (x Status) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Status.Descriptor instead.
 func (Status) EnumDescriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{0}
+	return file_fex_proto_rawDescGZIP(), []int{1}
 }
 
 // ScoringMethod is used to identify the scoring method of the rating.
@@ -143,11 +195,11 @@ func (x ScoringMethod) String() string {
 }
 
 func (ScoringMethod) Descriptor() protoreflect.EnumDescriptor {
-	return file_fex_proto_enumTypes[1].Descriptor()
+	return file_fex_proto_enumTypes[2].Descriptor()
 }
 
 func (ScoringMethod) Type() protoreflect.EnumType {
-	return &file_fex_proto_enumTypes[1]
+	return &file_fex_proto_enumTypes[2]
 }
 
 func (x ScoringMethod) Number() protoreflect.EnumNumber {
@@ -156,7 +208,7 @@ func (x ScoringMethod) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ScoringMethod.Descriptor instead.
 func (ScoringMethod) EnumDescriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{1}
+	return file_fex_proto_rawDescGZIP(), []int{2}
 }
 
 // Confidence levels in finding
@@ -196,11 +248,11 @@ func (x Confidence) String() string {
 }
 
 func (Confidence) Descriptor() protoreflect.EnumDescriptor {
-	return file_fex_proto_enumTypes[2].Descriptor()
+	return file_fex_proto_enumTypes[3].Descriptor()
 }
 
 func (Confidence) Type() protoreflect.EnumType {
-	return &file_fex_proto_enumTypes[2]
+	return &file_fex_proto_enumTypes[3]
 }
 
 func (x Confidence) Number() protoreflect.EnumNumber {
@@ -209,7 +261,7 @@ func (x Confidence) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Confidence.Descriptor instead.
 func (Confidence) EnumDescriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{2}
+	return file_fex_proto_rawDescGZIP(), []int{3}
 }
 
 // SeverityRating is used to identify the severity of a finding.
@@ -260,11 +312,11 @@ func (x SeverityRating) String() string {
 }
 
 func (SeverityRating) Descriptor() protoreflect.EnumDescriptor {
-	return file_fex_proto_enumTypes[3].Descriptor()
+	return file_fex_proto_enumTypes[4].Descriptor()
 }
 
 func (SeverityRating) Type() protoreflect.EnumType {
-	return &file_fex_proto_enumTypes[3]
+	return &file_fex_proto_enumTypes[4]
 }
 
 func (x SeverityRating) Number() protoreflect.EnumNumber {
@@ -273,7 +325,7 @@ func (x SeverityRating) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use SeverityRating.Descriptor instead.
 func (SeverityRating) EnumDescriptor() ([]byte, []int) {
-	return file_fex_proto_rawDescGZIP(), []int{3}
+	return file_fex_proto_rawDescGZIP(), []int{4}
 }
 
 // The category type of the remediation
@@ -316,11 +368,11 @@ func (x Remediation_Category) String() string {
 }
 
 func (Remediation_Category) Descriptor() protoreflect.EnumDescriptor {
-	return file_fex_proto_enumTypes[4].Descriptor()
+	return file_fex_proto_enumTypes[5].Descriptor()
 }
 
 func (Remediation_Category) Type() protoreflect.EnumType {
-	return &file_fex_proto_enumTypes[4]
+	return &file_fex_proto_enumTypes[5]
 }
 
 func (x Remediation_Category) Number() protoreflect.EnumNumber {
@@ -380,11 +432,11 @@ func (x FindingDetail_Category) String() string {
 }
 
 func (FindingDetail_Category) Descriptor() protoreflect.EnumDescriptor {
-	return file_fex_proto_enumTypes[5].Descriptor()
+	return file_fex_proto_enumTypes[6].Descriptor()
 }
 
 func (FindingDetail_Category) Type() protoreflect.EnumType {
-	return &file_fex_proto_enumTypes[5]
+	return &file_fex_proto_enumTypes[6]
 }
 
 func (x FindingDetail_Category) Number() protoreflect.EnumNumber {
@@ -439,11 +491,11 @@ func (x Connection_ConnectionProtocol) String() string {
 }
 
 func (Connection_ConnectionProtocol) Descriptor() protoreflect.EnumDescriptor {
-	return file_fex_proto_enumTypes[6].Descriptor()
+	return file_fex_proto_enumTypes[7].Descriptor()
 }
 
 func (Connection_ConnectionProtocol) Type() protoreflect.EnumType {
-	return &file_fex_proto_enumTypes[6]
+	return &file_fex_proto_enumTypes[7]
 }
 
 func (x Connection_ConnectionProtocol) Number() protoreflect.EnumNumber {
@@ -550,8 +602,16 @@ type FindingsUploadRequest struct {
 	SpaceMrn         string                 `protobuf:"bytes,4,opt,name=space_mrn,json=spaceMrn,proto3" json:"space_mrn,omitempty"`
 	CreateAssets     bool                   `protobuf:"varint,5,opt,name=create_assets,json=createAssets,proto3" json:"create_assets,omitempty"`
 	ImportStartedAt  *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=import_started_at,json=importStartedAt,proto3" json:"import_started_at,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// The finding kinds this upload is complete for. With import_started_at set
+	// (a full pull), the platform closes findings by absence only for the kinds
+	// listed: FINDING closes stale FEX findings, VULNERABILITY closes stale VEX.
+	// Empty means every kind. A producer that sends each kind as its own upload
+	// under one source lists only that kind, so one upload does not close the
+	// other's findings. Fields 7 and 8 are used by the platform's copy of this
+	// message.
+	CompleteKinds []FindingKind `protobuf:"varint,9,rep,packed,name=complete_kinds,json=completeKinds,proto3,enum=mql.fex.v1.FindingKind" json:"complete_kinds,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *FindingsUploadRequest) Reset() {
@@ -622,6 +682,13 @@ func (x *FindingsUploadRequest) GetCreateAssets() bool {
 func (x *FindingsUploadRequest) GetImportStartedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.ImportStartedAt
+	}
+	return nil
+}
+
+func (x *FindingsUploadRequest) GetCompleteKinds() []FindingKind {
+	if x != nil {
+		return x.CompleteKinds
 	}
 	return nil
 }
@@ -4054,14 +4121,15 @@ const file_fex_proto_rawDesc = "" +
 	"\x0fFindingDocument\x125\n" +
 	"\x03vex\x18\x01 \x01(\v2!.mql.fex.v1.VulnerabilityExchangeH\x00R\x03vex\x12/\n" +
 	"\x03fex\x18\x02 \x01(\v2\x1b.mql.fex.v1.FindingExchangeH\x00R\x03fexB\t\n" +
-	"\afinding\"\x9f\x02\n" +
+	"\afinding\"\xdf\x02\n" +
 	"\x15FindingsUploadRequest\x127\n" +
 	"\bfindings\x18\x01 \x03(\v2\x1b.mql.fex.v1.FindingDocumentR\bfindings\x12\x16\n" +
 	"\x06source\x18\x02 \x01(\tR\x06source\x12+\n" +
 	"\x11mondoo_enrichment\x18\x03 \x01(\bR\x10mondooEnrichment\x12\x1b\n" +
 	"\tspace_mrn\x18\x04 \x01(\tR\bspaceMrn\x12#\n" +
 	"\rcreate_assets\x18\x05 \x01(\bR\fcreateAssets\x12F\n" +
-	"\x11import_started_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x0fimportStartedAt\"\x91\x06\n" +
+	"\x11import_started_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x0fimportStartedAt\x12>\n" +
+	"\x0ecomplete_kinds\x18\t \x03(\x0e2\x17.mql.fex.v1.FindingKindR\rcompleteKinds\"\x91\x06\n" +
 	"\x15VulnerabilityExchange\x12\x10\n" +
 	"\x03ref\x18\x01 \x01(\tR\x03ref\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\tR\x02id\x12\x10\n" +
@@ -4397,7 +4465,11 @@ const file_fex_proto_rawDesc = "" +
 	"\x0fAttackTechnique\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription*\xb0\x01\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription*e\n" +
+	"\vFindingKind\x12\x1c\n" +
+	"\x18FINDING_KIND_UNSPECIFIED\x10\x00\x12\x18\n" +
+	"\x14FINDING_KIND_FINDING\x10\x01\x12\x1e\n" +
+	"\x1aFINDING_KIND_VULNERABILITY\x10\x02*\xb0\x01\n" +
 	"\x06Status\x12\x16\n" +
 	"\x12STATUS_UNSPECIFIED\x10\x00\x12\x17\n" +
 	"\x13STATUS_NOT_AFFECTED\x10\x01\x12\x13\n" +
@@ -4440,153 +4512,155 @@ func file_fex_proto_rawDescGZIP() []byte {
 	return file_fex_proto_rawDescData
 }
 
-var file_fex_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
+var file_fex_proto_enumTypes = make([]protoimpl.EnumInfo, 8)
 var file_fex_proto_msgTypes = make([]protoimpl.MessageInfo, 44)
 var file_fex_proto_goTypes = []any{
-	(Status)(0),                        // 0: mql.fex.v1.Status
-	(ScoringMethod)(0),                 // 1: mql.fex.v1.ScoringMethod
-	(Confidence)(0),                    // 2: mql.fex.v1.Confidence
-	(SeverityRating)(0),                // 3: mql.fex.v1.SeverityRating
-	(Remediation_Category)(0),          // 4: mql.fex.v1.Remediation.Category
-	(FindingDetail_Category)(0),        // 5: mql.fex.v1.FindingDetail.Category
-	(Connection_ConnectionProtocol)(0), // 6: mql.fex.v1.Connection.ConnectionProtocol
-	(*FindingDocument)(nil),            // 7: mql.fex.v1.FindingDocument
-	(*FindingsUploadRequest)(nil),      // 8: mql.fex.v1.FindingsUploadRequest
-	(*VulnerabilityExchange)(nil),      // 9: mql.fex.v1.VulnerabilityExchange
-	(*Reference)(nil),                  // 10: mql.fex.v1.Reference
-	(*Source)(nil),                     // 11: mql.fex.v1.Source
-	(*VulnerabilityDetails)(nil),       // 12: mql.fex.v1.VulnerabilityDetails
-	(*Affects)(nil),                    // 13: mql.fex.v1.Affects
-	(*Component)(nil),                  // 14: mql.fex.v1.Component
-	(*CloudResource)(nil),              // 15: mql.fex.v1.CloudResource
-	(*FileComponent)(nil),              // 16: mql.fex.v1.FileComponent
-	(*Rating)(nil),                     // 17: mql.fex.v1.Rating
-	(*Severity)(nil),                   // 18: mql.fex.v1.Severity
-	(*Remediation)(nil),                // 19: mql.fex.v1.Remediation
-	(*FindingExchange)(nil),            // 20: mql.fex.v1.FindingExchange
-	(*FindingDetail)(nil),              // 21: mql.fex.v1.FindingDetail
-	(*Evidence)(nil),                   // 22: mql.fex.v1.Evidence
-	(*SourceVersion)(nil),              // 23: mql.fex.v1.SourceVersion
-	(*File)(nil),                       // 24: mql.fex.v1.File
-	(*User)(nil),                       // 25: mql.fex.v1.User
-	(*Process)(nil),                    // 26: mql.fex.v1.Process
-	(*Container)(nil),                  // 27: mql.fex.v1.Container
-	(*Kubernetes)(nil),                 // 28: mql.fex.v1.Kubernetes
-	(*RegistryKey)(nil),                // 29: mql.fex.v1.RegistryKey
-	(*Connection)(nil),                 // 30: mql.fex.v1.Connection
-	(*HttpRequest)(nil),                // 31: mql.fex.v1.HttpRequest
-	(*DnsRecord)(nil),                  // 32: mql.fex.v1.DnsRecord
-	(*Certificate)(nil),                // 33: mql.fex.v1.Certificate
-	(*DomainRegistration)(nil),         // 34: mql.fex.v1.DomainRegistration
-	(*NetworkRange)(nil),               // 35: mql.fex.v1.NetworkRange
-	(*ThreatIntelIndicator)(nil),       // 36: mql.fex.v1.ThreatIntelIndicator
-	(*Malware)(nil),                    // 37: mql.fex.v1.Malware
-	(*AiModel)(nil),                    // 38: mql.fex.v1.AiModel
-	(*AiAgent)(nil),                    // 39: mql.fex.v1.AiAgent
-	(*AttackTactic)(nil),               // 40: mql.fex.v1.AttackTactic
-	(*AttackTechnique)(nil),            // 41: mql.fex.v1.AttackTechnique
-	nil,                                // 42: mql.fex.v1.Reference.MetadataEntry
-	nil,                                // 43: mql.fex.v1.Component.IdentifiersEntry
-	nil,                                // 44: mql.fex.v1.Component.PropertiesEntry
-	nil,                                // 45: mql.fex.v1.CloudResource.TagsEntry
-	nil,                                // 46: mql.fex.v1.FindingDetail.PropertiesEntry
-	nil,                                // 47: mql.fex.v1.Evidence.PropertiesEntry
-	nil,                                // 48: mql.fex.v1.User.PropertiesEntry
-	(*Kubernetes_Pod)(nil),             // 49: mql.fex.v1.Kubernetes.Pod
-	(*Kubernetes_Node)(nil),            // 50: mql.fex.v1.Kubernetes.Node
-	(*timestamppb.Timestamp)(nil),      // 51: google.protobuf.Timestamp
-	(*structpb.Struct)(nil),            // 52: google.protobuf.Struct
+	(FindingKind)(0),                   // 0: mql.fex.v1.FindingKind
+	(Status)(0),                        // 1: mql.fex.v1.Status
+	(ScoringMethod)(0),                 // 2: mql.fex.v1.ScoringMethod
+	(Confidence)(0),                    // 3: mql.fex.v1.Confidence
+	(SeverityRating)(0),                // 4: mql.fex.v1.SeverityRating
+	(Remediation_Category)(0),          // 5: mql.fex.v1.Remediation.Category
+	(FindingDetail_Category)(0),        // 6: mql.fex.v1.FindingDetail.Category
+	(Connection_ConnectionProtocol)(0), // 7: mql.fex.v1.Connection.ConnectionProtocol
+	(*FindingDocument)(nil),            // 8: mql.fex.v1.FindingDocument
+	(*FindingsUploadRequest)(nil),      // 9: mql.fex.v1.FindingsUploadRequest
+	(*VulnerabilityExchange)(nil),      // 10: mql.fex.v1.VulnerabilityExchange
+	(*Reference)(nil),                  // 11: mql.fex.v1.Reference
+	(*Source)(nil),                     // 12: mql.fex.v1.Source
+	(*VulnerabilityDetails)(nil),       // 13: mql.fex.v1.VulnerabilityDetails
+	(*Affects)(nil),                    // 14: mql.fex.v1.Affects
+	(*Component)(nil),                  // 15: mql.fex.v1.Component
+	(*CloudResource)(nil),              // 16: mql.fex.v1.CloudResource
+	(*FileComponent)(nil),              // 17: mql.fex.v1.FileComponent
+	(*Rating)(nil),                     // 18: mql.fex.v1.Rating
+	(*Severity)(nil),                   // 19: mql.fex.v1.Severity
+	(*Remediation)(nil),                // 20: mql.fex.v1.Remediation
+	(*FindingExchange)(nil),            // 21: mql.fex.v1.FindingExchange
+	(*FindingDetail)(nil),              // 22: mql.fex.v1.FindingDetail
+	(*Evidence)(nil),                   // 23: mql.fex.v1.Evidence
+	(*SourceVersion)(nil),              // 24: mql.fex.v1.SourceVersion
+	(*File)(nil),                       // 25: mql.fex.v1.File
+	(*User)(nil),                       // 26: mql.fex.v1.User
+	(*Process)(nil),                    // 27: mql.fex.v1.Process
+	(*Container)(nil),                  // 28: mql.fex.v1.Container
+	(*Kubernetes)(nil),                 // 29: mql.fex.v1.Kubernetes
+	(*RegistryKey)(nil),                // 30: mql.fex.v1.RegistryKey
+	(*Connection)(nil),                 // 31: mql.fex.v1.Connection
+	(*HttpRequest)(nil),                // 32: mql.fex.v1.HttpRequest
+	(*DnsRecord)(nil),                  // 33: mql.fex.v1.DnsRecord
+	(*Certificate)(nil),                // 34: mql.fex.v1.Certificate
+	(*DomainRegistration)(nil),         // 35: mql.fex.v1.DomainRegistration
+	(*NetworkRange)(nil),               // 36: mql.fex.v1.NetworkRange
+	(*ThreatIntelIndicator)(nil),       // 37: mql.fex.v1.ThreatIntelIndicator
+	(*Malware)(nil),                    // 38: mql.fex.v1.Malware
+	(*AiModel)(nil),                    // 39: mql.fex.v1.AiModel
+	(*AiAgent)(nil),                    // 40: mql.fex.v1.AiAgent
+	(*AttackTactic)(nil),               // 41: mql.fex.v1.AttackTactic
+	(*AttackTechnique)(nil),            // 42: mql.fex.v1.AttackTechnique
+	nil,                                // 43: mql.fex.v1.Reference.MetadataEntry
+	nil,                                // 44: mql.fex.v1.Component.IdentifiersEntry
+	nil,                                // 45: mql.fex.v1.Component.PropertiesEntry
+	nil,                                // 46: mql.fex.v1.CloudResource.TagsEntry
+	nil,                                // 47: mql.fex.v1.FindingDetail.PropertiesEntry
+	nil,                                // 48: mql.fex.v1.Evidence.PropertiesEntry
+	nil,                                // 49: mql.fex.v1.User.PropertiesEntry
+	(*Kubernetes_Pod)(nil),             // 50: mql.fex.v1.Kubernetes.Pod
+	(*Kubernetes_Node)(nil),            // 51: mql.fex.v1.Kubernetes.Node
+	(*timestamppb.Timestamp)(nil),      // 52: google.protobuf.Timestamp
+	(*structpb.Struct)(nil),            // 53: google.protobuf.Struct
 }
 var file_fex_proto_depIdxs = []int32{
-	9,  // 0: mql.fex.v1.FindingDocument.vex:type_name -> mql.fex.v1.VulnerabilityExchange
-	20, // 1: mql.fex.v1.FindingDocument.fex:type_name -> mql.fex.v1.FindingExchange
-	7,  // 2: mql.fex.v1.FindingsUploadRequest.findings:type_name -> mql.fex.v1.FindingDocument
-	51, // 3: mql.fex.v1.FindingsUploadRequest.import_started_at:type_name -> google.protobuf.Timestamp
-	12, // 4: mql.fex.v1.VulnerabilityExchange.details:type_name -> mql.fex.v1.VulnerabilityDetails
-	11, // 5: mql.fex.v1.VulnerabilityExchange.source:type_name -> mql.fex.v1.Source
-	17, // 6: mql.fex.v1.VulnerabilityExchange.ratings:type_name -> mql.fex.v1.Rating
-	51, // 7: mql.fex.v1.VulnerabilityExchange.first_seen:type_name -> google.protobuf.Timestamp
-	51, // 8: mql.fex.v1.VulnerabilityExchange.remediated:type_name -> google.protobuf.Timestamp
-	13, // 9: mql.fex.v1.VulnerabilityExchange.affects:type_name -> mql.fex.v1.Affects
-	0,  // 10: mql.fex.v1.VulnerabilityExchange.status:type_name -> mql.fex.v1.Status
-	10, // 11: mql.fex.v1.VulnerabilityExchange.references:type_name -> mql.fex.v1.Reference
-	19, // 12: mql.fex.v1.VulnerabilityExchange.remediations:type_name -> mql.fex.v1.Remediation
-	52, // 13: mql.fex.v1.VulnerabilityExchange.database_specific:type_name -> google.protobuf.Struct
-	22, // 14: mql.fex.v1.VulnerabilityExchange.evidences:type_name -> mql.fex.v1.Evidence
-	42, // 15: mql.fex.v1.Reference.metadata:type_name -> mql.fex.v1.Reference.MetadataEntry
-	51, // 16: mql.fex.v1.VulnerabilityDetails.created:type_name -> google.protobuf.Timestamp
-	51, // 17: mql.fex.v1.VulnerabilityDetails.published:type_name -> google.protobuf.Timestamp
-	51, // 18: mql.fex.v1.VulnerabilityDetails.updated:type_name -> google.protobuf.Timestamp
-	14, // 19: mql.fex.v1.Affects.component:type_name -> mql.fex.v1.Component
-	14, // 20: mql.fex.v1.Affects.sub_components:type_name -> mql.fex.v1.Component
-	43, // 21: mql.fex.v1.Component.identifiers:type_name -> mql.fex.v1.Component.IdentifiersEntry
-	44, // 22: mql.fex.v1.Component.properties:type_name -> mql.fex.v1.Component.PropertiesEntry
-	16, // 23: mql.fex.v1.Component.file:type_name -> mql.fex.v1.FileComponent
-	15, // 24: mql.fex.v1.Component.cloud_resource:type_name -> mql.fex.v1.CloudResource
-	45, // 25: mql.fex.v1.CloudResource.tags:type_name -> mql.fex.v1.CloudResource.TagsEntry
-	11, // 26: mql.fex.v1.Rating.source:type_name -> mql.fex.v1.Source
-	1,  // 27: mql.fex.v1.Rating.method:type_name -> mql.fex.v1.ScoringMethod
-	11, // 28: mql.fex.v1.Severity.source:type_name -> mql.fex.v1.Source
-	1,  // 29: mql.fex.v1.Severity.method:type_name -> mql.fex.v1.ScoringMethod
-	3,  // 30: mql.fex.v1.Severity.rating:type_name -> mql.fex.v1.SeverityRating
-	4,  // 31: mql.fex.v1.Remediation.category:type_name -> mql.fex.v1.Remediation.Category
-	21, // 32: mql.fex.v1.FindingExchange.details:type_name -> mql.fex.v1.FindingDetail
-	51, // 33: mql.fex.v1.FindingExchange.first_seen_at:type_name -> google.protobuf.Timestamp
-	51, // 34: mql.fex.v1.FindingExchange.last_seen_at:type_name -> google.protobuf.Timestamp
-	51, // 35: mql.fex.v1.FindingExchange.remediated_at:type_name -> google.protobuf.Timestamp
-	0,  // 36: mql.fex.v1.FindingExchange.status:type_name -> mql.fex.v1.Status
-	11, // 37: mql.fex.v1.FindingExchange.source:type_name -> mql.fex.v1.Source
-	13, // 38: mql.fex.v1.FindingExchange.affects:type_name -> mql.fex.v1.Affects
-	22, // 39: mql.fex.v1.FindingExchange.evidences:type_name -> mql.fex.v1.Evidence
-	19, // 40: mql.fex.v1.FindingExchange.remediations:type_name -> mql.fex.v1.Remediation
-	20, // 41: mql.fex.v1.FindingExchange.sub_findings:type_name -> mql.fex.v1.FindingExchange
-	5,  // 42: mql.fex.v1.FindingDetail.category:type_name -> mql.fex.v1.FindingDetail.Category
-	18, // 43: mql.fex.v1.FindingDetail.severity:type_name -> mql.fex.v1.Severity
-	2,  // 44: mql.fex.v1.FindingDetail.confidence:type_name -> mql.fex.v1.Confidence
-	10, // 45: mql.fex.v1.FindingDetail.references:type_name -> mql.fex.v1.Reference
-	46, // 46: mql.fex.v1.FindingDetail.properties:type_name -> mql.fex.v1.FindingDetail.PropertiesEntry
-	40, // 47: mql.fex.v1.Evidence.tactic:type_name -> mql.fex.v1.AttackTactic
-	41, // 48: mql.fex.v1.Evidence.technique:type_name -> mql.fex.v1.AttackTechnique
-	2,  // 49: mql.fex.v1.Evidence.confidence:type_name -> mql.fex.v1.Confidence
-	25, // 50: mql.fex.v1.Evidence.user:type_name -> mql.fex.v1.User
-	24, // 51: mql.fex.v1.Evidence.file:type_name -> mql.fex.v1.File
-	26, // 52: mql.fex.v1.Evidence.process:type_name -> mql.fex.v1.Process
-	27, // 53: mql.fex.v1.Evidence.container:type_name -> mql.fex.v1.Container
-	28, // 54: mql.fex.v1.Evidence.kubernetes:type_name -> mql.fex.v1.Kubernetes
-	29, // 55: mql.fex.v1.Evidence.registry_key:type_name -> mql.fex.v1.RegistryKey
-	30, // 56: mql.fex.v1.Evidence.connection:type_name -> mql.fex.v1.Connection
-	31, // 57: mql.fex.v1.Evidence.http_request:type_name -> mql.fex.v1.HttpRequest
-	32, // 58: mql.fex.v1.Evidence.dns_record:type_name -> mql.fex.v1.DnsRecord
-	33, // 59: mql.fex.v1.Evidence.certificate:type_name -> mql.fex.v1.Certificate
-	34, // 60: mql.fex.v1.Evidence.domain_registration:type_name -> mql.fex.v1.DomainRegistration
-	35, // 61: mql.fex.v1.Evidence.network_range:type_name -> mql.fex.v1.NetworkRange
-	36, // 62: mql.fex.v1.Evidence.threat_intel_indicator:type_name -> mql.fex.v1.ThreatIntelIndicator
-	37, // 63: mql.fex.v1.Evidence.malware:type_name -> mql.fex.v1.Malware
-	38, // 64: mql.fex.v1.Evidence.ai_model:type_name -> mql.fex.v1.AiModel
-	39, // 65: mql.fex.v1.Evidence.ai_agent:type_name -> mql.fex.v1.AiAgent
-	47, // 66: mql.fex.v1.Evidence.properties:type_name -> mql.fex.v1.Evidence.PropertiesEntry
-	23, // 67: mql.fex.v1.Evidence.source_version:type_name -> mql.fex.v1.SourceVersion
-	51, // 68: mql.fex.v1.SourceVersion.date:type_name -> google.protobuf.Timestamp
-	48, // 69: mql.fex.v1.User.properties:type_name -> mql.fex.v1.User.PropertiesEntry
-	24, // 70: mql.fex.v1.Process.binary:type_name -> mql.fex.v1.File
-	24, // 71: mql.fex.v1.Process.script:type_name -> mql.fex.v1.File
-	25, // 72: mql.fex.v1.Process.user:type_name -> mql.fex.v1.User
-	26, // 73: mql.fex.v1.Process.parent:type_name -> mql.fex.v1.Process
-	49, // 74: mql.fex.v1.Kubernetes.pods:type_name -> mql.fex.v1.Kubernetes.Pod
-	50, // 75: mql.fex.v1.Kubernetes.nodes:type_name -> mql.fex.v1.Kubernetes.Node
-	6,  // 76: mql.fex.v1.Connection.protocol:type_name -> mql.fex.v1.Connection.ConnectionProtocol
-	51, // 77: mql.fex.v1.Certificate.not_before:type_name -> google.protobuf.Timestamp
-	51, // 78: mql.fex.v1.Certificate.not_after:type_name -> google.protobuf.Timestamp
-	51, // 79: mql.fex.v1.DomainRegistration.created_at:type_name -> google.protobuf.Timestamp
-	51, // 80: mql.fex.v1.DomainRegistration.updated_at:type_name -> google.protobuf.Timestamp
-	51, // 81: mql.fex.v1.DomainRegistration.expires_at:type_name -> google.protobuf.Timestamp
-	51, // 82: mql.fex.v1.ThreatIntelIndicator.last_observed_at:type_name -> google.protobuf.Timestamp
-	27, // 83: mql.fex.v1.Kubernetes.Pod.containers:type_name -> mql.fex.v1.Container
-	84, // [84:84] is the sub-list for method output_type
-	84, // [84:84] is the sub-list for method input_type
-	84, // [84:84] is the sub-list for extension type_name
-	84, // [84:84] is the sub-list for extension extendee
-	0,  // [0:84] is the sub-list for field type_name
+	10, // 0: mql.fex.v1.FindingDocument.vex:type_name -> mql.fex.v1.VulnerabilityExchange
+	21, // 1: mql.fex.v1.FindingDocument.fex:type_name -> mql.fex.v1.FindingExchange
+	8,  // 2: mql.fex.v1.FindingsUploadRequest.findings:type_name -> mql.fex.v1.FindingDocument
+	52, // 3: mql.fex.v1.FindingsUploadRequest.import_started_at:type_name -> google.protobuf.Timestamp
+	0,  // 4: mql.fex.v1.FindingsUploadRequest.complete_kinds:type_name -> mql.fex.v1.FindingKind
+	13, // 5: mql.fex.v1.VulnerabilityExchange.details:type_name -> mql.fex.v1.VulnerabilityDetails
+	12, // 6: mql.fex.v1.VulnerabilityExchange.source:type_name -> mql.fex.v1.Source
+	18, // 7: mql.fex.v1.VulnerabilityExchange.ratings:type_name -> mql.fex.v1.Rating
+	52, // 8: mql.fex.v1.VulnerabilityExchange.first_seen:type_name -> google.protobuf.Timestamp
+	52, // 9: mql.fex.v1.VulnerabilityExchange.remediated:type_name -> google.protobuf.Timestamp
+	14, // 10: mql.fex.v1.VulnerabilityExchange.affects:type_name -> mql.fex.v1.Affects
+	1,  // 11: mql.fex.v1.VulnerabilityExchange.status:type_name -> mql.fex.v1.Status
+	11, // 12: mql.fex.v1.VulnerabilityExchange.references:type_name -> mql.fex.v1.Reference
+	20, // 13: mql.fex.v1.VulnerabilityExchange.remediations:type_name -> mql.fex.v1.Remediation
+	53, // 14: mql.fex.v1.VulnerabilityExchange.database_specific:type_name -> google.protobuf.Struct
+	23, // 15: mql.fex.v1.VulnerabilityExchange.evidences:type_name -> mql.fex.v1.Evidence
+	43, // 16: mql.fex.v1.Reference.metadata:type_name -> mql.fex.v1.Reference.MetadataEntry
+	52, // 17: mql.fex.v1.VulnerabilityDetails.created:type_name -> google.protobuf.Timestamp
+	52, // 18: mql.fex.v1.VulnerabilityDetails.published:type_name -> google.protobuf.Timestamp
+	52, // 19: mql.fex.v1.VulnerabilityDetails.updated:type_name -> google.protobuf.Timestamp
+	15, // 20: mql.fex.v1.Affects.component:type_name -> mql.fex.v1.Component
+	15, // 21: mql.fex.v1.Affects.sub_components:type_name -> mql.fex.v1.Component
+	44, // 22: mql.fex.v1.Component.identifiers:type_name -> mql.fex.v1.Component.IdentifiersEntry
+	45, // 23: mql.fex.v1.Component.properties:type_name -> mql.fex.v1.Component.PropertiesEntry
+	17, // 24: mql.fex.v1.Component.file:type_name -> mql.fex.v1.FileComponent
+	16, // 25: mql.fex.v1.Component.cloud_resource:type_name -> mql.fex.v1.CloudResource
+	46, // 26: mql.fex.v1.CloudResource.tags:type_name -> mql.fex.v1.CloudResource.TagsEntry
+	12, // 27: mql.fex.v1.Rating.source:type_name -> mql.fex.v1.Source
+	2,  // 28: mql.fex.v1.Rating.method:type_name -> mql.fex.v1.ScoringMethod
+	12, // 29: mql.fex.v1.Severity.source:type_name -> mql.fex.v1.Source
+	2,  // 30: mql.fex.v1.Severity.method:type_name -> mql.fex.v1.ScoringMethod
+	4,  // 31: mql.fex.v1.Severity.rating:type_name -> mql.fex.v1.SeverityRating
+	5,  // 32: mql.fex.v1.Remediation.category:type_name -> mql.fex.v1.Remediation.Category
+	22, // 33: mql.fex.v1.FindingExchange.details:type_name -> mql.fex.v1.FindingDetail
+	52, // 34: mql.fex.v1.FindingExchange.first_seen_at:type_name -> google.protobuf.Timestamp
+	52, // 35: mql.fex.v1.FindingExchange.last_seen_at:type_name -> google.protobuf.Timestamp
+	52, // 36: mql.fex.v1.FindingExchange.remediated_at:type_name -> google.protobuf.Timestamp
+	1,  // 37: mql.fex.v1.FindingExchange.status:type_name -> mql.fex.v1.Status
+	12, // 38: mql.fex.v1.FindingExchange.source:type_name -> mql.fex.v1.Source
+	14, // 39: mql.fex.v1.FindingExchange.affects:type_name -> mql.fex.v1.Affects
+	23, // 40: mql.fex.v1.FindingExchange.evidences:type_name -> mql.fex.v1.Evidence
+	20, // 41: mql.fex.v1.FindingExchange.remediations:type_name -> mql.fex.v1.Remediation
+	21, // 42: mql.fex.v1.FindingExchange.sub_findings:type_name -> mql.fex.v1.FindingExchange
+	6,  // 43: mql.fex.v1.FindingDetail.category:type_name -> mql.fex.v1.FindingDetail.Category
+	19, // 44: mql.fex.v1.FindingDetail.severity:type_name -> mql.fex.v1.Severity
+	3,  // 45: mql.fex.v1.FindingDetail.confidence:type_name -> mql.fex.v1.Confidence
+	11, // 46: mql.fex.v1.FindingDetail.references:type_name -> mql.fex.v1.Reference
+	47, // 47: mql.fex.v1.FindingDetail.properties:type_name -> mql.fex.v1.FindingDetail.PropertiesEntry
+	41, // 48: mql.fex.v1.Evidence.tactic:type_name -> mql.fex.v1.AttackTactic
+	42, // 49: mql.fex.v1.Evidence.technique:type_name -> mql.fex.v1.AttackTechnique
+	3,  // 50: mql.fex.v1.Evidence.confidence:type_name -> mql.fex.v1.Confidence
+	26, // 51: mql.fex.v1.Evidence.user:type_name -> mql.fex.v1.User
+	25, // 52: mql.fex.v1.Evidence.file:type_name -> mql.fex.v1.File
+	27, // 53: mql.fex.v1.Evidence.process:type_name -> mql.fex.v1.Process
+	28, // 54: mql.fex.v1.Evidence.container:type_name -> mql.fex.v1.Container
+	29, // 55: mql.fex.v1.Evidence.kubernetes:type_name -> mql.fex.v1.Kubernetes
+	30, // 56: mql.fex.v1.Evidence.registry_key:type_name -> mql.fex.v1.RegistryKey
+	31, // 57: mql.fex.v1.Evidence.connection:type_name -> mql.fex.v1.Connection
+	32, // 58: mql.fex.v1.Evidence.http_request:type_name -> mql.fex.v1.HttpRequest
+	33, // 59: mql.fex.v1.Evidence.dns_record:type_name -> mql.fex.v1.DnsRecord
+	34, // 60: mql.fex.v1.Evidence.certificate:type_name -> mql.fex.v1.Certificate
+	35, // 61: mql.fex.v1.Evidence.domain_registration:type_name -> mql.fex.v1.DomainRegistration
+	36, // 62: mql.fex.v1.Evidence.network_range:type_name -> mql.fex.v1.NetworkRange
+	37, // 63: mql.fex.v1.Evidence.threat_intel_indicator:type_name -> mql.fex.v1.ThreatIntelIndicator
+	38, // 64: mql.fex.v1.Evidence.malware:type_name -> mql.fex.v1.Malware
+	39, // 65: mql.fex.v1.Evidence.ai_model:type_name -> mql.fex.v1.AiModel
+	40, // 66: mql.fex.v1.Evidence.ai_agent:type_name -> mql.fex.v1.AiAgent
+	48, // 67: mql.fex.v1.Evidence.properties:type_name -> mql.fex.v1.Evidence.PropertiesEntry
+	24, // 68: mql.fex.v1.Evidence.source_version:type_name -> mql.fex.v1.SourceVersion
+	52, // 69: mql.fex.v1.SourceVersion.date:type_name -> google.protobuf.Timestamp
+	49, // 70: mql.fex.v1.User.properties:type_name -> mql.fex.v1.User.PropertiesEntry
+	25, // 71: mql.fex.v1.Process.binary:type_name -> mql.fex.v1.File
+	25, // 72: mql.fex.v1.Process.script:type_name -> mql.fex.v1.File
+	26, // 73: mql.fex.v1.Process.user:type_name -> mql.fex.v1.User
+	27, // 74: mql.fex.v1.Process.parent:type_name -> mql.fex.v1.Process
+	50, // 75: mql.fex.v1.Kubernetes.pods:type_name -> mql.fex.v1.Kubernetes.Pod
+	51, // 76: mql.fex.v1.Kubernetes.nodes:type_name -> mql.fex.v1.Kubernetes.Node
+	7,  // 77: mql.fex.v1.Connection.protocol:type_name -> mql.fex.v1.Connection.ConnectionProtocol
+	52, // 78: mql.fex.v1.Certificate.not_before:type_name -> google.protobuf.Timestamp
+	52, // 79: mql.fex.v1.Certificate.not_after:type_name -> google.protobuf.Timestamp
+	52, // 80: mql.fex.v1.DomainRegistration.created_at:type_name -> google.protobuf.Timestamp
+	52, // 81: mql.fex.v1.DomainRegistration.updated_at:type_name -> google.protobuf.Timestamp
+	52, // 82: mql.fex.v1.DomainRegistration.expires_at:type_name -> google.protobuf.Timestamp
+	52, // 83: mql.fex.v1.ThreatIntelIndicator.last_observed_at:type_name -> google.protobuf.Timestamp
+	28, // 84: mql.fex.v1.Kubernetes.Pod.containers:type_name -> mql.fex.v1.Container
+	85, // [85:85] is the sub-list for method output_type
+	85, // [85:85] is the sub-list for method input_type
+	85, // [85:85] is the sub-list for extension type_name
+	85, // [85:85] is the sub-list for extension extendee
+	0,  // [0:85] is the sub-list for field type_name
 }
 
 func init() { file_fex_proto_init() }
@@ -4625,7 +4699,7 @@ func file_fex_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_fex_proto_rawDesc), len(file_fex_proto_rawDesc)),
-			NumEnums:      7,
+			NumEnums:      8,
 			NumMessages:   44,
 			NumExtensions: 0,
 			NumServices:   0,

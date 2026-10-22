@@ -44,6 +44,23 @@ message FindingsUploadRequest {
   string space_mrn = 4;
   bool create_assets = 5;
   google.protobuf.Timestamp import_started_at = 6;
+  // The finding kinds this upload is complete for. With import_started_at set
+  // (a full pull), the platform closes findings by absence only for the kinds
+  // listed: FINDING closes stale FEX findings, VULNERABILITY closes stale VEX.
+  // Empty means every kind. A producer that sends each kind as its own upload
+  // under one source lists only that kind, so one upload does not close the
+  // other's findings. Fields 7 and 8 are used by the platform's copy of this
+  // message.
+  repeated FindingKind complete_kinds = 9;
+}
+
+// FindingKind is a kind of document a FindingsUploadRequest carries.
+enum FindingKind {
+  FINDING_KIND_UNSPECIFIED = 0;
+  // FindingExchange (FEX) documents.
+  FINDING_KIND_FINDING = 1;
+  // VulnerabilityExchange (VEX) documents.
+  FINDING_KIND_VULNERABILITY = 2;
 }
 
 // VulnerabilityExchange are used for sharing information about vulnerabilities
