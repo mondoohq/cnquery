@@ -48,6 +48,8 @@ func (r *mqlBreezell) rules() ([]interface{}, error) {
 			continue
 		}
 		name := entry.Name()
+		// Breezell only reads markdown here (global_rules.md, global_memories.md,
+		// global_skills.md, global_commit_prompt.md), unlike Windsurf's .txt rules.
 		if strings.ToLower(filepath.Ext(name)) != ".md" {
 			continue
 		}
