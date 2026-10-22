@@ -164,6 +164,14 @@ func TestToolPackageCandidates(t *testing.T) {
 		{"ollama", "ollama"},                  // pkg:brew/homebrew/core/ollama
 		{"Ollama", "ollama"},                  // bundle-id=com.electron.ollama
 		{"ollama-app", "ollama"},              // pkg:brew/homebrew/cask/ollama-app
+		{"devin-desktop", "devin.desktop"},    // Homebrew cask, deb and rpm
+		{"Devin", "devin.desktop"},            // pkg:windows/windows/Devin, Devin.app
+		{"Devin (User)", "devin.desktop"},     // pkg:windows/windows/Devin%20%28User%29
+		{"zcode", "zcode"},                    // Homebrew cask, deb and rpm
+		{"ZCode", "zcode"},                    // pkg:macos/macos/ZCode
+		{"qualia", "qualia"},                  // deb
+		{"Qualia", "qualia"},                  // Qualia.app
+		{"Builder.io", "builderio"},           // pkg:windows/windows/Builder.io, Builder.io.app
 
 		{"claude", ""},                       // Claude Code's macOS app AND Claude Desktop's cask
 		{"zfs-zed", ""},                      // pkg:deb/debian/zfs-zed, OpenZFS event daemon
@@ -181,6 +189,10 @@ func TestToolPackageCandidates(t *testing.T) {
 		{"Microsoft 365 Copilot", ""},        // Microsoft 365 Copilot
 		{"@anthropic-ai/claude-code", ""},    // npm, not an OS package
 		{"Ollama version 0.34.4", ""},        // version in the name; exact match cannot reach it
+		{"ant", ""},                          // Apache Ant (formula, deb, rpm) AND the Claude Platform CLI's cask
+		{"devin-cli", ""},                    // Devin CLI, not Devin Desktop
+		{"ZCode 3.15.1", ""},                 // versioned name; versionedCandidates reaches it
+		{"Qualia 0.8.14", ""},                // versioned name; versionedCandidates reaches it
 		{"Visual Studio Code", ""},           // a runtime host, not a tool
 		{"Microsoft Visual Studio Code", ""}, // a runtime host, not a tool
 	}
@@ -317,4 +329,43 @@ func TestToolPackageUnreadableManifestErrors(t *testing.T) {
 			assert.Zero(t, fs.opens)
 		})
 	}
+}
+
+func TestVersionedPackageMatch(t *testing.T) {
+	pkg := func(name, version string) *mqlPackage {
+		return &mqlPackage{
+			Name:      plugin.TValue[string]{Data: name, State: plugin.StateIsSet},
+			Version:   plugin.TValue[string]{Data: version, State: plugin.StateIsSet},
+			Installed: plugin.TValue[bool]{Data: true, State: plugin.StateIsSet},
+		}
+	}
+	byName := map[string]*mqlPackage{}
+	for _, p := range []*mqlPackage{
+		pkg("ZCode 3.15.1", "3.15.1"),        // pkg:windows/windows/ZCode%203.15.1@3.15.1
+		pkg("ZCode Helper 3.15.1", "3.15.1"), // the app's helper, registered beside it
+		pkg("Qualia 0.8.14", "0.8.15"),       // name and version disagree
+	} {
+		byName[p.Name.Data] = p
+	}
+
+	got := versionedPackageMatch(byName, "ZCode")
+	require.NotNil(t, got)
+	assert.Equal(t, "ZCode 3.15.1", got.Name.Data)
+	assert.Nil(t, versionedPackageMatch(byName, "Qualia"))
+	assert.Nil(t, versionedPackageMatch(byName, "Zed"))
+}
+
+func TestParseAnthropicCLIVersion(t *testing.T) {
+	assert.Equal(t, "2.1.0", parseAnthropicCLIVersion("ant version 2.1.0\n"))
+	// Apache Ant's version banner, should a wrapper ever map --version to it.
+	assert.Equal(t, "", parseAnthropicCLIVersion("Apache Ant(TM) version 1.10.15 compiled on August 25 2024\n"))
+	assert.Equal(t, "", parseAnthropicCLIVersion(""))
+	assert.Equal(t, "", parseAnthropicCLIVersion("ant version unknown"))
+}
+
+// A config directory other software also creates is not an install signal.
+func TestToolPackageSpecsSharedConfig(t *testing.T) {
+	assert.True(t, toolPackageSpecs["devin.desktop"].configShared, "the Devin CLI shares ~/.config/devin")
+	assert.True(t, toolPackageSpecs["anthropic.cli"].configShared, "every anthropic-sdk-go client writes ~/.config/anthropic")
+	assert.Empty(t, toolPackageSpecs["anthropic.cli"].binaryNames, "Apache Ant owns a binary named ant")
 }

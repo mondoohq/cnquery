@@ -430,3 +430,126 @@ func (r *mqlQwenCodeSkill) sha256() (string, error) { return contentSHA256(r.Con
 func (r *mqlQwenCodeSkill) purl() (string, error) {
 	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
 }
+
+// --- Devin Desktop ---
+
+// devinDesktopConfigDir is where Devin Desktop keeps its MCP servers and global
+// skills, relative to the user's home: ~/.config/devin on macOS and Linux (XDG,
+// not ~/Library), %APPDATA%\devin on Windows. The Devin CLI shares it.
+func devinDesktopConfigDir(osFamily string) string {
+	if osFamily == "windows" {
+		return filepath.Join("AppData", "Roaming", "devin")
+	}
+	return filepath.Join(".config", "devin")
+}
+
+func initDevinDesktop(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initOSConfigPath(runtime, args, "devin.desktop", devinDesktopConfigDir)
+}
+
+func (r *mqlDevinDesktop) id() (string, error) {
+	return "devin.desktop/" + r.ConfigPath.Data, nil
+}
+
+func (r *mqlDevinDesktop) skills() ([]interface{}, error) {
+	defaultDir := devinDesktopConfigDir(runtimeOSFamily(r.MqlRuntime))
+	return agentSkills(r.MqlRuntime, "devin.desktop.skill", r.ConfigPath.Data, defaultDir,
+		filepath.Join(defaultDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
+}
+
+func (r *mqlDevinDesktopSkill) id() (string, error) {
+	return "devin.desktop.skill/" + r.Source.Data, nil
+}
+func (r *mqlDevinDesktopSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlDevinDesktopSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
+
+// --- ZCode ---
+
+const defaultZcodeConfigDir = ".zcode"
+
+func initZcode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initConfigPath(runtime, args, "zcode", defaultZcodeConfigDir)
+}
+
+func (r *mqlZcode) id() (string, error) {
+	return "zcode/" + r.ConfigPath.Data, nil
+}
+
+func (r *mqlZcode) skills() ([]interface{}, error) {
+	return agentSkills(r.MqlRuntime, "zcode.skill", r.ConfigPath.Data, defaultZcodeConfigDir,
+		filepath.Join(defaultZcodeConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
+}
+
+func (r *mqlZcodeSkill) id() (string, error)     { return "zcode.skill/" + r.Source.Data, nil }
+func (r *mqlZcodeSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlZcodeSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
+
+// --- Qualia ---
+
+// qualiaConfigDir is Qualia's settings directory relative to the user's home,
+// named for its bundle id on every platform.
+func qualiaConfigDir(osFamily string) string {
+	switch osFamily {
+	case "darwin":
+		return filepath.Join("Library", "Application Support", "io.quadrillion.qualia")
+	case "windows":
+		return filepath.Join("AppData", "Roaming", "io.quadrillion.qualia")
+	default: // linux and other unix-likes
+		return filepath.Join(".config", "io.quadrillion.qualia")
+	}
+}
+
+func initQualia(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initOSConfigPath(runtime, args, "qualia", qualiaConfigDir)
+}
+
+func (r *mqlQualia) id() (string, error) {
+	return "qualia/" + r.ConfigPath.Data, nil
+}
+
+// --- Builder.io ---
+
+const defaultBuilderioConfigDir = ".builder"
+
+func initBuilderio(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initConfigPath(runtime, args, "builderio", defaultBuilderioConfigDir)
+}
+
+func (r *mqlBuilderio) id() (string, error) {
+	return "builderio/" + r.ConfigPath.Data, nil
+}
+
+func (r *mqlBuilderio) skills() ([]interface{}, error) {
+	return agentSkills(r.MqlRuntime, "builderio.skill", r.ConfigPath.Data, defaultBuilderioConfigDir,
+		filepath.Join(defaultBuilderioConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
+}
+
+func (r *mqlBuilderioSkill) id() (string, error)     { return "builderio.skill/" + r.Source.Data, nil }
+func (r *mqlBuilderioSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlBuilderioSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
+
+// --- Claude Platform CLI ---
+
+// anthropicCLIConfigDir is the anthropic-sdk-go configuration directory the
+// CLI keeps its profiles and credentials in, relative to the user's home:
+// ~/.config/anthropic on macOS and Linux, %APPDATA%\Anthropic on Windows.
+func anthropicCLIConfigDir(osFamily string) string {
+	if osFamily == "windows" {
+		return filepath.Join("AppData", "Roaming", "Anthropic")
+	}
+	return filepath.Join(".config", "anthropic")
+}
+
+func initAnthropicCli(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initOSConfigPath(runtime, args, "anthropic.cli", anthropicCLIConfigDir)
+}
+
+func (r *mqlAnthropicCli) id() (string, error) {
+	return "anthropic.cli/" + r.ConfigPath.Data, nil
+}
