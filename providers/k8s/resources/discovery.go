@@ -6,6 +6,7 @@ package resources
 import (
 	"bytes"
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/gobwas/glob"
@@ -1237,16 +1238,13 @@ func discoverNamespaces(
 			continue
 		}
 
-		ownLabels := make(map[string]string, len(ns.Labels))
-		for k, v := range ns.Labels {
-			ownLabels[k] = v
+		ownLabels := maps.Clone(ns.Labels)
+		if ownLabels == nil {
+			ownLabels = map[string]string{}
 		}
 		own[ns.Name] = ownLabels
 
-		labels := map[string]string{}
-		for k, v := range ns.Labels {
-			labels[k] = v
-		}
+		labels := maps.Clone(ownLabels)
 		addMondooAssetLabels(labels, &ns.ObjectMeta, clusterId)
 		platform, err := createPlatformData(ns.Kind, conn.Runtime())
 		if err != nil {
