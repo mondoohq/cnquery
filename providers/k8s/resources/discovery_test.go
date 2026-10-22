@@ -639,3 +639,40 @@ func TestDiscoverManifestUndeclaredNamespaceInheritsNothing(t *testing.T) {
 		assert.True(t, strings.HasPrefix(k, "k8s.mondoo.com/"), "unexpected inherited label %q", k)
 	}
 }
+
+func TestDiscoverNamespacesReturnsOwnLabels(t *testing.T) {
+	cfg := &inventory.Config{Type: "k8s", Options: map[string]string{}}
+	asset := &inventory.Asset{Name: "K8s Cluster test", Connections: []*inventory.Config{cfg}}
+	ns := newTestNamespace("team-a", "uid-team-a")
+	ns.Labels = map[string]string{"my.company.com/team": "aaabbbccc", "kubernetes.io/metadata.name": "team-a"}
+	conn := &namespaceDiscoveryConnection{
+		Connection: plugin.NewConnection(1, asset),
+		asset:      asset,
+		namespaces: []corev1.Namespace{ns},
+	}
+	nsFilter, err := newFilterOpts(nil, nil)
+	require.NoError(t, err)
+
+	assets, own, err := discoverNamespaces(conn, cfg, "", nil, nsFilter, &LabelSelectorFilters{})
+	require.NoError(t, err)
+	require.Len(t, assets, 1)
+	assert.Equal(t, "team-a", assets[0].Labels["k8s.mondoo.com/name"])
+	assert.Equal(t, map[string]string{"my.company.com/team": "aaabbbccc", "kubernetes.io/metadata.name": "team-a"}, own["team-a"])
+}
+
+func TestDiscoverLegacyInheritsNamespaceLabels(t *testing.T) {
+	conn := inheritanceTestConn(
+		map[string]string{shared.OPTION_INHERIT_NAMESPACE_LABELS: "my.company.com/team"},
+		[]string{DiscoveryPods},
+		newTestPod("team-a", "web", "uid-web", map[string]string{"app": "web"}),
+	)
+	delete(conn.asset.Connections[0].Options, plugin.OptionStagedDiscovery)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	require.Len(t, inv.Spec.Assets, 1)
+	got := inv.Spec.Assets[0]
+	assert.Equal(t, "team-a/web", got.Name)
+	assert.Equal(t, "aaabbbccc", got.Labels["my.company.com/team"])
+	assert.NotContains(t, got.Labels, "other")
+}

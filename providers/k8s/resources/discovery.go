@@ -226,7 +226,12 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 			log.Warn().Err(err).Msg("failed to discover cluster asset")
 		}
 	}
-	nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter, labelFilters)
+	inheritKeys, err := inheritedLabelKeys(invConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	nss, nsOwnLabels, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter, labelFilters)
 	if err != nil {
 		return nil, err
 	}
@@ -247,6 +252,7 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 		if err != nil {
 			return nil, err
 		}
+		inheritNamespaceLabels(assets, nsOwnLabels[ns.Name], inheritKeys)
 		setRelatedAssets(conn, ns, assets, od, features)
 		in.Spec.Assets = append(in.Spec.Assets, assets...)
 	}
@@ -309,7 +315,7 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 	// Discover namespaces and emit them as scannable assets with platform IDs
 	// and discovery targets. Override each namespace's connection config to
 	// route to stage 2 when the client connects to it later.
-	nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter, labelFilters)
+	nss, _, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter, labelFilters)
 	if err != nil {
 		return nil, err
 	}
@@ -1191,7 +1197,7 @@ func discoverNamespaces(
 	od *PlatformIdOwnershipIndex,
 	nsFilter FilterOpts,
 	labelFilters *LabelSelectorFilters,
-) ([]*inventory.Asset, error) {
+) ([]*inventory.Asset, map[string]map[string]string, error) {
 	// We don't use MQL here since we need to handle k8s permission errors
 	nss, err := conn.Namespaces()
 	if err != nil {
@@ -1200,24 +1206,28 @@ func discoverNamespaces(
 				for _, ns := range nsFilter.include {
 					n, err := conn.Namespace(ns)
 					if err != nil {
-						return nil, err
+						return nil, nil, err
 					}
 					nss = append(nss, *n)
 				}
 			} else {
-				return nil, errors.Wrap(err, "no permissions to list cluster namespaces, try specifying namespaces explicitly")
+				return nil, nil, errors.Wrap(err, "no permissions to list cluster namespaces, try specifying namespaces explicitly")
 			}
 		} else {
-			return nil, errors.Wrap(err, "failed to list namespaces")
+			return nil, nil, errors.Wrap(err, "failed to list namespaces")
 		}
 	}
 
 	basePlatformId, err := conn.BasePlatformId()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	assetList := make([]*inventory.Asset, 0, len(nss))
+	// own holds each namespace's own labels, keyed by name, for callers that
+	// inherit from them: the asset's labels also carry the k8s.mondoo.com/*
+	// keys added below, which must never be inherited.
+	own := make(map[string]map[string]string, len(nss))
 	for _, ns := range nss {
 		if skip := nsFilter.skip(ns.Name); skip {
 			continue
@@ -1227,6 +1237,12 @@ func discoverNamespaces(
 			continue
 		}
 
+		ownLabels := make(map[string]string, len(ns.Labels))
+		for k, v := range ns.Labels {
+			ownLabels[k] = v
+		}
+		own[ns.Name] = ownLabels
+
 		labels := map[string]string{}
 		for k, v := range ns.Labels {
 			labels[k] = v
@@ -1234,7 +1250,7 @@ func discoverNamespaces(
 		addMondooAssetLabels(labels, &ns.ObjectMeta, clusterId)
 		platform, err := createPlatformData(ns.Kind, conn.Runtime())
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
@@ -1250,7 +1266,7 @@ func discoverNamespaces(
 			od.Add(basePlatformId, &ns)
 		}
 	}
-	return assetList, nil
+	return assetList, own, nil
 }
 
 func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, invConfig *inventory.Config, k8s *mqlK8s, nsFilter FilterOpts, labelFilters *LabelSelectorFilters, imgFilter FilterOpts) ([]*inventory.Asset, error) {
