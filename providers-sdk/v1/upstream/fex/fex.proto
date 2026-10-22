@@ -346,6 +346,13 @@ message FindingExchange {
 
   // Optional. Available remediation options
   repeated Remediation remediations = 21;
+
+  // Optional. Findings this finding is made of, in the way a GitHub issue has
+  // sub-issues: each is a complete FindingExchange with its own id, evidence,
+  // status and severity. A code scanner reports one finding per rule whose
+  // sub-findings are its matches. Only a depth of 1 is supported for now: a
+  // sub-finding does not carry sub-findings of its own.
+  repeated FindingExchange sub_findings = 22;
 }
 
 // Core information about the finding

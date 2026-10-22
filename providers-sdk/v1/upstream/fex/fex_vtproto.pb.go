@@ -1236,6 +1236,20 @@ func (m *FindingExchange) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if len(m.SubFindings) > 0 {
+		for iNdEx := len(m.SubFindings) - 1; iNdEx >= 0; iNdEx-- {
+			size, err := m.SubFindings[iNdEx].MarshalToSizedBufferVT(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xb2
+		}
+	}
 	if len(m.Remediations) > 0 {
 		for iNdEx := len(m.Remediations) - 1; iNdEx >= 0; iNdEx-- {
 			size, err := m.Remediations[iNdEx].MarshalToSizedBufferVT(dAtA[:i])
@@ -4001,6 +4015,12 @@ func (m *FindingExchange) SizeVT() (n int) {
 	}
 	if len(m.Remediations) > 0 {
 		for _, e := range m.Remediations {
+			l = e.SizeVT()
+			n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+		}
+	}
+	if len(m.SubFindings) > 0 {
+		for _, e := range m.SubFindings {
 			l = e.SizeVT()
 			n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 		}
@@ -8850,6 +8870,40 @@ func (m *FindingExchange) UnmarshalVT(dAtA []byte) error {
 			}
 			m.Remediations = append(m.Remediations, &Remediation{})
 			if err := m.Remediations[len(m.Remediations)-1].UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 22:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SubFindings", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SubFindings = append(m.SubFindings, &FindingExchange{})
+			if err := m.SubFindings[len(m.SubFindings)-1].UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
