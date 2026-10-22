@@ -676,3 +676,25 @@ func TestDiscoverLegacyInheritsNamespaceLabels(t *testing.T) {
 	assert.Equal(t, "aaabbbccc", got.Labels["my.company.com/team"])
 	assert.NotContains(t, got.Labels, "other")
 }
+
+func TestInheritedNamespaceLabels(t *testing.T) {
+	ns := map[string]string{
+		"my.company.com/team":         "aaabbbccc",
+		"my.company.com/department":   "d-42",
+		"kubernetes.io/metadata.name": "team-a",
+	}
+	t.Run("returns the matching subset", func(t *testing.T) {
+		got := inheritedNamespaceLabels(ns, []string{"my.company.com/*"})
+		assert.Equal(t, map[string]string{"my.company.com/team": "aaabbbccc", "my.company.com/department": "d-42"}, got)
+	})
+	t.Run("star matches every own label", func(t *testing.T) {
+		got := inheritedNamespaceLabels(ns, []string{"*"})
+		assert.Equal(t, ns, got)
+	})
+	t.Run("nothing matching is nil", func(t *testing.T) {
+		assert.Nil(t, inheritedNamespaceLabels(ns, []string{"other.io/*"}))
+	})
+	t.Run("no patterns is nil", func(t *testing.T) {
+		assert.Nil(t, inheritedNamespaceLabels(ns, nil))
+	})
+}

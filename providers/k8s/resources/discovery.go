@@ -1694,26 +1694,44 @@ func inheritedLabelKeys(cfg *inventory.Config) ([]string, error) {
 	return patterns, nil
 }
 
+// inheritedNamespaceLabels returns the entries of nsLabels whose key matches
+// one of patterns, nil when none does. It runs once per namespace so that the
+// glob matching never repeats per asset.
+func inheritedNamespaceLabels(nsLabels map[string]string, patterns []string) map[string]string {
+	if len(patterns) == 0 {
+		return nil
+	}
+	var inherited map[string]string
+	for k, v := range nsLabels {
+		if !matchesAny(patterns, k) {
+			continue
+		}
+		if inherited == nil {
+			inherited = map[string]string{}
+		}
+		inherited[k] = v
+	}
+	return inherited
+}
+
 // inheritNamespaceLabels copies every entry of nsLabels whose key matches one
 // of patterns onto each asset that does not already carry that key: the
 // workload's own label wins, the namespace only fills the gaps. Container
 // image assets are left untouched, an image is shared by every namespace that
 // runs it and gets its labels elsewhere.
 func inheritNamespaceLabels(assets []*inventory.Asset, nsLabels map[string]string, patterns []string) {
-	if len(patterns) == 0 {
+	inherited := inheritedNamespaceLabels(nsLabels, patterns)
+	if len(inherited) == 0 {
 		return
 	}
 	for _, a := range assets {
 		if len(a.Connections) > 0 && a.Connections[0].Type == registryImageConnectionType {
 			continue
 		}
-		for k, v := range nsLabels {
-			if !matchesAny(patterns, k) {
-				continue
-			}
-			if a.Labels == nil {
-				a.Labels = map[string]string{}
-			}
+		if a.Labels == nil {
+			a.Labels = make(map[string]string, len(inherited))
+		}
+		for k, v := range inherited {
 			if _, exists := a.Labels[k]; exists {
 				continue
 			}
