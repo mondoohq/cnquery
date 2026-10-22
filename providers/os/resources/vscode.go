@@ -49,6 +49,7 @@ var vsCodeEditors = []vsCodeEditor{
 	{".cursor/extensions", "Cursor"},
 	{".antigravity/extensions", "Antigravity"},
 	{".windsurf/extensions", "Windsurf"},
+	{".breezell-editor/extensions", "Breezell"},
 	{".positron/extensions", "Positron"},
 	{".kiro/extensions", "Kiro"},
 }

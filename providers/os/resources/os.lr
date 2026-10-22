@@ -23761,6 +23761,154 @@ private windsurf.skill @defaults("name") @maturity("preview") {
   purl() string
 }
 
+// Breezell editor instance
+//
+// Breezell AI code editor, a VS Code (Code - OSS) fork, installed on the host.
+// Queryable through it are the global rules and memories that steer the
+// assistant, the configured MCP servers, and any installed skills, along with
+// the package that installed the editor and the runtime it executes in. Rules
+// and skills are read from the configuration directory (default .breezell in
+// the user's home); MCP servers from the editor's user mcp.json in the sibling
+// .breezell-editor directory.
+// URL: https://breezell.com/
+breezell @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Breezell configuration directory
+  configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional, null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
+  // Global rules and memories that steer the assistant
+  rules() []breezell.rule
+  // MCP servers the editor connects to
+  mcpServers() []breezell.mcpServer
+  // Installed skills
+  skills() []breezell.skill
+  // Git repositories backing the opened workspaces
+  repos() []breezell.repo
+}
+
+// Breezell workspace repository
+//
+// Git repository backing a workspace folder opened in Breezell, derived from
+// the editor's opened-folder history and resolved through its `.git/config`.
+// Exposes the origin remote `url`, the parsed `host` (for example github.com)
+// and `name` (org/repo slug), the checked-out `branch`, all configured
+// `remotes`, and the working-tree root `path`. Repositories are deduplicated
+// by their working-tree root. Opened folders that are not git working trees
+// are omitted.
+private breezell.repo @defaults("name branch") @maturity("preview") {
+  // Working-tree root path on disk
+  path string
+  // Origin remote URL
+  //
+  // The fetch URL of the remote named origin, or the first remote found
+  // when there is no origin. Empty for a repository with no remotes.
+  url string
+  // Remote host parsed from the origin URL
+  //
+  // For example github.com or gitlab.com. Empty when there is no remote or
+  // the URL cannot be parsed.
+  host string
+  // Repository slug parsed from the origin URL
+  //
+  // The owner-and-name path, for example mondoohq/mql. Empty when there is
+  // no remote or the URL cannot be parsed.
+  name string
+  // Currently checked-out branch
+  //
+  // The branch referenced by HEAD, for example main. Empty when HEAD is
+  // detached or cannot be read.
+  branch string
+  // All configured remotes, keyed by remote name
+  remotes map[string]string
+}
+
+// Breezell rule / memory file
+//
+// Rule or memory file under the configuration directory's memories folder
+// (global_rules.md, global_memories.md, ...) that injects standing
+// instructions into the Breezell assistant's context. The content field
+// holds the full text, which shapes how the AI behaves and is worth
+// reviewing for injected or unexpected directives.
+private breezell.rule @defaults("name") @maturity("preview") {
+  // Rule name (derived from filename)
+  name string
+  // Full content of the rule file
+  content string
+  // Path to the rule file
+  source string
+}
+
+// Breezell MCP server configuration
+//
+// Model Context Protocol server Breezell is configured to use. Stdio
+// servers launch a local command with args; sse servers connect to a url.
+// `type` reports the transport and hasEnv whether environment variables
+// (often holding API keys or tokens) are configured for the server.
+private breezell.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server transport type, for example "stdio" or "http"
+  type string
+  // Local command launched for stdio-type servers
+  command string
+  // Command-line arguments passed to the server command
+  args []string
+  // Endpoint URL for sse or streamable-http servers
+  url string
+  // Whether environment variables (for example API keys) are configured
+  hasEnv bool
+  // Discovered MCP server asset
+  //
+  // Points at the asset discovered for this MCP server, anchored on this
+  // resource. The reference is typed to the `mcp` root: the resource that
+  // roots the MCP server's own tree. See ADR 030 and ADR 031.
+  running() asset<mcp>
+}
+
+// Breezell skill
+//
+// Skill defined by a SKILL.md file that packages task instructions for
+// the assistant. The allowedTools list bounds which tools the skill may
+// invoke, argumentHint documents its expected arguments, and content
+// holds the full definition. Use sha256 to detect tampering.
+private breezell.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint describing the skill's expected arguments
+  argumentHint string
+  // Path to the SKILL.md file that defines the skill
+  source string
+  // Full markdown content of the skill definition
+  content string
+  // SHA-256 hash of the skill content, for integrity checks
+  sha256() string
+  // Package URL identifying the skill's git origin
+  purl() string
+}
+
 // Zed editor instance
 //
 // Zed code editor installed on the host. Queryable through it are the

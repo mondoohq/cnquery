@@ -24,6 +24,7 @@ var mcpClientResources = []string{
 	"github.copilot",
 	"gemini",
 	"windsurf",
+	"breezell",
 	"claude.desktop",
 }
 
