@@ -112,6 +112,7 @@ var toolPackageSpecs = map[string]toolPackageSpec{
 	"goose":            {packageName: "goose", managerCandidates: []string{"block-goose-cli", "block-goose"}, vendor: "Block"},
 	"gemini":           {packageName: "gemini", managerCandidates: []string{"gemini-cli"}, vendor: "Google"},
 	"windsurf":         {packageName: "windsurf", binaryNames: []string{"windsurf"}, managerCandidates: []string{"windsurf", "Windsurf", "Windsurf (User)"}},
+	"breezell":         {packageName: "breezell", binaryNames: []string{"breezell"}, managerCandidates: []string{"breezell", "Breezell", "Breezell (User)"}},
 	"zed":              {packageName: "zed", managerCandidates: []string{"zed", "Zed", "ZedIndustries.Zed"}, vendor: "Zed Industries"},
 	"roo":              {packageName: "roo", runtime: runtimeIDE, runtimeHostName: "Visual Studio Code", runtimeHostCandidates: vscodeHostCandidates, vscodeExtensionIDs: []string{"RooVeterinaryInc.roo-cline"}},
 	"cline":            {packageName: "cline", runtime: runtimeIDE, runtimeHostName: "Visual Studio Code", runtimeHostCandidates: vscodeHostCandidates, vscodeExtensionIDs: []string{"saoudrizwan.claude-dev"}},
@@ -266,6 +267,7 @@ var vscodeHostCandidates = []string{
 	"vscodium", "VSCodium", "VSCodium (User)",
 	"cursor", "Cursor", "Cursor (User)",
 	"windsurf", "Windsurf", "Windsurf (User)",
+	"breezell", "Breezell", "Breezell (User)",
 }
 
 // resolveRuntimePackage returns the host the tool runs inside — the OS for a
@@ -581,6 +583,10 @@ func (r *mqlWindsurf) compute_package() (*mqlPackage, error) {
 	return resolveToolPackage(r.MqlRuntime, r.ConfigPath.Data, toolPackageSpecs["windsurf"])
 }
 
+func (r *mqlBreezell) compute_package() (*mqlPackage, error) {
+	return resolveToolPackage(r.MqlRuntime, r.ConfigPath.Data, toolPackageSpecs["breezell"])
+}
+
 func (r *mqlZed) compute_package() (*mqlPackage, error) {
 	return resolveToolPackage(r.MqlRuntime, r.ConfigPath.Data, toolPackageSpecs["zed"])
 }
@@ -696,6 +702,10 @@ func (r *mqlGemini) runtime() (*mqlExtensionRuntime, error) {
 
 func (r *mqlWindsurf) runtime() (*mqlExtensionRuntime, error) {
 	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["windsurf"])
+}
+
+func (r *mqlBreezell) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["breezell"])
 }
 
 func (r *mqlZed) runtime() (*mqlExtensionRuntime, error) {

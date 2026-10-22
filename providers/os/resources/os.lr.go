@@ -715,6 +715,11 @@ const (
 	ResourceWindsurfRule                                   string = "windsurf.rule"
 	ResourceWindsurfMcpServer                              string = "windsurf.mcpServer"
 	ResourceWindsurfSkill                                  string = "windsurf.skill"
+	ResourceBreezell                                       string = "breezell"
+	ResourceBreezellRepo                                   string = "breezell.repo"
+	ResourceBreezellRule                                   string = "breezell.rule"
+	ResourceBreezellMcpServer                              string = "breezell.mcpServer"
+	ResourceBreezellSkill                                  string = "breezell.skill"
 	ResourceZed                                            string = "zed"
 	ResourceZedRepo                                        string = "zed.repo"
 	ResourceRoo                                            string = "roo"
@@ -3585,6 +3590,26 @@ func init() {
 		"windsurf.skill": {
 			// to override args, implement: initWindsurfSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindsurfSkill,
+		},
+		"breezell": {
+			Init:   initBreezell,
+			Create: createBreezell,
+		},
+		"breezell.repo": {
+			// to override args, implement: initBreezellRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBreezellRepo,
+		},
+		"breezell.rule": {
+			// to override args, implement: initBreezellRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBreezellRule,
+		},
+		"breezell.mcpServer": {
+			// to override args, implement: initBreezellMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBreezellMcpServer,
+		},
+		"breezell.skill": {
+			// to override args, implement: initBreezellSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBreezellSkill,
 		},
 		"zed": {
 			Init:   initZed,
@@ -20819,6 +20844,99 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windsurf.skill.purl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindsurfSkill).GetPurl()).ToDataRes(types.String)
+	},
+	"breezell.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezell).GetConfigPath()).ToDataRes(types.String)
+	},
+	"breezell.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezell).GetPackage()).ToDataRes(types.Resource("package"))
+	},
+	"breezell.runtime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezell).GetRuntime()).ToDataRes(types.Resource("extensionRuntime"))
+	},
+	"breezell.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezell).GetRules()).ToDataRes(types.Array(types.Resource("breezell.rule")))
+	},
+	"breezell.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezell).GetMcpServers()).ToDataRes(types.Array(types.Resource("breezell.mcpServer")))
+	},
+	"breezell.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezell).GetSkills()).ToDataRes(types.Array(types.Resource("breezell.skill")))
+	},
+	"breezell.repos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezell).GetRepos()).ToDataRes(types.Array(types.Resource("breezell.repo")))
+	},
+	"breezell.repo.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellRepo).GetPath()).ToDataRes(types.String)
+	},
+	"breezell.repo.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellRepo).GetUrl()).ToDataRes(types.String)
+	},
+	"breezell.repo.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellRepo).GetHost()).ToDataRes(types.String)
+	},
+	"breezell.repo.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellRepo).GetName()).ToDataRes(types.String)
+	},
+	"breezell.repo.branch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellRepo).GetBranch()).ToDataRes(types.String)
+	},
+	"breezell.repo.remotes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellRepo).GetRemotes()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"breezell.rule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellRule).GetName()).ToDataRes(types.String)
+	},
+	"breezell.rule.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellRule).GetContent()).ToDataRes(types.String)
+	},
+	"breezell.rule.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellRule).GetSource()).ToDataRes(types.String)
+	},
+	"breezell.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellMcpServer).GetName()).ToDataRes(types.String)
+	},
+	"breezell.mcpServer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellMcpServer).GetType()).ToDataRes(types.String)
+	},
+	"breezell.mcpServer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellMcpServer).GetCommand()).ToDataRes(types.String)
+	},
+	"breezell.mcpServer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellMcpServer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"breezell.mcpServer.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellMcpServer).GetUrl()).ToDataRes(types.String)
+	},
+	"breezell.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"breezell.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
+	},
+	"breezell.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellSkill).GetName()).ToDataRes(types.String)
+	},
+	"breezell.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"breezell.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"breezell.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"breezell.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellSkill).GetSource()).ToDataRes(types.String)
+	},
+	"breezell.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellSkill).GetContent()).ToDataRes(types.String)
+	},
+	"breezell.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"breezell.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBreezellSkill).GetPurl()).ToDataRes(types.String)
 	},
 	"zed.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZed).GetConfigPath()).ToDataRes(types.String)
@@ -47567,6 +47685,150 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windsurf.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindsurfSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezell).__id, ok = v.Value.(string)
+		return
+	},
+	"breezell.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezell).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezell).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
+	"breezell.runtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezell).Runtime, ok = plugin.RawToTValue[*mqlExtensionRuntime](v.Value, v.Error)
+		return
+	},
+	"breezell.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezell).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"breezell.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezell).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"breezell.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezell).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"breezell.repos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezell).Repos, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"breezell.repo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellRepo).__id, ok = v.Value.(string)
+		return
+	},
+	"breezell.repo.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellRepo).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.repo.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellRepo).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.repo.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellRepo).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.repo.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellRepo).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.repo.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellRepo).Branch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.repo.remotes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellRepo).Remotes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"breezell.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellRule).__id, ok = v.Value.(string)
+		return
+	},
+	"breezell.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.rule.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellRule).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.rule.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellRule).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellMcpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"breezell.mcpServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellMcpServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.mcpServer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellMcpServer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.mcpServer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellMcpServer).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.mcpServer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellMcpServer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"breezell.mcpServer.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellMcpServer).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"breezell.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
+		return
+	},
+	"breezell.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"breezell.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"breezell.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"breezell.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBreezellSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"zed.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -121437,6 +121699,459 @@ func (c *mqlWindsurfSkill) GetSha256() *plugin.TValue[string] {
 }
 
 func (c *mqlWindsurfSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+// mqlBreezell for the breezell resource
+type mqlBreezell struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlBreezellInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
+	Runtime    plugin.TValue[*mqlExtensionRuntime]
+	Rules      plugin.TValue[[]any]
+	McpServers plugin.TValue[[]any]
+	Skills     plugin.TValue[[]any]
+	Repos      plugin.TValue[[]any]
+}
+
+// createBreezell creates a new instance of this resource
+func createBreezell(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBreezell{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("breezell", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBreezell) MqlName() string {
+	return "breezell"
+}
+
+func (c *mqlBreezell) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBreezell) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlBreezell) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("breezell", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
+}
+
+func (c *mqlBreezell) GetRuntime() *plugin.TValue[*mqlExtensionRuntime] {
+	return plugin.GetOrCompute[*mqlExtensionRuntime](&c.Runtime, func() (*mqlExtensionRuntime, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("breezell", c.__id, "runtime")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlExtensionRuntime), nil
+			}
+		}
+
+		return c.runtime()
+	})
+}
+
+func (c *mqlBreezell) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("breezell", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+func (c *mqlBreezell) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("breezell", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+func (c *mqlBreezell) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("breezell", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+func (c *mqlBreezell) GetRepos() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repos, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("breezell", c.__id, "repos")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repos()
+	})
+}
+
+// mqlBreezellRepo for the breezell.repo resource
+type mqlBreezellRepo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlBreezellRepoInternal it will be used here
+	Path    plugin.TValue[string]
+	Url     plugin.TValue[string]
+	Host    plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Branch  plugin.TValue[string]
+	Remotes plugin.TValue[map[string]any]
+}
+
+// createBreezellRepo creates a new instance of this resource
+func createBreezellRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBreezellRepo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("breezell.repo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBreezellRepo) MqlName() string {
+	return "breezell.repo"
+}
+
+func (c *mqlBreezellRepo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBreezellRepo) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlBreezellRepo) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlBreezellRepo) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlBreezellRepo) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlBreezellRepo) GetBranch() *plugin.TValue[string] {
+	return &c.Branch
+}
+
+func (c *mqlBreezellRepo) GetRemotes() *plugin.TValue[map[string]any] {
+	return &c.Remotes
+}
+
+// mqlBreezellRule for the breezell.rule resource
+type mqlBreezellRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlBreezellRuleInternal it will be used here
+	Name    plugin.TValue[string]
+	Content plugin.TValue[string]
+	Source  plugin.TValue[string]
+}
+
+// createBreezellRule creates a new instance of this resource
+func createBreezellRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBreezellRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("breezell.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBreezellRule) MqlName() string {
+	return "breezell.rule"
+}
+
+func (c *mqlBreezellRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBreezellRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlBreezellRule) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlBreezellRule) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+// mqlBreezellMcpServer for the breezell.mcpServer resource
+type mqlBreezellMcpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlBreezellMcpServerInternal it will be used here
+	Name    plugin.TValue[string]
+	Type    plugin.TValue[string]
+	Command plugin.TValue[string]
+	Args    plugin.TValue[[]any]
+	Url     plugin.TValue[string]
+	HasEnv  plugin.TValue[bool]
+	Running plugin.TValue[*llx.AssetValue]
+}
+
+// createBreezellMcpServer creates a new instance of this resource
+func createBreezellMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBreezellMcpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("breezell.mcpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBreezellMcpServer) MqlName() string {
+	return "breezell.mcpServer"
+}
+
+func (c *mqlBreezellMcpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBreezellMcpServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlBreezellMcpServer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlBreezellMcpServer) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlBreezellMcpServer) GetArgs() *plugin.TValue[[]any] {
+	return &c.Args
+}
+
+func (c *mqlBreezellMcpServer) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlBreezellMcpServer) GetHasEnv() *plugin.TValue[bool] {
+	return &c.HasEnv
+}
+
+func (c *mqlBreezellMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
+	})
+}
+
+// mqlBreezellSkill for the breezell.skill resource
+type mqlBreezellSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlBreezellSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
+}
+
+// createBreezellSkill creates a new instance of this resource
+func createBreezellSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBreezellSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("breezell.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBreezellSkill) MqlName() string {
+	return "breezell.skill"
+}
+
+func (c *mqlBreezellSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBreezellSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlBreezellSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlBreezellSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlBreezellSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlBreezellSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlBreezellSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlBreezellSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+func (c *mqlBreezellSkill) GetPurl() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
 		return c.purl()
 	})
