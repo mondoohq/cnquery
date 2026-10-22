@@ -380,6 +380,11 @@ func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, inv
 		return nil, err
 	}
 
+	inheritKeys, err := inheritedLabelKeys(invConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	// Resolve the namespace's platform ID for use as the ownership root
 	basePlatformId, err := conn.BasePlatformId()
 	if err != nil {
@@ -400,6 +405,7 @@ func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, inv
 	if err != nil {
 		return nil, err
 	}
+	inheritNamespaceLabels(assets, nsObj.Labels, inheritKeys)
 
 	in.Spec.Assets = append(in.Spec.Assets, assets...)
 	return in, nil

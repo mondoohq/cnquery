@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,6 +17,7 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	admissionconn "go.mondoo.com/mql/providers/k8s/connection/admission"
+	"go.mondoo.com/mql/providers/k8s/connection/manifest"
 	"go.mondoo.com/mql/providers/k8s/connection/shared"
 	"go.mondoo.com/mql/providers/k8s/connection/shared/distro"
 	sharedres "go.mondoo.com/mql/providers/k8s/connection/shared/resources"
@@ -84,6 +86,7 @@ type namespaceDiscoveryConnection struct {
 	plugin.Connection
 	asset             *inventory.Asset
 	namespaces        []corev1.Namespace
+	pods              []corev1.Pod
 	namespaceGetCalls []string
 }
 
@@ -95,8 +98,17 @@ func (c *namespaceDiscoveryConnection) Runtime() string {
 	return "k8s-cluster"
 }
 
+// Resources serves the fake's pods for the pods kind and nothing for any
+// other kind, so discovery targets other than pods find an empty cluster.
 func (c *namespaceDiscoveryConnection) Resources(kind string, name string, namespace string) (*shared.ResourceResult, error) {
-	return nil, fmt.Errorf("unexpected resource lookup %s/%s/%s", kind, namespace, name)
+	res := &shared.ResourceResult{Kind: kind, Name: name, Namespace: namespace}
+	if kind != gvkString(corev1.SchemeGroupVersion.WithKind("pods")) {
+		return res, nil
+	}
+	for i := range c.pods {
+		res.Resources = append(res.Resources, &c.pods[i])
+	}
+	return res, nil
 }
 
 func (c *namespaceDiscoveryConnection) ServerVersion() *version.Info {
@@ -468,4 +480,162 @@ func TestInheritNamespaceLabels(t *testing.T) {
 		inheritNamespaceLabels([]*inventory.Asset{a}, ns, nil)
 		assert.Equal(t, map[string]string{"app": "web"}, a.Labels)
 	})
+}
+
+// newTestPod builds a pod with no owner references. Each image becomes one
+// container whose status reports that image as already resolved.
+func newTestPod(namespace, name, uid string, labels map[string]string, images ...string) corev1.Pod {
+	pod := corev1.Pod{
+		TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Pod"},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      name,
+			UID:       types.UID(uid),
+			Labels:    labels,
+		},
+	}
+	for i, image := range images {
+		containerName := fmt.Sprintf("c%d", i)
+		pod.Spec.Containers = append(pod.Spec.Containers, corev1.Container{Name: containerName, Image: image})
+		pod.Status.ContainerStatuses = append(pod.Status.ContainerStatuses, corev1.ContainerStatus{Name: containerName, Image: image, ImageID: image})
+	}
+	return pod
+}
+
+// newDiscoveryTestRuntime wires the fake connection into a runtime whose
+// CreateResource serves the k8s root resource and delegates every other
+// resource to the generated factories.
+func newDiscoveryTestRuntime(conn shared.Connection) *plugin.Runtime {
+	rt := &plugin.Runtime{
+		Resources:  &syncx.Map[plugin.Resource]{},
+		Connection: conn,
+	}
+	rt.CreateResource = func(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
+		if name == "k8s" {
+			return &mqlK8s{MqlRuntime: runtime}, nil
+		}
+		return CreateResource(runtime, name, args)
+	}
+	return rt
+}
+
+// inheritanceTestConn returns a fake cluster with one namespace "team-a"
+// labeled with a team id, serving the given pods, and the staged namespace
+// stage config for it. options are merged into the connection options.
+func inheritanceTestConn(options map[string]string, targets []string, pods ...corev1.Pod) *namespaceDiscoveryConnection {
+	cfg := &inventory.Config{
+		Type: "k8s",
+		Options: map[string]string{
+			plugin.OptionStagedDiscovery: "",
+			shared.OPTION_NAMESPACE:      "team-a",
+		},
+		Discover: &inventory.Discovery{Targets: targets},
+	}
+	for k, v := range options {
+		cfg.Options[k] = v
+	}
+	asset := &inventory.Asset{Name: "K8s Cluster test", Connections: []*inventory.Config{cfg}}
+	ns := newTestNamespace("team-a", "uid-team-a")
+	ns.Labels = map[string]string{"my.company.com/team": "aaabbbccc", "other": "x"}
+	return &namespaceDiscoveryConnection{
+		Connection: plugin.NewConnection(1, asset),
+		asset:      asset,
+		namespaces: []corev1.Namespace{ns},
+		pods:       pods,
+	}
+}
+
+func TestDiscoverNamespaceStageInheritsNamespaceLabels(t *testing.T) {
+	conn := inheritanceTestConn(
+		map[string]string{shared.OPTION_INHERIT_NAMESPACE_LABELS: "my.company.com/team"},
+		[]string{DiscoveryPods},
+		newTestPod("team-a", "web", "uid-web", map[string]string{"app": "web"}),
+	)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	require.Len(t, inv.Spec.Assets, 1)
+	got := inv.Spec.Assets[0]
+	assert.Equal(t, "team-a/web", got.Name)
+	assert.Equal(t, "aaabbbccc", got.Labels["my.company.com/team"])
+	assert.Equal(t, "web", got.Labels["app"])
+	assert.NotContains(t, got.Labels, "other")
+}
+
+func TestDiscoverNamespaceStageKeepsWorkloadLabelOnCollision(t *testing.T) {
+	conn := inheritanceTestConn(
+		map[string]string{shared.OPTION_INHERIT_NAMESPACE_LABELS: "my.company.com/team"},
+		[]string{DiscoveryPods},
+		newTestPod("team-a", "web", "uid-web", map[string]string{"my.company.com/team": "zzz"}),
+	)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	require.Len(t, inv.Spec.Assets, 1)
+	assert.Equal(t, "zzz", inv.Spec.Assets[0].Labels["my.company.com/team"])
+}
+
+func TestDiscoverNamespaceStageWithoutOptionLeavesLabelsUnchanged(t *testing.T) {
+	conn := inheritanceTestConn(
+		nil,
+		[]string{DiscoveryPods},
+		newTestPod("team-a", "web", "uid-web", map[string]string{"app": "web"}),
+	)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	require.Len(t, inv.Spec.Assets, 1)
+	assert.NotContains(t, inv.Spec.Assets[0].Labels, "my.company.com/team")
+	assert.Equal(t, "web", inv.Spec.Assets[0].Labels["app"])
+}
+
+func TestDiscoverNamespaceStageDoesNotLabelContainerImages(t *testing.T) {
+	conn := inheritanceTestConn(
+		map[string]string{shared.OPTION_INHERIT_NAMESPACE_LABELS: "my.company.com/team"},
+		[]string{DiscoveryPods, DiscoveryContainerImages},
+		newTestPod("team-a", "web", "uid-web", map[string]string{"app": "web"}, "docker.io/library/nginx@sha256:0123456789abcdef"),
+	)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	require.Len(t, inv.Spec.Assets, 2)
+	var image, workload *inventory.Asset
+	for _, a := range inv.Spec.Assets {
+		if a.Connections[0].Type == registryImageConnectionType {
+			image = a
+		} else {
+			workload = a
+		}
+	}
+	require.NotNil(t, image)
+	require.NotNil(t, workload)
+	assert.NotContains(t, image.Labels, "my.company.com/team")
+	assert.Equal(t, "aaabbbccc", workload.Labels["my.company.com/team"])
+}
+
+func TestDiscoverManifestUndeclaredNamespaceInheritsNothing(t *testing.T) {
+	cfg := &inventory.Config{
+		Type: "k8s",
+		Options: map[string]string{
+			plugin.OptionStagedDiscovery:           "",
+			shared.OPTION_NAMESPACE:                "undeclared",
+			shared.OPTION_INHERIT_NAMESPACE_LABELS: "*",
+		},
+		Discover: &inventory.Discovery{Targets: []string{DiscoveryPods}},
+	}
+	asset := &inventory.Asset{Connections: []*inventory.Config{cfg}}
+	conn, err := manifest.NewConnection(0, asset, manifest.WithManifestFile("testdata/inherit_namespace_labels_undeclared_ns.yaml"))
+	require.NoError(t, err)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	require.Len(t, inv.Spec.Assets, 1)
+	got := inv.Spec.Assets[0]
+	assert.Equal(t, "web", got.Labels["app"])
+	for k := range got.Labels {
+		if k == "app" {
+			continue
+		}
+		assert.True(t, strings.HasPrefix(k, "k8s.mondoo.com/"), "unexpected inherited label %q", k)
+	}
 }
