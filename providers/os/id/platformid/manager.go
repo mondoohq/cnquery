@@ -29,6 +29,10 @@ func MachineIDProvider(conn shared.Connection, platform *inventory.Platform) (Un
 		uuidProvider = &FreeBSDIdProvider{connection: conn}
 	} else if uuidProvider == nil && platform.Name == "aix" {
 		uuidProvider = &AixIdProvider{connection: conn}
+	} else if uuidProvider == nil && platform.Name == "solaris" {
+		// Solaris 11.4 keeps a D-Bus machine id at /var/lib/dbus/machine-id,
+		// the file the linux provider reads first.
+		uuidProvider = &LinuxIdProvider{connection: conn}
 	}
 
 	return uuidProvider, nil

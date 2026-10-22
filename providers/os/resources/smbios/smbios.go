@@ -81,9 +81,7 @@ func ResolveManager(conn shared.Connection, pf *inventory.Platform) (SmBiosManag
 
 	var biosM SmBiosManager
 
-	// check darwin before unix since darwin is also a unix. Solaris 11.4 ships
-	// /etc/os-release and is detected into the linux family, so it is matched
-	// by name first.
+	// check darwin before unix since darwin is also a unix.
 	if pf.Name == "solaris" {
 		biosM = &SolarisSmbiosManager{provider: conn}
 	} else if pf.IsFamily("darwin") {

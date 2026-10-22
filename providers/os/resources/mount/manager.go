@@ -39,8 +39,6 @@ func ResolveManager(conn shared.Connection) (OperatingSystemMountManager, error)
 		return nil, errors.New("missing platform information")
 	}
 
-	// Solaris 11.4 ships /etc/os-release and is detected into the linux
-	// family, so it is matched by name first.
 	if pf.Name == "solaris" {
 		mm = &SolarisMountManager{conn: conn}
 	} else if pf.Name == "aix" {

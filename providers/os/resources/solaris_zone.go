@@ -20,8 +20,7 @@ import (
 
 // zoneadmPath is where Oracle Solaris and illumos install zoneadm. Its
 // presence decides whether the system has zones at all. The platform name
-// cannot: Solaris 11.4 ships /etc/os-release and is detected into the linux
-// family, and the illumos distributions each carry their own name.
+// cannot: the illumos distributions each carry their own name.
 const zoneadmPath = "/usr/sbin/zoneadm"
 
 // validZoneName matches a zone name as zonecfg accepts it: an alphanumeric

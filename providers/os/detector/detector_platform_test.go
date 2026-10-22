@@ -1478,6 +1478,33 @@ func TestSolaris11Detector(t *testing.T) {
 	assert.Equal(t, []string{"unix", "os"}, di.Family)
 }
 
+// Solaris 11.4 ships an /etc/os-release, which used to make it a linux system:
+// every resource gated on the linux family then took a Linux code path.
+func TestSolaris114Detector(t *testing.T) {
+	for _, tc := range []struct {
+		name, fixture, arch string
+	}{
+		{"live host", "./testdata/detect-solaris114.toml", "i86pc"},
+		// No uname to confirm SunOS: os-release is the only evidence.
+		{"files only", "./testdata/detect-solaris114-files-only.toml", ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			di, err := detectPlatformFromMock(tc.fixture)
+			require.NoError(t, err)
+
+			assert.Equal(t, "solaris", di.Name)
+			assert.Equal(t, []string{"unix", "os"}, di.Family)
+			assert.Equal(t, "Oracle Solaris 11.4", di.Title)
+			assert.Equal(t, "11.4", di.Version)
+			assert.Equal(t, "11.4.86.0.1.201.2", di.Build)
+			assert.Equal(t, tc.arch, di.Arch)
+			// The distro qualifier of package URLs reads these.
+			assert.Equal(t, "solaris", di.Labels[LabelDistroID])
+			assert.Equal(t, "sru", di.Labels["variant-id"])
+		})
+	}
+}
+
 // uname already proves the host is SunOS, so an unreadable /etc/release must
 // still detect solaris - just without a title and version.
 func TestSolarisDetectorWithoutReleaseFile(t *testing.T) {

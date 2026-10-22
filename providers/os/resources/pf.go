@@ -236,8 +236,7 @@ func (p *mqlPf) file() (*mqlFile, error) {
 }
 
 // configPath finds the ruleset file PF loads at boot. Solaris is matched by
-// platform name, never by family: 11.4 ships an os-release and is detected
-// into the linux family.
+// platform name, never by family.
 func (p *mqlPf) configPath() (string, error) {
 	conn, err := p.conn()
 	if err != nil {

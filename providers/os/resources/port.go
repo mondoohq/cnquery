@@ -38,9 +38,7 @@ func (p *mqlPorts) list() ([]any, error) {
 	pf := conn.Asset().Platform
 
 	switch {
-	// Solaris 11.4 ships /etc/os-release and is detected into the linux
-	// family, so it must be matched by name before the family test sends it
-	// to /proc/net/tcp, which Solaris does not have.
+	// Solaris has no /proc/net/tcp; it lists its sockets with netstat.
 	case pf.Name == "solaris":
 		return p.listSolaris()
 	case pf.IsFamily("linux"):

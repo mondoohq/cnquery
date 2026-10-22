@@ -1826,6 +1826,13 @@ var linuxFamily = &PlatformResolver{
 		detected := false
 		osrd := NewOSReleaseDetector(conn)
 
+		// Solaris 11.4 ships an /etc/os-release, which would otherwise make it
+		// a linux system. Decline before touching pf, so the solaris resolver
+		// starts from a clean platform.
+		if isSolarisOSRelease(osrd) {
+			return false, nil
+		}
+
 		pf.Name = ""
 		pf.Title = ""
 		if pf.Labels == nil {
@@ -1976,12 +1983,15 @@ var solaris = &PlatformResolver{
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		osrd := NewOSReleaseDetector(conn)
 
+		// Without command execution (an image or a disk snapshot) uname cannot
+		// run, and the os-release that Solaris 11.4 ships is the only evidence.
 		unames, err := osrd.unames()
-		if err != nil {
-			return false, err
-		}
-
-		if !strings.Contains(strings.ToLower(unames), "sunos") {
+		switch {
+		case err != nil || unames == "":
+			if !isSolarisOSRelease(osrd) {
+				return false, err
+			}
+		case !strings.Contains(strings.ToLower(unames), "sunos"):
 			return false, nil
 		}
 
@@ -1998,26 +2008,56 @@ var solaris = &PlatformResolver{
 		// try to read "/etc/release" for more details. uname already confirmed
 		// SunOS, so a missing or unreadable release file only costs us the title
 		// and version - it must not retract the platform detection itself.
-		f, err := conn.FileSystem().Open("/etc/release")
-		if err != nil {
-			return true, nil
+		if f, err := conn.FileSystem().Open("/etc/release"); err == nil {
+			c, err := io.ReadAll(f)
+			f.Close()
+			if err == nil {
+				if release, err := ParseSolarisRelease(string(c)); err == nil {
+					pf.Name = release.ID
+					pf.Title = release.Title
+					pf.Version = release.Release
+				}
+			}
 		}
-		defer f.Close()
 
-		c, err := io.ReadAll(f)
-		if err != nil {
-			return true, nil
-		}
-
-		release, err := ParseSolarisRelease(string(c))
-		if err == nil {
-			pf.Name = release.ID
-			pf.Title = release.Title
-			pf.Version = release.Release
+		// Solaris 11.4 also ships an os-release, whose PRETTY_NAME carries the
+		// version ("Oracle Solaris 11.4") where /etc/release's title does not.
+		// Its ID feeds the distro qualifier of package URLs.
+		if osr, err := osrd.osrelease(); err == nil {
+			if osr["ID"] != "" {
+				if pf.Labels == nil {
+					pf.Labels = map[string]string{}
+				}
+				if pf.Metadata == nil {
+					pf.Metadata = map[string]string{}
+				}
+				pf.Labels[LabelDistroID] = osr["ID"]
+				pf.Metadata[LabelDistroID] = osr["ID"]
+			}
+			if osr["PRETTY_NAME"] != "" {
+				pf.Title = osr["PRETTY_NAME"]
+			}
+			if osr["VERSION_ID"] != "" {
+				pf.Version = osr["VERSION_ID"]
+			}
+			if osr["BUILD_ID"] != "" {
+				pf.Build = osr["BUILD_ID"]
+			}
+			if osr["VARIANT_ID"] != "" {
+				pf.Labels["variant-id"] = osr["VARIANT_ID"]
+				pf.Metadata["variant-id"] = osr["VARIANT_ID"]
+			}
 		}
 
 		return true, nil
 	},
+}
+
+// isSolarisOSRelease reports whether the target's os-release names Oracle
+// Solaris (ID=solaris), which 11.4 and later ship.
+func isSolarisOSRelease(osrd *OSReleaseDetector) bool {
+	osr, err := osrd.osrelease()
+	return err == nil && osr["ID"] == "solaris"
 }
 
 var aixUnameParser = regexp.MustCompile(`(\d+)\s+(\d+)\s+(.*)`)

@@ -114,12 +114,12 @@ kexalgorithms sntrup761x25519-sha512,mlkem768x25519-sha256,curve25519-sha256
 	assert.Equal(t, []any{"sntrup761x25519-sha512", "mlkem768x25519-sha256", "curve25519-sha256"}, kexs.Data)
 }
 
-// Solaris 11.4 is detected into the linux family, and its sshd is not on the
-// PATH: a bare `sshd -T` fails there with "command not found".
+// The Solaris sshd is not on the PATH: a bare `sshd -T` fails there with
+// "command not found".
 func TestSshdConfigEffectiveAlgorithmsSolaris(t *testing.T) {
 	runtime := sshdEffectiveConfigMockRuntimeOn(t, &inventory.Platform{
 		Name:    "solaris",
-		Family:  []string{"linux", "unix", "os"},
+		Family:  []string{"unix", "os"},
 		Version: "11.4",
 	}, map[string]*mock.Command{
 		solarisSshdEffectiveConfigCommand: {
