@@ -304,3 +304,18 @@ func TestParseCLI(t *testing.T) {
 		assert.Equal(t, expectedRes, res)
 	})
 }
+
+func TestParseCLIInheritNamespaceLabels(t *testing.T) {
+	srv := &Service{}
+	res, err := srv.ParseCLI(&plugin.ParseCLIReq{
+		Connector: "k8s",
+		Flags: map[string]*llx.Primitive{
+			"inherit-namespace-labels": {
+				Value: []byte("my.company.com/team,my.company.com/*"),
+			},
+		},
+	})
+	require.NoError(t, err)
+	conf := res.Asset.Connections[0]
+	assert.Equal(t, "my.company.com/team,my.company.com/*", conf.Options[shared.OPTION_INHERIT_NAMESPACE_LABELS])
+}

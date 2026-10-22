@@ -94,6 +94,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options[shared.OPTION_OBJECT_LABEL_SELECTOR] = string(selector.Value)
 	}
 
+	if keys, ok := req.Flags[shared.OPTION_INHERIT_NAMESPACE_LABELS]; ok {
+		conf.Options[shared.OPTION_INHERIT_NAMESPACE_LABELS] = string(keys.Value)
+	}
+
 	if val, ok := req.Flags[shared.OPTION_KUBELOGIN]; ok {
 		conf.Options[shared.OPTION_KUBELOGIN] = strconv.FormatBool(val.RawData().Value.(bool))
 	}

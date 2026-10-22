@@ -6,6 +6,7 @@ package resources
 import (
 	"bytes"
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/gobwas/glob"
@@ -42,6 +43,10 @@ const (
 	DiscoveryNamespaces       = "namespaces"
 	DiscoveryServices         = "services"
 )
+
+// registryImageConnectionType is the connection type of the image assets
+// discoverContainerImages emits.
+const registryImageConnectionType = "registry-image"
 
 type FilterOpts struct {
 	include []string
@@ -222,7 +227,12 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 			log.Warn().Err(err).Msg("failed to discover cluster asset")
 		}
 	}
-	nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter, labelFilters)
+	inheritKeys, err := inheritedLabelKeys(invConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	nss, nsOwnLabels, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter, labelFilters)
 	if err != nil {
 		return nil, err
 	}
@@ -243,6 +253,7 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 		if err != nil {
 			return nil, err
 		}
+		inheritNamespaceLabels(assets, nsOwnLabels[ns.Name], inheritKeys)
 		setRelatedAssets(conn, ns, assets, od, features)
 		in.Spec.Assets = append(in.Spec.Assets, assets...)
 	}
@@ -305,7 +316,7 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 	// Discover namespaces and emit them as scannable assets with platform IDs
 	// and discovery targets. Override each namespace's connection config to
 	// route to stage 2 when the client connects to it later.
-	nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter, labelFilters)
+	nss, _, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter, labelFilters)
 	if err != nil {
 		return nil, err
 	}
@@ -376,6 +387,11 @@ func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, inv
 		return nil, err
 	}
 
+	inheritKeys, err := inheritedLabelKeys(invConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	// Resolve the namespace's platform ID for use as the ownership root
 	basePlatformId, err := conn.BasePlatformId()
 	if err != nil {
@@ -396,6 +412,7 @@ func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, inv
 	if err != nil {
 		return nil, err
 	}
+	inheritNamespaceLabels(assets, nsObj.Labels, inheritKeys)
 
 	in.Spec.Assets = append(in.Spec.Assets, assets...)
 	return in, nil
@@ -1181,7 +1198,7 @@ func discoverNamespaces(
 	od *PlatformIdOwnershipIndex,
 	nsFilter FilterOpts,
 	labelFilters *LabelSelectorFilters,
-) ([]*inventory.Asset, error) {
+) ([]*inventory.Asset, map[string]map[string]string, error) {
 	// We don't use MQL here since we need to handle k8s permission errors
 	nss, err := conn.Namespaces()
 	if err != nil {
@@ -1190,24 +1207,28 @@ func discoverNamespaces(
 				for _, ns := range nsFilter.include {
 					n, err := conn.Namespace(ns)
 					if err != nil {
-						return nil, err
+						return nil, nil, err
 					}
 					nss = append(nss, *n)
 				}
 			} else {
-				return nil, errors.Wrap(err, "no permissions to list cluster namespaces, try specifying namespaces explicitly")
+				return nil, nil, errors.Wrap(err, "no permissions to list cluster namespaces, try specifying namespaces explicitly")
 			}
 		} else {
-			return nil, errors.Wrap(err, "failed to list namespaces")
+			return nil, nil, errors.Wrap(err, "failed to list namespaces")
 		}
 	}
 
 	basePlatformId, err := conn.BasePlatformId()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	assetList := make([]*inventory.Asset, 0, len(nss))
+	// own holds each namespace's own labels, keyed by name, for callers that
+	// inherit from them: the asset's labels also carry the k8s.mondoo.com/*
+	// keys added below, which must never be inherited.
+	own := make(map[string]map[string]string, len(nss))
 	for _, ns := range nss {
 		if skip := nsFilter.skip(ns.Name); skip {
 			continue
@@ -1217,14 +1238,17 @@ func discoverNamespaces(
 			continue
 		}
 
-		labels := map[string]string{}
-		for k, v := range ns.Labels {
-			labels[k] = v
+		ownLabels := maps.Clone(ns.Labels)
+		if ownLabels == nil {
+			ownLabels = map[string]string{}
 		}
+		own[ns.Name] = ownLabels
+
+		labels := maps.Clone(ownLabels)
 		addMondooAssetLabels(labels, &ns.ObjectMeta, clusterId)
 		platform, err := createPlatformData(ns.Kind, conn.Runtime())
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
@@ -1240,7 +1264,7 @@ func discoverNamespaces(
 			od.Add(basePlatformId, &ns)
 		}
 	}
-	return assetList, nil
+	return assetList, own, nil
 }
 
 func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, invConfig *inventory.Config, k8s *mqlK8s, nsFilter FilterOpts, labelFilters *LabelSelectorFilters, imgFilter FilterOpts) ([]*inventory.Asset, error) {
@@ -1285,7 +1309,7 @@ func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, in
 		assetList = append(assetList, &inventory.Asset{
 			Connections: []*inventory.Config{
 				{
-					Type:    "registry-image",
+					Type:    registryImageConnectionType,
 					Host:    i.resolvedImage,
 					Options: options,
 				},
@@ -1652,6 +1676,66 @@ func parseLabelSelectorOption(option, raw string) (labels.Selector, error) {
 		return nil, fmt.Errorf("invalid %s label selector: %w", option, err)
 	}
 	return selector, nil
+}
+
+// inheritedLabelKeys returns the glob patterns from OPTION_INHERIT_NAMESPACE_LABELS:
+// the namespace label keys to copy onto the workloads discovered in that
+// namespace. It is nil when the option is unset or empty.
+func inheritedLabelKeys(cfg *inventory.Config) ([]string, error) {
+	patterns := shared.SplitFilterValues(cfg.Options[shared.OPTION_INHERIT_NAMESPACE_LABELS])
+	if len(patterns) == 0 {
+		return nil, nil
+	}
+	if err := validateGlobs(patterns); err != nil {
+		return nil, fmt.Errorf("invalid %s: %w", shared.OPTION_INHERIT_NAMESPACE_LABELS, err)
+	}
+	return patterns, nil
+}
+
+// inheritedNamespaceLabels returns the entries of nsLabels whose key matches
+// one of patterns, nil when none does. It runs once per namespace so that the
+// glob matching never repeats per asset.
+func inheritedNamespaceLabels(nsLabels map[string]string, patterns []string) map[string]string {
+	if len(patterns) == 0 {
+		return nil
+	}
+	var inherited map[string]string
+	for k, v := range nsLabels {
+		if !matchesAny(patterns, k) {
+			continue
+		}
+		if inherited == nil {
+			inherited = map[string]string{}
+		}
+		inherited[k] = v
+	}
+	return inherited
+}
+
+// inheritNamespaceLabels copies every entry of nsLabels whose key matches one
+// of patterns onto each asset that does not already carry that key: the
+// workload's own label wins, the namespace only fills the gaps. Container
+// image assets are left untouched, an image is shared by every namespace that
+// runs it and gets its labels elsewhere.
+func inheritNamespaceLabels(assets []*inventory.Asset, nsLabels map[string]string, patterns []string) {
+	inherited := inheritedNamespaceLabels(nsLabels, patterns)
+	if len(inherited) == 0 {
+		return
+	}
+	for _, a := range assets {
+		if len(a.Connections) > 0 && a.Connections[0].Type == registryImageConnectionType {
+			continue
+		}
+		if a.Labels == nil {
+			a.Labels = make(map[string]string, len(inherited))
+		}
+		for k, v := range inherited {
+			if _, exists := a.Labels[k]; exists {
+				continue
+			}
+			a.Labels[k] = v
+		}
+	}
 }
 
 func setNamespaceFilters(cfg *inventory.Config) (FilterOpts, error) {

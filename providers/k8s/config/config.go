@@ -105,6 +105,12 @@ Examples:
 					Desc:    "Only include Kubernetes objects matching the label selector; for container image discovery this matches the pod that references the image",
 				},
 				{
+					Long:    "inherit-namespace-labels",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Copy the namespace labels whose keys match this comma-separated list (glob supported) onto every workload discovered in that namespace; a label the workload already carries is kept",
+				},
+				{
 					Long:    "container-proxy",
 					Type:    plugin.FlagType_String,
 					Default: "",

@@ -25,6 +25,7 @@ const (
 	OPTION_NAMESPACE_EXCLUDE        = "namespaces-exclude"
 	OPTION_NAMESPACE_LABEL_SELECTOR = "namespace-label-selector"
 	OPTION_OBJECT_LABEL_SELECTOR    = "object-label-selector"
+	OPTION_INHERIT_NAMESPACE_LABELS = "inherit-namespace-labels"
 	OPTION_IMAGES                   = "images"
 	OPTION_IMAGES_EXCLUDE           = "images-exclude"
 	OPTION_ADMISSION                = "k8s-admission-review"
