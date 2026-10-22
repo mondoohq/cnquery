@@ -1744,7 +1744,13 @@ type FindingExchange struct {
 	// Optional. Technical evidence
 	Evidences []*Evidence `protobuf:"bytes,20,rep,name=evidences,proto3" json:"evidences,omitempty"`
 	// Optional. Available remediation options
-	Remediations  []*Remediation `protobuf:"bytes,21,rep,name=remediations,proto3" json:"remediations,omitempty"`
+	Remediations []*Remediation `protobuf:"bytes,21,rep,name=remediations,proto3" json:"remediations,omitempty"`
+	// Optional. Findings this finding is made of, in the way a GitHub issue has
+	// sub-issues: each is a complete FindingExchange with its own id, evidence,
+	// status and severity. A code scanner reports one finding per rule whose
+	// sub-findings are its matches. Only a depth of 1 is supported for now: a
+	// sub-finding does not carry sub-findings of its own.
+	SubFindings   []*FindingExchange `protobuf:"bytes,22,rep,name=sub_findings,json=subFindings,proto3" json:"sub_findings,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1873,6 +1879,13 @@ func (x *FindingExchange) GetEvidences() []*Evidence {
 func (x *FindingExchange) GetRemediations() []*Remediation {
 	if x != nil {
 		return x.Remediations
+	}
+	return nil
+}
+
+func (x *FindingExchange) GetSubFindings() []*FindingExchange {
+	if x != nil {
+		return x.SubFindings
 	}
 	return nil
 }
@@ -4162,7 +4175,7 @@ const file_fex_proto_rawDesc = "" +
 	"\rNoneAvailable\x10\x02\x12\a\n" +
 	"\x03Fix\x10\x03\x12\x0e\n" +
 	"\n" +
-	"Workaround\x10\x04\"\xe6\x04\n" +
+	"Workaround\x10\x04\"\xa6\x05\n" +
 	"\x0fFindingExchange\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x10\n" +
 	"\x03ref\x18\x02 \x01(\tR\x03ref\x12\x10\n" +
@@ -4179,7 +4192,8 @@ const file_fex_proto_rawDesc = "" +
 	"\x06source\x18\v \x01(\v2\x12.mql.fex.v1.SourceR\x06source\x12-\n" +
 	"\aaffects\x18\f \x03(\v2\x13.mql.fex.v1.AffectsR\aaffects\x122\n" +
 	"\tevidences\x18\x14 \x03(\v2\x14.mql.fex.v1.EvidenceR\tevidences\x12;\n" +
-	"\fremediations\x18\x15 \x03(\v2\x17.mql.fex.v1.RemediationR\fremediations\"\xe9\x04\n" +
+	"\fremediations\x18\x15 \x03(\v2\x17.mql.fex.v1.RemediationR\fremediations\x12>\n" +
+	"\fsub_findings\x18\x16 \x03(\v2\x1b.mql.fex.v1.FindingExchangeR\vsubFindings\"\xe9\x04\n" +
 	"\rFindingDetail\x12>\n" +
 	"\bcategory\x18\x01 \x01(\x0e2\".mql.fex.v1.FindingDetail.CategoryR\bcategory\x120\n" +
 	"\bseverity\x18\x02 \x01(\v2\x14.mql.fex.v1.SeverityR\bseverity\x126\n" +
@@ -4525,53 +4539,54 @@ var file_fex_proto_depIdxs = []int32{
 	13, // 38: mql.fex.v1.FindingExchange.affects:type_name -> mql.fex.v1.Affects
 	22, // 39: mql.fex.v1.FindingExchange.evidences:type_name -> mql.fex.v1.Evidence
 	19, // 40: mql.fex.v1.FindingExchange.remediations:type_name -> mql.fex.v1.Remediation
-	5,  // 41: mql.fex.v1.FindingDetail.category:type_name -> mql.fex.v1.FindingDetail.Category
-	18, // 42: mql.fex.v1.FindingDetail.severity:type_name -> mql.fex.v1.Severity
-	2,  // 43: mql.fex.v1.FindingDetail.confidence:type_name -> mql.fex.v1.Confidence
-	10, // 44: mql.fex.v1.FindingDetail.references:type_name -> mql.fex.v1.Reference
-	46, // 45: mql.fex.v1.FindingDetail.properties:type_name -> mql.fex.v1.FindingDetail.PropertiesEntry
-	40, // 46: mql.fex.v1.Evidence.tactic:type_name -> mql.fex.v1.AttackTactic
-	41, // 47: mql.fex.v1.Evidence.technique:type_name -> mql.fex.v1.AttackTechnique
-	2,  // 48: mql.fex.v1.Evidence.confidence:type_name -> mql.fex.v1.Confidence
-	25, // 49: mql.fex.v1.Evidence.user:type_name -> mql.fex.v1.User
-	24, // 50: mql.fex.v1.Evidence.file:type_name -> mql.fex.v1.File
-	26, // 51: mql.fex.v1.Evidence.process:type_name -> mql.fex.v1.Process
-	27, // 52: mql.fex.v1.Evidence.container:type_name -> mql.fex.v1.Container
-	28, // 53: mql.fex.v1.Evidence.kubernetes:type_name -> mql.fex.v1.Kubernetes
-	29, // 54: mql.fex.v1.Evidence.registry_key:type_name -> mql.fex.v1.RegistryKey
-	30, // 55: mql.fex.v1.Evidence.connection:type_name -> mql.fex.v1.Connection
-	31, // 56: mql.fex.v1.Evidence.http_request:type_name -> mql.fex.v1.HttpRequest
-	32, // 57: mql.fex.v1.Evidence.dns_record:type_name -> mql.fex.v1.DnsRecord
-	33, // 58: mql.fex.v1.Evidence.certificate:type_name -> mql.fex.v1.Certificate
-	34, // 59: mql.fex.v1.Evidence.domain_registration:type_name -> mql.fex.v1.DomainRegistration
-	35, // 60: mql.fex.v1.Evidence.network_range:type_name -> mql.fex.v1.NetworkRange
-	36, // 61: mql.fex.v1.Evidence.threat_intel_indicator:type_name -> mql.fex.v1.ThreatIntelIndicator
-	37, // 62: mql.fex.v1.Evidence.malware:type_name -> mql.fex.v1.Malware
-	38, // 63: mql.fex.v1.Evidence.ai_model:type_name -> mql.fex.v1.AiModel
-	39, // 64: mql.fex.v1.Evidence.ai_agent:type_name -> mql.fex.v1.AiAgent
-	47, // 65: mql.fex.v1.Evidence.properties:type_name -> mql.fex.v1.Evidence.PropertiesEntry
-	23, // 66: mql.fex.v1.Evidence.source_version:type_name -> mql.fex.v1.SourceVersion
-	51, // 67: mql.fex.v1.SourceVersion.date:type_name -> google.protobuf.Timestamp
-	48, // 68: mql.fex.v1.User.properties:type_name -> mql.fex.v1.User.PropertiesEntry
-	24, // 69: mql.fex.v1.Process.binary:type_name -> mql.fex.v1.File
-	24, // 70: mql.fex.v1.Process.script:type_name -> mql.fex.v1.File
-	25, // 71: mql.fex.v1.Process.user:type_name -> mql.fex.v1.User
-	26, // 72: mql.fex.v1.Process.parent:type_name -> mql.fex.v1.Process
-	49, // 73: mql.fex.v1.Kubernetes.pods:type_name -> mql.fex.v1.Kubernetes.Pod
-	50, // 74: mql.fex.v1.Kubernetes.nodes:type_name -> mql.fex.v1.Kubernetes.Node
-	6,  // 75: mql.fex.v1.Connection.protocol:type_name -> mql.fex.v1.Connection.ConnectionProtocol
-	51, // 76: mql.fex.v1.Certificate.not_before:type_name -> google.protobuf.Timestamp
-	51, // 77: mql.fex.v1.Certificate.not_after:type_name -> google.protobuf.Timestamp
-	51, // 78: mql.fex.v1.DomainRegistration.created_at:type_name -> google.protobuf.Timestamp
-	51, // 79: mql.fex.v1.DomainRegistration.updated_at:type_name -> google.protobuf.Timestamp
-	51, // 80: mql.fex.v1.DomainRegistration.expires_at:type_name -> google.protobuf.Timestamp
-	51, // 81: mql.fex.v1.ThreatIntelIndicator.last_observed_at:type_name -> google.protobuf.Timestamp
-	27, // 82: mql.fex.v1.Kubernetes.Pod.containers:type_name -> mql.fex.v1.Container
-	83, // [83:83] is the sub-list for method output_type
-	83, // [83:83] is the sub-list for method input_type
-	83, // [83:83] is the sub-list for extension type_name
-	83, // [83:83] is the sub-list for extension extendee
-	0,  // [0:83] is the sub-list for field type_name
+	20, // 41: mql.fex.v1.FindingExchange.sub_findings:type_name -> mql.fex.v1.FindingExchange
+	5,  // 42: mql.fex.v1.FindingDetail.category:type_name -> mql.fex.v1.FindingDetail.Category
+	18, // 43: mql.fex.v1.FindingDetail.severity:type_name -> mql.fex.v1.Severity
+	2,  // 44: mql.fex.v1.FindingDetail.confidence:type_name -> mql.fex.v1.Confidence
+	10, // 45: mql.fex.v1.FindingDetail.references:type_name -> mql.fex.v1.Reference
+	46, // 46: mql.fex.v1.FindingDetail.properties:type_name -> mql.fex.v1.FindingDetail.PropertiesEntry
+	40, // 47: mql.fex.v1.Evidence.tactic:type_name -> mql.fex.v1.AttackTactic
+	41, // 48: mql.fex.v1.Evidence.technique:type_name -> mql.fex.v1.AttackTechnique
+	2,  // 49: mql.fex.v1.Evidence.confidence:type_name -> mql.fex.v1.Confidence
+	25, // 50: mql.fex.v1.Evidence.user:type_name -> mql.fex.v1.User
+	24, // 51: mql.fex.v1.Evidence.file:type_name -> mql.fex.v1.File
+	26, // 52: mql.fex.v1.Evidence.process:type_name -> mql.fex.v1.Process
+	27, // 53: mql.fex.v1.Evidence.container:type_name -> mql.fex.v1.Container
+	28, // 54: mql.fex.v1.Evidence.kubernetes:type_name -> mql.fex.v1.Kubernetes
+	29, // 55: mql.fex.v1.Evidence.registry_key:type_name -> mql.fex.v1.RegistryKey
+	30, // 56: mql.fex.v1.Evidence.connection:type_name -> mql.fex.v1.Connection
+	31, // 57: mql.fex.v1.Evidence.http_request:type_name -> mql.fex.v1.HttpRequest
+	32, // 58: mql.fex.v1.Evidence.dns_record:type_name -> mql.fex.v1.DnsRecord
+	33, // 59: mql.fex.v1.Evidence.certificate:type_name -> mql.fex.v1.Certificate
+	34, // 60: mql.fex.v1.Evidence.domain_registration:type_name -> mql.fex.v1.DomainRegistration
+	35, // 61: mql.fex.v1.Evidence.network_range:type_name -> mql.fex.v1.NetworkRange
+	36, // 62: mql.fex.v1.Evidence.threat_intel_indicator:type_name -> mql.fex.v1.ThreatIntelIndicator
+	37, // 63: mql.fex.v1.Evidence.malware:type_name -> mql.fex.v1.Malware
+	38, // 64: mql.fex.v1.Evidence.ai_model:type_name -> mql.fex.v1.AiModel
+	39, // 65: mql.fex.v1.Evidence.ai_agent:type_name -> mql.fex.v1.AiAgent
+	47, // 66: mql.fex.v1.Evidence.properties:type_name -> mql.fex.v1.Evidence.PropertiesEntry
+	23, // 67: mql.fex.v1.Evidence.source_version:type_name -> mql.fex.v1.SourceVersion
+	51, // 68: mql.fex.v1.SourceVersion.date:type_name -> google.protobuf.Timestamp
+	48, // 69: mql.fex.v1.User.properties:type_name -> mql.fex.v1.User.PropertiesEntry
+	24, // 70: mql.fex.v1.Process.binary:type_name -> mql.fex.v1.File
+	24, // 71: mql.fex.v1.Process.script:type_name -> mql.fex.v1.File
+	25, // 72: mql.fex.v1.Process.user:type_name -> mql.fex.v1.User
+	26, // 73: mql.fex.v1.Process.parent:type_name -> mql.fex.v1.Process
+	49, // 74: mql.fex.v1.Kubernetes.pods:type_name -> mql.fex.v1.Kubernetes.Pod
+	50, // 75: mql.fex.v1.Kubernetes.nodes:type_name -> mql.fex.v1.Kubernetes.Node
+	6,  // 76: mql.fex.v1.Connection.protocol:type_name -> mql.fex.v1.Connection.ConnectionProtocol
+	51, // 77: mql.fex.v1.Certificate.not_before:type_name -> google.protobuf.Timestamp
+	51, // 78: mql.fex.v1.Certificate.not_after:type_name -> google.protobuf.Timestamp
+	51, // 79: mql.fex.v1.DomainRegistration.created_at:type_name -> google.protobuf.Timestamp
+	51, // 80: mql.fex.v1.DomainRegistration.updated_at:type_name -> google.protobuf.Timestamp
+	51, // 81: mql.fex.v1.DomainRegistration.expires_at:type_name -> google.protobuf.Timestamp
+	51, // 82: mql.fex.v1.ThreatIntelIndicator.last_observed_at:type_name -> google.protobuf.Timestamp
+	27, // 83: mql.fex.v1.Kubernetes.Pod.containers:type_name -> mql.fex.v1.Container
+	84, // [84:84] is the sub-list for method output_type
+	84, // [84:84] is the sub-list for method input_type
+	84, // [84:84] is the sub-list for extension type_name
+	84, // [84:84] is the sub-list for extension extendee
+	0,  // [0:84] is the sub-list for field type_name
 }
 
 func init() { file_fex_proto_init() }
