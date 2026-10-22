@@ -43,6 +43,10 @@ const (
 	DiscoveryServices         = "services"
 )
 
+// registryImageConnectionType is the connection type of the image assets
+// discoverContainerImages emits.
+const registryImageConnectionType = "registry-image"
+
 type FilterOpts struct {
 	include []string
 	exclude []string
@@ -1285,7 +1289,7 @@ func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, in
 		assetList = append(assetList, &inventory.Asset{
 			Connections: []*inventory.Config{
 				{
-					Type:    "registry-image",
+					Type:    registryImageConnectionType,
 					Host:    i.resolvedImage,
 					Options: options,
 				},
@@ -1652,6 +1656,48 @@ func parseLabelSelectorOption(option, raw string) (labels.Selector, error) {
 		return nil, fmt.Errorf("invalid %s label selector: %w", option, err)
 	}
 	return selector, nil
+}
+
+// inheritedLabelKeys returns the glob patterns from OPTION_INHERIT_NAMESPACE_LABELS:
+// the namespace label keys to copy onto the workloads discovered in that
+// namespace. It is nil when the option is unset or empty.
+func inheritedLabelKeys(cfg *inventory.Config) ([]string, error) {
+	patterns := shared.SplitFilterValues(cfg.Options[shared.OPTION_INHERIT_NAMESPACE_LABELS])
+	if len(patterns) == 0 {
+		return nil, nil
+	}
+	if err := validateGlobs(patterns); err != nil {
+		return nil, fmt.Errorf("invalid %s: %w", shared.OPTION_INHERIT_NAMESPACE_LABELS, err)
+	}
+	return patterns, nil
+}
+
+// inheritNamespaceLabels copies every entry of nsLabels whose key matches one
+// of patterns onto each asset that does not already carry that key: the
+// workload's own label wins, the namespace only fills the gaps. Container
+// image assets are left untouched, an image is shared by every namespace that
+// runs it and gets its labels elsewhere.
+func inheritNamespaceLabels(assets []*inventory.Asset, nsLabels map[string]string, patterns []string) {
+	if len(patterns) == 0 {
+		return
+	}
+	for _, a := range assets {
+		if len(a.Connections) > 0 && a.Connections[0].Type == registryImageConnectionType {
+			continue
+		}
+		for k, v := range nsLabels {
+			if !matchesAny(patterns, k) {
+				continue
+			}
+			if a.Labels == nil {
+				a.Labels = map[string]string{}
+			}
+			if _, exists := a.Labels[k]; exists {
+				continue
+			}
+			a.Labels[k] = v
+		}
+	}
 }
 
 func setNamespaceFilters(cfg *inventory.Config) (FilterOpts, error) {

@@ -387,3 +387,85 @@ func TestAssetFromAdmissionReviewUsesGenericPlatformForUnsupportedObjectKind(t *
 	assert.Contains(t, asset.PlatformIds[0], "configmap")
 	assert.NotContains(t, asset.PlatformIds[0], "admissionreview")
 }
+
+func TestInheritedLabelKeys(t *testing.T) {
+	cases := []struct {
+		name    string
+		set     bool
+		value   string
+		want    []string
+		wantErr string
+	}{
+		{name: "absent", set: false, want: nil},
+		{name: "empty", set: true, value: "", want: nil},
+		{name: "only separators", set: true, value: " , ,", want: nil},
+		{name: "keys and globs", set: true, value: "my.company.com/team, my.company.com/*", want: []string{"my.company.com/team", "my.company.com/*"}},
+		{name: "invalid glob", set: true, value: "my.company.com/[team", wantErr: "inherit-namespace-labels"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := &inventory.Config{Options: map[string]string{}}
+			if tc.set {
+				cfg.Options[shared.OPTION_INHERIT_NAMESPACE_LABELS] = tc.value
+			}
+			got, err := inheritedLabelKeys(cfg)
+			if tc.wantErr != "" {
+				require.ErrorContains(t, err, tc.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestInheritNamespaceLabels(t *testing.T) {
+	ns := map[string]string{
+		"my.company.com/team":         "aaabbbccc",
+		"my.company.com/department":   "d-42",
+		"kubernetes.io/metadata.name": "team-a",
+	}
+	workload := func(labels map[string]string) *inventory.Asset {
+		return &inventory.Asset{
+			PlatformIds: []string{"//platformid.api.mondoo.app/runtime/k8s/uid/c/namespace/team-a/pods/name/web"},
+			Labels:      labels,
+			Connections: []*inventory.Config{{Type: "k8s"}},
+		}
+	}
+
+	t.Run("exact key is copied", func(t *testing.T) {
+		a := workload(map[string]string{"app": "web"})
+		inheritNamespaceLabels([]*inventory.Asset{a}, ns, []string{"my.company.com/team"})
+		assert.Equal(t, map[string]string{"app": "web", "my.company.com/team": "aaabbbccc"}, a.Labels)
+	})
+	t.Run("glob copies every matching key", func(t *testing.T) {
+		a := workload(map[string]string{})
+		inheritNamespaceLabels([]*inventory.Asset{a}, ns, []string{"my.company.com/*"})
+		assert.Equal(t, map[string]string{"my.company.com/team": "aaabbbccc", "my.company.com/department": "d-42"}, a.Labels)
+	})
+	t.Run("workload's own value wins", func(t *testing.T) {
+		a := workload(map[string]string{"my.company.com/team": "zzz"})
+		inheritNamespaceLabels([]*inventory.Asset{a}, ns, []string{"my.company.com/team"})
+		assert.Equal(t, "zzz", a.Labels["my.company.com/team"])
+	})
+	t.Run("namespace lacking the key changes nothing", func(t *testing.T) {
+		a := workload(map[string]string{"app": "web"})
+		inheritNamespaceLabels([]*inventory.Asset{a}, ns, []string{"other.io/owner"})
+		assert.Equal(t, map[string]string{"app": "web"}, a.Labels)
+	})
+	t.Run("nil labels map is initialised", func(t *testing.T) {
+		a := workload(nil)
+		inheritNamespaceLabels([]*inventory.Asset{a}, ns, []string{"my.company.com/team"})
+		assert.Equal(t, "aaabbbccc", a.Labels["my.company.com/team"])
+	})
+	t.Run("image assets are skipped", func(t *testing.T) {
+		image := &inventory.Asset{Connections: []*inventory.Config{{Type: registryImageConnectionType, Host: "nginx@sha256:abc"}}}
+		inheritNamespaceLabels([]*inventory.Asset{image}, ns, []string{"*"})
+		assert.Nil(t, image.Labels)
+	})
+	t.Run("no patterns is a no-op", func(t *testing.T) {
+		a := workload(map[string]string{"app": "web"})
+		inheritNamespaceLabels([]*inventory.Asset{a}, ns, nil)
+		assert.Equal(t, map[string]string{"app": "web"}, a.Labels)
+	})
+}
