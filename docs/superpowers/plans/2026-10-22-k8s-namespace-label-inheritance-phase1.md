@@ -20,7 +20,7 @@
 - No new Kubernetes API calls per asset. The namespace object already fetched (stage 2) or listed (legacy) is the only source.
 - Option unset or empty → every discovered asset's labels are byte-identical to today.
 - An invalid glob fails discovery with an error naming the option, like the existing filters.
-- Files carry the repo's license header (`// Copyright Mondoo, Inc. 2024, 2026` / `// SPDX-License-Identifier: BUSL-1.1`; a new file uses `2026`).
+- Files carry the repo's license header: the same two comment lines every Go file under `providers/k8s` starts with (holder and SPDX identifier); a new file names only the current year.
 - Commits: emoji prefix (`✨`, `🧪`, `📄`), scoped `k8s:`; every commit GPG-signed (check `git config commit.gpgsign` is `true`, else `git commit -S`). No unrelated changes in the diff.
 - Tests: `cd providers/k8s && go test ./resources -run '<Name>' -count=1`. Never `go build ./...` or `go vet ./...` from the repo root; vet only `./resources ./provider ./connection/shared ./config` inside `providers/k8s`.
 
