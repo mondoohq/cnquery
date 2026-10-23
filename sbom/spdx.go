@@ -166,8 +166,9 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 			PackageSupplier:           spdxSupplier(pkg.Supplier),
 			PackageDescription:        pkg.Description,
 			PackageExternalReferences: refs,
-			PackageFileName:           pkg.Location,
+			PackageFileName:           spdxPackageFileName(pkg),
 			PackageChecksums:          checksums,
+			PackageComment:            spdxPackageComment(pkg),
 		})
 		// A LicenseRef-* identifier is not on the SPDX license list, so the
 		// specification requires the document to define it before it may be
@@ -885,4 +886,46 @@ func readSpdxPackageLicensing(bomPkg *Package, pkg *v2_3.Package) {
 			bomPkg.Supplier = name
 		}
 	}
+}
+
+// spdxPackageFileName is the package's packageFileName: the deprecated
+// location, or for a binary the path of the executable, which is the file
+// the package is. Other packages' file evidence points at the package
+// database rather than at the package, so it is not a file name.
+func spdxPackageFileName(pkg *Package) string {
+	if pkg.Location != "" || pkg.Type != "binary" {
+		return pkg.Location
+	}
+	for _, e := range pkg.EvidenceList {
+		if e.GetType() == EvidenceType_EVIDENCE_TYPE_FILE && e.GetValue() != "" {
+			return e.GetValue()
+		}
+	}
+	return ""
+}
+
+// spdxPackageComment states what SPDX has no field for: how a binary's
+// identity was concluded and its code signature, one statement per line, in
+// the property names the CycloneDX rendering uses. Empty when there is none.
+func spdxPackageComment(pkg *Package) string {
+	var lines []string
+	for _, e := range pkg.GetIdentityEvidence() {
+		if e.GetField() == "" || e.GetTechnique() == "" {
+			continue
+		}
+		lines = append(lines, fmt.Sprintf("mondoo:identity:%s: %s by %s from %s (confidence %g)",
+			e.GetField(), e.GetConcludedValue(), e.GetTechnique(), e.GetValue(), e.GetConfidence()))
+	}
+	if sig := pkg.GetSignature(); sig != nil {
+		for _, p := range [][2]string{
+			{propSignatureStatus, sig.GetStatus()},
+			{propSignatureSignerOrg, sig.GetSignerOrganization()},
+			{propSignatureSignerName, sig.GetSignerCommonName()},
+		} {
+			if p[1] != "" {
+				lines = append(lines, p[0]+": "+p[1])
+			}
+		}
+	}
+	return strings.Join(lines, "\n")
 }

@@ -929,7 +929,16 @@ type Package struct {
 	Copyright []string `protobuf:"bytes,32,rep,name=copyright,proto3" json:"copyright,omitempty"`
 	// 'supplier' is the entity that supplied the package, as SPDX and CycloneDX
 	// both model it (a name, optionally with an email in angle brackets).
-	Supplier      string `protobuf:"bytes,33,opt,name=supplier,proto3" json:"supplier,omitempty"`
+	Supplier string `protobuf:"bytes,33,opt,name=supplier,proto3" json:"supplier,omitempty"`
+	// 'identity_evidence' says how the package's identity was established when
+	// it was found by examining a file rather than read from a package
+	// database: which field was concluded, by what technique, and from what.
+	// Rendered as CycloneDX component.evidence.identity.
+	IdentityEvidence []*IdentityEvidence `protobuf:"bytes,34,rep,name=identity_evidence,json=identityEvidence,proto3" json:"identity_evidence,omitempty"`
+	// 'signature' is the code signature of the package's file, for a binary on
+	// a platform that signs executables (macOS, Windows). Unset when the file
+	// was not checked, as on Linux.
+	Signature     *CodeSignature `protobuf:"bytes,35,opt,name=signature,proto3" json:"signature,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1112,6 +1121,172 @@ func (x *Package) GetSupplier() string {
 	return ""
 }
 
+func (x *Package) GetIdentityEvidence() []*IdentityEvidence {
+	if x != nil {
+		return x.IdentityEvidence
+	}
+	return nil
+}
+
+func (x *Package) GetSignature() *CodeSignature {
+	if x != nil {
+		return x.Signature
+	}
+	return nil
+}
+
+// IdentityEvidence is how one field of a package's identity was concluded,
+// in the terms of CycloneDX's evidence.identity.
+type IdentityEvidence struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 'field' is the identity field concluded: "name", "version", "hash", ...
+	Field string `protobuf:"bytes,1,opt,name=field,proto3" json:"field,omitempty"`
+	// 'concluded_value' is the value the evidence supports.
+	ConcludedValue string `protobuf:"bytes,2,opt,name=concluded_value,json=concludedValue,proto3" json:"concluded_value,omitempty"`
+	// 'technique' is the CycloneDX identity technique, such as
+	// "binary-analysis", "manifest-analysis" or "hash-comparison".
+	Technique string `protobuf:"bytes,3,opt,name=technique,proto3" json:"technique,omitempty"`
+	// 'confidence' is how sure the producer is, in (0,1].
+	Confidence float64 `protobuf:"fixed64,4,opt,name=confidence,proto3" json:"confidence,omitempty"`
+	// 'value' is the evidence the technique read, such as the name of the
+	// metadata the version came from.
+	Value         string `protobuf:"bytes,5,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IdentityEvidence) Reset() {
+	*x = IdentityEvidence{}
+	mi := &file_mql_sbom_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IdentityEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IdentityEvidence) ProtoMessage() {}
+
+func (x *IdentityEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_mql_sbom_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IdentityEvidence.ProtoReflect.Descriptor instead.
+func (*IdentityEvidence) Descriptor() ([]byte, []int) {
+	return file_mql_sbom_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *IdentityEvidence) GetField() string {
+	if x != nil {
+		return x.Field
+	}
+	return ""
+}
+
+func (x *IdentityEvidence) GetConcludedValue() string {
+	if x != nil {
+		return x.ConcludedValue
+	}
+	return ""
+}
+
+func (x *IdentityEvidence) GetTechnique() string {
+	if x != nil {
+		return x.Technique
+	}
+	return ""
+}
+
+func (x *IdentityEvidence) GetConfidence() float64 {
+	if x != nil {
+		return x.Confidence
+	}
+	return 0
+}
+
+func (x *IdentityEvidence) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+// CodeSignature is a file's code signature as the platform verified it.
+type CodeSignature struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 'status' is the verification result: "valid", "notSigned", "invalid",
+	// "untrusted", "adhoc" or "unknown".
+	Status string `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	// 'signer_organization' is the organization in the subject of the signing
+	// certificate, empty when it names none.
+	SignerOrganization string `protobuf:"bytes,2,opt,name=signer_organization,json=signerOrganization,proto3" json:"signer_organization,omitempty"`
+	// 'signer_common_name' is the common name in the subject of the signing
+	// certificate.
+	SignerCommonName string `protobuf:"bytes,3,opt,name=signer_common_name,json=signerCommonName,proto3" json:"signer_common_name,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *CodeSignature) Reset() {
+	*x = CodeSignature{}
+	mi := &file_mql_sbom_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CodeSignature) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CodeSignature) ProtoMessage() {}
+
+func (x *CodeSignature) ProtoReflect() protoreflect.Message {
+	mi := &file_mql_sbom_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CodeSignature.ProtoReflect.Descriptor instead.
+func (*CodeSignature) Descriptor() ([]byte, []int) {
+	return file_mql_sbom_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *CodeSignature) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *CodeSignature) GetSignerOrganization() string {
+	if x != nil {
+		return x.SignerOrganization
+	}
+	return ""
+}
+
+func (x *CodeSignature) GetSignerCommonName() string {
+	if x != nil {
+		return x.SignerCommonName
+	}
+	return ""
+}
+
 // License is one license attributed to a package, and how that attribution was
 // arrived at.
 type License struct {
@@ -1157,7 +1332,7 @@ type License struct {
 
 func (x *License) Reset() {
 	*x = License{}
-	mi := &file_mql_sbom_proto_msgTypes[7]
+	mi := &file_mql_sbom_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1169,7 +1344,7 @@ func (x *License) String() string {
 func (*License) ProtoMessage() {}
 
 func (x *License) ProtoReflect() protoreflect.Message {
-	mi := &file_mql_sbom_proto_msgTypes[7]
+	mi := &file_mql_sbom_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1182,7 +1357,7 @@ func (x *License) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use License.ProtoReflect.Descriptor instead.
 func (*License) Descriptor() ([]byte, []int) {
-	return file_mql_sbom_proto_rawDescGZIP(), []int{7}
+	return file_mql_sbom_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *License) GetSpdxId() string {
@@ -1241,7 +1416,7 @@ type Hash struct {
 
 func (x *Hash) Reset() {
 	*x = Hash{}
-	mi := &file_mql_sbom_proto_msgTypes[8]
+	mi := &file_mql_sbom_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1253,7 +1428,7 @@ func (x *Hash) String() string {
 func (*Hash) ProtoMessage() {}
 
 func (x *Hash) ProtoReflect() protoreflect.Message {
-	mi := &file_mql_sbom_proto_msgTypes[8]
+	mi := &file_mql_sbom_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1266,7 +1441,7 @@ func (x *Hash) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Hash.ProtoReflect.Descriptor instead.
 func (*Hash) Descriptor() ([]byte, []int) {
-	return file_mql_sbom_proto_rawDescGZIP(), []int{8}
+	return file_mql_sbom_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Hash) GetAlg() string {
@@ -1297,7 +1472,7 @@ type Evidence struct {
 
 func (x *Evidence) Reset() {
 	*x = Evidence{}
-	mi := &file_mql_sbom_proto_msgTypes[9]
+	mi := &file_mql_sbom_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1309,7 +1484,7 @@ func (x *Evidence) String() string {
 func (*Evidence) ProtoMessage() {}
 
 func (x *Evidence) ProtoReflect() protoreflect.Message {
-	mi := &file_mql_sbom_proto_msgTypes[9]
+	mi := &file_mql_sbom_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1322,7 +1497,7 @@ func (x *Evidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Evidence.ProtoReflect.Descriptor instead.
 func (*Evidence) Descriptor() ([]byte, []int) {
-	return file_mql_sbom_proto_rawDescGZIP(), []int{9}
+	return file_mql_sbom_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *Evidence) GetType() EvidenceType {
@@ -1354,7 +1529,7 @@ type Kernel struct {
 
 func (x *Kernel) Reset() {
 	*x = Kernel{}
-	mi := &file_mql_sbom_proto_msgTypes[10]
+	mi := &file_mql_sbom_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1366,7 +1541,7 @@ func (x *Kernel) String() string {
 func (*Kernel) ProtoMessage() {}
 
 func (x *Kernel) ProtoReflect() protoreflect.Message {
-	mi := &file_mql_sbom_proto_msgTypes[10]
+	mi := &file_mql_sbom_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1379,7 +1554,7 @@ func (x *Kernel) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Kernel.ProtoReflect.Descriptor instead.
 func (*Kernel) Descriptor() ([]byte, []int) {
-	return file_mql_sbom_proto_rawDescGZIP(), []int{10}
+	return file_mql_sbom_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *Kernel) GetName() string {
@@ -1451,7 +1626,7 @@ const file_mql_sbom_proto_rawDesc = "" +
 	"\x04cpes\x18\x17 \x03(\tR\x04cpes\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xff\x04\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x8b\x06\n" +
 	"\aPackage\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
 	"\aversion\x18\x02 \x01(\tR\aversion\x12\"\n" +
@@ -1473,7 +1648,21 @@ const file_mql_sbom_proto_rawDesc = "" +
 	"\x06hashes\x18\x1e \x03(\v2\x14.mondoo.sbom.v1.HashR\x06hashes\x123\n" +
 	"\blicenses\x18\x1f \x03(\v2\x17.mondoo.sbom.v1.LicenseR\blicenses\x12\x1c\n" +
 	"\tcopyright\x18  \x03(\tR\tcopyright\x12\x1a\n" +
-	"\bsupplier\x18! \x01(\tR\bsupplier\"\xd8\x01\n" +
+	"\bsupplier\x18! \x01(\tR\bsupplier\x12M\n" +
+	"\x11identity_evidence\x18\" \x03(\v2 .mondoo.sbom.v1.IdentityEvidenceR\x10identityEvidence\x12;\n" +
+	"\tsignature\x18# \x01(\v2\x1d.mondoo.sbom.v1.CodeSignatureR\tsignature\"\xa5\x01\n" +
+	"\x10IdentityEvidence\x12\x14\n" +
+	"\x05field\x18\x01 \x01(\tR\x05field\x12'\n" +
+	"\x0fconcluded_value\x18\x02 \x01(\tR\x0econcludedValue\x12\x1c\n" +
+	"\ttechnique\x18\x03 \x01(\tR\ttechnique\x12\x1e\n" +
+	"\n" +
+	"confidence\x18\x04 \x01(\x01R\n" +
+	"confidence\x12\x14\n" +
+	"\x05value\x18\x05 \x01(\tR\x05value\"\x86\x01\n" +
+	"\rCodeSignature\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\x12/\n" +
+	"\x13signer_organization\x18\x02 \x01(\tR\x12signerOrganization\x12,\n" +
+	"\x12signer_common_name\x18\x03 \x01(\tR\x10signerCommonName\"\xd8\x01\n" +
 	"\aLicense\x12\x17\n" +
 	"\aspdx_id\x18\x01 \x01(\tR\x06spdxId\x12\x1e\n" +
 	"\n" +
@@ -1529,25 +1718,27 @@ func file_mql_sbom_proto_rawDescGZIP() []byte {
 }
 
 var file_mql_sbom_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_mql_sbom_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_mql_sbom_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_mql_sbom_proto_goTypes = []any{
-	(Status)(0),             // 0: mondoo.sbom.v1.Status
-	(ExternalIDType)(0),     // 1: mondoo.sbom.v1.ExternalIDType
-	(LicenseAcquisition)(0), // 2: mondoo.sbom.v1.LicenseAcquisition
-	(EvidenceType)(0),       // 3: mondoo.sbom.v1.EvidenceType
-	(*Sbom)(nil),            // 4: mondoo.sbom.v1.Sbom
-	(*Dependency)(nil),      // 5: mondoo.sbom.v1.Dependency
-	(*Generator)(nil),       // 6: mondoo.sbom.v1.Generator
-	(*ExternalID)(nil),      // 7: mondoo.sbom.v1.ExternalID
-	(*Asset)(nil),           // 8: mondoo.sbom.v1.Asset
-	(*Platform)(nil),        // 9: mondoo.sbom.v1.Platform
-	(*Package)(nil),         // 10: mondoo.sbom.v1.Package
-	(*License)(nil),         // 11: mondoo.sbom.v1.License
-	(*Hash)(nil),            // 12: mondoo.sbom.v1.Hash
-	(*Evidence)(nil),        // 13: mondoo.sbom.v1.Evidence
-	(*Kernel)(nil),          // 14: mondoo.sbom.v1.Kernel
-	nil,                     // 15: mondoo.sbom.v1.Asset.LabelsEntry
-	nil,                     // 16: mondoo.sbom.v1.Platform.LabelsEntry
+	(Status)(0),              // 0: mondoo.sbom.v1.Status
+	(ExternalIDType)(0),      // 1: mondoo.sbom.v1.ExternalIDType
+	(LicenseAcquisition)(0),  // 2: mondoo.sbom.v1.LicenseAcquisition
+	(EvidenceType)(0),        // 3: mondoo.sbom.v1.EvidenceType
+	(*Sbom)(nil),             // 4: mondoo.sbom.v1.Sbom
+	(*Dependency)(nil),       // 5: mondoo.sbom.v1.Dependency
+	(*Generator)(nil),        // 6: mondoo.sbom.v1.Generator
+	(*ExternalID)(nil),       // 7: mondoo.sbom.v1.ExternalID
+	(*Asset)(nil),            // 8: mondoo.sbom.v1.Asset
+	(*Platform)(nil),         // 9: mondoo.sbom.v1.Platform
+	(*Package)(nil),          // 10: mondoo.sbom.v1.Package
+	(*IdentityEvidence)(nil), // 11: mondoo.sbom.v1.IdentityEvidence
+	(*CodeSignature)(nil),    // 12: mondoo.sbom.v1.CodeSignature
+	(*License)(nil),          // 13: mondoo.sbom.v1.License
+	(*Hash)(nil),             // 14: mondoo.sbom.v1.Hash
+	(*Evidence)(nil),         // 15: mondoo.sbom.v1.Evidence
+	(*Kernel)(nil),           // 16: mondoo.sbom.v1.Kernel
+	nil,                      // 17: mondoo.sbom.v1.Asset.LabelsEntry
+	nil,                      // 18: mondoo.sbom.v1.Platform.LabelsEntry
 }
 var file_mql_sbom_proto_depIdxs = []int32{
 	6,  // 0: mondoo.sbom.v1.Sbom.generator:type_name -> mondoo.sbom.v1.Generator
@@ -1558,19 +1749,21 @@ var file_mql_sbom_proto_depIdxs = []int32{
 	1,  // 5: mondoo.sbom.v1.ExternalID.type:type_name -> mondoo.sbom.v1.ExternalIDType
 	7,  // 6: mondoo.sbom.v1.Asset.external_ids:type_name -> mondoo.sbom.v1.ExternalID
 	9,  // 7: mondoo.sbom.v1.Asset.platform:type_name -> mondoo.sbom.v1.Platform
-	15, // 8: mondoo.sbom.v1.Asset.labels:type_name -> mondoo.sbom.v1.Asset.LabelsEntry
-	14, // 9: mondoo.sbom.v1.Asset.kernels:type_name -> mondoo.sbom.v1.Kernel
-	16, // 10: mondoo.sbom.v1.Platform.labels:type_name -> mondoo.sbom.v1.Platform.LabelsEntry
-	13, // 11: mondoo.sbom.v1.Package.evidence_list:type_name -> mondoo.sbom.v1.Evidence
-	12, // 12: mondoo.sbom.v1.Package.hashes:type_name -> mondoo.sbom.v1.Hash
-	11, // 13: mondoo.sbom.v1.Package.licenses:type_name -> mondoo.sbom.v1.License
-	2,  // 14: mondoo.sbom.v1.License.acquisition:type_name -> mondoo.sbom.v1.LicenseAcquisition
-	3,  // 15: mondoo.sbom.v1.Evidence.type:type_name -> mondoo.sbom.v1.EvidenceType
-	16, // [16:16] is the sub-list for method output_type
-	16, // [16:16] is the sub-list for method input_type
-	16, // [16:16] is the sub-list for extension type_name
-	16, // [16:16] is the sub-list for extension extendee
-	0,  // [0:16] is the sub-list for field type_name
+	17, // 8: mondoo.sbom.v1.Asset.labels:type_name -> mondoo.sbom.v1.Asset.LabelsEntry
+	16, // 9: mondoo.sbom.v1.Asset.kernels:type_name -> mondoo.sbom.v1.Kernel
+	18, // 10: mondoo.sbom.v1.Platform.labels:type_name -> mondoo.sbom.v1.Platform.LabelsEntry
+	15, // 11: mondoo.sbom.v1.Package.evidence_list:type_name -> mondoo.sbom.v1.Evidence
+	14, // 12: mondoo.sbom.v1.Package.hashes:type_name -> mondoo.sbom.v1.Hash
+	13, // 13: mondoo.sbom.v1.Package.licenses:type_name -> mondoo.sbom.v1.License
+	11, // 14: mondoo.sbom.v1.Package.identity_evidence:type_name -> mondoo.sbom.v1.IdentityEvidence
+	12, // 15: mondoo.sbom.v1.Package.signature:type_name -> mondoo.sbom.v1.CodeSignature
+	2,  // 16: mondoo.sbom.v1.License.acquisition:type_name -> mondoo.sbom.v1.LicenseAcquisition
+	3,  // 17: mondoo.sbom.v1.Evidence.type:type_name -> mondoo.sbom.v1.EvidenceType
+	18, // [18:18] is the sub-list for method output_type
+	18, // [18:18] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_mql_sbom_proto_init() }
@@ -1584,7 +1777,7 @@ func file_mql_sbom_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_mql_sbom_proto_rawDesc), len(file_mql_sbom_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   13,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

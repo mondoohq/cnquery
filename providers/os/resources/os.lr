@@ -71,6 +71,7 @@ alias os.base.ports = ports
 alias os.base.privatekey = privatekey
 alias os.base.process = process
 alias os.base.processes = processes
+alias os.base.runningBinaries = runningBinaries
 alias os.base.python = python
 alias os.base.qualia = qualia
 alias os.base.roo = roo
@@ -11576,6 +11577,110 @@ process @defaults("executable pid state") {
 // a daemon, or filter on state to spot zombie or stopped processes.
 processes {
   []process
+}
+
+// Executables of running processes
+//
+// Collection of every distinct executable a running process was started
+// from, one `binary` per file however many processes run it. Each entry
+// carries the installed `package` that owns the file, so
+// `runningBinaries.where(package == null && system == false)` lists running
+// software that no package inventory accounts for, such as a runtime unpacked
+// into `/opt` or a downloaded Go binary. Read on Linux from `/proc`, and on
+// macOS and Windows from the process list. Processes inside containers are
+// left out, since the container's own package database owns their files.
+// Without administrative rights only the scanning user's own processes are
+// visible.
+runningBinaries {
+  []binary
+}
+
+// Executable file of a running process
+//
+// An executable and what it identifies as: `name`, `version` and `vendor`,
+// read from the file without running it, and its `sha256` digest.
+// `versionSource` names the evidence the version came from, and an empty
+// `version` means the file carries none that is recognized. `package` is the
+// installed package that owns the file, `system` marks a file that ships with
+// the operating system, `signatureStatus` and `signer` say whether and by
+// whom it is signed, and `processes` lists the processes started from it.
+private binary @defaults("path name version") {
+  // Path to the executable
+  path string
+  // Name of the software the binary belongs to
+  //
+  // The main module path for a Go binary; node, php, python, or openjdk for
+  // those runtimes; on Windows the product name from the version resource;
+  // on macOS the name of the application bundle; otherwise the file name.
+  name() string
+  // Version of the software, empty when none was found
+  version() string
+  // Evidence the version was read from
+  //
+  // One of `goBuildInfo` (the build information the Go toolchain embeds),
+  // `peVersionInfo` (the Windows version resource), `bundleInfo` (the
+  // `Info.plist` of the macOS application bundle), `versionString` (a
+  // version string inside the binary), `installMetadata` (a file shipped
+  // beside the binary, such as a JDK's `release` file), or empty when no
+  // version was found.
+  versionSource() string
+  // Vendor of the software, empty when unknown
+  vendor() string
+  // Executable file on disk
+  file() file
+  // Running processes started from this binary
+  processes []process
+  // SHA-256 digest of the executable, in lower-case hex
+  //
+  // Computed from the file the processes run. On Linux that holds even after
+  // a package upgrade replaced or removed the file at `path`. Null when the
+  // file is gone: on macOS and Windows removed by an update, on Linux once
+  // its processes exited as well.
+  sha256() string
+  // Installed package that owns the binary, null when no package owns it
+  //
+  // On Linux, read from the file database of dpkg, opkg, rpm, apk, pacman,
+  // Portage, or xbps, and from the path for snap, nix, Homebrew, and flatpak,
+  // which install every package into a directory of its own. An error when
+  // the asset has a package manager with neither. On macOS, the application
+  // whose bundle contains the binary, or the Homebrew formula. On Windows,
+  // the installed package whose install location contains the binary, or
+  // the Windows Installer product that installed it.
+  package() package
+  // Whether the binary is part of the operating system installation
+  //
+  // On Windows, a file under the Windows directory (`%SystemRoot%`). On
+  // macOS, a file on the system volume or under System Integrity Protection:
+  // `/System`, `/bin`, `/sbin`, `/usr` other than `/usr/local`, and
+  // `/Library/Apple`. Always false on Linux, where packages own the
+  // operating system's binaries.
+  system bool
+  // Status of the binary's code signature
+  //
+  // One of `valid`, `notSigned`, `invalid` (the signature does not verify:
+  // the file changed after signing, or on macOS any other failed check),
+  // `untrusted` (Windows: a certificate Windows is told not to trust; macOS:
+  // an intact signature whose certificate does not chain to Apple's root),
+  // `adhoc` (macOS: signed without a signing identity, as the linker does on
+  // Apple silicon), or `unknown` (Windows: the check failed, which includes a
+  // certificate that does not chain to a trusted root, as
+  // Get-AuthenticodeSignature reports it). On
+  // Windows this is the file's own Authenticode signature or its entry in a
+  // system catalog, which is how most files of Windows itself are signed. On
+  // macOS the executable is verified, not the other files of its application
+  // bundle. Null on Linux, where executables carry no code signature, and on
+  // macOS for a file an update removed while its process still runs.
+  signatureStatus() string
+  // Certificate that signed the binary
+  //
+  // The leaf of the signer's certificate chain, parsed: its subject, such as
+  // `CN=Microsoft Windows, O=Microsoft Corporation` on Windows or
+  // `CN=Developer ID Application: Google LLC (EQHXZ8M8AV), O=Google LLC` on
+  // macOS, its issuer, validity and fingerprints. Filter on it together with
+  // `signatureStatus == "valid"`, since an unverified certificate can name
+  // any organization. Null when no signing identity signed the binary (not
+  // signed, or ad hoc signed on macOS), and on Linux.
+  signer() network.certificate
 }
 
 // Single TCP/UDP port on the system

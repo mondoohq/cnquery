@@ -142,6 +142,7 @@ func GenerateBom(r *reporter.Report) []*sbom.Sbom {
 		// decode success -- not package count -- is correct either way.
 		var fieldErrors []string
 		var decodedCount int
+		var runningBinaries []BomPackage
 		for _, k := range keys {
 			dataValue := dataPoints.Values[k]
 			jsondata, err := reporter.JsonValue(dataValue.Content)
@@ -307,7 +308,11 @@ func GenerateBom(r *reporter.Report) []*sbom.Sbom {
 			bom.Packages = append(bom.Packages, languagePackages(rb.RPackages, "cran")...)
 
 			bom.Packages = append(bom.Packages, languagePackages(rb.LuaPackages, "luarocks")...)
+
+			runningBinaries = append(runningBinaries, rb.RunningBinaries...)
 		}
+
+		bom.Packages = append(bom.Packages, runningBinaryPackages(runningBinaries)...)
 
 		// Stamp a stable bom_ref on every component (purl-when-present, else a
 		// synthesized fallback) so renders are reproducible and dependency-graph
@@ -334,6 +339,90 @@ func GenerateBom(r *reporter.Report) []*sbom.Sbom {
 		boms = append(boms, bom)
 	}
 	return boms
+}
+
+// runningBinaryPackages maps the executables of running processes that no
+// installed package owns into SBOM packages.
+//
+// A binary is reported by what the file is: its name, the version read from
+// it, the vendor it names as its supplier, its path and its SHA-256 digest. It carries no purl or CPE: the purl is
+// derived from these downstream, where the digest identifies the exact file
+// even when no version was found.
+//
+// Two different files of one name, both without a version, are the same
+// component by name, so a binary's bom_ref is its path, which keeps both in
+// the rendered document; the renderers keep only the first package of a
+// bom_ref.
+func runningBinaryPackages(bins []BomPackage) []*sbom.Package {
+	out := make([]*sbom.Package, 0, len(bins))
+	for _, bin := range bins {
+		pkg := &sbom.Package{
+			Name:    bin.Name,
+			Version: bin.Version,
+			Vendor:  bin.Vendor,
+			// the vendor the file names supplied it; Supplier is what the
+			// CycloneDX and SPDX renderers write
+			Supplier: bin.Vendor,
+			Type:     "binary",
+		}
+		if bin.Path != "" {
+			pkg.BomRef = "binary:" + bin.Path
+			pkg.EvidenceList = []*sbom.Evidence{{
+				Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+				Value: bin.Path,
+			}}
+		}
+		if bin.Sha256 != "" {
+			pkg.Hashes = []*sbom.Hash{{Alg: "SHA-256", Value: bin.Sha256}}
+		}
+		pkg.IdentityEvidence = binaryIdentityEvidence(bin)
+		if bin.SignatureStatus != "" {
+			pkg.Signature = &sbom.CodeSignature{
+				Status:             bin.SignatureStatus,
+				SignerOrganization: strings.Join(bin.SignerOrganization, ", "),
+				SignerCommonName:   bin.SignerCommonName,
+			}
+		}
+		out = append(out, pkg)
+	}
+	return out
+}
+
+// binaryVersionEvidence maps the evidence a binary's version was read from to
+// the CycloneDX identity technique that read it and how far the evidence is
+// to be trusted. Metadata the toolchain or the platform writes into the file
+// is the strongest; a version string found by pattern in the binary the
+// weakest.
+var binaryVersionEvidence = map[string]struct {
+	technique  string
+	confidence float64
+}{
+	// the build information the Go toolchain embeds
+	"goBuildInfo": {"binary-analysis", 1.0},
+	// the Windows version resource the vendor compiled into the file
+	"peVersionInfo": {"binary-analysis", 0.9},
+	// the Info.plist of the macOS application bundle
+	"bundleInfo": {"manifest-analysis", 0.9},
+	// a file shipped beside the binary, such as a JDK's release file
+	"installMetadata": {"manifest-analysis", 0.8},
+	// a version string matched inside the binary
+	"versionString": {"binary-analysis", 0.7},
+}
+
+// binaryIdentityEvidence says how a binary's version was concluded, or nil
+// when it has none, or none from known evidence.
+func binaryIdentityEvidence(bin BomPackage) []*sbom.IdentityEvidence {
+	ev, ok := binaryVersionEvidence[bin.VersionSource]
+	if bin.Version == "" || !ok {
+		return nil
+	}
+	return []*sbom.IdentityEvidence{{
+		Field:          "version",
+		ConcludedValue: bin.Version,
+		Technique:      ev.technique,
+		Confidence:     ev.confidence,
+		Value:          bin.VersionSource,
+	}}
 }
 
 // enrichPlatformIds adds the platform id based on cnquery ids

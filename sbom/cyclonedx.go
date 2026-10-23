@@ -166,9 +166,27 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 			}
 		}
 
+		// How a binary's identity was concluded is evidence too, under the
+		// same opt-in.
+		if ccx.opts.IncludeEvidence {
+			if identities := cycloneDXIdentityEvidence(pkg.IdentityEvidence); identities != nil {
+				if evidence == nil {
+					evidence = &cyclonedx.Evidence{}
+				}
+				evidence.Identity = &cyclonedx.EvidenceIdentityChoice{Identities: identities}
+			}
+		}
+
+		// a running binary is an executable, which CycloneDX calls an
+		// application; every other package is a library
+		componentType := cyclonedx.ComponentTypeLibrary
+		if pkg.Type == "binary" {
+			componentType = cyclonedx.ComponentTypeApplication
+		}
+
 		bomPkg := cyclonedx.Component{
 			BOMRef:      ref,
-			Type:        cyclonedx.ComponentTypeLibrary,
+			Type:        componentType,
 			Name:        pkg.Name,
 			Version:     pkg.Version,
 			PackageURL:  pkg.Purl,
@@ -353,6 +371,10 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 
 		if component.CPE != "" {
 			pkg.Cpes = []string{component.CPE}
+		}
+
+		if component.Evidence != nil && ccx.opts.IncludeEvidence {
+			pkg.IdentityEvidence = identityEvidenceFromCycloneDX(component.Evidence.Identity)
 		}
 
 		if component.Evidence != nil && component.Evidence.Occurrences != nil && ccx.opts.IncludeEvidence {
@@ -710,4 +732,65 @@ func isSPDXIdentifierShaped(s string) bool {
 		}
 	}
 	return true
+}
+
+// cycloneDXIdentityEvidence renders how a package's identity was concluded as
+// CycloneDX evidence.identity entries, one per concluded field, or nil when
+// there is none.
+func cycloneDXIdentityEvidence(list []*IdentityEvidence) *[]cyclonedx.EvidenceIdentity {
+	var identities []cyclonedx.EvidenceIdentity
+	for _, e := range list {
+		if e.GetField() == "" || e.GetTechnique() == "" {
+			continue
+		}
+		confidence := float32(e.GetConfidence())
+		identities = append(identities, cyclonedx.EvidenceIdentity{
+			Field:          cyclonedx.EvidenceIdentityFieldType(e.GetField()),
+			Confidence:     &confidence,
+			ConcludedValue: e.GetConcludedValue(),
+			Methods: &[]cyclonedx.EvidenceIdentityMethod{{
+				Technique:  cyclonedx.EvidenceIdentityTechnique(e.GetTechnique()),
+				Confidence: &confidence,
+				Value:      e.GetValue(),
+			}},
+		})
+	}
+	if len(identities) == 0 {
+		return nil
+	}
+	return &identities
+}
+
+// identityEvidenceFromCycloneDX reads evidence.identity back, one entry per
+// method, in either the array form or the single object of CycloneDX 1.5.
+func identityEvidenceFromCycloneDX(choice *cyclonedx.EvidenceIdentityChoice) []*IdentityEvidence {
+	if choice == nil {
+		return nil
+	}
+	var identities []cyclonedx.EvidenceIdentity
+	switch {
+	case choice.Identities != nil:
+		identities = *choice.Identities
+	case choice.Identity != nil:
+		identities = []cyclonedx.EvidenceIdentity{*choice.Identity}
+	}
+	var res []*IdentityEvidence
+	for _, id := range identities {
+		if id.Methods == nil {
+			continue
+		}
+		for _, m := range *id.Methods {
+			e := &IdentityEvidence{
+				Field:          string(id.Field),
+				ConcludedValue: id.ConcludedValue,
+				Technique:      string(m.Technique),
+				Value:          m.Value,
+			}
+			if m.Confidence != nil {
+				e.Confidence = float64(*m.Confidence)
+			}
+			res = append(res, e)
+		}
+	}
+	return res
 }

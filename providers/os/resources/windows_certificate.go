@@ -84,33 +84,14 @@ func (r *mqlWindowsCertificate) certificate() (plugin.Resource, error) {
 		return nil, nil
 	}
 
-	sharedRes, err := r.MqlRuntime.CreateSharedResource("certificates", map[string]*llx.RawData{
-		"pem": llx.StringData(r.pem),
-	})
+	cert, err := parsedCertificate(r.MqlRuntime, r.pem)
 	if err != nil {
 		return nil, err
 	}
-
-	list, err := r.MqlRuntime.GetSharedData("certificates", sharedRes.MqlID(), "list")
-	if err != nil {
-		return nil, err
-	}
-	if list == nil || list.Error != nil {
-		r.Certificate.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-
-	entries, ok := list.Value.([]any)
-	if !ok || len(entries) == 0 {
+	if cert == nil {
 		// A store entry whose bytes are well-formed base64 but not a
 		// certificate. Reported as null rather than as an error, so one bad
 		// entry does not blind the store.
-		r.Certificate.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-
-	cert, ok := entries[0].(plugin.Resource)
-	if !ok {
 		r.Certificate.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}

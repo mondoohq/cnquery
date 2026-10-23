@@ -28,6 +28,14 @@ const (
 	propPackageArch    = "mondoo:package:arch"
 )
 
+// A binary's code signature has no home in CycloneDX: component.signature
+// would claim the BOM entry itself is signed, not the file it describes.
+const (
+	propSignatureStatus     = "mondoo:signature:status"
+	propSignatureSignerOrg  = "mondoo:signature:signer:organization"
+	propSignatureSignerName = "mondoo:signature:signer:commonName"
+)
+
 // platformProperties renders the platform fields CycloneDX cannot hold, or nil
 // when there is nothing to carry.
 func platformProperties(platform *Platform) *[]cyclonedx.Property {
@@ -51,6 +59,11 @@ func packageProperties(pkg *Package) *[]cyclonedx.Property {
 	}
 	props := appendProp(nil, propPackageOrigin, pkg.Origin)
 	props = appendProp(props, propPackageArch, pkg.Architecture)
+	if sig := pkg.GetSignature(); sig != nil {
+		props = appendProp(props, propSignatureStatus, sig.GetStatus())
+		props = appendProp(props, propSignatureSignerOrg, sig.GetSignerOrganization())
+		props = appendProp(props, propSignatureSignerName, sig.GetSignerCommonName())
+	}
 	if len(props) == 0 {
 		return nil
 	}
@@ -96,6 +109,19 @@ func applyPackageProperties(pkg *Package, props *[]cyclonedx.Property) {
 			pkg.Origin = prop.Value
 		case propPackageArch:
 			pkg.Architecture = prop.Value
+		case propSignatureStatus:
+			signatureOf(pkg).Status = prop.Value
+		case propSignatureSignerOrg:
+			signatureOf(pkg).SignerOrganization = prop.Value
+		case propSignatureSignerName:
+			signatureOf(pkg).SignerCommonName = prop.Value
 		}
 	}
+}
+
+func signatureOf(pkg *Package) *CodeSignature {
+	if pkg.Signature == nil {
+		pkg.Signature = &CodeSignature{}
+	}
+	return pkg.Signature
 }

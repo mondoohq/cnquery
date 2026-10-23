@@ -340,6 +340,19 @@ func ParsePortageDB(pf *inventory.Platform, afs *afero.Afero, dbPath string) ([]
 	return pkgs, nil
 }
 
+// PortageDBPackageName returns the name, CATEGORY/NAME as List reports it,
+// of the package whose Portage database directory is dir,
+// <PortageDB>/CATEGORY/NAME-VERSION. It is empty for any other directory.
+func PortageDBPackageName(dir string) string {
+	category, base := path.Split(path.Clean(dir))
+	category = path.Base(category)
+	name, version := splitPortageDirName(base)
+	if category == "" || category == "." || category == "/" || name == "" || version == "" {
+		return ""
+	}
+	return category + "/" + name
+}
+
 // splitPortageDirName splits a directory name like "curl-8.4.0" or
 // "dhcpcd-10.0.5-r1" into (name, version). The version starts at the last
 // hyphen that is followed by a digit.
