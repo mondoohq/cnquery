@@ -10,6 +10,7 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"unicode/utf16"
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -25,6 +26,62 @@ import (
 // entry, then VS_VERSIONINFO with its VS_FIXEDFILEINFO. withVersion=false
 // leaves the resource tree without an RT_VERSION type.
 func buildPE(t *testing.T, major, minor, build, private uint16, withVersion bool) []byte {
+	t.Helper()
+	v := [4]uint16{major, minor, build, private}
+	return buildPEVersions(t, v, v, withVersion)
+}
+
+// buildPEVersions is buildPE with a fixed product version that differs from the
+// file version.
+func buildPEVersions(t *testing.T, file, product [4]uint16, withVersion bool) []byte {
+	t.Helper()
+	return buildPEStrings(t, file, product, nil, withVersion)
+}
+
+// verNode assembles a VS_VERSIONINFO child node: wLength, wValueLength, wType,
+// UTF-16 key, padding, value, padding, children.
+func verNode(key string, valueLen, typ uint16, value, children []byte) []byte {
+	pad := func(b []byte) []byte {
+		for len(b)%4 != 0 {
+			b = append(b, 0)
+		}
+		return b
+	}
+	b := make([]byte, 6)
+	binary.LittleEndian.PutUint16(b[2:], valueLen)
+	binary.LittleEndian.PutUint16(b[4:], typ)
+	b = append(b, utf16le(key)...)
+	b = pad(b)
+	b = append(b, value...)
+	b = pad(b)
+	b = append(b, children...)
+	binary.LittleEndian.PutUint16(b[0:], uint16(len(b)))
+	return pad(b)
+}
+
+// utf16le encodes s with a terminator.
+func utf16le(s string) []byte {
+	var b []byte
+	for _, u := range utf16.Encode([]rune(s)) {
+		b = binary.LittleEndian.AppendUint16(b, u)
+	}
+	return append(b, 0, 0)
+}
+
+// stringFileInfo builds a StringFileInfo node with one string table holding
+// the key/value pairs.
+func stringFileInfo(kv ...string) []byte {
+	var strs []byte
+	for i := 0; i+1 < len(kv); i += 2 {
+		v := utf16le(kv[i+1])
+		strs = append(strs, verNode(kv[i], uint16(len(v)/2), 1, v, nil)...)
+	}
+	return verNode("StringFileInfo", 0, 1, nil, verNode("040904b0", 0, 1, nil, strs))
+}
+
+// buildPEStrings is buildPEVersions with a StringFileInfo holding the given
+// key/value pairs; none leaves it out.
+func buildPEStrings(t *testing.T, file, product [4]uint16, strs []string, withVersion bool) []byte {
 	t.Helper()
 	const rsrcRVA = 0x1000
 	le := binary.LittleEndian
@@ -50,10 +107,13 @@ func buildPE(t *testing.T, major, minor, build, private uint16, withVersion bool
 	vi.Write([]byte{0, 0}) // pad to 32 bits
 	write(vi, [13]uint32{
 		peFixedFileInfoSignature, 0x10000,
-		uint32(major)<<16 | uint32(minor), uint32(build)<<16 | uint32(private),
-		uint32(major)<<16 | uint32(minor), uint32(build)<<16 | uint32(private),
+		uint32(file[0])<<16 | uint32(file[1]), uint32(file[2])<<16 | uint32(file[3]),
+		uint32(product[0])<<16 | uint32(product[1]), uint32(product[2])<<16 | uint32(product[3]),
 		0x3f, 0, 0x40004, 1, 0, 0, 0,
 	})
+	if len(strs) > 0 {
+		vi.Write(stringFileInfo(strs...))
+	}
 	viBytes := vi.Bytes()
 	le.PutUint16(viBytes[0:], uint16(len(viBytes)))
 	write(rsrc, [4]uint32{rsrcRVA + 88, uint32(len(viBytes)), 0, 0})
@@ -127,6 +187,69 @@ func TestPEFileVersion(t *testing.T) {
 
 	_, ok = peFileVersion(strings.NewReader("#!/bin/sh\necho not a PE\n"))
 	assert.False(t, ok)
+}
+
+// The PE images in these tests are synthesized (no Microsoft binaries are
+// shipped) from version resources measured on real VMs: the fixed file and
+// product versions and the FileVersion and ProductVersion strings.
+func TestPEProductVersion(t *testing.T) {
+	file := [4]uint16{4, 8, 4811, 0}
+	clrProduct := [4]uint16{4, 0, 30319, 0}
+	cases := []struct {
+		name string
+		img  []byte
+		want string
+		ok   bool
+	}{
+		// Measured: values read from Server 2022 (20348), Server 2016 (14393)
+		// and Win11 24H2 (26100) on 2026-10-23. The fixed product version of
+		// clr.dll is 4.0.30319.0 everywhere, the ProductVersion string is the
+		// real build, and the FileVersion string carries a "built by" suffix.
+		{"Server 2022 clr.dll", buildPEStrings(t, file, clrProduct, []string{"FileVersion", "4.8.4811.0 built by: NET48REL1LAST_B", "ProductVersion", "4.8.4811.0"}, true), "4.8.4811.0", true},
+		{"Server 2016 clr.dll", buildPEStrings(t, [4]uint16{4, 7, 4150, 0}, clrProduct, []string{"FileVersion", "4.7.4150.0 built by: NET472REL1LAST_B", "ProductVersion", "4.7.4150.0"}, true), "4.7.4150.0", true},
+		{"Win11 24H2 clr.dll", buildPEStrings(t, [4]uint16{4, 8, 9363, 0}, clrProduct, []string{"FileVersion", "4.8.9363.0 built by: NET481REL1LAST_25H2_B", "ProductVersion", "4.8.9363.0"}, true), "4.8.9363.0", true},
+		// Server 2022 mscorlib.dll: FileVersion has a "(WinRelRS6...)" suffix,
+		// ProductVersion is clean, fixed file equals fixed product.
+		{"Server 2022 mscorlib.dll", buildPEStrings(t, [4]uint16{2, 0, 50727, 9188}, [4]uint16{2, 0, 50727, 9188}, []string{"FileVersion", "2.0.50727.9188 (WinRelRS6.050727-9100)", "ProductVersion", "2.0.50727.9188"}, true), "2.0.50727.9188", true},
+
+		// Synthetic: behaviour no VM showed (every measured ProductVersion was
+		// clean, with no trailing text).
+		{"ProductVersion string only, differs from fixed product", buildPEStrings(t, file, clrProduct, []string{"ProductVersion", "4.8.4811.0"}, true), "4.8.4811.0", true},
+		{"trailing text is kept for the caller to cut", buildPEStrings(t, file, file, []string{"ProductVersion", "2.0.50727.9149 (synthetic suffix)"}, true), "2.0.50727.9149 (synthetic suffix)", true},
+		{"no StringFileInfo falls back to the fixed file version", buildPEStrings(t, file, clrProduct, nil, true), "4.8.4811.0", true},
+		{"StringFileInfo without ProductVersion", buildPEStrings(t, file, clrProduct, []string{"FileVersion", "4.8.4811.0"}, true), "4.8.4811.0", true},
+		{"no RT_VERSION resource", buildPE(t, 4, 8, 1, 0, false), "", false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			v, ok := peProductVersion(bytes.NewReader(tc.img))
+			assert.Equal(t, tc.ok, ok)
+			assert.Equal(t, tc.want, v)
+		})
+	}
+
+	// Synthetic: corrupted StringFileInfo nodes; no VM showed these.
+	t.Run("malformed StringFileInfo falls back without panic", func(t *testing.T) {
+		img := buildPEStrings(t, file, file, []string{"ProductVersion", "9.9.9.9"}, true)
+		// VS_VERSIONINFO starts at 0x200+88; StringFileInfo at +92.
+		sfi := 0x200 + 88 + 92
+		for name, mutate := range map[string]func(b []byte){
+			"huge wLength":       func(b []byte) { binary.LittleEndian.PutUint16(b[sfi:], 0xffff) },
+			"tiny wLength":       func(b []byte) { binary.LittleEndian.PutUint16(b[sfi:], 2) },
+			"zero wLength":       func(b []byte) { binary.LittleEndian.PutUint16(b[sfi:], 0) },
+			"huge wValueLength":  func(b []byte) { binary.LittleEndian.PutUint16(b[sfi+2:], 0xffff) },
+			"unterminated key":   func(b []byte) { copy(b[sfi+6:], bytes.Repeat([]byte{'A', 0}, 40)) },
+			"damaged table node": func(b []byte) { binary.LittleEndian.PutUint16(b[sfi+36:], 0xfff0) },
+		} {
+			t.Run(name, func(t *testing.T) {
+				bad := append([]byte{}, img...)
+				mutate(bad)
+				v, ok := peProductVersion(bytes.NewReader(bad))
+				require.True(t, ok)
+				assert.Equal(t, "4.8.4811.0", v, "fixed file version fallback")
+			})
+		}
+	})
 }
 
 func TestFsFileVersionReader(t *testing.T) {

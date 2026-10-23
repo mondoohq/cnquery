@@ -6,6 +6,7 @@ package packages
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/spf13/afero"
 	fsconn "go.mondoo.com/mql/providers/os/connection/fs"
@@ -23,6 +24,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers/os/connection/mock"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/registry"
 	"go.mondoo.com/mql/providers/os/resources/cpe"
 	"go.mondoo.com/mql/providers/os/resources/powershell"
@@ -1945,4 +1947,173 @@ func TestCBSUpdatesToHotfixPackages(t *testing.T) {
 
 	assert.Equal(t, "KB5120708", pkgs[1].Name)
 	assert.True(t, pkgs[1].InstallDate.IsZero(), "no install time is null, not a made-up date")
+}
+
+// dotNetHive serves registry keys of the SOFTWARE hive by path.
+type dotNetHive map[string][]registry.RegistryKeyItem
+
+func (h dotNetHive) GetNativeRegistryKeyItems(id, path string) ([]registry.RegistryKeyItem, error) {
+	if items, ok := h[path]; ok {
+		return items, nil
+	}
+	return nil, errors.New("key not found")
+}
+
+type memFsConn struct {
+	shared.Connection
+	fs afero.Fs
+}
+
+func (c *memFsConn) FileSystem() afero.Fs { return c.fs }
+
+func TestGetFsDotNetFramework(t *testing.T) {
+	const (
+		key4x  = `Microsoft\NET Framework Setup\NDP\v4\Full`
+		key35  = `Microsoft\NET Framework Setup\NDP\v3.5`
+		clr4   = "Windows/Microsoft.NET/Framework64/v4.0.30319/clr.dll"
+		dir2   = "Windows/Microsoft.NET/Framework64/v2.0.50727/"
+		dir2x  = "Windows/Microsoft.NET/Framework/v2.0.50727/"
+		path4x = `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\`
+		path35 = `C:\Windows\Microsoft.NET\Framework64\v3.5\`
+	)
+	str := func(k, v string) registry.RegistryKeyItem {
+		return registry.RegistryKeyItem{Key: k, Value: registry.RegistryKeyValue{Kind: registry.SZ, String: v}}
+	}
+	dword := func(k string, n int64) registry.RegistryKeyItem {
+		return registry.RegistryKeyItem{Key: k, Value: registry.RegistryKeyValue{Kind: registry.DWORD, Number: n}}
+	}
+	hive4x := []registry.RegistryKeyItem{str("InstallPath", path4x), dword("Release", 533320)}
+	hive35 := []registry.RegistryKeyItem{dword("Install", 1), str("InstallPath", `C:\Windows\Microsoft.NET\Framework64\v3.5\`)}
+	// The fixed product version is deliberately not the one reported; the
+	// ProductVersion string is.
+	pe := func(v [4]uint16) []byte {
+		return buildPEStrings(t, v, [4]uint16{4, 0, 30319, 0}, []string{"ProductVersion", fmt.Sprintf("%d.%d.%d.%d", v[0], v[1], v[2], v[3])}, true)
+	}
+
+	type files map[string][]byte
+
+	// Measured fixtures. The PE images are synthesized from the version
+	// resources measured on the VMs (no Microsoft binaries are shipped): the
+	// fixed file version, the fixed product version and the FileVersion and
+	// ProductVersion strings.
+	realPE := func(file, product [4]uint16, fileStr, productStr string) []byte {
+		return buildPEStrings(t, file, product, []string{"FileVersion", fileStr, "ProductVersion", productStr}, true)
+	}
+	// clr.dll sits in Framework and Framework64, identical per VM.
+	clrFiles := func(img []byte) files {
+		return files{
+			"Windows/Microsoft.NET/Framework/v4.0.30319/clr.dll":   img,
+			"Windows/Microsoft.NET/Framework64/v4.0.30319/clr.dll": img,
+		}
+	}
+	merge := func(fs ...files) files {
+		out := files{}
+		for _, f := range fs {
+			for k, v := range f {
+				out[k] = v
+			}
+		}
+		return out
+	}
+	clr2 := func(name string, v uint16, fileStr string) files {
+		img := realPE([4]uint16{2, 0, 50727, v}, [4]uint16{2, 0, 50727, v}, fileStr, fmt.Sprintf("2.0.50727.%d", v))
+		return files{dir2 + name: img, dir2x + name: img}
+	}
+	// The CLR 2.0 files measured on Server 2022 and Win11 x64 (the directory
+	// holds 84 DLLs, these three are representative). System.dll is pinned to
+	// an older build next to mscorlib.dll.
+	realClr2 := merge(
+		clr2("mscorlib.dll", 9188, "2.0.50727.9188 (WinRelRS6.050727-9100)"),
+		clr2("mscorwks.dll", 9188, "2.0.50727.9188 (WinRelRS6.050727-9100)"),
+		clr2("System.dll", 9182, "2.0.50727.9182 (WinRelRS6.050727-9100)"),
+	)
+	clr4Server2022 := clrFiles(realPE([4]uint16{4, 8, 4811, 0}, [4]uint16{4, 0, 30319, 0}, "4.8.4811.0 built by: NET48REL1LAST_B", "4.8.4811.0"))
+	clr4Server2016 := clrFiles(realPE([4]uint16{4, 7, 4150, 0}, [4]uint16{4, 0, 30319, 0}, "4.7.4150.0 built by: NET472REL1LAST_B", "4.7.4150.0"))
+	clr4Win11 := clrFiles(realPE([4]uint16{4, 8, 9363, 0}, [4]uint16{4, 0, 30319, 0}, "4.8.9363.0 built by: NET481REL1LAST_25H2_B", "4.8.9363.0"))
+
+	// Real registry keys, every value present on the VM.
+	full4x := func(release int64, version string) []registry.RegistryKeyItem {
+		return []registry.RegistryKeyItem{
+			dword("CBS", 1), dword("Install", 1), str("InstallPath", path4x), dword("Release", release),
+			dword("Servicing", 0), str("TargetVersion", "4.0.0"), str("Version", version),
+		}
+	}
+	real35 := []registry.RegistryKeyItem{
+		dword("CBS", 1), dword("Install", 1), str("InstallPath", path35), dword("SP", 1), str("Version", "3.5.30729.4926"),
+	}
+
+	// Synthetic fixture: invented versions (not from any VM) covering edge
+	// cases no VM showed: a 32-bit directory newer than the 64-bit one, a
+	// string suffix, a non-CLR 2.0 file.
+	both := files{
+		clr4:                  pe([4]uint16{4, 8, 9310, 0}),
+		dir2 + "mscorlib.dll": pe([4]uint16{2, 0, 50727, 9149}),
+		// pinned to an older build for side-by-side compatibility
+		dir2 + "System.dll": pe([4]uint16{2, 0, 50727, 4927}),
+		// the 32-bit directory can hold a newer build than the 64-bit one
+		dir2x + "mscorlib.dll": pe([4]uint16{2, 0, 50727, 9200}),
+		// text after the version is cut off
+		dir2 + "suffix.dll": buildPEStrings(t, [4]uint16{2, 0, 50727, 1}, [4]uint16{2, 0, 50727, 9300}, []string{"ProductVersion", "2.0.50727.9300 (built)"}, true),
+		// not a CLR 2.0 build: ignored
+		dir2 + "other.dll": pe([4]uint16{3, 5, 30729, 9999}),
+	}
+
+	cases := []struct {
+		name  string
+		arch  string // platform architecture; AMD64 when empty
+		hive  dotNetHive
+		files files
+		want  []string // version@installLocation
+	}{
+		// Measured: values read from each VM on 2026-10-23. The expected
+		// versions match the live local scan of
+		// packages.where(name == "Microsoft .NET Framework") on that VM.
+		{name: "Server 2022 with 3.5", hive: dotNetHive{key4x: full4x(528449, "4.8.04161"), key35: real35}, files: merge(clr4Server2022, realClr2),
+			want: []string{`4.8.4811.0@` + path4x, `2.0.50727.9188@` + path35}},
+		{name: "Server 2016 without 3.5", hive: dotNetHive{key4x: full4x(461814, "4.7.03062")}, files: clr4Server2016,
+			want: []string{`4.7.4150.0@` + path4x}},
+		{name: "Win11 24H2 x64 with 3.5", hive: dotNetHive{key4x: full4x(533509, "4.8.09221"), key35: real35}, files: merge(clr4Win11, realClr2),
+			want: []string{`4.8.9363.0@` + path4x, `2.0.50727.9188@` + path35}},
+		{name: "Win11 24H2 ARM64 without 3.5", arch: "ARM64", hive: dotNetHive{key4x: full4x(533509, "4.8.09221")}, files: clr4Win11,
+			want: []string{`4.8.9363.0@` + path4x}},
+
+		// Synthetic: edge cases no VM showed, on invented versions.
+		{name: "4.x only", hive: dotNetHive{key4x: hive4x}, files: both, want: []string{`4.8.9310.0@` + path4x}},
+		{name: "3.5 only", hive: dotNetHive{key35: hive35}, files: both, want: []string{`2.0.50727.9300@C:\Windows\Microsoft.NET\Framework64\v3.5\`}},
+		{name: "both", hive: dotNetHive{key4x: hive4x, key35: hive35}, files: both, want: []string{`4.8.9310.0@` + path4x, `2.0.50727.9300@C:\Windows\Microsoft.NET\Framework64\v3.5\`}},
+		{name: "absent keys", hive: dotNetHive{}, files: both, want: nil},
+		{name: "3.5 with Install=0", hive: dotNetHive{key35: {dword("Install", 0), str("InstallPath", "x")}}, files: both, want: nil},
+		{name: "4.x without InstallPath", hive: dotNetHive{key4x: {dword("Release", 533320)}}, files: both, want: nil},
+		{name: "missing clr.dll", hive: dotNetHive{key4x: hive4x}, files: files{}, want: nil},
+		{name: "3.5 without CLR 2.0 files", hive: dotNetHive{key35: hive35}, files: files{clr4: both[clr4]}, want: nil},
+		{name: "%WINDIR% in InstallPath", hive: dotNetHive{key4x: {str("InstallPath", `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319`)}}, files: both, want: []string{`4.8.9310.0@%WINDIR%\Microsoft.NET\Framework64\v4.0.30319`}},
+		{name: "InstallPath on another drive", hive: dotNetHive{key4x: {str("InstallPath", `D:\Windows\Microsoft.NET\Framework64\v4.0.30319\`)}}, files: both, want: nil},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			fs := afero.NewMemMapFs()
+			for p, data := range tc.files {
+				require.NoError(t, afero.WriteFile(fs, p, data, 0o644))
+			}
+			arch := tc.arch
+			if arch == "" {
+				arch = "AMD64"
+			}
+			w := &WinPkgManager{conn: &memFsConn{fs: fs}, platform: &inventory.Platform{Name: "windows", Arch: arch}}
+			got := []string{}
+			for _, p := range w.getFsDotNetFramework(tc.hive) {
+				assert.Equal(t, "Microsoft .NET Framework", p.Name)
+				assert.Equal(t, "Microsoft", p.Vendor)
+				assert.Equal(t, arch, p.Arch)
+				assert.Equal(t, installScopeMachine, p.InstallScope)
+				require.Len(t, p.Files, 1)
+				got = append(got, p.Version+"@"+p.Files[0].Path)
+			}
+			if tc.want == nil {
+				assert.Empty(t, got)
+			} else {
+				assert.Equal(t, tc.want, got)
+			}
+		})
+	}
 }

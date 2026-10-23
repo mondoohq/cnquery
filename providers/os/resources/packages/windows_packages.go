@@ -16,6 +16,7 @@ import (
 	"regexp"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -920,26 +921,24 @@ func (w *WinPkgManager) getProfileInstalledApps(p windowsProfile, reader nativeR
 // Registry and version probes run over the active connection via PowerShell, so
 // this works for remote connections (e.g. SSH) as well as a local Windows host.
 //
-// This is called from exactly one enumeration path per connection type
+// This is called from the local and remote enumeration paths
 // (getLocalInstalledApps for a local Windows host, getInstalledApps for remote
-// connections), so the returned packages are not duplicated.
+// connections). Offline filesystem and device connections cannot run
+// PowerShell and use getFsDotNetFramework instead, so the returned packages are
+// never duplicated. Both build their packages with newDotNetFrameworkPackage.
 func (w *WinPkgManager) getDotNetFramework() ([]Package, error) {
 	packages := []Package{}
 
-	// Both probes read a single machine-wide HKLM key (NDP\v4\Full,
-	// NDP\v3.5); neither has a per-user concept. Tagged here, once, rather
-	// than in each probe, so the two stay in sync automatically.
+	// newDotNetFrameworkPackage tags both as machine scope.
 	if pkg, err := w.getDotNetFramework4x(); err != nil {
 		log.Debug().Err(err).Msg("could not get .NET Framework 4.x runtime")
 	} else if pkg != nil {
-		pkg.InstallScope = installScopeMachine
 		packages = append(packages, *pkg)
 	}
 
 	if pkg, err := w.getDotNetFramework35(); err != nil {
 		log.Debug().Err(err).Msg("could not get .NET Framework 3.5 runtime")
 	} else if pkg != nil {
-		pkg.InstallScope = installScopeMachine
 		packages = append(packages, *pkg)
 	}
 
@@ -960,12 +959,7 @@ func (w *WinPkgManager) getDotNetFramework4x() (*Package, error) {
 		return nil, fmt.Errorf("could not read registry key %q: %w", dotNet45plus, err)
 	}
 
-	installLocation := ""
-	for _, i := range items {
-		if i.Key == "InstallPath" {
-			installLocation = i.Value.String
-		}
-	}
+	installLocation := dotNet4xInstallPath(items)
 	if installLocation == "" {
 		return nil, nil
 	}
@@ -979,7 +973,7 @@ func (w *WinPkgManager) getDotNetFramework4x() (*Package, error) {
 		return nil, nil
 	}
 
-	return createPackage("Microsoft .NET Framework", version, "windows/app", w.platform.Arch, "Microsoft", installLocation, w.platform), nil
+	return newDotNetFrameworkPackage(version, installLocation, w.platform), nil
 }
 
 // getDotNetFramework35 reports the installed .NET Framework 3.5 runtime. It is
@@ -995,16 +989,7 @@ func (w *WinPkgManager) getDotNetFramework35() (*Package, error) {
 		return nil, fmt.Errorf("could not read registry key %q: %w", dotNet35, err)
 	}
 
-	installed := false
-	installLocation := ""
-	for _, i := range items {
-		switch i.Key {
-		case "Install":
-			installed = i.Value.Number == 1
-		case "InstallPath":
-			installLocation = i.Value.String
-		}
-	}
+	installed, installLocation := dotNet35Install(items)
 	if !installed {
 		return nil, nil
 	}
@@ -1017,7 +1002,143 @@ func (w *WinPkgManager) getDotNetFramework35() (*Package, error) {
 		return nil, nil
 	}
 
-	return createPackage("Microsoft .NET Framework", version, "windows/app", w.platform.Arch, "Microsoft", installLocation, w.platform), nil
+	return newDotNetFrameworkPackage(version, installLocation, w.platform), nil
+}
+
+// dotNet4xInstallPath returns the InstallPath value of the NDP\v4\Full key.
+func dotNet4xInstallPath(items []registry.RegistryKeyItem) string {
+	for _, i := range items {
+		if i.Key == "InstallPath" {
+			return i.Value.String
+		}
+	}
+	return ""
+}
+
+// dotNet35Install reports whether the NDP\v3.5 key marks .NET Framework 3.5 as
+// installed (Install == 1) and returns its InstallPath.
+func dotNet35Install(items []registry.RegistryKeyItem) (installed bool, installLocation string) {
+	for _, i := range items {
+		switch i.Key {
+		case "Install":
+			installed = i.Value.Number == 1
+		case "InstallPath":
+			installLocation = i.Value.String
+		}
+	}
+	return installed, installLocation
+}
+
+// newDotNetFrameworkPackage builds the .NET Framework runtime package for the
+// live and the offline paths, so both report the same name, vendor, arch and
+// scope. Both runtimes are read from a single machine-wide HKLM key (NDP\v4\Full,
+// NDP\v3.5); neither has a per-user concept.
+func newDotNetFrameworkPackage(version, installLocation string, platform *inventory.Platform) *Package {
+	pkg := createPackage("Microsoft .NET Framework", version, "windows/app", platform.Arch, "Microsoft", installLocation, platform)
+	pkg.InstallScope = installScopeMachine
+	return pkg
+}
+
+// dotNetFsClr2Dirs lists the CLR 2.0 directories, relative to the mounted
+// system volume, that dotNetClr2VersionScript scans.
+var dotNetFsClr2Dirs = []string{
+	"Windows/Microsoft.NET/Framework64/v2.0.50727",
+	"Windows/Microsoft.NET/Framework/v2.0.50727",
+}
+
+var windowsDirVar = regexp.MustCompile(`(?i)%(windir|systemroot)%`)
+
+// nativeKeyItemsReader is the part of the registry handler the offline .NET
+// Framework probe needs.
+type nativeKeyItemsReader interface {
+	GetNativeRegistryKeyItems(registryId string, path string) ([]registry.RegistryKeyItem, error)
+}
+
+// getFsDotNetFramework is the offline counterpart of getDotNetFramework. It
+// reads the NDP registry keys from the loaded SOFTWARE hive and the runtime
+// versions from the PE files on the mounted filesystem, since neither
+// PowerShell nor the live registry is available.
+func (w *WinPkgManager) getFsDotNetFramework(rh nativeKeyItemsReader) []Package {
+	fs := w.conn.FileSystem()
+	packages := []Package{}
+
+	if items, err := rh.GetNativeRegistryKeyItems(registry.Software, `Microsoft\NET Framework Setup\NDP\v4\Full`); err == nil {
+		if installLocation := dotNet4xInstallPath(items); installLocation != "" {
+			// %WINDIR% offline is the Windows directory of the mounted volume.
+			dir := windowsDirVar.ReplaceAllString(installLocation, `C:\Windows`)
+			if !strings.HasSuffix(dir, `\`) {
+				dir += `\`
+			}
+			if fp, ok := mountedSystemDrivePath(dir + "clr.dll"); ok {
+				if v, ok := fsProductVersion(fs, fp); ok {
+					// Like dotNetClr2VersionScript, drop any text after the version.
+					packages = append(packages, *newDotNetFrameworkPackage(firstToken(v), installLocation, w.platform))
+				}
+			}
+		}
+	}
+
+	if items, err := rh.GetNativeRegistryKeyItems(registry.Software, `Microsoft\NET Framework Setup\NDP\v3.5`); err == nil {
+		if installed, installLocation := dotNet35Install(items); installed {
+			if version := fsDotNetClr2Version(fs); version != "" {
+				packages = append(packages, *newDotNetFrameworkPackage(version, installLocation, w.platform))
+			}
+		}
+	}
+	return packages
+}
+
+// dotNetClr2Product matches the ProductVersion of a CLR 2.0 assembly, as
+// dotNetClr2VersionScript does.
+var dotNetClr2Product = regexp.MustCompile(`^2\.0\.50727\.(\d+)`)
+
+// firstToken returns the part of s before the first whitespace.
+func firstToken(s string) string {
+	if f := strings.Fields(s); len(f) > 0 {
+		return f[0]
+	}
+	return ""
+}
+
+// fsDotNetClr2Version is dotNetClr2VersionScript on a mounted filesystem: the
+// highest 2.0.50727.<build> ProductVersion across the assemblies of the CLR 2.0
+// directories, cut at the first whitespace, or "" if there is none.
+func fsDotNetClr2Version(fs afero.Fs) string {
+	best := ""
+	bestBuild := -1
+	for _, dir := range dotNetFsClr2Dirs {
+		entries, err := afero.ReadDir(fs, dir)
+		if err != nil {
+			continue
+		}
+		for _, e := range entries {
+			if e.IsDir() || !strings.EqualFold(filepath.Ext(e.Name()), ".dll") {
+				continue
+			}
+			pv, ok := fsProductVersion(fs, dir+"/"+e.Name())
+			if !ok {
+				continue
+			}
+			m := dotNetClr2Product.FindStringSubmatch(pv)
+			if m == nil {
+				continue
+			}
+			if b, err := strconv.Atoi(m[1]); err == nil && b > bestBuild {
+				bestBuild = b
+				best = firstToken(pv)
+			}
+		}
+	}
+	return best
+}
+
+// formatWindowsVersion renders a numeric version as a.b.c.d.
+func formatWindowsVersion(v []uint64) string {
+	parts := make([]string, len(v))
+	for i, n := range v {
+		parts[i] = strconv.FormatUint(n, 10)
+	}
+	return strings.Join(parts, ".")
 }
 
 // runPwshVersion runs a PowerShell script that emits a single version string and
@@ -1243,6 +1364,10 @@ func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
 	applyM365ChannelQualifier(packages, w.platform, func() string {
 		return w.m365ChannelFromHive(rh)
 	})
+
+	// The .NET Framework runtimes don't appear in the Uninstall keys; read them
+	// from the NDP keys and the runtime files, as the live paths do.
+	packages = append(packages, w.getFsDotNetFramework(rh)...)
 
 	msSqlHotfixes := findMsSqlHotfixes(packages)
 	if len(msSqlHotfixes) > 0 {

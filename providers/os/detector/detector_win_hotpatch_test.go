@@ -112,3 +112,25 @@ func TestStaticHotpatchLabels(t *testing.T) {
 	}
 
 }
+
+// TestStaticHotpatchArchKey checks that the offline architecture, in the
+// PROCESSOR_ARCHITECTURE spelling, selects the Hotpatch.<arch> key of its own
+// architecture.
+//
+// Synthetic: the Hotpatch.arm64 key name and its value are test markers written
+// on a Win11 ARM64 VM, which was not hotpatch-enrolled; no enrolled ARM64
+// machine showed this key.
+func TestStaticHotpatchArchKey(t *testing.T) {
+	arm64Enrolled := hotpatchHive{
+		registry.Software + `|Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\DynamicInstalled\Hotpatch.arm64`: {{Key: "Name", Value: registry.RegistryKeyValue{Kind: registry.SZ, String: win.HotpatchPackage}}},
+		registry.System + `|ControlSet001\Control\DeviceGuard`:                                                          {hiveDword("EnableVirtualizationBasedSecurity", "1")},
+		registry.System + `|ControlSet001\Control\Session Manager\Memory Management`:                                    {hiveDword("HotPatchTableSize", "4096")},
+	}
+	for arch, want := range map[string]string{"ARM64": "true", "AMD64": "false", "": "false"} {
+		t.Run("arch "+arch, func(t *testing.T) {
+			pf := &inventory.Platform{Title: "Windows Server", Version: "20348", Build: "1000", Arch: arch, Labels: map[string]string{"windows.mondoo.com/product-type": "3"}}
+			applyStaticHotpatch(pf, arm64Enrolled)
+			assert.Equal(t, want, pf.Labels[win.HotpatchLabel])
+		})
+	}
+}

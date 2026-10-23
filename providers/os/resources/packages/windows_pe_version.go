@@ -11,6 +11,7 @@ import (
 	"io"
 	"regexp"
 	"strings"
+	"unicode/utf16"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -27,6 +28,7 @@ const (
 	peFixedFileInfoSignature = 0xFEEF04BD
 	peMaxResourceEntries     = 4096
 	peMaxExecutableSize      = 1 << 30
+	peMaxVersionInfoSize     = 1 << 16
 )
 
 // vsVersionInfoKey is "VS_VERSION_INFO" with its terminator, in UTF-16LE.
@@ -38,9 +40,34 @@ var vsVersionInfoKey = []byte("V\x00S\x00_\x00V\x00E\x00R\x00S\x00I\x00O\x00N\x0
 // and reads only the bytes it needs. Returns false for anything that is not
 // a PE image, has no version resource, or whose version is all zero.
 func peFileVersion(r io.ReaderAt) ([]uint64, bool) {
+	file, _, ok := peFixedVersions(r)
+	return file, ok
+}
+
+// peProductVersion returns the ProductVersion string of a PE image's version
+// resource (StringFileInfo), the value PowerShell's VersionInfo.ProductVersion
+// returns, such as "4.8.4811.0". The fixed dwProductVersion is not the same:
+// clr.dll carries 4.0.30319.0 there. When the resource has no usable
+// ProductVersion string, the fixed file version formatted a.b.c.d is returned.
+// Returns false in the same cases as peFileVersion.
+func peProductVersion(r io.ReaderAt) (string, bool) {
+	file, product, ok := peFixedVersions(r)
+	if !ok {
+		return "", false
+	}
+	if product != "" {
+		return product, true
+	}
+	return formatWindowsVersion(file), true
+}
+
+// peFixedVersions returns the fixed file version of a PE image and its
+// StringFileInfo ProductVersion string, which is empty when the resource has
+// none or it is malformed.
+func peFixedVersions(r io.ReaderAt) (file []uint64, product string, ok bool) {
 	f, err := pe.NewFile(r)
 	if err != nil {
-		return nil, false
+		return nil, "", false
 	}
 	defer f.Close()
 
@@ -48,19 +75,19 @@ func peFileVersion(r io.ReaderAt) ([]uint64, bool) {
 	switch oh := f.OptionalHeader.(type) {
 	case *pe.OptionalHeader32:
 		if oh.NumberOfRvaAndSizes <= peResourceDirectoryEntry {
-			return nil, false
+			return nil, "", false
 		}
 		rsrcRVA = oh.DataDirectory[peResourceDirectoryEntry].VirtualAddress
 	case *pe.OptionalHeader64:
 		if oh.NumberOfRvaAndSizes <= peResourceDirectoryEntry {
-			return nil, false
+			return nil, "", false
 		}
 		rsrcRVA = oh.DataDirectory[peResourceDirectoryEntry].VirtualAddress
 	default:
-		return nil, false
+		return nil, "", false
 	}
 	if rsrcRVA == 0 {
-		return nil, false
+		return nil, "", false
 	}
 
 	// readRVA reads n bytes at a relative virtual address, from whichever
@@ -109,7 +136,7 @@ func peFileVersion(r io.ReaderAt) ([]uint64, bool) {
 
 	root, ok := entries(0)
 	if !ok {
-		return nil, false
+		return nil, "", false
 	}
 	var next uint32
 	found := false
@@ -120,20 +147,20 @@ func peFileVersion(r io.ReaderAt) ([]uint64, bool) {
 		}
 	}
 	if !found {
-		return nil, false
+		return nil, "", false
 	}
 	// Name level, then language level: the first of each.
 	names, ok := entries(next)
 	if !ok || names[0].offset&subdir == 0 {
-		return nil, false
+		return nil, "", false
 	}
 	langs, ok := entries(names[0].offset &^ subdir)
 	if !ok || langs[0].offset&subdir != 0 {
-		return nil, false
+		return nil, "", false
 	}
 	dataEntry, ok := readRVA(rsrcRVA+langs[0].offset, 16)
 	if !ok {
-		return nil, false
+		return nil, "", false
 	}
 	dataRVA := binary.LittleEndian.Uint32(dataEntry[0:])
 	dataSize := binary.LittleEndian.Uint32(dataEntry[4:])
@@ -142,26 +169,133 @@ func peFileVersion(r io.ReaderAt) ([]uint64, bool) {
 	// padding to 32 bits, then VS_FIXEDFILEINFO (52 bytes) at offset 40.
 	const fixedOff, fixedLen = 40, 52
 	if dataSize < fixedOff+fixedLen {
-		return nil, false
+		return nil, "", false
 	}
 	vi, ok := readRVA(dataRVA, fixedOff+fixedLen)
 	if !ok {
-		return nil, false
+		return nil, "", false
 	}
 	if binary.LittleEndian.Uint16(vi[2:]) < fixedLen || !bytes.Equal(vi[6:6+len(vsVersionInfoKey)], vsVersionInfoKey) {
-		return nil, false
+		return nil, "", false
 	}
 	fixed := vi[fixedOff:]
 	if binary.LittleEndian.Uint32(fixed[0:]) != peFixedFileInfoSignature {
-		return nil, false
+		return nil, "", false
 	}
-	ms := binary.LittleEndian.Uint32(fixed[8:])
-	ls := binary.LittleEndian.Uint32(fixed[12:])
-	v := []uint64{uint64(ms >> 16), uint64(ms & 0xffff), uint64(ls >> 16), uint64(ls & 0xffff)}
-	if v[0] == 0 && v[1] == 0 && v[2] == 0 && v[3] == 0 {
-		return nil, false
+	split := func(ms, ls uint32) []uint64 {
+		return []uint64{uint64(ms >> 16), uint64(ms & 0xffff), uint64(ls >> 16), uint64(ls & 0xffff)}
 	}
-	return v, true
+	file = split(binary.LittleEndian.Uint32(fixed[8:]), binary.LittleEndian.Uint32(fixed[12:]))
+	if file[0] == 0 && file[1] == 0 && file[2] == 0 && file[3] == 0 {
+		return nil, "", false
+	}
+	// The strings follow the fixed info. Reading them is best effort: any
+	// failure leaves the product string empty.
+	if n := min(dataSize, peMaxVersionInfoSize); n > fixedOff+fixedLen {
+		if block, ok := readRVA(dataRVA, int(n)); ok {
+			product = versionInfoString(block, "ProductVersion")
+		}
+	}
+	return file, product, true
+}
+
+// versionInfoString finds a string value in the StringFileInfo of a
+// VS_VERSIONINFO block, looking at the first string table only. Every node is
+// wLength, wValueLength, wType, a UTF-16 key, padding to 32 bits, the value,
+// padding, then child nodes. All offsets are checked against the block, and
+// every node is at least six bytes, so a malformed block ends the walk instead
+// of panicking or looping. Returns "" when the string is not there.
+func versionInfoString(block []byte, name string) string {
+	type node struct {
+		key           string
+		valOff, valSz int
+		textValue     bool
+		childOff, end int
+	}
+	align4 := func(n int) int { return (n + 3) &^ 3 }
+	// parse reads the node at off, which must end by limit.
+	parse := func(off, limit int) (node, bool) {
+		var n node
+		if off < 0 || off+6 > limit {
+			return n, false
+		}
+		length := int(binary.LittleEndian.Uint16(block[off:]))
+		valLen := int(binary.LittleEndian.Uint16(block[off+2:]))
+		n.textValue = binary.LittleEndian.Uint16(block[off+4:]) == 1
+		if length < 6 || off+length > limit {
+			return n, false
+		}
+		n.end = off + length
+		var key []uint16
+		p := off + 6
+		for {
+			if p+2 > n.end {
+				return n, false
+			}
+			c := binary.LittleEndian.Uint16(block[p:])
+			p += 2
+			if c == 0 {
+				break
+			}
+			key = append(key, c)
+		}
+		n.key = string(utf16.Decode(key))
+		n.valOff = align4(p)
+		n.valSz = valLen
+		if n.textValue {
+			n.valSz = valLen * 2
+		}
+		if n.valOff > n.end || n.valSz > n.end-n.valOff {
+			return n, false
+		}
+		n.childOff = align4(n.valOff + n.valSz)
+		return n, true
+	}
+
+	root, ok := parse(0, len(block))
+	if !ok {
+		return ""
+	}
+	// First child with the key StringFileInfo.
+	var sfi node
+	found := false
+	for off := root.childOff; ; {
+		c, ok := parse(off, root.end)
+		if !ok {
+			return ""
+		}
+		if c.key == "StringFileInfo" {
+			sfi, found = c, true
+			break
+		}
+		off = align4(c.end)
+	}
+	if !found {
+		return ""
+	}
+	table, ok := parse(sfi.childOff, sfi.end)
+	if !ok {
+		return ""
+	}
+	for off := table.childOff; ; {
+		str, ok := parse(off, table.end)
+		if !ok {
+			return ""
+		}
+		if str.key == name && str.textValue {
+			raw := block[str.valOff : str.valOff+str.valSz]
+			units := make([]uint16, 0, len(raw)/2)
+			for i := 0; i+1 < len(raw); i += 2 {
+				u := binary.LittleEndian.Uint16(raw[i:])
+				if u == 0 {
+					break
+				}
+				units = append(units, u)
+			}
+			return strings.TrimSpace(string(utf16.Decode(units)))
+		}
+		off = align4(str.end)
+	}
 }
 
 // fsFileVersionReader reads file versions through a filesystem. toFsPath
@@ -186,16 +320,26 @@ func fsFileVersionReader(fs afero.Fs, toFsPath func(string) (string, bool)) file
 }
 
 func fsFileVersion(fs afero.Fs, path string) ([]uint64, bool) {
+	return fsPEVersion(fs, path, peFileVersion)
+}
+
+// fsProductVersion is fsFileVersion for the ProductVersion string.
+func fsProductVersion(fs afero.Fs, path string) (string, bool) {
+	return fsPEVersion(fs, path, peProductVersion)
+}
+
+func fsPEVersion[T any](fs afero.Fs, path string, read func(io.ReaderAt) (T, bool)) (T, bool) {
+	var zero T
 	fi, err := fs.Stat(path)
 	if err != nil || fi.IsDir() || fi.Size() > peMaxExecutableSize {
-		return nil, false
+		return zero, false
 	}
 	f, err := fs.Open(path)
 	if err != nil {
-		return nil, false
+		return zero, false
 	}
 	defer f.Close()
-	return peFileVersion(f)
+	return read(f)
 }
 
 // nativeWindowsPath is toFsPath for a filesystem rooted at the host's own

@@ -4,10 +4,12 @@
 package detector
 
 import (
+	"debug/pe"
 	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	win "go.mondoo.com/mql/providers/os/detector/windows"
@@ -134,9 +136,7 @@ func staticWindowsDetector(pf *inventory.Platform, conn shared.Connection) (bool
 	if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "EditionID"); err == nil {
 		current.EditionID = v.Value.String
 	}
-	if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "Architecture"); err == nil {
-		current.Architecture = v.Value.String
-	}
+	current.Architecture = staticWindowsArch(rh, conn.FileSystem())
 	if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "DisplayVersion"); err == nil {
 		current.DisplayVersion = v.Value.String
 	}
@@ -162,6 +162,49 @@ func staticWindowsDetector(pf *inventory.Platform, conn shared.Connection) (bool
 	}
 
 	return true, nil
+}
+
+// staticArchEnvKey is the machine environment key of the SYSTEM hive, relative
+// to the control set, that holds PROCESSOR_ARCHITECTURE.
+const staticArchEnvKey = "\\Control\\Session Manager\\Environment"
+
+// staticWindowsArch returns the architecture of an offline Windows system in the
+// spelling the live path reports ($env:PROCESSOR_ARCHITECTURE: AMD64, ARM64,
+// x86). It reads PROCESSOR_ARCHITECTURE from the SYSTEM hive and falls back to
+// the machine type in the PE header of ntoskrnl.exe. It returns an empty string
+// if neither is available.
+func staticWindowsArch(rh win.HiveValueReader, fs afero.Fs) string {
+	if v, err := rh.GetRegistryItemValue(registry.System, staticControlSet(rh)+staticArchEnvKey, "PROCESSOR_ARCHITECTURE"); err == nil && v.Value.String != "" {
+		return v.Value.String
+	}
+	return archFromPE(fs, "Windows/System32/ntoskrnl.exe")
+}
+
+// archFromPE maps the machine type of a PE file to the PROCESSOR_ARCHITECTURE
+// spelling. It returns an empty string for a missing file or an unknown machine.
+func archFromPE(fs afero.Fs, path string) string {
+	if fs == nil {
+		return ""
+	}
+	f, err := fs.Open(path)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+	pf, err := pe.NewFile(f)
+	if err != nil {
+		return ""
+	}
+	defer pf.Close()
+	switch pf.Machine {
+	case pe.IMAGE_FILE_MACHINE_AMD64:
+		return "AMD64"
+	case pe.IMAGE_FILE_MACHINE_ARM64:
+		return "ARM64"
+	case pe.IMAGE_FILE_MACHINE_I386:
+		return "x86"
+	}
+	return ""
 }
 
 // applyStaticHotpatch sets the hotpatch labels from loaded SOFTWARE and SYSTEM
