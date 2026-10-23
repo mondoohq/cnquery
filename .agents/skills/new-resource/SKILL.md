@@ -205,6 +205,21 @@ Once you have a target, run every new field against it and read the values, then
 
 After fixing a parser bug, ask which fixture now contains the triggering shape. If none does, the test suite is silent about the thing you just fixed.
 
+### Offline scans: compare with the local scan of the same host
+
+A field that reads a filesystem without running commands (the `fs` connection, a mounted snapshot, a disk image) has a ground truth one hop away: the local scan of the same machine. Run the same query both ways and diff the results, against a `main` build and a branch build (§4). Make the diff empty, or explain every line in the PR. On Windows the offline path reads the registry hives with the `regf` parser and PE version resources, and the local path asks PowerShell, WMI or COM, so they disagree in ways neither path shows alone:
+
+- `asset.arch` was empty offline: `PROCESSOR_ARCHITECTURE` lives in the SYSTEM hive (`<CurrentControlSet>\Control\Session Manager\Environment`), not in SOFTWARE.
+- .NET Framework was missing offline, and once found it reported `4.0.30319.0`: `clr.dll`'s fixed product version never changes, while the `ProductVersion` string carries the real build. The fixed *file* version happens to match, so a test against one host can't tell the two apart.
+- On Windows 11 ARM64, `Framework64\v4.0.30319\clr.dll` is an x64 (0x8664) binary, so only `ntoskrnl.exe` (0xaa64) gives the architecture.
+
+Two ways to get an offline copy:
+
+- **On the host, Windows scanner.** Create a VSS shadow copy, `mklink /d C:\x <ShadowCopy DeviceObject>\`, then `cd C:\` and `mql run fs --path x`. Absolute Windows paths fail as targets. Run it as SYSTEM (`az vm run-command` on Azure); over ssh the admin user was refused by DISM and Windows Update. A Server 2016 scanner can't load hives from a read-only copy, so use Server 2022 or later.
+- **Off the host, Linux or macOS scanner.** Copy `Windows/System32/config/{SOFTWARE,SYSTEM}` with their `.LOG1`/`.LOG2` files, plus the binaries the code reads, into a local directory tree laid out like the volume, then run `mql run fs --path <tree>`. Hives copied from a running system are dirty, and the newest changes live only in the logs.
+
+Keep the copied trees until the tests are written: they hold the measured values that AGENTS.md Step 3.7 asks for.
+
 ## 6. Before the PR
 
 ```bash

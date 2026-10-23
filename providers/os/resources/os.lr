@@ -16743,8 +16743,12 @@ private windows.update.config @defaults("catalogSource rebootPending") {
   lastDownloadSuccess time
   // Time of the last successful update install
   //
-  // Read from the Windows Update Agent when commands can run, otherwise from
-  // the registry.
+  // Read from the Windows Update Agent when commands can run. It includes
+  // installs by the Update Orchestrator (automatic updates and Settings) and
+  // excludes Microsoft Store app and driver installs. Null when Windows Update
+  // installed nothing since setup, which is the state of a host built from a
+  // fully patched image. Offline scans without command execution read the
+  // registry instead, which is usually empty on Windows 10 and later.
   lastInstallSuccess time
   // Whether a reboot is pending from a previous update
   rebootPending bool
