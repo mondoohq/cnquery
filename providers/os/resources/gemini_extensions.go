@@ -233,11 +233,19 @@ func qwenExtensionEnabled(afs *afero.Afero, configDir string) func(string) bool 
 	legacy := geminiEnablementRules(afs, configDir)
 	home := filepath.Dir(configDir)
 
+	// The store is keyed by an id per installed artifact. Entries are visited in
+	// key order so that two entries sharing a name give a stable answer.
+	keys := make([]string, 0, len(state.Extensions))
+	for k := range state.Extensions {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
 	return func(name string) bool {
 		enabled := true
 		var rules []string
-		for _, e := range state.Extensions {
-			if e.Name == name {
+		for _, k := range keys {
+			if e := state.Extensions[k]; e.Name == name {
 				enabled = e.DefaultActivation != "disabled"
 				rules = append(rules, e.LegacyPathRules...)
 			}

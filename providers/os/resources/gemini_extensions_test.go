@@ -110,6 +110,19 @@ func TestQwenExtensionDefaultActivation(t *testing.T) {
 	assert.True(t, enabled("unknown"))
 }
 
+// Two store entries with one name are visited in key order, so the answer
+// does not depend on map iteration: the last key's activation applies.
+func TestQwenExtensionDuplicateNameIsStable(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	writeTestFiles(t, fs, map[string]string{
+		"/home/alice/.qwen/extension-store/state.json": `{"extensions":{"aaa":{"name":"dup","defaultActivation":"enabled"},"bbb":{"name":"dup","defaultActivation":"disabled"}}}`,
+	})
+	for i := 0; i < 50; i++ {
+		enabled := qwenExtensionEnabled(&afero.Afero{Fs: fs}, "/home/alice/.qwen")
+		require.False(t, enabled("dup"))
+	}
+}
+
 func TestGeminiContextFileName(t *testing.T) {
 	assert.Equal(t, "GEMINI.md", geminiContextFileName(json.RawMessage(`"GEMINI.md"`)))
 	assert.Equal(t, "A.md,B.md", geminiContextFileName(json.RawMessage(`["A.md","B.md"]`)))
