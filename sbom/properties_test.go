@@ -108,7 +108,7 @@ func TestFormatRegistry(t *testing.T) {
 	for _, name := range []string{
 		FormatJson, "cnquery-json", "cnspec-json",
 		FormatCycloneDxJSON, FormatCycloneDxXML,
-		FormatSpdxJSON, FormatSpdxTagValue,
+		FormatSpdxJSON, FormatSpdxTagValue, FormatSpdx3JSON,
 		FormatList, "list",
 	} {
 		assert.True(t, IsSupportedFormat(name), "%q must be supported", name)
@@ -124,7 +124,7 @@ func TestFormatRegistry(t *testing.T) {
 	advertised := strings.Split(AllFormats(), ", ")
 	assert.ElementsMatch(t, []string{
 		FormatJson, FormatCycloneDxJSON, FormatCycloneDxXML,
-		FormatSpdxJSON, FormatSpdxTagValue, FormatList,
+		FormatSpdxJSON, FormatSpdxTagValue, FormatSpdx3JSON, FormatList,
 	}, advertised, "the advertised list must be exactly the documented formats")
 
 	// aliases are accepted but not advertised
