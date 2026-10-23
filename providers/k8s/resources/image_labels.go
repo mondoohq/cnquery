@@ -1,4 +1,4 @@
-// Copyright Mondoo, Inc. 2026
+// Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
 package resources
@@ -104,7 +104,13 @@ func encodeImageLabelVerdicts(verdicts map[string]imageLabelVerdict) string {
 		return "{}"
 	}
 	raw, err := json.Marshal(verdicts)
-	if err != nil || len(raw) > imageLabelVerdictsMaxBytes {
+	if err != nil {
+		// Unreachable for a map of strings; still, a marshal failure is a bug,
+		// not a capacity problem, so say so before degrading to the sentinel.
+		log.Error().Err(err).Msg("encoding container image label verdicts")
+		return imageLabelVerdictsSentinel
+	}
+	if len(raw) > imageLabelVerdictsMaxBytes {
 		return imageLabelVerdictsSentinel
 	}
 	return string(raw)
