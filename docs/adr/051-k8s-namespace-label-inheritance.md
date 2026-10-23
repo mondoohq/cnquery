@@ -95,20 +95,35 @@ namespace it is about to discover) and the legacy per-namespace loop in
 scan whose objects reference a namespace the manifest never declares sees the
 synthesized bare namespace and inherits nothing, without error.
 
-### Container images (planned, Phase 3)
+### Container images
 
 An image is one asset per digest, shared by every namespace, cluster and
 registry that runs or scans it, and routing places an asset in exactly one
-space, so a single-valued team label on an image is a heuristic. Images are
-therefore excluded from this change and get their own rule in a follow-up:
+space, so a single-valued team label on an image is a heuristic. Images get
+their own rule, a *verdict* folded once over the whole cluster
+(`providers/k8s/resources/image_labels.go`):
 
 - Per inherited key, over the in-scope namespaces that run the image and carry
   the key: all agree → the image gets the value; they disagree → the key stays
   unset and the image gets the marker label
-  `k8s.mondoo.com/namespace-label-conflict` naming the conflicting keys, so a
-  routing rule can send shared images to a shared space ahead of the catch-all.
-- The stage-1 cluster stage builds the set of ambiguous images once, from pod
-  status, and hands it to every namespace stage.
+  `k8s.mondoo.com/namespace-label-conflict` (`LabelNamespaceLabelConflict`)
+  naming the conflicting keys, sorted and comma-separated, so a routing rule
+  can send shared images to a shared space ahead of the catch-all. Namespaces
+  without the key do not vote. "Runs the image" uses the resolution image
+  discovery uses (status image id first, spec image as fallback), the same pod
+  label selector and the same image filters.
+- The cluster stage folds the verdicts from a single pod list read through the
+  connection, without pull-secret lookups, and hands each namespace stage the
+  verdicts for the images that namespace runs, as JSON in the internal option
+  `inherit-namespace-labels-verdicts`. Every stage therefore stamps the same
+  answer whichever namespace the client connects first; the client keeps only
+  the first copy of an image it sees, so a per-stage judgement would depend on
+  ordering.
+- A namespace payload above 256 KiB is replaced by the sentinel `*`: that stage
+  labels no image and logs a warning, rather than labeling some wrongly. A
+  namespace stage started directly (one literal namespace, no cluster stage)
+  folds over its own namespace alone. Legacy single-pass discovery folds
+  in-process.
 - The rule is judged within one cluster scan. Under org routing that is sound,
   because the value selects the space and disagreeing clusters never share an
   asset. In a single space fed by several clusters the shared image flips
@@ -127,7 +142,11 @@ therefore excluded from this change and get their own rule in a follow-up:
   cannot tell an inherited value from an own one, which is the intended
   reading.
 - `discoverNamespaces` now returns each namespace's own labels alongside the
-  assets; the cluster stage ignores them.
+  assets; both the legacy path and the cluster stage fold image verdicts from
+  them.
+- With inherited labels set and container images targeted, the cluster stage
+  lists every pod once, as legacy discovery always did. Without the option the
+  cluster stage is unchanged.
 - Console and server parity for the setting (so it can be given on first
   connection and managed from the app) is a follow-up; until then the feature
   is configured through the operator CR or `cnspec scan k8s`.
@@ -138,7 +157,7 @@ therefore excluded from this change and get their own rule in a follow-up:
 
 ```
 cd providers/k8s
-go test ./resources -run 'TestInherit|TestDiscover' -count=1
+go test ./resources -run 'TestInherit|TestDiscover|TestImageLabel|TestClusterImages|TestPodImageRefs' -count=1
 go test ./provider -run TestParseCLI -count=1
 
 cnspec scan k8s --discover pods --inherit-namespace-labels 'my.company.com/team'
