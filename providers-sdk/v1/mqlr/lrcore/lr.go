@@ -533,6 +533,9 @@ func validateDocCommentStructure(comments []CommentToken, context string) error 
 
 // Parse the input leise string to an AST
 func Parse(input string) (*LR, error) {
+	// A checkout with CRLF line endings (git on Windows) would otherwise leave a
+	// "\r" in every comment, so a blank `//` line no longer reads as blank.
+	input = strings.ReplaceAll(input, "\r\n", "\n")
 	res := &LR{}
 
 	var lexer lrLexer

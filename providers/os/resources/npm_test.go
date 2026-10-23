@@ -611,3 +611,9 @@ func TestCollectNpmPackagesInPaths_suseLib64BundledNpm(t *testing.T) {
 	require.NoError(t, err)
 	assert.ElementsMatch(t, []string{"npm@10.9.8", "npm@11.16.0"}, packageNames(direct))
 }
+
+func TestDefaultNpmPaths_windowsSystemProfile(t *testing.T) {
+	// npm install -g run as LocalSystem installs into the SYSTEM profile,
+	// which is not under C:\Users
+	assert.Contains(t, defaultNpmPaths, `C:\Windows\System32\config\systemprofile\AppData\Roaming\npm`)
+}
