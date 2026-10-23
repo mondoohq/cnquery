@@ -421,8 +421,21 @@ func (r *mqlQwenCode) id() (string, error) {
 }
 
 func (r *mqlQwenCode) skills() ([]interface{}, error) {
-	return agentSkills(r.MqlRuntime, "qwen.code.skill", r.ConfigPath.Data, defaultQwenCodeConfigDir,
+	dirs, err := resolvePerUserDirs(r.MqlRuntime, r.ConfigPath.Data, defaultQwenCodeConfigDir,
 		filepath.Join(defaultQwenCodeConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
+	if err != nil {
+		return nil, err
+	}
+	exts := r.GetExtensions()
+	if exts.Error != nil {
+		return nil, exts.Error
+	}
+	for _, e := range exts.Data {
+		if ext := e.(*mqlQwenCodeExtension); ext.Enabled.Data {
+			dirs = append(dirs, ext.ext.skillsDir)
+		}
+	}
+	return readSkillsFromDirs(r.MqlRuntime, dirs, "qwen.code.skill")
 }
 
 func (r *mqlQwenCodeSkill) id() (string, error)     { return "qwen.code.skill/" + r.Source.Data, nil }

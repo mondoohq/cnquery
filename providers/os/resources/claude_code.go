@@ -33,6 +33,10 @@ type mqlClaudeCodeInternal struct {
 	backupOnce  sync.Once
 	backupState *claudeBackupState
 	backupErr   error
+
+	pluginsOnce   sync.Once
+	pluginRecords []claudePluginRecord
+	pluginsErr    error
 }
 
 // mqlClaudeCodeProjectInternal caches the per-project model usage read from
@@ -139,58 +143,23 @@ func (r *mqlClaudeCode) enabledPlugins() ([]interface{}, error) {
 	return result, nil
 }
 
-func (r *mqlClaudeCode) plugins() ([]interface{}, error) {
-	afs := r.afs()
-
-	var installedPlugins struct {
-		Version int                               `json:"version"`
-		Plugins map[string][]installedPluginEntry `json:"plugins"`
-	}
-	err := readJSONFileAfero(afs, r.configDir(), "plugins/installed_plugins.json", &installedPlugins)
+func (r *mqlClaudeCode) skills() ([]interface{}, error) {
+	dirs, err := resolvePerUserDirs(r.MqlRuntime, r.configDir(), defaultClaudeCodeConfigDir,
+		filepath.Join(defaultClaudeCodeConfigDir, "skills"), filepath.Join(r.configDir(), "skills"))
 	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
 		return nil, err
 	}
 
-	var settings struct {
-		EnabledPlugins map[string]bool `json:"enabledPlugins"`
+	// Skills of enabled plugins are available to Claude Code as well.
+	records, err := r.enabledPluginRecords()
+	if err != nil {
+		return nil, err
 	}
-	_ = readJSONFileAfero(afs, r.configDir(), "settings.json", &settings)
-
-	var result []interface{}
-	for name, entries := range installedPlugins.Plugins {
-		for _, entry := range entries {
-			enabled := false
-			if settings.EnabledPlugins != nil {
-				enabled = settings.EnabledPlugins[name]
-			}
-
-			pluginID := "claude.code.plugin/" + name + "/" + entry.Scope
-			res, err := NewResource(r.MqlRuntime, "claude.code.plugin", map[string]*llx.RawData{
-				"__id":         llx.StringData(pluginID),
-				"name":         llx.StringData(name),
-				"version":      llx.StringData(entry.Version),
-				"scope":        llx.StringData(entry.Scope),
-				"installPath":  llx.StringData(entry.InstallPath),
-				"installedAt":  llx.StringData(entry.InstalledAt),
-				"lastUpdated":  llx.StringData(entry.LastUpdated),
-				"gitCommitSha": llx.StringData(entry.GitCommitSha),
-				"enabled":      llx.BoolData(enabled),
-			})
-			if err != nil {
-				return nil, err
-			}
-			result = append(result, res)
-		}
+	afs := r.afs()
+	for _, rec := range records {
+		dirs = append(dirs, readAgentPlugin(afs, rec.entry.InstallPath, claudePluginRootVar).skillsDirs...)
 	}
-	return result, nil
-}
-
-func (r *mqlClaudeCode) skills() ([]interface{}, error) {
-	return agentSkills(r.MqlRuntime, "claude.code.skill", r.configDir(), defaultClaudeCodeConfigDir,
-		filepath.Join(defaultClaudeCodeConfigDir, "skills"), filepath.Join(r.configDir(), "skills"))
+	return readSkillsFromDirs(r.MqlRuntime, dirs, "claude.code.skill")
 }
 
 func (r *mqlClaudeCode) projects() ([]interface{}, error) {
@@ -298,13 +267,38 @@ func (r *mqlClaudeCode) mcpServers() ([]interface{}, error) {
 			"args":        strSliceToArrayData(srv.Args),
 			"url":         llx.StringData(srv.URL),
 			"hasEnv":      llx.BoolData(len(srv.Env) > 0),
+			"hasHeaders":  llx.BoolData(len(srv.Headers) > 0),
 			"needsAuth":   llx.BoolData(needsAuth),
 			"lastChecked": llx.StringData(lastChecked),
+			"plugin":      llx.StringData(""),
 		})
 		if err != nil {
 			return nil, err
 		}
 		result = append(result, res)
+	}
+
+	// Servers declared by enabled plugins. A plugin installed at several scopes
+	// is reported once per project it applies to.
+	records, err := r.enabledPluginRecords()
+	if err != nil {
+		return nil, err
+	}
+	afs := r.afs()
+	seen := map[string]struct{}{}
+	for _, rec := range records {
+		key := rec.name + "\x00" + rec.entry.ProjectPath
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		for _, s := range readAgentPlugin(afs, rec.entry.InstallPath, claudePluginRootVar).mcpServers {
+			res, err := claudePluginMcpServerResource(r.MqlRuntime, rec.name, rec.entry.ProjectPath, s)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, res)
+		}
 	}
 	return result, nil
 }
@@ -370,6 +364,7 @@ type installedPluginEntry struct {
 	InstalledAt  string `json:"installedAt"`
 	LastUpdated  string `json:"lastUpdated"`
 	GitCommitSha string `json:"gitCommitSha"`
+	ProjectPath  string `json:"projectPath"`
 }
 
 type claudeBackupState struct {
@@ -448,6 +443,7 @@ type claudeMcpServerEntry struct {
 	Args    []string          `json:"args"`
 	URL     string            `json:"url"`
 	Env     map[string]string `json:"env"`
+	Headers map[string]string `json:"headers"`
 }
 
 // claudeScopedMcpServer is one MCP server together with the project it is
@@ -660,10 +656,6 @@ func findLatestBackupAfero(afs *afero.Afero, configDir string) (string, error) {
 
 // Stub ID methods for child resources (they use __id set during creation)
 
-func (r *mqlClaudeCodePlugin) id() (string, error) {
-	return "claude.code.plugin/" + r.Name.Data + "/" + r.Scope.Data, nil
-}
-
 func (r *mqlClaudeCodeSkill) id() (string, error) {
 	return "claude.code.skill/" + r.Source.Data, nil
 }
@@ -681,6 +673,9 @@ func (r *mqlClaudeCodeProject) id() (string, error) {
 }
 
 func (r *mqlClaudeCodeMcpServer) id() (string, error) {
+	if r.Plugin.Data != "" {
+		return claudeMcpServerID(r.Project.Data, "plugin:"+r.Plugin.Data+":"+r.Name.Data), nil
+	}
 	return claudeMcpServerID(r.Project.Data, r.Name.Data), nil
 }
 

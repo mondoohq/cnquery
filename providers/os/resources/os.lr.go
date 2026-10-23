@@ -682,6 +682,7 @@ const (
 	ResourceOllamaConfigIntegration                        string = "ollama.config.integration"
 	ResourceClaudeCode                                     string = "claude.code"
 	ResourceClaudeCodePlugin                               string = "claude.code.plugin"
+	ResourceClaudeCodeMarketplace                          string = "claude.code.marketplace"
 	ResourceClaudeCodeSkill                                string = "claude.code.skill"
 	ResourceClaudeCodeProject                              string = "claude.code.project"
 	ResourceClaudeCodeModelUsage                           string = "claude.code.modelUsage"
@@ -689,6 +690,7 @@ const (
 	ResourceClaudeCodeMcpServer                            string = "claude.code.mcpServer"
 	ResourceClaudeDesktop                                  string = "claude.desktop"
 	ResourceClaudeDesktopMcpServer                         string = "claude.desktop.mcpServer"
+	ResourceClaudeDesktopExtension                         string = "claude.desktop.extension"
 	ResourceOpenaiCodex                                    string = "openai.codex"
 	ResourceOpenaiCodexPlugin                              string = "openai.codex.plugin"
 	ResourceOpenaiCodexSkill                               string = "openai.codex.skill"
@@ -704,11 +706,14 @@ const (
 	ResourceGithubCopilotAccount                           string = "github.copilot.account"
 	ResourceGithubCopilotMcpServer                         string = "github.copilot.mcpServer"
 	ResourceGithubCopilotSkill                             string = "github.copilot.skill"
+	ResourceGithubCopilotPlugin                            string = "github.copilot.plugin"
 	ResourceGoose                                          string = "goose"
 	ResourceGooseExtension                                 string = "goose.extension"
+	ResourceGooseMcpServer                                 string = "goose.mcpServer"
 	ResourceGooseSkill                                     string = "goose.skill"
 	ResourceGemini                                         string = "gemini"
 	ResourceGeminiMcpServer                                string = "gemini.mcpServer"
+	ResourceGeminiExtension                                string = "gemini.extension"
 	ResourceGeminiSkill                                    string = "gemini.skill"
 	ResourceWindsurf                                       string = "windsurf"
 	ResourceWindsurfRepo                                   string = "windsurf.repo"
@@ -725,6 +730,7 @@ const (
 	ResourceRoo                                            string = "roo"
 	ResourceRooSkill                                       string = "roo.skill"
 	ResourceCline                                          string = "cline"
+	ResourceClineMcpServer                                 string = "cline.mcpServer"
 	ResourceClineSkill                                     string = "cline.skill"
 	ResourceKiro                                           string = "kiro"
 	ResourceKiroSkill                                      string = "kiro.skill"
@@ -733,10 +739,12 @@ const (
 	ResourceTrae                                           string = "trae"
 	ResourceTraeSkill                                      string = "trae.skill"
 	ResourceOpencode                                       string = "opencode"
+	ResourceOpencodeMcpServer                              string = "opencode.mcpServer"
 	ResourceOpencodeSkill                                  string = "opencode.skill"
 	ResourcePi                                             string = "pi"
 	ResourcePiSkill                                        string = "pi.skill"
 	ResourceMistralVibe                                    string = "mistral.vibe"
+	ResourceMistralVibeMcpServer                           string = "mistral.vibe.mcpServer"
 	ResourceMistralVibeSkill                               string = "mistral.vibe.skill"
 	ResourceAntigravity                                    string = "antigravity"
 	ResourceAntigravitySkill                               string = "antigravity.skill"
@@ -750,14 +758,19 @@ const (
 	ResourceJunie                                          string = "junie"
 	ResourceJunieSkill                                     string = "junie.skill"
 	ResourceAugment                                        string = "augment"
+	ResourceAugmentMcpServer                               string = "augment.mcpServer"
 	ResourceAugmentSkill                                   string = "augment.skill"
 	ResourceWarp                                           string = "warp"
 	ResourceWarpSkill                                      string = "warp.skill"
 	ResourceKilocode                                       string = "kilocode"
+	ResourceKilocodeMcpServer                              string = "kilocode.mcpServer"
 	ResourceKilocodeSkill                                  string = "kilocode.skill"
 	ResourceOpenhands                                      string = "openhands"
+	ResourceOpenhandsMcpServer                             string = "openhands.mcpServer"
 	ResourceOpenhandsSkill                                 string = "openhands.skill"
 	ResourceQwenCode                                       string = "qwen.code"
+	ResourceQwenCodeMcpServer                              string = "qwen.code.mcpServer"
+	ResourceQwenCodeExtension                              string = "qwen.code.extension"
 	ResourceQwenCodeSkill                                  string = "qwen.code.skill"
 	ResourceDevinDesktop                                   string = "devin.desktop"
 	ResourceDevinDesktopSkill                              string = "devin.desktop.skill"
@@ -3467,6 +3480,10 @@ func init() {
 			// to override args, implement: initClaudeCodePlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createClaudeCodePlugin,
 		},
+		"claude.code.marketplace": {
+			// to override args, implement: initClaudeCodeMarketplace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createClaudeCodeMarketplace,
+		},
 		"claude.code.skill": {
 			// to override args, implement: initClaudeCodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createClaudeCodeSkill,
@@ -3494,6 +3511,10 @@ func init() {
 		"claude.desktop.mcpServer": {
 			// to override args, implement: initClaudeDesktopMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createClaudeDesktopMcpServer,
+		},
+		"claude.desktop.extension": {
+			// to override args, implement: initClaudeDesktopExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createClaudeDesktopExtension,
 		},
 		"openai.codex": {
 			Init:   initOpenaiCodex,
@@ -3555,6 +3576,10 @@ func init() {
 			// to override args, implement: initGithubCopilotSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGithubCopilotSkill,
 		},
+		"github.copilot.plugin": {
+			// to override args, implement: initGithubCopilotPlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubCopilotPlugin,
+		},
 		"goose": {
 			Init:   initGoose,
 			Create: createGoose,
@@ -3562,6 +3587,10 @@ func init() {
 		"goose.extension": {
 			// to override args, implement: initGooseExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGooseExtension,
+		},
+		"goose.mcpServer": {
+			// to override args, implement: initGooseMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGooseMcpServer,
 		},
 		"goose.skill": {
 			// to override args, implement: initGooseSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3574,6 +3603,10 @@ func init() {
 		"gemini.mcpServer": {
 			// to override args, implement: initGeminiMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGeminiMcpServer,
+		},
+		"gemini.extension": {
+			// to override args, implement: initGeminiExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGeminiExtension,
 		},
 		"gemini.skill": {
 			// to override args, implement: initGeminiSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3639,6 +3672,10 @@ func init() {
 			Init:   initCline,
 			Create: createCline,
 		},
+		"cline.mcpServer": {
+			// to override args, implement: initClineMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createClineMcpServer,
+		},
 		"cline.skill": {
 			// to override args, implement: initClineSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createClineSkill,
@@ -3671,6 +3708,10 @@ func init() {
 			Init:   initOpencode,
 			Create: createOpencode,
 		},
+		"opencode.mcpServer": {
+			// to override args, implement: initOpencodeMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpencodeMcpServer,
+		},
 		"opencode.skill": {
 			// to override args, implement: initOpencodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOpencodeSkill,
@@ -3686,6 +3727,10 @@ func init() {
 		"mistral.vibe": {
 			Init:   initMistralVibe,
 			Create: createMistralVibe,
+		},
+		"mistral.vibe.mcpServer": {
+			// to override args, implement: initMistralVibeMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMistralVibeMcpServer,
 		},
 		"mistral.vibe.skill": {
 			// to override args, implement: initMistralVibeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3739,6 +3784,10 @@ func init() {
 			Init:   initAugment,
 			Create: createAugment,
 		},
+		"augment.mcpServer": {
+			// to override args, implement: initAugmentMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAugmentMcpServer,
+		},
 		"augment.skill": {
 			// to override args, implement: initAugmentSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAugmentSkill,
@@ -3755,6 +3804,10 @@ func init() {
 			Init:   initKilocode,
 			Create: createKilocode,
 		},
+		"kilocode.mcpServer": {
+			// to override args, implement: initKilocodeMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKilocodeMcpServer,
+		},
 		"kilocode.skill": {
 			// to override args, implement: initKilocodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createKilocodeSkill,
@@ -3763,6 +3816,10 @@ func init() {
 			Init:   initOpenhands,
 			Create: createOpenhands,
 		},
+		"openhands.mcpServer": {
+			// to override args, implement: initOpenhandsMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenhandsMcpServer,
+		},
 		"openhands.skill": {
 			// to override args, implement: initOpenhandsSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOpenhandsSkill,
@@ -3770,6 +3827,14 @@ func init() {
 		"qwen.code": {
 			Init:   initQwenCode,
 			Create: createQwenCode,
+		},
+		"qwen.code.mcpServer": {
+			// to override args, implement: initQwenCodeMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createQwenCodeMcpServer,
+		},
+		"qwen.code.extension": {
+			// to override args, implement: initQwenCodeExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createQwenCodeExtension,
 		},
 		"qwen.code.skill": {
 			// to override args, implement: initQwenCodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -20177,6 +20242,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"claude.code.plugins": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCode).GetPlugins()).ToDataRes(types.Array(types.Resource("claude.code.plugin")))
 	},
+	"claude.code.marketplaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetMarketplaces()).ToDataRes(types.Array(types.Resource("claude.code.marketplace")))
+	},
 	"claude.code.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCode).GetSkills()).ToDataRes(types.Array(types.Resource("claude.code.skill")))
 	},
@@ -20218,6 +20286,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"claude.code.plugin.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCodePlugin).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"claude.code.plugin.projectPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetProjectPath()).ToDataRes(types.String)
+	},
+	"claude.code.plugin.marketplace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetMarketplace()).ToDataRes(types.Resource("claude.code.marketplace"))
+	},
+	"claude.code.plugin.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetDescription()).ToDataRes(types.String)
+	},
+	"claude.code.plugin.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetAuthor()).ToDataRes(types.String)
+	},
+	"claude.code.plugin.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetRepository()).ToDataRes(types.String)
+	},
+	"claude.code.plugin.homepage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetHomepage()).ToDataRes(types.String)
+	},
+	"claude.code.plugin.license": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetLicense()).ToDataRes(types.String)
+	},
+	"claude.code.plugin.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetSkills()).ToDataRes(types.Array(types.Resource("claude.code.skill")))
+	},
+	"claude.code.plugin.commands": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetCommands()).ToDataRes(types.Array(types.String))
+	},
+	"claude.code.plugin.agents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetAgents()).ToDataRes(types.Array(types.String))
+	},
+	"claude.code.plugin.hasHooks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetHasHooks()).ToDataRes(types.Bool)
+	},
+	"claude.code.plugin.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetMcpServers()).ToDataRes(types.Array(types.Resource("claude.code.mcpServer")))
+	},
+	"claude.code.marketplace.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeMarketplace).GetName()).ToDataRes(types.String)
+	},
+	"claude.code.marketplace.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeMarketplace).GetSourceType()).ToDataRes(types.String)
+	},
+	"claude.code.marketplace.repo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeMarketplace).GetRepo()).ToDataRes(types.String)
+	},
+	"claude.code.marketplace.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeMarketplace).GetUrl()).ToDataRes(types.String)
+	},
+	"claude.code.marketplace.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeMarketplace).GetPath()).ToDataRes(types.String)
+	},
+	"claude.code.marketplace.installLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeMarketplace).GetInstallLocation()).ToDataRes(types.String)
+	},
+	"claude.code.marketplace.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeMarketplace).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"claude.code.marketplace.plugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeMarketplace).GetPlugins()).ToDataRes(types.Array(types.Resource("claude.code.plugin")))
 	},
 	"claude.code.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCodeSkill).GetName()).ToDataRes(types.String)
@@ -20318,6 +20446,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"claude.code.mcpServer.lastChecked": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCodeMcpServer).GetLastChecked()).ToDataRes(types.String)
 	},
+	"claude.code.mcpServer.hasHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeMcpServer).GetHasHeaders()).ToDataRes(types.Bool)
+	},
+	"claude.code.mcpServer.plugin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeMcpServer).GetPlugin()).ToDataRes(types.String)
+	},
 	"claude.code.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCodeMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
 	},
@@ -20332,6 +20466,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"claude.desktop.mcpServers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeDesktop).GetMcpServers()).ToDataRes(types.Array(types.Resource("claude.desktop.mcpServer")))
+	},
+	"claude.desktop.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktop).GetExtensions()).ToDataRes(types.Array(types.Resource("claude.desktop.extension")))
 	},
 	"claude.desktop.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeDesktopMcpServer).GetName()).ToDataRes(types.String)
@@ -20351,8 +20488,56 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"claude.desktop.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeDesktopMcpServer).GetHasEnv()).ToDataRes(types.Bool)
 	},
+	"claude.desktop.mcpServer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopMcpServer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"claude.desktop.mcpServer.extension": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopMcpServer).GetExtension()).ToDataRes(types.Resource("claude.desktop.extension"))
+	},
 	"claude.desktop.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeDesktopMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
+	},
+	"claude.desktop.extension.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopExtension).GetId()).ToDataRes(types.String)
+	},
+	"claude.desktop.extension.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopExtension).GetName()).ToDataRes(types.String)
+	},
+	"claude.desktop.extension.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopExtension).GetDisplayName()).ToDataRes(types.String)
+	},
+	"claude.desktop.extension.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopExtension).GetVersion()).ToDataRes(types.String)
+	},
+	"claude.desktop.extension.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopExtension).GetDescription()).ToDataRes(types.String)
+	},
+	"claude.desktop.extension.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopExtension).GetAuthor()).ToDataRes(types.String)
+	},
+	"claude.desktop.extension.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopExtension).GetRepository()).ToDataRes(types.String)
+	},
+	"claude.desktop.extension.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopExtension).GetSource()).ToDataRes(types.String)
+	},
+	"claude.desktop.extension.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopExtension).GetPath()).ToDataRes(types.String)
+	},
+	"claude.desktop.extension.installedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopExtension).GetInstalledAt()).ToDataRes(types.Time)
+	},
+	"claude.desktop.extension.signatureStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopExtension).GetSignatureStatus()).ToDataRes(types.String)
+	},
+	"claude.desktop.extension.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopExtension).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"claude.desktop.extension.tools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopExtension).GetTools()).ToDataRes(types.Array(types.String))
+	},
+	"claude.desktop.extension.mcpServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeDesktopExtension).GetMcpServer()).ToDataRes(types.Resource("claude.desktop.mcpServer"))
 	},
 	"openai.codex.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodex).GetConfigPath()).ToDataRes(types.String)
@@ -20606,6 +20791,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.copilot.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCopilot).GetSkills()).ToDataRes(types.Array(types.Resource("github.copilot.skill")))
 	},
+	"github.copilot.plugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilot).GetPlugins()).ToDataRes(types.Array(types.Resource("github.copilot.plugin")))
+	},
 	"github.copilot.account.user": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCopilotAccount).GetUser()).ToDataRes(types.String)
 	},
@@ -20629,6 +20817,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.copilot.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCopilotMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"github.copilot.mcpServer.hasHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotMcpServer).GetHasHeaders()).ToDataRes(types.Bool)
+	},
+	"github.copilot.mcpServer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotMcpServer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"github.copilot.mcpServer.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotMcpServer).GetSource()).ToDataRes(types.String)
+	},
+	"github.copilot.mcpServer.plugin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotMcpServer).GetPlugin()).ToDataRes(types.Resource("github.copilot.plugin"))
 	},
 	"github.copilot.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCopilotMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
@@ -20657,6 +20857,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.copilot.skill.purl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCopilotSkill).GetPurl()).ToDataRes(types.String)
 	},
+	"github.copilot.plugin.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotPlugin).GetName()).ToDataRes(types.String)
+	},
+	"github.copilot.plugin.marketplace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotPlugin).GetMarketplace()).ToDataRes(types.String)
+	},
+	"github.copilot.plugin.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotPlugin).GetVersion()).ToDataRes(types.String)
+	},
+	"github.copilot.plugin.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotPlugin).GetPath()).ToDataRes(types.String)
+	},
+	"github.copilot.plugin.installedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotPlugin).GetInstalledAt()).ToDataRes(types.Time)
+	},
+	"github.copilot.plugin.sourceSha": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotPlugin).GetSourceSha()).ToDataRes(types.String)
+	},
+	"github.copilot.plugin.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotPlugin).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"github.copilot.plugin.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotPlugin).GetDescription()).ToDataRes(types.String)
+	},
+	"github.copilot.plugin.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotPlugin).GetAuthor()).ToDataRes(types.String)
+	},
+	"github.copilot.plugin.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotPlugin).GetRepository()).ToDataRes(types.String)
+	},
+	"github.copilot.plugin.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotPlugin).GetSkills()).ToDataRes(types.Array(types.Resource("github.copilot.skill")))
+	},
+	"github.copilot.plugin.agents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotPlugin).GetAgents()).ToDataRes(types.Array(types.String))
+	},
+	"github.copilot.plugin.hasHooks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotPlugin).GetHasHooks()).ToDataRes(types.Bool)
+	},
+	"github.copilot.plugin.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotPlugin).GetMcpServers()).ToDataRes(types.Array(types.Resource("github.copilot.mcpServer")))
+	},
 	"goose.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoose).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -20678,6 +20920,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"goose.extensions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoose).GetExtensions()).ToDataRes(types.Array(types.Resource("goose.extension")))
 	},
+	"goose.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoose).GetMcpServers()).ToDataRes(types.Array(types.Resource("goose.mcpServer")))
+	},
 	"goose.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoose).GetSkills()).ToDataRes(types.Array(types.Resource("goose.skill")))
 	},
@@ -20698,6 +20943,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"goose.extension.timeout": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGooseExtension).GetTimeout()).ToDataRes(types.Int)
+	},
+	"goose.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseMcpServer).GetName()).ToDataRes(types.String)
+	},
+	"goose.mcpServer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseMcpServer).GetType()).ToDataRes(types.String)
+	},
+	"goose.mcpServer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseMcpServer).GetCommand()).ToDataRes(types.String)
+	},
+	"goose.mcpServer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseMcpServer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"goose.mcpServer.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseMcpServer).GetUrl()).ToDataRes(types.String)
+	},
+	"goose.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"goose.mcpServer.hasHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseMcpServer).GetHasHeaders()).ToDataRes(types.Bool)
+	},
+	"goose.mcpServer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseMcpServer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"goose.mcpServer.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseMcpServer).GetSource()).ToDataRes(types.String)
+	},
+	"goose.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
 	},
 	"goose.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGooseSkill).GetName()).ToDataRes(types.String)
@@ -20744,6 +21019,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gemini.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGemini).GetSkills()).ToDataRes(types.Array(types.Resource("gemini.skill")))
 	},
+	"gemini.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGemini).GetExtensions()).ToDataRes(types.Array(types.Resource("gemini.extension")))
+	},
 	"gemini.model": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGemini).GetModel()).ToDataRes(types.String)
 	},
@@ -20765,8 +21043,50 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gemini.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGeminiMcpServer).GetHasEnv()).ToDataRes(types.Bool)
 	},
+	"gemini.mcpServer.hasHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiMcpServer).GetHasHeaders()).ToDataRes(types.Bool)
+	},
+	"gemini.mcpServer.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiMcpServer).GetSource()).ToDataRes(types.String)
+	},
+	"gemini.mcpServer.extension": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiMcpServer).GetExtension()).ToDataRes(types.Resource("gemini.extension"))
+	},
 	"gemini.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGeminiMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
+	},
+	"gemini.extension.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiExtension).GetName()).ToDataRes(types.String)
+	},
+	"gemini.extension.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiExtension).GetVersion()).ToDataRes(types.String)
+	},
+	"gemini.extension.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiExtension).GetPath()).ToDataRes(types.String)
+	},
+	"gemini.extension.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiExtension).GetSource()).ToDataRes(types.String)
+	},
+	"gemini.extension.installType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiExtension).GetInstallType()).ToDataRes(types.String)
+	},
+	"gemini.extension.releaseTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiExtension).GetReleaseTag()).ToDataRes(types.String)
+	},
+	"gemini.extension.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiExtension).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"gemini.extension.contextFileName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiExtension).GetContextFileName()).ToDataRes(types.String)
+	},
+	"gemini.extension.commands": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiExtension).GetCommands()).ToDataRes(types.Array(types.String))
+	},
+	"gemini.extension.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiExtension).GetMcpServers()).ToDataRes(types.Array(types.Resource("gemini.mcpServer")))
+	},
+	"gemini.extension.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiExtension).GetSkills()).ToDataRes(types.Array(types.Resource("gemini.skill")))
 	},
 	"gemini.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGeminiSkill).GetName()).ToDataRes(types.String)
@@ -21068,6 +21388,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cline.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCline).GetSkills()).ToDataRes(types.Array(types.Resource("cline.skill")))
 	},
+	"cline.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCline).GetMcpServers()).ToDataRes(types.Array(types.Resource("cline.mcpServer")))
+	},
+	"cline.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClineMcpServer).GetName()).ToDataRes(types.String)
+	},
+	"cline.mcpServer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClineMcpServer).GetType()).ToDataRes(types.String)
+	},
+	"cline.mcpServer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClineMcpServer).GetCommand()).ToDataRes(types.String)
+	},
+	"cline.mcpServer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClineMcpServer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"cline.mcpServer.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClineMcpServer).GetUrl()).ToDataRes(types.String)
+	},
+	"cline.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClineMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"cline.mcpServer.hasHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClineMcpServer).GetHasHeaders()).ToDataRes(types.Bool)
+	},
+	"cline.mcpServer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClineMcpServer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"cline.mcpServer.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClineMcpServer).GetSource()).ToDataRes(types.String)
+	},
+	"cline.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClineMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
+	},
 	"cline.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClineSkill).GetName()).ToDataRes(types.String)
 	},
@@ -21212,6 +21565,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"opencode.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpencode).GetSkills()).ToDataRes(types.Array(types.Resource("opencode.skill")))
 	},
+	"opencode.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpencode).GetMcpServers()).ToDataRes(types.Array(types.Resource("opencode.mcpServer")))
+	},
+	"opencode.plugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpencode).GetPlugins()).ToDataRes(types.Array(types.String))
+	},
+	"opencode.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpencodeMcpServer).GetName()).ToDataRes(types.String)
+	},
+	"opencode.mcpServer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpencodeMcpServer).GetType()).ToDataRes(types.String)
+	},
+	"opencode.mcpServer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpencodeMcpServer).GetCommand()).ToDataRes(types.String)
+	},
+	"opencode.mcpServer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpencodeMcpServer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"opencode.mcpServer.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpencodeMcpServer).GetUrl()).ToDataRes(types.String)
+	},
+	"opencode.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpencodeMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"opencode.mcpServer.hasHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpencodeMcpServer).GetHasHeaders()).ToDataRes(types.Bool)
+	},
+	"opencode.mcpServer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpencodeMcpServer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"opencode.mcpServer.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpencodeMcpServer).GetSource()).ToDataRes(types.String)
+	},
+	"opencode.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpencodeMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
+	},
 	"opencode.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpencodeSkill).GetName()).ToDataRes(types.String)
 	},
@@ -21283,6 +21672,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mistral.vibe.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMistralVibe).GetSkills()).ToDataRes(types.Array(types.Resource("mistral.vibe.skill")))
+	},
+	"mistral.vibe.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMistralVibe).GetMcpServers()).ToDataRes(types.Array(types.Resource("mistral.vibe.mcpServer")))
+	},
+	"mistral.vibe.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMistralVibeMcpServer).GetName()).ToDataRes(types.String)
+	},
+	"mistral.vibe.mcpServer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMistralVibeMcpServer).GetType()).ToDataRes(types.String)
+	},
+	"mistral.vibe.mcpServer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMistralVibeMcpServer).GetCommand()).ToDataRes(types.String)
+	},
+	"mistral.vibe.mcpServer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMistralVibeMcpServer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"mistral.vibe.mcpServer.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMistralVibeMcpServer).GetUrl()).ToDataRes(types.String)
+	},
+	"mistral.vibe.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMistralVibeMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"mistral.vibe.mcpServer.hasHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMistralVibeMcpServer).GetHasHeaders()).ToDataRes(types.Bool)
+	},
+	"mistral.vibe.mcpServer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMistralVibeMcpServer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"mistral.vibe.mcpServer.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMistralVibeMcpServer).GetSource()).ToDataRes(types.String)
+	},
+	"mistral.vibe.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMistralVibeMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
 	},
 	"mistral.vibe.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMistralVibeSkill).GetName()).ToDataRes(types.String)
@@ -21515,6 +21937,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"augment.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAugment).GetSkills()).ToDataRes(types.Array(types.Resource("augment.skill")))
 	},
+	"augment.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugment).GetMcpServers()).ToDataRes(types.Array(types.Resource("augment.mcpServer")))
+	},
+	"augment.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentMcpServer).GetName()).ToDataRes(types.String)
+	},
+	"augment.mcpServer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentMcpServer).GetType()).ToDataRes(types.String)
+	},
+	"augment.mcpServer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentMcpServer).GetCommand()).ToDataRes(types.String)
+	},
+	"augment.mcpServer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentMcpServer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"augment.mcpServer.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentMcpServer).GetUrl()).ToDataRes(types.String)
+	},
+	"augment.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"augment.mcpServer.hasHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentMcpServer).GetHasHeaders()).ToDataRes(types.Bool)
+	},
+	"augment.mcpServer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentMcpServer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"augment.mcpServer.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentMcpServer).GetSource()).ToDataRes(types.String)
+	},
+	"augment.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
+	},
 	"augment.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAugmentSkill).GetName()).ToDataRes(types.String)
 	},
@@ -21587,6 +22042,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"kilocode.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKilocode).GetSkills()).ToDataRes(types.Array(types.Resource("kilocode.skill")))
 	},
+	"kilocode.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocode).GetMcpServers()).ToDataRes(types.Array(types.Resource("kilocode.mcpServer")))
+	},
+	"kilocode.plugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocode).GetPlugins()).ToDataRes(types.Array(types.String))
+	},
+	"kilocode.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeMcpServer).GetName()).ToDataRes(types.String)
+	},
+	"kilocode.mcpServer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeMcpServer).GetType()).ToDataRes(types.String)
+	},
+	"kilocode.mcpServer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeMcpServer).GetCommand()).ToDataRes(types.String)
+	},
+	"kilocode.mcpServer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeMcpServer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"kilocode.mcpServer.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeMcpServer).GetUrl()).ToDataRes(types.String)
+	},
+	"kilocode.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"kilocode.mcpServer.hasHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeMcpServer).GetHasHeaders()).ToDataRes(types.Bool)
+	},
+	"kilocode.mcpServer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeMcpServer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"kilocode.mcpServer.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeMcpServer).GetSource()).ToDataRes(types.String)
+	},
+	"kilocode.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
+	},
 	"kilocode.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKilocodeSkill).GetName()).ToDataRes(types.String)
 	},
@@ -21623,6 +22114,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openhands.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenhands).GetSkills()).ToDataRes(types.Array(types.Resource("openhands.skill")))
 	},
+	"openhands.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhands).GetMcpServers()).ToDataRes(types.Array(types.Resource("openhands.mcpServer")))
+	},
+	"openhands.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsMcpServer).GetName()).ToDataRes(types.String)
+	},
+	"openhands.mcpServer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsMcpServer).GetType()).ToDataRes(types.String)
+	},
+	"openhands.mcpServer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsMcpServer).GetCommand()).ToDataRes(types.String)
+	},
+	"openhands.mcpServer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsMcpServer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"openhands.mcpServer.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsMcpServer).GetUrl()).ToDataRes(types.String)
+	},
+	"openhands.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"openhands.mcpServer.hasHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsMcpServer).GetHasHeaders()).ToDataRes(types.Bool)
+	},
+	"openhands.mcpServer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsMcpServer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"openhands.mcpServer.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsMcpServer).GetSource()).ToDataRes(types.String)
+	},
+	"openhands.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
+	},
 	"openhands.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenhandsSkill).GetName()).ToDataRes(types.String)
 	},
@@ -21658,6 +22182,78 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"qwen.code.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlQwenCode).GetSkills()).ToDataRes(types.Array(types.Resource("qwen.code.skill")))
+	},
+	"qwen.code.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCode).GetMcpServers()).ToDataRes(types.Array(types.Resource("qwen.code.mcpServer")))
+	},
+	"qwen.code.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCode).GetExtensions()).ToDataRes(types.Array(types.Resource("qwen.code.extension")))
+	},
+	"qwen.code.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeMcpServer).GetName()).ToDataRes(types.String)
+	},
+	"qwen.code.mcpServer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeMcpServer).GetType()).ToDataRes(types.String)
+	},
+	"qwen.code.mcpServer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeMcpServer).GetCommand()).ToDataRes(types.String)
+	},
+	"qwen.code.mcpServer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeMcpServer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"qwen.code.mcpServer.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeMcpServer).GetUrl()).ToDataRes(types.String)
+	},
+	"qwen.code.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"qwen.code.mcpServer.hasHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeMcpServer).GetHasHeaders()).ToDataRes(types.Bool)
+	},
+	"qwen.code.mcpServer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeMcpServer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"qwen.code.mcpServer.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeMcpServer).GetSource()).ToDataRes(types.String)
+	},
+	"qwen.code.mcpServer.extension": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeMcpServer).GetExtension()).ToDataRes(types.Resource("qwen.code.extension"))
+	},
+	"qwen.code.mcpServer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeMcpServer).GetRunning()).ToDataRes(types.Asset("mcp"))
+	},
+	"qwen.code.extension.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeExtension).GetName()).ToDataRes(types.String)
+	},
+	"qwen.code.extension.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeExtension).GetVersion()).ToDataRes(types.String)
+	},
+	"qwen.code.extension.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeExtension).GetPath()).ToDataRes(types.String)
+	},
+	"qwen.code.extension.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeExtension).GetSource()).ToDataRes(types.String)
+	},
+	"qwen.code.extension.installType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeExtension).GetInstallType()).ToDataRes(types.String)
+	},
+	"qwen.code.extension.releaseTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeExtension).GetReleaseTag()).ToDataRes(types.String)
+	},
+	"qwen.code.extension.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeExtension).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"qwen.code.extension.contextFileName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeExtension).GetContextFileName()).ToDataRes(types.String)
+	},
+	"qwen.code.extension.commands": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeExtension).GetCommands()).ToDataRes(types.Array(types.String))
+	},
+	"qwen.code.extension.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeExtension).GetMcpServers()).ToDataRes(types.Array(types.Resource("qwen.code.mcpServer")))
+	},
+	"qwen.code.extension.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeExtension).GetSkills()).ToDataRes(types.Array(types.Resource("qwen.code.skill")))
 	},
 	"qwen.code.skill.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlQwenCodeSkill).GetName()).ToDataRes(types.String)
@@ -46773,6 +47369,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlClaudeCode).Plugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"claude.code.marketplaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).Marketplaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"claude.code.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeCode).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -46831,6 +47431,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"claude.code.plugin.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeCodePlugin).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.projectPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).ProjectPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.marketplace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).Marketplace, ok = plugin.RawToTValue[*mqlClaudeCodeMarketplace](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).Repository, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.homepage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).Homepage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.license": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).License, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.commands": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).Commands, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.agents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).Agents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.hasHooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).HasHooks, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.code.marketplace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMarketplace).__id, ok = v.Value.(string)
+		return
+	},
+	"claude.code.marketplace.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMarketplace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.marketplace.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMarketplace).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.marketplace.repo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMarketplace).Repo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.marketplace.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMarketplace).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.marketplace.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMarketplace).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.marketplace.installLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMarketplace).InstallLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.marketplace.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMarketplace).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"claude.code.marketplace.plugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMarketplace).Plugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"claude.code.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46985,6 +47669,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlClaudeCodeMcpServer).LastChecked, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"claude.code.mcpServer.hasHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMcpServer).HasHeaders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"claude.code.mcpServer.plugin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMcpServer).Plugin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"claude.code.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeCodeMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
 		return
@@ -47007,6 +47699,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"claude.desktop.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeDesktop).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktop).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"claude.desktop.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47037,8 +47733,76 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlClaudeDesktopMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"claude.desktop.mcpServer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopMcpServer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.mcpServer.extension": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopMcpServer).Extension, ok = plugin.RawToTValue[*mqlClaudeDesktopExtension](v.Value, v.Error)
+		return
+	},
 	"claude.desktop.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeDesktopMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.extension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopExtension).__id, ok = v.Value.(string)
+		return
+	},
+	"claude.desktop.extension.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopExtension).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.extension.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopExtension).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.extension.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopExtension).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.extension.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopExtension).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.extension.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopExtension).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.extension.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopExtension).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.extension.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopExtension).Repository, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.extension.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopExtension).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.extension.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopExtension).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.extension.installedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopExtension).InstalledAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.extension.signatureStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopExtension).SignatureStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.extension.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopExtension).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.extension.tools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopExtension).Tools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.desktop.extension.mcpServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeDesktopExtension).McpServer, ok = plugin.RawToTValue[*mqlClaudeDesktopMcpServer](v.Value, v.Error)
 		return
 	},
 	"openai.codex.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47425,6 +48189,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubCopilot).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"github.copilot.plugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilot).Plugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"github.copilot.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubCopilotAccount).__id, ok = v.Value.(string)
 		return
@@ -47463,6 +48231,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.copilot.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubCopilotMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.copilot.mcpServer.hasHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotMcpServer).HasHeaders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.copilot.mcpServer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotMcpServer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.copilot.mcpServer.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotMcpServer).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.mcpServer.plugin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotMcpServer).Plugin, ok = plugin.RawToTValue[*mqlGithubCopilotPlugin](v.Value, v.Error)
 		return
 	},
 	"github.copilot.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47505,6 +48289,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubCopilotSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"github.copilot.plugin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotPlugin).__id, ok = v.Value.(string)
+		return
+	},
+	"github.copilot.plugin.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotPlugin).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.plugin.marketplace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotPlugin).Marketplace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.plugin.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotPlugin).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.plugin.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotPlugin).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.plugin.installedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotPlugin).InstalledAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.copilot.plugin.sourceSha": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotPlugin).SourceSha, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.plugin.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotPlugin).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.copilot.plugin.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotPlugin).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.plugin.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotPlugin).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.plugin.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotPlugin).Repository, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.plugin.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotPlugin).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.copilot.plugin.agents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotPlugin).Agents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.copilot.plugin.hasHooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotPlugin).HasHooks, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.copilot.plugin.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotPlugin).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"goose.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoose).__id, ok = v.Value.(string)
 		return
@@ -47537,6 +48381,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGoose).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"goose.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoose).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"goose.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoose).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -47567,6 +48415,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"goose.extension.timeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGooseExtension).Timeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"goose.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseMcpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"goose.mcpServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseMcpServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.mcpServer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseMcpServer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.mcpServer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseMcpServer).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.mcpServer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseMcpServer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"goose.mcpServer.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseMcpServer).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"goose.mcpServer.hasHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseMcpServer).HasHeaders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"goose.mcpServer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseMcpServer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"goose.mcpServer.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseMcpServer).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
 		return
 	},
 	"goose.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47637,6 +48529,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGemini).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gemini.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGemini).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gemini.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGemini).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -47669,8 +48565,68 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGeminiMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gemini.mcpServer.hasHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiMcpServer).HasHeaders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gemini.mcpServer.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiMcpServer).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.mcpServer.extension": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiMcpServer).Extension, ok = plugin.RawToTValue[*mqlGeminiExtension](v.Value, v.Error)
+		return
+	},
 	"gemini.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGeminiMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
+		return
+	},
+	"gemini.extension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiExtension).__id, ok = v.Value.(string)
+		return
+	},
+	"gemini.extension.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiExtension).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.extension.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiExtension).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.extension.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiExtension).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.extension.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiExtension).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.extension.installType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiExtension).InstallType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.extension.releaseTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiExtension).ReleaseTag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.extension.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiExtension).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gemini.extension.contextFileName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiExtension).ContextFileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.extension.commands": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiExtension).Commands, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gemini.extension.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiExtension).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gemini.extension.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiExtension).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gemini.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48137,6 +49093,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCline).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"cline.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCline).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cline.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClineMcpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"cline.mcpServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClineMcpServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cline.mcpServer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClineMcpServer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cline.mcpServer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClineMcpServer).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cline.mcpServer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClineMcpServer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cline.mcpServer.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClineMcpServer).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cline.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClineMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cline.mcpServer.hasHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClineMcpServer).HasHeaders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cline.mcpServer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClineMcpServer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cline.mcpServer.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClineMcpServer).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cline.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClineMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
+		return
+	},
 	"cline.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClineSkill).__id, ok = v.Value.(string)
 		return
@@ -48361,6 +49365,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpencode).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"opencode.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpencode).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"opencode.plugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpencode).Plugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"opencode.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpencodeMcpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"opencode.mcpServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpencodeMcpServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"opencode.mcpServer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpencodeMcpServer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"opencode.mcpServer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpencodeMcpServer).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"opencode.mcpServer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpencodeMcpServer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"opencode.mcpServer.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpencodeMcpServer).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"opencode.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpencodeMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"opencode.mcpServer.hasHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpencodeMcpServer).HasHeaders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"opencode.mcpServer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpencodeMcpServer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"opencode.mcpServer.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpencodeMcpServer).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"opencode.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpencodeMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
+		return
+	},
 	"opencode.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpencodeSkill).__id, ok = v.Value.(string)
 		return
@@ -48471,6 +49527,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mistral.vibe.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMistralVibe).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mistral.vibe.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMistralVibe).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mistral.vibe.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMistralVibeMcpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"mistral.vibe.mcpServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMistralVibeMcpServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mistral.vibe.mcpServer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMistralVibeMcpServer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mistral.vibe.mcpServer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMistralVibeMcpServer).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mistral.vibe.mcpServer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMistralVibeMcpServer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mistral.vibe.mcpServer.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMistralVibeMcpServer).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mistral.vibe.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMistralVibeMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mistral.vibe.mcpServer.hasHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMistralVibeMcpServer).HasHeaders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mistral.vibe.mcpServer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMistralVibeMcpServer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mistral.vibe.mcpServer.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMistralVibeMcpServer).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mistral.vibe.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMistralVibeMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
 		return
 	},
 	"mistral.vibe.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48833,6 +49937,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAugment).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"augment.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugment).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"augment.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentMcpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"augment.mcpServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentMcpServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"augment.mcpServer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentMcpServer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"augment.mcpServer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentMcpServer).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"augment.mcpServer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentMcpServer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"augment.mcpServer.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentMcpServer).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"augment.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"augment.mcpServer.hasHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentMcpServer).HasHeaders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"augment.mcpServer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentMcpServer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"augment.mcpServer.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentMcpServer).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"augment.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
+		return
+	},
 	"augment.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAugmentSkill).__id, ok = v.Value.(string)
 		return
@@ -48945,6 +50097,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlKilocode).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"kilocode.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocode).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"kilocode.plugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocode).Plugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"kilocode.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeMcpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"kilocode.mcpServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeMcpServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kilocode.mcpServer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeMcpServer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kilocode.mcpServer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeMcpServer).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kilocode.mcpServer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeMcpServer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"kilocode.mcpServer.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeMcpServer).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kilocode.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kilocode.mcpServer.hasHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeMcpServer).HasHeaders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kilocode.mcpServer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeMcpServer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kilocode.mcpServer.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeMcpServer).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kilocode.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
+		return
+	},
 	"kilocode.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKilocodeSkill).__id, ok = v.Value.(string)
 		return
@@ -49001,6 +50205,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenhands).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"openhands.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhands).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openhands.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsMcpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"openhands.mcpServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsMcpServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openhands.mcpServer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsMcpServer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openhands.mcpServer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsMcpServer).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openhands.mcpServer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsMcpServer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openhands.mcpServer.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsMcpServer).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openhands.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openhands.mcpServer.hasHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsMcpServer).HasHeaders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openhands.mcpServer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsMcpServer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openhands.mcpServer.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsMcpServer).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openhands.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
+		return
+	},
 	"openhands.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenhandsSkill).__id, ok = v.Value.(string)
 		return
@@ -49055,6 +50307,110 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"qwen.code.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlQwenCode).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"qwen.code.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCode).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"qwen.code.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCode).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"qwen.code.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeMcpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"qwen.code.mcpServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeMcpServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.mcpServer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeMcpServer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.mcpServer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeMcpServer).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.mcpServer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeMcpServer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"qwen.code.mcpServer.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeMcpServer).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"qwen.code.mcpServer.hasHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeMcpServer).HasHeaders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"qwen.code.mcpServer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeMcpServer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"qwen.code.mcpServer.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeMcpServer).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.mcpServer.extension": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeMcpServer).Extension, ok = plugin.RawToTValue[*mqlQwenCodeExtension](v.Value, v.Error)
+		return
+	},
+	"qwen.code.mcpServer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeMcpServer).Running, ok = plugin.RawToTValue[*llx.AssetValue](v.Value, v.Error)
+		return
+	},
+	"qwen.code.extension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeExtension).__id, ok = v.Value.(string)
+		return
+	},
+	"qwen.code.extension.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeExtension).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.extension.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeExtension).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.extension.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeExtension).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.extension.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeExtension).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.extension.installType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeExtension).InstallType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.extension.releaseTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeExtension).ReleaseTag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.extension.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeExtension).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"qwen.code.extension.contextFileName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeExtension).ContextFileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.extension.commands": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeExtension).Commands, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"qwen.code.extension.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeExtension).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"qwen.code.extension.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeExtension).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"qwen.code.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -118702,6 +120058,7 @@ type mqlClaudeCode struct {
 	Settings       plugin.TValue[any]
 	EnabledPlugins plugin.TValue[[]any]
 	Plugins        plugin.TValue[[]any]
+	Marketplaces   plugin.TValue[[]any]
 	Skills         plugin.TValue[[]any]
 	Projects       plugin.TValue[[]any]
 	Repos          plugin.TValue[[]any]
@@ -118847,6 +120204,22 @@ func (c *mqlClaudeCode) GetPlugins() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlClaudeCode) GetMarketplaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Marketplaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.code", c.__id, "marketplaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.marketplaces()
+	})
+}
+
 func (c *mqlClaudeCode) GetSkills() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -118937,7 +120310,7 @@ func (c *mqlClaudeCode) GetModels() *plugin.TValue[[]any] {
 type mqlClaudeCodePlugin struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlClaudeCodePluginInternal it will be used here
+	mqlClaudeCodePluginInternal
 	Name         plugin.TValue[string]
 	Version      plugin.TValue[string]
 	Scope        plugin.TValue[string]
@@ -118946,6 +120319,18 @@ type mqlClaudeCodePlugin struct {
 	LastUpdated  plugin.TValue[string]
 	GitCommitSha plugin.TValue[string]
 	Enabled      plugin.TValue[bool]
+	ProjectPath  plugin.TValue[string]
+	Marketplace  plugin.TValue[*mqlClaudeCodeMarketplace]
+	Description  plugin.TValue[string]
+	Author       plugin.TValue[string]
+	Repository   plugin.TValue[string]
+	Homepage     plugin.TValue[string]
+	License      plugin.TValue[string]
+	Skills       plugin.TValue[[]any]
+	Commands     plugin.TValue[[]any]
+	Agents       plugin.TValue[[]any]
+	HasHooks     plugin.TValue[bool]
+	McpServers   plugin.TValue[[]any]
 }
 
 // createClaudeCodePlugin creates a new instance of this resource
@@ -119015,6 +120400,202 @@ func (c *mqlClaudeCodePlugin) GetGitCommitSha() *plugin.TValue[string] {
 
 func (c *mqlClaudeCodePlugin) GetEnabled() *plugin.TValue[bool] {
 	return &c.Enabled
+}
+
+func (c *mqlClaudeCodePlugin) GetProjectPath() *plugin.TValue[string] {
+	return &c.ProjectPath
+}
+
+func (c *mqlClaudeCodePlugin) GetMarketplace() *plugin.TValue[*mqlClaudeCodeMarketplace] {
+	return plugin.GetOrCompute[*mqlClaudeCodeMarketplace](&c.Marketplace, func() (*mqlClaudeCodeMarketplace, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.code.plugin", c.__id, "marketplace")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlClaudeCodeMarketplace), nil
+			}
+		}
+
+		return c.marketplace()
+	})
+}
+
+func (c *mqlClaudeCodePlugin) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlClaudeCodePlugin) GetAuthor() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Author, func() (string, error) {
+		return c.author()
+	})
+}
+
+func (c *mqlClaudeCodePlugin) GetRepository() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Repository, func() (string, error) {
+		return c.repository()
+	})
+}
+
+func (c *mqlClaudeCodePlugin) GetHomepage() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Homepage, func() (string, error) {
+		return c.homepage()
+	})
+}
+
+func (c *mqlClaudeCodePlugin) GetLicense() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.License, func() (string, error) {
+		return c.license()
+	})
+}
+
+func (c *mqlClaudeCodePlugin) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.code.plugin", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+func (c *mqlClaudeCodePlugin) GetCommands() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Commands, func() ([]any, error) {
+		return c.commands()
+	})
+}
+
+func (c *mqlClaudeCodePlugin) GetAgents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Agents, func() ([]any, error) {
+		return c.agents()
+	})
+}
+
+func (c *mqlClaudeCodePlugin) GetHasHooks() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasHooks, func() (bool, error) {
+		return c.hasHooks()
+	})
+}
+
+func (c *mqlClaudeCodePlugin) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.code.plugin", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+// mqlClaudeCodeMarketplace for the claude.code.marketplace resource
+type mqlClaudeCodeMarketplace struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlClaudeCodeMarketplaceInternal
+	Name            plugin.TValue[string]
+	SourceType      plugin.TValue[string]
+	Repo            plugin.TValue[string]
+	Url             plugin.TValue[string]
+	Path            plugin.TValue[string]
+	InstallLocation plugin.TValue[string]
+	LastUpdated     plugin.TValue[*time.Time]
+	Plugins         plugin.TValue[[]any]
+}
+
+// createClaudeCodeMarketplace creates a new instance of this resource
+func createClaudeCodeMarketplace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlClaudeCodeMarketplace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("claude.code.marketplace", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlClaudeCodeMarketplace) MqlName() string {
+	return "claude.code.marketplace"
+}
+
+func (c *mqlClaudeCodeMarketplace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlClaudeCodeMarketplace) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlClaudeCodeMarketplace) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlClaudeCodeMarketplace) GetRepo() *plugin.TValue[string] {
+	return &c.Repo
+}
+
+func (c *mqlClaudeCodeMarketplace) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlClaudeCodeMarketplace) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlClaudeCodeMarketplace) GetInstallLocation() *plugin.TValue[string] {
+	return &c.InstallLocation
+}
+
+func (c *mqlClaudeCodeMarketplace) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+func (c *mqlClaudeCodeMarketplace) GetPlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plugins, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.code.marketplace", c.__id, "plugins")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.plugins()
+	})
 }
 
 // mqlClaudeCodeSkill for the claude.code.skill resource
@@ -119338,6 +120919,8 @@ type mqlClaudeCodeMcpServer struct {
 	HasEnv      plugin.TValue[bool]
 	NeedsAuth   plugin.TValue[bool]
 	LastChecked plugin.TValue[string]
+	HasHeaders  plugin.TValue[bool]
+	Plugin      plugin.TValue[string]
 	Running     plugin.TValue[*llx.AssetValue]
 }
 
@@ -119414,6 +120997,14 @@ func (c *mqlClaudeCodeMcpServer) GetLastChecked() *plugin.TValue[string] {
 	return &c.LastChecked
 }
 
+func (c *mqlClaudeCodeMcpServer) GetHasHeaders() *plugin.TValue[bool] {
+	return &c.HasHeaders
+}
+
+func (c *mqlClaudeCodeMcpServer) GetPlugin() *plugin.TValue[string] {
+	return &c.Plugin
+}
+
 func (c *mqlClaudeCodeMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
 	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
 		return c.running()
@@ -119429,6 +121020,7 @@ type mqlClaudeDesktop struct {
 	Package    plugin.TValue[*mqlPackage]
 	Runtime    plugin.TValue[*mqlExtensionRuntime]
 	McpServers plugin.TValue[[]any]
+	Extensions plugin.TValue[[]any]
 }
 
 // createClaudeDesktop creates a new instance of this resource
@@ -119520,18 +121112,36 @@ func (c *mqlClaudeDesktop) GetMcpServers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlClaudeDesktop) GetExtensions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.desktop", c.__id, "extensions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.extensions()
+	})
+}
+
 // mqlClaudeDesktopMcpServer for the claude.desktop.mcpServer resource
 type mqlClaudeDesktopMcpServer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlClaudeDesktopMcpServerInternal it will be used here
-	Name    plugin.TValue[string]
-	Type    plugin.TValue[string]
-	Command plugin.TValue[string]
-	Args    plugin.TValue[[]any]
-	Url     plugin.TValue[string]
-	HasEnv  plugin.TValue[bool]
-	Running plugin.TValue[*llx.AssetValue]
+	Name      plugin.TValue[string]
+	Type      plugin.TValue[string]
+	Command   plugin.TValue[string]
+	Args      plugin.TValue[[]any]
+	Url       plugin.TValue[string]
+	HasEnv    plugin.TValue[bool]
+	Enabled   plugin.TValue[bool]
+	Extension plugin.TValue[*mqlClaudeDesktopExtension]
+	Running   plugin.TValue[*llx.AssetValue]
 }
 
 // createClaudeDesktopMcpServer creates a new instance of this resource
@@ -119595,9 +121205,155 @@ func (c *mqlClaudeDesktopMcpServer) GetHasEnv() *plugin.TValue[bool] {
 	return &c.HasEnv
 }
 
+func (c *mqlClaudeDesktopMcpServer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlClaudeDesktopMcpServer) GetExtension() *plugin.TValue[*mqlClaudeDesktopExtension] {
+	return plugin.GetOrCompute[*mqlClaudeDesktopExtension](&c.Extension, func() (*mqlClaudeDesktopExtension, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.desktop.mcpServer", c.__id, "extension")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlClaudeDesktopExtension), nil
+			}
+		}
+
+		return c.extension()
+	})
+}
+
 func (c *mqlClaudeDesktopMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
 	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
 		return c.running()
+	})
+}
+
+// mqlClaudeDesktopExtension for the claude.desktop.extension resource
+type mqlClaudeDesktopExtension struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlClaudeDesktopExtensionInternal
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	DisplayName     plugin.TValue[string]
+	Version         plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Author          plugin.TValue[string]
+	Repository      plugin.TValue[string]
+	Source          plugin.TValue[string]
+	Path            plugin.TValue[string]
+	InstalledAt     plugin.TValue[*time.Time]
+	SignatureStatus plugin.TValue[string]
+	Enabled         plugin.TValue[bool]
+	Tools           plugin.TValue[[]any]
+	McpServer       plugin.TValue[*mqlClaudeDesktopMcpServer]
+}
+
+// createClaudeDesktopExtension creates a new instance of this resource
+func createClaudeDesktopExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlClaudeDesktopExtension{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("claude.desktop.extension", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlClaudeDesktopExtension) MqlName() string {
+	return "claude.desktop.extension"
+}
+
+func (c *mqlClaudeDesktopExtension) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlClaudeDesktopExtension) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlClaudeDesktopExtension) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlClaudeDesktopExtension) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlClaudeDesktopExtension) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlClaudeDesktopExtension) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlClaudeDesktopExtension) GetAuthor() *plugin.TValue[string] {
+	return &c.Author
+}
+
+func (c *mqlClaudeDesktopExtension) GetRepository() *plugin.TValue[string] {
+	return &c.Repository
+}
+
+func (c *mqlClaudeDesktopExtension) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlClaudeDesktopExtension) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlClaudeDesktopExtension) GetInstalledAt() *plugin.TValue[*time.Time] {
+	return &c.InstalledAt
+}
+
+func (c *mqlClaudeDesktopExtension) GetSignatureStatus() *plugin.TValue[string] {
+	return &c.SignatureStatus
+}
+
+func (c *mqlClaudeDesktopExtension) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlClaudeDesktopExtension) GetTools() *plugin.TValue[[]any] {
+	return &c.Tools
+}
+
+func (c *mqlClaudeDesktopExtension) GetMcpServer() *plugin.TValue[*mqlClaudeDesktopMcpServer] {
+	return plugin.GetOrCompute[*mqlClaudeDesktopMcpServer](&c.McpServer, func() (*mqlClaudeDesktopMcpServer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.desktop.extension", c.__id, "mcpServer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlClaudeDesktopMcpServer), nil
+			}
+		}
+
+		return c.mcpServer()
 	})
 }
 
@@ -120664,6 +122420,7 @@ type mqlGithubCopilot struct {
 	Accounts   plugin.TValue[[]any]
 	McpServers plugin.TValue[[]any]
 	Skills     plugin.TValue[[]any]
+	Plugins    plugin.TValue[[]any]
 }
 
 // createGithubCopilot creates a new instance of this resource
@@ -120787,6 +122544,22 @@ func (c *mqlGithubCopilot) GetSkills() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlGithubCopilot) GetPlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plugins, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.copilot", c.__id, "plugins")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.plugins()
+	})
+}
+
 // mqlGithubCopilotAccount for the github.copilot.account resource
 type mqlGithubCopilotAccount struct {
 	MqlRuntime *plugin.Runtime
@@ -120846,13 +122619,17 @@ type mqlGithubCopilotMcpServer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGithubCopilotMcpServerInternal it will be used here
-	Name    plugin.TValue[string]
-	Type    plugin.TValue[string]
-	Command plugin.TValue[string]
-	Args    plugin.TValue[[]any]
-	Url     plugin.TValue[string]
-	HasEnv  plugin.TValue[bool]
-	Running plugin.TValue[*llx.AssetValue]
+	Name       plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Command    plugin.TValue[string]
+	Args       plugin.TValue[[]any]
+	Url        plugin.TValue[string]
+	HasEnv     plugin.TValue[bool]
+	HasHeaders plugin.TValue[bool]
+	Enabled    plugin.TValue[bool]
+	Source     plugin.TValue[string]
+	Plugin     plugin.TValue[*mqlGithubCopilotPlugin]
+	Running    plugin.TValue[*llx.AssetValue]
 }
 
 // createGithubCopilotMcpServer creates a new instance of this resource
@@ -120914,6 +122691,34 @@ func (c *mqlGithubCopilotMcpServer) GetUrl() *plugin.TValue[string] {
 
 func (c *mqlGithubCopilotMcpServer) GetHasEnv() *plugin.TValue[bool] {
 	return &c.HasEnv
+}
+
+func (c *mqlGithubCopilotMcpServer) GetHasHeaders() *plugin.TValue[bool] {
+	return &c.HasHeaders
+}
+
+func (c *mqlGithubCopilotMcpServer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlGithubCopilotMcpServer) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlGithubCopilotMcpServer) GetPlugin() *plugin.TValue[*mqlGithubCopilotPlugin] {
+	return plugin.GetOrCompute[*mqlGithubCopilotPlugin](&c.Plugin, func() (*mqlGithubCopilotPlugin, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.copilot.mcpServer", c.__id, "plugin")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGithubCopilotPlugin), nil
+			}
+		}
+
+		return c.plugin()
+	})
 }
 
 func (c *mqlGithubCopilotMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
@@ -121010,6 +122815,154 @@ func (c *mqlGithubCopilotSkill) GetPurl() *plugin.TValue[string] {
 	})
 }
 
+// mqlGithubCopilotPlugin for the github.copilot.plugin resource
+type mqlGithubCopilotPlugin struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGithubCopilotPluginInternal
+	Name        plugin.TValue[string]
+	Marketplace plugin.TValue[string]
+	Version     plugin.TValue[string]
+	Path        plugin.TValue[string]
+	InstalledAt plugin.TValue[*time.Time]
+	SourceSha   plugin.TValue[string]
+	Enabled     plugin.TValue[bool]
+	Description plugin.TValue[string]
+	Author      plugin.TValue[string]
+	Repository  plugin.TValue[string]
+	Skills      plugin.TValue[[]any]
+	Agents      plugin.TValue[[]any]
+	HasHooks    plugin.TValue[bool]
+	McpServers  plugin.TValue[[]any]
+}
+
+// createGithubCopilotPlugin creates a new instance of this resource
+func createGithubCopilotPlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubCopilotPlugin{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.copilot.plugin", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubCopilotPlugin) MqlName() string {
+	return "github.copilot.plugin"
+}
+
+func (c *mqlGithubCopilotPlugin) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubCopilotPlugin) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGithubCopilotPlugin) GetMarketplace() *plugin.TValue[string] {
+	return &c.Marketplace
+}
+
+func (c *mqlGithubCopilotPlugin) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlGithubCopilotPlugin) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlGithubCopilotPlugin) GetInstalledAt() *plugin.TValue[*time.Time] {
+	return &c.InstalledAt
+}
+
+func (c *mqlGithubCopilotPlugin) GetSourceSha() *plugin.TValue[string] {
+	return &c.SourceSha
+}
+
+func (c *mqlGithubCopilotPlugin) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlGithubCopilotPlugin) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlGithubCopilotPlugin) GetAuthor() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Author, func() (string, error) {
+		return c.author()
+	})
+}
+
+func (c *mqlGithubCopilotPlugin) GetRepository() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Repository, func() (string, error) {
+		return c.repository()
+	})
+}
+
+func (c *mqlGithubCopilotPlugin) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.copilot.plugin", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+func (c *mqlGithubCopilotPlugin) GetAgents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Agents, func() ([]any, error) {
+		return c.agents()
+	})
+}
+
+func (c *mqlGithubCopilotPlugin) GetHasHooks() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasHooks, func() (bool, error) {
+		return c.hasHooks()
+	})
+}
+
+func (c *mqlGithubCopilotPlugin) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.copilot.plugin", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
 // mqlGoose for the goose resource
 type mqlGoose struct {
 	MqlRuntime *plugin.Runtime
@@ -121022,6 +122975,7 @@ type mqlGoose struct {
 	Model            plugin.TValue[string]
 	TelemetryEnabled plugin.TValue[bool]
 	Extensions       plugin.TValue[[]any]
+	McpServers       plugin.TValue[[]any]
 	Skills           plugin.TValue[[]any]
 }
 
@@ -121132,6 +123086,22 @@ func (c *mqlGoose) GetExtensions() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlGoose) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("goose", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
 func (c *mqlGoose) GetSkills() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -121220,6 +123190,102 @@ func (c *mqlGooseExtension) GetBundled() *plugin.TValue[bool] {
 
 func (c *mqlGooseExtension) GetTimeout() *plugin.TValue[int64] {
 	return &c.Timeout
+}
+
+// mqlGooseMcpServer for the goose.mcpServer resource
+type mqlGooseMcpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGooseMcpServerInternal it will be used here
+	Name       plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Command    plugin.TValue[string]
+	Args       plugin.TValue[[]any]
+	Url        plugin.TValue[string]
+	HasEnv     plugin.TValue[bool]
+	HasHeaders plugin.TValue[bool]
+	Enabled    plugin.TValue[bool]
+	Source     plugin.TValue[string]
+	Running    plugin.TValue[*llx.AssetValue]
+}
+
+// createGooseMcpServer creates a new instance of this resource
+func createGooseMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGooseMcpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("goose.mcpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGooseMcpServer) MqlName() string {
+	return "goose.mcpServer"
+}
+
+func (c *mqlGooseMcpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGooseMcpServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGooseMcpServer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGooseMcpServer) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlGooseMcpServer) GetArgs() *plugin.TValue[[]any] {
+	return &c.Args
+}
+
+func (c *mqlGooseMcpServer) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlGooseMcpServer) GetHasEnv() *plugin.TValue[bool] {
+	return &c.HasEnv
+}
+
+func (c *mqlGooseMcpServer) GetHasHeaders() *plugin.TValue[bool] {
+	return &c.HasHeaders
+}
+
+func (c *mqlGooseMcpServer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlGooseMcpServer) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlGooseMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
+	})
 }
 
 // mqlGooseSkill for the goose.skill resource
@@ -121322,6 +123388,7 @@ type mqlGemini struct {
 	Settings   plugin.TValue[any]
 	McpServers plugin.TValue[[]any]
 	Skills     plugin.TValue[[]any]
+	Extensions plugin.TValue[[]any]
 	Model      plugin.TValue[string]
 }
 
@@ -121442,6 +123509,22 @@ func (c *mqlGemini) GetSkills() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlGemini) GetExtensions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gemini", c.__id, "extensions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.extensions()
+	})
+}
+
 func (c *mqlGemini) GetModel() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Model, func() (string, error) {
 		return c.model()
@@ -121453,13 +123536,16 @@ type mqlGeminiMcpServer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGeminiMcpServerInternal it will be used here
-	Name    plugin.TValue[string]
-	Type    plugin.TValue[string]
-	Command plugin.TValue[string]
-	Args    plugin.TValue[[]any]
-	Url     plugin.TValue[string]
-	HasEnv  plugin.TValue[bool]
-	Running plugin.TValue[*llx.AssetValue]
+	Name       plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Command    plugin.TValue[string]
+	Args       plugin.TValue[[]any]
+	Url        plugin.TValue[string]
+	HasEnv     plugin.TValue[bool]
+	HasHeaders plugin.TValue[bool]
+	Source     plugin.TValue[string]
+	Extension  plugin.TValue[*mqlGeminiExtension]
+	Running    plugin.TValue[*llx.AssetValue]
 }
 
 // createGeminiMcpServer creates a new instance of this resource
@@ -121523,9 +123609,156 @@ func (c *mqlGeminiMcpServer) GetHasEnv() *plugin.TValue[bool] {
 	return &c.HasEnv
 }
 
+func (c *mqlGeminiMcpServer) GetHasHeaders() *plugin.TValue[bool] {
+	return &c.HasHeaders
+}
+
+func (c *mqlGeminiMcpServer) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlGeminiMcpServer) GetExtension() *plugin.TValue[*mqlGeminiExtension] {
+	return plugin.GetOrCompute[*mqlGeminiExtension](&c.Extension, func() (*mqlGeminiExtension, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gemini.mcpServer", c.__id, "extension")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGeminiExtension), nil
+			}
+		}
+
+		return c.extension()
+	})
+}
+
 func (c *mqlGeminiMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
 	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
 		return c.running()
+	})
+}
+
+// mqlGeminiExtension for the gemini.extension resource
+type mqlGeminiExtension struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGeminiExtensionInternal
+	Name            plugin.TValue[string]
+	Version         plugin.TValue[string]
+	Path            plugin.TValue[string]
+	Source          plugin.TValue[string]
+	InstallType     plugin.TValue[string]
+	ReleaseTag      plugin.TValue[string]
+	Enabled         plugin.TValue[bool]
+	ContextFileName plugin.TValue[string]
+	Commands        plugin.TValue[[]any]
+	McpServers      plugin.TValue[[]any]
+	Skills          plugin.TValue[[]any]
+}
+
+// createGeminiExtension creates a new instance of this resource
+func createGeminiExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGeminiExtension{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gemini.extension", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGeminiExtension) MqlName() string {
+	return "gemini.extension"
+}
+
+func (c *mqlGeminiExtension) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGeminiExtension) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGeminiExtension) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlGeminiExtension) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlGeminiExtension) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlGeminiExtension) GetInstallType() *plugin.TValue[string] {
+	return &c.InstallType
+}
+
+func (c *mqlGeminiExtension) GetReleaseTag() *plugin.TValue[string] {
+	return &c.ReleaseTag
+}
+
+func (c *mqlGeminiExtension) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlGeminiExtension) GetContextFileName() *plugin.TValue[string] {
+	return &c.ContextFileName
+}
+
+func (c *mqlGeminiExtension) GetCommands() *plugin.TValue[[]any] {
+	return &c.Commands
+}
+
+func (c *mqlGeminiExtension) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gemini.extension", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+func (c *mqlGeminiExtension) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gemini.extension", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
 	})
 }
 
@@ -122922,6 +125155,7 @@ type mqlCline struct {
 	Package    plugin.TValue[*mqlPackage]
 	Runtime    plugin.TValue[*mqlExtensionRuntime]
 	Skills     plugin.TValue[[]any]
+	McpServers plugin.TValue[[]any]
 }
 
 // createCline creates a new instance of this resource
@@ -123010,6 +125244,118 @@ func (c *mqlCline) GetSkills() *plugin.TValue[[]any] {
 		}
 
 		return c.skills()
+	})
+}
+
+func (c *mqlCline) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cline", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+// mqlClineMcpServer for the cline.mcpServer resource
+type mqlClineMcpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlClineMcpServerInternal it will be used here
+	Name       plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Command    plugin.TValue[string]
+	Args       plugin.TValue[[]any]
+	Url        plugin.TValue[string]
+	HasEnv     plugin.TValue[bool]
+	HasHeaders plugin.TValue[bool]
+	Enabled    plugin.TValue[bool]
+	Source     plugin.TValue[string]
+	Running    plugin.TValue[*llx.AssetValue]
+}
+
+// createClineMcpServer creates a new instance of this resource
+func createClineMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlClineMcpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cline.mcpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlClineMcpServer) MqlName() string {
+	return "cline.mcpServer"
+}
+
+func (c *mqlClineMcpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlClineMcpServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlClineMcpServer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlClineMcpServer) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlClineMcpServer) GetArgs() *plugin.TValue[[]any] {
+	return &c.Args
+}
+
+func (c *mqlClineMcpServer) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlClineMcpServer) GetHasEnv() *plugin.TValue[bool] {
+	return &c.HasEnv
+}
+
+func (c *mqlClineMcpServer) GetHasHeaders() *plugin.TValue[bool] {
+	return &c.HasHeaders
+}
+
+func (c *mqlClineMcpServer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlClineMcpServer) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlClineMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
 	})
 }
 
@@ -123674,6 +126020,8 @@ type mqlOpencode struct {
 	Package    plugin.TValue[*mqlPackage]
 	Runtime    plugin.TValue[*mqlExtensionRuntime]
 	Skills     plugin.TValue[[]any]
+	McpServers plugin.TValue[[]any]
+	Plugins    plugin.TValue[[]any]
 }
 
 // createOpencode creates a new instance of this resource
@@ -123762,6 +126110,124 @@ func (c *mqlOpencode) GetSkills() *plugin.TValue[[]any] {
 		}
 
 		return c.skills()
+	})
+}
+
+func (c *mqlOpencode) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("opencode", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+func (c *mqlOpencode) GetPlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plugins, func() ([]any, error) {
+		return c.plugins()
+	})
+}
+
+// mqlOpencodeMcpServer for the opencode.mcpServer resource
+type mqlOpencodeMcpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpencodeMcpServerInternal it will be used here
+	Name       plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Command    plugin.TValue[string]
+	Args       plugin.TValue[[]any]
+	Url        plugin.TValue[string]
+	HasEnv     plugin.TValue[bool]
+	HasHeaders plugin.TValue[bool]
+	Enabled    plugin.TValue[bool]
+	Source     plugin.TValue[string]
+	Running    plugin.TValue[*llx.AssetValue]
+}
+
+// createOpencodeMcpServer creates a new instance of this resource
+func createOpencodeMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpencodeMcpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("opencode.mcpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpencodeMcpServer) MqlName() string {
+	return "opencode.mcpServer"
+}
+
+func (c *mqlOpencodeMcpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpencodeMcpServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpencodeMcpServer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOpencodeMcpServer) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlOpencodeMcpServer) GetArgs() *plugin.TValue[[]any] {
+	return &c.Args
+}
+
+func (c *mqlOpencodeMcpServer) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlOpencodeMcpServer) GetHasEnv() *plugin.TValue[bool] {
+	return &c.HasEnv
+}
+
+func (c *mqlOpencodeMcpServer) GetHasHeaders() *plugin.TValue[bool] {
+	return &c.HasHeaders
+}
+
+func (c *mqlOpencodeMcpServer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlOpencodeMcpServer) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlOpencodeMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
 	})
 }
 
@@ -124050,6 +126516,7 @@ type mqlMistralVibe struct {
 	Package    plugin.TValue[*mqlPackage]
 	Runtime    plugin.TValue[*mqlExtensionRuntime]
 	Skills     plugin.TValue[[]any]
+	McpServers plugin.TValue[[]any]
 }
 
 // createMistralVibe creates a new instance of this resource
@@ -124138,6 +126605,118 @@ func (c *mqlMistralVibe) GetSkills() *plugin.TValue[[]any] {
 		}
 
 		return c.skills()
+	})
+}
+
+func (c *mqlMistralVibe) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mistral.vibe", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+// mqlMistralVibeMcpServer for the mistral.vibe.mcpServer resource
+type mqlMistralVibeMcpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMistralVibeMcpServerInternal it will be used here
+	Name       plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Command    plugin.TValue[string]
+	Args       plugin.TValue[[]any]
+	Url        plugin.TValue[string]
+	HasEnv     plugin.TValue[bool]
+	HasHeaders plugin.TValue[bool]
+	Enabled    plugin.TValue[bool]
+	Source     plugin.TValue[string]
+	Running    plugin.TValue[*llx.AssetValue]
+}
+
+// createMistralVibeMcpServer creates a new instance of this resource
+func createMistralVibeMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMistralVibeMcpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mistral.vibe.mcpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMistralVibeMcpServer) MqlName() string {
+	return "mistral.vibe.mcpServer"
+}
+
+func (c *mqlMistralVibeMcpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMistralVibeMcpServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMistralVibeMcpServer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlMistralVibeMcpServer) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlMistralVibeMcpServer) GetArgs() *plugin.TValue[[]any] {
+	return &c.Args
+}
+
+func (c *mqlMistralVibeMcpServer) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlMistralVibeMcpServer) GetHasEnv() *plugin.TValue[bool] {
+	return &c.HasEnv
+}
+
+func (c *mqlMistralVibeMcpServer) GetHasHeaders() *plugin.TValue[bool] {
+	return &c.HasHeaders
+}
+
+func (c *mqlMistralVibeMcpServer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlMistralVibeMcpServer) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlMistralVibeMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
 	})
 }
 
@@ -125275,6 +127854,7 @@ type mqlAugment struct {
 	Package    plugin.TValue[*mqlPackage]
 	Runtime    plugin.TValue[*mqlExtensionRuntime]
 	Skills     plugin.TValue[[]any]
+	McpServers plugin.TValue[[]any]
 }
 
 // createAugment creates a new instance of this resource
@@ -125363,6 +127943,118 @@ func (c *mqlAugment) GetSkills() *plugin.TValue[[]any] {
 		}
 
 		return c.skills()
+	})
+}
+
+func (c *mqlAugment) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("augment", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+// mqlAugmentMcpServer for the augment.mcpServer resource
+type mqlAugmentMcpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAugmentMcpServerInternal it will be used here
+	Name       plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Command    plugin.TValue[string]
+	Args       plugin.TValue[[]any]
+	Url        plugin.TValue[string]
+	HasEnv     plugin.TValue[bool]
+	HasHeaders plugin.TValue[bool]
+	Enabled    plugin.TValue[bool]
+	Source     plugin.TValue[string]
+	Running    plugin.TValue[*llx.AssetValue]
+}
+
+// createAugmentMcpServer creates a new instance of this resource
+func createAugmentMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAugmentMcpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("augment.mcpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAugmentMcpServer) MqlName() string {
+	return "augment.mcpServer"
+}
+
+func (c *mqlAugmentMcpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAugmentMcpServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAugmentMcpServer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAugmentMcpServer) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlAugmentMcpServer) GetArgs() *plugin.TValue[[]any] {
+	return &c.Args
+}
+
+func (c *mqlAugmentMcpServer) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlAugmentMcpServer) GetHasEnv() *plugin.TValue[bool] {
+	return &c.HasEnv
+}
+
+func (c *mqlAugmentMcpServer) GetHasHeaders() *plugin.TValue[bool] {
+	return &c.HasHeaders
+}
+
+func (c *mqlAugmentMcpServer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAugmentMcpServer) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAugmentMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
 	})
 }
 
@@ -125651,6 +128343,8 @@ type mqlKilocode struct {
 	Package    plugin.TValue[*mqlPackage]
 	Runtime    plugin.TValue[*mqlExtensionRuntime]
 	Skills     plugin.TValue[[]any]
+	McpServers plugin.TValue[[]any]
+	Plugins    plugin.TValue[[]any]
 }
 
 // createKilocode creates a new instance of this resource
@@ -125739,6 +128433,124 @@ func (c *mqlKilocode) GetSkills() *plugin.TValue[[]any] {
 		}
 
 		return c.skills()
+	})
+}
+
+func (c *mqlKilocode) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("kilocode", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+func (c *mqlKilocode) GetPlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plugins, func() ([]any, error) {
+		return c.plugins()
+	})
+}
+
+// mqlKilocodeMcpServer for the kilocode.mcpServer resource
+type mqlKilocodeMcpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlKilocodeMcpServerInternal it will be used here
+	Name       plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Command    plugin.TValue[string]
+	Args       plugin.TValue[[]any]
+	Url        plugin.TValue[string]
+	HasEnv     plugin.TValue[bool]
+	HasHeaders plugin.TValue[bool]
+	Enabled    plugin.TValue[bool]
+	Source     plugin.TValue[string]
+	Running    plugin.TValue[*llx.AssetValue]
+}
+
+// createKilocodeMcpServer creates a new instance of this resource
+func createKilocodeMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKilocodeMcpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("kilocode.mcpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKilocodeMcpServer) MqlName() string {
+	return "kilocode.mcpServer"
+}
+
+func (c *mqlKilocodeMcpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKilocodeMcpServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlKilocodeMcpServer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlKilocodeMcpServer) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlKilocodeMcpServer) GetArgs() *plugin.TValue[[]any] {
+	return &c.Args
+}
+
+func (c *mqlKilocodeMcpServer) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlKilocodeMcpServer) GetHasEnv() *plugin.TValue[bool] {
+	return &c.HasEnv
+}
+
+func (c *mqlKilocodeMcpServer) GetHasHeaders() *plugin.TValue[bool] {
+	return &c.HasHeaders
+}
+
+func (c *mqlKilocodeMcpServer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlKilocodeMcpServer) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlKilocodeMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
 	})
 }
 
@@ -125839,6 +128651,7 @@ type mqlOpenhands struct {
 	Package    plugin.TValue[*mqlPackage]
 	Runtime    plugin.TValue[*mqlExtensionRuntime]
 	Skills     plugin.TValue[[]any]
+	McpServers plugin.TValue[[]any]
 }
 
 // createOpenhands creates a new instance of this resource
@@ -125927,6 +128740,118 @@ func (c *mqlOpenhands) GetSkills() *plugin.TValue[[]any] {
 		}
 
 		return c.skills()
+	})
+}
+
+func (c *mqlOpenhands) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openhands", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+// mqlOpenhandsMcpServer for the openhands.mcpServer resource
+type mqlOpenhandsMcpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenhandsMcpServerInternal it will be used here
+	Name       plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Command    plugin.TValue[string]
+	Args       plugin.TValue[[]any]
+	Url        plugin.TValue[string]
+	HasEnv     plugin.TValue[bool]
+	HasHeaders plugin.TValue[bool]
+	Enabled    plugin.TValue[bool]
+	Source     plugin.TValue[string]
+	Running    plugin.TValue[*llx.AssetValue]
+}
+
+// createOpenhandsMcpServer creates a new instance of this resource
+func createOpenhandsMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenhandsMcpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openhands.mcpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenhandsMcpServer) MqlName() string {
+	return "openhands.mcpServer"
+}
+
+func (c *mqlOpenhandsMcpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenhandsMcpServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenhandsMcpServer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOpenhandsMcpServer) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlOpenhandsMcpServer) GetArgs() *plugin.TValue[[]any] {
+	return &c.Args
+}
+
+func (c *mqlOpenhandsMcpServer) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlOpenhandsMcpServer) GetHasEnv() *plugin.TValue[bool] {
+	return &c.HasEnv
+}
+
+func (c *mqlOpenhandsMcpServer) GetHasHeaders() *plugin.TValue[bool] {
+	return &c.HasHeaders
+}
+
+func (c *mqlOpenhandsMcpServer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlOpenhandsMcpServer) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlOpenhandsMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
 	})
 }
 
@@ -126027,6 +128952,8 @@ type mqlQwenCode struct {
 	Package    plugin.TValue[*mqlPackage]
 	Runtime    plugin.TValue[*mqlExtensionRuntime]
 	Skills     plugin.TValue[[]any]
+	McpServers plugin.TValue[[]any]
+	Extensions plugin.TValue[[]any]
 }
 
 // createQwenCode creates a new instance of this resource
@@ -126106,6 +129033,274 @@ func (c *mqlQwenCode) GetSkills() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("qwen.code", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+func (c *mqlQwenCode) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("qwen.code", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+func (c *mqlQwenCode) GetExtensions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("qwen.code", c.__id, "extensions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.extensions()
+	})
+}
+
+// mqlQwenCodeMcpServer for the qwen.code.mcpServer resource
+type mqlQwenCodeMcpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlQwenCodeMcpServerInternal it will be used here
+	Name       plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Command    plugin.TValue[string]
+	Args       plugin.TValue[[]any]
+	Url        plugin.TValue[string]
+	HasEnv     plugin.TValue[bool]
+	HasHeaders plugin.TValue[bool]
+	Enabled    plugin.TValue[bool]
+	Source     plugin.TValue[string]
+	Extension  plugin.TValue[*mqlQwenCodeExtension]
+	Running    plugin.TValue[*llx.AssetValue]
+}
+
+// createQwenCodeMcpServer creates a new instance of this resource
+func createQwenCodeMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlQwenCodeMcpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("qwen.code.mcpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlQwenCodeMcpServer) MqlName() string {
+	return "qwen.code.mcpServer"
+}
+
+func (c *mqlQwenCodeMcpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlQwenCodeMcpServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlQwenCodeMcpServer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlQwenCodeMcpServer) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlQwenCodeMcpServer) GetArgs() *plugin.TValue[[]any] {
+	return &c.Args
+}
+
+func (c *mqlQwenCodeMcpServer) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlQwenCodeMcpServer) GetHasEnv() *plugin.TValue[bool] {
+	return &c.HasEnv
+}
+
+func (c *mqlQwenCodeMcpServer) GetHasHeaders() *plugin.TValue[bool] {
+	return &c.HasHeaders
+}
+
+func (c *mqlQwenCodeMcpServer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlQwenCodeMcpServer) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlQwenCodeMcpServer) GetExtension() *plugin.TValue[*mqlQwenCodeExtension] {
+	return plugin.GetOrCompute[*mqlQwenCodeExtension](&c.Extension, func() (*mqlQwenCodeExtension, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("qwen.code.mcpServer", c.__id, "extension")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlQwenCodeExtension), nil
+			}
+		}
+
+		return c.extension()
+	})
+}
+
+func (c *mqlQwenCodeMcpServer) GetRunning() *plugin.TValue[*llx.AssetValue] {
+	return plugin.GetOrCompute[*llx.AssetValue](&c.Running, func() (*llx.AssetValue, error) {
+		return c.running()
+	})
+}
+
+// mqlQwenCodeExtension for the qwen.code.extension resource
+type mqlQwenCodeExtension struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlQwenCodeExtensionInternal
+	Name            plugin.TValue[string]
+	Version         plugin.TValue[string]
+	Path            plugin.TValue[string]
+	Source          plugin.TValue[string]
+	InstallType     plugin.TValue[string]
+	ReleaseTag      plugin.TValue[string]
+	Enabled         plugin.TValue[bool]
+	ContextFileName plugin.TValue[string]
+	Commands        plugin.TValue[[]any]
+	McpServers      plugin.TValue[[]any]
+	Skills          plugin.TValue[[]any]
+}
+
+// createQwenCodeExtension creates a new instance of this resource
+func createQwenCodeExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlQwenCodeExtension{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("qwen.code.extension", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlQwenCodeExtension) MqlName() string {
+	return "qwen.code.extension"
+}
+
+func (c *mqlQwenCodeExtension) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlQwenCodeExtension) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlQwenCodeExtension) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlQwenCodeExtension) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlQwenCodeExtension) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlQwenCodeExtension) GetInstallType() *plugin.TValue[string] {
+	return &c.InstallType
+}
+
+func (c *mqlQwenCodeExtension) GetReleaseTag() *plugin.TValue[string] {
+	return &c.ReleaseTag
+}
+
+func (c *mqlQwenCodeExtension) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlQwenCodeExtension) GetContextFileName() *plugin.TValue[string] {
+	return &c.ContextFileName
+}
+
+func (c *mqlQwenCodeExtension) GetCommands() *plugin.TValue[[]any] {
+	return &c.Commands
+}
+
+func (c *mqlQwenCodeExtension) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("qwen.code.extension", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+func (c *mqlQwenCodeExtension) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("qwen.code.extension", c.__id, "skills")
 			if err != nil {
 				return nil, err
 			}

@@ -106,3 +106,53 @@ func TestGooseConfigDir(t *testing.T) {
 	assert.Equal(t, filepath.Join(".config", "goose"), gooseConfigDir("linux"))
 	assert.Equal(t, filepath.Join(".config", "goose"), gooseConfigDir(""))
 }
+
+// config.yaml written by `goose configure` after adding a command-line
+// extension "fs" (with an environment variable, whose value goes to the
+// secret store) and a remote extension "remote" (with a header), next to the
+// platform extensions Goose ships.
+func loadGooseTestdataConfig(t *testing.T) *gooseConfig {
+	t.Helper()
+	data, err := testAfero().ReadFile(filepath.Join(aiToolsHome, ".config", "goose", "config.yaml"))
+	require.NoError(t, err)
+	var config gooseConfig
+	require.NoError(t, yaml.Unmarshal(data, &config))
+	return &config
+}
+
+func TestGooseMcpServersFromConfigure(t *testing.T) {
+	config := loadGooseTestdataConfig(t)
+	specs := gooseMcpServers(config, "config.yaml")
+	require.Len(t, specs, 2, "platform extensions are not MCP servers")
+
+	fs := specs[0]
+	assert.Equal(t, "fs", fs.name)
+	assert.Equal(t, mcpTransportStdio, fs.transport)
+	assert.Equal(t, "npx", fs.command)
+	assert.Equal(t, []string{"-y", "@modelcontextprotocol/server-filesystem", "/tmp"}, fs.args)
+	assert.True(t, fs.hasEnv, "env_keys names the variable kept in the secret store")
+	assert.False(t, fs.hasHeaders)
+	assert.True(t, fs.enabled)
+
+	remote := specs[1]
+	assert.Equal(t, "remote", remote.name)
+	assert.Equal(t, mcpTransportHTTP, remote.transport, "streamable_http")
+	assert.Equal(t, "https://mcp.example.com/mcp", remote.url)
+	assert.True(t, remote.hasHeaders)
+	assert.False(t, remote.hasEnv)
+}
+
+// `goose configure` replaces GOOSE_PROVIDER and GOOSE_MODEL with
+// active_provider and the provider's entry under providers.
+func TestGooseActiveProviderAndModel(t *testing.T) {
+	config := loadGooseTestdataConfig(t)
+	assert.Empty(t, config.Provider)
+	assert.Equal(t, "openai", config.activeProvider())
+	assert.Equal(t, "gpt-4o", config.activeModel())
+
+	legacy := &gooseConfig{Provider: "anthropic", Model: "claude-sonnet", ActiveProvider: "openai"}
+	assert.Equal(t, "anthropic", legacy.activeProvider(), "GOOSE_PROVIDER wins when set")
+	assert.Equal(t, "claude-sonnet", legacy.activeModel())
+
+	assert.Empty(t, (&gooseConfig{}).activeModel())
+}

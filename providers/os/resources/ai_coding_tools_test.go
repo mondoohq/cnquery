@@ -351,20 +351,26 @@ func TestUnmarshalJSONConfigEmptyFile(t *testing.T) {
 		"whitespace": " \n\t\n",
 	} {
 		t.Run(name, func(t *testing.T) {
-			var config geminiMCPConfig
+			var config struct {
+				McpServers map[string]mcpJSONServer `json:"mcpServers"`
+			}
 			require.NoError(t, unmarshalJSONConfig([]byte(data), &config))
 			assert.Empty(t, config.McpServers)
 		})
 	}
 
 	t.Run("valid", func(t *testing.T) {
-		var config geminiMCPConfig
+		var config struct {
+			McpServers map[string]mcpJSONServer `json:"mcpServers"`
+		}
 		require.NoError(t, unmarshalJSONConfig([]byte(`{"mcpServers":{"a":{"command":"x"}}}`), &config))
 		assert.Len(t, config.McpServers, 1)
 	})
 
 	t.Run("malformed is still an error", func(t *testing.T) {
-		var config geminiMCPConfig
+		var config struct {
+			McpServers map[string]mcpJSONServer `json:"mcpServers"`
+		}
 		assert.Error(t, unmarshalJSONConfig([]byte(`{"mcpServers":`), &config))
 	})
 }

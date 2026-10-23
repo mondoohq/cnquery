@@ -26,6 +26,14 @@ var mcpClientResources = []string{
 	"windsurf",
 	"breezell",
 	"claude.desktop",
+	"goose",
+	"qwen.code",
+	"augment",
+	"openhands",
+	"cline",
+	"mistral.vibe",
+	"opencode",
+	"kilocode",
 }
 
 // mcpClientLike is satisfied by every AI tool resource that lists MCP servers.

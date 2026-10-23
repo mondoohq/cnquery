@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"sigs.k8s.io/yaml"
 )
@@ -54,7 +56,7 @@ func (r *mqlGoose) provider() (string, error) {
 		}
 		return "", err
 	}
-	return config.Provider, nil
+	return config.activeProvider(), nil
 }
 
 func (r *mqlGoose) model() (string, error) {
@@ -65,7 +67,7 @@ func (r *mqlGoose) model() (string, error) {
 		}
 		return "", err
 	}
-	return config.Model, nil
+	return config.activeModel(), nil
 }
 
 func (r *mqlGoose) telemetryEnabled() (bool, error) {
@@ -116,6 +118,66 @@ func (r *mqlGoose) extensions() ([]interface{}, error) {
 	return result, nil
 }
 
+// gooseMcpExtensionTypes are the extension types Goose runs as Model Context
+// Protocol servers.
+var gooseMcpExtensionTypes = map[string]bool{"stdio": true, "sse": true, "streamable_http": true}
+
+// gooseMcpServers returns the extensions of a config that are MCP servers,
+// sorted by name. Goose stores an extension's environment variable values in
+// its secret store and lists only their names under env_keys, so either one
+// being set means the server has environment variables.
+func gooseMcpServers(config *gooseConfig, source string) []mcpServerSpec {
+	names := make([]string, 0, len(config.Extensions))
+	for name, ext := range config.Extensions {
+		if gooseMcpExtensionTypes[ext.Type] {
+			names = append(names, name)
+		}
+	}
+	sort.Strings(names)
+
+	specs := make([]mcpServerSpec, 0, len(names))
+	for _, name := range names {
+		ext := config.Extensions[name]
+		specs = append(specs, mcpServerSpec{
+			name:       name,
+			transport:  deriveMcpTransport(ext.Type, ext.Cmd, ext.URI),
+			command:    ext.Cmd,
+			args:       ext.Args,
+			url:        ext.URI,
+			hasEnv:     len(ext.Envs) > 0 || len(ext.EnvKeys) > 0,
+			hasHeaders: len(ext.Headers) > 0,
+			enabled:    ext.Enabled,
+			source:     source,
+		})
+	}
+	return specs
+}
+
+func (r *mqlGoose) mcpServers() ([]interface{}, error) {
+	config, err := r.loadConfig()
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return newMcpServerResources(r.MqlRuntime, "goose.mcpServer", gooseMcpServers(config, filepath.Join(r.ConfigPath.Data, "config.yaml")))
+}
+
+func (r *mqlGooseMcpServer) id() (string, error) {
+	return mcpServerResourceID("goose.mcpServer", r.Source.Data, r.Name.Data), nil
+}
+
+func (r *mqlGooseMcpServer) running() (*llx.AssetValue, error) {
+	return mcpServerAsset(r), nil
+}
+
+// MqlAsset implements plugin.AssetSource: the asset the `running` anchor stands
+// for, with the connection needed to reach it. See mcpServerAssetFor.
+func (r *mqlGooseMcpServer) MqlAsset() (*inventory.Asset, error) {
+	return mcpServerAssetFor(r.MqlRuntime, r)
+}
+
 func (r *mqlGoose) skills() ([]interface{}, error) {
 	dir := gooseConfigDir(runtimeOSFamily(r.MqlRuntime))
 	return agentSkills(r.MqlRuntime, "goose.skill", r.ConfigPath.Data, dir,
@@ -147,13 +209,44 @@ type gooseConfig struct {
 	Provider         string                    `json:"GOOSE_PROVIDER"`
 	Model            string                    `json:"GOOSE_MODEL"`
 	TelemetryEnabled *bool                     `json:"GOOSE_TELEMETRY_ENABLED"`
+	// ActiveProvider and Providers are where `goose configure` keeps the
+	// provider and its model in current releases, replacing GOOSE_PROVIDER
+	// and GOOSE_MODEL.
+	ActiveProvider string `json:"active_provider"`
+	Providers      map[string]struct {
+		Model string `json:"model"`
+	} `json:"providers"`
+}
+
+// activeProvider returns the configured provider, from GOOSE_PROVIDER when set
+// and from active_provider otherwise.
+func (c *gooseConfig) activeProvider() string {
+	if c.Provider != "" {
+		return c.Provider
+	}
+	return c.ActiveProvider
+}
+
+// activeModel returns the configured model, from GOOSE_MODEL when set and
+// from the active provider's entry under providers otherwise.
+func (c *gooseConfig) activeModel() string {
+	if c.Model != "" {
+		return c.Model
+	}
+	return c.Providers[c.activeProvider()].Model
 }
 
 type gooseExtension struct {
-	Enabled     bool   `json:"enabled"`
-	Type        string `json:"type"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Bundled     bool   `json:"bundled"`
-	Timeout     int    `json:"timeout"`
+	Enabled     bool           `json:"enabled"`
+	Type        string         `json:"type"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Bundled     bool           `json:"bundled"`
+	Timeout     int            `json:"timeout"`
+	Cmd         string         `json:"cmd"`
+	Args        []string       `json:"args"`
+	URI         string         `json:"uri"`
+	Envs        map[string]any `json:"envs"`
+	EnvKeys     []string       `json:"env_keys"`
+	Headers     map[string]any `json:"headers"`
 }
