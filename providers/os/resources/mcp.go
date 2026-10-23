@@ -37,9 +37,21 @@ const (
 // it is inferred from the connection shape: a local launch command implies
 // stdio, a remote endpoint URL implies http. Returns an empty string when
 // neither is present.
+//
+// Tools name the same transports differently, so the spellings that mean
+// stdio or streamable HTTP are folded onto those two: Copilot CLI and OpenCode
+// write "local" for stdio, OpenCode writes "remote", and Cline, Goose and
+// Mistral Vibe spell streamable HTTP three different ways.
 func deriveMcpTransport(explicitType, command, url string) string {
 	if explicitType != "" {
-		return strings.ToLower(explicitType)
+		switch t := strings.ToLower(explicitType); t {
+		case "local":
+			return mcpTransportStdio
+		case "remote", "streamablehttp", "streamable-http", "streamable_http":
+			return mcpTransportHTTP
+		default:
+			return t
+		}
 	}
 	if command != "" {
 		return mcpTransportStdio

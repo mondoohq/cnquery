@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/spf13/afero"
 	"github.com/tailscale/hujson"
@@ -72,34 +73,49 @@ func (r *mqlGemini) mcpServers() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	names := make([]string, 0, len(servers))
+	for name := range servers {
+		names = append(names, name)
+	}
+	sort.Strings(names)
 
 	var result []interface{}
-	for name, server := range servers {
-		url := server.URL
-		if url == "" {
-			url = server.HTTPURL
-		}
-
-		res, err := NewResource(r.MqlRuntime, "gemini.mcpServer", map[string]*llx.RawData{
-			"__id":    llx.StringData("gemini.mcpServer/" + name),
-			"name":    llx.StringData(name),
-			"type":    llx.StringData(deriveMcpTransport(server.Type, server.Command, url)),
-			"command": llx.StringData(server.Command),
-			"args":    strSliceToArrayData(server.Args),
-			"url":     llx.StringData(url),
-			"hasEnv":  llx.BoolData(len(server.Env) > 0),
-		})
+	for _, name := range names {
+		res, err := NewResource(r.MqlRuntime, "gemini.mcpServer", geminiMcpServerArgs(servers[name]))
 		if err != nil {
 			return nil, err
 		}
+		res.(*mqlGeminiMcpServer).Extension.State = plugin.StateIsSet | plugin.StateIsNull
 		result = append(result, res)
 	}
-	return result, nil
+
+	exts := r.GetExtensions()
+	if exts.Error != nil {
+		return nil, exts.Error
+	}
+	extServers, err := enabledExtensionServers[*mqlGeminiExtension](exts.Data)
+	if err != nil {
+		return nil, err
+	}
+	return append(result, extServers...), nil
 }
 
 func (r *mqlGemini) skills() ([]interface{}, error) {
-	return agentSkills(r.MqlRuntime, "gemini.skill", r.ConfigPath.Data, defaultGeminiConfigDir,
+	dirs, err := resolvePerUserDirs(r.MqlRuntime, r.ConfigPath.Data, defaultGeminiConfigDir,
 		filepath.Join(defaultGeminiConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
+	if err != nil {
+		return nil, err
+	}
+	exts := r.GetExtensions()
+	if exts.Error != nil {
+		return nil, exts.Error
+	}
+	for _, e := range exts.Data {
+		if ext := e.(*mqlGeminiExtension); ext.Enabled.Data {
+			dirs = append(dirs, ext.ext.skillsDir)
+		}
+	}
+	return readSkillsFromDirs(r.MqlRuntime, dirs, "gemini.skill")
 }
 
 // Child resource ID methods
@@ -115,7 +131,7 @@ func (r *mqlGeminiMcpServer) MqlAsset() (*inventory.Asset, error) {
 }
 
 func (r *mqlGeminiMcpServer) id() (string, error) {
-	return "gemini.mcpServer/" + r.Name.Data, nil
+	return geminiMcpServerID(r.Source.Data, r.Name.Data), nil
 }
 
 func (r *mqlGeminiSkill) id() (string, error) {
@@ -135,22 +151,23 @@ func (r *mqlGeminiSkill) purl() (string, error) {
 // Antigravity keeps its own list in antigravity/mcp_config.json. Both are read,
 // and settings.json wins when both name the same server. A missing file is not
 // an error; a file that exists but does not parse is.
-func geminiMCPServers(afs *afero.Afero, configDir string) (map[string]geminiMCPServer, error) {
-	servers := map[string]geminiMCPServer{}
+func geminiMCPServers(afs *afero.Afero, configDir string) (map[string]mcpServerSpec, error) {
+	servers := map[string]mcpServerSpec{}
 	for _, rel := range []string{filepath.Join("antigravity", "mcp_config.json"), "settings.json"} {
-		data, err := afs.ReadFile(filepath.Join(configDir, rel))
+		path := filepath.Join(configDir, rel)
+		data, err := afs.ReadFile(path)
 		if err != nil {
 			if os.IsNotExist(err) {
 				continue
 			}
 			return nil, err
 		}
-		var config geminiMCPConfig
-		if err := unmarshalGeminiJSON(data, &config); err != nil {
+		specs, err := parseMcpServersJSON(data, "mcpServers", path)
+		if err != nil {
 			return nil, fmt.Errorf("failed to parse gemini %s: %w", rel, err)
 		}
-		for name, server := range config.McpServers {
-			servers[name] = server
+		for _, spec := range specs {
+			servers[spec.name] = spec
 		}
 	}
 	return servers, nil
@@ -205,17 +222,4 @@ func (s geminiSettings) authType() string {
 		return s.Security.Auth.SelectedType
 	}
 	return s.SelectedAuthType
-}
-
-type geminiMCPConfig struct {
-	McpServers map[string]geminiMCPServer `json:"mcpServers"`
-}
-
-type geminiMCPServer struct {
-	Type    string            `json:"type"`
-	Command string            `json:"command"`
-	Args    []string          `json:"args"`
-	URL     string            `json:"url"`
-	HTTPURL string            `json:"httpUrl"`
-	Env     map[string]string `json:"env"`
 }

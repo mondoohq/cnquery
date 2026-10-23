@@ -407,20 +407,6 @@ func agentSkills(runtime *plugin.Runtime, resourceType, configPath, defaultConfi
 	return readSkillsFromDirs(runtime, dirs, resourceType)
 }
 
-// skillsAllUsers reads skills from homeRelSkillsDir under every user's home, for
-// agents whose skills location is independent of configPath (e.g. Copilot).
-func skillsAllUsers(runtime *plugin.Runtime, homeRelSkillsDir, resourceType string) ([]interface{}, error) {
-	users, err := targetUserHomes(runtime)
-	if err != nil {
-		return nil, err
-	}
-	dirs := make([]string, 0, len(users))
-	for _, u := range users {
-		dirs = append(dirs, filepath.Join(u.home, homeRelSkillsDir))
-	}
-	return readSkillsFromDirs(runtime, dirs, resourceType)
-}
-
 // gitRepoResult holds the fields derived from a project's git working tree.
 type gitRepoResult struct {
 	root    string

@@ -22687,14 +22687,25 @@ claude.code @defaults("configPath") @maturity("preview") {
   // List of enabled plugin names
   enabledPlugins() []string
   // Installed plugins
+  //
+  // One entry per install record in plugins/installed_plugins.json: a plugin
+  // installed for several projects is listed once per project.
   plugins() []claude.code.plugin
+  // Plugin marketplaces registered in plugins/known_marketplaces.json
+  marketplaces() []claude.code.marketplace
   // Configured skills
+  //
+  // Skills in the skills directory of the configuration directory, plus the
+  // skills of every enabled plugin.
   skills() []claude.code.skill
   // Projects Claude Code has access to
   projects() []claude.code.project
   // Git repositories backing the projects
   repos() []claude.code.repo
   // MCP servers
+  //
+  // Servers configured in .claude.json, in each project's .mcp.json, and by
+  // every enabled plugin.
   mcpServers() []claude.code.mcpServer
   // Configured default model
   //
@@ -22715,10 +22726,13 @@ claude.code @defaults("configPath") @maturity("preview") {
 
 // Claude Code installed plugin
 //
-// Single plugin installed into Claude Code. Records the plugin `name`,
-// `version`, install `scope` (user or project), on-disk `installPath`,
-// install and update timestamps, the pinned `gitCommitSha`, and whether
-// it is currently `enabled`.
+// Single plugin install record in Claude Code. Records the plugin `name`,
+// `version`, install `scope` (user, project or local) with the `projectPath`
+// it applies to, the on-disk `installPath`, install and update timestamps,
+// the pinned `gitCommitSha`, and whether it is currently `enabled`. The
+// plugin's manifest and directory add its description, author and
+// repository, the `marketplace` it came from, and the skills, commands,
+// agents, hooks and MCP servers it contributes.
 private claude.code.plugin @defaults("name") @maturity("preview") {
   // Plugin name (e.g. "gopls-lsp@claude-plugins-official")
   name string
@@ -22735,7 +22749,68 @@ private claude.code.plugin @defaults("name") @maturity("preview") {
   // Git commit SHA of the installed version
   gitCommitSha string
   // Whether the plugin is currently enabled
+  //
+  // Read from `enabledPlugins` in the settings that apply to the install: for
+  // a project or local install, the project's .claude/settings.local.json and
+  // .claude/settings.json take precedence over the user's settings.json.
   enabled bool
+  // Project the plugin is installed for
+  //
+  // Path of the project a project or local scope install belongs to. Empty
+  // for a user-scope install.
+  projectPath string
+  // Marketplace the plugin was installed from
+  marketplace() claude.code.marketplace
+  // Plugin description
+  description() string
+  // Plugin author
+  author() string
+  // Source code repository URL
+  repository() string
+  // Plugin homepage URL
+  homepage() string
+  // Plugin license
+  license() string
+  // Skills the plugin provides
+  skills() []claude.code.skill
+  // Slash commands the plugin adds
+  commands() []string
+  // Subagents the plugin adds
+  agents() []string
+  // Whether the plugin registers hooks
+  //
+  // Hooks run commands on agent events such as a tool call or the start of a
+  // session.
+  hasHooks() bool
+  // MCP servers the plugin declares
+  mcpServers() []claude.code.mcpServer
+}
+
+// Claude Code plugin marketplace
+//
+// Plugin marketplace registered with Claude Code in
+// plugins/known_marketplaces.json. Plugins are installed from a marketplace,
+// so its source decides where plugin code comes from. The `name` field
+// selects the marketplace, for example `claude-plugins-official`.
+private claude.code.marketplace @defaults("name sourceType repo") @maturity("preview") {
+  // Marketplace name
+  name string
+  // Source type, for example "github", "git", "url" or "directory"
+  sourceType string
+  // GitHub repository of a "github" source
+  //
+  // Owner and name, for example anthropics/claude-plugins-official.
+  repo string
+  // URL of a "git" or "url" source
+  url string
+  // Local path of a "directory" or "file" source
+  path string
+  // Local directory the marketplace is checked out to
+  installLocation string
+  // Time the marketplace was last updated
+  lastUpdated time
+  // Plugins installed from this marketplace
+  plugins() []claude.code.plugin
 }
 
 // Claude Code skill
@@ -22875,6 +22950,14 @@ private claude.code.mcpServer @defaults("name") @maturity("preview") {
   needsAuth bool
   // Timestamp of last authentication check
   lastChecked string
+  // Whether HTTP headers (for example an Authorization token) are configured
+  hasHeaders bool
+  // Plugin that declares the server
+  //
+  // Plugin name with its marketplace, for example
+  // "github@claude-plugins-official". Empty for a server configured in
+  // .claude.json or a project's .mcp.json.
+  plugin string
   // Discovered MCP server asset
   //
   // Points at the asset discovered for this MCP server, anchored on this
@@ -22886,8 +22969,9 @@ private claude.code.mcpServer @defaults("name") @maturity("preview") {
 // Claude desktop app instance
 //
 // Anthropic's Claude desktop application configured on the host. Queryable
-// through it are the MCP servers declared in claude_desktop_config.json,
-// along with the package that installed the app and the runtime it runs in.
+// through it are the installed desktop extensions and the MCP servers they
+// run or claude_desktop_config.json declares, along with the package that
+// installed the app and the runtime it runs in.
 // The configuration directory is AppData\Roaming\Claude on Windows,
 // Library/Application Support/Claude on macOS, and .config/Claude elsewhere,
 // under the user's home; pass configPath to target another one. Useful for
@@ -22918,15 +23002,22 @@ claude.desktop @defaults("configPath") @maturity("preview") {
   // determined.
   runtime() extensionRuntime
   // MCP servers the app connects to
+  //
+  // Servers declared in claude_desktop_config.json, plus the server of every
+  // installed desktop extension.
   mcpServers() []claude.desktop.mcpServer
+  // Installed desktop extensions
+  extensions() []claude.desktop.extension
 }
 
 // Claude desktop MCP server
 //
-// Model Context Protocol server declared in claude_desktop_config.json.
-// Stdio servers launch a local command with args; http servers connect to a
-// url. `type` reports the transport and hasEnv whether environment
-// variables (often holding API keys or tokens) are configured for the server.
+// Model Context Protocol server declared in claude_desktop_config.json or
+// run by a desktop extension. Stdio servers launch a local command with args;
+// http servers connect to a url. `type` reports the transport and hasEnv
+// whether environment variables (often holding API keys or tokens) are
+// configured for the server. An extension's server is named after the
+// extension's identifier.
 private claude.desktop.mcpServer @defaults("name") @maturity("preview") {
   // Server name
   name string
@@ -22940,12 +23031,60 @@ private claude.desktop.mcpServer @defaults("name") @maturity("preview") {
   url string
   // Whether environment variables (for example API keys) are configured
   hasEnv bool
+  // Whether the server is enabled
+  //
+  // A server declared in claude_desktop_config.json is always enabled. An
+  // extension's server is enabled when the extension is.
+  enabled bool
+  // Desktop extension that runs the server
+  //
+  // Null for a server declared in claude_desktop_config.json.
+  extension() claude.desktop.extension
   // Discovered MCP server asset
   //
   // Points at the asset discovered for this MCP server, anchored on this
   // resource. The reference is typed to the `mcp` root: the resource that
   // roots the MCP server's own tree. See ADR 030 and ADR 031.
   running() asset<mcp>
+}
+
+// Claude desktop extension
+//
+// Desktop extension (an MCP bundle) installed into the Claude desktop app,
+// read from extensions-installations.json and the per-extension settings in
+// the configuration directory. Each extension runs one MCP server and
+// declares the tools it offers. The `id` field selects the extension, for
+// example `ant.dir.ant.anthropic.filesystem`. `signatureStatus` reports
+// whether the bundle was signed and `enabled` whether the app runs it.
+private claude.desktop.extension @defaults("id version enabled") @maturity("preview") {
+  // Extension identifier, for example ant.dir.ant.anthropic.filesystem
+  id string
+  // Extension name from the manifest
+  name string
+  // Display name shown in the app
+  displayName string
+  // Extension version
+  version string
+  // Extension description
+  description string
+  // Extension author
+  author string
+  // Source code repository URL
+  repository string
+  // Where the extension was installed from, for example "registry"
+  source string
+  // Installation directory
+  path string
+  // Time the extension was installed
+  installedAt time
+  // Signature verification status of the bundle, for example "unsigned"
+  signatureStatus string
+  // Whether the extension is enabled in the app
+  enabled bool
+  // Tools the extension declares in its manifest
+  tools []string
+  // MCP server the extension runs
+  mcpServer() claude.desktop.mcpServer
 }
 
 // OpenAI Codex CLI instance
@@ -23342,9 +23481,18 @@ github.copilot @defaults("configPath") @maturity("preview") {
   // Authenticated GitHub accounts
   accounts() []github.copilot.account
   // MCP servers the tool connects to
+  //
+  // Servers declared in mcp.json and intellij/mcp.json of the configuration
+  // directory, in the Copilot CLI's ~/.copilot/mcp-config.json, in the VS Code
+  // user mcp.json, and by every enabled Copilot CLI plugin.
   mcpServers() []github.copilot.mcpServer
   // Installed skills
+  //
+  // Skills in ~/.copilot/skills, plus the skills of every enabled Copilot CLI
+  // plugin.
   skills() []github.copilot.skill
+  // Plugins installed into the Copilot CLI
+  plugins() []github.copilot.plugin
 }
 
 // GitHub Copilot authenticated account
@@ -23364,9 +23512,10 @@ private github.copilot.account @defaults("user") @maturity("preview") {
 //
 // Model Context Protocol server Copilot is configured to use. Stdio servers
 // launch a local command with args; http servers connect to a url. `type`
-// reports the transport and hasEnv whether environment variables (often API
-// keys or tokens) are configured, both relevant when auditing the external
-// tools and data exposed to the assistant.
+// reports the transport, and hasEnv and hasHeaders whether environment
+// variables or HTTP headers (often API keys or tokens) are configured, all
+// relevant when auditing the external tools and data exposed to the
+// assistant. `source` names the file that declares the server.
 private github.copilot.mcpServer @defaults("name") @maturity("preview") {
   // Server name
   name string
@@ -23380,6 +23529,19 @@ private github.copilot.mcpServer @defaults("name") @maturity("preview") {
   url string
   // Whether environment variables (for example API keys) are configured
   hasEnv bool
+  // Whether HTTP headers (for example an Authorization token) are configured
+  hasHeaders bool
+  // Whether the server is enabled
+  //
+  // False for a Copilot CLI server listed in `disabledMcpServers` of
+  // ~/.copilot/settings.json.
+  enabled bool
+  // Path of the configuration file that declares the server
+  source string
+  // Copilot CLI plugin that declares the server
+  //
+  // Null for a server the user configured directly.
+  plugin() github.copilot.plugin
   // Discovered MCP server asset
   //
   // Points at the asset discovered for this MCP server, anchored on this
@@ -23411,6 +23573,49 @@ private github.copilot.skill @defaults("name") @maturity("preview") {
   sha256() string
   // Package URL identifying the skill's git origin
   purl() string
+}
+
+// GitHub Copilot CLI plugin
+//
+// Plugin installed into the Copilot CLI from a plugin marketplace or a
+// repository, recorded in ~/.copilot/config.json. A plugin bundles skills,
+// agents, hooks and MCP servers. The `name` field selects the plugin, for
+// example `azure`, and `marketplace` names the marketplace it came from.
+private github.copilot.plugin @defaults("name marketplace version enabled") @maturity("preview") {
+  // Plugin name
+  name string
+  // Marketplace the plugin was installed from, for example "awesome-copilot"
+  marketplace string
+  // Plugin version
+  version string
+  // Installation directory
+  path string
+  // Time the plugin was installed
+  installedAt time
+  // SHA-256 digest of the installed plugin source
+  sourceSha string
+  // Whether the plugin is enabled
+  //
+  // Read from `enabledPlugins` in ~/.copilot/settings.json, falling back to
+  // the install record.
+  enabled bool
+  // Plugin description
+  description() string
+  // Plugin author
+  author() string
+  // Source code repository URL
+  repository() string
+  // Skills the plugin provides
+  skills() []github.copilot.skill
+  // Agents the plugin adds
+  agents() []string
+  // Whether the plugin registers hooks
+  //
+  // Hooks run commands on agent events such as a tool call or the start of a
+  // session.
+  hasHooks() bool
+  // MCP servers the plugin declares
+  mcpServers() []github.copilot.mcpServer
 }
 
 // Goose AI agent (Block) instance
@@ -23461,6 +23666,11 @@ goose @defaults("configPath") @maturity("preview") {
   telemetryEnabled() bool
   // Configured extensions
   extensions() []goose.extension
+  // MCP servers the agent connects to
+  //
+  // The extensions in config.yaml of type stdio, sse or streamable_http,
+  // which Goose runs as Model Context Protocol servers.
+  mcpServers() []goose.mcpServer
   // Installed skills
   skills() []goose.skill
 }
@@ -23468,16 +23678,20 @@ goose @defaults("configPath") @maturity("preview") {
 // Goose extension
 //
 // Extension configured for the Goose agent, adding tools or integrations.
-// The type distinguishes a "platform" extension (external process) from a
-// "builtin" one, bundled reports whether it ships with Goose, enabled
-// reports whether it is active, and timeout is its execution limit in
-// seconds (0 means no timeout).
+// The type distinguishes extensions built into Goose ("platform", "builtin")
+// from Model Context Protocol servers ("stdio", "sse", "streamable_http"),
+// bundled reports whether it ships with Goose, enabled reports whether it is
+// active, and timeout is its execution limit in seconds (0 means no
+// timeout). The MCP server extensions are also listed in goose.mcpServers.
 private goose.extension @defaults("name") @maturity("preview") {
   // Extension name
   name string
   // Whether the extension is enabled
   enabled bool
-  // Extension type: "platform" or "builtin"
+  // Extension type
+  //
+  // For example "platform" or "builtin" for an extension built into Goose,
+  // or "stdio", "sse" or "streamable_http" for an MCP server.
   type string
   // Extension description
   description string
@@ -23485,6 +23699,43 @@ private goose.extension @defaults("name") @maturity("preview") {
   bundled bool
   // Extension execution timeout in seconds (0 means no timeout)
   timeout int
+}
+
+
+// Goose MCP server
+//
+// Model Context Protocol server declared in an extension of the Goose
+// config.yaml. Stdio servers launch a local command with args; http and sse
+// servers connect to a url. hasEnv and hasHeaders report whether environment
+// variables or HTTP headers (often holding API keys or tokens) are set,
+// without exposing their values. Goose keeps the values of an extension's
+// environment variables in its secret store, so hasEnv reports that their
+// names are configured.
+private goose.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server transport type, for example "stdio", "http" or "sse"
+  type string
+  // Local command launched for stdio-type servers
+  command string
+  // Command-line arguments passed to the server command
+  args []string
+  // Endpoint URL for http or sse servers
+  url string
+  // Whether environment variables (for example API keys) are configured
+  hasEnv bool
+  // Whether HTTP headers (for example an Authorization token) are configured
+  hasHeaders bool
+  // Whether the server is enabled
+  enabled bool
+  // Path of the configuration file that declares the server
+  source string
+  // Discovered MCP server asset
+  //
+  // Points at the asset discovered for this MCP server, anchored on this
+  // resource. The reference is typed to the `mcp` root: the resource that
+  // roots the MCP server's own tree. See ADR 030 and ADR 031.
+  running() asset<mcp>
 }
 
 // Goose skill
@@ -23555,12 +23806,18 @@ gemini @defaults("configPath") @maturity("preview") {
   settings() dict
   // MCP servers the tool connects to
   //
-  // Read from the `mcpServers` key of settings.json and from
-  // antigravity/mcp_config.json. When both name the same server, the
+  // Read from the `mcpServers` key of settings.json, from
+  // antigravity/mcp_config.json, and from every enabled extension. When
+  // settings.json and antigravity/mcp_config.json name the same server, the
   // settings.json definition is reported.
   mcpServers() []gemini.mcpServer
   // Installed skills
+  //
+  // Skills in the skills directory of the configuration directory, plus the
+  // skills of every enabled extension.
   skills() []gemini.skill
+  // Installed extensions
+  extensions() []gemini.extension
   // Configured default model
   //
   // The model Gemini is configured to use, taken from the `model.name` key
@@ -23573,8 +23830,9 @@ gemini @defaults("configPath") @maturity("preview") {
 //
 // Model Context Protocol server Gemini is configured to use. Stdio servers
 // launch a local command with args; http servers connect to a url. `type`
-// reports the transport and hasEnv whether environment variables (often
-// holding API keys or tokens) are configured for the server.
+// reports the transport, and hasEnv and hasHeaders whether environment
+// variables or HTTP headers (often holding API keys or tokens) are
+// configured for the server.
 private gemini.mcpServer @defaults("name") @maturity("preview") {
   // Server name
   name string
@@ -23588,12 +23846,60 @@ private gemini.mcpServer @defaults("name") @maturity("preview") {
   url string
   // Whether environment variables (for example API keys) are configured
   hasEnv bool
+  // Whether HTTP headers (for example an Authorization token) are configured
+  hasHeaders bool
+  // Path of the configuration file that declares the server
+  source string
+  // Extension that declares the server
+  //
+  // Null for a server configured in settings.json or
+  // antigravity/mcp_config.json.
+  extension() gemini.extension
   // Discovered MCP server asset
   //
   // Points at the asset discovered for this MCP server, anchored on this
   // resource. The reference is typed to the `mcp` root: the resource that
   // roots the MCP server's own tree. See ADR 030 and ADR 031.
   running() asset<mcp>
+}
+
+
+// Gemini CLI extension
+//
+// Extension installed for the Gemini CLI under extensions/<name> in the
+// configuration directory, described by its gemini-extension.json manifest.
+// An extension bundles MCP servers, custom commands, skills and a context
+// file. `source` and `installType` record where it was installed from, and
+// `enabled` whether it is active for the user's home directory.
+private gemini.extension @defaults("name version enabled") @maturity("preview") {
+  // Extension name
+  name string
+  // Extension version
+  version string
+  // Installation directory
+  path string
+  // Source the extension was installed from, for example a git repository URL
+  source string
+  // Installation type
+  //
+  // How the extension was installed, for example "github-release", "git",
+  // "local" or "link".
+  installType string
+  // Release tag installed by a "github-release" installation
+  releaseTag string
+  // Whether the extension is enabled for the user's home directory
+  //
+  // Evaluated from the rules in extensions/extension-enablement.json. Rules
+  // for a single workspace are not reflected.
+  enabled bool
+  // Context file the extension adds to every session, for example GEMINI.md
+  contextFileName string
+  // Custom commands the extension adds, for example "security:analyze"
+  commands []string
+  // MCP servers the extension declares
+  mcpServers() []gemini.mcpServer
+  // Skills the extension provides
+  skills() []gemini.skill
 }
 
 // Gemini skill
@@ -24094,6 +24400,45 @@ cline @defaults("configPath") @maturity("preview") {
   runtime() extensionRuntime
   // Installed skills
   skills() []cline.skill
+  // MCP servers the agent connects to
+  //
+  // Read from data/settings/cline_mcp_settings.json in the configuration
+  // directory, where the Cline CLI keeps them.
+  mcpServers() []cline.mcpServer
+}
+
+// Cline MCP server
+//
+// Model Context Protocol server declared in the Cline CLI
+// cline_mcp_settings.json. Stdio servers launch a local command with args;
+// http and sse servers connect to a url. hasEnv and hasHeaders report whether
+// environment variables or HTTP headers (often holding API keys or tokens)
+// are set, without exposing their values.
+private cline.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server transport type, for example "stdio", "http" or "sse"
+  type string
+  // Local command launched for stdio-type servers
+  command string
+  // Command-line arguments passed to the server command
+  args []string
+  // Endpoint URL for http or sse servers
+  url string
+  // Whether environment variables (for example API keys) are configured
+  hasEnv bool
+  // Whether HTTP headers (for example an Authorization token) are configured
+  hasHeaders bool
+  // Whether the server is enabled
+  enabled bool
+  // Path of the configuration file that declares the server
+  source string
+  // Discovered MCP server asset
+  //
+  // Points at the asset discovered for this MCP server, anchored on this
+  // resource. The reference is typed to the `mcp` root: the resource that
+  // roots the MCP server's own tree. See ADR 030 and ADR 031.
+  running() asset<mcp>
 }
 
 // Cline skill
@@ -24382,6 +24727,51 @@ opencode @defaults("configPath") @maturity("preview") {
   runtime() extensionRuntime
   // Skills installed for the agent, one resource per discovered SKILL.md file
   skills() []opencode.skill
+  // MCP servers the agent connects to
+  //
+  // Read from the `mcp` key of opencode.json and opencode.jsonc in the
+  // configuration directory.
+  mcpServers() []opencode.mcpServer
+  // Plugins the agent loads
+  //
+  // npm package specifiers listed under `plugin` in opencode.json and
+  // opencode.jsonc in the configuration directory, for example
+  // "opencode-wakatime".
+  plugins() []string
+}
+
+// OpenCode MCP server
+//
+// Model Context Protocol server declared in an OpenCode opencode.json or
+// opencode.jsonc. Stdio servers launch a local command with args; http and
+// sse servers connect to a url. hasEnv and hasHeaders report whether
+// environment variables or HTTP headers (often holding API keys or tokens)
+// are set, without exposing their values.
+private opencode.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server transport type, for example "stdio", "http" or "sse"
+  type string
+  // Local command launched for stdio-type servers
+  command string
+  // Command-line arguments passed to the server command
+  args []string
+  // Endpoint URL for http or sse servers
+  url string
+  // Whether environment variables (for example API keys) are configured
+  hasEnv bool
+  // Whether HTTP headers (for example an Authorization token) are configured
+  hasHeaders bool
+  // Whether the server is enabled
+  enabled bool
+  // Path of the configuration file that declares the server
+  source string
+  // Discovered MCP server asset
+  //
+  // Points at the asset discovered for this MCP server, anchored on this
+  // resource. The reference is typed to the `mcp` root: the resource that
+  // roots the MCP server's own tree. See ADR 030 and ADR 031.
+  running() asset<mcp>
 }
 
 // OpenCode skill
@@ -24548,6 +24938,45 @@ mistral.vibe @defaults("configPath") @maturity("preview") {
   runtime() extensionRuntime
   // Skills installed for the agent, one resource per discovered SKILL.md file
   skills() []mistral.vibe.skill
+  // MCP servers the agent connects to
+  //
+  // Read from the `mcp_servers` tables of config.toml in the configuration
+  // directory.
+  mcpServers() []mistral.vibe.mcpServer
+}
+
+// Mistral Vibe MCP server
+//
+// Model Context Protocol server declared in the Mistral Vibe config.toml.
+// Stdio servers launch a local command with args; http and sse servers
+// connect to a url. hasEnv and hasHeaders report whether environment
+// variables or HTTP headers (often holding API keys or tokens) are set,
+// without exposing their values.
+private mistral.vibe.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server transport type, for example "stdio", "http" or "sse"
+  type string
+  // Local command launched for stdio-type servers
+  command string
+  // Command-line arguments passed to the server command
+  args []string
+  // Endpoint URL for http or sse servers
+  url string
+  // Whether environment variables (for example API keys) are configured
+  hasEnv bool
+  // Whether HTTP headers (for example an Authorization token) are configured
+  hasHeaders bool
+  // Whether the server is enabled
+  enabled bool
+  // Path of the configuration file that declares the server
+  source string
+  // Discovered MCP server asset
+  //
+  // Points at the asset discovered for this MCP server, anchored on this
+  // resource. The reference is typed to the `mcp` root: the resource that
+  // roots the MCP server's own tree. See ADR 030 and ADR 031.
+  running() asset<mcp>
 }
 
 // Mistral Vibe skill
@@ -25095,6 +25524,45 @@ augment @defaults("configPath") @maturity("preview") {
   runtime() extensionRuntime
   // Skills installed for the agent, one resource per discovered SKILL.md file
   skills() []augment.skill
+  // MCP servers the agent connects to
+  //
+  // Read from the `mcpServers` key of settings.json in the configuration
+  // directory.
+  mcpServers() []augment.mcpServer
+}
+
+// Augment MCP server
+//
+// Model Context Protocol server declared in the Augment settings.json. Stdio
+// servers launch a local command with args; http and sse servers connect to a
+// url. hasEnv and hasHeaders report whether environment variables or HTTP
+// headers (often holding API keys or tokens) are set, without exposing their
+// values.
+private augment.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server transport type, for example "stdio", "http" or "sse"
+  type string
+  // Local command launched for stdio-type servers
+  command string
+  // Command-line arguments passed to the server command
+  args []string
+  // Endpoint URL for http or sse servers
+  url string
+  // Whether environment variables (for example API keys) are configured
+  hasEnv bool
+  // Whether HTTP headers (for example an Authorization token) are configured
+  hasHeaders bool
+  // Whether the server is enabled
+  enabled bool
+  // Path of the configuration file that declares the server
+  source string
+  // Discovered MCP server asset
+  //
+  // Points at the asset discovered for this MCP server, anchored on this
+  // resource. The reference is typed to the `mcp` root: the resource that
+  // roots the MCP server's own tree. See ADR 030 and ADR 031.
+  running() asset<mcp>
 }
 
 // Augment skill
@@ -25262,6 +25730,50 @@ kilocode @defaults("configPath") @maturity("preview") {
   runtime() extensionRuntime
   // Skills installed for the agent, one resource per discovered SKILL.md file
   skills() []kilocode.skill
+  // MCP servers the agent connects to
+  //
+  // Read from the `mcp` key of kilo.json, kilo.jsonc, opencode.json and
+  // opencode.jsonc in ~/.config/kilo, where the Kilo CLI keeps them.
+  mcpServers() []kilocode.mcpServer
+  // Plugins the agent loads
+  //
+  // npm package specifiers listed under `plugin` in the Kilo CLI
+  // configuration files in ~/.config/kilo, for example "opencode-wakatime".
+  plugins() []string
+}
+
+// Kilo Code MCP server
+//
+// Model Context Protocol server declared in a Kilo CLI configuration file.
+// Stdio servers launch a local command with args; http and sse servers
+// connect to a url. hasEnv and hasHeaders report whether environment
+// variables or HTTP headers (often holding API keys or tokens) are set,
+// without exposing their values.
+private kilocode.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server transport type, for example "stdio", "http" or "sse"
+  type string
+  // Local command launched for stdio-type servers
+  command string
+  // Command-line arguments passed to the server command
+  args []string
+  // Endpoint URL for http or sse servers
+  url string
+  // Whether environment variables (for example API keys) are configured
+  hasEnv bool
+  // Whether HTTP headers (for example an Authorization token) are configured
+  hasHeaders bool
+  // Whether the server is enabled
+  enabled bool
+  // Path of the configuration file that declares the server
+  source string
+  // Discovered MCP server asset
+  //
+  // Points at the asset discovered for this MCP server, anchored on this
+  // resource. The reference is typed to the `mcp` root: the resource that
+  // roots the MCP server's own tree. See ADR 030 and ADR 031.
+  running() asset<mcp>
 }
 
 // Kilo Code skill
@@ -25346,6 +25858,44 @@ openhands @defaults("configPath") @maturity("preview") {
   runtime() extensionRuntime
   // Skills installed for the agent, one resource per discovered SKILL.md file
   skills() []openhands.skill
+  // MCP servers the agent connects to
+  //
+  // Read from mcp.json in the configuration directory.
+  mcpServers() []openhands.mcpServer
+}
+
+// OpenHands MCP server
+//
+// Model Context Protocol server declared in the OpenHands mcp.json. Stdio
+// servers launch a local command with args; http and sse servers connect to a
+// url. hasEnv and hasHeaders report whether environment variables or HTTP
+// headers (often holding API keys or tokens) are set, without exposing their
+// values.
+private openhands.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server transport type, for example "stdio", "http" or "sse"
+  type string
+  // Local command launched for stdio-type servers
+  command string
+  // Command-line arguments passed to the server command
+  args []string
+  // Endpoint URL for http or sse servers
+  url string
+  // Whether environment variables (for example API keys) are configured
+  hasEnv bool
+  // Whether HTTP headers (for example an Authorization token) are configured
+  hasHeaders bool
+  // Whether the server is enabled
+  enabled bool
+  // Path of the configuration file that declares the server
+  source string
+  // Discovered MCP server asset
+  //
+  // Points at the asset discovered for this MCP server, anchored on this
+  // resource. The reference is typed to the `mcp` root: the resource that
+  // roots the MCP server's own tree. See ADR 030 and ADR 031.
+  running() asset<mcp>
 }
 
 // OpenHands skill
@@ -25428,6 +25978,95 @@ qwen.code @defaults("configPath") @maturity("preview") {
   // determined.
   runtime() extensionRuntime
   // Skills installed for the agent, one resource per discovered SKILL.md file
+  //
+  // Skills in the skills directory of the configuration directory, plus the
+  // skills of every enabled extension.
+  skills() []qwen.code.skill
+  // MCP servers the agent connects to
+  //
+  // Read from the `mcpServers` key of settings.json and from every enabled
+  // extension.
+  mcpServers() []qwen.code.mcpServer
+  // Installed extensions
+  extensions() []qwen.code.extension
+}
+
+
+// Qwen Code MCP server
+//
+// Model Context Protocol server declared in the Qwen Code settings.json or an
+// extension. Stdio servers launch a local command with args; http and sse
+// servers connect to a url. hasEnv and hasHeaders report whether environment
+// variables or HTTP headers (often holding API keys or tokens) are set,
+// without exposing their values.
+private qwen.code.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server transport type, for example "stdio", "http" or "sse"
+  type string
+  // Local command launched for stdio-type servers
+  command string
+  // Command-line arguments passed to the server command
+  args []string
+  // Endpoint URL for http or sse servers
+  url string
+  // Whether environment variables (for example API keys) are configured
+  hasEnv bool
+  // Whether HTTP headers (for example an Authorization token) are configured
+  hasHeaders bool
+  // Whether the server is enabled
+  enabled bool
+  // Path of the configuration file that declares the server
+  source string
+  // Extension that declares the server
+  //
+  // Null for a server configured in settings.json.
+  extension() qwen.code.extension
+  // Discovered MCP server asset
+  //
+  // Points at the asset discovered for this MCP server, anchored on this
+  // resource. The reference is typed to the `mcp` root: the resource that
+  // roots the MCP server's own tree. See ADR 030 and ADR 031.
+  running() asset<mcp>
+}
+
+// Qwen Code extension
+//
+// Extension installed for Qwen Code under extensions/<name> in the
+// configuration directory, described by its qwen-extension.json (or
+// gemini-extension.json) manifest. An extension bundles MCP servers, custom
+// commands, skills and a context file. `source` and `installType` record
+// where it was installed from, and `enabled` whether it is active for the
+// user's home directory.
+private qwen.code.extension @defaults("name version enabled") @maturity("preview") {
+  // Extension name
+  name string
+  // Extension version
+  version string
+  // Installation directory
+  path string
+  // Source the extension was installed from, for example a git repository URL
+  source string
+  // Installation type
+  //
+  // How the extension was installed, for example "github-release", "git",
+  // "local" or "link".
+  installType string
+  // Release tag installed by a "github-release" installation
+  releaseTag string
+  // Whether the extension is enabled for the user's home directory
+  //
+  // Evaluated from the extension store in extension-store/state.json and the
+  // rules in extensions/extension-enablement.json. Rules for a single
+  // workspace are not reflected.
+  enabled bool
+  // Context file the extension adds to every session, for example GEMINI.md
+  contextFileName string
+  // Custom commands the extension adds, for example "security:analyze"
+  commands []string
+  // MCP servers the extension declares
+  mcpServers() []qwen.code.mcpServer
+  // Skills the extension provides
   skills() []qwen.code.skill
 }
 

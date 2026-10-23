@@ -56,21 +56,23 @@ func TestGeminiMCPParsing(t *testing.T) {
 	data, err := afs.ReadFile(filepath.Join(dir, "antigravity", "mcp_config.json"))
 	require.NoError(t, err)
 
-	var config geminiMCPConfig
-	err = json.Unmarshal(data, &config)
+	specs, err := parseMcpServersJSON(data, "mcpServers", "mcp_config.json")
 	require.NoError(t, err)
-	assert.Len(t, config.McpServers, 2)
+	require.Len(t, specs, 2)
 
-	fs := config.McpServers["filesystem"]
-	assert.Equal(t, "npx", fs.Command)
-	assert.Len(t, fs.Args, 2)
-	assert.Len(t, fs.Env, 1)
-	assert.Equal(t, mcpTransportStdio, deriveMcpTransport(fs.Type, fs.Command, fs.URL))
+	fs := specs[0]
+	assert.Equal(t, "filesystem", fs.name)
+	assert.Equal(t, "npx", fs.command)
+	assert.Len(t, fs.args, 2)
+	assert.True(t, fs.hasEnv)
+	assert.Equal(t, mcpTransportStdio, fs.transport)
 
-	// remote server uses httpUrl; the creator falls back to it for url
-	remote := config.McpServers["remote"]
-	assert.Equal(t, "https://mcp.example.com/mcp", remote.HTTPURL)
-	assert.Empty(t, remote.Command)
+	// remote server uses httpUrl, which is read as its url
+	remote := specs[1]
+	assert.Equal(t, "remote", remote.name)
+	assert.Equal(t, "https://mcp.example.com/mcp", remote.url)
+	assert.Equal(t, mcpTransportHTTP, remote.transport)
+	assert.Empty(t, remote.command)
 }
 
 func TestGeminiConfigMissing(t *testing.T) {
@@ -92,8 +94,8 @@ func TestGeminiMCPServersFromSettings(t *testing.T) {
 	servers, err := geminiMCPServers(afs, dir)
 	require.NoError(t, err)
 	require.Contains(t, servers, "memory")
-	assert.Equal(t, "npx", servers["memory"].Command)
-	assert.Equal(t, []string{"-y", "@modelcontextprotocol/server-memory"}, servers["memory"].Args)
+	assert.Equal(t, "npx", servers["memory"].command)
+	assert.Equal(t, []string{"-y", "@modelcontextprotocol/server-memory"}, servers["memory"].args)
 }
 
 // Both files are read; a server named in both is reported with its
@@ -109,8 +111,8 @@ func TestGeminiMCPServersMergesBothFiles(t *testing.T) {
 	servers, err := geminiMCPServers(afs, dir)
 	require.NoError(t, err)
 	assert.ElementsMatch(t, []string{"filesystem", "remote", "memory"}, keysOf(servers))
-	assert.Equal(t, "uvx", servers["filesystem"].Command, "settings.json wins over antigravity")
-	assert.Equal(t, "https://mcp.example.com/mcp", servers["remote"].HTTPURL)
+	assert.Equal(t, "uvx", servers["filesystem"].command, "settings.json wins over antigravity")
+	assert.Equal(t, "https://mcp.example.com/mcp", servers["remote"].url)
 }
 
 func TestGeminiMCPServersNoFiles(t *testing.T) {
@@ -167,7 +169,7 @@ func TestGeminiSettingsWithComments(t *testing.T) {
 
 	servers, err := geminiMCPServers(afs, dir)
 	require.NoError(t, err)
-	assert.Equal(t, "npx", servers["memory"].Command)
+	assert.Equal(t, "npx", servers["memory"].command)
 }
 
 func TestGeminiSettingsMalformedStillErrors(t *testing.T) {
