@@ -168,6 +168,13 @@ Not weak, keep them: `assert.True/False` on a derived predicate, `assert.Error` 
 
 Delete bad tests you find in files you edit and name them in the PR. Never delete a test just because it fails.
 
+**Say where each case's data comes from.** When the change was verified against a real target, build the main cases from what you measured there and label every case, so a reader can tell a fact about real hosts from an edge case someone imagined:
+
+- `// Measured: <target, version or build, date>`. The values are copied from the target: registry dumps, version strings, API responses. Read them with a tool that doesn't go through the code under test (the vendor's CLI, PowerShell, an existing parser), and set the expected value to what the live scan on that target returned.
+- `// Synthetic: <behaviour it covers>; no target showed this.` These are edge cases (malformed input, absent keys, another architecture). Keep them; they cover what no host showed you.
+
+Capture the raw values before you tear the target down. A fixture is still synthesized, for example a PE image built from the measured version resource, and that's fine as long as a comment says so. Measured data catches what invented data hides: on every real Windows host the PE fixed file version equals the `ProductVersion` string, so only a synthetic case can tell the two apart, and only real hosts showed that `clr.dll`'s fixed product version is a constant `4.0.30319.0`.
+
 ### Step 4: Verification
 
 Unit tests complement interactive verification, they don't replace it. After each provider change:
@@ -245,7 +252,7 @@ Hide synthetic `__id` values, don't expose them as `id` fields. When a sub-resou
 - [ ] `make test/lint` and `make test/go/plain` pass; `go test -v ./providers/<provider>/...` if the provider has tests
 - [ ] Verified interactively (`mql shell <provider>`, queries from the ticket)
 - [ ] Every new field naming another resource is a typed accessor (Step 1.5)
-- [ ] Pure Go logic has unit tests (Step 3.6), in the `_test.go` named after the source file; every test added can fail, any found that couldn't was removed (Step 3.7)
+- [ ] Pure Go logic has unit tests (Step 3.6), in the `_test.go` named after the source file; every test added can fail, any found that couldn't was removed, and each case is labelled measured or synthetic (Step 3.7)
 - [ ] No spelling errors: CI runs `crate-ci/typos` (config `_typos.toml`). Fix real typos, add identifiers and product names to `_typos.toml`
 - [ ] `make race/go` if touching concurrency; `make test/integration` if changing core execution
 
