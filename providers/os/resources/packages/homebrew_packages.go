@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"path"
 	"strings"
 
 	"github.com/package-url/packageurl-go"
@@ -50,15 +51,18 @@ func (h *HomebrewPkgManager) Format() string {
 // HomebrewPackage represents a Homebrew package with extended metadata
 // beyond the standard Package struct.
 type HomebrewPackage struct {
-	Name                  string
-	Version               string
-	LatestVersion         string
-	Purl                  string
-	Description           string
-	Homepage              string
-	Path                  string
-	Type                  string // "formula" or "cask"
-	AppName               string
+	Name          string
+	Version       string
+	LatestVersion string
+	Purl          string
+	Description   string
+	Homepage      string
+	Path          string
+	Type          string // "formula" or "cask"
+	AppName       string
+	// AppPaths are the absolute paths of the application bundles a cask
+	// installed. Empty for formulae and for casks without an app bundle.
+	AppPaths              []string
 	AutoUpdates           bool
 	InstalledOnRequest    bool
 	InstalledAsDependency bool
@@ -163,7 +167,59 @@ func (h *HomebrewPkgManager) listFromCLI() ([]HomebrewPackage, error) {
 		return nil, err
 	}
 
-	return ParseHomebrewInfo(data, prefix)
+	pkgs, err := ParseHomebrewInfo(data, prefix)
+	if err != nil {
+		return nil, err
+	}
+	// brew info does not say where a cask's app ended up; the Caskroom does.
+	for i := range pkgs {
+		if pkgs[i].Type == "cask" {
+			pkgs[i].AppPaths = caskAppPaths(afs, pkgs[i].Path)
+		}
+	}
+	return pkgs, nil
+}
+
+// caskAppPaths returns the absolute paths of the application bundles the
+// cask installed, read from the *.app entries in its Caskroom version
+// directory. Homebrew puts a symlink there for each app it moved into the
+// appdir, so the link target is where the app really lives, including under a
+// custom --appdir. A real *.app directory is reported as itself. The version
+// directory is named after the cask version at install time and is never
+// renamed, which is why an auto-updating cask's app can be newer than it.
+// Casks without an app bundle (pkg installers, fonts) return nil.
+func caskAppPaths(afs *afero.Afero, caskDir string) []string {
+	entries, err := afs.ReadDir(caskDir)
+	if err != nil {
+		return nil
+	}
+	lr, canReadLinks := afs.Fs.(afero.LinkReader)
+
+	var apps []string
+	for _, e := range entries {
+		if !strings.HasSuffix(e.Name(), ".app") {
+			continue
+		}
+		entryPath := caskDir + "/" + e.Name()
+		if e.IsDir() {
+			apps = append(apps, entryPath)
+			continue
+		}
+		if !canReadLinks {
+			log.Debug().Str("path", entryPath).Msg("mql[homebrew]> filesystem cannot read symlinks, skipping cask app")
+			continue
+		}
+		target, err := lr.ReadlinkIfPossible(entryPath)
+		if err != nil {
+			log.Debug().Err(err).Str("path", entryPath).Msg("mql[homebrew]> could not read cask app link")
+			continue
+		}
+		if !path.IsAbs(target) {
+			target = path.Join(caskDir, target)
+		}
+		apps = append(apps, path.Clean(target))
+	}
+	return apps
 }
 
 // brewInfoCommand returns the command that lists the installed packages.
@@ -353,18 +409,21 @@ func (h *HomebrewPkgManager) parseFromCaskroom(afs *afero.Afero, prefix string) 
 			continue
 		}
 		for _, vDir := range versionDirs {
-			if !vDir.IsDir() {
+			// .metadata holds brew's install receipts, not a version
+			if !vDir.IsDir() || strings.HasPrefix(vDir.Name(), ".") {
 				continue
 			}
 			version := vDir.Name()
 
+			caskDir := caskroomPath + "/" + name + "/" + version
 			pkgs = append(pkgs, HomebrewPackage{
 				Name:               name,
 				Version:            version,
 				Purl:               newHomebrewPurl(name, version, "homebrew/cask"),
 				Type:               "cask",
 				Prefix:             prefix,
-				Path:               caskroomPath + "/" + name + "/" + version,
+				Path:               caskDir,
+				AppPaths:           caskAppPaths(afs, caskDir),
 				InstalledOnRequest: true, // Casks are always explicit installs
 			})
 		}
@@ -480,6 +539,7 @@ func ParseHomebrewInfo(data []byte, prefix string) ([]HomebrewPackage, error) {
 			Purl:               newHomebrewPurl(c.Token, c.Installed, c.Tap),
 			Description:        c.Desc,
 			Homepage:           c.Homepage,
+			Path:               prefix + "/Caskroom/" + c.Token + "/" + c.Installed,
 			Type:               "cask",
 			AppName:            appName,
 			AutoUpdates:        c.AutoUpdates,

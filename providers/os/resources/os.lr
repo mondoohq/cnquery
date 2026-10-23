@@ -14795,6 +14795,8 @@ private homebrew.package @defaults("name version type") {
   type string
   // Application name (casks only)
   appName string
+  // Absolute paths of the application bundles this cask installed (casks only)
+  appPaths []string
   // Whether the cask manages its own updates
   autoUpdates bool
   // Whether this package was explicitly installed (not a dependency)

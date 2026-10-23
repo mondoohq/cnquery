@@ -14767,6 +14767,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"homebrew.package.appName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHomebrewPackage).GetAppName()).ToDataRes(types.String)
 	},
+	"homebrew.package.appPaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetAppPaths()).ToDataRes(types.Array(types.String))
+	},
 	"homebrew.package.autoUpdates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHomebrewPackage).GetAutoUpdates()).ToDataRes(types.Bool)
 	},
@@ -39119,6 +39122,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"homebrew.package.appName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHomebrewPackage).AppName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.appPaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).AppPaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"homebrew.package.autoUpdates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -97655,6 +97662,7 @@ type mqlHomebrewPackage struct {
 	Path                  plugin.TValue[string]
 	Type                  plugin.TValue[string]
 	AppName               plugin.TValue[string]
+	AppPaths              plugin.TValue[[]any]
 	AutoUpdates           plugin.TValue[bool]
 	InstalledOnRequest    plugin.TValue[bool]
 	InstalledAsDependency plugin.TValue[bool]
@@ -97735,6 +97743,10 @@ func (c *mqlHomebrewPackage) GetType() *plugin.TValue[string] {
 
 func (c *mqlHomebrewPackage) GetAppName() *plugin.TValue[string] {
 	return &c.AppName
+}
+
+func (c *mqlHomebrewPackage) GetAppPaths() *plugin.TValue[[]any] {
+	return &c.AppPaths
 }
 
 func (c *mqlHomebrewPackage) GetAutoUpdates() *plugin.TValue[bool] {
