@@ -335,6 +335,8 @@ const (
 	ResourceJail                                           string = "jail"
 	ResourceProcess                                        string = "process"
 	ResourceProcesses                                      string = "processes"
+	ResourceRunningBinaries                                string = "runningBinaries"
+	ResourceBinary                                         string = "binary"
 	ResourcePort                                           string = "port"
 	ResourcePorts                                          string = "ports"
 	ResourceAuditpol                                       string = "auditpol"
@@ -2091,6 +2093,14 @@ func init() {
 		"processes": {
 			// to override args, implement: initProcesses(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createProcesses,
+		},
+		"runningBinaries": {
+			// to override args, implement: initRunningBinaries(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createRunningBinaries,
+		},
+		"binary": {
+			// to override args, implement: initBinary(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBinary,
 		},
 		"port": {
 			// to override args, implement: initPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -12657,6 +12667,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"processes.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProcesses).GetList()).ToDataRes(types.Array(types.Resource("process")))
+	},
+	"runningBinaries.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRunningBinaries).GetList()).ToDataRes(types.Array(types.Resource("binary")))
+	},
+	"binary.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBinary).GetPath()).ToDataRes(types.String)
+	},
+	"binary.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBinary).GetName()).ToDataRes(types.String)
+	},
+	"binary.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBinary).GetVersion()).ToDataRes(types.String)
+	},
+	"binary.versionSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBinary).GetVersionSource()).ToDataRes(types.String)
+	},
+	"binary.vendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBinary).GetVendor()).ToDataRes(types.String)
+	},
+	"binary.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBinary).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"binary.processes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBinary).GetProcesses()).ToDataRes(types.Array(types.Resource("process")))
+	},
+	"binary.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBinary).GetSha256()).ToDataRes(types.String)
+	},
+	"binary.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBinary).GetPackage()).ToDataRes(types.Resource("package"))
+	},
+	"binary.system": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBinary).GetSystem()).ToDataRes(types.Bool)
+	},
+	"binary.signatureStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBinary).GetSignatureStatus()).ToDataRes(types.String)
+	},
+	"binary.signer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBinary).GetSigner()).ToDataRes(types.Resource("certificate"))
 	},
 	"port.protocol": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPort).GetProtocol()).ToDataRes(types.String)
@@ -35871,6 +35920,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"processes.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProcesses).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"runningBinaries.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRunningBinaries).__id, ok = v.Value.(string)
+		return
+	},
+	"runningBinaries.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRunningBinaries).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"binary.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBinary).__id, ok = v.Value.(string)
+		return
+	},
+	"binary.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBinary).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"binary.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBinary).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"binary.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBinary).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"binary.versionSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBinary).VersionSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"binary.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBinary).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"binary.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBinary).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"binary.processes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBinary).Processes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"binary.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBinary).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"binary.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBinary).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
+	"binary.system": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBinary).System, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"binary.signatureStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBinary).SignatureStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"binary.signer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBinary).Signer, ok = plugin.RawToTValue[plugin.Resource](v.Value, v.Error)
 		return
 	},
 	"port.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -87080,6 +87189,209 @@ func (c *mqlProcesses) GetList() *plugin.TValue[[]any] {
 		}
 
 		return c.list()
+	})
+}
+
+// mqlRunningBinaries for the runningBinaries resource
+type mqlRunningBinaries struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlRunningBinariesInternal
+	List plugin.TValue[[]any]
+}
+
+// createRunningBinaries creates a new instance of this resource
+func createRunningBinaries(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlRunningBinaries{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("runningBinaries", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlRunningBinaries) MqlName() string {
+	return "runningBinaries"
+}
+
+func (c *mqlRunningBinaries) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlRunningBinaries) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("runningBinaries", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlBinary for the binary resource
+type mqlBinary struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlBinaryInternal
+	Path            plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Version         plugin.TValue[string]
+	VersionSource   plugin.TValue[string]
+	Vendor          plugin.TValue[string]
+	File            plugin.TValue[*mqlFile]
+	Processes       plugin.TValue[[]any]
+	Sha256          plugin.TValue[string]
+	Package         plugin.TValue[*mqlPackage]
+	System          plugin.TValue[bool]
+	SignatureStatus plugin.TValue[string]
+	Signer          plugin.TValue[plugin.Resource]
+}
+
+// createBinary creates a new instance of this resource
+func createBinary(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBinary{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("binary", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBinary) MqlName() string {
+	return "binary"
+}
+
+func (c *mqlBinary) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBinary) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlBinary) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlBinary) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlBinary) GetVersionSource() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.VersionSource, func() (string, error) {
+		return c.versionSource()
+	})
+}
+
+func (c *mqlBinary) GetVendor() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Vendor, func() (string, error) {
+		return c.vendor()
+	})
+}
+
+func (c *mqlBinary) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("binary", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlBinary) GetProcesses() *plugin.TValue[[]any] {
+	return &c.Processes
+}
+
+func (c *mqlBinary) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+func (c *mqlBinary) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("binary", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
+}
+
+func (c *mqlBinary) GetSystem() *plugin.TValue[bool] {
+	return &c.System
+}
+
+func (c *mqlBinary) GetSignatureStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SignatureStatus, func() (string, error) {
+		return c.signatureStatus()
+	})
+}
+
+func (c *mqlBinary) GetSigner() *plugin.TValue[plugin.Resource] {
+	return plugin.GetOrCompute[plugin.Resource](&c.Signer, func() (plugin.Resource, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("binary", c.__id, "signer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(plugin.Resource), nil
+			}
+		}
+
+		return c.signer()
 	})
 }
 

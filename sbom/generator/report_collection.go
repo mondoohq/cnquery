@@ -44,6 +44,22 @@ type BomPackage struct {
 	FilePath string `json:"file.path,omitempty"`
 	// used by os packages
 	FilePaths []string `json:"files.map,omitempty"`
+	// used by running binaries, the executable's path
+	Path string `json:"path,omitempty"`
+	// used by running binaries, the vendor the binary names, if any
+	Vendor string `json:"vendor,omitempty"`
+	// used by running binaries, the hex SHA-256 digest of the executable
+	Sha256 string `json:"sha256,omitempty"`
+	// used by running binaries, the evidence the version was read from
+	// (goBuildInfo, peVersionInfo, bundleInfo, versionString, installMetadata)
+	VersionSource string `json:"versionSource,omitempty"`
+	// used by running binaries, the status of the code signature (macOS and
+	// Windows), empty where executables carry none
+	SignatureStatus string `json:"signatureStatus,omitempty"`
+	// used by running binaries, the organizations and the common name in the
+	// subject of the certificate that signed the executable
+	SignerOrganization []string `json:"signer.subject.organization,omitempty"`
+	SignerCommonName   string   `json:"signer.subject.commonName,omitempty"`
 }
 
 type KernelInstalled struct {
@@ -87,6 +103,10 @@ type BomFields struct {
 	// "<resource>.list" -- the same shape as packages.list and
 	// npm.packages.list.
 	PrinterDrivers []BomPackage `json:"windows.printerDrivers.list,omitempty"`
+	// RunningBinaries are the executables of running processes that no
+	// installed package owns. The query filters the list with where(), which
+	// is why the compiled label is "runningBinaries.where.list".
+	RunningBinaries []BomPackage `json:"runningBinaries.where.list,omitempty"`
 }
 
 func (b *BomFields) ToJSON() ([]byte, error) {

@@ -189,3 +189,10 @@ func TestPackageFromPortageDir(t *testing.T) {
 	assert.Equal(t, "net-misc/curl", p.Name)
 	assert.Equal(t, "7.79.1", p.Version)
 }
+
+func TestPortageDBPackageName(t *testing.T) {
+	assert.Equal(t, "net-misc/curl", PortageDBPackageName("/var/db/pkg/net-misc/curl-8.4.0"))
+	assert.Equal(t, "net-misc/dhcpcd", PortageDBPackageName("/var/db/pkg/net-misc/dhcpcd-10.0.5-r1/"))
+	assert.Equal(t, "", PortageDBPackageName("/var/db/pkg/net-misc"))
+	assert.Equal(t, "", PortageDBPackageName("curl-8.4.0"))
+}

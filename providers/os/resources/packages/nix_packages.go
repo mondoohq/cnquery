@@ -438,3 +438,23 @@ func (npm *NixPkgManager) Available() (map[string]PackageUpdate, error) {
 func (npm *NixPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
 	return nil, nil
 }
+
+// NixStorePathPackage returns the name of the package whose store path
+// holds p, a path below /nix/store, and false when p is not inside a
+// package's store path.
+func NixStorePathPackage(p string) (string, bool) {
+	rest, ok := strings.CutPrefix(p, nixStorePrefix)
+	if !ok {
+		return "", false
+	}
+	entry, _, _ := strings.Cut(rest, "/")
+	m := nixStoreRegex.FindStringSubmatch(entry)
+	if m == nil {
+		return "", false
+	}
+	pkg := nixPackageFromStoreEntry(m[1])
+	if pkg == nil {
+		return "", false
+	}
+	return pkg.Name, true
+}

@@ -294,3 +294,17 @@ func TestNewNixPurl(t *testing.T) {
 	assert.Equal(t, "pkg:nix/git-minimal@2.54.0", newNixPurl("git-minimal", "2.54.0"))
 	assert.Equal(t, "", newNixPurl("", "1.0"))
 }
+
+func TestNixStorePathPackage(t *testing.T) {
+	name, ok := NixStorePathPackage("/nix/store/8gdgwydsf6gia9j178nymxwm2bl0z3m3-curl-8.20.0-bin/bin/curl")
+	assert.True(t, ok)
+	assert.Equal(t, "curl", name)
+
+	// a profile link is not a store path
+	_, ok = NixStorePathPackage("/nix/var/nix/profiles/default/bin/curl")
+	assert.False(t, ok)
+
+	// a store entry with no hash is not a package's
+	_, ok = NixStorePathPackage("/nix/store/.links/abc")
+	assert.False(t, ok)
+}
