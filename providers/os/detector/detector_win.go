@@ -195,6 +195,7 @@ func archFromPE(fs afero.Fs, path string) string {
 	if err != nil {
 		return ""
 	}
+	defer pf.Close()
 	switch pf.Machine {
 	case pe.IMAGE_FILE_MACHINE_AMD64:
 		return "AMD64"
