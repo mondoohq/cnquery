@@ -17493,7 +17493,7 @@ windows.lsa {
   restrictAnonymousSam() bool
   // SDDL string controlling which clients may make remote SAM calls (Lsa\restrictremotesam, REG_SZ)
   restrictRemoteSam() string
-  // LSA protection / Run as Protected Process Light level (RunAsPPL from the "Configure LSASS to run as a protected process" group policy, else Lsa\RunAsPPL; 1 or 2 enables LSA protection)
+  // LSA protection level (RunAsPPL from group policy, else Lsa\RunAsPPL; 1 or 2 enables LSA protection)
   runAsPpl() int
   // Whether advanced audit policy is forced over legacy audit categories (Lsa\SCENoApplyLegacyAuditPolicy)
   //
