@@ -589,30 +589,6 @@ func TestDiscoverNamespaceStageWithoutOptionLeavesLabelsUnchanged(t *testing.T) 
 	assert.Equal(t, "web", inv.Spec.Assets[0].Labels["app"])
 }
 
-func TestDiscoverNamespaceStageDoesNotLabelContainerImages(t *testing.T) {
-	conn := inheritanceTestConn(
-		map[string]string{shared.OPTION_INHERIT_NAMESPACE_LABELS: "my.company.com/team"},
-		[]string{DiscoveryPods, DiscoveryContainerImages},
-		newTestPod("team-a", "web", "uid-web", map[string]string{"app": "web"}, "docker.io/library/nginx@sha256:0123456789abcdef"),
-	)
-
-	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
-	require.NoError(t, err)
-	require.Len(t, inv.Spec.Assets, 2)
-	var image, workload *inventory.Asset
-	for _, a := range inv.Spec.Assets {
-		if a.Connections[0].Type == registryImageConnectionType {
-			image = a
-		} else {
-			workload = a
-		}
-	}
-	require.NotNil(t, image)
-	require.NotNil(t, workload)
-	assert.NotContains(t, image.Labels, "my.company.com/team")
-	assert.Equal(t, "aaabbbccc", workload.Labels["my.company.com/team"])
-}
-
 func TestDiscoverManifestUndeclaredNamespaceInheritsNothing(t *testing.T) {
 	cfg := &inventory.Config{
 		Type: "k8s",
@@ -762,4 +738,86 @@ func TestDiscoverClusterStageWithoutImagesTargetAttachesNoVerdicts(t *testing.T)
 	for _, ns := range inv.Spec.Assets {
 		assert.NotContains(t, ns.Connections[0].Options, shared.OPTION_INHERIT_NAMESPACE_LABELS_VERDICTS)
 	}
+}
+
+const testImageRef = "docker.io/library/nginx@sha256:0123456789abcdef"
+
+// splitImageAndWorkload returns the single registry-image asset and the single
+// workload asset of a stage-2 run that targeted pods and container images.
+func splitImageAndWorkload(t *testing.T, inv *inventory.Inventory) (image, workload *inventory.Asset) {
+	t.Helper()
+	require.Len(t, inv.Spec.Assets, 2)
+	for _, a := range inv.Spec.Assets {
+		if a.Connections[0].Type == registryImageConnectionType {
+			image = a
+		} else {
+			workload = a
+		}
+	}
+	require.NotNil(t, image)
+	require.NotNil(t, workload)
+	return image, workload
+}
+
+func TestDiscoverNamespaceStageLabelsImagesFromVerdicts(t *testing.T) {
+	verdicts := encodeImageLabelVerdicts(map[string]imageLabelVerdict{
+		testImageRef: {Labels: map[string]string{"my.company.com/team": "aaabbbccc"}, Conflicts: []string{"my.company.com/department"}},
+	})
+	conn := inheritanceTestConn(
+		map[string]string{
+			shared.OPTION_INHERIT_NAMESPACE_LABELS:          "my.company.com/team",
+			shared.OPTION_INHERIT_NAMESPACE_LABELS_VERDICTS: verdicts,
+		},
+		[]string{DiscoveryPods, DiscoveryContainerImages},
+		newTestPod("team-a", "web", "uid-web", map[string]string{"app": "web"}, testImageRef),
+	)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	image, workload := splitImageAndWorkload(t, inv)
+	assert.Equal(t, map[string]string{"my.company.com/team": "aaabbbccc", LabelNamespaceLabelConflict: "my.company.com/department"}, image.Labels)
+	assert.Equal(t, "aaabbbccc", workload.Labels["my.company.com/team"])
+}
+
+func TestDiscoverNamespaceStageStandaloneFoldsOwnNamespace(t *testing.T) {
+	conn := inheritanceTestConn(
+		map[string]string{shared.OPTION_INHERIT_NAMESPACE_LABELS: "my.company.com/team"},
+		[]string{DiscoveryPods, DiscoveryContainerImages},
+		newTestPod("team-a", "web", "uid-web", map[string]string{"app": "web"}, testImageRef),
+	)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	image, _ := splitImageAndWorkload(t, inv)
+	assert.Equal(t, map[string]string{"my.company.com/team": "aaabbbccc"}, image.Labels)
+}
+
+func TestDiscoverNamespaceStageSentinelSkipsImageLabels(t *testing.T) {
+	conn := inheritanceTestConn(
+		map[string]string{
+			shared.OPTION_INHERIT_NAMESPACE_LABELS:          "my.company.com/team",
+			shared.OPTION_INHERIT_NAMESPACE_LABELS_VERDICTS: imageLabelVerdictsSentinel,
+		},
+		[]string{DiscoveryPods, DiscoveryContainerImages},
+		newTestPod("team-a", "web", "uid-web", map[string]string{"app": "web"}, testImageRef),
+	)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	image, workload := splitImageAndWorkload(t, inv)
+	assert.Nil(t, image.Labels)
+	assert.Equal(t, "aaabbbccc", workload.Labels["my.company.com/team"])
+}
+
+func TestDiscoverNamespaceStageWithoutOptionLeavesImagesUnchanged(t *testing.T) {
+	conn := inheritanceTestConn(
+		nil,
+		[]string{DiscoveryPods, DiscoveryContainerImages},
+		newTestPod("team-a", "web", "uid-web", map[string]string{"app": "web"}, testImageRef),
+	)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	image, _ := splitImageAndWorkload(t, inv)
+	assert.Nil(t, image.Labels)
 }

@@ -443,6 +443,9 @@ func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, inv
 		return nil, err
 	}
 	inheritNamespaceLabels(assets, nsObj.Labels, inheritKeys)
+	if err := applyNamespaceStageImageLabels(assets, invConfig, nsName, nsObj.Labels, inheritKeys); err != nil {
+		return nil, err
+	}
 
 	in.Spec.Assets = append(in.Spec.Assets, assets...)
 	return in, nil

@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers/k8s/connection/shared"
 	corev1 "k8s.io/api/core/v1"
@@ -195,4 +196,46 @@ func clusterImagesByNamespace(conn shared.Connection, namespaces []string, label
 		out[ns] = refs
 	}
 	return out, nil
+}
+
+// imageRefs returns the image references of the registry-image assets in assets.
+func imageRefs(assets []*inventory.Asset) []string {
+	var refs []string
+	for _, a := range assets {
+		if isImageAsset(a) {
+			refs = append(refs, a.Connections[0].Host)
+		}
+	}
+	return refs
+}
+
+// applyNamespaceStageImageLabels labels the image assets of one namespace stage.
+// With the verdict option from the cluster stage it applies those verdicts; the
+// sentinel means they did not fit, so no image is labeled and a warning says so;
+// without the option (the stage was started directly) the namespace is the only
+// one in scope, so its own labels are the verdict.
+func applyNamespaceStageImageLabels(assets []*inventory.Asset, cfg *inventory.Config, nsName string, nsLabels map[string]string, patterns []string) error {
+	if len(patterns) == 0 {
+		return nil
+	}
+	raw, ok := cfg.Options[shared.OPTION_INHERIT_NAMESPACE_LABELS_VERDICTS]
+	if !ok {
+		verdicts := imageLabelVerdicts(
+			map[string][]string{nsName: imageRefs(assets)},
+			map[string]map[string]string{nsName: nsLabels},
+			patterns,
+		)
+		applyImageLabelVerdicts(assets, verdicts)
+		return nil
+	}
+	verdicts, skip, err := decodeImageLabelVerdicts(raw)
+	if err != nil {
+		return err
+	}
+	if skip {
+		log.Warn().Str("namespace", nsName).Msg("too many container images with namespace label verdicts; leaving container images unlabeled")
+		return nil
+	}
+	applyImageLabelVerdicts(assets, verdicts)
+	return nil
 }
