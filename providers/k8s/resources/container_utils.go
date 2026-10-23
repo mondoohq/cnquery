@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"sort"
 	"strings"
 
 	"go.mondoo.com/mql/llx"
@@ -56,8 +57,6 @@ func ResolveContainerImageFromStatus(containerStatus v1.ContainerStatus) (string
 // UniqueImagesForPod returns the unique container images for a pod. Images are compared based on their digest
 // if that is available in the pod status. If there is no pod status set, the container image tag is used.
 func UniqueImagesForPod(pod *v1.Pod, runtime *plugin.Runtime) map[string]ContainerImage {
-	imagesSet := make(map[string]ContainerImage)
-
 	pullSecrets := make([]v1.Secret, 0, len(pod.Spec.ImagePullSecrets))
 	for _, ps := range pod.Spec.ImagePullSecrets {
 		s, err := GetSecret(runtime, pod.Namespace, ps.Name) // TODO: figure out if we want to do anything with the error here
@@ -65,6 +64,25 @@ func UniqueImagesForPod(pod *v1.Pod, runtime *plugin.Runtime) map[string]Contain
 			pullSecrets = append(pullSecrets, *s)
 		}
 	}
+	return resolvePodImages(pod, pullSecrets)
+}
+
+// podImageRefs returns the sorted resolved references of the images a pod runs,
+// without touching the API for pull secrets.
+func podImageRefs(pod *v1.Pod) []string {
+	images := resolvePodImages(pod, nil)
+	refs := make([]string, 0, len(images))
+	for ref := range images {
+		refs = append(refs, ref)
+	}
+	sort.Strings(refs)
+	return refs
+}
+
+// resolvePodImages is UniqueImagesForPod without the pull-secret lookups: the
+// same status-first, spec-fallback resolution, keyed by resolved reference.
+func resolvePodImages(pod *v1.Pod, pullSecrets []v1.Secret) map[string]ContainerImage {
+	imagesSet := make(map[string]ContainerImage)
 
 	// it is best to read the image from the container status since it is resolved
 	// and more accurate, for static file scan we also need to fall-back to pure spec
