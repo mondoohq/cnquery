@@ -698,3 +698,68 @@ func TestInheritedNamespaceLabels(t *testing.T) {
 		assert.Nil(t, inheritedNamespaceLabels(ns, nil))
 	})
 }
+
+// clusterStageImageConn is a cluster with team-alpha {team=alpha}, team-beta
+// {team=beta} and an unlabeled platform-tools, where nginx is shared by alpha and
+// beta and web is shared by alpha and platform-tools.
+func clusterStageImageConn(targets []string, options map[string]string) *namespaceDiscoveryConnection {
+	cfg := &inventory.Config{
+		Type:     "k8s",
+		Options:  map[string]string{plugin.OptionStagedDiscovery: ""},
+		Discover: &inventory.Discovery{Targets: targets},
+	}
+	for k, v := range options {
+		cfg.Options[k] = v
+	}
+	asset := &inventory.Asset{Name: "K8s Cluster test", Connections: []*inventory.Config{cfg}}
+	alpha := newTestNamespace("team-alpha", "uid-alpha")
+	alpha.Labels = map[string]string{"my.company.com/team": "alpha"}
+	beta := newTestNamespace("team-beta", "uid-beta")
+	beta.Labels = map[string]string{"my.company.com/team": "beta"}
+	tools := newTestNamespace("platform-tools", "uid-tools")
+	return &namespaceDiscoveryConnection{
+		Connection: plugin.NewConnection(1, asset),
+		asset:      asset,
+		namespaces: []corev1.Namespace{alpha, beta, tools},
+		pods: []corev1.Pod{
+			newTestPod("team-alpha", "web", "u1", nil, "nginx@sha256:shared", "web@sha256:alpha"),
+			newTestPod("team-beta", "proxy", "u2", nil, "nginx@sha256:shared"),
+			newTestPod("platform-tools", "agent", "u3", nil, "web@sha256:alpha"),
+		},
+	}
+}
+
+func TestDiscoverClusterStageAttachesImageVerdicts(t *testing.T) {
+	conn := clusterStageImageConn([]string{DiscoveryContainerImages}, map[string]string{shared.OPTION_INHERIT_NAMESPACE_LABELS: "my.company.com/team"})
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	require.Len(t, inv.Spec.Assets, 3)
+
+	payloads := map[string]map[string]imageLabelVerdict{}
+	for _, ns := range inv.Spec.Assets {
+		raw, ok := ns.Connections[0].Options[shared.OPTION_INHERIT_NAMESPACE_LABELS_VERDICTS]
+		require.True(t, ok, "namespace %s has no verdict option", ns.Name)
+		verdicts, skip, err := decodeImageLabelVerdicts(raw)
+		require.NoError(t, err)
+		require.False(t, skip)
+		payloads[ns.Name] = verdicts
+	}
+	conflict := imageLabelVerdict{Conflicts: []string{"my.company.com/team"}}
+	alphaOnly := imageLabelVerdict{Labels: map[string]string{"my.company.com/team": "alpha"}}
+	assert.Equal(t, map[string]imageLabelVerdict{"nginx@sha256:shared": conflict, "web@sha256:alpha": alphaOnly}, payloads["team-alpha"])
+	assert.Equal(t, map[string]imageLabelVerdict{"nginx@sha256:shared": conflict}, payloads["team-beta"])
+	// the unlabeled namespace carries alpha's verdict for the image it shares with alpha
+	assert.Equal(t, map[string]imageLabelVerdict{"web@sha256:alpha": alphaOnly}, payloads["platform-tools"])
+}
+
+func TestDiscoverClusterStageWithoutImagesTargetAttachesNoVerdicts(t *testing.T) {
+	conn := clusterStageImageConn([]string{DiscoveryPods}, map[string]string{shared.OPTION_INHERIT_NAMESPACE_LABELS: "my.company.com/team"})
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	require.Len(t, inv.Spec.Assets, 3)
+	for _, ns := range inv.Spec.Assets {
+		assert.NotContains(t, ns.Connections[0].Options, shared.OPTION_INHERIT_NAMESPACE_LABELS_VERDICTS)
+	}
+}

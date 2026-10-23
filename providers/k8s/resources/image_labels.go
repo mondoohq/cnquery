@@ -12,6 +12,7 @@ import (
 
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers/k8s/connection/shared"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // LabelNamespaceLabelConflict marks a container image whose in-scope namespaces
@@ -146,4 +147,52 @@ func applyImageLabelVerdicts(assets []*inventory.Asset, verdicts map[string]imag
 			a.Labels[LabelNamespaceLabelConflict] = strings.Join(verdict.Conflicts, ",")
 		}
 	}
+}
+
+// clusterImagesByNamespace lists every pod once through conn and returns, for
+// each namespace in namespaces, the sorted unique images its pods run, counting
+// only pods that pass labelFilters and images that pass imgFilter. It never
+// fetches pull secrets.
+func clusterImagesByNamespace(conn shared.Connection, namespaces []string, labelFilters *LabelSelectorFilters, imgFilter FilterOpts) (map[string][]string, error) {
+	inScope := make(map[string]struct{}, len(namespaces))
+	for _, ns := range namespaces {
+		inScope[ns] = struct{}{}
+	}
+
+	res, err := conn.Resources(gvkString(corev1.SchemeGroupVersion.WithKind("pods")), "", "")
+	if err != nil {
+		return nil, err
+	}
+	sets := map[string]map[string]struct{}{}
+	if res != nil {
+		for _, obj := range res.Resources {
+			pod, ok := obj.(*corev1.Pod)
+			if !ok {
+				continue
+			}
+			if _, ok := inScope[pod.Namespace]; !ok || !labelFilters.MatchObject(pod) {
+				continue
+			}
+			for _, ref := range podImageRefs(pod) {
+				if imgFilter.skip(ref) {
+					continue
+				}
+				if sets[pod.Namespace] == nil {
+					sets[pod.Namespace] = map[string]struct{}{}
+				}
+				sets[pod.Namespace][ref] = struct{}{}
+			}
+		}
+	}
+
+	out := make(map[string][]string, len(sets))
+	for ns, set := range sets {
+		refs := make([]string, 0, len(set))
+		for ref := range set {
+			refs = append(refs, ref)
+		}
+		sort.Strings(refs)
+		out[ns] = refs
+	}
+	return out, nil
 }

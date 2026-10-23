@@ -9,6 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/k8s/connection/shared"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func TestImageLabelVerdicts(t *testing.T) {
@@ -74,4 +77,26 @@ func TestApplyImageLabelVerdicts(t *testing.T) {
 	assert.Equal(t, map[string]string{"my.company.com/department": "d-1", LabelNamespaceLabelConflict: "my.company.com/dept,my.company.com/team"}, conflicted.Labels)
 	assert.Nil(t, unknown.Labels)
 	assert.Equal(t, map[string]string{"app": "x"}, workload.Labels)
+}
+
+func TestClusterImagesByNamespaceHonoursScope(t *testing.T) {
+	asset := &inventory.Asset{Connections: []*inventory.Config{{Type: "k8s", Options: map[string]string{}}}}
+	conn := &namespaceDiscoveryConnection{
+		Connection: plugin.NewConnection(1, asset),
+		asset:      asset,
+		pods: []corev1.Pod{
+			newTestPod("team-alpha", "web", "u1", nil, "nginx@sha256:shared"),
+			newTestPod("team-beta", "proxy", "u2", nil, "nginx@sha256:shared"),
+			newTestPod("excluded-ns", "x", "u3", nil, "nginx@sha256:shared"),
+			newTestPod("team-alpha", "skipme", "u4", map[string]string{"scan": "no"}, "other@sha256:1"),
+		},
+	}
+	labelFilters, err := labelSelectorFilters(&inventory.Config{Options: map[string]string{shared.OPTION_OBJECT_LABEL_SELECTOR: "scan!=no"}})
+	require.NoError(t, err)
+	imgFilter, err := newFilterOpts(nil, nil)
+	require.NoError(t, err)
+
+	got, err := clusterImagesByNamespace(conn, []string{"team-alpha", "team-beta"}, labelFilters, imgFilter)
+	require.NoError(t, err)
+	assert.Equal(t, map[string][]string{"team-alpha": {"nginx@sha256:shared"}, "team-beta": {"nginx@sha256:shared"}}, got)
 }

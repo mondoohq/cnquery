@@ -313,12 +313,39 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 		}
 	}
 
+	inheritKeys, err := inheritedLabelKeys(invConfig)
+	if err != nil {
+		return nil, err
+	}
+	imgFilter, err := setImageFilters(invConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	// Discover namespaces and emit them as scannable assets with platform IDs
 	// and discovery targets. Override each namespace's connection config to
 	// route to stage 2 when the client connects to it later.
-	nss, _, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter, labelFilters)
+	nss, nsOwnLabels, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter, labelFilters)
 	if err != nil {
 		return nil, err
+	}
+
+	// With inherited labels and container images targeted, fold the per-image
+	// verdicts once over the whole cluster here, so every namespace stage stamps
+	// the same answer whichever runs first: the client keeps only the first copy
+	// of an image it sees.
+	var imagesByNs map[string][]string
+	var verdicts map[string]imageLabelVerdict
+	if len(inheritKeys) > 0 && stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryContainerImages, DiscoveryAll) {
+		names := make([]string, 0, len(nss))
+		for _, ns := range nss {
+			names = append(names, ns.Name)
+		}
+		imagesByNs, err = clusterImagesByNamespace(conn, names, labelFilters, imgFilter)
+		if err != nil {
+			return nil, err
+		}
+		verdicts = imageLabelVerdicts(imagesByNs, nsOwnLabels, inheritKeys)
 	}
 
 	// Namespaces are only scannable if explicitly targeted. When they are
@@ -336,6 +363,9 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 		// by all other namespaces, returning stale data.
 		nsConfig := invConfig.Clone() // Clone() copies Options, propagating OPTION_STAGED_DISCOVERY
 		nsConfig.Options[shared.OPTION_NAMESPACE] = ns.Name
+		if verdicts != nil {
+			nsConfig.Options[shared.OPTION_INHERIT_NAMESPACE_LABELS_VERDICTS] = encodeImageLabelVerdicts(verdictsForImages(verdicts, imagesByNs[ns.Name]))
+		}
 
 		if !nsIsScannable {
 			ns.PlatformIds = nil
