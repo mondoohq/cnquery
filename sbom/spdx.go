@@ -326,35 +326,9 @@ func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
 				pkgUrl, err := packageurl.FromString(ref.Locator)
 				if err == nil {
 					bomPkg.Type = pkgUrl.Type
-
-					// extract distro information
-					m := pkgUrl.Qualifiers.Map()
-					distroVal, ok := m["distro"]
-					if ok {
-						if pf == nil {
-							pf = &Platform{}
-						}
-						name = distroVal
-						pf.Title = distroVal
-						// The qualifier is the platform name and version
-						// joined with a dash (purl.NewPlatformPurl), and it is
-						// the *name* that commonly carries dashes of its own:
-						// opensuse-leap, opensuse-tumbleweed, opensuse-microos.
-						// Splitting on the first dash reports
-						// "opensuse-leap-15.6" as name "opensuse" version
-						// "leap", so split on the last one. A qualifier with no
-						// dash carries no version, e.g. "arch" rather than
-						// "arch-rolling".
-						pf.Name = distroVal
-						if i := strings.LastIndex(distroVal, "-"); i > 0 {
-							pf.Name = distroVal[:i]
-							pf.Version = distroVal[i+1:]
-						}
-						pf.Family = familyMap[pf.Name]
-					}
-					arch, ok := m["arch"]
-					if ok && pf != nil {
-						pf.Arch = arch
+					var distro string
+					if pf, distro = purlDistroPlatform(pkgUrl, pf); distro != "" {
+						name = distro
 					}
 				}
 			}
@@ -381,6 +355,38 @@ func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
 	}
 
 	return bom
+}
+
+// purlDistroPlatform reads the platform a package was installed on out of its
+// package URL's `distro` and `arch` qualifiers, updating pf, which may be nil.
+// It returns the platform and the raw distro qualifier, or "" when the package
+// URL names no distro.
+func purlDistroPlatform(purl packageurl.PackageURL, pf *Platform) (*Platform, string) {
+	m := purl.Qualifiers.Map()
+	distroVal, ok := m["distro"]
+	if ok {
+		if pf == nil {
+			pf = &Platform{}
+		}
+		pf.Title = distroVal
+		// The qualifier is the platform name and version joined with a dash
+		// (purl.NewPlatformPurl), and it is the *name* that commonly carries
+		// dashes of its own: opensuse-leap, opensuse-tumbleweed,
+		// opensuse-microos. Splitting on the first dash reports
+		// "opensuse-leap-15.6" as name "opensuse" version "leap", so split on
+		// the last one. A qualifier with no dash carries no version, e.g.
+		// "arch" rather than "arch-rolling".
+		pf.Name = distroVal
+		if i := strings.LastIndex(distroVal, "-"); i > 0 {
+			pf.Name = distroVal[:i]
+			pf.Version = distroVal[i+1:]
+		}
+		pf.Family = familyMap[pf.Name]
+	}
+	if arch, ok := m["arch"]; ok && pf != nil {
+		pf.Arch = arch
+	}
+	return pf, distroVal
 }
 
 // spdxNoAssertion returns the SPDX-mandated NOASSERTION for an empty value.

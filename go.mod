@@ -120,6 +120,7 @@ require (
 )
 
 require (
+	github.com/carabiner-dev/spdx3 v0.1.0
 	github.com/containerd/errdefs v1.0.0
 	github.com/hashicorp/hcl/v2 v2.25.0
 	github.com/microsoft/wmi v0.45.0
@@ -171,7 +172,6 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
-	github.com/carabiner-dev/spdx3 v0.1.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
