@@ -26,13 +26,17 @@ const (
 	OPTION_NAMESPACE_LABEL_SELECTOR = "namespace-label-selector"
 	OPTION_OBJECT_LABEL_SELECTOR    = "object-label-selector"
 	OPTION_INHERIT_NAMESPACE_LABELS = "inherit-namespace-labels"
-	OPTION_IMAGES                   = "images"
-	OPTION_IMAGES_EXCLUDE           = "images-exclude"
-	OPTION_ADMISSION                = "k8s-admission-review"
-	OPTION_OBJECT_KIND              = "object-kind"
-	OPTION_CONTEXT                  = "context"
-	OPTION_KUBELOGIN                = "kubelogin"
-	IdPrefix                        = "//platformid.api.mondoo.app/runtime/k8s/uid/"
+	// OPTION_INHERIT_NAMESPACE_LABELS_VERDICTS carries the container-image label
+	// verdicts from the cluster discovery stage to each namespace stage. Internal
+	// transport, set by the provider itself, never by users.
+	OPTION_INHERIT_NAMESPACE_LABELS_VERDICTS = "inherit-namespace-labels-verdicts"
+	OPTION_IMAGES                            = "images"
+	OPTION_IMAGES_EXCLUDE                    = "images-exclude"
+	OPTION_ADMISSION                         = "k8s-admission-review"
+	OPTION_OBJECT_KIND                       = "object-kind"
+	OPTION_CONTEXT                           = "context"
+	OPTION_KUBELOGIN                         = "kubelogin"
+	IdPrefix                                 = "//platformid.api.mondoo.app/runtime/k8s/uid/"
 )
 
 type ConnectionType string
