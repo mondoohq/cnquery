@@ -1071,7 +1071,8 @@ func (w *WinPkgManager) getFsDotNetFramework(rh nativeKeyItemsReader) []Package 
 			}
 			if fp, ok := mountedSystemDrivePath(dir + "clr.dll"); ok {
 				if v, ok := fsProductVersion(fs, fp); ok {
-					packages = append(packages, *newDotNetFrameworkPackage(formatWindowsVersion(v), installLocation, w.platform))
+					// Like dotNetClr2VersionScript, drop any text after the version.
+					packages = append(packages, *newDotNetFrameworkPackage(firstToken(v), installLocation, w.platform))
 				}
 			}
 		}
@@ -1087,9 +1088,21 @@ func (w *WinPkgManager) getFsDotNetFramework(rh nativeKeyItemsReader) []Package 
 	return packages
 }
 
+// dotNetClr2Product matches the ProductVersion of a CLR 2.0 assembly, as
+// dotNetClr2VersionScript does.
+var dotNetClr2Product = regexp.MustCompile(`^2\.0\.50727\.(\d+)`)
+
+// firstToken returns the part of s before the first whitespace.
+func firstToken(s string) string {
+	if f := strings.Fields(s); len(f) > 0 {
+		return f[0]
+	}
+	return ""
+}
+
 // fsDotNetClr2Version is dotNetClr2VersionScript on a mounted filesystem: the
-// highest 2.0.50727.<build> product version across the assemblies of the CLR 2.0
-// directories, or "" if there is none.
+// highest 2.0.50727.<build> ProductVersion across the assemblies of the CLR 2.0
+// directories, cut at the first whitespace, or "" if there is none.
 func fsDotNetClr2Version(fs afero.Fs) string {
 	best := ""
 	bestBuild := -1
@@ -1102,13 +1115,17 @@ func fsDotNetClr2Version(fs afero.Fs) string {
 			if e.IsDir() || !strings.EqualFold(filepath.Ext(e.Name()), ".dll") {
 				continue
 			}
-			v, ok := fsProductVersion(fs, dir+"/"+e.Name())
-			if !ok || len(v) != 4 || v[0] != 2 || v[1] != 0 || v[2] != 50727 {
+			pv, ok := fsProductVersion(fs, dir+"/"+e.Name())
+			if !ok {
 				continue
 			}
-			if int(v[3]) > bestBuild {
-				bestBuild = int(v[3])
-				best = formatWindowsVersion(v)
+			m := dotNetClr2Product.FindStringSubmatch(pv)
+			if m == nil {
+				continue
+			}
+			if b, err := strconv.Atoi(m[1]); err == nil && b > bestBuild {
+				bestBuild = b
+				best = firstToken(pv)
 			}
 		}
 	}

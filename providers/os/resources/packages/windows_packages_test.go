@@ -1983,7 +1983,11 @@ func TestGetFsDotNetFramework(t *testing.T) {
 	}
 	hive4x := []registry.RegistryKeyItem{str("InstallPath", path4x), dword("Release", 533320)}
 	hive35 := []registry.RegistryKeyItem{dword("Install", 1), str("InstallPath", `C:\Windows\Microsoft.NET\Framework64\v3.5\`)}
-	pe := func(v [4]uint16) []byte { return buildPEVersions(t, [4]uint16{1, 1, 1, 1}, v, true) }
+	// The fixed product version is deliberately not the one reported; the
+	// ProductVersion string is.
+	pe := func(v [4]uint16) []byte {
+		return buildPEStrings(t, v, [4]uint16{4, 0, 30319, 0}, []string{"ProductVersion", fmt.Sprintf("%d.%d.%d.%d", v[0], v[1], v[2], v[3])}, true)
+	}
 
 	type files map[string][]byte
 	both := files{
@@ -1993,6 +1997,8 @@ func TestGetFsDotNetFramework(t *testing.T) {
 		dir2 + "System.dll": pe([4]uint16{2, 0, 50727, 4927}),
 		// the 32-bit directory can hold a newer build than the 64-bit one
 		dir2x + "mscorlib.dll": pe([4]uint16{2, 0, 50727, 9200}),
+		// text after the version is cut off
+		dir2 + "suffix.dll": buildPEStrings(t, [4]uint16{2, 0, 50727, 1}, [4]uint16{2, 0, 50727, 9300}, []string{"ProductVersion", "2.0.50727.9300 (built)"}, true),
 		// not a CLR 2.0 build: ignored
 		dir2 + "other.dll": pe([4]uint16{3, 5, 30729, 9999}),
 	}
@@ -2004,8 +2010,8 @@ func TestGetFsDotNetFramework(t *testing.T) {
 		want  []string // version@installLocation
 	}{
 		{"4.x only", dotNetHive{key4x: hive4x}, both, []string{`4.8.9310.0@` + path4x}},
-		{"3.5 only", dotNetHive{key35: hive35}, both, []string{`2.0.50727.9200@C:\Windows\Microsoft.NET\Framework64\v3.5\`}},
-		{"both", dotNetHive{key4x: hive4x, key35: hive35}, both, []string{`4.8.9310.0@` + path4x, `2.0.50727.9200@C:\Windows\Microsoft.NET\Framework64\v3.5\`}},
+		{"3.5 only", dotNetHive{key35: hive35}, both, []string{`2.0.50727.9300@C:\Windows\Microsoft.NET\Framework64\v3.5\`}},
+		{"both", dotNetHive{key4x: hive4x, key35: hive35}, both, []string{`4.8.9310.0@` + path4x, `2.0.50727.9300@C:\Windows\Microsoft.NET\Framework64\v3.5\`}},
 		{"absent keys", dotNetHive{}, both, nil},
 		{"3.5 with Install=0", dotNetHive{key35: {dword("Install", 0), str("InstallPath", "x")}}, both, nil},
 		{"4.x without InstallPath", dotNetHive{key4x: {dword("Release", 533320)}}, both, nil},
