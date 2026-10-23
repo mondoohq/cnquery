@@ -17,6 +17,7 @@ const (
 	FormatCycloneDxXML  string = "cyclonedx-xml"
 	FormatSpdxJSON      string = "spdx-json"
 	FormatSpdxTagValue  string = "spdx-tag-value"
+	FormatSpdx3JSON     string = "spdx3-json"
 	FormatList          string = "table"
 )
 
@@ -75,6 +76,7 @@ var formats = []format{
 	{FormatSpdxTagValue, true, func() FormatSpecificationHandler {
 		return &Spdx{Version: "2.3", Format: FormatSpdxTagValue}
 	}},
+	{FormatSpdx3JSON, true, func() FormatSpecificationHandler { return NewSPDX3() }},
 	{FormatList, true, func() FormatSpecificationHandler { return &TextList{} }},
 	{"list", false, func() FormatSpecificationHandler { return &TextList{} }},
 }

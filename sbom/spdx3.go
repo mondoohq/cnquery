@@ -35,7 +35,9 @@ func NewSPDX3() *Spdx3 {
 
 // Spdx3 decodes SPDX 3 documents serialized as JSON-LD. SPDX 3 has no
 // tag-value form.
-type Spdx3 struct{}
+type Spdx3 struct {
+	opts renderOpts
+}
 
 func (s *Spdx3) Parse(r io.ReadSeeker) (*Sbom, error) {
 	data, err := io.ReadAll(r)
