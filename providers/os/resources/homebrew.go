@@ -8,6 +8,7 @@ import (
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/resources/packages"
+	"go.mondoo.com/mql/types"
 )
 
 func (r *mqlHomebrewPackages) id() (string, error) {
@@ -38,6 +39,7 @@ func (r *mqlHomebrewPackages) list() ([]any, error) {
 			"path":                  llx.StringData(pkg.Path),
 			"type":                  llx.StringData(pkg.Type),
 			"appName":               llx.StringData(pkg.AppName),
+			"appPaths":              llx.ArrayData(llx.TArr2Raw(pkg.AppPaths), types.String),
 			"autoUpdates":           llx.BoolData(pkg.AutoUpdates),
 			"installedOnRequest":    llx.BoolData(pkg.InstalledOnRequest),
 			"installedAsDependency": llx.BoolData(pkg.InstalledAsDependency),

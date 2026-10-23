@@ -2406,6 +2406,7 @@ haskell.packages.list 13.13.1
 haskell.packages.path 13.13.1
 homebrew.package 13.10.1
 homebrew.package.appName 13.10.1
+homebrew.package.appPaths 14.31.1
 homebrew.package.autoUpdates 13.10.1
 homebrew.package.description 13.10.1
 homebrew.package.homepage 13.10.1
