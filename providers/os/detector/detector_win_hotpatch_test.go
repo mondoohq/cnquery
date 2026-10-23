@@ -116,6 +116,10 @@ func TestStaticHotpatchLabels(t *testing.T) {
 // TestStaticHotpatchArchKey checks that the offline architecture, in the
 // PROCESSOR_ARCHITECTURE spelling, selects the Hotpatch.<arch> key of its own
 // architecture.
+//
+// Synthetic: the Hotpatch.arm64 key name and its value are test markers written
+// on a Win11 ARM64 VM, which was not hotpatch-enrolled; no enrolled ARM64
+// machine showed this key.
 func TestStaticHotpatchArchKey(t *testing.T) {
 	arm64Enrolled := hotpatchHive{
 		registry.Software + `|Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\DynamicInstalled\Hotpatch.arm64`: {{Key: "Name", Value: registry.RegistryKeyValue{Kind: registry.SZ, String: win.HotpatchPackage}}},

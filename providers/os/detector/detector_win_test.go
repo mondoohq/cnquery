@@ -389,12 +389,37 @@ func TestStaticWindowsArch(t *testing.T) {
 		return fs
 	}
 
+	// selectHive builds the real Select key: Current and LastKnownGood.
+	selectHive := func(current, lastKnownGood int64) archHive {
+		dw := func(n int64) registry.RegistryKeyItem {
+			return registry.RegistryKeyItem{Value: registry.RegistryKeyValue{Kind: registry.DWORD, Number: n}}
+		}
+		return archHive{
+			registry.System + "|Select|Current":       dw(current),
+			registry.System + "|Select|LastKnownGood": dw(lastKnownGood),
+		}
+	}
+
 	cases := []struct {
 		name string
 		hive archHive
 		fs   afero.Fs
 		want string
 	}{
+		// Measured: values read on 2026-10-23 from Server 2022 (20348),
+		// Server 2016 (14393), Win11 24H2 x64 and Win11 24H2 ARM64 (26100).
+		// Select Current=1 everywhere; LastKnownGood=2 on the servers, 1 on
+		// Win11. The ntoskrnl.exe machine types are the real ones (the fixture
+		// is a minimal PE with that machine).
+		{"Server 2022 registry", withEnv(selectHive(1, 2), "ControlSet001", "AMD64"), nil, "AMD64"},
+		{"Server 2016 registry", withEnv(selectHive(1, 2), "ControlSet001", "AMD64"), nil, "AMD64"},
+		{"Win11 x64 registry", withEnv(selectHive(1, 1), "ControlSet001", "AMD64"), nil, "AMD64"},
+		{"Win11 ARM64 registry", withEnv(selectHive(1, 1), "ControlSet001", "ARM64"), nil, "ARM64"},
+		{"Server 2022 ntoskrnl fallback (machine 0x8664)", selectHive(1, 2), ntoskrnl(0x8664), "AMD64"},
+		{"Win11 ARM64 ntoskrnl fallback (machine 0xaa64)", selectHive(1, 1), ntoskrnl(0xaa64), "ARM64"},
+
+		// Synthetic: behaviour no VM showed (x86 guests, a second active
+		// control set, missing or unreadable values, unknown machine types).
 		{"AMD64 from registry", withEnv(archHive{}, "ControlSet001", "AMD64"), nil, "AMD64"},
 		{"ARM64 from registry", withEnv(archHive{}, "ControlSet001", "ARM64"), nil, "ARM64"},
 		{"x86 from registry", withEnv(archHive{}, "ControlSet001", "x86"), nil, "x86"},

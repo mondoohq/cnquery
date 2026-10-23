@@ -189,20 +189,35 @@ func TestPEFileVersion(t *testing.T) {
 	assert.False(t, ok)
 }
 
+// The PE images in these tests are synthesized (no Microsoft binaries are
+// shipped) from version resources measured on real VMs: the fixed file and
+// product versions and the FileVersion and ProductVersion strings.
 func TestPEProductVersion(t *testing.T) {
 	file := [4]uint16{4, 8, 4811, 0}
+	clrProduct := [4]uint16{4, 0, 30319, 0}
 	cases := []struct {
 		name string
 		img  []byte
 		want string
 		ok   bool
 	}{
-		// Server 2022 clr.dll: fixed product 4.0.30319.0, string 4.8.4811.0.
-		{"string differs from fixed product", buildPEStrings(t, file, [4]uint16{4, 0, 30319, 0}, []string{"ProductVersion", "4.8.4811.0"}, true), "4.8.4811.0", true},
-		{"built-by suffix on FileVersion only", buildPEStrings(t, file, [4]uint16{4, 0, 30319, 0}, []string{"FileVersion", "4.8.4811.0 built by: NET48REL1LAST_B", "ProductVersion", "4.8.4811.0"}, true), "4.8.4811.0", true},
-		{"trailing text is kept for the caller to cut", buildPEStrings(t, file, file, []string{"ProductVersion", "2.0.50727.9149 (WinRelRS5.050727-9100)"}, true), "2.0.50727.9149 (WinRelRS5.050727-9100)", true},
-		{"no StringFileInfo falls back to the fixed file version", buildPEStrings(t, file, [4]uint16{4, 0, 30319, 0}, nil, true), "4.8.4811.0", true},
-		{"StringFileInfo without ProductVersion", buildPEStrings(t, file, [4]uint16{4, 0, 30319, 0}, []string{"FileVersion", "4.8.4811.0"}, true), "4.8.4811.0", true},
+		// Measured: values read from Server 2022 (20348), Server 2016 (14393)
+		// and Win11 24H2 (26100) on 2026-10-23. The fixed product version of
+		// clr.dll is 4.0.30319.0 everywhere, the ProductVersion string is the
+		// real build, and the FileVersion string carries a "built by" suffix.
+		{"Server 2022 clr.dll", buildPEStrings(t, file, clrProduct, []string{"FileVersion", "4.8.4811.0 built by: NET48REL1LAST_B", "ProductVersion", "4.8.4811.0"}, true), "4.8.4811.0", true},
+		{"Server 2016 clr.dll", buildPEStrings(t, [4]uint16{4, 7, 4150, 0}, clrProduct, []string{"FileVersion", "4.7.4150.0 built by: NET472REL1LAST_B", "ProductVersion", "4.7.4150.0"}, true), "4.7.4150.0", true},
+		{"Win11 24H2 clr.dll", buildPEStrings(t, [4]uint16{4, 8, 9363, 0}, clrProduct, []string{"FileVersion", "4.8.9363.0 built by: NET481REL1LAST_25H2_B", "ProductVersion", "4.8.9363.0"}, true), "4.8.9363.0", true},
+		// Server 2022 mscorlib.dll: FileVersion has a "(WinRelRS6...)" suffix,
+		// ProductVersion is clean, fixed file equals fixed product.
+		{"Server 2022 mscorlib.dll", buildPEStrings(t, [4]uint16{2, 0, 50727, 9188}, [4]uint16{2, 0, 50727, 9188}, []string{"FileVersion", "2.0.50727.9188 (WinRelRS6.050727-9100)", "ProductVersion", "2.0.50727.9188"}, true), "2.0.50727.9188", true},
+
+		// Synthetic: behaviour no VM showed (every measured ProductVersion was
+		// clean, with no trailing text).
+		{"ProductVersion string only, differs from fixed product", buildPEStrings(t, file, clrProduct, []string{"ProductVersion", "4.8.4811.0"}, true), "4.8.4811.0", true},
+		{"trailing text is kept for the caller to cut", buildPEStrings(t, file, file, []string{"ProductVersion", "2.0.50727.9149 (synthetic suffix)"}, true), "2.0.50727.9149 (synthetic suffix)", true},
+		{"no StringFileInfo falls back to the fixed file version", buildPEStrings(t, file, clrProduct, nil, true), "4.8.4811.0", true},
+		{"StringFileInfo without ProductVersion", buildPEStrings(t, file, clrProduct, []string{"FileVersion", "4.8.4811.0"}, true), "4.8.4811.0", true},
 		{"no RT_VERSION resource", buildPE(t, 4, 8, 1, 0, false), "", false},
 	}
 	for _, tc := range cases {
@@ -213,6 +228,7 @@ func TestPEProductVersion(t *testing.T) {
 		})
 	}
 
+	// Synthetic: corrupted StringFileInfo nodes; no VM showed these.
 	t.Run("malformed StringFileInfo falls back without panic", func(t *testing.T) {
 		img := buildPEStrings(t, file, file, []string{"ProductVersion", "9.9.9.9"}, true)
 		// VS_VERSIONINFO starts at 0x200+88; StringFileInfo at +92.
