@@ -84,10 +84,13 @@ func newTestNamespace(name, uid string) corev1.Namespace {
 
 type namespaceDiscoveryConnection struct {
 	plugin.Connection
-	asset             *inventory.Asset
-	namespaces        []corev1.Namespace
-	pods              []corev1.Pod
-	namespaceGetCalls []string
+	asset      *inventory.Asset
+	namespaces []corev1.Namespace
+	pods       []corev1.Pod
+	// forbidClusterWidePods makes a cluster-wide pod list come back empty, as the
+	// API connection does when namespace-scoped RBAC forbids it.
+	forbidClusterWidePods bool
+	namespaceGetCalls     []string
 }
 
 func (c *namespaceDiscoveryConnection) Name() string {
@@ -105,7 +108,13 @@ func (c *namespaceDiscoveryConnection) Resources(kind string, name string, names
 	if kind != gvkString(corev1.SchemeGroupVersion.WithKind("pods")) {
 		return res, nil
 	}
+	if namespace == "" && c.forbidClusterWidePods {
+		return res, nil
+	}
 	for i := range c.pods {
+		if namespace != "" && c.pods[i].Namespace != namespace {
+			continue
+		}
 		res.Resources = append(res.Resources, &c.pods[i])
 	}
 	return res, nil
@@ -589,30 +598,6 @@ func TestDiscoverNamespaceStageWithoutOptionLeavesLabelsUnchanged(t *testing.T) 
 	assert.Equal(t, "web", inv.Spec.Assets[0].Labels["app"])
 }
 
-func TestDiscoverNamespaceStageDoesNotLabelContainerImages(t *testing.T) {
-	conn := inheritanceTestConn(
-		map[string]string{shared.OPTION_INHERIT_NAMESPACE_LABELS: "my.company.com/team"},
-		[]string{DiscoveryPods, DiscoveryContainerImages},
-		newTestPod("team-a", "web", "uid-web", map[string]string{"app": "web"}, "docker.io/library/nginx@sha256:0123456789abcdef"),
-	)
-
-	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
-	require.NoError(t, err)
-	require.Len(t, inv.Spec.Assets, 2)
-	var image, workload *inventory.Asset
-	for _, a := range inv.Spec.Assets {
-		if a.Connections[0].Type == registryImageConnectionType {
-			image = a
-		} else {
-			workload = a
-		}
-	}
-	require.NotNil(t, image)
-	require.NotNil(t, workload)
-	assert.NotContains(t, image.Labels, "my.company.com/team")
-	assert.Equal(t, "aaabbbccc", workload.Labels["my.company.com/team"])
-}
-
 func TestDiscoverManifestUndeclaredNamespaceInheritsNothing(t *testing.T) {
 	cfg := &inventory.Config{
 		Type: "k8s",
@@ -697,4 +682,178 @@ func TestInheritedNamespaceLabels(t *testing.T) {
 	t.Run("no patterns is nil", func(t *testing.T) {
 		assert.Nil(t, inheritedNamespaceLabels(ns, nil))
 	})
+}
+
+// clusterStageImageConn is a cluster with team-alpha {team=alpha}, team-beta
+// {team=beta} and an unlabeled platform-tools, where nginx is shared by alpha and
+// beta and web is shared by alpha and platform-tools.
+func clusterStageImageConn(targets []string, options map[string]string) *namespaceDiscoveryConnection {
+	cfg := &inventory.Config{
+		Type:     "k8s",
+		Options:  map[string]string{plugin.OptionStagedDiscovery: ""},
+		Discover: &inventory.Discovery{Targets: targets},
+	}
+	for k, v := range options {
+		cfg.Options[k] = v
+	}
+	asset := &inventory.Asset{Name: "K8s Cluster test", Connections: []*inventory.Config{cfg}}
+	alpha := newTestNamespace("team-alpha", "uid-alpha")
+	alpha.Labels = map[string]string{"my.company.com/team": "alpha"}
+	beta := newTestNamespace("team-beta", "uid-beta")
+	beta.Labels = map[string]string{"my.company.com/team": "beta"}
+	tools := newTestNamespace("platform-tools", "uid-tools")
+	return &namespaceDiscoveryConnection{
+		Connection: plugin.NewConnection(1, asset),
+		asset:      asset,
+		namespaces: []corev1.Namespace{alpha, beta, tools},
+		pods: []corev1.Pod{
+			newTestPod("team-alpha", "web", "u1", nil, "nginx@sha256:shared", "web@sha256:alpha"),
+			newTestPod("team-beta", "proxy", "u2", nil, "nginx@sha256:shared"),
+			newTestPod("platform-tools", "agent", "u3", nil, "web@sha256:alpha"),
+		},
+	}
+}
+
+func TestDiscoverClusterStageAttachesImageVerdicts(t *testing.T) {
+	conn := clusterStageImageConn([]string{DiscoveryContainerImages}, map[string]string{shared.OPTION_INHERIT_NAMESPACE_LABELS: "my.company.com/team"})
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	require.Len(t, inv.Spec.Assets, 3)
+
+	payloads := map[string]map[string]imageLabelVerdict{}
+	for _, ns := range inv.Spec.Assets {
+		raw, ok := ns.Connections[0].Options[shared.OPTION_INHERIT_NAMESPACE_LABELS_VERDICTS]
+		require.True(t, ok, "namespace %s has no verdict option", ns.Name)
+		verdicts, skip, err := decodeImageLabelVerdicts(raw)
+		require.NoError(t, err)
+		require.False(t, skip)
+		payloads[ns.Name] = verdicts
+	}
+	conflict := imageLabelVerdict{Conflicts: []string{"my.company.com/team"}}
+	alphaOnly := imageLabelVerdict{Labels: map[string]string{"my.company.com/team": "alpha"}}
+	assert.Equal(t, map[string]imageLabelVerdict{"nginx@sha256:shared": conflict, "web@sha256:alpha": alphaOnly}, payloads["team-alpha"])
+	assert.Equal(t, map[string]imageLabelVerdict{"nginx@sha256:shared": conflict}, payloads["team-beta"])
+	// the unlabeled namespace carries alpha's verdict for the image it shares with alpha
+	assert.Equal(t, map[string]imageLabelVerdict{"web@sha256:alpha": alphaOnly}, payloads["platform-tools"])
+}
+
+func TestDiscoverClusterStageWithoutImagesTargetAttachesNoVerdicts(t *testing.T) {
+	conn := clusterStageImageConn([]string{DiscoveryPods}, map[string]string{shared.OPTION_INHERIT_NAMESPACE_LABELS: "my.company.com/team"})
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	require.Len(t, inv.Spec.Assets, 3)
+	for _, ns := range inv.Spec.Assets {
+		assert.NotContains(t, ns.Connections[0].Options, shared.OPTION_INHERIT_NAMESPACE_LABELS_VERDICTS)
+	}
+}
+
+const testImageRef = "docker.io/library/nginx@sha256:0123456789abcdef"
+
+// splitImageAndWorkload returns the single registry-image asset and the single
+// workload asset of a stage-2 run that targeted pods and container images.
+func splitImageAndWorkload(t *testing.T, inv *inventory.Inventory) (image, workload *inventory.Asset) {
+	t.Helper()
+	require.Len(t, inv.Spec.Assets, 2)
+	for _, a := range inv.Spec.Assets {
+		if a.Connections[0].Type == registryImageConnectionType {
+			image = a
+		} else {
+			workload = a
+		}
+	}
+	require.NotNil(t, image)
+	require.NotNil(t, workload)
+	return image, workload
+}
+
+func TestDiscoverNamespaceStageLabelsImagesFromVerdicts(t *testing.T) {
+	verdicts := encodeImageLabelVerdicts(map[string]imageLabelVerdict{
+		testImageRef: {Labels: map[string]string{"my.company.com/team": "aaabbbccc"}, Conflicts: []string{"my.company.com/department"}},
+	})
+	conn := inheritanceTestConn(
+		map[string]string{
+			shared.OPTION_INHERIT_NAMESPACE_LABELS:          "my.company.com/team",
+			shared.OPTION_INHERIT_NAMESPACE_LABELS_VERDICTS: verdicts,
+		},
+		[]string{DiscoveryPods, DiscoveryContainerImages},
+		newTestPod("team-a", "web", "uid-web", map[string]string{"app": "web"}, testImageRef),
+	)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	image, workload := splitImageAndWorkload(t, inv)
+	assert.Equal(t, map[string]string{"my.company.com/team": "aaabbbccc", LabelNamespaceLabelConflict: "my.company.com/department"}, image.Labels)
+	assert.Equal(t, "aaabbbccc", workload.Labels["my.company.com/team"])
+}
+
+func TestDiscoverNamespaceStageStandaloneFoldsOwnNamespace(t *testing.T) {
+	conn := inheritanceTestConn(
+		map[string]string{shared.OPTION_INHERIT_NAMESPACE_LABELS: "my.company.com/team"},
+		[]string{DiscoveryPods, DiscoveryContainerImages},
+		newTestPod("team-a", "web", "uid-web", map[string]string{"app": "web"}, testImageRef),
+	)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	image, _ := splitImageAndWorkload(t, inv)
+	assert.Equal(t, map[string]string{"my.company.com/team": "aaabbbccc"}, image.Labels)
+}
+
+func TestDiscoverNamespaceStageSentinelSkipsImageLabels(t *testing.T) {
+	conn := inheritanceTestConn(
+		map[string]string{
+			shared.OPTION_INHERIT_NAMESPACE_LABELS:          "my.company.com/team",
+			shared.OPTION_INHERIT_NAMESPACE_LABELS_VERDICTS: imageLabelVerdictsSentinel,
+		},
+		[]string{DiscoveryPods, DiscoveryContainerImages},
+		newTestPod("team-a", "web", "uid-web", map[string]string{"app": "web"}, testImageRef),
+	)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	image, workload := splitImageAndWorkload(t, inv)
+	assert.Nil(t, image.Labels)
+	assert.Equal(t, "aaabbbccc", workload.Labels["my.company.com/team"])
+}
+
+func TestDiscoverNamespaceStageWithoutOptionLeavesImagesUnchanged(t *testing.T) {
+	conn := inheritanceTestConn(
+		nil,
+		[]string{DiscoveryPods, DiscoveryContainerImages},
+		newTestPod("team-a", "web", "uid-web", map[string]string{"app": "web"}, testImageRef),
+	)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+	image, _ := splitImageAndWorkload(t, inv)
+	assert.Nil(t, image.Labels)
+}
+
+func TestDiscoverLegacyLabelsImagesAcrossNamespaces(t *testing.T) {
+	conn := clusterStageImageConn([]string{DiscoveryContainerImages}, map[string]string{
+		shared.OPTION_INHERIT_NAMESPACE_LABELS: "my.company.com/team",
+		shared.OPTION_NAMESPACE:                "team-*,platform-tools",
+	})
+	delete(conn.asset.Connections[0].Options, plugin.OptionStagedDiscovery)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+
+	// Legacy discovery emits an image once per namespace that runs it; every copy
+	// must carry the same verdict.
+	byHost := map[string][]*inventory.Asset{}
+	for _, a := range inv.Spec.Assets {
+		require.Equal(t, registryImageConnectionType, a.Connections[0].Type)
+		byHost[a.Connections[0].Host] = append(byHost[a.Connections[0].Host], a)
+	}
+	require.Len(t, byHost["nginx@sha256:shared"], 2)
+	for _, a := range byHost["nginx@sha256:shared"] {
+		assert.Equal(t, map[string]string{LabelNamespaceLabelConflict: "my.company.com/team"}, a.Labels)
+	}
+	require.Len(t, byHost["web@sha256:alpha"], 2)
+	for _, a := range byHost["web@sha256:alpha"] {
+		assert.Equal(t, map[string]string{"my.company.com/team": "alpha"}, a.Labels)
+	}
 }
