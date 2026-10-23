@@ -75,6 +75,11 @@ type Config struct {
 	// CurrentVersion is the current version of the running binary.
 	// If "x.y.z-rolling", self-update is skipped.
 	CurrentVersion string
+	// SkipRegisteredVersion leaves the OS package record alone. The record is
+	// the Add/Remove entry of the Mondoo MSI on Windows, which belongs to the
+	// binaries that package installs. A binary that is not installed by it must
+	// set this, or an update writes its own version into that entry.
+	SkipRegisteredVersion bool
 }
 
 // releaseURLs is the ordered list of manifests to try: the configured one
@@ -245,7 +250,7 @@ func CheckLocalAndUpdate(cfg Config) (bool, error) {
 		return false, err
 	}
 
-	return execLocalIfNewer(binPath, binName, currentVersion)
+	return execLocalIfNewer(cfg, binPath, binName, currentVersion)
 }
 
 // CheckAndUpdate checks for updates and installs them if available.
@@ -259,7 +264,7 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 	// First, check if there's already a newer binary installed locally.
 	// This allows us to immediately use an already-downloaded update without
 	// needing to check the network.
-	if execed, err := execLocalIfNewer(binPath, binName, currentVersion); err != nil {
+	if execed, err := execLocalIfNewer(cfg, binPath, binName, currentVersion); err != nil {
 		log.Debug().Err(err).Msg("self-update: failed to check local binary")
 	} else if execed {
 		return true, nil
@@ -285,7 +290,7 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 	//
 	// Gated behind the refresh interval rather than run per invocation, and it
 	// reads before it writes, so the steady state is one registry read.
-	registerVersion(currentVersion)
+	cfg.registerVersion(currentVersion)
 
 	// Fetch the latest release information
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -388,7 +393,7 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 			return false, errors.Wrap(err, "in-place swap failed")
 		}
 		binaryPath = originalPath
-		registerVersion(release.Version)
+		cfg.registerVersion(release.Version)
 	}
 
 	// Re-execute with the new binary
@@ -400,8 +405,13 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 	return true, nil
 }
 
+// updateRegisteredVersionFunc is the platform's updateRegisteredVersion, held in
+// a variable so tests can observe whether it is called.
+var updateRegisteredVersionFunc = updateRegisteredVersion
+
 // registerVersion points the OS package manager's record at the version now on
-// disk, where the platform has such a record.
+// disk, where the platform has such a record. It does nothing for a binary that
+// set SkipRegisteredVersion.
 //
 // Deliberately not fatal. The binary has already been replaced and verified at
 // this point, so the update succeeded; only the bookkeeping did not. Writing
@@ -410,8 +420,11 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 // warning is the honest outcome: the machine is running the new version and
 // Windows will keep reporting the old one until something with the rights
 // corrects it.
-func registerVersion(version string) {
-	if err := updateRegisteredVersion(version); err != nil {
+func (c Config) registerVersion(version string) {
+	if c.SkipRegisteredVersion {
+		return
+	}
+	if err := updateRegisteredVersionFunc(version); err != nil {
 		log.Warn().Err(err).
 			Str("version", version).
 			Msg("self-update: updated the binary but could not update the version the OS reports")
@@ -433,7 +446,7 @@ func platformBinaryName(name string) string {
 
 // execLocalIfNewer checks if there's a newer binary already installed
 // in the bin path. If so, it execs to that binary. Returns true if exec happened.
-func execLocalIfNewer(binPath, binName, currentVersion string) (bool, error) {
+func execLocalIfNewer(cfg Config, binPath, binName, currentVersion string) (bool, error) {
 	localBinary := filepath.Join(binPath, binName)
 
 	// Check if local binary exists
@@ -478,7 +491,7 @@ func execLocalIfNewer(binPath, binName, currentVersion string) (bool, error) {
 			return false, errors.Wrap(err, "in-place swap failed")
 		}
 		localBinary = originalPath
-		registerVersion(localVersion)
+		cfg.registerVersion(localVersion)
 	}
 
 	// Exec to the newer local binary
