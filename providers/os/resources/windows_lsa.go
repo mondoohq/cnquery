@@ -29,6 +29,10 @@ const (
 	lsaWDigestPath        = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest`
 	lsaNetlogonPath       = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters`
 	lsaNetlogonPolicyPath = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Netlogon\Parameters`
+	// lsaSystemPolicyPath is where the "Configure LSASS to run as a protected
+	// process" group policy writes RunAsPPL. Windows honors the policy value over
+	// the one under the Lsa key, so it is read first (see lsaRunAsPpl).
+	lsaSystemPolicyPath = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\System`
 )
 
 // Registry locations of the hardening controls that live outside the Lsa key
@@ -263,6 +267,17 @@ func computeLsaSecureChannel(netlogon, netlogonPolicy map[string]registry.Regist
 	}
 }
 
+// lsaRunAsPpl returns the effective LSA protection level. A RunAsPPL value set
+// by the "Configure LSASS to run as a protected process" group policy takes
+// precedence over the value under the Lsa key; without the policy value the
+// Lsa key decides. Pure function for unit testing.
+func lsaRunAsPpl(lsa, systemPolicy map[string]registry.RegistryKeyItem) *int64 {
+	if v := regIntPtr(systemPolicy, "RunAsPPL"); v != nil {
+		return v
+	}
+	return regIntPtr(lsa, "RunAsPPL")
+}
+
 func (r *mqlWindowsLsa) crashOnAuditFail() (int64, error)           { return 0, r.populate() }
 func (r *mqlWindowsLsa) disableDomainCreds() (bool, error)          { return false, r.populate() }
 func (r *mqlWindowsLsa) everyoneIncludesAnonymous() (bool, error)   { return false, r.populate() }
@@ -287,6 +302,11 @@ func (r *mqlWindowsLsa) populate() error {
 		return err
 	}
 	v := computeLsa(items)
+	systemPolicy, err := r.readLsaKey(lsaSystemPolicyPath)
+	if err != nil {
+		return err
+	}
+	v.RunAsPpl = lsaRunAsPpl(items, systemPolicy)
 
 	r.CrashOnAuditFail = intFieldPtr(v.CrashOnAuditFail)
 	r.DisableDomainCreds = boolFieldPtr(v.DisableDomainCreds)
