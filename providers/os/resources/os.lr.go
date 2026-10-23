@@ -18721,6 +18721,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.defender.scanSettings.enableLowCpuPriority": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderScanSettings).GetEnableLowCpuPriority()).ToDataRes(types.Bool)
 	},
+	"windows.defender.scanSettings.quickScanIncludeExclusions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetQuickScanIncludeExclusions()).ToDataRes(types.Int)
+	},
+	"windows.defender.scanSettings.disablePackedExeScanning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetDisablePackedExeScanning()).ToDataRes(types.Bool)
+	},
+	"windows.defender.scanSettings.daysUntilAggressiveCatchupQuickScan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderScanSettings).GetDaysUntilAggressiveCatchupQuickScan()).ToDataRes(types.Int)
+	},
 	"windows.defender.realTimeSettings.disableRealtimeMonitoring": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderRealTimeSettings).GetDisableRealtimeMonitoring()).ToDataRes(types.Bool)
 	},
@@ -18741,6 +18750,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.defender.realTimeSettings.enableFileHashComputation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderRealTimeSettings).GetEnableFileHashComputation()).ToDataRes(types.Bool)
+	},
+	"windows.defender.realTimeSettings.oobeEnableRtpAndSigUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderRealTimeSettings).GetOobeEnableRtpAndSigUpdate()).ToDataRes(types.Bool)
+	},
+	"windows.defender.realTimeSettings.disableScanOnRealtimeEnable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderRealTimeSettings).GetDisableScanOnRealtimeEnable()).ToDataRes(types.Bool)
 	},
 	"windows.defender.cloudSettings.mapsReporting": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderCloudSettings).GetMapsReporting()).ToDataRes(types.Int)
@@ -18796,6 +18811,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.defender.signatureSettings.meteredConnectionUpdates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderSignatureSettings).GetMeteredConnectionUpdates()).ToDataRes(types.Bool)
 	},
+	"windows.defender.signatureSettings.reportDynamicSignatureDroppedEvent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderSignatureSettings).GetReportDynamicSignatureDroppedEvent()).ToDataRes(types.Bool)
+	},
 	"windows.defender.threatActionSettings.severeThreatDefaultAction": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderThreatActionSettings).GetSevereThreatDefaultAction()).ToDataRes(types.Int)
 	},
@@ -18843,6 +18861,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.defender.networkProtectionSettings.enableDnsSinkhole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderNetworkProtectionSettings).GetEnableDnsSinkhole()).ToDataRes(types.Bool)
+	},
+	"windows.defender.networkProtectionSettings.enableConvertWarnToBlock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderNetworkProtectionSettings).GetEnableConvertWarnToBlock()).ToDataRes(types.Bool)
 	},
 	"windows.defender.behavioralNetworkBlockSettings.bruteForceProtectionConfiguredState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).GetBruteForceProtectionConfiguredState()).ToDataRes(types.Int)
@@ -18901,6 +18922,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.defender.remediationSettings.disableRestorePoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderRemediationSettings).GetDisableRestorePoint()).ToDataRes(types.Bool)
 	},
+	"windows.defender.remediationSettings.disableRoutinelyTakingAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderRemediationSettings).GetDisableRoutinelyTakingAction()).ToDataRes(types.Bool)
+	},
+	"windows.defender.remediationSettings.passiveRemediation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderRemediationSettings).GetPassiveRemediation()).ToDataRes(types.Int)
+	},
 	"windows.defender.exclusions.paths": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderExclusions).GetPaths()).ToDataRes(types.Array(types.String))
 	},
@@ -18912,6 +18939,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.defender.exclusions.ipAddresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderExclusions).GetIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"windows.defender.exclusions.hideFromLocalUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderExclusions).GetHideFromLocalUsers()).ToDataRes(types.Bool)
 	},
 	"windows.defender.asrRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderAsrRule).GetId()).ToDataRes(types.String)
@@ -45068,6 +45098,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsDefenderScanSettings).EnableLowCpuPriority, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"windows.defender.scanSettings.quickScanIncludeExclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).QuickScanIncludeExclusions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.disablePackedExeScanning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).DisablePackedExeScanning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.scanSettings.daysUntilAggressiveCatchupQuickScan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderScanSettings).DaysUntilAggressiveCatchupQuickScan, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"windows.defender.realTimeSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDefenderRealTimeSettings).__id, ok = v.Value.(string)
 		return
@@ -45098,6 +45140,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.defender.realTimeSettings.enableFileHashComputation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDefenderRealTimeSettings).EnableFileHashComputation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.realTimeSettings.oobeEnableRtpAndSigUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRealTimeSettings).OobeEnableRtpAndSigUpdate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.realTimeSettings.disableScanOnRealtimeEnable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRealTimeSettings).DisableScanOnRealtimeEnable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.defender.cloudSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45180,6 +45230,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsDefenderSignatureSettings).MeteredConnectionUpdates, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"windows.defender.signatureSettings.reportDynamicSignatureDroppedEvent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderSignatureSettings).ReportDynamicSignatureDroppedEvent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"windows.defender.threatActionSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDefenderThreatActionSettings).__id, ok = v.Value.(string)
 		return
@@ -45258,6 +45312,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.defender.networkProtectionSettings.enableDnsSinkhole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDefenderNetworkProtectionSettings).EnableDnsSinkhole, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.networkProtectionSettings.enableConvertWarnToBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderNetworkProtectionSettings).EnableConvertWarnToBlock, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.defender.behavioralNetworkBlockSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45348,6 +45406,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsDefenderRemediationSettings).DisableRestorePoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"windows.defender.remediationSettings.disableRoutinelyTakingAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRemediationSettings).DisableRoutinelyTakingAction, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.remediationSettings.passiveRemediation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderRemediationSettings).PassiveRemediation, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"windows.defender.exclusions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDefenderExclusions).__id, ok = v.Value.(string)
 		return
@@ -45366,6 +45432,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.defender.exclusions.ipAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDefenderExclusions).IpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.defender.exclusions.hideFromLocalUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderExclusions).HideFromLocalUsers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.defender.asrRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -113820,7 +113890,7 @@ func (c *mqlWindowsDefenderPreferences) GetDisableGenericReports() *plugin.TValu
 type mqlWindowsDefenderScanSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsDefenderScanSettingsInternal it will be used here
+	mqlWindowsDefenderScanSettingsInternal
 	ScanParameters                                plugin.TValue[int64]
 	ScanScheduleDay                               plugin.TValue[int64]
 	ScanScheduleTime                              plugin.TValue[string]
@@ -113839,6 +113909,9 @@ type mqlWindowsDefenderScanSettings struct {
 	DisableCpuThrottleOnIdleScans                 plugin.TValue[bool]
 	EnableFullScanOnBatteryPower                  plugin.TValue[bool]
 	EnableLowCpuPriority                          plugin.TValue[bool]
+	QuickScanIncludeExclusions                    plugin.TValue[int64]
+	DisablePackedExeScanning                      plugin.TValue[bool]
+	DaysUntilAggressiveCatchupQuickScan           plugin.TValue[int64]
 }
 
 // createWindowsDefenderScanSettings creates a new instance of this resource
@@ -113945,11 +114018,27 @@ func (c *mqlWindowsDefenderScanSettings) GetEnableLowCpuPriority() *plugin.TValu
 	return &c.EnableLowCpuPriority
 }
 
+func (c *mqlWindowsDefenderScanSettings) GetQuickScanIncludeExclusions() *plugin.TValue[int64] {
+	return &c.QuickScanIncludeExclusions
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetDisablePackedExeScanning() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisablePackedExeScanning, func() (bool, error) {
+		return c.disablePackedExeScanning()
+	})
+}
+
+func (c *mqlWindowsDefenderScanSettings) GetDaysUntilAggressiveCatchupQuickScan() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DaysUntilAggressiveCatchupQuickScan, func() (int64, error) {
+		return c.daysUntilAggressiveCatchupQuickScan()
+	})
+}
+
 // mqlWindowsDefenderRealTimeSettings for the windows.defender.realTimeSettings resource
 type mqlWindowsDefenderRealTimeSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsDefenderRealTimeSettingsInternal it will be used here
+	mqlWindowsDefenderRealTimeSettingsInternal
 	DisableRealtimeMonitoring        plugin.TValue[bool]
 	DisableBehaviorMonitoring        plugin.TValue[bool]
 	DisableIOAVProtection            plugin.TValue[bool]
@@ -113957,6 +114046,8 @@ type mqlWindowsDefenderRealTimeSettings struct {
 	DisableIntrusionPreventionSystem plugin.TValue[bool]
 	RealTimeScanDirection            plugin.TValue[int64]
 	EnableFileHashComputation        plugin.TValue[bool]
+	OobeEnableRtpAndSigUpdate        plugin.TValue[bool]
+	DisableScanOnRealtimeEnable      plugin.TValue[bool]
 }
 
 // createWindowsDefenderRealTimeSettings creates a new instance of this resource
@@ -114017,6 +114108,16 @@ func (c *mqlWindowsDefenderRealTimeSettings) GetRealTimeScanDirection() *plugin.
 
 func (c *mqlWindowsDefenderRealTimeSettings) GetEnableFileHashComputation() *plugin.TValue[bool] {
 	return &c.EnableFileHashComputation
+}
+
+func (c *mqlWindowsDefenderRealTimeSettings) GetOobeEnableRtpAndSigUpdate() *plugin.TValue[bool] {
+	return &c.OobeEnableRtpAndSigUpdate
+}
+
+func (c *mqlWindowsDefenderRealTimeSettings) GetDisableScanOnRealtimeEnable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableScanOnRealtimeEnable, func() (bool, error) {
+		return c.disableScanOnRealtimeEnable()
+	})
 }
 
 // mqlWindowsDefenderCloudSettings for the windows.defender.cloudSettings resource
@@ -114101,6 +114202,7 @@ type mqlWindowsDefenderSignatureSettings struct {
 	EngineUpdatesChannel                         plugin.TValue[int64]
 	PlatformUpdatesChannel                       plugin.TValue[int64]
 	MeteredConnectionUpdates                     plugin.TValue[bool]
+	ReportDynamicSignatureDroppedEvent           plugin.TValue[bool]
 }
 
 // createWindowsDefenderSignatureSettings creates a new instance of this resource
@@ -114185,6 +114287,10 @@ func (c *mqlWindowsDefenderSignatureSettings) GetPlatformUpdatesChannel() *plugi
 
 func (c *mqlWindowsDefenderSignatureSettings) GetMeteredConnectionUpdates() *plugin.TValue[bool] {
 	return &c.MeteredConnectionUpdates
+}
+
+func (c *mqlWindowsDefenderSignatureSettings) GetReportDynamicSignatureDroppedEvent() *plugin.TValue[bool] {
+	return &c.ReportDynamicSignatureDroppedEvent
 }
 
 // mqlWindowsDefenderThreatActionSettings for the windows.defender.threatActionSettings resource
@@ -114381,6 +114487,7 @@ type mqlWindowsDefenderNetworkProtectionSettings struct {
 	AllowNetworkProtectionDownLevel    plugin.TValue[bool]
 	AllowDatagramProcessingOnWinServer plugin.TValue[bool]
 	EnableDnsSinkhole                  plugin.TValue[bool]
+	EnableConvertWarnToBlock           plugin.TValue[bool]
 }
 
 // createWindowsDefenderNetworkProtectionSettings creates a new instance of this resource
@@ -114433,6 +114540,10 @@ func (c *mqlWindowsDefenderNetworkProtectionSettings) GetAllowDatagramProcessing
 
 func (c *mqlWindowsDefenderNetworkProtectionSettings) GetEnableDnsSinkhole() *plugin.TValue[bool] {
 	return &c.EnableDnsSinkhole
+}
+
+func (c *mqlWindowsDefenderNetworkProtectionSettings) GetEnableConvertWarnToBlock() *plugin.TValue[bool] {
+	return &c.EnableConvertWarnToBlock
 }
 
 // mqlWindowsDefenderBehavioralNetworkBlockSettings for the windows.defender.behavioralNetworkBlockSettings resource
@@ -114592,11 +114703,13 @@ func (c *mqlWindowsDefenderLocalSettingOverrides) GetAvgCPULoadFactor() *plugin.
 type mqlWindowsDefenderRemediationSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsDefenderRemediationSettingsInternal it will be used here
+	mqlWindowsDefenderRemediationSettingsInternal
 	RemediationScheduleDay         plugin.TValue[int64]
 	RemediationScheduleTime        plugin.TValue[string]
 	QuarantinePurgeItemsAfterDelay plugin.TValue[int64]
 	DisableRestorePoint            plugin.TValue[bool]
+	DisableRoutinelyTakingAction   plugin.TValue[bool]
+	PassiveRemediation             plugin.TValue[int64]
 }
 
 // createWindowsDefenderRemediationSettings creates a new instance of this resource
@@ -114647,15 +114760,28 @@ func (c *mqlWindowsDefenderRemediationSettings) GetDisableRestorePoint() *plugin
 	return &c.DisableRestorePoint
 }
 
+func (c *mqlWindowsDefenderRemediationSettings) GetDisableRoutinelyTakingAction() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableRoutinelyTakingAction, func() (bool, error) {
+		return c.disableRoutinelyTakingAction()
+	})
+}
+
+func (c *mqlWindowsDefenderRemediationSettings) GetPassiveRemediation() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PassiveRemediation, func() (int64, error) {
+		return c.passiveRemediation()
+	})
+}
+
 // mqlWindowsDefenderExclusions for the windows.defender.exclusions resource
 type mqlWindowsDefenderExclusions struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlWindowsDefenderExclusionsInternal it will be used here
-	Paths       plugin.TValue[[]any]
-	Extensions  plugin.TValue[[]any]
-	Processes   plugin.TValue[[]any]
-	IpAddresses plugin.TValue[[]any]
+	Paths              plugin.TValue[[]any]
+	Extensions         plugin.TValue[[]any]
+	Processes          plugin.TValue[[]any]
+	IpAddresses        plugin.TValue[[]any]
+	HideFromLocalUsers plugin.TValue[bool]
 }
 
 // createWindowsDefenderExclusions creates a new instance of this resource
@@ -114704,6 +114830,10 @@ func (c *mqlWindowsDefenderExclusions) GetProcesses() *plugin.TValue[[]any] {
 
 func (c *mqlWindowsDefenderExclusions) GetIpAddresses() *plugin.TValue[[]any] {
 	return &c.IpAddresses
+}
+
+func (c *mqlWindowsDefenderExclusions) GetHideFromLocalUsers() *plugin.TValue[bool] {
+	return &c.HideFromLocalUsers
 }
 
 // mqlWindowsDefenderAsrRule for the windows.defender.asrRule resource

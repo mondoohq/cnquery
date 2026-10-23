@@ -20531,6 +20531,24 @@ windows.defender.scanSettings @defaults("scanParameters scanScheduleDay") {
   enableFullScanOnBatteryPower bool
   // Whether scans run at low CPU priority
   enableLowCpuPriority bool
+  // Whether quick scans include excluded files and folders
+  //
+  // 0 = exclusions are not scanned, 1 = files and folders excluded from
+  // real-time protection by contextual exclusions are scanned. Null when the
+  // Defender platform does not report this preference.
+  quickScanIncludeExclusions int
+  // Whether scanning of packed executables is disabled
+  //
+  // Read from the DisablePackedExeScanning Group Policy value, which
+  // Get-MpPreference does not report. Null when the policy is not configured,
+  // in which case Defender scans packed executables.
+  disablePackedExeScanning() bool
+  // Days without any scan after which an aggressive catch-up quick scan runs
+  //
+  // Read from the DaysUntilAggressiveCatchupQuickScan Group Policy value
+  // (7-60, 0 turns aggressive catch-up quick scans off), which Get-MpPreference
+  // does not report. Null when the policy is not configured.
+  daysUntilAggressiveCatchupQuickScan() int
 }
 
 // Microsoft Defender real-time protection settings
@@ -20561,6 +20579,17 @@ windows.defender.realTimeSettings @defaults("disableRealtimeMonitoring") {
   realTimeScanDirection int
   // Whether file-hash computation is enabled
   enableFileHashComputation bool
+  // Whether real-time protection and security intelligence updates are enabled during the out-of-box experience
+  //
+  // Null when the Defender platform does not report this preference.
+  oobeEnableRtpAndSigUpdate bool
+  // Whether process scanning when real-time protection is turned on is disabled
+  //
+  // Read from the DisableScanOnRealtimeEnable Group Policy value, which
+  // Get-MpPreference does not report. Null when the policy is not configured,
+  // in which case Defender scans running processes when real-time protection
+  // is turned on.
+  disableScanOnRealtimeEnable() bool
 }
 
 // Microsoft Defender cloud-delivered protection settings
@@ -20624,6 +20653,10 @@ windows.defender.signatureSettings @defaults("signatureUpdateInterval") {
   platformUpdatesChannel int
   // Whether updates are allowed over metered connections
   meteredConnectionUpdates bool
+  // Whether dropped dynamic security intelligence updates are reported as events
+  //
+  // Null when the Defender platform does not report this preference.
+  reportDynamicSignatureDroppedEvent bool
 }
 
 // Microsoft Defender default threat actions
@@ -20703,6 +20736,10 @@ windows.defender.networkProtectionSettings @defaults("enableNetworkProtection") 
   allowDatagramProcessingOnWinServer bool
   // Whether DNS sinkhole enforcement is enabled
   enableDnsSinkhole bool
+  // Whether network protection blocks connections it would otherwise only warn about
+  //
+  // Null when the Defender platform does not report this preference.
+  enableConvertWarnToBlock bool
 }
 
 // Microsoft Defender behavioral network block settings
@@ -20785,6 +20822,23 @@ windows.defender.remediationSettings @defaults("quarantinePurgeItemsAfterDelay")
   quarantinePurgeItemsAfterDelay int
   // Whether creation of a system restore point before remediation is disabled
   disableRestorePoint bool
+  // Whether routine remediation is turned off
+  //
+  // When true, Defender does not automatically act on detected threats and
+  // waits for a user to choose an action. Read from the
+  // DisableRoutinelyTakingAction Group Policy value, which Get-MpPreference
+  // does not report. Null when the policy is not configured, in which case
+  // Defender remediates automatically.
+  disableRoutinelyTakingAction() bool
+  // EDR in block mode (passive remediation) configuration
+  //
+  // Read from the PassiveRemediation Group Policy value, which
+  // Get-MpPreference does not report. 0 = off. Group Policy sets 1 to turn EDR
+  // in block mode on; the Defender CSP accepts a bitmask of 0x1 (automatic
+  // remediation of endpoint detection and response findings), 0x2 (real-time
+  // protection audit) and 0x4 (real-time protection remediation). Null when
+  // the policy is not configured.
+  passiveRemediation() int
 }
 
 // Microsoft Defender scan exclusions
@@ -20803,6 +20857,10 @@ windows.defender.exclusions @defaults("paths extensions processes") {
   processes []string
   // Excluded IP addresses
   ipAddresses []string
+  // Whether the exclusion lists are hidden from users who are not administrators
+  //
+  // Null when the Defender platform does not report this preference.
+  hideFromLocalUsers bool
 }
 
 // Microsoft Defender Attack Surface Reduction rule

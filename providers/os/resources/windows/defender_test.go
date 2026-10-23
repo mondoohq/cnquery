@@ -112,6 +112,30 @@ func TestParseMpPreference(t *testing.T) {
 	// the "RePorts" casing is matched via the explicit json tag
 	require.NotNil(t, pref.DisableGenericReports)
 	assert.True(t, *pref.DisableGenericReports)
+
+	// preferences configured away from their defaults
+	require.NotNil(t, pref.QuickScanIncludeExclusions)
+	assert.Equal(t, int64(1), *pref.QuickScanIncludeExclusions)
+	require.NotNil(t, pref.OobeEnableRtpAndSigUpdate)
+	assert.True(t, *pref.OobeEnableRtpAndSigUpdate)
+	require.NotNil(t, pref.ReportDynamicSignatureDroppedEvent)
+	assert.True(t, *pref.ReportDynamicSignatureDroppedEvent)
+	require.NotNil(t, pref.EnableConvertWarnToBlock)
+	assert.True(t, *pref.EnableConvertWarnToBlock)
+	require.NotNil(t, pref.HideExclusionsFromLocalUsers)
+	assert.False(t, *pref.HideExclusionsFromLocalUsers)
+}
+
+// A Defender platform that predates a preference does not report it. It must
+// decode to nil, so the field reads null rather than claiming the default.
+func TestParseMpPreference_AbsentPreferencesAreNil(t *testing.T) {
+	pref, err := ParseMpPreference([]byte(`{"ScanParameters":1}`))
+	require.NoError(t, err)
+	assert.Nil(t, pref.QuickScanIncludeExclusions)
+	assert.Nil(t, pref.OobeEnableRtpAndSigUpdate)
+	assert.Nil(t, pref.ReportDynamicSignatureDroppedEvent)
+	assert.Nil(t, pref.EnableConvertWarnToBlock)
+	assert.Nil(t, pref.HideExclusionsFromLocalUsers)
 }
 
 func TestParseMpThreats(t *testing.T) {

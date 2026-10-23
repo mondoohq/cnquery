@@ -440,6 +440,7 @@ type MpPreference struct {
 	DisableCpuThrottleOnIdleScans                 bool
 	EnableFullScanOnBatteryPower                  bool
 	EnableLowCpuPriority                          bool
+	QuickScanIncludeExclusions                    *int64
 
 	// real-time
 	DisableRealtimeMonitoring        bool
@@ -449,6 +450,7 @@ type MpPreference struct {
 	DisableIntrusionPreventionSystem *bool
 	RealTimeScanDirection            int64
 	EnableFileHashComputation        bool
+	OobeEnableRtpAndSigUpdate        *bool
 
 	// cloud / MAPS
 	MAPSReporting           int64
@@ -471,6 +473,7 @@ type MpPreference struct {
 	EngineUpdatesChannel                         int64
 	PlatformUpdatesChannel                       int64
 	MeteredConnectionUpdates                     bool
+	ReportDynamicSignatureDroppedEvent           *bool
 
 	// threat actions
 	SevereThreatDefaultAction     int64
@@ -492,6 +495,7 @@ type MpPreference struct {
 	AllowNetworkProtectionDownLevel    bool
 	AllowDatagramProcessingOnWinServer bool
 	EnableDnsSinkhole                  bool
+	EnableConvertWarnToBlock           *bool
 
 	// behavioral network blocks (brute-force and remote-encryption protection)
 	BruteForceProtectionConfiguredState       int64
@@ -523,6 +527,9 @@ type MpPreference struct {
 	ExclusionExtension flexStrings
 	ExclusionProcess   flexStrings
 	ExclusionIpAddress flexStrings
+	// HideExclusionsFromLocalUsers hides the exclusion lists from users who
+	// are not administrators.
+	HideExclusionsFromLocalUsers *bool
 
 	// attack surface reduction
 	AttackSurfaceReductionRules_Ids     flexStrings

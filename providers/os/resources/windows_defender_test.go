@@ -157,3 +157,54 @@ func TestResolveLocalSettingOverrides(t *testing.T) {
 		assert.False(t, *o.realtimeMonitoring)
 	})
 }
+
+// Get-MpPreference does not report these settings at all, so each must come
+// from the Group Policy value and subkey WindowsDefender.admx defines for it.
+func TestResolveDefenderPolicyOnly(t *testing.T) {
+	t.Run("not configured is null", func(t *testing.T) {
+		assert.Equal(t, defenderPolicyOnly{}, resolveDefenderPolicyOnly(&defenderPolicy{}))
+	})
+
+	t.Run("each field reads its own policy value", func(t *testing.T) {
+		pol := &defenderPolicy{
+			root:     defenderPolicyItems(map[string]int64{"DisableRoutinelyTakingAction": 1}),
+			realTime: defenderPolicyItems(map[string]int64{"DisableScanOnRealtimeEnable": 0}),
+			scan: defenderPolicyItems(map[string]int64{
+				"DisablePackedExeScanning":            1,
+				"DaysUntilAggressiveCatchupQuickScan": 7,
+			}),
+			features: defenderPolicyItems(map[string]int64{"PassiveRemediation": 1}),
+		}
+		got := resolveDefenderPolicyOnly(pol)
+
+		require.NotNil(t, got.disableRoutinelyTakingAction)
+		assert.True(t, *got.disableRoutinelyTakingAction)
+		require.NotNil(t, got.disableScanOnRealtimeEnable)
+		assert.False(t, *got.disableScanOnRealtimeEnable)
+		require.NotNil(t, got.disablePackedExeScanning)
+		assert.True(t, *got.disablePackedExeScanning)
+		require.NotNil(t, got.daysUntilAggressiveCatchupQuickScan)
+		assert.Equal(t, int64(7), *got.daysUntilAggressiveCatchupQuickScan)
+		require.NotNil(t, got.passiveRemediation)
+		assert.Equal(t, int64(1), *got.passiveRemediation)
+	})
+
+	t.Run("passive remediation keeps the CSP bitmask", func(t *testing.T) {
+		pol := &defenderPolicy{features: defenderPolicyItems(map[string]int64{"PassiveRemediation": 0x4})}
+		got := resolveDefenderPolicyOnly(pol)
+		require.NotNil(t, got.passiveRemediation)
+		assert.Equal(t, int64(4), *got.passiveRemediation)
+	})
+
+	t.Run("a value under the wrong subkey is not read", func(t *testing.T) {
+		pol := &defenderPolicy{
+			// DisableRoutinelyTakingAction lives on the root key, the others
+			// under Real-Time Protection, Scan and Features.
+			scan:     defenderPolicyItems(map[string]int64{"DisableRoutinelyTakingAction": 1, "PassiveRemediation": 1}),
+			root:     defenderPolicyItems(map[string]int64{"DisablePackedExeScanning": 1, "DaysUntilAggressiveCatchupQuickScan": 7}),
+			realTime: defenderPolicyItems(map[string]int64{"PassiveRemediation": 1}),
+			features: defenderPolicyItems(map[string]int64{"DisableScanOnRealtimeEnable": 1}),
+		}
+		assert.Equal(t, defenderPolicyOnly{}, resolveDefenderPolicyOnly(pol))
+	})
+}

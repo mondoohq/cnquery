@@ -108,6 +108,19 @@ func TestMpPreferenceLiveDecodes(t *testing.T) {
 			assert.True(t, pref.DisableEmailScanning)
 			assert.False(t, pref.DisableRealtimeMonitoring)
 
+			// Reported by the platform on every version, at their defaults
+			// except HideExclusionsFromLocalUsers, which Defender turns on.
+			require.NotNil(t, pref.HideExclusionsFromLocalUsers)
+			assert.True(t, *pref.HideExclusionsFromLocalUsers)
+			require.NotNil(t, pref.OobeEnableRtpAndSigUpdate)
+			assert.False(t, *pref.OobeEnableRtpAndSigUpdate)
+			require.NotNil(t, pref.QuickScanIncludeExclusions)
+			assert.Equal(t, int64(0), *pref.QuickScanIncludeExclusions)
+			require.NotNil(t, pref.ReportDynamicSignatureDroppedEvent)
+			assert.False(t, *pref.ReportDynamicSignatureDroppedEvent)
+			require.NotNil(t, pref.EnableConvertWarnToBlock)
+			assert.False(t, *pref.EnableConvertWarnToBlock)
+
 			// Nothing is configured on these hosts, so every list preference
 			// comes back as a JSON null rather than an empty array.
 			assert.Empty(t, pref.ExclusionPath)

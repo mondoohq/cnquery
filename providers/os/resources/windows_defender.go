@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -289,10 +290,12 @@ const defenderPolicyKey = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Window
 // does not report, keyed by lower-cased value name per subkey. A key that does
 // not exist is an empty map, so every value under it reads as not configured.
 type defenderPolicy struct {
+	root      map[string]registry.RegistryKeyItem
 	realTime  map[string]registry.RegistryKeyItem
 	spynet    map[string]registry.RegistryKeyItem
 	scan      map[string]registry.RegistryKeyItem
 	reporting map[string]registry.RegistryKeyItem
+	features  map[string]registry.RegistryKeyItem
 }
 
 // readRegistryValues reads one registry key into a map keyed by lower-cased
@@ -330,13 +333,19 @@ func (p *mqlWindowsDefenderPreferences) getPolicy() (*defenderPolicy, error) {
 		subkey string
 		dst    *map[string]registry.RegistryKeyItem
 	}{
+		{``, &pol.root},
 		{`Real-Time Protection`, &pol.realTime},
 		{`Spynet`, &pol.spynet},
 		{`Scan`, &pol.scan},
 		{`Reporting`, &pol.reporting},
+		{`Features`, &pol.features},
 	}
 	for _, rd := range reads {
-		items, err := readRegistryValues(p.MqlRuntime, defenderPolicyKey+`\`+rd.subkey)
+		path := defenderPolicyKey
+		if rd.subkey != "" {
+			path += `\` + rd.subkey
+		}
+		items, err := readRegistryValues(p.MqlRuntime, path)
 		if err != nil {
 			p.policyFetched = true
 			p.policyErr = err
@@ -388,6 +397,37 @@ func resolveLocalSettingOverrides(prefs *windows.MpPreference, pol *defenderPoli
 		scanParameters:                   prefOrPolicy(prefs.LocalSettingOverrideScanParameters, pol.scan, "LocalSettingOverrideScanParameters"),
 		scanScheduleDay:                  prefOrPolicy(prefs.LocalSettingOverrideScanScheduleDay, pol.scan, "LocalSettingOverrideScheduleDay"),
 		avgCPULoadFactor:                 prefOrPolicy(prefs.LocalSettingOverrideAvgCPULoadFactor, pol.scan, "LocalSettingOverrideAvgCPULoadFactor"),
+	}
+}
+
+// defenderPolicyOnly are the Defender Group Policy values that Get-MpPreference
+// does not report at all, so the policy is their only source. Each is nil when
+// the policy is not configured.
+type defenderPolicyOnly struct {
+	disableRoutinelyTakingAction        *bool
+	disableScanOnRealtimeEnable         *bool
+	disablePackedExeScanning            *bool
+	daysUntilAggressiveCatchupQuickScan *int64
+	passiveRemediation                  *int64
+}
+
+// resolveDefenderPolicyOnly reads the policy-only values. The subkeys and value
+// names are the ones WindowsDefender.admx defines:
+//
+//	DisableRoutinelyTakingAction         Windows Defender
+//	DisableScanOnRealtimeEnable          Windows Defender\Real-Time Protection
+//	DisablePackedExeScanning             Windows Defender\Scan
+//	DaysUntilAggressiveCatchupQuickScan  Windows Defender\Scan
+//	PassiveRemediation                   Windows Defender\Features
+//
+// PassiveRemediation is a bitmask in the Defender CSP, so it stays an integer.
+func resolveDefenderPolicyOnly(pol *defenderPolicy) defenderPolicyOnly {
+	return defenderPolicyOnly{
+		disableRoutinelyTakingAction:        regBoolPtr(pol.root, "DisableRoutinelyTakingAction"),
+		disableScanOnRealtimeEnable:         regBoolPtr(pol.realTime, "DisableScanOnRealtimeEnable"),
+		disablePackedExeScanning:            regBoolPtr(pol.scan, "DisablePackedExeScanning"),
+		daysUntilAggressiveCatchupQuickScan: regIntPtr(pol.scan, "DaysUntilAggressiveCatchupQuickScan"),
+		passiveRemediation:                  regIntPtr(pol.features, "PassiveRemediation"),
 	}
 }
 
@@ -460,11 +500,14 @@ func (p *mqlWindowsDefenderPreferences) scan() (*mqlWindowsDefenderScanSettings,
 		"disableCpuThrottleOnIdleScans":                 llx.BoolData(prefs.DisableCpuThrottleOnIdleScans),
 		"enableFullScanOnBatteryPower":                  llx.BoolData(prefs.EnableFullScanOnBatteryPower),
 		"enableLowCpuPriority":                          llx.BoolData(prefs.EnableLowCpuPriority),
+		"quickScanIncludeExclusions":                    llx.IntDataPtr(prefs.QuickScanIncludeExclusions),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlWindowsDefenderScanSettings), nil
+	r := res.(*mqlWindowsDefenderScanSettings)
+	r.preferences.Store(p)
+	return r, nil
 }
 
 func (p *mqlWindowsDefenderPreferences) realTimeProtection() (*mqlWindowsDefenderRealTimeSettings, error) {
@@ -481,11 +524,14 @@ func (p *mqlWindowsDefenderPreferences) realTimeProtection() (*mqlWindowsDefende
 		"disableIntrusionPreventionSystem": llx.BoolDataPtr(prefs.DisableIntrusionPreventionSystem),
 		"realTimeScanDirection":            llx.IntData(prefs.RealTimeScanDirection),
 		"enableFileHashComputation":        llx.BoolData(prefs.EnableFileHashComputation),
+		"oobeEnableRtpAndSigUpdate":        llx.BoolDataPtr(prefs.OobeEnableRtpAndSigUpdate),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlWindowsDefenderRealTimeSettings), nil
+	r := res.(*mqlWindowsDefenderRealTimeSettings)
+	r.preferences.Store(p)
+	return r, nil
 }
 
 func (p *mqlWindowsDefenderPreferences) cloudProtection() (*mqlWindowsDefenderCloudSettings, error) {
@@ -527,6 +573,7 @@ func (p *mqlWindowsDefenderPreferences) signatureUpdates() (*mqlWindowsDefenderS
 		"engineUpdatesChannel":                         llx.IntData(prefs.EngineUpdatesChannel),
 		"platformUpdatesChannel":                       llx.IntData(prefs.PlatformUpdatesChannel),
 		"meteredConnectionUpdates":                     llx.BoolData(prefs.MeteredConnectionUpdates),
+		"reportDynamicSignatureDroppedEvent":           llx.BoolDataPtr(prefs.ReportDynamicSignatureDroppedEvent),
 	})
 	if err != nil {
 		return nil, err
@@ -585,6 +632,7 @@ func (p *mqlWindowsDefenderPreferences) networkProtection() (*mqlWindowsDefender
 		"allowNetworkProtectionDownLevel":    llx.BoolData(prefs.AllowNetworkProtectionDownLevel),
 		"allowDatagramProcessingOnWinServer": llx.BoolData(prefs.AllowDatagramProcessingOnWinServer),
 		"enableDnsSinkhole":                  llx.BoolData(prefs.EnableDnsSinkhole),
+		"enableConvertWarnToBlock":           llx.BoolDataPtr(prefs.EnableConvertWarnToBlock),
 	})
 	if err != nil {
 		return nil, err
@@ -655,7 +703,9 @@ func (p *mqlWindowsDefenderPreferences) remediation() (*mqlWindowsDefenderRemedi
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlWindowsDefenderRemediationSettings), nil
+	r := res.(*mqlWindowsDefenderRemediationSettings)
+	r.preferences.Store(p)
+	return r, nil
 }
 
 func (p *mqlWindowsDefenderPreferences) exclusions() (*mqlWindowsDefenderExclusions, error) {
@@ -664,11 +714,12 @@ func (p *mqlWindowsDefenderPreferences) exclusions() (*mqlWindowsDefenderExclusi
 		return nil, err
 	}
 	res, err := CreateResource(p.MqlRuntime, "windows.defender.exclusions", map[string]*llx.RawData{
-		"__id":        llx.StringData("windows.defender.exclusions"),
-		"paths":       llx.ArrayData(convert.SliceAnyToInterface(prefs.ExclusionPath), types.String),
-		"extensions":  llx.ArrayData(convert.SliceAnyToInterface(prefs.ExclusionExtension), types.String),
-		"processes":   llx.ArrayData(convert.SliceAnyToInterface(prefs.ExclusionProcess), types.String),
-		"ipAddresses": llx.ArrayData(convert.SliceAnyToInterface(prefs.ExclusionIpAddress), types.String),
+		"__id":               llx.StringData("windows.defender.exclusions"),
+		"paths":              llx.ArrayData(convert.SliceAnyToInterface(prefs.ExclusionPath), types.String),
+		"extensions":         llx.ArrayData(convert.SliceAnyToInterface(prefs.ExclusionExtension), types.String),
+		"processes":          llx.ArrayData(convert.SliceAnyToInterface(prefs.ExclusionProcess), types.String),
+		"ipAddresses":        llx.ArrayData(convert.SliceAnyToInterface(prefs.ExclusionIpAddress), types.String),
+		"hideFromLocalUsers": llx.BoolDataPtr(prefs.HideExclusionsFromLocalUsers),
 	})
 	if err != nil {
 		return nil, err
@@ -784,4 +835,99 @@ func (t *mqlWindowsDefenderThreatActionSettings) idActions() ([]any, error) {
 		res = append(res, mqlAction)
 	}
 	return res, nil
+}
+
+// The scan, real-time and remediation settings each carry Group Policy values
+// that Get-MpPreference does not report. Reading the policy costs registry
+// reads, so those fields are computed on demand from the policy that the
+// preferences resource reads and caches once. The settings resource keeps a
+// pointer to the preferences resource that created it; it is atomic because
+// CreateResource may hand back a cached instance another goroutine is reading.
+type mqlWindowsDefenderScanSettingsInternal struct {
+	preferences atomic.Pointer[mqlWindowsDefenderPreferences]
+}
+
+type mqlWindowsDefenderRealTimeSettingsInternal struct {
+	preferences atomic.Pointer[mqlWindowsDefenderPreferences]
+}
+
+type mqlWindowsDefenderRemediationSettingsInternal struct {
+	preferences atomic.Pointer[mqlWindowsDefenderPreferences]
+}
+
+// defenderPolicyOnlyFor resolves the policy-only values for a settings
+// resource. A settings resource created by its own name rather than through
+// windows.defender.preferences has no preferences pointer, so it is looked up
+// through windows.defender. The second return value is false when Defender is
+// not installed.
+func defenderPolicyOnlyFor(runtime *plugin.Runtime, prefs *mqlWindowsDefenderPreferences) (defenderPolicyOnly, bool, error) {
+	if prefs == nil {
+		parent, err := CreateResource(runtime, "windows.defender", map[string]*llx.RawData{})
+		if err != nil {
+			return defenderPolicyOnly{}, false, err
+		}
+		v := parent.(*mqlWindowsDefender).GetPreferences()
+		if v.Error != nil {
+			return defenderPolicyOnly{}, false, v.Error
+		}
+		if v.IsNull() || v.Data == nil {
+			return defenderPolicyOnly{}, false, nil
+		}
+		prefs = v.Data
+	}
+	pol, err := prefs.getPolicy()
+	if err != nil {
+		return defenderPolicyOnly{}, false, err
+	}
+	return resolveDefenderPolicyOnly(pol), true, nil
+}
+
+// policyBool returns a policy-only boolean, marking the field null when the
+// policy is not configured or Defender is not installed.
+func policyBool(field *plugin.TValue[bool], v *bool, ok bool, err error) (bool, error) {
+	if err != nil {
+		return false, err
+	}
+	if !ok || v == nil {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+	return *v, nil
+}
+
+// policyInt is policyBool for integer values.
+func policyInt(field *plugin.TValue[int64], v *int64, ok bool, err error) (int64, error) {
+	if err != nil {
+		return 0, err
+	}
+	if !ok || v == nil {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return *v, nil
+}
+
+func (s *mqlWindowsDefenderScanSettings) disablePackedExeScanning() (bool, error) {
+	pol, ok, err := defenderPolicyOnlyFor(s.MqlRuntime, s.preferences.Load())
+	return policyBool(&s.DisablePackedExeScanning, pol.disablePackedExeScanning, ok, err)
+}
+
+func (s *mqlWindowsDefenderScanSettings) daysUntilAggressiveCatchupQuickScan() (int64, error) {
+	pol, ok, err := defenderPolicyOnlyFor(s.MqlRuntime, s.preferences.Load())
+	return policyInt(&s.DaysUntilAggressiveCatchupQuickScan, pol.daysUntilAggressiveCatchupQuickScan, ok, err)
+}
+
+func (r *mqlWindowsDefenderRealTimeSettings) disableScanOnRealtimeEnable() (bool, error) {
+	pol, ok, err := defenderPolicyOnlyFor(r.MqlRuntime, r.preferences.Load())
+	return policyBool(&r.DisableScanOnRealtimeEnable, pol.disableScanOnRealtimeEnable, ok, err)
+}
+
+func (r *mqlWindowsDefenderRemediationSettings) disableRoutinelyTakingAction() (bool, error) {
+	pol, ok, err := defenderPolicyOnlyFor(r.MqlRuntime, r.preferences.Load())
+	return policyBool(&r.DisableRoutinelyTakingAction, pol.disableRoutinelyTakingAction, ok, err)
+}
+
+func (r *mqlWindowsDefenderRemediationSettings) passiveRemediation() (int64, error) {
+	pol, ok, err := defenderPolicyOnlyFor(r.MqlRuntime, r.preferences.Load())
+	return policyInt(&r.PassiveRemediation, pol.passiveRemediation, ok, err)
 }
