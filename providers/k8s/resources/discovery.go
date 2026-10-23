@@ -237,6 +237,21 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 		return nil, err
 	}
 
+	// Container images are shared across namespaces, so their inherited labels
+	// are a verdict over every in-scope namespace, folded once up front.
+	var verdicts map[string]imageLabelVerdict
+	if len(inheritKeys) > 0 && stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryContainerImages, DiscoveryAll) {
+		names := make([]string, 0, len(nss))
+		for _, ns := range nss {
+			names = append(names, ns.Name)
+		}
+		imagesByNs, err := clusterImagesByNamespace(conn, names, labelFilters, imgFilter)
+		if err != nil {
+			return nil, err
+		}
+		verdicts = imageLabelVerdicts(imagesByNs, nsOwnLabels, inheritKeys)
+	}
+
 	if resFilters.IsEmpty() && stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryNamespaces, DiscoveryAuto, DiscoveryAll) {
 		in.Spec.Assets = append(in.Spec.Assets, nss...)
 	}
@@ -254,6 +269,7 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 			return nil, err
 		}
 		inheritNamespaceLabels(assets, nsOwnLabels[ns.Name], inheritKeys)
+		applyImageLabelVerdicts(assets, verdicts)
 		setRelatedAssets(conn, ns, assets, od, features)
 		in.Spec.Assets = append(in.Spec.Assets, assets...)
 	}

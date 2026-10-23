@@ -821,3 +821,30 @@ func TestDiscoverNamespaceStageWithoutOptionLeavesImagesUnchanged(t *testing.T) 
 	image, _ := splitImageAndWorkload(t, inv)
 	assert.Nil(t, image.Labels)
 }
+
+func TestDiscoverLegacyLabelsImagesAcrossNamespaces(t *testing.T) {
+	conn := clusterStageImageConn([]string{DiscoveryContainerImages}, map[string]string{
+		shared.OPTION_INHERIT_NAMESPACE_LABELS: "my.company.com/team",
+		shared.OPTION_NAMESPACE:                "team-*,platform-tools",
+	})
+	delete(conn.asset.Connections[0].Options, plugin.OptionStagedDiscovery)
+
+	inv, err := Discover(newDiscoveryTestRuntime(conn), mql.Features{})
+	require.NoError(t, err)
+
+	// Legacy discovery emits an image once per namespace that runs it; every copy
+	// must carry the same verdict.
+	byHost := map[string][]*inventory.Asset{}
+	for _, a := range inv.Spec.Assets {
+		require.Equal(t, registryImageConnectionType, a.Connections[0].Type)
+		byHost[a.Connections[0].Host] = append(byHost[a.Connections[0].Host], a)
+	}
+	require.Len(t, byHost["nginx@sha256:shared"], 2)
+	for _, a := range byHost["nginx@sha256:shared"] {
+		assert.Equal(t, map[string]string{LabelNamespaceLabelConflict: "my.company.com/team"}, a.Labels)
+	}
+	require.Len(t, byHost["web@sha256:alpha"], 2)
+	for _, a := range byHost["web@sha256:alpha"] {
+		assert.Equal(t, map[string]string{"my.company.com/team": "alpha"}, a.Labels)
+	}
+}
