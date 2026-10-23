@@ -100,3 +100,25 @@ func TestClusterImagesByNamespaceHonoursScope(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, map[string][]string{"team-alpha": {"nginx@sha256:shared"}, "team-beta": {"nginx@sha256:shared"}}, got)
 }
+
+// A namespace-scoped service account cannot list pods cluster-wide (the API
+// connection swallows the Forbidden and returns nothing), but can list them in
+// the namespaces it was given. The index must use the latter.
+func TestClusterImagesByNamespaceListsPerNamespace(t *testing.T) {
+	asset := &inventory.Asset{Connections: []*inventory.Config{{Type: "k8s", Options: map[string]string{}}}}
+	conn := &namespaceDiscoveryConnection{
+		Connection:            plugin.NewConnection(1, asset),
+		asset:                 asset,
+		forbidClusterWidePods: true,
+		pods: []corev1.Pod{
+			newTestPod("team-alpha", "web", "u1", nil, "nginx@sha256:shared"),
+			newTestPod("team-beta", "proxy", "u2", nil, "nginx@sha256:shared", "api@sha256:beta"),
+		},
+	}
+	imgFilter, err := newFilterOpts(nil, nil)
+	require.NoError(t, err)
+
+	got, err := clusterImagesByNamespace(conn, []string{"team-alpha", "team-beta"}, &LabelSelectorFilters{}, imgFilter)
+	require.NoError(t, err)
+	assert.Equal(t, map[string][]string{"team-alpha": {"nginx@sha256:shared"}, "team-beta": {"api@sha256:beta", "nginx@sha256:shared"}}, got)
+}

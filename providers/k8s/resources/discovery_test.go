@@ -84,10 +84,13 @@ func newTestNamespace(name, uid string) corev1.Namespace {
 
 type namespaceDiscoveryConnection struct {
 	plugin.Connection
-	asset             *inventory.Asset
-	namespaces        []corev1.Namespace
-	pods              []corev1.Pod
-	namespaceGetCalls []string
+	asset      *inventory.Asset
+	namespaces []corev1.Namespace
+	pods       []corev1.Pod
+	// forbidClusterWidePods makes a cluster-wide pod list come back empty, as the
+	// API connection does when namespace-scoped RBAC forbids it.
+	forbidClusterWidePods bool
+	namespaceGetCalls     []string
 }
 
 func (c *namespaceDiscoveryConnection) Name() string {
@@ -105,7 +108,13 @@ func (c *namespaceDiscoveryConnection) Resources(kind string, name string, names
 	if kind != gvkString(corev1.SchemeGroupVersion.WithKind("pods")) {
 		return res, nil
 	}
+	if namespace == "" && c.forbidClusterWidePods {
+		return res, nil
+	}
 	for i := range c.pods {
+		if namespace != "" && c.pods[i].Namespace != namespace {
+			continue
+		}
 		res.Resources = append(res.Resources, &c.pods[i])
 	}
 	return res, nil

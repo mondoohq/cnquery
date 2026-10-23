@@ -150,44 +150,41 @@ func applyImageLabelVerdicts(assets []*inventory.Asset, verdicts map[string]imag
 	}
 }
 
-// clusterImagesByNamespace lists every pod once through conn and returns, for
-// each namespace in namespaces, the sorted unique images its pods run, counting
-// only pods that pass labelFilters and images that pass imgFilter. It never
-// fetches pull secrets.
+// clusterImagesByNamespace lists the pods of each namespace in namespaces
+// through conn and returns, per namespace, the sorted unique images its pods
+// run, counting only pods that pass labelFilters and images that pass
+// imgFilter. It never fetches pull secrets.
+//
+// One list per namespace rather than one cluster-wide list: a namespace-scoped
+// service account may list pods only where it was granted, and the API
+// connection answers a forbidden cluster-wide list with nothing, which would
+// leave every image silently unlabeled.
 func clusterImagesByNamespace(conn shared.Connection, namespaces []string, labelFilters *LabelSelectorFilters, imgFilter FilterOpts) (map[string][]string, error) {
-	inScope := make(map[string]struct{}, len(namespaces))
+	kind := gvkString(corev1.SchemeGroupVersion.WithKind("pods"))
+	out := make(map[string][]string, len(namespaces))
 	for _, ns := range namespaces {
-		inScope[ns] = struct{}{}
-	}
-
-	res, err := conn.Resources(gvkString(corev1.SchemeGroupVersion.WithKind("pods")), "", "")
-	if err != nil {
-		return nil, err
-	}
-	sets := map[string]map[string]struct{}{}
-	if res != nil {
+		res, err := conn.Resources(kind, "", ns)
+		if err != nil {
+			return nil, err
+		}
+		if res == nil {
+			continue
+		}
+		set := map[string]struct{}{}
 		for _, obj := range res.Resources {
 			pod, ok := obj.(*corev1.Pod)
-			if !ok {
-				continue
-			}
-			if _, ok := inScope[pod.Namespace]; !ok || !labelFilters.MatchObject(pod) {
+			if !ok || pod.Namespace != ns || !labelFilters.MatchObject(pod) {
 				continue
 			}
 			for _, ref := range podImageRefs(pod) {
-				if imgFilter.skip(ref) {
-					continue
+				if !imgFilter.skip(ref) {
+					set[ref] = struct{}{}
 				}
-				if sets[pod.Namespace] == nil {
-					sets[pod.Namespace] = map[string]struct{}{}
-				}
-				sets[pod.Namespace][ref] = struct{}{}
 			}
 		}
-	}
-
-	out := make(map[string][]string, len(sets))
-	for ns, set := range sets {
+		if len(set) == 0 {
+			continue
+		}
 		refs := make([]string, 0, len(set))
 		for ref := range set {
 			refs = append(refs, ref)

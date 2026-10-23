@@ -112,8 +112,10 @@ their own rule, a *verdict* folded once over the whole cluster
   without the key do not vote. "Runs the image" uses the resolution image
   discovery uses (status image id first, spec image as fallback), the same pod
   label selector and the same image filters.
-- The cluster stage folds the verdicts from a single pod list read through the
-  connection, without pull-secret lookups, and hands each namespace stage the
+- The cluster stage folds the verdicts from one pod list per in-scope namespace
+  (a namespace-scoped service account cannot list cluster-wide, and the API
+  connection answers a forbidden cluster-wide list with nothing), without
+  pull-secret lookups, and hands each namespace stage the
   verdicts for the images that namespace runs, as JSON in the internal option
   `inherit-namespace-labels-verdicts`. Every stage therefore stamps the same
   answer whichever namespace the client connects first; the client keeps only
@@ -145,8 +147,8 @@ their own rule, a *verdict* folded once over the whole cluster
   assets; both the legacy path and the cluster stage fold image verdicts from
   them.
 - With inherited labels set and container images targeted, the cluster stage
-  lists every pod once, as legacy discovery always did. Without the option the
-  cluster stage is unchanged.
+  lists each in-scope namespace's pods once. Without the option the cluster
+  stage is unchanged.
 - Console and server parity for the setting (so it can be given on first
   connection and managed from the app) is a follow-up; until then the feature
   is configured through the operator CR or `cnspec scan k8s`.
