@@ -182,6 +182,38 @@ func TestComputeLsa(t *testing.T) {
 // CrashOnAuditFail. The value is reported verbatim rather than collapsed into a
 // bool: 2 means the system already halted and is admitting only
 // administrators, which a bool would fold into the same answer as 1.
+func TestLsaRunAsPpl(t *testing.T) {
+	empty := map[string]registry.RegistryKeyItem{}
+
+	t.Run("no value anywhere is null", func(t *testing.T) {
+		assert.Nil(t, lsaRunAsPpl(empty, empty))
+	})
+
+	t.Run("lsa value is used without a policy value", func(t *testing.T) {
+		v := lsaRunAsPpl(items(d("RunAsPPL", 2)), empty)
+		require.NotNil(t, v)
+		assert.Equal(t, int64(2), *v)
+	})
+
+	t.Run("group policy value is used without an lsa value", func(t *testing.T) {
+		v := lsaRunAsPpl(empty, items(d("RunAsPPL", 1)))
+		require.NotNil(t, v)
+		assert.Equal(t, int64(1), *v)
+	})
+
+	t.Run("group policy value wins over the lsa value", func(t *testing.T) {
+		v := lsaRunAsPpl(items(d("RunAsPPL", 2)), items(d("RunAsPPL", 1)))
+		require.NotNil(t, v)
+		assert.Equal(t, int64(1), *v)
+	})
+
+	t.Run("group policy can turn protection off", func(t *testing.T) {
+		v := lsaRunAsPpl(items(d("RunAsPPL", 1)), items(d("RunAsPPL", 0)))
+		require.NotNil(t, v)
+		assert.Equal(t, int64(0), *v)
+	})
+}
+
 func TestComputeLsaCrashOnAuditFail(t *testing.T) {
 	t.Run("absent value is null, not the off state", func(t *testing.T) {
 		v := computeLsa(items(d("NoLMHash", 1)))
