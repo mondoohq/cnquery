@@ -26,6 +26,14 @@ import (
 // leaves the resource tree without an RT_VERSION type.
 func buildPE(t *testing.T, major, minor, build, private uint16, withVersion bool) []byte {
 	t.Helper()
+	v := [4]uint16{major, minor, build, private}
+	return buildPEVersions(t, v, v, withVersion)
+}
+
+// buildPEVersions is buildPE with a product version that differs from the
+// file version.
+func buildPEVersions(t *testing.T, file, product [4]uint16, withVersion bool) []byte {
+	t.Helper()
 	const rsrcRVA = 0x1000
 	le := binary.LittleEndian
 
@@ -50,8 +58,8 @@ func buildPE(t *testing.T, major, minor, build, private uint16, withVersion bool
 	vi.Write([]byte{0, 0}) // pad to 32 bits
 	write(vi, [13]uint32{
 		peFixedFileInfoSignature, 0x10000,
-		uint32(major)<<16 | uint32(minor), uint32(build)<<16 | uint32(private),
-		uint32(major)<<16 | uint32(minor), uint32(build)<<16 | uint32(private),
+		uint32(file[0])<<16 | uint32(file[1]), uint32(file[2])<<16 | uint32(file[3]),
+		uint32(product[0])<<16 | uint32(product[1]), uint32(product[2])<<16 | uint32(product[3]),
 		0x3f, 0, 0x40004, 1, 0, 0, 0,
 	})
 	viBytes := vi.Bytes()
@@ -127,6 +135,23 @@ func TestPEFileVersion(t *testing.T) {
 
 	_, ok = peFileVersion(strings.NewReader("#!/bin/sh\necho not a PE\n"))
 	assert.False(t, ok)
+}
+
+func TestPEProductVersion(t *testing.T) {
+	img := buildPEVersions(t, [4]uint16{4, 8, 9310, 0}, [4]uint16{4, 8, 9311, 5}, true)
+	v, ok := peProductVersion(bytes.NewReader(img))
+	require.True(t, ok)
+	assert.Equal(t, []uint64{4, 8, 9311, 5}, v, "product version, not file version")
+
+	f, ok := peFileVersion(bytes.NewReader(img))
+	require.True(t, ok)
+	assert.Equal(t, []uint64{4, 8, 9310, 0}, f)
+
+	_, ok = peProductVersion(bytes.NewReader(buildPEVersions(t, [4]uint16{4, 8, 9310, 0}, [4]uint16{}, true)))
+	assert.False(t, ok, "an all-zero product version is no version")
+
+	_, ok = peProductVersion(bytes.NewReader(buildPE(t, 4, 8, 1, 0, false)))
+	assert.False(t, ok, "no RT_VERSION resource")
 }
 
 func TestFsFileVersionReader(t *testing.T) {

@@ -9,6 +9,7 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"debug/pe"
 	"encoding/asn1"
 	"encoding/base64"
 	"encoding/binary"
@@ -17,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
@@ -344,4 +346,77 @@ func TestStaticControlSet(t *testing.T) {
 	// No Select key, or a value out of range: the first control set.
 	assert.Equal(t, "ControlSet001", staticControlSet(selectHive{missing: true}))
 	assert.Equal(t, "ControlSet001", staticControlSet(selectHive{current: 0}))
+}
+
+// peWithMachine returns the smallest PE image debug/pe accepts: a DOS stub, the
+// PE signature and a file header with the given machine type.
+func peWithMachine(machine uint16) []byte {
+	b := make([]byte, 0x40)
+	copy(b, "MZ")
+	binary.LittleEndian.PutUint32(b[0x3c:], 0x40)
+	b = append(b, "PE\x00\x00"...)
+	hdr := make([]byte, 20)
+	binary.LittleEndian.PutUint16(hdr[0:], machine)
+	return append(b, hdr...)
+}
+
+type archHive map[string]registry.RegistryKeyItem
+
+func (h archHive) GetRegistryItemValue(id, path, key string) (registry.RegistryKeyItem, error) {
+	if v, ok := h[id+"|"+path+"|"+key]; ok {
+		return v, nil
+	}
+	return registry.RegistryKeyItem{}, errors.New("not found")
+}
+
+func TestStaticWindowsArch(t *testing.T) {
+	sz := func(v string) registry.RegistryKeyItem {
+		return registry.RegistryKeyItem{Value: registry.RegistryKeyValue{Kind: registry.SZ, String: v}}
+	}
+	envKey := func(controlSet string) string {
+		return registry.System + "|" + controlSet + `\Control\Session Manager\Environment|PROCESSOR_ARCHITECTURE`
+	}
+	selectCurrent := func(n int64) archHive {
+		return archHive{registry.System + "|Select|Current": {Value: registry.RegistryKeyValue{Kind: registry.DWORD, Number: n}}}
+	}
+	withEnv := func(h archHive, controlSet, arch string) archHive {
+		h[envKey(controlSet)] = sz(arch)
+		return h
+	}
+	ntoskrnl := func(machine uint16) afero.Fs {
+		fs := afero.NewMemMapFs()
+		_ = afero.WriteFile(fs, "Windows/System32/ntoskrnl.exe", peWithMachine(machine), 0o644)
+		return fs
+	}
+
+	cases := []struct {
+		name string
+		hive archHive
+		fs   afero.Fs
+		want string
+	}{
+		{"AMD64 from registry", withEnv(archHive{}, "ControlSet001", "AMD64"), nil, "AMD64"},
+		{"ARM64 from registry", withEnv(archHive{}, "ControlSet001", "ARM64"), nil, "ARM64"},
+		{"x86 from registry", withEnv(archHive{}, "ControlSet001", "x86"), nil, "x86"},
+		{"active control set is used", withEnv(withEnv(selectCurrent(2), "ControlSet001", "x86"), "ControlSet002", "ARM64"), nil, "ARM64"},
+		{"registry wins over ntoskrnl", withEnv(archHive{}, "ControlSet001", "ARM64"), ntoskrnl(pe.IMAGE_FILE_MACHINE_AMD64), "ARM64"},
+		{"absent, no filesystem", archHive{}, nil, ""},
+		{"absent, ntoskrnl AMD64", archHive{}, ntoskrnl(pe.IMAGE_FILE_MACHINE_AMD64), "AMD64"},
+		{"absent, ntoskrnl ARM64", archHive{}, ntoskrnl(pe.IMAGE_FILE_MACHINE_ARM64), "ARM64"},
+		{"absent, ntoskrnl i386", archHive{}, ntoskrnl(pe.IMAGE_FILE_MACHINE_I386), "x86"},
+		{"absent, ntoskrnl unknown machine", archHive{}, ntoskrnl(0x1c0), ""},
+		{"absent, no ntoskrnl", archHive{}, afero.NewMemMapFs(), ""},
+		{"empty value falls back", withEnv(archHive{}, "ControlSet001", ""), ntoskrnl(pe.IMAGE_FILE_MACHINE_ARM64), "ARM64"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, staticWindowsArch(tc.hive, tc.fs))
+		})
+	}
+}
+
+func TestArchFromPENotAPE(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	require.NoError(t, afero.WriteFile(fs, "x.exe", []byte("#!/bin/sh\n"), 0o644))
+	assert.Equal(t, "", archFromPE(fs, "x.exe"))
 }

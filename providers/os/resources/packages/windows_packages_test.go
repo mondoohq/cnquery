@@ -6,6 +6,7 @@ package packages
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/spf13/afero"
 	fsconn "go.mondoo.com/mql/providers/os/connection/fs"
@@ -23,6 +24,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers/os/connection/mock"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/registry"
 	"go.mondoo.com/mql/providers/os/resources/cpe"
 	"go.mondoo.com/mql/providers/os/resources/powershell"
@@ -1945,4 +1947,94 @@ func TestCBSUpdatesToHotfixPackages(t *testing.T) {
 
 	assert.Equal(t, "KB5120708", pkgs[1].Name)
 	assert.True(t, pkgs[1].InstallDate.IsZero(), "no install time is null, not a made-up date")
+}
+
+// dotNetHive serves registry keys of the SOFTWARE hive by path.
+type dotNetHive map[string][]registry.RegistryKeyItem
+
+func (h dotNetHive) GetNativeRegistryKeyItems(id, path string) ([]registry.RegistryKeyItem, error) {
+	if items, ok := h[path]; ok {
+		return items, nil
+	}
+	return nil, errors.New("key not found")
+}
+
+type memFsConn struct {
+	shared.Connection
+	fs afero.Fs
+}
+
+func (c *memFsConn) FileSystem() afero.Fs { return c.fs }
+
+func TestGetFsDotNetFramework(t *testing.T) {
+	const (
+		key4x  = `Microsoft\NET Framework Setup\NDP\v4\Full`
+		key35  = `Microsoft\NET Framework Setup\NDP\v3.5`
+		clr4   = "Windows/Microsoft.NET/Framework64/v4.0.30319/clr.dll"
+		dir2   = "Windows/Microsoft.NET/Framework64/v2.0.50727/"
+		dir2x  = "Windows/Microsoft.NET/Framework/v2.0.50727/"
+		path4x = `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\`
+	)
+	str := func(k, v string) registry.RegistryKeyItem {
+		return registry.RegistryKeyItem{Key: k, Value: registry.RegistryKeyValue{Kind: registry.SZ, String: v}}
+	}
+	dword := func(k string, n int64) registry.RegistryKeyItem {
+		return registry.RegistryKeyItem{Key: k, Value: registry.RegistryKeyValue{Kind: registry.DWORD, Number: n}}
+	}
+	hive4x := []registry.RegistryKeyItem{str("InstallPath", path4x), dword("Release", 533320)}
+	hive35 := []registry.RegistryKeyItem{dword("Install", 1), str("InstallPath", `C:\Windows\Microsoft.NET\Framework64\v3.5\`)}
+	pe := func(v [4]uint16) []byte { return buildPEVersions(t, [4]uint16{1, 1, 1, 1}, v, true) }
+
+	type files map[string][]byte
+	both := files{
+		clr4:                  pe([4]uint16{4, 8, 9310, 0}),
+		dir2 + "mscorlib.dll": pe([4]uint16{2, 0, 50727, 9149}),
+		// pinned to an older build for side-by-side compatibility
+		dir2 + "System.dll": pe([4]uint16{2, 0, 50727, 4927}),
+		// the 32-bit directory can hold a newer build than the 64-bit one
+		dir2x + "mscorlib.dll": pe([4]uint16{2, 0, 50727, 9200}),
+		// not a CLR 2.0 build: ignored
+		dir2 + "other.dll": pe([4]uint16{3, 5, 30729, 9999}),
+	}
+
+	cases := []struct {
+		name  string
+		hive  dotNetHive
+		files files
+		want  []string // version@installLocation
+	}{
+		{"4.x only", dotNetHive{key4x: hive4x}, both, []string{`4.8.9310.0@` + path4x}},
+		{"3.5 only", dotNetHive{key35: hive35}, both, []string{`2.0.50727.9200@C:\Windows\Microsoft.NET\Framework64\v3.5\`}},
+		{"both", dotNetHive{key4x: hive4x, key35: hive35}, both, []string{`4.8.9310.0@` + path4x, `2.0.50727.9200@C:\Windows\Microsoft.NET\Framework64\v3.5\`}},
+		{"absent keys", dotNetHive{}, both, nil},
+		{"3.5 with Install=0", dotNetHive{key35: {dword("Install", 0), str("InstallPath", "x")}}, both, nil},
+		{"4.x without InstallPath", dotNetHive{key4x: {dword("Release", 533320)}}, both, nil},
+		{"missing clr.dll", dotNetHive{key4x: hive4x}, files{}, nil},
+		{"3.5 without CLR 2.0 files", dotNetHive{key35: hive35}, files{clr4: both[clr4]}, nil},
+		{"%WINDIR% in InstallPath", dotNetHive{key4x: {str("InstallPath", `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319`)}}, both, []string{`4.8.9310.0@%WINDIR%\Microsoft.NET\Framework64\v4.0.30319`}},
+		{"InstallPath on another drive", dotNetHive{key4x: {str("InstallPath", `D:\Windows\Microsoft.NET\Framework64\v4.0.30319\`)}}, both, nil},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			fs := afero.NewMemMapFs()
+			for p, data := range tc.files {
+				require.NoError(t, afero.WriteFile(fs, p, data, 0o644))
+			}
+			w := &WinPkgManager{conn: &memFsConn{fs: fs}, platform: &inventory.Platform{Name: "windows", Arch: "AMD64"}}
+			got := []string{}
+			for _, p := range w.getFsDotNetFramework(tc.hive) {
+				assert.Equal(t, "Microsoft .NET Framework", p.Name)
+				assert.Equal(t, "Microsoft", p.Vendor)
+				assert.Equal(t, "AMD64", p.Arch)
+				assert.Equal(t, installScopeMachine, p.InstallScope)
+				require.Len(t, p.Files, 1)
+				got = append(got, p.Version+"@"+p.Files[0].Path)
+			}
+			if tc.want == nil {
+				assert.Empty(t, got)
+			} else {
+				assert.Equal(t, tc.want, got)
+			}
+		})
+	}
 }
