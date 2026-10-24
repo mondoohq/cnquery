@@ -16,16 +16,23 @@ import (
 	"go.mondoo.com/mql/providers/together/connection"
 )
 
-// whoamiFixture is shaped like the documented GET /whoami response. The values
-// are invented; only the field names have to match the API.
+// whoamiFixture is shaped like the documented GET /v3/whoami response for a
+// project API key. Synthetic: the values are invented; only the field names
+// have to match the API.
 const whoamiFixture = `{
-  "api_key_id": "key-0000000000000000",
-  "organization_id": "org-1111111111111111",
-  "organization_name": "Example Org",
-  "project_id": "proj-2222222222222222",
-  "project_name": "Example Project",
-  "project_slug": "example-project",
-  "user_id": "user-3333333333333333"
+  "type": "project_api_key",
+  "api_key": {"id": "key-0000000000000000"},
+  "organization": {"id": "org-1111111111111111", "name": "Example Org"},
+  "project": {"id": "proj-2222222222222222", "name": "Example Project", "slug": "example-project"}
+}`
+
+// whoamiUserSessionFixture is the user_org_project_jwt variant, the only kind
+// of credential that names a user. Synthetic: the values are invented.
+const whoamiUserSessionFixture = `{
+  "type": "user_org_project_jwt",
+  "organization": {"id": "org-1111111111111111", "name": "Example Org"},
+  "project": {"id": "proj-2222222222222222", "name": "Example Project", "slug": "example-project"},
+  "user": {"id": "user-3333333333333333"}
 }`
 
 // newWhoamiTogether builds a together resource whose client talks to a stub
@@ -36,7 +43,7 @@ func newWhoamiTogether(t *testing.T, cliProject, body string, status int) (*mqlT
 
 	var calls int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/whoami" {
+		if r.URL.Path != "/v3/whoami" {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
@@ -70,7 +77,19 @@ func TestWhoamiDecodesTheDocumentedResponse(t *testing.T) {
 	assert.Equal(t, "Example Org", who.OrganizationName)
 	assert.Equal(t, "proj-2222222222222222", who.ProjectID)
 	assert.Equal(t, "Example Project", who.ProjectName)
-	assert.Equal(t, "user-3333333333333333", who.UserID)
+	assert.Empty(t, who.UserID, "a project API key names no user")
+}
+
+func TestWhoamiReportsTheUserOfAUserSession(t *testing.T) {
+	r, _ := newWhoamiTogether(t, "", whoamiUserSessionFixture, http.StatusOK)
+
+	userID, err := r.userId()
+	require.NoError(t, err)
+	assert.Equal(t, "user-3333333333333333", userID)
+
+	apiKeyID, err := r.apiKeyId()
+	require.NoError(t, err)
+	assert.Empty(t, apiKeyID, "a user session carries no API key")
 }
 
 func TestIdentityFieldsComeFromTheServerNotTheCLIFlag(t *testing.T) {
@@ -103,12 +122,10 @@ func TestIdentityFieldsComeFromTheServerNotTheCLIFlag(t *testing.T) {
 
 func TestOrganizationFallsBackToTheIdentifier(t *testing.T) {
 	r, _ := newWhoamiTogether(t, "", `{
-	  "api_key_id": "key-0000000000000000",
-	  "organization_id": "org-1111111111111111",
-	  "organization_name": "",
-	  "project_id": "proj-2222222222222222",
-	  "project_name": "Example Project",
-	  "project_slug": "example-project"
+	  "type": "project_api_key",
+	  "api_key": {"id": "key-0000000000000000"},
+	  "organization": {"id": "org-1111111111111111", "name": ""},
+	  "project": {"id": "proj-2222222222222222", "name": "Example Project", "slug": "example-project"}
 	}`, http.StatusOK)
 
 	org, err := r.organization()
@@ -118,7 +135,7 @@ func TestOrganizationFallsBackToTheIdentifier(t *testing.T) {
 
 	userID, err := r.userId()
 	require.NoError(t, err)
-	assert.Empty(t, userID, "user_id is optional and stays empty rather than being invented")
+	assert.Empty(t, userID, "a project API key names no user, so userId stays empty rather than being invented")
 }
 
 func TestIdentityIsFetchedOnce(t *testing.T) {
@@ -156,7 +173,7 @@ func TestIdentityFailureIsReportedNotGuessed(t *testing.T) {
 func TestIdentityFailureIsNotLatched(t *testing.T) {
 	var calls atomic.Int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/whoami" {
+		if r.URL.Path != "/v3/whoami" {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
@@ -164,7 +181,7 @@ func TestIdentityFailureIsNotLatched(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		if n == 1 {
-			_, _ = w.Write([]byte(`{"organization_id": `))
+			_, _ = w.Write([]byte(`{"organization": `))
 			return
 		}
 		_, _ = w.Write([]byte(whoamiFixture))

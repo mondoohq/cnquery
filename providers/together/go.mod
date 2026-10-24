@@ -6,7 +6,7 @@ go 1.27.3
 
 require (
 	github.com/stretchr/testify v1.12.1
-	github.com/togethercomputer/together-go v0.12.0
+	github.com/togethercomputer/together-go v0.13.0
 	go.mondoo.com/mql v0.0.0-20261019065417-1fcdd84493fd
 )
 

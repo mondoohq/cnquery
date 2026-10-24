@@ -19,7 +19,7 @@ import (
 )
 
 // volumesFixture is shaped like the documented list response for
-// GET compute/clusters/storage/volumes. The values are invented; only the field
+// GET v1/compute/clusters/storage/volumes. The values are invented; only the field
 // names have to match the API.
 const volumesFixture = `{
   "volumes": [
@@ -118,7 +118,7 @@ func TestClusterStorageFlagWinsOverIdentityProject(t *testing.T) {
 // out unfiltered and every volume it returns belongs to that key's account.
 func TestClusterStorageListsUnfilteredWhenIdentityCarriesNoProject(t *testing.T) {
 	stub := okStub()
-	stub.whoamiResponse = `{"api_key_id": "key-0000000000000000", "organization_id": "org-1111111111111111"}`
+	stub.whoamiResponse = `{"type": "org_api_key", "api_key": {"id": "key-0000000000000000"}, "organization": {"id": "org-1111111111111111", "name": "Example Org"}}`
 	r := newStorageTogether(t, "", stub)
 
 	vols, err := r.clusterStorageVolumes()
