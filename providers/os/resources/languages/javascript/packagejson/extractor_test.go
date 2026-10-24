@@ -35,8 +35,10 @@ func TestPackageJsonExtractor(t *testing.T) {
 		EvidenceList: []*sbom.Evidence{{Type: sbom.EvidenceType_EVIDENCE_TYPE_FILE, Value: "path/package.json"}},
 	}, root, "express package is not as expected")
 
+	// the root plus the 16 dependencies pinned to one version; the 14 declared
+	// with a range ("~1.3.5") say nothing about the installed version
 	list := info.Transitive()
-	assert.Equal(t, 31, len(list))
+	assert.Equal(t, 17, len(list))
 
 	// ensure the package is in the list — Find returns the root entry,
 	// which carries the package.json description/author/license.
@@ -61,14 +63,58 @@ func TestPackageJsonExtractor(t *testing.T) {
 		EvidenceList: []*sbom.Evidence{{Type: sbom.EvidenceType_EVIDENCE_TYPE_FILE, Value: "path/package.json"}},
 	}, p, "path-to-regexp package is not as expected")
 
-	p = list.Find("range-parser")
-	assert.Equal(t, &languages.Package{
-		Name:         "range-parser",
-		Version:      "~1.2.0",
-		Purl:         "pkg:npm/range-parser@1.2.0",
-		Cpes:         []string{"cpe:2.3:a:range-parser:range-parser:1.2.0:*:*:*:*:*:*:*"},
-		EvidenceList: []*sbom.Evidence{{Type: sbom.EvidenceType_EVIDENCE_TYPE_FILE, Value: "path/package.json"}},
-	}, p, "range-parser package is not as expected")
+	// "range-parser": "~1.2.0" is a range, not an installed version
+	assert.Nil(t, list.Find("range-parser"), "a dependency declared with a range must not be listed")
+	for _, pkg := range list {
+		assert.NotContains(t, pkg.Version, "~", pkg.Name)
+		assert.NotContains(t, pkg.Version, "^", pkg.Name)
+	}
+}
+
+func TestPinnedVersion(t *testing.T) {
+	cases := map[string]string{
+		"1.2.3":            "1.2.3",
+		"=1.2.3":           "1.2.3",
+		"v1.2.3":           "1.2.3",
+		" 1.2.3 ":          "1.2.3",
+		"1.2.3-beta.1":     "1.2.3-beta.1",
+		"1.2.3+build.5":    "1.2.3+build.5",
+		"^4.3.4":           "",
+		"~1.2.0":           "",
+		"4":                "",
+		"4.3":              "",
+		"4.x":              "",
+		"*":                "",
+		"":                 "",
+		"latest":           "",
+		">=1.0.0 <2.0.0":   "",
+		"1.0.0 - 2.0.0":    "",
+		"1.2.3 || 2.0.0":   "",
+		"file:../local":    "",
+		"git+https://x/y":  "",
+		"npm:other@1.2.3":  "",
+		"workspace:*":      "",
+		"github:user/repo": "",
+	}
+	for spec, want := range cases {
+		assert.Equal(t, want, pinnedVersion(spec), spec)
+	}
+}
+
+func TestPackageJsonDeclaredRangesAreNotPackages(t *testing.T) {
+	raw := `{"name":"agent-base","version":"7.1.4","dependencies":{"debug":"4","ms":"^2.1.3","tslib":"2.8.1"}}`
+	info, err := (&Extractor{}).Parse(strings.NewReader(raw), "node_modules/agent-base/package.json")
+	require.NoError(t, err)
+
+	list := info.Transitive()
+	require.Len(t, list, 2)
+	assert.NotNil(t, list.Find("agent-base"))
+	assert.Nil(t, list.Find("debug"), `"debug": "4" accepts every 4.x release`)
+	assert.Nil(t, list.Find("ms"))
+	tslib := list.Find("tslib")
+	require.NotNil(t, tslib)
+	assert.Equal(t, "2.8.1", tslib.Version)
+	assert.Equal(t, "pkg:npm/tslib@2.8.1", tslib.Purl)
 }
 
 func TestPackageJsonExtractorAuthorForms(t *testing.T) {

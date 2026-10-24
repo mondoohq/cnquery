@@ -6,6 +6,8 @@ package packagejson
 import (
 	"encoding/json"
 	"io"
+	"regexp"
+	"strings"
 
 	"go.mondoo.com/mql/providers/os/resources/languages"
 	"go.mondoo.com/mql/providers/os/resources/languages/javascript"
@@ -94,6 +96,22 @@ func (p *packageJson) Direct() languages.Packages {
 	return nil
 }
 
+// exactVersionSpec matches a dependency spec that names exactly one version:
+// a full semver version, optionally written with a leading "=" or "v", as npm
+// accepts it. Anything else is a range, a dist-tag, a URL or a path.
+var exactVersionSpec = regexp.MustCompile(`^=?v?(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)$`)
+
+// pinnedVersion returns the version a dependency spec pins, or "" when the spec
+// allows more than one version ("^4.3.4", "~1.2.0", "4", "4.x", "*", "latest",
+// "file:..", "git+https://..").
+func pinnedVersion(spec string) string {
+	m := exactVersionSpec.FindStringSubmatch(strings.TrimSpace(spec))
+	if m == nil {
+		return ""
+	}
+	return m[1]
+}
+
 func (p *packageJson) Transitive() languages.Packages {
 	// transitive dependencies, includes the root package
 	var transitive languages.Packages
@@ -103,7 +121,15 @@ func (p *packageJson) Transitive() languages.Packages {
 		transitive = append(transitive, r)
 	}
 
-	for k, v := range p.Dependencies {
+	// A dependency in package.json is a declaration, not an installed package:
+	// "^4.3.4" or "4" says which versions would be accepted, not which one is
+	// on disk. Installed packages are read from node_modules or a lockfile.
+	// Only a spec that pins one exact version names the version npm installs.
+	for k, spec := range p.Dependencies {
+		v := pinnedVersion(spec)
+		if v == "" {
+			continue
+		}
 		transitive = append(transitive, &languages.Package{
 			Name:         k,
 			Version:      v,

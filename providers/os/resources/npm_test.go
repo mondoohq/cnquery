@@ -138,6 +138,11 @@ func TestCollectNpmPackagesInPaths(t *testing.T) {
 					}
 				}
 				require.True(t, foundRoot, "should find root package 'test-app'")
+
+				// "lodash": "^4.17.21" is declared, not installed: nothing is in node_modules
+				for _, pkg := range transitive {
+					require.NotEqual(t, "lodash", pkg.Name, "a declared range is not an installed package")
+				}
 			},
 		},
 		{
@@ -610,4 +615,33 @@ func TestCollectNpmPackagesInPaths_suseLib64BundledNpm(t *testing.T) {
 	direct, _, _, err := collectNpmPackagesInPaths(r, mockFS, defaultNpmPaths)
 	require.NoError(t, err)
 	assert.ElementsMatch(t, []string{"npm@10.9.8", "npm@11.16.0"}, packageNames(direct))
+}
+
+// The npm that ships with Node.js has no lockfile: its dependencies are
+// installed in npm/node_modules, each with a package.json that declares its
+// own dependencies as ranges ("debug": "4"). Only installed versions are listed.
+func TestCollectNpmPackagesInPaths_bundledNpmDeclaredRanges(t *testing.T) {
+	mockFS := afero.NewMemMapFs()
+	npmDir := "/opt/nodejs/lib/node_modules/npm"
+	writeManifest := func(dir, manifest string) {
+		require.NoError(t, afero.WriteFile(mockFS, dir+"/package.json", []byte(manifest), 0o644))
+	}
+	writeManifest(npmDir, `{"name":"npm","version":"11.6.2","dependencies":{"tar":"^7.5.1","semver":"^7.7.2"}}`)
+	writeManifest(npmDir+"/node_modules/agent-base", `{"name":"agent-base","version":"7.1.4","dependencies":{"debug":"4"}}`)
+	writeManifest(npmDir+"/node_modules/https-proxy-agent", `{"name":"https-proxy-agent","version":"7.0.6","dependencies":{"agent-base":"^7.1.2","debug":"^4.3.4"}}`)
+	writeNpmManifest(t, mockFS, npmDir+"/node_modules/debug", "debug", "4.4.3")
+	writeNpmManifest(t, mockFS, npmDir+"/node_modules/tar", "tar", "7.5.22")
+
+	r := npmTestRuntime(t, mockFS)
+	direct, transitive, _, err := collectNpmPackagesInPaths(r, mockFS, []string{npmDir})
+	require.NoError(t, err)
+
+	installed := []string{"npm@11.6.2", "agent-base@7.1.4", "https-proxy-agent@7.0.6", "debug@4.4.3", "tar@7.5.22"}
+	assert.ElementsMatch(t, installed, packageNames(direct))
+	assert.ElementsMatch(t, installed, packageNames(transitive))
+	for _, pkg := range append(direct, transitive...) {
+		assert.NotContains(t, pkg.Version, "^", pkg.Name)
+		assert.NotContains(t, pkg.Version, "~", pkg.Name)
+		assert.Regexp(t, `^\d+\.\d+\.\d+`, pkg.Version, pkg.Name)
+	}
 }
