@@ -1839,6 +1839,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.protectedBranch.accessLevel.group": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProtectedBranchAccessLevel).GetGroup()).ToDataRes(types.Resource("gitlab.group"))
 	},
+	"gitlab.protectedBranch.accessLevel.memberRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProtectedBranchAccessLevel).GetMemberRole()).ToDataRes(types.Resource("gitlab.memberRole"))
+	},
 	"gitlab.project.file.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectFile).GetPath()).ToDataRes(types.String)
 	},
@@ -5368,6 +5371,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.protectedBranch.accessLevel.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProtectedBranchAccessLevel).Group, ok = plugin.RawToTValue[*mqlGitlabGroup](v.Value, v.Error)
+		return
+	},
+	"gitlab.protectedBranch.accessLevel.memberRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProtectedBranchAccessLevel).MemberRole, ok = plugin.RawToTValue[*mqlGitlabMemberRole](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11997,6 +12004,7 @@ type mqlGitlabProtectedBranchAccessLevel struct {
 	DeployKeyId            plugin.TValue[int64]
 	User                   plugin.TValue[*mqlGitlabUser]
 	Group                  plugin.TValue[*mqlGitlabGroup]
+	MemberRole             plugin.TValue[*mqlGitlabMemberRole]
 }
 
 // createGitlabProtectedBranchAccessLevel creates a new instance of this resource
@@ -12072,6 +12080,22 @@ func (c *mqlGitlabProtectedBranchAccessLevel) GetGroup() *plugin.TValue[*mqlGitl
 		}
 
 		return c.group()
+	})
+}
+
+func (c *mqlGitlabProtectedBranchAccessLevel) GetMemberRole() *plugin.TValue[*mqlGitlabMemberRole] {
+	return plugin.GetOrCompute[*mqlGitlabMemberRole](&c.MemberRole, func() (*mqlGitlabMemberRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.protectedBranch.accessLevel", c.__id, "memberRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabMemberRole), nil
+			}
+		}
+
+		return c.memberRole()
 	})
 }
 

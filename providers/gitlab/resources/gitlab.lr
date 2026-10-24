@@ -1419,9 +1419,9 @@ private gitlab.project.protectedBranch @defaults("name allowForcePush") {
 //
 // A single access grant on a protected branch, describing who may perform the
 // push, merge, or unprotect action. Each entry grants access either to a role
-// (via `accessLevel`), a specific `user`, a specific `group`, or a deploy key
-// (via `deployKeyId`). Exactly one of these targets is set per grant; the
-// others are null or zero.
+// (via `accessLevel`), a custom role (via `memberRole`), a specific `user`, a
+// specific `group`, or a deploy key (via `deployKeyId`). Exactly one of these
+// targets is set per grant; the others are null or zero.
 private gitlab.protectedBranch.accessLevel @defaults("accessLevel accessLevelDescription") {
   // Numeric access level (0 No access, 30 Developer, 40 Maintainer, 60 Admin)
   accessLevel int
@@ -1433,6 +1433,8 @@ private gitlab.protectedBranch.accessLevel @defaults("accessLevel accessLevelDes
   user() gitlab.user
   // Group granted access, when the grant targets a specific group (null otherwise)
   group() gitlab.group
+  // Custom role granted access, when the grant targets a custom member role (null otherwise)
+  memberRole() gitlab.memberRole
 }
 
 // GitLab project repository file

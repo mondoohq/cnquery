@@ -432,8 +432,8 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/zclconf/go-cty v1.19.0 h1:IV8WdqYZc2c5rLX9bEoLNXKojBAp0MZPBHMIrCoa/s4=
 github.com/zclconf/go-cty v1.19.0/go.mod h1:12W89jGn3JCOIQi7infWr9m80rOkb5RNYJqXMZcN4c8=
-gitlab.com/gitlab-org/api/client-go/v3 v3.29.0 h1:wPdHPkd5rIRkxcFzlpm0dHxqBEVrkaDpDhpdikuTRNA=
-gitlab.com/gitlab-org/api/client-go/v3 v3.29.0/go.mod h1:jBFhGkTHLKkgeHEdS/A8yA0tQ6UHq96QVsS5muu6flM=
+gitlab.com/gitlab-org/api/client-go/v3 v3.33.0 h1:pl7bVbnSlozSzn+qXtsw1ALtZ2C1mgplIaG4CC88BW0=
+gitlab.com/gitlab-org/api/client-go/v3 v3.33.0/go.mod h1:jBFhGkTHLKkgeHEdS/A8yA0tQ6UHq96QVsS5muu6flM=
 go.mondoo.com/mondoo-go v0.0.0-20261009120721-91d592217e58 h1:LE0YM/laF0G4YTb9vhUe5vGViuNAKj6QpOTJyVk0wTM=
 go.mondoo.com/mondoo-go v0.0.0-20261009120721-91d592217e58/go.mod h1:hESCStkuJqvuw0cWwVKrorQJJnGdxUnSdR4Zs1/W1W4=
 go.mondoo.com/ranger-rpc v0.8.1 h1:DynUWByDnxI4wMHbFpXUMw+lndYJ21BAHOxrhGyVCD4=

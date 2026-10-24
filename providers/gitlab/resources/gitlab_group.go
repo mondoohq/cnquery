@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
@@ -105,27 +106,12 @@ func newMqlGitlabMemberRole(runtime *plugin.Runtime, role *gitlab.MemberRole) (*
 func (g *mqlGitlabGroup) memberRoles() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
 
-	// ListMemberRoles takes no typed options struct, but the endpoint still
-	// paginates and GitLab defaults to 20 per page — a group with more custom
-	// roles than that would silently report only the first 20. gitlab.WithNext
-	// drives the next page for offset, keyset, and cursor styles alike, and is
-	// what samlGroupLinks below already uses for the same SDK shape.
-	var allRoles []*gitlab.MemberRole
-	var nextOpts []gitlab.RequestOptionFunc
-	for {
-		roles, resp, err := conn.Client().MemberRolesService.ListMemberRoles(int(g.Id.Data), nextOpts...)
-		if err != nil {
-			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
-				return []any{}, nil // not available on this GitLab tier
-			}
-			return nil, err
+	allRoles, err := listGroupMemberRoles(conn.Client(), int(g.Id.Data))
+	if err != nil {
+		if isGitlabStatus(err, 403, 404) {
+			return []any{}, nil // not available on this GitLab tier
 		}
-		allRoles = append(allRoles, roles...)
-		next, hasNext := gitlab.WithNext(resp)
-		if !hasNext {
-			break
-		}
-		nextOpts = []gitlab.RequestOptionFunc{next}
+		return nil, err
 	}
 
 	var mqlRoles []any
@@ -138,6 +124,71 @@ func (g *mqlGitlabGroup) memberRoles() ([]any, error) {
 	}
 
 	return mqlRoles, nil
+}
+
+// listGroupMemberRoles walks every page of a group's custom member roles. gid
+// is a group id or full path.
+//
+// ListMemberRoles takes no typed options struct, but the endpoint still
+// paginates and GitLab defaults to 20 per page: a group with more custom roles
+// than that would silently report only the first 20. gitlab.WithNext drives
+// the next page for offset, keyset, and cursor styles alike, and is what
+// samlGroupLinks below already uses for the same SDK shape.
+func listGroupMemberRoles(client *gitlab.Client, gid any) ([]*gitlab.MemberRole, error) {
+	var allRoles []*gitlab.MemberRole
+	var nextOpts []gitlab.RequestOptionFunc
+	for {
+		roles, resp, err := client.MemberRolesService.ListMemberRoles(gid, nextOpts...)
+		if err != nil {
+			return nil, err
+		}
+		allRoles = append(allRoles, roles...)
+		next, hasNext := gitlab.WithNext(resp)
+		if !hasNext {
+			break
+		}
+		nextOpts = []gitlab.RequestOptionFunc{next}
+	}
+	return allRoles, nil
+}
+
+// listInstanceMemberRoles walks every page of the instance-wide custom member
+// roles, which is where self-managed GitLab defines them.
+func listInstanceMemberRoles(client *gitlab.Client) ([]*gitlab.MemberRole, error) {
+	var allRoles []*gitlab.MemberRole
+	var nextOpts []gitlab.RequestOptionFunc
+	for {
+		roles, resp, err := client.MemberRolesService.ListInstanceMemberRoles(nextOpts...)
+		if err != nil {
+			return nil, err
+		}
+		allRoles = append(allRoles, roles...)
+		next, hasNext := gitlab.WithNext(resp)
+		if !hasNext {
+			break
+		}
+		nextOpts = []gitlab.RequestOptionFunc{next}
+	}
+	return allRoles, nil
+}
+
+// isGitlabStatus reports whether err is a GitLab API error response carrying
+// one of the given HTTP status codes.
+func isGitlabStatus(err error, codes ...int) bool {
+	var respErr *gitlab.ErrorResponse
+	if !errors.As(err, &respErr) {
+		return false
+	}
+	status := respErr.StatusCode
+	if status == 0 && respErr.Response != nil {
+		status = respErr.Response.StatusCode
+	}
+	for _, c := range codes {
+		if status == c {
+			return true
+		}
+	}
+	return false
 }
 
 // init initializes the gitlab group with the arguments
@@ -953,15 +1004,15 @@ func (g *mqlGitlabGroup) protectedBranches() ([]any, error) {
 	var mqlBranches []any
 	for _, branch := range allBranches {
 		prefix := "gitlab.group.protectedBranch/" + strconv.FormatInt(branch.ID, 10)
-		push, err := groupBranchAccessLevels(g.MqlRuntime, prefix+"/push", branch.PushAccessLevels)
+		push, err := groupBranchAccessLevels(g.MqlRuntime, prefix+"/push", g.FullPath.Data, branch.PushAccessLevels)
 		if err != nil {
 			return nil, err
 		}
-		merge, err := groupBranchAccessLevels(g.MqlRuntime, prefix+"/merge", branch.MergeAccessLevels)
+		merge, err := groupBranchAccessLevels(g.MqlRuntime, prefix+"/merge", g.FullPath.Data, branch.MergeAccessLevels)
 		if err != nil {
 			return nil, err
 		}
-		unprotect, err := groupBranchAccessLevels(g.MqlRuntime, prefix+"/unprotect", branch.UnprotectAccessLevels)
+		unprotect, err := groupBranchAccessLevels(g.MqlRuntime, prefix+"/unprotect", g.FullPath.Data, branch.UnprotectAccessLevels)
 		if err != nil {
 			return nil, err
 		}
@@ -987,13 +1038,18 @@ func (g *mqlGitlabGroup) protectedBranches() ([]any, error) {
 	return mqlBranches, nil
 }
 
-func groupBranchAccessLevels(runtime *plugin.Runtime, idPrefix string, descs []*gitlab.GroupBranchAccessDescription) ([]any, error) {
+func groupBranchAccessLevels(runtime *plugin.Runtime, idPrefix, namespacePath string, descs []*gitlab.GroupBranchAccessDescription) ([]any, error) {
 	out := make([]any, 0, len(descs))
 	for _, d := range descs {
 		if d == nil {
 			continue
 		}
 		al, err := newMqlProtectedBranchAccessLevel(runtime, idPrefix, d.ID, int64(d.AccessLevel), d.UserID, d.GroupID, d.DeployKeyID, d.AccessLevelDescription)
+		if err != nil {
+			return nil, err
+		}
+		al.cacheMemberRoleID = d.MemberRoleID
+		al.cacheNamespacePath = namespacePath
 		if err != nil {
 			return nil, err
 		}

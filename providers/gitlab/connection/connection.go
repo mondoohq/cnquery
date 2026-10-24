@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -32,6 +33,33 @@ type GitLabConnection struct {
 	projectName string
 	client      *gitlab.Client
 	url         string
+
+	memberRolesMu sync.Mutex
+	memberRoles   map[string]memberRolesResult
+}
+
+type memberRolesResult struct {
+	roles []*gitlab.MemberRole
+	err   error
+}
+
+// MemberRoles returns the custom member roles stored under key, calling fetch
+// only the first time this connection is asked for that key. Protected-branch
+// access levels resolve their custom role through it, so every grant on every
+// branch shares one listing per scope instead of paying one per grant. A failed
+// fetch is remembered as well, so a refused listing is not retried per grant.
+func (c *GitLabConnection) MemberRoles(key string, fetch func() ([]*gitlab.MemberRole, error)) ([]*gitlab.MemberRole, error) {
+	c.memberRolesMu.Lock()
+	defer c.memberRolesMu.Unlock()
+	if res, ok := c.memberRoles[key]; ok {
+		return res.roles, res.err
+	}
+	roles, err := fetch()
+	if c.memberRoles == nil {
+		c.memberRoles = map[string]memberRolesResult{}
+	}
+	c.memberRoles[key] = memberRolesResult{roles: roles, err: err}
+	return roles, err
 }
 
 func NewGitLabConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*GitLabConnection, error) {
