@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
@@ -37,6 +38,11 @@ func TestNpmPackage_unique(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, gcPkg)
 
+	// Both declare yosay. A range ("^2.0.2") is not an installed version and is
+	// not listed, so pin each one: the same name then comes from two files.
+	yoPkg = bytes.Replace(yoPkg, []byte(`"yosay": "^2.0.2"`), []byte(`"yosay": "2.0.2"`), 1)
+	gcPkg = bytes.Replace(gcPkg, []byte(`"yosay": "^3.0.0"`), []byte(`"yosay": "3.0.0"`), 1)
+
 	err = afero.WriteFile(mockFS, "/usr/local/lib/node_modules/generator-code/package.json", gcPkg, 0o644)
 	require.NoError(t, err)
 	err = afero.WriteFile(mockFS, "/usr/local/lib/node_modules/yo/package.json", yoPkg, 0o644)
@@ -64,12 +70,12 @@ func TestNpmPackage_unique(t *testing.T) {
 	// Check that the first package is yosay
 	pkg2 := mqlNpm.List.Data[2].(*mqlNpmPackage)
 	require.Equal(t, "yosay", pkg2.Name.Data)
-	require.Equal(t, "^2.0.2", pkg2.Version.Data)
+	require.Equal(t, "2.0.2", pkg2.Version.Data)
 
 	// Check that the third package is also yosay, but with a different version
 	pkg3 := mqlNpm.List.Data[3].(*mqlNpmPackage)
 	require.Equal(t, "yosay", pkg3.Name.Data)
-	require.Equal(t, "^3.0.0", pkg3.Version.Data)
+	require.Equal(t, "3.0.0", pkg3.Version.Data)
 
 	// To get the correct data, we need distinct IDs
 	require.NotEqual(t, pkg2.MqlID(), pkg3.MqlID())
@@ -138,6 +144,11 @@ func TestCollectNpmPackagesInPaths(t *testing.T) {
 					}
 				}
 				require.True(t, foundRoot, "should find root package 'test-app'")
+
+				// "lodash": "^4.17.21" is declared, not installed: nothing is in node_modules
+				for _, pkg := range transitive {
+					require.NotEqual(t, "lodash", pkg.Name, "a declared range is not an installed package")
+				}
 			},
 		},
 		{
@@ -610,4 +621,33 @@ func TestCollectNpmPackagesInPaths_suseLib64BundledNpm(t *testing.T) {
 	direct, _, _, err := collectNpmPackagesInPaths(r, mockFS, defaultNpmPaths)
 	require.NoError(t, err)
 	assert.ElementsMatch(t, []string{"npm@10.9.8", "npm@11.16.0"}, packageNames(direct))
+}
+
+// The npm that ships with Node.js has no lockfile: its dependencies are
+// installed in npm/node_modules, each with a package.json that declares its
+// own dependencies as ranges ("debug": "4"). Only installed versions are listed.
+func TestCollectNpmPackagesInPaths_bundledNpmDeclaredRanges(t *testing.T) {
+	mockFS := afero.NewMemMapFs()
+	npmDir := "/opt/nodejs/lib/node_modules/npm"
+	writeManifest := func(dir, manifest string) {
+		require.NoError(t, afero.WriteFile(mockFS, dir+"/package.json", []byte(manifest), 0o644))
+	}
+	writeManifest(npmDir, `{"name":"npm","version":"11.6.2","dependencies":{"tar":"^7.5.1","semver":"^7.7.2"}}`)
+	writeManifest(npmDir+"/node_modules/agent-base", `{"name":"agent-base","version":"7.1.4","dependencies":{"debug":"4"}}`)
+	writeManifest(npmDir+"/node_modules/https-proxy-agent", `{"name":"https-proxy-agent","version":"7.0.6","dependencies":{"agent-base":"^7.1.2","debug":"^4.3.4"}}`)
+	writeNpmManifest(t, mockFS, npmDir+"/node_modules/debug", "debug", "4.4.3")
+	writeNpmManifest(t, mockFS, npmDir+"/node_modules/tar", "tar", "7.5.22")
+
+	r := npmTestRuntime(t, mockFS)
+	direct, transitive, _, err := collectNpmPackagesInPaths(r, mockFS, []string{npmDir})
+	require.NoError(t, err)
+
+	installed := []string{"npm@11.6.2", "agent-base@7.1.4", "https-proxy-agent@7.0.6", "debug@4.4.3", "tar@7.5.22"}
+	assert.ElementsMatch(t, installed, packageNames(direct))
+	assert.ElementsMatch(t, installed, packageNames(transitive))
+	for _, pkg := range append(direct, transitive...) {
+		assert.NotContains(t, pkg.Version, "^", pkg.Name)
+		assert.NotContains(t, pkg.Version, "~", pkg.Name)
+		assert.Regexp(t, `^\d+\.\d+\.\d+`, pkg.Version, pkg.Name)
+	}
 }
