@@ -513,11 +513,13 @@ type mqlAwsGuarddutyDetectorPublishingDestinationInternal struct {
 	lock           sync.Mutex
 	cacheBucketArn *string
 	cacheKmsKeyArn *string
+	cacheOwner     *string
 	fetchErr       error
 }
 
 // fetchDetail lazily calls DescribePublishingDestination once to resolve the
-// destination's S3 bucket and KMS key, shared by s3Bucket() and kmsKey().
+// destination's S3 bucket, KMS key, and expected bucket owner, shared by
+// s3Bucket(), kmsKey(), and expectedBucketOwner().
 func (a *mqlAwsGuarddutyDetectorPublishingDestination) fetchDetail() error {
 	if a.fetched.Load() {
 		return a.fetchErr
@@ -543,6 +545,7 @@ func (a *mqlAwsGuarddutyDetectorPublishingDestination) fetchDetail() error {
 	if detail.DestinationProperties != nil {
 		a.cacheBucketArn = detail.DestinationProperties.DestinationArn
 		a.cacheKmsKeyArn = detail.DestinationProperties.KmsKeyArn
+		a.cacheOwner = detail.DestinationProperties.ExpectedBucketOwner
 	}
 	a.fetched.Store(true)
 	return nil
@@ -576,6 +579,17 @@ func (a *mqlAwsGuarddutyDetectorPublishingDestination) s3Bucket() (*mqlAwsS3Buck
 		return nil, err
 	}
 	return mqlBucket.(*mqlAwsS3Bucket), nil
+}
+
+func (a *mqlAwsGuarddutyDetectorPublishingDestination) expectedBucketOwner() (string, error) {
+	if err := a.fetchDetail(); err != nil {
+		return "", err
+	}
+	if a.cacheOwner == nil || *a.cacheOwner == "" {
+		a.ExpectedBucketOwner.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	return *a.cacheOwner, nil
 }
 
 func (a *mqlAwsGuarddutyDetectorPublishingDestination) kmsKey() (*mqlAwsKmsKey, error) {

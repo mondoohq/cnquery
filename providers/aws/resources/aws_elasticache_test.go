@@ -10,6 +10,7 @@ import (
 	elasticache_types "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/llx"
 )
 
 // TestElasticacheClusterKmsKey covers the early-return null-state paths of
@@ -107,4 +108,37 @@ func TestElasticacheSecurityGroupArns(t *testing.T) {
 				elasticacheSecurityGroupArns(region, accountID, test.cluster))
 		})
 	}
+}
+
+func TestServerlessCacheMigrationArgs(t *testing.T) {
+	// Synthetic: a cache without a live migration reports every migration field null.
+	t.Run("no migration", func(t *testing.T) {
+		status, cutover, addr, port := serverlessCacheMigrationArgs(nil)
+		for _, raw := range []*llx.RawData{status, cutover, addr, port} {
+			assert.Same(t, llx.NilData, raw)
+		}
+	})
+	// Synthetic: a migration summary without an endpoint keeps status and cutover.
+	t.Run("migration without endpoint", func(t *testing.T) {
+		status, cutover, addr, port := serverlessCacheMigrationArgs(&elasticache_types.MigrationSummary{
+			Status:      aws.String("PREPARING"),
+			CutoverMode: aws.String("MANUAL"),
+		})
+		assert.Equal(t, "PREPARING", status.Value)
+		assert.Equal(t, "MANUAL", cutover.Value)
+		assert.Same(t, llx.NilData, addr)
+		assert.Same(t, llx.NilData, port)
+	})
+	// Synthetic: endpoint address and port are flattened.
+	t.Run("migration with endpoint", func(t *testing.T) {
+		_, _, addr, port := serverlessCacheMigrationArgs(&elasticache_types.MigrationSummary{
+			Status: aws.String("IN_PROGRESS"),
+			MigrationEndpoint: &elasticache_types.Endpoint{
+				Address: aws.String("cache.example.serverless.use1.cache.amazonaws.com"),
+				Port:    aws.Int32(6379),
+			},
+		})
+		assert.Equal(t, "cache.example.serverless.use1.cache.amazonaws.com", addr.Value)
+		assert.Equal(t, int64(6379), port.Value)
+	})
 }

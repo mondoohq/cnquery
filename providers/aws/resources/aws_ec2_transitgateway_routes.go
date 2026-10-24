@@ -24,14 +24,15 @@ import (
 func newMqlAwsEc2TransitgatewayAttachment(runtime *plugin.Runtime, region string, att ec2types.TransitGatewayAttachment) (plugin.Resource, error) {
 	return CreateResource(runtime, ResourceAwsEc2TransitgatewayAttachment,
 		map[string]*llx.RawData{
-			"id":               llx.StringData(convert.ToValue(att.TransitGatewayAttachmentId)),
-			"transitGatewayId": llx.StringData(convert.ToValue(att.TransitGatewayId)),
-			"resourceId":       llx.StringData(convert.ToValue(att.ResourceId)),
-			"resourceType":     llx.StringData(string(att.ResourceType)),
-			"state":            llx.StringData(string(att.State)),
-			"createdAt":        llx.TimeDataPtr(att.CreationTime),
-			"tags":             llx.MapData(toInterfaceMap(ec2TagsToMap(att.Tags)), types.String),
-			"region":           llx.StringData(region),
+			"id":                llx.StringData(convert.ToValue(att.TransitGatewayAttachmentId)),
+			"transitGatewayId":  llx.StringData(convert.ToValue(att.TransitGatewayId)),
+			"resourceId":        llx.StringData(convert.ToValue(att.ResourceId)),
+			"resourceType":      llx.StringData(string(att.ResourceType)),
+			"state":             llx.StringData(string(att.State)),
+			"natGatewaySupport": llx.StringDataPtr(nonEmptyEnum(att.NatGatewaySupport)),
+			"createdAt":         llx.TimeDataPtr(att.CreationTime),
+			"tags":              llx.MapData(toInterfaceMap(ec2TagsToMap(att.Tags)), types.String),
+			"region":            llx.StringData(region),
 		})
 }
 

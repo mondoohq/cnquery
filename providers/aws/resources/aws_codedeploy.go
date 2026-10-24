@@ -349,6 +349,23 @@ func (dg *mqlAwsCodedeployDeploymentGroup) loadBalancerInfo() (any, error) {
 	return convert.JsonToDict(dg.sdkData.LoadBalancerInfo)
 }
 
+func (dg *mqlAwsCodedeployDeploymentGroup) autoScalingProcessesToSuspend() ([]any, error) {
+	return codedeployProcessesToSuspend(dg.sdkData.Ec2DeploymentOptions), nil
+}
+
+// codedeployProcessesToSuspend lists the Auto Scaling processes a deployment
+// group suspends during in-place deployments. Absent options suspend nothing.
+func codedeployProcessesToSuspend(opts *codedeploytypes.EC2DeploymentOptions) []any {
+	res := []any{}
+	if opts == nil {
+		return res
+	}
+	for _, p := range opts.AutoScalingGroupProcessesToSuspend {
+		res = append(res, string(p))
+	}
+	return res
+}
+
 func (d *mqlAwsCodedeployDeployment) id() (string, error) {
 	return d.Arn.Data, nil
 }

@@ -417,3 +417,82 @@ func (a *mqlAwsAutoscalingGroup) subnets() ([]any, error) {
 	}
 	return res, nil
 }
+
+func (a *mqlAwsAutoscaling) accountSettings() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getAccountSettings(conn), 5)
+	poolOfJobs.Run()
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsAutoscaling) getAccountSettings(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Autoscaling(region)
+			ctx := context.Background()
+			res := []any{}
+
+			var nextToken *string
+			for {
+				resp, err := svc.DescribeAccountSettings(ctx, &autoscaling.DescribeAccountSettingsInput{NextToken: nextToken})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for EC2 Auto Scaling account settings")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, setting := range resp.Settings {
+					mqlSetting, err := CreateResource(a.MqlRuntime, ResourceAwsAutoscalingAccountSetting,
+						autoscalingAccountSettingArgs(region, setting))
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlSetting)
+				}
+				if resp.NextToken == nil || *resp.NextToken == "" {
+					break
+				}
+				if nextToken != nil && *nextToken == *resp.NextToken {
+					// A cursor that does not advance would loop forever.
+					break
+				}
+				nextToken = resp.NextToken
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+// autoscalingAccountSettingArgs maps one account setting. The enforcement
+// values are only returned for settings with a hard or flexible enforcement
+// type, so they stay null otherwise.
+func autoscalingAccountSettingArgs(region string, setting ec2types.AccountSetting) map[string]*llx.RawData {
+	name := convert.ToValue(setting.Name)
+	return map[string]*llx.RawData{
+		"__id":            llx.StringData(region + "/" + name),
+		"name":            llx.StringData(name),
+		"value":           llx.StringDataPtr(setting.Value),
+		"region":          llx.StringData(region),
+		"enforcementType": llx.StringDataPtr(setting.EnforcementType),
+		"enforcementDate": llx.TimeDataPtr(setting.EnforcementDate),
+		"defaultValue":    llx.StringDataPtr(setting.DefaultValue),
+		"enforcedValue":   llx.StringDataPtr(setting.EnforcedValue),
+	}
+}

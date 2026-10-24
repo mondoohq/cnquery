@@ -628,21 +628,27 @@ func newMqlAwsElasticacheServerlessCache(runtime *plugin.Runtime, region string,
 		sgArgs = append(sgArgs, NewSecurityGroupArn(region, accountID, sgId))
 	}
 
+	migrationStatus, migrationCutoverMode, migrationEndpointAddress, migrationEndpointPort := serverlessCacheMigrationArgs(cache.Migration)
+
 	resource, err := CreateResource(runtime, "aws.elasticache.serverlessCache",
 		map[string]*llx.RawData{
-			"__id":                   llx.StringDataPtr(cache.ARN),
-			"arn":                    llx.StringDataPtr(cache.ARN),
-			"name":                   llx.StringDataPtr(cache.ServerlessCacheName),
-			"description":            llx.StringDataPtr(cache.Description),
-			"engine":                 llx.StringDataPtr(cache.Engine),
-			"engineVersion":          llx.StringDataPtr(cache.FullEngineVersion),
-			"majorEngineVersion":     llx.StringDataPtr(cache.MajorEngineVersion),
-			"region":                 llx.StringData(region),
-			"snapshotRetentionLimit": llx.IntDataDefault(cache.SnapshotRetentionLimit, 0),
-			"dailySnapshotTime":      llx.StringDataPtr(cache.DailySnapshotTime),
-			"createdAt":              llx.TimeDataPtr(cache.CreateTime),
-			"status":                 llx.StringDataPtr(cache.Status),
-			"connectionType":         llx.StringDataPtr(nonEmptyEnum(cache.ConnectionType)),
+			"__id":                     llx.StringDataPtr(cache.ARN),
+			"arn":                      llx.StringDataPtr(cache.ARN),
+			"name":                     llx.StringDataPtr(cache.ServerlessCacheName),
+			"description":              llx.StringDataPtr(cache.Description),
+			"engine":                   llx.StringDataPtr(cache.Engine),
+			"engineVersion":            llx.StringDataPtr(cache.FullEngineVersion),
+			"majorEngineVersion":       llx.StringDataPtr(cache.MajorEngineVersion),
+			"region":                   llx.StringData(region),
+			"snapshotRetentionLimit":   llx.IntDataDefault(cache.SnapshotRetentionLimit, 0),
+			"dailySnapshotTime":        llx.StringDataPtr(cache.DailySnapshotTime),
+			"createdAt":                llx.TimeDataPtr(cache.CreateTime),
+			"status":                   llx.StringDataPtr(cache.Status),
+			"connectionType":           llx.StringDataPtr(nonEmptyEnum(cache.ConnectionType)),
+			"migrationStatus":          migrationStatus,
+			"migrationCutoverMode":     migrationCutoverMode,
+			"migrationEndpointAddress": migrationEndpointAddress,
+			"migrationEndpointPort":    migrationEndpointPort,
 		})
 	if err != nil {
 		return nil, err
@@ -655,6 +661,22 @@ func newMqlAwsElasticacheServerlessCache(runtime *plugin.Runtime, region string,
 	mqlCache.subnetIds = cache.SubnetIds
 	mqlCache.cacheKmsKeyId = cache.KmsKeyId
 	return mqlCache, nil
+}
+
+// serverlessCacheMigrationArgs flattens a serverless cache's live migration
+// summary. Every value is null when no migration is associated with the cache.
+func serverlessCacheMigrationArgs(m *elasticache_types.MigrationSummary) (status, cutoverMode, endpointAddress, endpointPort *llx.RawData) {
+	if m == nil {
+		return llx.NilData, llx.NilData, llx.NilData, llx.NilData
+	}
+	status = llx.StringDataPtr(m.Status)
+	cutoverMode = llx.StringDataPtr(m.CutoverMode)
+	endpointAddress, endpointPort = llx.NilData, llx.NilData
+	if m.MigrationEndpoint != nil {
+		endpointAddress = llx.StringDataPtr(m.MigrationEndpoint.Address)
+		endpointPort = llx.IntDataPtr(m.MigrationEndpoint.Port)
+	}
+	return status, cutoverMode, endpointAddress, endpointPort
 }
 
 func (a *mqlAwsElasticacheServerlessCache) kmsKey() (*mqlAwsKmsKey, error) {

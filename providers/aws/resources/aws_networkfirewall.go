@@ -19,6 +19,7 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/providers/aws/connection"
+	"go.mondoo.com/mql/types"
 )
 
 func (a *mqlAwsNetworkfirewall) id() (string, error) {
@@ -187,6 +188,11 @@ type mqlAwsNetworkfirewallPolicyInternal struct {
 	cacheStatelessRuleGroupArns []string
 	cacheStatefulRuleGroupArns  []string
 	cacheKmsKeyId               *string
+	cacheResolvedIPValidation   *nftypes.Route53ResolvedIPValidation
+}
+
+type mqlAwsNetworkfirewallPolicyRoute53ResolvedIpValidationInternal struct {
+	cacheRuleGroupId string
 }
 
 type mqlAwsNetworkfirewallRulegroupInternal struct {
@@ -630,7 +636,60 @@ func networkfirewallPolicyToMql(runtime *plugin.Runtime, policyResp *nftypes.Fir
 	mp.cacheStatelessRuleGroupArns = statelessArns
 	mp.cacheStatefulRuleGroupArns = statefulArns
 	mp.cacheKmsKeyId = kmsKeyId
+	mp.cacheResolvedIPValidation = policy.Route53ResolvedIPValidation
 	return mp, nil
+}
+
+func (a *mqlAwsNetworkfirewallPolicy) route53ResolvedIpValidation() (*mqlAwsNetworkfirewallPolicyRoute53ResolvedIpValidation, error) {
+	v := a.cacheResolvedIPValidation
+	if v == nil {
+		a.Route53ResolvedIpValidation.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := CreateResource(a.MqlRuntime, ResourceAwsNetworkfirewallPolicyRoute53ResolvedIpValidation,
+		map[string]*llx.RawData{
+			"__id":                      llx.StringData(a.Arn.Data + "/route53ResolvedIpValidation"),
+			"action":                    llx.StringData(string(v.Action)),
+			"dnsExpiryExceptionPolicy":  llx.StringData(string(v.DNSExpiryExceptionPolicy)),
+			"bypassDestinationIpRanges": nfAddressesToRaw(v.BypassDestinationValidationIPRanges, false),
+			"sourceIpRanges":            nfAddressesToRaw(v.SourceIPRanges, true),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mv := res.(*mqlAwsNetworkfirewallPolicyRoute53ResolvedIpValidation)
+	mv.cacheRuleGroupId = convert.ToValue(v.DNSFirewallRuleGroupId)
+	return mv, nil
+}
+
+// nfAddressesToRaw converts Network Firewall address entries to a string list.
+// With nilIsNull set, an absent list becomes null instead of empty: for
+// SourceIPRanges an omitted list and an empty list mean different things.
+func nfAddressesToRaw(addrs []nftypes.Address, nilIsNull bool) *llx.RawData {
+	if addrs == nil && nilIsNull {
+		return llx.NilData
+	}
+	res := make([]any, 0, len(addrs))
+	for _, addr := range addrs {
+		if addr.AddressDefinition != nil {
+			res = append(res, *addr.AddressDefinition)
+		}
+	}
+	return llx.ArrayData(res, types.String)
+}
+
+func (a *mqlAwsNetworkfirewallPolicyRoute53ResolvedIpValidation) dnsFirewallRuleGroup() (*mqlAwsRoute53ResolverFirewallRuleGroup, error) {
+	if a.cacheRuleGroupId == "" {
+		a.DnsFirewallRuleGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.route53.resolver.firewallRuleGroup", map[string]*llx.RawData{
+		"id": llx.StringData(a.cacheRuleGroupId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsRoute53ResolverFirewallRuleGroup), nil
 }
 
 func (a *mqlAwsNetworkfirewallPolicy) statelessRuleGroups() ([]any, error) {

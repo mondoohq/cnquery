@@ -1726,7 +1726,7 @@ private aws.networkfirewall.policy @defaults("arn name region") {
   region string
   // Status of the firewall policy
   //
-  // One of ACTIVE, DELETING, or ERROR.
+  // One of ACTIVE, DELETING, ERROR, or UPDATING.
   firewallPolicyStatus string
   // Number of firewalls associated with this policy
   numberOfAssociations int
@@ -1793,6 +1793,43 @@ private aws.networkfirewall.policy @defaults("arn name region") {
   kmsKey() aws.kms.key
   // Tags on the firewall policy
   tags map[string]string
+  // Route 53 resolved IP validation settings
+  //
+  // Policy-level check that a connection's destination IP address was
+  // returned by the Route 53 Resolver in a DNS response, which blocks or
+  // flags traffic to IP addresses a client never looked up. Null when the
+  // policy does not enable resolved IP validation.
+  route53ResolvedIpValidation() aws.networkfirewall.policy.route53ResolvedIpValidation
+}
+
+// AWS Network Firewall policy Route 53 resolved IP validation
+//
+// Action for connections whose destination IP address the Route 53 Resolver
+// did not return in an associated VPC, the policy for resolutions that have
+// expired from the resolved IP cache, the DNS Firewall rule group whose VPCs
+// count for validation, and the source and destination ranges the check
+// covers or exempts.
+private aws.networkfirewall.policy.route53ResolvedIpValidation @defaults("action dnsExpiryExceptionPolicy") {
+  // Action for a connection whose destination IP address fails validation
+  //
+  // One of ALERT (flag the connection in flow logs without blocking it), DROP,
+  // or REJECT.
+  action string
+  // Action for traffic to an IP address whose DNS resolution has expired
+  //
+  // One of CONTINUE (treat the expired resolution as valid), DROP, or REJECT.
+  dnsExpiryExceptionPolicy string
+  // Route 53 Resolver DNS Firewall rule group whose associated VPCs count for validation
+  dnsFirewallRuleGroup() aws.route53.resolver.firewallRuleGroup
+  // Destination IP address ranges exempt from the policy-level check
+  bypassDestinationIpRanges []string
+  // Client source IP address ranges whose connections are validated
+  //
+  // Null when the policy does not set source ranges, in which case validation
+  // covers the CIDR ranges of the firewall's VPC and of any additional VPCs
+  // attached to the firewall. An empty list means no source address is
+  // validated.
+  sourceIpRanges []string
 }
 
 // AWS Network Firewall rule group
@@ -1819,7 +1856,7 @@ private aws.networkfirewall.rulegroup @defaults("arn name region") {
   numberOfAssociations int
   // Type of the rule group (STATELESS, STATEFUL, or STATEFUL_DOMAIN)
   type string
-  // Status of the rule group (ACTIVE, DELETING, ERROR)
+  // Status of the rule group (ACTIVE, DELETING, ERROR, UPDATING)
   ruleGroupStatus string
   // Rules definition
   //
@@ -1880,7 +1917,7 @@ private aws.networkfirewall.tlsInspectionConfiguration @defaults("arn name regio
   region string
   // Status of the TLS inspection configuration
   //
-  // One of ACTIVE, DELETING, or ERROR.
+  // One of ACTIVE, DELETING, ERROR, or UPDATING.
   status string
   // Number of firewall policies that reference this TLS inspection configuration
   numberOfAssociations int
@@ -6626,7 +6663,8 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   //
   // Minimum TLS version the domain endpoint negotiates. One of
   // Policy-Min-TLS-1-0-2019-07, Policy-Min-TLS-1-2-2019-07,
-  // Policy-Min-TLS-1-2-PFS-2023-10, or Policy-Min-TLS-1-2-RFC9151-FIPS-2024-08.
+  // Policy-Min-TLS-1-2-PFS-2023-10, Policy-Min-TLS-1-2-RFC9151-FIPS-2024-08, or
+  // Policy-Min-TLS-1-2-FIPS-PQ-2026-10.
   tlsSecurityPolicy string
   // Domain access policy as a JSON-formatted string
   //
@@ -6860,6 +6898,41 @@ private aws.acm.certificate @defaults("domainName issuer createdAt notAfter") {
 aws.autoscaling @defaults("groups") {
   // List of autoscaling groups across the account
   groups() []aws.autoscaling.group
+  // Account-level EC2 Auto Scaling settings across all enabled regions
+  accountSettings() []aws.autoscaling.accountSetting
+}
+
+// Amazon EC2 Auto Scaling account setting
+//
+// Account-level EC2 Auto Scaling setting in one region, such as
+// launchBeforeTerminate, selected by `name`. Carries the current `value`
+// and, for settings AWS is phasing in, the `enforcementType`, the
+// `enforcementDate`, and the `defaultValue` and `enforcedValue` before and
+// after that date.
+private aws.autoscaling.accountSetting @defaults("name value region") {
+  // Name of the setting
+  name string
+  // Current value of the setting
+  value string
+  // Region where the setting is effective
+  region string
+  // Type of enforcement for the setting
+  //
+  // One of hard (the setting cannot be changed after the enforcement date),
+  // flexible (the setting can always be changed), or none.
+  enforcementType string
+  // Date when the setting is enforced
+  //
+  // Null for settings without a hard or flexible enforcement type.
+  enforcementDate time
+  // Value of the setting before the enforcement date
+  //
+  // Null for settings without a hard or flexible enforcement type.
+  defaultValue string
+  // Value enforced after the enforcement date
+  //
+  // Null for settings without a hard or flexible enforcement type.
+  enforcedValue string
 }
 
 // Amazon EC2 Auto Scaling group
@@ -8071,6 +8144,13 @@ private aws.guardduty.detector.publishingDestination @defaults("destinationType 
   s3Bucket() aws.s3.bucket
   // KMS key used to encrypt published findings
   kmsKey() aws.kms.key
+  // AWS account ID GuardDuty expects to own the destination bucket
+  //
+  // When set, GuardDuty verifies that this account owns the bucket before it
+  // exports findings, so findings are not exported to a bucket whose name was
+  // later claimed by another account. Null when no expected owner was
+  // configured, in which case GuardDuty does not verify bucket ownership.
+  expectedBucketOwner() string
 }
 
 // Amazon GuardDuty detector trusted IP set
@@ -9547,6 +9627,89 @@ aws.ecs  @defaults("clusters containers containerInstances") {
   capacityProviders() []aws.ecs.capacityProvider
   // Account-level ECS settings effective for the caller across all enabled regions
   accountSettings() []aws.ecs.accountSetting
+  // ECS Service Gateways across all enabled regions
+  gateways() []aws.ecs.gateway
+}
+
+// Amazon ECS Service Gateway
+//
+// Managed ingress for ECS services, backed by shared Application Load
+// Balancers that ECS provisions and operates. Carries whether the gateway is
+// public (`accessType`, `scheme`), the WAF web ACL in front of it (`webAcl`),
+// the HTTP desync mitigation mode, the access log destination, the subnets
+// and inbound security group of its load balancers, the maximum and current
+// number of load balancers, deletion protection, and the IAM role ECS uses to
+// manage the infrastructure.
+private aws.ecs.gateway @defaults("name region status accessType") {
+  // ARN of the gateway
+  arn string
+  // Name of the gateway
+  name string
+  // Region where the gateway exists
+  region string
+  // Status of the gateway
+  //
+  // One of ACTIVE, UPDATE_IN_PROGRESS, UPDATE_COMPLETE, UPDATE_FAILED, or DELETED.
+  status string
+  // Explanation of the current status, set when the gateway is in a failure state
+  statusReason string
+  // Whether the gateway is publicly accessible
+  //
+  // One of PUBLIC or PRIVATE. Derived from the scheme when the gateway is
+  // created and immutable.
+  accessType string
+  // Whether deletion protection is enabled
+  deletionProtection bool
+  // Whether the gateway propagates its tags to the infrastructure it manages
+  //
+  // One of NONE or GATEWAY.
+  propagateTags string
+  // Time when the gateway was created
+  createdAt time
+  // Time when the gateway was last updated
+  updatedAt time
+  // Tags on the gateway
+  tags map[string]string
+  // IAM role ECS uses to manage the gateway's infrastructure
+  infrastructureRole() aws.iam.role
+  // Kind of infrastructure backing the gateway
+  //
+  // hostSharedAlb for a gateway built on host-based, shared Application Load
+  // Balancers, or unknown for a kind this provider does not recognize. The
+  // load balancer fields below are null for unknown.
+  configurationType string
+  // Whether the gateway's load balancers are internet-facing or internal
+  scheme string
+  // HTTP desync mitigation mode of the gateway's load balancers
+  //
+  // One of monitor, defensive, or strictest.
+  httpDesyncMitigationMode string
+  // Protocol of the load balancer listener (HTTPS)
+  listenerProtocol string
+  // Port of the load balancer listener (443)
+  listenerPort int
+  // Maximum number of Application Load Balancers the gateway manages
+  maxAlbCount int
+  // Number of Application Load Balancers the gateway has allocated
+  currentAlbCount int
+  // IP address type of the gateway's load balancers
+  //
+  // One of ipv4, dualstack, or dualstack-without-public-ipv4.
+  ipAddressType string
+  // Subnets the gateway's load balancers are placed in
+  subnets() []aws.vpc.subnet
+  // Customer security group controlling inbound traffic to the gateway's load balancers
+  //
+  // Null when the gateway manages inbound rules on its own security group.
+  inboundSecurityGroup() aws.ec2.securitygroup
+  // WAF web ACL associated with the gateway's load balancers
+  webAcl() aws.waf.acl
+  // Whether access logs are delivered for the gateway's load balancers
+  accessLogsEnabled bool
+  // S3 bucket that receives the access logs
+  accessLogsBucket() aws.s3.bucket
+  // Object key prefix of the access logs in the S3 bucket
+  accessLogsPrefix string
 }
 
 // Amazon ECS capacity provider
@@ -15360,6 +15523,11 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   multiTenant bool
   // Option groups attached to the DB instance
   optionGroups() []aws.rds.optionGroup
+  // Identifier of the DB capacity reservation the instance uses
+  //
+  // An identifier with the dbcr- prefix. Null when the instance does not use a
+  // DB capacity reservation.
+  dbCapacityReservationIdentifier string
 }
 
 // IAM role associated with an RDS DB instance for accessing other AWS services
@@ -15845,6 +16013,25 @@ private aws.elasticache.serverlessCache @defaults("name description status engin
 
   // Tags for the serverless cache
   tags() map[string]string
+  // Status of a live migration into the serverless cache
+  //
+  // Null when no migration from a self-managed Redis or Valkey cluster is
+  // associated with the cache.
+  migrationStatus string
+  // Cutover configuration of the live migration
+  //
+  // Null when no migration is associated with the cache.
+  migrationCutoverMode string
+  // Address of the migration endpoint applications use during the migration
+  //
+  // The standard endpoint of the serverless cache, which routes requests to
+  // the migration source until cutover. Null when no migration is associated
+  // with the cache.
+  migrationEndpointAddress string
+  // Port of the migration endpoint
+  //
+  // Null when no migration is associated with the cache.
+  migrationEndpointPort int
 }
 
 // Amazon ElastiCache parameter group
@@ -19943,6 +20130,11 @@ private aws.ec2.transitgateway.attachment @defaults("id resourceType state") {
   //
   // One of: initiating, initiatingRequest, pendingAcceptance, rollingBack, pending, available, modifying, deleting, deleted, failed, rejected, rejecting, failing.
   state string
+  // State of managed NAT on the attachment
+  //
+  // One of enabled, disabled, enabling, or disabling. Null when the caller
+  // does not own the transit gateway, since only the owner receives it.
+  natGatewaySupport string
   // When the attachment was created
   createdAt time
   // Tags on the attachment
@@ -21271,8 +21463,10 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   //
   // Carries InstanceState, the SystemStatus and InstanceStatus check results
   // (each with an overall Status plus per-check Details), AttachedEbsStatus,
-  // any scheduled Events, and AvailabilityZone. Only populated while the
-  // instance is running.
+  // any scheduled Events, and AvailabilityZone. PerformanceStatus (Status,
+  // ImpairedSince, and Remediation) is present only when performance status
+  // checks are enabled for the instance. Only populated while the instance is
+  // running.
   instanceStatus() dict
   // Reason for the most recent state transition
   //
@@ -23848,6 +24042,14 @@ private aws.codedeploy.deploymentGroup @defaults("deploymentGroupName computePla
   // deployments, and `TargetGroupPairInfoList` the target group pairs used for
   // blue/green traffic shifting.
   loadBalancerInfo() dict
+  // EC2 Auto Scaling processes suspended during in-place deployments
+  //
+  // CodeDeploy suspends these processes on the targeted Auto Scaling groups
+  // before deploying and resumes them afterwards. Each entry is one of
+  // Terminate, AZRebalance, InstanceRefresh, or ScheduledActions. While Terminate is
+  // suspended, Auto Scaling does not replace unhealthy instances. Empty when
+  // no processes are suspended.
+  autoScalingProcessesToSuspend() []string
 }
 
 // AWS CodeDeploy Deployment
@@ -26722,7 +26924,7 @@ private aws.glue.job @defaults("name region") {
   glueVersion string
   // Number of workers allocated to this job
   numberOfWorkers int
-  // Type of predefined worker allocated: Standard, G.1X, G.2X, G.4X, G.8X, G.025X, or Z.2X
+  // Type of predefined worker allocated: Standard, G.025X, G.1X, G.2X, G.4X, G.8X, G.12X, G.16X, R.1X, R.2X, R.4X, R.8X, or Z.2X
   workerType string
   // Maximum number of Glue data processing units (DPUs) allocated when MaxCapacity is set instead of WorkerType/NumberOfWorkers
   maxCapacity float
