@@ -6,7 +6,7 @@ package resources
 import (
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/netapp/armnetapp/v10"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/netapp/armnetapp/v11"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -48,6 +48,39 @@ func TestNetAppKeyVaultKeyId(t *testing.T) {
 		assert.Equal(t, "contoso", parsed.Vault)
 		assert.Equal(t, "keys", parsed.Type)
 		assert.Equal(t, "netapp-cmk", parsed.Name)
+		assert.Equal(t, "", parsed.Version)
+	})
+}
+
+// NetApp reports the LDAP bind password location as a vault URI and a secret
+// name. A wrong join yields an id parseKeyVaultId rejects, and the bind
+// password secret of every LDAP-configured account reads as unresolvable.
+func TestNetAppKeyVaultSecretId(t *testing.T) {
+	str := func(s string) *string { return &s }
+
+	// Synthetic: URI shape from the ARM BindPasswordAkvConfig docs; no target showed this.
+	t.Run("vault URI and secret name are joined into a versionless secret id", func(t *testing.T) {
+		assert.Equal(t,
+			"https://contoso.vault.azure.net/secrets/ldap-bind",
+			netAppKeyVaultSecretId(str("https://contoso.vault.azure.net/"), str("ldap-bind")))
+	})
+
+	// Synthetic: absent BindPasswordAkvConfig members; no target showed this.
+	t.Run("no secret id without both halves", func(t *testing.T) {
+		assert.Equal(t, "", netAppKeyVaultSecretId(nil, nil))
+		assert.Equal(t, "", netAppKeyVaultSecretId(str("https://contoso.vault.azure.net"), nil))
+		assert.Equal(t, "", netAppKeyVaultSecretId(nil, str("ldap-bind")))
+		assert.Equal(t, "", netAppKeyVaultSecretId(str("https://contoso.vault.azure.net"), str("")))
+	})
+
+	// Synthetic: checks the join against the secret resource's id parser.
+	t.Run("the assembled id parses as a key vault secret identifier", func(t *testing.T) {
+		parsed, err := parseKeyVaultId(netAppKeyVaultSecretId(
+			str("https://contoso.vault.azure.net"), str("ldap-bind")))
+		require.NoError(t, err)
+		assert.Equal(t, "contoso", parsed.Vault)
+		assert.Equal(t, "secrets", parsed.Type)
+		assert.Equal(t, "ldap-bind", parsed.Name)
 		assert.Equal(t, "", parsed.Version)
 	})
 }

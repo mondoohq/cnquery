@@ -605,6 +605,7 @@ const (
 	ResourceAzureSubscriptionDataBoxServiceJob                                                          string = "azure.subscription.dataBoxService.job"
 	ResourceAzureSubscriptionNetAppServiceAccountEncryption                                             string = "azure.subscription.netAppService.account.encryption"
 	ResourceAzureSubscriptionNetAppServiceAccountActiveDirectory                                        string = "azure.subscription.netAppService.account.activeDirectory"
+	ResourceAzureSubscriptionNetAppServiceAccountLdapConfiguration                                      string = "azure.subscription.netAppService.account.ldapConfiguration"
 	ResourceAzureSubscriptionNetAppServiceAccountCapacityPool                                           string = "azure.subscription.netAppService.account.capacityPool"
 	ResourceAzureSubscriptionElasticSanServiceElasticSanVolumeGroup                                     string = "azure.subscription.elasticSanService.elasticSan.volumeGroup"
 	ResourceAzureSubscriptionNetAppServiceAccountCapacityPoolVolume                                     string = "azure.subscription.netAppService.account.capacityPool.volume"
@@ -2984,6 +2985,10 @@ func init() {
 		"azure.subscription.netAppService.account.activeDirectory": {
 			// to override args, implement: initAzureSubscriptionNetAppServiceAccountActiveDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetAppServiceAccountActiveDirectory,
+		},
+		"azure.subscription.netAppService.account.ldapConfiguration": {
+			// to override args, implement: initAzureSubscriptionNetAppServiceAccountLdapConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetAppServiceAccountLdapConfiguration,
 		},
 		"azure.subscription.netAppService.account.capacityPool": {
 			// to override args, implement: initAzureSubscriptionNetAppServiceAccountCapacityPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -23843,6 +23848,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.netAppService.account.activeDirectories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetActiveDirectories()).ToDataRes(types.Array(types.Resource("azure.subscription.netAppService.account.activeDirectory")))
 	},
+	"azure.subscription.netAppService.account.ldapConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetLdapConfiguration()).ToDataRes(types.Resource("azure.subscription.netAppService.account.ldapConfiguration"))
+	},
 	"azure.subscription.netAppService.account.capacityPools": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetCapacityPools()).ToDataRes(types.Array(types.Resource("azure.subscription.netAppService.account.capacityPool")))
 	},
@@ -24187,6 +24195,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.netAppService.account.activeDirectory.statusDetails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetStatusDetails()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GetDomain()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.ldapServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GetLdapServers()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.ldapPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GetLdapPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.secureLdapType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GetSecureLdapType()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.bindAuthenticationLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GetBindAuthenticationLevel()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.bindDn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GetBindDn()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.userDn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GetUserDn()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.groupDn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GetGroupDn()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.netGroupDn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GetNetGroupDn()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.certificateCnHost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GetCertificateCnHost()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.dnsServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GetDnsServers()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.bindPasswordVaultUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GetBindPasswordVaultUri()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.bindPasswordSecretName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GetBindPasswordSecretName()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.bindPasswordSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GetBindPasswordSecret()).ToDataRes(types.Resource("azure.subscription.keyVaultService.secret"))
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.bindPasswordIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GetBindPasswordIdentity()).ToDataRes(types.Resource("azure.subscription.managedIdentity"))
 	},
 	"azure.subscription.netAppService.account.capacityPool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetId()).ToDataRes(types.String)
@@ -54771,6 +54824,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetAppServiceAccount).ActiveDirectories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.netAppService.account.ldapConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).LdapConfiguration, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.netAppService.account.capacityPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetAppServiceAccount).CapacityPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -55261,6 +55318,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.netAppService.account.activeDirectory.statusDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).StatusDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.ldapServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).LdapServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.ldapPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).LdapPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.secureLdapType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).SecureLdapType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.bindAuthenticationLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).BindAuthenticationLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.bindDn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).BindDn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.userDn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).UserDn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.groupDn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).GroupDn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.netGroupDn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).NetGroupDn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.certificateCnHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).CertificateCnHost, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.dnsServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).DnsServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.bindPasswordVaultUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).BindPasswordVaultUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.bindPasswordSecretName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).BindPasswordSecretName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.bindPasswordSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).BindPasswordSecret, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceSecret](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.ldapConfiguration.bindPasswordIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration).BindPasswordIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionManagedIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.netAppService.account.capacityPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -128472,6 +128593,7 @@ type mqlAzureSubscriptionNetAppServiceAccount struct {
 	MultiAdStatus          plugin.TValue[string]
 	Encryption             plugin.TValue[*mqlAzureSubscriptionNetAppServiceAccountEncryption]
 	ActiveDirectories      plugin.TValue[[]any]
+	LdapConfiguration      plugin.TValue[*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration]
 	CapacityPools          plugin.TValue[[]any]
 	SystemMetadata         plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
@@ -128602,6 +128724,22 @@ func (c *mqlAzureSubscriptionNetAppServiceAccount) GetActiveDirectories() *plugi
 		}
 
 		return c.activeDirectories()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetLdapConfiguration() *plugin.TValue[*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration](&c.LdapConfiguration, func() (*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account", c.__id, "ldapConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration), nil
+			}
+		}
+
+		return c.ldapConfiguration()
 	})
 }
 
@@ -129762,6 +129900,144 @@ func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetStatus() *p
 
 func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetStatusDetails() *plugin.TValue[string] {
 	return &c.StatusDetails
+}
+
+// mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration for the azure.subscription.netAppService.account.ldapConfiguration resource
+type mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetAppServiceAccountLdapConfigurationInternal
+	Domain                  plugin.TValue[string]
+	LdapServers             plugin.TValue[[]any]
+	LdapPort                plugin.TValue[int64]
+	SecureLdapType          plugin.TValue[string]
+	BindAuthenticationLevel plugin.TValue[string]
+	BindDn                  plugin.TValue[string]
+	UserDn                  plugin.TValue[string]
+	GroupDn                 plugin.TValue[string]
+	NetGroupDn              plugin.TValue[string]
+	CertificateCnHost       plugin.TValue[string]
+	DnsServers              plugin.TValue[[]any]
+	BindPasswordVaultUri    plugin.TValue[string]
+	BindPasswordSecretName  plugin.TValue[string]
+	BindPasswordSecret      plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceSecret]
+	BindPasswordIdentity    plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
+}
+
+// createAzureSubscriptionNetAppServiceAccountLdapConfiguration creates a new instance of this resource
+func createAzureSubscriptionNetAppServiceAccountLdapConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.netAppService.account.ldapConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) MqlName() string {
+	return "azure.subscription.netAppService.account.ldapConfiguration"
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) GetLdapServers() *plugin.TValue[[]any] {
+	return &c.LdapServers
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) GetLdapPort() *plugin.TValue[int64] {
+	return &c.LdapPort
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) GetSecureLdapType() *plugin.TValue[string] {
+	return &c.SecureLdapType
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) GetBindAuthenticationLevel() *plugin.TValue[string] {
+	return &c.BindAuthenticationLevel
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) GetBindDn() *plugin.TValue[string] {
+	return &c.BindDn
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) GetUserDn() *plugin.TValue[string] {
+	return &c.UserDn
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) GetGroupDn() *plugin.TValue[string] {
+	return &c.GroupDn
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) GetNetGroupDn() *plugin.TValue[string] {
+	return &c.NetGroupDn
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) GetCertificateCnHost() *plugin.TValue[string] {
+	return &c.CertificateCnHost
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) GetDnsServers() *plugin.TValue[[]any] {
+	return &c.DnsServers
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) GetBindPasswordVaultUri() *plugin.TValue[string] {
+	return &c.BindPasswordVaultUri
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) GetBindPasswordSecretName() *plugin.TValue[string] {
+	return &c.BindPasswordSecretName
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) GetBindPasswordSecret() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceSecret] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceSecret](&c.BindPasswordSecret, func() (*mqlAzureSubscriptionKeyVaultServiceSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account.ldapConfiguration", c.__id, "bindPasswordSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceSecret), nil
+			}
+		}
+
+		return c.bindPasswordSecret()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) GetBindPasswordIdentity() *plugin.TValue[*mqlAzureSubscriptionManagedIdentity] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionManagedIdentity](&c.BindPasswordIdentity, func() (*mqlAzureSubscriptionManagedIdentity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account.ldapConfiguration", c.__id, "bindPasswordIdentity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionManagedIdentity), nil
+			}
+		}
+
+		return c.bindPasswordIdentity()
+	})
 }
 
 // mqlAzureSubscriptionNetAppServiceAccountCapacityPool for the azure.subscription.netAppService.account.capacityPool resource

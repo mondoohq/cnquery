@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/netapp/armnetapp/v10"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/netapp/armnetapp/v11"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
@@ -22,6 +22,7 @@ type mqlAzureSubscriptionNetAppServiceAccountInternal struct {
 	cacheSystemData              any
 	cacheEncryption              *armnetapp.AccountEncryption
 	cacheActiveDirectories       []*armnetapp.ActiveDirectory
+	cacheLdapConfiguration       *armnetapp.LdapConfiguration
 	cacheUserAssignedIdentityIds []string
 }
 
@@ -163,6 +164,7 @@ func createNetAppAccountResource(runtime *plugin.Runtime, account *armnetapp.Acc
 	mqlAccount := resource.(*mqlAzureSubscriptionNetAppServiceAccount)
 	mqlAccount.cacheEncryption = props.Encryption
 	mqlAccount.cacheActiveDirectories = props.ActiveDirectories
+	mqlAccount.cacheLdapConfiguration = props.LdapConfiguration
 	mqlAccount.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 
 	sysData, err := convert.JsonToDict(account.SystemData)
@@ -179,10 +181,17 @@ func createNetAppAccountResource(runtime *plugin.Runtime, account *armnetapp.Acc
 // resolves to the key's current version — the same version the account
 // encrypts with, since NetApp follows the key rather than pinning a version.
 func netAppKeyVaultKeyId(vaultURI, keyName *string) string {
-	if vaultURI == nil || *vaultURI == "" || keyName == nil || *keyName == "" {
+	return netAppKeyVaultObjectId(vaultURI, "keys", keyName)
+}
+
+// netAppKeyVaultObjectId joins a vault URI, an object collection ("keys" or
+// "secrets"), and an object name into a versionless Key Vault identifier.
+// Empty when either half is missing.
+func netAppKeyVaultObjectId(vaultURI *string, collection string, name *string) string {
+	if vaultURI == nil || *vaultURI == "" || name == nil || *name == "" {
 		return ""
 	}
-	return strings.TrimSuffix(*vaultURI, "/") + "/keys/" + *keyName
+	return strings.TrimSuffix(*vaultURI, "/") + "/" + collection + "/" + *name
 }
 
 func (a *mqlAzureSubscriptionNetAppServiceAccount) encryption() (*mqlAzureSubscriptionNetAppServiceAccountEncryption, error) {
@@ -314,6 +323,80 @@ func (a *mqlAzureSubscriptionNetAppServiceAccount) activeDirectories() ([]any, e
 		res = append(res, mqlAd)
 	}
 	return res, nil
+}
+
+// netAppKeyVaultSecretId builds the versionless Key Vault secret identifier
+// from the vault URI and secret name NetApp reports separately. Versionless
+// resolves to the secret's current version, which is the one NetApp reads.
+func netAppKeyVaultSecretId(vaultURI, secretName *string) string {
+	return netAppKeyVaultObjectId(vaultURI, "secrets", secretName)
+}
+
+func (a *mqlAzureSubscriptionNetAppServiceAccount) ldapConfiguration() (*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration, error) {
+	ldap := a.cacheLdapConfiguration
+	if ldap == nil {
+		a.LdapConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	var vaultUri, secretName, userAssignedIdentity *string
+	if akv := ldap.BindPasswordAkvConfig; akv != nil {
+		vaultUri = akv.AzureKeyVaultURI
+		secretName = akv.SecretName
+		userAssignedIdentity = akv.UserAssignedIdentity
+	}
+
+	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetAppServiceAccountLdapConfiguration,
+		map[string]*llx.RawData{
+			"__id":                    llx.StringData(a.Id.Data + "/ldapConfiguration"),
+			"domain":                  llx.StringDataPtr(ldap.Domain),
+			"ldapServers":             llx.ArrayData(strPtrSliceToAny(ldap.LdapServers), types.String),
+			"ldapPort":                llx.IntDataPtr(ldap.LdapPort),
+			"secureLdapType":          llx.StringDataPtr(enumStringPtr(ldap.SecureLdapType)),
+			"bindAuthenticationLevel": llx.StringDataPtr(enumStringPtr(ldap.BindAuthenticationLevel)),
+			"bindDn":                  llx.StringDataPtr(ldap.BindDN),
+			"userDn":                  llx.StringDataPtr(ldap.UserDN),
+			"groupDn":                 llx.StringDataPtr(ldap.GroupDN),
+			"netGroupDn":              llx.StringDataPtr(ldap.NetGroupDN),
+			"certificateCnHost":       llx.StringDataPtr(ldap.CertificateCNHost),
+			"dnsServers":              llx.ArrayData(strPtrSliceToAny(ldap.DNSServers), types.String),
+			"bindPasswordVaultUri":    llx.StringDataPtr(vaultUri),
+			"bindPasswordSecretName":  llx.StringDataPtr(secretName),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	mqlLdap := res.(*mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration)
+	mqlLdap.cacheBindPasswordSecretId = netAppKeyVaultSecretId(vaultUri, secretName)
+	mqlLdap.cacheUserAssignedIdentity = convert.ToValue(userAssignedIdentity)
+	return mqlLdap, nil
+}
+
+type mqlAzureSubscriptionNetAppServiceAccountLdapConfigurationInternal struct {
+	cacheBindPasswordSecretId string
+	cacheUserAssignedIdentity string
+}
+
+func (a *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) bindPasswordSecret() (*mqlAzureSubscriptionKeyVaultServiceSecret, error) {
+	if a.cacheBindPasswordSecretId == "" {
+		a.BindPasswordSecret.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return newKeyVaultSecretResource(a.MqlRuntime, a.cacheBindPasswordSecretId)
+}
+
+func (a *mqlAzureSubscriptionNetAppServiceAccountLdapConfiguration) bindPasswordIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	if a.cacheUserAssignedIdentity == "" {
+		a.BindPasswordIdentity.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.managedIdentity",
+		map[string]*llx.RawData{"__id": llx.StringData(a.cacheUserAssignedIdentity)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionManagedIdentity), nil
 }
 
 func (a *mqlAzureSubscriptionNetAppServiceAccount) capacityPools() ([]any, error) {
