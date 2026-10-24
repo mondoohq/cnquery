@@ -110,7 +110,9 @@ mongodbatlas.cluster.clusterType 13.0.0
 mongodbatlas.cluster.configServerManagementMode 13.1.4
 mongodbatlas.cluster.configServerType 13.1.4
 mongodbatlas.cluster.createDate 13.0.0
+mongodbatlas.cluster.databaseEdition 14.0.6
 mongodbatlas.cluster.diskWarmingMode 13.1.4
+mongodbatlas.cluster.effectiveDatabaseEdition 14.0.6
 mongodbatlas.cluster.employeeAccessGrantExpiration 13.1.4
 mongodbatlas.cluster.employeeAccessGrantType 13.1.4
 mongodbatlas.cluster.encryptionAtRestProvider 13.0.0

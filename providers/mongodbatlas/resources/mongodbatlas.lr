@@ -478,6 +478,17 @@ mongodbatlas.cluster @defaults("name mongoDBMajorVersion encryptionAtRestProvide
   diskWarmingMode string
   // Whether sharding for a global cluster is self-managed rather than managed by Atlas
   globalClusterSelfManagedSharding bool
+  // Database edition requested for the cluster (such as CORE or INFINITE), null when none was requested
+  //
+  // Set only when the dedicated cluster is created or a Free or Flex cluster is
+  // upgraded to one, and immutable afterwards. Read effectiveDatabaseEdition for
+  // the edition the cluster actually runs.
+  databaseEdition string
+  // Database edition the cluster runs (such as CORE or INFINITE)
+  //
+  // Matches databaseEdition when one was requested, otherwise the default
+  // edition Atlas assigned to the cluster.
+  effectiveDatabaseEdition string
   // Cloud backup schedule and retention policy, null when cloud backup is disabled
   backupSchedule() mongodbatlas.backupScheduleConfig
   // Atlas Search and Atlas Vector Search indexes on the cluster

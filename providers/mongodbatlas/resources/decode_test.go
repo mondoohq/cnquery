@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/llx"
-	"go.mongodb.org/atlas-sdk/v20250312025/admin"
+	"go.mongodb.org/atlas-sdk/v20250312027/admin"
 )
 
 // The tests below pin the SDK struct tags for the security-relevant fields this
@@ -636,4 +636,34 @@ func TestDecodeMaintenanceWindowWithoutWavesOrDayStaysNull(t *testing.T) {
 
 	assert.Nil(t, llx.IntDataPtr(w.WaveAssignment).Value)
 	assert.Nil(t, llx.IntDataPtr(w.DayOfWeek).Value)
+}
+
+// Synthetic: payload shaped like the documented cluster response with an
+// explicitly requested edition; no live cluster was read.
+func TestDecodeClusterDatabaseEdition(t *testing.T) {
+	var c admin.ClusterDescription20240805
+	require.NoError(t, json.Unmarshal([]byte(`{
+		"name": "prod-0",
+		"databaseEdition": "INFINITE",
+		"effectiveDatabaseEdition": "INFINITE"
+	}`), &c))
+
+	require.NotNil(t, c.DatabaseEdition)
+	assert.Equal(t, "INFINITE", *c.DatabaseEdition)
+	require.NotNil(t, c.EffectiveDatabaseEdition)
+	assert.Equal(t, "INFINITE", *c.EffectiveDatabaseEdition)
+}
+
+// Synthetic: no edition was requested, so only the effective edition Atlas
+// assigned is returned and the requested one must stay null.
+func TestDecodeClusterDatabaseEditionNotRequestedStaysNull(t *testing.T) {
+	var c admin.ClusterDescription20240805
+	require.NoError(t, json.Unmarshal([]byte(`{
+		"name": "prod-0",
+		"effectiveDatabaseEdition": "CORE"
+	}`), &c))
+
+	assert.Nil(t, c.DatabaseEdition)
+	require.NotNil(t, c.EffectiveDatabaseEdition)
+	assert.Equal(t, "CORE", *c.EffectiveDatabaseEdition)
 }

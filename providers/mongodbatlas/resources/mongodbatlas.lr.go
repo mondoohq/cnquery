@@ -712,6 +712,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mongodbatlas.cluster.globalClusterSelfManagedSharding": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasCluster).GetGlobalClusterSelfManagedSharding()).ToDataRes(types.Bool)
 	},
+	"mongodbatlas.cluster.databaseEdition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasCluster).GetDatabaseEdition()).ToDataRes(types.String)
+	},
+	"mongodbatlas.cluster.effectiveDatabaseEdition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasCluster).GetEffectiveDatabaseEdition()).ToDataRes(types.String)
+	},
 	"mongodbatlas.cluster.backupSchedule": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasCluster).GetBackupSchedule()).ToDataRes(types.Resource("mongodbatlas.backupScheduleConfig"))
 	},
@@ -2274,6 +2280,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mongodbatlas.cluster.globalClusterSelfManagedSharding": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlasCluster).GlobalClusterSelfManagedSharding, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.cluster.databaseEdition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasCluster).DatabaseEdition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.cluster.effectiveDatabaseEdition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasCluster).EffectiveDatabaseEdition, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"mongodbatlas.cluster.backupSchedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5210,6 +5224,8 @@ type mqlMongodbatlasCluster struct {
 	ReplicaSetScalingStrategy                 plugin.TValue[string]
 	DiskWarmingMode                           plugin.TValue[string]
 	GlobalClusterSelfManagedSharding          plugin.TValue[bool]
+	DatabaseEdition                           plugin.TValue[string]
+	EffectiveDatabaseEdition                  plugin.TValue[string]
 	BackupSchedule                            plugin.TValue[*mqlMongodbatlasBackupScheduleConfig]
 	SearchIndexes                             plugin.TValue[[]any]
 	AdvancedConfiguration                     plugin.TValue[*mqlMongodbatlasClusterAdvancedConfig]
@@ -5382,6 +5398,14 @@ func (c *mqlMongodbatlasCluster) GetDiskWarmingMode() *plugin.TValue[string] {
 
 func (c *mqlMongodbatlasCluster) GetGlobalClusterSelfManagedSharding() *plugin.TValue[bool] {
 	return &c.GlobalClusterSelfManagedSharding
+}
+
+func (c *mqlMongodbatlasCluster) GetDatabaseEdition() *plugin.TValue[string] {
+	return &c.DatabaseEdition
+}
+
+func (c *mqlMongodbatlasCluster) GetEffectiveDatabaseEdition() *plugin.TValue[string] {
+	return &c.EffectiveDatabaseEdition
 }
 
 func (c *mqlMongodbatlasCluster) GetBackupSchedule() *plugin.TValue[*mqlMongodbatlasBackupScheduleConfig] {

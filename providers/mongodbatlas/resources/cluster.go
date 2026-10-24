@@ -11,7 +11,7 @@ import (
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/types"
-	"go.mongodb.org/atlas-sdk/v20250312025/admin"
+	"go.mongodb.org/atlas-sdk/v20250312027/admin"
 )
 
 // newMqlMongodbatlasCluster maps a cluster to its resource, shared by the
@@ -125,6 +125,8 @@ func newMqlMongodbatlasCluster(runtime *plugin.Runtime, pid string, c admin.Clus
 		"replicaSetScalingStrategy":                 llx.StringDataPtr(c.ReplicaSetScalingStrategy),
 		"diskWarmingMode":                           llx.StringDataPtr(c.DiskWarmingMode),
 		"globalClusterSelfManagedSharding":          llx.BoolData(c.GetGlobalClusterSelfManagedSharding()),
+		"databaseEdition":                           llx.StringDataPtr(c.DatabaseEdition),
+		"effectiveDatabaseEdition":                  llx.StringDataPtr(c.EffectiveDatabaseEdition),
 	})
 	if err != nil {
 		return nil, err

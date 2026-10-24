@@ -7,7 +7,7 @@ go 1.26.10
 require (
 	github.com/stretchr/testify v1.12.1
 	go.mondoo.com/mql v0.0.0-20261019065417-1fcdd84493fd
-	go.mongodb.org/atlas-sdk/v20250312025 v20250312025.0.0
+	go.mongodb.org/atlas-sdk/v20250312027 v20250312027.0.0
 )
 
 require go.opentelemetry.io/otel/log v1.47.0 // indirect
