@@ -162,9 +162,9 @@ func splitNameVersion(key string) (string, string) {
 	if i := strings.IndexByte(key, '_'); i >= 0 {
 		key = key[:i]
 	}
-	at := strings.LastIndexByte(key, '@')
-	if at <= 0 { // no version, or leading-scope "@" only
+	name, version, ok := strings.CutLast(key, "@")
+	if !ok || name == "" { // no version, or leading-scope "@" only
 		return key, ""
 	}
-	return key[:at], key[at+1:]
+	return name, version
 }

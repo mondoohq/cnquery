@@ -305,8 +305,7 @@ func zoneFileMatches(fs afero.Fs, tz string, localtime []byte) zoneFileMatch {
 // e.g., "/usr/share/zoneinfo/America/New_York" → "America/New_York"
 func extractTZFromPath(path string) string {
 	const marker = "zoneinfo/"
-	if idx := strings.LastIndex(path, marker); idx >= 0 {
-		tz := path[idx+len(marker):]
+	if _, tz, ok := strings.CutLast(path, marker); ok {
 		if tz == "" || tz == "localtime" {
 			return ""
 		}

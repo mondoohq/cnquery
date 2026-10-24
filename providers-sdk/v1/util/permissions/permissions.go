@@ -1902,8 +1902,8 @@ func azureOperationFromPath(urlPath, httpMethod string) (string, string) {
 	urlPath, _, _ = strings.Cut(urlPath, "?")
 	ns := "Microsoft.Resources"
 	rest := urlPath
-	if i := strings.LastIndex(urlPath, "/providers/"); i >= 0 {
-		rest = urlPath[i+len("/providers/"):]
+	if _, after, ok := strings.CutLast(urlPath, "/providers/"); ok {
+		rest = after
 		ns, rest, _ = strings.Cut(rest, "/")
 	}
 	var segs []string

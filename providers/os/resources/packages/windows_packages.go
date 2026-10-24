@@ -2024,8 +2024,8 @@ func parseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 // regardless of which root alias (HKCU:\, Registry::HKEY_USERS\<sid>\..., a
 // PowerShell PSPath's "provider::" prefix) was used to read it.
 func registryPathLeaf(path string) string {
-	if i := strings.LastIndexByte(path, '\\'); i >= 0 {
-		return path[i+1:]
+	if _, after, ok := strings.CutLast(path, "\\"); ok {
+		return after
 	}
 	return path
 }

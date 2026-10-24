@@ -128,8 +128,8 @@ func findAixProto(fields []string) (int, string, bool) {
 // and for an IPv6 address, 4 for an IPv4 address.
 func aixBareSocketFamily(local string) string {
 	addr := local
-	if i := strings.LastIndex(local, "."); i >= 0 {
-		addr = local[:i]
+	if before, _, ok := strings.CutLast(local, "."); ok {
+		addr = before
 	}
 	if addr == "*" || strings.Contains(addr, ":") {
 		return "6"
@@ -158,8 +158,8 @@ func splitDottedEndpoint(s string, v6 bool) (string, int64) {
 	}
 
 	addr, portStr := s, ""
-	if i := strings.LastIndex(s, "."); i >= 0 {
-		addr, portStr = s[:i], s[i+1:]
+	if before, after, ok := strings.CutLast(s, "."); ok {
+		addr, portStr = before, after
 	}
 
 	var port int64

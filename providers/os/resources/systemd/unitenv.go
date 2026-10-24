@@ -274,8 +274,8 @@ func findDropIns(afs *afero.Afero, unitName string, dirs DropInDirs, aliases ...
 		}
 	}
 	if dirs.TypeLevel {
-		if dot := strings.LastIndex(unitName, "."); dot >= 0 && dot < len(unitName)-1 {
-			typeDir := unitName[dot+1:] + ".d"
+		if _, unitType, ok := strings.CutLast(unitName, "."); ok && unitType != "" {
+			typeDir := unitType + ".d"
 			for _, UnitDir := range slices.Backward(UnitDirs) {
 				searched = append(searched, path.Join(UnitDir, typeDir))
 			}
@@ -331,11 +331,11 @@ func unitNamePrefixes(unitName string) []string {
 
 	var out []string
 	for {
-		dash := strings.LastIndex(stem, "-")
-		if dash < 0 {
+		before, _, ok := strings.CutLast(stem, "-")
+		if !ok {
 			return out
 		}
-		stem = stem[:dash]
+		stem = before
 		out = append(out, stem+"-"+suffix)
 	}
 }

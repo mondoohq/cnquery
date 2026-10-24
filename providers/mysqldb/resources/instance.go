@@ -302,8 +302,8 @@ func keyringComponent(status map[string]string) (string, bool) {
 // validate_password from file://component_validate_password.
 func componentName(urn string) string {
 	name := urn
-	if i := strings.LastIndex(name, "/"); i >= 0 {
-		name = name[i+1:]
+	if _, after, ok := strings.CutLast(name, "/"); ok {
+		name = after
 	}
 	return strings.TrimPrefix(name, "component_")
 }

@@ -255,8 +255,8 @@ func inlineConcat(s string, vars map[string]string) string {
 	return concatRe.ReplaceAllStringFunc(s, func(m string) string {
 		sub := concatRe.FindStringSubmatch(m)
 		name := sub[2]
-		if i := strings.LastIndex(name, "."); i >= 0 {
-			name = name[i+1:]
+		if _, after, ok := strings.CutLast(name, "."); ok {
+			name = after
 		}
 		v, ok := vars[name]
 		if !ok {
@@ -377,8 +377,8 @@ func resolveInterp(v string, vars map[string]string) string {
 		name := strings.Trim(strings.TrimPrefix(ref, "$"), "{}")
 		// A qualified reference (project.ext.fooVersion) resolves on its last
 		// segment, which is the property name.
-		if i := strings.LastIndex(name, "."); i >= 0 {
-			name = name[i+1:]
+		if _, after, ok := strings.CutLast(name, "."); ok {
+			name = after
 		}
 		return vars[name]
 	})

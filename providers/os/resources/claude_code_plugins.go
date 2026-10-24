@@ -131,8 +131,8 @@ func claudePluginID(name, scope, projectPath string) string {
 // claudePluginMarketplace returns the marketplace part of a plugin name of
 // the form "<plugin>@<marketplace>".
 func claudePluginMarketplace(name string) string {
-	if i := strings.LastIndex(name, "@"); i >= 0 {
-		return name[i+1:]
+	if _, after, ok := strings.CutLast(name, "@"); ok {
+		return after
 	}
 	return ""
 }

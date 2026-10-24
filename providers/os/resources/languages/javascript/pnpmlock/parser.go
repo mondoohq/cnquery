@@ -121,13 +121,13 @@ func parseAtSeparatedKey(key string) (name, ver string, ok bool) {
 
 	// For scoped packages like @scope/name@1.0.0, we need to find the
 	// last @ that separates name from version (not the leading @).
-	atIdx := strings.LastIndex(key, "@")
-	if atIdx <= 0 {
+	before, after, found := strings.CutLast(key, "@")
+	if !found || before == "" {
 		return "", "", false
 	}
 
-	name = key[:atIdx]
-	ver = cleanVersionSuffix(key[atIdx+1:])
+	name = before
+	ver = cleanVersionSuffix(after)
 	if name == "" || ver == "" {
 		return "", "", false
 	}

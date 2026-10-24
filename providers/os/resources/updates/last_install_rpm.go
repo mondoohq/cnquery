@@ -119,8 +119,8 @@ func rpmNevraEVR(nevra, name string) string {
 	if evra == nevra {
 		return ""
 	}
-	if dot := strings.LastIndex(evra, "."); dot > 0 {
-		return evra[:dot]
+	if before, _, ok := strings.CutLast(evra, "."); ok && before != "" {
+		return before
 	}
 	return evra
 }
@@ -232,13 +232,13 @@ func parseDnfTime(value string) (time.Time, error) {
 // unchanged, which is what makes it the key for vendor attribution against
 // the rpm database.
 func rpmNevraName(nevra string) string {
-	release := strings.LastIndex(nevra, "-")
-	if release <= 0 {
+	nameVersion, _, ok := strings.CutLast(nevra, "-")
+	if !ok || nameVersion == "" {
 		return ""
 	}
-	version := strings.LastIndex(nevra[:release], "-")
-	if version <= 0 {
+	name, _, ok := strings.CutLast(nameVersion, "-")
+	if !ok || name == "" {
 		return ""
 	}
-	return nevra[:version]
+	return name
 }

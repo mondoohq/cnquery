@@ -220,8 +220,8 @@ func (g *mqlGcpOrganization) orgPolicies() ([]any, error) {
 // Format: {parent}/policies/{constraintName}
 // Returns the full name unchanged if the "/policies/" segment is not found.
 func extractConstraintName(policyName string) string {
-	if idx := strings.LastIndex(policyName, "/policies/"); idx != -1 {
-		return policyName[idx+len("/policies/"):]
+	if _, after, ok := strings.CutLast(policyName, "/policies/"); ok {
+		return after
 	}
 	return policyName
 }

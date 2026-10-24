@@ -666,11 +666,10 @@ func splitNamespace(ns string) (string, string) {
 		return ns, ""
 	}
 	rest := strings.TrimPrefix(ns, prefix)
-	idx := strings.LastIndex(rest, ":")
-	if idx < 0 {
+	before, version, ok := strings.CutLast(rest, ":")
+	if !ok {
 		return rest, ""
 	}
-	version := rest[idx+1:]
 	// Only a trailing numeric component is a version. A name that itself
 	// contains a colon and no version must not lose its last segment.
 	if version == "" || strings.IndexFunc(version, func(r rune) bool {
@@ -678,7 +677,7 @@ func splitNamespace(ns string) (string, string) {
 	}) >= 0 {
 		return rest, ""
 	}
-	return rest[:idx], version
+	return before, version
 }
 
 // Body re-wraps the subsystem's inner XML so it can be unmarshalled into a

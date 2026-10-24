@@ -358,8 +358,8 @@ func apkStripVersion(s string) string {
 	if loc := apkReleaseSuffix.FindStringIndex(s); loc != nil {
 		s = s[:loc[0]]
 	}
-	if i := strings.LastIndex(s, "-"); i >= 0 {
-		s = s[:i]
+	if before, _, ok := strings.CutLast(s, "-"); ok {
+		s = before
 	}
 	return s
 }

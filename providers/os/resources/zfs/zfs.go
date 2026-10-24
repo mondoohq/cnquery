@@ -685,8 +685,8 @@ func statusVdev(fields []string, fullFields []string, counters int) (Vdev, error
 // "mirror-0", "raidz2-1", "draid1:2d:4c:0s-0", "spare-3", or "replacing-0".
 func groupVdevType(name string) string {
 	t := name
-	if i := strings.LastIndexByte(t, '-'); i > 0 {
-		t = t[:i]
+	if before, _, ok := strings.CutLast(t, "-"); ok && before != "" {
+		t = before
 	}
 	if i := strings.IndexByte(t, ':'); i > 0 {
 		t = t[:i]

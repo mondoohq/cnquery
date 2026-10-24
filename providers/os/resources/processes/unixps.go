@@ -70,8 +70,8 @@ func (p ProcessEntry) ToOSProcess() *OSProcess {
 	// Deliberately not path.Base: it maps "" to "." and "/usr/bin/" to "bin",
 	// where this reports "" for both.
 	executable := executablePath
-	if i := strings.LastIndexByte(executablePath, '/'); i >= 0 {
-		executable = executablePath[i+1:]
+	if _, after, ok := strings.CutLast(executablePath, "/"); ok {
+		executable = after
 	}
 
 	return &OSProcess{

@@ -317,8 +317,8 @@ func parseExposePort(spec string) ([]dockerfilePort, error) {
 	// the container port is always the last colon-separated part, after any
 	// ip and host port, IPv6 addresses included
 	rest := spec
-	if i := strings.LastIndex(rest, ":"); i >= 0 {
-		rest = rest[i+1:]
+	if _, after, ok := strings.CutLast(rest, ":"); ok {
+		rest = after
 	}
 	portRange, proto, _ := strings.Cut(rest, "/")
 	proto = strings.ToLower(proto)

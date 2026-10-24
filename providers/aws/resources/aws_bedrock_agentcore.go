@@ -703,11 +703,11 @@ func (a *mqlAwsBedrockAgentCoreCapacityProvider) volumes() ([]any, error) {
 // capacityProviderIdFromArn pulls the capacity provider id out of an ARN of the
 // form arn:aws:bedrock-agentcore:<region>:<account>:capacity-provider/<id>.
 func capacityProviderIdFromArn(capacityProviderArn string) (string, error) {
-	idx := strings.LastIndex(capacityProviderArn, "/")
-	if idx < 0 || idx == len(capacityProviderArn)-1 {
+	_, after, ok := strings.CutLast(capacityProviderArn, "/")
+	if !ok || after == "" {
 		return "", fmt.Errorf("cannot derive capacity provider id from arn %q", capacityProviderArn)
 	}
-	return capacityProviderArn[idx+1:], nil
+	return after, nil
 }
 
 // initAwsBedrockAgentCoreCapacityProvider resolves a capacity provider from its
@@ -1554,8 +1554,8 @@ func initAwsBedrockAgentCoreWorkloadIdentity(runtime *plugin.Runtime, args map[s
 		}
 	}
 	if args["name"] == nil {
-		if idx := strings.LastIndex(arnVal, "/"); idx >= 0 && idx < len(arnVal)-1 {
-			args["name"] = llx.StringData(arnVal[idx+1:])
+		if _, name, ok := strings.CutLast(arnVal, "/"); ok && name != "" {
+			args["name"] = llx.StringData(name)
 		}
 	}
 	return args, nil, nil

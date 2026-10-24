@@ -222,8 +222,8 @@ func parseINIInventory(b *inventoryBuilder, data []byte) {
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
 			name := strings.TrimSuffix(strings.TrimPrefix(line, "["), "]")
 			section, sectionType = name, "hosts"
-			if idx := strings.LastIndex(name, ":"); idx >= 0 {
-				section, sectionType = name[:idx], name[idx+1:]
+			if before, after, ok := strings.CutLast(name, ":"); ok {
+				section, sectionType = before, after
 			}
 			b.group(section) // ensure empty groups still appear
 			continue

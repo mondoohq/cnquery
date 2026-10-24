@@ -249,8 +249,8 @@ func (s *mqlPamConf) services(files []any) (map[string]any, error) {
 // preserved — PAM module names are conventionally lowercase, but we don't
 // fold them.
 func canonicalizePamModuleName(name string) string {
-	if idx := strings.LastIndex(name, "/"); idx >= 0 {
-		name = name[idx+1:]
+	if _, after, ok := strings.CutLast(name, "/"); ok {
+		name = after
 	}
 	name = strings.TrimSuffix(name, ".so")
 	return name

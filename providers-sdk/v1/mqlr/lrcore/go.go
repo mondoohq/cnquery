@@ -588,22 +588,22 @@ func (b *goBuilder) checkOwnerFilledResourcesArePrivate(all []*Resource) {
 			continue
 		}
 
-		dot := strings.LastIndex(r.ID, ".")
-		if dot == -1 {
+		ownerID, field, found := strings.CutLast(r.ID, ".")
+		if !found {
 			continue
 		}
-		owner, ok := byID[r.ID[:dot]]
+		owner, ok := byID[ownerID]
 		if !ok {
 			continue
 		}
-		if !b.declaresAccessorFor(owner, r.ID[dot+1:], r.ID) {
+		if !b.declaresAccessorFor(owner, field, r.ID) {
 			continue
 		}
 
 		b.errors.Add(fmt.Errorf(
 			"resource %s is public, but only the `%s` accessor on %s can fill it. "+
 				"A path like `%s.<field>` therefore compiles to a bare %s and every field reads null. Mark the resource `private`",
-			r.ID, r.ID[dot+1:], owner.ID, r.ID, r.ID))
+			r.ID, field, owner.ID, r.ID, r.ID))
 	}
 }
 

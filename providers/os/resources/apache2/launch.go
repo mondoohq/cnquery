@@ -165,8 +165,8 @@ func (s SUSESysconfig) Launch() Launch {
 			d = "/etc/apache2/" + d
 		}
 		parent := d
-		if i := strings.LastIndexByte(d, '/'); i >= 0 {
-			parent = d[:i]
+		if before, _, ok := strings.CutLast(d, "/"); ok {
+			parent = before
 		}
 		if exists(d) || exists(parent) {
 			l.PostDirectives = append(l.PostDirectives, "Include "+d)

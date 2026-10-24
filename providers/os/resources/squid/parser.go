@@ -314,9 +314,9 @@ func parseListen(directive string, args []string) Listen {
 			}
 		}
 	default:
-		if i := strings.LastIndex(target, ":"); i >= 0 {
-			l.Address = target[:i]
-			if p, ok := parsePort(target[i+1:]); ok {
+		if before, after, found := strings.CutLast(target, ":"); found {
+			l.Address = before
+			if p, ok := parsePort(after); ok {
 				l.Port = p
 			}
 		} else if p, ok := parsePort(target); ok {

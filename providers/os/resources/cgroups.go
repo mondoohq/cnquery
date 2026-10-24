@@ -412,11 +412,11 @@ func parentCgroupPath(path string) string {
 	if path == "/" {
 		return "/"
 	}
-	idx := strings.LastIndexByte(path, '/')
-	if idx <= 0 {
+	before, _, ok := strings.CutLast(path, "/")
+	if !ok || before == "" {
 		return "/"
 	}
-	return path[:idx]
+	return before
 }
 
 // cgroupUnitTypeFromPath infers the systemd unit kind from the leaf
@@ -429,8 +429,8 @@ func cgroupUnitTypeFromPath(path string) string {
 		return "root"
 	}
 	leaf := path
-	if idx := strings.LastIndexByte(path, '/'); idx >= 0 {
-		leaf = path[idx+1:]
+	if _, after, ok := strings.CutLast(path, "/"); ok {
+		leaf = after
 	}
 	switch {
 	case strings.HasSuffix(leaf, ".slice"):

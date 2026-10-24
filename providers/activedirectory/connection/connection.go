@@ -683,8 +683,8 @@ func domainFromHost(host string) string {
 // ("user", "REALM"). If no '@' is present, realm is empty and the
 // gokrb5 client uses the default realm from krb5.conf.
 func splitPrincipal(upn string) (string, string) {
-	if idx := strings.LastIndex(upn, "@"); idx >= 0 {
-		return upn[:idx], upn[idx+1:]
+	if before, after, ok := strings.CutLast(upn, "@"); ok {
+		return before, after
 	}
 	return upn, ""
 }

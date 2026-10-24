@@ -443,8 +443,8 @@ func splitEVR(evr string) (epoch uint64, version, release string) {
 			evr = evr[i+1:]
 		}
 	}
-	if i := strings.LastIndexByte(evr, '-'); i >= 0 {
-		return epoch, evr[:i], evr[i+1:]
+	if before, after, ok := strings.CutLast(evr, "-"); ok {
+		return epoch, before, after
 	}
 	return epoch, evr, ""
 }

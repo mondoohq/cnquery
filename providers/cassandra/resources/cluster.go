@@ -235,8 +235,8 @@ func (r *mqlCassandraCluster) keyspaces() ([]any, error) {
 	list := []any{}
 	for _, row := range rows {
 		strategy := row.replication["class"]
-		if i := strings.LastIndex(strategy, "."); i >= 0 {
-			strategy = strategy[i+1:]
+		if _, after, ok := strings.CutLast(strategy, "."); ok {
+			strategy = after
 		}
 		factors := map[string]any{}
 		for k, v := range row.replication {

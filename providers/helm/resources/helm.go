@@ -716,9 +716,9 @@ func parseOciRef(repository, version string) ociRef {
 	rest := strings.TrimPrefix(strings.TrimSpace(repository), "oci://")
 
 	// A digest pin (@sha256:...) takes precedence over a :tag suffix.
-	if at := strings.LastIndex(rest, "@"); at != -1 {
-		ref.digest = rest[at+1:]
-		rest = rest[:at]
+	if before, after, ok := strings.CutLast(rest, "@"); ok {
+		ref.digest = after
+		rest = before
 	}
 
 	// Split host from path. Everything before the first "/" is the
@@ -731,9 +731,9 @@ func parseOciRef(repository, version string) ociRef {
 		// was found, and only if the colon isn't part of a host:port —
 		// which lives in the registry segment, already split off).
 		if ref.digest == "" {
-			if colon := strings.LastIndex(repoPath, ":"); colon != -1 {
-				ref.tag = repoPath[colon+1:]
-				repoPath = repoPath[:colon]
+			if before, after, ok := strings.CutLast(repoPath, ":"); ok {
+				ref.tag = after
+				repoPath = before
 			}
 		}
 		ref.repository = repoPath

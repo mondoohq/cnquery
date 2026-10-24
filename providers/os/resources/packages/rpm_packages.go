@@ -211,11 +211,11 @@ func rpmSourceName(sourceRpm string) string {
 		}
 	}
 	for range 2 { // drop the release, then the version
-		i := strings.LastIndex(s, "-")
-		if i <= 0 {
+		before, _, found := strings.CutLast(s, "-")
+		if !found || before == "" {
 			return ""
 		}
-		s = s[:i]
+		s = before
 	}
 	return s
 }

@@ -169,8 +169,8 @@ func oktaLinkHref(link any) string {
 // lastPathSegment returns the final non-empty segment of a URL path.
 func lastPathSegment(s string) string {
 	s = strings.TrimRight(s, "/")
-	if i := strings.LastIndex(s, "/"); i >= 0 {
-		return s[i+1:]
+	if _, after, ok := strings.CutLast(s, "/"); ok {
+		return after
 	}
 	return s
 }

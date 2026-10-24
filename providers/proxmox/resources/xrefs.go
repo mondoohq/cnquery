@@ -130,12 +130,11 @@ func (r *mqlProxmoxToken) owner() (*mqlProxmoxUser, error) {
 	// Token id shape is `user@realm!tokenid`. Anything else is a token
 	// the API would have refused to create, so treat unparseable ids as
 	// "no resolvable owner" rather than failing the whole query.
-	bang := strings.LastIndex(r.Id.Data, "!")
-	if bang <= 0 {
+	ownerID, _, ok := strings.CutLast(r.Id.Data, "!")
+	if !ok || ownerID == "" {
 		r.Owner.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	ownerID := r.Id.Data[:bang]
 	res, err := NewResource(r.MqlRuntime, "proxmox.user", map[string]*llx.RawData{
 		"id": llx.StringData(ownerID),
 	})

@@ -642,8 +642,8 @@ func parseGitRemoteURL(remote string) (host string, name string) {
 	case strings.Contains(remote, "://"):
 		// scheme://[user@]host[:port]/path
 		rest = remote[strings.Index(remote, "://")+3:]
-		if at := strings.LastIndex(rest, "@"); at != -1 {
-			rest = rest[at+1:]
+		if _, after, ok := strings.CutLast(rest, "@"); ok {
+			rest = after
 		}
 		slash := strings.Index(rest, "/")
 		if slash == -1 {

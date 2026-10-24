@@ -1213,9 +1213,9 @@ func parseNginxListen(args []string) nginxListen {
 		if idx+2 < len(addr) && addr[idx+1] == ':' {
 			l.Port, _ = parsePort(addr[idx+2:])
 		}
-	} else if i := strings.LastIndex(addr, ":"); i >= 0 {
-		l.Address = addr[:i]
-		l.Port, _ = parsePort(addr[i+1:])
+	} else if before, after, ok := strings.CutLast(addr, ":"); ok {
+		l.Address = before
+		l.Port, _ = parsePort(after)
 	} else {
 		// Could be just a port number, or just an address.
 		if p, ok := parsePort(addr); ok {

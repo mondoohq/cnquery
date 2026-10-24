@@ -21,11 +21,11 @@ import (
 // acs:ram::<account>:role/<name>, returning "" when the ARN has no role segment.
 func ramRoleNameFromArn(arn string) string {
 	const marker = "role/"
-	idx := strings.LastIndex(arn, marker)
-	if idx < 0 {
+	_, after, ok := strings.CutLast(arn, marker)
+	if !ok {
 		return ""
 	}
-	return arn[idx+len(marker):]
+	return after
 }
 
 func (r *mqlAlicloudFc) id() (string, error) {

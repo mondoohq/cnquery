@@ -32,10 +32,9 @@ func (d *PyTorchHubDetector) Detect(ctx DetectContext) []ModelInfo {
 
 		name := strings.TrimSuffix(strings.TrimSuffix(e.Name(), ".pth"), ".pt")
 		// Strip trailing hash: resnet50-0676ba61 -> resnet50
-		if idx := strings.LastIndex(name, "-"); idx > 0 {
-			candidate := name[idx+1:]
+		if before, candidate, ok := strings.CutLast(name, "-"); ok && before != "" {
 			if len(candidate) >= 6 && isHex(candidate) {
-				name = name[:idx]
+				name = before
 			}
 		}
 

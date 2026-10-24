@@ -65,12 +65,12 @@ func ParsePs(out string) []Process {
 // and parentheses, so the fields are counted from the last ")".
 func ParseStatPPid(stat []byte) (int, bool) {
 	s := string(stat)
-	end := strings.LastIndexByte(s, ')')
-	if end < 0 {
+	_, rest, ok := strings.CutLast(s, ")")
+	if !ok {
 		return 0, false
 	}
 	// after ")" come the state and then the parent pid
-	fields := strings.Fields(s[end+1:])
+	fields := strings.Fields(rest)
 	if len(fields) < 2 {
 		return 0, false
 	}

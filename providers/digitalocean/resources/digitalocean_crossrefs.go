@@ -18,8 +18,8 @@ import (
 func doURNId(s string) string {
 	s = strings.TrimSpace(s)
 	if strings.HasPrefix(s, "do:") {
-		if i := strings.LastIndexByte(s, ':'); i >= 0 {
-			return s[i+1:]
+		if _, after, ok := strings.CutLast(s, ":"); ok {
+			return after
 		}
 	}
 	return s

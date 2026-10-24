@@ -767,8 +767,8 @@ var nftTextElementAttrs = []string{" timeout ", " expires ", " counter ", " comm
 func nftTextElements(s string) json.RawMessage {
 	s = strings.TrimSpace(s)
 	s = strings.TrimPrefix(s, "{")
-	if i := strings.LastIndex(s, "}"); i >= 0 {
-		s = s[:i]
+	if before, _, ok := strings.CutLast(s, "}"); ok {
+		s = before
 	}
 
 	var elems []any

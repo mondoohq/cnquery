@@ -313,8 +313,8 @@ func (s *Schema) AllProviderRoots() map[string]string {
 // Keying version metadata on the raw id would therefore lose the association
 // for more than half the providers, silently.
 func ProviderKey(id string) string {
-	if i := strings.LastIndexByte(id, '/'); i >= 0 && i+1 < len(id) {
-		return id[i+1:]
+	if _, after, ok := strings.CutLast(id, "/"); ok && after != "" {
+		return after
 	}
 	return id
 }

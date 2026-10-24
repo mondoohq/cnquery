@@ -282,11 +282,11 @@ func iconFilePath(icon string) string {
 // parentDir returns the directory part of a Windows file path.
 func parentDir(p string) string {
 	p = strings.ReplaceAll(p, "/", `\`)
-	i := strings.LastIndexByte(p, '\\')
-	if i <= 0 {
+	before, _, ok := strings.CutLast(p, "\\")
+	if !ok || before == "" {
 		return ""
 	}
-	return p[:i]
+	return before
 }
 
 // uninstallEntryDir derives the directory an Uninstall entry's product lives

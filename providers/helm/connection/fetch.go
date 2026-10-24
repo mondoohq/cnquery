@@ -295,8 +295,8 @@ func httpGetBytes(rawURL, username, password string) ([]byte, error) {
 // lastPathSegment returns the final path segment of a registry reference,
 // where a tag (":") or digest ("@") would appear.
 func lastPathSegment(ref string) string {
-	if i := strings.LastIndex(ref, "/"); i != -1 {
-		return ref[i+1:]
+	if _, after, ok := strings.CutLast(ref, "/"); ok {
+		return after
 	}
 	return ref
 }

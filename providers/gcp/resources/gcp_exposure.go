@@ -176,11 +176,11 @@ func policyAppliesInRegion(policyRegionUrl, instanceRegion string) bool {
 // "us-central1" for "us-central1-a". It returns "" for a name that does not
 // have the region-letter shape.
 func regionFromZoneName(zone string) string {
-	i := strings.LastIndex(zone, "-")
-	if i <= 0 || i == len(zone)-1 {
+	before, after, ok := strings.CutLast(zone, "-")
+	if !ok || before == "" || after == "" {
 		return ""
 	}
-	return zone[:i]
+	return before
 }
 
 // policyRuleOpenIngress reports whether a network firewall policy rule admits
@@ -273,11 +273,11 @@ func policyAppliesToNetworks(associations []any, instanceNetworks map[string]boo
 // networkNameFromUrl returns the trailing network name from a GCP network URL or
 // partial reference, so full URLs and short names compare equal.
 func networkNameFromUrl(url string) string {
-	if i := strings.LastIndex(url, "/networks/"); i >= 0 {
-		return url[i+len("/networks/"):]
+	if _, after, ok := strings.CutLast(url, "/networks/"); ok {
+		return after
 	}
-	if i := strings.LastIndex(url, "/"); i >= 0 {
-		return url[i+1:]
+	if _, after, ok := strings.CutLast(url, "/"); ok {
+		return after
 	}
 	return url
 }

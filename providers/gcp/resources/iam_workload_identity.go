@@ -384,8 +384,8 @@ func flattenWifProviderConfig(p *iam.WorkloadIdentityPoolProvider) (providerType
 // lastSegment returns the substring after the final "/" in a slash-delimited
 // resource name, or the original string if no "/" is present.
 func lastSegment(name string) string {
-	if i := strings.LastIndex(name, "/"); i >= 0 {
-		return name[i+1:]
+	if _, after, ok := strings.CutLast(name, "/"); ok {
+		return after
 	}
 	return name
 }

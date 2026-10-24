@@ -92,18 +92,18 @@ func (p *Parser) Parse(content string) []Entry {
 			e.Arguments = strings.Join(fields[fixedFields:], " ")
 		}
 
-		idx := strings.LastIndexByte(e.Name, ':')
+		addr, name, hasAddr := strings.CutLast(e.Name, ":")
 		switch {
 		case e.Protocol == "unix":
 			// Unix-domain services are named by a socket path. FreeBSD lets
 			// the path carry a :user:group:mode: ownership prefix, which is
 			// not an address.
-			if idx >= 0 {
-				e.Name = e.Name[idx+1:]
+			if hasAddr {
+				e.Name = name
 			}
-		case idx >= 0:
-			e.Address = normalizeAddress(e.Name[:idx])
-			e.Name = e.Name[idx+1:]
+		case hasAddr:
+			e.Address = normalizeAddress(addr)
+			e.Name = name
 		default:
 			e.Address = p.defaultAddress
 		}

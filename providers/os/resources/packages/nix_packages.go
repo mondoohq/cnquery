@@ -396,14 +396,14 @@ func splitNixNameVersion(s string) (string, string) {
 	// linux-6.12.93-modules-shrunk, so strip for as long as the tail is one.
 	// Each pass removes a component, so this ends.
 	for {
-		i := strings.LastIndexByte(version, '-')
-		if i == -1 {
+		before, after, found := strings.CutLast(version, "-")
+		if !found {
 			break
 		}
-		if _, ok := nixOutputNames[version[i+1:]]; !ok {
+		if _, ok := nixOutputNames[after]; !ok {
 			break
 		}
-		version = version[:i]
+		version = before
 	}
 
 	return name, version

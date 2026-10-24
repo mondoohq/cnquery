@@ -975,9 +975,9 @@ func parseImageReference(ref string) (registry, repository, tag, digest string) 
 		registry = "docker.io"
 	}
 
-	if i := strings.LastIndexByte(name, ':'); i >= 0 {
-		tag = name[i+1:]
-		repository = name[:i]
+	if before, after, ok := strings.CutLast(name, ":"); ok {
+		tag = after
+		repository = before
 	} else {
 		repository = name
 	}

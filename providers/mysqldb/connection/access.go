@@ -58,11 +58,11 @@ func granteeString(user, host string) string {
 // grantee string. A user name may contain '@'; the host never does, so the
 // split is at the last one.
 func parseCurrentUser(s string) string {
-	i := strings.LastIndex(s, "@")
-	if i < 0 {
+	before, after, ok := strings.CutLast(s, "@")
+	if !ok {
 		return granteeString(s, "")
 	}
-	return granteeString(s[:i], s[i+1:])
+	return granteeString(before, after)
 }
 
 // grantRow is one row of information_schema.USER_PRIVILEGES.

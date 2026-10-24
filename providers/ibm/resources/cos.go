@@ -31,11 +31,11 @@ const allUsersURI = "http://acs.amazonaws.com/groups/global/AllUsers"
 // us-south-smart, us-standard, or ams03-onerate_active, into its location and
 // storage class. The storage class is the last dash-separated part.
 func splitLocationConstraint(lc string) (location, storageClass string) {
-	i := strings.LastIndex(lc, "-")
-	if i <= 0 {
+	before, after, ok := strings.CutLast(lc, "-")
+	if !ok || before == "" {
 		return lc, ""
 	}
-	return lc[:i], lc[i+1:]
+	return before, after
 }
 
 // bucketCRN builds a bucket's CRN from its instance's CRN, which ends in

@@ -96,18 +96,15 @@ func (s *AlpineReboot) installedVersion(name string) (string, bool, error) {
 // uname -r prints it, to the package it was installed from and that package's
 // version: `linux-<flavor>` at `<ver>-r<rel>`.
 func alpineKernelPackage(release string) (name string, version string, ok bool) {
-	i := strings.LastIndexByte(release, '-')
-	if i <= 0 || i == len(release)-1 {
+	rest, flavor, found := strings.CutLast(release, "-")
+	if !found || rest == "" || flavor == "" {
 		return "", "", false
 	}
-	flavor := release[i+1:]
-	rest := release[:i]
 
-	j := strings.LastIndexByte(rest, '-')
-	if j <= 0 || j == len(rest)-1 {
+	ver, rel, found := strings.CutLast(rest, "-")
+	if !found || ver == "" || rel == "" {
 		return "", "", false
 	}
-	ver, rel := rest[:j], rest[j+1:]
 	for _, c := range rel {
 		if c < '0' || c > '9' {
 			return "", "", false

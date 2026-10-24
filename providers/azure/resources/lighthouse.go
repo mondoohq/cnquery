@@ -370,11 +370,11 @@ func (a *mqlAzureSubscriptionLighthouseServiceRegistrationAssignment) registrati
 }
 
 func lastPathSegment(s string) string {
-	idx := strings.LastIndex(s, "/")
-	if idx == -1 {
+	_, after, ok := strings.CutLast(s, "/")
+	if !ok {
 		return s
 	}
-	return s[idx+1:]
+	return after
 }
 
 // assignmentScope returns the delegated scope an assignment applies to by

@@ -54,12 +54,10 @@ func parseGPLinks(gplink string) []gpLinkEntry {
 	entries := make([]gpLinkEntry, 0, len(raw))
 	for _, r := range raw {
 		// Each entry: "LDAP://DN;status"
-		semicolon := strings.LastIndex(r, ";")
-		if semicolon < 0 {
+		path, statusStr, hasStatus := strings.CutLast(r, ";")
+		if !hasStatus {
 			continue
 		}
-		path := r[:semicolon]
-		statusStr := r[semicolon+1:]
 
 		// Strip the LDAP:// (or ldap://) prefix.
 		const prefix = "LDAP://"

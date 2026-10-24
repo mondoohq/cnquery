@@ -21,8 +21,8 @@ func barbicanRefID(ref string) string {
 	if ref == "" {
 		return ""
 	}
-	if i := strings.LastIndex(ref, "/"); i >= 0 {
-		return ref[i+1:]
+	if _, after, ok := strings.CutLast(ref, "/"); ok {
+		return after
 	}
 	return ref
 }

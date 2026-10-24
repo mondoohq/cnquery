@@ -163,8 +163,8 @@ func resourceBodyInner(body string) string {
 		return ""
 	}
 	inner := after
-	if close := strings.LastIndexByte(inner, '}'); close >= 0 {
-		inner = inner[:close]
+	if before, _, ok := strings.CutLast(inner, "}"); ok {
+		inner = before
 	}
 	return inner
 }

@@ -291,12 +291,12 @@ func parsePacmanOwners(r io.Reader) Owners {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
-		i := strings.LastIndex(line, " is owned by ")
-		if i < 0 {
+		before, after, ok := strings.CutLast(line, " is owned by ")
+		if !ok {
 			continue
 		}
-		if fields := strings.Fields(line[i+len(" is owned by "):]); len(fields) > 0 {
-			owners.add(line[:i], fields[0])
+		if fields := strings.Fields(after); len(fields) > 0 {
+			owners.add(before, fields[0])
 		}
 	}
 	return owners

@@ -515,11 +515,11 @@ func parseGIDInt(gid string) int64 {
 	if gid == "" {
 		return 0
 	}
-	idx := strings.LastIndex(gid, "/")
-	if idx < 0 || idx >= len(gid)-1 {
+	_, after, ok := strings.CutLast(gid, "/")
+	if !ok || after == "" {
 		return 0
 	}
-	n, _ := strconv.ParseInt(gid[idx+1:], 10, 64)
+	n, _ := strconv.ParseInt(after, 10, 64)
 	return n
 }
 
