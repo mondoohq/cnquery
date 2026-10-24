@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/mldsa"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/json"
@@ -326,6 +327,9 @@ func certificateKeyInfo(cert *x509.Certificate) (*int64, string) {
 	case ed25519.PublicKey:
 		bits := int64(len(key) * 8)
 		return &bits, "Ed25519"
+	case *mldsa.PublicKey:
+		bits := int64(key.Parameters().PublicKeySize() * 8)
+		return &bits, "ML-DSA"
 	default:
 		return nil, ""
 	}

@@ -6,6 +6,7 @@ package resources
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -262,6 +263,10 @@ func TestCertificateKeyInfo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not generate an ECDSA key: %v", err)
 	}
+	pqKey, err := mldsa.GenerateKey(mldsa.MLDSA87())
+	if err != nil {
+		t.Fatalf("could not generate an ML-DSA key: %v", err)
+	}
 
 	tests := []struct {
 		name     string
@@ -269,6 +274,14 @@ func TestCertificateKeyInfo(t *testing.T) {
 		wantBits int64
 		wantAlgo string
 	}{
+		{
+			// Synthetic: crypto/x509 parses ML-DSA certificates from Go 1.27;
+			// no BMC showed one. Bits is the encoded public key size.
+			name:     "ML-DSA-87",
+			pemBody:  selfSignedPEM(t, pqKey, pqKey.Public()),
+			wantBits: 20736,
+			wantAlgo: "ML-DSA",
+		},
 		{
 			name:     "RSA 2048",
 			pemBody:  selfSignedPEM(t, rsaKey, &rsaKey.PublicKey),

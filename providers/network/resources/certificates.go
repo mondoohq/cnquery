@@ -6,6 +6,7 @@ package resources
 import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/mldsa"
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -243,6 +244,9 @@ func publicKeyBitSize(cert *x509.Certificate) int64 {
 		return int64(key.Curve.Params().BitSize)
 	case ed25519.PublicKey:
 		return 256
+	case *mldsa.PublicKey:
+		// The encoded public key size, as for Ed25519 above.
+		return int64(key.Parameters().PublicKeySize() * 8)
 	default:
 		return 0
 	}

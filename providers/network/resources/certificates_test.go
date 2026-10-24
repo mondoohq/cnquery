@@ -4,10 +4,17 @@
 package resources
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/mldsa"
+	"crypto/rand"
+	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"math/big"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -116,4 +123,44 @@ func TestCertificatesListErrorsWhenNothingParses(t *testing.T) {
 	skipped, err := c.unparseable()
 	require.Error(t, err)
 	assert.Equal(t, int64(0), skipped)
+}
+
+func TestPublicKeyBitSize(t *testing.T) {
+	selfSigned := func(t *testing.T, pub, priv any) *x509.Certificate {
+		t.Helper()
+		tmpl := &x509.Certificate{
+			SerialNumber: big.NewInt(1),
+			Subject:      pkix.Name{CommonName: "bits.example.com"},
+			NotBefore:    time.Unix(0, 0),
+			NotAfter:     time.Unix(1<<31, 0),
+		}
+		der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, pub, priv)
+		require.NoError(t, err)
+		cert, err := x509.ParseCertificate(der)
+		require.NoError(t, err)
+		return cert
+	}
+
+	ecKey, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+	require.NoError(t, err)
+	assert.Equal(t, int64(384), publicKeyBitSize(selfSigned(t, &ecKey.PublicKey, ecKey)))
+
+	// Synthetic: ML-DSA certificates, which crypto/x509 parses from Go 1.27; no
+	// target showed one. The size is the encoded public key, as for Ed25519.
+	for _, tc := range []struct {
+		params mldsa.Parameters
+		bits   int64
+	}{
+		{mldsa.MLDSA44(), 10496},
+		{mldsa.MLDSA65(), 15616},
+		{mldsa.MLDSA87(), 20736},
+	} {
+		t.Run(tc.params.String(), func(t *testing.T) {
+			key, err := mldsa.GenerateKey(tc.params)
+			require.NoError(t, err)
+			cert := selfSigned(t, key.Public(), key)
+			assert.Equal(t, "ML-DSA", cert.PublicKeyAlgorithm.String())
+			assert.Equal(t, tc.bits, publicKeyBitSize(cert))
+		})
+	}
 }
