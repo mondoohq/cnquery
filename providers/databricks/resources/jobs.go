@@ -259,6 +259,7 @@ func newMqlDatabricksJob(runtime *plugin.Runtime, job jobs.BaseJob) (*mqlDatabri
 		"continuousMaintenanceWindowStartHour":  maintenanceStartHour,
 		"continuousMaintenanceWindowTimezoneId": maintenanceTimezoneId,
 		"performanceTarget":                     llx.StringData(string(settings.PerformanceTarget)),
+		"durationTarget":                        nonEmptyString(settings.DurationTarget),
 		"deploymentKind":                        llx.StringData(deploymentKind),
 		"deploymentId":                          llx.StringData(deploymentId),
 		"parentPath":                            llx.StringData(settings.ParentPath),

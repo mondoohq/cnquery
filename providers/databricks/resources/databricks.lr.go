@@ -985,6 +985,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.warehouse.statementTimeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksWarehouse).GetStatementTimeoutSeconds()).ToDataRes(types.Int)
 	},
+	"databricks.warehouse.maxDbu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWarehouse).GetMaxDbu()).ToDataRes(types.Int)
+	},
+	"databricks.warehouse.computeVersionLabel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWarehouse).GetComputeVersionLabel()).ToDataRes(types.String)
+	},
 	"databricks.warehouse.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksWarehouse).GetPermissions()).ToDataRes(types.Array(types.Resource("databricks.permission")))
 	},
@@ -1866,6 +1872,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"databricks.job.performanceTarget": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksJob).GetPerformanceTarget()).ToDataRes(types.String)
+	},
+	"databricks.job.durationTarget": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJob).GetDurationTarget()).ToDataRes(types.String)
 	},
 	"databricks.job.deploymentKind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksJob).GetDeploymentKind()).ToDataRes(types.String)
@@ -3397,6 +3406,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricksWarehouse).StatementTimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"databricks.warehouse.maxDbu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWarehouse).MaxDbu, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"databricks.warehouse.computeVersionLabel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWarehouse).ComputeVersionLabel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"databricks.warehouse.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksWarehouse).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -4663,6 +4680,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"databricks.job.performanceTarget": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksJob).PerformanceTarget, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.job.durationTarget": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJob).DurationTarget, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"databricks.job.deploymentKind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7986,6 +8007,8 @@ type mqlDatabricksWarehouse struct {
 	AutoStopMinutes         plugin.TValue[int64]
 	CreatorName             plugin.TValue[string]
 	StatementTimeoutSeconds plugin.TValue[int64]
+	MaxDbu                  plugin.TValue[int64]
+	ComputeVersionLabel     plugin.TValue[string]
 	Permissions             plugin.TValue[[]any]
 }
 
@@ -8063,6 +8086,14 @@ func (c *mqlDatabricksWarehouse) GetCreatorName() *plugin.TValue[string] {
 
 func (c *mqlDatabricksWarehouse) GetStatementTimeoutSeconds() *plugin.TValue[int64] {
 	return &c.StatementTimeoutSeconds
+}
+
+func (c *mqlDatabricksWarehouse) GetMaxDbu() *plugin.TValue[int64] {
+	return &c.MaxDbu
+}
+
+func (c *mqlDatabricksWarehouse) GetComputeVersionLabel() *plugin.TValue[string] {
+	return &c.ComputeVersionLabel
 }
 
 func (c *mqlDatabricksWarehouse) GetPermissions() *plugin.TValue[[]any] {
@@ -10653,6 +10684,7 @@ type mqlDatabricksJob struct {
 	ContinuousMaintenanceWindowStartHour  plugin.TValue[int64]
 	ContinuousMaintenanceWindowTimezoneId plugin.TValue[string]
 	PerformanceTarget                     plugin.TValue[string]
+	DurationTarget                        plugin.TValue[string]
 	DeploymentKind                        plugin.TValue[string]
 	DeploymentId                          plugin.TValue[string]
 	ParentPath                            plugin.TValue[string]
@@ -10783,6 +10815,10 @@ func (c *mqlDatabricksJob) GetContinuousMaintenanceWindowTimezoneId() *plugin.TV
 
 func (c *mqlDatabricksJob) GetPerformanceTarget() *plugin.TValue[string] {
 	return &c.PerformanceTarget
+}
+
+func (c *mqlDatabricksJob) GetDurationTarget() *plugin.TValue[string] {
+	return &c.DurationTarget
 }
 
 func (c *mqlDatabricksJob) GetDeploymentKind() *plugin.TValue[string] {

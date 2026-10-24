@@ -344,6 +344,7 @@ databricks.job.creatorUserName 13.1.4
 databricks.job.deploymentId 13.1.4
 databricks.job.deploymentKind 13.1.4
 databricks.job.description 13.1.4
+databricks.job.durationTarget 14.0.6
 databricks.job.editMode 13.1.4
 databricks.job.environmentVariableFiles 14.0.2
 databricks.job.environmentVariableNames 14.0.2
@@ -715,8 +716,10 @@ databricks.warehouse 13.0.0
 databricks.warehouse.autoStopMinutes 13.0.0
 databricks.warehouse.channel 13.0.0
 databricks.warehouse.clusterSize 13.0.0
+databricks.warehouse.computeVersionLabel 14.0.6
 databricks.warehouse.creatorName 13.0.0
 databricks.warehouse.id 13.0.0
+databricks.warehouse.maxDbu 14.0.6
 databricks.warehouse.name 13.0.0
 databricks.warehouse.permissions 13.1.4
 databricks.warehouse.photonEnabled 13.0.0

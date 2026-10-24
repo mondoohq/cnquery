@@ -660,7 +660,7 @@ databricks.warehouse @defaults("name warehouseType state") {
   name string
   // Current state (such as RUNNING or STOPPED)
   state string
-  // Warehouse type (CLASSIC, PRO, or TYPE_UNSPECIFIED)
+  // Warehouse type (CLASSIC, PRO, REALTIME, or TYPE_UNSPECIFIED)
   warehouseType string
   // Whether the Photon query engine is enabled
   photonEnabled bool
@@ -682,6 +682,15 @@ databricks.warehouse @defaults("name warehouseType state") {
   // STATEMENT_TIMEOUT SQL configuration parameter applies (172800 seconds
   // unless an admin changed it).
   statementTimeoutSeconds int
+  // Maximum compute capacity in DBU per hour
+  //
+  // Caps the compute a REALTIME warehouse can scale to, a multiple of 3
+  // between 3 and 960. Null when the warehouse sets no cap.
+  maxDbu int
+  // Compute version label of a REALTIME warehouse
+  //
+  // Null for warehouses that report no compute version label.
+  computeVersionLabel string
   // Workspace access control list of the warehouse
   permissions() []databricks.permission
 }
@@ -1673,6 +1682,13 @@ databricks.job @defaults("name runAs format") {
   continuousMaintenanceWindowTimezoneId string
   // Performance target for serverless runs, empty when unset
   performanceTarget string
+  // Window a cost-optimized serverless run aims to finish within
+  //
+  // A value such as NO_FLEXIBILITY, 4h, 12h, 24h, or 72h. Applies when the
+  // performance target is COST_OPTIMIZED; NO_FLEXIBILITY keeps the default
+  // cost-optimized performance level without further cost savings. Null when
+  // the job sets no duration target.
+  durationTarget string
   // How the job is managed, BUNDLE or SYSTEM_MANAGED
   //
   // Empty for a job defined directly in the workspace. A bundle-managed job is

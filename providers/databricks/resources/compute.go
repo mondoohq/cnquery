@@ -325,6 +325,16 @@ func warehouseStatementTimeoutSeconds(w sql.EndpointInfo) *llx.RawData {
 	return llx.IntData(int64(w.StatementTimeout))
 }
 
+// warehouseMaxDbu reports the warehouse's DBU-per-hour cap, or null when it
+// sets none. The API accepts only multiples of 3 between 3 and 960, so 0 is
+// the unset value, and reporting it would read as "capped at zero".
+func warehouseMaxDbu(w sql.EndpointInfo) *llx.RawData {
+	if w.MaxDbu <= 0 {
+		return llx.NilData
+	}
+	return llx.IntData(int64(w.MaxDbu))
+}
+
 // warehouseFields maps one warehouse list record to its MQL fields.
 func warehouseFields(w sql.EndpointInfo) map[string]*llx.RawData {
 	channel := ""
@@ -344,6 +354,8 @@ func warehouseFields(w sql.EndpointInfo) map[string]*llx.RawData {
 		"autoStopMinutes":         llx.IntData(w.AutoStopMins),
 		"creatorName":             llx.StringData(w.CreatorName),
 		"statementTimeoutSeconds": warehouseStatementTimeoutSeconds(w),
+		"maxDbu":                  warehouseMaxDbu(w),
+		"computeVersionLabel":     nonEmptyString(w.CustomerVersionLabel),
 	}
 }
 
