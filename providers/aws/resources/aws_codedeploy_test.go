@@ -117,3 +117,18 @@ func TestCodeDeployDeploymentModePublishesTheWireValue(t *testing.T) {
 	assert.Equal(t, "RESTART", codeDeployDeploymentMode(codedeploytypes.DeploymentModeRestart).Value)
 	assert.Equal(t, "STANDARD", codeDeployDeploymentMode(codedeploytypes.DeploymentModeStandard).Value)
 }
+
+func TestCodedeployProcessesToSuspend(t *testing.T) {
+	// Synthetic: no EC2 deployment options suspends nothing.
+	assert.Equal(t, []any{}, codedeployProcessesToSuspend(nil))
+	// Synthetic: options with an empty list suspend nothing.
+	assert.Equal(t, []any{}, codedeployProcessesToSuspend(&codedeploytypes.EC2DeploymentOptions{}))
+	// Synthetic: process names keep their SDK spelling and order.
+	got := codedeployProcessesToSuspend(&codedeploytypes.EC2DeploymentOptions{
+		AutoScalingGroupProcessesToSuspend: []codedeploytypes.AutoScalingGroupProcess{
+			codedeploytypes.AutoScalingGroupProcessTerminate,
+			codedeploytypes.AutoScalingGroupProcessAzRebalance,
+		},
+	})
+	assert.Equal(t, []any{"Terminate", "AZRebalance"}, got)
+}

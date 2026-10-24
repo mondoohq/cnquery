@@ -6,9 +6,12 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	waftypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/google/uuid"
@@ -1616,4 +1619,86 @@ func (a *mqlAwsElbLoadbalancer) webAcl() (*mqlAwsWafAcl, error) {
 		return nil, err
 	}
 	return mqlAcl.(*mqlAwsWafAcl), nil
+}
+
+// parseWafv2WebAclArn splits a WAFv2 web ACL ARN
+// (arn:aws:wafv2:<region>:<account>:<regional|global>/webacl/<name>/<id>) into
+// the region, scope, name, and id that GetWebACL needs. A global ARN is a
+// CLOUDFRONT-scoped ACL.
+func parseWafv2WebAclArn(aclArn string) (region, scope, name, id string, err error) {
+	parsed, err := arn.Parse(aclArn)
+	if err != nil {
+		return "", "", "", "", err
+	}
+	if parsed.Service != "wafv2" {
+		return "", "", "", "", fmt.Errorf("not a WAFv2 ARN: %s", aclArn)
+	}
+	parts := strings.Split(parsed.Resource, "/")
+	if len(parts) != 4 || parts[1] != "webacl" || parts[2] == "" || parts[3] == "" {
+		return "", "", "", "", fmt.Errorf("not a WAFv2 web ACL ARN: %s", aclArn)
+	}
+	switch parts[0] {
+	case "regional":
+		scope = wafScopeRegional
+	case "global":
+		scope = wafScopeCloudfront
+	default:
+		return "", "", "", "", fmt.Errorf("unknown WAFv2 web ACL scope %q in %s", parts[0], aclArn)
+	}
+	return parsed.Region, scope, parts[2], parts[3], nil
+}
+
+// initAwsWafAcl resolves a web ACL referenced by ARN. A reference built from
+// the ARN alone would leave name, scope, and region unset, and every computed
+// field needs them to call GetWebACL.
+func initAwsWafAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["arn"] == nil {
+		return args, nil, nil
+	}
+	aclArn, _ := args["arn"].Value.(string)
+	if aclArn == "" {
+		return args, nil, nil
+	}
+	if cached, ok := runtime.Resources.Get("aws.waf.acl\x00" + aclArn); ok {
+		return args, cached, nil
+	}
+
+	region, scope, name, id, err := parseWafv2WebAclArn(aclArn)
+	if err != nil {
+		return nil, nil, err
+	}
+	conn := runtime.Connection.(*connection.AwsConnection)
+	resp, err := conn.Wafv2(region).GetWebACL(context.Background(), &wafv2.GetWebACLInput{
+		Id:    &id,
+		Name:  &name,
+		Scope: waftypes.Scope(scope),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp.WebACL == nil {
+		return nil, nil, fmt.Errorf("aws.waf.acl with arn %q not found", aclArn)
+	}
+	acl := resp.WebACL
+	res, err := CreateResource(runtime, "aws.waf.acl", map[string]*llx.RawData{
+		"__id":        llx.StringData(aclArn),
+		"id":          llx.StringData(id),
+		"scope":       llx.StringData(scope),
+		"region":      llx.StringData(region),
+		"arn":         llx.StringData(aclArn),
+		"name":        llx.StringData(name),
+		"description": llx.StringDataPtr(acl.Description),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlAcl := res.(*mqlAwsWafAcl)
+	mqlAcl.cachedManagedByFwManager = acl.ManagedByFirewallManager
+	mqlAcl.cachedRules = acl.Rules
+	mqlAcl.cachedACL = acl
+	mqlAcl.fetched = true
+	return args, mqlAcl, nil
 }

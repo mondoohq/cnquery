@@ -74,3 +74,32 @@ func TestWafRegionsFor(t *testing.T) {
 	assert.Equal(t, []string{"us-east-1", "eu-west-1", "ap-southeast-2"}, regional,
 		"regional resources exist per region, so every region is queried")
 }
+
+func TestParseWafv2WebAclArn(t *testing.T) {
+	// Synthetic: regional web ACL ARN in the documented format.
+	region, scope, name, id, err := parseWafv2WebAclArn("arn:aws:wafv2:eu-west-1:123456789012:regional/webacl/my-acl/a1b2c3d4-5678-90ab-cdef-EXAMPLE11111")
+	require.NoError(t, err)
+	assert.Equal(t, "eu-west-1", region)
+	assert.Equal(t, wafScopeRegional, scope)
+	assert.Equal(t, "my-acl", name)
+	assert.Equal(t, "a1b2c3d4-5678-90ab-cdef-EXAMPLE11111", id)
+
+	// Synthetic: a global ARN is a CLOUDFRONT-scoped ACL.
+	region, scope, _, _, err = parseWafv2WebAclArn("arn:aws:wafv2:us-east-1:123456789012:global/webacl/edge/abc")
+	require.NoError(t, err)
+	assert.Equal(t, "us-east-1", region)
+	assert.Equal(t, wafScopeCloudfront, scope)
+
+	// Synthetic: malformed and non-web-ACL ARNs are rejected.
+	for _, bad := range []string{
+		"",
+		"not-an-arn",
+		"arn:aws:waf::123456789012:webacl/abc",
+		"arn:aws:wafv2:eu-west-1:123456789012:regional/ipset/my-set/abc",
+		"arn:aws:wafv2:eu-west-1:123456789012:regional/webacl/my-acl",
+		"arn:aws:wafv2:eu-west-1:123456789012:other/webacl/my-acl/abc",
+	} {
+		_, _, _, _, err := parseWafv2WebAclArn(bad)
+		assert.Error(t, err, bad)
+	}
+}

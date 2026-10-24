@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "14.4.1",
-  "generated_at": "2026-10-07T14:16:14+03:00",
+  "version": "14.5.2",
+  "generated_at": "2026-10-23T23:21:58Z",
   "permissions": [
     "access-analyzer:GetFinding",
     "access-analyzer:ListAnalyzers",
@@ -76,6 +76,7 @@
     "athena:ListTableMetadata",
     "athena:ListTagsForResource",
     "athena:ListWorkGroups",
+    "autoscaling:DescribeAccountSettings",
     "autoscaling:DescribeAutoScalingGroups",
     "autoscaling:DescribeLaunchConfigurations",
     "backup:DescribeBackupVault",
@@ -404,6 +405,7 @@
     "ecs:DescribeCapacityProviders",
     "ecs:DescribeClusters",
     "ecs:DescribeContainerInstances",
+    "ecs:DescribeGateway",
     "ecs:DescribeServices",
     "ecs:DescribeTaskDefinition",
     "ecs:DescribeTaskSets",
@@ -411,6 +413,7 @@
     "ecs:ListAccountSettings",
     "ecs:ListClusters",
     "ecs:ListContainerInstances",
+    "ecs:ListGateways",
     "ecs:ListServices",
     "ecs:ListTagsForResource",
     "ecs:ListTaskDefinitions",
@@ -1564,6 +1567,12 @@
       "service": "athena",
       "action": "ListWorkGroups",
       "source_file": "aws_athena.go"
+    },
+    {
+      "permission": "autoscaling:DescribeAccountSettings",
+      "service": "autoscaling",
+      "action": "DescribeAccountSettings",
+      "source_file": "aws_autoscaling.go"
     },
     {
       "permission": "autoscaling:DescribeAutoScalingGroups",
@@ -3642,6 +3651,12 @@
       "source_file": "aws_ecs.go"
     },
     {
+      "permission": "ecs:DescribeGateway",
+      "service": "ecs",
+      "action": "DescribeGateway",
+      "source_file": "aws_ecs_gateway.go"
+    },
+    {
       "permission": "ecs:DescribeServices",
       "service": "ecs",
       "action": "DescribeServices",
@@ -3682,6 +3697,12 @@
       "service": "ecs",
       "action": "ListContainerInstances",
       "source_file": "aws_ecs.go"
+    },
+    {
+      "permission": "ecs:ListGateways",
+      "service": "ecs",
+      "action": "ListGateways",
+      "source_file": "aws_ecs_gateway.go"
     },
     {
       "permission": "ecs:ListServices",

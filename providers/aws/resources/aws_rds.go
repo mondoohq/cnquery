@@ -587,6 +587,7 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 			"domainMemberships":                  llx.ArrayData(domainMemberships, types.Dict),
 			"replicaMode":                        llx.StringData(string(dbInstance.ReplicaMode)),
 			"multiTenant":                        llx.BoolDataPtr(dbInstance.MultiTenant),
+			"dbCapacityReservationIdentifier":    llx.StringDataPtr(dbInstance.DBCapacityReservationIdentifier),
 		})
 	if err != nil {
 		return nil, err
