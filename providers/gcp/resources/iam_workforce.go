@@ -149,6 +149,7 @@ func (g *mqlGcpOrganizationWorkforcePool) providers() ([]any, error) {
 						"attributeCondition":   llx.StringData(p.AttributeCondition),
 						"detailedAuditLogging": llx.BoolData(p.DetailedAuditLogging),
 						"scimUsage":            llx.StringData(p.ScimUsage),
+						"vendorType":           llx.StringData(p.VendorType),
 						"providerType":         llx.StringData(cfg.providerType),
 						"oidcIssuerUri":        llx.StringData(cfg.oidcIssuer),
 						"oidcClientId":         llx.StringData(cfg.oidcClientId),
