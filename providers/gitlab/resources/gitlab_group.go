@@ -1050,9 +1050,6 @@ func groupBranchAccessLevels(runtime *plugin.Runtime, idPrefix, namespacePath st
 		}
 		al.cacheMemberRoleID = d.MemberRoleID
 		al.cacheNamespacePath = namespacePath
-		if err != nil {
-			return nil, err
-		}
 		out = append(out, al)
 	}
 	return out, nil
