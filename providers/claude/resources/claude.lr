@@ -490,9 +490,11 @@ claude.messageBatch @defaults("id processingStatus") {
 //
 // User profile representing an entity that interacts with the Claude
 // platform. The `accessType` field describes how the platform uses the
-// API on behalf of the entity, and `externalUserOnboardedAt` records when
-// the platform onboarded the end user behind the profile.
-claude.userProfile @defaults("id name accessType") {
+// API on behalf of the entity, `externalUserOnboardedAt` records when
+// the platform onboarded the end user behind the profile, and
+// `enforcementStatus` and `enforcementActions` report the restrictions and
+// bans Anthropic holds open on it.
+claude.userProfile @defaults("id name accessType enforcementStatus") {
   // Profile identifier
   id string
   // Profile display name
@@ -522,6 +524,50 @@ claude.userProfile @defaults("id name accessType") {
   updatedAt time
   // Object type
   type string
+  // Anthropic's enforcement status of this profile
+  //
+  // One of unrestricted, pending, restricted, or banned, and Anthropic may
+  // add values. `banned` while any open action is a ban, `pending` while
+  // an identity check the end user submitted is under review, `restricted`
+  // while any other action is open, and `unrestricted` while none is.
+  enforcementStatus string
+  // Enforcement actions Anthropic holds open on this profile
+  //
+  // Empty when no action is open.
+  enforcementActions []claude.userProfile.enforcementAction
+}
+
+// Enforcement action on a Claude user profile
+//
+// A restriction or ban Anthropic holds open on a user profile, with the
+// reason it was placed, when it was opened, when it ends on its own, and
+// whether the end user can clear it by passing an identity check.
+private claude.userProfile.enforcementAction @defaults("id type reason") {
+  // Enforcement action identifier
+  id string
+  // Kind of action
+  //
+  // One of restriction or ban. A restriction limits how Anthropic serves
+  // the end user until it is resolved; a ban stops serving them.
+  type string
+  // Why Anthropic placed the action
+  //
+  // One of unsupported_region, fraud_or_abuse, high_harm,
+  // usage_policy_violation, account_compromise, or unspecified, and
+  // Anthropic may add values.
+  reason string
+  // Next step the end user can take to clear the action
+  //
+  // `verify` when the end user can clear it now by passing an identity
+  // check. Null when nothing the end user can do now clears it, which is
+  // always the case for a ban.
+  nextStep string
+  // Timestamp Anthropic opened the action
+  openedAt time
+  // Timestamp the action ends on its own
+  //
+  // Null when it has no end date, which is always the case for a ban.
+  expiresAt time
 }
 
 // Claude organization
@@ -529,9 +575,9 @@ claude.userProfile @defaults("id name accessType") {
 // Organizational resources managed through the Claude Admin API:
 // identity, workspaces, members, pending invites, API keys, usage,
 // cost, rate limits, customer-managed encryption keys, the Compliance
-// API state, and, for Claude Enterprise organizations, RBAC groups and
-// roles, effective spend limits, plugins, and plugin marketplaces.
-// Requires an admin API key configured via
+// API state, webhook endpoints, and, for Claude Enterprise organizations,
+// RBAC groups and roles, effective spend limits, plugins, and plugin
+// marketplaces. Requires an admin API key configured via
 // `--admin-token` or the `ANTHROPIC_ADMIN_API_KEY` environment variable.
 claude.organization @defaults("id name") {
   // Organization identifier
@@ -579,6 +625,43 @@ claude.organization @defaults("id name") {
   plugins() []claude.organization.plugin
   // Plugin marketplaces the organization's plugins come from
   pluginMarketplaces() []claude.organization.pluginMarketplace
+  // Webhook endpoints that belong to the organization
+  webhooks() []claude.organization.webhook
+}
+
+// Claude organization webhook endpoint
+//
+// Webhook endpoint that belongs to the organization rather than to one of
+// its workspaces: the HTTPS `url` deliveries go to, the `enabledEvents`
+// delivered there, whether deliveries are sent (`state`), and why Anthropic
+// disabled it automatically (`disabledReason`).
+claude.organization.webhook @defaults("id name url state") {
+  // Webhook endpoint identifier
+  id string
+  // Short label for the endpoint
+  name string
+  // Notes about the endpoint
+  description string
+  // HTTPS URL that deliveries are sent to
+  url string
+  // Event types delivered to the endpoint
+  //
+  // For example user_profile.enforcement_action_opened and
+  // user_profile.enforcement_action_resolved.
+  enabledEvents []string
+  // Whether deliveries are sent to the endpoint
+  //
+  // One of enabled or disabled. Events that happen while the endpoint is
+  // disabled are never delivered.
+  state string
+  // Why Anthropic disabled the endpoint automatically
+  //
+  // Null when the endpoint is enabled, or when it was disabled by hand.
+  disabledReason string
+  // Endpoint creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
 }
 
 // Claude organization workspace

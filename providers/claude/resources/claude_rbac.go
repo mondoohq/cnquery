@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/anthropics/anthropic-sdk-go"
+	"github.com/anthropics/anthropic-sdk-go/v2"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
@@ -166,7 +166,7 @@ func (r *mqlClaudeOrganization) rbacRoles() ([]interface{}, error) {
 		mqlRole, err := CreateResource(r.MqlRuntime, "claude.organization.rbacRole", map[string]*llx.RawData{
 			"__id":      llx.StringData(role.ID),
 			"id":        llx.StringData(role.ID),
-			"name":      llx.StringData(role.Name),
+			"name":      llx.StringData(role.DisplayName),
 			"createdAt": llx.TimeDataPtr(nullableTime(role.CreatedAt)),
 			"updatedAt": llx.TimeDataPtr(nullableTime(role.UpdatedAt)),
 		})

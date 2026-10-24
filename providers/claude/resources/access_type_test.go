@@ -6,7 +6,7 @@ package resources
 import (
 	"testing"
 
-	"github.com/anthropics/anthropic-sdk-go"
+	"github.com/anthropics/anthropic-sdk-go/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,19 +18,19 @@ import (
 func TestClaudeAccessType(t *testing.T) {
 	for _, tc := range []struct {
 		name     string
-		in       anthropic.BetaUserProfileAccessType
+		in       anthropic.UserProfileAccessType
 		wantNil  bool
 		wantData string
 	}{
 		{name: "absent", in: "", wantNil: true},
 		{
 			name:     "application",
-			in:       anthropic.BetaUserProfileAccessTypeApplication,
+			in:       anthropic.UserProfileAccessTypeApplication,
 			wantData: "application",
 		},
 		{
 			name:     "passthrough",
-			in:       anthropic.BetaUserProfileAccessTypePassthrough,
+			in:       anthropic.UserProfileAccessTypePassthrough,
 			wantData: "passthrough",
 		},
 	} {

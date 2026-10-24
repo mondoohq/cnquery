@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/anthropics/anthropic-sdk-go"
+	"github.com/anthropics/anthropic-sdk-go/v2"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/types"
@@ -613,31 +613,25 @@ func (r *mqlClaude) messageBatches() ([]interface{}, error) {
 
 // claude.userProfile
 
+type mqlClaudeUserProfileInternal struct {
+	cacheEnforcementActions []anthropic.UserProfileEnforcementActionUnion
+}
+
 func (r *mqlClaude) userProfiles() ([]interface{}, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
 
-	pager := client.Beta.UserProfiles.ListAutoPaging(context.Background(), anthropic.BetaUserProfileListParams{})
+	pager := client.UserProfiles.ListAutoPaging(context.Background(), anthropic.UserProfileListParams{Limit: anthropic.Int(100)})
 
 	var res []interface{}
 	for pager.Next() {
 		p := pager.Current()
 
-		mqlProfile, err := CreateResource(r.MqlRuntime, "claude.userProfile", map[string]*llx.RawData{
-			"__id":                    llx.StringData(p.ID),
-			"id":                      llx.StringData(p.ID),
-			"name":                    llx.StringData(p.Name),
-			"externalId":              llx.StringData(p.ExternalID),
-			"relationship":            llx.NilData,
-			"accessType":              claudeAccessType(p.AccessType),
-			"externalUserOnboardedAt": llx.TimeDataPtr(nullableTime(p.ExternalUserOnboardedAt)),
-			"createdAt":               llx.TimeData(p.CreatedAt),
-			"updatedAt":               llx.TimeData(p.UpdatedAt),
-			"type":                    llx.StringData(string(p.Type)),
-		})
+		mqlProfile, err := CreateResource(r.MqlRuntime, "claude.userProfile", userProfileArgs(p))
 		if err != nil {
 			return nil, err
 		}
+		mqlProfile.(*mqlClaudeUserProfile).cacheEnforcementActions = p.EnforcementActions
 		res = append(res, mqlProfile)
 	}
 	if err := pager.Err(); err != nil {
@@ -647,11 +641,61 @@ func (r *mqlClaude) userProfiles() ([]interface{}, error) {
 	return res, nil
 }
 
+// userProfileArgs maps a user profile onto resource arguments.
+//
+// The platform's own reference and onboarding time moved under
+// external_user_details when user profiles left beta. They are the same
+// values the beta served at the top level as external_id and
+// external_user_onboarded_at, so the shipped fields keep their meaning.
+func userProfileArgs(p anthropic.UserProfile) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":                    llx.StringData(p.ID),
+		"id":                      llx.StringData(p.ID),
+		"name":                    llx.StringData(p.Name),
+		"externalId":              llx.StringData(p.ExternalUserDetails.ReferenceID),
+		"relationship":            llx.NilData,
+		"accessType":              claudeAccessType(p.AccessType),
+		"externalUserOnboardedAt": llx.TimeDataPtr(nullableTime(p.ExternalUserDetails.OnboardedAt)),
+		"createdAt":               llx.TimeData(p.CreatedAt),
+		"updatedAt":               llx.TimeData(p.UpdatedAt),
+		"type":                    llx.StringData(string(p.Type)),
+		"enforcementStatus":       llx.StringDataPtr(nullableString(string(p.EnforcementStatus))),
+	}
+}
+
+func (r *mqlClaudeUserProfile) enforcementActions() ([]interface{}, error) {
+	res := make([]interface{}, 0, len(r.cacheEnforcementActions))
+	for _, a := range r.cacheEnforcementActions {
+		mqlAction, err := CreateResource(r.MqlRuntime, "claude.userProfile.enforcementAction",
+			enforcementActionArgs(r.Id.Data, a))
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlAction)
+	}
+	return res, nil
+}
+
+// enforcementActionArgs maps an enforcement action onto resource arguments.
+// The action id is only promised stable while the action is open, so the
+// profile id is part of the cache key.
+func enforcementActionArgs(profileID string, a anthropic.UserProfileEnforcementActionUnion) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":      llx.StringData(profileID + "/enforcementAction/" + a.ID),
+		"id":        llx.StringData(a.ID),
+		"type":      llx.StringDataPtr(nullableString(a.Type)),
+		"reason":    llx.StringDataPtr(nullableString(string(a.Reason))),
+		"nextStep":  llx.StringDataPtr(nullableString(string(a.Action))),
+		"openedAt":  llx.TimeDataPtr(nullableTime(a.OpenedAt)),
+		"expiresAt": llx.TimeDataPtr(nullableTime(a.ExpiresAt)),
+	}
+}
+
 // claudeAccessType maps a profile's access type into MQL data, reporting null
 // when the API omits it. The field is optional on the profile payload, and an
 // empty string would read as a real access type that is neither `application`
 // nor `passthrough`.
-func claudeAccessType(t anthropic.BetaUserProfileAccessType) *llx.RawData {
+func claudeAccessType(t anthropic.UserProfileAccessType) *llx.RawData {
 	if t == "" {
 		return llx.NilData
 	}

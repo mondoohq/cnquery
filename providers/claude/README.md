@@ -2,11 +2,11 @@
 
 The Claude provider queries the Claude Developer Platform API for security
 posture, compliance, and AI Bill of Materials (AIBOM) data. It covers the
-Models API (stable), Beta services (agents, environments, sessions, files,
-skills, vaults, memory stores, message batches, user profiles), and the Admin
+Models and User Profiles APIs (stable), Beta services (agents, environments,
+sessions, files, skills, vaults, memory stores, message batches), and the Admin
 API (organizations, workspaces, members, invites, API keys, rate limits, usage,
-cost, activities, encryption keys, compliance settings, and the Claude
-Enterprise RBAC, spend limit, and plugin APIs).
+cost, activities, encryption keys, compliance settings, organization webhooks,
+and the Claude Enterprise RBAC, spend limit, and plugin APIs).
 
 ## Authentication
 

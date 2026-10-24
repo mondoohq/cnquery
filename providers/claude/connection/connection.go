@@ -8,8 +8,8 @@ import (
 	"errors"
 	"os"
 
-	"github.com/anthropics/anthropic-sdk-go"
-	"github.com/anthropics/anthropic-sdk-go/option"
+	"github.com/anthropics/anthropic-sdk-go/v2"
+	"github.com/anthropics/anthropic-sdk-go/v2/option"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -54,7 +54,12 @@ func NewClaudeConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 		opts = append(opts, option.WithAPIKey(token))
 	}
 
-	if identityTokenFile := conf.Options[IdentityTokenFileOption]; identityTokenFile != "" {
+	// The SDK client holds exactly one credential, and two passed in code fail
+	// every request. An API key wins over workload identity federation, the
+	// same order the SDK applies to credentials it reads from the environment.
+	if identityTokenFile := conf.Options[IdentityTokenFileOption]; identityTokenFile != "" && token != "" {
+		log.Warn().Msg("claude: both an API key and an identity token file are set; using the API key")
+	} else if identityTokenFile != "" {
 		fedOpts := option.FederationOptions{
 			FederationRuleID: conf.Options[FederationRuleIDOption],
 			OrganizationID:   conf.Options[OrganizationIDOption],
