@@ -55,7 +55,6 @@ require (
 	cloud.google.com/go/securitycenter v1.49.0
 	cloud.google.com/go/serviceusage v1.16.0
 	cloud.google.com/go/spanner v1.96.1
-	github.com/aws/smithy-go v1.28.5
 	github.com/cockroachdb/errors v1.14.0
 	github.com/google/go-containerregistry v0.22.1
 	github.com/googleapis/gax-go/v2 v2.26.2
@@ -118,6 +117,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.38.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.43.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.51.4 // indirect
+	github.com/aws/smithy-go v1.28.5 // indirect
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.12.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
