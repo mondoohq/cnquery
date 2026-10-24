@@ -3244,6 +3244,12 @@ private stackit.logMe.instance @defaults("id name status planName") {
   // from status, which is the outcome of the last provisioning operation;
   // a stopped instance can still report a succeeded status.
   state string
+  // Current state of the service instance
+  //
+  // One of provisioned, available, deleted, deploying, failed, stopped, or
+  // unknown, as the LogMe service reports it. Null when the response omits
+  // it.
+  instanceStatus string
   // Kind of the last provisioning operation
   //
   // One of create, update, or delete. Qualifies status: a succeeded
@@ -3290,6 +3296,15 @@ private stackit.logMe.instance @defaults("id name status planName") {
   // Proof that backups exist and how the last ones ended. Empty when none
   // exist or the credential cannot list them.
   backups() []stackit.logMe.instance.backup
+  // Whether automatic updates are allowed for the instance
+  //
+  // False means updates to the instance's components are only applied
+  // when someone starts them, so available fixes can stay uninstalled.
+  automaticUpdatesEnabled() bool
+  // Number of update components available for the instance
+  //
+  // Greater than zero when updates are waiting to be applied.
+  availableUpdates() int
   // Catalog offering the instance runs (nullable)
   //
   // Matched by offeringVersion against the engine catalog. Follow it to
@@ -5021,8 +5036,8 @@ private stackit.git.authentication @defaults("name provider status") {
 // STACKIT Logs namespace
 //
 // Managed log storage instances in the project. Query `instances` to
-// audit their retention, network access, and the access tokens that can
-// read or write them.
+// audit their retention, network access, and the access tokens and
+// access policies that can read or write them.
 stackit.logs {
   // STACKIT Logs instances
   instances() []stackit.logs.instance
@@ -5032,7 +5047,8 @@ stackit.logs {
 //
 // Single managed log storage instance, keyed by its UUID `id`. Covers the
 // `retentionDays` logs are kept for, the `acl` of networks allowed to
-// reach it, the ingest and query endpoints, and its `accessTokens`.
+// reach it, the ingest and query endpoints, its `accessTokens`, and the
+// `accessPolicies` granting IAM subjects access.
 private stackit.logs.instance @defaults("id name status retentionDays") {
   // Instance UUID
   id string
@@ -5063,6 +5079,8 @@ private stackit.logs.instance @defaults("id name status retentionDays") {
   datasourceUrl string
   // Access tokens issued for the instance
   accessTokens() []stackit.logs.accessToken
+  // Access policies granting STACKIT IAM subjects access to the instance
+  accessPolicies() []stackit.logs.accessPolicy
 }
 
 // Access token of a STACKIT Logs instance
@@ -5089,6 +5107,30 @@ private stackit.logs.accessToken @defaults("name permissions status validUntil")
   validUntil time
   // Token status (active, expired)
   status string
+}
+
+// Access policy of a STACKIT Logs instance
+//
+// One grant on the instance, keyed by its `id` within the instance: the
+// `email` of the STACKIT IAM subject (user, group, or service account) it
+// applies to and the `permissions` it grants (read, write).
+// `serviceAccount` resolves the subject when it is one of the project's
+// service accounts.
+private stackit.logs.accessPolicy @defaults("email permissions") {
+  // Policy ID
+  id string
+  // Email address of the IAM subject the policy grants access to
+  email string
+  // Description
+  description string
+  // Access the policy grants (read, write)
+  permissions []string
+  // Service account the policy grants access to (nullable)
+  //
+  // Resolved when the subject is one of the project's service accounts.
+  // Null for a human user or a group; the API does not mark the subject
+  // kind, so membership in the project's service-account list is the test.
+  serviceAccount() stackit.serviceAccount
 }
 
 // STACKIT Valkey namespace

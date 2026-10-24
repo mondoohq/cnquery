@@ -10,6 +10,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	logme "github.com/stackitcloud/stackit-sdk-go/services/logme/v2api"
 	mongodbflex "github.com/stackitcloud/stackit-sdk-go/services/mongodbflex/v2api"
 	observability "github.com/stackitcloud/stackit-sdk-go/services/observability/v1api"
 	postgresflex "github.com/stackitcloud/stackit-sdk-go/services/postgresflex/v2api"
@@ -1559,17 +1560,87 @@ func (r *mqlStackitLogMe) instances() ([]any, error) {
 	items, _ := resp.GetInstancesOk()
 	out := make([]any, 0, len(items))
 	for i := range items {
-		inst := items[i]
-		lop := inst.GetLastOperation()
-		st, stOk := inst.GetStatusOk()
-		args := cfBrokerInstanceArgs(c.Region(), &inst, st, stOk, &lop)
-		res, err := CreateResource(r.MqlRuntime, "stackit.logMe.instance", args)
+		res, err := CreateResource(r.MqlRuntime, "stackit.logMe.instance", logMeInstanceArgs(c.Region(), &items[i]))
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, res)
 	}
 	return out, nil
+}
+
+// logMeInstanceArgs maps a LogMe instance onto the fields the CF-broker
+// engines share, plus instanceStatus, which only the LogMe API reports. An
+// absent instanceStatus reads null rather than "".
+func logMeInstanceArgs(region string, inst *logme.Instance) map[string]*llx.RawData {
+	lop := inst.GetLastOperation()
+	st, stOk := inst.GetStatusOk()
+	args := cfBrokerInstanceArgs(region, inst, st, stOk, &lop)
+	var instanceStatus *string
+	if v, ok := inst.GetInstanceStatusOk(); ok && v != nil {
+		s := string(*v)
+		instanceStatus = &s
+	}
+	args["instanceStatus"] = llx.StringDataPtr(instanceStatus)
+	return args
+}
+
+type mqlStackitLogMeInstanceInternal struct {
+	updatesFetched atomic.Bool
+	updatesLock    sync.Mutex
+	updates        *logme.GetUpdatesResponse
+}
+
+// fetchUpdates reads the instance's update settings and availability once.
+// Errors are not cached, so a later field can retry.
+func (r *mqlStackitLogMeInstance) fetchUpdates() (*logme.GetUpdatesResponse, error) {
+	if r.updatesFetched.Load() {
+		return r.updates, nil
+	}
+	r.updatesLock.Lock()
+	defer r.updatesLock.Unlock()
+	if r.updatesFetched.Load() {
+		return r.updates, nil
+	}
+	c := conn(r.MqlRuntime)
+	client, err := c.LogMe()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.GetUpdates(bgctx(), c.ProjectID(), c.Region(), r.Id.Data).Execute()
+	if err != nil {
+		if isAccessDenied(err) {
+			return nil, refusal(err)
+		}
+		return nil, err
+	}
+	r.updates = resp
+	r.updatesFetched.Store(true)
+	return r.updates, nil
+}
+
+func (r *mqlStackitLogMeInstance) automaticUpdatesEnabled() (bool, error) {
+	u, err := r.fetchUpdates()
+	if err != nil {
+		return false, err
+	}
+	if u == nil {
+		r.AutomaticUpdatesEnabled.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+	return u.GetAutomaticUpdatesEnabled(), nil
+}
+
+func (r *mqlStackitLogMeInstance) availableUpdates() (int64, error) {
+	u, err := r.fetchUpdates()
+	if err != nil {
+		return 0, err
+	}
+	if u == nil {
+		r.AvailableUpdates.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return int64(u.GetAvailableUpdates()), nil
 }
 
 func (r *mqlStackitLogMeInstance) id() (string, error) {
@@ -1596,9 +1667,7 @@ func initStackitLogMeInstance(runtime *plugin.Runtime, args map[string]*llx.RawD
 	if inst == nil {
 		return nil, nil, fmt.Errorf("stackit.logMe.instance with id %q not found", id)
 	}
-	lop := inst.GetLastOperation()
-	st, stOk := inst.GetStatusOk()
-	res, err := CreateResource(runtime, "stackit.logMe.instance", cfBrokerInstanceArgs(c.Region(), inst, st, stOk, &lop))
+	res, err := CreateResource(runtime, "stackit.logMe.instance", logMeInstanceArgs(c.Region(), inst))
 	if err != nil {
 		return nil, nil, err
 	}
