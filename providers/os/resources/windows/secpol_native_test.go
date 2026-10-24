@@ -19,7 +19,7 @@ func infSection(t *testing.T, file, name string) []string {
 	require.NoError(t, err)
 	var lines []string
 	in := false
-	for _, l := range strings.Split(strings.ReplaceAll(string(b), "\r\n", "\n"), "\n") {
+	for l := range strings.SplitSeq(strings.ReplaceAll(string(b), "\r\n", "\n"), "\n") {
 		if strings.HasPrefix(l, "[") {
 			in = l == "["+name+"]"
 			continue

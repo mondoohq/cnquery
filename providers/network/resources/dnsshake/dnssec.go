@@ -409,7 +409,7 @@ func (d *DnsClient) walkChain(server, zone string) (chain []string, brokenAt str
 	chain = []string{}
 	zone = dns.Fqdn(zone)
 
-	for depth := 0; depth < maxChainDepth; depth++ {
+	for range maxChainDepth {
 		chain = append(chain, zone)
 
 		keyMsg, err := d.exchangeDnssec(server, zone, dns.TypeDNSKEY, true)

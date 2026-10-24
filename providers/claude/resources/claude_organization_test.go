@@ -45,7 +45,7 @@ func TestWorkspaceArgsLiveWorkspaceReadsNullArchivedAt(t *testing.T) {
 	assert.Nil(t, args["archivedAt"].Value)
 	assert.Equal(t, "platform", args["name"].Value)
 	assert.Equal(t, "us", args["workspaceGeo"].Value)
-	assert.Equal(t, []interface{}{"unrestricted"}, args["allowedInferenceGeos"].Value)
+	assert.Equal(t, []any{"unrestricted"}, args["allowedInferenceGeos"].Value)
 }
 
 // The encryption binding is the most audit-relevant thing the workspace list
@@ -67,7 +67,7 @@ func TestWorkspaceArgsCarriesEncryptionBindingAndTags(t *testing.T) {
 
 	assert.Equal(t, "ekey_0001", args["externalKeyId"].Value)
 	assert.Equal(t, "f8a7b6c5-4d3e-4f1a-8b9c-0d1e2f3a4b5c", args["compartmentId"].Value)
-	assert.Equal(t, map[string]interface{}{"env": "prod", "owner": "platform"}, args["tags"].Value)
+	assert.Equal(t, map[string]any{"env": "prod", "owner": "platform"}, args["tags"].Value)
 }
 
 // A workspace on Anthropic-managed encryption has no key at all. Reporting ""
@@ -89,7 +89,7 @@ func TestWorkspaceArgsUnencryptedWorkspaceReadsNullKey(t *testing.T) {
 
 	assert.Nil(t, args["externalKeyId"].Value)
 	assert.Nil(t, args["compartmentId"].Value)
-	assert.Equal(t, map[string]interface{}{}, args["tags"].Value)
+	assert.Equal(t, map[string]any{}, args["tags"].Value)
 }
 
 func decodeActivity(t *testing.T, payload string) connection.AdminActivity {
@@ -347,7 +347,7 @@ func TestWorkspaceArgsArchivedWorkspaceCarriesTimestamp(t *testing.T) {
 	// A workspace with no data_residency block must not invent a geo. An
 	// empty string is the API saying nothing, not "no restriction".
 	assert.Equal(t, "", args["workspaceGeo"].Value)
-	assert.Equal(t, []interface{}{}, args["allowedInferenceGeos"].Value)
+	assert.Equal(t, []any{}, args["allowedInferenceGeos"].Value)
 }
 
 // A malformed timestamp has to surface as an error rather than resolve to the
@@ -391,7 +391,7 @@ func TestWebhookArgsDisabledEndpoint(t *testing.T) {
 	assert.Equal(t, "enforcement", args["name"].Value)
 	assert.Equal(t, "Pages the trust team", args["description"].Value)
 	assert.Equal(t, "https://hooks.example.invalid/claude", args["url"].Value)
-	assert.Equal(t, []interface{}{"user_profile.enforcement_action_opened", "user_profile.enforcement_action_resolved"}, args["enabledEvents"].Value)
+	assert.Equal(t, []any{"user_profile.enforcement_action_opened", "user_profile.enforcement_action_resolved"}, args["enabledEvents"].Value)
 	assert.Equal(t, "disabled", args["state"].Value)
 	assert.Equal(t, "too_many_failed_deliveries", args["disabledReason"].Value)
 	assert.Equal(t, time.Date(2026, 10, 12, 9, 0, 0, 0, time.UTC), *(args["updatedAt"].Value.(*time.Time)))

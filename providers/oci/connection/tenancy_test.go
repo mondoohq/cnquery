@@ -10,14 +10,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func testCompartment(id, name string) identity.Compartment {
-	return identity.Compartment{Id: common.String(id), Name: common.String(name)}
+	return identity.Compartment{Id: new(id), Name: new(name)}
 }
 
 // seededConnection is a connection whose compartment tree has already been
@@ -50,8 +49,8 @@ func TestCompartmentIndexByID(t *testing.T) {
 		// caller passes that also happens to be empty, reporting the wrong
 		// compartment rather than a miss.
 		index := compartmentIndexByID([]identity.Compartment{
-			{Name: common.String("no id")},
-			{Id: common.String(""), Name: common.String("empty id")},
+			{Name: new("no id")},
+			{Id: new(""), Name: new("empty id")},
 			prod,
 		})
 
@@ -126,7 +125,7 @@ func TestCompartmentByID(t *testing.T) {
 
 		got, err := conn.CompartmentByID(ctx, "ocid1.compartment.oc1..prod")
 		require.NoError(t, err)
-		got.Name = common.String("mutated")
+		got.Name = new("mutated")
 
 		again, err := conn.CompartmentByID(ctx, "ocid1.compartment.oc1..prod")
 		require.NoError(t, err)
@@ -140,7 +139,7 @@ func TestCompartmentByID(t *testing.T) {
 		conn := seededConnection(prod, testCompartment("ocid1.compartment.oc1..dev", "dev"))
 
 		var wg sync.WaitGroup
-		for i := 0; i < 32; i++ {
+		for i := range 32 {
 			wg.Add(1)
 			go func(i int) {
 				defer wg.Done()

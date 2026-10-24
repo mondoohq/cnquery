@@ -359,7 +359,7 @@ func postgresqlHomes(afs *afero.Afero) map[string]string {
 	if err != nil {
 		return nil
 	}
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		fields := strings.Split(line, ":")
 		if len(fields) >= 6 && fields[0] == "postgres" && fields[5] != "" {
 			return map[string]string{"postgres": fields[5]}

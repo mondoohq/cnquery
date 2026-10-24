@@ -169,7 +169,7 @@ func readLockStore(fs afero.Fs, p string) ([]byte, error) {
 func parseVersionlockConf(content string) (enabled bool, locklist string) {
 	enabled = true
 	inMain := false
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || line[0] == '#' || line[0] == ';' {
 			continue
@@ -207,7 +207,7 @@ func parseVersionlockConf(content string) (enabled bool, locklist string) {
 func parsePluginsEnabled(content string, def bool) bool {
 	enabled := def
 	inMain := false
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || line[0] == '#' || line[0] == ';' {
 			continue
@@ -248,7 +248,7 @@ func parsePluginsEnabled(content string, def bool) bool {
 // AlmaLinux 9, the second from Amazon Linux 2.
 func parseVersionlockList(content string) lockedNames {
 	out := lockedNames{}
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		entry := strings.TrimSpace(line)
 		if idx := strings.IndexByte(entry, '#'); idx >= 0 {
 			entry = strings.TrimSpace(entry[:idx])

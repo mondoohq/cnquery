@@ -216,12 +216,12 @@ func TestServiceFabricManagementEndpointHTTPS(t *testing.T) {
 		endpoint *string
 		want     *bool
 	}{
-		{"secured cluster", str("https://c.westus2.cloudapp.azure.com:19080"), boolPtrFor(true)},
-		{"unsecured cluster", str("http://c.westus2.cloudapp.azure.com:19080"), boolPtrFor(false)},
-		{"scheme casing is ignored", str("HTTPS://c.westus2.cloudapp.azure.com:19080"), boolPtrFor(true)},
-		{"leading whitespace is trimmed", str("  https://c:19080"), boolPtrFor(true)},
-		{"http host containing the word https", str("http://https.example.com:19080"), boolPtrFor(false)},
-		{"empty endpoint is not https", str(""), boolPtrFor(false)},
+		{"secured cluster", str("https://c.westus2.cloudapp.azure.com:19080"), new(true)},
+		{"unsecured cluster", str("http://c.westus2.cloudapp.azure.com:19080"), new(false)},
+		{"scheme casing is ignored", str("HTTPS://c.westus2.cloudapp.azure.com:19080"), new(true)},
+		{"leading whitespace is trimmed", str("  https://c:19080"), new(true)},
+		{"http host containing the word https", str("http://https.example.com:19080"), new(false)},
+		{"empty endpoint is not https", str(""), new(false)},
 		{"absent endpoint stays null", nil, nil},
 	}
 
@@ -238,7 +238,8 @@ func TestServiceFabricManagementEndpointHTTPS(t *testing.T) {
 	}
 }
 
-func boolPtrFor(b bool) *bool { return &b }
+//go:fix inline
+func boolPtrFor(b bool) *bool { return new(b) }
 
 // TestServiceFabricSettingParameters covers the fabric-settings flattening,
 // including the entries the loop is meant to skip. A nil name would panic on

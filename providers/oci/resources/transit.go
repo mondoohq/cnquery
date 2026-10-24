@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -39,7 +38,7 @@ func (o *mqlOciNetwork) drgs() ([]any, error) {
 
 			drgs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Drg, *string, error) {
 				response, err := svc.ListDrgs(ctx, core.ListDrgsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -148,8 +147,8 @@ func (o *mqlOciNetworkDrg) attachments() ([]any, error) {
 		// exists to expose, and the reason the ipsecConnection/virtualCircuit
 		// accessors below could never resolve.
 		response, err := svc.ListDrgAttachments(ctx, core.ListDrgAttachmentsRequest{
-			CompartmentId:  common.String(o.drgCompartment(conn.TenantID())),
-			DrgId:          common.String(o.Id.Data),
+			CompartmentId:  new(o.drgCompartment(conn.TenantID())),
+			DrgId:          new(o.Id.Data),
 			AttachmentType: core.ListDrgAttachmentsAttachmentTypeAll,
 			Page:           page,
 		})
@@ -246,8 +245,8 @@ func (o *mqlOciNetworkDrg) remotePeeringConnections() ([]any, error) {
 	// created, rather than the tenancy root.
 	rpcs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.RemotePeeringConnection, *string, error) {
 		response, err := svc.ListRemotePeeringConnections(ctx, core.ListRemotePeeringConnectionsRequest{
-			CompartmentId: common.String(o.drgCompartment(conn.TenantID())),
-			DrgId:         common.String(o.Id.Data),
+			CompartmentId: new(o.drgCompartment(conn.TenantID())),
+			DrgId:         new(o.Id.Data),
 			Page:          page,
 		})
 		if err != nil {
@@ -418,7 +417,7 @@ func (o *mqlOciNetwork) localPeeringGateways() ([]any, error) {
 
 			lpgs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.LocalPeeringGateway, *string, error) {
 				response, err := svc.ListLocalPeeringGateways(ctx, core.ListLocalPeeringGatewaysRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -567,7 +566,7 @@ func (o *mqlOciNetwork) serviceGateways() ([]any, error) {
 
 			sgws, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.ServiceGateway, *string, error) {
 				response, err := svc.ListServiceGateways(ctx, core.ListServiceGatewaysRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -698,7 +697,7 @@ func (o *mqlOciNetworkServiceGateway) services() ([]any, error) {
 		if !isOcid(sid) {
 			continue
 		}
-		response, err := svc.GetService(ctx, core.GetServiceRequest{ServiceId: common.String(sid)})
+		response, err := svc.GetService(ctx, core.GetServiceRequest{ServiceId: new(sid)})
 		if err != nil {
 			return nil, err
 		}

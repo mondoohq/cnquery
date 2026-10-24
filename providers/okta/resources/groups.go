@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"maps"
 
 	"github.com/okta/okta-sdk-golang/v6/okta"
 	"github.com/rs/zerolog/log"
@@ -92,9 +93,7 @@ func initOktaGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	if err != nil {
 		return nil, nil, err
 	}
-	for k, v := range groupArgs {
-		args[k] = v
-	}
+	maps.Copy(args, groupArgs)
 	return args, nil, nil
 }
 

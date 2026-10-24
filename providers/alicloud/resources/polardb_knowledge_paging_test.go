@@ -25,14 +25,11 @@ func polardbSyncLinkPages(total int, pageSize int32) (polardbSyncLinkPageFunc, *
 		if start >= total {
 			return nil, nil
 		}
-		end := start + int(size)
-		if end > total {
-			end = total
-		}
+		end := min(start+int(size), total)
 		page := []*polardb.DescribeKBSyncLinksResponseBodyItems{}
 		for i := start; i < end; i++ {
 			page = append(page, &polardb.DescribeKBSyncLinksResponseBodyItems{
-				LinkId: tea.String(fmt.Sprintf("pkbl-%03d", i)),
+				LinkId: new(fmt.Sprintf("pkbl-%03d", i)),
 			})
 		}
 		return page, nil
@@ -94,7 +91,7 @@ func TestCollectPolardbSyncLinks(t *testing.T) {
 		fetch := func(pageNumber, pageSize int32) ([]*polardb.DescribeKBSyncLinksResponseBodyItems, error) {
 			return []*polardb.DescribeKBSyncLinksResponseBodyItems{
 				nil,
-				{LinkId: tea.String("pkbl-bp1example")},
+				{LinkId: new("pkbl-bp1example")},
 				nil,
 			}, nil
 		}
@@ -115,7 +112,7 @@ func TestCollectPolardbSyncLinks(t *testing.T) {
 			page := []*polardb.DescribeKBSyncLinksResponseBodyItems{}
 			for i := 0; i < int(pageSize); i++ {
 				page = append(page, &polardb.DescribeKBSyncLinksResponseBodyItems{
-					LinkId: tea.String(fmt.Sprintf("pkbl-%03d", i)),
+					LinkId: new(fmt.Sprintf("pkbl-%03d", i)),
 				})
 			}
 			return page, nil
@@ -134,7 +131,7 @@ func TestCollectPolardbSyncLinks(t *testing.T) {
 			page := []*polardb.DescribeKBSyncLinksResponseBodyItems{}
 			for i := 0; i < int(pageSize); i++ {
 				page = append(page, &polardb.DescribeKBSyncLinksResponseBodyItems{
-					LinkId: tea.String("pkbl-bp1example"),
+					LinkId: new("pkbl-bp1example"),
 				})
 			}
 			return page, nil

@@ -5,6 +5,7 @@ package networkinterface
 
 import (
 	"io"
+	"maps"
 	"net"
 	"sort"
 	"strings"
@@ -173,9 +174,7 @@ var linuxIPv6RouteFlagsMap = map[int64]string{
 func init() {
 	// IPv6 routes carry the IPv4 bits too, so fold them in rather than
 	// restating them and letting the two lists drift apart.
-	for bit, name := range linuxRouteFlagsMap {
-		linuxIPv6RouteFlagsMap[bit] = name
-	}
+	maps.Copy(linuxIPv6RouteFlagsMap, linuxRouteFlagsMap)
 }
 
 // parseBSDRouteFlags converts the route flags of a BSD-derived system into an

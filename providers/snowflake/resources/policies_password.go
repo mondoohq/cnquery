@@ -20,9 +20,8 @@ func (r *mqlSnowflakeAccount) passwordPolicies() ([]any, error) {
 	ctx := context.Background()
 
 	passwordPolicies, err := client.PasswordPolicies.Show(ctx, &sdk.ShowPasswordPolicyRequest{
-		In: &sdk.ExtendedIn{In: sdk.In{
-			Account: sdk.Bool(true),
-		}},
+		In: &sdk.ExtendedIn{
+			Account: new(true)},
 	})
 	if err != nil {
 		return nil, err

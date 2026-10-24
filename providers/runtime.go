@@ -9,6 +9,7 @@ import (
 	"io"
 	"net"
 	"path"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -804,8 +805,7 @@ func (r *Runtime) watchAndUpdateContext(ctx context.Context, resource string, re
 		// error (ADR 046): this is the site where a kind would otherwise be
 		// flattened into a string for the rest of its life.
 		raw = &llx.RawData{Error: llx.ErrorFromDetail(data.Error, data.ErrorDetail)}
-		var classified *llx.Error
-		if errors.As(raw.Error, &classified) {
+		if classified, ok := errors.AsType[*llx.Error](raw.Error); ok {
 			log.Debug().
 				Str("provider", provider.Instance.Name).
 				Str("resource", resource).
@@ -999,8 +999,7 @@ func (r *Runtime) handlePluginError(err error, provider *ConnectedProvider, reso
 // substring matching on err.Error()) so a resource-level error that happens
 // to mention "connection" in its message is never misclassified.
 func isTransportFailure(err error) bool {
-	var opErr *net.OpError
-	if errors.As(err, &opErr) {
+	if _, ok := errors.AsType[*net.OpError](err); ok {
 		// Covers "dial tcp ...", "read tcp ...", "write tcp ..." failures -
 		// the shape a real dial/connection failure takes.
 		return true
@@ -1481,8 +1480,8 @@ func (r *Runtime) lookupResource(resource string) (*resources.ResourceInfo, erro
 	}
 
 	priority := []string{BuiltinCoreID, r.Provider.Instance.ID}
-	for i := len(priority) - 1; i >= 0; i-- {
-		id := priority[i]
+	for _, id := range slices.Backward(priority) {
+
 		if s := resourcesPerProvider[id]; s != nil {
 			info = s
 		}
@@ -1528,8 +1527,8 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 	// prioritize ids
 	priority := []string{BuiltinCoreID, r.Provider.Instance.ID}
 	priorityMatched := false
-	for i := len(priority) - 1; i >= 0; i-- {
-		id := priority[i]
+	for _, id := range slices.Backward(priority) {
+
 		if s := fieldsPerProvider[id]; s != nil {
 			fieldInfo = s
 			priorityMatched = true

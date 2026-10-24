@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -81,11 +82,11 @@ func identifierProvider(schema resources.ResourcesSchema, id string) string {
 	}
 	name := id
 	for {
-		i := strings.LastIndexByte(name, '.')
-		if i <= 0 {
+		before, _, ok := strings.CutLast(name, ".")
+		if !ok || before == "" {
 			return ""
 		}
-		name = name[:i]
+		name = before
 		if info := schema.Lookup(name); info != nil && info.Provider != "" {
 			return info.Provider
 		}
@@ -1907,10 +1908,8 @@ func (c *compiler) noteIfUnrooted(resource *resources.ResourceInfo) {
 		return
 	}
 
-	for _, existing := range c.Result.UnrootedResources {
-		if existing == resource.Id {
-			return
-		}
+	if slices.Contains(c.Result.UnrootedResources, resource.Id) {
+		return
 	}
 	c.Result.UnrootedResources = append(c.Result.UnrootedResources, resource.Id)
 }
@@ -2864,8 +2863,8 @@ func (c *compiler) addValueFieldChunks(ref uint64, autoExpandRef uint64) {
 	// for the predicate(s) of the .all()/.none()/... function
 	var assessmentBlock *llx.Block
 	// find the referenced block for the where function
-	for i := len(whereChunk.Function.Args) - 1; i >= 0; i-- {
-		arg := whereChunk.Function.Args[i]
+	for _, arg := range slices.Backward(whereChunk.Function.Args) {
+
 		if types.Type(arg.Type).Underlying() == types.FunctionLike {
 			raw := arg.RawData()
 			blockRef := raw.Value.(uint64)
@@ -3082,9 +3081,7 @@ func (c *compiler) updateEntrypoints() {
 		res[idx] = ref
 		idx++
 	}
-	sort.Slice(res, func(i, j int) bool {
-		return res[i] < res[j]
-	})
+	slices.Sort(res)
 	c.block.Datapoints = append(c.block.Datapoints, res...)
 	// E.g. in the case of .all(...)/.none(...)/... queries, we have two datapoints bound to the list of resources:
 	// - one with the resource ids
@@ -3094,13 +3091,7 @@ func (c *compiler) updateEntrypoints() {
 	for _, ref := range c.block.Datapoints {
 		chunk := code.Chunk(ref)
 		if chunk.Function != nil {
-			found := false
-			for i := range c.block.Datapoints {
-				if c.block.Datapoints[i] == chunk.Function.Binding {
-					found = true
-					break
-				}
-			}
+			found := slices.Contains(c.block.Datapoints, chunk.Function.Binding)
 			if found {
 				updatedDatapoints = append(updatedDatapoints, ref)
 			}

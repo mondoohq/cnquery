@@ -35,7 +35,7 @@ func NewHashes(integrity string) []languages.PackageHash {
 		return nil
 	}
 	var hashes []languages.PackageHash
-	for _, entry := range strings.Fields(integrity) {
+	for entry := range strings.FieldsSeq(integrity) {
 		dash := strings.IndexByte(entry, '-')
 		if dash <= 0 {
 			continue

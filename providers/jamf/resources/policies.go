@@ -17,20 +17,20 @@ import (
 )
 
 // jamfScopeEntities renders a list of scope entities into id/name dicts.
-func jamfScopeEntities[T any](items []T, idName func(T) (any, string)) []interface{} {
-	out := make([]interface{}, 0, len(items))
+func jamfScopeEntities[T any](items []T, idName func(T) (any, string)) []any {
+	out := make([]any, 0, len(items))
 	for _, it := range items {
 		id, name := idName(it)
-		out = append(out, map[string]interface{}{"id": id, "name": name})
+		out = append(out, map[string]any{"id": id, "name": name})
 	}
 	return out
 }
 
 // jamfScopeEntitiesPtr is the pointer-slice variant; the Jamf policy scope
 // uses pointer slices that are nil when empty.
-func jamfScopeEntitiesPtr[T any](items *[]T, idName func(T) (any, string)) []interface{} {
+func jamfScopeEntitiesPtr[T any](items *[]T, idName func(T) (any, string)) []any {
 	if items == nil {
-		return []interface{}{}
+		return []any{}
 	}
 	return jamfScopeEntities(*items, idName)
 }
@@ -52,7 +52,7 @@ type mqlJamfPolicyScriptInternal struct {
 	scriptID string
 }
 
-func (r *mqlJamf) policies() ([]interface{}, error) {
+func (r *mqlJamf) policies() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.JamfConnection)
 	client := conn.Client
 
@@ -61,7 +61,7 @@ func (r *mqlJamf) policies() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var res []interface{}
+	var res []any
 	for _, item := range list.Policy {
 		mqlItem, err := CreateResource(r.MqlRuntime, "jamf.policy", map[string]*llx.RawData{
 			"id":   llx.StringData(strconv.Itoa(item.ID)),
@@ -285,7 +285,7 @@ func (p *mqlJamfPolicy) scopeAllComputers() (bool, error) {
 	return d.Scope.AllComputers, nil
 }
 
-func (p *mqlJamfPolicy) scope() (interface{}, error) {
+func (p *mqlJamfPolicy) scope() (any, error) {
 	d, err := p.fetchDetail()
 	if err != nil {
 		return nil, err
@@ -300,7 +300,7 @@ func (p *mqlJamfPolicy) scope() (interface{}, error) {
 	userGroup := func(g jamfpro.PolicySubsetUserGroup) (any, string) { return g.ID, g.Name }
 	networkSegment := func(n jamfpro.PolicySubsetNetworkSegment) (any, string) { return int64(n.ID), n.Name }
 
-	result := map[string]interface{}{
+	result := map[string]any{
 		"allComputers":   scope.AllComputers,
 		"allJssUsers":    scope.AllJSSUsers,
 		"computers":      jamfScopeEntitiesPtr(scope.Computers, computer),
@@ -310,7 +310,7 @@ func (p *mqlJamfPolicy) scope() (interface{}, error) {
 	}
 
 	if scope.Limitations != nil {
-		result["limitations"] = map[string]interface{}{
+		result["limitations"] = map[string]any{
 			"users":           jamfScopeEntitiesPtr(scope.Limitations.Users, user),
 			"userGroups":      jamfScopeEntitiesPtr(scope.Limitations.UserGroups, userGroup),
 			"networkSegments": jamfScopeEntitiesPtr(scope.Limitations.NetworkSegments, networkSegment),
@@ -318,7 +318,7 @@ func (p *mqlJamfPolicy) scope() (interface{}, error) {
 	}
 
 	if scope.Exclusions != nil {
-		result["exclusions"] = map[string]interface{}{
+		result["exclusions"] = map[string]any{
 			"computers":       jamfScopeEntitiesPtr(scope.Exclusions.Computers, computer),
 			"computerGroups":  jamfScopeEntitiesPtr(scope.Exclusions.ComputerGroups, group),
 			"buildings":       jamfScopeEntitiesPtr(scope.Exclusions.Buildings, building),
@@ -332,13 +332,13 @@ func (p *mqlJamfPolicy) scope() (interface{}, error) {
 	return result, nil
 }
 
-func (p *mqlJamfPolicy) filesProcesses() (interface{}, error) {
+func (p *mqlJamfPolicy) filesProcesses() (any, error) {
 	d, err := p.fetchDetail()
 	if err != nil {
 		return nil, err
 	}
 	fp := d.FilesProcesses
-	return map[string]interface{}{
+	return map[string]any{
 		"searchByPath":         fp.SearchByPath,
 		"deleteFile":           fp.DeleteFile,
 		"locateFile":           fp.LocateFile,
@@ -350,13 +350,13 @@ func (p *mqlJamfPolicy) filesProcesses() (interface{}, error) {
 	}, nil
 }
 
-func (p *mqlJamfPolicy) packages() ([]interface{}, error) {
+func (p *mqlJamfPolicy) packages() ([]any, error) {
 	d, err := p.fetchDetail()
 	if err != nil {
 		return nil, err
 	}
 
-	var res []interface{}
+	var res []any
 	for _, pkg := range d.PackageConfiguration.Packages {
 		mqlPkg, err := CreateResource(p.MqlRuntime, "jamf.policy.package", map[string]*llx.RawData{
 			"__id":              llx.StringData(fmt.Sprintf("%s/package/%d", p.Id.Data, pkg.ID)),
@@ -375,13 +375,13 @@ func (p *mqlJamfPolicy) packages() ([]interface{}, error) {
 	return res, nil
 }
 
-func (p *mqlJamfPolicy) scripts() ([]interface{}, error) {
+func (p *mqlJamfPolicy) scripts() ([]any, error) {
 	d, err := p.fetchDetail()
 	if err != nil {
 		return nil, err
 	}
 
-	var res []interface{}
+	var res []any
 	for _, sc := range d.Scripts {
 		mqlScript, err := CreateResource(p.MqlRuntime, "jamf.policy.script", map[string]*llx.RawData{
 			"__id":       llx.StringData(fmt.Sprintf("%s/script/%s", p.Id.Data, sc.ID)),
@@ -400,7 +400,7 @@ func (p *mqlJamfPolicy) scripts() ([]interface{}, error) {
 
 // policyScriptParameters collects the non-empty labeled parameters (parameter4
 // through parameter11) a policy passes to a script.
-func policyScriptParameters(s jamfpro.PolicySubsetScript) map[string]interface{} {
+func policyScriptParameters(s jamfpro.PolicySubsetScript) map[string]any {
 	slots := map[string]string{
 		"parameter4":  s.Parameter4,
 		"parameter5":  s.Parameter5,
@@ -411,7 +411,7 @@ func policyScriptParameters(s jamfpro.PolicySubsetScript) map[string]interface{}
 		"parameter10": s.Parameter10,
 		"parameter11": s.Parameter11,
 	}
-	out := map[string]interface{}{}
+	out := map[string]any{}
 	for k, v := range slots {
 		if v != "" {
 			out[k] = v

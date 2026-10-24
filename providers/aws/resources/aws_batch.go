@@ -975,9 +975,9 @@ func parseImageReference(ref string) (registry, repository, tag, digest string) 
 		registry = "docker.io"
 	}
 
-	if i := strings.LastIndexByte(name, ':'); i >= 0 {
-		tag = name[i+1:]
-		repository = name[:i]
+	if before, after, ok := strings.CutLast(name, ":"); ok {
+		tag = after
+		repository = before
 	} else {
 		repository = name
 	}
@@ -1363,10 +1363,7 @@ func (a *mqlAwsBatch) getSchedulingPolicies(conn *connection.AwsConnection) []*j
 
 			// Describe in batches of 100 (SDK max).
 			for i := 0; i < len(arns); i += 100 {
-				end := i + 100
-				if end > len(arns) {
-					end = len(arns)
-				}
+				end := min(i+100, len(arns))
 				resp, err := svc.DescribeSchedulingPolicies(ctx, &batch.DescribeSchedulingPoliciesInput{
 					Arns: arns[i:end],
 				})
@@ -1828,10 +1825,7 @@ func (a *mqlAwsBatchJobQueue) jobs() ([]any, error) {
 
 	// Describe in batches of 100 (SDK max).
 	for i := 0; i < len(jobIds); i += 100 {
-		end := i + 100
-		if end > len(jobIds) {
-			end = len(jobIds)
-		}
+		end := min(i+100, len(jobIds))
 		resp, err := svc.DescribeJobs(ctx, &batch.DescribeJobsInput{
 			Jobs: jobIds[i:end],
 		})

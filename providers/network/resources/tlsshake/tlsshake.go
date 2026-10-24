@@ -162,9 +162,7 @@ func (s *Tester) Test(conf ScanConfig) error {
 	for i := range conf.Versions {
 		version := conf.Versions[i]
 
-		workers.Add(1)
-		go func() {
-			defer workers.Done()
+		workers.Go(func() {
 
 			// we don't activate any of the additional tests in the beginning
 			// let's find out if we work on this version of TLS/SSL
@@ -202,7 +200,7 @@ func (s *Tester) Test(conf ScanConfig) error {
 					_, _ = s.testTLS(s.proto, s.target, curConf)
 				}
 			}
-		}()
+		})
 	}
 
 	workers.Wait()
@@ -385,7 +383,7 @@ var helloRetryRequestRandom = []byte{
 
 func hexdump(data []byte) string {
 	var res bytes.Buffer
-	for i := 0; i < len(data); i++ {
+	for i := range data {
 		if i > 0 {
 			res.WriteString(" ")
 		}

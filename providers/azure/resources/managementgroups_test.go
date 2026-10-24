@@ -6,42 +6,41 @@ package resources
 import (
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/managementgroups/armmanagementgroups/v2"
 	"github.com/stretchr/testify/assert"
 )
 
 func mgEntity(name string, parentID string, chain ...string) *armmanagementgroups.EntityInfo {
 	e := &armmanagementgroups.EntityInfo{
-		ID:   to.Ptr(managementGroupIDPrefix + name),
-		Name: to.Ptr(name),
-		Type: to.Ptr("Microsoft.Management/managementGroups"),
+		ID:   new(managementGroupIDPrefix + name),
+		Name: new(name),
+		Type: new("Microsoft.Management/managementGroups"),
 		Properties: &armmanagementgroups.EntityInfoProperties{
-			DisplayName: to.Ptr(name + " display"),
-			TenantID:    to.Ptr("tenant-1"),
+			DisplayName: new(name + " display"),
+			TenantID:    new("tenant-1"),
 		},
 	}
 	if parentID != "" {
-		e.Properties.Parent = &armmanagementgroups.EntityParentGroupInfo{ID: to.Ptr(parentID)}
+		e.Properties.Parent = &armmanagementgroups.EntityParentGroupInfo{ID: new(parentID)}
 	}
 	for _, c := range chain {
-		e.Properties.ParentNameChain = append(e.Properties.ParentNameChain, to.Ptr(c))
+		e.Properties.ParentNameChain = append(e.Properties.ParentNameChain, new(c))
 	}
 	return e
 }
 
 func subEntity(subID string, parentName string, chain ...string) *armmanagementgroups.EntityInfo {
 	e := &armmanagementgroups.EntityInfo{
-		ID:   to.Ptr("/subscriptions/" + subID),
-		Name: to.Ptr(subID),
-		Type: to.Ptr("/subscriptions"),
+		ID:   new("/subscriptions/" + subID),
+		Name: new(subID),
+		Type: new("/subscriptions"),
 		Properties: &armmanagementgroups.EntityInfoProperties{
-			DisplayName: to.Ptr("sub " + subID),
-			Parent:      &armmanagementgroups.EntityParentGroupInfo{ID: to.Ptr(managementGroupIDPrefix + parentName)},
+			DisplayName: new("sub " + subID),
+			Parent:      &armmanagementgroups.EntityParentGroupInfo{ID: new(managementGroupIDPrefix + parentName)},
 		},
 	}
 	for _, c := range chain {
-		e.Properties.ParentNameChain = append(e.Properties.ParentNameChain, to.Ptr(c))
+		e.Properties.ParentNameChain = append(e.Properties.ParentNameChain, new(c))
 	}
 	return e
 }
@@ -54,7 +53,7 @@ func TestIsManagementGroupEntity(t *testing.T) {
 
 	t.Run("casing of the provider path is tolerated", func(t *testing.T) {
 		e := &armmanagementgroups.EntityInfo{
-			ID: to.Ptr("/providers/microsoft.management/managementgroups/root"),
+			ID: new("/providers/microsoft.management/managementgroups/root"),
 		}
 		assert.True(t, isManagementGroupEntity(e))
 	})
@@ -67,8 +66,8 @@ func TestIsSubscriptionEntity(t *testing.T) {
 
 	t.Run("classified by type when the id prefix is unexpected", func(t *testing.T) {
 		e := &armmanagementgroups.EntityInfo{
-			ID:   to.Ptr("/Subscriptions/sub-2"),
-			Type: to.Ptr("Microsoft.Management/managementGroups/subscriptions"),
+			ID:   new("/Subscriptions/sub-2"),
+			Type: new("Microsoft.Management/managementGroups/subscriptions"),
 		}
 		assert.True(t, isSubscriptionEntity(e))
 	})
@@ -97,7 +96,7 @@ func TestEntityParentNameChain(t *testing.T) {
 
 	t.Run("nil chain entries are dropped", func(t *testing.T) {
 		e := mgEntity("prod", managementGroupIDPrefix+"root")
-		e.Properties.ParentNameChain = []*string{to.Ptr("root"), nil, to.Ptr("platform")}
+		e.Properties.ParentNameChain = []*string{new("root"), nil, new("platform")}
 		assert.Equal(t, []string{"root", "platform"}, entityParentNameChain(e))
 	})
 }

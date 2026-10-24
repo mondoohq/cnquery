@@ -768,7 +768,7 @@ func storageOverlayOption(options map[string]any, key string) string {
 // splitMountOptions splits a comma separated mount option list.
 func splitMountOptions(s string) []string {
 	res := []string{}
-	for _, o := range strings.Split(s, ",") {
+	for o := range strings.SplitSeq(s, ",") {
 		if o = strings.TrimSpace(o); o != "" {
 			res = append(res, o)
 		}

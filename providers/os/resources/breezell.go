@@ -30,7 +30,7 @@ func (r *mqlBreezell) id() (string, error) {
 	return "breezell/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlBreezell) rules() ([]interface{}, error) {
+func (r *mqlBreezell) rules() ([]any, error) {
 	afs := connectionAfs(r.MqlRuntime)
 	memoriesDir := filepath.Join(r.ConfigPath.Data, "memories")
 
@@ -42,7 +42,7 @@ func (r *mqlBreezell) rules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var result []interface{}
+	var result []any
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -80,7 +80,7 @@ func breezellMCPConfigPath(configPath string) string {
 	return filepath.Join(filepath.Dir(configPath), breezellEditorDataDir, "mcp.json")
 }
 
-func (r *mqlBreezell) mcpServers() ([]interface{}, error) {
+func (r *mqlBreezell) mcpServers() ([]any, error) {
 	afs := connectionAfs(r.MqlRuntime)
 	configFile := breezellMCPConfigPath(r.ConfigPath.Data)
 
@@ -97,7 +97,7 @@ func (r *mqlBreezell) mcpServers() ([]interface{}, error) {
 		return nil, fmt.Errorf("failed to parse breezell mcp.json: %w", err)
 	}
 
-	var result []interface{}
+	var result []any
 	for name, server := range config.McpServers {
 		res, err := NewResource(r.MqlRuntime, "breezell.mcpServer", map[string]*llx.RawData{
 			"__id":    llx.StringData("breezell.mcpServer/" + name),
@@ -116,12 +116,12 @@ func (r *mqlBreezell) mcpServers() ([]interface{}, error) {
 	return result, nil
 }
 
-func (r *mqlBreezell) skills() ([]interface{}, error) {
+func (r *mqlBreezell) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "breezell.skill", r.ConfigPath.Data, defaultBreezellConfigDir,
 		filepath.Join(defaultBreezellConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
 
-func (r *mqlBreezell) repos() ([]interface{}, error) {
+func (r *mqlBreezell) repos() ([]any, error) {
 	folders, err := vscodeWorkspaceFolders(r.MqlRuntime, "Breezell")
 	if err != nil {
 		return nil, err

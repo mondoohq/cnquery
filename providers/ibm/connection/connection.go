@@ -334,8 +334,7 @@ func StatusCode(err error) int {
 		return coder.Code()
 	}
 	// A status the swagger client has no type for arrives as a runtime.APIError.
-	var apiErr *runtime.APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*runtime.APIError](err); ok {
 		return apiErr.Code
 	}
 	// The Power client turns a 429 into a plain error that keeps no status.

@@ -5,6 +5,7 @@ package apache2
 
 import (
 	"fmt"
+	"maps"
 	"path/filepath"
 	"sort"
 	"testing"
@@ -67,9 +68,7 @@ IncludeOptional conf.d/*.conf
 		"/etc/httpd/conf.modules.d/00-mpm.conf":  rhel00MPM(mpm),
 		"/etc/httpd/conf.modules.d/01-cgi.conf":  cgiConf,
 	}
-	for k, v := range extra {
-		files[k] = v
-	}
+	maps.Copy(files, extra)
 	return files
 }
 

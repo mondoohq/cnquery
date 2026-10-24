@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/afero"
 	fsconn "go.mondoo.com/mql/providers/os/connection/fs"
 	"go.mondoo.com/mql/providers/os/fsutil"
+	"maps"
 	"net/url"
 	"os"
 	"regexp"
@@ -2009,9 +2010,7 @@ func TestGetFsDotNetFramework(t *testing.T) {
 	merge := func(fs ...files) files {
 		out := files{}
 		for _, f := range fs {
-			for k, v := range f {
-				out[k] = v
-			}
+			maps.Copy(out, f)
 		}
 		return out
 	}

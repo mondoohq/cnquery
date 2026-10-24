@@ -17,12 +17,12 @@ import (
 
 func TestLifecycleRuleArgs(t *testing.T) {
 	args := lifecycleRuleArgs(objectstorage.ObjectLifecycleRule{
-		Name:             common.String("expire-logs"),
-		Action:           common.String("DELETE"),
-		Target:           common.String("previous-object-versions"),
+		Name:             new("expire-logs"),
+		Action:           new("DELETE"),
+		Target:           new("previous-object-versions"),
 		TimeAmount:       common.Int64(30),
 		TimeUnit:         objectstorage.ObjectLifecycleRuleTimeUnitDays,
-		IsEnabled:        common.Bool(true),
+		IsEnabled:        new(true),
 		ObjectNameFilter: &objectstorage.ObjectNameFilter{InclusionPrefixes: []string{"logs/"}},
 	})
 	assert.Equal(t, "DELETE", args["action"].Value)
@@ -30,19 +30,19 @@ func TestLifecycleRuleArgs(t *testing.T) {
 	assert.Equal(t, "DAYS", args["timeUnit"].Value)
 	assert.Equal(t, []any{"logs/"}, args["inclusionPrefixes"].Value)
 
-	bare := lifecycleRuleArgs(objectstorage.ObjectLifecycleRule{Name: common.String("r")})
+	bare := lifecycleRuleArgs(objectstorage.ObjectLifecycleRule{Name: new("r")})
 	assert.Equal(t, false, bare["isEnabled"].Value)
 	assert.Equal(t, []any{}, bare["inclusionPrefixes"].Value, "no filter applies the rule to every object")
 }
 
 func TestBastionSessionArgs(t *testing.T) {
 	ssh, inst := bastionSessionArgs(bastion.SessionSummary{
-		Id: common.String("s1"),
+		Id: new("s1"),
 		TargetResourceDetails: bastion.ManagedSshSessionTargetResourceDetails{
-			TargetResourceId:                      common.String("ocid1.instance..i"),
-			TargetResourcePrivateIpAddress:        common.String("10.0.0.5"),
-			TargetResourcePort:                    common.Int(22),
-			TargetResourceOperatingSystemUserName: common.String("opc"),
+			TargetResourceId:                      new("ocid1.instance..i"),
+			TargetResourcePrivateIpAddress:        new("10.0.0.5"),
+			TargetResourcePort:                    new(22),
+			TargetResourceOperatingSystemUserName: new("opc"),
 		},
 	})
 	assert.Equal(t, "MANAGED_SSH", ssh["sessionType"].Value)
@@ -51,17 +51,17 @@ func TestBastionSessionArgs(t *testing.T) {
 	assert.Equal(t, "ocid1.instance..i", inst)
 
 	pf, inst := bastionSessionArgs(bastion.SessionSummary{
-		Id: common.String("s2"),
+		Id: new("s2"),
 		TargetResourceDetails: bastion.PortForwardingSessionTargetResourceDetails{
-			TargetResourcePrivateIpAddress: common.String("10.0.0.9"),
-			TargetResourcePort:             common.Int(5432),
+			TargetResourcePrivateIpAddress: new("10.0.0.9"),
+			TargetResourcePort:             new(5432),
 		},
 	})
 	assert.Equal(t, "PORT_FORWARDING", pf["sessionType"].Value)
 	assert.Equal(t, "", pf["targetUser"].Value)
 	assert.Empty(t, inst, "a port forwarding session to an IP address has no instance")
 
-	dyn, _ := bastionSessionArgs(bastion.SessionSummary{Id: common.String("s3"), TargetResourceDetails: bastion.DynamicPortForwardingSessionTargetResourceDetails{}})
+	dyn, _ := bastionSessionArgs(bastion.SessionSummary{Id: new("s3"), TargetResourceDetails: bastion.DynamicPortForwardingSessionTargetResourceDetails{}})
 	assert.Equal(t, "DYNAMIC_PORT_FORWARDING", dyn["sessionType"].Value)
 	assert.Nil(t, dyn["targetPort"].Value)
 }
@@ -69,10 +69,10 @@ func TestBastionSessionArgs(t *testing.T) {
 func TestTargetRecipeIDs(t *testing.T) {
 	detector, responder := targetRecipeIDs(&cloudguard.Target{
 		TargetDetectorRecipes: []cloudguard.TargetDetectorRecipe{
-			{Id: common.String("copy1"), DetectorRecipeId: common.String("recipe1")},
-			{Id: common.String("copy2")},
+			{Id: new("copy1"), DetectorRecipeId: new("recipe1")},
+			{Id: new("copy2")},
 		},
-		TargetResponderRecipes: []cloudguard.TargetResponderRecipe{{Id: common.String("copy3"), ResponderRecipeId: common.String("recipe3")}},
+		TargetResponderRecipes: []cloudguard.TargetResponderRecipe{{Id: new("copy3"), ResponderRecipeId: new("recipe3")}},
 	})
 	assert.Equal(t, []string{"recipe1"}, detector, "the source recipe, not the target's copy")
 	assert.Equal(t, []string{"recipe3"}, responder)

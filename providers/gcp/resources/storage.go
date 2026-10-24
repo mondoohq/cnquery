@@ -352,7 +352,7 @@ func (g *mqlGcpProjectStorageServiceBucket) managedBy() (string, error) {
 	return managedByFromLabels(&g.Labels)
 }
 
-func (g *mqlGcpProjectStorageServiceBucket) tags() (map[string]interface{}, error) {
+func (g *mqlGcpProjectStorageServiceBucket) tags() (map[string]any, error) {
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
@@ -397,7 +397,7 @@ func (g *mqlGcpProjectStorageServiceBucket) tags() (map[string]interface{}, erro
 	resp, err := svc.Locations.EffectiveTagBindingCollections.Get(name).Context(ctx).Do()
 	if err != nil {
 		if gerr, ok := err.(*googleapi.Error); ok && (gerr.Code == 403 || gerr.Code == 404) {
-			return map[string]interface{}{}, nil
+			return map[string]any{}, nil
 		}
 		return nil, err
 	}
@@ -408,8 +408,8 @@ func (g *mqlGcpProjectStorageServiceBucket) tags() (map[string]interface{}, erro
 // effectiveTagsToInterface converts the EffectiveTags map from the
 // cloudresourcemanager API (map[string]string) to map[string]interface{}
 // as required by MQL. Unexported; tested directly in storage_test.go.
-func effectiveTagsToInterface(in map[string]string) map[string]interface{} {
-	out := make(map[string]interface{}, len(in))
+func effectiveTagsToInterface(in map[string]string) map[string]any {
+	out := make(map[string]any, len(in))
 	for k, v := range in {
 		out[k] = v
 	}

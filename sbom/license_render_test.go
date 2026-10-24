@@ -184,7 +184,7 @@ func TestSPDXEmitsLicenseFields(t *testing.T) {
 func TestLicenseContentIsDeterministic(t *testing.T) {
 	strip := func(s string) string {
 		var kept []string
-		for _, line := range strings.Split(s, "\n") {
+		for line := range strings.SplitSeq(s, "\n") {
 			t := strings.TrimSpace(line)
 			if strings.HasPrefix(t, `"serialNumber"`) || strings.HasPrefix(t, `"timestamp"`) ||
 				strings.HasPrefix(t, `"created"`) || strings.HasPrefix(t, `"documentNamespace"`) {
@@ -197,7 +197,7 @@ func TestLicenseContentIsDeterministic(t *testing.T) {
 
 	for _, format := range []string{FormatCycloneDxJSON, FormatSpdxJSON} {
 		first := strip(renderTo(t, format))
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			if strip(renderTo(t, format)) != first {
 				t.Errorf("%s content is not stable across renders", format)
 				break

@@ -8,7 +8,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/integration"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -36,7 +35,7 @@ func (o *mqlOciIntegration) instances() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]integration.IntegrationInstanceSummary, *string, error) {
 				response, err := svc.ListIntegrationInstances(ctx, integration.ListIntegrationInstancesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {

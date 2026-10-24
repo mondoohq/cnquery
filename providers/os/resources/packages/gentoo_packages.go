@@ -105,11 +105,11 @@ func newEbuildPurl(pf *inventory.Platform, categoryName, version string) string 
 
 // splitCategoryName splits "category/name" into its parts.
 func splitCategoryName(categoryName string) (string, string) {
-	idx := strings.LastIndex(categoryName, "/")
-	if idx < 0 {
+	before, after, ok := strings.CutLast(categoryName, "/")
+	if !ok {
 		return "", categoryName
 	}
-	return categoryName[:idx], categoryName[idx+1:]
+	return before, after
 }
 
 // Gentoo

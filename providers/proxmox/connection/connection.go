@@ -99,8 +99,8 @@ func (c *PveConnection) Verify() error {
 }
 
 // GetVersion returns the Proxmox version information as a map.
-func (c *PveConnection) GetVersion() (map[string]interface{}, error) {
-	var result map[string]interface{}
+func (c *PveConnection) GetVersion() (map[string]any, error) {
+	var result map[string]any
 	if err := c.apiGet("/version", &result); err != nil {
 		return nil, fmt.Errorf("failed to get version: %w", err)
 	}

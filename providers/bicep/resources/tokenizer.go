@@ -89,17 +89,18 @@ func tokenizeBicep(content string) []bicepStatement {
 		// don't keep it open past its real end.
 		var decorators []string
 		for strings.HasPrefix(trimmed, "@") {
-			decLine := trimmed
+			var decLine strings.Builder
+			decLine.WriteString(trimmed)
 			st := scanState{}
 			st.feed(trimmed)
 			i++
 			for st.open() && i < len(lines) {
 				t := strings.TrimSpace(lines[i])
-				decLine += "\n" + t
+				decLine.WriteString("\n" + t)
 				st.feed(t)
 				i++
 			}
-			decorators = append(decorators, decLine)
+			decorators = append(decorators, decLine.String())
 
 			// Advance past any blank, comment, or directive lines between a
 			// decorator and the statement (or the next decorator) it attaches

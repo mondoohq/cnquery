@@ -12,6 +12,7 @@ package postgresql
 import (
 	"errors"
 	"io/fs"
+	"maps"
 	"path/filepath"
 	"slices"
 	"sort"
@@ -38,9 +39,7 @@ func (c *Conf) Overlay(other *Conf) {
 	if other == nil {
 		return
 	}
-	for k, v := range other.Params {
-		c.Params[k] = v
-	}
+	maps.Copy(c.Params, other.Params)
 	for _, f := range other.Files {
 		if !slices.Contains(c.Files, f) {
 			c.Files = append(c.Files, f)
@@ -135,7 +134,7 @@ func parseConfRec(c *Conf, path string, optional bool, fileReader FileReader, di
 
 	baseDir := filepath.Dir(path)
 
-	for _, raw := range strings.Split(content, "\n") {
+	for raw := range strings.SplitSeq(content, "\n") {
 		line := strings.TrimSpace(raw)
 		if line == "" || line[0] == '#' {
 			continue
@@ -607,8 +606,8 @@ func parseHbaOptions(tokens []string) map[string]string {
 	}
 	out := make(map[string]string, len(tokens))
 	for _, t := range tokens {
-		if eq := strings.IndexByte(t, '='); eq >= 0 {
-			out[t[:eq]] = strings.Trim(t[eq+1:], `"`)
+		if before, after, ok := strings.Cut(t, "="); ok {
+			out[before] = strings.Trim(after, `"`)
 		} else {
 			out[t] = ""
 		}
@@ -626,7 +625,7 @@ func looksLikeNetmask(token string) bool {
 	}
 	// IPv4 dotted-quad
 	if strings.Count(token, ".") == 3 {
-		for _, part := range strings.Split(token, ".") {
+		for part := range strings.SplitSeq(token, ".") {
 			if _, err := strconv.Atoi(part); err != nil {
 				return false
 			}

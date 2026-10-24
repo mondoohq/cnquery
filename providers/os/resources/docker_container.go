@@ -512,7 +512,7 @@ type dockerDaemonSeccomp struct {
 func parseDockerDaemonSeccomp(securityOptions []string) dockerDaemonSeccomp {
 	for _, opt := range securityOptions {
 		var name, profile string
-		for _, kv := range strings.Split(opt, ",") {
+		for kv := range strings.SplitSeq(opt, ",") {
 			k, v, _ := strings.Cut(kv, "=")
 			switch k {
 			case "name":
@@ -733,7 +733,7 @@ func containerMounts(mounts []container.MountPoint, tmpfsMounts map[string]strin
 	for _, dest := range tmpfs {
 		opts := tmpfsMounts[dest]
 		readOnly := false
-		for _, o := range strings.Split(opts, ",") {
+		for o := range strings.SplitSeq(opts, ",") {
 			if o == "ro" {
 				readOnly = true
 			}

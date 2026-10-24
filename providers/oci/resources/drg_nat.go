@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -35,7 +34,7 @@ func (o *mqlOciNetwork) drgNatPolicies() ([]any, error) {
 
 			policies, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.DrgNatPolicy, *string, error) {
 				response, err := svc.ListDrgNatPolicies(ctx, core.ListDrgNatPoliciesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -107,7 +106,7 @@ func (o *mqlOciNetworkDrgNatPolicy) rules() ([]any, error) {
 
 	rules, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]core.DrgNatRule, *string, error) {
 		response, err := svc.ListDrgNatRules(ctx, core.ListDrgNatRulesRequest{
-			DrgNatPolicyId: common.String(o.Id.Data),
+			DrgNatPolicyId: new(o.Id.Data),
 			Page:           page,
 		})
 		if err != nil {

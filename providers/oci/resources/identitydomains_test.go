@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identitydomains"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,26 +21,26 @@ func TestOciScimNextIndex(t *testing.T) {
 	}{
 		// SCIM indexes are 1-based, so the second page of a 200-item page
 		// size starts at 201, not 200.
-		{"first full page of many", 1, ociScimPageSize, common.Int(500), ociScimPageSize + 1, true},
-		{"second full page of many", 201, ociScimPageSize, common.Int(500), 401, true},
+		{"first full page of many", 1, ociScimPageSize, new(500), ociScimPageSize + 1, true},
+		{"second full page of many", 201, ociScimPageSize, new(500), 401, true},
 
 		// next > total ends the loop.
-		{"last partial page", 401, 100, common.Int(500), 0, false},
-		{"exactly consumed", 1, 200, common.Int(200), 0, false},
+		{"last partial page", 401, 100, new(500), 0, false},
+		{"exactly consumed", 1, 200, new(200), 0, false},
 
 		// The guard that matters: an empty page always terminates. A service
 		// reporting a total larger than it will actually return would
 		// otherwise spin forever.
-		{"empty page with a larger total", 201, 0, common.Int(10000), 0, false},
+		{"empty page with a larger total", 201, 0, new(10000), 0, false},
 		{"empty page with no total", 1, 0, nil, 0, false},
-		{"empty first page", 1, 0, common.Int(0), 0, false},
+		{"empty first page", 1, 0, new(0), 0, false},
 
 		// With no total reported, only a full page implies more to come.
 		{"no total, full page", 1, ociScimPageSize, nil, ociScimPageSize + 1, true},
 		{"no total, short page", 1, 5, nil, 0, false},
 
 		// A single item in a single-item collection must not loop.
-		{"one of one", 1, 1, common.Int(1), 0, false},
+		{"one of one", 1, 1, new(1), 0, false},
 	}
 
 	for _, tt := range tests {
@@ -107,8 +106,8 @@ func TestOciPrimaryEmail(t *testing.T) {
 
 	t.Run("picks the primary, not the first", func(t *testing.T) {
 		value, verified := ociPrimaryEmail([]identitydomains.UserEmails{
-			{Value: common.String("alt@example.com"), Verified: common.Bool(true)},
-			{Value: common.String("primary@example.com"), Primary: common.Bool(true), Verified: common.Bool(true)},
+			{Value: new("alt@example.com"), Verified: new(true)},
+			{Value: new("primary@example.com"), Primary: new(true), Verified: new(true)},
 		})
 		assert.Equal(t, "primary@example.com", value)
 		assert.True(t, verified)
@@ -116,7 +115,7 @@ func TestOciPrimaryEmail(t *testing.T) {
 
 	t.Run("falls back to the first when none is primary", func(t *testing.T) {
 		value, verified := ociPrimaryEmail([]identitydomains.UserEmails{
-			{Value: common.String("only@example.com"), Verified: common.Bool(false)},
+			{Value: new("only@example.com"), Verified: new(false)},
 		})
 		assert.Equal(t, "only@example.com", value)
 		assert.False(t, verified)
@@ -126,8 +125,8 @@ func TestOciPrimaryEmail(t *testing.T) {
 		// The verified flag has to follow the address that was selected,
 		// not the first verified address in the list.
 		value, verified := ociPrimaryEmail([]identitydomains.UserEmails{
-			{Value: common.String("alt@example.com"), Verified: common.Bool(true)},
-			{Value: common.String("primary@example.com"), Primary: common.Bool(true)},
+			{Value: new("alt@example.com"), Verified: new(true)},
+			{Value: new("primary@example.com"), Primary: new(true)},
 		})
 		assert.Equal(t, "primary@example.com", value)
 		assert.False(t, verified)

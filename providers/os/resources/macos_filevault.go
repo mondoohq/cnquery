@@ -55,7 +55,7 @@ func (m *mqlMacosFilevault) fetchStatus() (string, error) {
 //	"Encryption in progress: Percent completed = 50.0"
 //	"Decryption in progress: Percent completed = 50.0"
 func parseFdesetupStatus(raw string) string {
-	for _, line := range strings.Split(raw, "\n") {
+	for line := range strings.SplitSeq(raw, "\n") {
 		trimmed := strings.TrimSpace(line)
 		if trimmed != "" {
 			return trimmed
@@ -80,7 +80,7 @@ func parseFdesetupList(raw string) []any {
 		return []any{}
 	}
 	users := []any{}
-	for _, line := range strings.Split(raw, "\n") {
+	for line := range strings.SplitSeq(raw, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue

@@ -97,10 +97,7 @@ func (c Certificate) Pem() string {
 	var b strings.Builder
 	b.WriteString("-----BEGIN CERTIFICATE-----\n")
 	for i := 0; i < len(raw); i += 64 {
-		end := i + 64
-		if end > len(raw) {
-			end = len(raw)
-		}
+		end := min(i+64, len(raw))
 		b.WriteString(raw[i:end])
 		b.WriteString("\n")
 	}

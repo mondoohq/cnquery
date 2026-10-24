@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/moby/moby/api/types/container"
@@ -100,11 +101,8 @@ func (p *mqlDockerVolume) containers() ([]any, error) {
 	}
 	res := []any{}
 	for _, c := range all {
-		for _, name := range c.volumeNames {
-			if name == p.Name.Data {
-				res = append(res, c)
-				break
-			}
+		if slices.Contains(c.volumeNames, p.Name.Data) {
+			res = append(res, c)
 		}
 	}
 	return res, nil

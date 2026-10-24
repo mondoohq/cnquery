@@ -195,7 +195,7 @@ func TestThrottleNextAnswers429AndThenRecovers(t *testing.T) {
 	srv := New(t)
 	srv.ThrottleNext("/_apis/projects", 2, "1")
 
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		res, _ := get(t, srv, base+"/_apis/projects?api-version=7.1", basic(PAT))
 		assert.Equal(t, http.StatusTooManyRequests, res.StatusCode, "request %d", i)
 		assert.Equal(t, "1", res.Header.Get("Retry-After"))

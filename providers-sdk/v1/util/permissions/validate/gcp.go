@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"slices"
 	"strings"
 )
 
@@ -44,12 +45,7 @@ type gcpPermission struct {
 }
 
 func (p gcpPermission) hasScope(scope string) bool {
-	for _, s := range p.Scopes {
-		if s == scope {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(p.Scopes, scope)
 }
 
 // gcpScopes are the two resource kinds the manifest distinguishes, in the
@@ -114,7 +110,7 @@ type gcpTestablePermission struct {
 func queryTestablePermissions(client *http.Client, token, resource string) ([]gcpTestablePermission, error) {
 	var out []gcpTestablePermission
 	pageToken := ""
-	for page := 0; page < 100; page++ {
+	for range 100 {
 		body, _ := json.Marshal(map[string]any{
 			"fullResourceName": resource,
 			"pageSize":         1000,

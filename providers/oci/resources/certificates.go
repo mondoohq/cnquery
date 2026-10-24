@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/certificatesmanagement"
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -41,7 +40,7 @@ func (o *mqlOciCertificates) certificates() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]certificatesmanagement.CertificateSummary, *string, error) {
 				response, err := svc.ListCertificates(ctx, certificatesmanagement.ListCertificatesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -216,7 +215,7 @@ func (o *mqlOciCertificates) certificateAuthorities() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]certificatesmanagement.CertificateAuthoritySummary, *string, error) {
 				response, err := svc.ListCertificateAuthorities(ctx, certificatesmanagement.ListCertificateAuthoritiesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -369,7 +368,7 @@ func (o *mqlOciCertificates) caBundles() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]certificatesmanagement.CaBundleSummary, *string, error) {
 				response, err := svc.ListCaBundles(ctx, certificatesmanagement.ListCaBundlesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {

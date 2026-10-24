@@ -12,7 +12,9 @@ import (
 
 // boolPtr is the absent-vs-set distinction these tests are about: a *bool that
 // is nil means the API reported nothing, which is not the same as false.
-func boolPtr(b bool) *bool { return &b }
+//
+//go:fix inline
+func boolPtr(b bool) *bool { return new(b) }
 
 func assertBoolPtr(t *testing.T, name string, got, want *bool) {
 	t.Helper()
@@ -229,12 +231,12 @@ func TestServerAgentProvisioned(t *testing.T) {
 		{
 			name:    "agent provisioned",
 			payload: `{"id":"s1","name":"web","machineType":"g1.1","agent":{"provisioned":true}}`,
-			want:    boolPtr(true),
+			want:    new(true),
 		},
 		{
 			name:    "agent explicitly not provisioned",
 			payload: `{"id":"s1","name":"web","machineType":"g1.1","agent":{"provisioned":false}}`,
-			want:    boolPtr(false),
+			want:    new(false),
 		},
 	}
 	for _, tc := range cases {
@@ -270,12 +272,12 @@ func TestServerBootVolumeDeleteOnTermination(t *testing.T) {
 		{
 			name:    "disk is destroyed with the server",
 			payload: `{"id":"s1","name":"web","machineType":"g1.1","bootVolume":{"id":"v1","deleteOnTermination":true}}`,
-			want:    boolPtr(true),
+			want:    new(true),
 		},
 		{
 			name:    "disk survives the server",
 			payload: `{"id":"s1","name":"web","machineType":"g1.1","bootVolume":{"id":"v1","deleteOnTermination":false}}`,
-			want:    boolPtr(false),
+			want:    new(false),
 		},
 	}
 	for _, tc := range cases {

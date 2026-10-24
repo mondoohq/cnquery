@@ -805,8 +805,7 @@ func isInventoryPolicyNotFoundError(err error) bool {
 	if err == nil {
 		return false
 	}
-	var rerr *azcore.ResponseError
-	if errors.As(err, &rerr) {
+	if rerr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 		return rerr.StatusCode == 404
 	}
 	return false

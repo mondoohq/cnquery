@@ -63,8 +63,7 @@ func (m MultiDecoder) Parse(r io.ReadSeeker) (*Sbom, error) {
 		if err == nil {
 			return s, nil
 		}
-		var recognized *RecognizedFormatError
-		if errors.As(err, &recognized) {
+		if _, ok := errors.AsType[*RecognizedFormatError](err); ok {
 			return nil, err
 		}
 		decoderErr = err

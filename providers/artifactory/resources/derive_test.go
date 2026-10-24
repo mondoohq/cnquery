@@ -377,11 +377,9 @@ func TestDetailLoadedFlagIsRaceFree(t *testing.T) {
 	var internal mqlArtifactoryRepositoryInternal
 
 	var wg sync.WaitGroup
-	for i := 0; i < 8; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for j := 0; j < 200; j++ {
+	for range 8 {
+		wg.Go(func() {
+			for range 200 {
 				if internal.detailLoaded.Load() {
 					continue
 				}
@@ -392,7 +390,7 @@ func TestDetailLoadedFlagIsRaceFree(t *testing.T) {
 				}
 				internal.lock.Unlock()
 			}
-		}()
+		})
 	}
 	wg.Wait()
 
@@ -661,7 +659,7 @@ func schemaNullPromises(t *testing.T) map[string]bool {
 	promised := map[string]bool{}
 	resource := ""
 	var doc []string
-	for _, line := range strings.Split(string(schema), "\n") {
+	for line := range strings.SplitSeq(string(schema), "\n") {
 		trimmed := strings.TrimSpace(line)
 		if strings.HasPrefix(trimmed, "//") {
 			doc = append(doc, trimmed)
@@ -711,12 +709,12 @@ func TestPolicyActionsReadEveryRule(t *testing.T) {
 	blocking.Actions.BlockDownload = &struct {
 		Unscanned *bool `json:"unscanned"`
 		Active    *bool `json:"active"`
-	}{Unscanned: boolPtr(true), Active: boolPtr(true)}
-	blocking.Actions.FailBuild = boolPtr(true)
-	blocking.Actions.BlockReleaseBundleDistribution = boolPtr(true)
+	}{Unscanned: new(true), Active: new(true)}
+	blocking.Actions.FailBuild = new(true)
+	blocking.Actions.BlockReleaseBundleDistribution = new(true)
 
 	notifying := xrayPolicyRuleRecord{}
-	notifying.Actions.NotifyWatchRecipients = boolPtr(true)
+	notifying.Actions.NotifyWatchRecipients = new(true)
 
 	tests := []struct {
 		name  string
@@ -832,7 +830,8 @@ func TestWatchWildcardTypes(t *testing.T) {
 	}
 }
 
-func boolPtr(v bool) *bool { return &v }
+//go:fix inline
+func boolPtr(v bool) *bool { return new(v) }
 
 // A platform with no Xray and a platform whose Xray the token may not read are
 // different answers. Reporting the denial as an absent Xray would say "this

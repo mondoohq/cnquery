@@ -155,7 +155,7 @@ func resolveOktaResourceTarget(orn, href string) (targetType string, id string) 
 // SDK surfaces as an untyped map[string]interface{} of the shape
 // {"href": "..."}. Returns "" when the entry is missing or malformed.
 func oktaLinkHref(link any) string {
-	m, ok := link.(map[string]interface{})
+	m, ok := link.(map[string]any)
 	if !ok {
 		return ""
 	}
@@ -169,8 +169,8 @@ func oktaLinkHref(link any) string {
 // lastPathSegment returns the final non-empty segment of a URL path.
 func lastPathSegment(s string) string {
 	s = strings.TrimRight(s, "/")
-	if i := strings.LastIndex(s, "/"); i >= 0 {
-		return s[i+1:]
+	if _, after, ok := strings.CutLast(s, "/"); ok {
+		return after
 	}
 	return s
 }
@@ -179,11 +179,11 @@ func lastPathSegment(s string) string {
 // self-link of the form ".../iam/roles/<roleId>/permissions".
 func oktaRoleIdFromPermissionsHref(href string) string {
 	const marker = "/roles/"
-	i := strings.Index(href, marker)
-	if i < 0 {
+	_, after, ok := strings.Cut(href, marker)
+	if !ok {
 		return ""
 	}
-	rest := href[i+len(marker):]
+	rest := after
 	if j := strings.IndexByte(rest, '/'); j >= 0 {
 		rest = rest[:j]
 	}
@@ -294,9 +294,8 @@ func isOktaRawFeatureUnavailable(resp *http.Response, err error) bool {
 		status = resp.StatusCode
 	}
 
-	var apiErr *sdk.APIError
 	code := ""
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*sdk.APIError](err); ok {
 		code = apiErr.Code
 		if status == 0 {
 			status = apiErr.StatusCode

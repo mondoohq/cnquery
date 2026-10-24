@@ -18,7 +18,7 @@ func TestServiceUsageQuotaRetryer(t *testing.T) {
 
 	t.Run("retries a quota rejection a bounded number of times", func(t *testing.T) {
 		r := newServiceUsageQuotaRetryer()
-		for i := 0; i < serviceUsageMaxRetries; i++ {
+		for i := range serviceUsageMaxRetries {
 			pause, retry := r.Retry(quotaErr)
 			assert.True(t, retry, "attempt %d", i+1)
 			assert.LessOrEqual(t, pause, 60*time.Second)
@@ -40,7 +40,7 @@ func TestServiceUsageQuotaRetryer(t *testing.T) {
 
 	t.Run("each call starts with a fresh attempt budget", func(t *testing.T) {
 		first := newServiceUsageQuotaRetryer()
-		for i := 0; i < serviceUsageMaxRetries; i++ {
+		for range serviceUsageMaxRetries {
 			first.Retry(quotaErr)
 		}
 		_, retry := newServiceUsageQuotaRetryer().Retry(quotaErr)

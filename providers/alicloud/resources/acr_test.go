@@ -39,11 +39,11 @@ func TestAcrEpochMillisString(t *testing.T) {
 		want *time.Time
 	}{
 		{"nil stays nil", nil, nil},
-		{"empty stays nil", tea.String(""), nil},
-		{"zero stays nil", tea.String("0"), nil},
-		{"not a number stays nil", tea.String("2019-07-11T12:54:39Z"), nil},
-		{"whitespace is tolerated", tea.String(" 1562849679000 "), timePtr(time.Date(2019, 7, 11, 12, 54, 39, 0, time.UTC))},
-		{"a real timestamp converts", tea.String("1562849679000"), timePtr(time.Date(2019, 7, 11, 12, 54, 39, 0, time.UTC))},
+		{"empty stays nil", new(""), nil},
+		{"zero stays nil", new("0"), nil},
+		{"not a number stays nil", new("2019-07-11T12:54:39Z"), nil},
+		{"whitespace is tolerated", new(" 1562849679000 "), new(time.Date(2019, 7, 11, 12, 54, 39, 0, time.UTC))},
+		{"a real timestamp converts", new("1562849679000"), new(time.Date(2019, 7, 11, 12, 54, 39, 0, time.UTC))},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -58,7 +58,8 @@ func TestAcrEpochMillisString(t *testing.T) {
 	}
 }
 
-func timePtr(t time.Time) *time.Time { return &t }
+//go:fix inline
+func timePtr(t time.Time) *time.Time { return new(t) }
 
 // TestAcrRepoIsPublic covers the two-factor public verdict. PUBLIC visibility
 // alone is not reachability: a public repository inside an instance whose

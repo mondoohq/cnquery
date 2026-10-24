@@ -96,9 +96,9 @@ func TestExchangeInvokeFollowsNextLink(t *testing.T) {
 	// Get-Mailbox on a large tenant pages; dropping the continuation would
 	// silently report a truncated mailbox list as the whole tenant
 	var srv *httptest.Server
-	var calls int32
+	var calls atomic.Int32
 	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		n := atomic.AddInt32(&calls, 1)
+		n := calls.Add(1)
 		switch n {
 		case 1:
 			fmt.Fprintf(w, `{"value":[{"Identity":"m1"}],"@odata.nextLink":%q}`, srv.URL+"/page2")
@@ -118,7 +118,7 @@ func TestExchangeInvokeFollowsNextLink(t *testing.T) {
 	require.Len(t, got, 3)
 	assert.Equal(t, "m1", got[0].Identity)
 	assert.Equal(t, "m3", got[2].Identity)
-	assert.Equal(t, int32(3), atomic.LoadInt32(&calls))
+	assert.Equal(t, int32(3), calls.Load())
 }
 
 func TestExchangeInvokeRejectsRepeatedContinuation(t *testing.T) {

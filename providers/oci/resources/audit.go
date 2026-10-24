@@ -50,7 +50,7 @@ func (o *mqlOciAudit) retentionPeriodDays() (int64, error) {
 	}
 
 	resp, err := client.GetConfiguration(context.Background(), audit.GetConfigurationRequest{
-		CompartmentId: common.String(conn.TenantID()),
+		CompartmentId: new(conn.TenantID()),
 	})
 	if err != nil {
 		return 0, err
@@ -83,7 +83,7 @@ func (o *mqlOciAudit) events() ([]any, error) {
 
 			events, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]audit.AuditEvent, *string, error) {
 				response, err := client.ListEvents(ctx, audit.ListEventsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					StartTime:     &common.SDKTime{Time: startTime},
 					EndTime:       &common.SDKTime{Time: endTime},
 					Page:          page,

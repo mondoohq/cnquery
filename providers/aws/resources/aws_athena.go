@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 	"sync"
@@ -696,8 +697,7 @@ func listNamedQueryIDs(ctx context.Context, svc *athena.Client, region, workgrou
 					Msg("not permitted to list the named queries of this workgroup")
 				return nil, nil
 			}
-			var invalid *athena_types.InvalidRequestException
-			if errors.As(err, &invalid) {
+			if _, ok := errors.AsType[*athena_types.InvalidRequestException](err); ok {
 				log.Debug().Str("region", region).Str("workgroup", workgroup).
 					Msg("workgroup no longer available while listing named queries")
 				return nil, nil
@@ -1061,9 +1061,7 @@ func (a *mqlAwsAthenaDataCatalog) tags() (map[string]any, error) {
 				}
 				return nil, err
 			}
-			for k, v := range tagsToMap(resp.Tags, func(t athena_types.Tag) *string { return t.Key }, func(t athena_types.Tag) *string { return t.Value }) {
-				tags[k] = v
-			}
+			maps.Copy(tags, tagsToMap(resp.Tags, func(t athena_types.Tag) *string { return t.Key }, func(t athena_types.Tag) *string { return t.Value }))
 			if resp.NextToken == nil {
 				break
 			}
@@ -1091,9 +1089,7 @@ func (a *mqlAwsAthenaCapacityReservation) tags() (map[string]any, error) {
 				}
 				return nil, err
 			}
-			for k, v := range tagsToMap(resp.Tags, func(t athena_types.Tag) *string { return t.Key }, func(t athena_types.Tag) *string { return t.Value }) {
-				tags[k] = v
-			}
+			maps.Copy(tags, tagsToMap(resp.Tags, func(t athena_types.Tag) *string { return t.Key }, func(t athena_types.Tag) *string { return t.Value }))
 			if resp.NextToken == nil {
 				break
 			}

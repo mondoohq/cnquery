@@ -204,7 +204,7 @@ func TestHiveFileKeys(t *testing.T) {
 		for _, n := range names {
 			seen[n] = true
 		}
-		for i := 0; i < 1500; i++ {
+		for i := range 1500 {
 			name := fmt.Sprintf("Key%04d", i)
 			require.True(t, seen[name], "missing %s", name)
 			item, err := h.Item("Many\\"+name, "Index")

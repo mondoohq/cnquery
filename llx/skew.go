@@ -119,11 +119,11 @@ func providerOfResource(schema resources.ResourcesSchema, name string) string {
 		return ""
 	}
 	for {
-		i := strings.LastIndexByte(name, '.')
-		if i <= 0 {
+		before, _, ok := strings.CutLast(name, ".")
+		if !ok || before == "" {
 			return ""
 		}
-		name = name[:i]
+		name = before
 		if info := schema.Lookup(name); info != nil && info.Provider != "" {
 			return info.Provider
 		}

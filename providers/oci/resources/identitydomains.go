@@ -109,7 +109,7 @@ func (o *mqlOciIdentity) domains() ([]any, error) {
 		jobs = append(jobs, jobpool.NewJob(func() (jobpool.JobResult, error) {
 			summaries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.DomainSummary, *string, error) {
 				response, err := client.ListDomains(ctx, identity.ListDomainsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -253,8 +253,8 @@ func (o *mqlOciIdentityDomain) users() ([]any, error) {
 	ctx := context.Background()
 	users, err := ociScimPaginate(ctx, func(ctx context.Context, startIndex int) ([]identitydomains.User, *int, error) {
 		response, err := client.ListUsers(ctx, identitydomains.ListUsersRequest{
-			StartIndex:    common.Int(startIndex),
-			Count:         common.Int(ociScimPageSize),
+			StartIndex:    new(startIndex),
+			Count:         new(ociScimPageSize),
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
@@ -454,8 +454,8 @@ func (o *mqlOciIdentityDomain) groups() ([]any, error) {
 	ctx := context.Background()
 	groups, err := ociScimPaginate(ctx, func(ctx context.Context, startIndex int) ([]identitydomains.Group, *int, error) {
 		response, err := client.ListGroups(ctx, identitydomains.ListGroupsRequest{
-			StartIndex:    common.Int(startIndex),
-			Count:         common.Int(ociScimPageSize),
+			StartIndex:    new(startIndex),
+			Count:         new(ociScimPageSize),
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
@@ -504,8 +504,8 @@ func (o *mqlOciIdentityDomain) passwordPolicies() ([]any, error) {
 	ctx := context.Background()
 	policies, err := ociScimPaginate(ctx, func(ctx context.Context, startIndex int) ([]identitydomains.PasswordPolicy, *int, error) {
 		response, err := client.ListPasswordPolicies(ctx, identitydomains.ListPasswordPoliciesRequest{
-			StartIndex:    common.Int(startIndex),
-			Count:         common.Int(ociScimPageSize),
+			StartIndex:    new(startIndex),
+			Count:         new(ociScimPageSize),
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
@@ -676,8 +676,8 @@ func (o *mqlOciIdentityDomain) apps() ([]any, error) {
 	ctx := context.Background()
 	apps, err := ociScimPaginate(ctx, func(ctx context.Context, startIndex int) ([]identitydomains.App, *int, error) {
 		response, err := client.ListApps(ctx, identitydomains.ListAppsRequest{
-			StartIndex:    common.Int(startIndex),
-			Count:         common.Int(ociScimPageSize),
+			StartIndex:    new(startIndex),
+			Count:         new(ociScimPageSize),
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {

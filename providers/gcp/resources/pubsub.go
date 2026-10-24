@@ -901,8 +901,8 @@ func subscriptionPath(projectID, name string) string {
 }
 
 func lastPathSegment(s string) string {
-	if i := strings.LastIndex(s, "/"); i >= 0 {
-		return s[i+1:]
+	if _, after, ok := strings.CutLast(s, "/"); ok {
+		return after
 	}
 	return s
 }

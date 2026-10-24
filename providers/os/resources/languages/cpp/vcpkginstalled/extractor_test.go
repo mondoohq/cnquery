@@ -118,7 +118,7 @@ func TestName(t *testing.T) {
 func TestParseStatusIsBoundedByLines(t *testing.T) {
 	var b strings.Builder
 	b.WriteString("Package: real\nVersion: 1.0\nArchitecture: x64-linux\nStatus: install ok installed\n\n")
-	for i := 0; i < maxLines+10; i++ {
+	for range maxLines + 10 {
 		b.WriteString("Description: filler with no blank line\n")
 	}
 	b.WriteString("\nPackage: past-the-cap\nVersion: 9.9\nStatus: install ok installed\n\n")

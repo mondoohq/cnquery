@@ -119,7 +119,7 @@ func (g *mqlGithubUser) repositories() ([]any, error) {
 	githubLogin := g.Login.Data
 
 	listOpts := &github.RepositoryListByUserOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 
 	var allRepos []*github.Repository
@@ -173,7 +173,7 @@ func (g *mqlGithubUser) gists() ([]any, error) {
 	userLogin := g.Login.Data
 
 	listOpts := &github.GistListOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 
 	var allGists []*github.Gist

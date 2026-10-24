@@ -254,8 +254,8 @@ func TestOciRuleValuesOpenIngressProtocolAndPorts(t *testing.T) {
 	// ingress builds a security list ingress rule the way the adapter does.
 	ingress := func(protocol, source string, ports *core.PortRange) ociIngressRuleValues {
 		rule := core.IngressSecurityRule{
-			Protocol:   strPtr(protocol),
-			Source:     strPtr(source),
+			Protocol:   new(protocol),
+			Source:     new(source),
 			SourceType: core.IngressSecurityRuleSourceTypeCidrBlock,
 		}
 		if ports != nil {
@@ -264,7 +264,7 @@ func TestOciRuleValuesOpenIngressProtocolAndPorts(t *testing.T) {
 		return ociIngressValuesOf(securityRuleFromIngress(rule))
 	}
 	port := func(min, max int) *core.PortRange {
-		return &core.PortRange{Min: intPtr(min), Max: intPtr(max)}
+		return &core.PortRange{Min: new(min), Max: new(max)}
 	}
 
 	t.Run("ssh from anywhere is an opening", func(t *testing.T) {
@@ -280,8 +280,8 @@ func TestOciRuleValuesOpenIngressProtocolAndPorts(t *testing.T) {
 
 	t.Run("udp from anywhere is an opening", func(t *testing.T) {
 		assert.True(t, ociRuleValuesOpenIngress(ociIngressValuesOf(securityRuleFromIngress(core.IngressSecurityRule{
-			Protocol:   strPtr("17"),
-			Source:     strPtr("0.0.0.0/0"),
+			Protocol:   new("17"),
+			Source:     new("0.0.0.0/0"),
 			SourceType: core.IngressSecurityRuleSourceTypeCidrBlock,
 			UdpOptions: &core.UdpOptions{DestinationPortRange: port(53, 53)},
 		}))))
@@ -296,10 +296,10 @@ func TestOciRuleValuesOpenIngressProtocolAndPorts(t *testing.T) {
 		// code 4 from 0.0.0.0/0, which Oracle documents keeping even on
 		// hardened subnets. It reaches no service port.
 		pmtu := securityRuleFromIngress(core.IngressSecurityRule{
-			Protocol:    strPtr("1"),
-			Source:      strPtr("0.0.0.0/0"),
+			Protocol:    new("1"),
+			Source:      new("0.0.0.0/0"),
 			SourceType:  core.IngressSecurityRuleSourceTypeCidrBlock,
-			IcmpOptions: &core.IcmpOptions{Type: intPtr(3), Code: intPtr(4)},
+			IcmpOptions: &core.IcmpOptions{Type: new(3), Code: new(4)},
 		})
 		assert.False(t, ociRuleValuesOpenIngress(ociIngressValuesOf(pmtu)))
 	})

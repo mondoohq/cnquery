@@ -537,8 +537,8 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 var reOperator = regexp.MustCompile(`(!=|<=|>=|=|>|<)`)
 
 func (s *auditdRuleSet) parse(content string, errors *multierr.Errors) {
-	lines := strings.Split(content, "\n")
-	for _, rawline := range lines {
+	lines := strings.SplitSeq(content, "\n")
+	for rawline := range lines {
 		line := strings.TrimSpace(rawline)
 		if line == "" || line[0] == '#' {
 			continue
@@ -603,7 +603,7 @@ func (s *auditdRuleSet) parse(content string, errors *multierr.Errors) {
 				// -S accepts a comma-separated list of syscalls (and may be
 				// repeated); store each syscall individually so policies can
 				// match them as a flat list.
-				for _, sc := range strings.Split(v, ",") {
+				for sc := range strings.SplitSeq(v, ",") {
 					if sc != "" {
 						syscalls = append(syscalls, sc)
 					}

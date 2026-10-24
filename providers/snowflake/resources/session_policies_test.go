@@ -7,7 +7,8 @@ import (
 	"testing"
 )
 
-func ptrAny(v any) *any { return &v }
+//go:fix inline
+func ptrAny(v any) *any { return new(v) }
 
 // row builds a DESCRIBE property/value row with the given column casing.
 func row(propKey, valKey, property, value string) map[string]*any {

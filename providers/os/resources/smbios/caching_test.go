@@ -46,7 +46,7 @@ func TestCachingManager_QueriesOnceForRepeatedCallers(t *testing.T) {
 	inner := &countingManager{info: &SmBiosInfo{SysInfo: SysInfo{Model: "test-model"}}}
 	mgr := &cachingManager{inner: inner}
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		info, err := mgr.Info()
 		require.NoError(t, err)
 		assert.Equal(t, "test-model", info.SysInfo.Model)
@@ -70,7 +70,7 @@ func TestCachingManager_CollapsesConcurrentCallers(t *testing.T) {
 
 	var wg sync.WaitGroup
 	wg.Add(callers)
-	for i := 0; i < callers; i++ {
+	for range callers {
 		go func() {
 			defer wg.Done()
 			info, err := mgr.Info()

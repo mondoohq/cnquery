@@ -243,7 +243,7 @@ func (s *statHelper) StatDir(dir string, names []string) (map[string]os.FileInfo
 		if err != nil {
 			return nil, false
 		}
-		for _, line := range strings.Split(string(data), "\n") {
+		for line := range strings.SplitSeq(string(data), "\n") {
 			fields, name, ok := strings.Cut(line, "/")
 			if !ok || name == "" {
 				continue

@@ -19,12 +19,12 @@ type mqlDigitaloceanVpcNatGatewayInternal struct {
 	vpcUUIDs []string
 }
 
-func (r *mqlDigitalocean) vpcNatGateways() ([]interface{}, error) {
+func (r *mqlDigitalocean) vpcNatGateways() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.VPCNATGatewaysListOptions{ListOptions: godo.ListOptions{PerPage: 200}}
+	var all []any
+	opt := &godo.VPCNATGatewaysListOptions{PerPage: 200}
 	for {
 		gateways, resp, err := client.VPCNATGateways.List(context.Background(), opt)
 		if err != nil {
@@ -35,21 +35,21 @@ func (r *mqlDigitalocean) vpcNatGateways() ([]interface{}, error) {
 				continue
 			}
 
-			ingressVpcs := make([]interface{}, 0, len(g.VPCs))
+			ingressVpcs := make([]any, 0, len(g.VPCs))
 			vpcUUIDs := make([]string, 0, len(g.VPCs))
 			for _, v := range g.VPCs {
 				if v == nil {
 					continue
 				}
 				vpcUUIDs = append(vpcUUIDs, v.VpcUUID)
-				ingressVpcs = append(ingressVpcs, map[string]interface{}{
+				ingressVpcs = append(ingressVpcs, map[string]any{
 					"vpcUuid":        v.VpcUUID,
 					"gatewayIp":      v.GatewayIP,
 					"defaultGateway": v.DefaultGateway,
 				})
 			}
 
-			egressIPs := []interface{}{}
+			egressIPs := []any{}
 			if g.Egresses != nil {
 				for _, pg := range g.Egresses.PublicGateways {
 					if pg != nil {
@@ -96,7 +96,7 @@ func (r *mqlDigitaloceanVpcNatGateway) id() (string, error) {
 	return "digitalocean.vpcNatGateway/" + r.Id.Data, nil
 }
 
-func (r *mqlDigitaloceanVpcNatGateway) vpcs() ([]interface{}, error) {
+func (r *mqlDigitaloceanVpcNatGateway) vpcs() ([]any, error) {
 	return vpcRefsByUUIDs(r.MqlRuntime, r.vpcUUIDs)
 }
 
@@ -118,7 +118,7 @@ func (r *mqlDigitaloceanReservedIpV6) droplet() (*mqlDigitaloceanDroplet, error)
 	return dropletRef(r.MqlRuntime, r.DropletId.Data, &r.Droplet)
 }
 
-func (r *mqlDigitalocean) reservedIPv6s() ([]interface{}, error) {
+func (r *mqlDigitalocean) reservedIPv6s() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -127,7 +127,7 @@ func (r *mqlDigitalocean) reservedIPv6s() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(ips))
+	all := make([]any, 0, len(ips))
 	for i := range ips {
 		ip := ips[i]
 		dropletID := int64(0)
@@ -150,15 +150,15 @@ func (r *mqlDigitalocean) reservedIPv6s() ([]interface{}, error) {
 
 // vpcRefsByUUIDs resolves a list of VPC UUIDs to typed digitalocean.vpc
 // resources, skipping any that cannot be found.
-func vpcRefsByUUIDs(runtime *plugin.Runtime, uuids []string) ([]interface{}, error) {
+func vpcRefsByUUIDs(runtime *plugin.Runtime, uuids []string) ([]any, error) {
 	if len(uuids) == 0 {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	parent, err := parentDigitalocean(runtime)
 	if err != nil {
 		return nil, err
 	}
-	out := make([]interface{}, 0, len(uuids))
+	out := make([]any, 0, len(uuids))
 	for _, uuid := range uuids {
 		if uuid == "" {
 			continue

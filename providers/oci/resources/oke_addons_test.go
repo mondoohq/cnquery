@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/containerengine"
 	"github.com/stretchr/testify/assert"
 )
@@ -27,21 +26,21 @@ func TestOkeKubernetesVersionAdmitted(t *testing.T) {
 	assert.True(t, okeKubernetesVersionAdmitted(nil, "v1.36.4"))
 	assert.True(t, okeKubernetesVersionAdmitted(&containerengine.KubernetesVersionsFilters{}, "v1.36.4"))
 
-	minOnly := &containerengine.KubernetesVersionsFilters{MinimalVersion: common.String("v1.34.1")}
+	minOnly := &containerengine.KubernetesVersionsFilters{MinimalVersion: new("v1.34.1")}
 	assert.True(t, okeKubernetesVersionAdmitted(minOnly, "v1.34.1"))
 	assert.True(t, okeKubernetesVersionAdmitted(minOnly, "v1.36.4"))
 	assert.False(t, okeKubernetesVersionAdmitted(minOnly, "v1.34.0"))
 
 	bounded := &containerengine.KubernetesVersionsFilters{
-		MinimalVersion: common.String("v1.30.1"),
-		MaximumVersion: common.String("v1.34.10"),
+		MinimalVersion: new("v1.30.1"),
+		MaximumVersion: new("v1.34.10"),
 	}
 	assert.True(t, okeKubernetesVersionAdmitted(bounded, "v1.34.2"))
 	assert.False(t, okeKubernetesVersionAdmitted(bounded, "v1.35.0"))
 
 	// Exact versions win over the range.
 	exact := &containerengine.KubernetesVersionsFilters{
-		MinimalVersion:          common.String("v1.20.0"),
+		MinimalVersion:          new("v1.20.0"),
 		ExactKubernetesVersions: []string{"v1.34.1"},
 	}
 	assert.True(t, okeKubernetesVersionAdmitted(exact, "v1.34.1"))
@@ -54,19 +53,19 @@ func TestOkeKubernetesVersionAdmitted(t *testing.T) {
 func TestOkeAddonVersionsFor(t *testing.T) {
 	versions := []containerengine.AddonVersions{
 		{
-			VersionNumber:            common.String("v0.27.3-34af5f87b0d-1"),
+			VersionNumber:            new("v0.27.3-34af5f87b0d-1"),
 			Status:                   containerengine.AddonVersionsStatusActive,
-			KubernetesVersionFilters: &containerengine.KubernetesVersionsFilters{MinimalVersion: common.String("v1.31.10")},
+			KubernetesVersionFilters: &containerengine.KubernetesVersionsFilters{MinimalVersion: new("v1.31.10")},
 		},
 		{
-			VersionNumber:            common.String("v0.20.2-e48ab53decf-8"),
+			VersionNumber:            new("v0.20.2-e48ab53decf-8"),
 			Status:                   containerengine.AddonVersionsStatusDeprecated,
-			KubernetesVersionFilters: &containerengine.KubernetesVersionsFilters{MinimalVersion: common.String("v1.26.2")},
+			KubernetesVersionFilters: &containerengine.KubernetesVersionsFilters{MinimalVersion: new("v1.26.2")},
 		},
 		{
-			VersionNumber:            common.String("v9.9.9"),
+			VersionNumber:            new("v9.9.9"),
 			Status:                   containerengine.AddonVersionsStatusActive,
-			KubernetesVersionFilters: &containerengine.KubernetesVersionsFilters{MinimalVersion: common.String("v1.40.0")},
+			KubernetesVersionFilters: &containerengine.KubernetesVersionsFilters{MinimalVersion: new("v1.40.0")},
 		},
 	}
 	got := okeAddonVersionsFor(versions, "v1.36.4")

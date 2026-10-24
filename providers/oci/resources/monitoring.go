@@ -7,7 +7,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/monitoring"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -38,10 +37,10 @@ func (o *mqlOciMonitoring) alarms() ([]any, error) {
 
 			alarms, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]monitoring.AlarmSummary, *string, error) {
 				response, err := svc.ListAlarms(ctx, monitoring.ListAlarmsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					// Alarms are normally created in a workload compartment,
 					// not the tenancy root.
-					CompartmentIdInSubtree: common.Bool(true),
+					CompartmentIdInSubtree: new(true),
 					Page:                   page,
 				})
 				if err != nil {

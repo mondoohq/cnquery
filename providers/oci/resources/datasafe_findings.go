@@ -7,7 +7,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/datasafe"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -77,7 +76,7 @@ func ociDataSafeFindingOpenDeferral(f datasafe.FindingSummary, now time.Time) bo
 //
 // The value already comes out of encoding/json, so it holds only JSON-native
 // types and needs no further conversion to be a dict.
-func ociDataSafeFindingDetails(details *interface{}) any {
+func ociDataSafeFindingDetails(details *any) any {
 	if details == nil {
 		return nil
 	}
@@ -128,7 +127,7 @@ func (o *mqlOciDataSafeSecurityAssessment) findings() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]datasafe.FindingSummary, *string, error) {
 		resp, err := svc.ListFindings(ctx, datasafe.ListFindingsRequest{
-			SecurityAssessmentId: common.String(o.Id.Data),
+			SecurityAssessmentId: new(o.Id.Data),
 			Page:                 page,
 		})
 		if err != nil {

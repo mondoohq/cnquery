@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"maps"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers/iru/connection"
@@ -41,9 +43,7 @@ func (l *mqlIruLibraryItem) id() (string, error) {
 
 func libraryItemArgs(li *client.LibraryItem) map[string]*llx.RawData {
 	payload := make(map[string]any, len(li.Payload))
-	for k, v := range li.Payload {
-		payload[k] = v
-	}
+	maps.Copy(payload, li.Payload)
 	return map[string]*llx.RawData{
 		"id":        llx.StringData(li.ID),
 		"name":      llx.StringData(li.Name),

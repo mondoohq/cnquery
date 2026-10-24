@@ -694,7 +694,7 @@ func nsgAllowsInternetIngress(rules []map[string]any) (bool, []map[string]any) {
 			continue
 		}
 		shadowed := false
-		for j := 0; j < i; j++ {
+		for j := range i {
 			d := internetRules[j]
 			if d.allow {
 				continue

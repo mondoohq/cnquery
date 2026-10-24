@@ -6,14 +6,13 @@ package resources
 import (
 	"testing"
 
-	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRamBoolValue(t *testing.T) {
-	assert.True(t, ramBoolValue(tea.Bool(true)))
-	assert.False(t, ramBoolValue(tea.Bool(false)))
+	assert.True(t, ramBoolValue(new(true)))
+	assert.False(t, ramBoolValue(new(false)))
 	// an absent preference must not report a restriction nobody confirmed
 	assert.False(t, ramBoolValue(nil))
 }
@@ -24,16 +23,16 @@ func TestRamNetworkMasks(t *testing.T) {
 		raw      *string
 		expected []any
 	}{
-		{"single mask", tea.String("10.0.0.0/8"), []any{"10.0.0.0/8"}},
+		{"single mask", new("10.0.0.0/8"), []any{"10.0.0.0/8"}},
 		{
 			"semicolon separated",
-			tea.String("10.0.0.0/8;192.0.2.0/24"),
+			new("10.0.0.0/8;192.0.2.0/24"),
 			[]any{"10.0.0.0/8", "192.0.2.0/24"},
 		},
-		{"whitespace trimmed", tea.String(" 10.0.0.0/8 ; 192.0.2.0/24 "), []any{"10.0.0.0/8", "192.0.2.0/24"}},
-		{"trailing separator", tea.String("10.0.0.0/8;"), []any{"10.0.0.0/8"}},
+		{"whitespace trimmed", new(" 10.0.0.0/8 ; 192.0.2.0/24 "), []any{"10.0.0.0/8", "192.0.2.0/24"}},
+		{"trailing separator", new("10.0.0.0/8;"), []any{"10.0.0.0/8"}},
 		// an unrestricted account yields an empty list, never a list holding ""
-		{"unset", tea.String(""), []any{}},
+		{"unset", new(""), []any{}},
 		{"absent", nil, []any{}},
 	}
 	for _, test := range tests {

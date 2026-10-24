@@ -126,7 +126,7 @@ func singleSubscriptionFilter(filterOpts map[string]string) (string, bool) {
 		return "", false
 	}
 	var ids []string
-	for _, part := range strings.Split(raw, ",") {
+	for part := range strings.SplitSeq(raw, ",") {
 		if id := strings.TrimSpace(part); id != "" {
 			ids = append(ids, id)
 		}

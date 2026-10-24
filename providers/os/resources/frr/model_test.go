@@ -20,18 +20,16 @@ func neighborByName(n []Neighbor, name string) *Neighbor {
 	return nil
 }
 
-func asn(v int64) *int64 { return &v }
-
 func TestParseASN(t *testing.T) {
 	tests := []struct {
 		in   string
 		want *int64
 	}{
-		{"65000", asn(65000)},
-		{"4294967295", asn(4294967295)},
+		{"65000", new(int64(65000))},
+		{"4294967295", new(int64(4294967295))},
 		// asdot, as FRR accepts it after `as-notation dot`
-		{"1.10", asn(65546)},
-		{"0.65535", asn(65535)},
+		{"1.10", new(int64(65546))},
+		{"0.65535", new(int64(65535))},
 		{"internal", nil},
 		{"external", nil},
 		{"notanumber", nil},
@@ -95,7 +93,7 @@ func TestBGPInstances_PlainSetup(t *testing.T) {
 	require.Len(t, instances, 1)
 
 	b := instances[0]
-	assert.Equal(t, asn(65500), b.ASN)
+	assert.Equal(t, new(int64(65500)), b.ASN)
 	assert.Equal(t, "", b.VRF)
 	assert.Equal(t, "192.0.2.10", b.RouterID)
 	// Both defaults are switched off by an explicit `no` line.
@@ -112,12 +110,12 @@ func TestNeighbors_UnnumberedAndPeerGroups(t *testing.T) {
 	require.NotNil(t, dcgw1)
 	assert.True(t, dcgw1.Interface)
 	assert.Equal(t, "64497", dcgw1.RemoteAs)
-	assert.Equal(t, asn(64497), dcgw1.RemoteASN)
+	assert.Equal(t, new(int64(64497)), dcgw1.RemoteASN)
 
 	group := neighborByName(b.Neighbors, "server")
 	require.NotNil(t, group)
 	assert.True(t, group.IsPeerGroup)
-	assert.Equal(t, asn(65501), group.RemoteASN)
+	assert.Equal(t, new(int64(65501)), group.RemoteASN)
 	assert.True(t, group.BFD)
 	assert.True(t, group.PasswordSet)
 	assert.Equal(t, int64(3), group.KeepaliveTime)
@@ -215,7 +213,7 @@ func TestBGPInstances_EVPNSetup(t *testing.T) {
 
 	underlay := bgpByVRF(instances, "")
 	require.NotNil(t, underlay)
-	assert.Equal(t, asn(65100), underlay.ASN)
+	assert.Equal(t, new(int64(65100)), underlay.ASN)
 
 	evpn := afByName(underlay.AddressFamilies, "l2vpn", "evpn")
 	require.NotNil(t, evpn)
@@ -255,7 +253,7 @@ func TestVRFs_TenantSeparation(t *testing.T) {
 	cluster := vrfByName(vrfs, "cluster")
 	require.NotNil(t, cluster)
 	assert.Equal(t, int64(5000), cluster.VNI)
-	assert.Equal(t, asn(65100), cluster.RouterASN)
+	assert.Equal(t, new(int64(65100)), cluster.RouterASN)
 	assert.Equal(t, []string{"10.100.0.0/16 blackhole"}, cluster.StaticRoutes)
 	assert.Equal(t, []string{"vr.mgmt"}, cluster.ImportedVrfs)
 	assert.Equal(t, []string{"65100:5000"}, cluster.RouteTargetsImport)

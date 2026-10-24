@@ -17,13 +17,13 @@ import (
 func TestOciCompartmentArgs(t *testing.T) {
 	created := time.Date(2026, 3, 4, 5, 6, 7, 0, time.UTC)
 	compartment := identity.Compartment{
-		Id:             common.String("ocid1.compartment.oc1..a"),
-		Name:           common.String("platform"),
-		Description:    common.String("shared infrastructure"),
+		Id:             new("ocid1.compartment.oc1..a"),
+		Name:           new("platform"),
+		Description:    new("shared infrastructure"),
 		TimeCreated:    &common.SDKTime{Time: created},
 		LifecycleState: identity.CompartmentLifecycleStateActive,
 		FreeformTags:   map[string]string{"env": "prod"},
-		DefinedTags: map[string]map[string]interface{}{
+		DefinedTags: map[string]map[string]any{
 			"Operations": {"CostCenter": "42"},
 		},
 	}

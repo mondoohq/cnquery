@@ -362,7 +362,7 @@ func ParseUsersXML(data []byte) ([]User, error) {
 
 	for _, u := range root.Elements("user") {
 		roles := []string{}
-		for _, role := range strings.Split(u.AttrString("roles"), ",") {
+		for role := range strings.SplitSeq(u.AttrString("roles"), ",") {
 			role = strings.TrimSpace(role)
 			if role != "" {
 				roles = append(roles, role)

@@ -564,7 +564,7 @@ func isAbsentSection(v any) bool {
 	}
 	rv := reflect.ValueOf(v)
 	switch rv.Kind() {
-	case reflect.Slice, reflect.Map, reflect.Ptr, reflect.Interface, reflect.Func:
+	case reflect.Slice, reflect.Map, reflect.Pointer, reflect.Interface, reflect.Func:
 		return rv.IsNil()
 	}
 	return false

@@ -862,7 +862,7 @@ func TestParseRsyslogFile_ContinuationKeepsCondition(t *testing.T) {
 `)
 	actions := entriesOfKind(got, rsyslogKindAction)
 	require.Len(t, actions, 4)
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		assert.Equal(t, `:programname, isequal, "sshd"`, actions[i].condition, "action %d", i)
 	}
 	assert.Empty(t, actions[3].condition, "a selector line starts a new filter")

@@ -21,9 +21,9 @@ func testRuntime() *plugin.Runtime {
 
 func testCompartment(id, name string) identity.Compartment {
 	return identity.Compartment{
-		Id:             common.String(id),
-		Name:           common.String(name),
-		Description:    common.String(name + " compartment"),
+		Id:             new(id),
+		Name:           new(name),
+		Description:    new(name + " compartment"),
 		LifecycleState: identity.CompartmentLifecycleStateActive,
 	}
 }

@@ -5,6 +5,7 @@ package connection
 
 import (
 	"context"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -34,9 +35,7 @@ func patAsset(endpoint, pat string, extra map[string]string) *inventory.Asset {
 		OPTION_ORGANIZATION: fakeado.Org,
 		OPTION_API_ENDPOINT: endpoint,
 	}
-	for k, v := range extra {
-		opts[k] = v
-	}
+	maps.Copy(opts, extra)
 	return assetFor(opts, vault.NewPasswordCredential("", pat))
 }
 

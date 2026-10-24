@@ -33,8 +33,8 @@ func (r *mqlAlicloudCen) instances() ([]any, error) {
 	pageNumber := int32(1)
 	for {
 		resp, err := client.DescribeCens(&cbnclient.DescribeCensRequest{
-			PageNumber: tea.Int32(pageNumber),
-			PageSize:   tea.Int32(cenPageSize),
+			PageNumber: new(pageNumber),
+			PageSize:   new(cenPageSize),
 		})
 		if err != nil {
 			return nil, err
@@ -123,9 +123,9 @@ func (r *mqlAlicloudCenInstance) attachments() ([]any, error) {
 	pageNumber := int32(1)
 	for {
 		resp, err := client.DescribeCenAttachedChildInstances(&cbnclient.DescribeCenAttachedChildInstancesRequest{
-			CenId:      tea.String(cenID),
-			PageNumber: tea.Int32(pageNumber),
-			PageSize:   tea.Int32(cenPageSize),
+			CenId:      new(cenID),
+			PageNumber: new(pageNumber),
+			PageSize:   new(cenPageSize),
 		})
 		if err != nil {
 			return nil, err

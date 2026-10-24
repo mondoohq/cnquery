@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"strconv"
 	"strings"
 	"sync"
@@ -639,9 +640,7 @@ func hclBodyToValuesDict(rawBody hcl.Body, ctx *hcl.EvalContext) (map[string]any
 	if err != nil {
 		return nil, err
 	}
-	for k, v := range resolved {
-		dict[k] = v
-	}
+	maps.Copy(dict, resolved)
 
 	for _, block := range body.Blocks {
 		// Expand `dynamic "X"` blocks into the `X` blocks they generate, exactly

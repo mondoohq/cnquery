@@ -320,7 +320,7 @@ func ParseEapiContainment(runningConfig string) *EapiContainment {
 			// A sub-block exists to enable eAPI in that instance, so it
 			// counts unless it explicitly shuts it down.
 			enabled := true
-			for _, sub := range strings.Split(block, "\n") {
+			for sub := range strings.SplitSeq(block, "\n") {
 				switch strings.TrimSpace(sub) {
 				case "shutdown", "default shutdown":
 					enabled = false

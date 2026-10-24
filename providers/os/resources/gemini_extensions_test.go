@@ -117,7 +117,7 @@ func TestQwenExtensionDuplicateNameIsStable(t *testing.T) {
 	writeTestFiles(t, fs, map[string]string{
 		"/home/alice/.qwen/extension-store/state.json": `{"extensions":{"aaa":{"name":"dup","defaultActivation":"enabled"},"bbb":{"name":"dup","defaultActivation":"disabled"}}}`,
 	})
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		enabled := qwenExtensionEnabled(&afero.Afero{Fs: fs}, "/home/alice/.qwen")
 		require.False(t, enabled("dup"))
 	}

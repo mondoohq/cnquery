@@ -230,11 +230,11 @@ func braceDelta(line string) int {
 // afterFirstBrace returns what follows the first "{" on a line, trimmed of a
 // trailing "}".
 func afterFirstBrace(line string) string {
-	i := strings.Index(line, "{")
-	if i < 0 {
+	_, after, ok := strings.Cut(line, "{")
+	if !ok {
 		return ""
 	}
-	return strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(line[i+1:]), "}"))
+	return strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(after), "}"))
 }
 
 // inlineConcat folds a concatenated version variable back into the string
@@ -255,8 +255,8 @@ func inlineConcat(s string, vars map[string]string) string {
 	return concatRe.ReplaceAllStringFunc(s, func(m string) string {
 		sub := concatRe.FindStringSubmatch(m)
 		name := sub[2]
-		if i := strings.LastIndex(name, "."); i >= 0 {
-			name = name[i+1:]
+		if _, after, ok := strings.CutLast(name, "."); ok {
+			name = after
 		}
 		v, ok := vars[name]
 		if !ok {
@@ -377,8 +377,8 @@ func resolveInterp(v string, vars map[string]string) string {
 		name := strings.Trim(strings.TrimPrefix(ref, "$"), "{}")
 		// A qualified reference (project.ext.fooVersion) resolves on its last
 		// segment, which is the property name.
-		if i := strings.LastIndex(name, "."); i >= 0 {
-			name = name[i+1:]
+		if _, after, ok := strings.CutLast(name, "."); ok {
+			name = after
 		}
 		return vars[name]
 	})

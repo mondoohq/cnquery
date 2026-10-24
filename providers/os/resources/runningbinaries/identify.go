@@ -335,11 +335,11 @@ func goToolchainIdentity(info *buildinfo.BuildInfo) (Identity, bool) {
 // bundle's name and the version it shows users. A bundle without a version
 // identifies nothing beyond the file name.
 func bundleIdentity(fs afero.Fs, p string) (Identity, bool) {
-	i := strings.LastIndex(p, bundleExecutableDir)
-	if i <= 0 || strings.Contains(p[i+len(bundleExecutableDir):], "/") {
+	bundle, executable, ok := strings.CutLast(p, bundleExecutableDir)
+	if !ok || bundle == "" || strings.Contains(executable, "/") {
 		return Identity{}, false
 	}
-	f, err := fs.Open(p[:i] + "/Contents/Info.plist")
+	f, err := fs.Open(bundle + "/Contents/Info.plist")
 	if err != nil {
 		return Identity{}, false
 	}

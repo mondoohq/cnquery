@@ -8,6 +8,7 @@ import (
 	"crypto/dsa" //nolint:staticcheck // DSA is deprecated, but we still detect legacy DSA keys for crypto-posture auditing
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/mldsa"
 	"crypto/rsa"
 	"encoding/pem"
 	"errors"
@@ -48,8 +49,7 @@ func inspectPrivateKey(data []byte) (privateKeyInfo, error) {
 		return privateKeyInfo{Algorithm: algo, Bits: bits}, nil
 	}
 
-	var passphraseErr *ssh.PassphraseMissingError
-	if errors.As(err, &passphraseErr) {
+	if passphraseErr, ok := errors.AsType[*ssh.PassphraseMissingError](err); ok {
 		info := privateKeyInfo{Encrypted: true}
 		if passphraseErr.PublicKey != nil {
 			if cpk, ok := passphraseErr.PublicKey.(ssh.CryptoPublicKey); ok {
@@ -138,11 +138,16 @@ func privateKeyAlgorithmBits(key any) (string, int64) {
 		return "Ed25519", 256
 	case *dsa.PrivateKey:
 		return "DSA", int64(k.P.BitLen())
+	case *mldsa.PrivateKey:
+		return publicKeyAlgorithmBits(k.PublicKey())
 	default:
 		return "", 0
 	}
 }
 
+// publicKeyAlgorithmBits reports ML-DSA keys by the size of their encoded
+// public key, the same measure Ed25519 uses (32 bytes, 256 bits), so the
+// ML-DSA-44, -65 and -87 parameter sets read 10496, 15616 and 20736.
 func publicKeyAlgorithmBits(key any) (string, int64) {
 	switch k := key.(type) {
 	case *rsa.PublicKey:
@@ -153,6 +158,8 @@ func publicKeyAlgorithmBits(key any) (string, int64) {
 		return "Ed25519", 256
 	case *dsa.PublicKey:
 		return "DSA", int64(k.P.BitLen())
+	case *mldsa.PublicKey:
+		return "ML-DSA", int64(k.Parameters().PublicKeySize() * 8)
 	default:
 		return "", 0
 	}

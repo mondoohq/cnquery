@@ -280,7 +280,7 @@ func initVercelTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 	if teamID == "" && conn.Asset() != nil {
 		for _, pid := range conn.Asset().PlatformIds {
-			if t := strings.TrimPrefix(pid, connection.PlatformIdVercelTeam); t != pid {
+			if t, ok := strings.CutPrefix(pid, connection.PlatformIdVercelTeam); ok {
 				teamID = t
 				break
 			}

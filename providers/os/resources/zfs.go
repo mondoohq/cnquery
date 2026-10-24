@@ -257,17 +257,18 @@ func solarisPoolProperties(runtime *plugin.Runtime) (zfsOutput, error) {
 	if err != nil {
 		return zfsOutput{}, err
 	}
-	cmd := "zpool get -Hp all"
+	var cmd strings.Builder
+	cmd.WriteString("zpool get -Hp all")
 	for name := range strings.FieldsSeq(names) {
 		if !validZfsName.MatchString(name) {
 			return zfsOutput{}, fmt.Errorf("invalid zfs pool name: %q", name)
 		}
-		cmd += fmt.Sprintf(" %q", name)
+		fmt.Fprintf(&cmd, " %q", name)
 	}
-	if cmd == "zpool get -Hp all" {
+	if cmd.String() == "zpool get -Hp all" {
 		return zfsOutput{text: []string{""}}, nil
 	}
-	out, _, err := runZfsCommand(runtime, cmd, "zfs pools")
+	out, _, err := runZfsCommand(runtime, cmd.String(), "zfs pools")
 	if err != nil {
 		return zfsOutput{}, err
 	}

@@ -399,7 +399,7 @@ type cfBrokerInstance interface {
 	GetCfSpaceGuid() string
 	GetDashboardUrl() string
 	GetImageUrl() string
-	GetParameters() map[string]interface{}
+	GetParameters() map[string]any
 }
 
 // cfLastOperation is the last provisioning operation on a CF-broker instance:

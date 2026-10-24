@@ -50,7 +50,7 @@ func parseRoleAssignments(content string) map[string][]string {
 	res := map[string][]string{}
 	for _, entry := range parseProperties(content) {
 		roles := []string{}
-		for _, role := range strings.Split(entry.value, ",") {
+		for role := range strings.SplitSeq(entry.value, ",") {
 			role = strings.TrimSpace(role)
 			if role != "" {
 				roles = append(roles, role)
@@ -75,7 +75,7 @@ func parseProperties(content string) []propertyEntry {
 	res := []propertyEntry{}
 
 	var pending strings.Builder
-	for _, raw := range strings.Split(content, "\n") {
+	for raw := range strings.SplitSeq(content, "\n") {
 		line := strings.TrimRight(raw, "\r")
 
 		if pending.Len() == 0 {

@@ -175,11 +175,11 @@ func TestFlattenTransparentBlocks_DepthCap(t *testing.T) {
 	// Build a nesting deeper than maxTransparentNesting and confirm the
 	// flattener terminates rather than exhausting the stack.
 	var lines []string
-	for i := 0; i < maxTransparentNesting+10; i++ {
+	for range maxTransparentNesting + 10 {
 		lines = append(lines, "<IfModule mod_ssl.c>")
 	}
 	lines = append(lines, "Listen 443")
-	for i := 0; i < maxTransparentNesting+10; i++ {
+	for range maxTransparentNesting + 10 {
 		lines = append(lines, "</IfModule>")
 	}
 

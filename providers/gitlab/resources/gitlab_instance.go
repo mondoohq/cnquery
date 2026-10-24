@@ -212,7 +212,7 @@ func (s *mqlGitlabSettings) variables() ([]any, error) {
 
 	for {
 		vars, resp, err := conn.Client().InstanceVariables.ListVariables(&gitlab.ListInstanceVariablesOptions{
-			ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage},
+			Page: page, PerPage: perPage,
 		})
 		if err != nil {
 			if isTierOrPermissionGated(resp) {
@@ -359,7 +359,7 @@ func (s *mqlGitlabSettings) applications() ([]any, error) {
 
 	for {
 		apps, resp, err := conn.Client().Applications.ListApplications(&gitlab.ListApplicationsOptions{
-			ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage},
+			Page: page, PerPage: perPage,
 		})
 		if err != nil {
 			if isTierOrPermissionGated(resp) {

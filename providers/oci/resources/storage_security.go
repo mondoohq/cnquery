@@ -42,8 +42,8 @@ func (o *mqlOciObjectStorageBucket) lifecycleRules() ([]any, error) {
 		return nil, err
 	}
 	resp, err := svc.GetObjectLifecyclePolicy(context.Background(), objectstorage.GetObjectLifecyclePolicyRequest{
-		NamespaceName: common.String(o.Namespace.Data),
-		BucketName:    common.String(o.Name.Data),
+		NamespaceName: new(o.Namespace.Data),
+		BucketName:    new(o.Name.Data),
 	})
 	// A bucket without a lifecycle policy answers 404: no rules.
 	if ociServiceStatus(err) == http.StatusNotFound {
@@ -89,8 +89,8 @@ func (o *mqlOciObjectStorageBucket) replicationPolicies() ([]any, error) {
 	}
 	policies, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]objectstorage.ReplicationPolicySummary, *string, error) {
 		resp, err := svc.ListReplicationPolicies(ctx, objectstorage.ListReplicationPoliciesRequest{
-			NamespaceName: common.String(o.Namespace.Data),
-			BucketName:    common.String(o.Name.Data),
+			NamespaceName: new(o.Namespace.Data),
+			BucketName:    new(o.Name.Data),
 			Page:          page,
 		})
 		if err != nil {
@@ -131,7 +131,7 @@ func (o *mqlOciKmsVault) vaultDetail() (*keymanagement.Vault, error) {
 		if err != nil {
 			return nil, err
 		}
-		resp, err := svc.GetVault(context.Background(), keymanagement.GetVaultRequest{VaultId: common.String(o.Id.Data)})
+		resp, err := svc.GetVault(context.Background(), keymanagement.GetVaultRequest{VaultId: new(o.Id.Data)})
 		if err != nil {
 			return nil, err
 		}
@@ -178,7 +178,7 @@ func (o *mqlOciKmsVault) replicas() ([]any, error) {
 		return nil, err
 	}
 	replicas, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]keymanagement.VaultReplicaSummary, *string, error) {
-		resp, err := svc.ListVaultReplicas(ctx, keymanagement.ListVaultReplicasRequest{VaultId: common.String(o.Id.Data), Page: page})
+		resp, err := svc.ListVaultReplicas(ctx, keymanagement.ListVaultReplicasRequest{VaultId: new(o.Id.Data), Page: page})
 		if err != nil {
 			return nil, nil, err
 		}
@@ -213,7 +213,7 @@ func (o *mqlOciCloudGuardTarget) targetDetail() (*cloudguard.Target, error) {
 		if err != nil {
 			return nil, err
 		}
-		resp, err := svc.GetTarget(context.Background(), cloudguard.GetTargetRequest{TargetId: common.String(o.Id.Data)})
+		resp, err := svc.GetTarget(context.Background(), cloudguard.GetTargetRequest{TargetId: new(o.Id.Data)})
 		if err != nil {
 			return nil, err
 		}
@@ -322,8 +322,8 @@ func (o *mqlOciCloudGuard) listManagedLists() ([]any, error) {
 	}
 	lists, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]cloudguard.ManagedListSummary, *string, error) {
 		resp, err := client.ListManagedLists(ctx, cloudguard.ListManagedListsRequest{
-			CompartmentId:          common.String(conn.TenantID()),
-			CompartmentIdInSubtree: common.Bool(true),
+			CompartmentId:          new(conn.TenantID()),
+			CompartmentIdInSubtree: new(true),
 			AccessLevel:            cloudguard.ListManagedListsAccessLevelAccessible,
 			Page:                   page,
 		})
@@ -378,7 +378,7 @@ func (o *mqlOciBastionInstance) sessions() ([]any, error) {
 		return nil, err
 	}
 	sessions, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]bastion.SessionSummary, *string, error) {
-		resp, err := svc.ListSessions(ctx, bastion.ListSessionsRequest{BastionId: common.String(o.Id.Data), Page: page})
+		resp, err := svc.ListSessions(ctx, bastion.ListSessionsRequest{BastionId: new(o.Id.Data), Page: page})
 		if err != nil {
 			return nil, nil, err
 		}

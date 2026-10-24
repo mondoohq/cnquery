@@ -289,8 +289,8 @@ func (g *mqlGcpProjectIdentityPlatformService) tenants() ([]any, error) {
 
 func newMqlIdentityPlatformTenant(runtime *plugin.Runtime, t *identitytoolkit.GoogleCloudIdentitytoolkitAdminV2Tenant) (plugin.Resource, error) {
 	tenantId := t.Name
-	if idx := strings.LastIndex(t.Name, "/"); idx >= 0 {
-		tenantId = t.Name[idx+1:]
+	if _, after, ok := strings.CutLast(t.Name, "/"); ok {
+		tenantId = after
 	}
 
 	args := map[string]*llx.RawData{

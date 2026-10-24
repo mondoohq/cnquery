@@ -43,12 +43,12 @@ func TestEcsSnapshotTagsToMap(t *testing.T) {
 	t.Run("flattens key-value pairs", func(t *testing.T) {
 		tags := &ecsclient.DescribeSnapshotsResponseBodySnapshotsSnapshotTags{
 			Tag: []*ecsclient.DescribeSnapshotsResponseBodySnapshotsSnapshotTagsTag{
-				{TagKey: tea.String("env"), TagValue: tea.String("prod")},
+				{TagKey: new("env"), TagValue: new("prod")},
 				// a key with no value is still a tag that filters match on
-				{TagKey: tea.String("owner")},
+				{TagKey: new("owner")},
 				// entries with no key cannot be indexed and are dropped
 				nil,
-				{TagValue: tea.String("orphan")},
+				{TagValue: new("orphan")},
 			},
 		}
 		assert.Equal(t, map[string]any{"env": "prod", "owner": ""}, ecsSnapshotTagsToMap(tags))

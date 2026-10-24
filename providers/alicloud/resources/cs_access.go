@@ -156,7 +156,7 @@ func (r *mqlAlicloudCs) grantSweep() ([]any, error) {
 		if principal.uid == "" {
 			continue
 		}
-		resp, err := client.DescribeUserPermission(tea.String(principal.uid))
+		resp, err := client.DescribeUserPermission(new(principal.uid))
 		if err != nil {
 			// One principal that cannot be read must not blind the sweep: the
 			// caller loses that principal's grants, not everybody's. Logged so
@@ -374,7 +374,7 @@ func (r *mqlAlicloudCsCluster) checks() ([]any, error) {
 		return nil, err
 	}
 
-	resp, err := client.ListClusterChecks(tea.String(r.clusterId), &csclient.ListClusterChecksRequest{})
+	resp, err := client.ListClusterChecks(new(r.clusterId), &csclient.ListClusterChecksRequest{})
 	if err != nil {
 		return nil, err
 	}

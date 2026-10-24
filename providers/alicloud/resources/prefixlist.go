@@ -42,7 +42,7 @@ func (r *mqlAlicloudEcs) prefixLists() ([]any, error) {
 		firstPage := true
 		for {
 			resp, err := client.DescribePrefixLists(&ecsclient.DescribePrefixListsRequest{
-				RegionId:   tea.String(region),
+				RegionId:   new(region),
 				MaxResults: tea.Int32(100),
 				NextToken:  nextToken,
 			})
@@ -156,8 +156,8 @@ func (r *mqlAlicloudEcsPrefixList) cidrBlocks() ([]any, error) {
 		return nil, err
 	}
 	resp, err := client.DescribePrefixListAttributes(&ecsclient.DescribePrefixListAttributesRequest{
-		RegionId:     tea.String(r.region),
-		PrefixListId: tea.String(r.PrefixListId.Data),
+		RegionId:     new(r.region),
+		PrefixListId: new(r.PrefixListId.Data),
 	})
 	if err != nil {
 		return nil, err

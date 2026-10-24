@@ -177,7 +177,7 @@ func initSnowflakeStorageIntegration(runtime *plugin.Runtime, args map[string]*l
 	client := conn.Client()
 	ctx := context.Background()
 
-	integrations, err := client.StorageIntegrations.Show(ctx, sdk.NewShowStorageIntegrationRequest().WithLike(sdk.Like{Pattern: sdk.String(name)}))
+	integrations, err := client.StorageIntegrations.Show(ctx, sdk.NewShowStorageIntegrationRequest().WithLike(sdk.Like{Pattern: new(name)}))
 	if err != nil {
 		return nil, nil, err
 	}

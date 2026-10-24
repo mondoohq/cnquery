@@ -74,7 +74,7 @@ func TestServiceGatePropagatesProjectIdError(t *testing.T) {
 func TestServiceGateResolvesOnce(t *testing.T) {
 	var gate serviceGate
 	gate.recordEnabled(true)
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		enabled, err := gate.resolveEnabled(nil, plugin.TValue[string]{Data: "p"}, "compute.googleapis.com")
 		require.NoError(t, err)
 		require.True(t, enabled)

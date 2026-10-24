@@ -13,7 +13,9 @@ import (
 )
 
 // boolPtr is defined in provenance_test.go.
-func int64Ptr(v int64) *int64 { return &v }
+//
+//go:fix inline
+func int64Ptr(v int64) *int64 { return new(v) }
 
 // restrictedSpec returns a pod spec that satisfies the restricted profile. Each
 // control test mutates a copy of it to drop exactly one requirement.
@@ -25,8 +27,8 @@ func restrictedSpec() *corev1.PodSpec {
 		Containers: []corev1.Container{{
 			Name: "app",
 			SecurityContext: &corev1.SecurityContext{
-				AllowPrivilegeEscalation: boolPtr(false),
-				RunAsNonRoot:             boolPtr(true),
+				AllowPrivilegeEscalation: new(false),
+				RunAsNonRoot:             new(true),
 				RunAsUser:                int64Ptr(1000),
 				Capabilities:             &corev1.Capabilities{Drop: []corev1.Capability{"ALL"}},
 			},
@@ -50,7 +52,7 @@ func TestPodSecurityStandard_Levels(t *testing.T) {
 
 	t.Run("privileged container is privileged level", func(t *testing.T) {
 		spec := restrictedSpec()
-		container(spec).Privileged = boolPtr(true)
+		container(spec).Privileged = new(true)
 		assert.False(t, specMeetsPodSecurityBaseline(spec), "baseline")
 		assert.Equal(t, "privileged", specPodSecurityStandard(spec))
 	})
@@ -78,7 +80,7 @@ func TestPodSecurityBaseline_Controls(t *testing.T) {
 		name   string
 		mutate func(*corev1.PodSpec)
 	}{
-		{"privileged", func(s *corev1.PodSpec) { container(s).Privileged = boolPtr(true) }},
+		{"privileged", func(s *corev1.PodSpec) { container(s).Privileged = new(true) }},
 		{"hostNetwork", func(s *corev1.PodSpec) { s.HostNetwork = true }},
 		{"hostPort", func(s *corev1.PodSpec) {
 			s.Containers[0].Ports = []corev1.ContainerPort{{HostPort: 8080}}
@@ -107,12 +109,12 @@ func TestPodSecurityBaseline_Controls(t *testing.T) {
 		}},
 		{"hostPath volume", func(s *corev1.PodSpec) {
 			s.Volumes = []corev1.Volume{{
-				Name:         "host",
-				VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}},
+				Name:     "host",
+				HostPath: &corev1.HostPathVolumeSource{Path: "/"},
 			}}
 		}},
 		{"windows hostProcess", func(s *corev1.PodSpec) {
-			container(s).WindowsOptions = &corev1.WindowsSecurityContextOptions{HostProcess: boolPtr(true)}
+			container(s).WindowsOptions = &corev1.WindowsSecurityContextOptions{HostProcess: new(true)}
 		}},
 	}
 	for _, tc := range cases {
@@ -137,7 +139,7 @@ func TestPodSecurityRestricted_Controls(t *testing.T) {
 			container(s).AllowPrivilegeEscalation = nil
 		}},
 		{"allowPrivilegeEscalation true", func(s *corev1.PodSpec) {
-			container(s).AllowPrivilegeEscalation = boolPtr(true)
+			container(s).AllowPrivilegeEscalation = new(true)
 		}},
 		{"runAsNonRoot unset", func(s *corev1.PodSpec) {
 			s.SecurityContext.RunAsNonRoot = nil

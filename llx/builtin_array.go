@@ -607,7 +607,7 @@ func detectDupes(array any, typ types.Type) ([]any, []any, error) {
 	existing := []any{}
 	duplicates := []any{}
 	var found bool
-	for i := 0; i < len(arr); i++ {
+	for i := range arr {
 		left := arr[i]
 
 		for j := range existing {

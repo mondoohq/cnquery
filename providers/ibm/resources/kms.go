@@ -304,9 +304,9 @@ func (r *mqlIbmKmsInstance) keys() ([]any, error) {
 	offset := int64(0)
 	for {
 		res, _, err := svc.GetKeys(&ibmkeyprotectapiv2.GetKeysOptions{
-			BluemixInstance: core.StringPtr(r.Guid.Data),
+			BluemixInstance: new(r.Guid.Data),
 			Limit:           core.Int64Ptr(kmsPageSize),
-			Offset:          core.Int64Ptr(offset),
+			Offset:          new(offset),
 		})
 		if err != nil {
 			return nil, classifyError(err, "kms.secrets.list")
@@ -502,9 +502,9 @@ func instanceRegistrations(inst *mqlIbmKmsInstance) ([]ibmkeyprotectapiv2.Regist
 		offset := int64(0)
 		for {
 			res, _, err := svc.GetRegistrationsAllKeys(&ibmkeyprotectapiv2.GetRegistrationsAllKeysOptions{
-				BluemixInstance: core.StringPtr(inst.Guid.Data),
+				BluemixInstance: new(inst.Guid.Data),
 				Limit:           core.Int64Ptr(kmsPageSize),
-				Offset:          core.Int64Ptr(offset),
+				Offset:          new(offset),
 			})
 			if err != nil {
 				return nil, classifyError(err, "kms.registrations.list")

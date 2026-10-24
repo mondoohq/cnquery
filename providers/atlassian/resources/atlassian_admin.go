@@ -427,7 +427,7 @@ func walkAdminEvents(
 	visit func(event *model.OrganizationEventModelScheme) error,
 ) error {
 	cursor := ""
-	for page := 0; page < maxAdminEventPages; page++ {
+	for range maxAdminEventPages {
 		events, err := fetch(cursor)
 		if err != nil {
 			return err

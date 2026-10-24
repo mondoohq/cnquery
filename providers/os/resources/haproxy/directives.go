@@ -4,6 +4,7 @@
 package haproxy
 
 import (
+	"maps"
 	"strconv"
 	"strings"
 )
@@ -63,9 +64,7 @@ func ParseBindLines(dirs []Directive) []Bind {
 			// Copy Params so downstream mutations don't bleed across forms.
 			if base.Params != nil {
 				b.Params = make(map[string]string, len(base.Params))
-				for k, v := range base.Params {
-					b.Params[k] = v
-				}
+				maps.Copy(b.Params, base.Params)
 			}
 			out = append(out, b)
 		}
@@ -93,9 +92,9 @@ func fillBindAddress(b *Bind, addr string) {
 		}
 	}
 	// Try splitting at the LAST colon for IPv4 / hostname forms.
-	if i := strings.LastIndex(addr, ":"); i >= 0 {
-		b.Address = addr[:i]
-		fillPortOrRange(b, addr[i+1:])
+	if before, after, ok := strings.CutLast(addr, ":"); ok {
+		b.Address = before
+		fillPortOrRange(b, after)
 		return
 	}
 	// Bare port or bare address.
@@ -346,9 +345,9 @@ func parseServerArgs(args []string, raw string) Server {
 			} else {
 				s.Address = addr
 			}
-		} else if i := strings.LastIndex(addr, ":"); i >= 0 {
-			s.Address = addr[:i]
-			s.Port, _ = parsePort(addr[i+1:])
+		} else if before, after, ok := strings.CutLast(addr, ":"); ok {
+			s.Address = before
+			s.Port, _ = parsePort(after)
 		} else {
 			s.Address = addr
 		}
@@ -836,9 +835,9 @@ func ParseAddrPort(s string) (addr string, port int64) {
 			return addr, 0
 		}
 	}
-	if i := strings.LastIndex(s, ":"); i >= 0 {
-		if p, ok := parseInt(s[i+1:]); ok {
-			return s[:i], p
+	if before, after, found := strings.CutLast(s, ":"); found {
+		if p, ok := parseInt(after); ok {
+			return before, p
 		}
 	}
 	return s, 0

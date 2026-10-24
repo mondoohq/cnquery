@@ -79,8 +79,8 @@ func (r *mqlAlicloudEcs) listAutoSnapshotPolicies(region string) ([]*mqlAlicloud
 	page := int32(1)
 	for {
 		resp, err := client.DescribeAutoSnapshotPolicyEx(&ecsclient.DescribeAutoSnapshotPolicyExRequest{
-			RegionId:   tea.String(region),
-			PageNumber: tea.Int32(page),
+			RegionId:   new(region),
+			PageNumber: new(page),
 			PageSize:   tea.Int32(ecsAutoSnapshotPolicyPageSize),
 		})
 		if err != nil {
@@ -237,7 +237,7 @@ func (r *mqlAlicloudEcs) diskEncryptionDefaults() ([]any, error) {
 			return nil, err
 		}
 		status, err := client.DescribeDiskEncryptionByDefaultStatus(&ecsclient.DescribeDiskEncryptionByDefaultStatusRequest{
-			RegionId: tea.String(region),
+			RegionId: new(region),
 		})
 		if err != nil {
 			// a denied or unavailable region is a partial result; keep the others
@@ -253,7 +253,7 @@ func (r *mqlAlicloudEcs) diskEncryptionDefaults() ([]any, error) {
 		// rather than dropping the region's encryption status.
 		kmsKeyID := ""
 		keyResp, err := client.DescribeDiskDefaultKMSKeyId(&ecsclient.DescribeDiskDefaultKMSKeyIdRequest{
-			RegionId: tea.String(region),
+			RegionId: new(region),
 		})
 		if err != nil {
 			log.Debug().Err(err).Str("region", region).

@@ -2,14 +2,12 @@ module go.mondoo.com/mql/providers/clickhousecloud
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.10
+go 1.27.3
 
 require (
 	go.mondoo.com/mql v0.0.0-20261019065417-1fcdd84493fd
 	go.mondoo.com/ranger-rpc v0.8.1
 )
-
-require go.opentelemetry.io/otel/log v1.47.0 // indirect
 
 require (
 	dario.cat/mergo v1.0.2 // indirect
@@ -82,6 +80,7 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel v1.47.0 // indirect
+	go.opentelemetry.io/otel/log v1.47.0 // indirect
 	go.opentelemetry.io/otel/metric v1.47.0 // indirect
 	go.opentelemetry.io/otel/trace v1.47.0 // indirect
 	go.uber.org/mock v0.6.0 // indirect

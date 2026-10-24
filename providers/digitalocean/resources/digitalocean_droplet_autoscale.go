@@ -16,7 +16,7 @@ type mqlDigitaloceanDropletAutoscalePoolInternal struct {
 	templateProjectID string
 }
 
-func (r *mqlDigitalocean) dropletAutoscalePools() ([]interface{}, error) {
+func (r *mqlDigitalocean) dropletAutoscalePools() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -25,7 +25,7 @@ func (r *mqlDigitalocean) dropletAutoscalePools() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(pools))
+	all := make([]any, 0, len(pools))
 	for _, p := range pools {
 		if p == nil {
 			continue
@@ -48,17 +48,17 @@ func (r *mqlDigitalocean) dropletAutoscalePools() ([]interface{}, error) {
 			currentMem = p.CurrentUtilization.Memory
 		}
 
-		template := map[string]interface{}{}
+		template := map[string]any{}
 		if t := p.DropletTemplate; t != nil {
-			tags := make([]interface{}, len(t.Tags))
+			tags := make([]any, len(t.Tags))
 			for i, tag := range t.Tags {
 				tags[i] = tag
 			}
-			sshKeys := make([]interface{}, len(t.SSHKeys))
+			sshKeys := make([]any, len(t.SSHKeys))
 			for i, k := range t.SSHKeys {
 				sshKeys[i] = k
 			}
-			template = map[string]interface{}{
+			template = map[string]any{
 				"size":             t.Size,
 				"region":           t.Region,
 				"image":            t.Image,
@@ -108,7 +108,7 @@ func (r *mqlDigitaloceanDropletAutoscalePool) id() (string, error) {
 	return "digitalocean.dropletAutoscalePool/" + r.Id.Data, nil
 }
 
-func (r *mqlDigitaloceanDropletAutoscalePool) members() ([]interface{}, error) {
+func (r *mqlDigitaloceanDropletAutoscalePool) members() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 	ctx := context.Background()

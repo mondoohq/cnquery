@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	web "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice/v6"
 	aci "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerinstance/armcontainerinstance/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis/v4"
@@ -31,11 +30,11 @@ const (
 
 func TestRedactedRedisConfigurationDropsStorageCredentials(t *testing.T) {
 	cfg := &armredis.CommonPropertiesRedisConfiguration{
-		AofStorageConnectionString0: to.Ptr(fakeStorageConnString + "aof0"),
-		AofStorageConnectionString1: to.Ptr(fakeStorageConnString + "aof1"),
-		RdbStorageConnectionString:  to.Ptr(fakeStorageConnString + "rdb"),
-		RdbBackupEnabled:            to.Ptr("true"),
-		MaxmemoryPolicy:             to.Ptr("allkeys-lru"),
+		AofStorageConnectionString0: new(fakeStorageConnString + "aof0"),
+		AofStorageConnectionString1: new(fakeStorageConnString + "aof1"),
+		RdbStorageConnectionString:  new(fakeStorageConnString + "rdb"),
+		RdbBackupEnabled:            new("true"),
+		MaxmemoryPolicy:             new("allkeys-lru"),
 	}
 
 	dict, err := convert.JsonToDict(redactedRedisConfiguration(cfg))
@@ -63,10 +62,10 @@ func TestRedactedRedisConfigurationDropsStorageCredentials(t *testing.T) {
 // field over.
 func TestRedactedRedisResourceDropsStorageCredentials(t *testing.T) {
 	cache := &armredis.ResourceInfo{
-		Name: to.Ptr("my-cache"),
+		Name: new("my-cache"),
 		Properties: &armredis.Properties{
 			RedisConfiguration: &armredis.CommonPropertiesRedisConfiguration{
-				RdbStorageConnectionString: to.Ptr(fakeStorageConnString),
+				RdbStorageConnectionString: new(fakeStorageConnString),
 			},
 		},
 	}
@@ -86,19 +85,19 @@ func TestRedactedRedisResourceDropsStorageCredentials(t *testing.T) {
 	assert.Nil(t, redactedRedisResource(nil))
 
 	// A cache with no properties must not panic.
-	assert.NotNil(t, redactedRedisResource(&armredis.ResourceInfo{Name: to.Ptr("bare")}))
+	assert.NotNil(t, redactedRedisResource(&armredis.ResourceInfo{Name: new("bare")}))
 }
 
 func TestRedactedAuthSettingsDropsEveryProviderSecret(t *testing.T) {
 	props := &web.SiteAuthSettingsProperties{
-		Enabled:                      to.Ptr(true),
-		ClientID:                     to.Ptr("client-id-is-not-a-secret"),
-		ClientSecret:                 to.Ptr(fakeClientSecret + "-aad"),
-		FacebookAppSecret:            to.Ptr(fakeClientSecret + "-fb"),
-		GitHubClientSecret:           to.Ptr(fakeClientSecret + "-gh"),
-		GoogleClientSecret:           to.Ptr(fakeClientSecret + "-goog"),
-		MicrosoftAccountClientSecret: to.Ptr(fakeClientSecret + "-msa"),
-		TwitterConsumerSecret:        to.Ptr(fakeClientSecret + "-tw"),
+		Enabled:                      new(true),
+		ClientID:                     new("client-id-is-not-a-secret"),
+		ClientSecret:                 new(fakeClientSecret + "-aad"),
+		FacebookAppSecret:            new(fakeClientSecret + "-fb"),
+		GitHubClientSecret:           new(fakeClientSecret + "-gh"),
+		GoogleClientSecret:           new(fakeClientSecret + "-goog"),
+		MicrosoftAccountClientSecret: new(fakeClientSecret + "-msa"),
+		TwitterConsumerSecret:        new(fakeClientSecret + "-tw"),
 	}
 
 	dict, err := convert.JsonToDict(redactedAuthSettings(props))
@@ -130,7 +129,7 @@ func TestRedactedAuthSettingsDropsEveryProviderSecret(t *testing.T) {
 // resource's caches, behind an `if cache.Properties != nil` guard -- so filling
 // the field in here quietly turned that guard into a read of an empty struct.
 func TestCreateRedisInstanceRawDataLeavesTheSourceAlone(t *testing.T) {
-	bare := &armredis.ResourceInfo{Name: to.Ptr("no-properties")}
+	bare := &armredis.ResourceInfo{Name: new("no-properties")}
 
 	_, err := createRedisInstanceRawData(azureTestRuntime(), bare)
 	require.NoError(t, err)
@@ -142,11 +141,11 @@ func TestCreateRedisInstanceRawDataLeavesTheSourceAlone(t *testing.T) {
 	// configuration block and no id is rejected rather than given a colliding
 	// cache key, so the fixture carries the id ARM always reports.
 	withSecret := &armredis.ResourceInfo{
-		ID:   to.Ptr("/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Cache/redis/has-properties"),
-		Name: to.Ptr("has-properties"),
+		ID:   new("/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Cache/redis/has-properties"),
+		Name: new("has-properties"),
 		Properties: &armredis.Properties{
 			RedisConfiguration: &armredis.CommonPropertiesRedisConfiguration{
-				RdbStorageConnectionString: to.Ptr(fakeStorageConnString),
+				RdbStorageConnectionString: new(fakeStorageConnString),
 			},
 		},
 	}
@@ -170,13 +169,13 @@ func TestCreateRedisInstanceRawDataLeavesTheSourceAlone(t *testing.T) {
 func TestRedactedImageRegistryCredentialsDropsThePassword(t *testing.T) {
 	creds := []*aci.ImageRegistryCredential{
 		{
-			Server:   to.Ptr("myregistry.azurecr.io"),
-			Username: to.Ptr("pull-user"),
-			Password: to.Ptr(fakeRegistryPassword),
+			Server:   new("myregistry.azurecr.io"),
+			Username: new("pull-user"),
+			Password: new(fakeRegistryPassword),
 		},
 		{
-			Server:   to.Ptr("identity.azurecr.io"),
-			Identity: to.Ptr("/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/pull"),
+			Server:   new("identity.azurecr.io"),
+			Identity: new("/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/pull"),
 		},
 		nil,
 	}
@@ -209,25 +208,25 @@ func TestRedactedImageRegistryCredentialsDropsThePassword(t *testing.T) {
 func TestRedactedVolumesDropsSecretContentsAndShareKey(t *testing.T) {
 	volumes := []*aci.Volume{
 		{
-			Name: to.Ptr("secrets"),
+			Name: new("secrets"),
 			Secret: map[string]*string{
-				"app.key": to.Ptr(fakeSecretVolumeData + "-app"),
-				"tls.pem": to.Ptr(fakeSecretVolumeData + "-tls"),
+				"app.key": new(fakeSecretVolumeData + "-app"),
+				"tls.pem": new(fakeSecretVolumeData + "-tls"),
 				"absent":  nil,
 			},
 		},
 		{
-			Name: to.Ptr("share"),
+			Name: new("share"),
 			AzureFile: &aci.AzureFileVolume{
-				ShareName:          to.Ptr("data"),
-				StorageAccountName: to.Ptr("acct"),
-				ReadOnly:           to.Ptr(true),
-				StorageAccountKey:  to.Ptr(fakeFileShareKey),
+				ShareName:          new("data"),
+				StorageAccountName: new("acct"),
+				ReadOnly:           new(true),
+				StorageAccountKey:  new(fakeFileShareKey),
 			},
 		},
 		{
-			Name:    to.Ptr("repo"),
-			GitRepo: &aci.GitRepoVolume{Repository: to.Ptr("https://example.invalid/repo.git")},
+			Name:    new("repo"),
+			GitRepo: &aci.GitRepoVolume{Repository: new("https://example.invalid/repo.git")},
 		},
 		nil,
 	}
@@ -265,8 +264,8 @@ func TestRedactedVolumesDropsSecretContentsAndShareKey(t *testing.T) {
 
 func TestRedactedEnvironmentVariablesDropsTheSecureValue(t *testing.T) {
 	env := []*aci.EnvironmentVariable{
-		{Name: to.Ptr("LOG_LEVEL"), Value: to.Ptr("debug")},
-		{Name: to.Ptr("DB_PASSWORD"), SecureValue: to.Ptr(fakeSecureEnvValue)},
+		{Name: new("LOG_LEVEL"), Value: new("debug")},
+		{Name: new("DB_PASSWORD"), SecureValue: new(fakeSecureEnvValue)},
 		nil,
 	}
 

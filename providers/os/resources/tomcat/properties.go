@@ -24,7 +24,7 @@ func ParseProperties(content string, paths Paths) map[string]string {
 	var logical strings.Builder
 	continued := false
 
-	for _, raw := range strings.Split(content, "\n") {
+	for raw := range strings.SplitSeq(content, "\n") {
 		line := strings.TrimRight(raw, "\r")
 
 		if !continued {

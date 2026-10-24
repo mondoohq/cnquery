@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 
@@ -907,9 +908,7 @@ func enrichWithLabels(a *inventory.Asset, labels map[string]string) {
 	if a.Labels == nil {
 		a.Labels = map[string]string{}
 	}
-	for k, v := range labels {
-		a.Labels[k] = v
-	}
+	maps.Copy(a.Labels, labels)
 }
 
 func getInstancesLabels(vm *mqlAzureSubscriptionComputeServiceVm) (map[string]string, error) {

@@ -198,11 +198,10 @@ func isPinnedActionRef(ref string) bool {
 		return true
 	}
 
-	at := strings.LastIndex(ref, "@")
-	if at < 0 {
+	_, version, ok := strings.CutLast(ref, "@")
+	if !ok {
 		return false
 	}
-	version := ref[at+1:]
 
 	if strings.HasPrefix(ref, "docker://") {
 		return imageDigest.MatchString(version)

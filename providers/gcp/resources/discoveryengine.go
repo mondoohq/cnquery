@@ -267,8 +267,8 @@ func (g *mqlGcpProjectDiscoveryEngineServiceEngine) dataStores() ([]any, error) 
 	location := discoveryEngineLocationFromName(engineName)
 	// The collection parent is the engine name up to and excluding "/engines/...".
 	collectionParent := engineName
-	if idx := strings.Index(engineName, "/engines/"); idx >= 0 {
-		collectionParent = engineName[:idx]
+	if before, _, ok := strings.Cut(engineName, "/engines/"); ok {
+		collectionParent = before
 	}
 	if location == "" || collectionParent == engineName {
 		return []any{}, nil

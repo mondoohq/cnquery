@@ -48,7 +48,7 @@ func (r *mqlAlicloudPolardbApplication) applicationSSL() *polardb.DescribeApplic
 			return
 		}
 		resp, err := client.DescribeApplicationSSL(&polardb.DescribeApplicationSSLRequest{
-			ApplicationId: tea.String(r.applicationId),
+			ApplicationId: new(r.applicationId),
 		})
 		if err != nil {
 			log.Debug().Err(err).Str("application", r.applicationId).
@@ -116,8 +116,8 @@ func (r *mqlAlicloudPolardbCluster) applications() ([]any, error) {
 		pn := pageNumber
 		ps := pageSize
 		resp, err := client.DescribeApplications(&polardb.DescribeApplicationsRequest{
-			RegionId:    tea.String(r.region),
-			DBClusterId: tea.String(r.dbClusterId),
+			RegionId:    new(r.region),
+			DBClusterId: new(r.dbClusterId),
 			PageNumber:  &pn,
 			PageSize:    &ps,
 		})

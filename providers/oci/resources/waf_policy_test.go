@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/waf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,11 +14,11 @@ import (
 func TestOciWafActionFields(t *testing.T) {
 	t.Run("a blocking action reports its status code and headers", func(t *testing.T) {
 		typ, code, headers := ociWafActionFields(waf.ReturnHttpResponseAction{
-			Name: common.String("block"),
-			Code: common.Int(403),
+			Name: new("block"),
+			Code: new(403),
 			Headers: []waf.ResponseHeader{
-				{Name: common.String("X-Blocked"), Value: common.String("yes")},
-				{Value: common.String("header without a name is dropped")},
+				{Name: new("X-Blocked"), Value: new("yes")},
+				{Value: new("header without a name is dropped")},
 			},
 		})
 		assert.Equal(t, "RETURN_HTTP_RESPONSE", typ)
@@ -29,22 +28,22 @@ func TestOciWafActionFields(t *testing.T) {
 	})
 
 	t.Run("the pointer form of an action is recognized too", func(t *testing.T) {
-		typ, code, _ := ociWafActionFields(&waf.ReturnHttpResponseAction{Name: common.String("block"), Code: common.Int(401)})
+		typ, code, _ := ociWafActionFields(&waf.ReturnHttpResponseAction{Name: new("block"), Code: new(401)})
 		assert.Equal(t, "RETURN_HTTP_RESPONSE", typ)
 		require.NotNil(t, code)
 		assert.Equal(t, 401, *code)
 
-		typ, _, _ = ociWafActionFields(&waf.AllowAction{Name: common.String("allow")})
+		typ, _, _ = ociWafActionFields(&waf.AllowAction{Name: new("allow")})
 		assert.Equal(t, "ALLOW", typ)
 	})
 
 	t.Run("check and allow actions carry no response", func(t *testing.T) {
-		typ, code, headers := ociWafActionFields(waf.CheckAction{Name: common.String("log")})
+		typ, code, headers := ociWafActionFields(waf.CheckAction{Name: new("log")})
 		assert.Equal(t, "CHECK", typ)
 		assert.Nil(t, code)
 		assert.Empty(t, headers)
 
-		typ, code, _ = ociWafActionFields(waf.AllowAction{Name: common.String("allow")})
+		typ, code, _ = ociWafActionFields(waf.AllowAction{Name: new("allow")})
 		assert.Equal(t, "ALLOW", typ)
 		assert.Nil(t, code)
 	})
@@ -58,40 +57,40 @@ func TestOciWafPolicyRules(t *testing.T) {
 	t.Run("rules are flattened in module evaluation order", func(t *testing.T) {
 		policy := &waf.WebAppFirewallPolicy{
 			ResponseProtection: &waf.ResponseProtection{Rules: []waf.ProtectionRule{
-				{Name: common.String("resp-prot"), ActionName: common.String("block")},
+				{Name: new("resp-prot"), ActionName: new("block")},
 			}},
 			RequestProtection: &waf.RequestProtection{Rules: []waf.ProtectionRule{
 				{
-					Name:                    common.String("sqli"),
-					ActionName:              common.String("block"),
-					IsBodyInspectionEnabled: common.Bool(true),
+					Name:                    new("sqli"),
+					ActionName:              new("block"),
+					IsBodyInspectionEnabled: new(true),
 					ProtectionCapabilities: []waf.ProtectionCapability{
-						{Key: common.String("942100"), Version: common.Int(1)},
+						{Key: new("942100"), Version: new(1)},
 					},
 					ProtectionCapabilitySettings: &waf.ProtectionCapabilitySettings{
-						MaxNumberOfArguments: common.Int(255),
+						MaxNumberOfArguments: new(255),
 						AllowedHttpMethods:   []string{"GET", "POST"},
 					},
 				},
 			}},
 			RequestAccessControl: &waf.RequestAccessControl{
-				DefaultActionName: common.String("allow"),
+				DefaultActionName: new("allow"),
 				Rules: []waf.AccessControlRule{
-					{Name: common.String("geo-1"), ActionName: common.String("block"), Condition: common.String("i_contains(['CN'], connection.source.geo.countryCode)"), ConditionLanguage: waf.WebAppFirewallPolicyRuleConditionLanguageJmespath},
-					{Name: common.String("geo-2"), ActionName: common.String("log")},
+					{Name: new("geo-1"), ActionName: new("block"), Condition: new("i_contains(['CN'], connection.source.geo.countryCode)"), ConditionLanguage: waf.WebAppFirewallPolicyRuleConditionLanguageJmespath},
+					{Name: new("geo-2"), ActionName: new("log")},
 				},
 			},
 			RequestRateLimiting: &waf.RequestRateLimiting{Rules: []waf.RequestRateLimitingRule{
 				{
-					Name:       common.String("rate"),
-					ActionName: common.String("block"),
+					Name:       new("rate"),
+					ActionName: new("block"),
 					Configurations: []waf.RequestRateLimitingConfiguration{
-						{PeriodInSeconds: common.Int(60), RequestsLimit: common.Int(100)},
+						{PeriodInSeconds: new(60), RequestsLimit: new(100)},
 					},
 				},
 			}},
 			ResponseAccessControl: &waf.ResponseAccessControl{Rules: []waf.AccessControlRule{
-				{Name: common.String("resp-ac"), ActionName: common.String("log")},
+				{Name: new("resp-ac"), ActionName: new("log")},
 			}},
 		}
 
@@ -134,8 +133,8 @@ func TestOciWafPolicyRules(t *testing.T) {
 
 func TestOciWafRateLimits(t *testing.T) {
 	got := ociWafRateLimits([]waf.RequestRateLimitingConfiguration{
-		{PeriodInSeconds: common.Int(60), RequestsLimit: common.Int(100), ActionDurationInSeconds: common.Int(300)},
-		{PeriodInSeconds: common.Int(1), RequestsLimit: common.Int(10)},
+		{PeriodInSeconds: new(60), RequestsLimit: new(100), ActionDurationInSeconds: new(300)},
+		{PeriodInSeconds: new(1), RequestsLimit: new(10)},
 	})
 	require.Len(t, got, 2)
 	assert.Equal(t, map[string]any{

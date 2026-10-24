@@ -37,7 +37,7 @@ func initCloudflareAccount(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	for _, platformId := range conn.Asset().PlatformIds {
-		if accId := strings.TrimPrefix(platformId, connection.PlatformIdCloudflareAccount); accId != platformId {
+		if accId, ok := strings.CutPrefix(platformId, connection.PlatformIdCloudflareAccount); ok {
 			acc, ok := runtime.Resources.Get("cloudflare.account\x00" + accId)
 			if !ok {
 				return nil, nil, errors.New("account not found")

@@ -133,7 +133,7 @@ func initNetlifyAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 	if want == "" && c.Asset() != nil {
 		for _, pid := range c.Asset().PlatformIds {
-			if t := strings.TrimPrefix(pid, connection.PlatformIdNetlifyAccount); t != pid {
+			if t, ok := strings.CutPrefix(pid, connection.PlatformIdNetlifyAccount); ok {
 				want = t
 				break
 			}

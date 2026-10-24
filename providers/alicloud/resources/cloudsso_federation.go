@@ -49,7 +49,7 @@ func (r *mqlAlicloudCloudssoDirectory) samlConfiguration() *cloudssoclient.GetEx
 			return
 		}
 		resp, err := client.GetExternalSAMLIdentityProvider(&cloudssoclient.GetExternalSAMLIdentityProviderRequest{
-			DirectoryId: tea.String(directoryID),
+			DirectoryId: new(directoryID),
 		})
 		if err != nil {
 			log.Debug().Err(err).Str("directory", directoryID).
@@ -132,8 +132,8 @@ func (r *mqlAlicloudCloudssoDirectory) tasks() ([]any, error) {
 
 	res := []any{}
 	req := &cloudssoclient.ListTasksRequest{
-		DirectoryId: tea.String(directoryID),
-		MaxResults:  tea.Int32(cloudssoPageSize),
+		DirectoryId: new(directoryID),
+		MaxResults:  new(cloudssoPageSize),
 	}
 	for {
 		resp, err := client.ListTasks(req)

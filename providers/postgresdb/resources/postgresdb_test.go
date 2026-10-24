@@ -29,7 +29,7 @@ func TestClassifyPassword(t *testing.T) {
 		// rolpassword IS NULL: the role has no password at all
 		{"nil", nil, "none"},
 		// the '' branch of passwordFormExpr
-		{"empty", strPtr(""), "none"},
+		{"empty", new(""), "none"},
 		// tokens as emitted by passwordFormExpr
 		{"scram token", &scramToken, "scram-sha-256"},
 		{"md5 token", &md5Token, "md5"},
@@ -88,7 +88,8 @@ func TestPasswordFormExprTokensRoundTrip(t *testing.T) {
 	}
 }
 
-func strPtr(s string) *string { return &s }
+//go:fix inline
+func strPtr(s string) *string { return new(s) }
 
 func TestSanitizeConnInfo(t *testing.T) {
 	// placeholder, assembled at run time so secret scanners see no literal

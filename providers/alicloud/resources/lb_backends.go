@@ -71,7 +71,7 @@ func (r *mqlAlicloudAlbServerGroup) servers() ([]any, error) {
 	var nextToken *string
 	for {
 		resp, err := client.ListServerGroupServers(&albclient.ListServerGroupServersRequest{
-			ServerGroupId: tea.String(r.serverGroupId),
+			ServerGroupId: new(r.serverGroupId),
 			MaxResults:    tea.Int32(100),
 			NextToken:     nextToken,
 		})
@@ -155,7 +155,7 @@ func (r *mqlAlicloudNlbServerGroup) servers() ([]any, error) {
 	var nextToken *string
 	for {
 		resp, err := client.ListServerGroupServers(&nlbclient.ListServerGroupServersRequest{
-			ServerGroupId: tea.String(r.serverGroupId),
+			ServerGroupId: new(r.serverGroupId),
 			MaxResults:    tea.Int32(100),
 			NextToken:     nextToken,
 		})
@@ -295,8 +295,8 @@ func (r *mqlAlicloudSlbLoadBalancer) fetchBackendServers() ([]*slbclient.Describ
 		return nil, err
 	}
 	resp, err := client.DescribeLoadBalancerAttribute(&slbclient.DescribeLoadBalancerAttributeRequest{
-		RegionId:       tea.String(r.region),
-		LoadBalancerId: tea.String(r.LoadBalancerId.Data),
+		RegionId:       new(r.region),
+		LoadBalancerId: new(r.LoadBalancerId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -319,8 +319,8 @@ func (r *mqlAlicloudSlbLoadBalancer) vServerGroups() ([]any, error) {
 	}
 
 	resp, err := client.DescribeVServerGroups(&slbclient.DescribeVServerGroupsRequest{
-		RegionId:       tea.String(r.region),
-		LoadBalancerId: tea.String(r.LoadBalancerId.Data),
+		RegionId:       new(r.region),
+		LoadBalancerId: new(r.LoadBalancerId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -378,8 +378,8 @@ func (r *mqlAlicloudSlbVServerGroup) backends() ([]any, error) {
 	}
 
 	resp, err := client.DescribeVServerGroupAttribute(&slbclient.DescribeVServerGroupAttributeRequest{
-		RegionId:       tea.String(region),
-		VServerGroupId: tea.String(r.VServerGroupId.Data),
+		RegionId:       new(region),
+		VServerGroupId: new(r.VServerGroupId.Data),
 	})
 	if err != nil {
 		return nil, err

@@ -35,8 +35,8 @@ func unionMembers(t *testing.T, typ reflect.Type) []reflect.StructField {
 	}
 
 	out := []reflect.StructField{}
-	for i := 0; i < typ.NumField(); i++ {
-		f := typ.Field(i)
+	for f := range typ.Fields() {
+		f := f
 		if !f.IsExported() || f.Name == "ForceSendFields" {
 			continue
 		}
@@ -57,7 +57,7 @@ func withOnlyMember(t *testing.T, typ reflect.Type, f reflect.StructField) refle
 	field := v.FieldByIndex(f.Index)
 
 	switch f.Type.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		field.Set(reflect.New(f.Type.Elem()))
 	case reflect.String:
 		field.SetString("sentinel")
@@ -69,12 +69,12 @@ func withOnlyMember(t *testing.T, typ reflect.Type, f reflect.StructField) refle
 }
 
 func TestTaskTypeOfHandlesEverySdkTaskKind(t *testing.T) {
-	typ := reflect.TypeOf(jobs.Task{})
+	typ := reflect.TypeFor[jobs.Task]()
 	for _, f := range unionMembers(t, typ) {
 		// A job task carries plenty of non-discriminating configuration
 		// (dependencies, retries, notifications). Only the pointer fields whose
 		// name ends in Task select the kind of work.
-		if f.Type.Kind() != reflect.Ptr || !strings.HasSuffix(f.Name, "Task") {
+		if f.Type.Kind() != reflect.Pointer || !strings.HasSuffix(f.Name, "Task") {
 			continue
 		}
 
@@ -96,9 +96,9 @@ func TestTriggerTypeOfHandlesEverySdkTriggerKind(t *testing.T) {
 	// *TriggerConfiguration struct and names a kind.
 	notAKind := map[string]bool{"PauseStatus": true, "SqlCondition": true}
 
-	typ := reflect.TypeOf(jobs.TriggerConfiguration{})
+	typ := reflect.TypeFor[jobs.TriggerConfiguration]()
 	for _, f := range unionMembers(t, typ) {
-		if f.Type.Kind() != reflect.Ptr || notAKind[f.Name] {
+		if f.Type.Kind() != reflect.Pointer || notAKind[f.Name] {
 			continue
 		}
 
@@ -116,7 +116,7 @@ func TestTriggerTypeOfHandlesEverySdkTriggerKind(t *testing.T) {
 }
 
 func TestJobLibrariesToDictHandlesEverySdkLibraryKind(t *testing.T) {
-	typ := reflect.TypeOf(compute.Library{})
+	typ := reflect.TypeFor[compute.Library]()
 	for _, f := range unionMembers(t, typ) {
 		t.Run(f.Name, func(t *testing.T) {
 			lib := withOnlyMember(t, typ, f).Interface().(compute.Library)
@@ -138,7 +138,7 @@ func TestJobLibrariesToDictHandlesEverySdkLibraryKind(t *testing.T) {
 }
 
 func TestPipelineLibraryToDictHandlesEverySdkLibraryKind(t *testing.T) {
-	typ := reflect.TypeOf(pipelines.PipelineLibrary{})
+	typ := reflect.TypeFor[pipelines.PipelineLibrary]()
 	for _, f := range unionMembers(t, typ) {
 		t.Run(f.Name, func(t *testing.T) {
 			lib := withOnlyMember(t, typ, f).Interface().(pipelines.PipelineLibrary)
@@ -160,7 +160,7 @@ func TestPipelineLibraryToDictHandlesEverySdkLibraryKind(t *testing.T) {
 }
 
 func TestInitScriptsToDictHandlesEverySdkStorageKind(t *testing.T) {
-	typ := reflect.TypeOf(compute.InitScriptInfo{})
+	typ := reflect.TypeFor[compute.InitScriptInfo]()
 	for _, f := range unionMembers(t, typ) {
 		t.Run(f.Name, func(t *testing.T) {
 			info := withOnlyMember(t, typ, f).Interface().(compute.InitScriptInfo)

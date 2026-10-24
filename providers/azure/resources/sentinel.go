@@ -136,8 +136,7 @@ func (a *mqlAzureSubscriptionSentinelService) workspaces() ([]any, error) {
 func sentinelOnboarded(ctx context.Context, client *armsecurityinsights.SentinelOnboardingStatesClient, resourceGroup, workspaceName string) (bool, error) {
 	resp, err := client.List(ctx, resourceGroup, workspaceName, nil)
 	if err != nil {
-		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) {
+		if respErr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 			if respErr.StatusCode == http.StatusNotFound {
 				return false, nil
 			}

@@ -65,7 +65,7 @@ func (r *mqlClaudeDesktop) id() (string, error) {
 	return "claude.desktop/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlClaudeDesktop) mcpServers() ([]interface{}, error) {
+func (r *mqlClaudeDesktop) mcpServers() ([]any, error) {
 	servers, err := claudeDesktopMCPServers(connectionAfs(r.MqlRuntime), r.ConfigPath.Data)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func (r *mqlClaudeDesktop) mcpServers() ([]interface{}, error) {
 	}
 	sort.Strings(names)
 
-	result := make([]interface{}, 0, len(names))
+	result := make([]any, 0, len(names))
 	for _, name := range names {
 		srv := servers[name]
 		res, err := NewResource(r.MqlRuntime, "claude.desktop.mcpServer", map[string]*llx.RawData{
@@ -200,13 +200,13 @@ func (e claudeDesktopExtension) mcpServer(dir string) mcpServerSpec {
 	return spec.expandPlaceholder("__dirname", dir)
 }
 
-func (r *mqlClaudeDesktop) extensions() ([]interface{}, error) {
+func (r *mqlClaudeDesktop) extensions() ([]any, error) {
 	exts, enabled, err := readClaudeDesktopExtensions(connectionAfs(r.MqlRuntime), r.ConfigPath.Data)
 	if err != nil {
 		return nil, err
 	}
 
-	result := make([]interface{}, 0, len(exts))
+	result := make([]any, 0, len(exts))
 	for _, ext := range exts {
 		version := ext.Manifest.Version
 		if version == "" {

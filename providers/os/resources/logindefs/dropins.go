@@ -4,6 +4,7 @@
 package logindefs
 
 import (
+	"maps"
 	"path"
 	"sort"
 	"strings"
@@ -63,9 +64,7 @@ func defsNames(names []string) []string {
 func Overlay(layers ...map[string]string) map[string]string {
 	res := map[string]string{}
 	for _, layer := range layers {
-		for k, v := range layer {
-			res[k] = v
-		}
+		maps.Copy(res, layer)
 	}
 	return res
 }

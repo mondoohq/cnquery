@@ -382,8 +382,7 @@ func (a *mqlAwsBackupVault) accessPolicy() (string, error) {
 	})
 	if err != nil {
 		// vaults without an access policy return ResourceNotFoundException
-		var rnf *backuptypes.ResourceNotFoundException
-		if errors.As(err, &rnf) {
+		if _, ok := errors.AsType[*backuptypes.ResourceNotFoundException](err); ok {
 			return "", nil
 		}
 		return "", err

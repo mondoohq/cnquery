@@ -1453,8 +1453,7 @@ func (a *mqlAwsWafAcl) loggingConfiguration() (*mqlAwsWafAclLoggingConfiguration
 		ResourceArn: &arnVal,
 	})
 	if err != nil {
-		var notFound *waftypes.WAFNonexistentItemException
-		if !errors.As(err, &notFound) {
+		if _, ok := errors.AsType[*waftypes.WAFNonexistentItemException](err); !ok {
 			return nil, err
 		}
 		log.Debug().Str("acl", arnVal).Msg("no logging configuration found for web ACL")

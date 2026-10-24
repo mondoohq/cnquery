@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -71,7 +70,7 @@ func (o *mqlOciCompute) volumeAttachments() ([]any, error) {
 			}
 			attachments, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.VolumeAttachment, *string, error) {
 				response, err := svc.ListVolumeAttachments(ctx, core.ListVolumeAttachmentsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -232,7 +231,7 @@ func (o *mqlOciCompute) volumeBackupPolicies() ([]any, error) {
 		return nil, err
 	}
 	custom, err := ociCollect(o.MqlRuntime, ociScopeAllCompartments, func(ctx context.Context, region string, compartmentID string) ([]any, error) {
-		return list(ctx, region, common.String(compartmentID))
+		return list(ctx, region, new(compartmentID))
 	})
 	if err != nil {
 		return nil, err
@@ -322,7 +321,7 @@ func assignedBackupPolicy(runtime *plugin.Runtime, region, assetID string, field
 		return nil, err
 	}
 	resp, err := svc.GetVolumeBackupPolicyAssetAssignment(context.Background(), core.GetVolumeBackupPolicyAssetAssignmentRequest{
-		AssetId: common.String(assetID),
+		AssetId: new(assetID),
 	})
 	if err != nil {
 		return nil, err
@@ -372,7 +371,7 @@ func (o *mqlOciCompute) volumeBackups() ([]any, error) {
 			}
 			backups, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.VolumeBackup, *string, error) {
 				response, err := svc.ListVolumeBackups(ctx, core.ListVolumeBackupsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -464,7 +463,7 @@ func (o *mqlOciCompute) bootVolumeBackups() ([]any, error) {
 			}
 			backups, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.BootVolumeBackup, *string, error) {
 				response, err := svc.ListBootVolumeBackups(ctx, core.ListBootVolumeBackupsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -558,7 +557,7 @@ func (o *mqlOciCompute) volumeGroups() ([]any, error) {
 			}
 			groups, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.VolumeGroup, *string, error) {
 				response, err := svc.ListVolumeGroups(ctx, core.ListVolumeGroupsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {

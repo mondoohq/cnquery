@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/oracle/oci-go-sdk/v65/apiaccesscontrol"
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
@@ -32,7 +31,7 @@ func TestDictSlice(t *testing.T) {
 	t.Run("entries are carried through", func(t *testing.T) {
 		got, err := dictSlice([]apiaccesscontrol.PrivilegedApiRequestOperationDetails{
 			{
-				ApiName:        common.String("GetSecretBundle"),
+				ApiName:        new("GetSecretBundle"),
 				AttributeNames: []string{"secretContent"},
 			},
 		})

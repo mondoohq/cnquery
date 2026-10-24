@@ -702,7 +702,7 @@ func cycloneDXLicenses(license string) *cyclonedx.Licenses {
 // operators, so a genuinely grouped expression contains one anyway and is
 // caught above.
 func isSPDXExpression(s string) bool {
-	for _, t := range strings.Fields(s) {
+	for t := range strings.FieldsSeq(s) {
 		switch t {
 		case "AND", "OR", "WITH":
 			return true

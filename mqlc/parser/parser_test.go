@@ -35,10 +35,6 @@ func TestParser_Lex(t *testing.T) {
 	}
 }
 
-func sPtr(s string) *string {
-	return &s
-}
-
 func vBool(b bool) *Value {
 	return &Value{Bool: &b}
 }
@@ -322,7 +318,7 @@ func TestParser_Comments(t *testing.T) {
 				Calls: []*Call{
 					{
 						Comments: "2\n3\n",
-						Ident:    sPtr("config"),
+						Ident:    new("config"),
 					},
 				},
 			}},

@@ -208,7 +208,7 @@ func TestDowngradePatchViaBundleRepeatsWithoutEditingIt(t *testing.T) {
 	}}
 	originalCode := bundle.CodeV2
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		raw, err := exec.ExecuteCode(runtime, bundle, nil, mql.Features{})
 		require.NoError(t, err)
 		results := llx.ReturnValuesV2(bundle, func(checksum string) (*llx.RawResult, bool) {

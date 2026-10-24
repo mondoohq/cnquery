@@ -123,14 +123,13 @@ func Schema(ast *LR) (*resources.Schema, error) {
 		fieldInfo := v
 		isPrivate := v.Private
 		for {
-			last := strings.LastIndex(rem, ".")
-			if last == -1 {
+			parent, basename, found := strings.CutLast(rem, ".")
+			if !found {
 				break
 			}
 
 			resource := rem
-			basename := rem[last+1:]
-			rem = rem[:last]
+			rem = parent
 
 			child, ok := res.Resources[rem]
 			if !ok {
@@ -373,8 +372,7 @@ func validateReplacedBy(res *resources.Schema, ast *LR) error {
 		// Not a resource, so it has to be a field on one. Only the last segment
 		// can be the field name; everything before it is the owning resource,
 		// which is itself dotted.
-		if idx := strings.LastIndex(target, "."); idx > 0 {
-			owner, field := target[:idx], target[idx+1:]
+		if owner, field, found := strings.CutLast(target, "."); found && owner != "" {
 			if ri, ok := res.Resources[owner]; ok {
 				if _, ok := ri.Fields[field]; ok {
 					reachable(what, owner)

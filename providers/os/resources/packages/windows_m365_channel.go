@@ -137,8 +137,8 @@ func m365ChannelFromValue(value string) (string, bool) {
 
 	// a CDN url carries the audience id in its last path segment
 	audience := value
-	if idx := strings.LastIndex(audience, "/"); idx >= 0 {
-		audience = audience[idx+1:]
+	if _, after, ok := strings.CutLast(audience, "/"); ok {
+		audience = after
 	}
 	audience = strings.ToLower(audience)
 	if !m365AudienceRegExp.MatchString(audience) {

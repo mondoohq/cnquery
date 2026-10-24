@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/dns"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
@@ -45,7 +44,7 @@ func (o *mqlOciDns) zones() ([]any, error) {
 			for _, scope := range ociDnsZoneScopes {
 				perScope, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]dns.ZoneSummary, *string, error) {
 					response, err := client.ListZones(ctx, dns.ListZonesRequest{
-						CompartmentId: common.String(compartmentID),
+						CompartmentId: new(compartmentID),
 						Scope:         scope,
 						Page:          page,
 					})
@@ -222,7 +221,7 @@ func (o *mqlOciDns) steeringPolicies() ([]any, error) {
 			// [GLOBAL]", so asking for PRIVATE fails the whole call.
 			policies, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]dns.SteeringPolicySummary, *string, error) {
 				response, err := client.ListSteeringPolicies(ctx, dns.ListSteeringPoliciesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Scope:         dns.ListSteeringPoliciesScopeGlobal,
 					Page:          page,
 				})
@@ -296,7 +295,7 @@ func (o *mqlOciDnsZone) records() ([]any, error) {
 	ctx := context.Background()
 	records, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]dns.Record, *string, error) {
 		response, err := client.GetZoneRecords(ctx, dns.GetZoneRecordsRequest{
-			ZoneNameOrId: common.String(o.Id.Data),
+			ZoneNameOrId: new(o.Id.Data),
 			// A private zone is only addressable within its scope, and the
 			// service rejects the request without it.
 			Scope: dns.GetZoneRecordsScopeEnum(o.cacheScope),

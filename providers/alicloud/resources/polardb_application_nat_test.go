@@ -22,8 +22,8 @@ import (
 func TestPolardbDnatMappingKey(t *testing.T) {
 	t.Run("the entry id is the key", func(t *testing.T) {
 		assert.Equal(t, "fwd-bp1abc", polardbDnatMappingKey(&polardb.DescribeApplicationAttributeResponseBodyDnatMappings{
-			EntryId:     tea.String("fwd-bp1abc"),
-			PortName:    tea.String("webui"),
+			EntryId:     new("fwd-bp1abc"),
+			PortName:    new("webui"),
 			FrontPort:   tea.Int32(10001),
 			BackendPort: tea.Int32(8787),
 		}))
@@ -31,7 +31,7 @@ func TestPolardbDnatMappingKey(t *testing.T) {
 
 	t.Run("an entry with no id falls back to the port triple", func(t *testing.T) {
 		assert.Equal(t, "webui/10001/8787", polardbDnatMappingKey(&polardb.DescribeApplicationAttributeResponseBodyDnatMappings{
-			PortName:    tea.String("webui"),
+			PortName:    new("webui"),
 			FrontPort:   tea.Int32(10001),
 			BackendPort: tea.Int32(8787),
 		}))
@@ -39,12 +39,12 @@ func TestPolardbDnatMappingKey(t *testing.T) {
 
 	t.Run("two id-less entries on one application stay distinct", func(t *testing.T) {
 		webui := polardbDnatMappingKey(&polardb.DescribeApplicationAttributeResponseBodyDnatMappings{
-			PortName:    tea.String("webui"),
+			PortName:    new("webui"),
 			FrontPort:   tea.Int32(10001),
 			BackendPort: tea.Int32(8787),
 		})
 		ssh := polardbDnatMappingKey(&polardb.DescribeApplicationAttributeResponseBodyDnatMappings{
-			PortName:    tea.String("ssh"),
+			PortName:    new("ssh"),
 			FrontPort:   tea.Int32(10002),
 			BackendPort: tea.Int32(22),
 		})
@@ -53,8 +53,8 @@ func TestPolardbDnatMappingKey(t *testing.T) {
 
 	t.Run("an empty entry id is not used as the key", func(t *testing.T) {
 		assert.Equal(t, "ssh/10002/22", polardbDnatMappingKey(&polardb.DescribeApplicationAttributeResponseBodyDnatMappings{
-			EntryId:     tea.String(""),
-			PortName:    tea.String("ssh"),
+			EntryId:     new(""),
+			PortName:    new("ssh"),
 			FrontPort:   tea.Int32(10002),
 			BackendPort: tea.Int32(22),
 		}))

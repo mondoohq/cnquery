@@ -102,8 +102,8 @@ func TestOktaRoleIdFromPermissionsHref(t *testing.T) {
 
 func TestOktaLinkHref(t *testing.T) {
 	assert.Equal(t, "https://x/api/v1/groups/g1",
-		oktaLinkHref(map[string]interface{}{"href": "https://x/api/v1/groups/g1"}))
-	assert.Equal(t, "", oktaLinkHref(map[string]interface{}{"noHref": "x"}))
+		oktaLinkHref(map[string]any{"href": "https://x/api/v1/groups/g1"}))
+	assert.Equal(t, "", oktaLinkHref(map[string]any{"noHref": "x"}))
 	assert.Equal(t, "", oktaLinkHref("not-a-map"))
 	assert.Equal(t, "", oktaLinkHref(nil))
 }

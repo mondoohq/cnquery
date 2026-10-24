@@ -37,7 +37,7 @@ func ParseBlockAdminState(runningConfig, header string) AdminState {
 		}
 		state.Configured = true
 
-		for _, line := range strings.Split(body, "\n") {
+		for line := range strings.SplitSeq(body, "\n") {
 			switch strings.TrimSpace(line) {
 			case "shutdown":
 				state.Shutdown = true

@@ -96,9 +96,9 @@ func TestAuthenticatedOriginPullsHostnameCertificateResolves(t *testing.T) {
 		],"result_info":{"page":1,"per_page":100,"total_pages":1}}`)
 	})
 
-	var certListCalls int32
+	var certListCalls atomic.Int32
 	env.Mux.HandleFunc(fmt.Sprintf("/zones/%s/origin_tls_client_auth/hostnames/certificates", testZoneID), func(w http.ResponseWriter, r *http.Request) {
-		atomic.AddInt32(&certListCalls, 1)
+		certListCalls.Add(1)
 		jsonResponse(w, `{"success":true,"result":[
 			{"id":"cert-1","issuer":"GlobalSign","serial_number":"123","signature":"SHA256WithRSA","status":"active","expires_on":"2033-02-20T20:54:00Z"},
 			{"id":"cert-2","issuer":"DigiCert","serial_number":"456","signature":"SHA256WithRSA","status":"active"}
@@ -137,7 +137,7 @@ func TestAuthenticatedOriginPullsHostnameCertificateResolves(t *testing.T) {
 	assert.Nil(t, thirdCert)
 	assert.Equal(t, plugin.StateIsSet|plugin.StateIsNull, third.Certificate.State)
 
-	assert.Equal(t, int32(1), atomic.LoadInt32(&certListCalls),
+	assert.Equal(t, int32(1), certListCalls.Load(),
 		"resolving every hostname's certificate must reuse one cached list request")
 }
 

@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"sort"
+	"slices"
 	"strconv"
 
 	"github.com/portainer/client-api-go/v2/pkg/models"
@@ -33,7 +33,7 @@ func edgeJobEndpointIDs(endpoints map[string]models.PortainerEdgeJobEndpointMeta
 		}
 		ids = append(ids, id)
 	}
-	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+	slices.Sort(ids)
 	return ids
 }
 

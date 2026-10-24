@@ -35,7 +35,7 @@ type aiderConfig struct {
 	OpenAIAPIKey    string `json:"openai-api-key"`
 	AnthropicAPIKey string `json:"anthropic-api-key"`
 	// APIKey is `api-key`: one "provider=key" string or a list of them.
-	APIKey interface{} `json:"api-key"`
+	APIKey any `json:"api-key"`
 }
 
 // mqlAiderInternal caches the parsed config, so model() and hasApiKeys() read
@@ -82,7 +82,7 @@ func (c *aiderConfig) hasAPIKeys() bool {
 	switch v := c.APIKey.(type) {
 	case string:
 		entries = []string{v}
-	case []interface{}:
+	case []any:
 		for _, e := range v {
 			if s, ok := e.(string); ok {
 				entries = append(entries, s)

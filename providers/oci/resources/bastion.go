@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/bastion"
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -34,7 +33,7 @@ func (o *mqlOciBastion) bastions() ([]any, error) {
 
 			bastions, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]bastion.BastionSummary, *string, error) {
 				response, err := svc.ListBastions(ctx, bastion.ListBastionsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -115,7 +114,7 @@ func (o *mqlOciBastionInstance) getBastionDetails() (*bastion.Bastion, error) {
 			return nil, err
 		}
 		resp, err := svc.GetBastion(context.Background(), bastion.GetBastionRequest{
-			BastionId: common.String(o.Id.Data),
+			BastionId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err

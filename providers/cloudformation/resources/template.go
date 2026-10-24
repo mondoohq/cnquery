@@ -342,10 +342,7 @@ func (r *mqlCloudformationTemplate) nodeContext(keyNode, valueNode *yaml.Node) (
 	conn := r.MqlRuntime.Connection.(*connection.CloudformationConnection)
 
 	start := uint32(keyNode.Line)
-	end := uint32(nodeEndLine(valueNode))
-	if end < start {
-		end = start
-	}
+	end := max(uint32(nodeEndLine(valueNode)), start)
 	rnge := llx.NewRange().AddLineRange(start, end)
 	content := rnge.ExtractString(conn.Content(), llx.DefaultExtractConfig)
 

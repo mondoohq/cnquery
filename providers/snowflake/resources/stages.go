@@ -79,8 +79,8 @@ func resolveStageRef(runtime *plugin.Runtime, fqn string, field *plugin.TValue[*
 
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
 	stages, err := conn.Client().Stages.Show(context.Background(), &sdk.ShowStageRequest{
-		Like: &sdk.Like{Pattern: sdk.String(id.Name())},
-		In:   &sdk.ExtendedIn{In: sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}},
+		Like: &sdk.Like{Pattern: new(id.Name())},
+		In:   &sdk.ExtendedIn{Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())},
 	})
 	if err != nil {
 		return nil, err

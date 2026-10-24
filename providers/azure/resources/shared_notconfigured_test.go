@@ -189,7 +189,7 @@ func TestSubcodeSurvivesAzcoreConsumingTheBody(t *testing.T) {
 	respErr := asResponseError(t, err)
 
 	require.Equal(t, "BadRequest", respErr.ErrorCode, "azcore read the code out of the body")
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		assert.Equal(t, "ClusterIsNotAPrivateLinkCluster", azureErrorSubcode(respErr),
 			"read %d must still see the body", i+1)
 	}

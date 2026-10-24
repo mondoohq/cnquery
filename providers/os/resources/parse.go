@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"strings"
 
 	"go.mondoo.com/mql/checksums"
@@ -82,9 +83,7 @@ func (s *mqlParseIni) sections(content string, delimiter string) (map[string]any
 	ini := parsers.ParseIni(content, delimiter)
 
 	res := make(map[string]any, len(ini.Fields))
-	for k, v := range ini.Fields {
-		res[k] = v
-	}
+	maps.Copy(res, ini.Fields)
 
 	return res, nil
 }
@@ -351,9 +350,9 @@ func (s *mqlParseYaml) documents(content string) ([]any, error) {
 	var documents []any
 
 	// Split content by YAML document separator
-	yamlDocs := strings.Split(content, "---")
+	yamlDocs := strings.SplitSeq(content, "---")
 
-	for _, doc := range yamlDocs {
+	for doc := range yamlDocs {
 		doc = strings.TrimSpace(doc)
 		if doc == "" {
 			continue

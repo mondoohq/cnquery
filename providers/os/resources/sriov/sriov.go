@@ -100,7 +100,7 @@ func ParseSysfs(output string) []PhysicalFunction {
 		pf = nil
 	}
 
-	for _, line := range strings.Split(output, "\n") {
+	for line := range strings.SplitSeq(output, "\n") {
 		line = strings.TrimRight(line, "\r")
 		switch {
 		case strings.HasPrefix(line, pfMarker):

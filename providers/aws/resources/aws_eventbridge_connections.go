@@ -46,7 +46,6 @@ func (a *mqlAwsEventbridge) getConnections(conn *connection.AwsConnection) []*jo
 	}
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Str("region", region).Msg("eventbridge>getConnections>list")
 			svc := conn.EventBridge(region)
@@ -363,7 +362,6 @@ func (a *mqlAwsEventbridge) getApiDestinations(conn *connection.AwsConnection) [
 	}
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Str("region", region).Msg("eventbridge>getApiDestinations>list")
 			svc := conn.EventBridge(region)
@@ -562,7 +560,6 @@ func (a *mqlAwsEventbridge) getArchives(conn *connection.AwsConnection) []*jobpo
 	}
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Str("region", region).Msg("eventbridge>getArchives>list")
 			svc := conn.EventBridge(region)
@@ -752,7 +749,6 @@ func (a *mqlAwsEventbridge) getReplays(conn *connection.AwsConnection) []*jobpoo
 	}
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Str("region", region).Msg("eventbridge>getReplays>list")
 			svc := conn.EventBridge(region)

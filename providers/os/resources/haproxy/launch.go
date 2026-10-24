@@ -4,6 +4,7 @@
 package haproxy
 
 import (
+	"maps"
 	"strings"
 )
 
@@ -239,13 +240,9 @@ func unquote(v string) string {
 // files override Environment= assignments regardless of their position.
 func ServiceArgv(svc SystemdService, envFiles []string) []string {
 	env := make(map[string]string, len(svc.Environment))
-	for k, v := range svc.Environment {
-		env[k] = v
-	}
+	maps.Copy(env, svc.Environment)
 	for _, content := range envFiles {
-		for k, v := range ParseEnvironmentFile(content) {
-			env[k] = v
-		}
+		maps.Copy(env, ParseEnvironmentFile(content))
 	}
 	return ExpandSystemdCommand(svc.ExecStart, env)
 }

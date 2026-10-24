@@ -196,7 +196,7 @@ const (
 // installation's name in a cell that names no standard scope.
 func flatpakScopeFromOptions(options string) string {
 	custom := ""
-	for _, opt := range strings.Split(options, ",") {
+	for opt := range strings.SplitSeq(options, ",") {
 		opt = strings.TrimSpace(opt)
 		if opt == flatpakScopeSystem || opt == flatpakScopeUser {
 			return opt
@@ -707,11 +707,11 @@ func parseFlatpakDeploy(data []byte) (flatpakDeployment, bool) {
 
 // nextFlatpakString reads one NUL-terminated string and returns the remainder.
 func nextFlatpakString(data []byte) (string, []byte, bool) {
-	idx := bytes.IndexByte(data, 0)
-	if idx < 0 {
+	before, after, ok := bytes.Cut(data, []byte{0})
+	if !ok {
 		return "", nil, false
 	}
-	return string(data[:idx]), data[idx+1:], true
+	return string(before), after, true
 }
 
 // flatpakDeployDictString reads the string value of a GVariant dictionary key.

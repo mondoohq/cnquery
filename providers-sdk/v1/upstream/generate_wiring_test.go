@@ -83,7 +83,7 @@ func generatesProto(t *testing.T, dir string) bool {
 		data, err := os.ReadFile(filepath.Join(dir, entry.Name()))
 		require.NoError(t, err)
 
-		for _, line := range strings.Split(string(data), "\n") {
+		for line := range strings.SplitSeq(string(data), "\n") {
 			if strings.HasPrefix(line, "//go:generate") && strings.Contains(line, "protoc") {
 				return true
 			}
@@ -99,7 +99,7 @@ func repoRoot(t *testing.T) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
 			if _, err := os.Stat(filepath.Join(dir, "Makefile")); err == nil {
 				return dir

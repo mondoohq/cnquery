@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/delegateaccesscontrol"
 	"github.com/oracle/oci-go-sdk/v65/lockbox"
 	"github.com/stretchr/testify/assert"
@@ -24,8 +23,8 @@ func TestOciApproverLevels(t *testing.T) {
 	approver := func(id string) *lockbox.ApproverInfo {
 		return &lockbox.ApproverInfo{
 			ApproverType: lockbox.ApproverTypeGroup,
-			ApproverId:   common.String(id),
-			DomainId:     common.String("ocid1.domain.oc1..ddd"),
+			ApproverId:   new(id),
+			DomainId:     new("ocid1.domain.oc1..ddd"),
 		}
 	}
 
@@ -92,7 +91,7 @@ func TestOciApproverLevelValuesAreJsonNative(t *testing.T) {
 	got := ociApproverLevels(&lockbox.ApproverLevels{
 		Level1: &lockbox.ApproverInfo{
 			ApproverType: lockbox.ApproverTypeUser,
-			ApproverId:   common.String("user-a"),
+			ApproverId:   new("user-a"),
 		},
 	})
 	require.Len(t, got, 1)

@@ -224,8 +224,8 @@ func ParseDpkgCopyrightLicense(fs afero.Fs, pkgName string) string {
 		// short name; the short name is on the same line as
 		// `License:`. We only return that short name. Lines beginning
 		// with whitespace are continuation/body and are skipped.
-		if strings.HasPrefix(line, "License:") {
-			return strings.TrimSpace(strings.TrimPrefix(line, "License:"))
+		if after, ok := strings.CutPrefix(line, "License:"); ok {
+			return strings.TrimSpace(after)
 		}
 	}
 	return ""
@@ -682,7 +682,7 @@ func (dpm *DebPkgManager) FindFileOwner(path string) (string, error) {
 // contains a space. The optional ":<arch>" multiarch qualifier is stripped to
 // match the names reported by List().
 func parseDpkgOwner(output string) string {
-	for _, line := range strings.Split(output, "\n") {
+	for line := range strings.SplitSeq(output, "\n") {
 		idx := strings.Index(line, ": ")
 		if idx <= 0 {
 			continue

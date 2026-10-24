@@ -119,7 +119,7 @@ func parseDACL(sd []byte, offset int) parsedSD {
 
 	result := parsedSD{aces: make([]aceEntry, 0, aceCount)}
 
-	for i := 0; i < aceCount; i++ {
+	for i := range aceCount {
 		if pos+4 > len(sd) {
 			log.Warn().Int("aceIndex", i).Msg("SD: truncated ACE header")
 			break

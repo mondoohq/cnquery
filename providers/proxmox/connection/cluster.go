@@ -36,8 +36,8 @@ func (c *PveConnection) GetClusterStatus() ([]ClusterStatusEntry, error) {
 // Cluster options
 // ---------------------------------------------------------------------------
 
-func (c *PveConnection) GetClusterOptions() (map[string]interface{}, error) {
-	var result map[string]interface{}
+func (c *PveConnection) GetClusterOptions() (map[string]any, error) {
+	var result map[string]any
 	if err := c.apiGet("/cluster/options", &result); err != nil {
 		return nil, fmt.Errorf("failed to get cluster options: %w", err)
 	}

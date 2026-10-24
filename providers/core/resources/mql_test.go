@@ -268,7 +268,7 @@ func TestOperations_Equality(t *testing.T) {
 
 	simpleTests := []testutils.SimpleTest{}
 
-	for i := 0; i < len(vals); i++ {
+	for i := range vals {
 		for j := i; j < len(vals); j++ {
 			a := vals[i]
 			b := vals[j]
@@ -922,7 +922,7 @@ func testSample(t *testing.T, mqlData string, sampleLen int, isMap bool) {
 		samples := make([][samplesCnt]any, samplesCnt)
 		ref := [samplesCnt]any{}
 
-		for i := 0; i < samplesCnt; i++ {
+		for i := range samplesCnt {
 			mql := mqlData + ".sample(" + strconv.Itoa(sampleLen) + ")"
 			if isMap {
 				mql += ".keys"

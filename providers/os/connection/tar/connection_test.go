@@ -218,7 +218,7 @@ func BenchmarkTarReadFiles(b *testing.B) {
 	require.NoError(b, err)
 	tw := archivetar.NewWriter(f)
 	body := strings.Repeat("x", 4096)
-	for i := 0; i < 20000; i++ {
+	for i := range 20000 {
 		require.NoError(b, tw.WriteHeader(&archivetar.Header{Name: fmt.Sprintf("usr/share/f%d", i), Typeflag: archivetar.TypeReg, Mode: 0o644, Size: int64(len(body))}))
 		_, err := tw.Write([]byte(body))
 		require.NoError(b, err)
@@ -230,7 +230,7 @@ func BenchmarkTarReadFiles(b *testing.B) {
 	afs := &afero.Afero{Fs: conn.FileSystem()}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		for j := 0; j < 100; j++ {
+		for j := range 100 {
 			if _, err := afs.ReadFile(fmt.Sprintf("/usr/share/f%d", j*199)); err != nil {
 				b.Fatal(err)
 			}

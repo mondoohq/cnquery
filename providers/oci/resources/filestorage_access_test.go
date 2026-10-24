@@ -21,13 +21,13 @@ import (
 func TestOciExportOptionFields(t *testing.T) {
 	t.Run("a fully specified option is carried through", func(t *testing.T) {
 		fields := ociExportOptionFields("ocid1.export.oc1..aaa", 0, filestorage.ClientOptions{
-			Source:                      common.String("10.0.0.0/16"),
+			Source:                      new("10.0.0.0/16"),
 			Access:                      filestorage.ClientOptionsAccessOnly,
 			IdentitySquash:              filestorage.ClientOptionsIdentitySquashRoot,
-			RequirePrivilegedSourcePort: common.Bool(true),
+			RequirePrivilegedSourcePort: new(true),
 			AnonymousUid:                common.Int64(65534),
 			AnonymousGid:                common.Int64(65534),
-			IsAnonymousAccessAllowed:    common.Bool(false),
+			IsAnonymousAccessAllowed:    new(false),
 			AllowedAuth: []filestorage.ClientOptionsAllowedAuthEnum{
 				filestorage.ClientOptionsAllowedAuthKrb5p,
 			},
@@ -48,7 +48,7 @@ func TestOciExportOptionFields(t *testing.T) {
 		// read-write, no squashing. If any of these three decoded wrongly the
 		// share would look constrained.
 		fields := ociExportOptionFields("ocid1.export.oc1..aaa", 0, filestorage.ClientOptions{
-			Source:         common.String("0.0.0.0/0"),
+			Source:         new("0.0.0.0/0"),
 			Access:         filestorage.ClientOptionsAccessWrite,
 			IdentitySquash: filestorage.ClientOptionsIdentitySquashNone,
 		})
@@ -63,7 +63,7 @@ func TestOciExportOptionFields(t *testing.T) {
 		// accepting unprivileged source ports on the strength of the API not
 		// having said anything.
 		fields := ociExportOptionFields("ocid1.export.oc1..aaa", 0, filestorage.ClientOptions{
-			Source: common.String("10.0.0.1"),
+			Source: new("10.0.0.1"),
 		})
 
 		assert.Nil(t, fields["requirePrivilegedSourcePort"].Value)
@@ -74,7 +74,7 @@ func TestOciExportOptionFields(t *testing.T) {
 		// 0 is uid root. Reporting an unset anonymousUid as 0 would say
 		// squashed identities are remapped to root, which inverts the control.
 		fields := ociExportOptionFields("ocid1.export.oc1..aaa", 0, filestorage.ClientOptions{
-			Source:         common.String("10.0.0.1"),
+			Source:         new("10.0.0.1"),
 			IdentitySquash: filestorage.ClientOptionsIdentitySquashAll,
 		})
 
@@ -87,7 +87,7 @@ func TestOciExportOptionFields(t *testing.T) {
 		// the export does not constrain the flavor, and a null would read as
 		// "not known" instead.
 		fields := ociExportOptionFields("ocid1.export.oc1..aaa", 0, filestorage.ClientOptions{
-			Source: common.String("10.0.0.1"),
+			Source: new("10.0.0.1"),
 		})
 
 		assert.Equal(t, []any{}, fields["allowedAuth"].Value)
@@ -98,10 +98,10 @@ func TestOciExportOptionFields(t *testing.T) {
 		// identity. Keying on source would collapse them into one and silently
 		// drop a rule from the export.
 		first := ociExportOptionFields("ocid1.export.oc1..aaa", 0, filestorage.ClientOptions{
-			Source: common.String("10.0.0.1"),
+			Source: new("10.0.0.1"),
 		})
 		second := ociExportOptionFields("ocid1.export.oc1..aaa", 1, filestorage.ClientOptions{
-			Source: common.String("10.0.0.1"),
+			Source: new("10.0.0.1"),
 		})
 
 		assert.Equal(t, "ocid1.export.oc1..aaa/option/0", first["__id"].Value)
@@ -121,7 +121,7 @@ func TestOciExportOptionAllowedAuthValues(t *testing.T) {
 	all = append(all, values...)
 
 	fields := ociExportOptionFields("ocid1.export.oc1..aaa", 0, filestorage.ClientOptions{
-		Source:      common.String("10.0.0.1"),
+		Source:      new("10.0.0.1"),
 		AllowedAuth: all,
 	})
 
@@ -138,15 +138,15 @@ func TestOciExportOptionAllowedAuthValues(t *testing.T) {
 func TestOciOutboundConnectorFields(t *testing.T) {
 	t.Run("an LDAP bind account is flattened", func(t *testing.T) {
 		fields, err := ociOutboundConnectorFields(filestorage.LdapBindAccountSummary{
-			Id:                    common.String("ocid1.outboundconnector.oc1..aaa"),
-			DisplayName:           common.String("corp-ldap"),
-			CompartmentId:         common.String("ocid1.compartment.oc1..bbb"),
-			AvailabilityDomain:    common.String("Uocm:PHX-AD-1"),
+			Id:                    new("ocid1.outboundconnector.oc1..aaa"),
+			DisplayName:           new("corp-ldap"),
+			CompartmentId:         new("ocid1.compartment.oc1..bbb"),
+			AvailabilityDomain:    new("Uocm:PHX-AD-1"),
 			LifecycleState:        filestorage.OutboundConnectorSummaryLifecycleStateActive,
-			BindDistinguishedName: common.String("cn=fss,ou=service,dc=corp,dc=example"),
+			BindDistinguishedName: new("cn=fss,ou=service,dc=corp,dc=example"),
 			Endpoints: []filestorage.Endpoint{
-				{Hostname: common.String("ldap1.corp.example"), Port: common.Int64(636)},
-				{Hostname: common.String("ldap2.corp.example"), Port: common.Int64(636)},
+				{Hostname: new("ldap1.corp.example"), Port: common.Int64(636)},
+				{Hostname: new("ldap2.corp.example"), Port: common.Int64(636)},
 			},
 		})
 		require.NoError(t, err)
@@ -197,9 +197,9 @@ func TestOciOutboundConnectorUnionMembers(t *testing.T) {
 func TestOciQuotaRuleID(t *testing.T) {
 	t.Run("the rule's own OCID is used when it has one", func(t *testing.T) {
 		got := ociQuotaRuleID("ocid1.filesystem.oc1..aaa", filestorage.QuotaRuleSummary{
-			Id:            common.String("ocid1.quotarule.oc1..ccc"),
+			Id:            new("ocid1.quotarule.oc1..ccc"),
 			PrincipalType: filestorage.QuotaRuleSummaryPrincipalTypeIndividualUser,
-			PrincipalId:   common.Int(1001),
+			PrincipalId:   new(1001),
 		})
 		assert.Equal(t, "ocid1.quotarule.oc1..ccc", got)
 	})
@@ -207,7 +207,7 @@ func TestOciQuotaRuleID(t *testing.T) {
 	t.Run("a rule with no OCID is keyed by file system, scope and principal", func(t *testing.T) {
 		got := ociQuotaRuleID("ocid1.filesystem.oc1..aaa", filestorage.QuotaRuleSummary{
 			PrincipalType: filestorage.QuotaRuleSummaryPrincipalTypeIndividualUser,
-			PrincipalId:   common.Int(1001),
+			PrincipalId:   new(1001),
 		})
 		assert.Equal(t, "ocid1.filesystem.oc1..aaa/quotaRule/INDIVIDUAL_USER/1001", got)
 	})

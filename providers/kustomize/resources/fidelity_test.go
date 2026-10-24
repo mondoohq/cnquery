@@ -363,16 +363,14 @@ func TestPatchInternalStampIsRaceFree(t *testing.T) {
 	rt := newTestRuntime()
 
 	var wg sync.WaitGroup
-	for i := 0; i < 16; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 16 {
+		wg.Go(func() {
 			p, err := newMqlKustomizePatch(rt, dir, 0, &kustomizeTypes.Patch{Path: "patch.yaml"}, hintNone)
 			if err != nil {
 				return
 			}
 			_, _ = p.operations()
-		}()
+		})
 	}
 	wg.Wait()
 }

@@ -37,7 +37,7 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]database.DbSystemSummary, *string, error) {
 				response, err := svc.ListDbSystems(ctx, database.ListDbSystemsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -259,7 +259,7 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]database.AutonomousDatabaseSummary, *string, error) {
 				response, err := svc.ListAutonomousDatabases(ctx, database.ListAutonomousDatabasesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -475,7 +475,7 @@ func (o *mqlOciDatabase) backups() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]database.BackupSummary, *string, error) {
 				response, err := svc.ListBackups(ctx, database.ListBackupsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -602,7 +602,7 @@ func (o *mqlOciDatabase) autonomousDatabaseBackups() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]database.AutonomousDatabaseBackupSummary, *string, error) {
 				response, err := svc.ListAutonomousDatabaseBackups(ctx, database.ListAutonomousDatabaseBackupsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {

@@ -165,9 +165,7 @@ func (c *coordinator) NewRuntimeFrom(parent *Runtime) *Runtime {
 	res.UpstreamConfig = parent.UpstreamConfig
 	res.AutoUpdate = parent.AutoUpdate
 	res.recording = parent.Recording()
-	for k, v := range parent.providers {
-		res.providers[k] = v
-	}
+	maps.Copy(res.providers, parent.providers)
 	return res
 }
 

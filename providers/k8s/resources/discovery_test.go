@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"strings"
 	"testing"
 
@@ -24,7 +25,6 @@ import (
 	"go.mondoo.com/mql/utils/syncx"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/version"
@@ -71,14 +71,10 @@ func TestDiscoverStagedDiscoveryWithCommaSeparatedNamespacesStartsClusterStage(t
 
 func newTestNamespace(name, uid string) corev1.Namespace {
 	return corev1.Namespace{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Namespace",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-			UID:  types.UID(uid),
-		},
+		APIVersion: "v1",
+		Kind:       "Namespace",
+		Name:       name,
+		UID:        types.UID(uid),
 	}
 }
 
@@ -191,16 +187,16 @@ func TestLabelSelectorFilters(t *testing.T) {
 
 	assert.False(t, filters.IsEmpty())
 	assert.True(t, filters.MatchNamespace(&corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"tenant": "t1"}},
+		Labels: map[string]string{"tenant": "t1"},
 	}))
 	assert.False(t, filters.MatchNamespace(&corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"tenant": "t2"}},
+		Labels: map[string]string{"tenant": "t2"},
 	}))
 	assert.True(t, filters.MatchObject(&corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"app": "api"}},
+		Labels: map[string]string{"app": "api"},
 	}))
 	assert.False(t, filters.MatchObject(&corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"app": "db"}},
+		Labels: map[string]string{"app": "db"},
 	}))
 }
 
@@ -227,7 +223,7 @@ func TestLabelSelectorFilters_InvalidSelector(t *testing.T) {
 func TestAdmissionReviewObjectNamespace(t *testing.T) {
 	assert.Equal(t, "object-ns", admissionReviewObjectNamespace(admissionv1.AdmissionReview{
 		Request: &admissionv1.AdmissionRequest{Namespace: "request-ns"},
-	}, &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "object-ns"}}))
+	}, &corev1.Pod{Namespace: "object-ns"}))
 
 	assert.Equal(t, "request-ns", admissionReviewObjectNamespace(admissionv1.AdmissionReview{
 		Request: &admissionv1.AdmissionRequest{Namespace: "request-ns"},
@@ -292,10 +288,8 @@ func TestAssetFromAdmissionReviewUsesAdmittedObjectPlatform(t *testing.T) {
   }
 }`)
 	review := admissionv1.AdmissionReview{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "admission.k8s.io/v1",
-			Kind:       "AdmissionReview",
-		},
+		APIVersion: "admission.k8s.io/v1",
+		Kind:       "AdmissionReview",
 		Request: &admissionv1.AdmissionRequest{
 			UID:       types.UID("review-uid"),
 			Namespace: "default",
@@ -375,10 +369,8 @@ func TestAssetFromAdmissionReviewUsesGenericPlatformForUnsupportedObjectKind(t *
   }
 }`)
 	review := admissionv1.AdmissionReview{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "admission.k8s.io/v1",
-			Kind:       "AdmissionReview",
-		},
+		APIVersion: "admission.k8s.io/v1",
+		Kind:       "AdmissionReview",
 		Request: &admissionv1.AdmissionRequest{
 			UID:       types.UID("review-uid"),
 			Namespace: "default",
@@ -495,13 +487,11 @@ func TestInheritNamespaceLabels(t *testing.T) {
 // container whose status reports that image as already resolved.
 func newTestPod(namespace, name, uid string, labels map[string]string, images ...string) corev1.Pod {
 	pod := corev1.Pod{
-		TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Pod"},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace,
-			Name:      name,
-			UID:       types.UID(uid),
-			Labels:    labels,
-		},
+		APIVersion: "v1", Kind: "Pod",
+		Namespace: namespace,
+		Name:      name,
+		UID:       types.UID(uid),
+		Labels:    labels,
 	}
 	for i, image := range images {
 		containerName := fmt.Sprintf("c%d", i)
@@ -540,9 +530,7 @@ func inheritanceTestConn(options map[string]string, targets []string, pods ...co
 		},
 		Discover: &inventory.Discovery{Targets: targets},
 	}
-	for k, v := range options {
-		cfg.Options[k] = v
-	}
+	maps.Copy(cfg.Options, options)
 	asset := &inventory.Asset{Name: "K8s Cluster test", Connections: []*inventory.Config{cfg}}
 	ns := newTestNamespace("team-a", "uid-team-a")
 	ns.Labels = map[string]string{"my.company.com/team": "aaabbbccc", "other": "x"}
@@ -693,9 +681,7 @@ func clusterStageImageConn(targets []string, options map[string]string) *namespa
 		Options:  map[string]string{plugin.OptionStagedDiscovery: ""},
 		Discover: &inventory.Discovery{Targets: targets},
 	}
-	for k, v := range options {
-		cfg.Options[k] = v
-	}
+	maps.Copy(cfg.Options, options)
 	asset := &inventory.Asset{Name: "K8s Cluster test", Connections: []*inventory.Config{cfg}}
 	alpha := newTestNamespace("team-alpha", "uid-alpha")
 	alpha.Labels = map[string]string{"my.company.com/team": "alpha"}

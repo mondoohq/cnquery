@@ -119,11 +119,11 @@ func isSectionHeader(trimmed string) bool {
 // cipher-mode values can themselves contain colons (e.g.
 // `cbc-essiv:sha256`). Splitting on the last colon would corrupt those.
 func splitColon(line string) (string, string, bool) {
-	idx := strings.IndexByte(line, ':')
-	if idx < 0 {
+	before, after, ok := strings.Cut(line, ":")
+	if !ok {
 		return "", "", false
 	}
-	return strings.TrimSpace(line[:idx]), strings.TrimSpace(line[idx+1:]), true
+	return strings.TrimSpace(before), strings.TrimSpace(after), true
 }
 
 // decodeNoneSentinel translates cryptsetup's "(no ...)" sentinels into

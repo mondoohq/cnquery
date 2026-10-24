@@ -18,7 +18,7 @@ type Plan struct {
 
 	PriorState         json.RawMessage    `json:"prior_state,omitempty"`
 	Configuration      json.RawMessage    `json:"configuration,omitempty"`
-	PlannedValues      plannedStateValues `json:"planned_values,omitempty"`
+	PlannedValues      plannedStateValues `json:"planned_values"`
 	Variables          Variables          `json:"variables,omitempty"`
 	ResourceChanges    []ResourceChange   `json:"resource_changes,omitempty"`
 	ResourceDrift      []ResourceChange   `json:"resource_drift,omitempty"`
@@ -30,7 +30,7 @@ type Plan struct {
 
 type plannedStateValues struct {
 	Outputs    map[string]output `json:"outputs,omitempty"`
-	RootModule module            `json:"root_module,omitempty"`
+	RootModule module            `json:"root_module"`
 }
 
 type output struct {
@@ -127,7 +127,7 @@ type ResourceChange struct {
 	Deposed string `json:"deposed,omitempty"`
 
 	// Change describes the change that will be made to this object
-	Change change `json:"change,omitempty"`
+	Change change `json:"change"`
 
 	// ActionReason is a keyword representing some optional extra context
 	// for why the actions in Change.Actions were chosen.

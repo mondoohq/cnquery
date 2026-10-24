@@ -48,14 +48,14 @@ func workspaceArgs(w connection.AdminWorkspace) (map[string]*llx.RawData, error)
 	}
 
 	var workspaceGeo, defaultInferenceGeo string
-	var allowedInferenceGeos []interface{}
+	var allowedInferenceGeos []any
 	if w.DataResidency != nil {
 		workspaceGeo = w.DataResidency.WorkspaceGeo
 		defaultInferenceGeo = w.DataResidency.DefaultInferenceGeo
 		allowedInferenceGeos = toInterfaceSlice(w.DataResidency.AllowedInferenceGeos)
 	}
 	if allowedInferenceGeos == nil {
-		allowedInferenceGeos = []interface{}{}
+		allowedInferenceGeos = []any{}
 	}
 
 	return map[string]*llx.RawData{
@@ -78,7 +78,7 @@ func workspaceArgs(w connection.AdminWorkspace) (map[string]*llx.RawData, error)
 	}, nil
 }
 
-func (r *mqlClaudeOrganization) workspaces() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) workspaces() ([]any, error) {
 	admin, err := requireAdmin(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func (r *mqlClaudeOrganization) workspaces() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(workspaces))
+	res := make([]any, 0, len(workspaces))
 	for _, w := range workspaces {
 		args, err := workspaceArgs(w)
 		if err != nil {
@@ -106,7 +106,7 @@ func (r *mqlClaudeOrganization) workspaces() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlClaudeOrganization) members() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) members() ([]any, error) {
 	admin, err := requireAdmin(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ func (r *mqlClaudeOrganization) members() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(users))
+	res := make([]any, 0, len(users))
 	for _, u := range users {
 		addedAt, err := parseTime(u.AddedAt)
 		if err != nil {
@@ -141,7 +141,7 @@ func (r *mqlClaudeOrganization) members() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlClaudeOrganization) invites() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) invites() ([]any, error) {
 	admin, err := requireAdmin(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -152,7 +152,7 @@ func (r *mqlClaudeOrganization) invites() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(invites))
+	res := make([]any, 0, len(invites))
 	for _, inv := range invites {
 		invitedAt, err := parseTime(inv.InvitedAt)
 		if err != nil {
@@ -188,7 +188,7 @@ type mqlClaudeOrganizationApiKeyInternal struct {
 	cachePrincipalServiceAccountID string
 }
 
-func (r *mqlClaudeOrganization) apiKeys() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) apiKeys() ([]any, error) {
 	client, err := adminSDKClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -197,7 +197,7 @@ func (r *mqlClaudeOrganization) apiKeys() ([]interface{}, error) {
 	pager := client.Beta.Organization.APIKeys.ListAutoPaging(
 		context.Background(), anthropic.BetaOrganizationAPIKeyListParams{})
 
-	var res []interface{}
+	var res []any
 	for pager.Next() {
 		k := pager.Current()
 
@@ -296,7 +296,7 @@ func (r *mqlClaudeOrganizationApiKey) workspace() (*mqlClaudeOrganizationWorkspa
 
 // claude.organization.rateLimit
 
-func (r *mqlClaudeOrganization) rateLimits() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) rateLimits() ([]any, error) {
 	admin, err := requireAdmin(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -310,10 +310,10 @@ func (r *mqlClaudeOrganization) rateLimits() ([]interface{}, error) {
 	return convertRateLimits(r.MqlRuntime, limits, "org")
 }
 
-func convertRateLimits(runtime *plugin.Runtime, limits []connection.AdminRateLimit, prefix string) ([]interface{}, error) {
-	res := make([]interface{}, 0, len(limits))
+func convertRateLimits(runtime *plugin.Runtime, limits []connection.AdminRateLimit, prefix string) ([]any, error) {
+	res := make([]any, 0, len(limits))
 	for _, l := range limits {
-		models := make([]interface{}, len(l.Models))
+		models := make([]any, len(l.Models))
 		for j, m := range l.Models {
 			models[j] = m
 		}
@@ -367,7 +367,7 @@ func (r *mqlClaudeOrganizationWorkspaceMember) workspace() (*mqlClaudeOrganizati
 	return ws, nil
 }
 
-func (r *mqlClaudeOrganizationWorkspace) members() ([]interface{}, error) {
+func (r *mqlClaudeOrganizationWorkspace) members() ([]any, error) {
 	admin, err := requireAdmin(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -379,7 +379,7 @@ func (r *mqlClaudeOrganizationWorkspace) members() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(members))
+	res := make([]any, 0, len(members))
 	for _, m := range members {
 		mqlMember, err := CreateResource(r.MqlRuntime, "claude.organization.workspace.member", map[string]*llx.RawData{
 			"__id":          llx.StringData(m.WorkspaceID + "/" + m.UserID),
@@ -399,7 +399,7 @@ func (r *mqlClaudeOrganizationWorkspace) members() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlClaudeOrganizationWorkspace) rateLimits() ([]interface{}, error) {
+func (r *mqlClaudeOrganizationWorkspace) rateLimits() ([]any, error) {
 	admin, err := requireAdmin(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -432,7 +432,7 @@ func (r *mqlClaudeOrganizationUsageEntry) workspace() (*mqlClaudeOrganizationWor
 	return ws, nil
 }
 
-func (r *mqlClaudeOrganization) usageReport() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) usageReport() ([]any, error) {
 	admin, err := requireAdmin(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -443,7 +443,7 @@ func (r *mqlClaudeOrganization) usageReport() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var res []interface{}
+	var res []any
 	for _, b := range buckets {
 		startingAt, err := parseTime(b.StartingAt)
 		if err != nil {
@@ -496,7 +496,7 @@ func (r *mqlClaudeOrganizationCostEntry) workspace() (*mqlClaudeOrganizationWork
 	return ws, nil
 }
 
-func (r *mqlClaudeOrganization) costReport() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) costReport() ([]any, error) {
 	admin, err := requireAdmin(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -507,7 +507,7 @@ func (r *mqlClaudeOrganization) costReport() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var res []interface{}
+	var res []any
 	for _, b := range buckets {
 		startingAt, err := parseTime(b.StartingAt)
 		if err != nil {
@@ -543,7 +543,7 @@ func (r *mqlClaudeOrganization) costReport() ([]interface{}, error) {
 
 // claude.organization.activity
 
-func (r *mqlClaudeOrganization) activities() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) activities() ([]any, error) {
 	admin, err := requireAdmin(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -554,7 +554,7 @@ func (r *mqlClaudeOrganization) activities() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(activities))
+	res := make([]any, 0, len(activities))
 	for _, a := range activities {
 		args, err := activityArgs(a)
 		if err != nil {
@@ -630,7 +630,7 @@ func (r *mqlClaudeOrganizationActivity) apiKey() (*mqlClaudeOrganizationApiKey, 
 // API on per organization and answers 404 until it is, so a 404 means the
 // question does not apply to this organization. The response never carries
 // an endpoint's signing secret.
-func (r *mqlClaudeOrganization) webhooks() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) webhooks() ([]any, error) {
 	client, err := adminSDKClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -639,7 +639,7 @@ func (r *mqlClaudeOrganization) webhooks() ([]interface{}, error) {
 	pager := client.Beta.Organization.Webhooks.ListAutoPaging(
 		context.Background(), anthropic.BetaOrganizationWebhookListParams{Limit: anthropic.Int(100)})
 
-	res := []interface{}{}
+	res := []any{}
 	for pager.Next() {
 		mqlHook, err := CreateResource(r.MqlRuntime, "claude.organization.webhook", webhookArgs(pager.Current()))
 		if err != nil {
@@ -657,7 +657,7 @@ func (r *mqlClaudeOrganization) webhooks() ([]interface{}, error) {
 // The API sends an empty string for an absent name, description and
 // disabled reason; those read as null.
 func webhookArgs(w anthropic.BetaOrganizationWebhookEndpoint) map[string]*llx.RawData {
-	events := make([]interface{}, 0, len(w.EnabledEvents))
+	events := make([]any, 0, len(w.EnabledEvents))
 	for _, e := range w.EnabledEvents {
 		events = append(events, e)
 	}

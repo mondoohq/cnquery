@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/networkfirewall"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,17 +22,17 @@ func TestDecryptionProfileFields(t *testing.T) {
 	}
 
 	t.Run("forward-proxy profile populates all blocking controls", func(t *testing.T) {
-		summary := networkfirewall.DecryptionProfileSummary{Name: common.String("fp")}
+		summary := networkfirewall.DecryptionProfileSummary{Name: new("fp")}
 		dp := networkfirewall.SslForwardProxyProfile{
-			IsUnsupportedVersionBlocked:        common.Bool(true),
-			IsUnsupportedCipherBlocked:         common.Bool(true),
-			IsOutOfCapacityBlocked:             common.Bool(false),
-			IsExpiredCertificateBlocked:        common.Bool(true),
-			IsUntrustedIssuerBlocked:           common.Bool(true),
-			IsRevocationStatusTimeoutBlocked:   common.Bool(false),
-			IsUnknownRevocationStatusBlocked:   common.Bool(true),
-			AreCertificateExtensionsRestricted: common.Bool(false),
-			IsAutoIncludeAltName:               common.Bool(true),
+			IsUnsupportedVersionBlocked:        new(true),
+			IsUnsupportedCipherBlocked:         new(true),
+			IsOutOfCapacityBlocked:             new(false),
+			IsExpiredCertificateBlocked:        new(true),
+			IsUntrustedIssuerBlocked:           new(true),
+			IsRevocationStatusTimeoutBlocked:   new(false),
+			IsUnknownRevocationStatusBlocked:   new(true),
+			AreCertificateExtensionsRestricted: new(false),
+			IsAutoIncludeAltName:               new(true),
 		}
 
 		fields := decryptionProfileFields(dp, summary)
@@ -50,11 +49,11 @@ func TestDecryptionProfileFields(t *testing.T) {
 	})
 
 	t.Run("inbound-inspection profile leaves certificate controls null", func(t *testing.T) {
-		summary := networkfirewall.DecryptionProfileSummary{Name: common.String("inbound")}
+		summary := networkfirewall.DecryptionProfileSummary{Name: new("inbound")}
 		dp := networkfirewall.SslInboundInspectionProfile{
-			IsUnsupportedVersionBlocked: common.Bool(true),
-			IsUnsupportedCipherBlocked:  common.Bool(false),
-			IsOutOfCapacityBlocked:      common.Bool(true),
+			IsUnsupportedVersionBlocked: new(true),
+			IsUnsupportedCipherBlocked:  new(false),
+			IsOutOfCapacityBlocked:      new(true),
 		}
 
 		fields := decryptionProfileFields(dp, summary)

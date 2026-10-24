@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -92,9 +91,9 @@ func stagedRootConfig(targets ...string) *inventory.Config {
 
 func testSubscription(id string) subscriptions.Subscription {
 	return subscriptions.Subscription{
-		SubscriptionID: to.Ptr(id),
-		TenantID:       to.Ptr("tenant-1"),
-		DisplayName:    to.Ptr("sub " + id),
+		SubscriptionID: new(id),
+		TenantID:       new("tenant-1"),
+		DisplayName:    new("sub " + id),
 	}
 }
 
@@ -206,7 +205,7 @@ func TestSubscriptionStageAssetOpts_ShareTheSubscriptionCache(t *testing.T) {
 		azureObject: azureObject{
 			id:           "/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/vault-1",
 			subscription: "sub-1",
-			tenant:       to.Ptr("tenant-1"),
+			tenant:       new("tenant-1"),
 			location:     "westeurope",
 			service:      "keyvault",
 			objectType:   "vault",
@@ -252,7 +251,7 @@ func TestLegacyAssetOpts_Unchanged(t *testing.T) {
 		azureObject: azureObject{
 			id:           "/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/vault-1",
 			subscription: "sub-1",
-			tenant:       to.Ptr("tenant-1"),
+			tenant:       new("tenant-1"),
 			location:     "westeurope",
 			service:      "keyvault",
 			objectType:   "vault",
@@ -361,7 +360,7 @@ func taggedSubscription(id string, tags map[string]string) subscriptions.Subscri
 	sub := testSubscription(id)
 	sub.Tags = map[string]*string{}
 	for k, v := range tags {
-		sub.Tags[k] = to.Ptr(v)
+		sub.Tags[k] = new(v)
 	}
 	return sub
 }

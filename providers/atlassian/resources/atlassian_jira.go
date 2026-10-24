@@ -1168,7 +1168,7 @@ func walkJiraGroupMembers(
 	visit func(member *models.GroupUserDetailScheme) error,
 ) error {
 	startAt := 0
-	for page := 0; page < jiraGroupMemberMaxPages; page++ {
+	for range jiraGroupMemberMaxPages {
 		members, err := fetch(startAt)
 		if err != nil {
 			return err

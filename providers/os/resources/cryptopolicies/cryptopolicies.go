@@ -10,6 +10,7 @@ package cryptopolicies
 import (
 	"bufio"
 	"io"
+	"maps"
 	"regexp"
 	"strconv"
 	"strings"
@@ -232,13 +233,9 @@ func (p *Policy) Resolve(scope string) map[string]any {
 	}
 
 	res := make(map[string]any, len(p.Baseline))
-	for k, v := range p.Baseline {
-		res[k] = v
-	}
+	maps.Copy(res, p.Baseline)
 	for _, s := range chain {
-		for k, v := range p.Scoped[s] {
-			res[k] = v
-		}
+		maps.Copy(res, p.Scoped[s])
 	}
 	return res
 }

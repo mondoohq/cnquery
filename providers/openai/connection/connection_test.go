@@ -5,6 +5,7 @@ package connection
 
 import (
 	"io"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -166,9 +167,7 @@ func newTestConnection(t *testing.T, options map[string]string) *OpenaiConnectio
 	t.Setenv("OPENAI_ORG_ID", "")
 	t.Setenv("OPENAI_PROJECT_ID", "")
 	opts := map[string]string{OrganizationOption: "org-test"}
-	for k, v := range options {
-		opts[k] = v
-	}
+	maps.Copy(opts, options)
 	conn, err := NewOpenaiConnection(0, &inventory.Asset{}, &inventory.Config{Options: opts})
 	require.NoError(t, err)
 	return conn

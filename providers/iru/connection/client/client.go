@@ -80,8 +80,7 @@ func (e *APIError) Error() string {
 // rather than failing the whole query when a token lacks a permission
 // flag for a specific endpoint.
 func IsAccessDenied(err error) bool {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*APIError](err); ok {
 		return apiErr.StatusCode == http.StatusUnauthorized || apiErr.StatusCode == http.StatusForbidden
 	}
 	return false

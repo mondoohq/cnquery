@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -87,7 +86,7 @@ func (o *mqlOciNetwork) vcns() ([]any, error) {
 func (s *mqlOciNetwork) getVcnsForRegion(ctx context.Context, networkClient *core.VirtualNetworkClient, compartmentID string) ([]core.Vcn, error) {
 	vcns, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Vcn, *string, error) {
 		request := core.ListVcnsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		}
 
@@ -259,7 +258,7 @@ func (o *mqlOciNetwork) securityLists() ([]any, error) {
 func (s *mqlOciNetwork) getSecurityListsForRegion(ctx context.Context, networkClient *core.VirtualNetworkClient, compartmentID string) ([]core.SecurityList, error) {
 	securityLists, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.SecurityList, *string, error) {
 		request := core.ListSecurityListsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		}
 
@@ -433,7 +432,7 @@ func (o *mqlOciNetwork) subnets() ([]any, error) {
 
 			subnets, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Subnet, *string, error) {
 				response, err := svc.ListSubnets(ctx, core.ListSubnetsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -603,7 +602,7 @@ func (o *mqlOciNetwork) networkSecurityGroups() ([]any, error) {
 func (o *mqlOciNetwork) getNSGsForRegion(ctx context.Context, networkClient *core.VirtualNetworkClient, compartmentID string) ([]core.NetworkSecurityGroup, error) {
 	nsgs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.NetworkSecurityGroup, *string, error) {
 		request := core.ListNetworkSecurityGroupsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		}
 
@@ -669,7 +668,7 @@ func initOciNetworkNetworkSecurityGroup(runtime *plugin.Runtime, args map[string
 	}
 
 	resp, err := svc.GetNetworkSecurityGroup(context.Background(), core.GetNetworkSecurityGroupRequest{
-		NetworkSecurityGroupId: common.String(id),
+		NetworkSecurityGroupId: new(id),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -731,7 +730,7 @@ type nsgSecurityRule struct {
 func (o *mqlOciNetworkNetworkSecurityGroup) getRulesForNSG(ctx context.Context, networkClient *core.VirtualNetworkClient, nsgId string) ([]core.SecurityRule, error) {
 	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.SecurityRule, *string, error) {
 		request := core.ListNetworkSecurityGroupSecurityRulesRequest{
-			NetworkSecurityGroupId: common.String(nsgId),
+			NetworkSecurityGroupId: new(nsgId),
 			Page:                   page,
 		}
 
@@ -877,7 +876,7 @@ func (o *mqlOciNetworkNetworkSecurityGroup) attachedVnics() ([]any, error) {
 
 	attachments, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.NetworkSecurityGroupVnic, *string, error) {
 		response, err := networkClient.ListNetworkSecurityGroupVnics(ctx, core.ListNetworkSecurityGroupVnicsRequest{
-			NetworkSecurityGroupId: common.String(o.Id.Data),
+			NetworkSecurityGroupId: new(o.Id.Data),
 			Page:                   page,
 		})
 		if err != nil {
@@ -961,7 +960,7 @@ func (o *mqlOciNetwork) internetGateways() ([]any, error) {
 
 			igws, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.InternetGateway, *string, error) {
 				response, err := svc.ListInternetGateways(ctx, core.ListInternetGatewaysRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -1043,7 +1042,7 @@ func (o *mqlOciNetwork) natGateways() ([]any, error) {
 
 			natGws, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.NatGateway, *string, error) {
 				response, err := svc.ListNatGateways(ctx, core.ListNatGatewaysRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -1144,7 +1143,7 @@ func (o *mqlOciNetwork) routeTables() ([]any, error) {
 
 			rts, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.RouteTable, *string, error) {
 				response, err := svc.ListRouteTables(ctx, core.ListRouteTablesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -1300,7 +1299,7 @@ func (o *mqlOciNetwork) publicIps() ([]any, error) {
 			publicIps, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.PublicIp, *string, error) {
 				response, err := svc.ListPublicIps(ctx, core.ListPublicIpsRequest{
 					Scope:         core.ListPublicIpsScopeRegion,
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Lifetime:      core.ListPublicIpsLifetimeReserved,
 					Page:          page,
 				})
@@ -1339,8 +1338,8 @@ func (o *mqlOciNetwork) publicIps() ([]any, error) {
 				perDomain, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.PublicIp, *string, error) {
 					response, err := svc.ListPublicIps(ctx, core.ListPublicIpsRequest{
 						Scope:              core.ListPublicIpsScopeAvailabilityDomain,
-						AvailabilityDomain: common.String(availabilityDomain),
-						CompartmentId:      common.String(compartmentID),
+						AvailabilityDomain: new(availabilityDomain),
+						CompartmentId:      new(compartmentID),
 						Lifetime:           core.ListPublicIpsLifetimeEphemeral,
 						Page:               page,
 					})

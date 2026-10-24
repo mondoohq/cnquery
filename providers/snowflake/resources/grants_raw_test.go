@@ -17,7 +17,6 @@ import (
 func grantRowCells(pairs map[string]any) map[string]*any {
 	out := make(map[string]*any, len(pairs))
 	for k, v := range pairs {
-		v := v
 		out[k] = &v
 	}
 	return out

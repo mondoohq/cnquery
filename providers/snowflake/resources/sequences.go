@@ -17,7 +17,7 @@ type mqlSnowflakeSequenceInternal struct {
 }
 
 func (r *mqlSnowflakeAccount) sequences() ([]any, error) {
-	return listSnowflakeSequences(r.MqlRuntime, sdk.In{Account: sdk.Bool(true)})
+	return listSnowflakeSequences(r.MqlRuntime, sdk.In{Account: new(true)})
 }
 
 func (r *mqlSnowflakeDatabase) sequences() ([]any, error) {

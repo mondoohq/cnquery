@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/carabiner-dev/spdx3"
-	"github.com/carabiner-dev/spdx3/base"
 	"github.com/carabiner-dev/spdx3/profiles/core"
 	"github.com/carabiner-dev/spdx3/profiles/simplelicensing"
 	"github.com/carabiner-dev/spdx3/profiles/software"
@@ -281,12 +280,9 @@ func (w *spdx3Writer) license(expression string) *simplelicensing.LicenseExpress
 		return license
 	}
 	license := &simplelicensing.LicenseExpression{
-		AnyLicenseInfo: simplelicensing.AnyLicenseInfo{Element: core.Element{Node: core.Node{
-			PreNode: base.PreNode{
-				SPDXID: w.newID("license"),
-				Type:   "simplelicensing_LicenseExpression",
-			},
-		}}},
+
+		SPDXID:            w.newID("license"),
+		Type:              "simplelicensing_LicenseExpression",
 		LicenseExpression: expression,
 	}
 	w.env.Graph.AddNode(license)

@@ -180,8 +180,7 @@ func (e *mqlMasterpasswdEntry) group(gid int64) (*mqlGroup, error) {
 	}
 	g, err := raw.(*mqlGroups).findID(gid)
 	if err != nil {
-		var notFound resources.NotFoundError
-		if errors.As(err, &notFound) {
+		if _, ok := errors.AsType[resources.NotFoundError](err); ok {
 			e.Group.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}

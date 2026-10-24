@@ -2,15 +2,14 @@ module go.mondoo.com/mql/providers/mssql
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.10
+go 1.27.3
 
 require (
 	github.com/microsoft/go-mssqldb v1.11.2
+	github.com/rs/zerolog v1.35.1
 	go.mondoo.com/mql v0.0.0-20261019065417-1fcdd84493fd
 	go.mondoo.com/ranger-rpc v0.8.1
 )
-
-require go.opentelemetry.io/otel/log v1.47.0 // indirect
 
 require (
 	dario.cat/mergo v1.0.2 // indirect
@@ -81,7 +80,6 @@ require (
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.16.0 // indirect
-	github.com/rs/zerolog v1.35.1
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
@@ -92,6 +90,7 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel v1.47.0 // indirect
+	go.opentelemetry.io/otel/log v1.47.0 // indirect
 	go.opentelemetry.io/otel/metric v1.47.0 // indirect
 	go.opentelemetry.io/otel/trace v1.47.0 // indirect
 	go.uber.org/mock v0.6.0 // indirect

@@ -270,7 +270,7 @@ func logrotateStrictParsing(version, rpmRelease string) bool {
 // endings": an editor or a copy from Windows converts every line, the braces
 // included.
 func logrotateFileHasCRLF(content string) bool {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		trimmed := strings.TrimLeft(line, " \t")
 		if strings.HasPrefix(trimmed, "#") {
 			continue
@@ -297,7 +297,7 @@ func logrotateAllDrivesRotation(fs afero.Fs) bool {
 			continue
 		}
 		// the first unit file found is the one systemd loads
-		for _, line := range strings.Split(string(content), "\n") {
+		for line := range strings.SplitSeq(string(content), "\n") {
 			key, value, ok := strings.Cut(strings.TrimSpace(line), "=")
 			if ok && strings.TrimSpace(key) == "ExecStart" && strings.Contains(value, logrotateAllPath) {
 				return true

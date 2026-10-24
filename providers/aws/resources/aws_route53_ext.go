@@ -40,7 +40,6 @@ func (a *mqlAwsRoute53) trafficPolicies() ([]any, error) {
 			return nil, err
 		}
 		for _, summary := range resp.TrafficPolicySummaries {
-			summary := summary
 			policy, err := getTrafficPolicy(ctx, svc, summary.Id, summary.LatestVersion)
 			if err != nil {
 				if Is400AccessDeniedError(err) {
@@ -190,7 +189,6 @@ func (a *mqlAwsRoute53) trafficPolicyInstances() ([]any, error) {
 			return nil, err
 		}
 		for _, inst := range resp.TrafficPolicyInstances {
-			inst := inst
 			mqlInst, err := newMqlAwsRoute53TrafficPolicyInstance(a.MqlRuntime, &inst)
 			if err != nil {
 				return nil, err
@@ -296,7 +294,6 @@ func (a *mqlAwsRoute53) cidrCollections() ([]any, error) {
 			return nil, err
 		}
 		for _, summary := range page.CidrCollections {
-			summary := summary
 			arnVal := convert.ToValue(summary.Arn)
 			idVal := convert.ToValue(summary.Id)
 			version := int64(0)

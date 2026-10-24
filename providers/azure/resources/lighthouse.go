@@ -370,19 +370,19 @@ func (a *mqlAzureSubscriptionLighthouseServiceRegistrationAssignment) registrati
 }
 
 func lastPathSegment(s string) string {
-	idx := strings.LastIndex(s, "/")
-	if idx == -1 {
+	_, after, ok := strings.CutLast(s, "/")
+	if !ok {
 		return s
 	}
-	return s[idx+1:]
+	return after
 }
 
 // assignmentScope returns the delegated scope an assignment applies to by
 // trimming the Microsoft.ManagedServices resource-provider suffix from the
 // assignment's resource ID.
 func assignmentScope(assignmentId string) string {
-	if idx := strings.Index(assignmentId, "/providers/Microsoft.ManagedServices"); idx != -1 {
-		return assignmentId[:idx]
+	if before, _, ok := strings.Cut(assignmentId, "/providers/Microsoft.ManagedServices"); ok {
+		return before
 	}
 	return assignmentId
 }

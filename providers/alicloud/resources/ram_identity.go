@@ -127,7 +127,7 @@ func ramNetworkMasks(raw *string) []any {
 		return []any{}
 	}
 	res := []any{}
-	for _, mask := range strings.Split(value, ";") {
+	for mask := range strings.SplitSeq(value, ";") {
 		mask = strings.TrimSpace(mask)
 		if mask == "" {
 			continue

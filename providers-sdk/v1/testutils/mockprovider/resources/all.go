@@ -110,7 +110,7 @@ func (c *mqlMos) groups() (*mqlCustomGroups, error) {
 // list() is where we actually load the real resources, which could be slow in big environments
 func (c *mqlCustomGroups) list() ([]any, error) {
 	res := []any{}
-	for i := 0; i < 7; i++ {
+	for i := range 7 {
 		group, err := CreateResource(c.MqlRuntime, "mgroup", map[string]*llx.RawData{
 			"name": llx.StringData(fmt.Sprintf("group%d", i+1)),
 		})

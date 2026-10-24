@@ -198,7 +198,7 @@ func (g *mqlGrafana) organization() (*mqlGrafanaOrganization, error) {
 	return res.(*mqlGrafanaOrganization), nil
 }
 
-func (g *mqlGrafana) users() ([]interface{}, error) {
+func (g *mqlGrafana) users() ([]any, error) {
 	conn, err := grafanaConnection(g.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -217,7 +217,7 @@ func (g *mqlGrafana) users() ([]interface{}, error) {
 		return nil, fmt.Errorf("grafana: decoding /api/org/users response: %w", err)
 	}
 
-	list := make([]interface{}, 0, len(raw))
+	list := make([]any, 0, len(raw))
 	prefetch := &userPrefetchGroup{conn: conn, users: make([]*mqlGrafanaUser, 0, len(raw))}
 	for _, u := range raw {
 		res, err := CreateResource(g.MqlRuntime, "grafana.user", map[string]*llx.RawData{

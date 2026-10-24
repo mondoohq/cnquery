@@ -16,7 +16,7 @@ type Services map[string]string
 // official name.
 func ParseServices(content string) Services {
 	res := Services{}
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		if idx := strings.IndexByte(line, '#'); idx >= 0 {
 			line = line[:idx]
 		}

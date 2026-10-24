@@ -8,7 +8,6 @@ import (
 	"errors"
 	"sort"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identitydomains"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -53,8 +52,8 @@ func (o *mqlOciIdentityDomain) policies() ([]any, error) {
 	ctx := context.Background()
 	policies, err := ociScimPaginate(ctx, func(ctx context.Context, startIndex int) ([]identitydomains.Policy, *int, error) {
 		response, err := client.ListPolicies(ctx, identitydomains.ListPoliciesRequest{
-			StartIndex:    common.Int(startIndex),
-			Count:         common.Int(ociScimPageSize),
+			StartIndex:    new(startIndex),
+			Count:         new(ociScimPageSize),
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
@@ -185,8 +184,8 @@ func (o *mqlOciIdentityDomain) rules() ([]any, error) {
 	ctx := context.Background()
 	rules, err := ociScimPaginate(ctx, func(ctx context.Context, startIndex int) ([]identitydomains.Rule, *int, error) {
 		response, err := client.ListRules(ctx, identitydomains.ListRulesRequest{
-			StartIndex:    common.Int(startIndex),
-			Count:         common.Int(ociScimPageSize),
+			StartIndex:    new(startIndex),
+			Count:         new(ociScimPageSize),
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
@@ -319,8 +318,8 @@ func (o *mqlOciIdentityDomain) conditions() ([]any, error) {
 	ctx := context.Background()
 	conditions, err := ociScimPaginate(ctx, func(ctx context.Context, startIndex int) ([]identitydomains.Condition, *int, error) {
 		response, err := client.ListConditions(ctx, identitydomains.ListConditionsRequest{
-			StartIndex:    common.Int(startIndex),
-			Count:         common.Int(ociScimPageSize),
+			StartIndex:    new(startIndex),
+			Count:         new(ociScimPageSize),
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
@@ -368,8 +367,8 @@ func (o *mqlOciIdentityDomain) networkPerimeters() ([]any, error) {
 	ctx := context.Background()
 	perimeters, err := ociScimPaginate(ctx, func(ctx context.Context, startIndex int) ([]identitydomains.NetworkPerimeter, *int, error) {
 		response, err := client.ListNetworkPerimeters(ctx, identitydomains.ListNetworkPerimetersRequest{
-			StartIndex:    common.Int(startIndex),
-			Count:         common.Int(ociScimPageSize),
+			StartIndex:    new(startIndex),
+			Count:         new(ociScimPageSize),
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {

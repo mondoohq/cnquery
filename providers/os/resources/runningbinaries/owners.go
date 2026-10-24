@@ -291,12 +291,12 @@ func parsePacmanOwners(r io.Reader) Owners {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
-		i := strings.LastIndex(line, " is owned by ")
-		if i < 0 {
+		before, after, ok := strings.CutLast(line, " is owned by ")
+		if !ok {
 			continue
 		}
-		if fields := strings.Fields(line[i+len(" is owned by "):]); len(fields) > 0 {
-			owners.add(line[:i], fields[0])
+		if fields := strings.Fields(after); len(fields) > 0 {
+			owners.add(before, fields[0])
 		}
 	}
 	return owners
@@ -509,11 +509,11 @@ func flatpakPackage(p string) (string, bool) {
 // pathSegmentAfter returns the directory name that follows marker in p, when
 // p continues below it. reserved is a name under marker that is no package.
 func pathSegmentAfter(p, marker, reserved string) (string, bool) {
-	i := strings.Index(p, marker)
-	if i < 0 {
+	_, after, ok0 := strings.Cut(p, marker)
+	if !ok0 {
 		return "", false
 	}
-	name, _, ok := strings.Cut(p[i+len(marker):], "/")
+	name, _, ok := strings.Cut(after, "/")
 	if !ok || name == "" || name == reserved {
 		return "", false
 	}

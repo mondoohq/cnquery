@@ -1338,7 +1338,7 @@ privatekey {
   file file
   // Whether the key material is passphrase-encrypted
   encrypted bool
-  // Public key algorithm of the key material (e.g., RSA, ECDSA, Ed25519, DSA)
+  // Public key algorithm of the key material (e.g., RSA, ECDSA, Ed25519, DSA, ML-DSA)
   publicKeyAlgorithm() string
   // Key size in bits (e.g., 2048, 256, 384, 521)
   publicKeyBits() int

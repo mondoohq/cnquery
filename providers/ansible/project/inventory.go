@@ -182,7 +182,7 @@ func inventorySources(root string) []string {
 // INI inventories open with a `[section]` header or bare host lines, whereas
 // YAML inventories use `key:` mappings.
 func isINIInventory(data []byte) bool {
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") {
 			continue
@@ -213,7 +213,7 @@ func parseINIInventory(b *inventoryBuilder, data []byte) {
 	section := "ungrouped"
 	sectionType := "hosts"
 
-	for _, raw := range strings.Split(string(data), "\n") {
+	for raw := range strings.SplitSeq(string(data), "\n") {
 		line := strings.TrimSpace(raw)
 		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") {
 			continue
@@ -222,8 +222,8 @@ func parseINIInventory(b *inventoryBuilder, data []byte) {
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
 			name := strings.TrimSuffix(strings.TrimPrefix(line, "["), "]")
 			section, sectionType = name, "hosts"
-			if idx := strings.LastIndex(name, ":"); idx >= 0 {
-				section, sectionType = name[:idx], name[idx+1:]
+			if before, after, ok := strings.CutLast(name, ":"); ok {
+				section, sectionType = before, after
 			}
 			b.group(section) // ensure empty groups still appear
 			continue

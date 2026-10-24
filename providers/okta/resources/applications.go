@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"time"
 
 	"github.com/okta/okta-sdk-golang/v6/okta"
@@ -151,9 +152,7 @@ func initOktaApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	if err != nil {
 		return nil, nil, err
 	}
-	for k, v := range appArgs {
-		args[k] = v
-	}
+	maps.Copy(args, appArgs)
 	return args, nil, nil
 }
 

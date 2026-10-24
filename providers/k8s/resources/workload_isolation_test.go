@@ -26,12 +26,12 @@ func TestSpecHostUsers(t *testing.T) {
 		},
 		{
 			name:     "explicit true shares the host user namespace",
-			spec:     &corev1.PodSpec{HostUsers: boolPtr(true)},
+			spec:     &corev1.PodSpec{HostUsers: new(true)},
 			expected: true,
 		},
 		{
 			name:     "explicit false requests an isolated user namespace",
-			spec:     &corev1.PodSpec{HostUsers: boolPtr(false)},
+			spec:     &corev1.PodSpec{HostUsers: new(false)},
 			expected: false,
 		},
 		{
@@ -71,7 +71,7 @@ func TestNodeRuntimeHandlerFeatures(t *testing.T) {
 			name: "a features block that omits the field reports nothing",
 			handlers: []corev1.NodeRuntimeHandler{
 				{Name: "runc", Features: &corev1.NodeRuntimeHandlerFeatures{
-					RecursiveReadOnlyMounts: boolPtr(true),
+					RecursiveReadOnlyMounts: new(true),
 				}},
 			},
 			expectedReported: false,
@@ -79,8 +79,8 @@ func TestNodeRuntimeHandlerFeatures(t *testing.T) {
 		{
 			name: "every handler reporting false is a real negative answer",
 			handlers: []corev1.NodeRuntimeHandler{
-				{Name: "", Features: &corev1.NodeRuntimeHandlerFeatures{UserNamespaces: boolPtr(false)}},
-				{Name: "runc", Features: &corev1.NodeRuntimeHandlerFeatures{UserNamespaces: boolPtr(false)}},
+				{Name: "", Features: &corev1.NodeRuntimeHandlerFeatures{UserNamespaces: new(false)}},
+				{Name: "runc", Features: &corev1.NodeRuntimeHandlerFeatures{UserNamespaces: new(false)}},
 			},
 			expectedSupported: false,
 			expectedReported:  true,
@@ -88,8 +88,8 @@ func TestNodeRuntimeHandlerFeatures(t *testing.T) {
 		{
 			name: "one supporting handler is enough",
 			handlers: []corev1.NodeRuntimeHandler{
-				{Name: "runc", Features: &corev1.NodeRuntimeHandlerFeatures{UserNamespaces: boolPtr(false)}},
-				{Name: "runsc", Features: &corev1.NodeRuntimeHandlerFeatures{UserNamespaces: boolPtr(true)}},
+				{Name: "runc", Features: &corev1.NodeRuntimeHandlerFeatures{UserNamespaces: new(false)}},
+				{Name: "runsc", Features: &corev1.NodeRuntimeHandlerFeatures{UserNamespaces: new(true)}},
 			},
 			expectedSupported: true,
 			expectedReported:  true,
@@ -98,7 +98,7 @@ func TestNodeRuntimeHandlerFeatures(t *testing.T) {
 			name: "a handler with no features does not mask one that has them",
 			handlers: []corev1.NodeRuntimeHandler{
 				{Name: "runc"},
-				{Name: "runsc", Features: &corev1.NodeRuntimeHandlerFeatures{UserNamespaces: boolPtr(true)}},
+				{Name: "runsc", Features: &corev1.NodeRuntimeHandlerFeatures{UserNamespaces: new(true)}},
 			},
 			expectedSupported: true,
 			expectedReported:  true,

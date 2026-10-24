@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/networkfirewall"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -82,8 +81,8 @@ func TestOciFirewallApplicationFields(t *testing.T) {
 
 	t.Run("ICMP", func(t *testing.T) {
 		fields := ociFirewallApplicationFields(networkfirewall.IcmpApplicationSummary{
-			Name:     common.String("ping"),
-			IcmpType: common.Int(8),
+			Name:     new("ping"),
+			IcmpType: new(8),
 			IcmpCode: &code,
 		})
 		require.NotNil(t, fields)
@@ -95,8 +94,8 @@ func TestOciFirewallApplicationFields(t *testing.T) {
 
 	t.Run("ICMP6", func(t *testing.T) {
 		fields := ociFirewallApplicationFields(networkfirewall.Icmp6ApplicationSummary{
-			Name:     common.String("ping6"),
-			IcmpType: common.Int(128),
+			Name:     new("ping6"),
+			IcmpType: new(128),
 		})
 		require.NotNil(t, fields)
 		assert.Equal(t, "ICMP6", fields["type"].Value)
@@ -175,8 +174,8 @@ func TestNetworkFirewallApplicationUnionMembers(t *testing.T) {
 	// drift guard. The drift check for this union is manual: re-read
 	// application_summary.go's UnmarshalPolymorphicJSON on an SDK bump.
 	members := map[string]networkfirewall.ApplicationSummary{
-		"ICMP":    networkfirewall.IcmpApplicationSummary{Name: common.String("a"), IcmpType: common.Int(8)},
-		"ICMP_V6": networkfirewall.Icmp6ApplicationSummary{Name: common.String("b"), IcmpType: common.Int(128)},
+		"ICMP":    networkfirewall.IcmpApplicationSummary{Name: new("a"), IcmpType: new(8)},
+		"ICMP_V6": networkfirewall.Icmp6ApplicationSummary{Name: new("b"), IcmpType: new(128)},
 	}
 
 	for discriminator, member := range members {

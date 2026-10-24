@@ -140,17 +140,14 @@ func classifyIngestFailure(err error) string {
 		return ""
 	}
 
-	var dnsErr *net.DNSError
-	if errors.As(err, &dnsErr) {
+	if _, ok := errors.AsType[*net.DNSError](err); ok {
 		return IngestFailureDNS
 	}
 
-	var certErr *tls.CertificateVerificationError
-	if errors.As(err, &certErr) {
+	if _, ok := errors.AsType[*tls.CertificateVerificationError](err); ok {
 		return IngestFailureTLS
 	}
-	var recordErr tls.RecordHeaderError
-	if errors.As(err, &recordErr) {
+	if _, ok := errors.AsType[tls.RecordHeaderError](err); ok {
 		return IngestFailureTLS
 	}
 

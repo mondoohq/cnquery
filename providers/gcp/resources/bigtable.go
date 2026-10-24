@@ -739,8 +739,8 @@ func (g *mqlGcpProjectBigtableServiceInstance) backups() ([]any, error) {
 	for _, c := range clusters {
 		// Extract just the cluster ID from the full name
 		clusterID := c.Name
-		if idx := strings.LastIndex(c.Name, "/"); idx >= 0 {
-			clusterID = c.Name[idx+1:]
+		if _, after, ok := strings.CutLast(c.Name, "/"); ok {
+			clusterID = after
 		}
 
 		it := ac.Backups(ctx, clusterID)

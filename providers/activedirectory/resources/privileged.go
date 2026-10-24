@@ -108,7 +108,7 @@ func sidStringToBytes(sidStr string) ([]byte, error) {
 	buf[6] = byte(authority >> 8)
 	buf[7] = byte(authority)
 
-	for i := 0; i < subAuthCount; i++ {
+	for i := range subAuthCount {
 		sa, err := strconv.ParseUint(parts[3+i], 10, 32)
 		if err != nil {
 			return nil, fmt.Errorf("bad SID sub-authority %q: %w", parts[3+i], err)
@@ -438,7 +438,7 @@ func addPrimaryGroupMemberships(conn *connection.ActiveDirectoryConnection, pm *
 // memberships via recursive LDAP queries and returns populated sets.
 // Results are cached on the connection for the lifetime of the scan.
 func buildPrivilegedMembershipSets(conn *connection.ActiveDirectoryConnection) (*privilegedMemberships, error) {
-	raw, err := conn.CachedFetch("privilegedMemberships", func() (interface{}, error) {
+	raw, err := conn.CachedFetch("privilegedMemberships", func() (any, error) {
 		groupDNs, err := resolvePrivilegedGroupDNs(conn)
 		if err != nil {
 			return nil, fmt.Errorf("resolving privileged group DNs: %w", err)

@@ -233,21 +233,17 @@ func TestSeedOwnerEmailIsSafeUnderConcurrency(t *testing.T) {
 	project := &mqlNeonProject{}
 
 	var wg sync.WaitGroup
-	for i := 0; i < 16; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 16 {
+		wg.Go(func() {
 			project.seedOwnerEmail("ada@example.com")
-		}()
+		})
 	}
-	for i := 0; i < 16; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 16 {
+		wg.Go(func() {
 			if project.ownerFetched.Load() && project.ownerEmail_ != "ada@example.com" {
 				t.Error("a seeded project reported an owner it was never given")
 			}
-		}()
+		})
 	}
 	wg.Wait()
 

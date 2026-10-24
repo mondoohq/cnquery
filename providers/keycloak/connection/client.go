@@ -10,9 +10,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
@@ -36,8 +38,7 @@ func (e *APIError) Error() string {
 // grant view-realm without view-users and a service account is often scoped to
 // a single realm.
 func IsForbidden(err error) bool {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*APIError](err); ok {
 		return apiErr.StatusCode == http.StatusUnauthorized || apiErr.StatusCode == http.StatusForbidden
 	}
 	return false
@@ -45,8 +46,7 @@ func IsForbidden(err error) bool {
 
 // IsNotFound reports whether err is a 404 response.
 func IsNotFound(err error) bool {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*APIError](err); ok {
 		return apiErr.StatusCode == http.StatusNotFound
 	}
 	return false
@@ -56,11 +56,12 @@ func IsNotFound(err error) bool {
 // is escaped, since a realm, a group name or a flow alias can carry characters
 // that are otherwise read as path structure.
 func AdminPath(realm string, segments ...string) string {
-	path := "/admin/realms/" + url.PathEscape(realm)
+	var path strings.Builder
+	path.WriteString("/admin/realms/" + url.PathEscape(realm))
 	for _, s := range segments {
-		path += "/" + url.PathEscape(s)
+		path.WriteString("/" + url.PathEscape(s))
 	}
-	return path
+	return path.String()
 }
 
 // Get performs a GET against the admin API and decodes the JSON body into out.
@@ -174,15 +175,13 @@ func FullRepresentation() url.Values {
 // response unchanged.
 func GetPaged[T any](ctx context.Context, c *KeycloakConnection, path string, query url.Values) ([]T, error) {
 	page := url.Values{}
-	for k, v := range query {
-		page[k] = v
-	}
+	maps.Copy(page, query)
 	page.Set("max", strconv.Itoa(pageSize))
 
 	var results []T
 	var previous []byte
 	complete := false
-	for i := 0; i < maxPages; i++ {
+	for i := range maxPages {
 		page.Set("first", strconv.Itoa(i*pageSize))
 
 		body, err := c.do(ctx, path, page)

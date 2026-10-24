@@ -109,12 +109,12 @@ func vpnGatewaysInRegion(runtime *plugin.Runtime, conn *connection.AlicloudConne
 	pageNumber := int32(1)
 	for {
 		req := &vpcclient.DescribeVpnGatewaysRequest{
-			RegionId:   tea.String(region),
-			PageNumber: tea.Int32(pageNumber),
-			PageSize:   tea.Int32(vpnPageSize),
+			RegionId:   new(region),
+			PageNumber: new(pageNumber),
+			PageSize:   new(vpnPageSize),
 		}
 		if vpcID != "" {
-			req.VpcId = tea.String(vpcID)
+			req.VpcId = new(vpcID)
 		}
 		resp, err := client.DescribeVpnGateways(req)
 		if err != nil {
@@ -252,12 +252,12 @@ func vpnConnectionsInRegion(runtime *plugin.Runtime, conn *connection.AlicloudCo
 	pageNumber := int32(1)
 	for {
 		req := &vpcclient.DescribeVpnConnectionsRequest{
-			RegionId:   tea.String(region),
-			PageNumber: tea.Int32(pageNumber),
-			PageSize:   tea.Int32(vpnPageSize),
+			RegionId:   new(region),
+			PageNumber: new(pageNumber),
+			PageSize:   new(vpnPageSize),
 		}
 		if gatewayID != "" {
-			req.VpnGatewayId = tea.String(gatewayID)
+			req.VpnGatewayId = new(gatewayID)
 		}
 		resp, err := client.DescribeVpnConnections(req)
 		if err != nil {
@@ -387,8 +387,8 @@ func (r *mqlAlicloudVpcVpnConnection) vpnGateway() (*mqlAlicloudVpcVpnGateway, e
 		return nil, err
 	}
 	resp, err := client.DescribeVpnGateways(&vpcclient.DescribeVpnGatewaysRequest{
-		RegionId:     tea.String(r.cacheRegion),
-		VpnGatewayId: tea.String(r.cacheGateway),
+		RegionId:     new(r.cacheRegion),
+		VpnGatewayId: new(r.cacheGateway),
 	})
 	// A failed call is not the same as a gateway that is gone. Reporting a rate
 	// limit or a timeout as a null gateway would hide the edge this resource

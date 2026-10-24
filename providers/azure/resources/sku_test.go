@@ -32,7 +32,7 @@ func TestSkuFieldsPublishOnlyTheMembersPassed(t *testing.T) {
 		sku := armredis.SKU{
 			Name:     ptr(armredis.SKUNamePremium),
 			Family:   ptr(armredis.SKUFamilyP),
-			Capacity: ptr(int32(3)),
+			Capacity: new(int32(3)),
 		}
 		args := skuFields(skuName(sku.Name), skuFamily(sku.Family), skuCapacity(sku.Capacity))
 
@@ -55,8 +55,8 @@ func TestSkuFieldsPublishOnlyTheMembersPassed(t *testing.T) {
 	// armcompute types Capacity as *int64 where nearly every other service
 	// types it *int32; both have to land on the same int64 field.
 	t.Run("capacity is published from either width", func(t *testing.T) {
-		wide := skuFields(skuCapacity(ptr(int64(12))))
-		narrow := skuFields(skuCapacity(ptr(int32(12))))
+		wide := skuFields(skuCapacity(new(int64(12))))
+		narrow := skuFields(skuCapacity(new(int32(12))))
 
 		assert.Equal(t, int64(12), wide["capacity"].Value)
 		assert.Equal(t, int64(12), narrow["capacity"].Value)
@@ -82,7 +82,7 @@ func TestSetSkuRef(t *testing.T) {
 	t.Run("a reported SKU is keyed off the parent", func(t *testing.T) {
 		runtime := azureTestRuntime()
 		args := map[string]*llx.RawData{"id": llx.StringData("/subscriptions/s/rg/disks/one")}
-		require.NoError(t, setSkuData(runtime, args, skuName(ptr("Premium_LRS")), skuTier(ptr("Premium"))))
+		require.NoError(t, setSkuData(runtime, args, skuName(new("Premium_LRS")), skuTier(new("Premium"))))
 
 		res, ok := args["skuData"].Value.(*mqlAzureSubscriptionResourceSku)
 		require.True(t, ok, "skuData should hold a resourceSku")
@@ -107,7 +107,7 @@ func TestSetSkuRef(t *testing.T) {
 	t.Run("a parent with no key is an error, not a shared cache row", func(t *testing.T) {
 		runtime := azureTestRuntime()
 		args := map[string]*llx.RawData{}
-		assert.Error(t, setSkuData(runtime, args, skuName(ptr("Standard"))))
+		assert.Error(t, setSkuData(runtime, args, skuName(new("Standard"))))
 	})
 }
 
@@ -115,8 +115,8 @@ func TestIdentityFieldsPublishOnlyTheMembersPassed(t *testing.T) {
 	t.Run("the shared shape publishes all three scalars", func(t *testing.T) {
 		identity := compute.VirtualMachineIdentity{
 			Type:        ptr(compute.ResourceIdentityTypeSystemAssignedUserAssigned),
-			PrincipalID: ptr("principal-1"),
-			TenantID:    ptr("tenant-1"),
+			PrincipalID: new("principal-1"),
+			TenantID:    new("tenant-1"),
 			UserAssignedIdentities: map[string]*compute.UserAssignedIdentitiesValue{
 				"/subscriptions/s/b": {},
 				"/subscriptions/s/a": {},

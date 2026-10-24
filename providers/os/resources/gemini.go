@@ -55,20 +55,20 @@ func (r *mqlGemini) model() (string, error) {
 	return settings.Model.Name, nil
 }
 
-func (r *mqlGemini) settings() (interface{}, error) {
+func (r *mqlGemini) settings() (any, error) {
 	afs := connectionAfs(r.MqlRuntime)
-	var settings map[string]interface{}
+	var settings map[string]any
 	err := readGeminiSettings(afs, r.ConfigPath.Data, &settings)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return map[string]interface{}{}, nil
+			return map[string]any{}, nil
 		}
 		return nil, err
 	}
 	return settings, nil
 }
 
-func (r *mqlGemini) mcpServers() ([]interface{}, error) {
+func (r *mqlGemini) mcpServers() ([]any, error) {
 	servers, err := geminiMCPServers(connectionAfs(r.MqlRuntime), r.ConfigPath.Data)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func (r *mqlGemini) mcpServers() ([]interface{}, error) {
 	}
 	sort.Strings(names)
 
-	var result []interface{}
+	var result []any
 	for _, name := range names {
 		res, err := NewResource(r.MqlRuntime, "gemini.mcpServer", geminiMcpServerArgs(servers[name]))
 		if err != nil {
@@ -100,7 +100,7 @@ func (r *mqlGemini) mcpServers() ([]interface{}, error) {
 	return append(result, extServers...), nil
 }
 
-func (r *mqlGemini) skills() ([]interface{}, error) {
+func (r *mqlGemini) skills() ([]any, error) {
 	dirs, err := resolvePerUserDirs(r.MqlRuntime, r.ConfigPath.Data, defaultGeminiConfigDir,
 		filepath.Join(defaultGeminiConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 	if err != nil {

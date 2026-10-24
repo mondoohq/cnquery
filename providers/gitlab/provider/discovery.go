@@ -8,6 +8,7 @@ import (
 	// with the "path" package. path/filepath rewrites separators on Windows,
 	// which produced backslash directory options that the chained helm and
 	// kustomize connections then failed to resolve inside the clone.
+	"maps"
 	gopath "path"
 	"strconv"
 	"strings"
@@ -267,7 +268,7 @@ func discoverGroupProjects(conn *connection.GitLabConnection, gid any) ([]*gitla
 	page := int64(1)
 	projects := []*gitlab.Project{}
 	for {
-		projs, resp, err := conn.Client().Groups.ListGroupProjects(gid, &gitlab.ListGroupProjectsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		projs, resp, err := conn.Client().Groups.ListGroupProjects(gid, &gitlab.ListGroupProjectsOptions{Page: page, PerPage: perPage})
 		if err != nil {
 			return nil, err
 		}
@@ -319,7 +320,7 @@ func listAllGroups(conn *connection.GitLabConnection) ([]*gitlab.Group, error) {
 	page := int64(1)
 	groups := []*gitlab.Group{}
 	for {
-		grps, resp, err := conn.Client().Groups.ListGroups(&gitlab.ListGroupsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		grps, resp, err := conn.Client().Groups.ListGroups(&gitlab.ListGroupsOptions{Page: page, PerPage: perPage})
 		if err != nil {
 			return nil, err
 		}
@@ -354,9 +355,7 @@ func (s *Service) discoverTypes(targets []string, conn *connection.GitLabConnect
 				"ssh-url":  project.SSHURLToRepo,
 				"http-url": project.HTTPURLToRepo,
 			}
-			for k, v := range extra {
-				opts[k] = v
-			}
+			maps.Copy(opts, extra)
 			return opts
 		}
 
@@ -475,9 +474,7 @@ type discoveredTypes struct {
 // handled separately via cloudformationTemplatePaths.
 func discoverRepoTypes(client *gitlab.Client, pid any) (*discoveredTypes, error) {
 	opts := &gitlab.ListTreeOptions{
-		ListOptions: gitlab.ListOptions{
-			PerPage: 100,
-		},
+		PerPage:   100,
 		Recursive: gitlab.Ptr(true),
 	}
 
@@ -544,7 +541,7 @@ func discoverRepoTypes(client *gitlab.Client, pid any) (*discoveredTypes, error)
 // returns matches in pages of 20 by default; we follow pagination so a project
 // with many templates is not silently truncated.
 func cloudformationTemplatePaths(client *gitlab.Client, pid any) ([]string, error) {
-	opts := &gitlab.SearchOptions{ListOptions: gitlab.ListOptions{PerPage: 100}}
+	opts := &gitlab.SearchOptions{PerPage: 100}
 	var paths []string
 	seen := map[string]bool{}
 	for {
@@ -589,7 +586,7 @@ func gitCredentials(in []*vault.Credential) []*vault.Credential {
 // isHiddenPath reports whether any path segment is hidden (starts with a dot),
 // e.g. files under .gitlab/ or a top-level .gitlab-ci.yml.
 func isHiddenPath(p string) bool {
-	for _, fragment := range strings.Split(p, "/") {
+	for fragment := range strings.SplitSeq(p, "/") {
 		if strings.HasPrefix(fragment, ".") {
 			return true
 		}

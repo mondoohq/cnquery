@@ -53,9 +53,9 @@ func TestParseTime(t *testing.T) {
 }
 
 func TestToInterfaceMap(t *testing.T) {
-	assert.Equal(t, map[string]interface{}{}, toInterfaceMap(nil))
+	assert.Equal(t, map[string]any{}, toInterfaceMap(nil))
 	assert.Equal(t,
-		map[string]interface{}{"team": "platform", "env": "prod"},
+		map[string]any{"team": "platform", "env": "prod"},
 		toInterfaceMap(map[string]string{"team": "platform", "env": "prod"}),
 	)
 }
@@ -63,8 +63,8 @@ func TestToInterfaceMap(t *testing.T) {
 func TestToInterfaceSlice(t *testing.T) {
 	// A nil slice must convert to an empty slice, not nil, so an absent list
 	// renders as [] rather than null.
-	assert.Equal(t, []interface{}{}, toInterfaceSlice(nil))
-	assert.Equal(t, []interface{}{"a", "b"}, toInterfaceSlice([]string{"a", "b"}))
+	assert.Equal(t, []any{}, toInterfaceSlice(nil))
+	assert.Equal(t, []any{"a", "b"}, toInterfaceSlice([]string{"a", "b"}))
 }
 
 func TestRawJSONToDict(t *testing.T) {
@@ -82,12 +82,12 @@ func TestRawJSONToDict(t *testing.T) {
 	// slices, since dict fields only accept JSON-native types.
 	got, err = rawJSONToDict(`{"type":"object","properties":{"path":{"type":"string"}},"required":["path"],"max":3}`)
 	require.NoError(t, err)
-	assert.Equal(t, map[string]interface{}{
+	assert.Equal(t, map[string]any{
 		"type": "object",
-		"properties": map[string]interface{}{
-			"path": map[string]interface{}{"type": "string"},
+		"properties": map[string]any{
+			"path": map[string]any{"type": "string"},
 		},
-		"required": []interface{}{"path"},
+		"required": []any{"path"},
 		"max":      float64(3),
 	}, got)
 

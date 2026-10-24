@@ -6,6 +6,7 @@ package zfs
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"math"
 	"regexp"
 	"strconv"
@@ -296,9 +297,7 @@ func ParsePropertiesText(output string) (map[string]string, error) {
 	}
 	props := make(map[string]string)
 	for _, item := range byName {
-		for k, v := range item {
-			props[k] = v
-		}
+		maps.Copy(props, item)
 	}
 	return props, nil
 }
@@ -355,7 +354,7 @@ func parseGetJSON(jsonOutput string, command string) (map[string]map[string]stri
 func parseGetText(output string) (map[string]map[string]string, error) {
 	byName := map[string]map[string]string{}
 	pending := ""
-	for _, line := range strings.Split(output, "\n") {
+	for line := range strings.SplitSeq(output, "\n") {
 		line = strings.TrimSuffix(line, "\r")
 		if pending != "" {
 			line = pending + "\n" + line
@@ -619,7 +618,7 @@ func statusConfigLines(output string) ([]string, int) {
 	var lines []string
 	counters := 0
 	inConfig := false
-	for _, line := range strings.Split(output, "\n") {
+	for line := range strings.SplitSeq(output, "\n") {
 		line = strings.TrimSuffix(line, "\r")
 		if !inConfig {
 			fields := strings.Fields(line)
@@ -686,8 +685,8 @@ func statusVdev(fields []string, fullFields []string, counters int) (Vdev, error
 // "mirror-0", "raidz2-1", "draid1:2d:4c:0s-0", "spare-3", or "replacing-0".
 func groupVdevType(name string) string {
 	t := name
-	if i := strings.LastIndexByte(t, '-'); i > 0 {
-		t = t[:i]
+	if before, _, ok := strings.CutLast(t, "-"); ok && before != "" {
+		t = before
 	}
 	if i := strings.IndexByte(t, ':'); i > 0 {
 		t = t[:i]

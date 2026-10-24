@@ -42,7 +42,7 @@ func (r *mqlSnowflakeAccount) authenticationPolicies() ([]any, error) {
 	ctx := context.Background()
 
 	policies, err := client.AuthenticationPolicies.Show(ctx,
-		sdk.NewShowAuthenticationPolicyRequest().WithIn(sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}}),
+		sdk.NewShowAuthenticationPolicyRequest().WithIn(sdk.ExtendedIn{Account: new(true)}),
 	)
 	if err != nil {
 		return nil, err

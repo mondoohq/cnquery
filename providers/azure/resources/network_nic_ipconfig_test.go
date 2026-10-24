@@ -17,10 +17,10 @@ func TestAppSecurityGroupIDs(t *testing.T) {
 
 	t.Run("skips nil items and nil IDs", func(t *testing.T) {
 		items := []*network.ApplicationSecurityGroup{
-			{ID: strPtr("/asgs/web")},
+			{ID: new("/asgs/web")},
 			nil,
 			{ID: nil},
-			{ID: strPtr("/asgs/db")},
+			{ID: new("/asgs/db")},
 		}
 		assert.Equal(t, []string{"/asgs/web", "/asgs/db"}, appSecurityGroupIDs(items))
 	})

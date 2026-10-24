@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v9"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -332,7 +331,7 @@ func runCommandArgs(rc *compute.VirtualMachineRunCommand) map[string]*llx.RawDat
 		runAsUser = p.RunAsUser
 		provisioningState = p.ProvisioningState
 		if p.TimeoutInSeconds != nil {
-			timeout = to.Ptr(int64(*p.TimeoutInSeconds))
+			timeout = new(int64(*p.TimeoutInSeconds))
 		}
 		asyncExecution = p.AsyncExecution
 		treatFailureAsDeploymentFailure = p.TreatFailureAsDeploymentFailure
@@ -380,7 +379,7 @@ func runCommandExecutionFrom(iv *compute.VirtualMachineRunCommandInstanceView) r
 	}
 	e.state = stringEnumPtr(iv.ExecutionState)
 	if iv.ExitCode != nil {
-		e.exitCode = to.Ptr(int64(*iv.ExitCode))
+		e.exitCode = new(int64(*iv.ExitCode))
 	}
 	e.startTime = iv.StartTime
 	e.endTime = iv.EndTime
@@ -411,7 +410,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) runCommands() ([]any, error) {
 	// ARM ignores the expand on this list call today; if it ever honors it,
 	// the instance views seed fetchExecution and save one GET per command.
 	pager := client.NewListByVirtualMachinePager(resourceID.ResourceGroup, vmName, &compute.VirtualMachineRunCommandsClientListByVirtualMachineOptions{
-		Expand: to.Ptr("instanceView"),
+		Expand: new("instanceView"),
 	})
 	res := []any{}
 	for pager.More() {
@@ -490,7 +489,7 @@ func (a *mqlAzureSubscriptionComputeServiceVmRunCommand) loadInstanceView() (*co
 		return nil, err
 	}
 	resp, err := client.GetByVirtualMachine(context.Background(), resourceID.ResourceGroup, vmName, name,
-		&compute.VirtualMachineRunCommandsClientGetByVirtualMachineOptions{Expand: to.Ptr("instanceView")})
+		&compute.VirtualMachineRunCommandsClientGetByVirtualMachineOptions{Expand: new("instanceView")})
 	if err != nil {
 		return nil, classifyAzureRefusal(err, "Microsoft.Compute/virtualMachines/runCommands/read")
 	}

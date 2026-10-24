@@ -2039,8 +2039,8 @@ func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		// The ARN resource can include a path (e.g., "role/service-role/my-role").
 		// IAM GetRole requires just the role name, not the path.
 		resource := strings.TrimPrefix(a.Resource, "role/")
-		if idx := strings.LastIndex(resource, "/"); idx != -1 {
-			rolename = resource[idx+1:]
+		if _, after, ok := strings.CutLast(resource, "/"); ok {
+			rolename = after
 		} else {
 			rolename = resource
 		}
@@ -2600,8 +2600,8 @@ func initAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.Raw
 		// The ARN resource can include a path (e.g., "instance-profile/path/name").
 		// GetInstanceProfile requires just the name, not the path.
 		resource := strings.TrimPrefix(a.Resource, "instance-profile/")
-		if idx := strings.LastIndex(resource, "/"); idx != -1 {
-			instanceProfileName = resource[idx+1:]
+		if _, after, ok := strings.CutLast(resource, "/"); ok {
+			instanceProfileName = after
 		} else {
 			instanceProfileName = resource
 		}

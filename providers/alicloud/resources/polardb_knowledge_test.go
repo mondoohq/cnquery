@@ -21,9 +21,9 @@ import (
 func TestPolardbKnowledgeSpaceIDs(t *testing.T) {
 	t.Run("distinct ids in first-seen order", func(t *testing.T) {
 		got := polardbKnowledgeSpaceIDs([]*polardb.DescribeKnowledgeBasesResponseBodyItems{
-			{KnowledgeSpaceId: tea.String("pks-b")},
-			{KnowledgeSpaceId: tea.String("pks-a")},
-			{KnowledgeSpaceId: tea.String("pks-b")},
+			{KnowledgeSpaceId: new("pks-b")},
+			{KnowledgeSpaceId: new("pks-a")},
+			{KnowledgeSpaceId: new("pks-b")},
 		})
 		assert.Equal(t, []string{"pks-b", "pks-a"}, got)
 	})
@@ -32,8 +32,8 @@ func TestPolardbKnowledgeSpaceIDs(t *testing.T) {
 		got := polardbKnowledgeSpaceIDs([]*polardb.DescribeKnowledgeBasesResponseBodyItems{
 			nil,
 			{KnowledgeSpaceId: nil},
-			{KnowledgeSpaceId: tea.String("")},
-			{KnowledgeSpaceId: tea.String("pks-a")},
+			{KnowledgeSpaceId: new("")},
+			{KnowledgeSpaceId: new("pks-a")},
 		})
 		assert.Equal(t, []string{"pks-a"}, got)
 	})
@@ -51,28 +51,28 @@ func TestPolardbKnowledgeSpaceIDs(t *testing.T) {
 func TestPolardbSyncLinkKey(t *testing.T) {
 	t.Run("the link id is the key", func(t *testing.T) {
 		assert.Equal(t, "pkbl-bp1abc", polardbSyncLinkKey(&polardb.DescribeKBSyncLinksResponseBodyItems{
-			LinkId:     tea.String("pkbl-bp1abc"),
-			ImPlatform: tea.String("FEISHU"),
-			SourceDir:  tea.String("https://example.feishu.cn/wiki/space/a"),
+			LinkId:     new("pkbl-bp1abc"),
+			ImPlatform: new("FEISHU"),
+			SourceDir:  new("https://example.feishu.cn/wiki/space/a"),
 		}))
 	})
 
 	t.Run("a link with no id falls back to its platform and source", func(t *testing.T) {
 		assert.Equal(t, "FEISHU/https://example.feishu.cn/wiki/space/a",
 			polardbSyncLinkKey(&polardb.DescribeKBSyncLinksResponseBodyItems{
-				ImPlatform: tea.String("FEISHU"),
-				SourceDir:  tea.String("https://example.feishu.cn/wiki/space/a"),
+				ImPlatform: new("FEISHU"),
+				SourceDir:  new("https://example.feishu.cn/wiki/space/a"),
 			}))
 	})
 
 	t.Run("two id-less links on one knowledge base stay distinct", func(t *testing.T) {
 		a := polardbSyncLinkKey(&polardb.DescribeKBSyncLinksResponseBodyItems{
-			ImPlatform: tea.String("FEISHU"),
-			SourceDir:  tea.String("https://example.feishu.cn/wiki/space/a"),
+			ImPlatform: new("FEISHU"),
+			SourceDir:  new("https://example.feishu.cn/wiki/space/a"),
 		})
 		b := polardbSyncLinkKey(&polardb.DescribeKBSyncLinksResponseBodyItems{
-			ImPlatform: tea.String("FEISHU"),
-			SourceDir:  tea.String("https://example.feishu.cn/wiki/space/b"),
+			ImPlatform: new("FEISHU"),
+			SourceDir:  new("https://example.feishu.cn/wiki/space/b"),
 		})
 		assert.NotEqual(t, a, b)
 	})

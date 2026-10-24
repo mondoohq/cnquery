@@ -196,7 +196,7 @@ func newResolvedConf() *resolvedConf {
 // #LLMNR=no there, where upstream defaults are allow-downgrade and yes.
 func (c *resolvedConf) applyCompiledDefaults(content string) {
 	inResolve := false
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "[") {
 			inResolve = line == "[Resolve]"
@@ -224,7 +224,7 @@ func (c *resolvedConf) applyCompiledDefaults(content string) {
 // and section names are case-sensitive, as systemd reads them.
 func (c *resolvedConf) apply(content string) {
 	inResolve := false
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || line[0] == '#' || line[0] == ';' {
 			continue
@@ -606,7 +606,7 @@ func parseYesNo(value string, fallback bool) bool {
 // We translate the +/- prefixes into the same `yes`/`no` string vocabulary
 // the corresponding configuration directives use.
 func parseResolvectlProtocols(value string, g *resolvedGlobal) {
-	for _, tok := range strings.Fields(value) {
+	for tok := range strings.FieldsSeq(value) {
 		if eq := strings.Index(tok, "="); eq > 0 {
 			k := tok[:eq]
 			v := tok[eq+1:]

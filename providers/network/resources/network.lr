@@ -392,7 +392,7 @@ certificate @defaults("serial subject.commonName subject.dn") @global {
   isVerified() bool
   // SAN extension value params
   sanExtension() pkix.sanExtension
-  // Public key algorithm (e.g., RSA, ECDSA, Ed25519)
+  // Public key algorithm (e.g., RSA, ECDSA, Ed25519, ML-DSA)
   publicKeyAlgorithm() string
   // Public key size in bits (e.g., 2048, 256, 384)
   publicKeyBits() int

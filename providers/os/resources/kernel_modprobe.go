@@ -239,8 +239,8 @@ func parseModprobeConfig(content string) map[string]modprobeRule {
 // modprobe's parser treats `#` as a comment introducer anywhere on a line
 // (there is no quoting in modprobe.d syntax).
 func stripModprobeComment(line string) string {
-	if i := strings.IndexByte(line, '#'); i >= 0 {
-		return line[:i]
+	if before, _, ok := strings.Cut(line, "#"); ok {
+		return before
 	}
 	return line
 }

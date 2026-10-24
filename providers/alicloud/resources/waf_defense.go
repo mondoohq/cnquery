@@ -160,9 +160,9 @@ func (r *mqlAlicloudWafInstance) defenseTemplates() ([]any, error) {
 	collected := int64(0)
 	for {
 		resp, err := client.DescribeDefenseTemplates(&wafclient.DescribeDefenseTemplatesRequest{
-			InstanceId: tea.String(r.instanceId),
-			RegionId:   tea.String(r.region),
-			PageNumber: tea.Int32(pageNumber),
+			InstanceId: new(r.instanceId),
+			RegionId:   new(r.region),
+			PageNumber: new(pageNumber),
 			PageSize:   tea.Int32(wafDefenseTemplatePageSize),
 		})
 		if err != nil {
@@ -214,9 +214,9 @@ func (r *mqlAlicloudWafDefenseResource) templates() ([]any, error) {
 	}
 
 	resp, err := client.DescribeDefenseResourceTemplates(&wafclient.DescribeDefenseResourceTemplatesRequest{
-		InstanceId: tea.String(instanceID),
-		RegionId:   tea.String(region),
-		Resource:   tea.String(r.Resource.Data),
+		InstanceId: new(instanceID),
+		RegionId:   new(region),
+		Resource:   new(r.Resource.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -298,10 +298,10 @@ func (r *mqlAlicloudWafDefenseTemplate) rules() ([]any, error) {
 	collected := int64(0)
 	for {
 		resp, err := client.DescribeDefenseRules(&wafclient.DescribeDefenseRulesRequest{
-			InstanceId: tea.String(r.instanceId),
-			RegionId:   tea.String(r.region),
-			Query:      tea.String(query),
-			PageNumber: tea.Int32(pageNumber),
+			InstanceId: new(r.instanceId),
+			RegionId:   new(r.region),
+			Query:      new(query),
+			PageNumber: new(pageNumber),
 			PageSize:   tea.Int32(wafDefenseRulePageSize),
 		})
 		if err != nil {

@@ -78,7 +78,7 @@ func TestFederationIssuerArgs(t *testing.T) {
 	assert.Equal(t, int64(900), args["maxJwtLifetimeSeconds"].Value)
 	assert.Nil(t, args["jwksPollingDisabledAt"].Value)
 
-	poll, ok := args["pollStatus"].Value.(map[string]interface{})
+	poll, ok := args["pollStatus"].Value.(map[string]any)
 	require.True(t, ok)
 	assert.Equal(t, "ok", poll["status"])
 }
@@ -131,7 +131,7 @@ func TestFederationRuleArgs(t *testing.T) {
 	// separates a scoped grant from a standing one.
 	assert.Equal(t, "https://api.anthropic.com", args["matchAudience"].Value)
 	assert.Equal(t, "repo:acme/app:ref:refs/heads/main", args["matchSubjectPrefix"].Value)
-	assert.Equal(t, map[string]interface{}{"repository_owner": "acme"}, args["matchClaims"].Value)
+	assert.Equal(t, map[string]any{"repository_owner": "acme"}, args["matchClaims"].Value)
 	assert.Equal(t, "claims.environment == 'production'", args["matchCondition"].Value)
 
 	assert.Equal(t, false, args["appliesToAllWorkspaces"].Value)

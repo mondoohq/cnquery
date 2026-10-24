@@ -71,8 +71,13 @@ func TestRawDataJson_duration(t *testing.T) {
 func TestRawDataJson_Umlauts(t *testing.T) {
 	var res bytes.Buffer
 	require.NoError(t, rawDataJSON(types.String, "Systemintegrit\x84t", "blfbjef", &CodeBundle{}, &res))
-	require.Equal(t, res.String(), "\"Systemintegrit\\ufffdt\"")
 	require.True(t, json.Valid(res.Bytes()))
+	// The invalid byte becomes U+FFFD. Go 1.27's encoding/json writes it as the
+	// raw character where earlier releases escaped it as �; both decode to
+	// the same string, which is what consumers of the output see.
+	var decoded string
+	require.NoError(t, json.Unmarshal(res.Bytes(), &decoded))
+	require.Equal(t, "Systemintegrit�t", decoded)
 }
 
 // Two block entries can resolve to the same human-readable label (e.g.

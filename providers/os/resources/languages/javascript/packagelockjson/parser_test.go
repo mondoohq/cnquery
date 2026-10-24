@@ -33,7 +33,7 @@ func TestResolveDepPurlDepthCapped(t *testing.T) {
 	// A pathologically deep path (beyond the cap) short-circuits to "" rather than
 	// walking unbounded — the DoS guard.
 	deep := "node_modules/a"
-	for i := 0; i < maxNodeModulesDepth+5; i++ {
+	for range maxNodeModulesDepth + 5 {
 		deep += "/node_modules/a"
 	}
 	assert.Equal(t, "", resolveDepPurl(pkgs, idx, deep, "target"))

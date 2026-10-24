@@ -109,9 +109,9 @@ func (r *mqlAlicloudKmsKey) keyPolicyDocument() string {
 			return
 		}
 		resp, err := client.GetKeyPolicy(&kmsclient.GetKeyPolicyRequest{
-			KeyId: tea.String(r.keyId),
+			KeyId: new(r.keyId),
 			// "default" is the only policy name KMS supports
-			PolicyName: tea.String("default"),
+			PolicyName: new("default"),
 		})
 		if err != nil {
 			log.Debug().Err(err).Str("key", r.keyId).Msg("alicloud> could not read KMS key policy")

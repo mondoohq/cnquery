@@ -3870,8 +3870,7 @@ func (a *mqlAwsSagemakerModelPackageGroup) isPublic() (bool, error) {
 // wording changes. The group name always comes from a prior list call, so a
 // ValidationException here reliably means "no policy" rather than a bad name.
 func isSagemakerNoPolicyError(err error) bool {
-	var apiErr smithy.APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[smithy.APIError](err); ok {
 		return apiErr.ErrorCode() == "ValidationException"
 	}
 	return false
@@ -4469,9 +4468,8 @@ func getSagemakerTags(ctx context.Context, svc *sagemaker.Client, arn *string) (
 	paginator := sagemaker.NewListTagsPaginator(svc, &sagemaker.ListTagsInput{ResourceArn: arn})
 	for paginator.HasMorePages() {
 		resp, err := paginator.NextPage(ctx)
-		var respErr *http.ResponseError
 		if err != nil {
-			if errors.As(err, &respErr) {
+			if respErr, ok := errors.AsType[*http.ResponseError](err); ok {
 				if respErr.HTTPStatusCode() == 404 {
 					return nil, nil
 				}

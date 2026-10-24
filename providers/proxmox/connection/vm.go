@@ -113,8 +113,8 @@ func (c *PveConnection) GetNodeVMs(node string) ([]VMInfo, error) {
 // VM configuration
 // ---------------------------------------------------------------------------
 
-func (c *PveConnection) GetVMConfig(node string, vmid int) (map[string]interface{}, error) {
-	var config map[string]interface{}
+func (c *PveConnection) GetVMConfig(node string, vmid int) (map[string]any, error) {
+	var config map[string]any
 	path := fmt.Sprintf("/nodes/%s/qemu/%d/config", node, vmid)
 	if err := c.apiGet(path, &config); err != nil {
 		return nil, fmt.Errorf("failed to get config for VM %d: %w", vmid, err)

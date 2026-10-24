@@ -47,7 +47,7 @@ type Rule struct {
 // ParseInfo reads the Status line of `pfctl -s info` and reports whether PF
 // is enabled.
 func ParseInfo(out string) (bool, error) {
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		rest, ok := strings.CutPrefix(strings.TrimSpace(line), "Status:")
 		if !ok {
 			continue
@@ -71,7 +71,7 @@ func ParseInfo(out string) (bool, error) {
 // the counters `-v` adds below a rule and are skipped.
 func ParseRules(out string, services Services) []Rule {
 	var rules []Rule
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		if line == "" || line[0] == ' ' || line[0] == '\t' {
 			continue
 		}
@@ -300,7 +300,7 @@ func ParseTableAddresses(out string) []string {
 // interfaces marked `(skip)`, the ones `set skip on` excludes from filtering.
 func ParseSkipInterfaces(out string) []string {
 	res := []string{}
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		name, flags, ok := strings.Cut(strings.TrimSpace(line), " ")
 		if !ok {
 			continue
@@ -314,7 +314,7 @@ func ParseSkipInterfaces(out string) []string {
 
 func nonEmptyLines(out string) []string {
 	res := []string{}
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		if line = strings.TrimSpace(line); line != "" {
 			res = append(res, line)
 		}

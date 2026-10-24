@@ -34,8 +34,8 @@ func elasticPoolNameFromID(id *string) *string {
 		return nil
 	}
 	name := *id
-	if idx := strings.LastIndex(name, "/"); idx >= 0 {
-		name = name[idx+1:]
+	if _, after, ok := strings.CutLast(name, "/"); ok {
+		name = after
 	}
 	return &name
 }

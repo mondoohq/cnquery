@@ -15,7 +15,7 @@ type IpinfoConnection struct {
 	Conf   *inventory.Config
 	asset  *inventory.Asset
 	token  string
-	client interface{} // ipinfo client will be stored here
+	client any // ipinfo client will be stored here
 }
 
 func NewIpinfoConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*IpinfoConnection, error) {
@@ -38,11 +38,11 @@ func (c *IpinfoConnection) Asset() *inventory.Asset {
 	return c.asset
 }
 
-func (c *IpinfoConnection) Client() interface{} {
+func (c *IpinfoConnection) Client() any {
 	return c.client
 }
 
-func (c *IpinfoConnection) SetClient(client interface{}) {
+func (c *IpinfoConnection) SetClient(client any) {
 	c.client = client
 }
 

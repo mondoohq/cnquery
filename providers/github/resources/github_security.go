@@ -500,7 +500,7 @@ func (g *mqlGithubOrganization) oauthApps() ([]any, error) {
 	orgLogin := g.Login.Data
 
 	opts := &github.CredentialAuthorizationsListOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 	var allCreds []*github.CredentialAuthorization
 	for {
@@ -645,7 +645,7 @@ func (g *mqlGithubOrganization) personalAccessTokens() ([]any, error) {
 	orgLogin := g.Login.Data
 
 	opts := &github.ListFineGrainedPATOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 	var allPATs []*github.PersonalAccessToken
 	for {

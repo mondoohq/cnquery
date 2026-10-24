@@ -536,7 +536,7 @@ func ociObjectToAsset(obj ociObject, platformName string, name string, labels ma
 // the plain string map the asset schema expects. Non-string values are
 // skipped — OCI freeform tags are declared as strings, but the MQL layer
 // types them as `any` because they flow through the dict path.
-func tagsToLabels(in map[string]interface{}) map[string]string {
+func tagsToLabels(in map[string]any) map[string]string {
 	if len(in) == 0 {
 		return map[string]string{}
 	}

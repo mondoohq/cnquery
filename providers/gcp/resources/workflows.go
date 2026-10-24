@@ -192,8 +192,8 @@ func workflowsLocation(name string) string {
 // the API may return either as a bare email or as a
 // projects/{project}/serviceAccounts/{email} resource path.
 func workflowsServiceAccountEmail(sa string) string {
-	if idx := strings.LastIndex(sa, "/"); idx != -1 {
-		return sa[idx+1:]
+	if _, after, ok := strings.CutLast(sa, "/"); ok {
+		return after
 	}
 	return sa
 }

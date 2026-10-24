@@ -131,8 +131,8 @@ func getSqlInstanceByName(runtime *plugin.Runtime, projectId, name string) (*mql
 	if name == "" {
 		return nil, nil
 	}
-	if i := strings.LastIndex(name, ":"); i >= 0 {
-		name = name[i+1:]
+	if _, after, ok := strings.CutLast(name, ":"); ok {
+		name = after
 	}
 
 	obj, err := CreateResource(runtime, "gcp.project.sqlService", map[string]*llx.RawData{

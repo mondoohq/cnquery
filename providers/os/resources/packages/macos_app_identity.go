@@ -152,7 +152,7 @@ func fatCPUs(header []byte, entrySize int) ([]macho.Cpu, bool) {
 		return nil, false
 	}
 	cpus := make([]macho.Cpu, 0, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		off := 8 + i*entrySize
 		cpus = append(cpus, macho.Cpu(binary.BigEndian.Uint32(header[off:])))
 	}

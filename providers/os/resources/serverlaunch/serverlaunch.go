@@ -42,7 +42,7 @@ const PsCommand = "ps -A -o pid= -o ppid= -o args="
 // the options a server is recognized by are not affected.
 func ParsePs(out string) []Process {
 	var procs []Process
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		fields := strings.Fields(line)
 		if len(fields) < 3 {
 			continue
@@ -65,12 +65,12 @@ func ParsePs(out string) []Process {
 // and parentheses, so the fields are counted from the last ")".
 func ParseStatPPid(stat []byte) (int, bool) {
 	s := string(stat)
-	end := strings.LastIndexByte(s, ')')
-	if end < 0 {
+	_, rest, ok := strings.CutLast(s, ")")
+	if !ok {
 		return 0, false
 	}
 	// after ")" come the state and then the parent pid
-	fields := strings.Fields(s[end+1:])
+	fields := strings.Fields(rest)
 	if len(fields) < 2 {
 		return 0, false
 	}

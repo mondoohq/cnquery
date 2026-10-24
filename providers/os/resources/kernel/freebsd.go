@@ -102,7 +102,7 @@ func ParseFreeBSDModulePath(value string) []string {
 		value = FreeBSDDefaultModulePath
 	}
 	var dirs []string
-	for _, dir := range strings.Split(value, ";") {
+	for dir := range strings.SplitSeq(value, ";") {
 		if dir = strings.TrimSpace(dir); dir != "" {
 			dirs = append(dirs, dir)
 		}

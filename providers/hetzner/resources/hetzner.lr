@@ -1005,8 +1005,9 @@ private hetzner.certificate @defaults("id name type") {
   // Public key size in bits parsed from the certificate
   //
   // The RSA/DSA modulus size or the ECDSA curve size. Ed25519 keys report
-  // 256. 0 when the certificate body cannot be parsed or the size cannot be
-  // determined.
+  // 256, and ML-DSA keys the size of the encoded public key (10496, 15616 or
+  // 20736 for ML-DSA-44, -65 or -87). 0 when the certificate body cannot be
+  // parsed or the size cannot be determined.
   keyBits int
   // Certificate signature algorithm parsed from the certificate
   //

@@ -19,7 +19,7 @@ func stripJSONC(data []byte) []byte {
 	inString := false
 	escape := false
 
-	for i := 0; i < len(data); i++ {
+	for i := range data {
 		c := data[i]
 
 		if escape {

@@ -7,7 +7,6 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -68,7 +67,7 @@ func (o *mqlOciNetwork) dhcpOptionSets() ([]any, error) {
 			}
 			sets, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.DhcpOptions, *string, error) {
 				response, err := svc.ListDhcpOptions(ctx, core.ListDhcpOptionsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -179,7 +178,7 @@ func (o *mqlOciNetwork) drgRouteTables() ([]any, error) {
 			return nil, err
 		}
 		tables, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.DrgRouteTable, *string, error) {
-			response, err := svc.ListDrgRouteTables(ctx, core.ListDrgRouteTablesRequest{DrgId: common.String(d.Id.Data), Page: page})
+			response, err := svc.ListDrgRouteTables(ctx, core.ListDrgRouteTablesRequest{DrgId: new(d.Id.Data), Page: page})
 			if err != nil {
 				return nil, nil, err
 			}
@@ -267,7 +266,7 @@ func (o *mqlOciNetworkDrgRouteTable) rules() ([]any, error) {
 		return nil, err
 	}
 	rules, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]core.DrgRouteRule, *string, error) {
-		response, err := svc.ListDrgRouteRules(ctx, core.ListDrgRouteRulesRequest{DrgRouteTableId: common.String(o.Id.Data), Page: page})
+		response, err := svc.ListDrgRouteRules(ctx, core.ListDrgRouteRulesRequest{DrgRouteTableId: new(o.Id.Data), Page: page})
 		if err != nil {
 			return nil, nil, err
 		}
@@ -383,7 +382,7 @@ func (o *mqlOciNetwork) drgRouteDistributions() ([]any, error) {
 			return nil, err
 		}
 		dists, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.DrgRouteDistribution, *string, error) {
-			response, err := svc.ListDrgRouteDistributions(ctx, core.ListDrgRouteDistributionsRequest{DrgId: common.String(d.Id.Data), Page: page})
+			response, err := svc.ListDrgRouteDistributions(ctx, core.ListDrgRouteDistributionsRequest{DrgId: new(d.Id.Data), Page: page})
 			if err != nil {
 				return nil, nil, err
 			}
@@ -448,7 +447,7 @@ func (o *mqlOciNetworkDrgRouteDistribution) statements() ([]any, error) {
 	}
 	stmts, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]core.DrgRouteDistributionStatement, *string, error) {
 		response, err := svc.ListDrgRouteDistributionStatements(ctx, core.ListDrgRouteDistributionStatementsRequest{
-			DrgRouteDistributionId: common.String(o.Id.Data), Page: page,
+			DrgRouteDistributionId: new(o.Id.Data), Page: page,
 		})
 		if err != nil {
 			return nil, nil, err
@@ -520,7 +519,7 @@ func (o *mqlOciNetwork) vtaps() ([]any, error) {
 				return nil, err
 			}
 			vtaps, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Vtap, *string, error) {
-				response, err := svc.ListVtaps(ctx, core.ListVtapsRequest{CompartmentId: common.String(compartmentID), Page: page})
+				response, err := svc.ListVtaps(ctx, core.ListVtapsRequest{CompartmentId: new(compartmentID), Page: page})
 				if err != nil {
 					return nil, nil, err
 				}
@@ -611,7 +610,7 @@ func (o *mqlOciNetwork) captureFilters() ([]any, error) {
 				return nil, err
 			}
 			filters, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.CaptureFilter, *string, error) {
-				response, err := svc.ListCaptureFilters(ctx, core.ListCaptureFiltersRequest{CompartmentId: common.String(compartmentID), Page: page})
+				response, err := svc.ListCaptureFilters(ctx, core.ListCaptureFiltersRequest{CompartmentId: new(compartmentID), Page: page})
 				if err != nil {
 					return nil, nil, err
 				}
@@ -710,7 +709,7 @@ func (o *mqlOciNetwork) crossConnectGroups() ([]any, error) {
 				return nil, err
 			}
 			groups, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.CrossConnectGroup, *string, error) {
-				response, err := svc.ListCrossConnectGroups(ctx, core.ListCrossConnectGroupsRequest{CompartmentId: common.String(compartmentID), Page: page})
+				response, err := svc.ListCrossConnectGroups(ctx, core.ListCrossConnectGroupsRequest{CompartmentId: new(compartmentID), Page: page})
 				if err != nil {
 					return nil, nil, err
 				}

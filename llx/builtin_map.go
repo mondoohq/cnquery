@@ -7,6 +7,7 @@ import (
 	"errors"
 	"math/rand"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -1570,13 +1571,7 @@ func dictDifferenceV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 	res := make([]any, 0)
 	var skip bool
 	for i := range org {
-		skip = false
-		for j := range filters {
-			if org[i] == filters[j] {
-				skip = true
-				break
-			}
-		}
+		skip = slices.Contains(filters, org[i])
 
 		if !skip {
 			res = append(res, org[i])
@@ -1671,13 +1666,7 @@ func dictContainsNone(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 	res := make([]any, 0)
 	var skip bool
 	for i := range org {
-		skip = true
-		for j := range filters {
-			if org[i] == filters[j] {
-				skip = false
-				break
-			}
-		}
+		skip = !slices.Contains(filters, org[i])
 
 		if !skip {
 			res = append(res, org[i])

@@ -3,6 +3,8 @@
 
 package edr
 
+import "slices"
+
 import "strings"
 
 // Package is an installed package as the matcher needs to see it.
@@ -100,22 +102,16 @@ func match(product Product, sig Signature, inv Inventory) (Detection, bool) {
 
 	pathFound := false
 	if inv.PathExists != nil {
-		for _, p := range sig.Paths {
-			if inv.PathExists(p) {
-				pathFound = true
-				break
-			}
+		if slices.ContainsFunc(sig.Paths, inv.PathExists) {
+			pathFound = true
 		}
 	}
 
 	for i := range inv.SystemExtensions {
-		for _, id := range sig.SystemExtensions {
-			if inv.SystemExtensions[i].Identifier == id {
-				d.SystemExtensionIdx = append(d.SystemExtensionIdx, i)
-				if d.Version == "" {
-					d.Version = inv.SystemExtensions[i].Version
-				}
-				break
+		if slices.Contains(sig.SystemExtensions, inv.SystemExtensions[i].Identifier) {
+			d.SystemExtensionIdx = append(d.SystemExtensionIdx, i)
+			if d.Version == "" {
+				d.Version = inv.SystemExtensions[i].Version
 			}
 		}
 	}

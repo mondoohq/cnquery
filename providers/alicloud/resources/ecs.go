@@ -7,11 +7,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"time"
 
 	ecsclient "github.com/alibabacloud-go/ecs-20140526/v7/client"
-	"github.com/alibabacloud-go/tea/tea"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -240,7 +240,7 @@ func seedEcsRamRoleNames(client *ecsclient.Client, region string, instances []an
 		}
 		resp, err := client.DescribeInstanceRamRole(&ecsclient.DescribeInstanceRamRoleRequest{
 			RegionId:    &region,
-			InstanceIds: tea.String(string(encoded)),
+			InstanceIds: new(string(encoded)),
 			PageSize:    int32Ptr(batchSize),
 		})
 		if err != nil || resp == nil || resp.Body == nil || resp.Body.InstanceRamRoleSets == nil {
@@ -306,7 +306,7 @@ func ecsInstanceRamRoleName(runtime *plugin.Runtime, region, instanceID string) 
 	}
 	resp, err := client.DescribeInstanceRamRole(&ecsclient.DescribeInstanceRamRoleRequest{
 		RegionId:    &region,
-		InstanceIds: tea.String(string(encoded)),
+		InstanceIds: new(string(encoded)),
 	})
 	if err != nil {
 		return "", err
@@ -1103,11 +1103,8 @@ func (r *mqlAlicloudEcsSecuritygroup) instances() ([]any, error) {
 		if !ok {
 			continue
 		}
-		for _, id := range inst.cacheSecurityGroupIDs {
-			if id == sgId {
-				res = append(res, inst)
-				break
-			}
+		if slices.Contains(inst.cacheSecurityGroupIDs, sgId) {
+			res = append(res, inst)
 		}
 	}
 	return res, nil
@@ -1449,6 +1446,8 @@ func initAlicloudEcsSecuritygroup(runtime *plugin.Runtime, args map[string]*llx.
 }
 
 // int32Ptr returns a pointer to an int32 literal for request paging fields.
+//
+//go:fix inline
 func int32Ptr(v int32) *int32 {
-	return &v
+	return new(v)
 }

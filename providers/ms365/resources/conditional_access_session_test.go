@@ -26,7 +26,7 @@ func TestSecureSignInSessionDict(t *testing.T) {
 
 	t.Run("control enabled", func(t *testing.T) {
 		control := models.NewSecureSignInSessionControl()
-		control.SetIsEnabled(ptr(true))
+		control.SetIsEnabled(new(true))
 		sc := models.NewConditionalAccessSessionControls()
 		sc.SetSecureSignInSession(control)
 
@@ -46,7 +46,7 @@ func TestSecureSignInSessionDict(t *testing.T) {
 	// is what the previous implementation did.
 	t.Run("disableResilienceDefaults does not populate the dict", func(t *testing.T) {
 		sc := models.NewConditionalAccessSessionControls()
-		sc.SetDisableResilienceDefaults(ptr(true))
+		sc.SetDisableResilienceDefaults(new(true))
 
 		assert.Nil(t, secureSignInSessionDict(sc))
 	})
@@ -58,7 +58,7 @@ func TestSecureSignInSessionDict(t *testing.T) {
 // policy that set the control errored on read.
 func TestSecureSignInSessionDictIsJSONNative(t *testing.T) {
 	control := models.NewSecureSignInSessionControl()
-	control.SetIsEnabled(ptr(true))
+	control.SetIsEnabled(new(true))
 	sc := models.NewConditionalAccessSessionControls()
 	sc.SetSecureSignInSession(control)
 

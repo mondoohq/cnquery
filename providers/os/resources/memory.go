@@ -142,18 +142,13 @@ func runMemoryCommand(conn shared.Connection, command string) ([]byte, error) {
 	return stdout, nil
 }
 
-// int64Ptr returns a pointer to v, for building a snapshot field.
-func int64Ptr(v int64) *int64 {
-	return &v
-}
-
 // scaled multiplies a reported count by its unit, keeping an unreported
 // count unreported.
 func scaled(v *int64, unit int64) *int64 {
 	if v == nil {
 		return nil
 	}
-	return int64Ptr(*v * unit)
+	return new(*v * unit)
 }
 
 // parseLinuxMeminfo reads /proc/meminfo. The kernel reports these values in
@@ -162,7 +157,7 @@ func scaled(v *int64, unit int64) *int64 {
 // vm.overcommit_memory=2.
 func parseLinuxMeminfo(data []byte) (*memoryInfo, error) {
 	values := map[string]*int64{}
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		key, rest, ok := strings.Cut(line, ":")
 		if !ok {
 			continue
@@ -187,7 +182,7 @@ func parseLinuxMeminfo(data []byte) (*memoryInfo, error) {
 			}
 			unit = 1024
 		}
-		values[key] = int64Ptr(n * unit)
+		values[key] = new(n * unit)
 	}
 	if values["MemTotal"] == nil {
 		return nil, errors.New("memory: /proc/meminfo has no MemTotal")
@@ -214,7 +209,7 @@ const macosMemoryCommand = "sysctl hw.memsize && vm_stat"
 func parseMacosMemory(data []byte) (*memoryInfo, error) {
 	values := map[string]int64{}
 	var pageSize int64
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		line = strings.TrimSpace(line)
 		if rest, ok := strings.CutPrefix(line, "Mach Virtual Memory Statistics: (page size of "); ok {
 			size, _, _ := strings.Cut(rest, " ")
@@ -241,13 +236,13 @@ func parseMacosMemory(data []byte) (*memoryInfo, error) {
 	if !ok {
 		return nil, errors.New("memory: sysctl did not report hw.memsize")
 	}
-	info := &memoryInfo{Total: int64Ptr(memsize)}
+	info := &memoryInfo{Total: new(memsize)}
 
 	free, okFree := values["Pages free"]
 	fileBacked, okFile := values["File-backed pages"]
 	purgeable, okPurge := values["Pages purgeable"]
 	if pageSize > 0 && okFree && okFile && okPurge {
-		info.Available = int64Ptr((free + fileBacked + purgeable) * pageSize)
+		info.Available = new((free + fileBacked + purgeable) * pageSize)
 	}
 	return info, nil
 }
@@ -263,7 +258,7 @@ const freebsdMemoryCommand = "sysctl -i hw.physmem hw.pagesize vm.stats.vm.v_fre
 // FreeBSD reports no commit limit, so commitLimit stays null.
 func parseFreebsdMemory(data []byte) (*memoryInfo, error) {
 	values := map[string]*int64{}
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		key, val, ok := strings.Cut(line, ":")
 		if !ok {
 			continue
@@ -272,7 +267,7 @@ func parseFreebsdMemory(data []byte) (*memoryInfo, error) {
 		if err != nil {
 			return nil, fmt.Errorf("memory: failed to parse sysctl %s: %w", strings.TrimSpace(key), err)
 		}
-		values[strings.TrimSpace(key)] = int64Ptr(n)
+		values[strings.TrimSpace(key)] = new(n)
 	}
 
 	if values["hw.physmem"] == nil {
@@ -284,7 +279,7 @@ func parseFreebsdMemory(data []byte) (*memoryInfo, error) {
 	}
 	pageSize, free, inactive := values["hw.pagesize"], values["vm.stats.vm.v_free_count"], values["vm.stats.vm.v_inactive_count"]
 	if pageSize != nil && free != nil && inactive != nil {
-		info.Available = int64Ptr((*free + *inactive) * *pageSize)
+		info.Available = new((*free + *inactive) * *pageSize)
 	}
 	return info, nil
 }
@@ -303,7 +298,7 @@ const netbsdMemoryCommand = "/sbin/sysctl hw.physmem64 && vmstat -s"
 func parseNetbsdMemory(data []byte) (*memoryInfo, error) {
 	var total *int64
 	counts := map[string]int64{}
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		if key, val, ok := strings.Cut(line, "="); ok {
 			if strings.TrimSpace(key) != "hw.physmem64" {
 				continue
@@ -312,7 +307,7 @@ func parseNetbsdMemory(data []byte) (*memoryInfo, error) {
 			if err != nil {
 				return nil, fmt.Errorf("memory: failed to parse sysctl hw.physmem64: %w", err)
 			}
-			total = int64Ptr(n)
+			total = new(n)
 			continue
 		}
 		// vmstat -s prints a count, then what it counts. Lines that do not
@@ -336,7 +331,7 @@ func parseNetbsdMemory(data []byte) (*memoryInfo, error) {
 	free, okFree := counts["pages free"]
 	file, okFile := counts["cached file pages"]
 	if okSize && pageSize > 0 && okFree && okFile {
-		info.Available = int64Ptr((free + file) * pageSize)
+		info.Available = new((free + file) * pageSize)
 	}
 	return info, nil
 }
@@ -357,7 +352,7 @@ const aixMemoryCommand = "svmon -G -O unit=KB"
 // are read by their header name.
 func parseAixMemory(data []byte) (*memoryInfo, error) {
 	var header []string
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		fields := strings.Fields(line)
 		if len(fields) == 0 {
 			continue
@@ -390,7 +385,7 @@ func parseAixMemory(data []byte) (*memoryInfo, error) {
 			if err != nil {
 				return nil, fmt.Errorf("memory: failed to parse svmon %s %q: %w", name, values[i], err)
 			}
-			*dst = int64Ptr(kib * 1024)
+			*dst = new(kib * 1024)
 		}
 		if info.Total == nil {
 			return nil, errors.New("memory: svmon reported no memory size")
@@ -410,7 +405,7 @@ const solarisMemoryCommand = "pagesize && kstat -p unix:0:system_pages:physmem u
 // "available" is the hard commit limit. swap -s reports in KiB.
 func parseSolarisMemory(data []byte) (*memoryInfo, error) {
 	var pageSize, physmem, freemem, used, avail *int64
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		line = strings.TrimSpace(line)
 		switch {
 		case line == "":
@@ -425,9 +420,9 @@ func parseSolarisMemory(data []byte) (*memoryInfo, error) {
 			}
 			switch strings.TrimPrefix(fields[0], "unix:0:system_pages:") {
 			case "physmem":
-				physmem = int64Ptr(n)
+				physmem = new(n)
 			case "freemem":
-				freemem = int64Ptr(n)
+				freemem = new(n)
 			}
 		case strings.HasPrefix(line, "total:"):
 			var err error
@@ -443,7 +438,7 @@ func parseSolarisMemory(data []byte) (*memoryInfo, error) {
 			if err != nil || n <= 0 {
 				return nil, fmt.Errorf("memory: failed to parse page size %q", line)
 			}
-			pageSize = int64Ptr(n)
+			pageSize = new(n)
 		}
 	}
 	if pageSize == nil || physmem == nil {
@@ -456,7 +451,7 @@ func parseSolarisMemory(data []byte) (*memoryInfo, error) {
 		Committed: scaled(used, 1024),
 	}
 	if used != nil && avail != nil {
-		info.CommitLimit = int64Ptr((*used + *avail) * 1024)
+		info.CommitLimit = new((*used + *avail) * 1024)
 	}
 	return info, nil
 }
@@ -482,7 +477,7 @@ func parseSolarisSwapSummary(line string) (used, avail *int64, err error) {
 		if err != nil {
 			return nil, fmt.Errorf("memory: failed to parse swap -s output %q: %w", line, err)
 		}
-		return int64Ptr(n), nil
+		return new(n), nil
 	}
 	if used, err = parse(usedPart, "used"); err != nil {
 		return nil, nil, err

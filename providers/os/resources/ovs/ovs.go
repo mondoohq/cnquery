@@ -351,7 +351,7 @@ func mapValue(value any) map[string]string {
 
 // ParseVersion reads the version from the first line of `ovs-vsctl --version`.
 func ParseVersion(output string) string {
-	for _, line := range strings.Split(output, "\n") {
+	for line := range strings.SplitSeq(output, "\n") {
 		fields := strings.Fields(strings.TrimSpace(line))
 		if len(fields) == 0 {
 			continue

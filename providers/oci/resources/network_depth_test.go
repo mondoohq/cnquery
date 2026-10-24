@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,7 +14,7 @@ import (
 
 func TestDhcpOptionSetArgs(t *testing.T) {
 	args := dhcpOptionSetArgs(core.DhcpOptions{
-		Id: common.String("d1"),
+		Id: new("d1"),
 		Options: []core.DhcpOption{
 			core.DhcpDnsOption{ServerType: core.DhcpDnsOptionServerTypeCustomdnsserver, CustomDnsServers: []string{"192.0.2.53"}},
 			core.DhcpSearchDomainOption{SearchDomainNames: []string{"corp.example"}},
@@ -27,14 +26,14 @@ func TestDhcpOptionSetArgs(t *testing.T) {
 	assert.Equal(t, []any{"corp.example"}, args["searchDomains"].Value)
 	assert.Equal(t, "CUSTOM_DOMAIN", args["domainNameType"].Value)
 
-	empty := dhcpOptionSetArgs(core.DhcpOptions{Id: common.String("d2")})
+	empty := dhcpOptionSetArgs(core.DhcpOptions{Id: new("d2")})
 	assert.Equal(t, "", empty["serverType"].Value)
 	assert.Equal(t, []any{}, empty["customDnsServers"].Value)
 }
 
 func TestDrgDistributionStatementArgs(t *testing.T) {
 	byType, id := drgDistributionStatementArgs(core.DrgRouteDistributionStatement{
-		Priority: common.Int(10),
+		Priority: new(10),
 		Action:   core.DrgRouteDistributionStatementActionAccept,
 		MatchCriteria: []core.DrgRouteDistributionMatchCriteria{
 			core.DrgAttachmentTypeDrgRouteDistributionMatchCriteria{AttachmentType: core.DrgAttachmentTypeDrgRouteDistributionMatchCriteriaAttachmentTypeIpsecTunnel},
@@ -47,7 +46,7 @@ func TestDrgDistributionStatementArgs(t *testing.T) {
 
 	byID, id := drgDistributionStatementArgs(core.DrgRouteDistributionStatement{
 		MatchCriteria: []core.DrgRouteDistributionMatchCriteria{
-			core.DrgAttachmentIdDrgRouteDistributionMatchCriteria{DrgAttachmentId: common.String("ocid1.drgattachment..a")},
+			core.DrgAttachmentIdDrgRouteDistributionMatchCriteria{DrgAttachmentId: new("ocid1.drgattachment..a")},
 		},
 	})
 	assert.Equal(t, "DRG_ATTACHMENT_ID", byID["matchType"].Value)
@@ -62,12 +61,12 @@ func TestCaptureFilterRuleArgs(t *testing.T) {
 		VtapCaptureFilterRules: []core.VtapCaptureFilterRuleDetails{{
 			TrafficDirection: core.VtapCaptureFilterRuleDetailsTrafficDirectionIngress,
 			RuleAction:       core.VtapCaptureFilterRuleDetailsRuleActionInclude,
-			SourceCidr:       common.String("0.0.0.0/0"),
+			SourceCidr:       new("0.0.0.0/0"),
 		}},
 		FlowLogCaptureFilterRules: []core.FlowLogCaptureFilterRuleDetails{{
-			IsEnabled:    common.Bool(false),
-			Priority:     common.Int(1),
-			SamplingRate: common.Int(10),
+			IsEnabled:    new(false),
+			Priority:     new(1),
+			SamplingRate: new(10),
 			RuleAction:   core.FlowLogCaptureFilterRuleDetailsRuleActionExclude,
 		}},
 	})
@@ -82,18 +81,18 @@ func TestCaptureFilterRuleArgs(t *testing.T) {
 
 func TestCrossConnectGroupArgs(t *testing.T) {
 	withMacsec := crossConnectGroupArgs(core.CrossConnectGroup{
-		Id: common.String("g1"),
+		Id: new("g1"),
 		MacsecProperties: &core.MacsecProperties{
 			State:                       core.MacsecStateEnabled,
 			EncryptionCipher:            core.MacsecEncryptionCipherAes256GcmXpn,
-			IsUnprotectedTrafficAllowed: common.Bool(true),
+			IsUnprotectedTrafficAllowed: new(true),
 		},
 	})
 	assert.Equal(t, "ENABLED", withMacsec["macsecState"].Value)
 	assert.Equal(t, "AES256_GCM_XPN", withMacsec["macsecEncryptionCipher"].Value)
 	assert.Equal(t, true, withMacsec["macsecIsUnprotectedTrafficAllowed"].Value)
 
-	none := crossConnectGroupArgs(core.CrossConnectGroup{Id: common.String("g2")})
+	none := crossConnectGroupArgs(core.CrossConnectGroup{Id: new("g2")})
 	assert.Equal(t, "", none["macsecState"].Value, "a group without MACsec reports no state")
 	assert.Equal(t, false, none["macsecIsUnprotectedTrafficAllowed"].Value)
 }
@@ -121,7 +120,7 @@ func TestRowKey(t *testing.T) {
 }
 
 func TestVtapArgsTargetIDNull(t *testing.T) {
-	args := vtapArgs(core.Vtap{Id: common.String("v"), TargetType: core.VtapTargetTypeIpAddress, TargetIp: common.String("10.0.0.9")})
+	args := vtapArgs(core.Vtap{Id: new("v"), TargetType: core.VtapTargetTypeIpAddress, TargetIp: new("10.0.0.9")})
 	assert.Nil(t, args["targetId"].Value, "an IP address target has no OCID")
 	assert.Equal(t, "10.0.0.9", args["targetIp"].Value)
 }

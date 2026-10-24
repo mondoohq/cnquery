@@ -24,17 +24,17 @@ func testTunnelRuntime() *plugin.Runtime {
 // tunnel the API said nothing about.
 func TestVpnTunnelFlag(t *testing.T) {
 	assert.Nil(t, vpnTunnelFlag(nil))
-	assert.Nil(t, vpnTunnelFlag(tea.String("")))
+	assert.Nil(t, vpnTunnelFlag(new("")))
 	// the connection-level vocabulary, which the tunnel options do not use
-	assert.Nil(t, vpnTunnelFlag(tea.String("enable")))
-	assert.Nil(t, vpnTunnelFlag(tea.String("yes")))
+	assert.Nil(t, vpnTunnelFlag(new("enable")))
+	assert.Nil(t, vpnTunnelFlag(new("yes")))
 
-	require.NotNil(t, vpnTunnelFlag(tea.String("true")))
-	assert.True(t, *vpnTunnelFlag(tea.String("true")))
-	require.NotNil(t, vpnTunnelFlag(tea.String("false")))
-	assert.False(t, *vpnTunnelFlag(tea.String("false")))
-	require.NotNil(t, vpnTunnelFlag(tea.String("True")))
-	assert.True(t, *vpnTunnelFlag(tea.String("True")))
+	require.NotNil(t, vpnTunnelFlag(new("true")))
+	assert.True(t, *vpnTunnelFlag(new("true")))
+	require.NotNil(t, vpnTunnelFlag(new("false")))
+	assert.False(t, *vpnTunnelFlag(new("false")))
+	require.NotNil(t, vpnTunnelFlag(new("True")))
+	assert.True(t, *vpnTunnelFlag(new("True")))
 }
 
 // TestVpnTunnelLifetime covers the lifetime parse. The per-tunnel configs
@@ -42,14 +42,14 @@ func TestVpnTunnelFlag(t *testing.T) {
 // like a security association that never lives.
 func TestVpnTunnelLifetime(t *testing.T) {
 	assert.Nil(t, vpnTunnelLifetime(nil))
-	assert.Nil(t, vpnTunnelLifetime(tea.String("")))
-	assert.Nil(t, vpnTunnelLifetime(tea.String("86400s")))
-	assert.Nil(t, vpnTunnelLifetime(tea.String("a while")))
+	assert.Nil(t, vpnTunnelLifetime(new("")))
+	assert.Nil(t, vpnTunnelLifetime(new("86400s")))
+	assert.Nil(t, vpnTunnelLifetime(new("a while")))
 
-	require.NotNil(t, vpnTunnelLifetime(tea.String("86400")))
-	assert.Equal(t, int64(86400), *vpnTunnelLifetime(tea.String("86400")))
-	require.NotNil(t, vpnTunnelLifetime(tea.String(" 3600 ")))
-	assert.Equal(t, int64(3600), *vpnTunnelLifetime(tea.String(" 3600 ")))
+	require.NotNil(t, vpnTunnelLifetime(new("86400")))
+	assert.Equal(t, int64(86400), *vpnTunnelLifetime(new("86400")))
+	require.NotNil(t, vpnTunnelLifetime(new(" 3600 ")))
+	assert.Equal(t, int64(3600), *vpnTunnelLifetime(new(" 3600 ")))
 }
 
 // TestVpnTunnelKey pins the part of the cache key that separates the tunnels of
@@ -58,14 +58,14 @@ func TestVpnTunnelLifetime(t *testing.T) {
 // algorithms.
 func TestVpnTunnelKey(t *testing.T) {
 	t.Run("the tunnel id wins", func(t *testing.T) {
-		tunnel := &vpnTunnelOptions{TunnelId: tea.String("tun-bp1sm4b5f2vz2abcd"), TunnelIndex: tea.Int32(2)}
+		tunnel := &vpnTunnelOptions{TunnelId: new("tun-bp1sm4b5f2vz2abcd"), TunnelIndex: tea.Int32(2)}
 		assert.Equal(t, "tun-bp1sm4b5f2vz2abcd", vpnTunnelKey(tunnel, 1))
 	})
 	t.Run("the index carries a tunnel reported without an id", func(t *testing.T) {
 		assert.Equal(t, "index-2", vpnTunnelKey(&vpnTunnelOptions{TunnelIndex: tea.Int32(2)}, 0))
 	})
 	t.Run("a blank id falls through to the index", func(t *testing.T) {
-		tunnel := &vpnTunnelOptions{TunnelId: tea.String("  "), TunnelIndex: tea.Int32(1)}
+		tunnel := &vpnTunnelOptions{TunnelId: new("  "), TunnelIndex: tea.Int32(1)}
 		assert.Equal(t, "index-1", vpnTunnelKey(tunnel, 0))
 	})
 	t.Run("the position carries a tunnel with neither", func(t *testing.T) {
@@ -86,48 +86,48 @@ func TestNewVpnConnectionTunnelsDecode(t *testing.T) {
 	spec := &vpnTunnelOptionsSpec{
 		TunnelOptions: []*vpnTunnelOptions{
 			{
-				TunnelId:           tea.String("tun-aaaaaaaaaaaaaaaaa"),
+				TunnelId:           new("tun-aaaaaaaaaaaaaaaaa"),
 				TunnelIndex:        tea.Int32(1),
-				Role:               tea.String("master"),
-				Status:             tea.String("active"),
-				State:              tea.String("ike_sa_established"),
-				InternetIp:         tea.String("47.100.0.1"),
-				CustomerGatewayId:  tea.String("cgw-aaaaaaaaaaaaaaaaa"),
-				EnableDpd:          tea.String("true"),
-				EnableNatTraversal: tea.String("false"),
+				Role:               new("master"),
+				Status:             new("active"),
+				State:              new("ike_sa_established"),
+				InternetIp:         new("47.100.0.1"),
+				CustomerGatewayId:  new("cgw-aaaaaaaaaaaaaaaaa"),
+				EnableDpd:          new("true"),
+				EnableNatTraversal: new("false"),
 				TunnelIkeConfig: &vpcclient.DescribeVpnConnectionsResponseBodyVpnConnectionsVpnConnectionTunnelOptionsSpecificationTunnelOptionsTunnelIkeConfig{
-					IkeVersion:  tea.String("ikev2"),
-					IkeMode:     tea.String("main"),
-					IkeEncAlg:   tea.String("aes256"),
-					IkeAuthAlg:  tea.String("sha256"),
-					IkePfs:      tea.String("group14"),
-					IkeLifetime: tea.String("86400"),
-					LocalId:     tea.String("47.100.0.1"),
-					RemoteId:    tea.String("203.0.113.10"),
+					IkeVersion:  new("ikev2"),
+					IkeMode:     new("main"),
+					IkeEncAlg:   new("aes256"),
+					IkeAuthAlg:  new("sha256"),
+					IkePfs:      new("group14"),
+					IkeLifetime: new("86400"),
+					LocalId:     new("47.100.0.1"),
+					RemoteId:    new("203.0.113.10"),
 					// the pre-shared key must never reach a scan result
-					Psk: tea.String("super-secret-psk"),
+					Psk: new("super-secret-psk"),
 				},
 				TunnelIpsecConfig: &vpcclient.DescribeVpnConnectionsResponseBodyVpnConnectionsVpnConnectionTunnelOptionsSpecificationTunnelOptionsTunnelIpsecConfig{
-					IpsecEncAlg:   tea.String("aes256"),
-					IpsecAuthAlg:  tea.String("sha256"),
-					IpsecPfs:      tea.String("group14"),
-					IpsecLifetime: tea.String("86400"),
+					IpsecEncAlg:   new("aes256"),
+					IpsecAuthAlg:  new("sha256"),
+					IpsecPfs:      new("group14"),
+					IpsecLifetime: new("86400"),
 				},
 			},
 			{
 				// the standby tunnel negotiated weaker algorithms, which is the
 				// case the connection-level fields cannot describe
-				TunnelId:    tea.String("tun-bbbbbbbbbbbbbbbbb"),
+				TunnelId:    new("tun-bbbbbbbbbbbbbbbbb"),
 				TunnelIndex: tea.Int32(2),
-				Role:        tea.String("slave"),
-				Status:      tea.String("active"),
+				Role:        new("slave"),
+				Status:      new("active"),
 				TunnelIkeConfig: &vpcclient.DescribeVpnConnectionsResponseBodyVpnConnectionsVpnConnectionTunnelOptionsSpecificationTunnelOptionsTunnelIkeConfig{
-					IkeEncAlg: tea.String("des"),
-					IkePfs:    tea.String("group2"),
+					IkeEncAlg: new("des"),
+					IkePfs:    new("group2"),
 				},
 				TunnelIpsecConfig: &vpcclient.DescribeVpnConnectionsResponseBodyVpnConnectionsVpnConnectionTunnelOptionsSpecificationTunnelOptionsTunnelIpsecConfig{
-					IpsecEncAlg: tea.String("des"),
-					IpsecPfs:    tea.String("group2"),
+					IpsecEncAlg: new("des"),
+					IpsecPfs:    new("group2"),
 				},
 			},
 		},
@@ -196,7 +196,7 @@ func TestNewVpnConnectionTunnelsAbsent(t *testing.T) {
 	})
 	t.Run("a nil element is skipped rather than built blank", func(t *testing.T) {
 		spec := &vpnTunnelOptionsSpec{
-			TunnelOptions: []*vpnTunnelOptions{nil, {TunnelId: tea.String("tun-ccccccccccccccccc")}},
+			TunnelOptions: []*vpnTunnelOptions{nil, {TunnelId: new("tun-ccccccccccccccccc")}},
 		}
 		tunnels, err := newVpnConnectionTunnels(testTunnelRuntime(), "cn-hangzhou/vco-abc", spec)
 		require.NoError(t, err)
@@ -211,8 +211,8 @@ func TestNewVpnConnectionTunnelsAbsent(t *testing.T) {
 func TestNewVpnConnectionTunnelsUnkeyed(t *testing.T) {
 	spec := &vpnTunnelOptionsSpec{
 		TunnelOptions: []*vpnTunnelOptions{
-			{Role: tea.String("master"), Status: tea.String("active")},
-			{Role: tea.String("slave"), Status: tea.String("updating")},
+			{Role: new("master"), Status: new("active")},
+			{Role: new("slave"), Status: new("updating")},
 		},
 	}
 
@@ -234,7 +234,7 @@ func TestNewVpnConnectionTunnelsUnkeyed(t *testing.T) {
 // fact and score a check that was never able to look.
 func TestNewVpnConnectionTunnelsNullLifetimes(t *testing.T) {
 	spec := &vpnTunnelOptionsSpec{
-		TunnelOptions: []*vpnTunnelOptions{{TunnelId: tea.String("tun-ddddddddddddddddd")}},
+		TunnelOptions: []*vpnTunnelOptions{{TunnelId: new("tun-ddddddddddddddddd")}},
 	}
 
 	tunnels, err := newVpnConnectionTunnels(testTunnelRuntime(), "cn-hangzhou/vco-abc", spec)
@@ -265,7 +265,7 @@ type (
 // as one it reported blank.
 func testTunnelOptions(id string, ikeEncAlg, ikePfs, ipsecEncAlg, ipsecPfs *string) *vpnTunnelOptions {
 	return &vpnTunnelOptions{
-		TunnelId:          tea.String(id),
+		TunnelId:          new(id),
 		TunnelIkeConfig:   &testTunnelIkeConfig{IkeEncAlg: ikeEncAlg, IkePfs: ikePfs},
 		TunnelIpsecConfig: &testTunnelIpsecConfig{IpsecEncAlg: ipsecEncAlg, IpsecPfs: ipsecPfs},
 	}
@@ -309,8 +309,8 @@ func testVpnConnection(t *testing.T, ikeEncAlg, ikePfs, ipsecEncAlg, ipsecPfs *s
 func TestVpnConnectionAlgorithmsAgreeingTunnels(t *testing.T) {
 	t.Run("a single tunnel repeating the connection settings", func(t *testing.T) {
 		conn := testVpnConnection(t,
-			tea.String("aes256"), tea.String("group14"), tea.String("aes256"), tea.String("group14"),
-			testTunnelOptions("tun-aaaaaaaaaaaaaaaaa", tea.String("aes256"), tea.String("group14"), tea.String("aes256"), tea.String("group14")),
+			new("aes256"), new("group14"), new("aes256"), new("group14"),
+			testTunnelOptions("tun-aaaaaaaaaaaaaaaaa", new("aes256"), new("group14"), new("aes256"), new("group14")),
 		)
 
 		ike, err := conn.ikeEncryptionAlgorithms()
@@ -332,10 +332,10 @@ func TestVpnConnectionAlgorithmsAgreeingTunnels(t *testing.T) {
 
 	t.Run("three tunnels agreeing still yield one entry", func(t *testing.T) {
 		conn := testVpnConnection(t,
-			tea.String("aes256"), tea.String("group14"), tea.String("aes256"), tea.String("group14"),
-			testTunnelOptions("tun-aaaaaaaaaaaaaaaaa", tea.String("aes256"), tea.String("group14"), tea.String("aes256"), tea.String("group14")),
-			testTunnelOptions("tun-bbbbbbbbbbbbbbbbb", tea.String("aes256"), tea.String("group14"), tea.String("aes256"), tea.String("group14")),
-			testTunnelOptions("tun-ccccccccccccccccc", tea.String("aes256"), tea.String("group14"), tea.String("aes256"), tea.String("group14")),
+			new("aes256"), new("group14"), new("aes256"), new("group14"),
+			testTunnelOptions("tun-aaaaaaaaaaaaaaaaa", new("aes256"), new("group14"), new("aes256"), new("group14")),
+			testTunnelOptions("tun-bbbbbbbbbbbbbbbbb", new("aes256"), new("group14"), new("aes256"), new("group14")),
+			testTunnelOptions("tun-ccccccccccccccccc", new("aes256"), new("group14"), new("aes256"), new("group14")),
 		)
 
 		ike, err := conn.ikeEncryptionAlgorithms()
@@ -357,9 +357,9 @@ func TestVpnConnectionAlgorithmsAgreeingTunnels(t *testing.T) {
 // values, and the four must not read each other's setting.
 func TestVpnConnectionAlgorithmsSecondTunnelDiffers(t *testing.T) {
 	conn := testVpnConnection(t,
-		tea.String("aes256"), tea.String("group14"), tea.String("aes256"), tea.String("group14"),
-		testTunnelOptions("tun-aaaaaaaaaaaaaaaaa", tea.String("aes256"), tea.String("group14"), tea.String("aes256"), tea.String("group14")),
-		testTunnelOptions("tun-bbbbbbbbbbbbbbbbb", tea.String("des"), tea.String("group2"), tea.String("3des"), tea.String("group1")),
+		new("aes256"), new("group14"), new("aes256"), new("group14"),
+		testTunnelOptions("tun-aaaaaaaaaaaaaaaaa", new("aes256"), new("group14"), new("aes256"), new("group14")),
+		testTunnelOptions("tun-bbbbbbbbbbbbbbbbb", new("des"), new("group2"), new("3des"), new("group1")),
 	)
 
 	ike, err := conn.ikeEncryptionAlgorithms()
@@ -385,7 +385,7 @@ func TestVpnConnectionAlgorithmsSecondTunnelDiffers(t *testing.T) {
 // connection, which the policy's != empty guard reads as nothing to assert.
 func TestVpnConnectionAlgorithmsWithoutTunnels(t *testing.T) {
 	conn := testVpnConnection(t,
-		tea.String("aes256"), tea.String("group14"), tea.String("aes"), tea.String("group5"))
+		new("aes256"), new("group14"), new("aes"), new("group5"))
 
 	ike, err := conn.ikeEncryptionAlgorithms()
 	require.NoError(t, err)
@@ -411,9 +411,9 @@ func TestVpnConnectionAlgorithmsWithoutTunnels(t *testing.T) {
 func TestVpnConnectionAlgorithmsSkipsUnreportedValues(t *testing.T) {
 	t.Run("an absent and a blank tunnel algorithm are both left out", func(t *testing.T) {
 		conn := testVpnConnection(t,
-			tea.String("aes256"), tea.String("group14"), tea.String("aes256"), tea.String("group14"),
+			new("aes256"), new("group14"), new("aes256"), new("group14"),
 			testTunnelOptions("tun-aaaaaaaaaaaaaaaaa", nil, nil, nil, nil),
-			testTunnelOptions("tun-bbbbbbbbbbbbbbbbb", tea.String("  "), tea.String(""), tea.String(""), tea.String("  ")),
+			testTunnelOptions("tun-bbbbbbbbbbbbbbbbb", new("  "), new(""), new(""), new("  ")),
 		)
 
 		ike, err := conn.ikeEncryptionAlgorithms()
@@ -429,7 +429,7 @@ func TestVpnConnectionAlgorithmsSkipsUnreportedValues(t *testing.T) {
 
 	t.Run("a connection reporting nothing still carries what its tunnels agreed to", func(t *testing.T) {
 		conn := testVpnConnection(t, nil, nil, nil, nil,
-			testTunnelOptions("tun-aaaaaaaaaaaaaaaaa", tea.String("des"), tea.String("group2"), tea.String("des"), tea.String("group2")),
+			testTunnelOptions("tun-aaaaaaaaaaaaaaaaa", new("des"), new("group2"), new("des"), new("group2")),
 		)
 
 		ike, err := conn.ikeEncryptionAlgorithms()

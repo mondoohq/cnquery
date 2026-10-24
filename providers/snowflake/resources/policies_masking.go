@@ -27,11 +27,11 @@ type mqlSnowflakeMaskingPolicyInternal struct {
 }
 
 func (r *mqlSnowflakeAccount) maskingPolicies() ([]any, error) {
-	return listSnowflakeMaskingPolicies(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}})
+	return listSnowflakeMaskingPolicies(r.MqlRuntime, sdk.ExtendedIn{Account: new(true)})
 }
 
 func (r *mqlSnowflakeDatabase) maskingPolicies() ([]any, error) {
-	return listSnowflakeMaskingPolicies(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)}})
+	return listSnowflakeMaskingPolicies(r.MqlRuntime, sdk.ExtendedIn{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)})
 }
 
 // listSnowflakeMaskingPolicies fetches masking policies within the given scope

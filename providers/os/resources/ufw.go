@@ -481,7 +481,7 @@ func parseUfwApplications(data string) []ufwParsedApp {
 	var apps []ufwParsedApp
 	var current *ufwParsedApp
 
-	for _, line := range strings.Split(data, "\n") {
+	for line := range strings.SplitSeq(data, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
@@ -542,7 +542,7 @@ func (r *mqlUfwRule) id() (string, error) {
 // Lines starting with # are comments.
 func parseUfwKeyValue(data string) map[string]string {
 	result := map[string]string{}
-	for _, line := range strings.Split(data, "\n") {
+	for line := range strings.SplitSeq(data, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
@@ -604,7 +604,7 @@ type ufwParsedRule struct {
 //	### tuple ### route:allow tcp 80 0.0.0.0/0 any 0.0.0.0/0 in_ens5!out_lo
 func parseUfwTuples(data string) []ufwParsedRule {
 	var rules []ufwParsedRule
-	for _, line := range strings.Split(data, "\n") {
+	for line := range strings.SplitSeq(data, "\n") {
 		line = strings.TrimSpace(line)
 		if !strings.HasPrefix(line, "### tuple ###") {
 			continue

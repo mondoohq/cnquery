@@ -24,7 +24,7 @@ func (r *mqlUnicode) id() (string, error) {
 	return "unicode/" + unicodeInputHash(r.Input.Data), nil
 }
 
-func (r *mqlUnicode) classification() ([]interface{}, error) {
+func (r *mqlUnicode) classification() ([]any, error) {
 	input := r.Input.Data
 
 	c := classifier.NewUnicodeClassifier()

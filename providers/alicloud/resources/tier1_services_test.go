@@ -11,7 +11,6 @@ import (
 	cloudapiclient "github.com/alibabacloud-go/cloudapi-20160714/v5/client"
 	imsclient "github.com/alibabacloud-go/ims-20190815/v4/client"
 	privatelinkclient "github.com/alibabacloud-go/privatelink-20200415/v5/client"
-	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -38,10 +37,10 @@ func TestRootAccessKeyCountFrom(t *testing.T) {
 }
 
 func TestRamMarkerDone(t *testing.T) {
-	assert.True(t, ramMarkerDone(tea.Bool(false), tea.String("next")))
+	assert.True(t, ramMarkerDone(new(false), new("next")))
 	assert.True(t, ramMarkerDone(nil, nil))
-	assert.False(t, ramMarkerDone(tea.Bool(true), tea.String("next")))
-	assert.True(t, ramMarkerDone(tea.Bool(true), tea.String("")), "a truncated page without a marker must not loop")
+	assert.False(t, ramMarkerDone(new(true), new("next")))
+	assert.True(t, ramMarkerDone(new(true), new("")), "a truncated page without a marker must not loop")
 }
 
 func TestApiGatewayDeployedStages(t *testing.T) {
@@ -63,19 +62,19 @@ func TestApiGatewayDeployedStages(t *testing.T) {
 }
 
 func TestApiGatewayFlag(t *testing.T) {
-	require.NotNil(t, apiGatewayFlag(tea.String("TRUE")))
-	assert.True(t, *apiGatewayFlag(tea.String("TRUE")))
-	assert.True(t, *apiGatewayFlag(tea.String("true")))
-	assert.False(t, *apiGatewayFlag(tea.String("FALSE")))
-	assert.Nil(t, apiGatewayFlag(tea.String("")), "an empty value is unknown, not false")
+	require.NotNil(t, apiGatewayFlag(new("TRUE")))
+	assert.True(t, *apiGatewayFlag(new("TRUE")))
+	assert.True(t, *apiGatewayFlag(new("true")))
+	assert.False(t, *apiGatewayFlag(new("FALSE")))
+	assert.Nil(t, apiGatewayFlag(new("")), "an empty value is unknown, not false")
 	assert.Nil(t, apiGatewayFlag(nil))
 }
 
 func TestPrivateLinkTokenDone(t *testing.T) {
 	assert.True(t, privateLinkTokenDone(nil, nil))
-	assert.True(t, privateLinkTokenDone(tea.String(""), tea.String("t1")))
-	assert.False(t, privateLinkTokenDone(tea.String("t2"), tea.String("t1")))
-	assert.True(t, privateLinkTokenDone(tea.String("t1"), tea.String("t1")), "a repeated token must not loop")
+	assert.True(t, privateLinkTokenDone(new(""), new("t1")))
+	assert.False(t, privateLinkTokenDone(new("t2"), new("t1")))
+	assert.True(t, privateLinkTokenDone(new("t1"), new("t1")), "a repeated token must not loop")
 }
 
 func TestPrivateLinkAllowlistEntries(t *testing.T) {
@@ -92,7 +91,7 @@ func TestCasCertificateTime(t *testing.T) {
 	want := time.Date(2022, 11, 17, 0, 0, 0, 0, time.UTC)
 	epoch := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC).UnixMilli()
 
-	got := casCertificateTime(tea.String("2022-11-17"), &epoch)
+	got := casCertificateTime(new("2022-11-17"), &epoch)
 	require.NotNil(t, got)
 	assert.True(t, want.Equal(*got), "the date wins over the epoch, got %s", got)
 
@@ -100,5 +99,5 @@ func TestCasCertificateTime(t *testing.T) {
 	require.NotNil(t, got)
 	assert.Equal(t, 2023, got.Year(), "the epoch is the fallback")
 
-	assert.Nil(t, casCertificateTime(tea.String(""), nil))
+	assert.Nil(t, casCertificateTime(new(""), nil))
 }

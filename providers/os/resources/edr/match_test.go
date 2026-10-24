@@ -5,6 +5,7 @@ package edr
 
 import (
 	"regexp"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -35,12 +36,7 @@ func ext(identifier string, enabled, active bool) SystemExtension {
 
 func paths(present ...string) func(string) bool {
 	return func(p string) bool {
-		for _, want := range present {
-			if p == want {
-				return true
-			}
-		}
-		return false
+		return slices.Contains(present, p)
 	}
 }
 

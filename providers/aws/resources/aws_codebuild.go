@@ -74,10 +74,7 @@ func (a *mqlAwsCodebuild) getProjects(conn *connection.AwsConnection) []*jobpool
 
 			// BatchGetProjects accepts up to 100 names per call.
 			for start := 0; start < len(names); start += 100 {
-				end := start + 100
-				if end > len(names) {
-					end = len(names)
-				}
+				end := min(start+100, len(names))
 				batch, err := svc.BatchGetProjects(ctx, &codebuild.BatchGetProjectsInput{Names: names[start:end]})
 				if err != nil {
 					if Is400AccessDeniedError(err) {
@@ -630,10 +627,7 @@ func (a *mqlAwsCodebuild) getReportGroups(conn *connection.AwsConnection) []*job
 
 			// BatchGetReportGroups accepts up to 100 ARNs per call
 			for start := 0; start < len(arns); start += 100 {
-				end := start + 100
-				if end > len(arns) {
-					end = len(arns)
-				}
+				end := min(start+100, len(arns))
 				batch, err := svc.BatchGetReportGroups(ctx, &codebuild.BatchGetReportGroupsInput{
 					ReportGroupArns: arns[start:end],
 				})

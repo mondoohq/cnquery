@@ -36,7 +36,7 @@ func (g *mqlGithubOrganization) auditLog() ([]any, error) {
 	orgLogin := g.Login.Data
 
 	opts := &github.GetAuditLogOptions{
-		ListCursorOptions: github.ListCursorOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 
 	var allEntries []*github.AuditEntry

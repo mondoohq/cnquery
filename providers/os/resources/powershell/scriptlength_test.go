@@ -228,7 +228,7 @@ func TestEmbeddedPowerShellScriptsFitCommandLine(t *testing.T) {
 					if !ok {
 						continue
 					}
-					for _, pat := range strings.Fields(pattern) {
+					for pat := range strings.FieldsSeq(pattern) {
 						if !strings.HasSuffix(pat, ".ps1") {
 							continue
 						}

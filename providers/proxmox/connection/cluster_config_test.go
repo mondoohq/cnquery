@@ -228,7 +228,7 @@ func TestGetCorosyncConfig_FetchedOnce(t *testing.T) {
 	f.route("/cluster/config/join", map[string]any{"preferred_node": "pve1"})
 	conn := f.conn()
 
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		_, err := conn.GetCorosyncConfig()
 		require.NoError(t, err)
 	}

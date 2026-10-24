@@ -438,7 +438,7 @@ var debianLike = &PlatformResolver{
 		if err != nil {
 			return false, nil
 		}
-		for _, like := range strings.Fields(osr["ID_LIKE"]) {
+		for like := range strings.FieldsSeq(osr["ID_LIKE"]) {
 			if like == "debian" || like == "ubuntu" {
 				return true, nil
 			}

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"sort"
 	"strconv"
 	"sync"
@@ -245,9 +246,7 @@ func newContainersPolicyRequirements(runtime *plugin.Runtime, parentID string, r
 			fulcio = *req.Fulcio
 		}
 		identity := map[string]any{}
-		for k, v := range req.SignedIdentity {
-			identity[k] = v
-		}
+		maps.Copy(identity, req.SignedIdentity)
 		r, err := CreateResource(runtime, "containers.policy.requirement", map[string]*llx.RawData{
 			"__id":                llx.StringData("containers.policy.requirement/" + parentID + "/" + strconv.Itoa(i)),
 			"type":                llx.StringData(req.Type),

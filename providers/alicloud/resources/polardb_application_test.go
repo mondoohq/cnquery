@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	polardb "github.com/alibabacloud-go/polardb-20170801/v10/client"
-	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,8 +23,8 @@ func TestPolardbApplicationEndpointsToDict(t *testing.T) {
 		// a VPC-internal one, so it has to survive the flattening intact.
 		endpoints := &polardb.DescribeApplicationsResponseBodyItemsApplicationsEndpoints{
 			Endpoint: []*polardb.DescribeApplicationsResponseBodyItemsApplicationsEndpointsEndpoint{
-				{IP: tea.String("192.0.2.10"), NetType: tea.String("Private"), Port: tea.String("5432")},
-				{IP: tea.String("203.0.113.7"), NetType: tea.String("Public"), Port: tea.String("5432")},
+				{IP: new("192.0.2.10"), NetType: new("Private"), Port: new("5432")},
+				{IP: new("203.0.113.7"), NetType: new("Public"), Port: new("5432")},
 			},
 		}
 
@@ -43,7 +42,7 @@ func TestPolardbApplicationEndpointsToDict(t *testing.T) {
 		endpoints := &polardb.DescribeApplicationsResponseBodyItemsApplicationsEndpoints{
 			Endpoint: []*polardb.DescribeApplicationsResponseBodyItemsApplicationsEndpointsEndpoint{
 				nil,
-				{IP: tea.String("203.0.113.7"), NetType: tea.String("Public"), Port: tea.String("5432")},
+				{IP: new("203.0.113.7"), NetType: new("Public"), Port: new("5432")},
 			},
 		}
 
@@ -73,8 +72,8 @@ func TestPolardbApplicationTagsToMap(t *testing.T) {
 	t.Run("key and value pairs are flattened", func(t *testing.T) {
 		tags := &polardb.DescribeApplicationsResponseBodyItemsApplicationsTags{
 			Tag: []*polardb.DescribeApplicationsResponseBodyItemsApplicationsTagsTag{
-				{Key: tea.String("env"), Value: tea.String("prod")},
-				{Key: tea.String("owner"), Value: tea.String("platform")},
+				{Key: new("env"), Value: new("prod")},
+				{Key: new("owner"), Value: new("platform")},
 			},
 		}
 
@@ -88,9 +87,9 @@ func TestPolardbApplicationTagsToMap(t *testing.T) {
 		tags := &polardb.DescribeApplicationsResponseBodyItemsApplicationsTags{
 			Tag: []*polardb.DescribeApplicationsResponseBodyItemsApplicationsTagsTag{
 				nil,
-				{Value: tea.String("orphan")},
-				{Key: tea.String("novalue")},
-				{Key: tea.String("env"), Value: tea.String("prod")},
+				{Value: new("orphan")},
+				{Key: new("novalue")},
+				{Key: new("env"), Value: new("prod")},
 			},
 		}
 

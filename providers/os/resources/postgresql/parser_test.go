@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io/fs"
 	"reflect"
+	"slices"
 	"sort"
 	"testing"
 )
@@ -793,10 +794,8 @@ func (e *notFoundError) Unwrap() error { return fs.ErrNotExist }
 // postgres user fails for a non-root scan.
 func mapReader(files map[string]string, denied ...string) FileReader {
 	return func(path string) (string, error) {
-		for _, d := range denied {
-			if d == path {
-				return "", fs.ErrPermission
-			}
+		if slices.Contains(denied, path) {
+			return "", fs.ErrPermission
 		}
 		v, ok := files[path]
 		if !ok {

@@ -13,7 +13,7 @@ import (
 func TestDbaasApplyDetail(t *testing.T) {
 	r := &mqlExoscaleDbaasService{}
 	r.applyDetail(&dbaasDetail{
-		version:     strPtr("16"),
+		version:     new("16"),
 		ipFilter:    []string{"0.0.0.0/0"},
 		maintenance: &v3.DBAASServiceMaintenance{Dow: "sunday", Time: "02:00:00"},
 	})
@@ -41,4 +41,5 @@ func TestDbaasApplyDetailAbsentValues(t *testing.T) {
 	assert.True(t, r.Version.IsNull())
 }
 
-func strPtr(s string) *string { return &s }
+//go:fix inline
+func strPtr(s string) *string { return new(s) }

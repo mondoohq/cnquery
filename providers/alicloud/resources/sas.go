@@ -275,10 +275,10 @@ func (r *mqlAlicloudSas) machines() ([]any, error) {
 	currentPage := int32(1)
 	for {
 		resp, err := client.DescribeCloudCenterInstances(&sasclient.DescribeCloudCenterInstancesRequest{
-			CurrentPage: tea.Int32(currentPage),
-			PageSize:    tea.Int32(sasPageSize),
+			CurrentPage: new(currentPage),
+			PageSize:    new(sasPageSize),
 			// the console's own default: exclude group metadata we do not model
-			NoGroupTrace: tea.Bool(true),
+			NoGroupTrace: new(true),
 		})
 		if err != nil {
 			return nil, err
@@ -394,9 +394,9 @@ func (r *mqlAlicloudSas) vulnerabilities() ([]any, error) {
 		currentPage := int32(1)
 		for {
 			resp, err := client.DescribeGroupedVul(&sasclient.DescribeGroupedVulRequest{
-				Type:        tea.String(vulType),
-				CurrentPage: tea.Int32(currentPage),
-				PageSize:    tea.Int32(sasPageSize),
+				Type:        new(vulType),
+				CurrentPage: new(currentPage),
+				PageSize:    new(sasPageSize),
 			})
 			if err != nil {
 				// a category the subscription does not cover answers with an
@@ -462,8 +462,8 @@ func (r *mqlAlicloudSas) baselineChecks() ([]any, error) {
 	currentPage := int32(1)
 	for {
 		resp, err := client.DescribeCheckWarningSummary(&sasclient.DescribeCheckWarningSummaryRequest{
-			CurrentPage: tea.Int32(currentPage),
-			PageSize:    tea.Int32(sasPageSize),
+			CurrentPage: new(currentPage),
+			PageSize:    new(sasPageSize),
 		})
 		if err != nil {
 			return nil, err
@@ -527,8 +527,8 @@ func (r *mqlAlicloudSas) alarmEvents() ([]any, error) {
 	for {
 		// DescribeSuspEvents takes its paging parameters as strings
 		resp, err := client.DescribeSuspEvents(&sasclient.DescribeSuspEventsRequest{
-			CurrentPage: tea.String(strconv.Itoa(int(currentPage))),
-			PageSize:    tea.String(strconv.Itoa(int(sasPageSize))),
+			CurrentPage: new(strconv.Itoa(int(currentPage))),
+			PageSize:    new(strconv.Itoa(int(sasPageSize))),
 		})
 		if err != nil {
 			return nil, err

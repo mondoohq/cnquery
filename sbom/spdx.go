@@ -378,9 +378,9 @@ func purlDistroPlatform(purl packageurl.PackageURL, pf *Platform) (*Platform, st
 		// the last one. A qualifier with no dash carries no version, e.g.
 		// "arch" rather than "arch-rolling".
 		pf.Name = distroVal
-		if i := strings.LastIndex(distroVal, "-"); i > 0 {
-			pf.Name = distroVal[:i]
-			pf.Version = distroVal[i+1:]
+		if before, after, ok := strings.CutLast(distroVal, "-"); ok && before != "" {
+			pf.Name = before
+			pf.Version = after
 		}
 		pf.Family = familyMap[pf.Name]
 	}
@@ -577,12 +577,12 @@ func spdxLooksLikeVersion(s string) bool {
 // is reading a guess for the shapes above. Report the identifier whole if that
 // matters more than the split.
 func spdxSplitTool(tool string) (string, string) {
-	i := strings.LastIndex(tool, "-")
-	if i <= 0 {
+	before, version, ok := strings.CutLast(tool, "-")
+	if !ok || before == "" {
 		return tool, ""
 	}
-	if version := tool[i+1:]; spdxLooksLikeVersion(version) {
-		return tool[:i], version
+	if spdxLooksLikeVersion(version) {
+		return before, version
 	}
 	return tool, ""
 }

@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"maps"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -64,12 +65,8 @@ var fedora44Files = map[string]string{
 
 func withFiles(base map[string]string, extra map[string]string) map[string]string {
 	res := map[string]string{}
-	for k, v := range base {
-		res[k] = v
-	}
-	for k, v := range extra {
-		res[k] = v
-	}
+	maps.Copy(res, base)
+	maps.Copy(res, extra)
 	return res
 }
 

@@ -175,7 +175,7 @@ func (m *mqlKubelet) staticPodManifests() ([]any, error) {
 // staticPodManifestPaths returns the paths find printed, sorted.
 func staticPodManifestPaths(out string) []string {
 	paths := []string{}
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		if line = strings.TrimSpace(line); path.IsAbs(line) {
 			paths = append(paths, line)
 		}

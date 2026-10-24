@@ -11,8 +11,6 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -264,15 +262,15 @@ func (n *neti) getLinuxSysfsInterfaces() (interfaces []Interface, err error) {
 		if err == nil {
 			switch strings.TrimSpace(strings.ToLower(string(operstate))) {
 			case "up":
-				iinterface.Active = convert.ToPtr(true)
+				iinterface.Active = new(true)
 			case "down":
-				iinterface.Active = convert.ToPtr(false)
+				iinterface.Active = new(false)
 			case "unknown":
 				// Drivers that don't track carrier (loopback, tun/tap, vxlan,
 				// OVS internal ports) always read "unknown". `ip` reports them
 				// by the UP flag, and so does the command detector.
 				if flagsOK {
-					iinterface.Active = convert.ToPtr(flagBits&linuxIffUp != 0)
+					iinterface.Active = new(flagBits&linuxIffUp != 0)
 				}
 			}
 		}
@@ -570,82 +568,82 @@ func linuxInterfaceVirtual(fs afero.Fs, name string) *bool {
 	if err != nil {
 		return nil
 	}
-	return convert.ToPtr(!hasDevice)
+	return new(!hasDevice)
 }
 
 func isVirtualDevice(deviceType string) *bool {
 	switch deviceType {
 	// The device is a VIF (Xen virtual interface).
 	case "vif":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is a TUN (network layer) virtual network interface.
 	case "tun":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is a TAP (data link layer) virtual network interface.
 	case "tap":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is a MACVLAN virtual network interface.
 	case "macvlan":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is an IPVLan virtual network interface.
 	case "ipvlan":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is a Virtual Ethernet (veth) interface.
 	case "veth":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is a network bridge.
 	case "bridge":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is a bonded network interface (multiple NICs bonded together).
 	case "bond":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is a VXLAN virtual network tunnel interface.
 	case "vxlan":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is a GRE (Generic Routing Encapsulation) tunnel interface.
 	case "gre":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is a GRE TAP (Layer 2 GRE) tunnel interface.
 	case "gretap":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is an IPv6 GRE tunnel interface.
 	case "ip6gre":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is an IPv6 GRE TAP tunnel interface.
 	case "ip6gretap":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is an IPv6-in-IPv4 tunnel.
 	case "sit":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is an IPv4-in-IPv4 tunnel.
 	case "ipip":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is a WireGuard VPN interface.
 	case "wireguard":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is a Point-to-Point Protocol (PPP) interface.
 	case "ppp":
-		return convert.ToPtr(true)
+		return new(true)
 
 	// The device is an XFRM (IPsec transform) interface.
 	case "xfrm":
-		return convert.ToPtr(true)
+		return new(true)
 
 	}
 	return nil

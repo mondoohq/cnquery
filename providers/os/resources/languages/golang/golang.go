@@ -20,9 +20,9 @@ func NewPackageUrl(modulePath string, version string) string {
 	namespace := ""
 	name := modulePath
 
-	if idx := strings.LastIndex(modulePath, "/"); idx != -1 {
-		namespace = modulePath[:idx]
-		name = modulePath[idx+1:]
+	if before, after, ok := strings.CutLast(modulePath, "/"); ok {
+		namespace = before
+		name = after
 	}
 
 	return packageurl.NewPackageURL(

@@ -208,8 +208,8 @@ func (g *mqlGcpProjectCloudBuildServiceTrigger) iamServiceAccount() (*mqlGcpProj
 	}
 	// Extract email from resource name: projects/{project}/serviceAccounts/{email}
 	email := sa
-	if idx := strings.LastIndex(sa, "/"); idx != -1 {
-		email = sa[idx+1:]
+	if _, after, ok := strings.CutLast(sa, "/"); ok {
+		email = after
 	}
 	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
 		"email":     llx.StringData(email),
@@ -728,8 +728,8 @@ func (g *mqlGcpProjectCloudBuildServiceBuild) iamServiceAccount() (*mqlGcpProjec
 	}
 	// Extract email from resource name: projects/{project}/serviceAccounts/{email}
 	email := sa
-	if idx := strings.LastIndex(sa, "/"); idx != -1 {
-		email = sa[idx+1:]
+	if _, after, ok := strings.CutLast(sa, "/"); ok {
+		email = after
 	}
 	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
 		"email":     llx.StringData(email),

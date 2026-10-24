@@ -7,7 +7,6 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/waf"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -26,7 +25,7 @@ func (o *mqlOciWafPolicy) getDetail() (*waf.WebAppFirewallPolicy, error) {
 			return nil, err
 		}
 		response, err := client.GetWebAppFirewallPolicy(context.Background(), waf.GetWebAppFirewallPolicyRequest{
-			WebAppFirewallPolicyId: common.String(o.Id.Data),
+			WebAppFirewallPolicyId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err

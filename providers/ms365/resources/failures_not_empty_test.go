@@ -303,7 +303,7 @@ func TestPowershellReportSectionsFailToNull(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			sections := 0
-			for _, line := range strings.Split(script, "\n") {
+			for line := range strings.SplitSeq(script, "\n") {
 				if !cmdletCall.MatchString(line) {
 					continue
 				}
@@ -329,14 +329,14 @@ func TestPowershellReportConnectFailureExits(t *testing.T) {
 // A section the script reported as null must decode to an absent section, and
 // one that ran and found nothing must not.
 func TestExchangeReportNullSectionsDecodeAbsent(t *testing.T) {
-	rt := reflect.TypeOf(ExchangeOnlineReport{})
+	rt := reflect.TypeFor[ExchangeOnlineReport]()
 	nulls := map[string]any{}
 	empties := map[string]any{}
-	for i := 0; i < rt.NumField(); i++ {
-		tag := strings.Split(rt.Field(i).Tag.Get("json"), ",")[0]
+	for field := range rt.Fields() {
+		tag, _, _ := strings.Cut(field.Tag.Get("json"), ",")
 		require.NotEmpty(t, tag)
 		nulls[tag] = nil
-		if rt.Field(i).Type.Kind() == reflect.Slice || rt.Field(i).Type.Kind() == reflect.Interface {
+		if field.Type.Kind() == reflect.Slice || field.Type.Kind() == reflect.Interface {
 			empties[tag] = []any{}
 		}
 	}

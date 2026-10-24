@@ -53,9 +53,9 @@ const longLineTestKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGqaL8uRjdQQKUY9KQt
 func longFromOption() string {
 	var b strings.Builder
 	b.WriteString(`from="`)
-	for a := 0; a < 2; a++ {
-		for c := 0; c < 30; c++ {
-			for d := 0; d < 200; d++ {
+	for a := range 2 {
+		for c := range 30 {
+			for d := range 200 {
 				fmt.Fprintf(&b, "10.%d.%d.%d,", a, c, d)
 			}
 		}

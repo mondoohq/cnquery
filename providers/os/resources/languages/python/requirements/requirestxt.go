@@ -95,8 +95,8 @@ func ParseRequirementsTxt(r io.Reader) ([]Requirement, error) {
 			line = continuation + line
 			continuation = ""
 		}
-		if strings.HasSuffix(line, "\\") {
-			continuation = strings.TrimSuffix(line, "\\")
+		if before, ok := strings.CutSuffix(line, "\\"); ok {
+			continuation = before
 			continue
 		}
 
@@ -130,7 +130,7 @@ func ParseRequirementsTxt(r io.Reader) ([]Requirement, error) {
 
 		// Parse extras
 		if extras != "" {
-			for _, e := range strings.Split(extras, ",") {
+			for e := range strings.SplitSeq(extras, ",") {
 				e = strings.TrimSpace(e)
 				if e != "" {
 					req.Extras = append(req.Extras, e)
@@ -161,8 +161,8 @@ func parsePinnedVersion(constraint string) string {
 	}
 
 	for _, op := range []string{"===", "=="} {
-		if strings.HasPrefix(constraint, op) {
-			v := strings.TrimSpace(strings.TrimPrefix(constraint, op))
+		if after, ok := strings.CutPrefix(constraint, op); ok {
+			v := strings.TrimSpace(after)
 			if v != "" {
 				return v
 			}

@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"maps"
 
 	"github.com/okta/okta-sdk-golang/v6/okta"
 	"go.mondoo.com/mql/llx"
@@ -91,9 +92,7 @@ func initOktaRealm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		return nil, nil, fmt.Errorf("%w: okta.realm %q", errOktaResourceNotFound, id)
 	}
 
-	for k, v := range oktaRealmArgs(item) {
-		args[k] = v
-	}
+	maps.Copy(args, oktaRealmArgs(item))
 	return args, nil, nil
 }
 

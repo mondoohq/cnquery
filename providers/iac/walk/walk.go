@@ -10,6 +10,7 @@ package walk
 
 import (
 	"io/fs"
+	"maps"
 	"path"
 	"path/filepath"
 	"sort"
@@ -303,9 +304,7 @@ func childAsset(optIn plugin.TargetOptIn, treeRoot, target string) *inventory.As
 	}
 
 	options := map[string]string{"path": abs}
-	for k, v := range optIn.Options {
-		options[k] = v
-	}
+	maps.Copy(options, optIn.Options)
 
 	return &inventory.Asset{
 		Connections: []*inventory.Config{{

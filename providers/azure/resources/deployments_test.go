@@ -37,7 +37,7 @@ func TestDeploymentTemplateSourceDoesNotPublishTheSASToken(t *testing.T) {
 
 	t.Run("the token arrives inside the URI, as ARM actually returns it", func(t *testing.T) {
 		data, err := deploymentTemplateSource(azureTestRuntime(), testDeploymentID,
-			&armdeployments.TemplateLink{URI: ptr(base + "?" + query), ContentVersion: ptr("1.0.0.0")})
+			&armdeployments.TemplateLink{URI: ptr(base + "?" + query), ContentVersion: new("1.0.0.0")})
 		require.NoError(t, err)
 
 		src, ok := data.Value.(*mqlAzureSubscriptionDeploymentTemplateSource)
@@ -76,8 +76,8 @@ func TestDeploymentLinksBothDropTheSASToken(t *testing.T) {
 	const query = "?sp=r&sig=PLACEHOLDER-NOT-A-REAL-SIGNATURE"
 
 	deployment := &armdeployments.DeploymentExtended{
-		ID:   ptr(testDeploymentID),
-		Name: ptr("from-uri"),
+		ID:   new(testDeploymentID),
+		Name: new("from-uri"),
 		Properties: &armdeployments.DeploymentPropertiesExtended{
 			TemplateLink:   &armdeployments.TemplateLink{URI: ptr(templateBase + query)},
 			ParametersLink: &armdeployments.ParametersLink{URI: ptr(paramsBase + query)},
@@ -100,7 +100,7 @@ func TestDeploymentTemplateSourceSeparatesSpecFromURI(t *testing.T) {
 	const specID = "/subscriptions/sub-1/resourceGroups/rg-1/providers/Microsoft.Resources/templateSpecs/base/versions/2.1"
 
 	spec, err := deploymentTemplateSource(azureTestRuntime(), testDeploymentID,
-		&armdeployments.TemplateLink{ID: ptr(specID), RelativePath: ptr("modules/network.json")})
+		&armdeployments.TemplateLink{ID: ptr(specID), RelativePath: new("modules/network.json")})
 	require.NoError(t, err)
 	fromSpec := spec.Value.(*mqlAzureSubscriptionDeploymentTemplateSource)
 	assert.Equal(t, specID, fromSpec.TemplateSpecId.Data)
@@ -108,7 +108,7 @@ func TestDeploymentTemplateSourceSeparatesSpecFromURI(t *testing.T) {
 	assert.Equal(t, "modules/network.json", fromSpec.RelativePath.Data)
 
 	uri, err := deploymentTemplateSource(azureTestRuntime(), testDeploymentID,
-		&armdeployments.TemplateLink{URI: ptr("https://example.com/t.json")})
+		&armdeployments.TemplateLink{URI: new("https://example.com/t.json")})
 	require.NoError(t, err)
 	fromURI := uri.Value.(*mqlAzureSubscriptionDeploymentTemplateSource)
 	assert.Empty(t, fromURI.TemplateSpecId.Data)
@@ -122,14 +122,14 @@ func TestDeploymentTemplateSourceSeparatesSpecFromURI(t *testing.T) {
 func TestDeploymentDiagnosticsWithIdenticalContentStayDistinct(t *testing.T) {
 	diags := []*armdeployments.DeploymentDiagnosticsDefinition{
 		{
-			Code:    ptr("NestedDeploymentShortCircuit"),
+			Code:    new("NestedDeploymentShortCircuit"),
 			Level:   ptr(armdeployments.LevelWarning),
-			Message: ptr("first occurrence"),
+			Message: new("first occurrence"),
 		},
 		{
-			Code:    ptr("NestedDeploymentShortCircuit"),
+			Code:    new("NestedDeploymentShortCircuit"),
 			Level:   ptr(armdeployments.LevelWarning),
-			Message: ptr("second occurrence"),
+			Message: new("second occurrence"),
 		},
 	}
 
@@ -151,7 +151,7 @@ func TestDeploymentDiagnosticsWithIdenticalContentStayDistinct(t *testing.T) {
 func TestDeploymentDiagnosticLevelSurvivesTheEnum(t *testing.T) {
 	res, err := deploymentDiagnostics(azureTestRuntime(), testDeploymentID,
 		[]*armdeployments.DeploymentDiagnosticsDefinition{
-			{Level: ptr(armdeployments.LevelError), Code: ptr("InvalidTemplate"), Target: ptr("resources[3]")},
+			{Level: ptr(armdeployments.LevelError), Code: new("InvalidTemplate"), Target: new("resources[3]")},
 		})
 	require.NoError(t, err)
 	require.Len(t, res, 1)
@@ -168,14 +168,14 @@ func TestDeploymentDiagnosticLevelSurvivesTheEnum(t *testing.T) {
 func TestDeploymentProvisionedResourcesCarryTypeAndVersion(t *testing.T) {
 	refs := []*armdeployments.ResourceReference{
 		{
-			ID:               ptr("/subscriptions/sub-1/resourceGroups/rg-1/providers/Microsoft.Storage/storageAccounts/stg1"),
-			ResourceType:     ptr("Microsoft.Storage/storageAccounts"),
-			APIVersion:       ptr("2021-04-01"),
-			SymbolicNamePath: []*string{ptr("network"), nil, ptr("storage")},
+			ID:               new("/subscriptions/sub-1/resourceGroups/rg-1/providers/Microsoft.Storage/storageAccounts/stg1"),
+			ResourceType:     new("Microsoft.Storage/storageAccounts"),
+			APIVersion:       new("2021-04-01"),
+			SymbolicNamePath: []*string{new("network"), nil, new("storage")},
 		},
 		nil,
-		{ResourceType: ptr("Kubernetes.Core/configMaps")},
-		{ResourceType: ptr("Kubernetes.Core/secrets")},
+		{ResourceType: new("Kubernetes.Core/configMaps")},
+		{ResourceType: new("Kubernetes.Core/secrets")},
 	}
 
 	res, err := deploymentProvisionedResources(azureTestRuntime(), testDeploymentID, refs)
@@ -205,10 +205,10 @@ func TestDeploymentProvisionedResourcesDoNotCollideAcrossDeployments(t *testing.
 	runtime := azureTestRuntime()
 
 	old, err := deploymentProvisionedResources(runtime, testDeploymentID+"-2019",
-		[]*armdeployments.ResourceReference{{ID: ptr(stg), APIVersion: ptr("2019-06-01")}})
+		[]*armdeployments.ResourceReference{{ID: ptr(stg), APIVersion: new("2019-06-01")}})
 	require.NoError(t, err)
 	current, err := deploymentProvisionedResources(runtime, testDeploymentID+"-2024",
-		[]*armdeployments.ResourceReference{{ID: ptr(stg), APIVersion: ptr("2024-01-01")}})
+		[]*armdeployments.ResourceReference{{ID: ptr(stg), APIVersion: new("2024-01-01")}})
 	require.NoError(t, err)
 
 	assert.Equal(t, "2019-06-01", old[0].(*mqlAzureSubscriptionDeploymentProvisionedResource).ApiVersion.Data)
@@ -222,10 +222,10 @@ func TestDeploymentDependenciesDoNotCollideAcrossDeployments(t *testing.T) {
 	runtime := azureTestRuntime()
 
 	first, err := deploymentDependencies(runtime, testDeploymentID+"-a",
-		[]*armdeployments.Dependency{{ID: ptr(vnet), ResourceName: ptr("vnet-as-named-in-a")}})
+		[]*armdeployments.Dependency{{ID: ptr(vnet), ResourceName: new("vnet-as-named-in-a")}})
 	require.NoError(t, err)
 	second, err := deploymentDependencies(runtime, testDeploymentID+"-b",
-		[]*armdeployments.Dependency{{ID: ptr(vnet), ResourceName: ptr("vnet-as-named-in-b")}})
+		[]*armdeployments.Dependency{{ID: ptr(vnet), ResourceName: new("vnet-as-named-in-b")}})
 	require.NoError(t, err)
 
 	assert.Equal(t, "vnet-as-named-in-a", first[0].(*mqlAzureSubscriptionDeploymentDependency).ResourceName.Data)
@@ -236,7 +236,7 @@ func TestDeploymentDependenciesDoNotCollideAcrossDeployments(t *testing.T) {
 // rather than an extension resource of empty members.
 func TestDeploymentProvisionedResourceExtensionIsNullWhenAbsent(t *testing.T) {
 	res, err := deploymentProvisionedResources(azureTestRuntime(), testDeploymentID,
-		[]*armdeployments.ResourceReference{{ID: ptr("/subscriptions/sub-1/providers/Microsoft.Storage/storageAccounts/s")}})
+		[]*armdeployments.ResourceReference{{ID: new("/subscriptions/sub-1/providers/Microsoft.Storage/storageAccounts/s")}})
 	require.NoError(t, err)
 	require.Len(t, res, 1)
 
@@ -250,16 +250,16 @@ func TestDeploymentDependenciesNestUnderTheirParent(t *testing.T) {
 	shared := "/subscriptions/sub-1/resourceGroups/rg-1/providers/Microsoft.Network/virtualNetworks/vnet"
 	deps := []*armdeployments.Dependency{
 		{
-			ID:           ptr("/subscriptions/sub-1/resourceGroups/rg-1/providers/Microsoft.Compute/virtualMachines/vm1"),
-			ResourceName: ptr("vm1"),
-			ResourceType: ptr("Microsoft.Compute/virtualMachines"),
-			DependsOn:    []*armdeployments.BasicDependency{{ID: ptr(shared), ResourceName: ptr("vnet")}},
+			ID:           new("/subscriptions/sub-1/resourceGroups/rg-1/providers/Microsoft.Compute/virtualMachines/vm1"),
+			ResourceName: new("vm1"),
+			ResourceType: new("Microsoft.Compute/virtualMachines"),
+			DependsOn:    []*armdeployments.BasicDependency{{ID: new(shared), ResourceName: new("vnet")}},
 		},
 		{
-			ID:           ptr("/subscriptions/sub-1/resourceGroups/rg-1/providers/Microsoft.Compute/virtualMachines/vm2"),
-			ResourceName: ptr("vm2"),
-			ResourceType: ptr("Microsoft.Compute/virtualMachines"),
-			DependsOn:    []*armdeployments.BasicDependency{{ID: ptr(shared), ResourceName: ptr("vnet")}},
+			ID:           new("/subscriptions/sub-1/resourceGroups/rg-1/providers/Microsoft.Compute/virtualMachines/vm2"),
+			ResourceName: new("vm2"),
+			ResourceType: new("Microsoft.Compute/virtualMachines"),
+			DependsOn:    []*armdeployments.BasicDependency{{ID: new(shared), ResourceName: new("vnet")}},
 		},
 	}
 
@@ -294,8 +294,8 @@ func TestDeploymentDependenciesAreEmptyNotNullWhenAbsent(t *testing.T) {
 // Extensions have no ARM ID at all, so every entry is keyed by position.
 func TestDeploymentExtensionsStayDistinctWithoutIDs(t *testing.T) {
 	exts := []*armdeployments.DeploymentExtensionDefinition{
-		{Name: ptr("Microsoft.Kubernetes"), Version: ptr("1.0.0"), Alias: ptr("k8sProd"), ConfigID: ptr("cfg"), ConfigHash: ptr("h1")},
-		{Name: ptr("Microsoft.Kubernetes"), Version: ptr("1.0.0"), Alias: ptr("k8sStaging"), ConfigID: ptr("cfg"), ConfigHash: ptr("h2")},
+		{Name: new("Microsoft.Kubernetes"), Version: new("1.0.0"), Alias: new("k8sProd"), ConfigID: new("cfg"), ConfigHash: new("h1")},
+		{Name: new("Microsoft.Kubernetes"), Version: new("1.0.0"), Alias: new("k8sStaging"), ConfigID: new("cfg"), ConfigHash: new("h2")},
 	}
 
 	res, err := deploymentExtensions(azureTestRuntime(), testDeploymentID, exts)

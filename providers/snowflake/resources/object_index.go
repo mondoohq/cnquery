@@ -154,7 +154,7 @@ func (r *mqlSnowflakeAccount) schemaIndex() (map[string]sdk.Schema, error) {
 	return r.cachedSchemaIndex.get(func() (map[string]sdk.Schema, error) {
 		conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
 		schemas, err := conn.Client().Schemas.Show(context.Background(), &sdk.ShowSchemaRequest{
-			In: &sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}},
+			In: &sdk.ExtendedIn{Account: new(true)},
 		})
 		if err != nil {
 			return nil, err

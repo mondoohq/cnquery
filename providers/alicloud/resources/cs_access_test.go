@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -134,22 +133,22 @@ func TestCsParseTime(t *testing.T) {
 		assert.Nil(t, csParseTime(nil))
 	})
 	t.Run("empty stays nil", func(t *testing.T) {
-		assert.Nil(t, csParseTime(tea.String("")))
+		assert.Nil(t, csParseTime(new("")))
 	})
 	t.Run("garbage stays nil", func(t *testing.T) {
-		assert.Nil(t, csParseTime(tea.String("not a date")))
+		assert.Nil(t, csParseTime(new("not a date")))
 	})
 	t.Run("an in-progress run has no finish time", func(t *testing.T) {
 		// a run that has not completed reports an empty finished_at
-		assert.Nil(t, csParseTime(tea.String("")))
+		assert.Nil(t, csParseTime(new("")))
 	})
 	t.Run("nanosecond rfc3339, as the API returns it", func(t *testing.T) {
-		got := csParseTime(tea.String("2025-04-11T02:56:18.881054031Z"))
+		got := csParseTime(new("2025-04-11T02:56:18.881054031Z"))
 		require.NotNil(t, got)
 		assert.Equal(t, time.Date(2025, 4, 11, 2, 56, 18, 881054031, time.UTC), got.UTC())
 	})
 	t.Run("plain rfc3339", func(t *testing.T) {
-		got := csParseTime(tea.String("2025-04-11T02:56:02Z"))
+		got := csParseTime(new("2025-04-11T02:56:02Z"))
 		require.NotNil(t, got)
 		assert.Equal(t, time.Date(2025, 4, 11, 2, 56, 2, 0, time.UTC), got.UTC())
 	})

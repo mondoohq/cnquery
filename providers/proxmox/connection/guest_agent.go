@@ -214,7 +214,7 @@ func ParseWindowsHotfixes(raw string) []UpdateInfo {
 // candidate (new) version and the bracket carries the currently-installed one.
 func ParseAptOutput(raw string) []UpdateInfo {
 	var updates []UpdateInfo
-	for _, line := range strings.Split(raw, "\n") {
+	for line := range strings.SplitSeq(raw, "\n") {
 		line = strings.TrimSpace(line)
 		// Only "... [upgradable from: X]" lines are real upgrades; this also
 		// skips the "Listing..." header and any stray output.
@@ -228,7 +228,7 @@ func ParseAptOutput(raw string) []UpdateInfo {
 			continue
 		}
 		repoField := parts[0]
-		pkgName := strings.SplitN(repoField, "/", 2)[0]
+		pkgName, _, _ := strings.Cut(repoField, "/")
 		newVersion := parts[1]
 		installedVersion := strings.Trim(line[idx+len(marker):], "]")
 
@@ -252,7 +252,7 @@ func ParseAptOutput(raw string) []UpdateInfo {
 func ParseDnfOutput(raw string) []UpdateInfo {
 	var updates []UpdateInfo
 	obsoleting := false
-	for _, line := range strings.Split(raw, "\n") {
+	for line := range strings.SplitSeq(raw, "\n") {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "Obsoleting") {
 			obsoleting = true

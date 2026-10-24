@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identitydomains"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,21 +16,21 @@ import (
 
 func TestOciIdentityProviderArgs(t *testing.T) {
 	provider := &identitydomains.IdentityProvider{
-		Id:                                common.String("idp-1"),
-		PartnerName:                       common.String("Corporate Entra ID"),
-		Enabled:                           common.Bool(true),
+		Id:                                new("idp-1"),
+		PartnerName:                       new("Corporate Entra ID"),
+		Enabled:                           new(true),
 		Type:                              identitydomains.IdentityProviderTypeSaml,
-		PartnerProviderId:                 common.String("https://sts.windows.net/tenant/"),
+		PartnerProviderId:                 new("https://sts.windows.net/tenant/"),
 		SignatureHashAlgorithm:            identitydomains.IdentityProviderSignatureHashAlgorithm1,
-		JitUserProvEnabled:                common.Bool(true),
-		JitUserProvCreateUserEnabled:      common.Bool(true),
+		JitUserProvEnabled:                new(true),
+		JitUserProvCreateUserEnabled:      new(true),
 		JitUserProvGroupAssignmentMethod:  identitydomains.IdentityProviderJitUserProvGroupAssignmentMethodMerge,
-		SigningCertificate:                common.String("MIIC-signing-cert"),
-		Metadata:                          common.String("<EntityDescriptor/>"),
-		JitUserProvGroupSAMLAttributeName: common.String("groups"),
+		SigningCertificate:                new("MIIC-signing-cert"),
+		Metadata:                          new("<EntityDescriptor/>"),
+		JitUserProvGroupSAMLAttributeName: new("groups"),
 		UrnIetfParamsScimSchemasOracleIdcsExtensionSocialIdentityProvider: &identitydomains.ExtensionSocialIdentityProvider{
-			ConsumerKey:    common.String("client-id"),
-			ConsumerSecret: common.String("s3cr3t-consumer-value"),
+			ConsumerKey:    new("client-id"),
+			ConsumerSecret: new("s3cr3t-consumer-value"),
 		},
 	}
 
@@ -95,8 +94,8 @@ func TestOciSettingBoolAndInt(t *testing.T) {
 
 	t.Run("a set value is reported", func(t *testing.T) {
 		setting := &identitydomains.Setting{
-			SigningCertPublicAccess:   common.Bool(true),
-			AuditEventRetentionPeriod: common.Int(90),
+			SigningCertPublicAccess:   new(true),
+			AuditEventRetentionPeriod: new(90),
 		}
 		var b plugin.TValue[bool]
 		assert.True(t, ociSettingBool(setting, &b, signingCert))

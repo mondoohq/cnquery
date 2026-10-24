@@ -47,8 +47,8 @@ func initSnowflakeSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	ctx := context.Background()
 
 	schemas, err := client.Schemas.Show(ctx, &sdk.ShowSchemaRequest{
-		Like: &sdk.Like{Pattern: sdk.String(name)},
-		In:   &sdk.ExtendedIn{In: sdk.In{Database: sdk.NewAccountObjectIdentifier(databaseName)}},
+		Like: &sdk.Like{Pattern: new(name)},
+		In:   &sdk.ExtendedIn{Database: sdk.NewAccountObjectIdentifier(databaseName)},
 	})
 	if err != nil {
 		return nil, nil, err
@@ -108,13 +108,12 @@ func (r *mqlSnowflakeSchema) database() (*mqlSnowflakeDatabase, error) {
 }
 
 func (r *mqlSnowflakeAccount) schemas() ([]any, error) {
-	return listSnowflakeSchemas(r.MqlRuntime, &sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}})
+	return listSnowflakeSchemas(r.MqlRuntime, &sdk.ExtendedIn{Account: new(true)})
 }
 
 func (r *mqlSnowflakeDatabase) schemas() ([]any, error) {
-	return listSnowflakeSchemas(r.MqlRuntime, &sdk.ExtendedIn{In: sdk.In{
-		Database: sdk.NewAccountObjectIdentifier(r.Name.Data),
-	}})
+	return listSnowflakeSchemas(r.MqlRuntime, &sdk.ExtendedIn{
+		Database: sdk.NewAccountObjectIdentifier(r.Name.Data)})
 }
 
 // listSnowflakeSchemas fetches schemas within the given scope (account-wide or a

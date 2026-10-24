@@ -153,8 +153,7 @@ func (s *mqlPwquality) readConfig(cfg string) (pwquality.Settings, []string, err
 		}
 		err = settings.Apply(p, f)
 		f.Close()
-		var perr *pwquality.Error
-		if errors.As(err, &perr) {
+		if _, ok := errors.AsType[*pwquality.Error](err); ok {
 			log.Debug().Err(err).Msg("pwquality> libpwquality stops reading its configuration here")
 			break
 		}
@@ -298,7 +297,7 @@ func newPwqualitySettings(runtime *plugin.Runtime, id string, s pwquality.Settin
 		params[k] = v
 	}
 	var badwords []any
-	for _, w := range strings.Fields(s["badwords"]) {
+	for w := range strings.FieldsSeq(s["badwords"]) {
 		badwords = append(badwords, w)
 	}
 

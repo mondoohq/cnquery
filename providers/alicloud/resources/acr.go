@@ -70,8 +70,8 @@ func (r *mqlAlicloudAcr) instances() ([]any, error) {
 		firstPage := true
 		for {
 			resp, err := client.ListInstance(&crclient.ListInstanceRequest{
-				PageNo:   tea.Int32(pageNo),
-				PageSize: tea.Int32(pageSize),
+				PageNo:   new(pageNo),
+				PageSize: new(pageSize),
 			})
 			if err != nil {
 				// A first-page error means the region has no Container Registry
@@ -192,8 +192,8 @@ func initAlicloudAcrInstance(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	pageSize := int32(100)
 	for {
 		resp, err := client.ListInstance(&crclient.ListInstanceRequest{
-			PageNo:   tea.Int32(pageNo),
-			PageSize: tea.Int32(pageSize),
+			PageNo:   new(pageNo),
+			PageSize: new(pageSize),
 		})
 		if err != nil {
 			return nil, nil, err
@@ -250,8 +250,8 @@ func (r *mqlAlicloudAcrInstance) internetEndpointDetail() (*crclient.GetInstance
 		return nil, err
 	}
 	resp, err := client.GetInstanceEndpoint(&crclient.GetInstanceEndpointRequest{
-		InstanceId:   tea.String(r.InstanceId.Data),
-		EndpointType: tea.String("internet"),
+		InstanceId:   new(r.InstanceId.Data),
+		EndpointType: new("internet"),
 	})
 	if err != nil {
 		return nil, err
@@ -321,9 +321,9 @@ func (r *mqlAlicloudAcrInstance) namespaces() ([]any, error) {
 	pageSize := int32(100)
 	for {
 		resp, err := client.ListNamespace(&crclient.ListNamespaceRequest{
-			InstanceId: tea.String(r.InstanceId.Data),
-			PageNo:     tea.Int32(pageNo),
-			PageSize:   tea.Int32(pageSize),
+			InstanceId: new(r.InstanceId.Data),
+			PageNo:     new(pageNo),
+			PageSize:   new(pageSize),
 		})
 		if err != nil {
 			return nil, err
@@ -438,12 +438,12 @@ func listAcrRepositories(runtime *plugin.Runtime, instance *mqlAlicloudAcrInstan
 	pageSize := int32(100)
 	for {
 		req := &crclient.ListRepositoryRequest{
-			InstanceId: tea.String(instance.InstanceId.Data),
-			PageNo:     tea.Int32(pageNo),
-			PageSize:   tea.Int32(pageSize),
+			InstanceId: new(instance.InstanceId.Data),
+			PageNo:     new(pageNo),
+			PageSize:   new(pageSize),
 		}
 		if namespaceName != "" {
-			req.RepoNamespaceName = tea.String(namespaceName)
+			req.RepoNamespaceName = new(namespaceName)
 		}
 		resp, err := client.ListRepository(req)
 		if err != nil {
@@ -578,9 +578,9 @@ func (r *mqlAlicloudAcrInstance) syncRules() ([]any, error) {
 	pageSize := int32(100)
 	for {
 		resp, err := client.ListRepoSyncRule(&crclient.ListRepoSyncRuleRequest{
-			InstanceId: tea.String(r.InstanceId.Data),
-			PageNo:     tea.Int32(pageNo),
-			PageSize:   tea.Int32(pageSize),
+			InstanceId: new(r.InstanceId.Data),
+			PageNo:     new(pageNo),
+			PageSize:   new(pageSize),
 		})
 		if err != nil {
 			return nil, err
@@ -647,9 +647,9 @@ func (r *mqlAlicloudAcrInstance) scanRules() ([]any, error) {
 	pageSize := int32(100)
 	for {
 		resp, err := client.ListScanRule(&crclient.ListScanRuleRequest{
-			InstanceId: tea.String(r.InstanceId.Data),
-			PageNo:     tea.Int32(pageNo),
-			PageSize:   tea.Int32(pageSize),
+			InstanceId: new(r.InstanceId.Data),
+			PageNo:     new(pageNo),
+			PageSize:   new(pageSize),
 		})
 		if err != nil {
 			return nil, err

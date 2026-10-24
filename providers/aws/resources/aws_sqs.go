@@ -39,8 +39,8 @@ func (a *mqlAwsSqsQueue) id() (string, error) {
 // "https://sqs.us-east-1.amazonaws.com/123456789012/MyQueue" that is
 // "MyQueue".
 func sqsQueueName(queueURL string) string {
-	if i := strings.LastIndex(queueURL, "/"); i >= 0 {
-		return queueURL[i+1:]
+	if _, after, ok := strings.CutLast(queueURL, "/"); ok {
+		return after
 	}
 	return queueURL
 }

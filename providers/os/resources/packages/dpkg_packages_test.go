@@ -397,7 +397,7 @@ func TestDpkgControlField(t *testing.T) {
 // dpkgBenchStatus builds a status stream in the shape of /var/lib/dpkg/status.
 func dpkgBenchStatus(pkgCount int) []byte {
 	var buf bytes.Buffer
-	for i := 0; i < pkgCount; i++ {
+	for i := range pkgCount {
 		name := "package-" + strconv.Itoa(i)
 		buf.WriteString("Package: " + name + "\n")
 		buf.WriteString("Status: install ok installed\n")
@@ -410,7 +410,7 @@ func dpkgBenchStatus(pkgCount int) []byte {
 		buf.WriteString("Version: 1." + strconv.Itoa(i) + "-2ubuntu1\n")
 		buf.WriteString("Depends: libc6 (>= 2.34), libtinfo6 (>= 6), libselinux1 (>= 3.1)\n")
 		buf.WriteString("Description: short summary for " + name + "\n")
-		for j := 0; j < 6; j++ {
+		for j := range 6 {
 			buf.WriteString(" continuation line " + strconv.Itoa(j) + " of the long description\n")
 		}
 		buf.WriteString("Original-Maintainer: Debian Developers <bar@example.org>\n")

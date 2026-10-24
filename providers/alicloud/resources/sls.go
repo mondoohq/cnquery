@@ -67,8 +67,8 @@ func (r *mqlAlicloudLog) projects() ([]any, error) {
 		firstPage := true
 		for {
 			resp, err := client.ListProject(&slsclient.ListProjectRequest{
-				Offset: tea.Int32(offset),
-				Size:   tea.Int32(size),
+				Offset: new(offset),
+				Size:   new(size),
 			})
 			if err != nil {
 				// A first-page error means the region has no SLS or the
@@ -188,7 +188,7 @@ func initAlicloudLogProject(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetProject(tea.String(name), &slsclient.GetProjectRequest{})
+	resp, err := client.GetProject(new(name), &slsclient.GetProjectRequest{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -219,9 +219,9 @@ func (r *mqlAlicloudLogProject) logstores() ([]any, error) {
 	size := int32(200)
 	firstPage := true
 	for {
-		resp, err := client.ListLogStores(tea.String(projectName), &slsclient.ListLogStoresRequest{
-			Offset: tea.Int32(offset),
-			Size:   tea.Int32(size),
+		resp, err := client.ListLogStores(new(projectName), &slsclient.ListLogStoresRequest{
+			Offset: new(offset),
+			Size:   new(size),
 		})
 		if err != nil {
 			// First-page error = can't read this project's stores (skip);
@@ -287,7 +287,7 @@ func (r *mqlAlicloudLogProject) fetchPolicy() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	resp, err := client.GetProjectPolicy(tea.String(r.Name.Data))
+	resp, err := client.GetProjectPolicy(new(r.Name.Data))
 	if err != nil {
 		if !slsPolicyAbsent(err) {
 			return "", err
@@ -405,7 +405,7 @@ func initAlicloudLogLogstore(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetLogStore(tea.String(projectName), tea.String(name))
+	resp, err := client.GetLogStore(new(projectName), new(name))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -457,7 +457,7 @@ func (r *mqlAlicloudLogLogstore) fetchDetail() (*slsclient.Logstore, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.GetLogStore(tea.String(r.projectName), tea.String(r.name))
+	resp, err := client.GetLogStore(new(r.projectName), new(r.name))
 	if err != nil {
 		return nil, err
 	}

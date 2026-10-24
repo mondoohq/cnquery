@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"slices"
 	"strings"
 	"unicode"
 
@@ -223,10 +224,7 @@ func (m *shellModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		// Update textarea width (leave space for prompt)
 		promptLen := len(m.theme.Prefix)
-		inputWidth := msg.Width - promptLen - 2
-		if inputWidth < 20 {
-			inputWidth = 20
-		}
+		inputWidth := max(msg.Width-promptLen-2, 20)
 		m.input.SetWidth(inputWidth)
 		// Recalculate height in case line wrapping changed
 		m.updateInputHeight()
@@ -519,8 +517,8 @@ func (m *shellModel) handleSubmit() (tea.Model, tea.Cmd) {
 		}
 
 		// Check for "help <resource>"
-		if strings.HasPrefix(input, "help ") {
-			resource := strings.TrimPrefix(input, "help ")
+		if after, ok := strings.CutPrefix(input, "help "); ok {
+			resource := after
 			output := m.listResources(resource)
 			m.input.SetValue("")
 			m.addToHistory(input)
@@ -742,8 +740,8 @@ func (m *shellModel) updateSearchMatches() {
 	query := strings.ToLower(m.searchQuery)
 
 	// Search backwards through history (most recent first)
-	for i := len(m.history) - 1; i >= 0; i-- {
-		if strings.Contains(strings.ToLower(m.history[i]), query) {
+	for i, v := range slices.Backward(m.history) {
+		if strings.Contains(strings.ToLower(v), query) {
 			m.searchMatches = append(m.searchMatches, i)
 		}
 	}
@@ -831,10 +829,7 @@ func (m *shellModel) acceptCompletion() (tea.Model, tea.Cmd) {
 		// Find the start of the current word (after last separator)
 		lastDot := strings.LastIndex(input, ".")
 		lastSpace := strings.LastIndex(input, " ")
-		wordStart := lastDot
-		if lastSpace > lastDot {
-			wordStart = lastSpace
-		}
+		wordStart := max(lastSpace, lastDot)
 
 		var newValue string
 		if wordStart >= 0 {
@@ -1040,10 +1035,7 @@ func (m *shellModel) renderCompletionPopup() string {
 		return ""
 	}
 
-	maxItems := 10
-	if len(m.suggestions) < maxItems {
-		maxItems = len(m.suggestions)
-	}
+	maxItems := min(len(m.suggestions), 10)
 
 	// Calculate scroll offset
 	startIdx := 0
@@ -1059,15 +1051,11 @@ func (m *shellModel) renderCompletionPopup() string {
 
 	// Reserve space for: padding (4), separator (3), description (min 20)
 	minDescWidth := 20
-	maxNameWidth := availableWidth - minDescWidth - 7
+	maxNameWidth := max(
+		// Cap name column width
+		min(
 
-	// Cap name column width
-	if maxNameWidth > 40 {
-		maxNameWidth = 40
-	}
-	if maxNameWidth < 15 {
-		maxNameWidth = 15
-	}
+			availableWidth-minDescWidth-7, 40), 15)
 
 	// Find the longest name in visible items (for alignment)
 	nameWidth := 0
@@ -1086,13 +1074,7 @@ func (m *shellModel) renderCompletionPopup() string {
 	}
 
 	// Calculate description width
-	descWidth := availableWidth - nameWidth - 7
-	if descWidth < minDescWidth {
-		descWidth = minDescWidth
-	}
-	if descWidth > 50 {
-		descWidth = 50
-	}
+	descWidth := min(max(availableWidth-nameWidth-7, minDescWidth), 50)
 
 	var rows []string
 	for i := startIdx; i < startIdx+maxItems && i < len(m.suggestions); i++ {
@@ -1174,7 +1156,7 @@ func (m *shellModel) listResources(filter string) string {
 	// Sort keys
 	sortedKeys := make([]string, len(keys))
 	copy(sortedKeys, keys)
-	for i := 0; i < len(sortedKeys); i++ {
+	for i := range sortedKeys {
 		for j := i + 1; j < len(sortedKeys); j++ {
 			if sortedKeys[i] > sortedKeys[j] {
 				sortedKeys[i], sortedKeys[j] = sortedKeys[j], sortedKeys[i]

@@ -302,7 +302,7 @@ func (p *mqlGitlabProject) approvalRules() ([]any, error) {
 	var approvals []*gitlab.ProjectApprovalRule
 	for {
 		rules, resp, err := conn.Client().Projects.GetProjectApprovalRules(projectID, &gitlab.GetProjectApprovalRulesListsOptions{
-			ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage},
+			Page: page, PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -548,7 +548,7 @@ func (p *mqlGitlabProject) protectedBranches() ([]any, error) {
 	page := int64(1)
 	var protectedBranches []*gitlab.ProtectedBranch
 	for {
-		branches, resp, err := conn.Client().ProtectedBranches.ListProtectedBranches(projectID, &gitlab.ListProtectedBranchesOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		branches, resp, err := conn.Client().ProtectedBranches.ListProtectedBranches(projectID, &gitlab.ListProtectedBranchesOptions{Page: page, PerPage: perPage})
 		if err != nil {
 			return nil, err
 		}
@@ -820,7 +820,7 @@ func (p *mqlGitlabProject) protectedEnvironments() ([]any, error) {
 	page := int64(1)
 	var all []*gitlab.ProtectedEnvironment
 	for {
-		envs, resp, err := conn.Client().ProtectedEnvironments.ListProtectedEnvironments(projectID, &gitlab.ListProtectedEnvironmentsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		envs, resp, err := conn.Client().ProtectedEnvironments.ListProtectedEnvironments(projectID, &gitlab.ListProtectedEnvironmentsOptions{Page: page, PerPage: perPage})
 		if err != nil {
 			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
 				return []any{}, nil
@@ -896,7 +896,7 @@ func (p *mqlGitlabProject) protectedTags() ([]any, error) {
 	page := int64(1)
 	var all []*gitlab.ProtectedTag
 	for {
-		tags, resp, err := conn.Client().ProtectedTags.ListProtectedTags(projectID, &gitlab.ListProtectedTagsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		tags, resp, err := conn.Client().ProtectedTags.ListProtectedTags(projectID, &gitlab.ListProtectedTagsOptions{Page: page, PerPage: perPage})
 		if err != nil {
 			return nil, err
 		}
@@ -964,7 +964,7 @@ func (j *mqlGitlabProjectJobTokenScope) inboundAllowlistProjects() ([]any, error
 	page := int64(1)
 	var out []any
 	for {
-		projects, resp, err := conn.Client().JobTokenScope.GetProjectJobTokenInboundAllowList(pid, &gitlab.GetJobTokenInboundAllowListOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		projects, resp, err := conn.Client().JobTokenScope.GetProjectJobTokenInboundAllowList(pid, &gitlab.GetJobTokenInboundAllowListOptions{Page: page, PerPage: perPage})
 		if err != nil {
 			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
 				return []any{}, nil
@@ -994,7 +994,7 @@ func (j *mqlGitlabProjectJobTokenScope) allowlistGroups() ([]any, error) {
 	page := int64(1)
 	var out []any
 	for {
-		groups, resp, err := conn.Client().JobTokenScope.GetJobTokenAllowlistGroups(pid, &gitlab.GetJobTokenAllowlistGroupsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		groups, resp, err := conn.Client().JobTokenScope.GetJobTokenAllowlistGroups(pid, &gitlab.GetJobTokenAllowlistGroupsOptions{Page: page, PerPage: perPage})
 		if err != nil {
 			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
 				return []any{}, nil
@@ -1028,10 +1028,8 @@ func (p *mqlGitlabProject) projectMembers() ([]any, error) {
 
 	for {
 		members, resp, err := conn.Client().ProjectMembers.ListAllProjectMembers(projectID, &gitlab.ListProjectMembersOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 			// GitLab omits is_using_seat from the members payload unless it is
 			// asked for, and the SDK models it as a plain bool — without this
 			// every member would decode as isUsingSeat=false.
@@ -1154,9 +1152,9 @@ func (p *mqlGitlabProject) projectFiles() ([]any, error) {
 	recursive := true
 
 	listFilesOptions := &gitlab.ListTreeOptions{
-		ListOptions: gitlab.ListOptions{PerPage: 100},
-		Ref:         ref,
-		Recursive:   &recursive,
+		PerPage:   100,
+		Ref:       ref,
+		Recursive: &recursive,
 	}
 
 	var files []*gitlab.TreeNode
@@ -1375,10 +1373,8 @@ func (p *mqlGitlabProject) mergeRequests() ([]any, error) {
 
 	for {
 		mergeRequests, resp, err := conn.Client().MergeRequests.ListProjectMergeRequests(projectID, &gitlab.ListProjectMergeRequestsOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -1576,10 +1572,8 @@ func (p *mqlGitlabProject) issues() ([]any, error) {
 
 	for {
 		issues, resp, err := conn.Client().Issues.ListProjectIssues(projectID, &gitlab.ListProjectIssuesOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -1660,10 +1654,8 @@ func (p *mqlGitlabProject) releases() ([]any, error) {
 
 	for {
 		releases, resp, err := conn.Client().Releases.ListReleases(projectID, &gitlab.ListReleasesOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -1811,10 +1803,8 @@ func (p *mqlGitlabProject) variables() ([]any, error) {
 
 	for {
 		variables, resp, err := conn.Client().ProjectVariables.ListVariables(projectID, &gitlab.ListProjectVariablesOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -1891,10 +1881,8 @@ func (p *mqlGitlabProject) milestones() ([]any, error) {
 
 	for {
 		milestones, resp, err := conn.Client().Milestones.ListMilestones(projectID, &gitlab.ListMilestonesOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -1961,10 +1949,8 @@ func (p *mqlGitlabProject) labels() ([]any, error) {
 
 	for {
 		labels, resp, err := conn.Client().Labels.ListLabels(projectID, &gitlab.ListLabelsOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -2027,10 +2013,8 @@ func (p *mqlGitlabProject) pipelines() ([]any, error) {
 
 	for {
 		pipelines, resp, err := conn.Client().Pipelines.ListProjectPipelines(projectID, &gitlab.ListProjectPipelinesOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -2134,13 +2118,13 @@ func (p *mqlGitlabProjectPipeline) user() (*mqlGitlabUser, error) {
 	return res.(*mqlGitlabUser), nil
 }
 
-func (p *mqlGitlabProjectPipeline) detailedStatus() (interface{}, error) {
+func (p *mqlGitlabProjectPipeline) detailedStatus() (any, error) {
 	d, err := p.loadDetails()
 	if err != nil || d == nil || d.DetailedStatus == nil {
 		return nil, err
 	}
 	s := d.DetailedStatus
-	return map[string]interface{}{
+	return map[string]any{
 		"icon":    s.Icon,
 		"text":    s.Text,
 		"label":   s.Label,
@@ -2252,10 +2236,8 @@ func (p *mqlGitlabProject) runners() ([]any, error) {
 
 	for {
 		runners, resp, err := conn.Client().Runners.ListProjectRunners(projectID, &gitlab.ListProjectRunnersOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -2360,10 +2342,8 @@ func (p *mqlGitlabProject) accessTokens() ([]any, error) {
 
 	for {
 		tokens, resp, err := conn.Client().ProjectAccessTokens.ListProjectAccessTokens(projectID, &gitlab.ListProjectAccessTokensOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -2478,10 +2458,8 @@ func (p *mqlGitlabProject) deployKeys() ([]any, error) {
 
 	for {
 		keys, resp, err := conn.Client().DeployKeys.ListProjectDeployKeys(projectID, &gitlab.ListProjectDeployKeysOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -2539,10 +2517,8 @@ func (p *mqlGitlabProject) deployTokens() ([]any, error) {
 
 	for {
 		tokens, resp, err := conn.Client().DeployTokens.ListProjectDeployTokens(projectID, &gitlab.ListProjectDeployTokensOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -2700,10 +2676,8 @@ func (p *mqlGitlabProject) auditEvents() ([]any, error) {
 
 	for {
 		events, resp, err := conn.Client().AuditEvents.ListProjectAuditEvents(projectID, &gitlab.ListAuditEventsOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {

@@ -6,7 +6,6 @@ package connection
 import (
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -157,11 +156,11 @@ func TestAdmitsCompartment(t *testing.T) {
 
 func TestSelectCompartments(t *testing.T) {
 	compartments := []identity.Compartment{
-		{Id: common.String("ocid1.compartment.oc1..prod"), Name: common.String("production")},
-		{Id: common.String("ocid1.compartment.oc1..stage"), Name: common.String("staging")},
+		{Id: new("ocid1.compartment.oc1..prod"), Name: new("production")},
+		{Id: new("ocid1.compartment.oc1..stage"), Name: new("staging")},
 		// A compartment with no OCID cannot be asked about, so it is dropped
 		// rather than producing an empty compartment id in a list request.
-		{Id: nil, Name: common.String("broken")},
+		{Id: nil, Name: new("broken")},
 	}
 
 	t.Run("no filter keeps every identifiable compartment", func(t *testing.T) {

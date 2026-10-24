@@ -21,11 +21,11 @@ import (
 // acs:ram::<account>:role/<name>, returning "" when the ARN has no role segment.
 func ramRoleNameFromArn(arn string) string {
 	const marker = "role/"
-	idx := strings.LastIndex(arn, marker)
-	if idx < 0 {
+	_, after, ok := strings.CutLast(arn, marker)
+	if !ok {
 		return ""
 	}
-	return arn[idx+len(marker):]
+	return after
 }
 
 func (r *mqlAlicloudFc) id() (string, error) {
@@ -206,7 +206,7 @@ func initAlicloudFcFunction(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetFunction(tea.String(functionName), &fcclient.GetFunctionRequest{})
+	resp, err := client.GetFunction(new(functionName), &fcclient.GetFunctionRequest{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -284,7 +284,7 @@ func (r *mqlAlicloudFcFunction) triggers() ([]any, error) {
 	res := []any{}
 	var nextToken *string
 	for {
-		resp, err := client.ListTriggers(tea.String(r.functionName), &fcclient.ListTriggersRequest{
+		resp, err := client.ListTriggers(new(r.functionName), &fcclient.ListTriggersRequest{
 			Limit:     tea.Int32(100),
 			NextToken: nextToken,
 		})

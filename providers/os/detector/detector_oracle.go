@@ -46,7 +46,7 @@ func hasOracleELSEnabled(conn shared.Connection) bool {
 			if !strings.HasSuffix(section, "_ELS") {
 				continue
 			}
-			if subFieldsMap, ok := fields.(map[string]interface{}); ok {
+			if subFieldsMap, ok := fields.(map[string]any); ok {
 				if enabled, ok := subFieldsMap["enabled"]; ok {
 					if v, ok := enabled.(string); ok && v == "1" {
 						return true

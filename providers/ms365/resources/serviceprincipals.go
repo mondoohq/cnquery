@@ -773,9 +773,9 @@ func (m *mqlMicrosoft) buildServicePrincipalPermissions(
 		}
 
 		// one line can include multiple scopes
-		scopeList := strings.Split(*scope, " ")
+		scopeList := strings.SplitSeq(*scope, " ")
 
-		for _, scopeEntry := range scopeList {
+		for scopeEntry := range scopeList {
 			if scopeEntry == "" {
 				continue
 			}

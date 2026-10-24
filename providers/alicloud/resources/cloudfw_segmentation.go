@@ -139,8 +139,8 @@ func (r *mqlAlicloudCloudFirewall) vpcFirewalls() ([]any, error) {
 	collected := 0
 	for {
 		resp, err := client.DescribeVpcFirewallList(&cloudfwclient.DescribeVpcFirewallListRequest{
-			CurrentPage: tea.String(strconv.Itoa(currentPage)),
-			PageSize:    tea.String(strconv.Itoa(cloudfwPolicyPageSize)),
+			CurrentPage: new(strconv.Itoa(currentPage)),
+			PageSize:    new(strconv.Itoa(cloudfwPolicyPageSize)),
 		})
 		if err != nil {
 			return nil, err
@@ -274,9 +274,9 @@ func (r *mqlAlicloudCloudFirewallVpcFirewall) controlPolicies() ([]any, error) {
 	collected := 0
 	for {
 		resp, err := client.DescribeVpcFirewallControlPolicy(&cloudfwclient.DescribeVpcFirewallControlPolicyRequest{
-			VpcFirewallId: tea.String(r.VpcFirewallId.Data),
-			CurrentPage:   tea.String(strconv.Itoa(currentPage)),
-			PageSize:      tea.String(strconv.Itoa(cloudfwPolicyPageSize)),
+			VpcFirewallId: new(r.VpcFirewallId.Data),
+			CurrentPage:   new(strconv.Itoa(currentPage)),
+			PageSize:      new(strconv.Itoa(cloudfwPolicyPageSize)),
 		})
 		if err != nil {
 			return nil, err
@@ -349,7 +349,7 @@ func (r *mqlAlicloudCloudFirewall) natFirewalls() ([]any, error) {
 	collected := 0
 	for {
 		resp, err := client.DescribeNatFirewallList(&cloudfwclient.DescribeNatFirewallListRequest{
-			PageNo:   tea.Int64(pageNo),
+			PageNo:   new(pageNo),
 			PageSize: tea.Int64(cloudfwPolicyPageSize),
 		})
 		if err != nil {
@@ -433,10 +433,10 @@ func (r *mqlAlicloudCloudFirewallNatFirewall) controlPolicies() ([]any, error) {
 		collected := 0
 		for {
 			resp, err := client.DescribeNatFirewallControlPolicy(&cloudfwclient.DescribeNatFirewallControlPolicyRequest{
-				NatGatewayId: tea.String(r.natGatewayID),
-				Direction:    tea.String(direction),
-				CurrentPage:  tea.String(strconv.Itoa(currentPage)),
-				PageSize:     tea.String(strconv.Itoa(cloudfwPolicyPageSize)),
+				NatGatewayId: new(r.natGatewayID),
+				Direction:    new(direction),
+				CurrentPage:  new(strconv.Itoa(currentPage)),
+				PageSize:     new(strconv.Itoa(cloudfwPolicyPageSize)),
 			})
 			if err != nil {
 				return nil, err

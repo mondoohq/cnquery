@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -143,7 +142,7 @@ func initOciComputeVnic(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := svc.GetVnic(context.Background(), core.GetVnicRequest{VnicId: common.String(id)})
+	resp, err := svc.GetVnic(context.Background(), core.GetVnicRequest{VnicId: new(id)})
 	if err != nil {
 		return nil, nil, err
 	}

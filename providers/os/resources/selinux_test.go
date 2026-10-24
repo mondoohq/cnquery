@@ -109,8 +109,8 @@ apache
 		modules := ParseSemodule(output)
 		require.Len(t, modules, 3)
 
-		require.Equal(t, SELinuxModule{Name: "abrt", Priority: intPtr(100), Status: "enabled"}, modules[0])
-		require.Equal(t, SELinuxModule{Name: "custom_policy", Priority: intPtr(200), Status: "enabled"}, modules[2])
+		require.Equal(t, SELinuxModule{Name: "abrt", Priority: new(100), Status: "enabled"}, modules[0])
+		require.Equal(t, SELinuxModule{Name: "custom_policy", Priority: new(200), Status: "enabled"}, modules[2])
 	})
 
 	t.Run("full format with status", func(t *testing.T) {
@@ -121,8 +121,8 @@ apache
 		modules := ParseSemodule(output)
 		require.Len(t, modules, 3)
 
-		require.Equal(t, SELinuxModule{Name: "abrt", Priority: intPtr(100), Status: "enabled"}, modules[0])
-		require.Equal(t, SELinuxModule{Name: "custom_policy", Priority: intPtr(200), Status: "disabled"}, modules[2])
+		require.Equal(t, SELinuxModule{Name: "abrt", Priority: new(100), Status: "enabled"}, modules[0])
+		require.Equal(t, SELinuxModule{Name: "custom_policy", Priority: new(200), Status: "disabled"}, modules[2])
 	})
 
 	t.Run("empty output", func(t *testing.T) {
@@ -165,8 +165,6 @@ func TestReadSelinuxBooleansFromFS(t *testing.T) {
 	})
 }
 
-func intPtr(i int) *int { return &i }
-
 // Output captured from `semodule --list-modules=full` and `semodule -l` on
 // RHEL 9 (policycoreutils 3.6) and RHEL 7 (2.5), with a module installed at
 // priority 400 and zosremote disabled.
@@ -179,9 +177,9 @@ func TestParseSemoduleListings(t *testing.T) {
 			"100 zosremote         pp  disabled\n"
 		modules := ParseSemodule(output)
 		require.Len(t, modules, 5)
-		assert.Equal(t, SELinuxModule{Name: "sweeppol", Priority: intPtr(400), Status: "enabled"}, modules[1])
-		assert.Equal(t, SELinuxModule{Name: "abrt", Priority: intPtr(100), Status: "enabled"}, modules[3])
-		assert.Equal(t, SELinuxModule{Name: "zosremote", Priority: intPtr(100), Status: "disabled"}, modules[4])
+		assert.Equal(t, SELinuxModule{Name: "sweeppol", Priority: new(400), Status: "enabled"}, modules[1])
+		assert.Equal(t, SELinuxModule{Name: "abrt", Priority: new(100), Status: "enabled"}, modules[3])
+		assert.Equal(t, SELinuxModule{Name: "zosremote", Priority: new(100), Status: "disabled"}, modules[4])
 	})
 
 	t.Run("full listing on RHEL 7", func(t *testing.T) {
@@ -190,8 +188,8 @@ func TestParseSemoduleListings(t *testing.T) {
 			"100 zosremote         pp disabled\n"
 		modules := ParseSemodule(output)
 		require.Len(t, modules, 3)
-		assert.Equal(t, SELinuxModule{Name: "sweeppol", Priority: intPtr(400), Status: "enabled"}, modules[0])
-		assert.Equal(t, SELinuxModule{Name: "zosremote", Priority: intPtr(100), Status: "disabled"}, modules[2])
+		assert.Equal(t, SELinuxModule{Name: "sweeppol", Priority: new(400), Status: "enabled"}, modules[0])
+		assert.Equal(t, SELinuxModule{Name: "zosremote", Priority: new(100), Status: "disabled"}, modules[2])
 	})
 
 	t.Run("RHEL 7 semodule -l prints versions, not a status", func(t *testing.T) {

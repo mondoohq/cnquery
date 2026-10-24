@@ -216,7 +216,7 @@ func (s *sharingSources) printerSharing() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	for _, line := range strings.Split(stdout, "\n") {
+	for line := range strings.SplitSeq(stdout, "\n") {
 		key, value, ok := strings.Cut(strings.TrimSpace(line), "=")
 		if ok && key == "_share_printers" {
 			return value == "1", nil

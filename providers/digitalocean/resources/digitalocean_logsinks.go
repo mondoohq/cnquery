@@ -11,7 +11,7 @@ import (
 	"go.mondoo.com/mql/providers/digitalocean/connection"
 )
 
-func (r *mqlDigitaloceanDatabase) logsinks() ([]interface{}, error) {
+func (r *mqlDigitaloceanDatabase) logsinks() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -23,7 +23,7 @@ func (r *mqlDigitaloceanDatabase) logsinks() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(sinks))
+	all := make([]any, 0, len(sinks))
 	for i := range sinks {
 		args, err := logsinkArgs(databaseID, &sinks[i])
 		if err != nil {

@@ -196,8 +196,8 @@ func TestLabelData(t *testing.T) {
 		{"nil", nil, wantEmpty},
 		{"empty string map", map[string]string{}, wantEmpty},
 		{"string map", map[string]string{"env": "prod", "tier": "frontend"}, wantOne},
-		{"any map (string values)", map[string]interface{}{"env": "prod", "tier": "frontend"}, wantOne},
-		{"any map drops non-strings", map[string]interface{}{"env": "prod", "n": 7}, map[string]any{"env": "prod"}},
+		{"any map (string values)", map[string]any{"env": "prod", "tier": "frontend"}, wantOne},
+		{"any map drops non-strings", map[string]any{"env": "prod", "n": 7}, map[string]any{"env": "prod"}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -219,10 +219,10 @@ func TestLabelData(t *testing.T) {
 }
 
 func TestDictAny(t *testing.T) {
-	in := map[string]interface{}{
+	in := map[string]any{
 		"a": "x",
-		"b": []interface{}{"y", 1.0},
-		"c": map[string]interface{}{"d": true},
+		"b": []any{"y", 1.0},
+		"c": map[string]any{"d": true},
 	}
 	out := dictAny(in)
 	m, ok := out.(map[string]any)

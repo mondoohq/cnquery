@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/loadbalancer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,8 +24,8 @@ func testCipherSuites() map[string]loadbalancer.SslCipherSuite {
 func testCertificates() map[string]loadbalancer.Certificate {
 	return map[string]loadbalancer.Certificate{
 		"wildcard": {
-			CertificateName:   common.String("wildcard"),
-			PublicCertificate: common.String("-----BEGIN CERTIFICATE-----"),
+			CertificateName:   new("wildcard"),
+			PublicCertificate: new("-----BEGIN CERTIFICATE-----"),
 		},
 	}
 }

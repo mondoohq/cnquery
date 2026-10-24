@@ -36,7 +36,7 @@ func firefoxAbsoluteProfiles(ini string) []string {
 		}
 		inProfile, absolute, profilePath = false, false, ""
 	}
-	for _, line := range strings.Split(ini, "\n") {
+	for line := range strings.SplitSeq(ini, "\n") {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "[") {
 			flush()

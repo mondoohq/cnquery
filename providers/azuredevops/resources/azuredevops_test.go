@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"maps"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -38,9 +39,7 @@ func newDiscoveryRuntime(t *testing.T, extra map[string]string, targets []string
 		connection.OPTION_ORGANIZATION: fakeado.Org,
 		connection.OPTION_API_ENDPOINT: srv.URL,
 	}
-	for k, v := range extra {
-		opts[k] = v
-	}
+	maps.Copy(opts, extra)
 	conf := &inventory.Config{
 		Type:        "azuredevops",
 		Options:     opts,

@@ -5,6 +5,7 @@ package firefox
 
 import (
 	"encoding/json"
+	"maps"
 	"strconv"
 	"strings"
 )
@@ -176,12 +177,8 @@ func mergeMergeable(existing, fromSubkey any) (any, bool) {
 	}
 
 	res := make(map[string]any, len(subkeyObj)+len(existingObj))
-	for k, v := range subkeyObj {
-		res[k] = v
-	}
-	for k, v := range existingObj {
-		res[k] = v
-	}
+	maps.Copy(res, subkeyObj)
+	maps.Copy(res, existingObj)
 	return res, true
 }
 

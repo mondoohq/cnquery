@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identitydomains"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,16 +14,16 @@ import (
 const secretValue = "never-read-secret"
 
 func TestCredentialMappingNeverReadsSecrets(t *testing.T) {
-	meta := &identitydomains.Meta{Created: common.String("2026-01-02T03:04:05Z")}
+	meta := &identitydomains.Meta{Created: new("2026-01-02T03:04:05Z")}
 	creds := []ociDomainCredential{
-		apiKeyCredential(identitydomains.ApiKey{Id: common.String("k1"), Fingerprint: common.String("aa:bb"), Key: common.String(secretValue), Meta: meta,
-			User: &identitydomains.ApiKeyUser{Value: common.String("u1"), Ocid: common.String("ocid1.user..u1")}}),
-		authTokenCredential(identitydomains.AuthToken{Id: common.String("t1"), Token: common.String(secretValue), Status: identitydomains.AuthTokenStatusActive,
-			ExpiresOn: common.String("2027-01-01T00:00:00Z"), Meta: meta}),
-		customerSecretKeyCredential(identitydomains.CustomerSecretKey{Id: common.String("s1"), SecretKey: common.String(secretValue), DisplayName: common.String("s3 key")}),
-		oauth2ClientCredential(identitydomains.OAuth2ClientCredential{Id: common.String("o1"), Secret: common.String(secretValue), Name: common.String("ci")}),
-		smtpCredential(identitydomains.SmtpCredential{Id: common.String("m1"), Password: common.String(secretValue), UserName: common.String("smtp-user")}),
-		dbCredential(identitydomains.UserDbCredential{Id: common.String("d1"), DbPassword: common.String(secretValue), MixedDbPassword: common.String(secretValue)}),
+		apiKeyCredential(identitydomains.ApiKey{Id: new("k1"), Fingerprint: new("aa:bb"), Key: new(secretValue), Meta: meta,
+			User: &identitydomains.ApiKeyUser{Value: new("u1"), Ocid: new("ocid1.user..u1")}}),
+		authTokenCredential(identitydomains.AuthToken{Id: new("t1"), Token: new(secretValue), Status: identitydomains.AuthTokenStatusActive,
+			ExpiresOn: new("2027-01-01T00:00:00Z"), Meta: meta}),
+		customerSecretKeyCredential(identitydomains.CustomerSecretKey{Id: new("s1"), SecretKey: new(secretValue), DisplayName: new("s3 key")}),
+		oauth2ClientCredential(identitydomains.OAuth2ClientCredential{Id: new("o1"), Secret: new(secretValue), Name: new("ci")}),
+		smtpCredential(identitydomains.SmtpCredential{Id: new("m1"), Password: new(secretValue), UserName: new("smtp-user")}),
+		dbCredential(identitydomains.UserDbCredential{Id: new("d1"), DbPassword: new(secretValue), MixedDbPassword: new(secretValue)}),
 	}
 	for _, c := range creds {
 		assert.NotContains(t, fmt.Sprintf("%+v", c), secretValue, "credential %s must not carry its secret", c.typ)
@@ -53,8 +52,8 @@ func TestOciScimUserFilter(t *testing.T) {
 
 func TestSocialIdentityProviderArgsNeverReadsSecret(t *testing.T) {
 	args := socialIdentityProviderArgs("dom", 0, identitydomains.SocialIdentityProvider{
-		Id: common.String("p1"), Name: common.String("Google"), ConsumerSecret: common.String(secretValue),
-		Enabled: common.Bool(true), RegistrationEnabled: common.Bool(true),
+		Id: new("p1"), Name: new("Google"), ConsumerSecret: new(secretValue),
+		Enabled: new(true), RegistrationEnabled: new(true),
 	})
 	for k, v := range args {
 		assert.NotEqual(t, secretValue, v.Value, "the consumer secret must not reach field %s", k)

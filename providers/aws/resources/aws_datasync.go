@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"strings"
 	"sync"
 	"time"
@@ -522,11 +523,9 @@ func datasyncTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (ma
 			}
 			return nil, err
 		}
-		for k, v := range tagsToMap(page.Tags,
+		maps.Copy(tags, tagsToMap(page.Tags,
 			func(t datasynctypes.TagListEntry) *string { return t.Key },
-			func(t datasynctypes.TagListEntry) *string { return t.Value }) {
-			tags[k] = v
-		}
+			func(t datasynctypes.TagListEntry) *string { return t.Value }))
 	}
 	return tags, nil
 }

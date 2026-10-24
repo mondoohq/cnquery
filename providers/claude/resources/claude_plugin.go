@@ -28,7 +28,7 @@ type mqlClaudeOrganizationPluginInternal struct {
 	cacheComponents []anthropic.BetaPluginComponent
 }
 
-func (r *mqlClaudeOrganization) plugins() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) plugins() ([]any, error) {
 	client, err := adminSDKClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (r *mqlClaudeOrganization) plugins() ([]interface{}, error) {
 		return nil, classifyAdminError(fmt.Errorf("listing plugins: %w", err), endpointUnavailable, pluginReadScopes...)
 	}
 
-	res := make([]interface{}, 0, len(plugins))
+	res := make([]any, 0, len(plugins))
 	for _, p := range plugins {
 		mqlPlugin, err := CreateResource(r.MqlRuntime, "claude.organization.plugin", pluginArgs(p))
 		if err != nil {
@@ -103,12 +103,12 @@ func pluginComponents(p anthropic.BetaPlugin) []anthropic.BetaPluginComponent {
 	return p.Components
 }
 
-func (r *mqlClaudeOrganizationPlugin) components() ([]interface{}, error) {
+func (r *mqlClaudeOrganizationPlugin) components() ([]any, error) {
 	if r.cacheComponents == nil {
 		r.Components.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	res := make([]interface{}, 0, len(r.cacheComponents))
+	res := make([]any, 0, len(r.cacheComponents))
 	for _, c := range r.cacheComponents {
 		mqlComponent, err := CreateResource(r.MqlRuntime, "claude.organization.plugin.component", pluginComponentArgs(r.Id.Data, c))
 		if err != nil {
@@ -187,7 +187,7 @@ type mqlClaudeOrganizationPluginMarketplaceInternal struct {
 	cacheOwnerUserID string
 }
 
-func (r *mqlClaudeOrganization) pluginMarketplaces() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) pluginMarketplaces() ([]any, error) {
 	client, err := adminSDKClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -199,7 +199,7 @@ func (r *mqlClaudeOrganization) pluginMarketplaces() ([]interface{}, error) {
 		return nil, classifyAdminError(fmt.Errorf("listing plugin marketplaces: %w", err), endpointUnavailable, pluginReadScopes...)
 	}
 
-	res := make([]interface{}, 0, len(marketplaces))
+	res := make([]any, 0, len(marketplaces))
 	for _, mp := range marketplaces {
 		mqlMp, err := CreateResource(r.MqlRuntime, "claude.organization.pluginMarketplace", pluginMarketplaceArgs(mp))
 		if err != nil {
@@ -243,8 +243,8 @@ func (r *mqlClaudeOrganizationPluginMarketplace) owner() (*mqlClaudeOrganization
 
 // plugins lists the marketplace's plugins from the organization's plugin list,
 // fetched once for every marketplace.
-func (r *mqlClaudeOrganizationPluginMarketplace) plugins() ([]interface{}, error) {
-	all, err := organizationList(r.MqlRuntime, func(o *mqlClaudeOrganization) *plugin.TValue[[]interface{}] {
+func (r *mqlClaudeOrganizationPluginMarketplace) plugins() ([]any, error) {
+	all, err := organizationList(r.MqlRuntime, func(o *mqlClaudeOrganization) *plugin.TValue[[]any] {
 		return o.GetPlugins()
 	})
 	if err != nil {
@@ -253,8 +253,8 @@ func (r *mqlClaudeOrganizationPluginMarketplace) plugins() ([]interface{}, error
 	return pluginsInMarketplace(all, r.Id.Data), nil
 }
 
-func pluginsInMarketplace(all []interface{}, marketplaceID string) []interface{} {
-	res := []interface{}{}
+func pluginsInMarketplace(all []any, marketplaceID string) []any {
+	res := []any{}
 	for _, item := range all {
 		p, ok := item.(*mqlClaudeOrganizationPlugin)
 		if ok && p.cacheMarketplaceID == marketplaceID {

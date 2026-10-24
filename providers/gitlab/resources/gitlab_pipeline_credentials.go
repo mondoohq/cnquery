@@ -74,7 +74,7 @@ func (p *mqlGitlabProject) pipelineTriggers() ([]any, error) {
 	page := int64(1)
 	for {
 		triggers, resp, err := conn.Client().PipelineTriggers.ListPipelineTriggers(projectID, &gitlab.ListPipelineTriggersOptions{
-			ListOptions: gitlab.ListOptions{Page: page, PerPage: gitlabPerPage},
+			Page: page, PerPage: gitlabPerPage,
 		})
 		if err != nil {
 			return nil, err
@@ -220,7 +220,7 @@ func (p *mqlGitlabProject) pipelineSchedules() ([]any, error) {
 	page := int64(1)
 	for {
 		schedules, resp, err := conn.Client().PipelineSchedules.ListPipelineSchedules(projectID, &gitlab.ListPipelineSchedulesOptions{
-			ListOptions: gitlab.ListOptions{Page: page, PerPage: gitlabPerPage},
+			Page: page, PerPage: gitlabPerPage,
 		})
 		if err != nil {
 			return nil, err
@@ -284,7 +284,7 @@ func (p *mqlGitlabProject) secureFiles() ([]any, error) {
 	page := int64(1)
 	for {
 		files, resp, err := conn.Client().SecureFiles.ListProjectSecureFiles(projectID, &gitlab.ListProjectSecureFilesOptions{
-			ListOptions: gitlab.ListOptions{Page: page, PerPage: gitlabPerPage},
+			Page: page, PerPage: gitlabPerPage,
 		})
 		if err != nil {
 			return nil, err
@@ -394,7 +394,7 @@ func (a *mqlGitlabProjectClusterAgent) tokens() ([]any, error) {
 	page := int64(1)
 	for {
 		tokens, resp, err := conn.Client().ClusterAgents.ListAgentTokens(int(a.projectID), a.Id.Data, &gitlab.ListAgentTokensOptions{
-			ListOptions: gitlab.ListOptions{Page: page, PerPage: gitlabPerPage},
+			Page: page, PerPage: gitlabPerPage,
 		})
 		if err != nil {
 			return nil, err
@@ -460,7 +460,7 @@ func (p *mqlGitlabProject) clusterAgents() ([]any, error) {
 	page := int64(1)
 	for {
 		agents, resp, err := conn.Client().ClusterAgents.ListAgents(projectID, &gitlab.ListAgentsOptions{
-			ListOptions: gitlab.ListOptions{Page: page, PerPage: gitlabPerPage},
+			Page: page, PerPage: gitlabPerPage,
 		})
 		if err != nil {
 			return nil, err
@@ -517,7 +517,7 @@ func (p *mqlGitlabProject) remoteMirrors() ([]any, error) {
 	page := int64(1)
 	for {
 		mirrors, resp, err := conn.Client().ProjectMirrors.ListProjectMirror(projectID, &gitlab.ListProjectMirrorOptions{
-			ListOptions: gitlab.ListOptions{Page: page, PerPage: gitlabPerPage},
+			Page: page, PerPage: gitlabPerPage,
 		})
 		if err != nil {
 			return nil, err

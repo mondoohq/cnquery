@@ -120,7 +120,7 @@ func DecoderOption() viper.DecoderConfigOption {
 	))
 }
 
-var timeType = reflect.TypeOf(time.Time{})
+var timeType = reflect.TypeFor[time.Time]()
 
 // timeToStringHook writes a timestamp back as the date the author wrote, or as
 // RFC3339 when it carries a time of day.

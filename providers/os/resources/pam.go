@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"maps"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -39,12 +41,7 @@ var pamServiceDirs = []string{defaultPamDir, "/usr/lib/pam.d", "/usr/etc/pam.d"}
 // per-service PAM directories, where the file name is the service name.
 func isPamServiceDir(filePath string) bool {
 	dir := filepath.Dir(filePath)
-	for _, d := range pamServiceDirs {
-		if dir == d {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(pamServiceDirs, dir)
 }
 
 // pamPathExists reports whether path exists on the target.
@@ -252,8 +249,8 @@ func (s *mqlPamConf) services(files []any) (map[string]any, error) {
 // preserved — PAM module names are conventionally lowercase, but we don't
 // fold them.
 func canonicalizePamModuleName(name string) string {
-	if idx := strings.LastIndex(name, "/"); idx >= 0 {
-		name = name[idx+1:]
+	if _, after, ok := strings.CutLast(name, "/"); ok {
+		name = after
 	}
 	name = strings.TrimSuffix(name, ".so")
 	return name
@@ -275,9 +272,9 @@ func aggregatePamParams(optionLists ...[]any) map[string]any {
 			if token == "" {
 				continue
 			}
-			if idx := strings.Index(token, "="); idx >= 0 {
-				key := strings.ToLower(token[:idx])
-				value := token[idx+1:]
+			if before, after, ok := strings.Cut(token, "="); ok {
+				key := strings.ToLower(before)
+				value := after
 				params[key] = value
 			} else {
 				params[strings.ToLower(token)] = ""
@@ -312,7 +309,7 @@ func isPamControlEnabled(control string) bool {
 		return true
 	}
 	hasDefault := false
-	for _, tok := range strings.Fields(strings.Trim(c, "[]")) {
+	for tok := range strings.FieldsSeq(strings.Trim(c, "[]")) {
 		value, action, ok := strings.Cut(strings.ToLower(tok), "=")
 		if !ok {
 			continue
@@ -616,7 +613,7 @@ func isPamSingleFileFormat(filePath, content string) bool {
 		return false
 	}
 	typeFirst, typeSecond := 0, 0
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		fields := strings.Fields(pam.StripComments(line))
 		switch {
 		case len(fields) == 0:
@@ -736,9 +733,7 @@ func (p *pamStack) files() (map[string]any, error) {
 	}
 	// a copy, so the files load reads do not show up in pam.conf.entries
 	p.entries = make(map[string]any, len(all.Data))
-	for k, v := range all.Data {
-		p.entries[k] = v
-	}
+	maps.Copy(p.entries, all.Data)
 	return p.entries, nil
 }
 

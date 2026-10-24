@@ -127,7 +127,7 @@ func ParseAccessLists(runningConfig string) []AccessList {
 			Type:    listType,
 			Entries: []AccessListEntry{},
 		}
-		for _, line := range strings.Split(body, "\n") {
+		for line := range strings.SplitSeq(body, "\n") {
 			line = strings.TrimSpace(line)
 			if line == "" {
 				continue

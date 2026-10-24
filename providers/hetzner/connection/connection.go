@@ -82,13 +82,12 @@ func NewHetznerConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 // project-specific permissions.
 func (c *HetznerConnection) Verify() error {
 	_, _, err := c.client.Location.List(context.Background(), hcloud.LocationListOpts{
-		ListOpts: hcloud.ListOpts{PerPage: 1},
+		PerPage: 1,
 	})
 	if err == nil {
 		return nil
 	}
-	var hErr hcloud.Error
-	if errors.As(err, &hErr) {
+	if hErr, ok := errors.AsType[hcloud.Error](err); ok {
 		switch hErr.Code {
 		case hcloud.ErrorCodeUnauthorized, hcloud.ErrorCodeForbidden:
 			return errors.New("invalid Hetzner Cloud token; verify your credentials")

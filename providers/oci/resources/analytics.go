@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/analytics"
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -36,7 +35,7 @@ func (o *mqlOciAnalytics) instances() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]analytics.AnalyticsInstanceSummary, *string, error) {
 				response, err := svc.ListAnalyticsInstances(ctx, analytics.ListAnalyticsInstancesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {

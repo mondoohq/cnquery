@@ -571,7 +571,7 @@ func (a *mqlAwsGuarddutyDetectorPublishingDestination) s3Bucket() (*mqlAwsS3Buck
 		a.S3Bucket.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	bucketName := strings.Split(parts[1], "/")[0]
+	bucketName, _, _ := strings.Cut(parts[1], "/")
 
 	mqlBucket, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
 		map[string]*llx.RawData{"name": llx.StringData(bucketName)})

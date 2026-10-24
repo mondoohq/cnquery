@@ -365,7 +365,7 @@ func initVercelProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 	if projectID == "" && conn.Asset() != nil {
 		for _, pid := range conn.Asset().PlatformIds {
-			if p := strings.TrimPrefix(pid, connection.PlatformIdVercelProject); p != pid {
+			if p, ok := strings.CutPrefix(pid, connection.PlatformIdVercelProject); ok {
 				projectID = p
 				break
 			}

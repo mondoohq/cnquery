@@ -86,7 +86,7 @@ func (m *mqlMacosMdm) fetchEnrollment() (mdmEnrollment, error) {
 // versions; we lowercase both sides before comparing.
 func parseMdmEnrollment(out string) mdmEnrollment {
 	state := mdmEnrollment{}
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		// IndexByte(line, ':') splits at the first colon only, preserving any
 		// colons within the URL value (e.g., "ServerURL: https://mdm.example.com:443/...").
 		idx := strings.IndexByte(line, ':')

@@ -205,13 +205,13 @@ func (r *mqlAlicloudCloudFirewall) controlPolicies() ([]any, error) {
 		collected := 0
 		for {
 			resp, err := client.DescribeControlPolicy(&cloudfwclient.DescribeControlPolicyRequest{
-				Direction:   tea.String(direction),
-				CurrentPage: tea.String(strconv.Itoa(currentPage)),
+				Direction:   new(direction),
+				CurrentPage: new(strconv.Itoa(currentPage)),
 				// The API caps PageSize server-side (documented example is 10),
 				// so use a conservative page and terminate on the accumulated
 				// count vs TotalCount below — robust to whatever the server caps
 				// the page at, rather than assuming a full page means "more".
-				PageSize: tea.String("50"),
+				PageSize: new("50"),
 			})
 			if err != nil {
 				return nil, err

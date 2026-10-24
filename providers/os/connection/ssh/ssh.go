@@ -693,10 +693,6 @@ func knownHostsCallback() (ssh.HostKeyCallback, error) {
 	return knownhosts.New(existentKnownHosts...)
 }
 
-func establishClientConnection(pCfg *inventory.Config, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, []io.Closer, error) {
-	return establishClientConnectionContext(context.Background(), pCfg, hostKeyCallback)
-}
-
 func establishClientConnectionContext(parent context.Context, pCfg *inventory.Config, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, []io.Closer, error) {
 	timeout, err := sshConnectTimeout(pCfg.Options)
 	if err != nil {
@@ -848,14 +844,6 @@ func serverSupportsHybridKEXContext(parent context.Context, addr string) (bool, 
 	}
 
 	return false, nil
-}
-
-// prepareConnection determines the auth methods required for a ssh connection and also prepares any other
-// pre-conditions for the connection like tunnelling the connection via AWS SSM session
-func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), defaultSSHConnectTimeout)
-	defer cancel()
-	return prepareConnectionContext(ctx, conf)
 }
 
 func prepareConnectionContext(ctx context.Context, conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, error) {

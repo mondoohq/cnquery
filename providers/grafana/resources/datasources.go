@@ -40,7 +40,7 @@ type grafanaDatasourceJSON struct {
 	JSONData          json.RawMessage `json:"jsonData"`
 }
 
-func (g *mqlGrafana) datasources() ([]interface{}, error) {
+func (g *mqlGrafana) datasources() ([]any, error) {
 	conn, err := grafanaConnection(g.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -59,11 +59,11 @@ func (g *mqlGrafana) datasources() ([]interface{}, error) {
 		return nil, fmt.Errorf("grafana: decoding /api/datasources response: %w", err)
 	}
 
-	list := make([]interface{}, 0, len(raw))
+	list := make([]any, 0, len(raw))
 	for _, ds := range raw {
-		var jsonDataDict interface{}
+		var jsonDataDict any
 		if len(ds.JSONData) > 0 && string(ds.JSONData) != "null" {
-			var parsed interface{}
+			var parsed any
 			if err := json.Unmarshal(ds.JSONData, &parsed); err != nil {
 				return nil, fmt.Errorf("grafana: parsing jsonData for datasource %s: %w", ds.UID, err)
 			}

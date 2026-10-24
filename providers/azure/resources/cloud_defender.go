@@ -948,7 +948,7 @@ func splitSecurityContactEmails(emails *string) []any {
 	if emails == nil {
 		return out
 	}
-	for _, e := range strings.Split(*emails, ";") {
+	for e := range strings.SplitSeq(*emails, ";") {
 		if e = strings.TrimSpace(e); e != "" {
 			out = append(out, e)
 		}
@@ -1674,7 +1674,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 			if item.ID != nil {
 				id = *item.ID
 			}
-			resourceId := strings.SplitN(id, "/providers/Microsoft.Security/assessments/", 2)[0]
+			resourceId, _, _ := strings.Cut(id, "/providers/Microsoft.Security/assessments/")
 
 			// The catalogue lookup can miss because metadata was never fetched
 			// (the list call was denied or throttled) as well as because the

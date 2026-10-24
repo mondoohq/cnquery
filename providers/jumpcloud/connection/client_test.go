@@ -177,9 +177,9 @@ func TestGraphPathEscapesID(t *testing.T) {
 // TestOrganizationIDResolvedOnce verifies concurrent callers share a single
 // resolution. Run under -race this also proves the lazy write is synchronized.
 func TestOrganizationIDResolvedOnce(t *testing.T) {
-	var calls int32
+	var calls atomic.Int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		atomic.AddInt32(&calls, 1)
+		calls.Add(1)
 		_, _ = w.Write([]byte(`{"results":[{"_id":"org_1"}],"totalCount":1}`))
 	}))
 	defer srv.Close()
@@ -202,15 +202,15 @@ func TestOrganizationIDResolvedOnce(t *testing.T) {
 		require.NoError(t, errs[i])
 		assert.Equal(t, "org_1", ids[i])
 	}
-	assert.Equal(t, int32(1), atomic.LoadInt32(&calls), "expected a single resolution across concurrent callers")
+	assert.Equal(t, int32(1), calls.Load(), "expected a single resolution across concurrent callers")
 }
 
 // TestOrganizationIDPrefersConfiguredValue verifies a caller-supplied org id
 // short-circuits the lookup entirely.
 func TestOrganizationIDPrefersConfiguredValue(t *testing.T) {
-	var calls int32
+	var calls atomic.Int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		atomic.AddInt32(&calls, 1)
+		calls.Add(1)
 		_, _ = w.Write([]byte(`{"results":[{"_id":"resolved"}],"totalCount":1}`))
 	}))
 	defer srv.Close()
@@ -219,5 +219,5 @@ func TestOrganizationIDPrefersConfiguredValue(t *testing.T) {
 	id, err := conn.OrganizationID()
 	require.NoError(t, err)
 	assert.Equal(t, "configured", id)
-	assert.Equal(t, int32(0), atomic.LoadInt32(&calls), "a configured org id must not trigger a lookup")
+	assert.Equal(t, int32(0), calls.Load(), "a configured org id must not trigger a lookup")
 }

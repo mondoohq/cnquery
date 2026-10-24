@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"maps"
 
 	"github.com/digitalocean/godo"
 	"go.mondoo.com/mql/llx"
@@ -16,7 +17,7 @@ import (
 
 // --- Database sub-resources ---
 
-func (r *mqlDigitaloceanDatabase) users() ([]interface{}, error) {
+func (r *mqlDigitaloceanDatabase) users() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -27,7 +28,7 @@ func (r *mqlDigitaloceanDatabase) users() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(users))
+	all := make([]any, 0, len(users))
 	for _, u := range users {
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.database.user", map[string]*llx.RawData{
 			"databaseId":     llx.StringData(r.Id.Data),
@@ -51,7 +52,7 @@ func (r *mqlDigitaloceanDatabaseUser) id() (string, error) {
 	return "digitalocean.database.user/" + r.DatabaseId.Data + "/" + r.Name.Data, nil
 }
 
-func (r *mqlDigitaloceanDatabase) replicas() ([]interface{}, error) {
+func (r *mqlDigitaloceanDatabase) replicas() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -62,9 +63,9 @@ func (r *mqlDigitaloceanDatabase) replicas() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(replicas))
+	all := make([]any, 0, len(replicas))
 	for _, rep := range replicas {
-		tags := make([]interface{}, len(rep.Tags))
+		tags := make([]any, len(rep.Tags))
 		for i, t := range rep.Tags {
 			tags[i] = t
 		}
@@ -95,12 +96,12 @@ func databaseEngineHasPools(engine string) bool {
 	return engine == "pg"
 }
 
-func (r *mqlDigitaloceanDatabase) pools() ([]interface{}, error) {
+func (r *mqlDigitaloceanDatabase) pools() ([]any, error) {
 	// No other engine can hold a pool, so it has none, and asking the pools
 	// endpoint for one would only turn that empty answer into a failure for
 	// this cluster.
 	if !databaseEngineHasPools(r.Engine.Data) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
@@ -112,7 +113,7 @@ func (r *mqlDigitaloceanDatabase) pools() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(pools))
+	all := make([]any, 0, len(pools))
 	for _, p := range pools {
 		// The pooler's connection URIs embed the pool user's password, so
 		// they are deliberately not surfaced; host and port are reported
@@ -166,7 +167,7 @@ func poolConnection(c *godo.DatabaseConnection) (host *string, port *int64, ssl 
 
 // --- VPC Peering ---
 
-func (r *mqlDigitalocean) vpcPeerings() ([]interface{}, error) {
+func (r *mqlDigitalocean) vpcPeerings() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -175,9 +176,9 @@ func (r *mqlDigitalocean) vpcPeerings() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(peerings))
+	all := make([]any, 0, len(peerings))
 	for _, p := range peerings {
-		vpcIds := make([]interface{}, len(p.VPCIDs))
+		vpcIds := make([]any, len(p.VPCIDs))
 		for i, id := range p.VPCIDs {
 			vpcIds[i] = id
 		}
@@ -202,7 +203,7 @@ func (r *mqlDigitaloceanVpcPeering) id() (string, error) {
 
 // --- Kubernetes node pools (typed) ---
 
-func (r *mqlDigitaloceanKubernetesCluster) nodePools() ([]interface{}, error) {
+func (r *mqlDigitaloceanKubernetesCluster) nodePools() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -213,21 +214,21 @@ func (r *mqlDigitaloceanKubernetesCluster) nodePools() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(pools))
+	all := make([]any, 0, len(pools))
 	for _, np := range pools {
-		npTags := make([]interface{}, len(np.Tags))
+		npTags := make([]any, len(np.Tags))
 		for i, t := range np.Tags {
 			npTags[i] = t
 		}
 
-		labels := map[string]interface{}{}
+		labels := map[string]any{}
 		for k, v := range np.Labels {
 			labels[k] = v
 		}
 
-		taints := make([]interface{}, len(np.Taints))
+		taints := make([]any, len(np.Taints))
 		for i, t := range np.Taints {
-			taints[i] = map[string]interface{}{
+			taints[i] = map[string]any{
 				"key":    t.Key,
 				"value":  t.Value,
 				"effect": t.Effect,
@@ -268,8 +269,8 @@ type mqlDigitaloceanKubernetesNodePoolInternal struct {
 	cacheNodes []*godo.KubernetesNode
 }
 
-func (r *mqlDigitaloceanKubernetesNodePool) nodes() ([]interface{}, error) {
-	out := make([]interface{}, 0, len(r.cacheNodes))
+func (r *mqlDigitaloceanKubernetesNodePool) nodes() ([]any, error) {
+	out := make([]any, 0, len(r.cacheNodes))
 	for _, n := range r.cacheNodes {
 		if n == nil {
 			continue
@@ -329,7 +330,7 @@ func initDigitaloceanRegistry(runtime *plugin.Runtime, args map[string]*llx.RawD
 		// would be an invented value.
 		args["createdAt"] = llx.TimeDataPtr(nil)
 		args["subscriptionTier"] = llx.StringData("")
-		args["subscription"] = llx.DictData(map[string]interface{}{})
+		args["subscription"] = llx.DictData(map[string]any{})
 		return args, nil, nil
 	}
 	if reg == nil {
@@ -337,9 +338,7 @@ func initDigitaloceanRegistry(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	tier, subDict := registrySubscription(conn.Client())
-	for k, v := range registryArgs(reg, tier, subDict) {
-		args[k] = v
-	}
+	maps.Copy(args, registryArgs(reg, tier, subDict))
 	return args, nil, nil
 }
 
@@ -356,18 +355,18 @@ func (r *mqlDigitaloceanRegistry) id() (string, error) {
 	return resourceID("digitalocean.registry", r.Name.Data)
 }
 
-func (r *mqlDigitaloceanRegistry) repositories() ([]interface{}, error) {
+func (r *mqlDigitaloceanRegistry) repositories() ([]any, error) {
 	if r.Name.Data == "" {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 	return listRegistryRepositories(r.MqlRuntime, client, r.Name.Data)
 }
 
-func (r *mqlDigitaloceanRegistry) garbageCollections() ([]interface{}, error) {
+func (r *mqlDigitaloceanRegistry) garbageCollections() ([]any, error) {
 	if r.Name.Data == "" {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
@@ -379,7 +378,7 @@ func (r *mqlDigitaloceanRegistry) garbageCollections() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(gcs))
+	all := make([]any, 0, len(gcs))
 	for _, gc := range gcs {
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.registry.garbageCollection", map[string]*llx.RawData{
 			"uuid":         llx.StringData(gc.UUID),
@@ -403,8 +402,8 @@ func (r *mqlDigitaloceanRegistryGarbageCollection) id() (string, error) {
 	return "digitalocean.registry.garbageCollection/" + r.Uuid.Data, nil
 }
 
-func listRegistryRepositories(runtime *plugin.Runtime, client *godo.Client, regName string) ([]interface{}, error) {
-	var all []interface{}
+func listRegistryRepositories(runtime *plugin.Runtime, client *godo.Client, regName string) ([]any, error) {
+	var all []any
 	opt := &godo.TokenListOptions{PerPage: 200}
 	for {
 		repos, resp, err := client.Registry.ListRepositoriesV2(context.Background(), regName, opt)
@@ -445,12 +444,12 @@ func listRegistryRepositories(runtime *plugin.Runtime, client *godo.Client, regN
 // endpoint, which names only the default registry: reading that one alone
 // drops every repository held in any other registry, and the account-wide
 // list would then disagree with `registries { repositories }`.
-func (r *mqlDigitalocean) registryRepositories() ([]interface{}, error) {
+func (r *mqlDigitalocean) registryRepositories() ([]any, error) {
 	regs := r.GetRegistries()
 	if regs.Error != nil {
 		return nil, regs.Error
 	}
-	all := []interface{}{}
+	all := []any{}
 	for _, reg := range regs.Data {
 		mreg, ok := reg.(*mqlDigitaloceanRegistry)
 		if !ok {
@@ -473,7 +472,7 @@ type mqlDigitaloceanRegistryRepositoryInternal struct {
 	cacheLatestManifest *godo.RepositoryManifest
 }
 
-func (r *mqlDigitaloceanRegistryRepository) tags() ([]interface{}, error) {
+func (r *mqlDigitaloceanRegistryRepository) tags() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -484,7 +483,7 @@ func (r *mqlDigitaloceanRegistryRepository) tags() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(tags))
+	all := make([]any, 0, len(tags))
 	for _, t := range tags {
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.registry.repository.tag", map[string]*llx.RawData{
 			"registryName":        llx.StringData(t.RegistryName),
@@ -503,7 +502,7 @@ func (r *mqlDigitaloceanRegistryRepository) tags() ([]interface{}, error) {
 	return all, nil
 }
 
-func (r *mqlDigitaloceanRegistryRepository) manifests() ([]interface{}, error) {
+func (r *mqlDigitaloceanRegistryRepository) manifests() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -514,7 +513,7 @@ func (r *mqlDigitaloceanRegistryRepository) manifests() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(manifests))
+	all := make([]any, 0, len(manifests))
 	for _, m := range manifests {
 		res, err := newManifestResource(r.MqlRuntime, m)
 		if err != nil {
@@ -538,17 +537,17 @@ func (r *mqlDigitaloceanRegistryRepository) latestManifest() (*mqlDigitaloceanRe
 }
 
 func newManifestResource(runtime *plugin.Runtime, m *godo.RepositoryManifest) (plugin.Resource, error) {
-	blobs := make([]interface{}, 0, len(m.Blobs))
+	blobs := make([]any, 0, len(m.Blobs))
 	for _, b := range m.Blobs {
 		if b == nil {
 			continue
 		}
-		blobs = append(blobs, map[string]interface{}{
+		blobs = append(blobs, map[string]any{
 			"digest":              b.Digest,
 			"compressedSizeBytes": int64(b.CompressedSizeBytes),
 		})
 	}
-	tags := make([]interface{}, 0, len(m.Tags))
+	tags := make([]any, 0, len(m.Tags))
 	for _, t := range m.Tags {
 		tags = append(tags, t)
 	}
@@ -574,7 +573,7 @@ func (r *mqlDigitaloceanRegistryRepositoryManifest) id() (string, error) {
 
 // --- Reserved IPs ---
 
-func (r *mqlDigitalocean) reservedIPs() ([]interface{}, error) {
+func (r *mqlDigitalocean) reservedIPs() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -583,7 +582,7 @@ func (r *mqlDigitalocean) reservedIPs() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(ips))
+	all := make([]any, 0, len(ips))
 	for _, ip := range ips {
 		regionSlug := ""
 		if ip.Region != nil {
@@ -614,7 +613,7 @@ func (r *mqlDigitaloceanReservedIp) id() (string, error) {
 
 // --- App Platform ---
 
-func (r *mqlDigitalocean) apps() ([]interface{}, error) {
+func (r *mqlDigitalocean) apps() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -623,7 +622,7 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(apps))
+	all := make([]any, 0, len(apps))
 	for _, app := range apps {
 		status := ""
 		if !app.LastDeploymentActiveAt.IsZero() {
@@ -633,30 +632,30 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 			status = "deploying"
 		}
 
-		spec := map[string]interface{}{}
+		spec := map[string]any{}
 		if app.Spec != nil {
 			spec["name"] = app.Spec.Name
-			svcNames := make([]interface{}, len(app.Spec.Services))
+			svcNames := make([]any, len(app.Spec.Services))
 			for i, s := range app.Spec.Services {
 				svcNames[i] = s.Name
 			}
 			spec["services"] = svcNames
-			workerNames := make([]interface{}, len(app.Spec.Workers))
+			workerNames := make([]any, len(app.Spec.Workers))
 			for i, w := range app.Spec.Workers {
 				workerNames[i] = w.Name
 			}
 			spec["workers"] = workerNames
-			jobNames := make([]interface{}, len(app.Spec.Jobs))
+			jobNames := make([]any, len(app.Spec.Jobs))
 			for i, j := range app.Spec.Jobs {
 				jobNames[i] = j.Name
 			}
 			spec["jobs"] = jobNames
-			staticNames := make([]interface{}, len(app.Spec.StaticSites))
+			staticNames := make([]any, len(app.Spec.StaticSites))
 			for i, s := range app.Spec.StaticSites {
 				staticNames[i] = s.Name
 			}
 			spec["staticSites"] = staticNames
-			fnNames := make([]interface{}, len(app.Spec.Functions))
+			fnNames := make([]any, len(app.Spec.Functions))
 			for i, f := range app.Spec.Functions {
 				fnNames[i] = f.Name
 			}
@@ -680,7 +679,7 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 
 		secureHeaderKey, secureHeaderValue, secureHeaderRemoved := appSecureHeader(app.Spec)
 
-		domains := make([]interface{}, 0, len(app.Domains))
+		domains := make([]any, 0, len(app.Domains))
 		for _, d := range app.Domains {
 			// godo hands back a slice of pointers; a nil entry would panic
 			// the provider and take down the whole scan.
@@ -693,7 +692,7 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 				domainName = d.Spec.Domain
 				minimumTLSVersion = d.Spec.MinimumTLSVersion
 			}
-			domains = append(domains, map[string]interface{}{
+			domains = append(domains, map[string]any{
 				"id":                   d.ID,
 				"name":                 domainName,
 				"phase":                string(d.Phase),
@@ -705,7 +704,7 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 		}
 
 		vpcID := ""
-		vpcEgressIps := []interface{}{}
+		vpcEgressIps := []any{}
 		if app.VPC != nil {
 			vpcID = app.VPC.ID
 			for _, e := range app.VPC.EgressIPs {
@@ -770,7 +769,7 @@ func (r *mqlDigitaloceanApp) id() (string, error) {
 
 // --- Monitoring Alert Policies ---
 
-func (r *mqlDigitalocean) alertPolicies() ([]interface{}, error) {
+func (r *mqlDigitalocean) alertPolicies() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -779,18 +778,18 @@ func (r *mqlDigitalocean) alertPolicies() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(policies))
+	all := make([]any, 0, len(policies))
 	for _, p := range policies {
-		entities := make([]interface{}, len(p.Entities))
+		entities := make([]any, len(p.Entities))
 		for i, e := range p.Entities {
 			entities[i] = e
 		}
-		pTags := make([]interface{}, len(p.Tags))
+		pTags := make([]any, len(p.Tags))
 		for i, t := range p.Tags {
 			pTags[i] = t
 		}
 
-		emails := make([]interface{}, 0)
+		emails := make([]any, 0)
 		if p.Alerts.Email != nil {
 			for _, e := range p.Alerts.Email {
 				emails = append(emails, e)
@@ -823,10 +822,10 @@ func (r *mqlDigitalocean) alertPolicies() ([]interface{}, error) {
 //
 // The incoming webhook URL is a bearer credential: anyone holding it can post
 // to the channel. Only the channel is reported.
-func alertSlackTargets(slack []godo.SlackDetails) []interface{} {
-	out := make([]interface{}, 0, len(slack))
+func alertSlackTargets(slack []godo.SlackDetails) []any {
+	out := make([]any, 0, len(slack))
 	for _, s := range slack {
-		out = append(out, map[string]interface{}{
+		out = append(out, map[string]any{
 			"channel": s.Channel,
 		})
 	}
@@ -839,7 +838,7 @@ func (r *mqlDigitaloceanAlertPolicy) id() (string, error) {
 
 // --- Uptime Checks ---
 
-func (r *mqlDigitalocean) uptimeChecks() ([]interface{}, error) {
+func (r *mqlDigitalocean) uptimeChecks() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -848,9 +847,9 @@ func (r *mqlDigitalocean) uptimeChecks() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(checks))
+	all := make([]any, 0, len(checks))
 	for _, c := range checks {
-		regions := make([]interface{}, len(c.Regions))
+		regions := make([]any, len(c.Regions))
 		for i, r := range c.Regions {
 			regions[i] = r
 		}
@@ -876,11 +875,11 @@ func (r *mqlDigitaloceanUptimeCheck) id() (string, error) {
 
 // --- CDN ---
 
-func (r *mqlDigitalocean) cdnEndpoints() ([]interface{}, error) {
+func (r *mqlDigitalocean) cdnEndpoints() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
+	var all []any
 	opt := &godo.ListOptions{PerPage: 200}
 	for {
 		cdns, resp, err := client.CDNs.List(context.Background(), opt)
@@ -920,7 +919,7 @@ func (r *mqlDigitaloceanCdn) id() (string, error) {
 
 // --- Tags ---
 
-func (r *mqlDigitalocean) tags() ([]interface{}, error) {
+func (r *mqlDigitalocean) tags() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -929,7 +928,7 @@ func (r *mqlDigitalocean) tags() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(tags))
+	all := make([]any, 0, len(tags))
 	for _, t := range tags {
 		count := 0
 		if t.Resources != nil {
@@ -953,7 +952,7 @@ func (r *mqlDigitaloceanTag) id() (string, error) {
 
 // --- Spaces Keys ---
 
-func (r *mqlDigitalocean) spacesKeys() ([]interface{}, error) {
+func (r *mqlDigitalocean) spacesKeys() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -967,22 +966,22 @@ func (r *mqlDigitalocean) spacesKeys() ([]interface{}, error) {
 		// account; tolerate that, but surface real failures (denied reads,
 		// rate limits, network) instead of masking them as "no keys".
 		if isDoNotFound(err) {
-			return []interface{}{}, nil
+			return []any{}, nil
 		}
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(keys))
+	all := make([]any, 0, len(keys))
 	for _, k := range keys {
 		if k == nil {
 			continue
 		}
-		grants := make([]interface{}, 0, len(k.Grants))
+		grants := make([]any, 0, len(k.Grants))
 		for _, g := range k.Grants {
 			if g == nil {
 				continue
 			}
-			grants = append(grants, map[string]interface{}{
+			grants = append(grants, map[string]any{
 				"bucket":     g.Bucket,
 				"permission": string(g.Permission),
 			})

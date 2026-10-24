@@ -13,13 +13,13 @@ import (
 
 // listeners builds one resource per forwarding rule so the certificate a
 // listener presents can be reached from the rule itself.
-func (l *mqlDigitaloceanLoadBalancer) listeners() ([]interface{}, error) {
+func (l *mqlDigitaloceanLoadBalancer) listeners() ([]any, error) {
 	id := l.GetId()
 	if id.Error != nil {
 		return nil, id.Error
 	}
 
-	all := make([]interface{}, 0, len(l.cacheForwardingRules))
+	all := make([]any, 0, len(l.cacheForwardingRules))
 	for _, rule := range l.cacheForwardingRules {
 		res, err := CreateResource(l.MqlRuntime, "digitalocean.loadBalancer.listener", map[string]*llx.RawData{
 			// An entry port can only be bound once per load balancer, so the

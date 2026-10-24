@@ -15,11 +15,11 @@ import (
 
 // lastIndexingJobDict flattens a godo *LastIndexingJob into a dict for
 // embedding on knowledge bases and data sources.
-func lastIndexingJobDict(j *godo.LastIndexingJob) map[string]interface{} {
+func lastIndexingJobDict(j *godo.LastIndexingJob) map[string]any {
 	if j == nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
-	out := map[string]interface{}{
+	out := map[string]any{
 		"uuid":                 j.Uuid,
 		"knowledgeBaseUuid":    j.KnowledgeBaseUuid,
 		"phase":                j.Phase,
@@ -42,7 +42,7 @@ func lastIndexingJobDict(j *godo.LastIndexingJob) map[string]interface{} {
 
 // ----- Knowledge bases -----
 
-func (r *mqlDigitaloceanGradientai) knowledgeBases() ([]interface{}, error) {
+func (r *mqlDigitaloceanGradientai) knowledgeBases() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -51,7 +51,7 @@ func (r *mqlDigitaloceanGradientai) knowledgeBases() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(kbs))
+	all := make([]any, 0, len(kbs))
 	for i := range kbs {
 		res, err := newMqlGradientaiKnowledgeBase(r.MqlRuntime, &kbs[i])
 		if err != nil {
@@ -68,7 +68,7 @@ func newMqlGradientaiKnowledgeBase(runtime *plugin.Runtime, kb *godo.KnowledgeBa
 	if kb == nil {
 		return nil, nil
 	}
-	tags := make([]interface{}, len(kb.Tags))
+	tags := make([]any, len(kb.Tags))
 	for i, t := range kb.Tags {
 		tags[i] = t
 	}
@@ -138,7 +138,7 @@ func (r *mqlDigitaloceanGradientaiKnowledgeBase) project() (*mqlDigitaloceanProj
 	return projectRef(r.MqlRuntime, r.ProjectId.Data, &r.Project)
 }
 
-func (r *mqlDigitaloceanGradientaiKnowledgeBase) dataSources() ([]interface{}, error) {
+func (r *mqlDigitaloceanGradientaiKnowledgeBase) dataSources() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -149,16 +149,16 @@ func (r *mqlDigitaloceanGradientaiKnowledgeBase) dataSources() ([]interface{}, e
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(sources))
+	all := make([]any, 0, len(sources))
 	for i := range sources {
 		s := sources[i]
 		sourceType := ""
-		webCrawler := map[string]interface{}{}
-		spaces := map[string]interface{}{}
-		fileUpload := map[string]interface{}{}
+		webCrawler := map[string]any{}
+		spaces := map[string]any{}
+		fileUpload := map[string]any{}
 		if s.WebCrawlerDataSource != nil {
 			sourceType = "web_crawler"
-			webCrawler = map[string]interface{}{
+			webCrawler = map[string]any{
 				"baseUrl":        s.WebCrawlerDataSource.BaseUrl,
 				"crawlingOption": s.WebCrawlerDataSource.CrawlingOption,
 				"embedMedia":     s.WebCrawlerDataSource.EmbedMedia,
@@ -166,7 +166,7 @@ func (r *mqlDigitaloceanGradientaiKnowledgeBase) dataSources() ([]interface{}, e
 		}
 		if s.SpacesDataSource != nil {
 			sourceType = "spaces"
-			spaces = map[string]interface{}{
+			spaces = map[string]any{
 				"bucketName": s.SpacesDataSource.BucketName,
 				"itemPath":   s.SpacesDataSource.ItemPath,
 				"region":     s.SpacesDataSource.Region,
@@ -174,7 +174,7 @@ func (r *mqlDigitaloceanGradientaiKnowledgeBase) dataSources() ([]interface{}, e
 		}
 		if s.FileUploadDataSource != nil {
 			sourceType = "file_upload"
-			fileUpload = map[string]interface{}{
+			fileUpload = map[string]any{
 				"originalFileName": s.FileUploadDataSource.OriginalFileName,
 				"size":             s.FileUploadDataSource.Size,
 				"storedObjectKey":  s.FileUploadDataSource.StoredObjectKey,
@@ -201,11 +201,11 @@ func (r *mqlDigitaloceanGradientaiKnowledgeBase) dataSources() ([]interface{}, e
 
 // ----- Indexing jobs -----
 
-func (r *mqlDigitaloceanGradientai) indexingJobs() ([]interface{}, error) {
+func (r *mqlDigitaloceanGradientai) indexingJobs() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
+	var all []any
 	opt := &godo.ListOptions{PerPage: 200}
 	for {
 		resp, httpResp, err := client.AgentPlatform.ListIndexingJobs(context.Background(), opt)
@@ -215,7 +215,7 @@ func (r *mqlDigitaloceanGradientai) indexingJobs() ([]interface{}, error) {
 		if resp != nil {
 			for i := range resp.Jobs {
 				j := resp.Jobs[i]
-				uuids := make([]interface{}, len(j.DataSourceUuids))
+				uuids := make([]any, len(j.DataSourceUuids))
 				for k, u := range j.DataSourceUuids {
 					uuids[k] = u
 				}

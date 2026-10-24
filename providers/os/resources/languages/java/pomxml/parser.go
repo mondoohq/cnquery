@@ -101,7 +101,7 @@ const maxPropertyDepth = 10
 // advisories and that version's license. Leaving the reference intact keeps the
 // gap visible to whatever reads it.
 func (p *pomProject) resolve(s string) string {
-	for depth := 0; depth < maxPropertyDepth; depth++ {
+	for range maxPropertyDepth {
 		if !strings.Contains(s, "${") {
 			return s
 		}

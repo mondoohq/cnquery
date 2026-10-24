@@ -18,8 +18,8 @@ import (
 func TestRunbookDetailsFromCompleteProperties(t *testing.T) {
 	rb := &mqlAzureSubscriptionAutomationServiceAccountRunbook{}
 	rb.cacheDetails = &armautomation.RunbookProperties{
-		Description:       to.Ptr("nightly cleanup"),
-		ProvisioningState: to.Ptr("Succeeded"),
+		Description:       new("nightly cleanup"),
+		ProvisioningState: new("Succeeded"),
 	}
 	desc, err := rb.description()
 	require.NoError(t, err)
@@ -31,7 +31,7 @@ func TestRunbookDetailsFromCompleteProperties(t *testing.T) {
 
 func TestRunbookWithoutDescriptionIsNull(t *testing.T) {
 	rb := &mqlAzureSubscriptionAutomationServiceAccountRunbook{}
-	rb.cacheDetails = &armautomation.RunbookProperties{ProvisioningState: to.Ptr("Succeeded")}
+	rb.cacheDetails = &armautomation.RunbookProperties{ProvisioningState: new("Succeeded")}
 	_, err := rb.description()
 	require.NoError(t, err)
 	assert.Equal(t, plugin.StateIsSet|plugin.StateIsNull, rb.Description.State)

@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/mldsa"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
@@ -72,6 +73,8 @@ func parseCertificatePEM(pemBody string) parsedCertificate {
 		out.keyBits = int64(key.Curve.Params().BitSize)
 	case ed25519.PublicKey:
 		out.keyBits = 256
+	case *mldsa.PublicKey:
+		out.keyBits = int64(key.Parameters().PublicKeySize() * 8)
 	}
 	return out
 }

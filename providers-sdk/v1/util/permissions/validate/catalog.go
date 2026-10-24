@@ -83,14 +83,14 @@ func (c *catalog) hasService(perm string) bool {
 // compute.instances.list, "Microsoft.Compute" of
 // Microsoft.Compute/virtualMachines/read.
 func serviceOf(perm string) string {
-	if i := strings.IndexByte(perm, ':'); i >= 0 {
-		return perm[:i]
+	if before, _, ok := strings.Cut(perm, ":"); ok {
+		return before
 	}
-	if i := strings.IndexByte(perm, '/'); i >= 0 {
-		return perm[:i]
+	if before, _, ok := strings.Cut(perm, "/"); ok {
+		return before
 	}
-	if i := strings.IndexByte(perm, '.'); i >= 0 {
-		return perm[:i]
+	if before, _, ok := strings.Cut(perm, "."); ok {
+		return before
 	}
 	return perm
 }

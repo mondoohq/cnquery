@@ -5,6 +5,7 @@ package resources
 
 import (
 	"fmt"
+	"maps"
 	"regexp"
 	"strings"
 
@@ -214,9 +215,7 @@ func enrichWindowsProfileNames(runtime *plugin.Runtime, profiles []targetUser) {
 		users := resource.(*mqlUsers)
 		// Never wait on another query that may itself be stuck enumerating accounts.
 		if users.lock.TryLock() {
-			for sid, user := range users.usersBySid {
-				cached[sid] = user
-			}
+			maps.Copy(cached, users.usersBySid)
 			users.lock.Unlock()
 		}
 	}

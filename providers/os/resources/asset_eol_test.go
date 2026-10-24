@@ -35,8 +35,8 @@ func newMondooEol(t *testing.T, scanner *fakeEolScanner, product, version string
 	t.Cleanup(srv.Close)
 	return &mqlMondooEol{
 		MqlRuntime: &plugin.Runtime{Upstream: &upstream.UpstreamClient{
-			UpstreamConfig: upstream.UpstreamConfig{ApiEndpoint: srv.URL},
-			HttpClient:     srv.Client(),
+			ApiEndpoint: srv.URL,
+			HttpClient:  srv.Client(),
 		}},
 		Product: plugin.TValue[string]{Data: product, State: plugin.StateIsSet},
 		Version: plugin.TValue[string]{Data: version, State: plugin.StateIsSet},

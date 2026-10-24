@@ -5,6 +5,7 @@ package providers
 
 import (
 	"context"
+	"slices"
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/mql"
@@ -296,10 +297,8 @@ func pickAssetRecording(assets []*recording.Asset, want *inventory.Asset) *recor
 			if a.Asset == nil {
 				continue
 			}
-			for _, have := range a.Asset.PlatformIds {
-				if have == id {
-					return a
-				}
+			if slices.Contains(a.Asset.PlatformIds, id) {
+				return a
 			}
 		}
 	}

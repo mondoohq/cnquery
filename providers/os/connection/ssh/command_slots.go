@@ -61,17 +61,6 @@ func startsPowershell(command string) bool {
 	return strings.HasPrefix(lower, "powershell ") || strings.HasPrefix(lower, "powershell.exe ")
 }
 
-// acquireCommandSlot waits for a free slot when the target is Windows and
-// returns the function that frees it. On any other target, and before the
-// shell is known, it returns at once.
-//
-// Only a PowerShell command detects the shell: a Unix target never gets one,
-// so it never pays for the probe.
-func (c *Connection) acquireCommandSlot(command string) func() {
-	release, _ := c.acquireCommandSlotContext(context.Background(), command)
-	return release
-}
-
 func (c *Connection) acquireCommandSlotContext(ctx context.Context, command string) (func(), error) {
 	var windows bool
 	if startsPowershell(command) {

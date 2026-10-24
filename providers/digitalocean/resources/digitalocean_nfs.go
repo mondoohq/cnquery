@@ -17,7 +17,7 @@ import (
 // nfsShares enumerates managed NFS shares. The DigitalOcean NFS list API
 // is region-scoped, so we fan out over the account's available regions
 // and aggregate the results.
-func (r *mqlDigitalocean) nfsShares() ([]interface{}, error) {
+func (r *mqlDigitalocean) nfsShares() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 	ctx := context.Background()
@@ -27,7 +27,7 @@ func (r *mqlDigitalocean) nfsShares() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, region := range regions {
 		opt := &godo.ListOptions{PerPage: 200}
 		for {
@@ -40,7 +40,7 @@ func (r *mqlDigitalocean) nfsShares() ([]interface{}, error) {
 					continue
 				}
 
-				vpcIDs := make([]interface{}, len(s.VpcIDs))
+				vpcIDs := make([]any, len(s.VpcIDs))
 				for i, v := range s.VpcIDs {
 					vpcIDs[i] = v
 				}
@@ -84,7 +84,7 @@ func (r *mqlDigitaloceanNfs) id() (string, error) {
 	return "digitalocean.nfs/" + r.Id.Data, nil
 }
 
-func (r *mqlDigitaloceanNfs) vpcs() ([]interface{}, error) {
+func (r *mqlDigitaloceanNfs) vpcs() ([]any, error) {
 	uuids := make([]string, 0, len(r.VpcIds.Data))
 	for _, v := range r.VpcIds.Data {
 		if s, ok := v.(string); ok {
@@ -108,10 +108,10 @@ type mqlDigitaloceanNfsSnapshotInternal struct {
 // snapshots lists the point-in-time copies taken of the NFS share. The list
 // API is scoped to one share in one region, so it requires a separate call
 // per share.
-func (r *mqlDigitaloceanNfs) snapshots() ([]interface{}, error) {
+func (r *mqlDigitaloceanNfs) snapshots() ([]any, error) {
 	shareID := r.Id.Data
 	if shareID == "" {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
@@ -125,7 +125,7 @@ func (r *mqlDigitaloceanNfs) snapshots() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(snaps))
+	all := make([]any, 0, len(snaps))
 	for _, s := range snaps {
 		if s == nil {
 			continue
@@ -174,10 +174,10 @@ func (r *mqlDigitaloceanNfsSnapshot) share() (*mqlDigitaloceanNfs, error) {
 
 // accessPoints lists the access points that export the NFS share. The
 // list API is share-scoped, so it requires a separate call per share.
-func (r *mqlDigitaloceanNfs) accessPoints() ([]interface{}, error) {
+func (r *mqlDigitaloceanNfs) accessPoints() ([]any, error) {
 	shareID := r.Id.Data
 	if shareID == "" {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
@@ -189,13 +189,13 @@ func (r *mqlDigitaloceanNfs) accessPoints() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(points))
+	all := make([]any, 0, len(points))
 	for _, ap := range points {
 		if ap == nil {
 			continue
 		}
 
-		protocols := make([]interface{}, len(ap.AccessPolicy.Protocols))
+		protocols := make([]any, len(ap.AccessPolicy.Protocols))
 		for i, p := range ap.AccessPolicy.Protocols {
 			protocols[i] = string(p)
 		}

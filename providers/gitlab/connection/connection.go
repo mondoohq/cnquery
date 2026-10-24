@@ -298,7 +298,7 @@ func groupDescendantGroups(conn *GitLabConnection, gid any) ([]*gitlab.Group, er
 	page := int64(1)
 	groups := []*gitlab.Group{}
 	for {
-		grps, resp, err := conn.Client().Groups.ListDescendantGroups(gid, &gitlab.ListDescendantGroupsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		grps, resp, err := conn.Client().Groups.ListDescendantGroups(gid, &gitlab.ListDescendantGroupsOptions{Page: page, PerPage: perPage})
 		if err != nil {
 			return nil, err
 		}
@@ -318,7 +318,7 @@ func groupSubgroups(conn *GitLabConnection, gid any) ([]*gitlab.Group, error) {
 	page := int64(1)
 	groups := []*gitlab.Group{}
 	for {
-		grps, resp, err := conn.Client().Groups.ListSubGroups(gid, &gitlab.ListSubGroupsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		grps, resp, err := conn.Client().Groups.ListSubGroups(gid, &gitlab.ListSubGroupsOptions{Page: page, PerPage: perPage})
 		if err != nil {
 			return nil, err
 		}

@@ -8,8 +8,6 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -101,10 +99,10 @@ func (n *neti) getBSDIfconfigInterfaces() (interfaces []Interface, err error) {
 			//   FreeBSD/OpenBSD/DragonFly: inet 1.2.3.4 netmask 0xffffff00 broadcast 1.2.3.255
 			//   NetBSD:                    inet 1.2.3.4/24 broadcast 1.2.3.255 flags 0x0
 			ipField := fields[1]
-			if slash := strings.Index(ipField, "/"); slash != -1 {
+			if before, after, ok := strings.Cut(ipField, "/"); ok {
 				current.AddOrUpdateIP(NewIPv4WithPrefixLength(
-					ipField[:slash],
-					parseInt(ipField[slash+1:]),
+					before,
+					parseInt(after),
 				))
 			} else if len(fields) >= 4 && fields[2] == "netmask" {
 				current.AddOrUpdateIP(NewIPv4WithMask(ipField, fields[3]))
@@ -143,9 +141,9 @@ func (n *neti) getBSDIfconfigInterfaces() (interfaces []Interface, err error) {
 		case "status:":
 			switch fields[1] {
 			case "active":
-				current.Active = convert.ToPtr(true)
+				current.Active = new(true)
 			case "inactive", "no":
-				current.Active = convert.ToPtr(false)
+				current.Active = new(false)
 			}
 		}
 	}
@@ -251,7 +249,7 @@ func bsdVirtualByName(name string) *bool {
 	}
 	for _, p := range prefixes {
 		if strings.HasPrefix(name, p) {
-			return convert.ToPtr(true)
+			return new(true)
 		}
 	}
 	return nil

@@ -110,7 +110,7 @@ func TestIamServiceUsesFullCloudPlatformScope(t *testing.T) {
 				return true
 			}
 			checked++
-			for _, line := range strings.Split(body, "\n") {
+			for line := range strings.SplitSeq(body, "\n") {
 				if !strings.Contains(line, "conn.Client(") {
 					continue
 				}

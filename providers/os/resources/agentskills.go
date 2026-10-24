@@ -449,7 +449,7 @@ func agentSkillReferences(body string) []string {
 	var refs []string
 	seen := map[string]bool{}
 	fence := ""
-	for _, line := range strings.Split(body, "\n") {
+	for line := range strings.SplitSeq(body, "\n") {
 		trimmed := strings.TrimLeft(line, " \t")
 		if fence == "" && (strings.HasPrefix(trimmed, "```") || strings.HasPrefix(trimmed, "~~~")) {
 			fence = trimmed[:3]

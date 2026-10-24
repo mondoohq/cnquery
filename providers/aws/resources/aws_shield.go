@@ -47,8 +47,7 @@ func (a *mqlAwsShield) subscription() (*mqlAwsShieldSubscription, error) {
 			a.Subscription.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
-		var notFoundErr *shieldtypes.ResourceNotFoundException
-		if errors.As(err, &notFoundErr) {
+		if _, ok := errors.AsType[*shieldtypes.ResourceNotFoundException](err); ok {
 			a.Subscription.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
@@ -114,8 +113,7 @@ func (a *mqlAwsShield) protections() ([]any, error) {
 			if Is400AccessDeniedError(err) {
 				return res, nil
 			}
-			var notFoundErr *shieldtypes.ResourceNotFoundException
-			if errors.As(err, &notFoundErr) {
+			if _, ok := errors.AsType[*shieldtypes.ResourceNotFoundException](err); ok {
 				return res, nil
 			}
 			return nil, err
@@ -170,8 +168,7 @@ func (a *mqlAwsShield) protectionGroups() ([]any, error) {
 			if Is400AccessDeniedError(err) {
 				return res, nil
 			}
-			var notFoundErr *shieldtypes.ResourceNotFoundException
-			if errors.As(err, &notFoundErr) {
+			if _, ok := errors.AsType[*shieldtypes.ResourceNotFoundException](err); ok {
 				return res, nil
 			}
 			return nil, err
@@ -216,8 +213,7 @@ func (a *mqlAwsShield) drtAccess() (*mqlAwsShieldDrtAccess, error) {
 			a.DrtAccess.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
-		var notFoundErr *shieldtypes.ResourceNotFoundException
-		if errors.As(err, &notFoundErr) {
+		if _, ok := errors.AsType[*shieldtypes.ResourceNotFoundException](err); ok {
 			a.DrtAccess.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
@@ -267,8 +263,7 @@ func (a *mqlAwsShield) emergencyContacts() ([]any, error) {
 		if Is400AccessDeniedError(err) {
 			return []any{}, nil
 		}
-		var notFoundErr *shieldtypes.ResourceNotFoundException
-		if errors.As(err, &notFoundErr) {
+		if _, ok := errors.AsType[*shieldtypes.ResourceNotFoundException](err); ok {
 			return []any{}, nil
 		}
 		return nil, err

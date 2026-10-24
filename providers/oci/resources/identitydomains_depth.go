@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identitydomains"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -258,11 +257,11 @@ func (o *mqlOciIdentityDomain) userCredentials(userID string) ([]ociDomainCreden
 		return nil, err
 	}
 	ctx := context.Background()
-	filter := common.String(ociScimUserFilter(userID))
+	filter := new(ociScimUserFilter(userID))
 	var all []ociDomainCredential
 
 	apiKeys, err := ociScimPaginate(ctx, func(ctx context.Context, start int) ([]identitydomains.ApiKey, *int, error) {
-		r, err := client.ListApiKeys(ctx, identitydomains.ListApiKeysRequest{Filter: filter, StartIndex: common.Int(start), Count: common.Int(ociScimPageSize), AttributeSets: ociScimAttributeSets})
+		r, err := client.ListApiKeys(ctx, identitydomains.ListApiKeysRequest{Filter: filter, StartIndex: new(start), Count: new(ociScimPageSize), AttributeSets: ociScimAttributeSets})
 		if err != nil {
 			return nil, nil, ociScimError(err, o.Name.Data, "API keys")
 		}
@@ -276,7 +275,7 @@ func (o *mqlOciIdentityDomain) userCredentials(userID string) ([]ociDomainCreden
 	}
 
 	tokens, err := ociScimPaginate(ctx, func(ctx context.Context, start int) ([]identitydomains.AuthToken, *int, error) {
-		r, err := client.ListAuthTokens(ctx, identitydomains.ListAuthTokensRequest{Filter: filter, StartIndex: common.Int(start), Count: common.Int(ociScimPageSize), AttributeSets: ociScimAttributeSets})
+		r, err := client.ListAuthTokens(ctx, identitydomains.ListAuthTokensRequest{Filter: filter, StartIndex: new(start), Count: new(ociScimPageSize), AttributeSets: ociScimAttributeSets})
 		if err != nil {
 			return nil, nil, ociScimError(err, o.Name.Data, "auth tokens")
 		}
@@ -290,7 +289,7 @@ func (o *mqlOciIdentityDomain) userCredentials(userID string) ([]ociDomainCreden
 	}
 
 	secretKeys, err := ociScimPaginate(ctx, func(ctx context.Context, start int) ([]identitydomains.CustomerSecretKey, *int, error) {
-		r, err := client.ListCustomerSecretKeys(ctx, identitydomains.ListCustomerSecretKeysRequest{Filter: filter, StartIndex: common.Int(start), Count: common.Int(ociScimPageSize), AttributeSets: ociScimAttributeSets})
+		r, err := client.ListCustomerSecretKeys(ctx, identitydomains.ListCustomerSecretKeysRequest{Filter: filter, StartIndex: new(start), Count: new(ociScimPageSize), AttributeSets: ociScimAttributeSets})
 		if err != nil {
 			return nil, nil, ociScimError(err, o.Name.Data, "customer secret keys")
 		}
@@ -304,7 +303,7 @@ func (o *mqlOciIdentityDomain) userCredentials(userID string) ([]ociDomainCreden
 	}
 
 	oauth, err := ociScimPaginate(ctx, func(ctx context.Context, start int) ([]identitydomains.OAuth2ClientCredential, *int, error) {
-		r, err := client.ListOAuth2ClientCredentials(ctx, identitydomains.ListOAuth2ClientCredentialsRequest{Filter: filter, StartIndex: common.Int(start), Count: common.Int(ociScimPageSize), AttributeSets: ociScimAttributeSets})
+		r, err := client.ListOAuth2ClientCredentials(ctx, identitydomains.ListOAuth2ClientCredentialsRequest{Filter: filter, StartIndex: new(start), Count: new(ociScimPageSize), AttributeSets: ociScimAttributeSets})
 		if err != nil {
 			return nil, nil, ociScimError(err, o.Name.Data, "OAuth 2.0 client credentials")
 		}
@@ -318,7 +317,7 @@ func (o *mqlOciIdentityDomain) userCredentials(userID string) ([]ociDomainCreden
 	}
 
 	smtp, err := ociScimPaginate(ctx, func(ctx context.Context, start int) ([]identitydomains.SmtpCredential, *int, error) {
-		r, err := client.ListSmtpCredentials(ctx, identitydomains.ListSmtpCredentialsRequest{Filter: filter, StartIndex: common.Int(start), Count: common.Int(ociScimPageSize), AttributeSets: ociScimAttributeSets})
+		r, err := client.ListSmtpCredentials(ctx, identitydomains.ListSmtpCredentialsRequest{Filter: filter, StartIndex: new(start), Count: new(ociScimPageSize), AttributeSets: ociScimAttributeSets})
 		if err != nil {
 			return nil, nil, ociScimError(err, o.Name.Data, "SMTP credentials")
 		}
@@ -332,7 +331,7 @@ func (o *mqlOciIdentityDomain) userCredentials(userID string) ([]ociDomainCreden
 	}
 
 	db, err := ociScimPaginate(ctx, func(ctx context.Context, start int) ([]identitydomains.UserDbCredential, *int, error) {
-		r, err := client.ListUserDbCredentials(ctx, identitydomains.ListUserDbCredentialsRequest{Filter: filter, StartIndex: common.Int(start), Count: common.Int(ociScimPageSize), AttributeSets: ociScimAttributeSets})
+		r, err := client.ListUserDbCredentials(ctx, identitydomains.ListUserDbCredentialsRequest{Filter: filter, StartIndex: new(start), Count: new(ociScimPageSize), AttributeSets: ociScimAttributeSets})
 		if err != nil {
 			return nil, nil, ociScimError(err, o.Name.Data, "database credentials")
 		}
@@ -391,7 +390,7 @@ func (o *mqlOciIdentityDomain) dynamicResourceGroups() ([]any, error) {
 		return nil, err
 	}
 	groups, err := ociScimPaginate(context.Background(), func(ctx context.Context, start int) ([]identitydomains.DynamicResourceGroup, *int, error) {
-		r, err := client.ListDynamicResourceGroups(ctx, identitydomains.ListDynamicResourceGroupsRequest{StartIndex: common.Int(start), Count: common.Int(ociScimPageSize), AttributeSets: ociScimAttributeSets})
+		r, err := client.ListDynamicResourceGroups(ctx, identitydomains.ListDynamicResourceGroupsRequest{StartIndex: new(start), Count: new(ociScimPageSize), AttributeSets: ociScimAttributeSets})
 		if err != nil {
 			return nil, nil, ociScimError(err, o.Name.Data, "dynamic resource groups")
 		}
@@ -425,7 +424,7 @@ func (o *mqlOciIdentityDomain) socialIdentityProviders() ([]any, error) {
 		return nil, err
 	}
 	providers, err := ociScimPaginate(context.Background(), func(ctx context.Context, start int) ([]identitydomains.SocialIdentityProvider, *int, error) {
-		r, err := client.ListSocialIdentityProviders(ctx, identitydomains.ListSocialIdentityProvidersRequest{StartIndex: common.Int(start), Count: common.Int(ociScimPageSize)})
+		r, err := client.ListSocialIdentityProviders(ctx, identitydomains.ListSocialIdentityProvidersRequest{StartIndex: new(start), Count: new(ociScimPageSize)})
 		if err != nil {
 			return nil, nil, ociScimError(err, o.Name.Data, "social identity providers")
 		}

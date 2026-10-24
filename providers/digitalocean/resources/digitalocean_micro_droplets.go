@@ -15,7 +15,7 @@ import (
 	"go.mondoo.com/mql/providers/digitalocean/connection"
 )
 
-func (r *mqlDigitalocean) microDroplets() ([]interface{}, error) {
+func (r *mqlDigitalocean) microDroplets() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -24,7 +24,7 @@ func (r *mqlDigitalocean) microDroplets() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(instances))
+	all := make([]any, 0, len(instances))
 	for i := range instances {
 		args, err := microDropletArgs(&instances[i])
 		if err != nil {

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/artifacts"
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
@@ -53,7 +52,7 @@ func (o *mqlOciArtifacts) containerConfiguration() (*artifacts.ContainerConfigur
 			return nil, err
 		}
 		resp, err := svc.GetContainerConfiguration(context.Background(), artifacts.GetContainerConfigurationRequest{
-			CompartmentId: common.String(conn.TenantID()),
+			CompartmentId: new(conn.TenantID()),
 		})
 		if err != nil {
 			return nil, err
@@ -101,7 +100,7 @@ func (o *mqlOciArtifacts) containerRepositories() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]artifacts.ContainerRepositorySummary, *string, error) {
 				resp, err := svc.ListContainerRepositories(ctx, artifacts.ListContainerRepositoriesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -166,7 +165,7 @@ func (o *mqlOciArtifactsContainerRepository) fetchDetail() (*artifacts.Container
 			return nil, err
 		}
 		resp, err := svc.GetContainerRepository(context.Background(), artifacts.GetContainerRepositoryRequest{
-			RepositoryId: common.String(o.Id.Data),
+			RepositoryId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -300,7 +299,7 @@ func (o *mqlOciArtifacts) containerImages() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]artifacts.ContainerImageSummary, *string, error) {
 				resp, err := svc.ListContainerImages(ctx, artifacts.ListContainerImagesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -378,7 +377,7 @@ func (o *mqlOciArtifactsContainerImage) fetchDetail() (*artifacts.ContainerImage
 			return nil, err
 		}
 		resp, err := svc.GetContainerImage(context.Background(), artifacts.GetContainerImageRequest{
-			ImageId: common.String(o.Id.Data),
+			ImageId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -464,7 +463,7 @@ func (o *mqlOciArtifacts) containerImageSignatures() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]artifacts.ContainerImageSignatureSummary, *string, error) {
 				resp, err := svc.ListContainerImageSignatures(ctx, artifacts.ListContainerImageSignaturesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -542,7 +541,7 @@ func (o *mqlOciArtifacts) repositories() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]artifacts.RepositorySummary, *string, error) {
 				resp, err := svc.ListRepositories(ctx, artifacts.ListRepositoriesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -622,8 +621,8 @@ func (o *mqlOciArtifactsRepository) artifacts() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]artifacts.GenericArtifactSummary, *string, error) {
 		resp, err := svc.ListGenericArtifacts(ctx, artifacts.ListGenericArtifactsRequest{
-			CompartmentId: common.String(o.cacheCompartmentID),
-			RepositoryId:  common.String(o.Id.Data),
+			CompartmentId: new(o.cacheCompartmentID),
+			RepositoryId:  new(o.Id.Data),
 			Page:          page,
 		})
 		if err != nil {

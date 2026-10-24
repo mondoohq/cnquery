@@ -135,8 +135,8 @@ func fullExecutableName(name string, cmdline []byte) string {
 	}
 	argv0, _, _ := bytes.Cut(cmdline, []byte{0})
 	base := string(argv0)
-	if i := strings.LastIndexByte(base, '/'); i >= 0 {
-		base = base[i+1:]
+	if _, after, ok := strings.CutLast(base, "/"); ok {
+		base = after
 	}
 	if len(base) > len(name) && strings.HasPrefix(base, name) {
 		return base

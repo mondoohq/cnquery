@@ -453,11 +453,11 @@ func registryValues() ([]string, error) {
 		if !ok || !strings.EqualFold(root, "MACHINE") {
 			continue
 		}
-		i := strings.LastIndex(rest, `\`)
-		if i < 0 {
+		before, after, found := strings.CutLast(rest, `\`)
+		if !found {
 			continue
 		}
-		v, ok := readRegistryValue(rest[:i], rest[i+1:], declaredType(n))
+		v, ok := readRegistryValue(before, after, declaredType(n))
 		if !ok {
 			continue
 		}

@@ -19,7 +19,7 @@ func (r *mqlSnowflakeAccount) tags() ([]any, error) {
 
 func (r *mqlSnowflakeDatabase) tags() ([]any, error) {
 	return listSnowflakeTags(r.MqlRuntime, &sdk.ShowTagRequest{
-		In: &sdk.ExtendedIn{In: sdk.In{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)}},
+		In: &sdk.ExtendedIn{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)},
 	})
 }
 

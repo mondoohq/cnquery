@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"errors"
+	"maps"
 	"time"
 
 	"go.mondoo.com/mql/llx"
@@ -205,9 +206,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.StackitConnect
 	if asset.Labels == nil {
 		asset.Labels = map[string]string{}
 	}
-	for k, v := range conn.ProjectLabels() {
-		asset.Labels[k] = v
-	}
+	maps.Copy(asset.Labels, conn.ProjectLabels())
 	asset.Labels["mondoo.com/region"] = conn.Region()
 	if parent := conn.ProjectParent(); parent != "" {
 		asset.Labels["mondoo.com/parent-id"] = parent

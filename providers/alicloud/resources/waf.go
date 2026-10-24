@@ -42,7 +42,7 @@ func (r *mqlAlicloudWaf) instances() ([]any, error) {
 			continue
 		}
 		resp, err := client.DescribeInstance(&wafclient.DescribeInstanceRequest{
-			RegionId: tea.String(region),
+			RegionId: new(region),
 		})
 		if err != nil {
 			lastErr = err
@@ -127,7 +127,7 @@ func initAlicloudWafInstance(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return nil, nil, err
 	}
 	resp, err := client.DescribeInstance(&wafclient.DescribeInstanceRequest{
-		RegionId: tea.String(region),
+		RegionId: new(region),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -164,10 +164,10 @@ func (r *mqlAlicloudWafInstance) defenseResources() ([]any, error) {
 	pageSize := int32(100)
 	for {
 		resp, err := client.DescribeDefenseResources(&wafclient.DescribeDefenseResourcesRequest{
-			InstanceId: tea.String(r.instanceId),
-			RegionId:   tea.String(r.region),
-			PageNumber: tea.Int32(pageNumber),
-			PageSize:   tea.Int32(pageSize),
+			InstanceId: new(r.instanceId),
+			RegionId:   new(r.region),
+			PageNumber: new(pageNumber),
+			PageSize:   new(pageSize),
 		})
 		if err != nil {
 			return nil, err
@@ -278,14 +278,11 @@ func (r *mqlAlicloudWafInstance) resourceLogStatuses() (map[string]bool, error) 
 
 	statuses := map[string]bool{}
 	for start := 0; start < len(names); start += wafResourceLogBatch {
-		end := start + wafResourceLogBatch
-		if end > len(names) {
-			end = len(names)
-		}
+		end := min(start+wafResourceLogBatch, len(names))
 		resp, err := client.DescribeResourceLogStatus(&wafclient.DescribeResourceLogStatusRequest{
-			InstanceId: tea.String(r.instanceId),
-			RegionId:   tea.String(r.region),
-			Resources:  tea.String(strings.Join(names[start:end], ",")),
+			InstanceId: new(r.instanceId),
+			RegionId:   new(r.region),
+			Resources:  new(strings.Join(names[start:end], ",")),
 		})
 		if err != nil {
 			// A batch that fails leaves its objects absent from the map, which
@@ -325,8 +322,8 @@ func (r *mqlAlicloudWafInstance) fetchLogStatus() *wafclient.DescribeUserWafLogS
 		return nil
 	}
 	resp, err := client.DescribeUserWafLogStatus(&wafclient.DescribeUserWafLogStatusRequest{
-		InstanceId: tea.String(r.instanceId),
-		RegionId:   tea.String(r.region),
+		InstanceId: new(r.instanceId),
+		RegionId:   new(r.region),
 	})
 	if err != nil || resp == nil || resp.Body == nil {
 		return nil
@@ -378,10 +375,10 @@ func (r *mqlAlicloudWafInstance) domains() ([]any, error) {
 	pageSize := int64(100)
 	for {
 		resp, err := client.DescribeDomains(&wafclient.DescribeDomainsRequest{
-			InstanceId: tea.String(r.instanceId),
-			RegionId:   tea.String(r.region),
-			PageNumber: tea.Int64(pageNumber),
-			PageSize:   tea.Int64(pageSize),
+			InstanceId: new(r.instanceId),
+			RegionId:   new(r.region),
+			PageNumber: new(pageNumber),
+			PageSize:   new(pageSize),
 		})
 		if err != nil {
 			return nil, err
@@ -471,9 +468,9 @@ func (r *mqlAlicloudWafDomain) domainDetail() (*wafclient.DescribeDomainDetailRe
 		return nil, err
 	}
 	resp, err := client.DescribeDomainDetail(&wafclient.DescribeDomainDetailRequest{
-		InstanceId: tea.String(r.instanceId),
-		RegionId:   tea.String(r.region),
-		Domain:     tea.String(r.domain),
+		InstanceId: new(r.instanceId),
+		RegionId:   new(r.region),
+		Domain:     new(r.domain),
 	})
 	if err != nil {
 		return nil, err

@@ -28,12 +28,12 @@ import (
 
 // databaseArgs maps a managed database cluster to its MQL fields.
 func databaseArgs(db *godo.Database) map[string]*llx.RawData {
-	tags := make([]interface{}, len(db.Tags))
+	tags := make([]any, len(db.Tags))
 	for i, t := range db.Tags {
 		tags[i] = t
 	}
 
-	mw := map[string]interface{}{}
+	mw := map[string]any{}
 	if db.MaintenanceWindow != nil {
 		mw["day"] = db.MaintenanceWindow.Day
 		mw["hour"] = db.MaintenanceWindow.Hour
@@ -78,7 +78,7 @@ func databaseArgs(db *godo.Database) map[string]*llx.RawData {
 		dashSslEnabled = &ssl
 	}
 
-	dbNames := make([]interface{}, len(db.DBNames))
+	dbNames := make([]any, len(db.DBNames))
 	for i, n := range db.DBNames {
 		dbNames[i] = n
 	}
@@ -110,14 +110,14 @@ func databaseArgs(db *godo.Database) map[string]*llx.RawData {
 		}
 	}
 
-	var serviceCnames []interface{}
+	var serviceCnames []any
 	if db.DOSettings != nil {
 		serviceCnames = toStringSlice(db.DOSettings.ServiceCnames)
 	}
 
-	metricsEndpoints := make([]interface{}, len(db.MetricsEndpoints))
+	metricsEndpoints := make([]any, len(db.MetricsEndpoints))
 	for i, ep := range db.MetricsEndpoints {
-		metricsEndpoints[i] = map[string]interface{}{
+		metricsEndpoints[i] = map[string]any{
 			"host": ep.Host,
 			"port": float64(ep.Port),
 		}
@@ -192,7 +192,7 @@ func initDigitaloceanDatabase(runtime *plugin.Runtime, args map[string]*llx.RawD
 // populated when a firewall is reached one way and empty when it is reached
 // the other.
 func firewallArgs(runtime *plugin.Runtime, fw *godo.Firewall) (map[string]*llx.RawData, error) {
-	tags := make([]interface{}, len(fw.Tags))
+	tags := make([]any, len(fw.Tags))
 	for i, t := range fw.Tags {
 		tags[i] = t
 	}
@@ -235,8 +235,8 @@ func newMqlFirewall(runtime *plugin.Runtime, fw *godo.Firewall) (*mqlDigitalocea
 // finished applying. The droplet id is kept on the resource rather than
 // exposed as a field: it is the cache key's distinguishing part and resolves
 // to a droplet through the typed accessor.
-func firewallPendingChanges(runtime *plugin.Runtime, fw *godo.Firewall) ([]interface{}, error) {
-	changes := make([]interface{}, 0, len(fw.PendingChanges))
+func firewallPendingChanges(runtime *plugin.Runtime, fw *godo.Firewall) ([]any, error) {
+	changes := make([]any, 0, len(fw.PendingChanges))
 	for _, pc := range fw.PendingChanges {
 		id, err := resourceID("digitalocean.firewall.pendingChange", fw.ID, strconv.Itoa(pc.DropletID))
 		if err != nil {
@@ -288,12 +288,12 @@ func initDigitaloceanFirewall(runtime *plugin.Runtime, args map[string]*llx.RawD
 
 // loadBalancerArgs maps a load balancer to its MQL fields.
 func loadBalancerArgs(lb *godo.LoadBalancer) map[string]*llx.RawData {
-	tags := make([]interface{}, len(lb.Tags))
+	tags := make([]any, len(lb.Tags))
 	for i, t := range lb.Tags {
 		tags[i] = t
 	}
 
-	hc := map[string]interface{}{}
+	hc := map[string]any{}
 	if lb.HealthCheck != nil {
 		hc["protocol"] = lb.HealthCheck.Protocol
 		hc["port"] = float64(lb.HealthCheck.Port)
@@ -304,7 +304,7 @@ func loadBalancerArgs(lb *godo.LoadBalancer) map[string]*llx.RawData {
 		hc["healthyThreshold"] = float64(lb.HealthCheck.HealthyThreshold)
 	}
 
-	ss := map[string]interface{}{}
+	ss := map[string]any{}
 	if lb.StickySessions != nil {
 		ss["type"] = lb.StickySessions.Type
 		ss["cookieName"] = lb.StickySessions.CookieName
@@ -316,15 +316,15 @@ func loadBalancerArgs(lb *godo.LoadBalancer) map[string]*llx.RawData {
 		lbRegion = lb.Region.Slug
 	}
 
-	var firewallAllow, firewallDeny []interface{}
+	var firewallAllow, firewallDeny []any
 	if lb.Firewall != nil {
 		firewallAllow = toStringSlice(lb.Firewall.Allow)
 		firewallDeny = toStringSlice(lb.Firewall.Deny)
 	}
 
-	domains := make([]interface{}, len(lb.Domains))
+	domains := make([]any, len(lb.Domains))
 	for i, d := range lb.Domains {
-		domains[i] = map[string]interface{}{
+		domains[i] = map[string]any{
 			"name":          d.Name,
 			"isManaged":     d.IsManaged,
 			"certificateId": d.CertificateID,
@@ -332,9 +332,9 @@ func loadBalancerArgs(lb *godo.LoadBalancer) map[string]*llx.RawData {
 		}
 	}
 
-	var glb map[string]interface{}
+	var glb map[string]any
 	if lb.GLBSettings != nil {
-		glb = map[string]interface{}{
+		glb = map[string]any{
 			"targetProtocol": lb.GLBSettings.TargetProtocol,
 			"targetPort":     float64(lb.GLBSettings.TargetPort),
 		}
@@ -426,12 +426,12 @@ func newMqlLoadBalancer(runtime *plugin.Runtime, lb *godo.LoadBalancer) (*mqlDig
 
 // kubernetesClusterArgs maps a DOKS cluster to its MQL fields.
 func kubernetesClusterArgs(c *godo.KubernetesCluster) map[string]*llx.RawData {
-	tags := make([]interface{}, len(c.Tags))
+	tags := make([]any, len(c.Tags))
 	for i, t := range c.Tags {
 		tags[i] = t
 	}
 
-	mp := map[string]interface{}{}
+	mp := map[string]any{}
 	if c.MaintenancePolicy != nil {
 		mp["startTime"] = c.MaintenancePolicy.StartTime
 		mp["day"] = float64(c.MaintenancePolicy.Day)
@@ -455,7 +455,7 @@ func kubernetesClusterArgs(c *godo.KubernetesCluster) map[string]*llx.RawData {
 	}
 
 	var cpFirewallEnabled *bool
-	var cpFirewallAllowed []interface{}
+	var cpFirewallAllowed []any
 	if c.ControlPlaneFirewall != nil {
 		cpFirewallEnabled = c.ControlPlaneFirewall.Enabled
 		cpFirewallAllowed = toStringSlice(c.ControlPlaneFirewall.AllowedAddresses)
@@ -485,7 +485,7 @@ func kubernetesClusterArgs(c *godo.KubernetesCluster) map[string]*llx.RawData {
 		corednsAutoscalerEnabled = c.CorednsAutoscaler.Enabled
 	}
 
-	autoscaler := map[string]interface{}{}
+	autoscaler := map[string]any{}
 	if c.ClusterAutoscalerConfiguration != nil {
 		ca := c.ClusterAutoscalerConfiguration
 		if ca.ScaleDownUtilizationThreshold != nil {
@@ -540,16 +540,16 @@ func kubernetesClusterArgs(c *godo.KubernetesCluster) map[string]*llx.RawData {
 // availableUpgradeVersions lists the Kubernetes versions the cluster can
 // currently upgrade to. An empty list means the cluster is already on the
 // newest version DigitalOcean offers for it.
-func (r *mqlDigitaloceanKubernetesCluster) availableUpgradeVersions() ([]interface{}, error) {
+func (r *mqlDigitaloceanKubernetesCluster) availableUpgradeVersions() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	upgrades, _, err := conn.Client().Kubernetes.GetUpgrades(context.Background(), r.Id.Data)
 	if err != nil {
 		if isDoNotFound(err) {
-			return []interface{}{}, nil
+			return []any{}, nil
 		}
 		return nil, err
 	}
-	out := make([]interface{}, 0, len(upgrades))
+	out := make([]any, 0, len(upgrades))
 	for _, u := range upgrades {
 		if u == nil {
 			continue

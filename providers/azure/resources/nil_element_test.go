@@ -24,10 +24,10 @@ import (
 // guard to report the raw strings. The unguarded walk came first.
 func TestSecurityRuleTolerateNilPortRange(t *testing.T) {
 	rule := network.SecurityRule{
-		ID:   strPtr("/subscriptions/sub/…/securityRules/allow-web"),
-		Name: strPtr("allow-web"),
+		ID:   new("/subscriptions/sub/…/securityRules/allow-web"),
+		Name: new("allow-web"),
 		Properties: &network.SecurityRulePropertiesFormat{
-			DestinationPortRanges: []*string{strPtr("80"), nil, strPtr("443-8443")},
+			DestinationPortRanges: []*string{new("80"), nil, new("443-8443")},
 		},
 	}
 
@@ -48,7 +48,7 @@ func TestSecurityRuleTolerateNilPortRange(t *testing.T) {
 func TestSecurityRuleWithNoPortRanges(t *testing.T) {
 	require.NotPanics(t, func() {
 		res, err := azureSecurityRuleToMql(cacheIDTestRuntime(), network.SecurityRule{
-			ID:         strPtr("/subscriptions/sub/…/securityRules/empty"),
+			ID:         new("/subscriptions/sub/…/securityRules/empty"),
 			Properties: &network.SecurityRulePropertiesFormat{},
 		})
 		require.NoError(t, err)
@@ -58,7 +58,7 @@ func TestSecurityRuleWithNoPortRanges(t *testing.T) {
 	// No properties at all, which ARM sends for a rule mid-provision.
 	require.NotPanics(t, func() {
 		res, err := azureSecurityRuleToMql(cacheIDTestRuntime(), network.SecurityRule{
-			ID: strPtr("/subscriptions/sub/…/securityRules/bare"),
+			ID: new("/subscriptions/sub/…/securityRules/bare"),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, res)
@@ -71,8 +71,8 @@ func TestBgpSettingsTolerateNilPeeringAddress(t *testing.T) {
 		Asn: func() *int64 { v := int64(65515); return &v }(),
 		BgpPeeringAddresses: []*network.IPConfigurationBgpPeeringAddress{
 			{
-				IPConfigurationID:    strPtr("/…/ipConfigurations/default"),
-				CustomBgpIPAddresses: []*string{strPtr("169.254.21.5")},
+				IPConfigurationID:    new("/…/ipConfigurations/default"),
+				CustomBgpIPAddresses: []*string{new("169.254.21.5")},
 			},
 			nil,
 		},
@@ -105,9 +105,9 @@ func TestBgpSettingsWithNoPeeringAddresses(t *testing.T) {
 func TestAlertActionsTolerateNilActionGroup(t *testing.T) {
 	actions := &monitor.ActionList{
 		ActionGroups: []*monitor.ActivityLogAlertActionGroup{
-			{ActionGroupID: strPtr("/…/actionGroups/oncall")},
+			{ActionGroupID: new("/…/actionGroups/oncall")},
 			nil,
-			{ActionGroupID: strPtr("/…/actionGroups/security")},
+			{ActionGroupID: new("/…/actionGroups/security")},
 		},
 	}
 
@@ -127,13 +127,13 @@ func TestAlertConditionsTolerateNilAtBothLevels(t *testing.T) {
 	condition := &monitor.AlertRuleAllOfCondition{
 		AllOf: []*monitor.AlertRuleAnyOfOrLeafCondition{
 			{
-				Field:  strPtr("category"),
-				Equals: strPtr("Administrative"),
+				Field:  new("category"),
+				Equals: new("Administrative"),
 			},
 			nil,
 			{
 				AnyOf: []*monitor.AlertRuleLeafCondition{
-					{Field: strPtr("operationName"), Equals: strPtr("Microsoft.Sql/servers/write")},
+					{Field: new("operationName"), Equals: new("Microsoft.Sql/servers/write")},
 					nil,
 				},
 			},

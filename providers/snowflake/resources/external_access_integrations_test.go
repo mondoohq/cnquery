@@ -38,8 +38,10 @@ func TestParseExternalAccessList(t *testing.T) {
 
 // ptr wraps a concrete value in an *any, mirroring the *any cells the Snowflake
 // driver returns from QueryUnsafe.
+//
+//go:fix inline
 func ptr(v any) *any {
-	return &v
+	return new(v)
 }
 
 func TestUnsafeString(t *testing.T) {

@@ -230,8 +230,8 @@ func Parse(s string) Version {
 	// 5. A trailing ".postN" is PEP 440's post-release marker, not a release
 	// component, and it has to come out of the release before anything is compared.
 	// See isPostComponent for why leaving it in place cannot be made consistent.
-	if i := strings.LastIndexByte(v.release, '.'); i >= 0 && isPostComponent(v.release[i+1:]) {
-		v.release, v.post = v.release[:i], v.release[i+1:]
+	if release, post, ok := strings.CutLast(v.release, "."); ok && isPostComponent(post) {
+		v.release, v.post = release, post
 	}
 
 	return v

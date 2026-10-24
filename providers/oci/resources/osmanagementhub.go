@@ -33,7 +33,7 @@ func (o *mqlOciOsManagementHub) managedInstances() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]osmanagementhub.ManagedInstanceSummary, *string, error) {
 				response, err := svc.ListManagedInstances(ctx, osmanagementhub.ListManagedInstancesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -105,7 +105,7 @@ func (o *mqlOciOsManagementHubManagedInstance) getDetail() (*osmanagementhub.Man
 			return nil, err
 		}
 		response, err := client.GetManagedInstance(context.Background(), osmanagementhub.GetManagedInstanceRequest{
-			ManagedInstanceId: common.String(o.Id.Data),
+			ManagedInstanceId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err

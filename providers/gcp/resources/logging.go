@@ -274,13 +274,13 @@ func parseAlertPolicyConditionFilterMetricName(condition map[string]any) string 
 		return ""
 	}
 	// The filter is composed of multiple statements split by AND or OR and spaces in between
-	parts := strings.Split(filter, " ")
-	for _, p := range parts {
+	parts := strings.SplitSeq(filter, " ")
+	for p := range parts {
 		// If the statement starts with metric.type="logging.googleapis.com/user/ then we are interested in it
-		if strings.HasPrefix(p, "metric.type=\"logging.googleapis.com/user/") {
+		if after, ok0 := strings.CutPrefix(p, "metric.type=\"logging.googleapis.com/user/"); ok0 {
 			// The filter looks like this: metric.type=\"logging.googleapis.com/user/log-metric-filter-and-alerts-exist-for-project-ownership-assignments-changes\"
 			// We are interested in the user part of that string
-			return strings.TrimSuffix(strings.TrimPrefix(p, "metric.type=\"logging.googleapis.com/user/"), "\"")
+			return strings.TrimSuffix(after, "\"")
 		}
 	}
 	return ""

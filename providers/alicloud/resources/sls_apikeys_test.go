@@ -24,17 +24,17 @@ func TestSlsAllowedStoreNames(t *testing.T) {
 	})
 	t.Run("a nil element is dropped, not dereferenced", func(t *testing.T) {
 		assert.Equal(t, []string{"access-log"},
-			slsAllowedStoreNames([]*string{nil, tea.String("access-log"), nil}))
+			slsAllowedStoreNames([]*string{nil, new("access-log"), nil}))
 	})
 	t.Run("blank names are dropped", func(t *testing.T) {
 		// a blank name would otherwise be handed to a logstore lookup, which
 		// resolves nothing and would surface as a spurious warning
 		assert.Equal(t, []string{"access-log"},
-			slsAllowedStoreNames([]*string{tea.String(""), tea.String("access-log")}))
+			slsAllowedStoreNames([]*string{new(""), new("access-log")}))
 	})
 	t.Run("order is preserved", func(t *testing.T) {
 		assert.Equal(t, []string{"a", "b", "c"},
-			slsAllowedStoreNames([]*string{tea.String("a"), tea.String("b"), tea.String("c")}))
+			slsAllowedStoreNames([]*string{new("a"), new("b"), new("c")}))
 	})
 }
 
@@ -93,7 +93,7 @@ func TestSlsOffsetListDone(t *testing.T) {
 func TestLogApiKeyArgsOmitsKeyMaterial(t *testing.T) {
 	const plaintext = "sls-plaintext-key-value"
 	args := logApiKeyArgs("cn-hangzhou", "audit-project", &slsclient.ListApiKeysResponseBodyApiKeys{
-		ApiKeyName: tea.String("ingest-key"),
+		ApiKeyName: new("ingest-key"),
 		ApiKey:     tea.String(plaintext),
 	})
 
@@ -113,10 +113,10 @@ func TestLogApiKeyArgsOmitsKeyMaterial(t *testing.T) {
 func TestLogApiKeyArgs(t *testing.T) {
 	t.Run("a restricted key", func(t *testing.T) {
 		args := logApiKeyArgs("cn-hangzhou", "audit-project", &slsclient.ListApiKeysResponseBodyApiKeys{
-			ApiKeyName:    tea.String("ingest-key"),
-			Description:   tea.String("ingest from the collector"),
-			Status:        tea.String("Enabled"),
-			AllowedStores: []*string{tea.String("access-log"), nil},
+			ApiKeyName:    new("ingest-key"),
+			Description:   new("ingest from the collector"),
+			Status:        new("Enabled"),
+			AllowedStores: []*string{new("access-log"), nil},
 			CreateTime:    tea.Int32(1788420000),
 			UpdateTime:    tea.Int32(1788430000),
 		})
@@ -136,8 +136,8 @@ func TestLogApiKeyArgs(t *testing.T) {
 
 	t.Run("an unrestricted key with no timestamps", func(t *testing.T) {
 		args := logApiKeyArgs("cn-hangzhou", "audit-project", &slsclient.ListApiKeysResponseBodyApiKeys{
-			ApiKeyName: tea.String("wide-key"),
-			Status:     tea.String("Enabled"),
+			ApiKeyName: new("wide-key"),
+			Status:     new("Enabled"),
 		})
 
 		assert.Equal(t, []any{}, args["allowedStores"].Value)

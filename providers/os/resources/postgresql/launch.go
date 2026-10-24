@@ -5,6 +5,7 @@ package postgresql
 
 import (
 	"bufio"
+	"maps"
 	"path"
 	"strconv"
 	"strings"
@@ -73,15 +74,11 @@ func RunningByPid(running []Instance, pid int) *Instance {
 // may be nil.
 func Overlay(params map[string]string, inst *Instance) map[string]string {
 	out := make(map[string]string, len(params))
-	for k, v := range params {
-		out[k] = v
-	}
+	maps.Copy(out, params)
 	if inst == nil {
 		return out
 	}
-	for k, v := range inst.Settings {
-		out[k] = v
-	}
+	maps.Copy(out, inst.Settings)
 	return out
 }
 
@@ -185,9 +182,7 @@ func (u *Unit) ApplyEnvironmentFile(content string) {
 	if u.Environment == nil {
 		u.Environment = map[string]string{}
 	}
-	for k, v := range systemd.ParseEnvFile(content) {
-		u.Environment[k] = v
-	}
+	maps.Copy(u.Environment, systemd.ParseEnvFile(content))
 }
 
 // suseStartScript is what SUSE's postgresql.service runs. It reads the data
@@ -226,9 +221,7 @@ func suseScriptInstance(u Unit) (Instance, bool) {
 	// does for postgres
 	inst, _ := ParsePostmasterArgs(append([]string{"postgres", "-D", dir}, words...))
 	inst.Env = map[string]string{}
-	for k, v := range u.Environment {
-		inst.Env[k] = v
-	}
+	maps.Copy(inst.Env, u.Environment)
 	return inst, true
 }
 
@@ -366,9 +359,7 @@ func UnitInstance(u Unit) (Instance, bool) {
 	}
 
 	inst := Instance{Settings: map[string]string{}, Env: map[string]string{}}
-	for k, v := range u.Environment {
-		inst.Env[k] = v
-	}
+	maps.Copy(inst.Env, u.Environment)
 	if dir := u.Environment["PGDATA"]; dir != "" {
 		inst.DataDir = path.Clean(dir)
 	}

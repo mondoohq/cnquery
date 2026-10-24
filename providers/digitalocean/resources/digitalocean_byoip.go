@@ -34,7 +34,7 @@ func byoipPrefixArgs(p *godo.BYOIPPrefix) map[string]*llx.RawData {
 	}
 }
 
-func (r *mqlDigitalocean) byoipPrefixes() ([]interface{}, error) {
+func (r *mqlDigitalocean) byoipPrefixes() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -43,7 +43,7 @@ func (r *mqlDigitalocean) byoipPrefixes() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(prefixes))
+	all := make([]any, 0, len(prefixes))
 	for _, p := range prefixes {
 		if p == nil {
 			continue
@@ -82,11 +82,11 @@ func (r *mqlDigitaloceanByoipPrefix) project() (*mqlDigitaloceanProject, error) 
 	return projectRef(r.MqlRuntime, r.ProjectId.Data, &r.Project)
 }
 
-func (r *mqlDigitaloceanByoipPrefix) resources() ([]interface{}, error) {
+func (r *mqlDigitaloceanByoipPrefix) resources() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
+	var all []any
 	opt := &godo.ListOptions{PerPage: 200}
 	for {
 		resources, resp, err := client.BYOIPPrefixes.GetResources(context.Background(), r.Uuid.Data, opt)
@@ -133,15 +133,15 @@ func (r *mqlDigitaloceanPartnerAttachment) id() (string, error) {
 // partnerAttachmentArgs maps a godo Partner Attachment to its MQL fields.
 // The BGP auth key is deliberately omitted — it is a shared secret.
 func partnerAttachmentArgs(p *godo.PartnerAttachment) map[string]*llx.RawData {
-	vpcIds := make([]interface{}, len(p.VPCIDs))
+	vpcIds := make([]any, len(p.VPCIDs))
 	for i, v := range p.VPCIDs {
 		vpcIds[i] = v
 	}
-	children := make([]interface{}, len(p.Children))
+	children := make([]any, len(p.Children))
 	for i, c := range p.Children {
 		children[i] = c
 	}
-	bgp := map[string]interface{}{
+	bgp := map[string]any{
 		"localAsn":      int64(p.BGP.LocalASN),
 		"localRouterIp": p.BGP.LocalRouterIP,
 		"peerAsn":       int64(p.BGP.PeerASN),
@@ -163,7 +163,7 @@ func partnerAttachmentArgs(p *godo.PartnerAttachment) map[string]*llx.RawData {
 	}
 }
 
-func (r *mqlDigitalocean) partnerAttachments() ([]interface{}, error) {
+func (r *mqlDigitalocean) partnerAttachments() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -172,7 +172,7 @@ func (r *mqlDigitalocean) partnerAttachments() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(attachments))
+	all := make([]any, 0, len(attachments))
 	for _, p := range attachments {
 		if p == nil {
 			continue
@@ -207,7 +207,7 @@ func initDigitaloceanPartnerAttachment(runtime *plugin.Runtime, args map[string]
 	return partnerAttachmentArgs(p), nil, nil
 }
 
-func (r *mqlDigitaloceanPartnerAttachment) vpcs() ([]interface{}, error) {
+func (r *mqlDigitaloceanPartnerAttachment) vpcs() ([]any, error) {
 	uuids := make([]string, 0, len(r.VpcIds.Data))
 	for _, v := range r.VpcIds.Data {
 		if s, ok := v.(string); ok {

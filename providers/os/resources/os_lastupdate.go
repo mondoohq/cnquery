@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -329,13 +330,7 @@ func rpmOSVendors(list []any) map[string]struct{} {
 			continue
 		}
 		name := pkg.Name.Data
-		anchor := false
-		for _, a := range rpmVendorAnchors {
-			if name == a {
-				anchor = true
-				break
-			}
-		}
+		anchor := slices.Contains(rpmVendorAnchors, name)
 		if !anchor {
 			continue
 		}
@@ -422,11 +417,8 @@ func entryCategories(entry *mqlWindowsUpdateEntry) []string {
 // can still land here is the few minutes of clock skew inside that tolerance,
 // which clamps to zero rather than rendering a negative age.
 func lastUpdateAge(installed time.Time) *time.Time {
-	age := time.Now().Unix() - installed.Unix()
-	if age < 0 {
-		age = 0
-	}
-	return MqlTime(llx.DurationToTime(age))
+	age := max(time.Now().Unix()-installed.Unix(), 0)
+	return new(llx.DurationToTime(age))
 }
 
 func (p *mqlOs) lastUpdate() (*time.Time, error) {
@@ -440,7 +432,7 @@ func (p *mqlOs) lastUpdate() (*time.Time, error) {
 		p.LastUpdate.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return MqlTime(update.Time), nil
+	return new(update.Time), nil
 }
 
 func (p *mqlOs) lastUpdateAge() (*time.Time, error) {
@@ -476,7 +468,7 @@ func (p *mqlOsBase) lastUpdate() (*time.Time, error) {
 		p.LastUpdate.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return MqlTime(update.Time), nil
+	return new(update.Time), nil
 }
 
 func (p *mqlOsBase) lastUpdateAge() (*time.Time, error) {

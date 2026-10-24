@@ -47,8 +47,8 @@ func matchesAgentCoreIdentifier(arn, identifier string) bool {
 	if strings.HasPrefix(identifier, "arn:") {
 		return false
 	}
-	if idx := strings.LastIndex(arn, "/"); idx >= 0 {
-		return arn[idx+1:] == identifier
+	if _, after, ok := strings.CutLast(arn, "/"); ok {
+		return after == identifier
 	}
 	return false
 }

@@ -17,7 +17,7 @@ import (
 // case rather than an edge case.
 func noResourcePolicyErr() error {
 	return &orgtypes.ResourcePolicyNotFoundException{
-		Message: strPtrOrg("We can't find a resource policy for your organization."),
+		Message: new("We can't find a resource policy for your organization."),
 	}
 }
 

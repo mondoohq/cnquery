@@ -125,7 +125,7 @@ func initNeonOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 	if orgID == "" && c.Asset() != nil {
 		for _, pid := range c.Asset().PlatformIds {
-			if t := strings.TrimPrefix(pid, connection.PlatformIdNeonOrganization); t != pid {
+			if t, ok := strings.CutPrefix(pid, connection.PlatformIdNeonOrganization); ok {
 				orgID = t
 				break
 			}

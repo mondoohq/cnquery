@@ -98,7 +98,7 @@ func floatPtr(v *float64) *llx.RawData {
 
 // mapBool safely extracts a boolean value from a loosely typed JSON map
 // (map[string]interface{}), returning nil when the key is absent or not a bool.
-func mapBool(m map[string]interface{}, key string) *bool {
+func mapBool(m map[string]any, key string) *bool {
 	if m == nil {
 		return nil
 	}
@@ -110,7 +110,7 @@ func mapBool(m map[string]interface{}, key string) *bool {
 
 // mapInt safely extracts an integer value from a loosely typed JSON map,
 // tolerating the float64 that encoding/json produces for numbers.
-func mapInt(m map[string]interface{}, key string) *int64 {
+func mapInt(m map[string]any, key string) *int64 {
 	if m == nil {
 		return nil
 	}

@@ -46,12 +46,12 @@ func TestServiceAccountAccessEntryMapsMcpIpAccessList(t *testing.T) {
 	lastUsed := time.Date(2026, 4, 2, 9, 30, 0, 0, time.UTC)
 
 	got := serviceAccountAccessEntry(admin.ServiceAccountIPAccessListEntry{
-		CidrBlock:       admin.PtrString("10.0.0.0/8"),
-		IpAddress:       admin.PtrString("10.1.2.3"),
+		CidrBlock:       new("10.0.0.0/8"),
+		IpAddress:       new("10.1.2.3"),
 		CreatedAt:       &created,
 		LastUsedAt:      &lastUsed,
-		LastUsedAddress: admin.PtrString("10.1.2.3"),
-		RequestCount:    admin.PtrInt(42),
+		LastUsedAddress: new("10.1.2.3"),
+		RequestCount:    new(42),
 	})
 
 	assert.Equal(t, "10.0.0.0/8", got.cidrBlock)
@@ -67,7 +67,7 @@ func TestServiceAccountAccessEntryHandlesAbsentValues(t *testing.T) {
 	// Those must stay empty and null rather than becoming a zero timestamp,
 	// which would report 1 January year 1 as a real last-used date.
 	got := serviceAccountAccessEntry(admin.ServiceAccountIPAccessListEntry{
-		CidrBlock: admin.PtrString("192.168.0.0/16"),
+		CidrBlock: new("192.168.0.0/16"),
 	})
 
 	assert.Equal(t, "192.168.0.0/16", got.cidrBlock)

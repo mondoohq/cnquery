@@ -318,7 +318,7 @@ func TestApkField(t *testing.T) {
 // lines of a real database list directories and files.
 func apkBenchDB(pkgCount int, filesPerPkg int) []byte {
 	var buf bytes.Buffer
-	for i := 0; i < pkgCount; i++ {
+	for i := range pkgCount {
 		name := "package-" + strconv.Itoa(i)
 		buf.WriteString("C:Q1eVpkasdfjkl" + strconv.Itoa(i) + "=\n")
 		buf.WriteString("P:" + name + "\n")
@@ -336,7 +336,7 @@ func apkBenchDB(pkgCount int, filesPerPkg int) []byte {
 		buf.WriteString("D:so:libc.musl-x86_64.so.1 so:libz.so.1\n")
 		buf.WriteString("p:cmd:" + name + "=1.0.0-r0\n")
 		buf.WriteString("F:usr/lib/" + name + "\n")
-		for j := 0; j < filesPerPkg; j++ {
+		for j := range filesPerPkg {
 			buf.WriteString("R:file-" + strconv.Itoa(j) + ".so\n")
 			buf.WriteString("Z:Q1abcdefghijklmnop" + strconv.Itoa(j) + "=\n")
 		}

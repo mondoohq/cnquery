@@ -24,16 +24,16 @@ func TestCosmosRoleDefinitionArgs(t *testing.T) {
 
 	t.Run("populated definition maps to typed values", func(t *testing.T) {
 		d := cosmosRoleDefinition{
-			id:       to.Ptr("/subscriptions/s/resourceGroups/rg/providers/Microsoft.DocumentDB/databaseAccounts/a/cassandraRoleDefinitions/abc"),
-			name:     to.Ptr("abc"),
-			typ:      to.Ptr("Microsoft.DocumentDB/databaseAccounts/cassandraRoleDefinitions"),
-			roleName: to.Ptr("My Reader"),
+			id:       new("/subscriptions/s/resourceGroups/rg/providers/Microsoft.DocumentDB/databaseAccounts/a/cassandraRoleDefinitions/abc"),
+			name:     new("abc"),
+			typ:      new("Microsoft.DocumentDB/databaseAccounts/cassandraRoleDefinitions"),
+			roleName: new("My Reader"),
 			roleType: to.Ptr(cosmos.RoleDefinitionTypeBuiltInRole),
 			// second scope is nil and must be dropped
-			scopes: []*string{to.Ptr("/scope/a"), nil, to.Ptr("/scope/b")},
+			scopes: []*string{new("/scope/a"), nil, new("/scope/b")},
 			// second permission is nil and must be dropped
 			permissions: []*cosmos.Permission{
-				{DataActions: []*string{to.Ptr("Microsoft.DocumentDB/.../read")}},
+				{DataActions: []*string{new("Microsoft.DocumentDB/.../read")}},
 				nil,
 			},
 		}
@@ -71,13 +71,13 @@ func TestCosmosRoleAssignmentArgs(t *testing.T) {
 
 	t.Run("populated assignment maps to typed values", func(t *testing.T) {
 		ra := cosmosRoleAssignment{
-			id:                to.Ptr("/subscriptions/s/resourceGroups/rg/providers/Microsoft.DocumentDB/databaseAccounts/a/cassandraRoleAssignments/xyz"),
-			name:              to.Ptr("xyz"),
-			typ:               to.Ptr("Microsoft.DocumentDB/databaseAccounts/cassandraRoleAssignments"),
-			principalID:       to.Ptr("00000000-0000-0000-0000-000000000000"),
-			roleDefinitionID:  to.Ptr("/roleDefinitions/abc"),
-			scope:             to.Ptr("/subscriptions/s/.../databaseAccounts/a"),
-			provisioningState: to.Ptr("Succeeded"),
+			id:                new("/subscriptions/s/resourceGroups/rg/providers/Microsoft.DocumentDB/databaseAccounts/a/cassandraRoleAssignments/xyz"),
+			name:              new("xyz"),
+			typ:               new("Microsoft.DocumentDB/databaseAccounts/cassandraRoleAssignments"),
+			principalID:       new("00000000-0000-0000-0000-000000000000"),
+			roleDefinitionID:  new("/roleDefinitions/abc"),
+			scope:             new("/subscriptions/s/.../databaseAccounts/a"),
+			provisioningState: new("Succeeded"),
 		}
 		args := cosmosRoleAssignmentArgs(ra)
 

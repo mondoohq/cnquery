@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"slices"
+
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/mongo/connection"
@@ -192,10 +194,5 @@ func roleDatabases(conn *connection.MongoConnection) []string {
 }
 
 func containsStr(s []string, want string) bool {
-	for _, x := range s {
-		if x == want {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s, want)
 }

@@ -79,7 +79,7 @@ func TestLookupNode_ErrorMemoized(t *testing.T) {
 	f.errorRoute("/nodes", 403, "Permission check failed")
 	conn := f.conn()
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		_, found, err := conn.LookupNode("pve1")
 		require.Error(t, err)
 		require.False(t, found)

@@ -377,7 +377,6 @@ func TestMskReplicatorIsCrossAccount(t *testing.T) {
 func buildReplicatorWithClusters(arns ...string) *mqlAwsMskReplicator {
 	clusters := make([]kafka_types.KafkaClusterDescription, 0, len(arns))
 	for _, a := range arns {
-		a := a
 		clusters = append(clusters, kafka_types.KafkaClusterDescription{
 			AmazonMskCluster: &kafka_types.AmazonMskCluster{MskClusterArn: &a},
 		})

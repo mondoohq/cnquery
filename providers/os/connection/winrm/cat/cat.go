@@ -105,7 +105,7 @@ func openScript(name string) string {
 // decodeContent turns openScript's output back into the file's bytes.
 func decodeContent(out []byte) ([]byte, error) {
 	var data []byte
-	for _, line := range bytes.Fields(out) {
+	for line := range bytes.FieldsSeq(out) {
 		chunk := make([]byte, base64.StdEncoding.DecodedLen(len(line)))
 		n, err := base64.StdEncoding.Decode(chunk, line)
 		if err != nil {

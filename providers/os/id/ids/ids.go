@@ -44,7 +44,7 @@ const (
 // name yields a one-element list.
 func Parse(raw string) []string {
 	var res []string
-	for _, name := range strings.Split(raw, ",") {
+	for name := range strings.SplitSeq(raw, ",") {
 		if name = strings.TrimSpace(name); name != "" {
 			res = append(res, name)
 		}

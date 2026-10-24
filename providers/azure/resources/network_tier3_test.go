@@ -18,7 +18,7 @@ import (
 // ipTags dict silently loses its shape.
 func TestPublicIpPrefixIpTagsDict(t *testing.T) {
 	tags := []*network.IPTag{
-		{IPTagType: strPtr("FirstPartyUsage"), Tag: strPtr("SQL")},
+		{IPTagType: new("FirstPartyUsage"), Tag: new("SQL")},
 	}
 
 	dicts, err := convert.JsonToDictSlice(tags)

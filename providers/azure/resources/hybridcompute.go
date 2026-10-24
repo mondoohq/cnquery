@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"maps"
 	"strings"
 	"time"
 
@@ -189,9 +190,7 @@ func (a *mqlAzureSubscriptionComputeService) hybridMachines() ([]any, error) {
 			if m.Properties != nil {
 				agentConfig = m.Properties.AgentConfiguration
 			}
-			for k, v := range hybridAgentConfigArgs(agentConfig) {
-				machineArgs[k] = v
-			}
+			maps.Copy(machineArgs, hybridAgentConfigArgs(agentConfig))
 			mqlMachine, err := CreateResource(a.MqlRuntime, "azure.subscription.computeService.hybridMachine", machineArgs)
 			if err != nil {
 				return nil, err

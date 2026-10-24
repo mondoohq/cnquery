@@ -258,8 +258,8 @@ func TestDiskNilPropertiesReportsNullNotUnset(t *testing.T) {
 	runtime := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
 
 	res, err := diskToMql(runtime, compute.Disk{
-		ID:   strp("/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Compute/disks/d1"),
-		Name: strp("d1"),
+		ID:   new("/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Compute/disks/d1"),
+		Name: new("d1"),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)

@@ -2998,8 +2998,8 @@ func (a *mqlAwsEcsCapacityProvider) autoScalingGroup() (*mqlAwsAutoscalingGroup,
 	// The Auto Scaling group name is the segment after the final "/" in the ARN,
 	// e.g. arn:aws:autoscaling:...:autoScalingGroupName/my-asg -> my-asg
 	name := a.cacheAutoScalingGroupArn
-	if idx := strings.LastIndex(name, "/"); idx >= 0 {
-		name = name[idx+1:]
+	if _, after, ok := strings.CutLast(name, "/"); ok {
+		name = after
 	}
 	if name == "" {
 		a.AutoScalingGroup.State = plugin.StateIsSet | plugin.StateIsNull

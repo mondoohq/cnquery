@@ -287,12 +287,7 @@ func (s *iacProviderService) walkTree(parent *Runtime, req *plugin.ConnectReq, t
 }
 
 func iacDiscoverHasAll(conf *inventory.Config) bool {
-	for _, target := range conf.GetDiscover().GetTargets() {
-		if target == DiscoveryAll {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(conf.GetDiscover().GetTargets(), DiscoveryAll)
 }
 
 // MockConnect replays a recorded iac scan.

@@ -92,8 +92,8 @@ func resolveDepPurl(pkgs map[string]packageLockPackage, pathToPurl map[string]st
 		if base == "" {
 			return ""
 		}
-		if idx := strings.LastIndex(base, "/node_modules/"); idx >= 0 {
-			base = base[:idx]
+		if before, _, ok := strings.CutLast(base, "/node_modules/"); ok {
+			base = before
 		} else {
 			base = ""
 		}
@@ -171,8 +171,8 @@ func (l *packageLockLicense) UnmarshalJSON(data []byte) (err error) {
 // "@babel/core/node_modules/ms") and, fed to NewPackageUrl, produced a purl built
 // from the path rather than the name.
 func packageLockPackageName(path string) string {
-	if i := strings.LastIndex(path, "node_modules/"); i >= 0 {
-		return path[i+len("node_modules/"):]
+	if _, after, ok := strings.CutLast(path, "node_modules/"); ok {
+		return after
 	}
 	return path
 }

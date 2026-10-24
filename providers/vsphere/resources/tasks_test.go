@@ -47,8 +47,8 @@ func TestEventEntity(t *testing.T) {
 	t.Run("vm takes precedence and yields moid+name", func(t *testing.T) {
 		moid, name := eventEntity(&vmwaretypes.Event{
 			Vm: &vmwaretypes.VmEventArgument{
-				EntityEventArgument: vmwaretypes.EntityEventArgument{Name: "web-01"},
-				Vm:                  vmwaretypes.ManagedObjectReference{Type: "VirtualMachine", Value: "vm-42"},
+				Name: "web-01",
+				Vm:   vmwaretypes.ManagedObjectReference{Type: "VirtualMachine", Value: "vm-42"},
 			},
 		})
 		assert.Equal(t, "web-01", name)
@@ -58,8 +58,8 @@ func TestEventEntity(t *testing.T) {
 	t.Run("host entity", func(t *testing.T) {
 		moid, name := eventEntity(&vmwaretypes.Event{
 			Host: &vmwaretypes.HostEventArgument{
-				EntityEventArgument: vmwaretypes.EntityEventArgument{Name: "esxi-1"},
-				Host:                vmwaretypes.ManagedObjectReference{Type: "HostSystem", Value: "host-9"},
+				Name: "esxi-1",
+				Host: vmwaretypes.ManagedObjectReference{Type: "HostSystem", Value: "host-9"},
 			},
 		})
 		assert.Equal(t, "esxi-1", name)

@@ -44,14 +44,14 @@ func Go(packageName string, ast *LR, collector *Collector, licenseHeaderTpl *tem
 		o.goResource(ast.Resources[i])
 	}
 
-	imports := ""
+	var imports strings.Builder
 	for packName := range o.packsInUse {
 		importPath, ok := ast.packPaths[packName]
 		if !ok {
 			return "", errors.New("cannot find import path for pack: " + packName)
 		}
 
-		imports += "\n\t" + strconv.Quote(importPath)
+		imports.WriteString("\n\t" + strconv.Quote(importPath))
 	}
 
 	coreImports := ""
@@ -64,7 +64,7 @@ func Go(packageName string, ast *LR, collector *Collector, licenseHeaderTpl *tem
 		return "", err
 	}
 
-	header := fmt.Sprintf(goHeader, licenseHeader, coreImports, imports)
+	header := fmt.Sprintf(goHeader, licenseHeader, coreImports, imports.String())
 	return header + o.data, o.errors.Deduplicate()
 }
 
@@ -547,11 +547,11 @@ func (b *goBuilder) importName(symbol string) (string, bool) {
 }
 
 func indent(s string, depth int) string { //nolint:unused
-	space := ""
-	for i := 0; i < depth; i++ {
-		space += "\t"
+	var space strings.Builder
+	for range depth {
+		space.WriteString("\t")
 	}
-	return space + strings.ReplaceAll(s, "\n", "\n"+space)
+	return space.String() + strings.ReplaceAll(s, "\n", "\n"+space.String())
 }
 
 func (r *Resource) constTypeName(b *goBuilder) string {
@@ -588,22 +588,22 @@ func (b *goBuilder) checkOwnerFilledResourcesArePrivate(all []*Resource) {
 			continue
 		}
 
-		dot := strings.LastIndex(r.ID, ".")
-		if dot == -1 {
+		ownerID, field, found := strings.CutLast(r.ID, ".")
+		if !found {
 			continue
 		}
-		owner, ok := byID[r.ID[:dot]]
+		owner, ok := byID[ownerID]
 		if !ok {
 			continue
 		}
-		if !b.declaresAccessorFor(owner, r.ID[dot+1:], r.ID) {
+		if !b.declaresAccessorFor(owner, field, r.ID) {
 			continue
 		}
 
 		b.errors.Add(fmt.Errorf(
 			"resource %s is public, but only the `%s` accessor on %s can fill it. "+
 				"A path like `%s.<field>` therefore compiles to a bare %s and every field reads null. Mark the resource `private`",
-			r.ID, r.ID[dot+1:], owner.ID, r.ID, r.ID))
+			r.ID, field, owner.ID, r.ID, r.ID))
 	}
 }
 

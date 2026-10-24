@@ -65,9 +65,9 @@ func restrictionPolicyFor(runtime *plugin.Runtime, resourceType, resourceId stri
 	data := resp.GetData()
 	attrs := data.GetAttributes()
 
-	bindings := []interface{}{}
+	bindings := []any{}
 	for _, binding := range attrs.GetBindings() {
-		bindings = append(bindings, map[string]interface{}{
+		bindings = append(bindings, map[string]any{
 			"relation":   binding.GetRelation(),
 			"principals": toAnyStrings(binding.GetPrincipals()),
 		})
@@ -105,14 +105,14 @@ func (r *mqlDatadogSecurityRule) restrictionPolicy() (*mqlDatadogRestrictionPoli
 
 // --- Shared dashboards ---
 
-func (r *mqlDatadogDashboard) sharedDashboards() ([]interface{}, error) {
+func (r *mqlDatadogDashboard) sharedDashboards() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewDashboardSharingApi(conn.ApiClient())
 
 	resp, httpResp, err := api.ListSharedDashboardsByDashboardId(conn.AuthCtx(), r.Id.Data)
 	if err != nil {
 		if isNotFound(httpResp) {
-			return []interface{}{}, nil
+			return []any{}, nil
 		}
 		if isForbidden(httpResp) {
 			log.Warn().Str("dashboard", r.Id.Data).Msg("datadog> dashboard shares not available (403 Forbidden)")
@@ -121,12 +121,12 @@ func (r *mqlDatadogDashboard) sharedDashboards() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := []interface{}{}
+	all := []any{}
 	for _, share := range resp.GetData() {
 		attrs := share.GetAttributes()
 		rels := share.GetRelationships()
 
-		invitees := []interface{}{}
+		invitees := []any{}
 		for _, invitee := range attrs.GetInvitees() {
 			invitees = append(invitees, invitee.GetEmail())
 		}
@@ -186,11 +186,11 @@ func (r *mqlDatadogSharedDashboard) dashboard() (*mqlDatadogDashboard, error) {
 
 // --- Identity provider attribute mappings ---
 
-func (r *mqlDatadog) authnMappings() ([]interface{}, error) {
+func (r *mqlDatadog) authnMappings() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewAuthNMappingsApi(conn.ApiClient())
 
-	var all []interface{}
+	var all []any
 	pageSize := int64(100)
 	page := int64(0)
 
@@ -345,7 +345,7 @@ func authnMappingGrants(mapping datadogV2.AuthNMapping) (string, string) {
 
 // --- Log processing pipelines ---
 
-func (r *mqlDatadog) logsPipelines() ([]interface{}, error) {
+func (r *mqlDatadog) logsPipelines() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewLogsPipelinesApi(conn.ApiClient())
 
@@ -358,7 +358,7 @@ func (r *mqlDatadog) logsPipelines() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, pipeline := range pipelines {
 		filterQuery := ""
 		if filter, ok := pipeline.GetFilterOk(); ok && filter != nil {
@@ -388,7 +388,7 @@ func (r *mqlDatadogLogsPipeline) id() (string, error) {
 
 // --- Log forwarding destinations ---
 
-func (r *mqlDatadog) logsCustomDestinations() ([]interface{}, error) {
+func (r *mqlDatadog) logsCustomDestinations() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewLogsCustomDestinationsApi(conn.ApiClient())
 
@@ -401,7 +401,7 @@ func (r *mqlDatadog) logsCustomDestinations() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, dest := range resp.GetData() {
 		attrs := dest.GetAttributes()
 		forwarder := destinationForwarder(attrs)
@@ -492,11 +492,11 @@ func destinationForwarder(attrs datadogV2.CustomDestinationResponseAttributes) f
 
 // --- Log restriction queries ---
 
-func (r *mqlDatadog) logsRestrictionQueries() ([]interface{}, error) {
+func (r *mqlDatadog) logsRestrictionQueries() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewLogsRestrictionQueriesApi(conn.ApiClient())
 
-	var all []interface{}
+	var all []any
 	pageSize := int64(100)
 	page := int64(0)
 
@@ -542,11 +542,11 @@ func (r *mqlDatadogLogsRestrictionQuery) id() (string, error) {
 	return "datadog.logsRestrictionQuery/" + r.Id.Data, nil
 }
 
-func (r *mqlDatadogLogsRestrictionQuery) roles() ([]interface{}, error) {
+func (r *mqlDatadogLogsRestrictionQuery) roles() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewLogsRestrictionQueriesApi(conn.ApiClient())
 
-	all := []interface{}{}
+	all := []any{}
 	pageSize := int64(100)
 	page := int64(0)
 

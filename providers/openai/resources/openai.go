@@ -93,8 +93,7 @@ func isAccessDenied(err error) bool {
 	if err == nil {
 		return false
 	}
-	var apiErr *openai.Error
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*openai.Error](err); ok {
 		return apiErr.StatusCode == 401 || apiErr.StatusCode == 403
 	}
 	return false

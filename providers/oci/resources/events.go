@@ -7,9 +7,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/events"
 	"github.com/oracle/oci-go-sdk/v65/ons"
 	"github.com/rs/zerolog/log"
@@ -77,7 +77,7 @@ func (o *mqlOciEvents) rules() ([]any, error) {
 func (o *mqlOciEvents) getEventRulesForRegion(ctx context.Context, client *events.EventsClient, compartmentID string) ([]events.RuleSummary, error) {
 	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]events.RuleSummary, *string, error) {
 		request := events.ListRulesRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		}
 
@@ -116,7 +116,7 @@ func (o *mqlOciEventsRule) getRuleDetails() (*events.Rule, error) {
 		}
 
 		response, err := client.GetRule(context.Background(), events.GetRuleRequest{
-			RuleId: common.String(o.Id.Data),
+			RuleId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -296,10 +296,8 @@ func ociEventsRuleNotifies(topicIDs []string, lookup func(topicID string) (ociTo
 		if delivery.topicState != string(ons.NotificationTopicSummaryLifecycleStateActive) {
 			continue
 		}
-		for _, state := range delivery.subscriptionStates {
-			if state == string(ons.SubscriptionSummaryLifecycleStateActive) {
-				return true, nil
-			}
+		if slices.Contains(delivery.subscriptionStates, string(ons.SubscriptionSummaryLifecycleStateActive)) {
+			return true, nil
 		}
 	}
 	return false, firstErr

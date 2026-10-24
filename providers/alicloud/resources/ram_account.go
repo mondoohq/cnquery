@@ -272,8 +272,8 @@ func (r *mqlAlicloudRamAccessKey) lastUsedDate() (*time.Time, error) {
 		return nil, err
 	}
 	resp, err := client.GetAccessKeyLastUsed(&ramclient.GetAccessKeyLastUsedRequest{
-		UserName:        tea.String(r.UserName.Data),
-		UserAccessKeyId: tea.String(r.AccessKeyId.Data),
+		UserName:        new(r.UserName.Data),
+		UserAccessKeyId: new(r.AccessKeyId.Data),
 	})
 	if err != nil {
 		return nil, classifyAlicloudError(err, "ram:GetAccessKeyLastUsed")

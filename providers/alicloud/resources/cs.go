@@ -65,9 +65,9 @@ func (r *mqlAlicloudCs) clusters() ([]any, error) {
 		pageSize := int64(50)
 		for {
 			resp, err := client.DescribeClustersV1(&csclient.DescribeClustersV1Request{
-				RegionId:   tea.String(region),
-				PageNumber: tea.Int64(pageNumber),
-				PageSize:   tea.Int64(pageSize),
+				RegionId:   new(region),
+				PageNumber: new(pageNumber),
+				PageSize:   new(pageSize),
 			})
 			if err != nil {
 				// A region may not have ACK enabled or the credential may lack
@@ -144,7 +144,7 @@ func newCsCluster(runtime *plugin.Runtime, region string, c *csclient.DescribeCl
 
 	vswitchIds := strPtrsToStrings(c.VswitchIds)
 	if len(vswitchIds) == 0 && tea.StringValue(c.VswitchId) != "" {
-		for _, v := range strings.Split(*c.VswitchId, ",") {
+		for v := range strings.SplitSeq(*c.VswitchId, ",") {
 			if v = strings.TrimSpace(v); v != "" {
 				vswitchIds = append(vswitchIds, v)
 			}
@@ -245,8 +245,8 @@ func initAlicloudCsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return nil, nil, err
 	}
 	resp, err := client.DescribeClustersV1(&csclient.DescribeClustersV1Request{
-		RegionId:  tea.String(region),
-		ClusterId: tea.String(clusterID),
+		RegionId:  new(region),
+		ClusterId: new(clusterID),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -291,7 +291,7 @@ func (r *mqlAlicloudCsCluster) clusterDetail() (*csclient.DescribeClusterDetailR
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.DescribeClusterDetail(tea.String(r.clusterId))
+	resp, err := client.DescribeClusterDetail(new(r.clusterId))
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +319,7 @@ func (r *mqlAlicloudCsCluster) controlPlaneLog() (*csclient.CheckControlPlaneLog
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.CheckControlPlaneLogEnable(tea.String(r.clusterId))
+	resp, err := client.CheckControlPlaneLogEnable(new(r.clusterId))
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +364,7 @@ func (r *mqlAlicloudCsCluster) clusterAuditProject() (*csclient.GetClusterAuditP
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.GetClusterAuditProject(tea.String(r.clusterId))
+	resp, err := client.GetClusterAuditProject(new(r.clusterId))
 	if err != nil {
 		return nil, err
 	}
@@ -528,7 +528,7 @@ func (r *mqlAlicloudCsCluster) addons() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListClusterAddonInstances(tea.String(r.clusterId))
+	resp, err := client.ListClusterAddonInstances(new(r.clusterId))
 	if err != nil || resp == nil || resp.Body == nil {
 		return []any{}, nil
 	}
@@ -552,7 +552,7 @@ func (r *mqlAlicloudCsCluster) nodePools() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.DescribeClusterNodePools(tea.String(r.clusterId), &csclient.DescribeClusterNodePoolsRequest{})
+	resp, err := client.DescribeClusterNodePools(new(r.clusterId), &csclient.DescribeClusterNodePoolsRequest{})
 	if err != nil || resp == nil || resp.Body == nil {
 		return []any{}, nil
 	}

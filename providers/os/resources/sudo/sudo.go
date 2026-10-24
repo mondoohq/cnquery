@@ -96,7 +96,7 @@ var (
 func ParseVersionOutput(output string) VersionInfo {
 	info := VersionInfo{}
 
-	for _, raw := range strings.Split(output, "\n") {
+	for raw := range strings.SplitSeq(output, "\n") {
 		line := strings.TrimSpace(raw)
 		if line == "" {
 			continue
@@ -195,7 +195,7 @@ func FirstPluginByType(plugins []Plugin, pluginType string) *Plugin {
 // Returns nil when there are no recognized error lines.
 func ParseVisudoErrors(output string) []ValidationError {
 	var errs []ValidationError
-	for _, raw := range strings.Split(output, "\n") {
+	for raw := range strings.SplitSeq(output, "\n") {
 		line := strings.TrimSpace(raw)
 		if line == "" {
 			continue

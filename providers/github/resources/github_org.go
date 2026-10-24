@@ -181,7 +181,7 @@ func (g *mqlGithubOrganization) members() ([]any, error) {
 	orgLogin := g.Login.Data
 
 	listOpts := &github.ListMembersOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 	var allMembers []*github.User
 	for {
@@ -224,7 +224,7 @@ func (g *mqlGithubOrganization) outsideCollaborators() ([]any, error) {
 	orgLogin := g.Login.Data
 
 	listOpts := &github.ListOutsideCollaboratorsOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 	var allUsers []*github.User
 	for {
@@ -266,8 +266,8 @@ func (g *mqlGithubOrganization) owners() ([]any, error) {
 	orgLogin := g.Login.Data
 
 	listOpts := &github.ListMembersOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
-		Role:        "admin",
+		PerPage: paginationPerPage,
+		Role:    "admin",
 	}
 	var allMembers []*github.User
 	for {
@@ -382,11 +382,9 @@ func (g *mqlGithubOrganization) repositories() ([]any, error) {
 	}
 	orgLogin := g.Login.Data
 	listOpts := &github.RepositoryListByOrgOptions{
-		ListOptions: github.ListOptions{
-			PerPage: paginationPerPage,
-			Page:    1,
-		},
-		Type: "all",
+		PerPage: paginationPerPage,
+		Page:    1,
+		Type:    "all",
 	}
 
 	log.Debug().
@@ -543,8 +541,8 @@ func (g *mqlGithubOrganization) packages() ([]any, error) {
 	res := []any{}
 	for i := range pkgTypes {
 		listOpts := &github.PackageListOptions{
-			ListOptions: github.ListOptions{PerPage: paginationPerPage},
-			PackageType: github.String(pkgTypes[i]),
+			PerPage:     paginationPerPage,
+			PackageType: new(pkgTypes[i]),
 		}
 
 		var allPackages []*github.Package

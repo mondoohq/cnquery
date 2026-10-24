@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	authorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 	"github.com/stretchr/testify/assert"
 )
@@ -55,16 +54,16 @@ func TestMatchesActionPattern(t *testing.T) {
 func perm(actions, notActions, dataActions, notDataActions []string) *authorization.Permission {
 	p := &authorization.Permission{}
 	for _, a := range actions {
-		p.Actions = append(p.Actions, to.Ptr(a))
+		p.Actions = append(p.Actions, new(a))
 	}
 	for _, a := range notActions {
-		p.NotActions = append(p.NotActions, to.Ptr(a))
+		p.NotActions = append(p.NotActions, new(a))
 	}
 	for _, a := range dataActions {
-		p.DataActions = append(p.DataActions, to.Ptr(a))
+		p.DataActions = append(p.DataActions, new(a))
 	}
 	for _, a := range notDataActions {
-		p.NotDataActions = append(p.NotDataActions, to.Ptr(a))
+		p.NotDataActions = append(p.NotDataActions, new(a))
 	}
 	return p
 }

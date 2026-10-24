@@ -23,7 +23,7 @@ type mqlJamfRestrictedSoftwareInternal struct {
 	lock   sync.Mutex
 }
 
-func (r *mqlJamf) restrictedSoftware() ([]interface{}, error) {
+func (r *mqlJamf) restrictedSoftware() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.JamfConnection)
 	client := conn.Client
 
@@ -32,7 +32,7 @@ func (r *mqlJamf) restrictedSoftware() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var res []interface{}
+	var res []any
 	for _, item := range list.RestrictedSoftware {
 		mqlItem, err := CreateResource(r.MqlRuntime, "jamf.restrictedSoftware", map[string]*llx.RawData{
 			"id":   llx.StringData(strconv.Itoa(item.ID)),
@@ -138,7 +138,7 @@ func (r *mqlJamfRestrictedSoftware) allComputers() (bool, error) {
 	return detail.Scope.AllComputers, nil
 }
 
-func (r *mqlJamfRestrictedSoftware) scope() (interface{}, error) {
+func (r *mqlJamfRestrictedSoftware) scope() (any, error) {
 	detail, err := r.fetchDetail()
 	if err != nil {
 		return nil, err
@@ -148,13 +148,13 @@ func (r *mqlJamfRestrictedSoftware) scope() (interface{}, error) {
 		return int64(e.ID), e.Name
 	}
 	scope := detail.Scope
-	return map[string]interface{}{
+	return map[string]any{
 		"allComputers":   scope.AllComputers,
 		"computers":      jamfScopeEntities(scope.Computers, entity),
 		"computerGroups": jamfScopeEntities(scope.ComputerGroups, entity),
 		"buildings":      jamfScopeEntities(scope.Buildings, entity),
 		"departments":    jamfScopeEntities(scope.Departments, entity),
-		"exclusions": map[string]interface{}{
+		"exclusions": map[string]any{
 			"computers":      jamfScopeEntities(scope.Exclusions.Computers, entity),
 			"computerGroups": jamfScopeEntities(scope.Exclusions.ComputerGroups, entity),
 			"buildings":      jamfScopeEntities(scope.Exclusions.Buildings, entity),

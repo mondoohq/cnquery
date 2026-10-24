@@ -19,7 +19,7 @@ func TestVmFlexPreferredSize(t *testing.T) {
 	})
 	t.Run("flex profile returns preferred size", func(t *testing.T) {
 		props := &compute.VirtualMachineProperties{
-			FlexProfile: &compute.FlexProfile{PreferredVMSize: ptr("Standard_D4s_v5")},
+			FlexProfile: &compute.FlexProfile{PreferredVMSize: new("Standard_D4s_v5")},
 		}
 		got := vmFlexPreferredSize(props)
 		if assert.NotNil(t, got) {

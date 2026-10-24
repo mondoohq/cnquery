@@ -18,10 +18,10 @@ func TestAutopilotOobeToDict_Nil(t *testing.T) {
 
 func TestAutopilotOobeToDict_AllFields(t *testing.T) {
 	s := betamodels.NewOutOfBoxExperienceSettings()
-	s.SetHidePrivacySettings(ptr(true))
-	s.SetHideEULA(ptr(false))
-	s.SetSkipKeyboardSelectionPage(ptr(true))
-	s.SetHideEscapeLink(ptr(true))
+	s.SetHidePrivacySettings(new(true))
+	s.SetHideEULA(new(false))
+	s.SetSkipKeyboardSelectionPage(new(true))
+	s.SetHideEscapeLink(new(true))
 	userType := betamodels.STANDARD_WINDOWSUSERTYPE
 	s.SetUserType(&userType)
 	deviceUsage := betamodels.SHARED_WINDOWSDEVICEUSAGETYPE
@@ -129,7 +129,7 @@ func TestAutopilotProfileArgs_AbsentIsNull(t *testing.T) {
 
 func TestAutopilotOobeToDict_OmitsNilFields(t *testing.T) {
 	s := betamodels.NewOutOfBoxExperienceSettings()
-	s.SetHideEULA(ptr(true))
+	s.SetHideEULA(new(true))
 
 	got := autopilotOobeToDict(s)
 	assert.Equal(t, map[string]any{"hideEULA": true}, got)

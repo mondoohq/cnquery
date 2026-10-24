@@ -18,10 +18,10 @@ func TestScheduledMaintenanceWindowArgs(t *testing.T) {
 
 	args := scheduledMaintenanceWindowArgs(&database.AutonomousDatabaseMaintenanceWindowSummary{
 		DayOfWeek:                          &database.DayOfWeek{Name: database.DayOfWeekNameTuesday},
-		MaintenanceStartTime:               strPtr("02:00"),
-		MaintenanceEndTime:                 strPtr("06:00"),
-		AvailabilityDomain:                 strPtr("Uocm:PHX-AD-1"),
-		IsMaintenanceWindowChangeScheduled: boolPtr(true),
+		MaintenanceStartTime:               new("02:00"),
+		MaintenanceEndTime:                 new("06:00"),
+		AvailabilityDomain:                 new("Uocm:PHX-AD-1"),
+		IsMaintenanceWindowChangeScheduled: new(true),
 	}, &common.SDKTime{Time: updateAt})
 
 	assert.Equal(t, "TUESDAY", args["maintenanceDayOfWeek"].Value)
@@ -58,8 +58,8 @@ func TestScheduledMaintenanceWindowArgsAreNullWithoutAWindow(t *testing.T) {
 func TestScheduledMaintenanceWindowArgsNullUpdateWithAWindow(t *testing.T) {
 	args := scheduledMaintenanceWindowArgs(&database.AutonomousDatabaseMaintenanceWindowSummary{
 		DayOfWeek:                          &database.DayOfWeek{Name: database.DayOfWeekNameSunday},
-		MaintenanceStartTime:               strPtr("22:00"),
-		IsMaintenanceWindowChangeScheduled: boolPtr(false),
+		MaintenanceStartTime:               new("22:00"),
+		IsMaintenanceWindowChangeScheduled: new(false),
 	}, nil)
 
 	assert.Equal(t, "SUNDAY", args["maintenanceDayOfWeek"].Value)
@@ -76,14 +76,14 @@ func TestScheduledMaintenanceWindowArgsNullUpdateWithAWindow(t *testing.T) {
 // compares unequal to every real day while looking like a configured value.
 func TestScheduledMaintenanceWindowArgsDayOfWeekAbsence(t *testing.T) {
 	nilDay := scheduledMaintenanceWindowArgs(&database.AutonomousDatabaseMaintenanceWindowSummary{
-		MaintenanceStartTime: strPtr("04:00"),
+		MaintenanceStartTime: new("04:00"),
 	}, nil)
 	assert.Nil(t, nilDay["maintenanceDayOfWeek"].Value)
 	assert.Equal(t, "04:00", nilDay["maintenanceStartTime"].Value)
 
 	emptyEnum := scheduledMaintenanceWindowArgs(&database.AutonomousDatabaseMaintenanceWindowSummary{
 		DayOfWeek:            &database.DayOfWeek{},
-		MaintenanceStartTime: strPtr("04:00"),
+		MaintenanceStartTime: new("04:00"),
 	}, nil)
 	assert.Nil(t, emptyEnum["maintenanceDayOfWeek"].Value)
 }

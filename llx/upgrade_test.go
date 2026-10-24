@@ -101,7 +101,7 @@ func TestFindTypeDriftIgnoresPatchedChunks(t *testing.T) {
 
 func TestReportTypeDriftTruncates(t *testing.T) {
 	var drift []llx.TypeDrift
-	for i := 0; i < 7; i++ {
+	for range 7 {
 		drift = append(drift, llx.TypeDrift{
 			Resource: "r", Field: "f", Writer: types.String, Reader: types.Int,
 		})

@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 )
 
@@ -165,10 +166,8 @@ func (db *Database) Lookup(name string) *Record {
 		return nil
 	}
 	for _, r := range db.Records {
-		for _, n := range r.Names {
-			if n == name {
-				return r
-			}
+		if slices.Contains(r.Names, name) {
+			return r
 		}
 	}
 	return nil

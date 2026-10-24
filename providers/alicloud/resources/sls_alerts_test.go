@@ -23,13 +23,13 @@ func TestSlsAlertEnabled(t *testing.T) {
 		want   bool
 	}{
 		{"nil is off", nil, false},
-		{"empty is off", tea.String(""), false},
-		{"ENABLED", tea.String("ENABLED"), true},
-		{"lowercase", tea.String("enabled"), true},
-		{"surrounding space", tea.String(" ENABLED "), true},
-		{"DISABLED", tea.String("DISABLED"), false},
-		{"unknown state is off", tea.String("PENDING"), false},
-		{"substring must not match", tea.String("NOT_ENABLED"), false},
+		{"empty is off", new(""), false},
+		{"ENABLED", new("ENABLED"), true},
+		{"lowercase", new("enabled"), true},
+		{"surrounding space", new(" ENABLED "), true},
+		{"DISABLED", new("DISABLED"), false},
+		{"unknown state is off", new("PENDING"), false},
+		{"substring must not match", new("NOT_ENABLED"), false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, slsAlertEnabled(tc.status))
@@ -70,7 +70,7 @@ func TestSlsEpochSeconds(t *testing.T) {
 // last one silently overwrites the rest.
 func TestSlsAlertTags(t *testing.T) {
 	tag := func(k, v string) *slsclient.AlertTag {
-		return &slsclient.AlertTag{Key: tea.String(k), Value: tea.String(v)}
+		return &slsclient.AlertTag{Key: new(k), Value: new(v)}
 	}
 
 	t.Run("nil is an empty map, not nil", func(t *testing.T) {
@@ -83,15 +83,15 @@ func TestSlsAlertTags(t *testing.T) {
 	t.Run("nil and keyless entries are dropped", func(t *testing.T) {
 		got := slsAlertTags([]*slsclient.AlertTag{
 			nil,
-			{Key: tea.String("")},
-			{Key: nil, Value: tea.String("orphan")},
+			{Key: new("")},
+			{Key: nil, Value: new("orphan")},
 			tag("severity", "high"),
 		})
 		assert.Equal(t, map[string]any{"severity": "high"}, got)
 	})
 	t.Run("a key with no value reports empty, not missing", func(t *testing.T) {
 		assert.Equal(t, map[string]any{"severity": ""},
-			slsAlertTags([]*slsclient.AlertTag{{Key: tea.String("severity")}}))
+			slsAlertTags([]*slsclient.AlertTag{{Key: new("severity")}}))
 	})
 }
 
@@ -129,12 +129,12 @@ func TestScheduleString(t *testing.T) {
 		assert.Equal(t, "", scheduleString(&slsclient.Schedule{}, getInterval))
 	})
 	t.Run("interval is read", func(t *testing.T) {
-		assert.Equal(t, "5m", scheduleString(&slsclient.Schedule{Interval: tea.String("5m")}, getInterval))
+		assert.Equal(t, "5m", scheduleString(&slsclient.Schedule{Interval: new("5m")}, getInterval))
 	})
 	t.Run("a cron rule reports no interval", func(t *testing.T) {
 		s := &slsclient.Schedule{
-			Type:           tea.String("Cron"),
-			CronExpression: tea.String("0 * * * *"),
+			Type:           new("Cron"),
+			CronExpression: new("0 * * * *"),
 		}
 		assert.Equal(t, "", scheduleString(s, getInterval))
 		assert.Equal(t, "0 * * * *", scheduleString(s, func(s *slsclient.Schedule) *string { return s.CronExpression }))

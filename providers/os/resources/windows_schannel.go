@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"maps"
 	"sort"
 	"strings"
 
@@ -71,7 +72,7 @@ func (r *mqlWindowsSchannel) readMultiString(path, name string) ([]string, error
 	return []string{}, nil
 }
 
-func (r *mqlWindowsSchannel) cipherSuites() ([]interface{}, error) {
+func (r *mqlWindowsSchannel) cipherSuites() ([]any, error) {
 	suites, err := r.readMultiString(schannelCipherSuitesPath, schannelFunctionsValue)
 	if err != nil {
 		return nil, err
@@ -79,7 +80,7 @@ func (r *mqlWindowsSchannel) cipherSuites() ([]interface{}, error) {
 	return strSliceToAny(suites), nil
 }
 
-func (r *mqlWindowsSchannel) ellipticCurves() ([]interface{}, error) {
+func (r *mqlWindowsSchannel) ellipticCurves() ([]any, error) {
 	curves, err := r.readMultiString(schannelCipherSuitesPath, schannelEccCurvesValue)
 	if err != nil {
 		return nil, err
@@ -87,7 +88,7 @@ func (r *mqlWindowsSchannel) ellipticCurves() ([]interface{}, error) {
 	return strSliceToAny(curves), nil
 }
 
-func (r *mqlWindowsSchannel) signatureAlgorithms() ([]interface{}, error) {
+func (r *mqlWindowsSchannel) signatureAlgorithms() ([]any, error) {
 	algorithms, err := r.readMultiString(schannelSignatureAlgoPath, schannelFunctionsValue)
 	if err != nil {
 		return nil, err
@@ -358,12 +359,8 @@ func schannelProtocolArgs(name string, client, server map[string]registry.Regist
 		"__id": llx.StringData(schannelProtocolsPath + `\` + name),
 		"name": llx.StringData(name),
 	}
-	for k, v := range schannelProtocolSideArgs("client", client) {
-		args[k] = v
-	}
-	for k, v := range schannelProtocolSideArgs("server", server) {
-		args[k] = v
-	}
+	maps.Copy(args, schannelProtocolSideArgs("client", client))
+	maps.Copy(args, schannelProtocolSideArgs("server", server))
 	return args
 }
 

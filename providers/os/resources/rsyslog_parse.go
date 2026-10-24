@@ -4,7 +4,9 @@
 package resources
 
 import (
+	"maps"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -456,9 +458,9 @@ func (p *rsyslogParser) parseFile(sourceFile, content string) {
 // currentRuleset is the ruleset a statement at this point belongs to: the
 // innermost `ruleset()` block, else the last `$RuleSet`, else the default.
 func (p *rsyslogParser) currentRuleset() string {
-	for i := len(p.blocks) - 1; i >= 0; i-- {
-		if p.blocks[i].ruleset != "" {
-			return p.blocks[i].ruleset
+	for _, v := range slices.Backward(p.blocks) {
+		if v.ruleset != "" {
+			return v.ruleset
 		}
 	}
 	if p.legacyRuleset != "" {
@@ -818,27 +820,19 @@ func (p *rsyslogParser) legacyAction(token string) rsyslogEntry {
 	moduleType, protocol := classifySelectorTarget(target)
 
 	params := map[string]any{}
-	for k, v := range p.nextParams {
-		params[k] = v
-	}
+	maps.Copy(params, p.nextParams)
 	queue := map[string]any{}
-	for k, v := range p.nextQueue {
-		queue[k] = v
-	}
+	maps.Copy(queue, p.nextQueue)
 	tlsEnabled := false
 	// rsyslog applies the send stream driver settings to TCP forwards only.
 	if moduleType == "omfwd" && protocol == "tcp" {
-		for k, v := range p.sendStreamDriver {
-			params[k] = v
-		}
+		maps.Copy(params, p.sendStreamDriver)
 		tlsEnabled = p.sendStreamDriver["streamdrivermode"] == "1"
 	}
 	var fileSettings map[string]string
 	if moduleType == "omfile" {
 		fileSettings = map[string]string{}
-		for k, v := range p.legacyFile {
-			fileSettings[k] = v
-		}
+		maps.Copy(fileSettings, p.legacyFile)
 	}
 
 	return rsyslogEntry{
@@ -910,20 +904,14 @@ func resolveConfigDefaults(entries []rsyslogEntry) {
 			if moduleParams[name] == nil {
 				moduleParams[name] = map[string]any{}
 			}
-			for k, v := range e.parameters {
-				moduleParams[name][k] = v
-			}
+			maps.Copy(moduleParams[name], e.parameters)
 		case rsyslogKindGlobal:
-			for k, v := range e.parameters {
-				globals[k] = v
-			}
+			maps.Copy(globals, e.parameters)
 		}
 	}
 	omfileDefaults := map[string]any{}
 	for name := range rsyslogOmfileModules {
-		for k, v := range moduleParams[name] {
-			omfileDefaults[k] = v
-		}
+		maps.Copy(omfileDefaults, moduleParams[name])
 	}
 	defaultDriver, _ := globals["defaultnetstreamdriver"].(string)
 
@@ -1193,7 +1181,7 @@ func legacyInputFromDirective(suffix, value string) (rsyslogEntry, bool) {
 // carries the selector's facilities, severities, and the shared target.
 func selectorRuleEntries(selectorList, target string) []rsyslogEntry {
 	var out []rsyslogEntry
-	for _, sel := range strings.Split(selectorList, ";") {
+	for sel := range strings.SplitSeq(selectorList, ";") {
 		sel = strings.TrimSpace(sel)
 		if sel == "" {
 			continue
@@ -1351,8 +1339,8 @@ func parseIntParam(params map[string]any, key string) int64 {
 func collectPrefix(params map[string]any, prefix string) map[string]any {
 	out := map[string]any{}
 	for k, v := range params {
-		if strings.HasPrefix(k, prefix) {
-			out[strings.TrimPrefix(k, prefix)] = v
+		if after, ok := strings.CutPrefix(k, prefix); ok {
+			out[after] = v
 			delete(params, k)
 		}
 	}
@@ -1382,7 +1370,7 @@ func copyParamsWithout(params map[string]any, keys ...string) map[string]any {
 // around each item is trimmed; empty items are dropped.
 func splitCommaList(s string) []string {
 	var out []string
-	for _, p := range strings.Split(s, ",") {
+	for p := range strings.SplitSeq(s, ",") {
 		p = strings.TrimSpace(p)
 		if p != "" {
 			out = append(out, p)

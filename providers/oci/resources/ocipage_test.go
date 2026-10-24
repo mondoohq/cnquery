@@ -14,14 +14,16 @@ import (
 var errPageFailed = errors.New("page request failed")
 
 // token is a helper for the *string page tokens OCI uses.
-func token(s string) *string { return &s }
+//
+//go:fix inline
+func token(s string) *string { return new(s) }
 
 // TestOciPaginateWalksEveryPage covers the shape all 143 converted call sites
 // share: pages are concatenated in order, and the walk stops when the response
 // reports no next page.
 func TestOciPaginateWalksEveryPage(t *testing.T) {
 	pages := [][]int{{1, 2}, {3, 4}, {5}}
-	nextTokens := []*string{token("p2"), token("p3"), nil}
+	nextTokens := []*string{new("p2"), new("p3"), nil}
 
 	var sawTokens []*string
 	call := 0
@@ -112,7 +114,7 @@ func TestOciPaginateDiscardsPartialResultOnError(t *testing.T) {
 			// Distinct per page: an unchanged token is itself an error now,
 			// and a fixture repeating one would fail here for that reason
 			// rather than for the one this test is about.
-			return []int{call}, token(fmt.Sprintf("page-%d", call+1)), nil
+			return []int{call}, new(fmt.Sprintf("page-%d", call+1)), nil
 		}
 		return nil, nil, errPageFailed
 	})
@@ -266,7 +268,7 @@ func TestOciPaginateStopsOnAStuckCursor(t *testing.T) {
 		if calls > 100 {
 			t.Fatal("pagination did not terminate on a repeated page token")
 		}
-		return []int{calls}, token("stuck"), nil
+		return []int{calls}, new("stuck"), nil
 	})
 	if err == nil {
 		t.Fatal("got no error for a page token that never advanced")
@@ -289,7 +291,7 @@ func TestOciPaginateStopsOnAStuckCursor(t *testing.T) {
 // repeat is stuck; a walk that moves p1 -> p2 -> p1 -> nil is odd but is
 // making progress, and rejecting it would truncate a real listing.
 func TestOciPaginateAllowsARepeatedTokenAfterAnAdvance(t *testing.T) {
-	nextTokens := []*string{token("p1"), token("p2"), token("p1"), nil}
+	nextTokens := []*string{new("p1"), new("p2"), new("p1"), nil}
 
 	call := 0
 	items, err := ociPaginate(context.Background(), func(_ context.Context, _ *string) ([]int, *string, error) {

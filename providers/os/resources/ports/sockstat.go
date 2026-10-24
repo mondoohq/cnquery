@@ -130,13 +130,10 @@ func splitHostPort(s string) (string, int64) {
 		return "", 0
 	}
 
-	idx := strings.LastIndex(s, ":")
-	if idx < 0 {
+	host, portStr, ok := strings.CutLast(s, ":")
+	if !ok {
 		return s, 0
 	}
-
-	host := s[:idx]
-	portStr := s[idx+1:]
 
 	// strip the brackets IPv6 literals are wrapped in
 	if len(host) > 1 && host[0] == '[' && host[len(host)-1] == ']' {

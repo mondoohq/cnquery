@@ -287,7 +287,7 @@ const ElevationProbeCommand = "sh -c 'command -v " + ElevationSudo + "; command 
 // probed == true means the target has neither sudo nor doas.
 func ParseElevationProbe(stdout string) (executable string, probed bool) {
 	var hasSudo, hasDoas bool
-	for _, line := range strings.Split(stdout, "\n") {
+	for line := range strings.SplitSeq(stdout, "\n") {
 		line = strings.TrimSpace(line)
 		if line == elevationProbeMarker {
 			probed = true

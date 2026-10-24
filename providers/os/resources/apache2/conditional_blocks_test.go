@@ -5,6 +5,7 @@ package apache2
 
 import (
 	"fmt"
+	"maps"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -70,9 +71,7 @@ IncludeOptional sites-enabled/*.conf
 </IfModule>
 `,
 	}
-	for k, v := range extra {
-		files[k] = v
-	}
+	maps.Copy(files, extra)
 	return files
 }
 

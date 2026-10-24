@@ -15,13 +15,13 @@ import (
 
 func TestDrgNatRuleArgs(t *testing.T) {
 	rule := core.DrgNatRule{
-		Id:                    common.String("rule-1"),
-		DrgNatPolicyId:        common.String("ocid1.drgnatpolicy.oc1.iad.a"),
+		Id:                    new("rule-1"),
+		DrgNatPolicyId:        new("ocid1.drgnatpolicy.oc1.iad.a"),
 		DrgNatRulePriority:    common.Int64(10),
-		OriginalSource:        common.String("10.0.0.0/24"),
-		TranslatedSource:      common.String("172.16.0.0/24"),
-		OriginalDestination:   common.String("192.168.1.0/24"),
-		TranslatedDestination: common.String("192.168.2.0/24"),
+		OriginalSource:        new("10.0.0.0/24"),
+		TranslatedSource:      new("172.16.0.0/24"),
+		OriginalDestination:   new("192.168.1.0/24"),
+		TranslatedDestination: new("192.168.2.0/24"),
 	}
 
 	t.Run("maps every field", func(t *testing.T) {
@@ -42,7 +42,7 @@ func TestDrgNatRuleArgs(t *testing.T) {
 	})
 
 	t.Run("absent values are null", func(t *testing.T) {
-		args := drgNatRuleArgs("ocid1.drgnatpolicy.oc1.iad.a", core.DrgNatRule{Id: common.String("rule-2")})
+		args := drgNatRuleArgs("ocid1.drgnatpolicy.oc1.iad.a", core.DrgNatRule{Id: new("rule-2")})
 		for _, key := range []string{"priority", "originalSource", "translatedSource", "originalDestination", "translatedDestination"} {
 			require.Contains(t, args, key)
 			assert.Nil(t, args[key].Value, key)

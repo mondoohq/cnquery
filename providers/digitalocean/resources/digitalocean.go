@@ -33,8 +33,7 @@ func isDoNotFound(err error) bool {
 // isDoStatus reports whether err is a DigitalOcean API error with the given
 // HTTP status.
 func isDoStatus(err error, status int) bool {
-	var er *godo.ErrorResponse
-	if errors.As(err, &er) {
+	if er, ok := errors.AsType[*godo.ErrorResponse](err); ok {
 		return er.Response != nil && er.Response.StatusCode == status
 	}
 	return false
@@ -72,16 +71,16 @@ func initDigitaloceanAccount(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	return args, nil, nil
 }
 
-func toStringSlice(s []string) []interface{} {
-	r := make([]interface{}, len(s))
+func toStringSlice(s []string) []any {
+	r := make([]any, len(s))
 	for i, v := range s {
 		r[i] = v
 	}
 	return r
 }
 
-func toIntSlice(s []int) []interface{} {
-	r := make([]interface{}, len(s))
+func toIntSlice(s []int) []any {
+	r := make([]any, len(s))
 	for i, v := range s {
 		r[i] = int64(v)
 	}
@@ -130,7 +129,7 @@ type mqlDigitaloceanDropletInternal struct {
 	cacheVPCUUID string
 }
 
-func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
+func (r *mqlDigitalocean) droplets() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -139,7 +138,7 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(droplets))
+	all := make([]any, 0, len(droplets))
 	for _, d := range droplets {
 		publicIPv4 := ""
 		privateIPv4 := ""
@@ -160,12 +159,12 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 			}
 		}
 
-		tags := make([]interface{}, len(d.Tags))
+		tags := make([]any, len(d.Tags))
 		for i, t := range d.Tags {
 			tags[i] = t
 		}
 
-		features := make([]interface{}, len(d.Features))
+		features := make([]any, len(d.Features))
 		for i, f := range d.Features {
 			features[i] = f
 		}
@@ -190,9 +189,9 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 			sizeSlug = d.Size.Slug
 		}
 
-		var kernelDict map[string]interface{}
+		var kernelDict map[string]any
 		if d.Kernel != nil {
-			kernelDict = map[string]interface{}{
+			kernelDict = map[string]any{
 				"id":      float64(d.Kernel.ID),
 				"name":    d.Kernel.Name,
 				"version": d.Kernel.Version,
@@ -255,7 +254,7 @@ func (r *mqlDigitaloceanDroplet) id() (string, error) {
 	return "digitalocean.droplet/" + strconv.FormatInt(r.Id.Data, 10), nil
 }
 
-func (r *mqlDigitalocean) firewalls() ([]interface{}, error) {
+func (r *mqlDigitalocean) firewalls() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -264,7 +263,7 @@ func (r *mqlDigitalocean) firewalls() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(firewalls))
+	all := make([]any, 0, len(firewalls))
 	for _, fw := range firewalls {
 		if skipFirewall(conn.Filters.General, &fw) {
 			continue
@@ -282,7 +281,7 @@ func (r *mqlDigitaloceanFirewall) id() (string, error) {
 	return "digitalocean.firewall/" + r.Id.Data, nil
 }
 
-func (r *mqlDigitalocean) databases() ([]interface{}, error) {
+func (r *mqlDigitalocean) databases() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -291,7 +290,7 @@ func (r *mqlDigitalocean) databases() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(dbs))
+	all := make([]any, 0, len(dbs))
 	for _, db := range dbs {
 		if skipDatabase(conn.Filters.General, &db) {
 			continue
@@ -309,7 +308,7 @@ func (r *mqlDigitaloceanDatabase) id() (string, error) {
 	return "digitalocean.database/" + r.Id.Data, nil
 }
 
-func (r *mqlDigitaloceanDatabase) firewallRules() ([]interface{}, error) {
+func (r *mqlDigitaloceanDatabase) firewallRules() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -318,9 +317,9 @@ func (r *mqlDigitaloceanDatabase) firewallRules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, rule := range rules {
-		all = append(all, map[string]interface{}{
+		all = append(all, map[string]any{
 			"uuid":      rule.UUID,
 			"type":      rule.Type,
 			"value":     rule.Value,
@@ -330,11 +329,11 @@ func (r *mqlDigitaloceanDatabase) firewallRules() ([]interface{}, error) {
 	return all, nil
 }
 
-func (r *mqlDigitalocean) domains() ([]interface{}, error) {
+func (r *mqlDigitalocean) domains() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
+	var all []any
 	opt := &godo.ListOptions{PerPage: 200}
 	for {
 		domains, resp, err := client.Domains.List(context.Background(), opt)
@@ -368,7 +367,7 @@ func (r *mqlDigitaloceanDomain) id() (string, error) {
 	return "digitalocean.domain/" + r.Name.Data, nil
 }
 
-func (r *mqlDigitaloceanDomain) records() ([]interface{}, error) {
+func (r *mqlDigitaloceanDomain) records() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -379,7 +378,7 @@ func (r *mqlDigitaloceanDomain) records() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(records))
+	all := make([]any, 0, len(records))
 	for _, rec := range records {
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.domain.record", map[string]*llx.RawData{
 			"domainName": llx.StringData(r.Name.Data),
@@ -406,11 +405,11 @@ func (r *mqlDigitaloceanDomainRecord) id() (string, error) {
 	return "digitalocean.domain.record/" + r.DomainName.Data + "/" + strconv.FormatInt(r.Id.Data, 10), nil
 }
 
-func (r *mqlDigitalocean) volumes() ([]interface{}, error) {
+func (r *mqlDigitalocean) volumes() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
+	var all []any
 	opt := &godo.ListVolumeParams{ListOptions: &godo.ListOptions{PerPage: 200}}
 	for {
 		volumes, resp, err := client.Storage.ListVolumes(context.Background(), opt)
@@ -418,7 +417,7 @@ func (r *mqlDigitalocean) volumes() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, v := range volumes {
-			tags := make([]interface{}, len(v.Tags))
+			tags := make([]any, len(v.Tags))
 			for i, t := range v.Tags {
 				tags[i] = t
 			}
@@ -468,7 +467,7 @@ func (r *mqlDigitaloceanVolume) id() (string, error) {
 	return "digitalocean.volume/" + r.Id.Data, nil
 }
 
-func (r *mqlDigitalocean) loadBalancers() ([]interface{}, error) {
+func (r *mqlDigitalocean) loadBalancers() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -477,7 +476,7 @@ func (r *mqlDigitalocean) loadBalancers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(lbs))
+	all := make([]any, 0, len(lbs))
 	for _, lb := range lbs {
 		if skipLoadBalancer(conn.Filters.General, &lb) {
 			continue
@@ -510,7 +509,7 @@ func (r *mqlDigitaloceanLoadBalancer) id() (string, error) {
 	return "digitalocean.loadBalancer/" + r.Id.Data, nil
 }
 
-func (r *mqlDigitalocean) vpcs() ([]interface{}, error) {
+func (r *mqlDigitalocean) vpcs() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -519,7 +518,7 @@ func (r *mqlDigitalocean) vpcs() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(vpcs))
+	all := make([]any, 0, len(vpcs))
 	for _, v := range vpcs {
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.vpc", map[string]*llx.RawData{
 			"id":          llx.StringData(v.ID),
@@ -543,7 +542,7 @@ func (r *mqlDigitaloceanVpc) id() (string, error) {
 	return "digitalocean.vpc/" + r.Id.Data, nil
 }
 
-func (r *mqlDigitalocean) kubernetesClusters() ([]interface{}, error) {
+func (r *mqlDigitalocean) kubernetesClusters() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -552,7 +551,7 @@ func (r *mqlDigitalocean) kubernetesClusters() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(clusters))
+	all := make([]any, 0, len(clusters))
 	for _, c := range clusters {
 		if skipKubernetesCluster(conn.Filters.General, c) {
 			continue
@@ -583,7 +582,7 @@ func projectResourceType(urn string) string {
 
 // resources lists the resources assigned to the project, which is how an
 // account's infrastructure is grouped for ownership and billing.
-func (r *mqlDigitaloceanProject) resources() ([]interface{}, error) {
+func (r *mqlDigitaloceanProject) resources() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -594,7 +593,7 @@ func (r *mqlDigitaloceanProject) resources() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(items))
+	all := make([]any, 0, len(items))
 	for _, item := range items {
 		id, err := resourceID("digitalocean.project.resource", r.Id.Data, item.URN)
 		if err != nil {
@@ -616,7 +615,7 @@ func (r *mqlDigitaloceanProject) resources() ([]interface{}, error) {
 	return all, nil
 }
 
-func (r *mqlDigitalocean) projects() ([]interface{}, error) {
+func (r *mqlDigitalocean) projects() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -625,7 +624,7 @@ func (r *mqlDigitalocean) projects() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(projects))
+	all := make([]any, 0, len(projects))
 	for _, p := range projects {
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.project", map[string]*llx.RawData{
 			"id":          llx.StringData(p.ID),
@@ -650,7 +649,7 @@ func (r *mqlDigitaloceanProject) id() (string, error) {
 	return "digitalocean.project/" + r.Id.Data, nil
 }
 
-func (r *mqlDigitalocean) sshKeys() ([]interface{}, error) {
+func (r *mqlDigitalocean) sshKeys() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -659,7 +658,7 @@ func (r *mqlDigitalocean) sshKeys() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(keys))
+	all := make([]any, 0, len(keys))
 	for _, k := range keys {
 		algorithm, bits := sshutil.ParsePublicKey(k.PublicKey)
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.sshKey", map[string]*llx.RawData{
@@ -682,7 +681,7 @@ func (r *mqlDigitaloceanSshKey) id() (string, error) {
 	return "digitalocean.sshKey/" + strconv.FormatInt(r.Id.Data, 10), nil
 }
 
-func (r *mqlDigitalocean) certificates() ([]interface{}, error) {
+func (r *mqlDigitalocean) certificates() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -691,9 +690,9 @@ func (r *mqlDigitalocean) certificates() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(certs))
+	all := make([]any, 0, len(certs))
 	for _, c := range certs {
-		dnsNames := make([]interface{}, len(c.DNSNames))
+		dnsNames := make([]any, len(c.DNSNames))
 		for i, n := range c.DNSNames {
 			dnsNames[i] = n
 		}

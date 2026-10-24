@@ -62,7 +62,7 @@ func TestParseV1IsDeterministic(t *testing.T) {
 	// Nodes are a JSON object; ranging the map would reorder the SBOM between
 	// runs of the same scan.
 	first := names(parseFixture(t, "testdata/v1.json").Transitive())
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		assert.Equal(t, first, names(parseFixture(t, "testdata/v1.json").Transitive()))
 	}
 }

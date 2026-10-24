@@ -18,7 +18,7 @@ func compareRelease(a, b string) int {
 	bs := strings.Split(b, ".")
 
 	n := max(len(as), len(bs))
-	for i := 0; i < n; i++ {
+	for i := range n {
 		x, y := "0", "0"
 		if i < len(as) {
 			x = as[i]

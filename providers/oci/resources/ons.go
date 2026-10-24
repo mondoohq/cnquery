@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/ons"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -78,7 +77,7 @@ func (o *mqlOciOns) topics() ([]any, error) {
 func (o *mqlOciOns) getTopicsForRegion(ctx context.Context, client *ons.NotificationControlPlaneClient, compartmentID string) ([]ons.NotificationTopicSummary, error) {
 	topics, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]ons.NotificationTopicSummary, *string, error) {
 		request := ons.ListTopicsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		}
 
@@ -164,8 +163,8 @@ func (o *mqlOciOnsTopic) subscriptions() ([]any, error) {
 
 	subs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]ons.SubscriptionSummary, *string, error) {
 		request := ons.ListSubscriptionsRequest{
-			CompartmentId: common.String(compartmentID),
-			TopicId:       common.String(topicId),
+			CompartmentId: new(compartmentID),
+			TopicId:       new(topicId),
 			Page:          page,
 		}
 

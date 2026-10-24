@@ -175,7 +175,7 @@ func journaldCompiledDefaults(content string) []parsers.UnitParam {
 	seen := map[string]bool{}
 	inJournal := false
 
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
 			inJournal = line == "[Journal]"

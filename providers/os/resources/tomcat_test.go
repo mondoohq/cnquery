@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -59,9 +60,7 @@ func tomcatMockInstallation(t *testing.T, extra map[string]*mock.MockFileData) *
 		tomcatTestHome + "/lib":              {StatData: mock.FileInfo{Mode: os.ModeDir | 0o755, IsDir: true}},
 		tomcatTestHome + "/lib/catalina.jar": {StatData: mock.FileInfo{Mode: 0o644}, Content: "jar"},
 	}
-	for path, file := range extra {
-		files[path] = file
-	}
+	maps.Copy(files, extra)
 
 	runtime := tomcatMockRuntime(t, files)
 	raw, err := CreateResource(runtime, "tomcat", map[string]*llx.RawData{

@@ -19,14 +19,14 @@ func TestCommonPricingArgs(t *testing.T) {
 		enablementTime := time.Date(2025, 6, 15, 10, 0, 0, 0, time.UTC)
 		props := &security.PricingProperties{
 			PricingTier:             ptr(security.PricingTierStandard),
-			SubPlan:                 ptr("P2"),
+			SubPlan:                 new("P2"),
 			Enforce:                 ptr(security.EnforceTrue),
-			Deprecated:              ptr(false),
-			FreeTrialRemainingTime:  ptr("P30D"),
+			Deprecated:              new(false),
+			FreeTrialRemainingTime:  new("P30D"),
 			EnablementTime:          &enablementTime,
 			Inherited:               ptr(security.InheritedFalse),
-			InheritedFrom:           ptr("/subscriptions/parent-sub"),
-			ReplacedBy:              []*string{ptr("plan-a"), ptr("plan-b")},
+			InheritedFrom:           new("/subscriptions/parent-sub"),
+			ReplacedBy:              []*string{new("plan-a"), new("plan-b")},
 			ResourcesCoverageStatus: ptr(security.ResourcesCoverageStatusFullyCovered),
 		}
 
@@ -134,9 +134,9 @@ func TestCommonPricingArgs(t *testing.T) {
 func TestArgsFromContactProperties(t *testing.T) {
 	t.Run("FullProperties", func(t *testing.T) {
 		props := &security.ContactProperties{
-			Emails:    ptr("admin@example.com;security@example.com"),
-			IsEnabled: ptr(true),
-			Phone:     ptr("+1-555-0100"),
+			Emails:    new("admin@example.com;security@example.com"),
+			IsEnabled: new(true),
+			Phone:     new("+1-555-0100"),
 		}
 
 		args := argsFromContactProperties(props)
@@ -166,7 +166,7 @@ func TestArgsFromContactProperties(t *testing.T) {
 
 	t.Run("DisabledContact", func(t *testing.T) {
 		props := &security.ContactProperties{
-			IsEnabled: ptr(false),
+			IsEnabled: new(false),
 		}
 
 		args := argsFromContactProperties(props)
@@ -188,12 +188,12 @@ func TestSplitSecurityContactEmails(t *testing.T) {
 		want  []any
 	}{
 		{"nil is no addresses", nil, []any{}},
-		{"empty string is no addresses, not one empty address", ptr(""), []any{}},
-		{"a separator with nothing around it yields nothing", ptr(";"), []any{}},
-		{"single address", ptr("soc@example.com"), []any{"soc@example.com"}},
-		{"multiple addresses", ptr("a@example.com;b@example.com"), []any{"a@example.com", "b@example.com"}},
-		{"surrounding spaces are trimmed", ptr(" a@example.com ; b@example.com "), []any{"a@example.com", "b@example.com"}},
-		{"empty entries are dropped", ptr("a@example.com;;b@example.com"), []any{"a@example.com", "b@example.com"}},
+		{"empty string is no addresses, not one empty address", new(""), []any{}},
+		{"a separator with nothing around it yields nothing", new(";"), []any{}},
+		{"single address", new("soc@example.com"), []any{"soc@example.com"}},
+		{"multiple addresses", new("a@example.com;b@example.com"), []any{"a@example.com", "b@example.com"}},
+		{"surrounding spaces are trimmed", new(" a@example.com ; b@example.com "), []any{"a@example.com", "b@example.com"}},
+		{"empty entries are dropped", new("a@example.com;;b@example.com"), []any{"a@example.com", "b@example.com"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, splitSecurityContactEmails(tc.input))

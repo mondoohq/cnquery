@@ -5,6 +5,7 @@ package resources
 
 import (
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"text/template"
@@ -181,10 +182,8 @@ func nodeUsesLookup(node parse.Node) bool {
 		if n == nil {
 			return false
 		}
-		for _, child := range n.Nodes {
-			if nodeUsesLookup(child) {
-				return true
-			}
+		if slices.ContainsFunc(n.Nodes, nodeUsesLookup) {
+			return true
 		}
 	case *parse.ActionNode:
 		return pipeUsesLookup(n.Pipe)

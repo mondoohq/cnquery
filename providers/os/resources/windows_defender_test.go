@@ -55,7 +55,7 @@ func TestWindowsDefenderPreferencesSeedIsSynchronized(t *testing.T) {
 	// than running one after another.
 	start := make(chan struct{})
 	var wg sync.WaitGroup
-	for i := 0; i < workers; i++ {
+	for range workers {
 		wg.Add(2)
 		go func() {
 			defer wg.Done()

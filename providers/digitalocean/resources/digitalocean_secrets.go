@@ -14,12 +14,12 @@ import (
 
 // secrets enumerates the account's stored secrets. Only metadata is
 // surfaced; the stored secret values are never exposed.
-func (r *mqlDigitalocean) secrets() ([]interface{}, error) {
+func (r *mqlDigitalocean) secrets() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 	ctx := context.Background()
 
-	var all []interface{}
+	var all []any
 	opt := &godo.ListOptions{PerPage: 200}
 	for {
 		list, resp, err := client.Secrets.List(ctx, opt)
@@ -74,11 +74,11 @@ func (r *mqlDigitalocean) secrets() ([]interface{}, error) {
 
 // versions lists the version history of the secret. The version API is
 // per-secret, so it requires a separate call.
-func (r *mqlDigitaloceanSecret) versions() ([]interface{}, error) {
+func (r *mqlDigitaloceanSecret) versions() ([]any, error) {
 	name := r.Name.Data
 	region := r.Region.Data
 	if name == "" || region == "" {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
@@ -90,7 +90,7 @@ func (r *mqlDigitaloceanSecret) versions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	out := make([]interface{}, 0, len(versions))
+	out := make([]any, 0, len(versions))
 	for _, v := range versions {
 		if v == nil {
 			continue
@@ -103,8 +103,8 @@ func (r *mqlDigitaloceanSecret) versions() ([]interface{}, error) {
 // secretVersionDict builds the dict for one secret version. dict values
 // must be JSON-native (dict2primitive rejects *time.Time), so the API's
 // RFC3339 timestamps are kept as strings.
-func secretVersionDict(v *godo.SecretVersion) map[string]interface{} {
-	return map[string]interface{}{
+func secretVersionDict(v *godo.SecretVersion) map[string]any {
+	return map[string]any{
 		"version":   int64(v.Version),
 		"createdAt": v.CreatedAt,
 		"updatedAt": v.UpdatedAt,

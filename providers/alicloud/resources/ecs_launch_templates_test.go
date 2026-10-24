@@ -19,14 +19,14 @@ func TestEcsImdsV2Required(t *testing.T) {
 		tokens   *string
 		expected bool
 	}{
-		{"required", tea.String("required"), true},
-		{"case insensitive", tea.String("Required"), true},
-		{"whitespace tolerated", tea.String(" required "), true},
+		{"required", new("required"), true},
+		{"case insensitive", new("Required"), true},
+		{"whitespace tolerated", new(" required "), true},
 		// optional still answers the token-less IMDSv1 request that a
 		// server-side request forgery can reach
-		{"optional", tea.String("optional"), false},
+		{"optional", new("optional"), false},
 		{"absent", nil, false},
-		{"empty", tea.String(""), false},
+		{"empty", new(""), false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -37,13 +37,13 @@ func TestEcsImdsV2Required(t *testing.T) {
 
 func TestEcsDiskEncrypted(t *testing.T) {
 	// the launch template API returns this member as a string, not a boolean
-	assert.True(t, ecsDiskEncrypted(tea.String("true")))
-	assert.True(t, ecsDiskEncrypted(tea.String("True")))
-	assert.False(t, ecsDiskEncrypted(tea.String("false")))
+	assert.True(t, ecsDiskEncrypted(new("true")))
+	assert.True(t, ecsDiskEncrypted(new("True")))
+	assert.False(t, ecsDiskEncrypted(new("false")))
 	// an unread setting must not report encryption nobody confirmed
 	assert.False(t, ecsDiskEncrypted(nil))
-	assert.False(t, ecsDiskEncrypted(tea.String("")))
-	assert.False(t, ecsDiskEncrypted(tea.String("1")))
+	assert.False(t, ecsDiskEncrypted(new("")))
+	assert.False(t, ecsDiskEncrypted(new("1")))
 }
 
 // TestLaunchTemplateDataDecode pins the struct tags the flattening depends on.

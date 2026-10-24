@@ -19,7 +19,7 @@ import (
 
 // --- Sensitive Data Scanner Groups ---
 
-func (r *mqlDatadog) sensitiveDataScannerGroups() ([]interface{}, error) {
+func (r *mqlDatadog) sensitiveDataScannerGroups() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewSensitiveDataScannerApi(conn.ApiClient())
 
@@ -33,7 +33,7 @@ func (r *mqlDatadog) sensitiveDataScannerGroups() ([]interface{}, error) {
 	}
 
 	// Groups are in the Included array as SensitiveDataScannerGroup items
-	var all []interface{}
+	var all []any
 	for _, item := range resp.GetIncluded() {
 		group := item.SensitiveDataScannerGroupIncludedItem
 		if group == nil {
@@ -41,7 +41,7 @@ func (r *mqlDatadog) sensitiveDataScannerGroups() ([]interface{}, error) {
 		}
 		attrs := group.GetAttributes()
 
-		productList := make([]interface{}, 0)
+		productList := make([]any, 0)
 		for _, p := range attrs.GetProductList() {
 			productList = append(productList, string(p))
 		}
@@ -73,7 +73,7 @@ func (r *mqlDatadogSensitiveDataScannerGroup) id() (string, error) {
 
 // --- Security Monitoring Filters ---
 
-func (r *mqlDatadog) securityFilters() ([]interface{}, error) {
+func (r *mqlDatadog) securityFilters() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewSecurityMonitoringApi(conn.ApiClient())
 
@@ -86,7 +86,7 @@ func (r *mqlDatadog) securityFilters() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, f := range resp.GetData() {
 		attrs := f.GetAttributes()
 		res, err := CreateResource(r.MqlRuntime, "datadog.securityFilter", map[string]*llx.RawData{
@@ -111,7 +111,7 @@ func (r *mqlDatadogSecurityFilter) id() (string, error) {
 
 // --- Security Monitoring Suppressions ---
 
-func (r *mqlDatadog) securitySuppressions() ([]interface{}, error) {
+func (r *mqlDatadog) securitySuppressions() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewSecurityMonitoringApi(conn.ApiClient())
 
@@ -124,7 +124,7 @@ func (r *mqlDatadog) securitySuppressions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, s := range resp.GetData() {
 		attrs := s.GetAttributes()
 
@@ -158,13 +158,13 @@ func (r *mqlDatadogSecuritySuppression) id() (string, error) {
 
 // --- Service Accounts ---
 
-func (r *mqlDatadog) serviceAccounts() ([]interface{}, error) {
+func (r *mqlDatadog) serviceAccounts() ([]any, error) {
 	usersList, err := r.fetchUsers()
 	if err != nil {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, u := range usersList {
 		attrs := u.GetAttributes()
 		if !attrs.GetServiceAccount() {
@@ -193,7 +193,7 @@ func (r *mqlDatadogServiceAccount) id() (string, error) {
 
 // --- Logs Archives ---
 
-func (r *mqlDatadog) logsArchives() ([]interface{}, error) {
+func (r *mqlDatadog) logsArchives() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewLogsArchivesApi(conn.ApiClient())
 
@@ -206,7 +206,7 @@ func (r *mqlDatadog) logsArchives() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, a := range resp.GetData() {
 		attrs := a.GetAttributes()
 
@@ -230,13 +230,13 @@ func (r *mqlDatadog) logsArchives() ([]interface{}, error) {
 			rehydrationMaxScan = *v
 		}
 
-		rehydrationTags := make([]interface{}, 0)
+		rehydrationTags := make([]any, 0)
 		for _, t := range attrs.GetRehydrationTags() {
 			rehydrationTags = append(rehydrationTags, t)
 		}
 
 		destType := ""
-		dest := map[string]interface{}{}
+		dest := map[string]any{}
 		if d := attrs.GetDestination(); d.LogsArchiveDestinationS3 != nil {
 			destType = "s3"
 			s3 := d.LogsArchiveDestinationS3
@@ -280,7 +280,7 @@ func (r *mqlDatadogLogsArchive) id() (string, error) {
 
 // --- RUM Applications ---
 
-func (r *mqlDatadog) rumApplications() ([]interface{}, error) {
+func (r *mqlDatadog) rumApplications() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewRUMApi(conn.ApiClient())
 
@@ -293,7 +293,7 @@ func (r *mqlDatadog) rumApplications() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, app := range resp.GetData() {
 		attrs := app.GetAttributes()
 		res, err := CreateResource(r.MqlRuntime, "datadog.rumApplication", map[string]*llx.RawData{
@@ -322,7 +322,7 @@ func (r *mqlDatadogRumApplication) id() (string, error) {
 
 // --- Synthetics Global Variables ---
 
-func (r *mqlDatadog) syntheticsGlobalVariables() ([]interface{}, error) {
+func (r *mqlDatadog) syntheticsGlobalVariables() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewSyntheticsApi(conn.ApiClient())
 
@@ -335,7 +335,7 @@ func (r *mqlDatadog) syntheticsGlobalVariables() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, v := range resp.GetVariables() {
 		tags := toAnyStrings(v.GetTags())
 
@@ -367,7 +367,7 @@ func (r *mqlDatadogSyntheticsGlobalVariable) id() (string, error) {
 
 // --- Synthetics Private Locations ---
 
-func (r *mqlDatadog) syntheticsPrivateLocations() ([]interface{}, error) {
+func (r *mqlDatadog) syntheticsPrivateLocations() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewSyntheticsApi(conn.ApiClient())
 
@@ -380,7 +380,7 @@ func (r *mqlDatadog) syntheticsPrivateLocations() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, loc := range resp.GetLocations() {
 		id := loc.GetId()
 		// Private locations have IDs starting with "pl:"
@@ -408,7 +408,7 @@ type mqlDatadogSyntheticsPrivateLocationInternal struct {
 	fetched        atomic.Bool
 	cachedDesc     string
 	cachedTags     []string
-	cachedMetadata map[string]interface{}
+	cachedMetadata map[string]any
 	lock           sync.Mutex
 }
 
@@ -432,7 +432,7 @@ func (r *mqlDatadogSyntheticsPrivateLocation) fetchDetails() error {
 
 	r.cachedDesc = loc.GetDescription()
 	r.cachedTags = loc.GetTags()
-	r.cachedMetadata = map[string]interface{}{}
+	r.cachedMetadata = map[string]any{}
 	if m, ok := loc.GetMetadataOk(); ok && m != nil {
 		// Extract available metadata fields
 		if v, ok := m.GetRestrictedRolesOk(); ok {
@@ -450,14 +450,14 @@ func (r *mqlDatadogSyntheticsPrivateLocation) description() (string, error) {
 	return r.cachedDesc, nil
 }
 
-func (r *mqlDatadogSyntheticsPrivateLocation) tags() ([]interface{}, error) {
+func (r *mqlDatadogSyntheticsPrivateLocation) tags() ([]any, error) {
 	if err := r.fetchDetails(); err != nil {
 		return nil, err
 	}
 	return toAnyStrings(r.cachedTags), nil
 }
 
-func (r *mqlDatadogSyntheticsPrivateLocation) metadata() (map[string]interface{}, error) {
+func (r *mqlDatadogSyntheticsPrivateLocation) metadata() (map[string]any, error) {
 	if err := r.fetchDetails(); err != nil {
 		return nil, err
 	}

@@ -25,7 +25,7 @@ func TestSortedUserAgentNames(t *testing.T) {
 	want := []string{"*", "Applebot-Extended", "CCBot", "GPTBot", "Google-Extended", "anthropic-ai"}
 
 	// Repeat: a single pass can match by luck when the map is small.
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		assert.Equal(t, want, sortedUserAgentNames(rules))
 	}
 }

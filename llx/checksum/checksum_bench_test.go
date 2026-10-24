@@ -77,7 +77,7 @@ func BenchmarkHashDataRow_DictEncoded500(b *testing.B) {
 
 func BenchmarkHashResourceRow(b *testing.B) {
 	fields := make(map[string]*llx.Result, 10)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		k := fmt.Sprintf("field-%d", i)
 		fields[k] = strResult(k, "a plausible field value")
 	}

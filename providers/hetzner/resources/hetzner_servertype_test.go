@@ -29,11 +29,9 @@ func TestServerTypeDeprecationSchedule(t *testing.T) {
 		st := hcloud.ServerType{
 			ID:   2,
 			Name: "cx11",
-			DeprecatableResource: hcloud.DeprecatableResource{
-				Deprecation: &hcloud.DeprecationInfo{
-					Announced:        announced,
-					UnavailableAfter: unavailable,
-				},
+			Deprecation: &hcloud.DeprecationInfo{
+				Announced:        announced,
+				UnavailableAfter: unavailable,
 			},
 		}
 		assert.True(t, st.IsDeprecated())

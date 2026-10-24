@@ -173,7 +173,7 @@ func parsePolkitPkla(content string) []polkitLocalAuthorityEntry {
 	res := []polkitLocalAuthorityEntry{}
 	current := -1
 
-	for _, rawLine := range strings.Split(content, "\n") {
+	for rawLine := range strings.SplitSeq(content, "\n") {
 		line := strings.TrimSpace(rawLine)
 		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") {
 			continue
@@ -221,7 +221,7 @@ func parsePolkitPkla(content string) []polkitLocalAuthorityEntry {
 func parsePolkitLocalAuthorityConf(content string) []string {
 	var res []string
 
-	for _, rawLine := range strings.Split(content, "\n") {
+	for rawLine := range strings.SplitSeq(content, "\n") {
 		line := strings.TrimSpace(rawLine)
 		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") {
 			continue

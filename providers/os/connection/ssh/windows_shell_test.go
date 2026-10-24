@@ -121,14 +121,12 @@ func TestRunCommandPowershellDefaultShell(t *testing.T) {
 
 	var wg sync.WaitGroup
 	for range 8 {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			res, err := c.RunCommand(cmd)
 			require.NoError(t, err)
 			// callers and recordings see the command they asked for
 			assert.Equal(t, cmd, res.Command)
-		}()
+		})
 	}
 	wg.Wait()
 

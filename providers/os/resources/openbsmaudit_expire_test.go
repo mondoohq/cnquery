@@ -14,8 +14,6 @@ import (
 	"go.mondoo.com/mql/providers/os/connection/mock"
 )
 
-func bsmI64(v int64) *int64 { return &v }
-
 const (
 	bsmDay = int64(86400)
 	bsmKiB = int64(1024)
@@ -31,51 +29,51 @@ func TestParseAuditExpireAfter(t *testing.T) {
 		operator string
 	}{
 		// one term, every unit
-		{value: "60d", age: bsmI64(60 * bsmDay)},
-		{value: "59d", age: bsmI64(59 * bsmDay)},
-		{value: "30s", age: bsmI64(30)},
-		{value: "1440h", age: bsmI64(60 * bsmDay)},
+		{value: "60d", age: new(60 * bsmDay)},
+		{value: "59d", age: new(59 * bsmDay)},
+		{value: "30s", age: new(int64(30))},
+		{value: "1440h", age: new(60 * bsmDay)},
 		// a year is 364 days plus a bsmDay for every fourth year
-		{value: "1y", age: bsmI64(364 * bsmDay)},
-		{value: "4y", age: bsmI64((4*364 + 1) * bsmDay)},
-		{value: "5G", bytes: bsmI64(5 * bsmGiB)},
-		{value: "1G", bytes: bsmI64(bsmGiB)},
-		{value: "1023M", bytes: bsmI64(1023 * bsmMiB)},
-		{value: "1024M", bytes: bsmI64(bsmGiB)},
-		{value: "10M", bytes: bsmI64(10 * bsmMiB)},
-		{value: "512K", bytes: bsmI64(512 * bsmKiB)},
-		{value: "100B", bytes: bsmI64(100)},
+		{value: "1y", age: new(364 * bsmDay)},
+		{value: "4y", age: new((4*364 + 1) * bsmDay)},
+		{value: "5G", bytes: new(5 * bsmGiB)},
+		{value: "1G", bytes: new(bsmGiB)},
+		{value: "1023M", bytes: new(1023 * bsmMiB)},
+		{value: "1024M", bytes: new(bsmGiB)},
+		{value: "10M", bytes: new(10 * bsmMiB)},
+		{value: "512K", bytes: new(512 * bsmKiB)},
+		{value: "100B", bytes: new(int64(100))},
 		// a number alone is bytes
-		{value: "4096", bytes: bsmI64(4096)},
+		{value: "4096", bytes: new(int64(4096))},
 		// the character after the number is the unit, so a space means bytes
-		{value: "60 ", bytes: bsmI64(60)},
-		{value: "60 x", bytes: bsmI64(60)},
-		{value: "0d", age: bsmI64(0)},
+		{value: "60 ", bytes: new(int64(60))},
+		{value: "60 x", bytes: new(int64(60))},
+		{value: "0d", age: new(int64(0))},
 		// leading whitespace is skipped, and trailing text that cannot start
 		// a joiner is ignored
-		{value: "  \t60d", age: bsmI64(60 * bsmDay)},
-		{value: "60d,", age: bsmI64(60 * bsmDay)},
-		{value: "60d5G", age: bsmI64(60 * bsmDay)},
-		{value: "+60d", age: bsmI64(60 * bsmDay)},
+		{value: "  \t60d", age: new(60 * bsmDay)},
+		{value: "60d,", age: new(60 * bsmDay)},
+		{value: "60d5G", age: new(60 * bsmDay)},
+		{value: "+60d", age: new(60 * bsmDay)},
 
 		// two terms, the joiner is case-insensitive and may use tabs
-		{value: "60d OR 5G", age: bsmI64(60 * bsmDay), bytes: bsmI64(5 * bsmGiB), operator: "OR"},
-		{value: "60d AND 10M", age: bsmI64(60 * bsmDay), bytes: bsmI64(10 * bsmMiB), operator: "AND"},
-		{value: "10M and 60d", age: bsmI64(60 * bsmDay), bytes: bsmI64(10 * bsmMiB), operator: "AND"},
-		{value: "60d or 10M", age: bsmI64(60 * bsmDay), bytes: bsmI64(10 * bsmMiB), operator: "OR"},
-		{value: "60d Or 1G", age: bsmI64(60 * bsmDay), bytes: bsmI64(bsmGiB), operator: "OR"},
-		{value: "60d\tOR\t5G", age: bsmI64(60 * bsmDay), bytes: bsmI64(5 * bsmGiB), operator: "OR"},
-		{value: "60dAND5G", age: bsmI64(60 * bsmDay), bytes: bsmI64(5 * bsmGiB), operator: "AND"},
-		{value: "60d   AND   5G", age: bsmI64(60 * bsmDay), bytes: bsmI64(5 * bsmGiB), operator: "AND"},
+		{value: "60d OR 5G", age: new(60 * bsmDay), bytes: new(5 * bsmGiB), operator: "OR"},
+		{value: "60d AND 10M", age: new(60 * bsmDay), bytes: new(10 * bsmMiB), operator: "AND"},
+		{value: "10M and 60d", age: new(60 * bsmDay), bytes: new(10 * bsmMiB), operator: "AND"},
+		{value: "60d or 10M", age: new(60 * bsmDay), bytes: new(10 * bsmMiB), operator: "OR"},
+		{value: "60d Or 1G", age: new(60 * bsmDay), bytes: new(bsmGiB), operator: "OR"},
+		{value: "60d\tOR\t5G", age: new(60 * bsmDay), bytes: new(5 * bsmGiB), operator: "OR"},
+		{value: "60dAND5G", age: new(60 * bsmDay), bytes: new(5 * bsmGiB), operator: "AND"},
+		{value: "60d   AND   5G", age: new(60 * bsmDay), bytes: new(5 * bsmGiB), operator: "AND"},
 		// AND wins when the joiner holds both words
-		{value: "60d OR AND 5G", age: bsmI64(60 * bsmDay), bytes: bsmI64(5 * bsmGiB), operator: "AND"},
+		{value: "60d OR AND 5G", age: new(60 * bsmDay), bytes: new(5 * bsmGiB), operator: "AND"},
 		// a space as the first unit makes it a size
-		{value: "60 AND 5G", bytes: bsmI64(5 * bsmGiB), operator: "AND"},
+		{value: "60 AND 5G", bytes: new(5 * bsmGiB), operator: "AND"},
 		// a later term of the same kind overwrites the earlier one
-		{value: "10d OR 60d", age: bsmI64(60 * bsmDay), operator: "OR"},
-		{value: "5G AND 10M", bytes: bsmI64(10 * bsmMiB), operator: "AND"},
+		{value: "10d OR 60d", age: new(60 * bsmDay), operator: "OR"},
+		{value: "5G AND 10M", bytes: new(10 * bsmMiB), operator: "AND"},
 		// only two terms are read
-		{value: "60d AND 5G OR 1s", age: bsmI64(60 * bsmDay), bytes: bsmI64(5 * bsmGiB), operator: "AND"},
+		{value: "60d AND 5G OR 1s", age: new(60 * bsmDay), bytes: new(5 * bsmGiB), operator: "AND"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.value, func(t *testing.T) {
@@ -130,21 +128,21 @@ func TestAuditExpireAfterRetention(t *testing.T) {
 		age   *int64
 		bytes *int64
 	}{
-		{value: "60d", age: bsmI64(60 * bsmDay)},
-		{value: "5G", bytes: bsmI64(5 * bsmGiB)},
+		{value: "60d", age: new(60 * bsmDay)},
+		{value: "5G", bytes: new(5 * bsmGiB)},
 		// with AND a file goes only once both are exceeded, so each is a floor
-		{value: "60d AND 10M", age: bsmI64(60 * bsmDay), bytes: bsmI64(10 * bsmMiB)},
-		{value: "10M and 60d", age: bsmI64(60 * bsmDay), bytes: bsmI64(10 * bsmMiB)},
+		{value: "60d AND 10M", age: new(60 * bsmDay), bytes: new(10 * bsmMiB)},
+		{value: "10M and 60d", age: new(60 * bsmDay), bytes: new(10 * bsmMiB)},
 		// with OR either threshold removes a file, so neither is a floor
 		{value: "60d OR 5G"},
 		{value: "60d OR 10M"},
 		// auditd skips a zero threshold, leaving the other one on its own
-		{value: "60d OR 0G", age: bsmI64(60 * bsmDay)},
-		{value: "0d OR 5G", bytes: bsmI64(5 * bsmGiB)},
-		{value: "10d AND 0G", age: bsmI64(10 * bsmDay)},
+		{value: "60d OR 0G", age: new(60 * bsmDay)},
+		{value: "0d OR 5G", bytes: new(5 * bsmGiB)},
+		{value: "10d AND 0G", age: new(10 * bsmDay)},
 		// a threshold overwritten by a later one of the same kind leaves a
 		// single dimension
-		{value: "10d OR 60d", age: bsmI64(60 * bsmDay)},
+		{value: "10d OR 60d", age: new(60 * bsmDay)},
 		// no nonzero threshold: auditd expires nothing, and no floor is claimed
 		{value: "0d"},
 		{value: "0d AND 0G"},

@@ -7,6 +7,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
+	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -90,6 +91,26 @@ func TestPrivatekeyPublicKeyIntrospection(t *testing.T) {
 			wantAlgorithm: "Ed25519",
 			wantBits:      256,
 		},
+	}
+
+	// Synthetic: ML-DSA keys in PKCS#8, which crypto/x509 parses from Go 1.27;
+	// no target showed one. Bits is the encoded public key size (FIPS 204).
+	for _, p := range []struct {
+		params mldsa.Parameters
+		bits   int64
+	}{
+		{mldsa.MLDSA44(), 10496},
+		{mldsa.MLDSA65(), 15616},
+		{mldsa.MLDSA87(), 20736},
+	} {
+		key, err := mldsa.GenerateKey(p.params)
+		require.NoError(t, err)
+		tests = append(tests, struct {
+			name          string
+			pem           string
+			wantAlgorithm string
+			wantBits      int64
+		}{p.params.String(), pkcs8PEM(t, key), "ML-DSA", p.bits})
 	}
 
 	for _, tc := range tests {

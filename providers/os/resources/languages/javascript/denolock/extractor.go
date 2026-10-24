@@ -8,6 +8,7 @@ package denolock
 import (
 	"encoding/json"
 	"io"
+	"maps"
 	"strings"
 
 	"github.com/package-url/packageurl-go"
@@ -90,26 +91,18 @@ func (l *denoLock) Transitive() languages.Packages {
 // mergedNpm unions the top-level (v4) and nested (v3) npm maps.
 func (l *denoLock) mergedNpm() map[string]denoEntry {
 	out := map[string]denoEntry{}
-	for k, v := range l.Npm {
-		out[k] = v
-	}
+	maps.Copy(out, l.Npm)
 	if l.Packages != nil {
-		for k, v := range l.Packages.Npm {
-			out[k] = v
-		}
+		maps.Copy(out, l.Packages.Npm)
 	}
 	return out
 }
 
 func (l *denoLock) mergedJsr() map[string]denoEntry {
 	out := map[string]denoEntry{}
-	for k, v := range l.Jsr {
-		out[k] = v
-	}
+	maps.Copy(out, l.Jsr)
 	if l.Packages != nil {
-		for k, v := range l.Packages.Jsr {
-			out[k] = v
-		}
+		maps.Copy(out, l.Packages.Jsr)
 	}
 	return out
 }
@@ -140,9 +133,9 @@ func (l *denoLock) jsrPackage(key string, entry denoEntry) *languages.Package {
 	}
 	namespace := ""
 	shortName := name
-	if i := strings.Index(name, "/"); i >= 0 {
-		namespace = name[:i]
-		shortName = name[i+1:]
+	if before, after, ok := strings.Cut(name, "/"); ok {
+		namespace = before
+		shortName = after
 	}
 	purl := packageurl.NewPackageURL(
 		packageurl.TypeNPM,
@@ -169,9 +162,9 @@ func splitNameVersion(key string) (string, string) {
 	if i := strings.IndexByte(key, '_'); i >= 0 {
 		key = key[:i]
 	}
-	at := strings.LastIndexByte(key, '@')
-	if at <= 0 { // no version, or leading-scope "@" only
+	name, version, ok := strings.CutLast(key, "@")
+	if !ok || name == "" { // no version, or leading-scope "@" only
 		return key, ""
 	}
-	return key[:at], key[at+1:]
+	return name, version
 }

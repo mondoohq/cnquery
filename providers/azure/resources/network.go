@@ -6010,8 +6010,7 @@ func azureAppSecurityGroupToMql(runtime *plugin.Runtime, asg network.Application
 	// so consumers don't see name=null on otherwise-valid typed references.
 	name := asg.Name
 	if (name == nil || *name == "") && asg.ID != nil {
-		if i := strings.LastIndex(*asg.ID, "/"); i >= 0 && i+1 < len(*asg.ID) {
-			n := (*asg.ID)[i+1:]
+		if _, n, ok := strings.CutLast(*asg.ID, "/"); ok && n != "" {
 			name = &n
 		}
 	}

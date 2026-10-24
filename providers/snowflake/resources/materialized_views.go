@@ -20,7 +20,7 @@ type mqlSnowflakeMaterializedViewInternal struct {
 }
 
 func (r *mqlSnowflakeAccount) materializedViews() ([]any, error) {
-	return listSnowflakeMaterializedViews(r.MqlRuntime, sdk.In{Account: sdk.Bool(true)})
+	return listSnowflakeMaterializedViews(r.MqlRuntime, sdk.In{Account: new(true)})
 }
 
 func (r *mqlSnowflakeDatabase) materializedViews() ([]any, error) {

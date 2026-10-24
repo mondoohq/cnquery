@@ -286,8 +286,8 @@ func TestSystemDServiceManagerListOn219(t *testing.T) {
 		systemdAnsweringCmd: {Stdout: "Version=219\n"},
 		showCmd("g04gone.service", "g04sysvon.service", "getty@tty1.service", "netconsole.service"): {Stderr: accessDenied, ExitStatus: 1},
 		showCmd("g04gone.service", "g04sysvon.service"):                                             {Stderr: accessDenied, ExitStatus: 1},
-		showCmd("g04gone.service"):   {Stderr: accessDenied, ExitStatus: 1},
-		showCmd("g04sysvon.service"): {Stdout: svc("g04sysvon.service", "inactive", "bad", "SYSV: g04 sysv service")},
+		showCmd("g04gone.service"):                                                                  {Stderr: accessDenied, ExitStatus: 1},
+		showCmd("g04sysvon.service"):                                                                {Stdout: svc("g04sysvon.service", "inactive", "bad", "SYSV: g04 sysv service")},
 		showCmd("getty@tty1.service", "netconsole.service"): {Stdout: svc("getty@tty1.service", "active", "enabled", "Getty on tty1") + "\n" +
 			svc("netconsole.service", "inactive", "bad", "LSB: Initializes network console logging")},
 		"systemctl is-enabled -- g04sysvon.service":  {Stdout: "enabled\n"},

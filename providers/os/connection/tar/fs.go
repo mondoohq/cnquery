@@ -537,7 +537,7 @@ func (fs *FS) findRoot(from string) string {
 // findTypes parses a files.find type list into find's one-letter types.
 func findTypes(typ string) []byte {
 	res := []byte{}
-	for _, t := range strings.Split(typ, ",") {
+	for t := range strings.SplitSeq(typ, ",") {
 		t = strings.TrimSpace(t)
 		if t == "" {
 			continue

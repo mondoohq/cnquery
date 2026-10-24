@@ -8,7 +8,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/networkfirewall"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -35,7 +34,7 @@ func (o *mqlOciNetworkFirewall) firewalls() ([]any, error) {
 
 			firewalls, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.NetworkFirewallSummary, *string, error) {
 				response, err := svc.ListNetworkFirewalls(ctx, networkfirewall.ListNetworkFirewallsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -106,7 +105,7 @@ func (o *mqlOciNetworkFirewallFirewall) healthStatus() (string, error) {
 		return "", err
 	}
 	resp, err := svc.GetNetworkFirewallHealthStatus(context.Background(), networkfirewall.GetNetworkFirewallHealthStatusRequest{
-		NetworkFirewallId: common.String(o.Id.Data),
+		NetworkFirewallId: new(o.Id.Data),
 	})
 	if err != nil {
 		return "", err
@@ -156,7 +155,7 @@ func (o *mqlOciNetworkFirewall) policies() ([]any, error) {
 
 			policies, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.NetworkFirewallPolicySummary, *string, error) {
 				response, err := svc.ListNetworkFirewallPolicies(ctx, networkfirewall.ListNetworkFirewallPoliciesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -211,7 +210,7 @@ func (o *mqlOciNetworkFirewallPolicy) fetchDetail() (*networkfirewall.NetworkFir
 			return nil, err
 		}
 		resp, err := svc.GetNetworkFirewallPolicy(context.Background(), networkfirewall.GetNetworkFirewallPolicyRequest{
-			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			NetworkFirewallPolicyId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -286,7 +285,7 @@ func (o *mqlOciNetworkFirewallPolicy) decryptionProfiles() ([]any, error) {
 	// require a per-profile Get.
 	summaries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.DecryptionProfileSummary, *string, error) {
 		resp, err := svc.ListDecryptionProfiles(ctx, networkfirewall.ListDecryptionProfilesRequest{
-			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			NetworkFirewallPolicyId: new(o.Id.Data),
 			Page:                    page,
 		})
 		if err != nil {
@@ -303,8 +302,8 @@ func (o *mqlOciNetworkFirewallPolicy) decryptionProfiles() ([]any, error) {
 		name := stringValue(summaries[i].Name)
 
 		getResp, err := svc.GetDecryptionProfile(ctx, networkfirewall.GetDecryptionProfileRequest{
-			NetworkFirewallPolicyId: common.String(o.Id.Data),
-			DecryptionProfileName:   common.String(name),
+			NetworkFirewallPolicyId: new(o.Id.Data),
+			DecryptionProfileName:   new(name),
 		})
 		if err != nil {
 			return nil, err
@@ -335,7 +334,7 @@ func (o *mqlOciNetworkFirewallPolicy) securityRules() ([]any, error) {
 	ctx := context.Background()
 	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.SecurityRuleSummary, *string, error) {
 		resp, err := svc.ListSecurityRules(ctx, networkfirewall.ListSecurityRulesRequest{
-			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			NetworkFirewallPolicyId: new(o.Id.Data),
 			Page:                    page,
 		})
 		if err != nil {
@@ -384,7 +383,7 @@ func (o *mqlOciNetworkFirewallPolicy) decryptionRules() ([]any, error) {
 	ctx := context.Background()
 	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.DecryptionRuleSummary, *string, error) {
 		resp, err := svc.ListDecryptionRules(ctx, networkfirewall.ListDecryptionRulesRequest{
-			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			NetworkFirewallPolicyId: new(o.Id.Data),
 			Page:                    page,
 		})
 		if err != nil {

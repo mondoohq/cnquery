@@ -115,7 +115,7 @@ func normalizeFederationDomains(tokens []*string) ([]string, bool) {
 		if tok == nil {
 			continue
 		}
-		for _, part := range strings.Split(*tok, ",") {
+		for part := range strings.SplitSeq(*tok, ",") {
 			part = strings.TrimSpace(part)
 			if strings.EqualFold(part, allowAllKnownDomainsToken) {
 				allowAll = true

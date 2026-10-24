@@ -32,7 +32,7 @@ func TestExchangeOwaMailboxPolicy_PersonalAccountFields(t *testing.T) {
 			name:          "accounts unreported, calendars on",
 			raw:           `{"Identity":"OwaMailboxPolicy-Default","PersonalAccountsEnabled":null,"PersonalAccountCalendarsEnabled":true}`,
 			wantAccounts:  nil,
-			wantCalendars: boolPtr(true),
+			wantCalendars: new(true),
 		},
 		{
 			name:          "property absent entirely",
@@ -43,14 +43,14 @@ func TestExchangeOwaMailboxPolicy_PersonalAccountFields(t *testing.T) {
 		{
 			name:          "both explicitly disabled",
 			raw:           `{"Identity":"x","PersonalAccountsEnabled":false,"PersonalAccountCalendarsEnabled":false}`,
-			wantAccounts:  boolPtr(false),
-			wantCalendars: boolPtr(false),
+			wantAccounts:  new(false),
+			wantCalendars: new(false),
 		},
 		{
 			name:          "both explicitly enabled",
 			raw:           `{"Identity":"x","PersonalAccountsEnabled":true,"PersonalAccountCalendarsEnabled":true}`,
-			wantAccounts:  boolPtr(true),
-			wantCalendars: boolPtr(true),
+			wantAccounts:  new(true),
+			wantCalendars: new(true),
 		},
 	}
 
@@ -64,7 +64,8 @@ func TestExchangeOwaMailboxPolicy_PersonalAccountFields(t *testing.T) {
 	}
 }
 
-func boolPtr(b bool) *bool { return &b }
+//go:fix inline
+func boolPtr(b bool) *bool { return new(b) }
 
 // --- Priority account protection ---
 

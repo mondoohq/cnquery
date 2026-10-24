@@ -33,7 +33,6 @@ func (a *mqlAwsBedrock) getInferenceProfiles(conn *connection.AwsConnection) []*
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Bedrock(region)
 			ctx := context.Background()
@@ -127,7 +126,6 @@ func (a *mqlAwsBedrock) getImportedModels(conn *connection.AwsConnection) []*job
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Bedrock(region)
 			ctx := context.Background()
@@ -236,7 +234,6 @@ func (a *mqlAwsBedrock) getPrompts(conn *connection.AwsConnection) []*jobpool.Jo
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.BedrockAgent(region)
 			ctx := context.Background()

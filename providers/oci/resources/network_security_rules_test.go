@@ -28,7 +28,7 @@ func TestRulePorts(t *testing.T) {
 				protocol:   "6",
 				tcpOptions: &core.TcpOptions{DestinationPortRange: portRange(22, 22)},
 			},
-			dstMin: intPtr(22), dstMax: intPtr(22),
+			dstMin: new(22), dstMax: new(22),
 		},
 		{
 			name: "tcp source and destination ranges",
@@ -39,8 +39,8 @@ func TestRulePorts(t *testing.T) {
 					DestinationPortRange: portRange(443, 443),
 				},
 			},
-			srcMin: intPtr(1024), srcMax: intPtr(65535),
-			dstMin: intPtr(443), dstMax: intPtr(443),
+			srcMin: new(1024), srcMax: new(65535),
+			dstMin: new(443), dstMax: new(443),
 		},
 		{
 			name: "udp options are read when tcp options are absent",
@@ -48,7 +48,7 @@ func TestRulePorts(t *testing.T) {
 				protocol:   "17",
 				udpOptions: &core.UdpOptions{DestinationPortRange: portRange(53, 53)},
 			},
-			dstMin: intPtr(53), dstMax: intPtr(53),
+			dstMin: new(53), dstMax: new(53),
 		},
 		{
 			// A rule with no options at all covers every port. The bounds must stay
@@ -67,7 +67,7 @@ func TestRulePorts(t *testing.T) {
 			name: "icmp rule has no port bounds",
 			rule: securityRule{
 				protocol:    "1",
-				icmpOptions: &core.IcmpOptions{Type: intPtr(8)},
+				icmpOptions: &core.IcmpOptions{Type: new(8)},
 			},
 		},
 	}
@@ -90,18 +90,18 @@ func TestRulePortsPrefersTcpWhenBothPresent(t *testing.T) {
 		tcpOptions: &core.TcpOptions{DestinationPortRange: portRange(22, 22)},
 		udpOptions: &core.UdpOptions{DestinationPortRange: portRange(53, 53)},
 	})
-	assert.Equal(t, intPtr(22), dstMin)
-	assert.Equal(t, intPtr(22), dstMax)
+	assert.Equal(t, new(22), dstMin)
+	assert.Equal(t, new(22), dstMax)
 }
 
 func TestSecurityRuleFromIngress(t *testing.T) {
 	stateless := true
 	r := securityRuleFromIngress(core.IngressSecurityRule{
-		Protocol:    strPtr("6"),
-		Source:      strPtr("0.0.0.0/0"),
+		Protocol:    new("6"),
+		Source:      new("0.0.0.0/0"),
 		SourceType:  core.IngressSecurityRuleSourceTypeCidrBlock,
 		IsStateless: &stateless,
-		Description: strPtr("ssh from anywhere"),
+		Description: new("ssh from anywhere"),
 		TcpOptions:  &core.TcpOptions{DestinationPortRange: portRange(22, 22)},
 	})
 
@@ -118,8 +118,8 @@ func TestSecurityRuleFromIngress(t *testing.T) {
 
 func TestSecurityRuleFromEgress(t *testing.T) {
 	r := securityRuleFromEgress(core.EgressSecurityRule{
-		Protocol:        strPtr("17"),
-		Destination:     strPtr("10.0.0.0/16"),
+		Protocol:        new("17"),
+		Destination:     new("10.0.0.0/16"),
 		DestinationType: core.EgressSecurityRuleDestinationTypeCidrBlock,
 		UdpOptions:      &core.UdpOptions{DestinationPortRange: portRange(53, 53)},
 	})
@@ -135,9 +135,9 @@ func TestSecurityRuleFromEgress(t *testing.T) {
 
 func TestSecurityRuleFromNsgCarriesDirectionAndId(t *testing.T) {
 	r := securityRuleFromNsg(core.SecurityRule{
-		Id:        strPtr("ocid1.securityrule.oc1..abc"),
+		Id:        new("ocid1.securityrule.oc1..abc"),
 		Direction: core.SecurityRuleDirectionEgress,
-		Protocol:  strPtr("6"),
+		Protocol:  new("6"),
 	})
 
 	// Unlike a security list rule, an NSG rule states its own direction and has

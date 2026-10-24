@@ -20,9 +20,9 @@ import (
 func TestSlsPolicyAbsent(t *testing.T) {
 	sdkErr := func(status int) error {
 		return &tea.SDKError{
-			Code:       tea.String("ProjectPolicyNotExist"),
-			StatusCode: tea.Int(status),
-			Message:    tea.String("policy not found"),
+			Code:       new("ProjectPolicyNotExist"),
+			StatusCode: new(status),
+			Message:    new("policy not found"),
 		}
 	}
 
@@ -42,7 +42,7 @@ func TestSlsPolicyAbsent(t *testing.T) {
 		assert.False(t, slsPolicyAbsent(errors.New("dial tcp: i/o timeout")))
 	})
 	t.Run("SDK error without a status is not matched", func(t *testing.T) {
-		assert.False(t, slsPolicyAbsent(&tea.SDKError{Code: tea.String("Throttling")}))
+		assert.False(t, slsPolicyAbsent(&tea.SDKError{Code: new("Throttling")}))
 	})
 }
 

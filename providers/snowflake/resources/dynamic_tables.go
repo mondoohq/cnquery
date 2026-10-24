@@ -18,7 +18,7 @@ type mqlSnowflakeDynamicTableInternal struct {
 }
 
 func (r *mqlSnowflakeAccount) dynamicTables() ([]any, error) {
-	return listSnowflakeDynamicTables(r.MqlRuntime, &sdk.In{Account: sdk.Bool(true)})
+	return listSnowflakeDynamicTables(r.MqlRuntime, &sdk.In{Account: new(true)})
 }
 
 func (r *mqlSnowflakeDatabase) dynamicTables() ([]any, error) {

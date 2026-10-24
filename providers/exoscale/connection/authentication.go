@@ -64,7 +64,7 @@ func GetZones(conf *inventory.Config) []string {
 
 func splitList(raw string) []string {
 	var out []string
-	for _, p := range strings.Split(raw, ",") {
+	for p := range strings.SplitSeq(raw, ",") {
 		if p = strings.TrimSpace(p); p != "" {
 			out = append(out, p)
 		}

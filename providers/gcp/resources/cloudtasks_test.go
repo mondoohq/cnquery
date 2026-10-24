@@ -22,7 +22,7 @@ func TestConvertCloudTasksHttpTarget_Full(t *testing.T) {
 		HttpMethod: cloudtaskspb.HttpMethod_PUT,
 		UriOverride: &cloudtaskspb.UriOverride{
 			Scheme:                 &scheme,
-			Host:                   proto.String("worker.example.com"),
+			Host:                   new("worker.example.com"),
 			Port:                   proto.Int64(8443),
 			PathOverride:           &cloudtaskspb.PathOverride{Path: "/run"},
 			QueryOverride:          &cloudtaskspb.QueryOverride{QueryParams: "a=1"},
@@ -105,7 +105,7 @@ func TestConvertCloudTasksHttpTarget_NoOverridesNoToken(t *testing.T) {
 func TestConvertCloudTasksHttpTarget_PartialUriOverride(t *testing.T) {
 	got := convertCloudTasksHttpTarget(&cloudtaskspb.HttpTarget{
 		UriOverride: &cloudtaskspb.UriOverride{
-			Host:                   proto.String("other.example.com"),
+			Host:                   new("other.example.com"),
 			UriOverrideEnforceMode: cloudtaskspb.UriOverride_IF_NOT_EXISTS,
 		},
 	})

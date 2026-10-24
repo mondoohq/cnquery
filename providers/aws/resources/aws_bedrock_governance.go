@@ -28,7 +28,6 @@ func bedrockRegionJobs(conn *connection.AwsConnection, collect func(svc *bedrock
 	}
 	tasks := make([]*jobpool.Job, 0, len(regions))
 	for _, region := range regions {
-		region := region
 		tasks = append(tasks, jobpool.NewJob(func() (jobpool.JobResult, error) {
 			res, err := collect(conn.Bedrock(region), region)
 			if err != nil {

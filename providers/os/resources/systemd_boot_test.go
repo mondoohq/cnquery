@@ -121,8 +121,8 @@ func newBootFs(t *testing.T, paths ...string) afero.Fs {
 	t.Helper()
 	fs := afero.NewMemMapFs()
 	for _, p := range paths {
-		if strings.HasSuffix(p, "/") {
-			require.NoError(t, fs.MkdirAll(strings.TrimSuffix(p, "/"), 0o755))
+		if before, ok := strings.CutSuffix(p, "/"); ok {
+			require.NoError(t, fs.MkdirAll(before, 0o755))
 			continue
 		}
 		require.NoError(t, fs.MkdirAll(path.Dir(p), 0o755))

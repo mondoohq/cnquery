@@ -37,7 +37,7 @@ func (r *mqlAlicloudNlb) loadBalancers() ([]any, error) {
 		firstPage := true
 		for {
 			resp, err := client.ListLoadBalancers(&nlbclient.ListLoadBalancersRequest{
-				RegionId:   tea.String(region),
+				RegionId:   new(region),
 				MaxResults: tea.Int32(100),
 				NextToken:  nextToken,
 			})
@@ -173,8 +173,8 @@ func initAlicloudNlbLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.R
 		return nil, nil, err
 	}
 	resp, err := client.ListLoadBalancers(&nlbclient.ListLoadBalancersRequest{
-		RegionId:        tea.String(region),
-		LoadBalancerIds: []*string{tea.String(lbID)},
+		RegionId:        new(region),
+		LoadBalancerIds: []*string{new(lbID)},
 	})
 	if err != nil {
 		return nil, nil, err
@@ -245,8 +245,8 @@ func (r *mqlAlicloudNlbLoadBalancer) listeners() ([]any, error) {
 	var nextToken *string
 	for {
 		resp, err := client.ListListeners(&nlbclient.ListListenersRequest{
-			RegionId:        tea.String(r.region),
-			LoadBalancerIds: []*string{tea.String(r.loadBalancerId)},
+			RegionId:        new(r.region),
+			LoadBalancerIds: []*string{new(r.loadBalancerId)},
 			MaxResults:      tea.Int32(100),
 			NextToken:       nextToken,
 		})
@@ -369,7 +369,7 @@ func (r *mqlAlicloudNlb) serverGroups() ([]any, error) {
 		firstPage := true
 		for {
 			resp, err := client.ListServerGroups(&nlbclient.ListServerGroupsRequest{
-				RegionId:   tea.String(region),
+				RegionId:   new(region),
 				MaxResults: tea.Int32(100),
 				NextToken:  nextToken,
 			})
@@ -496,8 +496,8 @@ func initAlicloudNlbServerGroup(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return nil, nil, err
 	}
 	resp, err := client.ListServerGroups(&nlbclient.ListServerGroupsRequest{
-		RegionId:       tea.String(region),
-		ServerGroupIds: []*string{tea.String(sgID)},
+		RegionId:       new(region),
+		ServerGroupIds: []*string{new(sgID)},
 	})
 	if err != nil {
 		return nil, nil, err

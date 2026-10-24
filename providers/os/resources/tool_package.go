@@ -446,13 +446,6 @@ func versionedPackageMatch(byName map[string]*mqlPackage, name string) *mqlPacka
 	return nil
 }
 
-// configDirPresent is the presence signal for the abstract-package fallback:
-// the tool's configPath directory exists on the target. Best-effort — used only
-// when binary ownership and name candidates both come up empty.
-func configDirPresent(runtime *plugin.Runtime, configPath string) bool {
-	return configPresent(runtime, configPath, false)
-}
-
 // configPresent reports whether configPath exists on the target as a directory,
 // or as a regular file when isFile is set.
 func configPresent(runtime *plugin.Runtime, configPath string, isFile bool) bool {
@@ -583,7 +576,7 @@ func inferCodexVersion(runtime *plugin.Runtime, configPath string) (string, erro
 	if cmd.GetExitcode().Data != 0 {
 		return "", nil
 	}
-	for _, field := range strings.Fields(cmd.GetStdout().Data) {
+	for field := range strings.FieldsSeq(cmd.GetStdout().Data) {
 		// Validate with MQL's semver parser instead of a bespoke regex. The
 		// parser exposes only Compare, so we parse by self-compare: a valid
 		// version compares against itself without error.
@@ -967,7 +960,7 @@ func probeOllamaVersion(runtime *plugin.Runtime, command string) (string, error)
 // at, which may be another machine entirely.
 func parseOllamaVersion(stdout string) string {
 	var serverVersion string
-	for _, line := range strings.Split(stdout, "\n") {
+	for line := range strings.SplitSeq(stdout, "\n") {
 		_, rest, found := strings.Cut(line, "version is")
 		if !found {
 			continue

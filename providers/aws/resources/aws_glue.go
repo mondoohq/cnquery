@@ -217,8 +217,7 @@ func findGlueSecurityConfiguration(runtime *plugin.Runtime, region, name string)
 		if Is400AccessDeniedError(err) {
 			return nil, nil
 		}
-		var notFoundErr *glue_types.EntityNotFoundException
-		if errors.As(err, &notFoundErr) {
+		if _, ok := errors.AsType[*glue_types.EntityNotFoundException](err); ok {
 			return nil, nil
 		}
 		return nil, err
@@ -757,12 +756,10 @@ func listGlueTables(ctx context.Context, svc glue.GetTablesAPIClient, dbName, ca
 // input. Access denied and everything else is returned as is, since the
 // default listing would fail the same way.
 func shouldRetryGlueTablesWithoutShareType(err error) bool {
-	var fedErr *glue_types.FederationSourceException
-	if errors.As(err, &fedErr) {
+	if _, ok := errors.AsType[*glue_types.FederationSourceException](err); ok {
 		return true
 	}
-	var fedRetryErr *glue_types.FederationSourceRetryableException
-	if errors.As(err, &fedRetryErr) {
+	if _, ok := errors.AsType[*glue_types.FederationSourceRetryableException](err); ok {
 		return true
 	}
 	var inputErr *glue_types.InvalidInputException

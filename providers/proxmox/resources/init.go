@@ -180,12 +180,10 @@ func initProxmoxToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	}
 	// Token IDs are user@realm!tokenid — derive the owner to call the
 	// per-user endpoint instead of paging through every user.
-	bangIdx := strings.LastIndex(tokenID, "!")
-	if bangIdx <= 0 {
+	owner, leaf, found := strings.CutLast(tokenID, "!")
+	if !found || owner == "" {
 		return nil, nil, fmt.Errorf("proxmox.token id %q is malformed, expected user@realm!tokenid", tokenID)
 	}
-	owner := tokenID[:bangIdx]
-	leaf := tokenID[bangIdx+1:]
 	conn := runtime.Connection.(*connection.PveConnection)
 	tokens, err := conn.GetUserTokens(owner)
 	if err != nil {

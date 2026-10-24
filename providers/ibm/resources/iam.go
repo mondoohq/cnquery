@@ -4,10 +4,10 @@
 package resources
 
 import (
+	"maps"
 	"regexp"
 	"time"
 
-	"github.com/IBM/go-sdk-core/v5/core"
 	"github.com/IBM/platform-services-go-sdk/accountmanagementv4"
 	"github.com/IBM/platform-services-go-sdk/iamaccessgroupsv2"
 	"github.com/IBM/platform-services-go-sdk/iamidentityv1"
@@ -159,9 +159,7 @@ func (r *mqlIbmIamAccessGroup) policies() ([]any, error) {
 func policyAttributes[T any](items []T, attrs func(T) map[string]string) map[string]string {
 	out := map[string]string{}
 	for _, it := range items {
-		for k, v := range attrs(it) {
-			out[k] = v
-		}
+		maps.Copy(out, attrs(it))
 	}
 	return out
 }
@@ -735,7 +733,7 @@ func identityActivity(runtime *plugin.Runtime, kind string, id string, get func(
 }
 
 func apiKeyActivity(svc *iamidentityv1.IamIdentityV1, id string) (*iamidentityv1.Activity, error) {
-	k, _, err := svc.GetAPIKey(&iamidentityv1.GetAPIKeyOptions{ID: &id, IncludeActivity: core.BoolPtr(true)})
+	k, _, err := svc.GetAPIKey(&iamidentityv1.GetAPIKeyOptions{ID: &id, IncludeActivity: new(true)})
 	if err != nil {
 		return nil, classifyError(err, "iam-identity.apikey.get")
 	}
@@ -743,7 +741,7 @@ func apiKeyActivity(svc *iamidentityv1.IamIdentityV1, id string) (*iamidentityv1
 }
 
 func serviceIDActivity(svc *iamidentityv1.IamIdentityV1, id string) (*iamidentityv1.Activity, error) {
-	s, _, err := svc.GetServiceID(&iamidentityv1.GetServiceIDOptions{ID: &id, IncludeActivity: core.BoolPtr(true)})
+	s, _, err := svc.GetServiceID(&iamidentityv1.GetServiceIDOptions{ID: &id, IncludeActivity: new(true)})
 	if err != nil {
 		return nil, classifyError(err, "iam-identity.serviceid.get")
 	}
@@ -751,7 +749,7 @@ func serviceIDActivity(svc *iamidentityv1.IamIdentityV1, id string) (*iamidentit
 }
 
 func trustedProfileActivity(svc *iamidentityv1.IamIdentityV1, id string) (*iamidentityv1.Activity, error) {
-	p, _, err := svc.GetProfile(&iamidentityv1.GetProfileOptions{ProfileID: &id, IncludeActivity: core.BoolPtr(true)})
+	p, _, err := svc.GetProfile(&iamidentityv1.GetProfileOptions{ProfileID: &id, IncludeActivity: new(true)})
 	if err != nil {
 		return nil, classifyError(err, "iam-identity.profile.get")
 	}

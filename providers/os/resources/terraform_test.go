@@ -76,7 +76,7 @@ func TestCollectTerraformPackagesBoundsDepth(t *testing.T) {
 	afs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
 	deep := "/repo"
-	for i := 0; i < maxLockSearchDepth+2; i++ {
+	for i := range maxLockSearchDepth + 2 {
 		deep = filepath.Join(deep, "d"+strconv.Itoa(i))
 	}
 	writeLock(t, afs, filepath.Join(deep, ".terraform.lock.hcl"))
@@ -184,7 +184,7 @@ func TestCollectTerraformPackagesBoundsBreadth(t *testing.T) {
 	afs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
 	// A wide, shallow tree — every directory within the depth cap.
-	for i := 0; i < maxLockSearchDirs+50; i++ {
+	for i := range maxLockSearchDirs + 50 {
 		require.NoError(t, afs.MkdirAll(filepath.Join("/wide", "d"+strconv.Itoa(i)), 0o755))
 	}
 	// A lock file past the budget, reachable only by exhausting it.

@@ -111,7 +111,7 @@ func extract(src string, it item) (string, bool, error) {
 		return "", false, err
 	}
 	lines := []string{}
-	for _, l := range strings.Split(buf.String(), "\n") {
+	for l := range strings.SplitSeq(buf.String(), "\n") {
 		if l = strings.TrimRight(l, " \t"); l != "" {
 			lines = append(lines, collapseSpace(l))
 		}

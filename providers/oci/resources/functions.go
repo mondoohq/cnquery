@@ -141,7 +141,7 @@ func unknownDiscriminator(v any, field string) *string {
 	if !f.IsValid() || f.Kind() != reflect.String || f.String() == "" {
 		return nil
 	}
-	return common.String(f.String())
+	return new(f.String())
 }
 
 // nonEmpty treats an empty string like an absent one.
@@ -170,7 +170,7 @@ func (o *mqlOciFunctions) applications() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]functions.ApplicationSummary, *string, error) {
 				response, err := svc.ListApplications(ctx, functions.ListApplicationsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -334,7 +334,7 @@ func (o *mqlOciFunctionsApplication) fetchApplication() (*functions.Application,
 		}
 
 		resp, err := svc.GetApplication(context.Background(), functions.GetApplicationRequest{
-			ApplicationId: common.String(o.Id.Data),
+			ApplicationId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -343,13 +343,13 @@ func (o *mqlOciFunctionsApplication) fetchApplication() (*functions.Application,
 	})
 }
 
-func (o *mqlOciFunctionsApplication) config() (map[string]interface{}, error) {
+func (o *mqlOciFunctionsApplication) config() (map[string]any, error) {
 	app, err := o.fetchApplication()
 	if err != nil {
 		return nil, err
 	}
 
-	config := make(map[string]interface{}, len(app.Config))
+	config := make(map[string]any, len(app.Config))
 	for k, v := range app.Config {
 		config[k] = v
 	}
@@ -409,7 +409,7 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]functions.FunctionSummary, *string, error) {
 		response, err := svc.ListFunctions(ctx, functions.ListFunctionsRequest{
-			ApplicationId: common.String(o.Id.Data),
+			ApplicationId: new(o.Id.Data),
 			Page:          page,
 		})
 		if err != nil {
@@ -619,7 +619,7 @@ func (o *mqlOciFunctionsFunction) fetchFunction() (*functions.Function, error) {
 		}
 
 		resp, err := svc.GetFunction(context.Background(), functions.GetFunctionRequest{
-			FunctionId: common.String(o.Id.Data),
+			FunctionId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -628,13 +628,13 @@ func (o *mqlOciFunctionsFunction) fetchFunction() (*functions.Function, error) {
 	})
 }
 
-func (o *mqlOciFunctionsFunction) config() (map[string]interface{}, error) {
+func (o *mqlOciFunctionsFunction) config() (map[string]any, error) {
 	fn, err := o.fetchFunction()
 	if err != nil {
 		return nil, err
 	}
 
-	config := make(map[string]interface{}, len(fn.Config))
+	config := make(map[string]any, len(fn.Config))
 	for k, v := range fn.Config {
 		config[k] = v
 	}

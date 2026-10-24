@@ -1,6 +1,6 @@
 module go.mondoo.com/mql/providers/helm
 
-go 1.26.10
+go 1.27.3
 
 replace go.mondoo.com/mql => ../..
 
@@ -12,11 +12,6 @@ require (
 	go.mondoo.com/mql v0.0.0-20261019065417-1fcdd84493fd
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.22.1
-)
-
-require (
-	github.com/go-openapi/swag/pools v0.27.1 // indirect
-	go.opentelemetry.io/otel/log v1.47.0 // indirect
 )
 
 require (
@@ -70,6 +65,7 @@ require (
 	github.com/go-openapi/swag/loading v0.27.1 // indirect
 	github.com/go-openapi/swag/mangling v0.27.1 // indirect
 	github.com/go-openapi/swag/netutils v0.27.1 // indirect
+	github.com/go-openapi/swag/pools v0.27.1 // indirect
 	github.com/go-openapi/swag/stringutils v0.27.1 // indirect
 	github.com/go-openapi/swag/typeutils v0.27.1 // indirect
 	github.com/go-openapi/swag/yamlutils v0.27.1 // indirect
@@ -124,6 +120,7 @@ require (
 	go.mondoo.com/ranger-rpc v0.8.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel v1.47.0 // indirect
+	go.opentelemetry.io/otel/log v1.47.0 // indirect
 	go.opentelemetry.io/otel/metric v1.47.0 // indirect
 	go.opentelemetry.io/otel/trace v1.47.0 // indirect
 	go.uber.org/mock v0.6.0 // indirect

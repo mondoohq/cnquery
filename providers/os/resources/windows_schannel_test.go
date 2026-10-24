@@ -67,10 +67,10 @@ func TestSchannelEnabledDecode(t *testing.T) {
 		items map[string]registry.RegistryKeyItem
 		want  *bool
 	}{
-		{"explicit 1 is enabled", regItems(map[string]int64{"Enabled": 1}), boolPtr(true)},
-		{"0xFFFFFFFF as signed -1 is enabled", regItems(map[string]int64{"Enabled": -1}), boolPtr(true)},
-		{"0xFFFFFFFF as unsigned is enabled", regItems(map[string]int64{"Enabled": 4294967295}), boolPtr(true)},
-		{"explicit 0 is disabled", regItems(map[string]int64{"Enabled": 0}), boolPtr(false)},
+		{"explicit 1 is enabled", regItems(map[string]int64{"Enabled": 1}), new(true)},
+		{"0xFFFFFFFF as signed -1 is enabled", regItems(map[string]int64{"Enabled": -1}), new(true)},
+		{"0xFFFFFFFF as unsigned is enabled", regItems(map[string]int64{"Enabled": 4294967295}), new(true)},
+		{"explicit 0 is disabled", regItems(map[string]int64{"Enabled": 0}), new(false)},
 		{"absent value stays nil", regItems(map[string]int64{"DisabledByDefault": 1}), nil},
 		{"empty key stays nil", map[string]registry.RegistryKeyItem{}, nil},
 	}
@@ -341,8 +341,6 @@ func TestMergeSchannelNames(t *testing.T) {
 		}
 	})
 }
-
-func boolPtr(v bool) *bool { return &v }
 
 // TestSchannelLocalSslStoreSources pins which subkey and which value name backs
 // each of the three effective lists. The local SSL store keys one subkey per

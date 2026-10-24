@@ -27,11 +27,11 @@ type mqlSnowflakeRowAccessPolicyInternal struct {
 }
 
 func (r *mqlSnowflakeAccount) rowAccessPolicies() ([]any, error) {
-	return listSnowflakeRowAccessPolicies(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}})
+	return listSnowflakeRowAccessPolicies(r.MqlRuntime, sdk.ExtendedIn{Account: new(true)})
 }
 
 func (r *mqlSnowflakeDatabase) rowAccessPolicies() ([]any, error) {
-	return listSnowflakeRowAccessPolicies(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)}})
+	return listSnowflakeRowAccessPolicies(r.MqlRuntime, sdk.ExtendedIn{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)})
 }
 
 // listSnowflakeRowAccessPolicies fetches row-access policies within the given

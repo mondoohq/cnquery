@@ -130,7 +130,7 @@ func TestWindowsRegistryEmptyListParsers(t *testing.T) {
 // pathAssignment returns the `$path = ...` line of a generated script.
 func pathAssignment(t *testing.T, script string) string {
 	t.Helper()
-	for _, line := range strings.Split(script, "\n") {
+	for line := range strings.SplitSeq(script, "\n") {
 		if strings.HasPrefix(line, "$path = ") {
 			return line
 		}

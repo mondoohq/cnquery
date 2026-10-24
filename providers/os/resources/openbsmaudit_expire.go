@@ -53,7 +53,7 @@ const (
 // newline and returns the next colon-delimited token, failing when there is
 // none. ok is false when the key is absent or its line cannot be read.
 func auditControlValue(content string, name string, apple bool) (string, bool) {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		if strings.HasPrefix(line, "#") {
 			continue
 		}
@@ -293,7 +293,7 @@ func (s *mqlOpenBSMAudit) expireAfterSetting(content string) *auditExpireAfter {
 }
 
 func auditDuration(seconds int64) *time.Time {
-	return MqlTime(llx.DurationToTime(seconds))
+	return new(llx.DurationToTime(seconds))
 }
 
 func (s *mqlOpenBSMAudit) expireAfterAge(content string) (*time.Time, error) {

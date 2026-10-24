@@ -187,7 +187,7 @@ func samePath(a, b string) bool {
 // env. systemd does not expand variables in them, so values are taken as
 // written, with the quotes around each assignment removed.
 func UnitEnvironment(content string, env map[string]string) {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		key, value, found := strings.Cut(strings.TrimSpace(line), "=")
 		if !found || strings.TrimSpace(key) != "Environment" {
 			continue
@@ -204,7 +204,7 @@ func UnitEnvironment(content string, env map[string]string) {
 // line is one assignment whose value runs to the end of the line, with one pair
 // of enclosing quotes removed; systemd does not expand variables in it.
 func EnvironmentFileAssignments(content string, env map[string]string) {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || line[0] == '#' || line[0] == ';' {
 			continue

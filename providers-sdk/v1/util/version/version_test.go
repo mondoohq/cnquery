@@ -25,7 +25,7 @@ func TestCommitTitle_ShortListsProviders(t *testing.T) {
 func TestCommitTitle_LongFallsBackToCount(t *testing.T) {
 	// Build enough providers that the enumerated title exceeds GitHub's limit.
 	var confs updateConfs
-	for i := 0; i < 72; i++ {
+	for i := range 72 {
 		confs = append(confs, &providerConf{
 			name:    fmt.Sprintf("provider%02d", i),
 			version: "13.0.1",

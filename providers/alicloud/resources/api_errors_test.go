@@ -86,13 +86,13 @@ func TestParseAlicloudTime(t *testing.T) {
 		"2022-11-17":                time.Date(2022, 11, 17, 0, 0, 0, 0, time.UTC),
 	}
 	for in, want := range cases {
-		got := parseAlicloudTime(tea.String(in))
+		got := parseAlicloudTime(new(in))
 		require.NotNil(t, got, in)
 		assert.True(t, want.Equal(*got), "%s parsed as %s", in, got)
 	}
 	assert.Nil(t, parseAlicloudTime(nil))
-	assert.Nil(t, parseAlicloudTime(tea.String("")))
-	assert.Nil(t, parseAlicloudTime(tea.String("not a date")), "an unparseable value must stay null, not become year 1")
+	assert.Nil(t, parseAlicloudTime(new("")))
+	assert.Nil(t, parseAlicloudTime(new("not a date")), "an unparseable value must stay null, not become year 1")
 }
 
 func TestEpochAuto(t *testing.T) {
@@ -114,12 +114,12 @@ func TestEpochAuto(t *testing.T) {
 }
 
 func TestParseJSONLists(t *testing.T) {
-	assert.Equal(t, []any{int64(0), int64(1), int64(23)}, parseJSONIntList(tea.String(`["0","1","23"]`)))
-	assert.Equal(t, []any{int64(1), int64(7)}, parseJSONIntList(tea.String(`[1,7]`)))
-	assert.Equal(t, []any{int64(2)}, parseJSONIntList(tea.String(`["x","2"]`)), "a non-number member is dropped")
-	assert.Equal(t, []string{"cn-hangzhou", "cn-beijing"}, parseJSONStringList(tea.String(`["cn-hangzhou", "cn-beijing"]`)))
-	assert.Empty(t, parseJSONStringList(tea.String("")))
-	assert.Empty(t, parseJSONStringList(tea.String("cn-hangzhou")), "a value that is not a JSON array yields nothing")
+	assert.Equal(t, []any{int64(0), int64(1), int64(23)}, parseJSONIntList(new(`["0","1","23"]`)))
+	assert.Equal(t, []any{int64(1), int64(7)}, parseJSONIntList(new(`[1,7]`)))
+	assert.Equal(t, []any{int64(2)}, parseJSONIntList(new(`["x","2"]`)), "a non-number member is dropped")
+	assert.Equal(t, []string{"cn-hangzhou", "cn-beijing"}, parseJSONStringList(new(`["cn-hangzhou", "cn-beijing"]`)))
+	assert.Empty(t, parseJSONStringList(new("")))
+	assert.Empty(t, parseJSONStringList(new("cn-hangzhou")), "a value that is not a JSON array yields nothing")
 	assert.Empty(t, parseJSONStringList(nil))
 }
 

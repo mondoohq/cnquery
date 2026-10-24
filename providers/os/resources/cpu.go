@@ -312,7 +312,7 @@ func getCpuInfoAIX(conn shared.Connection) (*cpuInfo, error) {
 		ProcessorCount: 1,
 	}
 
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		line = strings.TrimSpace(line)
 		if k, v, ok := strings.Cut(line, ":"); ok {
 			k = strings.TrimSpace(k)
@@ -349,7 +349,7 @@ func getCpuInfoAIX(conn shared.Connection) (*cpuInfo, error) {
 	}
 
 	var cores int64
-	for _, line := range strings.Split(strings.TrimSpace(string(lsdevData)), "\n") {
+	for line := range strings.SplitSeq(strings.TrimSpace(string(lsdevData)), "\n") {
 		if strings.HasPrefix(line, "proc") {
 			cores++
 		}
@@ -415,7 +415,7 @@ func getCpuInfoSolaris(conn shared.Connection) (*cpuInfo, error) {
 	var totalCores int64
 	var sockets int64
 
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		trimmed := strings.TrimSpace(line)
 
 		// "The physical processor has N cores and M virtual processors (...)"
@@ -476,7 +476,7 @@ func parseLscpuOutput(conn shared.Connection) (*cpuInfo, error) {
 	}
 
 	info := &cpuInfo{}
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		if k, v, ok := strings.Cut(line, ":"); ok {
 			k = strings.TrimSpace(k)
 			v = strings.TrimSpace(v)

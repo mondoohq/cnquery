@@ -53,7 +53,7 @@ func splitCommaList(raw *string) []string {
 		return nil
 	}
 	res := []string{}
-	for _, entry := range strings.Split(value, ",") {
+	for entry := range strings.SplitSeq(value, ",") {
 		entry = strings.TrimSpace(entry)
 		if entry == "" {
 			continue
@@ -121,8 +121,8 @@ func (r *mqlAlicloudSlb) acls() ([]any, error) {
 		collected := int32(0)
 		for {
 			resp, err := client.DescribeAccessControlLists(&slbclient.DescribeAccessControlListsRequest{
-				RegionId:   tea.String(region),
-				PageNumber: tea.Int32(pageNumber),
+				RegionId:   new(region),
+				PageNumber: new(pageNumber),
 				PageSize:   tea.Int32(lbPageSize),
 			})
 			if err != nil {
@@ -187,9 +187,9 @@ func (r *mqlAlicloudSlbAcl) aclEntries() ([]any, error) {
 		collected := int32(0)
 		for {
 			resp, err := client.DescribeAccessControlListAttribute(&slbclient.DescribeAccessControlListAttributeRequest{
-				RegionId: tea.String(r.RegionId.Data),
-				AclId:    tea.String(r.AclId.Data),
-				Page:     tea.Int32(page),
+				RegionId: new(r.RegionId.Data),
+				AclId:    new(r.AclId.Data),
+				Page:     new(page),
 				PageSize: tea.Int32(lbPageSize),
 			})
 			if err != nil {
@@ -413,7 +413,7 @@ func (r *mqlAlicloudNlb) securityPolicies() ([]any, error) {
 		}
 
 		req := &nlbclient.ListSecurityPolicyRequest{
-			RegionId:   tea.String(region),
+			RegionId:   new(region),
 			MaxResults: tea.Int32(lbPageSize),
 		}
 		for {

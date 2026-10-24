@@ -229,7 +229,7 @@ func render(release string, t *table, license string) ([]byte, error) {
 	fmt.Fprintf(&b, "//\t%s%s/%s (current IANA names)\n//\n", rawBase, release, timezonesPath)
 	fmt.Fprintf(&b, "// windowsZones.xml records otherVersion=%q and typeVersion=%q.\n", t.windowsVersion, t.tzVersion)
 	b.WriteString("//\n// The data is distributed under the following license:\n//\n")
-	for _, line := range strings.Split(strings.TrimRight(license, "\n"), "\n") {
+	for line := range strings.SplitSeq(strings.TrimRight(license, "\n"), "\n") {
 		line = strings.TrimRight(line, " \t\r")
 		if line == "" {
 			b.WriteString("//\n")

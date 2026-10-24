@@ -8,7 +8,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/logging"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -76,7 +75,7 @@ func (o *mqlOciLogging) logGroups() ([]any, error) {
 func (o *mqlOciLogging) getLogGroupsForRegion(ctx context.Context, client *logging.LoggingManagementClient, compartmentID string) ([]logging.LogGroupSummary, error) {
 	entries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]logging.LogGroupSummary, *string, error) {
 		request := logging.ListLogGroupsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		}
 
@@ -198,7 +197,7 @@ func (o *mqlOciLoggingLogGroup) logs() ([]any, error) {
 func (o *mqlOciLoggingLogGroup) getLogsForGroup(ctx context.Context, client *logging.LoggingManagementClient, logGroupId string) ([]logging.LogSummary, error) {
 	entries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]logging.LogSummary, *string, error) {
 		request := logging.ListLogsRequest{
-			LogGroupId: common.String(logGroupId),
+			LogGroupId: new(logGroupId),
 			Page:       page,
 		}
 
@@ -251,12 +250,12 @@ func extractLogSource(cfg *logging.Configuration) (category, service, resource s
 	return stringValue(svc.Category), stringValue(svc.Service), stringValue(svc.Resource)
 }
 
-func convertLogConfiguration(cfg *logging.Configuration) (map[string]interface{}, error) {
+func convertLogConfiguration(cfg *logging.Configuration) (map[string]any, error) {
 	if cfg == nil {
 		return nil, nil
 	}
 
-	result := map[string]interface{}{}
+	result := map[string]any{}
 
 	if cfg.CompartmentId != nil {
 		result["compartmentId"] = *cfg.CompartmentId

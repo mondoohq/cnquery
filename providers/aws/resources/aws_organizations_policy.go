@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"maps"
 
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	orgtypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
@@ -232,11 +233,9 @@ func organizationResourceTags(runtime *plugin.Runtime, resourceId string) (map[s
 			}
 			return nil, err
 		}
-		for k, v := range tagsToMap(page.Tags,
+		maps.Copy(tags, tagsToMap(page.Tags,
 			func(t orgtypes.Tag) *string { return t.Key },
-			func(t orgtypes.Tag) *string { return t.Value }) {
-			tags[k] = v
-		}
+			func(t orgtypes.Tag) *string { return t.Value }))
 	}
 	return tags, nil
 }

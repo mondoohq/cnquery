@@ -41,8 +41,8 @@ func (r *mqlAlicloudAntiddos) instances() ([]any, error) {
 		centerOk := false
 		for {
 			resp, err := client.DescribeInstances(&ddoscooclient.DescribeInstancesRequest{
-				PageNumber: tea.String(strconv.Itoa(pageNumber)),
-				PageSize:   tea.String(strconv.Itoa(pageSize)),
+				PageNumber: new(strconv.Itoa(pageNumber)),
+				PageSize:   new(strconv.Itoa(pageSize)),
 			})
 			if err != nil {
 				if !centerOk {
@@ -135,9 +135,9 @@ func (r *mqlAlicloudAntiddosInstance) webRules() ([]any, error) {
 	pageSize := int32(10)
 	for {
 		resp, err := client.DescribeWebRules(&ddoscooclient.DescribeWebRulesRequest{
-			InstanceIds: []*string{tea.String(r.instanceId)},
-			PageNumber:  tea.Int32(pageNumber),
-			PageSize:    tea.Int32(pageSize),
+			InstanceIds: []*string{new(r.instanceId)},
+			PageNumber:  new(pageNumber),
+			PageSize:    new(pageSize),
 		})
 		if err != nil {
 			return nil, err
@@ -236,7 +236,7 @@ func (r *mqlAlicloudAntiddosWebRule) fetchLogStatus() *ddoscooclient.DescribeWeb
 		return nil
 	}
 	resp, err := client.DescribeWebAccessLogStatus(&ddoscooclient.DescribeWebAccessLogStatusRequest{
-		Domain: tea.String(r.Domain.Data),
+		Domain: new(r.Domain.Data),
 	})
 	if err != nil || resp == nil || resp.Body == nil {
 		return nil
@@ -308,9 +308,9 @@ func (r *mqlAlicloudAntiddosInstance) networkRules() ([]any, error) {
 	pageSize := int32(10)
 	for {
 		resp, err := client.DescribeNetworkRules(&ddoscooclient.DescribeNetworkRulesRequest{
-			InstanceId: tea.String(r.instanceId),
-			PageNumber: tea.Int32(pageNumber),
-			PageSize:   tea.Int32(pageSize),
+			InstanceId: new(r.instanceId),
+			PageNumber: new(pageNumber),
+			PageSize:   new(pageSize),
 		})
 		if err != nil {
 			return nil, err

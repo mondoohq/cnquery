@@ -546,8 +546,7 @@ func (a *mqlAwsCodeartifactRepository) endpoints() (map[string]any, error) {
 // permissions-policy APIs return when no policy is attached to the domain or
 // repository. Treated as "no policy" rather than a real error.
 func isCodeArtifactNotFound(err error) bool {
-	var apiErr smithy.APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[smithy.APIError](err); ok {
 		code := apiErr.ErrorCode()
 		return code == "ResourceNotFoundException"
 	}
@@ -558,8 +557,7 @@ func isCodeArtifactNotFound(err error) bool {
 // GetRepositoryEndpoint returns when the repository has no configuration for
 // the requested package format. Treated as "no endpoint for that format".
 func isCodeArtifactValidation(err error) bool {
-	var apiErr smithy.APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[smithy.APIError](err); ok {
 		code := apiErr.ErrorCode()
 		return code == "ValidationException"
 	}

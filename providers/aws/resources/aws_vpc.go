@@ -2334,7 +2334,7 @@ func (a *mqlAwsVpcFlowlog) s3Bucket() (*mqlAwsS3Bucket, error) {
 		a.S3Bucket.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	bucketName := strings.Split(parsed.Resource, "/")[0]
+	bucketName, _, _ := strings.Cut(parsed.Resource, "/")
 	if bucketName == "" {
 		a.S3Bucket.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil

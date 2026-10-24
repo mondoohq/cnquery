@@ -71,10 +71,10 @@ func TestGatedModeValue(t *testing.T) {
 		in   hfmodels.GatedValue
 		want *string
 	}{
-		{"ungated", hfmodels.GatedValue{IsGated: false, Mode: "false"}, ptr("false")},
-		{"auto", hfmodels.GatedValue{IsGated: true, Mode: "auto"}, ptr("auto")},
-		{"manual", hfmodels.GatedValue{IsGated: true, Mode: "manual"}, ptr("manual")},
-		{"legacy bool true", hfmodels.GatedValue{IsGated: true, Mode: "true"}, ptr("true")},
+		{"ungated", hfmodels.GatedValue{IsGated: false, Mode: "false"}, new("false")},
+		{"auto", hfmodels.GatedValue{IsGated: true, Mode: "auto"}, new("auto")},
+		{"manual", hfmodels.GatedValue{IsGated: true, Mode: "manual"}, new("manual")},
+		{"legacy bool true", hfmodels.GatedValue{IsGated: true, Mode: "true"}, new("true")},
 		{"never reported", hfmodels.GatedValue{}, nil},
 	}
 	for _, tt := range tests {
@@ -90,7 +90,8 @@ func TestGatedModeValue(t *testing.T) {
 	}
 }
 
-func ptr(s string) *string { return &s }
+//go:fix inline
+func ptr(s string) *string { return new(s) }
 
 func TestStringsToInterface(t *testing.T) {
 	assert.Equal(t, []any{}, stringsToInterface(nil))

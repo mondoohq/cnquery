@@ -6,10 +6,10 @@ package resources
 import (
 	"context"
 	"errors"
+	"maps"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/audit"
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -189,7 +189,7 @@ func (o *mqlOciCompartment) parentCompartmentID() (string, error) {
 		return "", err
 	}
 	resp, err := client.GetCompartment(context.Background(), identity.GetCompartmentRequest{
-		CompartmentId: common.String(id),
+		CompartmentId: new(id),
 	})
 	if err != nil {
 		if ociCompartmentInaccessible(err) {
@@ -283,7 +283,7 @@ func initOciCompartment(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return nil, nil, err
 	}
 	resp, err := client.GetCompartment(context.Background(), identity.GetCompartmentRequest{
-		CompartmentId: common.String(id),
+		CompartmentId: new(id),
 	})
 	if err != nil {
 		// Keep the resource identifiable by id when the caller can't read its
@@ -295,9 +295,7 @@ func initOciCompartment(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return args, nil, nil
 	}
 
-	for name, value := range ociCompartmentArgs(resp.Compartment) {
-		args[name] = value
-	}
+	maps.Copy(args, ociCompartmentArgs(resp.Compartment))
 	return args, nil, nil
 }
 

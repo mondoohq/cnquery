@@ -220,11 +220,11 @@ func normalizeWindowsDir(p string, expandEnv func(string) string) string {
 	if _, shared := sharedWindowsDirs[rest]; shared {
 		return ""
 	}
-	if strings.HasPrefix(rest, `users\`) {
-		profileRest := strings.TrimPrefix(rest, `users\`)
+	if after, ok := strings.CutPrefix(rest, `users\`); ok {
+		profileRest := after
 		sub := ""
-		if i := strings.IndexByte(profileRest, '\\'); i >= 0 {
-			sub = profileRest[i+1:]
+		if _, after, ok := strings.Cut(profileRest, "\\"); ok {
+			sub = after
 		}
 		if _, shared := sharedUserSubdirs[sub]; shared {
 			return ""
@@ -282,11 +282,11 @@ func iconFilePath(icon string) string {
 // parentDir returns the directory part of a Windows file path.
 func parentDir(p string) string {
 	p = strings.ReplaceAll(p, "/", `\`)
-	i := strings.LastIndexByte(p, '\\')
-	if i <= 0 {
+	before, _, ok := strings.CutLast(p, "\\")
+	if !ok || before == "" {
 		return ""
 	}
-	return p[:i]
+	return before
 }
 
 // uninstallEntryDir derives the directory an Uninstall entry's product lives

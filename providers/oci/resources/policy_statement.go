@@ -206,7 +206,7 @@ func splitOciPolicyNameList(tokens []string) []string {
 		return nil
 	}
 	var names []string
-	for _, part := range strings.Split(strings.Join(tokens, " "), ",") {
+	for part := range strings.SplitSeq(strings.Join(tokens, " "), ",") {
 		if name := strings.TrimSpace(part); name != "" {
 			names = append(names, name)
 		}

@@ -413,7 +413,7 @@ func TestListPerGroup_ChunksRunConcurrentlyInOrder(t *testing.T) {
 	routes := map[string]fakeRoute{}
 	groupIDs := []string{}
 	want := []string{}
-	for i := 0; i < pimGroupChunkSize*pimGroupConcurrency+5; i++ {
+	for i := range pimGroupChunkSize*pimGroupConcurrency + 5 {
 		id := fmt.Sprintf("g-%03d", i)
 		groupIDs = append(groupIDs, id)
 		want = append(want, id+"_member_u")

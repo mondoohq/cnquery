@@ -505,32 +505,32 @@ func TestSitePasswordProtected(t *testing.T) {
 		{
 			name:    "explicit json null is a reported absence",
 			payload: `{"id":"site_1","password":null}`,
-			want:    ptr(false),
+			want:    new(false),
 		},
 		{
 			name:    "empty string is no password",
 			payload: `{"id":"site_1","password":""}`,
-			want:    ptr(false),
+			want:    new(false),
 		},
 		{
 			name:    "literal password is protected",
 			payload: `{"id":"site_1","password":"correct-horse"}`,
-			want:    ptr(true),
+			want:    new(true),
 		},
 		{
 			name:    "redacted placeholder is still protected",
 			payload: `{"id":"site_1","password":"****"}`,
-			want:    ptr(true),
+			want:    new(true),
 		},
 		{
 			name:    "boolean marker true is protected",
 			payload: `{"id":"site_1","password":true}`,
-			want:    ptr(true),
+			want:    new(true),
 		},
 		{
 			name:    "boolean marker false is not protected",
 			payload: `{"id":"site_1","password":false}`,
-			want:    ptr(false),
+			want:    new(false),
 		},
 	}
 

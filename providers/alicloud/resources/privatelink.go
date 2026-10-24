@@ -84,7 +84,7 @@ func (r *mqlAlicloudPrivatelink) listServices(region string) ([]*mqlAlicloudPriv
 
 	res := []*mqlAlicloudPrivatelinkEndpointService{}
 	req := &privatelinkclient.ListVpcEndpointServicesRequest{
-		RegionId:   tea.String(region),
+		RegionId:   new(region),
 		MaxResults: tea.Int32(privateLinkPageSize),
 	}
 	for {
@@ -185,9 +185,9 @@ func (r *mqlAlicloudPrivatelinkEndpointService) allowlist(listType string) ([]an
 	}
 	res := []any{}
 	req := &privatelinkclient.ListVpcEndpointServiceUsersRequest{
-		RegionId:     tea.String(r.RegionId.Data),
-		ServiceId:    tea.String(r.ServiceId.Data),
-		UserListType: tea.String(listType),
+		RegionId:     new(r.RegionId.Data),
+		ServiceId:    new(r.ServiceId.Data),
+		UserListType: new(listType),
 		MaxResults:   tea.Int32(privateLinkPageSize),
 	}
 	for {
@@ -243,8 +243,8 @@ func (r *mqlAlicloudPrivatelinkEndpointService) connections() ([]any, error) {
 	}
 	res := []any{}
 	req := &privatelinkclient.ListVpcEndpointConnectionsRequest{
-		RegionId:   tea.String(r.RegionId.Data),
-		ServiceId:  tea.String(r.ServiceId.Data),
+		RegionId:   new(r.RegionId.Data),
+		ServiceId:  new(r.ServiceId.Data),
 		MaxResults: tea.Int32(privateLinkPageSize),
 	}
 	for {
@@ -306,7 +306,7 @@ func (r *mqlAlicloudPrivatelink) endpoints() ([]any, error) {
 			return nil, err
 		}
 		req := &privatelinkclient.ListVpcEndpointsRequest{
-			RegionId:   tea.String(region),
+			RegionId:   new(region),
 			MaxResults: tea.Int32(privateLinkPageSize),
 		}
 		firstPage := true
@@ -438,8 +438,8 @@ func (r *mqlAlicloudPrivatelinkEndpoint) securityGroups() ([]any, error) {
 	}
 	ids := []any{}
 	req := &privatelinkclient.ListVpcEndpointSecurityGroupsRequest{
-		RegionId:   tea.String(r.RegionId.Data),
-		EndpointId: tea.String(r.EndpointId.Data),
+		RegionId:   new(r.RegionId.Data),
+		EndpointId: new(r.EndpointId.Data),
 		MaxResults: tea.Int32(privateLinkPageSize),
 	}
 	for {

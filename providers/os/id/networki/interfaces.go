@@ -191,8 +191,8 @@ func FindInterface(interfaces []Interface, iinterface Interface) int {
 // baseInterfaceName strips the peer suffix (@ifN) from interface names.
 // For example, "eth0@if103" returns "eth0", while "enX0" returns "enX0".
 func baseInterfaceName(name string) string {
-	if i := strings.Index(name, "@"); i != -1 {
-		return name[:i]
+	if before, _, ok := strings.Cut(name, "@"); ok {
+		return before
 	}
 	return name
 }

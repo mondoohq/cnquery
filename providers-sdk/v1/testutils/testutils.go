@@ -9,7 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -120,9 +120,7 @@ func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[stri
 		refs = append(refs, datapointArr...)
 	}
 
-	sort.Slice(refs, func(i, j int) bool {
-		return refs[i] < refs[j]
-	})
+	slices.Sort(refs)
 
 	for idx, ref := range refs {
 		checksum := bundle.CodeV2.Checksums[ref]

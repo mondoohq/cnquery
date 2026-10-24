@@ -39,7 +39,7 @@ func parseTimedatectlStatusSynchronized(stdout string) bool {
 // lookupTimedatectlStatusSynchronized is parseTimedatectlStatusSynchronized
 // that also reports whether the output had the line at all.
 func lookupTimedatectlStatusSynchronized(stdout string) (synchronized bool, found bool) {
-	for _, line := range strings.Split(stdout, "\n") {
+	for line := range strings.SplitSeq(stdout, "\n") {
 		key, value, ok := strings.Cut(line, ":")
 		if !ok {
 			continue
@@ -123,7 +123,7 @@ func parseNTPMessageField(msg string, field string) (string, bool) {
 	msg = strings.TrimSpace(msg)
 	msg = strings.TrimPrefix(msg, "{")
 	msg = strings.TrimSuffix(msg, "}")
-	for _, part := range strings.Split(msg, ",") {
+	for part := range strings.SplitSeq(msg, ",") {
 		key, value, ok := strings.Cut(strings.TrimSpace(part), "=")
 		if ok && key == field {
 			return strings.TrimSpace(value), true

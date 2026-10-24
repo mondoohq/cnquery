@@ -6,27 +6,26 @@ package resources
 import (
 	"testing"
 
-	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCloudssoStatusEnabled(t *testing.T) {
-	assert.True(t, cloudssoStatusEnabled(tea.String("Enabled")))
-	assert.True(t, cloudssoStatusEnabled(tea.String("enabled")))
-	assert.True(t, cloudssoStatusEnabled(tea.String(" Enabled ")))
-	assert.False(t, cloudssoStatusEnabled(tea.String("Disabled")))
+	assert.True(t, cloudssoStatusEnabled(new("Enabled")))
+	assert.True(t, cloudssoStatusEnabled(new("enabled")))
+	assert.True(t, cloudssoStatusEnabled(new(" Enabled ")))
+	assert.False(t, cloudssoStatusEnabled(new("Disabled")))
 	// a status nobody could read must not report a control that may not be in
 	// place
 	assert.False(t, cloudssoStatusEnabled(nil))
-	assert.False(t, cloudssoStatusEnabled(tea.String("")))
+	assert.False(t, cloudssoStatusEnabled(new("")))
 }
 
 func TestCloudssoTaskSucceeded(t *testing.T) {
-	assert.True(t, cloudssoTaskSucceeded(tea.String("Success")))
-	assert.True(t, cloudssoTaskSucceeded(tea.String("success")))
+	assert.True(t, cloudssoTaskSucceeded(new("Success")))
+	assert.True(t, cloudssoTaskSucceeded(new("success")))
 	// a failed revocation leaves the access it was withdrawing still granted
-	assert.False(t, cloudssoTaskSucceeded(tea.String("Failed")))
+	assert.False(t, cloudssoTaskSucceeded(new("Failed")))
 	// a task still running has not withdrawn anything yet either
-	assert.False(t, cloudssoTaskSucceeded(tea.String("InProgress")))
+	assert.False(t, cloudssoTaskSucceeded(new("InProgress")))
 	assert.False(t, cloudssoTaskSucceeded(nil))
 }

@@ -521,8 +521,7 @@ func (a *mqlAwsMskCluster) fetchPolicy() (*kafka.GetClusterPolicyOutput, error) 
 		svc := conn.Kafka(a.region)
 		out, err := svc.GetClusterPolicy(context.Background(), &kafka.GetClusterPolicyInput{ClusterArn: &a.Arn.Data})
 		if err != nil {
-			var notFound *kafka_types.NotFoundException
-			if errors.As(err, &notFound) {
+			if _, ok := errors.AsType[*kafka_types.NotFoundException](err); ok {
 				a.policyErr = nil
 				return
 			}
@@ -2346,10 +2345,10 @@ func (a *mqlAwsMskReplicator) replicationInfoList() ([]any, error) {
 		}
 		var srcArn, tgtArn *string
 		if v, ok := aliasToArn[srcAlias]; ok {
-			srcArn = stringPtr(v)
+			srcArn = new(v)
 		}
 		if v, ok := aliasToArn[tgtAlias]; ok {
-			tgtArn = stringPtr(v)
+			tgtArn = new(v)
 		}
 
 		resource, err := CreateResource(a.MqlRuntime, "aws.msk.replicator.replicationInfo",
@@ -2537,8 +2536,9 @@ func (a *mqlAwsMskReplicator) isCrossAccount() (bool, error) {
 	return len(accounts) > 1, nil
 }
 
+//go:fix inline
 func stringPtr(s string) *string {
-	return &s
+	return new(s)
 }
 
 func (a *mqlAwsMskReplicator) logDelivery() (*mqlAwsMskReplicatorLogDelivery, error) {

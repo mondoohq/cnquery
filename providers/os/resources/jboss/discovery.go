@@ -185,7 +185,7 @@ func ConfigFromCommand(cmd string) (serverConfig string, domainConfig string, ho
 // HomeFromEnviron extracts JBOSS_HOME from the raw, NUL-separated contents of
 // a process's environment.
 func HomeFromEnviron(environ string) string {
-	for _, entry := range strings.Split(environ, "\x00") {
+	for entry := range strings.SplitSeq(environ, "\x00") {
 		key, value, found := strings.Cut(entry, "=")
 		if found && key == "JBOSS_HOME" {
 			return value
@@ -196,7 +196,7 @@ func HomeFromEnviron(environ string) string {
 
 // IsJBossUnit reports whether a systemd unit file starts a JBoss server.
 func IsJBossUnit(content string) bool {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if !strings.HasPrefix(line, "ExecStart") && !strings.HasPrefix(line, "Environment") {
 			continue
@@ -215,7 +215,7 @@ func IsJBossUnit(content string) bool {
 func PathsFromUnit(content string) (home string, launchType string, envFiles []string) {
 	envFiles = []string{}
 
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		key, value, found := strings.Cut(line, "=")
 		if !found {
@@ -255,7 +255,7 @@ func PathsFromUnit(content string) (home string, launchType string, envFiles []s
 // unit's EnvironmentFile= target, /etc/default/wildfly, or the vendor's own
 // bin/init.d/jboss-as.conf.
 func HomeFromEnvFile(content string) string {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
@@ -310,7 +310,7 @@ var UnitGrepCommand = func() string {
 func ParseUnitGrepOutput(out string) ([]string, bool) {
 	var paths []string
 	done := false
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		line = strings.TrimSpace(line)
 		switch line {
 		case "":
@@ -483,7 +483,7 @@ var reVersionLine = regexp.MustCompile(`(?i)^(.*?)\s*-\s*Version\s+(\S+)\s*$`)
 //	Red Hat JBoss Enterprise Application Platform - Version 6.4.23.GA
 //	WildFly Full - Version 26.1.3.Final
 func ParseVersionFile(content string) (product string, version string) {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
@@ -596,7 +596,7 @@ type StartupConfig struct {
 func ParseStartupConfig(content string) StartupConfig {
 	res := StartupConfig{JavaOpts: []string{}}
 
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		trimmed := strings.TrimSpace(line)
 		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
 			continue

@@ -16,40 +16,37 @@ import (
 	"go.mondoo.com/mql/providers/os/registry"
 )
 
-func i64(v int64) *int64   { return &v }
-func str(v string) *string { return &v }
-
 func TestHotpatchStateRules(t *testing.T) {
-	pkg := str(HotpatchPackage)
+	pkg := new(HotpatchPackage)
 	cases := []struct {
 		name   string
 		state  HotpatchState
 		client bool
 		want   bool
 	}{
-		{"server enrolled", HotpatchState{EnrollmentPackage: pkg, EnableVirtualizationBasedSecurity: i64(1), HotPatchTableSize: i64(4096)}, false, true},
-		{"server without package", HotpatchState{EnableVirtualizationBasedSecurity: i64(1), HotPatchTableSize: i64(4096)}, false, false},
-		{"server with another package name", HotpatchState{EnrollmentPackage: str("Other"), EnableVirtualizationBasedSecurity: i64(1), HotPatchTableSize: i64(4096)}, false, false},
-		{"server VBS not configured", HotpatchState{EnrollmentPackage: pkg, EnableVirtualizationBasedSecurity: i64(0), HotPatchTableSize: i64(4096)}, false, false},
-		{"server VBS value absent", HotpatchState{EnrollmentPackage: pkg, HotPatchTableSize: i64(4096)}, false, false},
-		{"server table size zero", HotpatchState{EnrollmentPackage: pkg, EnableVirtualizationBasedSecurity: i64(1), HotPatchTableSize: i64(0)}, false, false},
-		{"server table size absent", HotpatchState{EnrollmentPackage: pkg, EnableVirtualizationBasedSecurity: i64(1)}, false, false},
+		{"server enrolled", HotpatchState{EnrollmentPackage: pkg, EnableVirtualizationBasedSecurity: new(int64(1)), HotPatchTableSize: new(int64(4096))}, false, true},
+		{"server without package", HotpatchState{EnableVirtualizationBasedSecurity: new(int64(1)), HotPatchTableSize: new(int64(4096))}, false, false},
+		{"server with another package name", HotpatchState{EnrollmentPackage: new("Other"), EnableVirtualizationBasedSecurity: new(int64(1)), HotPatchTableSize: new(int64(4096))}, false, false},
+		{"server VBS not configured", HotpatchState{EnrollmentPackage: pkg, EnableVirtualizationBasedSecurity: new(int64(0)), HotPatchTableSize: new(int64(4096))}, false, false},
+		{"server VBS value absent", HotpatchState{EnrollmentPackage: pkg, HotPatchTableSize: new(int64(4096))}, false, false},
+		{"server table size zero", HotpatchState{EnrollmentPackage: pkg, EnableVirtualizationBasedSecurity: new(int64(1)), HotPatchTableSize: new(int64(0))}, false, false},
+		{"server table size absent", HotpatchState{EnrollmentPackage: pkg, EnableVirtualizationBasedSecurity: new(int64(1))}, false, false},
 		// the server rule uses the configured VBS value, as before
-		{"server VBS running is not enough", HotpatchState{EnrollmentPackage: pkg, VirtualizationBasedSecurityStatus: i64(2), HotPatchTableSize: i64(4096)}, false, false},
-		{"client configured, VBS running", HotpatchState{AllowRebootlessUpdates: i64(1), VirtualizationBasedSecurityStatus: i64(2)}, true, true},
-		{"client VBS configured but not running", HotpatchState{AllowRebootlessUpdates: i64(1), EnableVirtualizationBasedSecurity: i64(1), VirtualizationBasedSecurityStatus: i64(1)}, true, false},
-		{"client WMI unknown falls back to configured VBS", HotpatchState{AllowRebootlessUpdates: i64(1), EnableVirtualizationBasedSecurity: i64(1)}, true, true},
-		{"client policy off", HotpatchState{AllowRebootlessUpdates: i64(0), VirtualizationBasedSecurityStatus: i64(2)}, true, false},
-		{"client policy absent", HotpatchState{VirtualizationBasedSecurityStatus: i64(2)}, true, false},
-		{"client ignores the server package", HotpatchState{EnrollmentPackage: pkg, EnableVirtualizationBasedSecurity: i64(1), HotPatchTableSize: i64(4096)}, true, false},
+		{"server VBS running is not enough", HotpatchState{EnrollmentPackage: pkg, VirtualizationBasedSecurityStatus: new(int64(2)), HotPatchTableSize: new(int64(4096))}, false, false},
+		{"client configured, VBS running", HotpatchState{AllowRebootlessUpdates: new(int64(1)), VirtualizationBasedSecurityStatus: new(int64(2))}, true, true},
+		{"client VBS configured but not running", HotpatchState{AllowRebootlessUpdates: new(int64(1)), EnableVirtualizationBasedSecurity: new(int64(1)), VirtualizationBasedSecurityStatus: new(int64(1))}, true, false},
+		{"client WMI unknown falls back to configured VBS", HotpatchState{AllowRebootlessUpdates: new(int64(1)), EnableVirtualizationBasedSecurity: new(int64(1))}, true, true},
+		{"client policy off", HotpatchState{AllowRebootlessUpdates: new(int64(0)), VirtualizationBasedSecurityStatus: new(int64(2))}, true, false},
+		{"client policy absent", HotpatchState{VirtualizationBasedSecurityStatus: new(int64(2))}, true, false},
+		{"client ignores the server package", HotpatchState{EnrollmentPackage: pkg, EnableVirtualizationBasedSecurity: new(int64(1)), HotPatchTableSize: new(int64(4096))}, true, false},
 		{"empty state", HotpatchState{}, true, false},
 		// Azure Edition has no enrollment package; the servicing branch is the signal.
-		{"server on the hotpatch branch without package", HotpatchState{ServicingBranch: str("lt_release_svc_hotpatch_prod1")}, false, true},
-		{"server hotpatch branch is case-insensitive", HotpatchState{ServicingBranch: str("LT_Release_SVC_HotPatch_prod1")}, false, true},
-		{"server on the baseline branch without package", HotpatchState{ServicingBranch: str("lt_release_svc_prod1"), EnableVirtualizationBasedSecurity: i64(1), HotPatchTableSize: i64(8192)}, false, false},
-		{"server baseline branch keeps the package rule", HotpatchState{ServicingBranch: str("lt_release_svc_prod1"), EnrollmentPackage: pkg, EnableVirtualizationBasedSecurity: i64(1), HotPatchTableSize: i64(4096)}, false, true},
-		{"server with nil branch and no package", HotpatchState{EnableVirtualizationBasedSecurity: i64(1), HotPatchTableSize: i64(8192)}, false, false},
-		{"client ignores the servicing branch", HotpatchState{ServicingBranch: str("lt_release_svc_hotpatch_prod1")}, true, false},
+		{"server on the hotpatch branch without package", HotpatchState{ServicingBranch: new("lt_release_svc_hotpatch_prod1")}, false, true},
+		{"server hotpatch branch is case-insensitive", HotpatchState{ServicingBranch: new("LT_Release_SVC_HotPatch_prod1")}, false, true},
+		{"server on the baseline branch without package", HotpatchState{ServicingBranch: new("lt_release_svc_prod1"), EnableVirtualizationBasedSecurity: new(int64(1)), HotPatchTableSize: new(int64(8192))}, false, false},
+		{"server baseline branch keeps the package rule", HotpatchState{ServicingBranch: new("lt_release_svc_prod1"), EnrollmentPackage: pkg, EnableVirtualizationBasedSecurity: new(int64(1)), HotPatchTableSize: new(int64(4096))}, false, true},
+		{"server with nil branch and no package", HotpatchState{EnableVirtualizationBasedSecurity: new(int64(1)), HotPatchTableSize: new(int64(8192))}, false, false},
+		{"client ignores the servicing branch", HotpatchState{ServicingBranch: new("lt_release_svc_hotpatch_prod1")}, true, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -65,9 +62,9 @@ func TestHotpatchStateNullSemantics(t *testing.T) {
 	assert.Nil(t, empty.RebootlessUpdatesPolicy())
 
 	st := HotpatchState{
-		AllowRebootlessUpdates:            i64(0),
-		EnableVirtualizationBasedSecurity: i64(1),
-		VirtualizationBasedSecurityStatus: i64(1),
+		AllowRebootlessUpdates:            new(int64(0)),
+		EnableVirtualizationBasedSecurity: new(int64(1)),
+		VirtualizationBasedSecurityStatus: new(int64(1)),
 	}
 	require.NotNil(t, st.VBSRunning())
 	assert.False(t, *st.VBSRunning())

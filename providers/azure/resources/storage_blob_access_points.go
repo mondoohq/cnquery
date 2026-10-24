@@ -276,8 +276,8 @@ func redactEndpoint(endpoint string) string {
 	endpoint, _, _ = strings.Cut(endpoint, "?")
 	endpoint, _, _ = strings.Cut(endpoint, "#")
 	authority, path, hasPath := strings.Cut(endpoint, "/")
-	if i := strings.LastIndex(authority, "@"); i >= 0 {
-		authority = authority[i+1:]
+	if _, after, ok := strings.CutLast(authority, "@"); ok {
+		authority = after
 	}
 	if hasPath {
 		return authority + "/" + path

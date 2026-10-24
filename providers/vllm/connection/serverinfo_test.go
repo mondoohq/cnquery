@@ -212,13 +212,13 @@ func TestEnvBool(t *testing.T) {
 		want  *bool
 	}{
 		{name: "absent", value: nil, want: nil},
-		{name: "json bool", value: true, want: boolPtr(true)},
-		{name: "json false", value: false, want: boolPtr(false)},
-		{name: "numeric one", value: float64(1), want: boolPtr(true)},
-		{name: "numeric zero", value: float64(0), want: boolPtr(false)},
-		{name: "string one", value: "1", want: boolPtr(true)},
-		{name: "string zero", value: "0", want: boolPtr(false)},
-		{name: "string true", value: "True", want: boolPtr(true)},
+		{name: "json bool", value: true, want: new(true)},
+		{name: "json false", value: false, want: new(false)},
+		{name: "numeric one", value: float64(1), want: new(true)},
+		{name: "numeric zero", value: float64(0), want: new(false)},
+		{name: "string one", value: "1", want: new(true)},
+		{name: "string zero", value: "0", want: new(false)},
+		{name: "string true", value: "True", want: new(true)},
 		{name: "empty string", value: "", want: nil},
 		{name: "unparseable string", value: "maybe", want: nil},
 		{name: "unexpected type", value: []any{1}, want: nil},
@@ -299,7 +299,8 @@ func TestServerInfoAbsentRouteIsNotAnError(t *testing.T) {
 	}
 }
 
-func boolPtr(v bool) *bool { return &v }
+//go:fix inline
+func boolPtr(v bool) *bool { return new(v) }
 
 func derefString(v *string) string {
 	if v == nil {

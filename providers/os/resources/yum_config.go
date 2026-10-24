@@ -201,7 +201,7 @@ type yumDirective struct{ key, value string }
 func yumMainDirectives(content string) []yumDirective {
 	res := []yumDirective{}
 	inMain := false
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		// an unquoted "#" starts a comment, as params reads it
 		line, _, _ = strings.Cut(line, "#")
 		line = strings.TrimSpace(line)

@@ -123,8 +123,8 @@ func createLabel(res *llx.CodeBundle, ref uint64, schema resources.ResourcesSche
 		// the parent path in the label (e.g. prevent
 		// "gcp.project.pubsub.gcp.project.pubsubService.topic").
 		short := typeName
-		if idx := strings.LastIndex(typeName, "."); idx >= 0 {
-			short = typeName[idx+1:]
+		if _, after, ok := strings.CutLast(typeName, "."); ok {
+			short = after
 		}
 		// The only emitter of this chunk reaches a resource *through* a binding
 		// (mqlc.go, the implicit-resource branch), so the author always wrote

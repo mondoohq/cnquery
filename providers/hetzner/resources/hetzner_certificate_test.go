@@ -7,6 +7,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
+	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -69,6 +70,18 @@ func TestParseCertificatePEM(t *testing.T) {
 		assert.Equal(t, "Ed25519", got.keyAlgorithm)
 		assert.Equal(t, int64(256), got.keyBits)
 		assert.Equal(t, "Ed25519", got.signatureAlgorithm)
+	})
+
+	// Synthetic: an ML-DSA-65 certificate, which crypto/x509 parses from Go 1.27;
+	// no target showed one.
+	t.Run("ml-dsa-65 self-signed", func(t *testing.T) {
+		pqKey, err := mldsa.GenerateKey(mldsa.MLDSA65())
+		require.NoError(t, err)
+		got := parseCertificatePEM(selfSignedPEM(t, pqKey.Public(), pqKey, "pq.example.com"))
+		assert.Equal(t, "ML-DSA", got.keyAlgorithm)
+		assert.Equal(t, int64(15616), got.keyBits)
+		assert.Equal(t, "ML-DSA-65", got.signatureAlgorithm)
+		assert.True(t, got.selfSigned)
 	})
 
 	t.Run("ca-signed leaf is not self-signed", func(t *testing.T) {

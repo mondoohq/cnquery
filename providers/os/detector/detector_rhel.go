@@ -127,7 +127,7 @@ func getActivatedRhelSupportLevels(conn shared.Connection) []string {
 			if supportLevel == "" {
 				continue
 			}
-			if subFieldsMap, ok := fields.(map[string]interface{}); ok {
+			if subFieldsMap, ok := fields.(map[string]any); ok {
 				if enabled, ok := subFieldsMap["enabled"]; ok {
 					if v, ok := enabled.(string); ok && v == "1" {
 						supportLevels = append(supportLevels, supportLevel)

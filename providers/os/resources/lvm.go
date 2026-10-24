@@ -244,7 +244,7 @@ func isLvmReportFormatUnsupported(stderr string) bool {
 //	LVM2_VG_NAME='vg0' LVM2_VG_UUID='MZMDJ9-...' LVM2_PV_COUNT='1'
 func lvmNamePrefixedToJSON(stdout, key string) (string, error) {
 	rows := []map[string]string{}
-	for _, line := range strings.Split(stdout, "\n") {
+	for line := range strings.SplitSeq(stdout, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue

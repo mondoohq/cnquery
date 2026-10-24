@@ -87,8 +87,8 @@ type KernelVersion struct {
 // concatenates a non-zero / non-"(none)" epoch into pkg.Version, so this
 // matters whenever the underlying kernel rpm declares an Epoch.
 func stripRPMEpoch(version string) string {
-	if idx := strings.IndexByte(version, ':'); idx >= 0 {
-		return version[idx+1:]
+	if _, after, ok := strings.Cut(version, ":"); ok {
+		return after
 	}
 	return version
 }
@@ -487,11 +487,11 @@ func mageiaKernelMatchesRunning(pkgVersion, pkgName, runningKernelVersion string
 		return version == runningKernelVersion
 	}
 
-	i := strings.LastIndex(version, "-")
-	if i < 0 {
+	before, after, ok := strings.CutLast(version, "-")
+	if !ok {
 		return false
 	}
-	return version[:i]+"-"+flavor+"-"+version[i+1:] == runningKernelVersion
+	return before+"-"+flavor+"-"+after == runningKernelVersion
 }
 
 // photonKernelVersion reads a Photon kernel package, whose flavor lives in
@@ -633,11 +633,11 @@ func alpineKernelMatchesRunning(pkgVersion, pkgName, runningKernelVersion string
 	}
 	running := strings.TrimSuffix(runningKernelVersion, flavor)
 
-	i := strings.LastIndex(pkgVersion, "-r")
-	if i < 0 {
+	before, after, ok := strings.CutLast(pkgVersion, "-r")
+	if !ok {
 		return false
 	}
-	return running == pkgVersion[:i]+"-"+pkgVersion[i+2:]
+	return running == before+"-"+after
 }
 
 // kernelFilterForPlatform picks the filter that knows how this platform's

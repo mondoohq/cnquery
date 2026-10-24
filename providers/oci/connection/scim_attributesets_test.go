@@ -113,7 +113,7 @@ func TestCollapseScimAttributeSetsSurvivesAnEmptyRequest(t *testing.T) {
 // no-op.
 func TestScimListingEmitsRepeatedAttributeSets(t *testing.T) {
 	request := identitydomains.ListUsersRequest{
-		Count: common.Int(200),
+		Count: new(200),
 		AttributeSets: []identitydomains.AttributeSetsEnum{
 			identitydomains.AttributeSetsDefault,
 			identitydomains.AttributeSetsRequest,

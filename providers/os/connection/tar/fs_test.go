@@ -558,10 +558,10 @@ func BenchmarkTarWalk(b *testing.B) {
 	for _, dir := range []string{"/usr", "/usr/share", "/usr/share/nodejs"} {
 		fs.FileMap[dir] = &archivetar.Header{Name: dir[1:], Typeflag: archivetar.TypeDir, Mode: 0o755}
 	}
-	for d := 0; d < 2000; d++ {
+	for d := range 2000 {
 		dir := fmt.Sprintf("/usr/share/nodejs/pkg%d", d)
 		fs.FileMap[dir] = &archivetar.Header{Name: dir[1:], Typeflag: archivetar.TypeDir, Mode: 0o755}
-		for f := 0; f < 20; f++ {
+		for f := range 20 {
 			p := fmt.Sprintf("/usr/share/nodejs/pkg%d/file%d.js", d, f)
 			fs.FileMap[p] = &archivetar.Header{Name: p[1:], Typeflag: archivetar.TypeReg, Mode: 0o644}
 		}

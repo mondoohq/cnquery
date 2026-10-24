@@ -174,7 +174,7 @@ func (h *hiveFile) childrenOf(nk regf.Key) *keyChildren {
 // missing, and an error when a key on the path cannot be read.
 func (h *hiveFile) openKey(keyPath string) (regf.Key, bool, error) {
 	nk := h.root
-	for _, part := range strings.Split(keyPath, "\\") {
+	for part := range strings.SplitSeq(keyPath, "\\") {
 		if part == "" {
 			continue
 		}

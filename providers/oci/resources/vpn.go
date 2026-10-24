@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -35,7 +34,7 @@ func (o *mqlOciNetwork) cpes() ([]any, error) {
 
 			cpes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Cpe, *string, error) {
 				response, err := svc.ListCpes(ctx, core.ListCpesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -135,7 +134,7 @@ func (o *mqlOciNetwork) ipsecConnections() ([]any, error) {
 
 			conns, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.IpSecConnection, *string, error) {
 				response, err := svc.ListIPSecConnections(ctx, core.ListIPSecConnectionsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -260,7 +259,7 @@ func (o *mqlOciNetworkIpsecConnection) tunnels() ([]any, error) {
 
 	tunnels, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.IpSecConnectionTunnel, *string, error) {
 		response, err := svc.ListIPSecConnectionTunnels(ctx, core.ListIPSecConnectionTunnelsRequest{
-			IpscId: common.String(o.Id.Data),
+			IpscId: new(o.Id.Data),
 			Page:   page,
 		})
 		if err != nil {
@@ -345,8 +344,8 @@ func (o *mqlOciNetworkIpsecConnectionTunnel) fetchDetails() error {
 			return err
 		}
 		resp, err := svc.GetIPSecConnectionTunnel(context.Background(), core.GetIPSecConnectionTunnelRequest{
-			IpscId:   common.String(o.cacheIpscID),
-			TunnelId: common.String(o.Id.Data),
+			IpscId:   new(o.cacheIpscID),
+			TunnelId: new(o.Id.Data),
 		})
 		if err != nil {
 			return err
@@ -705,7 +704,7 @@ func (o *mqlOciNetwork) virtualCircuits() ([]any, error) {
 
 			vcs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.VirtualCircuit, *string, error) {
 				response, err := svc.ListVirtualCircuits(ctx, core.ListVirtualCircuitsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -846,7 +845,7 @@ func (o *mqlOciNetwork) crossConnects() ([]any, error) {
 
 			xcs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.CrossConnect, *string, error) {
 				response, err := svc.ListCrossConnects(ctx, core.ListCrossConnectsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {

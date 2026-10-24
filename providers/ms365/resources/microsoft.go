@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"maps"
 	"sync"
 
 	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
@@ -130,12 +131,8 @@ func (c *batchFieldCache) resolve(
 		for _, id := range todo {
 			c.loaded[id] = true
 		}
-		for id, v := range data {
-			c.data[id] = v
-		}
-		for id, e := range errs {
-			c.errs[id] = e
-		}
+		maps.Copy(c.data, data)
+		maps.Copy(c.errs, errs)
 	}
 	if e := c.errs[key]; e != nil {
 		return nil, e

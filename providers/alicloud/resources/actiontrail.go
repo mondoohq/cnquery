@@ -47,7 +47,7 @@ func (r *mqlAlicloudActiontrail) trails() ([]any, error) {
 	}
 
 	resp, err := client.DescribeTrails(&actiontrailclient.DescribeTrailsRequest{
-		IncludeOrganizationTrail: tea.Bool(true),
+		IncludeOrganizationTrail: new(true),
 	})
 	if err != nil {
 		return nil, err
@@ -155,8 +155,8 @@ func (r *mqlAlicloudActiontrailTrail) trailStatus() (*actiontrailclient.GetTrail
 		return nil, err
 	}
 	resp, err := client.GetTrailStatus(&actiontrailclient.GetTrailStatusRequest{
-		Name:                tea.String(r.Name.Data),
-		IsOrganizationTrail: tea.Bool(r.IsOrganizationTrail.Data),
+		Name:                new(r.Name.Data),
+		IsOrganizationTrail: new(r.IsOrganizationTrail.Data),
 	})
 	if err != nil {
 		// Surface the failure so operators can tell a genuinely non-logging

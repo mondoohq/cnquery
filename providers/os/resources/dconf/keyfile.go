@@ -135,7 +135,7 @@ func ParseLocks(r io.Reader) ([]string, error) {
 		return nil, err
 	}
 	var res []string
-	for _, line := range strings.Split(string(b), "\n") {
+	for line := range strings.SplitSeq(string(b), "\n") {
 		if strings.HasPrefix(line, "/") {
 			res = append(res, line)
 		}

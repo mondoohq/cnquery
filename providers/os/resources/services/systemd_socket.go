@@ -312,8 +312,8 @@ func ParseListenProperty(listen string) []string {
 		}
 
 		// Simple format: "<address> (<type>)"
-		if idx := strings.LastIndex(line, " ("); idx > 0 {
-			addresses = append(addresses, strings.TrimSpace(line[:idx]))
+		if before, _, ok := strings.CutLast(line, " ("); ok && before != "" {
+			addresses = append(addresses, strings.TrimSpace(before))
 		} else {
 			addresses = append(addresses, line)
 		}

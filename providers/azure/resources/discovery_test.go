@@ -10,7 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -323,9 +322,9 @@ func TestAssetsForSubscription(t *testing.T) {
 func TestSubToAsset_SetsSubscriptionLabel(t *testing.T) {
 	asset := subToAsset(subWithConfig{
 		sub: subscriptions.Subscription{
-			SubscriptionID: to.Ptr("sub-1"),
-			DisplayName:    to.Ptr("My Sub"),
-			TenantID:       to.Ptr("tenant-1"),
+			SubscriptionID: new("sub-1"),
+			DisplayName:    new("My Sub"),
+			TenantID:       new("tenant-1"),
 		},
 		conf: &inventory.Config{},
 	})
@@ -334,8 +333,8 @@ func TestSubToAsset_SetsSubscriptionLabel(t *testing.T) {
 
 func TestApplySubscriptionTags_Override(t *testing.T) {
 	subs := []subWithConfig{
-		{sub: subscriptions.Subscription{SubscriptionID: to.Ptr("sub-1")}},
-		{sub: subscriptions.Subscription{SubscriptionID: to.Ptr("sub-2")}},
+		{sub: subscriptions.Subscription{SubscriptionID: new("sub-1")}},
+		{sub: subscriptions.Subscription{SubscriptionID: new("sub-2")}},
 	}
 	assets := []*inventory.Asset{
 		{Name: "vm1", Labels: map[string]string{SubscriptionLabel: "sub-1"}},
@@ -356,10 +355,10 @@ func TestApplySubscriptionTags_FromListedSubscription(t *testing.T) {
 	// pager already returned, so no extra per-subscription API call is made.
 	subs := []subWithConfig{
 		{sub: subscriptions.Subscription{
-			SubscriptionID: to.Ptr("sub-1"),
-			Tags:           map[string]*string{"owner": to.Ptr("alice"), "env": to.Ptr("prod")},
+			SubscriptionID: new("sub-1"),
+			Tags:           map[string]*string{"owner": new("alice"), "env": new("prod")},
 		}},
-		{sub: subscriptions.Subscription{SubscriptionID: to.Ptr("sub-2")}}, // no tags
+		{sub: subscriptions.Subscription{SubscriptionID: new("sub-2")}}, // no tags
 	}
 	assets := []*inventory.Asset{
 		{Name: "vm1", Labels: map[string]string{SubscriptionLabel: "sub-1"}},

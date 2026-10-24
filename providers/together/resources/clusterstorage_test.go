@@ -38,8 +38,8 @@ const volumesFixture = `{
 type storageStub struct {
 	projectFilter  string
 	filterWasSent  bool
-	listCalls      int32
-	whoamiCalls    int32
+	listCalls      atomic.Int32
+	whoamiCalls    atomic.Int32
 	whoamiStatus   int
 	whoamiResponse string
 }
@@ -50,12 +50,12 @@ func newStorageTogether(t *testing.T, cliProject string, stub *storageStub) *mql
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/whoami"):
-			atomic.AddInt32(&stub.whoamiCalls, 1)
+			stub.whoamiCalls.Add(1)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(stub.whoamiStatus)
 			_, _ = w.Write([]byte(stub.whoamiResponse))
 		case strings.HasSuffix(r.URL.Path, "/storage/volumes"):
-			atomic.AddInt32(&stub.listCalls, 1)
+			stub.listCalls.Add(1)
 			stub.projectFilter = r.URL.Query().Get("projectId")
 			_, stub.filterWasSent = r.URL.Query()["projectId"]
 			w.Header().Set("Content-Type", "application/json")
@@ -138,7 +138,7 @@ func TestClusterStorageFailsClosedWhenIdentityIsUnavailable(t *testing.T) {
 
 	_, err := r.clusterStorageVolumes()
 	assert.Error(t, err)
-	assert.Zero(t, atomic.LoadInt32(&stub.listCalls), "volumes were listed unfiltered after the identity lookup failed")
+	assert.Zero(t, stub.listCalls.Load(), "volumes were listed unfiltered after the identity lookup failed")
 }
 
 // The identity is fetched once for the whole resource, so scoping the list does
@@ -153,6 +153,6 @@ func TestClusterStorageReusesTheMemoizedIdentity(t *testing.T) {
 	_, err = r.clusterStorageVolumes()
 	require.NoError(t, err)
 
-	assert.Equal(t, int32(1), atomic.LoadInt32(&stub.whoamiCalls),
+	assert.Equal(t, int32(1), stub.whoamiCalls.Load(),
 		"scoping the list call cost a second identity round trip")
 }

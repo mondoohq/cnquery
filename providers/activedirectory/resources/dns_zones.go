@@ -26,7 +26,7 @@ func classifyZoneType(zoneName string) string {
 	return "Primary"
 }
 
-func (a *mqlActivedirectory) dnsZones() ([]interface{}, error) {
+func (a *mqlActivedirectory) dnsZones() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 
 	domainDN := conn.DomainDnsZonesDN()
@@ -77,7 +77,7 @@ func (a *mqlActivedirectory) dnsZones() ([]interface{}, error) {
 		}
 	}
 
-	res := make([]interface{}, 0, len(allEntries))
+	res := make([]any, 0, len(allEntries))
 	for _, entry := range allEntries {
 		name := connection.GetStringAttr(entry, "name")
 		dn := connection.GetStringAttr(entry, "distinguishedName")

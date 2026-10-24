@@ -82,7 +82,7 @@ func mariadbUserSchema(version string) userSchema {
 func majorMinor(v string) (int, int) {
 	var nums [2]int
 	i := 0
-	for n := 0; n < 2; n++ {
+	for n := range 2 {
 		start := i
 		for i < len(v) && v[i] >= '0' && v[i] <= '9' {
 			i++

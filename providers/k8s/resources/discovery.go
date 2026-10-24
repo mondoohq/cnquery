@@ -162,9 +162,7 @@ func addDistroMetadata(conn shared.Connection, in *inventory.Inventory) {
 		if a.Platform.Metadata == nil {
 			a.Platform.Metadata = map[string]string{}
 		}
-		for k, v := range d.PlatformMetadata() {
-			a.Platform.Metadata[k] = v
-		}
+		maps.Copy(a.Platform.Metadata, d.PlatformMetadata())
 	}
 }
 
@@ -1650,8 +1648,8 @@ func (f *ResourceFilters) Match(typ, name, namespace string) bool {
 func resourceFilters(cfg *inventory.Config) (*ResourceFilters, error) {
 	resourcesFilter := &ResourceFilters{identifiers: make(map[string][]K8sResourceIdentifier)}
 	if fOpt, ok := cfg.Options["k8s-resources"]; ok {
-		fs := strings.Split(fOpt, ",")
-		for _, f := range fs {
+		fs := strings.SplitSeq(fOpt, ",")
+		for f := range fs {
 			ids := strings.Split(strings.TrimSpace(f), ":")
 			resType := ids[0]
 			var ns, name string

@@ -14,12 +14,12 @@ import (
 // benchTree builds a directory tree on disk, the shape a node scan walks.
 func benchTree(tb testing.TB, dirs, filesPerDir int) string {
 	root := tb.TempDir()
-	for d := 0; d < dirs; d++ {
+	for d := range dirs {
 		dir := filepath.Join(root, "dir"+strconv.Itoa(d))
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			tb.Fatal(err)
 		}
-		for f := 0; f < filesPerDir; f++ {
+		for f := range filesPerDir {
 			name := filepath.Join(dir, "file"+strconv.Itoa(f)+".conf")
 			if err := os.WriteFile(name, []byte("x"), 0o644); err != nil {
 				tb.Fatal(err)

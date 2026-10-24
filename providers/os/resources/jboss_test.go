@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"maps"
 	"os"
 	"path"
 	"testing"
@@ -63,9 +64,7 @@ func jbossMockInstall(t *testing.T, extra map[string]*mock.MockFileData) *mqlJbo
 		jbossTestHome + "/jboss-modules.jar": jbossFile("jar"),
 		jbossTestHome + "/bin":               jbossDir(),
 	}
-	for path, file := range extra {
-		files[path] = file
-	}
+	maps.Copy(files, extra)
 
 	raw, err := CreateResource(jbossMockRuntime(t, files), "jboss", map[string]*llx.RawData{})
 	require.NoError(t, err)
@@ -299,9 +298,7 @@ func TestJbossRealmUsersEmptyVersusAbsent(t *testing.T) {
 
 	t.Run("present but empty", func(t *testing.T) {
 		files := map[string]*mock.MockFileData{}
-		for k, v := range base {
-			files[k] = v
-		}
+		maps.Copy(files, base)
 		files[jbossTestHome+"/standalone/configuration/mgmt-users.properties"] = jbossFile(
 			"#\n# no users have been added\n#\n")
 
@@ -331,9 +328,7 @@ func TestJbossSecurityManager(t *testing.T) {
 
 	t.Run("commented out", func(t *testing.T) {
 		files := map[string]*mock.MockFileData{}
-		for k, v := range standalone {
-			files[k] = v
-		}
+		maps.Copy(files, standalone)
 		files[jbossTestHome+"/bin/standalone.conf"] = jbossFile(
 			"# Uncomment this to run with a security manager enabled\n# SECMGR=\"true\"\n" +
 				"JAVA_OPTS=\"-Xms1303m -Djava.net.preferIPv4Stack=true\"\n")
@@ -346,9 +341,7 @@ func TestJbossSecurityManager(t *testing.T) {
 
 	t.Run("turned on", func(t *testing.T) {
 		files := map[string]*mock.MockFileData{}
-		for k, v := range standalone {
-			files[k] = v
-		}
+		maps.Copy(files, standalone)
 		files[jbossTestHome+"/bin/standalone.conf"] = jbossFile(
 			"SECMGR=\"true\"\nJAVA_OPTS=\"$JAVA_OPTS -Djava.security.policy==/opt/eap/bin/server.policy\"\n")
 

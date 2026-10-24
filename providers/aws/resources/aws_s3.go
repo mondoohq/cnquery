@@ -549,10 +549,8 @@ func isFalseConditionValue(v any) bool {
 	case string:
 		return strings.EqualFold(val, "false")
 	case []any:
-		for _, item := range val {
-			if isFalseConditionValue(item) {
-				return true
-			}
+		if slices.ContainsFunc(val, isFalseConditionValue) {
+			return true
 		}
 	}
 	return false

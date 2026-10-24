@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"errors"
+	"maps"
 	"os"
 	"slices"
 
@@ -95,9 +96,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 	conf.Discover = &inventory.Discovery{Targets: discoverTargets}
 
-	for k, v := range parseFlagsToFiltersOpts(flags) {
-		conf.Options[k] = v
-	}
+	maps.Copy(conf.Options, parseFlagsToFiltersOpts(flags))
 
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{conf},

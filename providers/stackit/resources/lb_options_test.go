@@ -86,8 +86,8 @@ func TestPoolHealthCheckTls(t *testing.T) {
 
 	t.Run("tls on, validation skipped", func(t *testing.T) {
 		enabled, skip := poolHealthCheckTls(decode(`{"name": "p", "activeHealthCheck": {"httpHealthChecks": {"path": "/healthz", "tls": {"enabled": true, "skipCertificateValidation": true}}}}`))
-		assertBoolPtr(t, "healthCheckTlsEnabled", enabled, boolPtr(true))
-		assertBoolPtr(t, "healthCheckSkipCertificateValidation", skip, boolPtr(true))
+		assertBoolPtr(t, "healthCheckTlsEnabled", enabled, new(true))
+		assertBoolPtr(t, "healthCheckSkipCertificateValidation", skip, new(true))
 	})
 	t.Run("tls block omitted reads null", func(t *testing.T) {
 		enabled, skip := poolHealthCheckTls(decode(`{"name": "p", "activeHealthCheck": {"httpHealthChecks": {"path": "/healthz"}}}`))
@@ -100,7 +100,7 @@ func TestPoolHealthCheckTls(t *testing.T) {
 		assertBoolPtr(t, "healthCheckSkipCertificateValidation", skip, nil)
 	})
 	t.Run("session persistence", func(t *testing.T) {
-		assertBoolPtr(t, "sessionPersistenceSourceIp", poolSessionPersistenceSourceIp(decode(`{"name": "p", "sessionPersistence": {"useSourceIpAddress": true}}`)), boolPtr(true))
+		assertBoolPtr(t, "sessionPersistenceSourceIp", poolSessionPersistenceSourceIp(decode(`{"name": "p", "sessionPersistence": {"useSourceIpAddress": true}}`)), new(true))
 		assertBoolPtr(t, "sessionPersistenceSourceIp absent", poolSessionPersistenceSourceIp(decode(`{"name": "p"}`)), nil)
 	})
 	t.Run("nil pool", func(t *testing.T) {

@@ -5,6 +5,7 @@ package ansibleinventory
 
 import (
 	"errors"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -128,12 +129,7 @@ func (inventory *Inventory) List(groups ...string) []*Host {
 	list := inventory.All.Children
 	if len(groups) > 0 {
 		list = Filter(list, func(x string) bool {
-			for i := range groups {
-				if groups[i] == x {
-					return true
-				}
-			}
-			return false
+			return slices.Contains(groups, x)
 		})
 	}
 

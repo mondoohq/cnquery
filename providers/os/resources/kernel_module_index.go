@@ -43,10 +43,10 @@ func moduleNameFromPath(p string) string {
 // underscore spelling resolves.
 func parseModulesDep(content string) map[string]bool {
 	out := map[string]bool{}
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		lhs := line
-		if i := strings.IndexByte(line, ':'); i >= 0 {
-			lhs = line[:i]
+		if before, _, ok := strings.Cut(line, ":"); ok {
+			lhs = before
 		}
 		if strings.TrimSpace(lhs) == "" {
 			continue
@@ -63,7 +63,7 @@ func parseModulesDep(content string) map[string]bool {
 // parseModulesDep.
 func parseModulesBuiltin(content string) map[string]bool {
 	out := map[string]bool{}
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		if strings.TrimSpace(line) == "" {
 			continue
 		}

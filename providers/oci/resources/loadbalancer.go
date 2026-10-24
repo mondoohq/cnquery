@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/loadbalancer"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -42,7 +41,7 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 
 			lbs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]loadbalancer.LoadBalancer, *string, error) {
 				response, err := svc.ListLoadBalancers(ctx, loadbalancer.ListLoadBalancersRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {

@@ -166,7 +166,7 @@ func TestNewPackage2CpeWFNizeError(t *testing.T) {
 // happened to visit first, so the same input reported a different field from
 // run to run; the fixed array makes it the first field in order.
 func TestNewPackage2CpeWFNizeErrorIsDeterministic(t *testing.T) {
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		_, err := NewPackage2Cpe(`v\*endor`, `n\*ame`, `1\*.2`, "", "x86_64")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "couldn't wfnize vendor ")

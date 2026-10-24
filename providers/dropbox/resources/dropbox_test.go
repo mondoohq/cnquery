@@ -13,11 +13,11 @@ import (
 )
 
 func sharedFolderPolicy(tag string) *team_policies.SharedFolderMemberPolicy {
-	return &team_policies.SharedFolderMemberPolicy{Tagged: dropboxsdk.Tagged{Tag: tag}}
+	return &team_policies.SharedFolderMemberPolicy{Tag: tag}
 }
 
 func sharedLinkPolicy(tag string) *team_policies.SharedLinkCreatePolicy {
-	return &team_policies.SharedLinkCreatePolicy{Tagged: dropboxsdk.Tagged{Tag: tag}}
+	return &team_policies.SharedLinkCreatePolicy{Tag: tag}
 }
 
 func TestDeriveSharingPolicies(t *testing.T) {

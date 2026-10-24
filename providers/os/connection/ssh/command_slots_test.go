@@ -79,14 +79,12 @@ func runConcurrently(t *testing.T, c *Connection, commands ...string) {
 	var wg sync.WaitGroup
 	for range 12 {
 		for _, cmd := range commands {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				_, err := c.RunCommand(cmd)
 				// assert, not require: FailNow must not run outside the
 				// test's goroutine
 				assert.NoError(t, err)
-			}()
+			})
 		}
 	}
 	wg.Wait()

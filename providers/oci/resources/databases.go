@@ -8,7 +8,6 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/goldengate"
 	"github.com/oracle/oci-go-sdk/v65/mysql"
 	"github.com/oracle/oci-go-sdk/v65/nosql"
@@ -78,7 +77,7 @@ func (o *mqlOciMysql) dbSystems() ([]any, error) {
 
 			systems, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]mysql.DbSystemSummary, *string, error) {
 				response, err := client.ListDbSystems(ctx, mysql.ListDbSystemsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -212,7 +211,7 @@ func (o *mqlOciMysqlDbSystem) getDetail() (*mysql.DbSystem, error) {
 		}
 
 		response, err := client.GetDbSystem(context.Background(), mysql.GetDbSystemRequest{
-			DbSystemId: common.String(o.Id.Data),
+			DbSystemId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -315,7 +314,7 @@ func (o *mqlOciPostgresql) dbSystems() ([]any, error) {
 
 			systems, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]psql.DbSystemSummary, *string, error) {
 				response, err := client.ListDbSystems(ctx, psql.ListDbSystemsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -389,7 +388,7 @@ func (o *mqlOciPostgresqlDbSystem) getDetail() (*psql.DbSystem, error) {
 		}
 
 		response, err := client.GetDbSystem(context.Background(), psql.GetDbSystemRequest{
-			DbSystemId: common.String(o.Id.Data),
+			DbSystemId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -507,7 +506,7 @@ func (o *mqlOciNosql) tables() ([]any, error) {
 
 			tables, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]nosql.TableSummary, *string, error) {
 				response, err := client.ListTables(ctx, nosql.ListTablesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -615,7 +614,7 @@ func (o *mqlOciOpensearch) clusters() ([]any, error) {
 
 			clusters, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]opensearch.OpensearchClusterSummary, *string, error) {
 				response, err := client.ListOpensearchClusters(ctx, opensearch.ListOpensearchClustersRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -730,7 +729,7 @@ func (o *mqlOciOpensearchCluster) getDetail() (*opensearch.OpensearchCluster, er
 		}
 
 		response, err := client.GetOpensearchCluster(context.Background(), opensearch.GetOpensearchClusterRequest{
-			OpensearchClusterId: common.String(o.Id.Data),
+			OpensearchClusterId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -1019,7 +1018,7 @@ func (o *mqlOciGoldenGate) deployments() ([]any, error) {
 
 			deployments, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]goldengate.DeploymentSummary, *string, error) {
 				response, err := client.ListDeployments(ctx, goldengate.ListDeploymentsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -1122,7 +1121,7 @@ func (o *mqlOciGoldenGateDeployment) getDetail() (*goldengate.Deployment, error)
 		}
 
 		response, err := client.GetDeployment(context.Background(), goldengate.GetDeploymentRequest{
-			DeploymentId: common.String(o.Id.Data),
+			DeploymentId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err

@@ -72,7 +72,7 @@ func parseShellProbe(stdout string) remoteShell {
 	}
 	// the last line that is not empty is what the second part printed
 	var last string
-	for _, line := range strings.Split(stdout, "\n") {
+	for line := range strings.SplitSeq(stdout, "\n") {
 		if line = strings.TrimSpace(line); line != "" {
 			last = line
 		}
@@ -242,17 +242,6 @@ var directExitCheckUTF16 = func() []byte {
 	}
 	return b
 }()
-
-// runPowershellDirect runs command in the server's PowerShell when it is an
-// encoded Windows PowerShell script and the server's shell is Windows
-// PowerShell. ok is false when the command is not one, and the caller runs it
-// as it is; err is then always nil. When ok is true, res and err are what
-// running the command returned, exactly as runRaw returns them for a command
-// that is not rewritten: err is the command failing to run, and res may be
-// nil with it.
-func (c *Connection) runPowershellDirect(command string) (*shared.Command, bool, error) {
-	return c.runPowershellDirectContext(context.Background(), command)
-}
 
 func (c *Connection) runPowershellDirectContext(ctx context.Context, command string) (*shared.Command, bool, error) {
 	direct, ok := directPowershell(command)

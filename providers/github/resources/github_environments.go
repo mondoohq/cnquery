@@ -5,6 +5,7 @@ package resources
 
 import (
 	"encoding/json"
+	"maps"
 	"strconv"
 	"strings"
 
@@ -66,7 +67,7 @@ func (g *mqlGithubRepository) environments() ([]any, error) {
 	}
 
 	opts := &github.EnvironmentListOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 
 	var allEnvironments []*github.Environment
@@ -121,9 +122,7 @@ func environmentsToMql(runtime *plugin.Runtime, ownerLogin, repoName string, rep
 					if reviewerData, err := json.Marshal(reviewer.Reviewer); err == nil {
 						var reviewerMap map[string]any
 						if json.Unmarshal(reviewerData, &reviewerMap) == nil {
-							for k, v := range reviewerMap {
-								reviewerDict[k] = v
-							}
+							maps.Copy(reviewerDict, reviewerMap)
 						}
 					}
 				}
@@ -185,7 +184,7 @@ func (g *mqlGithubRepository) deployments() ([]any, error) {
 	}
 
 	opts := &github.DeploymentsListOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 
 	var allDeployments []*github.Deployment

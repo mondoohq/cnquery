@@ -158,13 +158,13 @@ func createMqlResources(runtime *plugin.Runtime, filePath string, resources []pa
 // first `{` and the final `}`, leaving the top-level field block that
 // parseBicepObject expects. Returns "" when no braces are present.
 func resourceBodyInner(body string) string {
-	open := strings.IndexByte(body, '{')
-	if open < 0 {
+	_, after, ok := strings.Cut(body, "{")
+	if !ok {
 		return ""
 	}
-	inner := body[open+1:]
-	if close := strings.LastIndexByte(inner, '}'); close >= 0 {
-		inner = inner[:close]
+	inner := after
+	if before, _, ok := strings.CutLast(inner, "}"); ok {
+		inner = before
 	}
 	return inner
 }

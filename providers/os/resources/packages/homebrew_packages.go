@@ -579,8 +579,8 @@ func installedAsDependency(reported *bool, onRequest bool) bool {
 func deriveBrewPrefix(brewPath string) string {
 	// /opt/homebrew/bin/brew -> /opt/homebrew
 	// /usr/local/bin/brew -> /usr/local
-	if idx := strings.LastIndex(brewPath, "/bin/brew"); idx != -1 {
-		return brewPath[:idx]
+	if before, _, ok := strings.CutLast(brewPath, "/bin/brew"); ok {
+		return before
 	}
 	return "/opt/homebrew" // default
 }

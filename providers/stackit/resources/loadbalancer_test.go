@@ -24,8 +24,8 @@ func TestAlbDisableTargetSecurityGroupAssignmentAbsentIsNull(t *testing.T) {
 		want    *bool
 	}{
 		{"flag absent reads null", `{"name":"alb1"}`, nil},
-		{"operator opted out", `{"name":"alb1","disableTargetSecurityGroupAssignment":true}`, boolPtr(true)},
-		{"managed group attached", `{"name":"alb1","disableTargetSecurityGroupAssignment":false}`, boolPtr(false)},
+		{"operator opted out", `{"name":"alb1","disableTargetSecurityGroupAssignment":true}`, new(true)},
+		{"managed group attached", `{"name":"alb1","disableTargetSecurityGroupAssignment":false}`, new(false)},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -78,12 +78,12 @@ func TestLbDisableTargetSecurityGroupAssignment(t *testing.T) {
 		{
 			name:    "operator opted out, so backends carry only hand-attached groups",
 			payload: `{"name":"lb1","disableTargetSecurityGroupAssignment":true}`,
-			want:    boolPtr(true),
+			want:    new(true),
 		},
 		{
 			name:    "managed target group is attached",
 			payload: `{"name":"lb1","disableTargetSecurityGroupAssignment":false}`,
-			want:    boolPtr(false),
+			want:    new(false),
 		},
 	}
 	for _, tc := range cases {

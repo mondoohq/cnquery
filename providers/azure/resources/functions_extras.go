@@ -208,8 +208,7 @@ func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) connectionStrings() ([
 // app-settings/connection-strings endpoints require explicit permissions
 // (Microsoft.Web/sites/config/list/action) that the audit role may lack.
 func isFunctionAppForbiddenError(err error) bool {
-	var rerr *azcore.ResponseError
-	if errors.As(err, &rerr) {
+	if rerr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 		return rerr.StatusCode == http.StatusForbidden
 	}
 	return false

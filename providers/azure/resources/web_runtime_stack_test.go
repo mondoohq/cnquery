@@ -19,8 +19,8 @@ import (
 // every minor version of every stack was skipped, and availableRuntimes
 // returned an empty list on every subscription.
 func TestRuntimeSettingsForPreferredOs(t *testing.T) {
-	linux := &web.WebAppRuntimeSettings{RuntimeVersion: strPtr("NODE|18-lts")}
-	windows := &web.WebAppRuntimeSettings{RuntimeVersion: strPtr("ASPNET|v4.8")}
+	linux := &web.WebAppRuntimeSettings{RuntimeVersion: new("NODE|18-lts")}
+	windows := &web.WebAppRuntimeSettings{RuntimeVersion: new("ASPNET|v4.8")}
 	settings := &web.WebAppRuntimes{LinuxRuntimeSettings: linux, WindowsRuntimeSettings: windows}
 
 	got, os := runtimeSettingsForPreferredOs(webOsPtr(web.StackPreferredOsLinux), settings)
@@ -108,7 +108,8 @@ func TestRuntimeStackDescriptorIDIsTheRuntimeVersion(t *testing.T) {
 	assert.NotNil(t, runtimeStackDescriptorFromResource(nil))
 }
 
-func webOsPtr(v web.StackPreferredOs) *web.StackPreferredOs { return &v }
+//go:fix inline
+func webOsPtr(v web.StackPreferredOs) *web.StackPreferredOs { return new(v) }
 
 func setString(v string) plugin.TValue[string] {
 	return plugin.TValue[string]{Data: v, State: plugin.StateIsSet}

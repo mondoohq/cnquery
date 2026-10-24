@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/networkloadbalancer"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -35,7 +34,7 @@ func (o *mqlOciNetworkLoadBalancer) loadBalancers() ([]any, error) {
 
 			nlbs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkloadbalancer.NetworkLoadBalancerSummary, *string, error) {
 				response, err := client.ListNetworkLoadBalancers(ctx, networkloadbalancer.ListNetworkLoadBalancersRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {

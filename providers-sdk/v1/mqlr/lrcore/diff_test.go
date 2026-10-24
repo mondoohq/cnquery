@@ -235,7 +235,7 @@ func TestDiffIsStableAndNilSafe(t *testing.T) {
 	nu := schemaWith(bucket(map[string]*resources.Field{}))
 
 	first := DiffSchemas(old, nu)
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		assert.Equal(t, first, DiffSchemas(old, nu), "output must not depend on map order")
 	}
 	require.Len(t, first, 2)

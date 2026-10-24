@@ -324,7 +324,7 @@ func isHotpatchEligibleClientEdition(title string) bool {
 	}
 	// Pro family ("Pro", "Pro for Workstations", "Professional"): match on whole
 	// words so unrelated titles containing "pro" as a substring do not qualify.
-	for _, w := range strings.Fields(t) {
+	for w := range strings.FieldsSeq(t) {
 		if w == "pro" || w == "professional" {
 			return true
 		}

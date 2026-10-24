@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"slices"
 	"sort"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -233,10 +234,8 @@ func dictReferencesAzureKeyVaultSecret(v any) bool {
 			}
 		}
 	case []any:
-		for _, child := range t {
-			if dictReferencesAzureKeyVaultSecret(child) {
-				return true
-			}
+		if slices.ContainsFunc(t, dictReferencesAzureKeyVaultSecret) {
+			return true
 		}
 	}
 	return false
@@ -490,8 +489,7 @@ func (a *mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork) pri
 // treat as an empty list rather than fatal — common when scanning a subscription
 // where some factories are read-only or in a different RBAC scope.
 func isFactoryAccessDeniedError(err error) bool {
-	var rerr *azcore.ResponseError
-	if errors.As(err, &rerr) {
+	if rerr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 		return rerr.StatusCode == 403
 	}
 	return false

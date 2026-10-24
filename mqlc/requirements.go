@@ -5,6 +5,7 @@ package mqlc
 
 import (
 	"errors"
+	"slices"
 	"sort"
 	"strings"
 
@@ -143,12 +144,7 @@ func SupportsRoot(bundle *llx.CodeBundle, root string) bool {
 	if root == bundle.AssetRoot {
 		return true
 	}
-	for _, candidate := range bundle.CompatibleRoots {
-		if candidate == root {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(bundle.CompatibleRoots, root)
 }
 
 // rootScopeError is a compile failure that is really a scoping answer: the

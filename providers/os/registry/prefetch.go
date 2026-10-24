@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 	"sync"
 
@@ -148,10 +149,8 @@ func FoldRegistryPath(path string) ([]string, bool) {
 		return nil, false
 	}
 	parts := strings.Split(strings.ToLower(path), `\`)
-	for _, p := range parts {
-		if p == "" {
-			return nil, false
-		}
+	if slices.Contains(parts, "") {
+		return nil, false
 	}
 	switch parts[0] {
 	case "hklm":

@@ -76,8 +76,8 @@ func (r *mqlAlicloudEcs) launchTemplates() ([]any, error) {
 		collected := int32(0)
 		for {
 			resp, err := client.DescribeLaunchTemplates(&ecsclient.DescribeLaunchTemplatesRequest{
-				RegionId:   tea.String(region),
-				PageNumber: tea.Int32(pageNumber),
+				RegionId:   new(region),
+				PageNumber: new(pageNumber),
 				PageSize:   tea.Int32(ecsLaunchTemplatePageSize),
 			})
 			if err != nil {
@@ -150,9 +150,9 @@ func (r *mqlAlicloudEcsLaunchTemplate) versions() ([]any, error) {
 	collected := int32(0)
 	for {
 		resp, err := client.DescribeLaunchTemplateVersions(&ecsclient.DescribeLaunchTemplateVersionsRequest{
-			RegionId:         tea.String(r.region),
-			LaunchTemplateId: tea.String(r.LaunchTemplateId.Data),
-			PageNumber:       tea.Int32(pageNumber),
+			RegionId:         new(r.region),
+			LaunchTemplateId: new(r.LaunchTemplateId.Data),
+			PageNumber:       new(pageNumber),
 			PageSize:         tea.Int32(ecsLaunchTemplatePageSize),
 		})
 		if err != nil {

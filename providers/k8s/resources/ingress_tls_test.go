@@ -13,7 +13,6 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/utils/syncx"
 	networkingv1 "k8s.io/api/networking/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // tlsSecret builds a k8s.secret whose certificates field is already resolved,
@@ -54,7 +53,7 @@ func TestGetTLSDegradesPerEntry(t *testing.T) {
 	}
 
 	ing := &networkingv1.Ingress{
-		ObjectMeta: metav1.ObjectMeta{Name: "mixed", Namespace: "default"},
+		Name: "mixed", Namespace: "default",
 		Spec: networkingv1.IngressSpec{
 			TLS: []networkingv1.IngressTLS{
 				{Hosts: []string{"broken.example.com"}, SecretName: "tls-broken"},
@@ -81,7 +80,7 @@ func TestGetTLSNoEntries(t *testing.T) {
 	getSecrets := func() *plugin.TValue[[]any] {
 		return &plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
 	}
-	ing := &networkingv1.Ingress{ObjectMeta: metav1.ObjectMeta{Name: "none", Namespace: "default"}}
+	ing := &networkingv1.Ingress{Name: "none", Namespace: "default"}
 
 	out, err := getTLS(ing, "ingress:default:none", runtime, getSecrets)
 	require.NoError(t, err)

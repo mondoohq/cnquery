@@ -207,7 +207,7 @@ func TestGetPagedWalksEveryPage(t *testing.T) {
 		batch := []record{}
 		switch first {
 		case 0, 100:
-			for i := 0; i < pageSize; i++ {
+			for i := range pageSize {
 				batch = append(batch, record{ID: strconv.Itoa(first + i)})
 			}
 		case 200:
@@ -241,7 +241,7 @@ func TestGetPagedStopsOnARepeatedPage(t *testing.T) {
 		calls++
 		// An endpoint that ignores first answers every request with page one.
 		batch := make([]record, 0, pageSize)
-		for i := 0; i < pageSize; i++ {
+		for i := range pageSize {
 			batch = append(batch, record{ID: strconv.Itoa(i)})
 		}
 		require.NoError(t, json.NewEncoder(w).Encode(batch))
@@ -512,7 +512,7 @@ func TestGetPagedKeepsEveryRecordFromANonPagingEndpoint(t *testing.T) {
 
 		calls++
 		batch := make([]record, 0, total)
-		for i := 0; i < total; i++ {
+		for i := range total {
 			batch = append(batch, record{ID: strconv.Itoa(i)})
 		}
 		require.NoError(t, json.NewEncoder(w).Encode(batch))

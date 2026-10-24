@@ -50,7 +50,7 @@ var (
 // earlier one, and ${name} in a value expands to name's value at that point
 // (`module_blacklist="${module_blacklist} nvidia"` appends).
 func ParseFreeBSDLoaderConf(content string, env map[string]string) {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue

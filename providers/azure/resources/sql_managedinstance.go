@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"maps"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -195,9 +196,7 @@ func (a *mqlAzureSubscriptionSqlService) managedInstances() ([]any, error) {
 			if mi.Properties != nil {
 				admins = mi.Properties.Administrators
 			}
-			for k, v := range managedInstanceAdminArgs(admins) {
-				miArgs[k] = v
-			}
+			maps.Copy(miArgs, managedInstanceAdminArgs(admins))
 			mqlMi, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.managedInstance", miArgs)
 			if err != nil {
 				return nil, err

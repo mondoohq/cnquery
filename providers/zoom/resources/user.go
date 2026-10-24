@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -42,12 +43,7 @@ func userVerified(u *connection.User) bool {
 // who has ever signed in another way keeps that method alongside SSO, so this
 // asks whether SSO is among them rather than whether it is the only one.
 func userSsoLinked(u *connection.User) bool {
-	for _, lt := range u.LoginTypes {
-		if lt == zoomSsoLoginType {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(u.LoginTypes, zoomSsoLoginType)
 }
 
 // resolveZoomUsers turns a list of user IDs into typed zoom.user resources.

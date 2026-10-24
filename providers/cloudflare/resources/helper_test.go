@@ -177,7 +177,9 @@ func jsonResponse(w http.ResponseWriter, body string) {
 
 // boolPtr returns a pointer to v, for table tests that distinguish an absent
 // value from an explicit false.
-func boolPtr(v bool) *bool { return &v }
+//
+//go:fix inline
+func boolPtr(v bool) *bool { return new(v) }
 
 // pagedFixture serves a fixture on the first page and an empty result on every
 // later page. cloudflare-go's V4 page paginator stops only when a page comes

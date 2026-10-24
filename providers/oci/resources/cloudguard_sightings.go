@@ -88,10 +88,10 @@ func (o *mqlOciCloudGuard) listSightings() ([]any, error) {
 	since := common.SDKTime{Time: time.Now().UTC().Add(-ociCloudGuardSightingWindow)}
 	sightings, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.SightingSummary, *string, error) {
 		response, err := client.ListSightings(ctx, cloudguard.ListSightingsRequest{
-			CompartmentId: common.String(conn.TenantID()),
+			CompartmentId: new(conn.TenantID()),
 			// Sightings are recorded against resources in sub-compartments, so
 			// without the subtree flag the tenancy root reports almost none.
-			CompartmentIdInSubtree: common.Bool(true),
+			CompartmentIdInSubtree: new(true),
 			// Required with the subtree flag rather than optional: Cloud Guard
 			// answers 400 when one is sent without the other. ACCESSIBLE
 			// degrades to the compartments the caller can read instead of
@@ -210,7 +210,7 @@ func (o *mqlOciCloudGuardSighting) impactedResources() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.SightingImpactedResourceSummary, *string, error) {
 		response, err := client.ListSightingImpactedResources(ctx, cloudguard.ListSightingImpactedResourcesRequest{
-			SightingId: common.String(o.Id.Data),
+			SightingId: new(o.Id.Data),
 			Page:       page,
 		})
 		if err != nil {
@@ -261,7 +261,7 @@ func (o *mqlOciCloudGuardSighting) endpoints() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.SightingEndpointSummary, *string, error) {
 		response, err := client.ListSightingEndpoints(ctx, cloudguard.ListSightingEndpointsRequest{
-			SightingId: common.String(o.Id.Data),
+			SightingId: new(o.Id.Data),
 			Page:       page,
 		})
 		if err != nil {

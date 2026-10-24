@@ -199,7 +199,7 @@ func (a *mqlApt) newRepo(file *mqlFile, idx int, repo aptRepo) (*mqlAptRepo, err
 // repositories; all other comments are ignored.
 func parseAptOneLine(content string) []aptRepo {
 	res := []aptRepo{}
-	for _, raw := range strings.Split(content, "\n") {
+	for raw := range strings.SplitSeq(content, "\n") {
 		line := strings.TrimSpace(raw)
 		enabled := true
 		if strings.HasPrefix(line, "#") {
@@ -383,7 +383,7 @@ func splitDeb822Stanzas(content string) []string {
 			cur = nil
 		}
 	}
-	for _, raw := range strings.Split(content, "\n") {
+	for raw := range strings.SplitSeq(content, "\n") {
 		line := strings.TrimRight(raw, "\r")
 		trimmed := strings.TrimSpace(line)
 		if trimmed == "" {
@@ -407,7 +407,7 @@ func splitDeb822Stanzas(content string) []string {
 func parseDeb822Fields(stanza string) map[string]string {
 	fields := map[string]string{}
 	lastKey := ""
-	for _, line := range strings.Split(stanza, "\n") {
+	for line := range strings.SplitSeq(stanza, "\n") {
 		if line == "" {
 			continue
 		}

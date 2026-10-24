@@ -32,7 +32,7 @@ func testConn(srv *httptest.Server) *NetlifyConnection {
 func writeItems(w http.ResponseWriter, page, n int) {
 	w.Header().Set("Content-Type", "application/json")
 	io.WriteString(w, "[")
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if i > 0 {
 			io.WriteString(w, ",")
 		}

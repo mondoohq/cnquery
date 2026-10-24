@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"strings"
 	"sync"
@@ -112,10 +113,7 @@ func fetchGraphPrincipals(ctx context.Context, conn *connection.AzureConnection,
 	url := graphEndpoint + "/directoryObjects/getByIds"
 
 	for start := 0; start < len(ids); start += graphGetByIdsBatchSize {
-		end := start + graphGetByIdsBatchSize
-		if end > len(ids) {
-			end = len(ids)
-		}
+		end := min(start+graphGetByIdsBatchSize, len(ids))
 
 		body, err := json.Marshal(graphGetByIdsRequest{IDs: ids[start:end], Types: graphPrincipalTypes})
 		if err != nil {
@@ -275,9 +273,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) resolvePrincipal(principalID 
 	if err != nil {
 		return nil, err
 	}
-	for k, p := range found {
-		a.principals[k] = p
-	}
+	maps.Copy(a.principals, found)
 	// Every ID we asked about and did not get back is a principal Graph cannot
 	// resolve; record it so a repeat query doesn't re-request it.
 	for _, id := range ids {

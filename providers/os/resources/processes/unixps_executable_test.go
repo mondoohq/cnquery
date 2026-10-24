@@ -119,7 +119,7 @@ func allocatedBytes(n int, f func()) uint64 {
 	var before, after runtime.MemStats
 	runtime.GC()
 	runtime.ReadMemStats(&before)
-	for i := 0; i < n; i++ {
+	for range n {
 		f()
 	}
 	runtime.ReadMemStats(&after)

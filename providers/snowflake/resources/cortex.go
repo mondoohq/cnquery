@@ -30,7 +30,7 @@ func (r *mqlSnowflakeAccount) cortexSearchServices() ([]any, error) {
 	ctx := context.Background()
 
 	services, err := client.CortexSearchServices.Show(ctx,
-		sdk.NewShowCortexSearchServiceRequest().WithIn(sdk.In{Account: sdk.Bool(true)}))
+		sdk.NewShowCortexSearchServiceRequest().WithIn(sdk.In{Account: new(true)}))
 	if err != nil {
 		return nil, err
 	}

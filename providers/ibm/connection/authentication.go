@@ -84,7 +84,7 @@ func GetRegions(conf *inventory.Config) []string {
 		raw = v
 	}
 	var out []string
-	for _, p := range strings.Split(raw, ",") {
+	for p := range strings.SplitSeq(raw, ",") {
 		if p = strings.TrimSpace(p); p != "" {
 			out = append(out, p)
 		}

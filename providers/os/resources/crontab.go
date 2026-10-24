@@ -453,7 +453,7 @@ func cronSELinuxTypes(conn shared.Connection, flavor cronFlavor, paths []string)
 // field of each file's context. A file without a context ("?") is left out.
 func parseCronSELinuxTypes(out string) map[string]string {
 	types := map[string]string{}
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		context, name, ok := strings.Cut(line, "\t")
 		if !ok {
 			continue

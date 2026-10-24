@@ -476,8 +476,7 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) autosca
 // to distinguish "no offer at this scope" (database/container has shared
 // throughput) from real errors.
 func isCosmosNotFoundError(err error) bool {
-	var rerr *azcore.ResponseError
-	if errors.As(err, &rerr) {
+	if rerr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 		return rerr.StatusCode == http.StatusNotFound
 	}
 	return false
@@ -513,8 +512,7 @@ func isCosmosServerlessThroughputError(err error) bool {
 // than fatal so an over-scoped audit role still works on the rest of the
 // schema.
 func isCosmosForbiddenError(err error) bool {
-	var rerr *azcore.ResponseError
-	if errors.As(err, &rerr) {
+	if rerr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 		return rerr.StatusCode == http.StatusForbidden
 	}
 	return false

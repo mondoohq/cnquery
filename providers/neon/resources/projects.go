@@ -287,7 +287,7 @@ func initNeonProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	}
 	if projectID == "" && c.Asset() != nil {
 		for _, pid := range c.Asset().PlatformIds {
-			if t := strings.TrimPrefix(pid, connection.PlatformIdNeonProject); t != pid {
+			if t, ok := strings.CutPrefix(pid, connection.PlatformIdNeonProject); ok {
 				projectID = t
 				break
 			}

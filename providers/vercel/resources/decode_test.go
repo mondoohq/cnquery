@@ -770,7 +770,7 @@ func TestEnvRecordAbsentSensitivityStaysNull(t *testing.T) {
 // so the record must carry no field bound to a value-bearing key however the
 // payload is shaped.
 func TestEnvRecordCarriesNoValueField(t *testing.T) {
-	assertNoJSONFields(t, reflect.TypeOf(envRecord{}), "value", "vsmValue", "legacyValue")
+	assertNoJSONFields(t, reflect.TypeFor[envRecord](), "value", "vsmValue", "legacyValue")
 
 	const payload = `{"id":"env_1","key":"SECRET","type":"encrypted","value":"zero-entropy-fake","vsmValue":"zero-entropy-fake","legacyValue":"zero-entropy-fake"}`
 	var rec envRecord
@@ -789,8 +789,8 @@ func assertNoJSONFields(t *testing.T, typ reflect.Type, keys ...string) {
 	for _, k := range keys {
 		banned[k] = true
 	}
-	for i := 0; i < typ.NumField(); i++ {
-		tag := typ.Field(i).Tag.Get("json")
+	for field := range typ.Fields() {
+		tag := field.Tag.Get("json")
 		name, _, _ := strings.Cut(tag, ",")
 		if banned[name] {
 			t.Errorf("%s binds the JSON key %q, which carries credential material", typ.Name(), name)
@@ -1071,7 +1071,7 @@ func TestDecodeEdgeConfigTokensAbsent(t *testing.T) {
 // token nor its masked prefix may be decoded: the mask still discloses the
 // leading characters of the secret.
 func TestEdgeConfigTokenRecordCarriesNoTokenValue(t *testing.T) {
-	assertNoJSONFields(t, reflect.TypeOf(edgeConfigTokenRecord{}), "token", "partialToken")
+	assertNoJSONFields(t, reflect.TypeFor[edgeConfigTokenRecord](), "token", "partialToken")
 
 	const payload = `[{"id":"tok_1","label":"ci","token":"zero-entropy-fake","partialToken":"zer********"}]`
 	got, err := decodeEdgeConfigTokens(json.RawMessage(payload))

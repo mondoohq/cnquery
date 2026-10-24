@@ -263,8 +263,8 @@ func (s *batchStat) StatDir(dir string, names []string) (map[string]os.FileInfo,
 func TestReaddirStatsTheDirectoryInOneGo(t *testing.T) {
 	run := &fakeRun{stdout: "kept\nlate\ngone\n"}
 	st := &batchStat{
-		fakeStat: fakeStat{missing: map[string]bool{"/d/gone": true}},
-		batch:    map[string]os.FileInfo{"kept": &shared.FileInfo{FName: "kept", FSize: 7}},
+		missing: map[string]bool{"/d/gone": true},
+		batch:   map[string]os.FileInfo{"kept": &shared.FileInfo{FName: "kept", FSize: 7}},
 	}
 	infos, err := NewFile(&Fs{commandRunner: run, statter: st}, "/d", false).Readdir(-1)
 	require.NoError(t, err)

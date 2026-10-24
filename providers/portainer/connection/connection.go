@@ -340,8 +340,7 @@ func StatusCode(err error) (int, bool) {
 	if errors.As(err, &coded) {
 		return coded.Code(), true
 	}
-	var apiErr *runtime.APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*runtime.APIError](err); ok {
 		return apiErr.Code, true
 	}
 	return 0, false

@@ -27,7 +27,7 @@ func TestVpcRouteArgs(t *testing.T) {
 	assert.Equal(t, "route-1", args["id"].Value)
 	assert.Equal(t, "STATIC", args["type"].Value)
 	assert.Equal(t, "10.20.0.0/16", args["destinationCidr"].Value)
-	assert.Equal(t, []interface{}{"do:droplet:12345", "do:load_balancer:abcde"}, args["targetUrns"].Value,
+	assert.Equal(t, []any{"do:droplet:12345", "do:load_balancer:abcde"}, args["targetUrns"].Value,
 		"every target must survive the mapping: a route's egress is the whole target set, not the first one")
 	assert.Equal(t, true, args["modifiable"].Value)
 	assert.Equal(t, created, *args["createdAt"].Value.(*time.Time))
@@ -59,5 +59,5 @@ func TestVpcRouteArgsCreatedAtIsNullWhenAbsent(t *testing.T) {
 func TestVpcRouteArgsEmptyTargetsAreAnEmptyList(t *testing.T) {
 	args, err := vpcRouteArgs("vpc-1", &godo.Route{ID: "route-1"})
 	require.NoError(t, err)
-	assert.Equal(t, []interface{}{}, args["targetUrns"].Value)
+	assert.Equal(t, []any{}, args["targetUrns"].Value)
 }

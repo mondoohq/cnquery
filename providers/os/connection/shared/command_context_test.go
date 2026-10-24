@@ -79,15 +79,13 @@ func TestCommandOutputConcurrentBudget(t *testing.T) {
 	require.NoError(t, err)
 	var writers sync.WaitGroup
 	for i := range 64 {
-		writers.Add(1)
-		go func() {
-			defer writers.Done()
+		writers.Go(func() {
 			stream := output.Stdout
 			if i%2 == 0 {
 				stream = output.Stderr
 			}
 			_, _ = stream.Write([]byte("data"))
-		}()
+		})
 	}
 	writers.Wait()
 	assert.ErrorIs(t, output.Error(), ErrCommandOutputLimit)

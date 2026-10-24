@@ -1247,7 +1247,7 @@ func TestNoRecordDecodesSecretMaterial(t *testing.T) {
 
 	var walk func(t *testing.T, typ reflect.Type, seen map[reflect.Type]bool)
 	walk = func(t *testing.T, typ reflect.Type, seen map[reflect.Type]bool) {
-		for typ.Kind() == reflect.Ptr || typ.Kind() == reflect.Slice {
+		for typ.Kind() == reflect.Pointer || typ.Kind() == reflect.Slice {
 			typ = typ.Elem()
 		}
 		if typ.Kind() != reflect.Struct || seen[typ] {
@@ -1255,8 +1255,8 @@ func TestNoRecordDecodesSecretMaterial(t *testing.T) {
 		}
 		seen[typ] = true
 
-		for i := 0; i < typ.NumField(); i++ {
-			field := typ.Field(i)
+		for field := range typ.Fields() {
+			field := field
 			tag, _, _ := strings.Cut(field.Tag.Get("json"), ",")
 			if secretTags[tag] {
 				t.Errorf("%s.%s decodes secret material (json:%q); it must not reach a schema field",

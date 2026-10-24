@@ -122,7 +122,7 @@ func TestPackagesLockJsonDropsUnresolvedEdgeTargets(t *testing.T) {
 // first-occurrence-wins a rule.
 func TestPackagesLockJsonMultiFrameworkIsDeterministic(t *testing.T) {
 	first := ""
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		f, err := os.Open("./testdata/multiframework.packages.lock.json")
 		require.NoError(t, err)
 		info, err := (&Extractor{}).Parse(f, "packages.lock.json")

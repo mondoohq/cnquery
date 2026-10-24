@@ -186,15 +186,15 @@ func resolveTagRefs(runtime *plugin.Runtime, tagIDs []string) ([]any, error) {
 // splits on ":"), so we parse the encoded form here: managed-object type names
 // never contain "-", so the first "-" separates type from value.
 func decodeMoRef(encoded string) (vmwaretypes.ManagedObjectReference, bool) {
-	i := strings.Index(encoded, "-")
-	if i < 0 {
+	before, after, ok := strings.Cut(encoded, "-")
+	if !ok {
 		return vmwaretypes.ManagedObjectReference{}, false
 	}
-	value, err := url.QueryUnescape(encoded[i+1:])
+	value, err := url.QueryUnescape(after)
 	if err != nil {
 		return vmwaretypes.ManagedObjectReference{}, false
 	}
-	return vmwaretypes.ManagedObjectReference{Type: encoded[:i], Value: value}, true
+	return vmwaretypes.ManagedObjectReference{Type: before, Value: value}, true
 }
 
 // attachedTagRefs resolves the vAPI tags attached to the inventory object

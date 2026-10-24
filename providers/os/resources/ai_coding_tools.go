@@ -101,7 +101,7 @@ type subdirEntry struct {
 
 // readJSONFileAfero reads and unmarshals a JSON file relative to a base directory
 // using the provided afero filesystem (which may be remote via SSH, container, etc.).
-func readJSONFileAfero(afs *afero.Afero, baseDir string, relPath string, v interface{}) error {
+func readJSONFileAfero(afs *afero.Afero, baseDir string, relPath string, v any) error {
 	data, err := readBoundedRegularFile(afs, filepath.Join(baseDir, relPath), maxConfigFileSize)
 	if err != nil {
 		return err
@@ -325,12 +325,12 @@ func collectSkillFiles(afs *afero.Afero, skillsDirs []string) []skillInfo {
 // readSkillsFromDirs reads SKILL.md files across skillsDirs and returns them as
 // MQL resources of resourceType, keyed by source path so same-named skills from
 // different users are all reported.
-func readSkillsFromDirs(runtime *plugin.Runtime, skillsDirs []string, resourceType string) ([]interface{}, error) {
+func readSkillsFromDirs(runtime *plugin.Runtime, skillsDirs []string, resourceType string) ([]any, error) {
 	skills := collectSkillFiles(connectionAfs(runtime), skillsDirs)
 
-	result := make([]interface{}, 0, len(skills))
+	result := make([]any, 0, len(skills))
 	for _, skill := range skills {
-		allowedToolsAny := make([]interface{}, len(skill.allowedTools))
+		allowedToolsAny := make([]any, len(skill.allowedTools))
 		for i, t := range skill.allowedTools {
 			allowedToolsAny[i] = t
 		}
@@ -399,7 +399,7 @@ func resolvePerUserDirs(runtime *plugin.Runtime, configPath, defaultConfigDir, h
 
 // agentSkills reads an agent's skills across every user, honoring a configPath
 // override. For agents whose skills sit at a fixed path under each home.
-func agentSkills(runtime *plugin.Runtime, resourceType, configPath, defaultConfigDir, homeRelSkillsDir, overrideSkillsDir string) ([]interface{}, error) {
+func agentSkills(runtime *plugin.Runtime, resourceType, configPath, defaultConfigDir, homeRelSkillsDir, overrideSkillsDir string) ([]any, error) {
 	dirs, err := resolvePerUserDirs(runtime, configPath, defaultConfigDir, homeRelSkillsDir, overrideSkillsDir)
 	if err != nil {
 		return nil, err
@@ -423,10 +423,10 @@ type gitRepoResult struct {
 // working-tree root so multiple paths inside one checkout collapse to one repo.
 // It is shared by the AI agent resources (claude.code, openai.codex, cursor,
 // windsurf, zed) whose repos() derive git repositories from project paths.
-func gitReposFromPaths(runtime *plugin.Runtime, resourceName string, paths []string) ([]interface{}, error) {
+func gitReposFromPaths(runtime *plugin.Runtime, resourceName string, paths []string) ([]any, error) {
 	afs := connectionAfs(runtime)
 	seen := map[string]struct{}{}
-	var result []interface{}
+	var result []any
 	for _, p := range paths {
 		if p == "" {
 			continue
@@ -584,7 +584,7 @@ func parseGitRemotes(afs *afero.Afero, configPath string) map[string]string {
 
 	remotes := map[string]string{}
 	var currentRemote string
-	for _, rawLine := range strings.Split(string(data), "\n") {
+	for rawLine := range strings.SplitSeq(string(data), "\n") {
 		line := strings.TrimSpace(rawLine)
 		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") {
 			continue
@@ -642,8 +642,8 @@ func parseGitRemoteURL(remote string) (host string, name string) {
 	case strings.Contains(remote, "://"):
 		// scheme://[user@]host[:port]/path
 		rest = remote[strings.Index(remote, "://")+3:]
-		if at := strings.LastIndex(rest, "@"); at != -1 {
-			rest = rest[at+1:]
+		if _, after, ok := strings.CutLast(rest, "@"); ok {
+			rest = after
 		}
 		slash := strings.Index(rest, "/")
 		if slash == -1 {
@@ -778,7 +778,7 @@ func packedRefSha(afs *afero.Afero, packedRefsPath, ref string) string {
 	if err != nil {
 		return ""
 	}
-	for _, rawLine := range strings.Split(string(data), "\n") {
+	for rawLine := range strings.SplitSeq(string(data), "\n") {
 		line := strings.TrimSpace(rawLine)
 		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "^") {
 			continue

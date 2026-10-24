@@ -216,9 +216,7 @@ func newDirectoryPrincipal(p models.DirectoryObjectable) *DirectoryObject {
 		return nil
 	}
 	return &DirectoryObject{
-		Entity: Entity{
-			Id: p.GetId(),
-		},
+		Id:              p.GetId(),
 		DeletedDateTime: p.GetDeletedDateTime(),
 	}
 }
@@ -374,23 +372,17 @@ func newAuthorizationPolicy(p models.AuthorizationPolicyable) *AuthorizationPoli
 		roleId = &s
 	}
 	return &AuthorizationPolicy{
-		PolicyBase: PolicyBase{
-			DirectoryObject: DirectoryObject{
-				Entity: Entity{
-					Id: p.GetId(),
-				},
-				DeletedDateTime: p.GetDeletedDateTime(),
-			},
-			DisplayName: p.GetDisplayName(),
-			Description: p.GetDescription(),
-		},
-		AllowedToSignUpEmailBasedSubscriptions:    p.GetAllowedToSignUpEmailBasedSubscriptions(),
-		AllowedToUseSSPR:                          p.GetAllowedToUseSSPR(),
+		Id:                                     p.GetId(),
+		DeletedDateTime:                        p.GetDeletedDateTime(),
+		DisplayName:                            p.GetDisplayName(),
+		Description:                            p.GetDescription(),
+		AllowedToSignUpEmailBasedSubscriptions: p.GetAllowedToSignUpEmailBasedSubscriptions(),
+		AllowedToUseSSPR:                       p.GetAllowedToUseSSPR(),
 		AllowEmailVerifiedUsersToJoinOrganization: p.GetAllowEmailVerifiedUsersToJoinOrganization(),
-		AllowInvitesFrom:                          newAllowInvitesFrom(p.GetAllowInvitesFrom()),
-		BlockMsolPowerShell:                       p.GetBlockMsolPowerShell(),
-		DefaultUserRolePermissions:                newDefaultUserRolePermissions(p.GetDefaultUserRolePermissions()),
-		GuestUserRoleId:                           roleId,
+		AllowInvitesFrom:           newAllowInvitesFrom(p.GetAllowInvitesFrom()),
+		BlockMsolPowerShell:        p.GetBlockMsolPowerShell(),
+		DefaultUserRolePermissions: newDefaultUserRolePermissions(p.GetDefaultUserRolePermissions()),
+		GuestUserRoleId:            roleId,
 	}
 }
 
@@ -468,11 +460,9 @@ func newIdentitySecurityDefaultsEnforcementPolicy(p models.IdentitySecurityDefau
 		return nil
 	}
 	return &IdentitySecurityDefaultsEnforcementPolicy{
-		PolicyBase: PolicyBase{
-			Description: p.GetDescription(),
-			DisplayName: p.GetDisplayName(),
-		},
-		IsEnabled: p.GetIsEnabled(),
+		Description: p.GetDescription(),
+		DisplayName: p.GetDisplayName(),
+		IsEnabled:   p.GetIsEnabled(),
 	}
 }
 
@@ -566,9 +556,7 @@ func newUserSettings(p models.UserSettingsable) *UserSettings {
 		return nil
 	}
 	return &UserSettings{
-		Entity: Entity{
-			Id: p.GetId(),
-		},
+		Id: p.GetId(),
 		ContributionToContentDiscoveryAsOrganizationDisabled: p.GetContributionToContentDiscoveryAsOrganizationDisabled(),
 		ContributionToContentDiscoveryDisabled:               p.GetContributionToContentDiscoveryDisabled(),
 	}
@@ -598,9 +586,7 @@ func newDeviceCompliancePolicyAssignment(p models.DeviceCompliancePolicyAssignme
 	}
 
 	return &DeviceCompliancePolicyAssignment{
-		Entity: Entity{
-			Id: p.GetId(),
-		},
+		Id: p.GetId(),
 	}
 }
 
@@ -643,11 +629,9 @@ func newPermissionGrantConditionSet(p models.PermissionGrantConditionSetable) Pe
 	}
 
 	return PermissionGrantConditionSet{
-		Entity: Entity{
-			Id: p.GetId(),
-		},
-		ClientApplicationIds:                        p.GetClientApplicationIds(),
-		ClientApplicationPublisherIds:               p.GetClientApplicationPublisherIds(),
+		Id:                            p.GetId(),
+		ClientApplicationIds:          p.GetClientApplicationIds(),
+		ClientApplicationPublisherIds: p.GetClientApplicationPublisherIds(),
 		ClientApplicationsFromVerifiedPublisherOnly: p.GetClientApplicationsFromVerifiedPublisherOnly(),
 		ClientApplicationTenantIds:                  p.GetClientApplicationTenantIds(),
 		PermissionClassification:                    p.GetPermissionClassification(),
@@ -681,18 +665,12 @@ func newPermissionGrantPolicy(p models.PermissionGrantPolicyable) *PermissionGra
 		return nil
 	}
 	return &PermissionGrantPolicy{
-		PolicyBase: PolicyBase{
-			DirectoryObject: DirectoryObject{
-				Entity: Entity{
-					Id: p.GetId(),
-				},
-				DeletedDateTime: p.GetDeletedDateTime(),
-			},
-			DisplayName: p.GetDisplayName(),
-			Description: p.GetDescription(),
-		},
-		Excludes: newPermissionGrantConditionSets(p.GetExcludes()),
-		Includes: newPermissionGrantConditionSets(p.GetIncludes()),
+		Id:              p.GetId(),
+		DeletedDateTime: p.GetDeletedDateTime(),
+		DisplayName:     p.GetDisplayName(),
+		Description:     p.GetDescription(),
+		Excludes:        newPermissionGrantConditionSets(p.GetExcludes()),
+		Includes:        newPermissionGrantConditionSets(p.GetIncludes()),
 	}
 }
 
@@ -760,9 +738,7 @@ func newAdminConsentRequestPolicy(p models.AdminConsentRequestPolicyable) *Admin
 	}
 
 	return &AdminConsentRequestPolicy{
-		Entity: Entity{
-			Id: p.GetId(),
-		},
+		Id:                    p.GetId(),
 		IsEnabled:             p.GetIsEnabled(),
 		NotifyReviewers:       p.GetNotifyReviewers(),
 		RemindersEnabled:      p.GetRemindersEnabled(),

@@ -23,8 +23,7 @@ func isNotFound(err error) bool {
 	if err == nil {
 		return false
 	}
-	var apiErr *openai.Error
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*openai.Error](err); ok {
 		return apiErr.StatusCode == 404
 	}
 	return false

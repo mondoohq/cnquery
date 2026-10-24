@@ -327,7 +327,7 @@ func ParseIisSslFlags(v any) []string {
 			return iisSslFlagNames(n)
 		}
 		res := []string{}
-		for _, part := range strings.Split(trimmed, ",") {
+		for part := range strings.SplitSeq(trimmed, ",") {
 			part = strings.TrimSpace(part)
 			if part == "" || strings.EqualFold(part, "None") {
 				continue
@@ -363,7 +363,7 @@ func iisSslFlagNames(n int64) []string {
 	// iis.ps1 appends the combined remainder instead, but it is building one
 	// joined string rather than a list.)
 	if residue := n & ^named; residue > 0 {
-		for i := 0; i < 63; i++ {
+		for i := range 63 {
 			bit := int64(1) << i
 			if residue&bit != 0 {
 				res = append(res, strconv.FormatInt(bit, 10))

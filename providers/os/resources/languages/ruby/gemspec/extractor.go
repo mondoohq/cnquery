@@ -197,8 +197,8 @@ func isVersionConstraint(v string) bool {
 
 // extractPinnedVersion extracts the version from an exact pin constraint "= X.Y.Z".
 func extractPinnedVersion(v string) string {
-	if strings.HasPrefix(v, "= ") {
-		return strings.TrimPrefix(v, "= ")
+	if after, ok := strings.CutPrefix(v, "= "); ok {
+		return after
 	}
 	return v
 }

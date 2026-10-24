@@ -51,7 +51,7 @@ func cacheProfileRegistryName(t *testing.T, runtime *plugin.Runtime, path, name,
 	if strings.HasPrefix(path, `HKEY_USERS\`) {
 		raw, err := CreateResource(runtime, "registrykey", map[string]*llx.RawData{"path": llx.StringData("HKEY_USERS")})
 		require.NoError(t, err)
-		sid := strings.Split(strings.TrimPrefix(path, `HKEY_USERS\`), `\`)[0]
+		sid, _, _ := strings.Cut(strings.TrimPrefix(path, `HKEY_USERS\`), `\`)
 		raw.(*mqlRegistrykey).Children = plugin.TValue[[]any]{State: plugin.StateIsSet, Data: []any{sid}}
 	}
 	raw, err := CreateResource(runtime, "registrykey", map[string]*llx.RawData{"path": llx.StringData(path)})

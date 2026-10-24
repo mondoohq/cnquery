@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"maps"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -71,9 +72,7 @@ func TestIdpPopulate_PlatformsWithoutDetection(t *testing.T) {
 			Family: []string{"windows"},
 			Labels: map[string]string{"windows.mondoo.com/product-type": productType},
 		}
-		for k, v := range l {
-			pf.Labels[k] = v
-		}
+		maps.Copy(pf.Labels, l)
 		return pf
 	}
 
@@ -106,9 +105,7 @@ func TestIdpPopulate_PlatformsWithoutDetection(t *testing.T) {
 
 	t.Run("a workstation reports how it joined", func(t *testing.T) {
 		withJoin := map[string]string{detwin.LabelEntraJoinType: detwin.EntraJoinTypeHybrid}
-		for k, v := range labels {
-			withJoin[k] = v
-		}
+		maps.Copy(withJoin, labels)
 		i := newIdp(t, windows("1", "Windows 11 Enterprise", withJoin))
 		require.NoError(t, i.populate())
 		require.NotNil(t, i.Entra.Data)

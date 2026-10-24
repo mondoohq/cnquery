@@ -308,11 +308,11 @@ func initAzureSubscriptionPolicyDefinition(runtime *plugin.Runtime, args map[str
 // assignments, so routing through ParseResourceID would fail the common case.
 func policyDefinitionNameFromID(id string) string {
 	id = strings.TrimSuffix(id, "/")
-	i := strings.LastIndex(id, "/")
-	if i < 0 {
+	_, after, ok := strings.CutLast(id, "/")
+	if !ok {
 		return id
 	}
-	return id[i+1:]
+	return after
 }
 
 // managementGroupFromScope pulls the management group name out of a definition

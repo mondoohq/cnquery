@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/apigateway"
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -38,7 +37,7 @@ func (o *mqlOciApigateway) gateways() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]apigateway.GatewaySummary, *string, error) {
 				response, err := svc.ListGateways(ctx, apigateway.ListGatewaysRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -162,7 +161,7 @@ func (o *mqlOciApigatewayGateway) fetchDetails() error {
 			return err
 		}
 		resp, err := svc.GetGateway(context.Background(), apigateway.GetGatewayRequest{
-			GatewayId: common.String(o.Id.Data),
+			GatewayId: new(o.Id.Data),
 		})
 		if err != nil {
 			return err
@@ -237,7 +236,7 @@ func (o *mqlOciApigateway) deployments() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]apigateway.DeploymentSummary, *string, error) {
 				response, err := svc.ListDeployments(ctx, apigateway.ListDeploymentsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -371,7 +370,7 @@ func (o *mqlOciApigatewayDeployment) getSpec() (*apigateway.ApiSpecification, er
 			return nil, err
 		}
 		resp, err := svc.GetDeployment(context.Background(), apigateway.GetDeploymentRequest{
-			DeploymentId: common.String(o.Id.Data),
+			DeploymentId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -607,7 +606,7 @@ func (o *mqlOciApigateway) certificates() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]apigateway.CertificateSummary, *string, error) {
 				response, err := svc.ListCertificates(ctx, apigateway.ListCertificatesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {

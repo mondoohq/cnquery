@@ -6,6 +6,7 @@ package resources
 import (
 	"fmt"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -424,10 +425,9 @@ func parseAideDirective(cfg *aideConfig, line string, branches *[]aideBranch) (a
 		if len(parts) == 0 {
 			return aideIncludeDirective{}, false
 		}
-		include := aideIncludeDirective{aideInclude: aideInclude{
+		include := aideIncludeDirective{
 			Target:  parts[0],
-			Execute: directive == "@@x_include",
-		}}
+			Execute: directive == "@@x_include"}
 		if len(parts) > 1 {
 			include.Regex = parts[1]
 		}
@@ -608,12 +608,7 @@ func aideVersionAtLeast(version string, major, minor int) bool {
 // aideBranchActive reports whether the lines at this point are read: every
 // enclosing conditional is true or cannot be decided.
 func aideBranchActive(branches []aideBranch) bool {
-	for _, branch := range branches {
-		if branch == aideBranchSkip {
-			return false
-		}
-	}
-	return true
+	return !slices.Contains(branches, aideBranchSkip)
 }
 
 // stripAideComment drops a trailing comment. A '#' inside a macro reference or a
@@ -789,7 +784,7 @@ func aideIncludeEntries(names []string, expression string) []string {
 
 // aideConfigHasInclude reports whether a configuration includes other files.
 func aideConfigHasInclude(content string) bool {
-	for _, rawLine := range strings.Split(content, "\n") {
+	for rawLine := range strings.SplitSeq(content, "\n") {
 		line := strings.ToLower(strings.TrimSpace(rawLine))
 		if strings.HasPrefix(line, "@@include") || strings.HasPrefix(line, "@@x_include ") || strings.HasPrefix(line, "@@x_include\t") {
 			return true
@@ -893,7 +888,7 @@ func aideBuiltinGroups(versionOutput string) map[string]string {
 	}
 
 	options := map[string]bool{}
-	for _, line := range strings.Split(versionOutput, "\n") {
+	for line := range strings.SplitSeq(versionOutput, "\n") {
 		if option := strings.TrimSpace(line); strings.HasPrefix(option, "WITH_") {
 			options[option] = true
 		}
@@ -980,7 +975,7 @@ func aideAttributeNames(versionOutput string) map[string]struct{} {
 		}
 	case minor == 16:
 		options := map[string]bool{}
-		for _, line := range strings.Split(versionOutput, "\n") {
+		for line := range strings.SplitSeq(versionOutput, "\n") {
 			if option := strings.TrimSpace(line); strings.HasPrefix(option, "WITH_") {
 				options[option] = true
 			}
@@ -1019,7 +1014,7 @@ func aideAttributeNames(versionOutput string) map[string]struct{} {
 // `aide --version` output, lines like "R: l+p+u+g+s+c+m+i+n+sha3_256".
 func parseAideDefaultGroups(out string) map[string]string {
 	var groups map[string]string
-	for _, rawLine := range strings.Split(out, "\n") {
+	for rawLine := range strings.SplitSeq(out, "\n") {
 		line := strings.TrimSpace(rawLine)
 		if groups == nil {
 			if line == "Default compound groups:" {
@@ -1127,14 +1122,14 @@ var aideReleaseRegex = regexp.MustCompile(`^[0-9]+\.[0-9]+`)
 // parseAideVersion pulls the release out of "aide --version" output, whose first
 // line reads like "Aide 0.17.4".
 func parseAideVersion(out string) string {
-	for _, rawLine := range strings.Split(out, "\n") {
+	for rawLine := range strings.SplitSeq(out, "\n") {
 		line := strings.TrimSpace(rawLine)
 		if line == "" {
 			continue
 		}
 
-		fields := strings.Fields(line)
-		for _, field := range fields {
+		fields := strings.FieldsSeq(line)
+		for field := range fields {
 			if field == "" {
 				continue
 			}

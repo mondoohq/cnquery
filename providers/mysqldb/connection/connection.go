@@ -281,8 +281,7 @@ func classifyConnectError(err error) error {
 	if err == nil {
 		return nil
 	}
-	var myErr *mysqldriver.MySQLError
-	if errors.As(err, &myErr) {
+	if myErr, ok := errors.AsType[*mysqldriver.MySQLError](err); ok {
 		switch myErr.Number {
 		case 1045: // access denied: unknown user or wrong password
 			return llx.Unauthenticated(err)

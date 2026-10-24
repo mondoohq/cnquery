@@ -265,7 +265,7 @@ func (xpm *XbpsPkgManager) Available() (map[string]PackageUpdate, error) {
 func XbpsUpdateCheck(updates map[string]PackageUpdate, repoList io.Reader) error {
 	var unreadable []string
 	if repoList != nil {
-		for _, line := range strings.Split(readCommandOutput(repoList), "\n") {
+		for line := range strings.SplitSeq(readCommandOutput(repoList), "\n") {
 			fields := strings.Fields(line)
 			if len(fields) >= 2 && fields[0] == "-1" {
 				unreadable = append(unreadable, fields[1])
@@ -292,7 +292,7 @@ func ParseXbpsUpdates(r io.Reader) (map[string]PackageUpdate, error) {
 	}
 
 	updates := map[string]PackageUpdate{}
-	for _, line := range strings.Split(string(raw), "\n") {
+	for line := range strings.SplitSeq(string(raw), "\n") {
 		fields := strings.Fields(line)
 		if len(fields) == 0 {
 			continue

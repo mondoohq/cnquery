@@ -24,25 +24,25 @@ func TestCreateEventHubNamespaceRawData(t *testing.T) {
 	publicAccess := armeventhub.PublicNetworkAccessDisabled
 
 	ns := &armeventhub.EHNamespace{
-		ID:       ptr("/subscriptions/s/resourceGroups/rg/providers/Microsoft.EventHub/namespaces/ns1"),
-		Name:     ptr("ns1"),
-		Location: ptr("westeurope"),
-		Tags:     map[string]*string{"env": ptr("prod")},
+		ID:       new("/subscriptions/s/resourceGroups/rg/providers/Microsoft.EventHub/namespaces/ns1"),
+		Name:     new("ns1"),
+		Location: new("westeurope"),
+		Tags:     map[string]*string{"env": new("prod")},
 		Properties: &armeventhub.EHNamespaceProperties{
 			CreatedAt:              &created,
-			Status:                 ptr("Active"),
-			IsAutoInflateEnabled:   ptr(true),
-			MaximumThroughputUnits: ptr(int32(12)),
-			KafkaEnabled:           ptr(true),
-			DisableLocalAuth:       ptr(true),
+			Status:                 new("Active"),
+			IsAutoInflateEnabled:   new(true),
+			MaximumThroughputUnits: new(int32(12)),
+			KafkaEnabled:           new(true),
+			DisableLocalAuth:       new(true),
 			MinimumTLSVersion:      &tlsVersion,
 			PublicNetworkAccess:    &publicAccess,
-			ZoneRedundant:          ptr(true),
+			ZoneRedundant:          new(true),
 			Encryption: &armeventhub.Encryption{
 				KeySource:                       &keySource,
-				RequireInfrastructureEncryption: ptr(true),
+				RequireInfrastructureEncryption: new(true),
 				KeyVaultProperties: []*armeventhub.KeyVaultProperties{
-					{KeyName: ptr("cmk1")},
+					{KeyName: new("cmk1")},
 				},
 			},
 		},
@@ -71,7 +71,7 @@ func TestCreateEventHubNamespaceRawData(t *testing.T) {
 // ARM omits the whole properties block on some rows. Dereferencing it panics,
 // and a panic in an accessor ends the scan rather than the query.
 func TestCreateEventHubNamespaceRawDataWithoutProperties(t *testing.T) {
-	ns := &armeventhub.EHNamespace{ID: ptr("/subscriptions/s/x/ns1"), Name: ptr("ns1")}
+	ns := &armeventhub.EHNamespace{ID: new("/subscriptions/s/x/ns1"), Name: new("ns1")}
 
 	raw, err := createEventHubNamespaceRawData(azureTestRuntime(), ns)
 
@@ -86,12 +86,12 @@ func TestCreateEventHubNamespaceRawDataWithoutProperties(t *testing.T) {
 // A nil entry inside KeyVaultProperties must be skipped, not dereferenced.
 func TestCreateEventHubNamespaceRawDataSkipsNilKeyVaultProperties(t *testing.T) {
 	ns := &armeventhub.EHNamespace{
-		Name: ptr("ns1"),
+		Name: new("ns1"),
 		Properties: &armeventhub.EHNamespaceProperties{
 			Encryption: &armeventhub.Encryption{
 				KeyVaultProperties: []*armeventhub.KeyVaultProperties{
 					nil,
-					{KeyName: ptr("cmk1")},
+					{KeyName: new("cmk1")},
 					nil,
 				},
 			},
@@ -109,14 +109,14 @@ func TestCreateEventHubRawData(t *testing.T) {
 	status := armeventhub.EntityStatusActive
 
 	raw := createEventHubRawData(&armeventhub.Eventhub{
-		ID:   ptr("/subscriptions/s/resourceGroups/rg/providers/Microsoft.EventHub/namespaces/ns1/eventhubs/eh1"),
-		Name: ptr("eh1"),
+		ID:   new("/subscriptions/s/resourceGroups/rg/providers/Microsoft.EventHub/namespaces/ns1/eventhubs/eh1"),
+		Name: new("eh1"),
 		Properties: &armeventhub.Properties{
 			CreatedAt:              &created,
-			PartitionCount:         ptr(int64(4)),
-			MessageRetentionInDays: ptr(int64(7)),
+			PartitionCount:         new(int64(4)),
+			MessageRetentionInDays: new(int64(7)),
 			Status:                 &status,
-			PartitionIDs:           []*string{ptr("0"), nil, ptr("1")},
+			PartitionIDs:           []*string{new("0"), nil, new("1")},
 		},
 	})
 
@@ -130,7 +130,7 @@ func TestCreateEventHubRawData(t *testing.T) {
 }
 
 func TestCreateEventHubRawDataWithoutProperties(t *testing.T) {
-	raw := createEventHubRawData(&armeventhub.Eventhub{Name: ptr("eh1")})
+	raw := createEventHubRawData(&armeventhub.Eventhub{Name: new("eh1")})
 
 	assert.Equal(t, "eh1", raw["name"].Value)
 	assert.Equal(t, int64(0), raw["partitionCount"].Value)
@@ -142,11 +142,11 @@ func TestCreateEventHubConsumerGroupRawData(t *testing.T) {
 	created := time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
 
 	raw := createEventHubConsumerGroupRawData(&armeventhub.ConsumerGroup{
-		ID:   ptr("/subscriptions/s/resourceGroups/rg/providers/Microsoft.EventHub/namespaces/ns1/eventhubs/eh1/consumergroups/cg1"),
-		Name: ptr("cg1"),
+		ID:   new("/subscriptions/s/resourceGroups/rg/providers/Microsoft.EventHub/namespaces/ns1/eventhubs/eh1/consumergroups/cg1"),
+		Name: new("cg1"),
 		Properties: &armeventhub.ConsumerGroupProperties{
 			CreatedAt:    &created,
-			UserMetadata: ptr("owner=platform"),
+			UserMetadata: new("owner=platform"),
 		},
 	})
 
@@ -160,7 +160,7 @@ func TestCreateEventHubConsumerGroupRawData(t *testing.T) {
 // Dereferencing it panics, and a panic in an accessor ends the scan rather than
 // the query.
 func TestCreateEventHubConsumerGroupRawDataWithoutProperties(t *testing.T) {
-	raw := createEventHubConsumerGroupRawData(&armeventhub.ConsumerGroup{Name: ptr("$Default")})
+	raw := createEventHubConsumerGroupRawData(&armeventhub.ConsumerGroup{Name: new("$Default")})
 
 	assert.Equal(t, "$Default", raw["name"].Value)
 	assert.Equal(t, "", raw["userMetadata"].Value)

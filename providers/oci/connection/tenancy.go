@@ -8,7 +8,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
 )
 
@@ -125,8 +124,8 @@ func (c *OciConnection) fetchCompartments(ctx context.Context) ([]identity.Compa
 	var page *string
 	for {
 		request := identity.ListCompartmentsRequest{
-			CompartmentId:          common.String(c.tenancyOcid),
-			CompartmentIdInSubtree: common.Bool(true),
+			CompartmentId:          new(c.tenancyOcid),
+			CompartmentIdInSubtree: new(true),
 			LifecycleState:         identity.CompartmentLifecycleStateActive,
 			Page:                   page,
 		}
@@ -237,8 +236,8 @@ func (c *OciConnection) AccessibleCompartmentIDs(ctx context.Context) (map[strin
 	var page *string
 	for {
 		response, err := oClient.ListCompartments(ctx, identity.ListCompartmentsRequest{
-			CompartmentId:          common.String(c.tenancyOcid),
-			CompartmentIdInSubtree: common.Bool(true),
+			CompartmentId:          new(c.tenancyOcid),
+			CompartmentIdInSubtree: new(true),
 			AccessLevel:            identity.ListCompartmentsAccessLevelAccessible,
 			LifecycleState:         identity.CompartmentLifecycleStateActive,
 			Page:                   page,
@@ -273,7 +272,7 @@ func (c *OciConnection) GetRegions(ctx context.Context) ([]identity.RegionSubscr
 	}
 
 	request := identity.ListRegionSubscriptionsRequest{
-		TenancyId: common.String(c.tenancyOcid),
+		TenancyId: new(c.tenancyOcid),
 	}
 
 	response, err := oClient.ListRegionSubscriptions(ctx, request)

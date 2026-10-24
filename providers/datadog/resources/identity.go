@@ -573,7 +573,7 @@ func (r *mqlDatadogOrganization) domainAllowlistEnabled() (bool, error) {
 	return attrs.GetEnabled(), nil
 }
 
-func (r *mqlDatadogOrganization) domainAllowlistDomains() ([]interface{}, error) {
+func (r *mqlDatadogOrganization) domainAllowlistDomains() ([]any, error) {
 	attrs, err := r.fetchDomainAllowlist()
 	if err != nil {
 		return nil, err
@@ -598,7 +598,7 @@ func parseDatadogTime(s string) *time.Time {
 
 // --- Permissions ---
 
-func (r *mqlDatadog) permissions() ([]interface{}, error) {
+func (r *mqlDatadog) permissions() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewRolesApi(conn.ApiClient())
 
@@ -611,7 +611,7 @@ func (r *mqlDatadog) permissions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, p := range resp.GetData() {
 		res, err := CreateResource(r.MqlRuntime, "datadog.permission", permissionArgs(p))
 		if err != nil {
@@ -628,7 +628,7 @@ func (r *mqlDatadogPermission) id() (string, error) {
 
 // --- Role edges ---
 
-func (r *mqlDatadogRole) permissions() ([]interface{}, error) {
+func (r *mqlDatadogRole) permissions() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewRolesApi(conn.ApiClient())
 
@@ -641,7 +641,7 @@ func (r *mqlDatadogRole) permissions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, p := range resp.GetData() {
 		res, err := CreateResource(r.MqlRuntime, "datadog.permission", permissionArgs(p))
 		if err != nil {
@@ -652,11 +652,11 @@ func (r *mqlDatadogRole) permissions() ([]interface{}, error) {
 	return all, nil
 }
 
-func (r *mqlDatadogRole) users() ([]interface{}, error) {
+func (r *mqlDatadogRole) users() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewRolesApi(conn.ApiClient())
 
-	var all []interface{}
+	var all []any
 	pageSize := int64(100)
 	page := int64(0)
 
@@ -690,7 +690,7 @@ func (r *mqlDatadogRole) users() ([]interface{}, error) {
 
 // --- User edges ---
 
-func (r *mqlDatadogUser) roles() ([]interface{}, error) {
+func (r *mqlDatadogUser) roles() ([]any, error) {
 	root, err := datadogRoot(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -707,7 +707,7 @@ func (r *mqlDatadogUser) roles() ([]interface{}, error) {
 
 	roleIds := userRoleIds(u)
 	if len(roleIds) == 0 {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	rolesList, err := root.fetchRoles()
@@ -719,7 +719,7 @@ func (r *mqlDatadogUser) roles() ([]interface{}, error) {
 		byId[role.GetId()] = role
 	}
 
-	all := []interface{}{}
+	all := []any{}
 	for _, id := range roleIds {
 		role, ok := byId[id]
 		if !ok {
@@ -757,7 +757,7 @@ func userRoleIds(u datadogV2.User) []string {
 	return ids
 }
 
-func (r *mqlDatadogUser) teams() ([]interface{}, error) {
+func (r *mqlDatadogUser) teams() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewTeamsApi(conn.ApiClient())
 
@@ -770,7 +770,7 @@ func (r *mqlDatadogUser) teams() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := []interface{}{}
+	all := []any{}
 	for _, membership := range resp.GetData() {
 		teamId := userTeamId(membership)
 		if teamId == "" {
@@ -806,7 +806,7 @@ func userTeamId(membership datadogV2.UserTeam) string {
 
 // --- Team edges ---
 
-func (r *mqlDatadogTeam) members() ([]interface{}, error) {
+func (r *mqlDatadogTeam) members() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewTeamsApi(conn.ApiClient())
 
@@ -819,7 +819,7 @@ func (r *mqlDatadogTeam) members() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := []interface{}{}
+	all := []any{}
 	pageSize := int64(100)
 	page := int64(0)
 

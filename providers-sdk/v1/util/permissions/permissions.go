@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -1176,8 +1177,8 @@ func findMeaningfulResource(chain []string) string {
 	qualify := map[string]bool{"Providers": true}
 
 	leafIdx := -1
-	for i := len(chain) - 1; i >= 0; i-- {
-		if i == len(chain)-1 || !skip[chain[i]] {
+	for i, c := range slices.Backward(chain) {
+		if i == len(chain)-1 || !skip[c] {
 			leafIdx = i
 			break
 		}
@@ -1901,12 +1902,12 @@ func azureOperationFromPath(urlPath, httpMethod string) (string, string) {
 	urlPath, _, _ = strings.Cut(urlPath, "?")
 	ns := "Microsoft.Resources"
 	rest := urlPath
-	if i := strings.LastIndex(urlPath, "/providers/"); i >= 0 {
-		rest = urlPath[i+len("/providers/"):]
+	if _, after, ok := strings.CutLast(urlPath, "/providers/"); ok {
+		rest = after
 		ns, rest, _ = strings.Cut(rest, "/")
 	}
 	var segs []string
-	for _, s := range strings.Split(rest, "/") {
+	for s := range strings.SplitSeq(rest, "/") {
 		if s == "" || strings.HasPrefix(s, "{") || s == "default" {
 			continue
 		}
@@ -2087,10 +2088,8 @@ func isAzureReadMethod(name string) bool {
 		// Non-paged list variants (some SDKs return the full list in one call)
 		"ListByServer", "ListBySubscription",
 	}
-	for _, m := range readMethods {
-		if name == m {
-			return true
-		}
+	if slices.Contains(readMethods, name) {
+		return true
 	}
 	// Catch-all for other list pagers
 	return strings.HasPrefix(name, "NewList") && strings.HasSuffix(name, "Pager")
@@ -2137,7 +2136,7 @@ func parseAzureSDKVersions(gomod []byte) map[string]string {
 	// A require line: module path, version, optionally a trailing comment such
 	// as "// indirect". Anchored at both ends so nothing else on a line counts.
 	re := regexp.MustCompile(`^\s*(github\.com/Azure/azure-sdk-for-go/\S+)\s+(v\S+)\s*(?://.*)?$`)
-	for _, line := range strings.Split(string(gomod), "\n") {
+	for line := range strings.SplitSeq(string(gomod), "\n") {
 		if m := re.FindStringSubmatch(line); m != nil {
 			versions[m[1]] = m[2]
 		}

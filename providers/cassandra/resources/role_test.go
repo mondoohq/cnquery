@@ -54,7 +54,7 @@ func TestEffectiveSuperusersCycleThroughSuperuser(t *testing.T) {
 	// whichever order the walk visits them.
 	direct := map[string]bool{"a": false, "b": false, "s": true}
 	grantedTo := map[string][]string{"a": {"b"}, "b": {"a", "s"}}
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		got := effectiveSuperusers(direct, grantedTo)
 		if !got["a"] || !got["b"] || !got["s"] {
 			t.Fatalf("run %d: got %v", i, got)

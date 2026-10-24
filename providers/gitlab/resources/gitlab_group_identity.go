@@ -71,7 +71,7 @@ func (g *mqlGitlabGroup) enterpriseAccessTokens() ([]any, error) {
 	page := int64(1)
 	for {
 		tokens, resp, err := conn.Client().GroupCredentials.ListGroupPersonalAccessTokens(groupID, &gitlab.ListGroupPersonalAccessTokensOptions{
-			ListOptions: gitlab.ListOptions{Page: page, PerPage: gitlabPerPage},
+			Page: page, PerPage: gitlabPerPage,
 		})
 		if err != nil {
 			if isTierOrPermissionGated(resp) {
@@ -141,7 +141,7 @@ func (g *mqlGitlabGroup) enterpriseSshKeys() ([]any, error) {
 	page := int64(1)
 	for {
 		keys, resp, err := conn.Client().GroupCredentials.ListGroupSSHKeys(groupID, &gitlab.ListGroupSSHKeysOptions{
-			ListOptions: gitlab.ListOptions{Page: page, PerPage: gitlabPerPage},
+			Page: page, PerPage: gitlabPerPage,
 		})
 		if err != nil {
 			if isTierOrPermissionGated(resp) {
@@ -204,7 +204,7 @@ func (a *mqlGitlabGroupServiceAccount) accessTokens() ([]any, error) {
 	for {
 		tokens, resp, err := conn.Client().Groups.ListServiceAccountPersonalAccessTokens(int(a.groupID), a.Id.Data,
 			&gitlab.ListServiceAccountPersonalAccessTokensOptions{
-				ListOptions: gitlab.ListOptions{Page: page, PerPage: gitlabPerPage},
+				Page: page, PerPage: gitlabPerPage,
 			})
 		if err != nil {
 			if isTierOrPermissionGated(resp) {
@@ -258,7 +258,7 @@ func (g *mqlGitlabGroup) serviceAccounts() ([]any, error) {
 	page := int64(1)
 	for {
 		accounts, resp, err := conn.Client().Groups.ListServiceAccounts(groupID, &gitlab.ListServiceAccountsOptions{
-			ListOptions: gitlab.ListOptions{Page: page, PerPage: gitlabPerPage},
+			Page: page, PerPage: gitlabPerPage,
 		})
 		if err != nil {
 			if isTierOrPermissionGated(resp) {
@@ -514,7 +514,7 @@ func listAccessRequests(
 	page := int64(1)
 	for {
 		requests, resp, err := list(&gitlab.ListAccessRequestsOptions{
-			ListOptions: gitlab.ListOptions{Page: page, PerPage: gitlabPerPage},
+			Page: page, PerPage: gitlabPerPage,
 		})
 		if err != nil {
 			if isTierOrPermissionGated(resp) {

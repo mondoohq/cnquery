@@ -28,21 +28,21 @@ func TestEsParseTime(t *testing.T) {
 		assert.Nil(t, esParseTime(nil))
 	})
 	t.Run("empty stays nil", func(t *testing.T) {
-		assert.Nil(t, esParseTime(tea.String("")))
+		assert.Nil(t, esParseTime(new("")))
 	})
 	t.Run("garbage stays nil", func(t *testing.T) {
-		assert.Nil(t, esParseTime(tea.String("not a date")))
+		assert.Nil(t, esParseTime(new("not a date")))
 	})
 	t.Run("epoch milliseconds are not silently accepted", func(t *testing.T) {
-		assert.Nil(t, esParseTime(tea.String("1562849679000")))
+		assert.Nil(t, esParseTime(new("1562849679000")))
 	})
 	t.Run("rfc3339", func(t *testing.T) {
-		got := esParseTime(tea.String("2026-08-15T12:30:00Z"))
+		got := esParseTime(new("2026-08-15T12:30:00Z"))
 		require.NotNil(t, got)
 		assert.Equal(t, want, got.UTC())
 	})
 	t.Run("milliseconds layout", func(t *testing.T) {
-		got := esParseTime(tea.String("2026-08-15T12:30:00.000Z"))
+		got := esParseTime(new("2026-08-15T12:30:00.000Z"))
 		require.NotNil(t, got)
 		assert.Equal(t, want, got.UTC())
 	})
@@ -53,10 +53,10 @@ func TestEsParseTime(t *testing.T) {
 // configured rule in a whitelist.
 func TestEsStrings(t *testing.T) {
 	assert.Equal(t, []any{}, esStrings(nil))
-	assert.Equal(t, []any{}, esStrings([]*string{nil, tea.String("")}))
-	assert.Equal(t, []any{"0.0.0.0/0"}, esStrings([]*string{tea.String("0.0.0.0/0"), nil}))
+	assert.Equal(t, []any{}, esStrings([]*string{nil, new("")}))
+	assert.Equal(t, []any{"0.0.0.0/0"}, esStrings([]*string{new("0.0.0.0/0"), nil}))
 	assert.Equal(t, []any{"10.0.0.0/8", "192.168.0.0/16"},
-		esStrings([]*string{tea.String("10.0.0.0/8"), tea.String(""), tea.String("192.168.0.0/16")}))
+		esStrings([]*string{new("10.0.0.0/8"), new(""), new("192.168.0.0/16")}))
 }
 
 // TestEsRegionUnavailable covers the classifier that decides whether a
@@ -66,7 +66,7 @@ func TestEsStrings(t *testing.T) {
 // warning per region on every healthy scan.
 func TestEsRegionUnavailable(t *testing.T) {
 	sdkErr := func(status int) error {
-		return &tea.SDKError{StatusCode: tea.Int(status), Code: tea.String("Forbidden")}
+		return &tea.SDKError{StatusCode: new(status), Code: new("Forbidden")}
 	}
 
 	t.Run("403 is an ordinary skip", func(t *testing.T) {
@@ -88,7 +88,7 @@ func TestEsRegionUnavailable(t *testing.T) {
 		assert.False(t, esRegionUnavailable(errors.New("dial tcp: i/o timeout")))
 	})
 	t.Run("SDK error without a status is a real failure", func(t *testing.T) {
-		assert.False(t, esRegionUnavailable(&tea.SDKError{Code: tea.String("Throttling")}))
+		assert.False(t, esRegionUnavailable(&tea.SDKError{Code: new("Throttling")}))
 	})
 }
 
@@ -121,14 +121,14 @@ func TestEsSnapshotIndices(t *testing.T) {
 		assert.Nil(t, esSnapshotIndices(nil))
 	})
 	t.Run("absent list is null", func(t *testing.T) {
-		assert.Nil(t, esSnapshotIndices(&esclient.DescribeSnapshotSettingResponseBodyResult{Enable: tea.Bool(true)}))
+		assert.Nil(t, esSnapshotIndices(&esclient.DescribeSnapshotSettingResponseBodyResult{Enable: new(true)}))
 	})
 	t.Run("empty list stays empty", func(t *testing.T) {
 		assert.Equal(t, []any{}, esSnapshotIndices(&esclient.DescribeSnapshotSettingResponseBodyResult{Indices: []*string{}}))
 	})
 	t.Run("blank entries dropped", func(t *testing.T) {
 		got := esSnapshotIndices(&esclient.DescribeSnapshotSettingResponseBodyResult{
-			Indices: []*string{tea.String("logs-*"), nil, tea.String(""), tea.String("orders")},
+			Indices: []*string{new("logs-*"), nil, new(""), new("orders")},
 		})
 		assert.Equal(t, []any{"logs-*", "orders"}, got)
 	})
@@ -151,7 +151,7 @@ func TestEsSnapshotSettingDecode(t *testing.T) {
 // anything the target did not refuse stays unclassified.
 func TestEsClassifyError(t *testing.T) {
 	sdkErr := func(status int) error {
-		return &tea.SDKError{StatusCode: tea.Int(status), Code: tea.String("x")}
+		return &tea.SDKError{StatusCode: new(status), Code: new("x")}
 	}
 	const perm = "elasticsearch:DescribeSnapshotSetting"
 
