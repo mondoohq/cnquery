@@ -235,6 +235,7 @@ oci.ai.document.projects 13.9.2
 oci.ai.generativeAi 13.9.2
 oci.ai.generativeAi.dedicatedAiCluster 13.9.2
 oci.ai.generativeAi.dedicatedAiCluster.capacity 13.9.2
+oci.ai.generativeAi.dedicatedAiCluster.capacityReservationID 14.3.6
 oci.ai.generativeAi.dedicatedAiCluster.compartment 13.9.2
 oci.ai.generativeAi.dedicatedAiCluster.compartmentID 13.9.2
 oci.ai.generativeAi.dedicatedAiCluster.created 13.9.2

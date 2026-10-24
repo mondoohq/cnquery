@@ -11694,6 +11694,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.ai.generativeAi.dedicatedAiCluster.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetLifecycleDetails()).ToDataRes(types.String)
 	},
+	"oci.ai.generativeAi.dedicatedAiCluster.capacityReservationID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetCapacityReservationID()).ToDataRes(types.String)
+	},
 	"oci.ai.generativeAi.dedicatedAiCluster.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetCreated()).ToDataRes(types.Time)
 	},
@@ -28281,6 +28284,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.ai.generativeAi.dedicatedAiCluster.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.capacityReservationID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).CapacityReservationID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.ai.generativeAi.dedicatedAiCluster.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -68253,21 +68260,22 @@ type mqlOciAiGenerativeAiDedicatedAiCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlOciAiGenerativeAiDedicatedAiClusterInternal it will be used here
-	Id               plugin.TValue[string]
-	Name             plugin.TValue[string]
-	CompartmentID    plugin.TValue[string]
-	Compartment      plugin.TValue[*mqlOciCompartment]
-	Type             plugin.TValue[string]
-	UnitCount        plugin.TValue[int64]
-	UnitShape        plugin.TValue[string]
-	Capacity         plugin.TValue[any]
-	Description      plugin.TValue[string]
-	State            plugin.TValue[string]
-	LifecycleDetails plugin.TValue[string]
-	Created          plugin.TValue[*time.Time]
-	TimeUpdated      plugin.TValue[*time.Time]
-	FreeformTags     plugin.TValue[map[string]any]
-	DefinedTags      plugin.TValue[map[string]any]
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	CompartmentID         plugin.TValue[string]
+	Compartment           plugin.TValue[*mqlOciCompartment]
+	Type                  plugin.TValue[string]
+	UnitCount             plugin.TValue[int64]
+	UnitShape             plugin.TValue[string]
+	Capacity              plugin.TValue[any]
+	Description           plugin.TValue[string]
+	State                 plugin.TValue[string]
+	LifecycleDetails      plugin.TValue[string]
+	CapacityReservationID plugin.TValue[string]
+	Created               plugin.TValue[*time.Time]
+	TimeUpdated           plugin.TValue[*time.Time]
+	FreeformTags          plugin.TValue[map[string]any]
+	DefinedTags           plugin.TValue[map[string]any]
 }
 
 // createOciAiGenerativeAiDedicatedAiCluster creates a new instance of this resource
@@ -68361,6 +68369,10 @@ func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetState() *plugin.TValue[strin
 
 func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetLifecycleDetails() *plugin.TValue[string] {
 	return &c.LifecycleDetails
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetCapacityReservationID() *plugin.TValue[string] {
+	return &c.CapacityReservationID
 }
 
 func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetCreated() *plugin.TValue[*time.Time] {
