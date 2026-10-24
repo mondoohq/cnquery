@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/hcp
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.10
+go 1.27.3
 
 require (
 	github.com/go-openapi/runtime v0.33.3

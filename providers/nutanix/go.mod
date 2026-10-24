@@ -18,7 +18,7 @@ replace (
 	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 => github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.0.1
 )
 
-go 1.26.10
+go 1.27.3
 
 require (
 	// pin v4.0.2

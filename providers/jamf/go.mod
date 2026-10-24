@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/jamf
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.10
+go 1.27.3
 
 require (
 	github.com/deploymenttheory/go-api-sdk-jamfpro v1.53.1

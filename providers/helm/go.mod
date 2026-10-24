@@ -1,6 +1,6 @@
 module go.mondoo.com/mql/providers/helm
 
-go 1.26.10
+go 1.27.3
 
 replace go.mondoo.com/mql => ../..
 

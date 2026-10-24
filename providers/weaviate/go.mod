@@ -2,7 +2,7 @@ module go.mondoo.com/mql/providers/weaviate
 
 replace go.mondoo.com/mql => ../..
 
-go 1.26.10
+go 1.27.3
 
 require (
 	github.com/weaviate/weaviate-go-client/v5 v5.7.3

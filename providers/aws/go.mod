@@ -14,7 +14,7 @@ replace go.mondoo.com/mql => ../..
 // `version mod-update` job from advancing it. Drop both once #3501 is fixed.
 replace github.com/aws/aws-sdk-go-v2/service/appstream => github.com/aws/aws-sdk-go-v2/service/appstream v1.63.0
 
-go 1.26.10
+go 1.27.3
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.47.3
@@ -226,6 +226,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.4.1 // indirect
 	github.com/mattn/go-colorable v0.1.16 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
+	github.com/microsoft/wmi v0.45.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/moby/api v1.56.1 // indirect
@@ -256,6 +257,7 @@ require (
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.72.0 // indirect
 	go.opentelemetry.io/otel v1.47.0 // indirect
+	go.opentelemetry.io/otel/log v1.47.0 // indirect
 	go.opentelemetry.io/otel/metric v1.47.0 // indirect
 	go.opentelemetry.io/otel/trace v1.47.0 // indirect
 	go.uber.org/mock v0.6.0 // indirect
@@ -277,11 +279,6 @@ require (
 	k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
-)
-
-require (
-	github.com/microsoft/wmi v0.45.0 // indirect
-	go.opentelemetry.io/otel/log v1.47.0 // indirect
 )
 
 replace github.com/hnakamur/go-scp => github.com/mondoohq/go-scp v1.0.4
