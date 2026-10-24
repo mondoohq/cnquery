@@ -104,6 +104,9 @@ func (r *mqlStackitLogsInstance) accessPolicies() ([]any, error) {
 	}
 	resp, err := client.DefaultAPI.ListAccessPolicies(bgctx(), c.ProjectID(), c.Region(), r.Id.Data).Execute()
 	if err != nil {
+		// Not deniedList like accessTokens: that keeps the v13 empty-list answer
+		// for fields that shipped with it (ADR 046 §9). This field is new, and an
+		// empty list on a refused read would let accessPolicies.none(...) pass.
 		if isAccessDenied(err) {
 			return nil, refusal(err)
 		}
