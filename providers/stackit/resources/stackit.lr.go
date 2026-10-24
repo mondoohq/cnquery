@@ -146,6 +146,7 @@ const (
 	ResourceStackitLogs                                    string = "stackit.logs"
 	ResourceStackitLogsInstance                            string = "stackit.logs.instance"
 	ResourceStackitLogsAccessToken                         string = "stackit.logs.accessToken"
+	ResourceStackitLogsAccessPolicy                        string = "stackit.logs.accessPolicy"
 	ResourceStackitValkey                                  string = "stackit.valkey"
 	ResourceStackitValkeyInstance                          string = "stackit.valkey.instance"
 	ResourceStackitValkeyInstanceBackup                    string = "stackit.valkey.instance.backup"
@@ -677,6 +678,10 @@ func init() {
 		"stackit.logs.accessToken": {
 			// to override args, implement: initStackitLogsAccessToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitLogsAccessToken,
+		},
+		"stackit.logs.accessPolicy": {
+			// to override args, implement: initStackitLogsAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitLogsAccessPolicy,
 		},
 		"stackit.valkey": {
 			// to override args, implement: initStackitValkey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3263,6 +3268,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.logMe.instance.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMeInstance).GetState()).ToDataRes(types.String)
 	},
+	"stackit.logMe.instance.instanceStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetInstanceStatus()).ToDataRes(types.String)
+	},
 	"stackit.logMe.instance.lastOperationType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMeInstance).GetLastOperationType()).ToDataRes(types.String)
 	},
@@ -3295,6 +3303,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.logMe.instance.backups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMeInstance).GetBackups()).ToDataRes(types.Array(types.Resource("stackit.logMe.instance.backup")))
+	},
+	"stackit.logMe.instance.automaticUpdatesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetAutomaticUpdatesEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.logMe.instance.availableUpdates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetAvailableUpdates()).ToDataRes(types.Int)
 	},
 	"stackit.logMe.instance.offering": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMeInstance).GetOffering()).ToDataRes(types.Resource("stackit.logMe.offering"))
@@ -4604,6 +4618,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.logs.instance.accessTokens": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogsInstance).GetAccessTokens()).ToDataRes(types.Array(types.Resource("stackit.logs.accessToken")))
 	},
+	"stackit.logs.instance.accessPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogsInstance).GetAccessPolicies()).ToDataRes(types.Array(types.Resource("stackit.logs.accessPolicy")))
+	},
 	"stackit.logs.accessToken.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogsAccessToken).GetId()).ToDataRes(types.String)
 	},
@@ -4627,6 +4644,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.logs.accessToken.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogsAccessToken).GetStatus()).ToDataRes(types.String)
+	},
+	"stackit.logs.accessPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogsAccessPolicy).GetId()).ToDataRes(types.String)
+	},
+	"stackit.logs.accessPolicy.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogsAccessPolicy).GetEmail()).ToDataRes(types.String)
+	},
+	"stackit.logs.accessPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogsAccessPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.logs.accessPolicy.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogsAccessPolicy).GetPermissions()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.logs.accessPolicy.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogsAccessPolicy).GetServiceAccount()).ToDataRes(types.Resource("stackit.serviceAccount"))
 	},
 	"stackit.valkey.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitValkey).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.valkey.instance")))
@@ -8458,6 +8490,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitLogMeInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"stackit.logMe.instance.instanceStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).InstanceStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"stackit.logMe.instance.lastOperationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogMeInstance).LastOperationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8500,6 +8536,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.logMe.instance.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogMeInstance).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.automaticUpdatesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).AutomaticUpdatesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.availableUpdates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).AvailableUpdates, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"stackit.logMe.instance.offering": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10450,6 +10494,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitLogsInstance).AccessTokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.logs.instance.accessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogsInstance).AccessPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.logs.accessToken.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogsAccessToken).__id, ok = v.Value.(string)
 		return
@@ -10484,6 +10532,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.logs.accessToken.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogsAccessToken).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logs.accessPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogsAccessPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.logs.accessPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogsAccessPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logs.accessPolicy.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogsAccessPolicy).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logs.accessPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogsAccessPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logs.accessPolicy.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogsAccessPolicy).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.logs.accessPolicy.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogsAccessPolicy).ServiceAccount, ok = plugin.RawToTValue[*mqlStackitServiceAccount](v.Value, v.Error)
 		return
 	},
 	"stackit.valkey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20150,7 +20222,7 @@ func (c *mqlStackitLogMe) GetOfferings() *plugin.TValue[[]any] {
 type mqlStackitLogMeInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitLogMeInstanceInternal it will be used here
+	mqlStackitLogMeInstanceInternal
 	Id                       plugin.TValue[string]
 	Name                     plugin.TValue[string]
 	Status                   plugin.TValue[string]
@@ -20164,6 +20236,7 @@ type mqlStackitLogMeInstance struct {
 	ImageUrl                 plugin.TValue[string]
 	Parameters               plugin.TValue[any]
 	State                    plugin.TValue[string]
+	InstanceStatus           plugin.TValue[string]
 	LastOperationType        plugin.TValue[string]
 	LastOperationDescription plugin.TValue[string]
 	Region                   plugin.TValue[string]
@@ -20175,6 +20248,8 @@ type mqlStackitLogMeInstance struct {
 	MonitoringInstance       plugin.TValue[*mqlStackitObservabilityInstance]
 	MaxDiskThreshold         plugin.TValue[int64]
 	Backups                  plugin.TValue[[]any]
+	AutomaticUpdatesEnabled  plugin.TValue[bool]
+	AvailableUpdates         plugin.TValue[int64]
 	Offering                 plugin.TValue[*mqlStackitLogMeOffering]
 	Plan                     plugin.TValue[*mqlStackitLogMeOfferingPlan]
 	FluentdTcpPort           plugin.TValue[int64]
@@ -20277,6 +20352,10 @@ func (c *mqlStackitLogMeInstance) GetState() *plugin.TValue[string] {
 	return &c.State
 }
 
+func (c *mqlStackitLogMeInstance) GetInstanceStatus() *plugin.TValue[string] {
+	return &c.InstanceStatus
+}
+
 func (c *mqlStackitLogMeInstance) GetLastOperationType() *plugin.TValue[string] {
 	return &c.LastOperationType
 }
@@ -20352,6 +20431,18 @@ func (c *mqlStackitLogMeInstance) GetBackups() *plugin.TValue[[]any] {
 		}
 
 		return c.backups()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetAutomaticUpdatesEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutomaticUpdatesEnabled, func() (bool, error) {
+		return c.automaticUpdatesEnabled()
+	})
+}
+
+func (c *mqlStackitLogMeInstance) GetAvailableUpdates() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AvailableUpdates, func() (int64, error) {
+		return c.availableUpdates()
 	})
 }
 
@@ -25383,19 +25474,20 @@ type mqlStackitLogsInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitLogsInstanceInternal it will be used here
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	Description   plugin.TValue[string]
-	Status        plugin.TValue[string]
-	CreatedAt     plugin.TValue[*time.Time]
-	RetentionDays plugin.TValue[int64]
-	Acl           plugin.TValue[[]any]
-	IngestUrl     plugin.TValue[string]
-	IngestOtlpUrl plugin.TValue[string]
-	QueryUrl      plugin.TValue[string]
-	QueryRangeUrl plugin.TValue[string]
-	DatasourceUrl plugin.TValue[string]
-	AccessTokens  plugin.TValue[[]any]
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Description    plugin.TValue[string]
+	Status         plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	RetentionDays  plugin.TValue[int64]
+	Acl            plugin.TValue[[]any]
+	IngestUrl      plugin.TValue[string]
+	IngestOtlpUrl  plugin.TValue[string]
+	QueryUrl       plugin.TValue[string]
+	QueryRangeUrl  plugin.TValue[string]
+	DatasourceUrl  plugin.TValue[string]
+	AccessTokens   plugin.TValue[[]any]
+	AccessPolicies plugin.TValue[[]any]
 }
 
 // createStackitLogsInstance creates a new instance of this resource
@@ -25499,6 +25591,22 @@ func (c *mqlStackitLogsInstance) GetAccessTokens() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitLogsInstance) GetAccessPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.logs.instance", c.__id, "accessPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessPolicies()
+	})
+}
+
 // mqlStackitLogsAccessToken for the stackit.logs.accessToken resource
 type mqlStackitLogsAccessToken struct {
 	MqlRuntime *plugin.Runtime
@@ -25576,6 +25684,82 @@ func (c *mqlStackitLogsAccessToken) GetValidUntil() *plugin.TValue[*time.Time] {
 
 func (c *mqlStackitLogsAccessToken) GetStatus() *plugin.TValue[string] {
 	return &c.Status
+}
+
+// mqlStackitLogsAccessPolicy for the stackit.logs.accessPolicy resource
+type mqlStackitLogsAccessPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitLogsAccessPolicyInternal it will be used here
+	Id             plugin.TValue[string]
+	Email          plugin.TValue[string]
+	Description    plugin.TValue[string]
+	Permissions    plugin.TValue[[]any]
+	ServiceAccount plugin.TValue[*mqlStackitServiceAccount]
+}
+
+// createStackitLogsAccessPolicy creates a new instance of this resource
+func createStackitLogsAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitLogsAccessPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.logs.accessPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitLogsAccessPolicy) MqlName() string {
+	return "stackit.logs.accessPolicy"
+}
+
+func (c *mqlStackitLogsAccessPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitLogsAccessPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitLogsAccessPolicy) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlStackitLogsAccessPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitLogsAccessPolicy) GetPermissions() *plugin.TValue[[]any] {
+	return &c.Permissions
+}
+
+func (c *mqlStackitLogsAccessPolicy) GetServiceAccount() *plugin.TValue[*mqlStackitServiceAccount] {
+	return plugin.GetOrCompute[*mqlStackitServiceAccount](&c.ServiceAccount, func() (*mqlStackitServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.logs.accessPolicy", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
 }
 
 // mqlStackitValkey for the stackit.valkey resource

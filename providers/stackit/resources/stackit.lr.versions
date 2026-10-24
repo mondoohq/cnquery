@@ -362,6 +362,8 @@ stackit.loadBalancer.targetSecurityGroup 13.7.2
 stackit.loadBalancers 13.0.0
 stackit.logMe 13.0.1
 stackit.logMe.instance 13.0.1
+stackit.logMe.instance.automaticUpdatesEnabled 14.2.6
+stackit.logMe.instance.availableUpdates 14.2.6
 stackit.logMe.instance.backup 13.7.2
 stackit.logMe.instance.backup.downloadable 13.7.2
 stackit.logMe.instance.backup.finishedAt 13.7.2
@@ -382,6 +384,7 @@ stackit.logMe.instance.fluentdUdpPort 13.7.2
 stackit.logMe.instance.graphite 13.7.2
 stackit.logMe.instance.id 13.0.1
 stackit.logMe.instance.imageUrl 13.0.1
+stackit.logMe.instance.instanceStatus 14.2.6
 stackit.logMe.instance.internetReachable 13.0.6
 stackit.logMe.instance.lastOperationDescription 13.7.2
 stackit.logMe.instance.lastOperationType 13.7.2
@@ -422,6 +425,12 @@ stackit.logMe.offering.quotaCount 13.7.2
 stackit.logMe.offering.version 13.7.2
 stackit.logMe.offerings 13.7.2
 stackit.logs 14.0.3
+stackit.logs.accessPolicy 14.2.6
+stackit.logs.accessPolicy.description 14.2.6
+stackit.logs.accessPolicy.email 14.2.6
+stackit.logs.accessPolicy.id 14.2.6
+stackit.logs.accessPolicy.permissions 14.2.6
+stackit.logs.accessPolicy.serviceAccount 14.2.6
 stackit.logs.accessToken 14.0.3
 stackit.logs.accessToken.creator 14.0.3
 stackit.logs.accessToken.description 14.0.3
@@ -432,6 +441,7 @@ stackit.logs.accessToken.permissions 14.0.3
 stackit.logs.accessToken.status 14.0.3
 stackit.logs.accessToken.validUntil 14.0.3
 stackit.logs.instance 14.0.3
+stackit.logs.instance.accessPolicies 14.2.6
 stackit.logs.instance.accessTokens 14.0.3
 stackit.logs.instance.acl 14.0.3
 stackit.logs.instance.createdAt 14.0.3

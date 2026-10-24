@@ -96,6 +96,51 @@ func (r *mqlStackitLogsInstance) accessTokens() ([]any, error) {
 	return out, nil
 }
 
+func (r *mqlStackitLogsInstance) accessPolicies() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.Logs()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.ListAccessPolicies(bgctx(), c.ProjectID(), c.Region(), r.Id.Data).Execute()
+	if err != nil {
+		if isAccessDenied(err) {
+			return nil, refusal(err)
+		}
+		return nil, err
+	}
+	items := resp.GetPolicies()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		res, err := CreateResource(r.MqlRuntime, "stackit.logs.accessPolicy", logsAccessPolicyArgs(r.Id.Data, &items[i]))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// logsAccessPolicyArgs maps an access policy. Policy ids are unique only
+// within their instance, so the cache key carries the instance id.
+func logsAccessPolicyArgs(instanceID string, p *logs.AccessPolicy) map[string]*llx.RawData {
+	perms := make([]any, 0, len(p.GetPermissions()))
+	for _, perm := range p.GetPermissions() {
+		perms = append(perms, string(perm))
+	}
+	return map[string]*llx.RawData{
+		"__id":        llx.StringData(qualifiedId("stackit.logs.accessPolicy", instanceID, p.GetId())),
+		"id":          llx.StringData(p.GetId()),
+		"email":       llx.StringData(p.GetEmail()),
+		"description": llx.StringData(p.GetDescription()),
+		"permissions": llx.ArrayData(perms, types.String),
+	}
+}
+
+func (r *mqlStackitLogsAccessPolicy) serviceAccount() (*mqlStackitServiceAccount, error) {
+	return serviceAccountRef(r.MqlRuntime, r.Email.Data, &r.ServiceAccount)
+}
+
 // logsAccessTokenArgs maps an access token's metadata. The token value, which
 // the API returns only when the token is created, is deliberately not mapped.
 func logsAccessTokenArgs(instanceID string, t *logs.AccessToken) map[string]*llx.RawData {
