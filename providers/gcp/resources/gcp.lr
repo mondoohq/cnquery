@@ -7804,10 +7804,24 @@ private gcp.project.iamService.workloadIdentityPool.provider @defaults("displayN
   oidcIssuerUri string
   // For OIDC providers: audience claims the IdP must include in tokens. Empty defaults to the workload identity pool's full resource name.
   oidcAllowedAudiences []string
+  // For OIDC providers: URL the OIDC discovery document is fetched from
+  //
+  // Empty when not set, in which case the discovery document is read from the
+  // issuer URL with `/.well-known/openid-configuration` appended. When set, its
+  // scheme, host, and port match `oidcIssuerUri`.
+  oidcDiscoveryUri string
   // For SAML providers: the SAML 2.0 IdP metadata XML document defining the trust
   samlIdpMetadataXml string
   // For X.509 providers: the number of trust anchors configured in the provider's trust store (0 for non-X.509 providers)
   x509TrustAnchorCount int
+  // Providers in the same pool authorized to issue actor tokens for this provider
+  //
+  // An actor token represents the identity of the acting party to whom
+  // authority is delegated. At most three actor providers can be configured.
+  // Empty when no delegation is configured. Soft-deleted actor providers are
+  // included. A configured name that matches no provider in the pool is left
+  // out, since a purged provider can no longer issue tokens.
+  actorProviders() []gcp.project.iamService.workloadIdentityPool.provider
 }
 
 // Google Cloud (GCP) Workforce Identity Federation pool
@@ -7892,6 +7906,12 @@ private gcp.organization.workforcePool.provider @defaults("displayName providerT
   //
   // One of SCIM_USAGE_UNSPECIFIED (do not use SCIM data), ENABLED_FOR_GROUPS, or ENABLED_FOR_USERS_GROUPS.
   scimUsage string
+  // Vendor of the third-party identity provider
+  //
+  // One of VENDOR_TYPE_UNSPECIFIED (no vendor specified, the value existing
+  // providers were backfilled with), ENTRA_ID, OKTA, PING_FEDERATE, ADFS,
+  // KEYCLOAK, FORGE_ROCK, JUMP_CLOUD, ONE_LOGIN, or GENERIC.
+  vendorType string
   // Discriminator for which protocol this provider trusts: `oidc` or `saml`
   providerType string
   // For OIDC providers: the issuer URL of the trusted IdP
@@ -12038,9 +12058,10 @@ private gcp.project.certificateManagerService {
 // dnsName entries on the issued certificate (or the requested domains for a
 // not-yet-provisioned managed cert), `expireTime` is the certificate's
 // expiry, and `scope` controls where the cert can be served (`DEFAULT`,
-// `EDGE_CACHE`, `ALL_REGIONS`). The audit hot spots are managed certs stuck
-// in `PROVISIONING`/`FAILED`, near-expiry leaf certs, and certs with broad
-// SAN coverage.
+// `EDGE_CACHE`, `ALL_REGIONS`, or `CLIENT_AUTH` for backend mTLS client
+// certificates). The audit hot spots are managed certs stuck
+// in `PROVISIONING`/`FAILED`, near-expiry leaf certs, certs with broad
+// SAN coverage, and certs no resource uses (`usedBy` is empty).
 private gcp.project.certificateManagerService.certificate @defaults("name type managedState expireTime") {
   // Project ID
   projectId string
@@ -12068,7 +12089,9 @@ private gcp.project.certificateManagerService.certificate @defaults("name type m
   sanDnsnames []string
   // Output-only PEM-encoded certificate chain
   pemCertificate string
-  // Where the certificate can be served (DEFAULT, EDGE_CACHE, ALL_REGIONS)
+  // Where the certificate can be served
+  //
+  // One of DEFAULT, EDGE_CACHE, ALL_REGIONS, or CLIENT_AUTH (a client certificate for backend mTLS).
   scope string
   // Discriminator for the certificate kind: `managed` (Google-managed or private-CA-issued) or `selfManaged` (user-uploaded)
   type string
@@ -12084,6 +12107,14 @@ private gcp.project.certificateManagerService.certificate @defaults("name type m
   managedProvisioningIssue dict
   // For managed certs: per-domain authorization attempt info. Each entry is shaped {domain, state, failureReason, details}
   managedAuthorizationAttemptInfo []dict
+  // Full resource names of the resources that use this certificate
+  //
+  // Names follow the full resource name format, for example
+  // `//certificatemanager.googleapis.com/projects/{project}/locations/{location}/certificateMaps/{map}/certificateMapEntries/{entry}`
+  // for a certificate map entry or
+  // `//compute.googleapis.com/projects/{project}/locations/{location}/targetHttpsProxies/{proxy}`
+  // for a target HTTPS proxy. Empty when no resource uses the certificate.
+  usedBy []string
 }
 
 // Google Cloud (GCP) Certificate Manager certificate map
@@ -12235,8 +12266,10 @@ private gcp.project.certificateManagerService.certificateIssuanceConfig @default
 // the trust stores attached to the config; each store carries
 // `trustAnchors` (root CAs) and `intermediateCas` (intermediate CAs) as
 // PEM-encoded certificate bundles. Currently only one trust store per
-// trust config is allowed, and trust configs are only consumed by load
-// balancers (not by SPIFFE workload validation).
+// trust config is allowed. `spiffeTrustStores` maps SPIFFE trust domains to
+// the trust stores used for SPIFFE certificate validation, and
+// `allowlistedCertificates` lists certificates accepted without chain
+// validation, the entries to review first.
 private gcp.project.certificateManagerService.trustConfig @defaults("name") {
   // Project ID
   projectId string
@@ -12258,6 +12291,19 @@ private gcp.project.certificateManagerService.trustConfig @defaults("name") {
   etag string
   // Attached trust stores. Each entry is shaped {trustAnchors:[{pemCertificate}], intermediateCas:[{pemCertificate}]}
   trustStores []dict
+  // Trust stores used for SPIFFE certificate validation, keyed by trust domain
+  //
+  // Each value is shaped {trustAnchors:[{pemCertificate}], intermediateCas:[{pemCertificate}]},
+  // the same shape as the entries of `trustStores`. Empty when no SPIFFE trust
+  // domain is configured.
+  spiffeTrustStores map[string]dict
+  // Certificates accepted without validating their chain to a trust anchor
+  //
+  // Each entry is shaped {pemCertificate}. A client certificate matching an
+  // allowlisted certificate is always considered valid as long as it parses,
+  // proof of private key possession is established, and the constraints on its
+  // SAN field are met. Empty when nothing is allowlisted.
+  allowlistedCertificates []dict
 }
 
 // Google Cloud (GCP) audit logging configuration for a service
@@ -16749,7 +16795,7 @@ private gcp.project.modelArmorService.floorSetting @defaults("name") {
   // Integrated services
   //
   // Google Cloud services to which the floor setting applies. Each value is
-  // one of INTEGRATED_SERVICE_UNSPECIFIED or AI_PLATFORM.
+  // one of INTEGRATED_SERVICE_UNSPECIFIED, AI_PLATFORM, or GOOGLE_MCP_SERVER.
   integratedServices []string
   // AI Platform floor setting
   //

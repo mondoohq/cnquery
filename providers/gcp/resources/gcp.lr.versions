@@ -349,6 +349,7 @@ gcp.organization.workforcePool.provider.providerType 13.32.1
 gcp.organization.workforcePool.provider.samlIdpMetadataXml 13.32.1
 gcp.organization.workforcePool.provider.scimUsage 13.32.1
 gcp.organization.workforcePool.provider.state 13.32.1
+gcp.organization.workforcePool.provider.vendorType 14.6.1
 gcp.organization.workforcePool.providers 13.32.1
 gcp.organization.workforcePool.sessionDuration 13.32.1
 gcp.organization.workforcePool.state 13.32.1
@@ -1123,6 +1124,7 @@ gcp.project.certificateManagerService.certificate.sanDnsnames 13.13.4
 gcp.project.certificateManagerService.certificate.scope 13.13.4
 gcp.project.certificateManagerService.certificate.type 13.13.4
 gcp.project.certificateManagerService.certificate.updateTime 13.13.4
+gcp.project.certificateManagerService.certificate.usedBy 14.6.1
 gcp.project.certificateManagerService.certificateIssuanceConfig 13.13.4
 gcp.project.certificateManagerService.certificateIssuanceConfig.certificateAuthorityConfig 13.13.4
 gcp.project.certificateManagerService.certificateIssuanceConfig.createTime 13.13.4
@@ -1179,6 +1181,7 @@ gcp.project.certificateManagerService.dnsAuthorization.updateTime 13.13.4
 gcp.project.certificateManagerService.dnsAuthorizations 13.13.4
 gcp.project.certificateManagerService.projectId 13.13.4
 gcp.project.certificateManagerService.trustConfig 13.13.4
+gcp.project.certificateManagerService.trustConfig.allowlistedCertificates 14.6.1
 gcp.project.certificateManagerService.trustConfig.createTime 13.13.4
 gcp.project.certificateManagerService.trustConfig.description 13.13.4
 gcp.project.certificateManagerService.trustConfig.etag 13.13.4
@@ -1187,6 +1190,7 @@ gcp.project.certificateManagerService.trustConfig.location 13.13.4
 gcp.project.certificateManagerService.trustConfig.name 13.13.4
 gcp.project.certificateManagerService.trustConfig.projectId 13.13.4
 gcp.project.certificateManagerService.trustConfig.resourcePath 13.13.4
+gcp.project.certificateManagerService.trustConfig.spiffeTrustStores 14.6.1
 gcp.project.certificateManagerService.trustConfig.trustStores 13.13.4
 gcp.project.certificateManagerService.trustConfig.updateTime 13.13.4
 gcp.project.certificateManagerService.trustConfigs 13.13.4
@@ -4049,6 +4053,7 @@ gcp.project.iamService.workloadIdentityPool.name 13.13.4
 gcp.project.iamService.workloadIdentityPool.poolId 13.13.4
 gcp.project.iamService.workloadIdentityPool.projectId 13.13.4
 gcp.project.iamService.workloadIdentityPool.provider 13.13.4
+gcp.project.iamService.workloadIdentityPool.provider.actorProviders 14.6.1
 gcp.project.iamService.workloadIdentityPool.provider.attributeCondition 13.13.4
 gcp.project.iamService.workloadIdentityPool.provider.attributeMapping 13.13.4
 gcp.project.iamService.workloadIdentityPool.provider.awsAccountId 13.13.4
@@ -4059,6 +4064,7 @@ gcp.project.iamService.workloadIdentityPool.provider.expireTime 13.13.4
 gcp.project.iamService.workloadIdentityPool.provider.hasAttributeCondition 13.21.2
 gcp.project.iamService.workloadIdentityPool.provider.name 13.13.4
 gcp.project.iamService.workloadIdentityPool.provider.oidcAllowedAudiences 13.13.4
+gcp.project.iamService.workloadIdentityPool.provider.oidcDiscoveryUri 14.6.1
 gcp.project.iamService.workloadIdentityPool.provider.oidcIssuerUri 13.13.4
 gcp.project.iamService.workloadIdentityPool.provider.poolId 13.13.4
 gcp.project.iamService.workloadIdentityPool.provider.projectId 13.13.4

@@ -169,6 +169,7 @@ func newCertificateResource(
 		"managedState":                    llx.StringData(managedState),
 		"managedProvisioningIssue":        llx.DictData(managedIssue),
 		"managedAuthorizationAttemptInfo": llx.ArrayData(managedAttempts, types.Dict),
+		"usedBy":                          llx.ArrayData(certificateUsedBy(c.UsedBy), types.String),
 	})
 	if err != nil {
 		return nil, err
@@ -540,6 +541,9 @@ func (g *mqlGcpProjectCertificateManagerService) trustConfigs() ([]any, error) {
 			"updateTime":   llx.TimeDataPtr(timestampAsTimePtr(t.UpdateTime)),
 			"etag":         llx.StringData(t.Etag),
 			"trustStores":  llx.ArrayData(flattenTrustStores(t.TrustStores), types.Dict),
+
+			"spiffeTrustStores":       llx.MapData(flattenSpiffeTrustStores(t.SpiffeTrustStores), types.Dict),
+			"allowlistedCertificates": llx.ArrayData(flattenAllowlistedCertificates(t.AllowlistedCertificates), types.Dict),
 		})
 		if err != nil {
 			return nil, err
@@ -646,18 +650,59 @@ func flattenGclbTargets(targets []*certificatemanagerpb.CertificateMap_GclbTarge
 func flattenTrustStores(stores []*certificatemanagerpb.TrustConfig_TrustStore) []any {
 	res := make([]any, 0, len(stores))
 	for _, s := range stores {
-		anchors := make([]any, 0, len(s.TrustAnchors))
-		for _, a := range s.TrustAnchors {
-			anchors = append(anchors, map[string]any{"pemCertificate": a.GetPemCertificate()})
+		res = append(res, flattenTrustStore(s))
+	}
+	return res
+}
+
+// flattenTrustStore shapes one trust store as
+// {trustAnchors:[{pemCertificate}], intermediateCas:[{pemCertificate}]}.
+// A nil store yields two empty lists.
+func flattenTrustStore(s *certificatemanagerpb.TrustConfig_TrustStore) map[string]any {
+	anchors := make([]any, 0, len(s.GetTrustAnchors()))
+	for _, a := range s.GetTrustAnchors() {
+		anchors = append(anchors, map[string]any{"pemCertificate": a.GetPemCertificate()})
+	}
+	intermediates := make([]any, 0, len(s.GetIntermediateCas()))
+	for _, i := range s.GetIntermediateCas() {
+		intermediates = append(intermediates, map[string]any{"pemCertificate": i.GetPemCertificate()})
+	}
+	return map[string]any{
+		"trustAnchors":    anchors,
+		"intermediateCas": intermediates,
+	}
+}
+
+// flattenSpiffeTrustStores keys each SPIFFE trust store by its trust domain.
+func flattenSpiffeTrustStores(stores map[string]*certificatemanagerpb.TrustConfig_TrustStore) map[string]any {
+	res := make(map[string]any, len(stores))
+	for domain, s := range stores {
+		res[domain] = flattenTrustStore(s)
+	}
+	return res
+}
+
+// flattenAllowlistedCertificates shapes each allowlisted certificate as
+// {pemCertificate}, matching the trust store entries.
+func flattenAllowlistedCertificates(certs []*certificatemanagerpb.TrustConfig_AllowlistedCertificate) []any {
+	res := make([]any, 0, len(certs))
+	for _, c := range certs {
+		if c == nil {
+			continue
 		}
-		intermediates := make([]any, 0, len(s.IntermediateCas))
-		for _, i := range s.IntermediateCas {
-			intermediates = append(intermediates, map[string]any{"pemCertificate": i.GetPemCertificate()})
+		res = append(res, map[string]any{"pemCertificate": c.GetPemCertificate()})
+	}
+	return res
+}
+
+// certificateUsedBy returns the full resource names of the resources using a
+// certificate, skipping nil and unnamed entries.
+func certificateUsedBy(usedBy []*certificatemanagerpb.Certificate_UsedBy) []any {
+	res := make([]any, 0, len(usedBy))
+	for _, u := range usedBy {
+		if name := u.GetName(); name != "" {
+			res = append(res, name)
 		}
-		res = append(res, map[string]any{
-			"trustAnchors":    anchors,
-			"intermediateCas": intermediates,
-		})
 	}
 	return res
 }

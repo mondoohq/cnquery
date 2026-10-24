@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
@@ -218,11 +219,16 @@ func (g *mqlGcpProjectIamServiceWorkloadIdentityPool) providers() ([]any, error)
 	}
 
 	var providers []any
+	byName := map[string]*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider{}
 	err = iamSvc.Projects.Locations.WorkloadIdentityPools.Providers.List(poolName).
 		ShowDeleted(true).
 		Pages(ctx, func(resp *iam.ListWorkloadIdentityPoolProvidersResponse) error {
 			for _, p := range resp.WorkloadIdentityPoolProviders {
 				providerType, awsAccountId, oidcIssuer, oidcAudiences, samlMetadata, x509TrustAnchorCount := flattenWifProviderConfig(p)
+				var oidcDiscoveryUri string
+				if p.Oidc != nil {
+					oidcDiscoveryUri = p.Oidc.DiscoveryUri
+				}
 
 				mqlProvider, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.workloadIdentityPool.provider",
 					map[string]*llx.RawData{
@@ -241,12 +247,16 @@ func (g *mqlGcpProjectIamServiceWorkloadIdentityPool) providers() ([]any, error)
 						"awsAccountId":         llx.StringData(awsAccountId),
 						"oidcIssuerUri":        llx.StringData(oidcIssuer),
 						"oidcAllowedAudiences": llx.ArrayData(oidcAudiences, types.String),
+						"oidcDiscoveryUri":     llx.StringData(oidcDiscoveryUri),
 						"samlIdpMetadataXml":   llx.StringData(samlMetadata),
 						"x509TrustAnchorCount": llx.IntData(int64(x509TrustAnchorCount)),
 					})
 				if err != nil {
 					return err
 				}
+				provider := mqlProvider.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider)
+				provider.cacheActorProviderNames = p.ActorProviders
+				byName[p.Name] = provider
 				providers = append(providers, mqlProvider)
 			}
 			return nil
@@ -254,11 +264,85 @@ func (g *mqlGcpProjectIamServiceWorkloadIdentityPool) providers() ([]any, error)
 	if err != nil {
 		return nil, err
 	}
+	// Actor providers live in the same pool, so they resolve against the list
+	// just fetched instead of one Get per reference.
+	for _, provider := range byName {
+		provider.cachePoolProviders = byName
+	}
 	return providers, nil
+}
+
+type mqlGcpProjectIamServiceWorkloadIdentityPoolProviderInternal struct {
+	// cacheActorProviderNames holds the raw ActorProviders resource names.
+	cacheActorProviderNames []string
+	// cachePoolProviders maps every provider of the parent pool by resource name.
+	cachePoolProviders map[string]*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider
 }
 
 func (g *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) id() (string, error) {
 	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) actorProviders() ([]any, error) {
+	resolved, unresolved := resolveWifActorProviders(g.cacheActorProviderNames, g.cachePoolProviders)
+	for _, name := range unresolved {
+		log.Debug().Str("provider", g.Name.Data).Str("actorProvider", name).
+			Msg("gcp> actor provider is not in the pool's provider list, skipping")
+	}
+	res := make([]any, 0, len(resolved))
+	for _, p := range resolved {
+		res = append(res, p)
+	}
+	return res, nil
+}
+
+// wifProviderPathSuffix returns the pool-relative part of a workload identity
+// pool provider resource name: "workloadIdentityPools/{pool}/providers/{id}".
+// The project segment is dropped because the API may spell it as a project ID
+// in one place and a project number in another, while actor providers always
+// live in the same pool and so share the same project.
+func wifProviderPathSuffix(name string) string {
+	parts := strings.Split(strings.Trim(name, "/"), "/")
+	for i := len(parts) - 4; i >= 0; i-- {
+		if parts[i] == "workloadIdentityPools" && i+3 < len(parts) && parts[i+2] == "providers" {
+			return strings.Join(parts[i:i+4], "/")
+		}
+	}
+	return ""
+}
+
+// resolveWifActorProviders matches ActorProviders resource names against the
+// providers of the same pool. A name is matched exactly first, then by its
+// pool-relative suffix. Names that match nothing (a provider purged after it
+// was referenced) are returned in unresolved, in their original order.
+func resolveWifActorProviders[T any](names []string, pool map[string]T) (resolved []T, unresolved []string) {
+	resolved = []T{}
+	var bySuffix map[string]T
+	for _, name := range names {
+		if name == "" {
+			continue
+		}
+		if p, ok := pool[name]; ok {
+			resolved = append(resolved, p)
+			continue
+		}
+		if bySuffix == nil {
+			bySuffix = make(map[string]T, len(pool))
+			for k, v := range pool {
+				if s := wifProviderPathSuffix(k); s != "" {
+					bySuffix[s] = v
+				}
+			}
+		}
+		if s := wifProviderPathSuffix(name); s != "" {
+			if p, ok := bySuffix[s]; ok {
+				resolved = append(resolved, p)
+				continue
+			}
+		}
+		unresolved = append(unresolved, name)
+	}
+	return resolved, unresolved
 }
 
 func (g *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) hasAttributeCondition() (bool, error) {

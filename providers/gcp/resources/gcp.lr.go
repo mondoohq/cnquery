@@ -9517,11 +9517,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.iamService.workloadIdentityPool.provider.oidcAllowedAudiences": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetOidcAllowedAudiences()).ToDataRes(types.Array(types.String))
 	},
+	"gcp.project.iamService.workloadIdentityPool.provider.oidcDiscoveryUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetOidcDiscoveryUri()).ToDataRes(types.String)
+	},
 	"gcp.project.iamService.workloadIdentityPool.provider.samlIdpMetadataXml": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetSamlIdpMetadataXml()).ToDataRes(types.String)
 	},
 	"gcp.project.iamService.workloadIdentityPool.provider.x509TrustAnchorCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetX509TrustAnchorCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.actorProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetActorProviders()).ToDataRes(types.Array(types.Resource("gcp.project.iamService.workloadIdentityPool.provider")))
 	},
 	"gcp.organization.workforcePool.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganizationWorkforcePool).GetName()).ToDataRes(types.String)
@@ -9594,6 +9600,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.organization.workforcePool.provider.scimUsage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganizationWorkforcePoolProvider).GetScimUsage()).ToDataRes(types.String)
+	},
+	"gcp.organization.workforcePool.provider.vendorType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationWorkforcePoolProvider).GetVendorType()).ToDataRes(types.String)
 	},
 	"gcp.organization.workforcePool.provider.providerType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganizationWorkforcePoolProvider).GetProviderType()).ToDataRes(types.String)
@@ -13144,6 +13153,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.certificateManagerService.certificate.managedAuthorizationAttemptInfo": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCertificateManagerServiceCertificate).GetManagedAuthorizationAttemptInfo()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.certificateManagerService.certificate.usedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCertificateManagerServiceCertificate).GetUsedBy()).ToDataRes(types.Array(types.String))
+	},
 	"gcp.project.certificateManagerService.certificateMap.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCertificateManagerServiceCertificateMap).GetProjectId()).ToDataRes(types.String)
 	},
@@ -13311,6 +13323,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.certificateManagerService.trustConfig.trustStores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCertificateManagerServiceTrustConfig).GetTrustStores()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.certificateManagerService.trustConfig.spiffeTrustStores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCertificateManagerServiceTrustConfig).GetSpiffeTrustStores()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"gcp.project.certificateManagerService.trustConfig.allowlistedCertificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCertificateManagerServiceTrustConfig).GetAllowlistedCertificates()).ToDataRes(types.Array(types.Dict))
 	},
 	"gcp.resourcemanager.auditConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpResourcemanagerAuditConfig).GetId()).ToDataRes(types.String)
@@ -29865,12 +29883,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).OidcAllowedAudiences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.iamService.workloadIdentityPool.provider.oidcDiscoveryUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).OidcDiscoveryUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.iamService.workloadIdentityPool.provider.samlIdpMetadataXml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).SamlIdpMetadataXml, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.iamService.workloadIdentityPool.provider.x509TrustAnchorCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).X509TrustAnchorCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.actorProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).ActorProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.organization.workforcePool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29975,6 +30001,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.organization.workforcePool.provider.scimUsage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrganizationWorkforcePoolProvider).ScimUsage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.workforcePool.provider.vendorType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationWorkforcePoolProvider).VendorType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.organization.workforcePool.provider.providerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35133,6 +35163,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectCertificateManagerServiceCertificate).ManagedAuthorizationAttemptInfo, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.certificateManagerService.certificate.usedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCertificateManagerServiceCertificate).UsedBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.certificateManagerService.certificateMap.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCertificateManagerServiceCertificateMap).__id, ok = v.Value.(string)
 		return
@@ -35375,6 +35409,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.certificateManagerService.trustConfig.trustStores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCertificateManagerServiceTrustConfig).TrustStores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.certificateManagerService.trustConfig.spiffeTrustStores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCertificateManagerServiceTrustConfig).SpiffeTrustStores, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.certificateManagerService.trustConfig.allowlistedCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCertificateManagerServiceTrustConfig).AllowlistedCertificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.resourcemanager.auditConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -69397,7 +69439,7 @@ func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetProviders() *plugin.TVa
 type mqlGcpProjectIamServiceWorkloadIdentityPoolProvider struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectIamServiceWorkloadIdentityPoolProviderInternal it will be used here
+	mqlGcpProjectIamServiceWorkloadIdentityPoolProviderInternal
 	ProjectId             plugin.TValue[string]
 	Name                  plugin.TValue[string]
 	ProviderId            plugin.TValue[string]
@@ -69414,8 +69456,10 @@ type mqlGcpProjectIamServiceWorkloadIdentityPoolProvider struct {
 	AwsAccountId          plugin.TValue[string]
 	OidcIssuerUri         plugin.TValue[string]
 	OidcAllowedAudiences  plugin.TValue[[]any]
+	OidcDiscoveryUri      plugin.TValue[string]
 	SamlIdpMetadataXml    plugin.TValue[string]
 	X509TrustAnchorCount  plugin.TValue[int64]
+	ActorProviders        plugin.TValue[[]any]
 }
 
 // createGcpProjectIamServiceWorkloadIdentityPoolProvider creates a new instance of this resource
@@ -69521,12 +69565,32 @@ func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetOidcAllowedAudi
 	return &c.OidcAllowedAudiences
 }
 
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetOidcDiscoveryUri() *plugin.TValue[string] {
+	return &c.OidcDiscoveryUri
+}
+
 func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetSamlIdpMetadataXml() *plugin.TValue[string] {
 	return &c.SamlIdpMetadataXml
 }
 
 func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetX509TrustAnchorCount() *plugin.TValue[int64] {
 	return &c.X509TrustAnchorCount
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetActorProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ActorProviders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.iamService.workloadIdentityPool.provider", c.__id, "actorProviders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.actorProviders()
+	})
 }
 
 // mqlGcpOrganizationWorkforcePool for the gcp.organization.workforcePool resource
@@ -69662,6 +69726,7 @@ type mqlGcpOrganizationWorkforcePoolProvider struct {
 	AttributeCondition                plugin.TValue[string]
 	DetailedAuditLogging              plugin.TValue[bool]
 	ScimUsage                         plugin.TValue[string]
+	VendorType                        plugin.TValue[string]
 	ProviderType                      plugin.TValue[string]
 	OidcIssuerUri                     plugin.TValue[string]
 	OidcClientId                      plugin.TValue[string]
@@ -69757,6 +69822,10 @@ func (c *mqlGcpOrganizationWorkforcePoolProvider) GetDetailedAuditLogging() *plu
 
 func (c *mqlGcpOrganizationWorkforcePoolProvider) GetScimUsage() *plugin.TValue[string] {
 	return &c.ScimUsage
+}
+
+func (c *mqlGcpOrganizationWorkforcePoolProvider) GetVendorType() *plugin.TValue[string] {
+	return &c.VendorType
 }
 
 func (c *mqlGcpOrganizationWorkforcePoolProvider) GetProviderType() *plugin.TValue[string] {
@@ -81643,6 +81712,7 @@ type mqlGcpProjectCertificateManagerServiceCertificate struct {
 	ManagedState                    plugin.TValue[string]
 	ManagedProvisioningIssue        plugin.TValue[any]
 	ManagedAuthorizationAttemptInfo plugin.TValue[[]any]
+	UsedBy                          plugin.TValue[[]any]
 }
 
 // createGcpProjectCertificateManagerServiceCertificate creates a new instance of this resource
@@ -81792,6 +81862,10 @@ func (c *mqlGcpProjectCertificateManagerServiceCertificate) GetManagedProvisioni
 
 func (c *mqlGcpProjectCertificateManagerServiceCertificate) GetManagedAuthorizationAttemptInfo() *plugin.TValue[[]any] {
 	return &c.ManagedAuthorizationAttemptInfo
+}
+
+func (c *mqlGcpProjectCertificateManagerServiceCertificate) GetUsedBy() *plugin.TValue[[]any] {
+	return &c.UsedBy
 }
 
 // mqlGcpProjectCertificateManagerServiceCertificateMap for the gcp.project.certificateManagerService.certificateMap resource
@@ -82229,16 +82303,18 @@ type mqlGcpProjectCertificateManagerServiceTrustConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectCertificateManagerServiceTrustConfigInternal it will be used here
-	ProjectId    plugin.TValue[string]
-	ResourcePath plugin.TValue[string]
-	Name         plugin.TValue[string]
-	Location     plugin.TValue[string]
-	Description  plugin.TValue[string]
-	Labels       plugin.TValue[map[string]any]
-	CreateTime   plugin.TValue[*time.Time]
-	UpdateTime   plugin.TValue[*time.Time]
-	Etag         plugin.TValue[string]
-	TrustStores  plugin.TValue[[]any]
+	ProjectId               plugin.TValue[string]
+	ResourcePath            plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Location                plugin.TValue[string]
+	Description             plugin.TValue[string]
+	Labels                  plugin.TValue[map[string]any]
+	CreateTime              plugin.TValue[*time.Time]
+	UpdateTime              plugin.TValue[*time.Time]
+	Etag                    plugin.TValue[string]
+	TrustStores             plugin.TValue[[]any]
+	SpiffeTrustStores       plugin.TValue[map[string]any]
+	AllowlistedCertificates plugin.TValue[[]any]
 }
 
 // createGcpProjectCertificateManagerServiceTrustConfig creates a new instance of this resource
@@ -82316,6 +82392,14 @@ func (c *mqlGcpProjectCertificateManagerServiceTrustConfig) GetEtag() *plugin.TV
 
 func (c *mqlGcpProjectCertificateManagerServiceTrustConfig) GetTrustStores() *plugin.TValue[[]any] {
 	return &c.TrustStores
+}
+
+func (c *mqlGcpProjectCertificateManagerServiceTrustConfig) GetSpiffeTrustStores() *plugin.TValue[map[string]any] {
+	return &c.SpiffeTrustStores
+}
+
+func (c *mqlGcpProjectCertificateManagerServiceTrustConfig) GetAllowlistedCertificates() *plugin.TValue[[]any] {
+	return &c.AllowlistedCertificates
 }
 
 // mqlGcpResourcemanagerAuditConfig for the gcp.resourcemanager.auditConfig resource
