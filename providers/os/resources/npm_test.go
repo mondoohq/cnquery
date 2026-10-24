@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
@@ -37,6 +38,11 @@ func TestNpmPackage_unique(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, gcPkg)
 
+	// Both declare yosay. A range ("^2.0.2") is not an installed version and is
+	// not listed, so pin each one: the same name then comes from two files.
+	yoPkg = bytes.Replace(yoPkg, []byte(`"yosay": "^2.0.2"`), []byte(`"yosay": "2.0.2"`), 1)
+	gcPkg = bytes.Replace(gcPkg, []byte(`"yosay": "^3.0.0"`), []byte(`"yosay": "3.0.0"`), 1)
+
 	err = afero.WriteFile(mockFS, "/usr/local/lib/node_modules/generator-code/package.json", gcPkg, 0o644)
 	require.NoError(t, err)
 	err = afero.WriteFile(mockFS, "/usr/local/lib/node_modules/yo/package.json", yoPkg, 0o644)
@@ -64,12 +70,12 @@ func TestNpmPackage_unique(t *testing.T) {
 	// Check that the first package is yosay
 	pkg2 := mqlNpm.List.Data[2].(*mqlNpmPackage)
 	require.Equal(t, "yosay", pkg2.Name.Data)
-	require.Equal(t, "^2.0.2", pkg2.Version.Data)
+	require.Equal(t, "2.0.2", pkg2.Version.Data)
 
 	// Check that the third package is also yosay, but with a different version
 	pkg3 := mqlNpm.List.Data[3].(*mqlNpmPackage)
 	require.Equal(t, "yosay", pkg3.Name.Data)
-	require.Equal(t, "^3.0.0", pkg3.Version.Data)
+	require.Equal(t, "3.0.0", pkg3.Version.Data)
 
 	// To get the correct data, we need distinct IDs
 	require.NotEqual(t, pkg2.MqlID(), pkg3.MqlID())
