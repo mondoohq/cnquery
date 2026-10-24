@@ -492,9 +492,6 @@ func TestSetDefaults_ByVersion(t *testing.T) {
 	assert.False(t, *set.FailCgroupV1)
 }
 
-//go:fix inline
-func ptrBool(b bool) *bool { return new(b) }
-
 // kubeadm writes explicit zero durations into config.yaml, which the kubelet
 // replaces with its defaults.
 func TestCreateConfiguration_ZeroValuesTakeDefaults(t *testing.T) {

@@ -190,11 +190,6 @@ func TestMacOSTimeSource(t *testing.T) {
 	})
 }
 
-//go:fix inline
-func strPtr(s string) *string {
-	return new(s)
-}
-
 func TestWindowsTimeSource(t *testing.T) {
 	got := windowsTimeSource("time.windows.com,0x9\r\n")
 	require.NotNil(t, got)

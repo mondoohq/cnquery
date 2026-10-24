@@ -29,9 +29,9 @@ func pkiObjectClass(classes []string) string {
 		"msPKI-Enterprise-Oid":   true,
 		"cRLDistributionPoint":   true,
 	}
-	for _, classe := range slices.Backward(classes) {
-		if known[classe] {
-			return classe
+	for _, class := range slices.Backward(classes) {
+		if known[class] {
+			return class
 		}
 	}
 	return classes[len(classes)-1]

@@ -31,7 +31,6 @@ func NewHostConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 		DialContext: (&net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
-			DualStack: true,
 		}).DialContext,
 		// HTTP/2 needs TLS 1.2+; against a TLS 1.0/1.1 server Go falls back to HTTP/1.1.
 		ForceAttemptHTTP2:     true,

@@ -221,8 +221,3 @@ func parseNtpConfServer(r io.Reader) *string {
 	}
 	return nil
 }
-
-//go:fix inline
-func boolPtr(b bool) *bool {
-	return new(b)
-}

@@ -142,13 +142,6 @@ func runMemoryCommand(conn shared.Connection, command string) ([]byte, error) {
 	return stdout, nil
 }
 
-// int64Ptr returns a pointer to v, for building a snapshot field.
-//
-//go:fix inline
-func int64Ptr(v int64) *int64 {
-	return new(v)
-}
-
 // scaled multiplies a reported count by its unit, keeping an unreported
 // count unreported.
 func scaled(v *int64, unit int64) *int64 {

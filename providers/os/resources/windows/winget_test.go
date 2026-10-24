@@ -232,9 +232,6 @@ const userSourcesDoc = `Sources:
     TrustLevel: 0
     Priority: 0`
 
-//go:fix inline
-func int64p(v int64) *int64 { return new(v) }
-
 func TestResolveWingetSources(t *testing.T) {
 	t.Run("defaults only", func(t *testing.T) {
 		got := ResolveWingetSources(nil, nil)

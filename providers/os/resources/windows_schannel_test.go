@@ -342,9 +342,6 @@ func TestMergeSchannelNames(t *testing.T) {
 	})
 }
 
-//go:fix inline
-func boolPtr(v bool) *bool { return new(v) }
-
 // TestSchannelLocalSslStoreSources pins which subkey and which value name backs
 // each of the three effective lists. The local SSL store keys one subkey per
 // NCRYPT interface and both interfaces spell their own list `Functions`, so

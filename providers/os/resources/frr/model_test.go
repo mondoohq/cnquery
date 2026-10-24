@@ -20,9 +20,6 @@ func neighborByName(n []Neighbor, name string) *Neighbor {
 	return nil
 }
 
-//go:fix inline
-func asn(v int64) *int64 { return new(v) }
-
 func TestParseASN(t *testing.T) {
 	tests := []struct {
 		in   string

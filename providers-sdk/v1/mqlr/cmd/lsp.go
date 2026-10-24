@@ -1508,10 +1508,3 @@ func (h *LRHandler) getResourceInfo(resourceID string, ast *lrcore.LR) (*resourc
 	resourceInfo, ok := schema.Resources[resourceID]
 	return resourceInfo, ok
 }
-
-// stringPtr returns a pointer to a string (helper function)
-//
-//go:fix inline
-func stringPtr(s string) *string {
-	return new(s)
-}

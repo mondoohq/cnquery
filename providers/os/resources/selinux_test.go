@@ -165,9 +165,6 @@ func TestReadSelinuxBooleansFromFS(t *testing.T) {
 	})
 }
 
-//go:fix inline
-func intPtr(i int) *int { return new(i) }
-
 // Output captured from `semodule --list-modules=full` and `semodule -l` on
 // RHEL 9 (policycoreutils 3.6) and RHEL 7 (2.5), with a module installed at
 // priority 400 and zosremote disabled.

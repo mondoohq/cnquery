@@ -299,16 +299,6 @@ func newPSSession(t sessionIO) (*psSession, error) {
 	return s, nil
 }
 
-// run runs one script and returns its stdout, stderr and exit code. Any error
-// means the session can no longer be trusted.
-func (s *psSession) run(script sessionScript) ([]byte, []byte, int, error) {
-	output, err := shared.NewCommandOutput(nil)
-	if err != nil {
-		return nil, nil, 0, err
-	}
-	return s.runOutput(script, output)
-}
-
 func (s *psSession) runOutput(script sessionScript, output *shared.CommandOutput) ([]byte, []byte, int, error) {
 	s.seq++
 	m := newSessionMarkers(s.id, s.seq)
@@ -442,10 +432,6 @@ type psSessionPool struct {
 	// open starts a session; tests replace it
 	open        func() (*psSession, error)
 	openContext func(context.Context) (*psSession, error)
-}
-
-func (p *psSessionPool) get() (*psSession, error) {
-	return p.getContext(context.Background())
 }
 
 func (p *psSessionPool) getContext(ctx context.Context) (*psSession, error) {
@@ -609,16 +595,6 @@ func (c *Connection) sessionScriptFor(command string) (sessionScript, bool) {
 		return parseRawScript(command)
 	}
 	return sessionScript{}, false
-}
-
-// runInSession runs command in a persistent session when sessions are on,
-// the target is Windows and the command is one a session runs: an encoded or
-// staged Windows PowerShell script, or, when the server's shell is Windows
-// PowerShell, any command that does not start PowerShell itself. ok is false
-// when it did not, and the caller runs the command as a process.
-func (c *Connection) runInSession(command string) (*shared.Command, bool) {
-	res, ok, _ := c.runInSessionContext(context.Background(), command)
-	return res, ok
 }
 
 func (c *Connection) runInSessionContext(parent context.Context, command string) (*shared.Command, bool, error) {

@@ -21,9 +21,6 @@ const disksServer2022 = `[
   {"Number":1,"FriendlyName":"NVMe Amazon Elastic B","SerialNumber":"vol0aac_00000001.","UniqueId":"vol0aac0001Amazon Elastic Block Store              1D0F","Size":10737418240,"BusType":17,"PartitionStyle":2,"IsBoot":false,"IsSystem":false,"IsOffline":false,"IsReadOnly":false,"OperationalStatus":[53264],"HealthStatus":0}
 ]`
 
-//go:fix inline
-func strp(s string) *string { return new(s) }
-
 func TestParseDisksLiveServer2022(t *testing.T) {
 	disks, err := ParseDisks(strings.NewReader(disksServer2022))
 	require.NoError(t, err)

@@ -155,15 +155,15 @@ func genBuiltinGo(conf ProvidersConf) ([]byte, error) {
 	for _, provider := range conf.Builtin {
 		// imports cannot contain dashes
 		trimProvider := strings.ReplaceAll(provider.Name, "-", "")
-		imports.WriteString(fmt.Sprintf("\t%sconf \"%s/config\"\n", trimProvider, provider.GoPackage))
-		imports.WriteString(fmt.Sprintf("\t%s \"%s/provider\"\n", trimProvider, provider.GoPackage))
+		fmt.Fprintf(&imports, "\t%sconf \"%s/config\"\n", trimProvider, provider.GoPackage)
+		fmt.Fprintf(&imports, "\t%s \"%s/provider\"\n", trimProvider, provider.GoPackage)
 
-		infos.WriteString(fmt.Sprintf(
+		fmt.Fprintf(&infos,
 			"//go:embed %s.resources.json\n"+
 				"var %sInfo []byte\n",
-			provider.Name, trimProvider))
+			provider.Name, trimProvider)
 
-		configs.WriteString(fmt.Sprintf(`
+		fmt.Fprintf(&configs, `
 	builtinProviders[%sconf.Config.ID] = &builtinProvider{
 		Runtime: &RunningProvider{
 			Name:     %sconf.Config.Name,
@@ -174,7 +174,7 @@ func genBuiltinGo(conf ProvidersConf) ([]byte, error) {
 		},
 		Config: &%sconf.Config,
 	}
-`, trimProvider, trimProvider, trimProvider, trimProvider, provider.Name, trimProvider, trimProvider))
+`, trimProvider, trimProvider, trimProvider, trimProvider, provider.Name, trimProvider, trimProvider)
 	}
 
 	res := fmt.Sprintf(template, imports.String(), infos.String(), configs.String())

@@ -11,9 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//go:fix inline
-func boolp(v bool) *bool { return new(v) }
-
 func TestParseSmartScreenSettings_Configured(t *testing.T) {
 	data, err := os.ReadFile("testdata/smartscreen_configured.json")
 	require.NoError(t, err)

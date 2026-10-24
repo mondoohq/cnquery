@@ -16,12 +16,6 @@ import (
 	"go.mondoo.com/mql/providers/os/registry"
 )
 
-//go:fix inline
-func i64(v int64) *int64 { return new(v) }
-
-//go:fix inline
-func str(v string) *string { return new(v) }
-
 func TestHotpatchStateRules(t *testing.T) {
 	pkg := new(HotpatchPackage)
 	cases := []struct {

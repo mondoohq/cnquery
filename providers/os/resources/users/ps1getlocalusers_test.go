@@ -72,11 +72,6 @@ func TestWindowsLocalUsersParser(t *testing.T) {
 	assert.Equal(t, `C:\Users\orphan.user`, orphan.LocalPath)
 }
 
-//go:fix inline
-func pointer(val string) *string {
-	return new(val)
-}
-
 func findWindowsUser(users []users.WindowsLocalUser, username string) *users.WindowsLocalUser {
 	for i := range users {
 		if users[i].Name == username {

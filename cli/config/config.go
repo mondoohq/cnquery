@@ -587,7 +587,7 @@ func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials 
 
 	return &upstream.ServiceAccountCredentials{
 		Mrn:         c.ServiceAccountMrn,
-		ParentMrn:   c.GetScopeMrn(),
+		ParentMrn:   c.GetScopeMrn(), //nolint:staticcheck // sent alongside ScopeMrn for servers that predate it
 		ScopeMrn:    c.GetScopeMrn(),
 		PrivateKey:  c.PrivateKey,
 		Certificate: c.Certificate,

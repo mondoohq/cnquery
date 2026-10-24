@@ -9,9 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//go:fix inline
-func ptrInt64(v int64) *int64 { return new(v) }
-
 func TestUnixFilesCmdGeneration(t *testing.T) {
 	tests := []struct {
 		From        string

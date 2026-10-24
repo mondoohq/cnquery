@@ -62,7 +62,7 @@ func languagePackage(pkg BomPackage, pkgType string) *sbom.Package {
 		// The legacy scalar stays written alongside the list. Nothing populates
 		// it from the list, so a consumer that has not migrated would otherwise
 		// see nothing where a license was reported.
-		License:  pkg.License,
+		License:  pkg.License, //nolint:staticcheck // kept for consumers that have not moved to Licenses
 		Licenses: sbom.DeclaredLicenses(pkg.License),
 	}
 
@@ -210,7 +210,7 @@ func GenerateBom(r *reporter.Report) []*sbom.Sbom {
 						Purl:         pkg.Purl,
 						Cpes:         pkg.CPEs,
 						Type:         pkg.Format,
-						License:      pkg.License,
+						License:      pkg.License, //nolint:staticcheck // kept for consumers that have not moved to Licenses
 						Licenses:     sbom.DeclaredLicenses(pkg.License),
 					}
 
@@ -232,7 +232,7 @@ func GenerateBom(r *reporter.Report) []*sbom.Sbom {
 					Purl:     pkg.Purl,
 					Cpes:     pkg.CPEs,
 					Type:     "pypi",
-					License:  pkg.License,
+					License:  pkg.License, //nolint:staticcheck // kept for consumers that have not moved to Licenses
 					Licenses: sbom.DeclaredLicenses(pkg.License),
 				}
 

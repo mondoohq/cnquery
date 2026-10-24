@@ -35,11 +35,6 @@ func TestParser_Lex(t *testing.T) {
 	}
 }
 
-//go:fix inline
-func sPtr(s string) *string {
-	return new(s)
-}
-
 func vBool(b bool) *Value {
 	return &Value{Bool: &b}
 }

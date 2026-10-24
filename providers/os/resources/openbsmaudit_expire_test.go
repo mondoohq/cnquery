@@ -14,9 +14,6 @@ import (
 	"go.mondoo.com/mql/providers/os/connection/mock"
 )
 
-//go:fix inline
-func bsmI64(v int64) *int64 { return new(v) }
-
 const (
 	bsmDay = int64(86400)
 	bsmKiB = int64(1024)
