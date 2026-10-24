@@ -3261,6 +3261,16 @@ alicloud.rds.instance {
   deletionProtection bool
   // Primary instance, set for read-only and disaster recovery instances
   masterInstance() alicloud.rds.instance
+  // Disaster recovery replica of the instance
+  //
+  // The instance that serves as this instance's disaster recovery replica,
+  // which may live in another region. Null when no replica is configured.
+  drReplicaInstance() alicloud.rds.instance
+  // Warm standby of the instance
+  //
+  // The instance kept as this instance's warm standby, which may live in
+  // another region. Null when no warm standby is configured.
+  warmStandbyInstance() alicloud.rds.instance
   // ID of the resource group the instance belongs to
   resourceGroupId string
   // Resource group that contains the instance
@@ -5376,8 +5386,15 @@ alicloud.cs.cluster {
   // Maintenance window configuration
   //
   // The scheduled maintenance window, with enable, duration, maintenanceTime,
-  // recurrence, and weeklyPeriod. Null when no window is configured.
+  // recurrence, and weeklyPeriod. Null when no window is configured. The
+  // blackout periods that suspend it are in maintenanceExclusions.
   maintenanceWindow dict
+  // Maintenance exclusions
+  //
+  // Blackout periods during which the maintenance window does not run some or
+  // all automatic operations, such as upgrades or CVE patching. Empty when the
+  // window has no exclusions, null when no maintenance window is configured.
+  maintenanceExclusions() []alicloud.cs.cluster.maintenanceExclusion
   // VPC the cluster runs in
   vpc() alicloud.vpc.network
   // vSwitches the cluster's control plane and nodes attach to
@@ -5464,6 +5481,29 @@ alicloud.cs.cluster.check @defaults("type status finishedAt") {
   //
   // Null while the run is still in progress.
   finishedAt time
+}
+
+// Container Service cluster maintenance exclusion
+//
+// A blackout period on a cluster's maintenance window. The scope names the
+// automatic operations it suspends, and startTime and endTime bound it, so a
+// cluster that blocks CVE patching, or blocks it for longer than intended, is
+// visible from scope and endTime.
+alicloud.cs.cluster.maintenanceExclusion @defaults("name scope endTime") {
+  // Exclusion name, unique within the cluster's maintenance window
+  name string
+  // Exclusion description
+  description string
+  // Automatic operations the exclusion suspends
+  //
+  // One of NoOperations (all automatic operations), NoUpgrades (cluster and
+  // component upgrades), NoMinorUpgrades (minor version upgrades only), or
+  // NoCVEPatch (automatic CVE patching).
+  scope string
+  // Time the exclusion starts
+  startTime time
+  // Time the exclusion ends
+  endTime time
 }
 
 // Container Service for Kubernetes node pool
@@ -8867,6 +8907,40 @@ alicloud.es.instance @defaults("description instanceId esVersion status") {
   port int
   // Whether the data node disks are encrypted at rest
   diskEncrypted bool
+  // Instance type of the index nodes
+  //
+  // For example elasticsearch.turbo1.ci.xlarge. Null when the cluster has no
+  // separate index nodes.
+  indexNodeSpec string
+  // Number of index nodes
+  //
+  // Null when the cluster has no separate index nodes.
+  indexNodeAmount int
+  // Disk size of each index node in GB
+  //
+  // Null when the cluster has no separate index nodes.
+  indexNodeDiskSize int
+  // Disk type of the index nodes, for example cloud_essd
+  //
+  // Null when the cluster has no separate index nodes.
+  indexNodeDiskType string
+  // Instance type of the search nodes
+  //
+  // For example elasticsearch.turbo1.ci.xlarge. Null when the cluster has no
+  // separate search nodes.
+  searchNodeSpec string
+  // Number of search nodes
+  //
+  // Null when the cluster has no separate search nodes.
+  searchNodeAmount int
+  // Disk size of each search node in GB
+  //
+  // Null when the cluster has no separate search nodes.
+  searchNodeDiskSize int
+  // Disk type of the search nodes, for example cloud_essd
+  //
+  // Null when the cluster has no separate search nodes.
+  searchNodeDiskType string
   // VPC the cluster is attached to
   vpc() alicloud.vpc.network
   // vSwitch the cluster is attached to

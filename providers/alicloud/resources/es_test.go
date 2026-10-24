@@ -173,3 +173,36 @@ func TestEsClassifyError(t *testing.T) {
 		assert.Equal(t, in, esClassifyError(in, perm))
 	})
 }
+
+// TestEsNodeTiers covers the index and search node tiers read from a
+// ListInstance item. A tier the cluster does not have must stay nil, so its
+// fields read as null and not as a tier of zero nodes, and the two tiers must
+// not be swapped.
+func TestEsNodeTiers(t *testing.T) {
+	t.Run("both tiers present", func(t *testing.T) {
+		// Synthetic: field names and example values from the SDK model docs; no
+		// live cluster was available.
+		body := `{"instanceId":"es-1","indexNodeConfiguration":{"spec":"elasticsearch.turbo1.ci.xlarge","amount":3,"disk":500,"diskType":"cloud_essd","performanceLevel":"PL0"},"searchNodeConfiguration":{"spec":"elasticsearch.turbo1.ci.large","amount":2,"disk":200,"diskType":"cloud_ssd"}}`
+		var inst esclient.ListInstanceResponseBodyResult
+		require.NoError(t, json.Unmarshal([]byte(body), &inst))
+		index, search := esNodeTiers(&inst)
+		assert.Equal(t, "elasticsearch.turbo1.ci.xlarge", tea.StringValue(index.spec))
+		assert.Equal(t, int32(3), tea.Int32Value(index.amount))
+		assert.Equal(t, int32(500), tea.Int32Value(index.disk))
+		assert.Equal(t, "cloud_essd", tea.StringValue(index.diskType))
+		assert.Equal(t, "elasticsearch.turbo1.ci.large", tea.StringValue(search.spec))
+		assert.Equal(t, int32(2), tea.Int32Value(search.amount))
+		assert.Equal(t, int32(200), tea.Int32Value(search.disk))
+		assert.Equal(t, "cloud_ssd", tea.StringValue(search.diskType))
+	})
+	t.Run("no separate tiers", func(t *testing.T) {
+		// Synthetic: a classic cluster whose list item carries neither tier.
+		var inst esclient.ListInstanceResponseBodyResult
+		require.NoError(t, json.Unmarshal([]byte(`{"instanceId":"es-2","nodeAmount":3}`), &inst))
+		index, search := esNodeTiers(&inst)
+		assert.Nil(t, index.spec)
+		assert.Nil(t, index.amount)
+		assert.Nil(t, search.disk)
+		assert.Nil(t, search.diskType)
+	})
+}

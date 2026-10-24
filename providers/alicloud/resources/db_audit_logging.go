@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
-	polardbclient "github.com/alibabacloud-go/polardb-20170801/v9/client"
-	rkvclient "github.com/alibabacloud-go/r-kvstore-20150101/v7/client"
+	polardbclient "github.com/alibabacloud-go/polardb-20170801/v10/client"
+	rkvclient "github.com/alibabacloud-go/r-kvstore-20150101/v8/client"
 	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/rs/zerolog/log"
 

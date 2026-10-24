@@ -109,6 +109,7 @@ const (
 	ResourceAlicloudCsGrant                       string = "alicloud.cs.grant"
 	ResourceAlicloudCsCluster                     string = "alicloud.cs.cluster"
 	ResourceAlicloudCsClusterCheck                string = "alicloud.cs.cluster.check"
+	ResourceAlicloudCsClusterMaintenanceExclusion string = "alicloud.cs.cluster.maintenanceExclusion"
 	ResourceAlicloudCsNodePool                    string = "alicloud.cs.nodePool"
 	ResourceAlicloudAlb                           string = "alicloud.alb"
 	ResourceAlicloudAlbSecurityPolicy             string = "alicloud.alb.securityPolicy"
@@ -571,6 +572,10 @@ func init() {
 		"alicloud.cs.cluster.check": {
 			// to override args, implement: initAlicloudCsClusterCheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAlicloudCsClusterCheck,
+		},
+		"alicloud.cs.cluster.maintenanceExclusion": {
+			// to override args, implement: initAlicloudCsClusterMaintenanceExclusion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudCsClusterMaintenanceExclusion,
 		},
 		"alicloud.cs.nodePool": {
 			// to override args, implement: initAlicloudCsNodePool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3674,6 +3679,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.rds.instance.masterInstance": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRdsInstance).GetMasterInstance()).ToDataRes(types.Resource("alicloud.rds.instance"))
 	},
+	"alicloud.rds.instance.drReplicaInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetDrReplicaInstance()).ToDataRes(types.Resource("alicloud.rds.instance"))
+	},
+	"alicloud.rds.instance.warmStandbyInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetWarmStandbyInstance()).ToDataRes(types.Resource("alicloud.rds.instance"))
+	},
 	"alicloud.rds.instance.resourceGroupId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRdsInstance).GetResourceGroupId()).ToDataRes(types.String)
 	},
@@ -5360,6 +5371,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.cs.cluster.maintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudCsCluster).GetMaintenanceWindow()).ToDataRes(types.Dict)
 	},
+	"alicloud.cs.cluster.maintenanceExclusions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCsCluster).GetMaintenanceExclusions()).ToDataRes(types.Array(types.Resource("alicloud.cs.cluster.maintenanceExclusion")))
+	},
 	"alicloud.cs.cluster.vpc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudCsCluster).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
 	},
@@ -5425,6 +5439,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.cs.cluster.check.finishedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudCsClusterCheck).GetFinishedAt()).ToDataRes(types.Time)
+	},
+	"alicloud.cs.cluster.maintenanceExclusion.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCsClusterMaintenanceExclusion).GetName()).ToDataRes(types.String)
+	},
+	"alicloud.cs.cluster.maintenanceExclusion.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCsClusterMaintenanceExclusion).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.cs.cluster.maintenanceExclusion.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCsClusterMaintenanceExclusion).GetScope()).ToDataRes(types.String)
+	},
+	"alicloud.cs.cluster.maintenanceExclusion.startTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCsClusterMaintenanceExclusion).GetStartTime()).ToDataRes(types.Time)
+	},
+	"alicloud.cs.cluster.maintenanceExclusion.endTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCsClusterMaintenanceExclusion).GetEndTime()).ToDataRes(types.Time)
 	},
 	"alicloud.cs.nodePool.regionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudCsNodePool).GetRegionId()).ToDataRes(types.String)
@@ -8407,6 +8436,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.es.instance.diskEncrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEsInstance).GetDiskEncrypted()).ToDataRes(types.Bool)
+	},
+	"alicloud.es.instance.indexNodeSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEsInstance).GetIndexNodeSpec()).ToDataRes(types.String)
+	},
+	"alicloud.es.instance.indexNodeAmount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEsInstance).GetIndexNodeAmount()).ToDataRes(types.Int)
+	},
+	"alicloud.es.instance.indexNodeDiskSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEsInstance).GetIndexNodeDiskSize()).ToDataRes(types.Int)
+	},
+	"alicloud.es.instance.indexNodeDiskType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEsInstance).GetIndexNodeDiskType()).ToDataRes(types.String)
+	},
+	"alicloud.es.instance.searchNodeSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEsInstance).GetSearchNodeSpec()).ToDataRes(types.String)
+	},
+	"alicloud.es.instance.searchNodeAmount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEsInstance).GetSearchNodeAmount()).ToDataRes(types.Int)
+	},
+	"alicloud.es.instance.searchNodeDiskSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEsInstance).GetSearchNodeDiskSize()).ToDataRes(types.Int)
+	},
+	"alicloud.es.instance.searchNodeDiskType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEsInstance).GetSearchNodeDiskType()).ToDataRes(types.String)
 	},
 	"alicloud.es.instance.vpc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEsInstance).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
@@ -12636,6 +12689,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudRdsInstance).MasterInstance, ok = plugin.RawToTValue[*mqlAlicloudRdsInstance](v.Value, v.Error)
 		return
 	},
+	"alicloud.rds.instance.drReplicaInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).DrReplicaInstance, ok = plugin.RawToTValue[*mqlAlicloudRdsInstance](v.Value, v.Error)
+		return
+	},
+	"alicloud.rds.instance.warmStandbyInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).WarmStandbyInstance, ok = plugin.RawToTValue[*mqlAlicloudRdsInstance](v.Value, v.Error)
+		return
+	},
 	"alicloud.rds.instance.resourceGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudRdsInstance).ResourceGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -15032,6 +15093,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudCsCluster).MaintenanceWindow, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"alicloud.cs.cluster.maintenanceExclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCsCluster).MaintenanceExclusions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"alicloud.cs.cluster.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudCsCluster).Vpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
 		return
@@ -15122,6 +15187,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.cs.cluster.check.finishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudCsClusterCheck).FinishedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.cs.cluster.maintenanceExclusion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCsClusterMaintenanceExclusion).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.cs.cluster.maintenanceExclusion.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCsClusterMaintenanceExclusion).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cs.cluster.maintenanceExclusion.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCsClusterMaintenanceExclusion).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cs.cluster.maintenanceExclusion.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCsClusterMaintenanceExclusion).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cs.cluster.maintenanceExclusion.startTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCsClusterMaintenanceExclusion).StartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.cs.cluster.maintenanceExclusion.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCsClusterMaintenanceExclusion).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"alicloud.cs.nodePool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19398,6 +19487,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.es.instance.diskEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudEsInstance).DiskEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.es.instance.indexNodeSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEsInstance).IndexNodeSpec, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.es.instance.indexNodeAmount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEsInstance).IndexNodeAmount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.es.instance.indexNodeDiskSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEsInstance).IndexNodeDiskSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.es.instance.indexNodeDiskType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEsInstance).IndexNodeDiskType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.es.instance.searchNodeSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEsInstance).SearchNodeSpec, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.es.instance.searchNodeAmount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEsInstance).SearchNodeAmount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.es.instance.searchNodeDiskSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEsInstance).SearchNodeDiskSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.es.instance.searchNodeDiskType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEsInstance).SearchNodeDiskType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"alicloud.es.instance.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28561,6 +28682,8 @@ type mqlAlicloudRdsInstance struct {
 	Category                    plugin.TValue[string]
 	DeletionProtection          plugin.TValue[bool]
 	MasterInstance              plugin.TValue[*mqlAlicloudRdsInstance]
+	DrReplicaInstance           plugin.TValue[*mqlAlicloudRdsInstance]
+	WarmStandbyInstance         plugin.TValue[*mqlAlicloudRdsInstance]
 	ResourceGroupId             plugin.TValue[string]
 	ResourceGroup               plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
 	DbInstanceStorage           plugin.TValue[int64]
@@ -28751,6 +28874,38 @@ func (c *mqlAlicloudRdsInstance) GetMasterInstance() *plugin.TValue[*mqlAlicloud
 		}
 
 		return c.masterInstance()
+	})
+}
+
+func (c *mqlAlicloudRdsInstance) GetDrReplicaInstance() *plugin.TValue[*mqlAlicloudRdsInstance] {
+	return plugin.GetOrCompute[*mqlAlicloudRdsInstance](&c.DrReplicaInstance, func() (*mqlAlicloudRdsInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.rds.instance", c.__id, "drReplicaInstance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudRdsInstance), nil
+			}
+		}
+
+		return c.drReplicaInstance()
+	})
+}
+
+func (c *mqlAlicloudRdsInstance) GetWarmStandbyInstance() *plugin.TValue[*mqlAlicloudRdsInstance] {
+	return plugin.GetOrCompute[*mqlAlicloudRdsInstance](&c.WarmStandbyInstance, func() (*mqlAlicloudRdsInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.rds.instance", c.__id, "warmStandbyInstance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudRdsInstance), nil
+			}
+		}
+
+		return c.warmStandbyInstance()
 	})
 }
 
@@ -34101,6 +34256,7 @@ type mqlAlicloudCsCluster struct {
 	Updated                   plugin.TValue[*time.Time]
 	Tags                      plugin.TValue[map[string]any]
 	MaintenanceWindow         plugin.TValue[any]
+	MaintenanceExclusions     plugin.TValue[[]any]
 	Vpc                       plugin.TValue[*mqlAlicloudVpcNetwork]
 	Vswitches                 plugin.TValue[[]any]
 	SecurityGroup             plugin.TValue[*mqlAlicloudEcsSecuritygroup]
@@ -34290,6 +34446,22 @@ func (c *mqlAlicloudCsCluster) GetTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlAlicloudCsCluster) GetMaintenanceWindow() *plugin.TValue[any] {
 	return &c.MaintenanceWindow
+}
+
+func (c *mqlAlicloudCsCluster) GetMaintenanceExclusions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MaintenanceExclusions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.cs.cluster", c.__id, "maintenanceExclusions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.maintenanceExclusions()
+	})
 }
 
 func (c *mqlAlicloudCsCluster) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
@@ -34550,6 +34722,70 @@ func (c *mqlAlicloudCsClusterCheck) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAlicloudCsClusterCheck) GetFinishedAt() *plugin.TValue[*time.Time] {
 	return &c.FinishedAt
+}
+
+// mqlAlicloudCsClusterMaintenanceExclusion for the alicloud.cs.cluster.maintenanceExclusion resource
+type mqlAlicloudCsClusterMaintenanceExclusion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudCsClusterMaintenanceExclusionInternal it will be used here
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Scope       plugin.TValue[string]
+	StartTime   plugin.TValue[*time.Time]
+	EndTime     plugin.TValue[*time.Time]
+}
+
+// createAlicloudCsClusterMaintenanceExclusion creates a new instance of this resource
+func createAlicloudCsClusterMaintenanceExclusion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudCsClusterMaintenanceExclusion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.cs.cluster.maintenanceExclusion", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudCsClusterMaintenanceExclusion) MqlName() string {
+	return "alicloud.cs.cluster.maintenanceExclusion"
+}
+
+func (c *mqlAlicloudCsClusterMaintenanceExclusion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudCsClusterMaintenanceExclusion) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAlicloudCsClusterMaintenanceExclusion) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudCsClusterMaintenanceExclusion) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAlicloudCsClusterMaintenanceExclusion) GetStartTime() *plugin.TValue[*time.Time] {
+	return &c.StartTime
+}
+
+func (c *mqlAlicloudCsClusterMaintenanceExclusion) GetEndTime() *plugin.TValue[*time.Time] {
+	return &c.EndTime
 }
 
 // mqlAlicloudCsNodePool for the alicloud.cs.nodePool resource
@@ -44431,6 +44667,14 @@ type mqlAlicloudEsInstance struct {
 	Domain                      plugin.TValue[string]
 	Port                        plugin.TValue[int64]
 	DiskEncrypted               plugin.TValue[bool]
+	IndexNodeSpec               plugin.TValue[string]
+	IndexNodeAmount             plugin.TValue[int64]
+	IndexNodeDiskSize           plugin.TValue[int64]
+	IndexNodeDiskType           plugin.TValue[string]
+	SearchNodeSpec              plugin.TValue[string]
+	SearchNodeAmount            plugin.TValue[int64]
+	SearchNodeDiskSize          plugin.TValue[int64]
+	SearchNodeDiskType          plugin.TValue[string]
 	Vpc                         plugin.TValue[*mqlAlicloudVpcNetwork]
 	Vswitch                     plugin.TValue[*mqlAlicloudVpcVswitch]
 	ResourceGroupId             plugin.TValue[string]
@@ -44546,6 +44790,38 @@ func (c *mqlAlicloudEsInstance) GetPort() *plugin.TValue[int64] {
 
 func (c *mqlAlicloudEsInstance) GetDiskEncrypted() *plugin.TValue[bool] {
 	return &c.DiskEncrypted
+}
+
+func (c *mqlAlicloudEsInstance) GetIndexNodeSpec() *plugin.TValue[string] {
+	return &c.IndexNodeSpec
+}
+
+func (c *mqlAlicloudEsInstance) GetIndexNodeAmount() *plugin.TValue[int64] {
+	return &c.IndexNodeAmount
+}
+
+func (c *mqlAlicloudEsInstance) GetIndexNodeDiskSize() *plugin.TValue[int64] {
+	return &c.IndexNodeDiskSize
+}
+
+func (c *mqlAlicloudEsInstance) GetIndexNodeDiskType() *plugin.TValue[string] {
+	return &c.IndexNodeDiskType
+}
+
+func (c *mqlAlicloudEsInstance) GetSearchNodeSpec() *plugin.TValue[string] {
+	return &c.SearchNodeSpec
+}
+
+func (c *mqlAlicloudEsInstance) GetSearchNodeAmount() *plugin.TValue[int64] {
+	return &c.SearchNodeAmount
+}
+
+func (c *mqlAlicloudEsInstance) GetSearchNodeDiskSize() *plugin.TValue[int64] {
+	return &c.SearchNodeDiskSize
+}
+
+func (c *mqlAlicloudEsInstance) GetSearchNodeDiskType() *plugin.TValue[string] {
+	return &c.SearchNodeDiskType
 }
 
 func (c *mqlAlicloudEsInstance) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {

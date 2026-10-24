@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	rkvclient "github.com/alibabacloud-go/r-kvstore-20150101/v7/client"
+	rkvclient "github.com/alibabacloud-go/r-kvstore-20150101/v8/client"
 	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

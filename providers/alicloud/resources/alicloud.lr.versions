@@ -720,6 +720,13 @@ alicloud.cs.cluster.deletionProtection 13.0.1
 alicloud.cs.cluster.grants 13.5.1
 alicloud.cs.cluster.initVersion 13.0.1
 alicloud.cs.cluster.ipStack 13.0.1
+alicloud.cs.cluster.maintenanceExclusion 14.2.5
+alicloud.cs.cluster.maintenanceExclusion.description 14.2.5
+alicloud.cs.cluster.maintenanceExclusion.endTime 14.2.5
+alicloud.cs.cluster.maintenanceExclusion.name 14.2.5
+alicloud.cs.cluster.maintenanceExclusion.scope 14.2.5
+alicloud.cs.cluster.maintenanceExclusion.startTime 14.2.5
+alicloud.cs.cluster.maintenanceExclusions 14.2.5
 alicloud.cs.cluster.maintenanceWindow 13.0.1
 alicloud.cs.cluster.name 13.0.1
 alicloud.cs.cluster.networkMode 13.0.1
@@ -1100,6 +1107,10 @@ alicloud.es.instance.description 13.4.1
 alicloud.es.instance.diskEncrypted 13.4.1
 alicloud.es.instance.domain 13.4.1
 alicloud.es.instance.esVersion 13.4.1
+alicloud.es.instance.indexNodeAmount 14.2.5
+alicloud.es.instance.indexNodeDiskSize 14.2.5
+alicloud.es.instance.indexNodeDiskType 14.2.5
+alicloud.es.instance.indexNodeSpec 14.2.5
 alicloud.es.instance.instanceCategory 13.4.1
 alicloud.es.instance.instanceId 13.4.1
 alicloud.es.instance.internetExposed 13.4.1
@@ -1118,6 +1129,10 @@ alicloud.es.instance.publicPort 13.4.1
 alicloud.es.instance.regionId 13.4.1
 alicloud.es.instance.resourceGroup 13.4.1
 alicloud.es.instance.resourceGroupId 13.4.1
+alicloud.es.instance.searchNodeAmount 14.2.5
+alicloud.es.instance.searchNodeDiskSize 14.2.5
+alicloud.es.instance.searchNodeDiskType 14.2.5
+alicloud.es.instance.searchNodeSpec 14.2.5
 alicloud.es.instance.snapshotIndices 14.0.1
 alicloud.es.instance.status 13.4.1
 alicloud.es.instance.tags 13.4.1
@@ -1950,6 +1965,7 @@ alicloud.rds.instance.dbInstanceStorage 13.0.0
 alicloud.rds.instance.dbInstanceStorageType 13.0.0
 alicloud.rds.instance.dbInstanceType 13.0.0
 alicloud.rds.instance.deletionProtection 13.0.0
+alicloud.rds.instance.drReplicaInstance 14.2.5
 alicloud.rds.instance.engine 13.0.0
 alicloud.rds.instance.engineVersion 13.0.0
 alicloud.rds.instance.expireTime 13.0.0
@@ -1978,6 +1994,7 @@ alicloud.rds.instance.tdeMode 13.5.1
 alicloud.rds.instance.vectorSupportStatus 13.4.1
 alicloud.rds.instance.vpc 13.0.0
 alicloud.rds.instance.vswitch 13.0.0
+alicloud.rds.instance.warmStandbyInstance 14.2.5
 alicloud.rds.instance.whitelistAllowsAllAddresses 13.5.1
 alicloud.rds.instance.zoneId 13.0.0
 alicloud.rds.instances 13.0.0

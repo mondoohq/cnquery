@@ -193,27 +193,37 @@ func newEsInstance(runtime *plugin.Runtime, region string, inst *esclient.ListIn
 		}
 	}
 
+	indexNodes, searchNodes := esNodeTiers(inst)
+
 	resource, err := CreateResource(runtime, "alicloud.es.instance", map[string]*llx.RawData{
 		// region-qualified so two clusters can never share a cache key, matching
 		// the RDS and PolarDB keys; instanceId stays the user-facing field
-		"__id":            llx.StringData(region + "/" + tea.StringValue(inst.InstanceId)),
-		"instanceId":      llx.StringDataPtr(inst.InstanceId),
-		"description":     llx.StringDataPtr(inst.Description),
-		"esVersion":       llx.StringDataPtr(inst.EsVersion),
-		"status":          llx.StringDataPtr(inst.Status),
-		"regionId":        llx.StringData(region),
-		"paymentType":     llx.StringDataPtr(inst.PaymentType),
-		"nodeAmount":      llx.IntData(int64(tea.Int32Value(inst.NodeAmount))),
-		"zoneCount":       llx.IntData(int64(tea.Int32Value(inst.ZoneCount))),
-		"dedicatedMaster": llx.BoolData(tea.BoolValue(inst.DedicateMaster)),
-		"protocol":        llx.StringDataPtr(inst.Protocol),
-		"domain":          llx.StringDataPtr(inst.Domain),
-		"port":            llx.IntData(port),
-		"diskEncrypted":   llx.BoolData(diskEncrypted),
-		"resourceGroupId": llx.StringDataPtr(inst.ResourceGroupId),
-		"tags":            llx.MapData(tags, types.String),
-		"createdAt":       llx.TimeDataPtr(esParseTime(inst.CreatedAt)),
-		"updatedAt":       llx.TimeDataPtr(esParseTime(inst.UpdatedAt)),
+		"__id":               llx.StringData(region + "/" + tea.StringValue(inst.InstanceId)),
+		"instanceId":         llx.StringDataPtr(inst.InstanceId),
+		"description":        llx.StringDataPtr(inst.Description),
+		"esVersion":          llx.StringDataPtr(inst.EsVersion),
+		"status":             llx.StringDataPtr(inst.Status),
+		"regionId":           llx.StringData(region),
+		"paymentType":        llx.StringDataPtr(inst.PaymentType),
+		"nodeAmount":         llx.IntData(int64(tea.Int32Value(inst.NodeAmount))),
+		"zoneCount":          llx.IntData(int64(tea.Int32Value(inst.ZoneCount))),
+		"dedicatedMaster":    llx.BoolData(tea.BoolValue(inst.DedicateMaster)),
+		"protocol":           llx.StringDataPtr(inst.Protocol),
+		"domain":             llx.StringDataPtr(inst.Domain),
+		"port":               llx.IntData(port),
+		"diskEncrypted":      llx.BoolData(diskEncrypted),
+		"indexNodeSpec":      llx.StringDataPtr(indexNodes.spec),
+		"indexNodeAmount":    llx.IntDataPtr(indexNodes.amount),
+		"indexNodeDiskSize":  llx.IntDataPtr(indexNodes.disk),
+		"indexNodeDiskType":  llx.StringDataPtr(indexNodes.diskType),
+		"searchNodeSpec":     llx.StringDataPtr(searchNodes.spec),
+		"searchNodeAmount":   llx.IntDataPtr(searchNodes.amount),
+		"searchNodeDiskSize": llx.IntDataPtr(searchNodes.disk),
+		"searchNodeDiskType": llx.StringDataPtr(searchNodes.diskType),
+		"resourceGroupId":    llx.StringDataPtr(inst.ResourceGroupId),
+		"tags":               llx.MapData(tags, types.String),
+		"createdAt":          llx.TimeDataPtr(esParseTime(inst.CreatedAt)),
+		"updatedAt":          llx.TimeDataPtr(esParseTime(inst.UpdatedAt)),
 	})
 	if err != nil {
 		return nil, err
@@ -518,4 +528,26 @@ func (r *mqlAlicloudEsInstance) snapshotIndices() ([]any, error) {
 		r.SnapshotIndices.State = plugin.StateIsSet | plugin.StateIsNull
 	}
 	return indices, nil
+}
+
+// esNodeTierConfig holds the settings of an index or search node tier, which
+// the SDK models as two distinct types with the same fields.
+type esNodeTierConfig struct {
+	spec     *string
+	amount   *int32
+	disk     *int32
+	diskType *string
+}
+
+// esNodeTiers reads the index and search node tiers of a cluster. A cluster
+// without separate index or search nodes leaves a tier unset, so its fields
+// stay null rather than reporting a tier of zero nodes.
+func esNodeTiers(inst *esclient.ListInstanceResponseBodyResult) (index, search esNodeTierConfig) {
+	if c := inst.IndexNodeConfiguration; c != nil {
+		index = esNodeTierConfig{spec: c.Spec, amount: c.Amount, disk: c.Disk, diskType: c.DiskType}
+	}
+	if c := inst.SearchNodeConfiguration; c != nil {
+		search = esNodeTierConfig{spec: c.Spec, amount: c.Amount, disk: c.Disk, diskType: c.DiskType}
+	}
+	return index, search
 }
