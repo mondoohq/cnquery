@@ -9,6 +9,7 @@ import (
 
 	databricks "github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/databricks/connection"
 )
@@ -66,6 +67,15 @@ func strSlice(vals []string) []any {
 		out = append(out, v)
 	}
 	return out
+}
+
+// nonEmptyString reports a string the API omits when unset, or null when it
+// is empty.
+func nonEmptyString(v string) *llx.RawData {
+	if v == "" {
+		return llx.NilData
+	}
+	return llx.StringData(v)
 }
 
 // strMap converts a string map to the map[string]any form llx.MapData expects.

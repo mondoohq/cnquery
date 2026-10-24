@@ -347,3 +347,13 @@ func TestGoogleServiceAccount(t *testing.T) {
 		t.Fatalf("googleServiceAccount() = %q", got)
 	}
 }
+
+func TestNonEmptyString(t *testing.T) {
+	// Synthetic: the two cases the helper distinguishes.
+	if got := nonEmptyString(""); got.Value != nil {
+		t.Fatalf("nonEmptyString(\"\") = %v, want null", got.Value)
+	}
+	if got := nonEmptyString("24h"); got.Value != "24h" {
+		t.Fatalf("nonEmptyString(\"24h\") = %v, want 24h", got.Value)
+	}
+}
