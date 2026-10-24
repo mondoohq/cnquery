@@ -347,7 +347,7 @@ func TestKubeConfigNeverReachesTheSchema(t *testing.T) {
 
 	// The response really does hand the credential to the provider: this is
 	// what the schema has to keep out, not a hypothetical.
-	var resp together.BetaClusterListResponse
+	var resp together.ClusterListResponse
 	require.NoError(t, json.Unmarshal([]byte(clustersFixture), &resp))
 	require.Len(t, resp.Clusters, 1)
 	require.Contains(t, resp.Clusters[0].KubeConfig, kubeConfigMarker)

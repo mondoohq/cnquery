@@ -35,7 +35,7 @@ Examples:
   mql shell together   # uses TOGETHER_API_KEY env var
 
 Notes:
-  The provider queries the Together AI REST API at https://api.together.ai/v1.
+  The provider queries the Together AI REST API at https://api.together.ai.
   An API key is required; generate one at https://api.together.ai/settings/api-keys.
 `,
 			Discovery: []string{},
@@ -50,7 +50,7 @@ Notes:
 					Long:    connection.OptionBaseURL,
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "API base URL (default: https://api.together.ai/v1)",
+					Desc:    "API base URL (default: https://api.together.ai)",
 				},
 				{
 					Long:    connection.OptionProject,

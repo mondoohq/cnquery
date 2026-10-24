@@ -4,11 +4,13 @@
 package resources
 
 import (
+	"encoding/json"
 	"errors"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	together "github.com/togethercomputer/together-go"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
@@ -157,4 +159,83 @@ func TestIsAccessDenied(t *testing.T) {
 			assert.Equal(t, tt.want, isAccessDenied(tt.err))
 		})
 	}
+}
+
+func TestParseContextLength(t *testing.T) {
+	// Synthetic: the catalog serializes the length as a decimal string.
+	n := parseContextLength("131072")
+	require.NotNil(t, n)
+	assert.Equal(t, int64(131072), *n)
+
+	for _, absent := range []string{"", "  ", "0", "-1", "128k"} {
+		assert.Nil(t, parseContextLength(absent), "%q is not a context length", absent)
+	}
+}
+
+func decodeSupportedModel(t *testing.T, body string) together.SupportedModel {
+	t.Helper()
+	var m together.SupportedModel
+	require.NoError(t, json.Unmarshal([]byte(body), &m))
+	return m
+}
+
+func TestSupportedModelArgs(t *testing.T) {
+	// Synthetic: shaped like the documented supported-model entry; values invented.
+	m := decodeSupportedModel(t, `{
+	  "id": "sm-0000",
+	  "name": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+	  "displayName": "Llama 3.3 70B Instruct Turbo",
+	  "displayType": "chat",
+	  "publisher": "Meta",
+	  "contextLength": "131072",
+	  "createdAt": "2026-01-01T00:00:00Z",
+	  "description": "Instruction-tuned Llama 3.3",
+	  "pricing": {"input": 0.88, "output": 0.88}
+	}`)
+
+	args := supportedModelArgs(m)
+	assert.Equal(t, "meta-llama/Llama-3.3-70B-Instruct-Turbo", args["id"].Value,
+		"the model id is the inference name the family and size parsers read, not the catalog id")
+	assert.Equal(t, "meta-llama/Llama-3.3-70B-Instruct-Turbo", args["__id"].Value)
+	assert.Equal(t, "chat", args["type"].Value)
+	assert.Equal(t, "Meta", args["organization"].Value)
+	assert.Equal(t, int64(131072), args["contextLength"].Value)
+	assert.Equal(t, 0.88, args["pricingInput"].Value)
+	assert.Equal(t, 0.88, args["pricingOutput"].Value)
+	assert.Equal(t, "Instruction-tuned Llama 3.3", args["description"].Value)
+	assert.Nil(t, args["license"].Value)
+	assert.Nil(t, args["link"].Value)
+}
+
+func TestSupportedModelArgsWithoutServerlessPricing(t *testing.T) {
+	// Synthetic: a dedicated-only model carries no serverless pricing.
+	m := decodeSupportedModel(t, `{"id": "sm-1", "name": "org/model-7B", "displayName": "Model 7B"}`)
+
+	args := supportedModelArgs(m)
+	assert.Nil(t, args["pricingInput"].Value, "no price is not a free model")
+	assert.Nil(t, args["pricingOutput"].Value)
+	assert.Nil(t, args["contextLength"].Value)
+	_, hasDescription := args["description"]
+	assert.False(t, hasDescription, "an empty description falls back to the display name")
+}
+
+func TestFileProcessed(t *testing.T) {
+	// Synthetic: the documented processing states, plus the absent case.
+	decode := func(body string) together.FileResponse {
+		var f together.FileResponse
+		require.NoError(t, json.Unmarshal([]byte(body), &f))
+		return f
+	}
+
+	done := fileProcessed(decode(`{"id": "file-1", "processing_status": "COMPLETED"}`))
+	require.NotNil(t, done)
+	assert.True(t, *done)
+
+	for _, status := range []string{"PENDING", "QUEUED", "RUNNING", "FAILED", "INVALID_FORMAT"} {
+		got := fileProcessed(decode(`{"id": "file-1", "processing_status": "` + status + `"}`))
+		require.NotNil(t, got, status)
+		assert.False(t, *got, status)
+	}
+
+	assert.Nil(t, fileProcessed(decode(`{"id": "file-1"}`)), "a file without a status has no answer")
 }

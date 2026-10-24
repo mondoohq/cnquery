@@ -38,8 +38,10 @@ The project ID appears in the Together AI dashboard URL when you select a projec
 For self-hosted or proxy setups:
 
 ```bash
-mql shell together --token <api-key> --base-url https://my-proxy.example.com/v1
+mql shell together --token <api-key> --base-url https://my-proxy.example.com
 ```
+
+The base URL is the API root: the provider calls versioned paths below it (`v1/files`, `v2/projects/...`, `v3/whoami`). A base URL ending in `/v1` is accepted and cut back to the root.
 
 ## Examples
 

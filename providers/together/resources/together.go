@@ -39,12 +39,36 @@ func (r *mqlTogether) id() (string, error) {
 type mqlTogetherInternal struct {
 	whoamiLock   sync.Mutex
 	whoamiLoaded atomic.Bool
-	whoami       *together.WhoamiResponse
+	whoami       *accountIdentity
+}
+
+// accountIdentity is the account the API key authenticates as. GET /v3/whoami
+// answers with one of several credential variants (project key, organization
+// key, user session), each carrying a subset of these values; a value the
+// variant does not carry stays empty.
+type accountIdentity struct {
+	APIKeyID         string
+	OrganizationID   string
+	OrganizationName string
+	ProjectID        string
+	ProjectName      string
+	UserID           string
+}
+
+func identityFromWhoami(who *together.WhoamiResponseUnion) *accountIdentity {
+	return &accountIdentity{
+		APIKeyID:         who.APIKey.ID,
+		OrganizationID:   who.Organization.ID,
+		OrganizationName: who.Organization.Name,
+		ProjectID:        who.Project.ID,
+		ProjectName:      who.Project.Name,
+		UserID:           who.User.ID,
+	}
 }
 
 // identity returns the account identity the API key actually authenticates as,
-// as reported by GET /whoami. It is fetched once per resource and reused.
-func (r *mqlTogether) identity() (*together.WhoamiResponse, error) {
+// as reported by GET /v3/whoami. It is fetched once per resource and reused.
+func (r *mqlTogether) identity() (*accountIdentity, error) {
 	if r.whoamiLoaded.Load() {
 		return r.whoami, nil
 	}
@@ -64,7 +88,7 @@ func (r *mqlTogether) identity() (*together.WhoamiResponse, error) {
 		return nil, errors.New("together: /whoami returned no account identity")
 	}
 
-	r.whoami = who
+	r.whoami = identityFromWhoami(who)
 	r.whoamiLoaded.Store(true)
 	return r.whoami, nil
 }
@@ -135,35 +159,18 @@ func (r *mqlTogether) models() ([]any, error) {
 	conn := togetherConn(r.MqlRuntime)
 	client := conn.Client()
 
-	models, err := client.Models.List(context.Background(), together.ModelListParams{})
+	// The v1 model list this resource was built on is gone from together-go
+	// v0.13. Models.List now lists a project's own custom models, so the
+	// catalog of Together-hosted models comes from the supported-model list.
+	models, err := collectPages(client.Models.ListSupported(context.Background(), together.ModelListSupportedParams{}))
 	if err != nil {
 		return nil, err
 	}
-	if models == nil {
-		return []any{}, nil
-	}
 
-	res := make([]any, 0, len(*models))
-	for _, m := range *models {
-		var created *time.Time
-		if m.Created > 0 {
-			t := time.Unix(m.Created, 0)
-			created = &t
-		}
-
-		mqlModel, err := CreateResource(r.MqlRuntime, "together.model", map[string]*llx.RawData{
-			"__id":          llx.StringData(m.ID),
-			"id":            llx.StringData(m.ID),
-			"displayName":   llx.StringData(m.DisplayName),
-			"type":          llx.StringData(string(m.Type)),
-			"organization":  llx.StringData(m.Organization),
-			"license":       llx.StringData(m.License),
-			"contextLength": llx.IntData(m.ContextLength),
-			"link":          llx.StringData(m.Link),
-			"created":       llx.TimeDataPtr(created),
-			"pricingInput":  llx.FloatData(m.Pricing.Input),
-			"pricingOutput": llx.FloatData(m.Pricing.Output),
-		})
+	res := make([]any, 0, len(models))
+	for _, m := range models {
+		args := supportedModelArgs(m)
+		mqlModel, err := CreateResource(r.MqlRuntime, "together.model", args)
 		if err != nil {
 			return nil, err
 		}
@@ -171,6 +178,51 @@ func (r *mqlTogether) models() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+// supportedModelArgs maps a supported-model catalog entry onto together.model.
+// The model is keyed by its inference name (the Hugging Face style
+// `org/model` identifier), which is what the field has always reported and
+// what family, parameterSize and quantization parse.
+func supportedModelArgs(m together.SupportedModel) map[string]*llx.RawData {
+	args := map[string]*llx.RawData{
+		"__id":          llx.StringData(m.Name),
+		"id":            llx.StringData(m.Name),
+		"displayName":   llx.StringData(m.DisplayName),
+		"type":          llx.StringData(m.DisplayType),
+		"organization":  llx.StringData(m.Publisher),
+		"license":       llx.NilData,
+		"contextLength": llx.IntDataPtr(parseContextLength(m.ContextLength)),
+		"link":          llx.NilData,
+		"created":       llx.TimeDataPtr(timeOrNil(m.CreatedAt)),
+		"pricingInput":  llx.NilData,
+		"pricingOutput": llx.NilData,
+	}
+	if m.Pricing.JSON.Input.Valid() {
+		args["pricingInput"] = llx.FloatData(m.Pricing.Input)
+	}
+	if m.Pricing.JSON.Output.Valid() {
+		args["pricingOutput"] = llx.FloatData(m.Pricing.Output)
+	}
+	if m.Description != "" {
+		args["description"] = llx.StringData(m.Description)
+	}
+	return args
+}
+
+// parseContextLength reads the catalog's context length, which the API
+// serializes as a decimal string. An absent or unreadable value is nil, not 0:
+// a zero-token context window is not something a model has.
+func parseContextLength(s string) *int64 {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return nil
+	}
+	n, err := strconv.ParseInt(s, 10, 64)
+	if err != nil || n <= 0 {
+		return nil
+	}
+	return &n
 }
 
 func (r *mqlTogether) fineTunes() ([]any, error) {
@@ -219,31 +271,34 @@ func (r *mqlTogether) endpoints() ([]any, error) {
 	conn := togetherConn(r.MqlRuntime)
 	client := conn.Client()
 
-	resp, err := client.Endpoints.List(context.Background(), together.EndpointListParams{})
+	project, err := r.scopedProjectID()
+	if err != nil {
+		return nil, err
+	}
+	if project == "" {
+		return nil, errors.New("together: endpoints are listed per project, and the API key resolves to no project; set --project")
+	}
+
+	endpoints, err := collectPages(client.Endpoints.List(context.Background(), together.EndpointListParams{
+		ProjectID: together.Opt(project),
+	}))
 	if isAccessDenied(err) {
 		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	if resp == nil {
-		return []any{}, nil
-	}
 
-	res := make([]any, 0, len(resp.Data))
-	for _, e := range resp.Data {
-		mqlEndpoint, err := CreateResource(r.MqlRuntime, "together.endpoint", map[string]*llx.RawData{
-			"__id":      llx.StringData(e.ID),
-			"id":        llx.StringData(e.ID),
-			"name":      llx.StringData(e.Name),
-			"model":     llx.StringData(e.Model),
-			"state":     llx.StringData(e.State),
-			"owner":     llx.StringData(e.Owner),
-			"type":      llx.StringData(e.Type),
-			"createdAt": llx.TimeData(e.CreatedAt),
-		})
+	res := make([]any, 0, len(endpoints))
+	for _, e := range endpoints {
+		mqlEndpoint, err := CreateResource(r.MqlRuntime, "together.endpoint", endpointArgs(e))
 		if err != nil {
 			return nil, err
+		}
+		ep := mqlEndpoint.(*mqlTogetherEndpoint)
+		ep.cacheProjectID = e.ProjectID
+		if ep.cacheProjectID == "" {
+			ep.cacheProjectID = project
 		}
 		res = append(res, mqlEndpoint)
 	}
@@ -275,14 +330,15 @@ func (r *mqlTogether) files() ([]any, error) {
 		}
 
 		mqlFile, err := CreateResource(r.MqlRuntime, "together.file", map[string]*llx.RawData{
-			"__id":      llx.StringData(f.ID),
-			"id":        llx.StringData(f.ID),
-			"filename":  llx.StringData(f.Filename),
-			"purpose":   llx.StringData(string(f.Purpose)),
-			"fileType":  llx.StringData(string(f.FileType)),
-			"bytes":     llx.IntData(f.Bytes),
-			"processed": llx.BoolData(f.Processed),
-			"createdAt": llx.TimeDataPtr(createdAt),
+			"__id":             llx.StringData(f.ID),
+			"id":               llx.StringData(f.ID),
+			"filename":         llx.StringData(f.Filename),
+			"purpose":          llx.StringData(string(f.Purpose)),
+			"fileType":         llx.StringData(string(f.FileType)),
+			"bytes":            llx.IntData(f.Bytes),
+			"processed":        llx.BoolDataPtr(fileProcessed(f)),
+			"processingStatus": llx.StringDataPtr(reportedString(string(f.ProcessingStatus), f.JSON.ProcessingStatus)),
+			"createdAt":        llx.TimeDataPtr(createdAt),
 		})
 		if err != nil {
 			return nil, err
@@ -293,11 +349,23 @@ func (r *mqlTogether) files() ([]any, error) {
 	return res, nil
 }
 
+// fileProcessed reports whether the file validation pipeline has finished
+// with the file. together-go v0.13 replaced the old Processed flag with a
+// processing status, so the flag is derived from it: only COMPLETED counts as
+// processed. A file that reports no status has no answer, which is null.
+func fileProcessed(f together.FileResponse) *bool {
+	if !f.JSON.ProcessingStatus.Valid() || f.ProcessingStatus == "" {
+		return nil
+	}
+	done := f.ProcessingStatus == together.FileResponseProcessingStatusCompleted
+	return &done
+}
+
 func (r *mqlTogether) clusters() ([]any, error) {
 	conn := togetherConn(r.MqlRuntime)
 	client := conn.Client()
 
-	resp, err := client.Beta.Clusters.List(context.Background(), together.BetaClusterListParams{})
+	resp, err := client.Clusters.List(context.Background(), together.ClusterListParams{})
 	if isAccessDenied(err) {
 		return []any{}, nil
 	}
@@ -583,12 +651,12 @@ func (r *mqlTogether) clusterStorageVolumes() ([]any, error) {
 // account has nothing to filter by, and every volume the key can see is its
 // own.
 func listClusterStorageVolumes(runtime *plugin.Runtime, client *together.Client, project string) ([]any, error) {
-	params := together.BetaClusterStorageListParams{}
+	params := together.ClusterStorageListParams{}
 	if project != "" {
 		params.ProjectID = together.Opt(project)
 	}
 
-	resp, err := client.Beta.Clusters.Storage.List(context.Background(), params)
+	resp, err := client.Clusters.Storage.List(context.Background(), params)
 	if isAccessDenied(err) {
 		return []any{}, nil
 	}
@@ -956,6 +1024,23 @@ func isAccessDenied(err error) bool {
 		return apierr.StatusCode == 403 || apierr.StatusCode == 401
 	}
 	return false
+}
+
+// classifyRefusal wraps a 401 or 403 from the API in the matching error kind
+// and returns any other error unchanged. Use it on list calls that have no
+// earlier empty-list behavior to preserve.
+func classifyRefusal(err error) error {
+	var apierr *together.Error
+	if !errors.As(err, &apierr) {
+		return err
+	}
+	switch apierr.StatusCode {
+	case 401:
+		return llx.Unauthenticated(err)
+	case 403:
+		return llx.Forbidden(err)
+	}
+	return err
 }
 
 var _ = plugin.StateIsNull
