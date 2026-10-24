@@ -11523,6 +11523,10 @@ private oci.ai.generativeAi.dedicatedAiCluster @defaults("name type state") {
   state string
   // Detail message describing the current lifecycle state
   lifecycleDetails string
+  // OCID of the customer-provided capacity reservation backing the cluster
+  //
+  // Null when the cluster does not draw on a capacity reservation.
+  capacityReservationID string
   // Creation time
   created time
   // Last update time

@@ -64,20 +64,21 @@ func (o *mqlOciAiGenerativeAi) fetchDedicatedAiClusters(svc *generativeai.Genera
 			return nil, err
 		}
 		mqlCluster, err := CreateResource(o.MqlRuntime, "oci.ai.generativeAi.dedicatedAiCluster", map[string]*llx.RawData{
-			"id":               llx.StringDataPtr(c.Id),
-			"name":             llx.StringDataPtr(c.DisplayName),
-			"compartmentID":    llx.StringDataPtr(c.CompartmentId),
-			"type":             llx.StringData(string(c.Type)),
-			"unitCount":        llx.IntDataPtr(c.UnitCount),
-			"unitShape":        llx.StringData(string(c.UnitShape)),
-			"capacity":         llx.DictData(capacity),
-			"description":      llx.StringDataPtr(c.Description),
-			"state":            llx.StringData(string(c.LifecycleState)),
-			"lifecycleDetails": llx.StringDataPtr(c.LifecycleDetails),
-			"created":          sdkTimeData(c.TimeCreated),
-			"timeUpdated":      sdkTimeData(c.TimeUpdated),
-			"freeformTags":     llx.MapData(strMapToAny(c.FreeformTags), types.String),
-			"definedTags":      llx.MapData(definedTagsToAny(c.DefinedTags), types.Any),
+			"id":                    llx.StringDataPtr(c.Id),
+			"name":                  llx.StringDataPtr(c.DisplayName),
+			"compartmentID":         llx.StringDataPtr(c.CompartmentId),
+			"type":                  llx.StringData(string(c.Type)),
+			"unitCount":             llx.IntDataPtr(c.UnitCount),
+			"unitShape":             llx.StringData(string(c.UnitShape)),
+			"capacity":              llx.DictData(capacity),
+			"description":           llx.StringDataPtr(c.Description),
+			"state":                 llx.StringData(string(c.LifecycleState)),
+			"lifecycleDetails":      llx.StringDataPtr(c.LifecycleDetails),
+			"capacityReservationID": llx.StringDataPtr(c.CapacityReservationId),
+			"created":               sdkTimeData(c.TimeCreated),
+			"timeUpdated":           sdkTimeData(c.TimeUpdated),
+			"freeformTags":          llx.MapData(strMapToAny(c.FreeformTags), types.String),
+			"definedTags":           llx.MapData(definedTagsToAny(c.DefinedTags), types.Any),
 		})
 		if err != nil {
 			return nil, err
