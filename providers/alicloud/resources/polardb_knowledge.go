@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"sync"
 
-	polardb "github.com/alibabacloud-go/polardb-20170801/v9/client"
+	polardb "github.com/alibabacloud-go/polardb-20170801/v10/client"
 	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/rs/zerolog/log"
 

@@ -6,7 +6,7 @@ package resources
 import (
 	"testing"
 
-	polardb "github.com/alibabacloud-go/polardb-20170801/v9/client"
+	polardb "github.com/alibabacloud-go/polardb-20170801/v10/client"
 	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

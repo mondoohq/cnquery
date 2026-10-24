@@ -4,11 +4,13 @@
 package resources
 
 import (
+	"encoding/json"
 	"testing"
 
-	rdsclient "github.com/alibabacloud-go/rds-20140815/v16/client"
+	rdsclient "github.com/alibabacloud-go/rds-20140815/v17/client"
 	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestRdsStatusEnabled covers the on/off classifier shared by the TDE and SQL
@@ -134,4 +136,54 @@ func TestRdsRunningParameters(t *testing.T) {
 		})
 		assert.Equal(t, map[string]any{}, got)
 	})
+}
+
+// TestRdsPeerInstance covers how a disaster recovery replica or warm standby is
+// read from the instance detail. No id means no peer, so the accessor reports
+// null; a peer that names no region is looked up in the instance's own region.
+func TestRdsPeerInstance(t *testing.T) {
+	// Synthetic: the API documents DrReplicaInfo and WarmStandbyInfo only by
+	// field name; no instance with a replica was available to measure.
+	for _, tc := range []struct {
+		name       string
+		insName    *string
+		region     *string
+		wantID     string
+		wantRegion string
+	}{
+		{"absent", nil, nil, "", ""},
+		{"empty id ignores region", tea.String(""), tea.String("cn-shanghai"), "", ""},
+		{"blank id", tea.String("  "), nil, "", ""},
+		{"cross-region peer", tea.String("rm-dr1"), tea.String("cn-shanghai"), "rm-dr1", "cn-shanghai"},
+		{"peer without region uses own region", tea.String("rm-dr1"), tea.String(""), "rm-dr1", "cn-hangzhou"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			id, region := rdsPeerInstance(tc.insName, tc.region, "cn-hangzhou")
+			assert.Equal(t, tc.wantID, id)
+			assert.Equal(t, tc.wantRegion, region)
+		})
+	}
+}
+
+// TestRdsInstanceAttributePeersDecode checks that the SDK struct tags for the
+// disaster recovery replica and warm standby match the documented response
+// field names, so a renamed tag cannot silently turn both accessors null.
+func TestRdsInstanceAttributePeersDecode(t *testing.T) {
+	// Synthetic: response shape from the DescribeDBInstanceAttribute API
+	// reference, with invented ids.
+	body := `{"Items":{"DBInstanceAttribute":[{"DBInstanceId":"rm-primary","DrReplicaInfo":{"InsName":"rm-dr1","Region":"cn-shanghai","UnitCode":"u1"},"WarmStandbyInfo":{"InsName":"rm-ws1","Region":"","UnitCode":""}}]}}`
+	var resp rdsclient.DescribeDBInstanceAttributeResponseBody
+	require.NoError(t, json.Unmarshal([]byte(body), &resp))
+	require.Len(t, resp.Items.DBInstanceAttribute, 1)
+	attr := resp.Items.DBInstanceAttribute[0]
+	require.NotNil(t, attr.DrReplicaInfo)
+	require.NotNil(t, attr.WarmStandbyInfo)
+
+	id, region := rdsPeerInstance(attr.DrReplicaInfo.InsName, attr.DrReplicaInfo.Region, "cn-hangzhou")
+	assert.Equal(t, "rm-dr1", id)
+	assert.Equal(t, "cn-shanghai", region)
+
+	id, region = rdsPeerInstance(attr.WarmStandbyInfo.InsName, attr.WarmStandbyInfo.Region, "cn-hangzhou")
+	assert.Equal(t, "rm-ws1", id)
+	assert.Equal(t, "cn-hangzhou", region)
 }

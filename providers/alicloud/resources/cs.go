@@ -114,6 +114,9 @@ type mqlAlicloudCsClusterInternal struct {
 	cacheVswitchIds      []string
 	cacheSecurityGroupId string
 	cacheWorkerRamRole   string
+	// cacheMaintenanceWindow is the window from DescribeClustersV1, kept for
+	// the maintenance exclusions; nil when the cluster has no window.
+	cacheMaintenanceWindow *csclient.MaintenanceWindow
 
 	detailLock    sync.Mutex
 	detailFetched atomic.Bool
@@ -210,6 +213,7 @@ func newCsCluster(runtime *plugin.Runtime, region string, c *csclient.DescribeCl
 	mqlCluster.cacheVswitchIds = vswitchIds
 	mqlCluster.cacheSecurityGroupId = tea.StringValue(c.SecurityGroupId)
 	mqlCluster.cacheWorkerRamRole = tea.StringValue(c.WorkerRamRoleName)
+	mqlCluster.cacheMaintenanceWindow = c.MaintenanceWindow
 	return mqlCluster, nil
 }
 
@@ -857,4 +861,43 @@ func (r *mqlAlicloudCsNodePool) ramRole() (*mqlAlicloudRamRole, error) {
 		return nil, nil
 	}
 	return resolveRamRole(r.MqlRuntime, r.cacheRamRoleName)
+}
+
+// csMaintenanceExclusionID builds the cache key for a maintenance exclusion.
+// Exclusion names are unique within a cluster's window; an unnamed exclusion
+// falls back to its position so two of them cannot share a key.
+func csMaintenanceExclusionID(clusterID, name string, index int) string {
+	if name == "" {
+		return clusterID + "/maintenanceExclusion/#" + strconv.Itoa(index)
+	}
+	return clusterID + "/maintenanceExclusion/" + name
+}
+
+// maintenanceExclusions builds the blackout periods of the cluster's
+// maintenance window from the cluster list response, so it costs no API call.
+func (r *mqlAlicloudCsCluster) maintenanceExclusions() ([]any, error) {
+	if r.cacheMaintenanceWindow == nil {
+		r.MaintenanceExclusions.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res := []any{}
+	for i, ex := range r.cacheMaintenanceWindow.Exclusions {
+		if ex == nil {
+			continue
+		}
+		name := tea.StringValue(ex.Name)
+		resource, err := CreateResource(r.MqlRuntime, "alicloud.cs.cluster.maintenanceExclusion", map[string]*llx.RawData{
+			"__id":        llx.StringData(csMaintenanceExclusionID(r.clusterId, name, i)),
+			"name":        llx.StringData(name),
+			"description": llx.StringDataPtr(ex.Description),
+			"scope":       llx.StringDataPtr(ex.Scope),
+			"startTime":   llx.TimeDataPtr(csParseTime(ex.StartTime)),
+			"endTime":     llx.TimeDataPtr(csParseTime(ex.EndTime)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, resource)
+	}
+	return res, nil
 }

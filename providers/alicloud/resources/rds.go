@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	rdsclient "github.com/alibabacloud-go/rds-20140815/v16/client"
+	rdsclient "github.com/alibabacloud-go/rds-20140815/v17/client"
 	tea "github.com/alibabacloud-go/tea/tea"
 
 	"go.mondoo.com/mql/llx"
@@ -631,6 +631,46 @@ func (r *mqlAlicloudRdsInstance) vswitch() (*mqlAlicloudVpcVswitch, error) {
 		return nil, nil
 	}
 	return resolveVpcVswitch(r.MqlRuntime, r.cacheRegion, r.cacheVswitchID)
+}
+
+// rdsPeerInstance reads the instance id and region of a disaster recovery
+// replica or warm standby from the DescribeDBInstanceAttribute detail. The peer
+// may live in another region; when the detail names none, it is assumed to
+// share the instance's own region. An empty id means no peer is configured.
+func rdsPeerInstance(insName, peerRegion *string, ownRegion string) (string, string) {
+	id := strings.TrimSpace(tea.StringValue(insName))
+	if id == "" {
+		return "", ""
+	}
+	region := strings.TrimSpace(tea.StringValue(peerRegion))
+	if region == "" {
+		region = ownRegion
+	}
+	return id, region
+}
+
+func (r *mqlAlicloudRdsInstance) drReplicaInstance() (*mqlAlicloudRdsInstance, error) {
+	var id, region string
+	if attr := r.fetchAttribute(); attr != nil && attr.DrReplicaInfo != nil {
+		id, region = rdsPeerInstance(attr.DrReplicaInfo.InsName, attr.DrReplicaInfo.Region, r.region)
+	}
+	if id == "" {
+		r.DrReplicaInstance.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveRdsInstance(r.MqlRuntime, region, id)
+}
+
+func (r *mqlAlicloudRdsInstance) warmStandbyInstance() (*mqlAlicloudRdsInstance, error) {
+	var id, region string
+	if attr := r.fetchAttribute(); attr != nil && attr.WarmStandbyInfo != nil {
+		id, region = rdsPeerInstance(attr.WarmStandbyInfo.InsName, attr.WarmStandbyInfo.Region, r.region)
+	}
+	if id == "" {
+		r.WarmStandbyInstance.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveRdsInstance(r.MqlRuntime, region, id)
 }
 
 func (r *mqlAlicloudRdsInstance) masterInstance() (*mqlAlicloudRdsInstance, error) {

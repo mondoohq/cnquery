@@ -4,11 +4,14 @@
 package resources
 
 import (
+	"encoding/json"
 	"testing"
+	"time"
 
 	csclient "github.com/alibabacloud-go/cs-20151215/v8/client"
 	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestParseCsMasterURL covers the ACK MasterUrl parser, which drives the
@@ -144,4 +147,37 @@ func TestCsClusterAuditProjectName(t *testing.T) {
 	t.Run("absent response has no project", func(t *testing.T) {
 		assert.Empty(t, csClusterAuditProjectName(nil))
 	})
+}
+
+// TestCsMaintenanceExclusionID covers the cache key for a maintenance
+// exclusion. Named exclusions key on the name, which is unique within the
+// window; unnamed ones must still get distinct keys, or the second would be
+// reported with the first one's values.
+func TestCsMaintenanceExclusionID(t *testing.T) {
+	assert.Equal(t, "c1/maintenanceExclusion/holiday", csMaintenanceExclusionID("c1", "holiday", 0))
+	assert.Equal(t, csMaintenanceExclusionID("c1", "holiday", 0), csMaintenanceExclusionID("c1", "holiday", 3))
+	assert.NotEqual(t, csMaintenanceExclusionID("c1", "", 0), csMaintenanceExclusionID("c1", "", 1))
+	assert.NotEqual(t, csMaintenanceExclusionID("c1", "holiday", 0), csMaintenanceExclusionID("c2", "holiday", 0))
+}
+
+// TestCsMaintenanceWindowExclusionsDecode checks that the cluster list decodes
+// the maintenance exclusions and that their RFC 3339 times, which carry a zone
+// offset, parse rather than reading as null.
+func TestCsMaintenanceWindowExclusionsDecode(t *testing.T) {
+	// Synthetic: field names and example values from the SDK model docs; no
+	// live cluster was available.
+	body := `{"cluster_id":"c1","maintenance_window":{"enable":true,"exclusions":[{"name":"exclusion-holiday","description":"freeze","scope":"NoCVEPatch","start_time":"2026-11-01T00:00:00+08:00","end_time":"2026-11-15T00:00:00+08:00"}]}}`
+	var c csclient.DescribeClustersV1ResponseBodyClusters
+	require.NoError(t, json.Unmarshal([]byte(body), &c))
+	require.NotNil(t, c.MaintenanceWindow)
+	require.Len(t, c.MaintenanceWindow.Exclusions, 1)
+	ex := c.MaintenanceWindow.Exclusions[0]
+	assert.Equal(t, "exclusion-holiday", tea.StringValue(ex.Name))
+	assert.Equal(t, "NoCVEPatch", tea.StringValue(ex.Scope))
+	start := csParseTime(ex.StartTime)
+	end := csParseTime(ex.EndTime)
+	require.NotNil(t, start)
+	require.NotNil(t, end)
+	assert.Equal(t, 14*24*time.Hour, end.Sub(*start))
+	assert.Equal(t, "2026-10-31T16:00:00Z", start.UTC().Format(time.RFC3339))
 }
