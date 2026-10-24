@@ -306,7 +306,7 @@ func TestChunkedStagingCreatesItsOwnFiles(t *testing.T) {
 	// per statement rather than as one substring.
 	for _, cmd := range []string{first, last} {
 		creates := 0
-		for _, stmt := range strings.Split(cmd, ";") {
+		for stmt := range strings.SplitSeq(cmd, ";") {
 			if !strings.Contains(stmt, "New-Item") {
 				continue
 			}

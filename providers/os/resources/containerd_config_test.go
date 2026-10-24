@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -435,12 +436,7 @@ func TestContainerdVersionBinaries(t *testing.T) {
 			argv0:   func() string { return argv0 },
 			resolve: func(p string) string { return p },
 			trustedBinary: func(p string) bool {
-				for _, t := range trusted {
-					if t == p {
-						return true
-					}
-				}
-				return false
+				return slices.Contains(trusted, p)
 			},
 		}
 	}
@@ -487,7 +483,7 @@ func TestLoadContainerdConfigDistributions(t *testing.T) {
 			fsys := containerdTestFS(t, nil, tc.dir, "/etc/containerd")
 			cfg, err := loadContainerdConfig(fsys, containerdConfigFile, containerdMajor(tc.version))
 			require.NoError(t, err)
-			dumpName := strings.SplitN(tc.version, "~", 2)[0]
+			dumpName, _, _ := strings.Cut(tc.version, "~")
 			assertContainerdMatchesDump(t, cfg, tc.version, containerdDump(t, tc.dir+"/dump-v"+dumpName+".toml"))
 		})
 	}

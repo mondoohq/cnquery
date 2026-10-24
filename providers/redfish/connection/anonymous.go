@@ -136,8 +136,7 @@ func (c *RedfishConnection) GetRaw(uri string) ([]byte, error) {
 // answered that it does not serve the resource. gofish turns every non-success
 // status into a typed error, so the status has to be read back out of it.
 func classifyGetError(uri string, err error) error {
-	var redfishErr *schemas.Error
-	if errors.As(err, &redfishErr) {
+	if redfishErr, ok := errors.AsType[*schemas.Error](err); ok {
 		switch redfishErr.HTTPReturnedStatusCode {
 		case http.StatusNotFound, http.StatusNotImplemented:
 			return fmt.Errorf("%w: GET %s returned status %d: %w", ErrNotFound, uri, redfishErr.HTTPReturnedStatusCode, err)

@@ -230,11 +230,11 @@ func braceDelta(line string) int {
 // afterFirstBrace returns what follows the first "{" on a line, trimmed of a
 // trailing "}".
 func afterFirstBrace(line string) string {
-	i := strings.Index(line, "{")
-	if i < 0 {
+	_, after, ok := strings.Cut(line, "{")
+	if !ok {
 		return ""
 	}
-	return strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(line[i+1:]), "}"))
+	return strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(after), "}"))
 }
 
 // inlineConcat folds a concatenated version variable back into the string

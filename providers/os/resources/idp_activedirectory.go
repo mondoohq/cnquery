@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"errors"
 	"io/fs"
+	"maps"
 	"path"
 	"sort"
 	"strings"
@@ -270,7 +271,7 @@ func sssdADDomain(c confSections) string {
 		return name
 	}
 
-	for _, name := range strings.Split(c["sssd"]["domains"], ",") {
+	for name := range strings.SplitSeq(c["sssd"]["domains"], ",") {
 		if name = strings.TrimSpace(name); name == "" {
 			continue
 		}
@@ -334,9 +335,7 @@ func (c confSections) merge(other confSections) {
 			sec = map[string]string{}
 			c[name] = sec
 		}
-		for k, v := range opts {
-			sec[k] = v
-		}
+		maps.Copy(sec, opts)
 	}
 }
 
@@ -348,7 +347,7 @@ func (c confSections) merge(other confSections) {
 func parseConfSections(raw string, foldSections bool) confSections {
 	res := confSections{}
 	cur := ""
-	for _, line := range strings.Split(raw, "\n") {
+	for line := range strings.SplitSeq(raw, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || line[0] == '#' || line[0] == ';' {
 			continue

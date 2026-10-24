@@ -107,7 +107,7 @@ func PathsFromCommand(cmd string) (home string, base string) {
 // PathsFromEnviron extracts CATALINA_HOME and CATALINA_BASE from the raw,
 // NUL-separated contents of a process's environment.
 func PathsFromEnviron(environ string) (home string, base string) {
-	for _, entry := range strings.Split(environ, "\x00") {
+	for entry := range strings.SplitSeq(environ, "\x00") {
 		key, value, found := strings.Cut(entry, "=")
 		if !found {
 			continue
@@ -124,7 +124,7 @@ func PathsFromEnviron(environ string) (home string, base string) {
 
 // IsCatalinaUnit reports whether a systemd unit file starts Tomcat.
 func IsCatalinaUnit(content string) bool {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if !strings.HasPrefix(line, "ExecStart") && !strings.HasPrefix(line, "Environment") {
 			continue
@@ -143,7 +143,7 @@ func IsCatalinaUnit(content string) bool {
 func PathsFromUnit(content string) (home string, base string, envFiles []string) {
 	envFiles = []string{}
 
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		key, value, found := strings.Cut(line, "=")
 		if !found {
@@ -187,7 +187,7 @@ func PathsFromUnit(content string) (home string, base string, envFiles []string)
 // environment file — a unit's EnvironmentFile= target, /etc/tomcat/tomcat.conf,
 // /etc/sysconfig/tomcat, or an instance's bin/setenv.sh.
 func PathsFromEnvFile(content string) (home string, base string) {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue

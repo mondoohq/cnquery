@@ -34,8 +34,7 @@ func (e *APIError) Error() string {
 // endpoints answer 403 on the free tier and tokens can be issued with a
 // narrower scope than the resource tree covers.
 func IsForbidden(err error) bool {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*APIError](err); ok {
 		return apiErr.StatusCode == http.StatusUnauthorized || apiErr.StatusCode == http.StatusForbidden
 	}
 	return false
@@ -43,8 +42,7 @@ func IsForbidden(err error) bool {
 
 // IsNotFound reports whether err is a 404 response.
 func IsNotFound(err error) bool {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*APIError](err); ok {
 		return apiErr.StatusCode == http.StatusNotFound
 	}
 	return false

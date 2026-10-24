@@ -65,7 +65,6 @@ func (a *mqlAwsBedrockAgentCore) agentCoreRegionTasks(conn *connection.AwsConnec
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			ctx := context.Background()
 			res, err := fn(ctx, region)

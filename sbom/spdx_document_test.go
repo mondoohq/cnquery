@@ -251,7 +251,7 @@ func TestSPDXDocumentSurvivesRepeatedRoundTrips(t *testing.T) {
 	bom := bomWithGenerator(&Generator{Name: "cyclonedx-gomod", Version: "v1.4.0", Vendor: "ExampleCorp"})
 	h := New(FormatSpdxJSON).(*Spdx)
 
-	for pass := 0; pass < 3; pass++ {
+	for pass := range 3 {
 		_, out := renderSpdx(t, bom)
 
 		var doc spdxDoc
@@ -303,7 +303,7 @@ func TestSPDXLooksLikeVersion(t *testing.T) {
 // when the entropy source cannot be read.
 func TestSPDXNamespaceSuffixIsUniqueAndNeverPanics(t *testing.T) {
 	seen := map[string]bool{}
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		s := spdxNamespaceSuffix()
 		require.NotEmpty(t, s)
 		require.False(t, seen[s], "suffix repeated: %q", s)

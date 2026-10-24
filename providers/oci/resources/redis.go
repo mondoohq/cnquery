@@ -8,7 +8,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/redis"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -35,7 +34,7 @@ func (o *mqlOciRedis) clusters() ([]any, error) {
 
 			clusters, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]redis.RedisClusterSummary, *string, error) {
 				response, err := svc.ListRedisClusters(ctx, redis.ListRedisClustersRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {

@@ -280,7 +280,7 @@ type WindowsAclAuditEntry struct {
 // substring, so a future flag whose name contains another one cannot be
 // mistaken for it.
 func hasAuditFlag(flags, name string) bool {
-	for _, f := range strings.Split(flags, ",") {
+	for f := range strings.SplitSeq(flags, ",") {
 		if strings.EqualFold(strings.TrimSpace(f), name) {
 			return true
 		}

@@ -4,6 +4,8 @@
 package llx
 
 import (
+	"strings"
+
 	"go.mondoo.com/mql/providers-sdk/v1/resources"
 	"go.mondoo.com/mql/types"
 )
@@ -111,17 +113,18 @@ func ReportTypeDrift(drift []TypeDrift) string {
 	if len(drift) == 0 {
 		return ""
 	}
-	msg := "this content was compiled against different field types than this build has;" +
-		" affected fields may produce wrong results:"
+	var msg strings.Builder
+	msg.WriteString("this content was compiled against different field types than this build has;" +
+		" affected fields may produce wrong results:")
 	for i, d := range drift {
 		if i == 3 {
-			msg += " ... and " + itoa(len(drift)-3) + " more"
+			msg.WriteString(" ... and " + itoa(len(drift)-3) + " more")
 			break
 		}
-		msg += " " + d.Resource + "." + d.Field +
-			" (compiled as " + d.Writer.Label() + ", this build has " + d.Reader.Label() + ")"
+		msg.WriteString(" " + d.Resource + "." + d.Field +
+			" (compiled as " + d.Writer.Label() + ", this build has " + d.Reader.Label() + ")")
 	}
-	return msg
+	return msg.String()
 }
 
 func itoa(i int) string {

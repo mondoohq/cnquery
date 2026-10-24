@@ -48,7 +48,6 @@ func (a *mqlAwsSigner) getSigningProfiles(conn *connection.AwsConnection) []*job
 	}
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Signer(region)
 			ctx := context.Background()

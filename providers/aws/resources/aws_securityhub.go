@@ -64,8 +64,7 @@ func (a *mqlAwsSecurityhub) getHubs(conn *connection.AwsConnection) []*jobpool.J
 					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 					return res, nil
 				}
-				var notFoundErr *types.InvalidAccessException
-				if errors.As(err, &notFoundErr) {
+				if _, ok := errors.AsType[*types.InvalidAccessException](err); ok {
 					return nil, nil
 				}
 				return nil, err
@@ -218,10 +217,7 @@ func (a *mqlAwsSecurityhubStandardSubscription) controls() ([]any, error) {
 	assocMap := make(map[string]types.StandardsControlAssociationDetail, len(controlDefs))
 	const batchSize = 100
 	for i := 0; i < len(controlDefs); i += batchSize {
-		end := i + batchSize
-		if end > len(controlDefs) {
-			end = len(controlDefs)
-		}
+		end := min(i+batchSize, len(controlDefs))
 		ids := make([]types.StandardsControlAssociationId, 0, end-i)
 		for _, def := range controlDefs[i:end] {
 			ids = append(ids, types.StandardsControlAssociationId{
@@ -693,11 +689,11 @@ func (a *mqlAwsSecurityhubFindingAggregator) id() (string, error) {
 //	 → "cis-aws-foundations-benchmark"
 func standardNameFromArn(arn string) string {
 	for _, prefix := range []string{"standards/", "ruleset/"} {
-		idx := strings.Index(arn, prefix)
-		if idx == -1 {
+		_, after, ok := strings.Cut(arn, prefix)
+		if !ok {
 			continue
 		}
-		name := arn[idx+len(prefix):]
+		name := after
 		if slash := strings.Index(name, "/"); slash != -1 {
 			name = name[:slash]
 		}
@@ -769,9 +765,9 @@ func (a *mqlAwsSecurityhubHub) enabledProducts() ([]any, error) {
 			// Extract product ARN from the subscription ARN
 			// Subscription ARN: arn:aws:securityhub:region:account:product-subscription/product-arn
 			productArn := productSubArn
-			if idx := strings.Index(productSubArn, ":product-subscription/"); idx != -1 {
+			if before, after, ok := strings.Cut(productSubArn, ":product-subscription/"); ok {
 				// Reconstruct the product ARN
-				productArn = productSubArn[:idx] + ":product/" + productSubArn[idx+len(":product-subscription/"):]
+				productArn = before + ":product/" + after
 			}
 
 			mqlProduct, err := CreateResource(a.MqlRuntime, "aws.securityhub.enabledProduct",

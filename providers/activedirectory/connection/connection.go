@@ -210,7 +210,7 @@ type ActiveDirectoryConnection struct {
 	domainFunctionalLevel string
 	forestFunctionalLevel string
 	cacheMu               sync.RWMutex
-	cache                 map[string]interface{}
+	cache                 map[string]any
 
 	// SMB probe state. Lazy-initialized on first SMB-backed field access.
 	// sync.Once (not CachedFetch) because failed probes must not retry.
@@ -287,7 +287,7 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 		ldapConn:   ldapConn,
 		dcHost:     dcHost,
 		transport:  transport,
-		cache:      make(map[string]interface{}),
+		cache:      make(map[string]any),
 	}
 
 	// Override baseDN: --base-dn takes precedence, then --domain, then RootDSE auto-detection.
@@ -1019,7 +1019,7 @@ func (c *ActiveDirectoryConnection) ProbeLDAPSigning() (bool, error) {
 
 // CachedFetch returns a cached value for the given key, computing it via fn
 // on first access. Concurrent callers block on the write if the key is absent.
-func (c *ActiveDirectoryConnection) CachedFetch(key string, fn func() (interface{}, error)) (interface{}, error) {
+func (c *ActiveDirectoryConnection) CachedFetch(key string, fn func() (any, error)) (any, error) {
 	c.cacheMu.RLock()
 	if v, ok := c.cache[key]; ok {
 		c.cacheMu.RUnlock()

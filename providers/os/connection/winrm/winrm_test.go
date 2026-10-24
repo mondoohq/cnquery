@@ -197,11 +197,11 @@ func TestFileInfoReportsLinks(t *testing.T) {
 	link := fakeInfo{name: "link", mode: os.ModeSymlink | 0o666}
 
 	fs := lstatFs{
-		statFs: statFs{Fs: afero.NewMemMapFs(), stat: map[string]os.FileInfo{
+		Fs: afero.NewMemMapFs(), stat: map[string]os.FileInfo{
 			`C:\t\plain.txt`: plain,
 			`C:\t\link.txt`:  target,
 			`C:\t\junction`:  dir,
-		}},
+		},
 		lstat: map[string]os.FileInfo{
 			`C:\t\plain.txt`: plain,
 			`C:\t\link.txt`:  link,

@@ -125,8 +125,7 @@ func (r *mqlDatabricksRegisteredModel) grants() ([]any, error) {
 // the securable is not enabled on the metastore (400) or the caller cannot read
 // it (403/404), rather than a transient failure that should propagate.
 func isDatabricksGrantsUnavailable(err error) bool {
-	var apiErr *apierr.APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*apierr.APIError](err); ok {
 		switch apiErr.StatusCode {
 		case 400, 403, 404:
 			return true

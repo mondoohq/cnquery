@@ -18,6 +18,7 @@ package deb
 
 import (
 	"errors"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -277,12 +278,7 @@ func nextRune(str string) (string, *rune) {
 }
 
 func containsRune(s []rune, e rune) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s, e)
 }
 
 func signum(a int) int {

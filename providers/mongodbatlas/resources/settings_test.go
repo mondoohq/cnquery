@@ -69,7 +69,7 @@ func TestProjectConfigFieldsReported(t *testing.T) {
 		for _, f := range projectConfigFlags {
 			t.Run(f.field, func(t *testing.T) {
 				s := &admin.GroupSettings{}
-				f.set(s, admin.PtrBool(want))
+				f.set(s, new(want))
 
 				raw, ok := projectConfigFields("p1", s)[f.field]
 				require.True(t, ok, "field is mapped")
@@ -86,8 +86,8 @@ func TestProjectConfigFieldsReported(t *testing.T) {
 // partial payload is the normal case, not an edge case.
 func TestProjectConfigFieldsPartial(t *testing.T) {
 	got := projectConfigFields("p1", &admin.GroupSettings{
-		IsDataExplorerEnabled:       admin.PtrBool(true),
-		IsPerformanceAdvisorEnabled: admin.PtrBool(false),
+		IsDataExplorerEnabled:       new(true),
+		IsPerformanceAdvisorEnabled: new(false),
 	})
 
 	assert.Equal(t, true, got["isDataExplorerEnabled"].Value)

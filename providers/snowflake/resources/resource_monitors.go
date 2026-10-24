@@ -122,7 +122,7 @@ func initSnowflakeResourceMonitor(runtime *plugin.Runtime, args map[string]*llx.
 	client := conn.Client()
 	ctx := context.Background()
 
-	monitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorRequest{Like: &sdk.Like{Pattern: sdk.String(name)}})
+	monitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorRequest{Like: &sdk.Like{Pattern: new(name)}})
 	if err != nil {
 		return nil, nil, err
 	}

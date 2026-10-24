@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/datascience"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -43,7 +42,7 @@ func (o *mqlOciAiDataScience) fetchProjects(svc *datascience.DataScienceClient, 
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]datascience.ProjectSummary, *string, error) {
 		resp, err := svc.ListProjects(ctx, datascience.ListProjectsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		})
 		if err != nil {
@@ -99,7 +98,7 @@ func (o *mqlOciAiDataScience) fetchNotebookSessions(svc *datascience.DataScience
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]datascience.NotebookSessionSummary, *string, error) {
 		resp, err := svc.ListNotebookSessions(ctx, datascience.ListNotebookSessionsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		})
 		if err != nil {
@@ -201,7 +200,7 @@ func (o *mqlOciAiDataScience) fetchModels(svc *datascience.DataScienceClient, co
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]datascience.ModelSummary, *string, error) {
 		resp, err := svc.ListModels(ctx, datascience.ListModelsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		})
 		if err != nil {
@@ -290,7 +289,7 @@ func (o *mqlOciAiDataScience) fetchModelVersionSets(svc *datascience.DataScience
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]datascience.ModelVersionSetSummary, *string, error) {
 		resp, err := svc.ListModelVersionSets(ctx, datascience.ListModelVersionSetsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		})
 		if err != nil {
@@ -358,7 +357,7 @@ func (o *mqlOciAiDataScience) fetchModelDeployments(svc *datascience.DataScience
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]datascience.ModelDeploymentSummary, *string, error) {
 		resp, err := svc.ListModelDeployments(ctx, datascience.ListModelDeploymentsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		})
 		if err != nil {
@@ -438,7 +437,7 @@ func (o *mqlOciAiDataScience) fetchJobs(svc *datascience.DataScienceClient, comp
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]datascience.JobSummary, *string, error) {
 		resp, err := svc.ListJobs(ctx, datascience.ListJobsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		})
 		if err != nil {
@@ -504,7 +503,7 @@ func (o *mqlOciAiDataScience) fetchPipelines(svc *datascience.DataScienceClient,
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]datascience.PipelineSummary, *string, error) {
 		resp, err := svc.ListPipelines(ctx, datascience.ListPipelinesRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		})
 		if err != nil {

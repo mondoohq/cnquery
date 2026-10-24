@@ -83,7 +83,7 @@ func TestCoordinatorSchemaLockOrder(t *testing.T) {
 	case <-time.After(15 * time.Second):
 		buf := make([]byte, 1<<20)
 		n := runtime.Stack(buf, true)
-		for _, g := range strings.Split(string(buf[:n]), "\n\n") {
+		for g := range strings.SplitSeq(string(buf[:n]), "\n\n") {
 			if strings.Contains(g, "extensibleSchema") || strings.Contains(g, "coordinator)") {
 				t.Log(g)
 			}

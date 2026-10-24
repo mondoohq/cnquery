@@ -74,7 +74,7 @@ func TestCephProbeRunsOnce(t *testing.T) {
 	f := cephReadyServer(t)
 	conn := f.conn()
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		_, _, err := conn.CephAvailable()
 		require.NoError(t, err)
 	}
@@ -217,7 +217,8 @@ func TestGetCephFileSystems(t *testing.T) {
 // CRUSH tree flattening
 // ---------------------------------------------------------------------------
 
-func intPtr(v int) *int { return &v }
+//go:fix inline
+func intPtr(v int) *int { return new(v) }
 
 func TestFlattenCephCrushTree(t *testing.T) {
 	root := CephCrushNode{
@@ -228,20 +229,20 @@ func TestFlattenCephCrushTree(t *testing.T) {
 				Children: []CephCrushNode{
 					{
 						ID: 0, Name: "osd.0", Type: "osd", Status: "up",
-						In: intPtr(1), DeviceClass: "ssd", CrushWeight: 0.5,
+						In: new(1), DeviceClass: "ssd", CrushWeight: 0.5,
 						Reweight: 1, TotalSpace: 1000, BytesUsed: 250,
 						PercentUsed: 25,
 					},
 					{
 						ID: 1, Name: "osd.1", Type: "osd", Status: "down",
-						In: intPtr(0), DeviceClass: "hdd",
+						In: new(0), DeviceClass: "hdd",
 					},
 				},
 			},
 			{
 				ID: -5, Name: "pve2", Type: "host",
 				Children: []CephCrushNode{
-					{ID: 2, Name: "osd.2", Type: "osd", Status: "up", In: intPtr(1)},
+					{ID: 2, Name: "osd.2", Type: "osd", Status: "up", In: new(1)},
 				},
 			},
 		},

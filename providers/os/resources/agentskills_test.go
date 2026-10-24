@@ -351,7 +351,7 @@ func TestReadAgentSkillPackageProblems(t *testing.T) {
 
 	t.Run("too many entries", func(t *testing.T) {
 		entries := map[string]string{"s/SKILL.md": "---\nname: s\n---\n"}
-		for i := 0; i < agentSkillPackageMaxEntries; i++ {
+		for i := range agentSkillPackageMaxEntries {
 			entries["s/f"+strings.Repeat("x", i%7)+string(rune('a'+i%26))+strings.Repeat("y", i/26)] = ""
 		}
 		srcs := readPackage(t, zipBytes(t, entries))

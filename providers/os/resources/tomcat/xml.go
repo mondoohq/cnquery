@@ -6,6 +6,7 @@ package tomcat
 import (
 	"encoding/xml"
 	"io"
+	"maps"
 	"strconv"
 	"strings"
 )
@@ -217,9 +218,7 @@ func (n *Node) Params() map[string]string {
 	if n == nil {
 		return res
 	}
-	for k, v := range n.Attrs {
-		res[k] = v
-	}
+	maps.Copy(res, n.Attrs)
 	return res
 }
 

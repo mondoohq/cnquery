@@ -163,8 +163,8 @@ var vendorSuffixes = []string{
 func VendorToken(manufacturer string) string {
 	token := purlToken(manufacturer)
 	for _, suffix := range vendorSuffixes {
-		if strings.HasSuffix(token, suffix) {
-			token = strings.TrimSuffix(token, suffix)
+		if before, ok := strings.CutSuffix(token, suffix); ok {
+			token = before
 			break
 		}
 	}

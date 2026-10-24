@@ -15,7 +15,7 @@ import (
 
 // scriptParameters collects the non-empty labeled parameters (parameter4
 // through parameter11) into a map keyed by parameter slot.
-func scriptParameters(s jamfpro.ResourceScript) map[string]interface{} {
+func scriptParameters(s jamfpro.ResourceScript) map[string]any {
 	slots := map[string]string{
 		"parameter4":  s.Parameter4,
 		"parameter5":  s.Parameter5,
@@ -26,7 +26,7 @@ func scriptParameters(s jamfpro.ResourceScript) map[string]interface{} {
 		"parameter10": s.Parameter10,
 		"parameter11": s.Parameter11,
 	}
-	out := map[string]interface{}{}
+	out := map[string]any{}
 	for k, v := range slots {
 		if v != "" {
 			out[k] = v
@@ -53,7 +53,7 @@ func scriptToArgs(s jamfpro.ResourceScript) map[string]*llx.RawData {
 	}
 }
 
-func (r *mqlJamf) scripts() ([]interface{}, error) {
+func (r *mqlJamf) scripts() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.JamfConnection)
 	client := conn.Client
 
@@ -64,7 +64,7 @@ func (r *mqlJamf) scripts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var res []interface{}
+	var res []any
 	for _, s := range scripts.Results {
 		item, err := CreateResource(r.MqlRuntime, "jamf.script", scriptToArgs(s))
 		if err != nil {

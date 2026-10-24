@@ -132,7 +132,7 @@ func (a *mqlActivedirectoryFineGrainedPasswordPolicy) id() (string, error) {
 	return a.DistinguishedName.Data, nil
 }
 
-func (a *mqlActivedirectory) fineGrainedPasswordPolicies() ([]interface{}, error) {
+func (a *mqlActivedirectory) fineGrainedPasswordPolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 	baseDN := conn.BaseDN()
 
@@ -163,12 +163,12 @@ func (a *mqlActivedirectory) fineGrainedPasswordPolicies() ([]interface{}, error
 	if err != nil {
 		// The Password Settings Container may not exist if no FGPPs are defined.
 		if ldap.IsErrorWithCode(err, ldap.LDAPResultNoSuchObject) {
-			return []interface{}{}, nil
+			return []any{}, nil
 		}
 		return nil, fmt.Errorf("failed to query fine-grained password policies: %w", err)
 	}
 
-	res := make([]interface{}, 0, len(result))
+	res := make([]any, 0, len(result))
 	for _, entry := range result {
 		name := entry.GetAttributeValue("cn")
 		dn := entry.GetAttributeValue("distinguishedName")
@@ -185,7 +185,7 @@ func (a *mqlActivedirectory) fineGrainedPasswordPolicies() ([]interface{}, error
 		reversibleEncryption := strings.EqualFold(entry.GetAttributeValue("msDS-PasswordReversibleEncryptionEnabled"), "TRUE")
 
 		appliesTo := entry.GetAttributeValues("msDS-PSOAppliesTo")
-		appliesToRaw := make([]interface{}, len(appliesTo))
+		appliesToRaw := make([]any, len(appliesTo))
 		for i, v := range appliesTo {
 			appliesToRaw[i] = v
 		}

@@ -18,11 +18,11 @@ type mqlSnowflakeTableInternal struct {
 }
 
 func (r *mqlSnowflakeAccount) tables() ([]any, error) {
-	return listSnowflakeTables(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}})
+	return listSnowflakeTables(r.MqlRuntime, sdk.ExtendedIn{Account: new(true)})
 }
 
 func (r *mqlSnowflakeDatabase) tables() ([]any, error) {
-	return listSnowflakeTables(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)}})
+	return listSnowflakeTables(r.MqlRuntime, sdk.ExtendedIn{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)})
 }
 
 // listSnowflakeTables fetches tables within the given scope (account-wide or a
@@ -120,8 +120,8 @@ func initSnowflakeTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
 	tables, err := conn.Client().Tables.Show(context.Background(), sdk.NewShowTableRequest().
-		WithLike(sdk.Like{Pattern: sdk.String(name)}).
-		WithIn(sdk.ExtendedIn{In: sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)}}))
+		WithLike(sdk.Like{Pattern: new(name)}).
+		WithIn(sdk.ExtendedIn{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)}))
 	if err != nil {
 		return nil, nil, err
 	}

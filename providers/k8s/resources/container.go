@@ -5,6 +5,7 @@ package resources
 
 import (
 	"fmt"
+	"maps"
 
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -179,9 +180,7 @@ func getContainers(
 
 		// flatten the common security-context fields so policies can read them
 		// without digging through the raw securityContext dict
-		for k, v := range containerSecurityContextArgs(c.SecurityContext) {
-			args[k] = v
-		}
+		maps.Copy(args, containerSecurityContextArgs(c.SecurityContext))
 
 		if containerType != EphemeralContainerType {
 			resources, err := convert.JsonToDict(c.Resources)

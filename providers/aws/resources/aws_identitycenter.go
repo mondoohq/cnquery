@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -345,9 +346,7 @@ func (a *mqlAwsIdentitycenterPermissionSet) tags() (map[string]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		for k, v := range ssoTagsToMap(page.Tags) {
-			tags[k] = v
-		}
+		maps.Copy(tags, ssoTagsToMap(page.Tags))
 	}
 	return tags, nil
 }
@@ -747,9 +746,7 @@ func identitycenterTagsForArn(runtime *plugin.Runtime, instanceArn, resourceArn 
 			}
 			return nil, err
 		}
-		for k, v := range ssoTagsToMap(page.Tags) {
-			tags[k] = v
-		}
+		maps.Copy(tags, ssoTagsToMap(page.Tags))
 	}
 	return tags, nil
 }

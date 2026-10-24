@@ -24,8 +24,8 @@ func timePtr(t time.Time) *time.Time {
 
 // componentNames collects the Name field from a deployment's component
 // slice into an []interface{} suitable for an llx string array.
-func componentNames[T any](items []T, name func(T) string) []interface{} {
-	out := make([]interface{}, 0, len(items))
+func componentNames[T any](items []T, name func(T) string) []any {
+	out := make([]any, 0, len(items))
 	for _, item := range items {
 		out = append(out, name(item))
 	}
@@ -134,8 +134,8 @@ func (r *mqlDigitaloceanApp) vpc() (*mqlDigitaloceanVpc, error) {
 	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.cacheVpcID)
 }
 
-func (r *mqlDigitaloceanApp) dedicatedIps() ([]interface{}, error) {
-	all := make([]interface{}, 0, len(r.cacheDedicatedIps))
+func (r *mqlDigitaloceanApp) dedicatedIps() ([]any, error) {
+	all := make([]any, 0, len(r.cacheDedicatedIps))
 	for _, d := range r.cacheDedicatedIps {
 		if d == nil {
 			continue
@@ -158,8 +158,8 @@ func (r *mqlDigitaloceanApp) dedicatedIps() ([]interface{}, error) {
 	return all, nil
 }
 
-func (r *mqlDigitaloceanApp) buildpacks() ([]interface{}, error) {
-	all := make([]interface{}, 0, len(r.cacheBuildpacks))
+func (r *mqlDigitaloceanApp) buildpacks() ([]any, error) {
+	all := make([]any, 0, len(r.cacheBuildpacks))
 	for _, b := range r.cacheBuildpacks {
 		if b == nil {
 			continue
@@ -201,7 +201,7 @@ func (r *mqlDigitaloceanApp) inProgressDeployment() (*mqlDigitaloceanAppDeployme
 	return newAppDeployment(r.MqlRuntime, r.Id.Data, r.cacheInProgressDeployment)
 }
 
-func (r *mqlDigitaloceanApp) deployments() ([]interface{}, error) {
+func (r *mqlDigitaloceanApp) deployments() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -212,7 +212,7 @@ func (r *mqlDigitaloceanApp) deployments() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(deployments))
+	all := make([]any, 0, len(deployments))
 	for _, d := range deployments {
 		if d == nil {
 			continue
@@ -250,7 +250,7 @@ func (r *mqlDigitaloceanApp) activeDeployment() (*mqlDigitaloceanAppDeployment, 
 	return newAppDeployment(r.MqlRuntime, r.Id.Data, deployment)
 }
 
-func (r *mqlDigitaloceanApp) alerts() ([]interface{}, error) {
+func (r *mqlDigitaloceanApp) alerts() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -259,7 +259,7 @@ func (r *mqlDigitaloceanApp) alerts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, a := range alerts {
 		if a == nil {
 			continue
@@ -276,7 +276,7 @@ func (r *mqlDigitaloceanApp) alerts() ([]interface{}, error) {
 			value = float64(a.Spec.Value)
 			disabled = a.Spec.Disabled
 		}
-		emails := make([]interface{}, len(a.Emails))
+		emails := make([]any, len(a.Emails))
 		for i, e := range a.Emails {
 			emails[i] = e
 		}
@@ -306,7 +306,7 @@ func (r *mqlDigitaloceanApp) alerts() ([]interface{}, error) {
 	return all, nil
 }
 
-func (r *mqlDigitaloceanApp) instances() ([]interface{}, error) {
+func (r *mqlDigitaloceanApp) instances() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -314,17 +314,17 @@ func (r *mqlDigitaloceanApp) instances() ([]interface{}, error) {
 	if err != nil {
 		// An app with no active deployment has no running instances.
 		if isDoNotFound(err) {
-			return []interface{}{}, nil
+			return []any{}, nil
 		}
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(instances))
+	all := make([]any, 0, len(instances))
 	for _, inst := range instances {
 		if inst == nil {
 			continue
 		}
-		all = append(all, map[string]interface{}{
+		all = append(all, map[string]any{
 			"componentName": inst.ComponentName,
 			"componentType": string(inst.ComponentType),
 			"instanceName":  inst.InstanceName,

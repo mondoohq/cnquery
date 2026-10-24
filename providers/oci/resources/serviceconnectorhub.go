@@ -33,7 +33,7 @@ func (o *mqlOciServiceConnectorHub) connectors() ([]any, error) {
 
 			connectors, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]sch.ServiceConnectorSummary, *string, error) {
 				response, err := client.ListServiceConnectors(ctx, sch.ListServiceConnectorsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -106,7 +106,7 @@ func (o *mqlOciServiceConnectorHubConnector) getDetail() (*sch.ServiceConnector,
 		}
 
 		response, err := client.GetServiceConnector(context.Background(), sch.GetServiceConnectorRequest{
-			ServiceConnectorId: common.String(o.Id.Data),
+			ServiceConnectorId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err

@@ -193,10 +193,5 @@ func IsFamily(platform string, family string) bool {
 	}
 
 	// 2. check that the platform is part of the family
-	for i := range parents {
-		if parents[i] == family {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(parents, family)
 }

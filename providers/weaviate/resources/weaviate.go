@@ -34,8 +34,7 @@ func intToStr(i int64) string {
 // authorization failure (HTTP 401 or 403). Only these should be treated as
 // "not visible"; every other error must propagate.
 func isForbidden(err error) bool {
-	var ce *fault.WeaviateClientError
-	if errors.As(err, &ce) {
+	if ce, ok := errors.AsType[*fault.WeaviateClientError](err); ok {
 		return ce.StatusCode == 401 || ce.StatusCode == 403
 	}
 	return false
@@ -45,8 +44,7 @@ func isForbidden(err error) bool {
 // endpoints answer 404 on a server with no OpenID Connect configuration, where
 // the honest answer is that no group holds a role rather than an error.
 func isNotFound(err error) bool {
-	var ce *fault.WeaviateClientError
-	if errors.As(err, &ce) {
+	if ce, ok := errors.AsType[*fault.WeaviateClientError](err); ok {
 		return ce.StatusCode == 404
 	}
 	return false

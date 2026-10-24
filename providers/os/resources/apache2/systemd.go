@@ -113,10 +113,10 @@ func UnitDefines(execStart string, env map[string]string) []string {
 func joinUnitContinuations(content string) []string {
 	var lines []string
 	var buf strings.Builder
-	for _, raw := range strings.Split(content, "\n") {
+	for raw := range strings.SplitSeq(content, "\n") {
 		line := strings.TrimRight(raw, "\r")
-		if strings.HasSuffix(line, "\\") {
-			buf.WriteString(strings.TrimSuffix(line, "\\"))
+		if before, ok := strings.CutSuffix(line, "\\"); ok {
+			buf.WriteString(before)
 			buf.WriteByte(' ')
 			continue
 		}

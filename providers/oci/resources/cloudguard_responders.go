@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/oracle/oci-go-sdk/v65/cloudguard"
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
@@ -113,11 +112,11 @@ func (o *mqlOciCloudGuard) listResponderRecipes() ([]any, error) {
 	ctx := context.Background()
 	recipes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.ResponderRecipeSummary, *string, error) {
 		response, err := client.ListResponderRecipes(ctx, cloudguard.ListResponderRecipesRequest{
-			CompartmentId: common.String(conn.TenantID()),
+			CompartmentId: new(conn.TenantID()),
 			// Responder recipes are created in whichever compartment owns the
 			// Cloud Guard configuration, which is routinely a child of the
 			// root. Without the subtree flag the root reports almost none.
-			CompartmentIdInSubtree: common.Bool(true),
+			CompartmentIdInSubtree: new(true),
 			// Required with the subtree flag rather than optional: Cloud Guard
 			// answers 400 when one is sent without the other. ACCESSIBLE
 			// degrades to the compartments the caller can read.
@@ -218,12 +217,12 @@ func (o *mqlOciCloudGuardResponderRecipe) rules() ([]any, error) {
 	ctx := context.Background()
 	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.ResponderRecipeResponderRuleSummary, *string, error) {
 		response, err := client.ListResponderRecipeResponderRules(ctx, cloudguard.ListResponderRecipeResponderRulesRequest{
-			ResponderRecipeId: common.String(o.Id.Data),
+			ResponderRecipeId: new(o.Id.Data),
 			// The endpoint has no subtree flag and requires a compartment, so
 			// it gets the one the recipe was listed from. The compartment OCID
 			// is not a schema field, so it comes from the internal struct; an
 			// empty value here would scope the listing to nothing.
-			CompartmentId: common.String(o.cacheCompartmentID),
+			CompartmentId: new(o.cacheCompartmentID),
 			Page:          page,
 		})
 		if err != nil {
@@ -346,7 +345,7 @@ func (o *mqlOciCloudGuardProblem) responderActivities() ([]any, error) {
 	ctx := context.Background()
 	activities, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.ResponderActivitySummary, *string, error) {
 		response, err := client.ListResponderActivities(ctx, cloudguard.ListResponderActivitiesRequest{
-			ProblemId: common.String(o.Id.Data),
+			ProblemId: new(o.Id.Data),
 			Page:      page,
 		})
 		if err != nil {

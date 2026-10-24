@@ -46,7 +46,6 @@ func (a *mqlAwsQBusiness) getApplications(conn *connection.AwsConnection) []*job
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.QBusiness(region)
 			ctx := context.Background()

@@ -93,7 +93,7 @@ func TestBatchChildID(t *testing.T) {
 		// Assert every index through 64 produces a distinct ASCII-safe id.
 		const base = "parent/kind"
 		seen := make(map[string]struct{}, 64)
-		for i := 0; i < 64; i++ {
+		for i := range 64 {
 			id := batchChildID(base, "", i)
 			_, dup := seen[id]
 			require.False(t, dup, "duplicate __id for index %d: %q", i, id)
@@ -107,14 +107,15 @@ func TestBatchChildID(t *testing.T) {
 		const n = 50
 		const base = "pod/container"
 		ids := make(map[string]struct{}, n)
-		for i := 0; i < n; i++ {
+		for i := range n {
 			ids[batchChildID(base, "", i)] = struct{}{}
 		}
 		assert.Len(t, ids, n)
 	})
 }
 
-func ptrInt64(v int64) *int64 { return &v }
+//go:fix inline
+func ptrInt64(v int64) *int64 { return new(v) }
 
 func TestParseImageReference(t *testing.T) {
 	tests := []struct {

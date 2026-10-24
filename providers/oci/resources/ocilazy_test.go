@@ -26,13 +26,11 @@ func runConcurrently(fn func()) {
 	var start sync.WaitGroup
 	var done sync.WaitGroup
 	start.Add(1)
-	for i := 0; i < lazyGoroutines; i++ {
-		done.Add(1)
-		go func() {
-			defer done.Done()
+	for range lazyGoroutines {
+		done.Go(func() {
 			start.Wait()
 			fn()
-		}()
+		})
 	}
 	start.Done()
 	done.Wait()
@@ -58,7 +56,7 @@ func TestOciOnceRetriesAfterFailure(t *testing.T) {
 	wantErr := errors.New("boom")
 
 	// Only success is remembered, so a failing fetch is attempted again.
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		err := once.do(func() error {
 			calls.Add(1)
 			return wantErr
@@ -109,7 +107,7 @@ func TestOciLazyCachesValueAndError(t *testing.T) {
 
 		// A resource the caller cannot read is asked for once, not once per
 		// field sharing the fetch.
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			got, err := lazy.get(func() (*string, error) {
 				calls.Add(1)
 				return nil, wantErr
@@ -177,7 +175,7 @@ func TestOciRetryLazyCachesOnlySuccess(t *testing.T) {
 		var lazy ociRetryLazy[*string]
 		var calls atomic.Int64
 
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			got, err := lazy.get(func() (*string, error) {
 				calls.Add(1)
 				return nil, nil

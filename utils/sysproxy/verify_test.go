@@ -263,12 +263,10 @@ func TestVerifierConcurrentCallersShareOneProbe(t *testing.T) {
 	}
 	proxy, target := mustURL(t, "http://p:1"), mustURL(t, "https://a.example/")
 	var wg sync.WaitGroup
-	for i := 0; i < 8; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 8 {
+		wg.Go(func() {
 			assert.NoError(t, v.usable(proxy, target))
-		}()
+		})
 	}
 	time.Sleep(50 * time.Millisecond)
 	close(release)

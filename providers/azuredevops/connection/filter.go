@@ -47,7 +47,7 @@ func NewRepoFilter(include, exclude string) (*RepoFilter, error) {
 
 func compilePatterns(list string) ([]*glob.Pattern, error) {
 	var out []*glob.Pattern
-	for _, p := range strings.Split(list, ",") {
+	for p := range strings.SplitSeq(list, ",") {
 		p = strings.TrimSpace(p)
 		if p == "" {
 			continue

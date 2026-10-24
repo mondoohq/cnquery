@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/loadbalancer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -34,12 +33,12 @@ func TestLbSslFieldsFromNilReportsNotConfigured(t *testing.T) {
 
 func TestLbSslFieldsFromPopulated(t *testing.T) {
 	out := lbSslFieldsFrom(&loadbalancer.SslConfiguration{
-		VerifyDepth:                    common.Int(3),
-		VerifyPeerCertificate:          common.Bool(true),
-		HasSessionResumption:           common.Bool(true),
-		CipherSuiteName:                common.String("oci-modern-ssl-cipher-suite-v1"),
+		VerifyDepth:                    new(3),
+		VerifyPeerCertificate:          new(true),
+		HasSessionResumption:           new(true),
+		CipherSuiteName:                new("oci-modern-ssl-cipher-suite-v1"),
 		Protocols:                      []string{"TLSv1.2", "TLSv1.3"},
-		CertificateName:                common.String("example_bundle"),
+		CertificateName:                new("example_bundle"),
 		ServerOrderPreference:          loadbalancer.SslConfigurationServerOrderPreferenceEnabled,
 		CertificateIds:                 []string{"ocid1.certificate.oc1..cert"},
 		TrustedCertificateAuthorityIds: []string{"ocid1.certificateauthority.oc1..ca"},
@@ -85,13 +84,13 @@ func TestLbCookieFieldsFromNilReportsNotConfigured(t *testing.T) {
 
 func TestLbCookieFieldsFromPopulated(t *testing.T) {
 	out := lbCookieFieldsFrom(&loadbalancer.LbCookieSessionPersistenceConfigurationDetails{
-		CookieName:      common.String("X-Oracle-OCI-route"),
-		DisableFallback: common.Bool(true),
-		Domain:          common.String("example.com"),
-		Path:            common.String("/app"),
-		MaxAgeInSeconds: common.Int(3600),
-		IsSecure:        common.Bool(true),
-		IsHttpOnly:      common.Bool(true),
+		CookieName:      new("X-Oracle-OCI-route"),
+		DisableFallback: new(true),
+		Domain:          new("example.com"),
+		Path:            new("/app"),
+		MaxAgeInSeconds: new(3600),
+		IsSecure:        new(true),
+		IsHttpOnly:      new(true),
 	})
 
 	assert.Equal(t, "X-Oracle-OCI-route", out.name)
@@ -108,7 +107,7 @@ func TestLbCookieFieldsFromPopulated(t *testing.T) {
 // these fields exist to surface, so pin that shape explicitly.
 func TestLbCookieFieldsFromInsecureCookie(t *testing.T) {
 	out := lbCookieFieldsFrom(&loadbalancer.LbCookieSessionPersistenceConfigurationDetails{
-		CookieName: common.String("session"),
+		CookieName: new("session"),
 	})
 
 	assert.Equal(t, "session", out.name)

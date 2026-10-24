@@ -231,7 +231,7 @@ func TestManyClassifiersAreBounded(t *testing.T) {
 	var b strings.Builder
 	b.WriteString("Metadata-Version: 2.1\nName: many\nVersion: 1.0\n")
 	// Distinct names, so dedup cannot collapse them.
-	for i := 0; i < 400; i++ {
+	for i := range 400 {
 		fmt.Fprintf(&b, "Classifier: License :: OSI Approved :: Fake-%d License\n", i)
 	}
 	assert.Equal(t, "", license(t, b.String()),

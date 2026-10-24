@@ -222,7 +222,7 @@ type NetstatRoute struct {
 
 // UnmarshalJSON handles unstable fields where type and field name is inconsistent
 func (n *NetstatRoute) UnmarshalJSON(data []byte) error {
-	var m map[string]interface{}
+	var m map[string]any
 	if err := json.Unmarshal(data, &m); err != nil {
 		return err
 	}

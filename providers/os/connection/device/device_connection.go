@@ -62,8 +62,8 @@ func NewDeviceConnection(connId uint32, conf *inventory.Config, asset *inventory
 	// allow injecting platform ids into the device connection. we cannot always know the asset that's being scanned, e.g.
 	// if we can scan an azure VM's disk we should be able to inject the platform ids of the VM
 	if platformIDs, ok := conf.Options[PlatformIdInject]; ok {
-		platformIds := strings.Split(platformIDs, ",")
-		for _, id := range platformIds {
+		platformIds := strings.SplitSeq(platformIDs, ",")
+		for id := range platformIds {
 			if !stringx.Contains(asset.PlatformIds, id) {
 				log.Debug().Str("platform-id", id).Msg("device connection> injecting platform id")
 				asset.PlatformIds = append(asset.PlatformIds, id)

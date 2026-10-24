@@ -115,7 +115,7 @@ func TestServiceAccountKeyArgs(t *testing.T) {
 func TestWifPoolTrustConfig(t *testing.T) {
 	anchors := func(n int) iamrest.TrustStore {
 		ts := iamrest.TrustStore{}
-		for i := 0; i < n; i++ {
+		for range n {
 			ts.TrustAnchors = append(ts.TrustAnchors, &iamrest.TrustAnchor{PemCertificate: "pem"})
 		}
 		return ts

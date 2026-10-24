@@ -509,11 +509,11 @@ func flatpakPackage(p string) (string, bool) {
 // pathSegmentAfter returns the directory name that follows marker in p, when
 // p continues below it. reserved is a name under marker that is no package.
 func pathSegmentAfter(p, marker, reserved string) (string, bool) {
-	i := strings.Index(p, marker)
-	if i < 0 {
+	_, after, ok0 := strings.Cut(p, marker)
+	if !ok0 {
 		return "", false
 	}
-	name, _, ok := strings.Cut(p[i+len(marker):], "/")
+	name, _, ok := strings.Cut(after, "/")
 	if !ok || name == "" || name == reserved {
 		return "", false
 	}

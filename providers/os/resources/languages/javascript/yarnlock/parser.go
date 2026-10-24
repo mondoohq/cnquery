@@ -18,7 +18,7 @@ import (
 func (l yarnLock) specIndex() map[string]string {
 	idx := map[string]string{}
 	for key, entry := range l {
-		for _, spec := range strings.Split(key, ",") {
+		for spec := range strings.SplitSeq(key, ",") {
 			spec = strings.TrimSpace(spec)
 			if spec != "" {
 				idx[spec] = entry.Version

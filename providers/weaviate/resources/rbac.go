@@ -74,7 +74,8 @@ type permEntry struct {
 	verbosity  *string
 }
 
-func strPtr(s string) *string { return &s }
+//go:fix inline
+func strPtr(s string) *string { return new(s) }
 
 func derefStr(s *string) string {
 	if s == nil {
@@ -101,7 +102,7 @@ func flattenPermissions(role *rbac.Role) []permEntry {
 		}
 	}
 	for _, p := range role.Alias {
-		add(p.Actions, permEntry{domain: domainAlias, collection: p.Collection, alias: strPtr(p.Alias)})
+		add(p.Actions, permEntry{domain: domainAlias, collection: p.Collection, alias: new(p.Alias)})
 	}
 	for _, p := range role.Backups {
 		add(p.Actions, permEntry{domain: domainBackups, collection: p.Collection})
@@ -116,19 +117,19 @@ func flattenPermissions(role *rbac.Role) []permEntry {
 		add(p.Actions, permEntry{domain: domainData, collection: p.Collection})
 	}
 	for _, p := range role.Groups {
-		add(p.Actions, permEntry{domain: domainGroups, group: strPtr(p.Group), groupType: strPtr(p.GroupType)})
+		add(p.Actions, permEntry{domain: domainGroups, group: new(p.Group), groupType: new(p.GroupType)})
 	}
 	for _, p := range role.MCP {
 		add(p.Actions, permEntry{domain: domainMCP})
 	}
 	for _, p := range role.Nodes {
-		add(p.Actions, permEntry{domain: domainNodes, collection: p.Collection, verbosity: strPtr(p.Verbosity)})
+		add(p.Actions, permEntry{domain: domainNodes, collection: p.Collection, verbosity: new(p.Verbosity)})
 	}
 	for _, p := range role.Replicate {
-		add(p.Actions, permEntry{domain: domainReplicate, collection: p.Collection, shard: strPtr(p.Shard)})
+		add(p.Actions, permEntry{domain: domainReplicate, collection: p.Collection, shard: new(p.Shard)})
 	}
 	for _, p := range role.Roles {
-		add(p.Actions, permEntry{domain: domainRoles, targetRole: strPtr(p.Role), scope: strPtr(p.Scope)})
+		add(p.Actions, permEntry{domain: domainRoles, targetRole: new(p.Role), scope: new(p.Scope)})
 	}
 	for _, p := range role.Tenants {
 		add(p.Actions, permEntry{domain: domainTenants})

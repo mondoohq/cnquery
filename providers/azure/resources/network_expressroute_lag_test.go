@@ -237,7 +237,7 @@ func TestExpressRouteLagAuthorizationArgs(t *testing.T) {
 	})
 
 	t.Run("no properties", func(t *testing.T) {
-		args, circuitId := expressRouteLagAuthorizationArgs(&network.ExpressRouteLagAuthorization{Name: strPtr("bare")})
+		args, circuitId := expressRouteLagAuthorizationArgs(&network.ExpressRouteLagAuthorization{Name: new("bare")})
 		assert.Nil(t, args["authorizationUseStatus"].Value)
 		assert.Nil(t, args["provisioningState"].Value)
 		assert.Empty(t, circuitId)

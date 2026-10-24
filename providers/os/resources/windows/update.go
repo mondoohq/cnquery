@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -261,10 +262,8 @@ var nonOSProductMarkers = []string{
 //
 // classification is the agent-reported classification, "" when there is none.
 func IsOperatingSystemUpdate(categories []string, classification string, title string) bool {
-	for _, c := range categories {
-		if namesNonOSProduct(c) {
-			return false
-		}
+	if slices.ContainsFunc(categories, namesNonOSProduct) {
+		return false
 	}
 	if namesNonOSProduct(title) {
 		return false

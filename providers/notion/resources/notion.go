@@ -106,7 +106,7 @@ func walkCursor[T any](fetch func(cursor notionapi.Cursor) ([]T, notionapi.Curso
 	var all []T
 	cursor := notionapi.Cursor("")
 
-	for page := 0; page < maxCursorPages; page++ {
+	for range maxCursorPages {
 		records, next, hasMore, err := fetch(cursor)
 		if err != nil {
 			return nil, err

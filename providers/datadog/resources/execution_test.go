@@ -279,7 +279,7 @@ func testExecutionPolicyApi(t *testing.T, srv *httptest.Server) (*datadogV2.Exec
 // would exercise the undecodable path instead of the paging path.
 func pageOf(offset, n, total int) string {
 	records := make([]string, 0, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		records = append(records, fmt.Sprintf(
 			`{"id":"policy-%d","type":"execution_policy","attributes":{`+
 				`"name":"p%d","effect":"allow","version":1,`+

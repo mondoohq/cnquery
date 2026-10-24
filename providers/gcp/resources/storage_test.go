@@ -182,27 +182,27 @@ func TestEffectiveTagsToInterface(t *testing.T) {
 	tests := []struct {
 		name string
 		in   map[string]string
-		want map[string]interface{}
+		want map[string]any
 	}{
 		{
 			name: "nil input returns empty map",
 			in:   nil,
-			want: map[string]interface{}{},
+			want: map[string]any{},
 		},
 		{
 			name: "empty input returns empty map",
 			in:   map[string]string{},
-			want: map[string]interface{}{},
+			want: map[string]any{},
 		},
 		{
 			name: "project-scoped tag key",
 			in:   map[string]string{"123456789012/env": "production"},
-			want: map[string]interface{}{"123456789012/env": "production"},
+			want: map[string]any{"123456789012/env": "production"},
 		},
 		{
 			name: "org-scoped tag key is preserved as-is",
 			in:   map[string]string{"815471563813/glz-resource-optout": "true"},
-			want: map[string]interface{}{"815471563813/glz-resource-optout": "true"},
+			want: map[string]any{"815471563813/glz-resource-optout": "true"},
 		},
 		{
 			name: "multiple tags are all converted",
@@ -211,7 +211,7 @@ func TestEffectiveTagsToInterface(t *testing.T) {
 				"815471563813/dtit:sec:infosecclass": "internal",
 				"123456789012/env":                   "production",
 			},
-			want: map[string]interface{}{
+			want: map[string]any{
 				"815471563813/glz-resource-optout":   "true",
 				"815471563813/dtit:sec:infosecclass": "internal",
 				"123456789012/env":                   "production",
@@ -220,7 +220,7 @@ func TestEffectiveTagsToInterface(t *testing.T) {
 		{
 			name: "tag with empty value is preserved",
 			in:   map[string]string{"815471563813/cost-center": ""},
-			want: map[string]interface{}{"815471563813/cost-center": ""},
+			want: map[string]any{"815471563813/cost-center": ""},
 		},
 	}
 
@@ -238,31 +238,31 @@ func TestBucketTagKeyMatching(t *testing.T) {
 	// a suffix match (contains) is needed rather than exact equality.
 	tests := []struct {
 		name       string
-		tags       map[string]interface{}
+		tags       map[string]any
 		searchKey  string
 		wantExists bool
 	}{
 		{
 			name:       "exact match on namespaced key",
-			tags:       map[string]interface{}{"815471563813/glz-resource-optout": "true"},
+			tags:       map[string]any{"815471563813/glz-resource-optout": "true"},
 			searchKey:  "815471563813/glz-resource-optout",
 			wantExists: true,
 		},
 		{
 			name:       "suffix match (MQL regex pattern) finds namespaced key",
-			tags:       map[string]interface{}{"815471563813/glz-resource-optout": "true"},
+			tags:       map[string]any{"815471563813/glz-resource-optout": "true"},
 			searchKey:  "glz-resource-optout",
 			wantExists: true,
 		},
 		{
 			name:       "key not present",
-			tags:       map[string]interface{}{"815471563813/env": "production"},
+			tags:       map[string]any{"815471563813/env": "production"},
 			searchKey:  "glz-resource-optout",
 			wantExists: false,
 		},
 		{
 			name:       "empty tags map",
-			tags:       map[string]interface{}{},
+			tags:       map[string]any{},
 			searchKey:  "glz-resource-optout",
 			wantExists: false,
 		},

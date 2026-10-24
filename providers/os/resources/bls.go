@@ -185,7 +185,7 @@ func expandVars(s string, vars map[string]string) string {
 // Unresolved variables are skipped, as in ParseCmdline.
 func ParseCmdlineValues(cmdline string) map[string][]string {
 	values := map[string][]string{}
-	for _, token := range strings.Fields(cmdline) {
+	for token := range strings.FieldsSeq(cmdline) {
 		if strings.HasPrefix(token, "$") {
 			continue
 		}
@@ -229,7 +229,7 @@ func ParseCmdline(cmdline string) (map[string]string, []string) {
 	params := map[string]string{}
 	flags := []string{}
 
-	for _, token := range strings.Fields(cmdline) {
+	for token := range strings.FieldsSeq(cmdline) {
 		if strings.HasPrefix(token, "$") {
 			continue
 		}

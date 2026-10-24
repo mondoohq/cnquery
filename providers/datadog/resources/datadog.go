@@ -59,8 +59,8 @@ func (r *mqlDatadog) id() (string, error) {
 	return "datadog", nil
 }
 
-func toAnyStrings(s []string) []interface{} {
-	r := make([]interface{}, len(s))
+func toAnyStrings(s []string) []any {
+	r := make([]any, len(s))
 	for i, v := range s {
 		r[i] = v
 	}
@@ -131,13 +131,13 @@ func (r *mqlDatadog) fetchUsers() ([]datadogV2.User, error) {
 
 // --- Users ---
 
-func (r *mqlDatadog) users() ([]interface{}, error) {
+func (r *mqlDatadog) users() ([]any, error) {
 	usersList, err := r.fetchUsers()
 	if err != nil {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, u := range usersList {
 		res, err := CreateResource(r.MqlRuntime, "datadog.user", userArgs(u))
 		if err != nil {
@@ -154,13 +154,13 @@ func (r *mqlDatadogUser) id() (string, error) {
 
 // --- Roles ---
 
-func (r *mqlDatadog) roles() ([]interface{}, error) {
+func (r *mqlDatadog) roles() ([]any, error) {
 	rolesList, err := r.fetchRoles()
 	if err != nil {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, role := range rolesList {
 		res, err := CreateResource(r.MqlRuntime, "datadog.role", roleArgs(role))
 		if err != nil {
@@ -177,11 +177,11 @@ func (r *mqlDatadogRole) id() (string, error) {
 
 // --- Monitors ---
 
-func (r *mqlDatadog) monitors() ([]interface{}, error) {
+func (r *mqlDatadog) monitors() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewMonitorsApi(conn.ApiClient())
 
-	var all []interface{}
+	var all []any
 	pageSize := int32(100)
 	page := int64(0)
 
@@ -214,7 +214,7 @@ func (r *mqlDatadog) monitors() ([]interface{}, error) {
 				notifyNoData = opts.GetNotifyNoData()
 			}
 
-			options := map[string]interface{}{}
+			options := map[string]any{}
 			if opts, ok := m.GetOptionsOk(); ok && opts != nil {
 				if v, ok := opts.GetRenotifyIntervalOk(); ok && v != nil {
 					options["renotifyInterval"] = float64(*v)
@@ -265,13 +265,13 @@ func (r *mqlDatadogMonitor) id() (string, error) {
 
 // --- Dashboards ---
 
-func (r *mqlDatadog) dashboards() ([]interface{}, error) {
+func (r *mqlDatadog) dashboards() ([]any, error) {
 	dashboards, err := r.fetchDashboards()
 	if err != nil {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, d := range dashboards {
 		res, err := newDashboard(r.MqlRuntime, d)
 		if err != nil {
@@ -288,7 +288,7 @@ func (r *mqlDatadogDashboard) id() (string, error) {
 
 // --- Synthetics Tests ---
 
-func (r *mqlDatadog) syntheticsTests() ([]interface{}, error) {
+func (r *mqlDatadog) syntheticsTests() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewSyntheticsApi(conn.ApiClient())
 
@@ -301,7 +301,7 @@ func (r *mqlDatadog) syntheticsTests() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, t := range resp.GetTests() {
 		tags := toAnyStrings(t.GetTags())
 		locations := toAnyStrings(t.GetLocations())
@@ -311,7 +311,7 @@ func (r *mqlDatadog) syntheticsTests() ([]interface{}, error) {
 			creator = c.GetEmail()
 		}
 
-		config := map[string]interface{}{}
+		config := map[string]any{}
 		if cfg, ok := t.GetConfigOk(); ok && cfg != nil {
 			if req, ok := cfg.GetRequestOk(); ok && req != nil {
 				config["method"] = req.GetMethod()
@@ -319,7 +319,7 @@ func (r *mqlDatadog) syntheticsTests() ([]interface{}, error) {
 			}
 		}
 
-		options := map[string]interface{}{}
+		options := map[string]any{}
 		if opts, ok := t.GetOptionsOk(); ok && opts != nil {
 			if v, ok := opts.GetTickEveryOk(); ok {
 				options["tickEvery"] = float64(*v)
@@ -360,11 +360,11 @@ func (r *mqlDatadogSyntheticsTest) id() (string, error) {
 
 // --- SLOs ---
 
-func (r *mqlDatadog) slos() ([]interface{}, error) {
+func (r *mqlDatadog) slos() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewServiceLevelObjectivesApi(conn.ApiClient())
 
-	var all []interface{}
+	var all []any
 	limit := int64(1000)
 	offset := int64(0)
 
@@ -399,7 +399,7 @@ func (r *mqlDatadog) slos() ([]interface{}, error) {
 				timeframe = string(thresholds[0].GetTimeframe())
 			}
 
-			monitorIds := make([]interface{}, len(s.GetMonitorIds()))
+			monitorIds := make([]any, len(s.GetMonitorIds()))
 			for i, id := range s.GetMonitorIds() {
 				monitorIds[i] = id
 			}
@@ -438,7 +438,7 @@ func (r *mqlDatadogSlo) id() (string, error) {
 
 // --- Log Indexes ---
 
-func (r *mqlDatadog) logIndexes() ([]interface{}, error) {
+func (r *mqlDatadog) logIndexes() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewLogsIndexesApi(conn.ApiClient())
 
@@ -451,16 +451,16 @@ func (r *mqlDatadog) logIndexes() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, idx := range resp.GetIndexes() {
 		filterQuery := ""
 		if f, ok := idx.GetFilterOk(); ok && f != nil {
 			filterQuery = f.GetQuery()
 		}
 
-		exclusionFilters := make([]interface{}, len(idx.GetExclusionFilters()))
+		exclusionFilters := make([]any, len(idx.GetExclusionFilters()))
 		for i, ef := range idx.GetExclusionFilters() {
-			efMap := map[string]interface{}{
+			efMap := map[string]any{
 				"name":      ef.GetName(),
 				"isEnabled": ef.GetIsEnabled(),
 			}
@@ -515,11 +515,11 @@ func (r *mqlDatadogLogIndex) id() (string, error) {
 
 // --- Security Rules ---
 
-func (r *mqlDatadog) securityRules() ([]interface{}, error) {
+func (r *mqlDatadog) securityRules() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewSecurityMonitoringApi(conn.ApiClient())
 
-	var all []interface{}
+	var all []any
 	pageSize := int64(100)
 	page := int64(0)
 
@@ -543,24 +543,24 @@ func (r *mqlDatadog) securityRules() ([]interface{}, error) {
 
 			tags := toAnyStrings(rule.GetTags())
 
-			cases := make([]interface{}, len(rule.GetCases()))
+			cases := make([]any, len(rule.GetCases()))
 			for i, c := range rule.GetCases() {
-				cases[i] = map[string]interface{}{
+				cases[i] = map[string]any{
 					"name":      c.GetName(),
 					"status":    string(c.GetStatus()),
 					"condition": c.GetCondition(),
 				}
 			}
 
-			filters := make([]interface{}, len(rule.GetFilters()))
+			filters := make([]any, len(rule.GetFilters()))
 			for i, f := range rule.GetFilters() {
-				filters[i] = map[string]interface{}{
+				filters[i] = map[string]any{
 					"query":  f.GetQuery(),
 					"action": string(f.GetAction()),
 				}
 			}
 
-			options := map[string]interface{}{}
+			options := map[string]any{}
 			if opts, ok := rule.GetOptionsOk(); ok && opts != nil {
 				options["detectionMethod"] = string(opts.GetDetectionMethod())
 				if v, ok := opts.GetEvaluationWindowOk(); ok {
@@ -610,11 +610,11 @@ func (r *mqlDatadogSecurityRule) id() (string, error) {
 
 // --- Downtimes ---
 
-func (r *mqlDatadog) downtimes() ([]interface{}, error) {
+func (r *mqlDatadog) downtimes() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewDowntimesApi(conn.ApiClient())
 
-	var all []interface{}
+	var all []any
 	items, cancel := api.ListDowntimesWithPagination(conn.AuthCtx())
 	defer cancel()
 
@@ -625,17 +625,17 @@ func (r *mqlDatadog) downtimes() ([]interface{}, error) {
 		d := item.Item
 		attrs := d.GetAttributes()
 
-		notifyEndStates := make([]interface{}, 0)
+		notifyEndStates := make([]any, 0)
 		for _, v := range attrs.GetNotifyEndStates() {
 			notifyEndStates = append(notifyEndStates, string(v))
 		}
 
-		notifyEndTypes := make([]interface{}, 0)
+		notifyEndTypes := make([]any, 0)
 		for _, v := range attrs.GetNotifyEndTypes() {
 			notifyEndTypes = append(notifyEndTypes, string(v))
 		}
 
-		monitorId := map[string]interface{}{}
+		monitorId := map[string]any{}
 		if mi, ok := attrs.GetMonitorIdentifierOk(); ok && mi != nil {
 			if mid := mi.DowntimeMonitorIdentifierId; mid != nil {
 				monitorId["monitorId"] = float64(mid.GetMonitorId())
@@ -645,7 +645,7 @@ func (r *mqlDatadog) downtimes() ([]interface{}, error) {
 			}
 		}
 
-		schedule := map[string]interface{}{}
+		schedule := map[string]any{}
 		if sched, ok := attrs.GetScheduleOk(); ok && sched != nil {
 			if rrule := sched.DowntimeScheduleRecurrencesResponse; rrule != nil {
 				schedule["timezone"] = rrule.GetTimezone()
@@ -699,13 +699,13 @@ func (r *mqlDatadogDowntime) id() (string, error) {
 
 // --- API Keys ---
 
-func (r *mqlDatadog) apiKeys() ([]interface{}, error) {
+func (r *mqlDatadog) apiKeys() ([]any, error) {
 	keys, err := r.fetchApiKeys()
 	if err != nil {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, k := range keys {
 		attrs := k.GetAttributes()
 		res, err := CreateResource(r.MqlRuntime, "datadog.apiKey", map[string]*llx.RawData{
@@ -734,13 +734,13 @@ func (r *mqlDatadogApiKey) id() (string, error) {
 
 // --- Application Keys ---
 
-func (r *mqlDatadog) applicationKeys() ([]interface{}, error) {
+func (r *mqlDatadog) applicationKeys() ([]any, error) {
 	keys, err := r.fetchApplicationKeys()
 	if err != nil {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, k := range keys {
 		attrs := k.GetAttributes()
 		scopes := toAnyStrings(attrs.GetScopes())
@@ -796,17 +796,17 @@ func (r *mqlDatadog) ipAllowlistEnabled() (bool, error) {
 	return attrs.GetEnabled(), nil
 }
 
-func (r *mqlDatadog) ipAllowlistEntries() ([]interface{}, error) {
+func (r *mqlDatadog) ipAllowlistEntries() ([]any, error) {
 	attrs, err := r.fetchIPAllowlist()
 	if err != nil {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, entry := range attrs.GetEntries() {
 		entryData := entry.GetData()
 		entryAttrs := entryData.GetAttributes()
-		all = append(all, map[string]interface{}{
+		all = append(all, map[string]any{
 			"cidrBlock":  entryAttrs.GetCidrBlock(),
 			"note":       entryAttrs.GetNote(),
 			"createdAt":  entryAttrs.GetCreatedAt().Format(time.RFC3339),
@@ -818,7 +818,7 @@ func (r *mqlDatadog) ipAllowlistEntries() ([]interface{}, error) {
 
 // --- AWS Integrations ---
 
-func (r *mqlDatadog) integrationAwsAccounts() ([]interface{}, error) {
+func (r *mqlDatadog) integrationAwsAccounts() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewAWSIntegrationApi(conn.ApiClient())
 
@@ -831,7 +831,7 @@ func (r *mqlDatadog) integrationAwsAccounts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, acct := range resp.GetData() {
 		attrs := acct.GetAttributes()
 
@@ -863,7 +863,7 @@ func (r *mqlDatadog) integrationAwsAccounts() ([]interface{}, error) {
 		}
 
 		// Extract metrics tag filters as filter tags
-		var filterTags []interface{}
+		var filterTags []any
 		if mc, ok := attrs.GetMetricsConfigOk(); ok && mc != nil {
 			for _, tf := range mc.GetTagFilters() {
 				for _, tag := range tf.GetTags() {
@@ -872,14 +872,14 @@ func (r *mqlDatadog) integrationAwsAccounts() ([]interface{}, error) {
 			}
 		}
 		if filterTags == nil {
-			filterTags = []interface{}{}
+			filterTags = []any{}
 		}
 
 		// The v2 API models region selection as either "include all" or an
 		// explicit "include only" list; expose the latter. It has no notion of
 		// excluded regions, so excludedRegions stays empty (retained for
 		// backward-compat with the v1-era schema).
-		includedRegions := []interface{}{}
+		includedRegions := []any{}
 		if ar, ok := attrs.GetAwsRegionsOk(); ok && ar != nil && ar.AWSRegionsIncludeOnly != nil {
 			includedRegions = toAnyStrings(ar.AWSRegionsIncludeOnly.GetIncludeOnly())
 		}
@@ -891,9 +891,9 @@ func (r *mqlDatadog) integrationAwsAccounts() ([]interface{}, error) {
 			"resourceCollectionEnabled": llx.BoolData(resourceCollectionEnabled),
 			"logsEnabled":               llx.BoolData(logsEnabled),
 			"filterTags":                llx.ArrayData(filterTags, "\x02"),
-			"hostTags":                  llx.ArrayData([]interface{}{}, "\x02"),
+			"hostTags":                  llx.ArrayData([]any{}, "\x02"),
 			"accountTags":               llx.ArrayData(accountTags, "\x02"),
-			"excludedRegions":           llx.ArrayData([]interface{}{}, "\x02"),
+			"excludedRegions":           llx.ArrayData([]any{}, "\x02"),
 			"includedRegions":           llx.ArrayData(includedRegions, "\x02"),
 		})
 		if err != nil {
@@ -910,13 +910,13 @@ func (r *mqlDatadogIntegrationAws) id() (string, error) {
 
 // --- Teams ---
 
-func (r *mqlDatadog) teams() ([]interface{}, error) {
+func (r *mqlDatadog) teams() ([]any, error) {
 	teamsList, err := r.fetchTeams()
 	if err != nil {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, t := range teamsList {
 		res, err := CreateResource(r.MqlRuntime, "datadog.team", teamArgs(t))
 		if err != nil {

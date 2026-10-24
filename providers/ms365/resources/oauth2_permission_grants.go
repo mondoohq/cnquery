@@ -58,7 +58,7 @@ func (a *mqlMicrosoft) oauth2PermissionGrants() ([]any, error) {
 
 		scopes := []any{}
 		if grant.GetScope() != nil {
-			for _, scope := range strings.Fields(*grant.GetScope()) {
+			for scope := range strings.FieldsSeq(*grant.GetScope()) {
 				scopes = append(scopes, scope)
 			}
 		}

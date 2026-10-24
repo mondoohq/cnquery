@@ -35,10 +35,8 @@ func TestSaveWhileAddingData(t *testing.T) {
 
 	// Writer 1: keeps inserting distinct resources, growing asset.resources.
 	// This races finalize()'s iteration of that map.
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < iterations; i++ {
+	wg.Go(func() {
+		for i := range iterations {
 			r.AddData(llx.AddDataReq{
 				ConnectionID:      1,
 				Resource:          "aws.ec2.instance",
@@ -48,14 +46,12 @@ func TestSaveWhileAddingData(t *testing.T) {
 				Data:              llx.StringData("instance"),
 			})
 		}
-	}()
+	})
 
 	// Writer 2: repeatedly writes fields on a single "hot" resource, mutating
 	// its Fields map. This races the reader goroutine's Fields access.
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < iterations; i++ {
+	wg.Go(func() {
+		for i := range iterations {
 			r.AddData(llx.AddDataReq{
 				ConnectionID:      1,
 				Resource:          "aws.ec2.instance",
@@ -65,30 +61,26 @@ func TestSaveWhileAddingData(t *testing.T) {
 				Data:              llx.StringData("v"),
 			})
 		}
-	}()
+	})
 
 	// Reader: finalizes the recording repeatedly, iterating the resources map.
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < iterations/10; i++ {
+	wg.Go(func() {
+		for range iterations / 10 {
 			assert.NoError(t, r.Save())
 		}
-	}()
+	})
 
 	// Reader: exercises the data-read paths, which access Resource.Fields while
 	// Writer 2 mutates it. GetResource must hand back a safe snapshot.
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < iterations; i++ {
+	wg.Go(func() {
+		for i := range iterations {
 			r.GetData(lookup, "aws.ec2.instance", "hot", strconv.Itoa(i%64))
 			if fields, ok := r.GetResource(lookup, "aws.ec2.instance", "hot"); ok {
 				for range fields { // iterate the returned map; must be a safe snapshot
 				}
 			}
 		}
-	}()
+	})
 
 	wg.Wait()
 }

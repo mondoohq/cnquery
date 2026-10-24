@@ -24,7 +24,7 @@ func (r *mqlCursor) id() (string, error) {
 	return "cursor/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlCursor) mcpServers() ([]interface{}, error) {
+func (r *mqlCursor) mcpServers() ([]any, error) {
 	afs := connectionAfs(r.MqlRuntime)
 	configDir := r.ConfigPath.Data
 
@@ -42,7 +42,7 @@ func (r *mqlCursor) mcpServers() ([]interface{}, error) {
 		return nil, fmt.Errorf("failed to parse cursor mcp.json: %w", err)
 	}
 
-	var result []interface{}
+	var result []any
 	for name, server := range mcpConfig.McpServers {
 		res, err := NewResource(r.MqlRuntime, "cursor.mcpServer", map[string]*llx.RawData{
 			"__id":    llx.StringData("cursor.mcpServer/" + name),
@@ -61,7 +61,7 @@ func (r *mqlCursor) mcpServers() ([]interface{}, error) {
 	return result, nil
 }
 
-func (r *mqlCursor) rules() ([]interface{}, error) {
+func (r *mqlCursor) rules() ([]any, error) {
 	afs := connectionAfs(r.MqlRuntime)
 	rulesDir := filepath.Join(r.ConfigPath.Data, "rules")
 
@@ -73,7 +73,7 @@ func (r *mqlCursor) rules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var result []interface{}
+	var result []any
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -106,14 +106,14 @@ func (r *mqlCursor) rules() ([]interface{}, error) {
 	return result, nil
 }
 
-func (r *mqlCursor) skills() ([]interface{}, error) {
+func (r *mqlCursor) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "cursor.skill", r.ConfigPath.Data, defaultCursorConfigDir,
 		filepath.Join(defaultCursorConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
 
 // Child resource ID methods
 
-func (r *mqlCursor) repos() ([]interface{}, error) {
+func (r *mqlCursor) repos() ([]any, error) {
 	folders, err := vscodeWorkspaceFolders(r.MqlRuntime, "Cursor")
 	if err != nil {
 		return nil, err

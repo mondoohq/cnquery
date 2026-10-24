@@ -31,7 +31,7 @@ func (a *mqlActivedirectoryComputer) id() (string, error) {
 	return a.DistinguishedName.Data, nil
 }
 
-func (a *mqlActivedirectory) computers() ([]interface{}, error) {
+func (a *mqlActivedirectory) computers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 	baseDN := conn.BaseDN()
 
@@ -68,7 +68,7 @@ func (a *mqlActivedirectory) computers() ([]interface{}, error) {
 	}
 
 	now := time.Now().UTC()
-	res := make([]interface{}, 0, len(result))
+	res := make([]any, 0, len(result))
 
 	for _, entry := range result {
 		samAccountName := connection.GetStringAttr(entry, "sAMAccountName")
@@ -123,7 +123,7 @@ func (a *mqlActivedirectory) computers() ([]interface{}, error) {
 		// Constrained delegation
 		delegateTargets := connection.GetStringSliceAttr(entry, "msDS-AllowedToDelegateTo")
 		constrainedDelegation := len(delegateTargets) > 0
-		delegateTargetsRaw := make([]interface{}, len(delegateTargets))
+		delegateTargetsRaw := make([]any, len(delegateTargets))
 		for i, v := range delegateTargets {
 			delegateTargetsRaw[i] = v
 		}
@@ -134,14 +134,14 @@ func (a *mqlActivedirectory) computers() ([]interface{}, error) {
 		rbcdRaw := entry.GetRawAttributeValue("msDS-AllowedToActOnBehalfOfOtherIdentity")
 		rbcd := len(rbcdRaw) > 0
 		rbcdPrincipals := rbcdPrincipalSIDs(rbcdRaw)
-		rbcdPrincipalsRaw := make([]interface{}, len(rbcdPrincipals))
+		rbcdPrincipalsRaw := make([]any, len(rbcdPrincipals))
 		for i, v := range rbcdPrincipals {
 			rbcdPrincipalsRaw[i] = v
 		}
 
 		// Service principal names
 		spns := connection.GetStringSliceAttr(entry, "servicePrincipalName")
-		spnsRaw := make([]interface{}, len(spns))
+		spnsRaw := make([]any, len(spns))
 		for i, v := range spns {
 			spnsRaw[i] = v
 		}

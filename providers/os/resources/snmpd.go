@@ -386,7 +386,7 @@ func (s *mqlSnmpdConfig) agentAddresses(content string) ([]any, error) {
 			continue
 		}
 		// agentAddress takes a comma-separated list of transport specifiers.
-		for _, part := range strings.Split(strings.Join(d.Args, " "), ",") {
+		for part := range strings.SplitSeq(strings.Join(d.Args, " "), ",") {
 			if p := strings.TrimSpace(part); p != "" {
 				res = append(res, p)
 			}

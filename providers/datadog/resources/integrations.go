@@ -24,7 +24,7 @@ import (
 
 // --- Google Cloud ---
 
-func (r *mqlDatadog) integrationGcpAccounts() ([]interface{}, error) {
+func (r *mqlDatadog) integrationGcpAccounts() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewGCPIntegrationApi(conn.ApiClient())
 
@@ -37,7 +37,7 @@ func (r *mqlDatadog) integrationGcpAccounts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, acc := range resp.GetData() {
 		attrs := acc.GetAttributes()
 		meta := acc.GetMeta()
@@ -74,7 +74,7 @@ func (r *mqlDatadogIntegrationGcp) id() (string, error) {
 
 // --- Azure ---
 
-func (r *mqlDatadog) integrationAzureAccounts() ([]interface{}, error) {
+func (r *mqlDatadog) integrationAzureAccounts() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewAzureIntegrationApi(conn.ApiClient())
 
@@ -87,7 +87,7 @@ func (r *mqlDatadog) integrationAzureAccounts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, acc := range accounts {
 		// Azure integrations carry no server-assigned identifier. The tenant
 		// and application pair is what uniquely names the app registration
@@ -121,7 +121,7 @@ func (r *mqlDatadog) integrationAzureAccounts() ([]interface{}, error) {
 
 // --- Okta ---
 
-func (r *mqlDatadog) integrationOktaAccounts() ([]interface{}, error) {
+func (r *mqlDatadog) integrationOktaAccounts() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewOktaIntegrationApi(conn.ApiClient())
 
@@ -134,7 +134,7 @@ func (r *mqlDatadog) integrationOktaAccounts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, acc := range resp.GetData() {
 		attrs := acc.GetAttributes()
 		res, err := CreateResource(r.MqlRuntime, "datadog.integration.okta", map[string]*llx.RawData{
@@ -159,7 +159,7 @@ func (r *mqlDatadogIntegrationOkta) id() (string, error) {
 
 // --- Cloudflare ---
 
-func (r *mqlDatadog) integrationCloudflareAccounts() ([]interface{}, error) {
+func (r *mqlDatadog) integrationCloudflareAccounts() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewCloudflareIntegrationApi(conn.ApiClient())
 
@@ -172,7 +172,7 @@ func (r *mqlDatadog) integrationCloudflareAccounts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, acc := range resp.GetData() {
 		attrs := acc.GetAttributes()
 		res, err := CreateResource(r.MqlRuntime, "datadog.integration.cloudflare", map[string]*llx.RawData{
@@ -197,7 +197,7 @@ func (r *mqlDatadogIntegrationCloudflare) id() (string, error) {
 
 // --- Fastly ---
 
-func (r *mqlDatadog) integrationFastlyAccounts() ([]interface{}, error) {
+func (r *mqlDatadog) integrationFastlyAccounts() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewFastlyIntegrationApi(conn.ApiClient())
 
@@ -210,15 +210,15 @@ func (r *mqlDatadog) integrationFastlyAccounts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, acc := range resp.GetData() {
 		attrs := acc.GetAttributes()
 
 		// Dict values cross the plugin boundary as JSON, so the tag slice has
 		// to be widened to []interface{} rather than passed as []string.
-		services := make([]interface{}, 0, len(attrs.GetServices()))
+		services := make([]any, 0, len(attrs.GetServices()))
 		for _, svc := range attrs.GetServices() {
-			services = append(services, map[string]interface{}{
+			services = append(services, map[string]any{
 				"id":   svc.GetId(),
 				"tags": toAnyStrings(svc.GetTags()),
 			})
@@ -244,7 +244,7 @@ func (r *mqlDatadogIntegrationFastly) id() (string, error) {
 
 // --- Confluent Cloud ---
 
-func (r *mqlDatadog) integrationConfluentAccounts() ([]interface{}, error) {
+func (r *mqlDatadog) integrationConfluentAccounts() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewConfluentCloudApi(conn.ApiClient())
 
@@ -257,13 +257,13 @@ func (r *mqlDatadog) integrationConfluentAccounts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, acc := range resp.GetData() {
 		attrs := acc.GetAttributes()
 
-		resources := make([]interface{}, 0, len(attrs.GetResources()))
+		resources := make([]any, 0, len(attrs.GetResources()))
 		for _, cr := range attrs.GetResources() {
-			resources = append(resources, map[string]interface{}{
+			resources = append(resources, map[string]any{
 				"id":                  cr.GetId(),
 				"resourceType":        cr.GetResourceType(),
 				"enableCustomMetrics": cr.GetEnableCustomMetrics(),
@@ -298,8 +298,8 @@ func (r *mqlDatadogIntegrationConfluent) id() (string, error) {
 // does not model yet, which land in AdditionalProperties, instead of silently
 // dropping them. A collection reported without an enabled state is left out
 // rather than reported as disabled.
-func integrationDataflows(dataflows interface{}) (map[string]interface{}, error) {
-	out := map[string]interface{}{}
+func integrationDataflows(dataflows any) (map[string]any, error) {
+	out := map[string]any{}
 	if dataflows == nil {
 		return out, nil
 	}
@@ -326,8 +326,8 @@ func integrationDataflows(dataflows interface{}) (map[string]interface{}, error)
 // unparsedAuthType reads auth_type out of an authentication object the SDK
 // could not match to one of its known methods. Datadog may add methods, and
 // the discriminator still names them even when the rest of the shape is new.
-func unparsedAuthType(unparsed interface{}) *string {
-	m, ok := unparsed.(map[string]interface{})
+func unparsedAuthType(unparsed any) *string {
+	m, ok := unparsed.(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -376,7 +376,7 @@ func snowflakeAccountArgs(acc datadogV2.SnowflakeIntegrationAccountResponseData)
 	attrs := acc.GetAttributes()
 	settings := attrs.GetSettings()
 
-	var dataflows interface{}
+	var dataflows any
 	if attrs.Dataflows != nil {
 		dataflows = attrs.Dataflows
 	}
@@ -399,7 +399,7 @@ func databricksAccountArgs(acc datadogV2.DatabricksIntegrationAccountResponseDat
 	attrs := acc.GetAttributes()
 	settings := attrs.GetSettings()
 
-	var dataflows interface{}
+	var dataflows any
 	if attrs.Dataflows != nil {
 		dataflows = attrs.Dataflows
 	}
@@ -419,7 +419,7 @@ func databricksAccountArgs(acc datadogV2.DatabricksIntegrationAccountResponseDat
 	}, nil
 }
 
-func (r *mqlDatadog) integrationSnowflakeAccounts() ([]interface{}, error) {
+func (r *mqlDatadog) integrationSnowflakeAccounts() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewSnowflakeIntegrationApi(conn.ApiClient())
 
@@ -431,7 +431,7 @@ func (r *mqlDatadog) integrationSnowflakeAccounts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, acc := range resp.GetData() {
 		args, err := snowflakeAccountArgs(acc)
 		if err != nil {
@@ -450,7 +450,7 @@ func (r *mqlDatadogIntegrationSnowflake) id() (string, error) {
 	return "datadog.integration.snowflake/" + r.Id.Data, nil
 }
 
-func (r *mqlDatadog) integrationDatabricksAccounts() ([]interface{}, error) {
+func (r *mqlDatadog) integrationDatabricksAccounts() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewDatabricksIntegrationApi(conn.ApiClient())
 
@@ -462,7 +462,7 @@ func (r *mqlDatadog) integrationDatabricksAccounts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, acc := range resp.GetData() {
 		args, err := databricksAccountArgs(acc)
 		if err != nil {

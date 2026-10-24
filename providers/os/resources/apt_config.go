@@ -49,7 +49,7 @@ func (a *mqlAptConfig) params() (map[string]any, error) {
 func parseAptConfigDump(out string) map[string]string {
 	res := map[string]string{}
 	lists := map[string]bool{}
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		line = strings.TrimSpace(line)
 		i := strings.Index(line, ` "`)
 		if i <= 0 {

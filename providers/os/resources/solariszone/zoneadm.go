@@ -34,7 +34,7 @@ type Zone struct {
 // backslash.
 func ParseZoneadmList(out string) ([]Zone, error) {
 	var zones []Zone
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		line = strings.TrimRight(line, "\r")
 		if strings.TrimSpace(line) == "" {
 			continue

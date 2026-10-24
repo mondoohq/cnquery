@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 
 	"github.com/okta/okta-sdk-golang/v6/okta"
@@ -116,9 +117,7 @@ func initOktaResourceSet(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return args, nil, nil
 	}
 
-	for k, v := range oktaResourceSetArgs(set) {
-		args[k] = v
-	}
+	maps.Copy(args, oktaResourceSetArgs(set))
 	return args, nil, nil
 }
 

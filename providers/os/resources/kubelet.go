@@ -198,11 +198,11 @@ func createConfiguration(kubeletFlags map[string]any, configFileContent string, 
 		return nil, fmt.Errorf("error applying precedence for deprecated flags to KubeletConfig: %v", err)
 	}
 
-	coerceToKubeletTypes(options, reflect.TypeOf(kubeletconfigv1beta1.KubeletConfiguration{}))
+	coerceToKubeletTypes(options, reflect.TypeFor[kubeletconfigv1beta1.KubeletConfiguration]())
 	return options, nil
 }
 
-var durationType = reflect.TypeOf(metav1.Duration{})
+var durationType = reflect.TypeFor[metav1.Duration]()
 
 // kubeletUnsetMeansZero lists the optional (pointer) config fields that the
 // kubelet holds as plain values, so that left unset they run as their zero
@@ -219,8 +219,7 @@ var kubeletUnsetMeansZero = map[string]bool{
 // kubelet runs with them. Nested structs are filled the same way. Optional
 // fields are added only when kubeletUnsetMeansZero lists them.
 func addKubeletZeroValues(m map[string]any, t reflect.Type) {
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
+	for field := range t.Fields() {
 		name, _, _ := strings.Cut(field.Tag.Get("json"), ",")
 		if name == "" || name == "-" || !field.IsExported() {
 			continue
@@ -280,8 +279,7 @@ func kubeletZeroValue(t reflect.Type) (any, bool) {
 // (--cluster-dns) are converted; a value that does not parse is left as it
 // is. Fields are matched by their JSON name, nested structs included.
 func coerceToKubeletTypes(m map[string]any, t reflect.Type) {
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
+	for field := range t.Fields() {
 		name, _, _ := strings.Cut(field.Tag.Get("json"), ",")
 		if name == "" || name == "-" {
 			continue
@@ -321,7 +319,7 @@ func coerceToKubeletTypes(m map[string]any, t reflect.Type) {
 		case reflect.Slice:
 			if ft.Elem().Kind() == reflect.String {
 				list := []any{}
-				for _, item := range strings.Split(s, ",") {
+				for item := range strings.SplitSeq(s, ",") {
 					if item = strings.TrimSpace(item); item != "" {
 						list = append(list, item)
 					}
@@ -743,7 +741,7 @@ func runCommandQuiet(runtime *plugin.Runtime, command string) (string, bool) {
 // parseProcStatusRealUID returns the real user id from /proc/<pid>/status,
 // the first of the four ids on its Uid line.
 func parseProcStatusRealUID(status string) (int64, bool) {
-	for _, line := range strings.Split(status, "\n") {
+	for line := range strings.SplitSeq(status, "\n") {
 		rest, ok := strings.CutPrefix(line, "Uid:")
 		if !ok {
 			continue

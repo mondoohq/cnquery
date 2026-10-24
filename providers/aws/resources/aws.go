@@ -209,8 +209,7 @@ func (a *mqlAws) regions() ([]any, error) {
 }
 
 func Is400AccessDeniedError(err error) bool {
-	var respErr *http.ResponseError
-	if errors.As(err, &respErr) {
+	if respErr, ok := errors.AsType[*http.ResponseError](err); ok {
 		statusCodeMatches := respErr.HTTPStatusCode() == 400 || respErr.HTTPStatusCode() == 403
 		errorMessageMatches := strings.Contains(respErr.Error(), "AccessDenied") ||
 			strings.Contains(respErr.Error(), "UnauthorizedOperation") ||
@@ -245,8 +244,7 @@ func isOrganizationsNotInUseError(err error) bool {
 // resource init lookups use it to fall through to their list-scan fallback for
 // stale ARNs instead of hard-failing the resolution.
 func isResourceNotFoundError(err error) bool {
-	var ae smithy.APIError
-	if errors.As(err, &ae) {
+	if ae, ok := errors.AsType[smithy.APIError](err); ok {
 		code := ae.ErrorCode()
 		// Most services use a "*NotFound*" code (e.g. RepositoryNotFoundException,
 		// LoadBalancerNotFound, ResourceNotFoundException); a few use a "NoSuch*"
@@ -262,8 +260,7 @@ func isResourceNotFoundError(err error) bool {
 // operation is not recognized by the service". Such a resource has no
 // resource-based policy to report, so callers degrade to an empty policy.
 func isOperationNotSupportedError(err error) bool {
-	var ae smithy.APIError
-	if errors.As(err, &ae) {
+	if ae, ok := errors.AsType[smithy.APIError](err); ok {
 		return ae.ErrorCode() == "ValidationException" &&
 			strings.Contains(ae.ErrorMessage(), "not recognized by the service")
 	}
@@ -273,8 +270,7 @@ func isOperationNotSupportedError(err error) bool {
 // isBadRequestError checks if the error is a 400 Bad Request error
 // This is used to handle cases where a feature is not enabled for an AWS account
 func isBadRequestError(err error) bool {
-	var respErr *http.ResponseError
-	if errors.As(err, &respErr) {
+	if respErr, ok := errors.AsType[*http.ResponseError](err); ok {
 		return respErr.HTTPStatusCode() == 400 &&
 			(strings.Contains(respErr.Error(), "BadRequest") ||
 				strings.Contains(respErr.Error(), "feature is not enabled"))
@@ -293,8 +289,7 @@ func IsMacieNotEnabledError(err error) bool {
 		return false
 	}
 
-	var respErr *http.ResponseError
-	if errors.As(err, &respErr) {
+	if respErr, ok := errors.AsType[*http.ResponseError](err); ok {
 		msg := awsNormalizeApostrophes(respErr.Error())
 		// Macie returns 401 status code with AccessDeniedException when not enabled
 		if respErr.HTTPStatusCode() == 401 && strings.Contains(msg, "AccessDeniedException: Macie is not enabled") {
@@ -370,8 +365,7 @@ func IsSecurityLakeNotEnabledError(err error) bool {
 }
 
 func Is400InstanceNotFoundError(err error) bool {
-	var respErr *http.ResponseError
-	if errors.As(err, &respErr) {
+	if respErr, ok := errors.AsType[*http.ResponseError](err); ok {
 		if respErr.HTTPStatusCode() == 400 && (strings.Contains(respErr.Error(), "InvalidInstanceID.NotFound") || strings.Contains(respErr.Error(), "InvalidInstanceID.Malformed")) {
 			return true
 		}

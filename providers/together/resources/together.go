@@ -131,7 +131,7 @@ func (r *mqlTogether) userId() (string, error) {
 	return who.UserID, nil
 }
 
-func (r *mqlTogether) models() ([]interface{}, error) {
+func (r *mqlTogether) models() ([]any, error) {
 	conn := togetherConn(r.MqlRuntime)
 	client := conn.Client()
 
@@ -140,10 +140,10 @@ func (r *mqlTogether) models() ([]interface{}, error) {
 		return nil, err
 	}
 	if models == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	res := make([]interface{}, 0, len(*models))
+	res := make([]any, 0, len(*models))
 	for _, m := range *models {
 		var created *time.Time
 		if m.Created > 0 {
@@ -173,22 +173,22 @@ func (r *mqlTogether) models() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlTogether) fineTunes() ([]interface{}, error) {
+func (r *mqlTogether) fineTunes() ([]any, error) {
 	conn := togetherConn(r.MqlRuntime)
 	client := conn.Client()
 
 	resp, err := client.FineTuning.List(context.Background())
 	if isAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 	if resp == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	res := make([]interface{}, 0, len(resp.Data))
+	res := make([]any, 0, len(resp.Data))
 	for _, j := range resp.Data {
 		mqlJob, err := CreateResource(r.MqlRuntime, "together.fineTune", map[string]*llx.RawData{
 			"__id":            llx.StringData(j.ID),
@@ -215,22 +215,22 @@ func (r *mqlTogether) fineTunes() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlTogether) endpoints() ([]interface{}, error) {
+func (r *mqlTogether) endpoints() ([]any, error) {
 	conn := togetherConn(r.MqlRuntime)
 	client := conn.Client()
 
 	resp, err := client.Endpoints.List(context.Background(), together.EndpointListParams{})
 	if isAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 	if resp == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	res := make([]interface{}, 0, len(resp.Data))
+	res := make([]any, 0, len(resp.Data))
 	for _, e := range resp.Data {
 		mqlEndpoint, err := CreateResource(r.MqlRuntime, "together.endpoint", map[string]*llx.RawData{
 			"__id":      llx.StringData(e.ID),
@@ -251,22 +251,22 @@ func (r *mqlTogether) endpoints() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlTogether) files() ([]interface{}, error) {
+func (r *mqlTogether) files() ([]any, error) {
 	conn := togetherConn(r.MqlRuntime)
 	client := conn.Client()
 
 	resp, err := client.Files.List(context.Background())
 	if isAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 	if resp == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	res := make([]interface{}, 0, len(resp.Data))
+	res := make([]any, 0, len(resp.Data))
 	for _, f := range resp.Data {
 		var createdAt *time.Time
 		if f.CreatedAt > 0 {
@@ -293,22 +293,22 @@ func (r *mqlTogether) files() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlTogether) clusters() ([]interface{}, error) {
+func (r *mqlTogether) clusters() ([]any, error) {
 	conn := togetherConn(r.MqlRuntime)
 	client := conn.Client()
 
 	resp, err := client.Beta.Clusters.List(context.Background(), together.BetaClusterListParams{})
 	if isAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 	if resp == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	res := make([]interface{}, 0, len(resp.Clusters))
+	res := make([]any, 0, len(resp.Clusters))
 	for _, c := range resp.Clusters {
 		nodes, err := clusterNodeResources(r.MqlRuntime, c)
 		if err != nil {
@@ -462,7 +462,7 @@ func clusterNodeID(clusterID string, rec clusterNodeRecord, index int) string {
 // clusterNodeResources builds the node resources of one cluster. Everything it
 // reads is already in the cluster list response, so a cluster's nodes cost no
 // additional API call.
-func clusterNodeResources(runtime *plugin.Runtime, c together.Cluster) ([]interface{}, error) {
+func clusterNodeResources(runtime *plugin.Runtime, c together.Cluster) ([]any, error) {
 	records := make([]clusterNodeRecord, 0, len(c.GPUWorkerNodes)+len(c.ControlPlaneNodes))
 	for _, n := range c.GPUWorkerNodes {
 		records = append(records, gpuWorkerNodeRecord(n))
@@ -471,9 +471,9 @@ func clusterNodeResources(runtime *plugin.Runtime, c together.Cluster) ([]interf
 		records = append(records, controlPlaneNodeRecord(n))
 	}
 
-	res := make([]interface{}, 0, len(records))
+	res := make([]any, 0, len(records))
 	for i, rec := range records {
-		networks := make([]interface{}, 0, len(rec.networks))
+		networks := make([]any, 0, len(rec.networks))
 		for _, network := range rec.networks {
 			networks = append(networks, network)
 		}
@@ -508,22 +508,22 @@ func (r *mqlTogetherClusterNode) isPublic() (bool, error) {
 	return r.PublicIpv4.Data != "", nil
 }
 
-func (r *mqlTogether) secrets() ([]interface{}, error) {
+func (r *mqlTogether) secrets() ([]any, error) {
 	conn := togetherConn(r.MqlRuntime)
 	client := conn.Client()
 
 	resp, err := client.Beta.Jig.Secrets.List(context.Background())
 	if isAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 	if resp == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	res := make([]interface{}, 0, len(resp.Data))
+	res := make([]any, 0, len(resp.Data))
 	for _, s := range resp.Data {
 		createdAt := parseTimeStr(s.CreatedAt)
 		updatedAt := parseTimeStr(s.UpdatedAt)
@@ -563,7 +563,7 @@ func (r *mqlTogether) scopedProjectID() (string, error) {
 	return r.projectId()
 }
 
-func (r *mqlTogether) clusterStorageVolumes() ([]interface{}, error) {
+func (r *mqlTogether) clusterStorageVolumes() ([]any, error) {
 	conn := togetherConn(r.MqlRuntime)
 
 	project, err := r.scopedProjectID()
@@ -582,7 +582,7 @@ func (r *mqlTogether) clusterStorageVolumes() ([]interface{}, error) {
 // project is empty only for a key that resolves to no project at all. Such an
 // account has nothing to filter by, and every volume the key can see is its
 // own.
-func listClusterStorageVolumes(runtime *plugin.Runtime, client *together.Client, project string) ([]interface{}, error) {
+func listClusterStorageVolumes(runtime *plugin.Runtime, client *together.Client, project string) ([]any, error) {
 	params := together.BetaClusterStorageListParams{}
 	if project != "" {
 		params.ProjectID = together.Opt(project)
@@ -590,16 +590,16 @@ func listClusterStorageVolumes(runtime *plugin.Runtime, client *together.Client,
 
 	resp, err := client.Beta.Clusters.Storage.List(context.Background(), params)
 	if isAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 	if resp == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	res := make([]interface{}, 0, len(resp.Volumes))
+	res := make([]any, 0, len(resp.Volumes))
 	for _, v := range resp.Volumes {
 		mqlVol, err := CreateResource(runtime, "together.clusterStorageVolume", map[string]*llx.RawData{
 			"__id":       llx.StringData(v.VolumeID),
@@ -617,24 +617,24 @@ func listClusterStorageVolumes(runtime *plugin.Runtime, client *together.Client,
 	return res, nil
 }
 
-func (r *mqlTogether) deployments() ([]interface{}, error) {
+func (r *mqlTogether) deployments() ([]any, error) {
 	conn := togetherConn(r.MqlRuntime)
 	client := conn.Client()
 
 	resp, err := client.Beta.Jig.List(context.Background())
 	if isAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 	if resp == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	res := make([]interface{}, 0, len(resp.Data))
+	res := make([]any, 0, len(resp.Data))
 	for _, d := range resp.Data {
-		envVarNames := make([]interface{}, 0, len(d.EnvironmentVariables))
+		envVarNames := make([]any, 0, len(d.EnvironmentVariables))
 		for _, ev := range d.EnvironmentVariables {
 			envVarNames = append(envVarNames, ev.Name)
 		}
@@ -670,22 +670,22 @@ func (r *mqlTogether) deployments() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlTogether) batches() ([]interface{}, error) {
+func (r *mqlTogether) batches() ([]any, error) {
 	conn := togetherConn(r.MqlRuntime)
 	client := conn.Client()
 
 	resp, err := client.Batches.List(context.Background())
 	if isAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 	if resp == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	res := make([]interface{}, 0, len(*resp))
+	res := make([]any, 0, len(*resp))
 	for _, b := range *resp {
 		mqlBatch, err := CreateResource(r.MqlRuntime, "together.batch", map[string]*llx.RawData{
 			"__id":          llx.StringData(b.ID),
@@ -712,22 +712,22 @@ func (r *mqlTogether) batches() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlTogether) evals() ([]interface{}, error) {
+func (r *mqlTogether) evals() ([]any, error) {
 	conn := togetherConn(r.MqlRuntime)
 	client := conn.Client()
 
 	resp, err := client.Evals.List(context.Background(), together.EvalListParams{})
 	if isAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 	if resp == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	res := make([]interface{}, 0, len(*resp))
+	res := make([]any, 0, len(*resp))
 	for _, e := range *resp {
 		mqlEval, err := CreateResource(r.MqlRuntime, "together.eval", map[string]*llx.RawData{
 			"__id":       llx.StringData(e.WorkflowID),
@@ -747,27 +747,27 @@ func (r *mqlTogether) evals() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlTogether) volumes() ([]interface{}, error) {
+func (r *mqlTogether) volumes() ([]any, error) {
 	conn := togetherConn(r.MqlRuntime)
 	client := conn.Client()
 
 	resp, err := client.Beta.Jig.Volumes.List(context.Background())
 	if isAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 	if resp == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	res := make([]interface{}, 0, len(resp.Data))
+	res := make([]any, 0, len(resp.Data))
 	for _, v := range resp.Data {
 		createdAt := parseTimeStr(v.CreatedAt)
 		updatedAt := parseTimeStr(v.UpdatedAt)
 
-		mountedBy := make([]interface{}, 0, len(v.MountedBy))
+		mountedBy := make([]any, 0, len(v.MountedBy))
 		for _, m := range v.MountedBy {
 			mountedBy = append(mountedBy, m)
 		}
@@ -818,8 +818,8 @@ var knownFamilies = map[string]string{
 }
 
 func modelName(id string) string {
-	if idx := strings.Index(id, "/"); idx >= 0 {
-		return id[idx+1:]
+	if _, after, ok := strings.Cut(id, "/"); ok {
+		return after
 	}
 	return id
 }
@@ -827,7 +827,7 @@ func modelName(id string) string {
 func (r *mqlTogetherModel) family() (string, error) {
 	name := modelName(r.Id.Data)
 	name = strings.TrimPrefix(name, "Meta-")
-	token := strings.SplitN(name, "-", 2)[0]
+	token, _, _ := strings.Cut(name, "-")
 
 	// Check known families first (handles digit-containing names like GPT4o)
 	for prefix, family := range knownFamilies {
@@ -952,8 +952,7 @@ func isAccessDenied(err error) bool {
 	if err == nil {
 		return false
 	}
-	var apierr *together.Error
-	if errors.As(err, &apierr) {
+	if apierr, ok := errors.AsType[*together.Error](err); ok {
 		return apierr.StatusCode == 403 || apierr.StatusCode == 401
 	}
 	return false

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 
 	"github.com/spf13/afero"
@@ -34,7 +35,7 @@ func (r *mqlGithubCopilot) id() (string, error) {
 	return "github.copilot/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlGithubCopilot) accounts() ([]interface{}, error) {
+func (r *mqlGithubCopilot) accounts() ([]any, error) {
 	afs := connectionAfs(r.MqlRuntime)
 	configDir := r.ConfigPath.Data
 
@@ -52,7 +53,7 @@ func (r *mqlGithubCopilot) accounts() ([]interface{}, error) {
 		return nil, fmt.Errorf("failed to parse github-copilot apps.json: %w", err)
 	}
 
-	var result []interface{}
+	var result []any
 	for key, app := range apps {
 		res, err := NewResource(r.MqlRuntime, "github.copilot.account", map[string]*llx.RawData{
 			"__id":        llx.StringData("github.copilot.account/" + key),
@@ -67,7 +68,7 @@ func (r *mqlGithubCopilot) accounts() ([]interface{}, error) {
 	return result, nil
 }
 
-func (r *mqlGithubCopilot) mcpServers() ([]interface{}, error) {
+func (r *mqlGithubCopilot) mcpServers() ([]any, error) {
 	afs := connectionAfs(r.MqlRuntime)
 	configDir := r.ConfigPath.Data
 
@@ -109,7 +110,7 @@ func (r *mqlGithubCopilot) mcpServers() ([]interface{}, error) {
 	}
 	specs = append(specs, vscodeSpecs...)
 
-	var result []interface{}
+	var result []any
 	for _, spec := range specs {
 		res, err := NewResource(r.MqlRuntime, "github.copilot.mcpServer", copilotMcpServerArgs(spec))
 		if err != nil {
@@ -166,12 +167,7 @@ type copilotCLISettings struct {
 }
 
 func (c copilotCLISettings) disabled(name string) bool {
-	for _, n := range c.DisabledMcpServers {
-		if n == name {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(c.DisabledMcpServers, name)
 }
 
 // readCopilotCLISettings reads ~/.copilot/settings.json under home. A missing
@@ -234,7 +230,7 @@ func (c copilotCLISettings) pluginEnabled(p copilotInstalledPlugin) bool {
 	return p.Enabled == nil || *p.Enabled
 }
 
-func (r *mqlGithubCopilot) plugins() ([]interface{}, error) {
+func (r *mqlGithubCopilot) plugins() ([]any, error) {
 	afs := connectionAfs(r.MqlRuntime)
 	home, err := targetHomeDir(r.MqlRuntime)
 	if err != nil {
@@ -246,7 +242,7 @@ func (r *mqlGithubCopilot) plugins() ([]interface{}, error) {
 	}
 	settings := readCopilotCLISettings(afs, home)
 
-	result := make([]interface{}, 0, len(installed))
+	result := make([]any, 0, len(installed))
 	for _, p := range installed {
 		res, err := NewResource(r.MqlRuntime, "github.copilot.plugin", map[string]*llx.RawData{
 			"__id":        llx.StringData("github.copilot.plugin/" + p.CachePath),
@@ -296,7 +292,7 @@ func (r *mqlGithubCopilotPlugin) repository() (string, error) {
 	return r.loadManifest().repository, nil
 }
 
-func (r *mqlGithubCopilotPlugin) agents() ([]interface{}, error) {
+func (r *mqlGithubCopilotPlugin) agents() ([]any, error) {
 	return llx.TArr2Raw(r.loadManifest().agents), nil
 }
 
@@ -304,12 +300,12 @@ func (r *mqlGithubCopilotPlugin) hasHooks() (bool, error) {
 	return r.loadManifest().hasHooks, nil
 }
 
-func (r *mqlGithubCopilotPlugin) skills() ([]interface{}, error) {
+func (r *mqlGithubCopilotPlugin) skills() ([]any, error) {
 	return readSkillsFromDirs(r.MqlRuntime, r.loadManifest().skillsDirs, "github.copilot.skill")
 }
 
-func (r *mqlGithubCopilotPlugin) mcpServers() ([]interface{}, error) {
-	var result []interface{}
+func (r *mqlGithubCopilotPlugin) mcpServers() ([]any, error) {
+	var result []any
 	for _, spec := range r.loadManifest().mcpServers {
 		spec.enabled = r.Enabled.Data && !r.settings.disabled(spec.name)
 		res, err := NewResource(r.MqlRuntime, "github.copilot.mcpServer", copilotMcpServerArgs(spec))
@@ -328,7 +324,7 @@ func (r *mqlGithubCopilotMcpServer) plugin() (*mqlGithubCopilotPlugin, error) {
 	return nil, nil
 }
 
-func (r *mqlGithubCopilot) skills() ([]interface{}, error) {
+func (r *mqlGithubCopilot) skills() ([]any, error) {
 	// Copilot skills live at ~/.copilot/skills/, independent of the config dir.
 	users, err := targetUserHomes(r.MqlRuntime)
 	if err != nil {

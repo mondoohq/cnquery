@@ -61,13 +61,11 @@ func TestOciAvailabilityDomainsFetchesOncePerKey(t *testing.T) {
 	var wg sync.WaitGroup
 	results := make([][]string, concurrency)
 	for i := range concurrency {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			got, err := ociAvailabilityDomainEntry("1/us-sanjose-1").get(fetch)
 			assert.NoError(t, err)
 			results[i] = got
-		}()
+		})
 	}
 	wg.Wait()
 

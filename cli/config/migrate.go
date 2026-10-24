@@ -126,7 +126,7 @@ func appendConfigKey(path string, key string, value string) error {
 	// Re-check against the file rather than viper: viper merges env and flags, so
 	// it can report a key the file does not carry, and writing it again would
 	// produce a duplicate.
-	for _, line := range strings.Split(string(current), "\n") {
+	for line := range strings.SplitSeq(string(current), "\n") {
 		if strings.HasPrefix(strings.TrimSpace(line), key+":") {
 			return nil
 		}

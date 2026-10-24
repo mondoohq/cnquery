@@ -239,7 +239,7 @@ func isUnauthenticated(err error) bool {
 	return statusErr.StatusCode == http.StatusUnauthorized || statusErr.StatusCode == http.StatusForbidden
 }
 
-func (r *mqlOllama) models() ([]interface{}, error) {
+func (r *mqlOllama) models() ([]any, error) {
 	conn := ollamaConn(r.MqlRuntime)
 	client := conn.Client()
 
@@ -248,7 +248,7 @@ func (r *mqlOllama) models() ([]interface{}, error) {
 		return nil, fmt.Errorf("failed to list models: %w", err)
 	}
 
-	res := make([]interface{}, 0, len(resp.Models))
+	res := make([]any, 0, len(resp.Models))
 	for _, m := range resp.Models {
 		mqlModel, err := CreateResource(r.MqlRuntime, "ollama.model", ollamaModelArgs(m))
 		if err != nil {
@@ -273,7 +273,7 @@ func (r *mqlOllama) models() ([]interface{}, error) {
 // and "llama3.1:8b") share one manifest digest, so keying on it would collapse
 // distinct models into a single cached resource.
 func ollamaModelArgs(m api.ListModelResponse) map[string]*llx.RawData {
-	families := make([]interface{}, len(m.Details.Families))
+	families := make([]any, len(m.Details.Families))
 	for i, f := range m.Details.Families {
 		families[i] = f
 	}
@@ -365,7 +365,7 @@ func initOllamaModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	return nil, nil, modelNotFoundError(name)
 }
 
-func (r *mqlOllama) runningModels() ([]interface{}, error) {
+func (r *mqlOllama) runningModels() ([]any, error) {
 	conn := ollamaConn(r.MqlRuntime)
 	client := conn.Client()
 
@@ -374,7 +374,7 @@ func (r *mqlOllama) runningModels() ([]interface{}, error) {
 		return nil, fmt.Errorf("failed to list running models: %w", err)
 	}
 
-	res := make([]interface{}, 0, len(resp.Models))
+	res := make([]any, 0, len(resp.Models))
 	for _, m := range resp.Models {
 		mqlRunning, err := CreateResource(r.MqlRuntime, "ollama.runningModel", map[string]*llx.RawData{
 			"__id":          llx.StringData("running/" + m.Name),
@@ -452,14 +452,14 @@ func (r *mqlOllamaModel) modelfile() (string, error) {
 	return show.Modelfile, nil
 }
 
-func (r *mqlOllamaModel) adapters() ([]interface{}, error) {
+func (r *mqlOllamaModel) adapters() ([]any, error) {
 	show, err := r.fetchShow()
 	if err != nil {
 		return nil, err
 	}
 
 	targets := modelfileAdapters(show.Modelfile)
-	res := make([]interface{}, len(targets))
+	res := make([]any, len(targets))
 	for i, t := range targets {
 		res[i] = t
 	}
@@ -516,12 +516,12 @@ func (r *mqlOllamaModel) template() (string, error) {
 	return show.Template, nil
 }
 
-func (r *mqlOllamaModel) capabilities() ([]interface{}, error) {
+func (r *mqlOllamaModel) capabilities() ([]any, error) {
 	// The model listing reports capabilities, so asking every model to describe
 	// itself again would cost one extra request per installed model on a query
 	// that is often the whole point of the scan.
 	if len(r.listCapabilities) > 0 {
-		caps := make([]interface{}, len(r.listCapabilities))
+		caps := make([]any, len(r.listCapabilities))
 		for i, c := range r.listCapabilities {
 			caps[i] = c
 		}
@@ -532,7 +532,7 @@ func (r *mqlOllamaModel) capabilities() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	caps := make([]interface{}, len(show.Capabilities))
+	caps := make([]any, len(show.Capabilities))
 	for i, c := range show.Capabilities {
 		caps[i] = string(c)
 	}
@@ -633,14 +633,14 @@ func getArchInt(m map[string]any, arch, key string) int64 {
 	return getInt(m, arch+"."+key)
 }
 
-func getStringSlice(m map[string]any, key string) []interface{} {
+func getStringSlice(m map[string]any, key string) []any {
 	v, ok := m[key]
 	if !ok || v == nil {
-		return []interface{}{}
+		return []any{}
 	}
 	switch s := v.(type) {
 	case []any:
-		res := make([]interface{}, 0, len(s))
+		res := make([]any, 0, len(s))
 		for _, item := range s {
 			if str, ok := item.(string); ok {
 				res = append(res, str)
@@ -648,7 +648,7 @@ func getStringSlice(m map[string]any, key string) []interface{} {
 		}
 		return res
 	}
-	return []interface{}{}
+	return []any{}
 }
 
 func (r *mqlOllamaModelInfo) id() (string, error) {

@@ -44,14 +44,14 @@ func Go(packageName string, ast *LR, collector *Collector, licenseHeaderTpl *tem
 		o.goResource(ast.Resources[i])
 	}
 
-	imports := ""
+	var imports strings.Builder
 	for packName := range o.packsInUse {
 		importPath, ok := ast.packPaths[packName]
 		if !ok {
 			return "", errors.New("cannot find import path for pack: " + packName)
 		}
 
-		imports += "\n\t" + strconv.Quote(importPath)
+		imports.WriteString("\n\t" + strconv.Quote(importPath))
 	}
 
 	coreImports := ""
@@ -64,7 +64,7 @@ func Go(packageName string, ast *LR, collector *Collector, licenseHeaderTpl *tem
 		return "", err
 	}
 
-	header := fmt.Sprintf(goHeader, licenseHeader, coreImports, imports)
+	header := fmt.Sprintf(goHeader, licenseHeader, coreImports, imports.String())
 	return header + o.data, o.errors.Deduplicate()
 }
 
@@ -547,11 +547,11 @@ func (b *goBuilder) importName(symbol string) (string, bool) {
 }
 
 func indent(s string, depth int) string { //nolint:unused
-	space := ""
-	for i := 0; i < depth; i++ {
-		space += "\t"
+	var space strings.Builder
+	for range depth {
+		space.WriteString("\t")
 	}
-	return space + strings.ReplaceAll(s, "\n", "\n"+space)
+	return space.String() + strings.ReplaceAll(s, "\n", "\n"+space.String())
 }
 
 func (r *Resource) constTypeName(b *goBuilder) string {

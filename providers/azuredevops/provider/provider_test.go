@@ -5,6 +5,7 @@ package provider
 
 import (
 	"bytes"
+	"maps"
 	"strings"
 	"testing"
 
@@ -309,9 +310,7 @@ func connectReq(t *testing.T, srv *fakeado.Server, extra map[string]string, targ
 		connection.OPTION_ORGANIZATION: fakeado.Org,
 		connection.OPTION_API_ENDPOINT: srv.URL,
 	}
-	for k, v := range extra {
-		opts[k] = v
-	}
+	maps.Copy(opts, extra)
 	conf := &inventory.Config{
 		Type:        "azuredevops",
 		Options:     opts,

@@ -22,7 +22,7 @@ type mqlClaudeOrganizationEffectiveSpendLimitInternal struct {
 	cacheSourceWorkspaceID string
 }
 
-func (r *mqlClaudeOrganization) effectiveSpendLimits() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) effectiveSpendLimits() ([]any, error) {
 	client, err := adminSDKClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func (r *mqlClaudeOrganization) effectiveSpendLimits() ([]interface{}, error) {
 		return nil, classifyAdminError(fmt.Errorf("listing effective spend limits: %w", err), endpointUnavailable)
 	}
 
-	res := make([]interface{}, 0, len(rows))
+	res := make([]any, 0, len(rows))
 	for _, row := range rows {
 		args, err := effectiveSpendLimitArgs(row)
 		if err != nil {

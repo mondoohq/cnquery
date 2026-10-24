@@ -49,19 +49,19 @@ func (r *mqlMistral) ownedBy() (string, error) {
 	return "mistralai", nil
 }
 
-func (r *mqlMistral) models() ([]interface{}, error) {
+func (r *mqlMistral) models() ([]any, error) {
 	conn := mistralConn(r.MqlRuntime)
 	client := conn.Client()
 
 	resp, err := client.ListModels(context.Background())
 	if mistralai.IsAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(resp.Data))
+	res := make([]any, 0, len(resp.Data))
 	for _, m := range resp.Data {
 		mqlModel, err := newMqlModel(r.MqlRuntime, m)
 		if err != nil {
@@ -104,7 +104,7 @@ func newMqlModel(runtime *plugin.Runtime, m mistralai.Model) (*mqlMistralModel, 
 		description = *m.Description
 	}
 
-	aliases := make([]interface{}, 0, len(m.Aliases))
+	aliases := make([]any, 0, len(m.Aliases))
 	for _, a := range m.Aliases {
 		aliases = append(aliases, a)
 	}
@@ -146,21 +146,21 @@ func newMqlModel(runtime *plugin.Runtime, m mistralai.Model) (*mqlMistralModel, 
 	return model, nil
 }
 
-func (r *mqlMistral) connectors() ([]interface{}, error) {
+func (r *mqlMistral) connectors() ([]any, error) {
 	conn := mistralConn(r.MqlRuntime)
 	client := conn.Client()
 
 	connectors, err := client.ListConnectors(context.Background())
 	if mistralai.IsAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(connectors))
+	res := make([]any, 0, len(connectors))
 	for _, c := range connectors {
-		authMethods := make([]interface{}, 0, len(c.SupportedAuthMethods))
+		authMethods := make([]any, 0, len(c.SupportedAuthMethods))
 		for _, name := range c.AuthMethodNames() {
 			authMethods = append(authMethods, name)
 		}
@@ -188,19 +188,19 @@ func (r *mqlMistral) connectors() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlMistral) libraries() ([]interface{}, error) {
+func (r *mqlMistral) libraries() ([]any, error) {
 	conn := mistralConn(r.MqlRuntime)
 	client := conn.Client()
 
 	libraries, err := client.ListLibraries(context.Background())
 	if mistralai.IsAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(libraries))
+	res := make([]any, 0, len(libraries))
 	for _, l := range libraries {
 		mqlLibrary, err := CreateResource(r.MqlRuntime, "mistral.library", map[string]*llx.RawData{
 			"__id":        llx.StringData(l.ID),
@@ -223,19 +223,19 @@ func (r *mqlMistral) libraries() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlMistral) fineTuningJobs() ([]interface{}, error) {
+func (r *mqlMistral) fineTuningJobs() ([]any, error) {
 	conn := mistralConn(r.MqlRuntime)
 	client := conn.Client()
 
 	jobs, err := client.ListFineTuningJobs(context.Background())
 	if mistralai.IsAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(jobs))
+	res := make([]any, 0, len(jobs))
 	for _, j := range jobs {
 		createdAt := timeFromUnix(j.CreatedAt)
 		modifiedAt := timeFromUnix(j.ModifiedAt)
@@ -249,11 +249,11 @@ func (r *mqlMistral) fineTuningJobs() ([]interface{}, error) {
 			suffix = *j.Suffix
 		}
 
-		trainingFiles := make([]interface{}, 0, len(j.TrainingFiles))
+		trainingFiles := make([]any, 0, len(j.TrainingFiles))
 		for _, f := range j.TrainingFiles {
 			trainingFiles = append(trainingFiles, f)
 		}
-		validationFiles := make([]interface{}, 0, len(j.ValidationFiles))
+		validationFiles := make([]any, 0, len(j.ValidationFiles))
 		for _, f := range j.ValidationFiles {
 			validationFiles = append(validationFiles, f)
 		}
@@ -269,7 +269,7 @@ func (r *mqlMistral) fineTuningJobs() ([]interface{}, error) {
 			}
 		}
 
-		integrations := make([]interface{}, 0, len(j.Integrations))
+		integrations := make([]any, 0, len(j.Integrations))
 		for _, in := range j.Integrations {
 			mqlIntegration, err := CreateResource(r.MqlRuntime, "mistral.fineTuningJob.integration", map[string]*llx.RawData{
 				"__id":    llx.StringData(integrationID(j.ID, in)),
@@ -316,19 +316,19 @@ func (r *mqlMistral) fineTuningJobs() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlMistral) files() ([]interface{}, error) {
+func (r *mqlMistral) files() ([]any, error) {
 	conn := mistralConn(r.MqlRuntime)
 	client := conn.Client()
 
 	files, err := client.ListFiles(context.Background())
 	if mistralai.IsAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(files))
+	res := make([]any, 0, len(files))
 	for _, f := range files {
 		createdAt := timeFromUnix(f.CreatedAt)
 
@@ -358,19 +358,19 @@ func (r *mqlMistral) files() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlMistral) batchJobs() ([]interface{}, error) {
+func (r *mqlMistral) batchJobs() ([]any, error) {
 	conn := mistralConn(r.MqlRuntime)
 	client := conn.Client()
 
 	batches, err := client.ListBatchJobs(context.Background())
 	if mistralai.IsAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(batches))
+	res := make([]any, 0, len(batches))
 	for _, b := range batches {
 		createdAt := timeFromUnix(b.CreatedAt)
 		startedAt := timeFromUnixPtr(b.StartedAt)
@@ -389,12 +389,12 @@ func (r *mqlMistral) batchJobs() ([]interface{}, error) {
 			errorFile = *b.ErrorFile
 		}
 
-		inputFiles := make([]interface{}, 0, len(b.InputFiles))
+		inputFiles := make([]any, 0, len(b.InputFiles))
 		for _, f := range b.InputFiles {
 			inputFiles = append(inputFiles, f)
 		}
 
-		batchErrors := make([]interface{}, 0, len(b.Errors))
+		batchErrors := make([]any, 0, len(b.Errors))
 		for _, e := range b.Errors {
 			mqlErr, err := CreateResource(r.MqlRuntime, "mistral.batchJob.error", map[string]*llx.RawData{
 				"__id":    llx.StringData(b.ID + "/" + e.Message),
@@ -407,7 +407,7 @@ func (r *mqlMistral) batchJobs() ([]interface{}, error) {
 			batchErrors = append(batchErrors, mqlErr)
 		}
 
-		metadata := make(map[string]interface{}, len(b.Metadata))
+		metadata := make(map[string]any, len(b.Metadata))
 		for k, v := range b.Metadata {
 			metadata[k] = v
 		}
@@ -567,20 +567,20 @@ func libraryAccessID(libraryID string, access mistralai.LibraryAccess) string {
 	return strings.Join([]string{libraryID, access.ShareWithType, uuid}, "/")
 }
 
-func (r *mqlMistralLibrary) accesses() ([]interface{}, error) {
+func (r *mqlMistralLibrary) accesses() ([]any, error) {
 	conn := mistralConn(r.MqlRuntime)
 	client := conn.Client()
 
 	libraryID := r.Id.Data
 	accesses, err := client.ListLibraryAccesses(context.Background(), libraryID)
 	if mistralai.IsAccessDenied(err) {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(accesses))
+	res := make([]any, 0, len(accesses))
 	for _, a := range accesses {
 		mqlAccess, err := CreateResource(r.MqlRuntime, "mistral.library.access", map[string]*llx.RawData{
 			"__id":          llx.StringData(libraryAccessID(libraryID, a)),

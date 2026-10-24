@@ -116,7 +116,7 @@ func List(v string) []string {
 	v = strings.TrimPrefix(v, "[")
 	v = strings.TrimSuffix(v, "]")
 	res := []string{}
-	for _, e := range strings.Split(v, ",") {
+	for e := range strings.SplitSeq(v, ",") {
 		e = strings.Trim(strings.TrimSpace(e), `"`)
 		if e != "" {
 			res = append(res, e)

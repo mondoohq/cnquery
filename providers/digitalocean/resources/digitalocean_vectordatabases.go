@@ -10,7 +10,7 @@ import (
 	"go.mondoo.com/mql/providers/digitalocean/connection"
 )
 
-func (r *mqlDigitalocean) vectorDatabases() ([]interface{}, error) {
+func (r *mqlDigitalocean) vectorDatabases() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -19,11 +19,11 @@ func (r *mqlDigitalocean) vectorDatabases() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(vdbs))
+	all := make([]any, 0, len(vdbs))
 	for i := range vdbs {
 		v := vdbs[i]
 
-		tags := make([]interface{}, len(v.Tags))
+		tags := make([]any, len(v.Tags))
 		for j, t := range v.Tags {
 			tags[j] = t
 		}
@@ -75,7 +75,7 @@ func (r *mqlDigitaloceanVectorDatabaseBackup) id() (string, error) {
 	return "digitalocean.vectorDatabase.backup/" + r.VectorDatabaseId.Data + "/" + r.BackupId.Data, nil
 }
 
-func (r *mqlDigitaloceanVectorDatabase) backups() ([]interface{}, error) {
+func (r *mqlDigitaloceanVectorDatabase) backups() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -87,7 +87,7 @@ func (r *mqlDigitaloceanVectorDatabase) backups() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(backups))
+	all := make([]any, 0, len(backups))
 	for i := range backups {
 		b := backups[i]
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.vectorDatabase.backup", map[string]*llx.RawData{

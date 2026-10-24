@@ -15,6 +15,7 @@ import (
 	"context"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
@@ -352,12 +353,7 @@ func FromKubeconfigAuth(k *Kubeconfig) (string, string) {
 }
 
 func contains(list []string, s string) bool {
-	for _, v := range list {
-		if v == s {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(list, s)
 }
 
 // Detect runs the probes and decides the distribution.

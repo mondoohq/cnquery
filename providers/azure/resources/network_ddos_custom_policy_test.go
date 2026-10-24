@@ -72,11 +72,11 @@ func TestDdosSourceOverrideValuesOf(t *testing.T) {
 		v := ddosSourceOverrideValuesOf(&network.DdosSourcePolicyOverride{
 			PolicyAction: &network.DdosSourcePolicyAction{ActionType: to.Ptr(network.DdosSourcePolicyActionTypePermit)},
 			Conditions: &network.DdosSourceMatchConditions{
-				IPPrefixes: []*string{to.Ptr("0.0.0.0/0"), nil, to.Ptr("2001:db8::/32")},
+				IPPrefixes: []*string{new("0.0.0.0/0"), nil, new("2001:db8::/32")},
 				GeoMatches: []*network.DdosGeoMatch{
 					{Continent: to.Ptr(network.DdosContinentEurope)},
 					nil,
-					{CountryCode: to.Ptr("NZ")},
+					{CountryCode: new("NZ")},
 					{Continent: to.Ptr(network.DdosContinentSouthAmerica)},
 				},
 			},
@@ -91,7 +91,7 @@ func TestDdosSourceOverrideValuesOf(t *testing.T) {
 	t.Run("deny override with prefixes only has empty geo lists", func(t *testing.T) {
 		v := ddosSourceOverrideValuesOf(&network.DdosSourcePolicyOverride{
 			PolicyAction: &network.DdosSourcePolicyAction{ActionType: to.Ptr(network.DdosSourcePolicyActionTypeDeny)},
-			Conditions:   &network.DdosSourceMatchConditions{IPPrefixes: []*string{to.Ptr("203.0.113.0/24")}},
+			Conditions:   &network.DdosSourceMatchConditions{IPPrefixes: []*string{new("203.0.113.0/24")}},
 		})
 		require.NotNil(t, v.action)
 		assert.Equal(t, "Deny", *v.action)
@@ -117,7 +117,7 @@ func TestDdosSourceOverrideValuesOf(t *testing.T) {
 	t.Run("empty geo values are skipped", func(t *testing.T) {
 		v := ddosSourceOverrideValuesOf(&network.DdosSourcePolicyOverride{
 			Conditions: &network.DdosSourceMatchConditions{
-				GeoMatches: []*network.DdosGeoMatch{{Continent: to.Ptr(network.DdosContinent("")), CountryCode: to.Ptr("")}},
+				GeoMatches: []*network.DdosGeoMatch{{Continent: to.Ptr(network.DdosContinent("")), CountryCode: new("")}},
 			},
 		})
 		assert.Empty(t, v.continents)

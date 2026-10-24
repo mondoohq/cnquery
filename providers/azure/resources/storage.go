@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -867,9 +868,7 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 		"isVersioningEnabled": llx.BoolData(isVersioningEnabled),
 		"staticWebsite":       llx.ResourceData(staticWebsite, "staticWebsite"),
 	}
-	for k, v := range blobServiceDataPlaneSettings(blobProps.BlobServiceProperties).rawData() {
-		args[k] = v
-	}
+	maps.Copy(args, blobServiceDataPlaneSettings(blobProps.BlobServiceProperties).rawData())
 
 	settings, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServiceBlobProperties, args)
 	if err != nil {

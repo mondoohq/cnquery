@@ -80,7 +80,7 @@ func label(ref string, bundle *CodeBundle, isResource bool) string {
 
 func removeUnderscoreKeys(keys []string) []string {
 	results := make([]string, 0, len(keys))
-	for i := 0; i < len(keys); i++ {
+	for i := range keys {
 		if keys[i] != "" && keys[i][0] != '_' {
 			results = append(results, keys[i])
 		}

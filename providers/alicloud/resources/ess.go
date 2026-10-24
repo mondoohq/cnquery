@@ -84,9 +84,9 @@ func essScalingGroupsInRegion(runtime *plugin.Runtime, conn *connection.Alicloud
 	pageNumber := int32(1)
 	for {
 		resp, err := client.DescribeScalingGroups(&essclient.DescribeScalingGroupsRequest{
-			RegionId:   tea.String(region),
-			PageNumber: tea.Int32(pageNumber),
-			PageSize:   tea.Int32(essPageSize),
+			RegionId:   new(region),
+			PageNumber: new(pageNumber),
+			PageSize:   new(essPageSize),
 		})
 		if err != nil {
 			return nil, err
@@ -216,9 +216,9 @@ func initAlicloudEssScalingGroup(runtime *plugin.Runtime, args map[string]*llx.R
 		return nil, nil, err
 	}
 	resp, err := client.DescribeScalingGroups(&essclient.DescribeScalingGroupsRequest{
-		RegionId:        tea.String(region),
-		ScalingGroupIds: []*string{tea.String(scalingGroupID)},
-		PageSize:        tea.Int32(essPageSize),
+		RegionId:        new(region),
+		ScalingGroupIds: []*string{new(scalingGroupID)},
+		PageSize:        new(essPageSize),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -310,12 +310,12 @@ func essScalingConfigurationsInRegion(runtime *plugin.Runtime, conn *connection.
 	pageNumber := int32(1)
 	for {
 		req := &essclient.DescribeScalingConfigurationsRequest{
-			RegionId:   tea.String(region),
-			PageNumber: tea.Int32(pageNumber),
-			PageSize:   tea.Int32(essPageSize),
+			RegionId:   new(region),
+			PageNumber: new(pageNumber),
+			PageSize:   new(essPageSize),
 		}
 		if scalingGroupID != "" {
-			req.ScalingGroupId = tea.String(scalingGroupID)
+			req.ScalingGroupId = new(scalingGroupID)
 		}
 		resp, err := client.DescribeScalingConfigurations(req)
 		if err != nil {
@@ -446,9 +446,9 @@ func initAlicloudEssScalingConfiguration(runtime *plugin.Runtime, args map[strin
 		return nil, nil, err
 	}
 	resp, err := client.DescribeScalingConfigurations(&essclient.DescribeScalingConfigurationsRequest{
-		RegionId:                tea.String(region),
-		ScalingConfigurationIds: []*string{tea.String(configID)},
-		PageSize:                tea.Int32(essPageSize),
+		RegionId:                new(region),
+		ScalingConfigurationIds: []*string{new(configID)},
+		PageSize:                new(essPageSize),
 	})
 	if err != nil {
 		return nil, nil, err

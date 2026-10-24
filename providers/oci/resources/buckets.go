@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/objectstorage"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -128,8 +127,8 @@ func (o *mqlOciObjectStorage) getBucketsForRegion(ctx context.Context, objectSto
 	fields := []objectstorage.ListBucketsFieldsEnum{objectstorage.ListBucketsFieldsTags}
 	entries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]objectstorage.BucketSummary, *string, error) {
 		request := objectstorage.ListBucketsRequest{
-			NamespaceName: common.String(namespace),
-			CompartmentId: common.String(compartmentID),
+			NamespaceName: new(namespace),
+			CompartmentId: new(compartmentID),
 			Fields:        fields,
 			Page:          page,
 		}
@@ -274,8 +273,8 @@ func (o *mqlOciObjectStorageBucket) getBucketDetails() (*objectstorage.Bucket, e
 		}
 
 		response, err := client.GetBucket(context.Background(), objectstorage.GetBucketRequest{
-			NamespaceName: common.String(namespace.Data),
-			BucketName:    common.String(name.Data),
+			NamespaceName: new(namespace.Data),
+			BucketName:    new(name.Data),
 			Fields: []objectstorage.GetBucketFieldsEnum{
 				objectstorage.GetBucketFieldsApproximatecount,
 				objectstorage.GetBucketFieldsApproximatesize,
@@ -446,24 +445,24 @@ func (o *mqlOciObjectStorageBucket) objectLifecyclePolicyEtag() (string, error) 
 	return *bucketInfo.ObjectLifecyclePolicyEtag, nil
 }
 
-func (o *mqlOciObjectStorageBucket) freeformTags() (map[string]interface{}, error) {
+func (o *mqlOciObjectStorageBucket) freeformTags() (map[string]any, error) {
 	bucketInfo, err := o.getBucketDetails()
 	if err != nil {
 		return nil, err
 	}
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	for k, v := range bucketInfo.FreeformTags {
 		tags[k] = v
 	}
 	return tags, nil
 }
 
-func (o *mqlOciObjectStorageBucket) definedTags() (map[string]interface{}, error) {
+func (o *mqlOciObjectStorageBucket) definedTags() (map[string]any, error) {
 	bucketInfo, err := o.getBucketDetails()
 	if err != nil {
 		return nil, err
 	}
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	for k, v := range bucketInfo.DefinedTags {
 		tags[k] = v
 	}
@@ -529,8 +528,8 @@ func (o *mqlOciObjectStorageBucket) retentionRules() ([]any, error) {
 	ctx := context.Background()
 	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]objectstorage.RetentionRuleSummary, *string, error) {
 		response, err := client.ListRetentionRules(ctx, objectstorage.ListRetentionRulesRequest{
-			NamespaceName: common.String(namespace.Data),
-			BucketName:    common.String(name.Data),
+			NamespaceName: new(namespace.Data),
+			BucketName:    new(name.Data),
 			Page:          page,
 		})
 		if err != nil {
@@ -617,8 +616,8 @@ func (o *mqlOciObjectStorageBucket) preauthenticatedRequests() ([]any, error) {
 	ctx := context.Background()
 	pars, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]objectstorage.PreauthenticatedRequestSummary, *string, error) {
 		response, err := client.ListPreauthenticatedRequests(ctx, objectstorage.ListPreauthenticatedRequestsRequest{
-			NamespaceName: common.String(namespace.Data),
-			BucketName:    common.String(name.Data),
+			NamespaceName: new(namespace.Data),
+			BucketName:    new(name.Data),
 			Page:          page,
 		})
 		if err != nil {

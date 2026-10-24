@@ -8,7 +8,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/IBM/ibm-cos-sdk-go/aws"
 	"github.com/IBM/ibm-cos-sdk-go/aws/awserr"
 	"github.com/IBM/ibm-cos-sdk-go/service/s3"
 	"github.com/stretchr/testify/assert"
@@ -60,8 +59,8 @@ func TestBucketConfigDecode(t *testing.T) {
 }
 
 func TestGrantsAllUsers(t *testing.T) {
-	owner := &s3.Grant{Grantee: &s3.Grantee{ID: aws.String("owner"), Type: aws.String("CanonicalUser")}, Permission: aws.String("FULL_CONTROL")}
-	public := &s3.Grant{Grantee: &s3.Grantee{URI: aws.String(allUsersURI), Type: aws.String("Group")}, Permission: aws.String("READ")}
+	owner := &s3.Grant{Grantee: &s3.Grantee{ID: new("owner"), Type: new("CanonicalUser")}, Permission: new("FULL_CONTROL")}
+	public := &s3.Grant{Grantee: &s3.Grantee{URI: new(allUsersURI), Type: new("Group")}, Permission: new("READ")}
 	assert.False(t, grantsAllUsers([]*s3.Grant{owner}))
 	assert.True(t, grantsAllUsers([]*s3.Grant{owner, public}))
 	assert.False(t, grantsAllUsers([]*s3.Grant{nil, {Grantee: nil}}))

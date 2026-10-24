@@ -6,6 +6,7 @@ package resources
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -251,12 +252,7 @@ func resourceIsUnscoped(resource string) bool {
 // hasUnscopedResource reports whether any entry selects a whole service rather
 // than a named resource.
 func hasUnscopedResource(entries []string) bool {
-	for _, e := range entries {
-		if resourceIsUnscoped(e) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(entries, resourceIsUnscoped)
 }
 
 // policyAllowsAdminAccess reports whether the statements grant every action on

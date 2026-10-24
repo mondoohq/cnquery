@@ -59,7 +59,7 @@ func TestCertificateNames(t *testing.T) {
 	defer srv.Close()
 
 	caPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: srv.Certificate().Raw})
-	cfg := &rest.Config{Host: srv.URL, TLSClientConfig: rest.TLSClientConfig{CAData: caPEM}}
+	cfg := &rest.Config{Host: srv.URL, CAData: caPEM}
 	got, err := certificateNames(context.Background(), cfg)
 	require.NoError(t, err)
 	assert.Contains(t, got, "example.com")
@@ -82,8 +82,8 @@ func TestCertificateNamesUntrusted(t *testing.T) {
 
 func TestListNodes(t *testing.T) {
 	client := fake.NewSimpleClientset(&corev1.Node{
-		ObjectMeta: metav1.ObjectMeta{Name: "n1", Labels: map[string]string{"cloud.google.com/gke-nodepool": "default"}},
-		Spec:       corev1.NodeSpec{ProviderID: "gce://p/us-central1-a/n1"},
+		Name: "n1", Labels: map[string]string{"cloud.google.com/gke-nodepool": "default"},
+		Spec: corev1.NodeSpec{ProviderID: "gce://p/us-central1-a/n1"},
 	})
 	nodes, err := listNodes(context.Background(), client)
 	require.NoError(t, err)

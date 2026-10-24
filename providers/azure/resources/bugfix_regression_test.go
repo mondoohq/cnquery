@@ -17,8 +17,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func strp(s string) *string { return &s }
-func boolp(b bool) *bool    { return &b }
+//go:fix inline
+func strp(s string) *string { return new(s) }
+
+//go:fix inline
+func boolp(b bool) *bool { return new(b) }
 
 // TestGetStatePowerStates pins the full set of power states Azure reports.
 // Only running and deallocated used to be mapped, so a stopped-but-allocated
@@ -28,7 +31,7 @@ func TestGetStatePowerStates(t *testing.T) {
 	status := func(codes ...string) compute.VirtualMachineInstanceView {
 		v := compute.VirtualMachineInstanceView{}
 		for _, c := range codes {
-			v.Statuses = append(v.Statuses, &compute.InstanceViewStatus{Code: strp(c)})
+			v.Statuses = append(v.Statuses, &compute.InstanceViewStatus{Code: new(c)})
 		}
 		return v
 	}
@@ -59,7 +62,7 @@ func TestGetStatePowerStates(t *testing.T) {
 
 	t.Run("nil status element", func(t *testing.T) {
 		v := compute.VirtualMachineInstanceView{
-			Statuses: []*compute.InstanceViewStatus{nil, {Code: strp("PowerState/running")}, {Code: nil}},
+			Statuses: []*compute.InstanceViewStatus{nil, {Code: new("PowerState/running")}, {Code: nil}},
 		}
 		assert.NotPanics(t, func() { assert.Equal(t, "running", getState(v)) })
 	})
@@ -92,12 +95,12 @@ func TestAksSecurityProfileFlags(t *testing.T) {
 		hours := int32(48)
 		f := aksSecurityProfileFlags(&clusters.ManagedClusterSecurityProfile{
 			Defender: &clusters.ManagedClusterSecurityProfileDefender{
-				SecurityMonitoring: &clusters.ManagedClusterSecurityProfileDefenderSecurityMonitoring{Enabled: boolp(true)},
-				SecurityGating:     &clusters.ManagedClusterSecurityProfileDefenderSecurityGating{Enabled: boolp(true)},
+				SecurityMonitoring: &clusters.ManagedClusterSecurityProfileDefenderSecurityMonitoring{Enabled: new(true)},
+				SecurityGating:     &clusters.ManagedClusterSecurityProfileDefenderSecurityGating{Enabled: new(true)},
 			},
-			ImageCleaner:     &clusters.ManagedClusterSecurityProfileImageCleaner{Enabled: boolp(true), IntervalHours: &hours},
-			WorkloadIdentity: &clusters.ManagedClusterSecurityProfileWorkloadIdentity{Enabled: boolp(true)},
-			AzureKeyVaultKms: &clusters.AzureKeyVaultKms{Enabled: boolp(true), KeyID: strp("https://v.vault.azure.net/keys/k/1")},
+			ImageCleaner:     &clusters.ManagedClusterSecurityProfileImageCleaner{Enabled: new(true), IntervalHours: &hours},
+			WorkloadIdentity: &clusters.ManagedClusterSecurityProfileWorkloadIdentity{Enabled: new(true)},
+			AzureKeyVaultKms: &clusters.AzureKeyVaultKms{Enabled: new(true), KeyID: new("https://v.vault.azure.net/keys/k/1")},
 		})
 		assert.True(t, f.defenderEnabled)
 		assert.True(t, f.defenderSecurityGatingEnabled)
@@ -134,10 +137,10 @@ func TestAdvancedNetworkingFields(t *testing.T) {
 		wg := clusters.TransitEncryptionTypeWireGuard
 		bpf := clusters.AccelerationModeBpfVeth
 		enabled, transit, accel, secEnabled := advancedNetworkingFields(&clusters.AdvancedNetworking{
-			Enabled:     boolp(true),
+			Enabled:     new(true),
 			Performance: &clusters.AdvancedNetworkingPerformance{AccelerationMode: &bpf},
 			Security: &clusters.AdvancedNetworkingSecurity{
-				Enabled:           boolp(true),
+				Enabled:           new(true),
 				TransitEncryption: &clusters.AdvancedNetworkingSecurityTransitEncryption{Type: &wg},
 			},
 		})
@@ -282,7 +285,7 @@ func TestVpnNatRuleMappingsToDict(t *testing.T) {
 	t.Run("skips nil elements", func(t *testing.T) {
 		got, err := vpnNatRuleMappingsToDict([]*network.VPNNatRuleMapping{
 			nil,
-			{AddressSpace: strp("10.0.0.0/24"), PortRange: strp("100-200")},
+			{AddressSpace: new("10.0.0.0/24"), PortRange: new("100-200")},
 			nil,
 		})
 		require.NoError(t, err)
@@ -299,12 +302,12 @@ func TestVpnNatRuleMappingsToDict(t *testing.T) {
 // a provider goroutine.
 func TestStrPtrsToAnySkipsNil(t *testing.T) {
 	assert.NotPanics(t, func() {
-		got := strPtrsToAny([]*string{strp("a"), nil, strp("b")})
+		got := strPtrsToAny([]*string{new("a"), nil, new("b")})
 		assert.Equal(t, []any{"a", "b"}, got)
 	})
 	assert.Equal(t, []any{}, strPtrsToAny(nil))
 
 	assert.NotPanics(t, func() {
-		assert.Equal(t, []string{"a"}, azureStrPtrsToStr([]*string{nil, strp("a")}))
+		assert.Equal(t, []string{"a"}, azureStrPtrsToStr([]*string{nil, new("a")}))
 	})
 }

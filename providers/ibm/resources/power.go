@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/IBM-Cloud/power-go-client/clients/instance"
@@ -348,11 +349,8 @@ func (r *mqlIbmPowerInstance) volumes() ([]any, error) {
 	out := []any{}
 	for _, e := range list.Data {
 		v := e.(*mqlIbmPowerVolume)
-		for _, id := range v.cacheInstanceIDs {
-			if id == r.Id.Data {
-				out = append(out, v)
-				break
-			}
+		if slices.Contains(v.cacheInstanceIDs, r.Id.Data) {
+			out = append(out, v)
 		}
 	}
 	return out, nil

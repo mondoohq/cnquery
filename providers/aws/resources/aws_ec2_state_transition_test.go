@@ -29,12 +29,12 @@ func TestParseStateTransitionTime(t *testing.T) {
 		{
 			name:   "a stopped instance reports the timestamp",
 			reason: "User initiated (2026-04-05 20:44:17 GMT)",
-			want:   timePtr(time.Date(2026, 4, 5, 20, 44, 17, 0, time.UTC)),
+			want:   new(time.Date(2026, 4, 5, 20, 44, 17, 0, time.UTC)),
 		},
 		{
 			name:   "a terminated instance reports the same shape",
 			reason: "User initiated (2026-05-31 04:36:20 GMT)",
-			want:   timePtr(time.Date(2026, 5, 31, 4, 36, 20, 0, time.UTC)),
+			want:   new(time.Date(2026, 5, 31, 4, 36, 20, 0, time.UTC)),
 		},
 		{
 			name:   "a reason with no parenthesised timestamp is null",

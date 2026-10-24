@@ -304,9 +304,8 @@ func (a *mqlAwsSnsTopic) tags() (map[string]any, error) {
 
 func getSNSTags(ctx context.Context, svc *sns.Client, arn *string) (map[string]any, error) {
 	resp, err := svc.ListTagsForResource(ctx, &sns.ListTagsForResourceInput{ResourceArn: arn})
-	var respErr *http.ResponseError
 	if err != nil {
-		if errors.As(err, &respErr) {
+		if respErr, ok := errors.AsType[*http.ResponseError](err); ok {
 			if respErr.HTTPStatusCode() == 404 || respErr.HTTPStatusCode() == 400 { // some sns topics do not support tags..
 				return nil, nil
 			}

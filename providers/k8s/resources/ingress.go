@@ -107,10 +107,8 @@ func toNetworkingV1Ingress(resource runtime.Object) (*networkingv1.Ingress, erro
 
 func convertV1beta1Ingress(in *extensionsv1beta1.Ingress) *networkingv1.Ingress {
 	out := &networkingv1.Ingress{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: networkingv1.SchemeGroupVersion.String(),
-			Kind:       "Ingress",
-		},
+		APIVersion: networkingv1.SchemeGroupVersion.String(),
+		Kind:       "Ingress",
 		ObjectMeta: in.ObjectMeta,
 		Spec: networkingv1.IngressSpec{
 			IngressClassName: in.Spec.IngressClassName,

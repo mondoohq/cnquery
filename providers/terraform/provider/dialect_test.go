@@ -4,6 +4,7 @@
 package provider
 
 import (
+	"maps"
 	"os"
 	"path/filepath"
 	"testing"
@@ -26,9 +27,7 @@ func connectToDir(t *testing.T, files map[string]string, options map[string]stri
 	}
 
 	opts := map[string]string{"path": dir}
-	for k, v := range options {
-		opts[k] = v
-	}
+	maps.Copy(opts, options)
 
 	srv := &Service{Service: plugin.NewService()}
 	res, err := srv.Connect(&plugin.ConnectReq{
@@ -104,9 +103,7 @@ func TestDetectPlatformByDialect(t *testing.T) {
 		srv := &Service{Service: plugin.NewService()}
 		connect := func(opts map[string]string) string {
 			o := map[string]string{"path": dir}
-			for k, v := range opts {
-				o[k] = v
-			}
+			maps.Copy(o, opts)
 			res, err := srv.Connect(&plugin.ConnectReq{
 				Asset: &inventory.Asset{
 					Connections: []*inventory.Config{{Type: HclConnectionType, Options: o}},

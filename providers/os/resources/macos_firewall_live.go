@@ -190,7 +190,7 @@ var listAppsEntryRegex = regexp.MustCompile(`^\d+\s*:\s*(.+?)\s*$`)
 func parseListApps(stdout string) []firewallAppEntry {
 	var out []firewallAppEntry
 	var current string
-	for _, raw := range strings.Split(stdout, "\n") {
+	for raw := range strings.SplitSeq(stdout, "\n") {
 		line := strings.TrimSpace(raw)
 		if m := listAppsEntryRegex.FindStringSubmatch(line); m != nil {
 			current = m[1]
@@ -219,7 +219,7 @@ func parseListApps(stdout string) []firewallAppEntry {
 // It returns the built-in and downloaded flags separately.
 func parseAllowSigned(stdout string) (builtin bool, downloaded bool, ok bool) {
 	var haveBuiltin, haveDownloaded bool
-	for _, line := range strings.Split(stdout, "\n") {
+	for line := range strings.SplitSeq(stdout, "\n") {
 		l := strings.ToLower(line)
 		if !strings.Contains(l, "signed software") {
 			continue

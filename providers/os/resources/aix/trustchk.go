@@ -45,7 +45,7 @@ func ParseTrustchk(out string) TrustchkPolicy {
 // SplitPath splits a colon separated path list and drops empty items.
 func SplitPath(v string) []string {
 	res := []string{}
-	for _, item := range strings.Split(v, ":") {
+	for item := range strings.SplitSeq(v, ":") {
 		if item = strings.TrimSpace(item); item != "" {
 			res = append(res, item)
 		}

@@ -10,7 +10,7 @@ import (
 	"go.mondoo.com/mql/providers/jamf/connection"
 )
 
-func (r *mqlJamf) users() ([]interface{}, error) {
+func (r *mqlJamf) users() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.JamfConnection)
 	client := conn.Client
 
@@ -19,7 +19,7 @@ func (r *mqlJamf) users() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var res []interface{}
+	var res []any
 	for _, u := range users.Users {
 		item, err := CreateResource(r.MqlRuntime, "jamf.user", map[string]*llx.RawData{
 			"id":   llx.IntData(u.ID),

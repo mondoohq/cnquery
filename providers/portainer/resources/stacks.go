@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"maps"
 	"strconv"
 
 	"github.com/portainer/client-api-go/v2/pkg/models"
@@ -86,12 +87,8 @@ func newMqlPortainerStack(runtime *plugin.Runtime, s *models.PortainereeStack) (
 		"webhookEnabled":    llx.BoolData(s.Webhook != ""),
 		"isDetachedFromGit": llx.BoolData(s.IsDetachedFromGit),
 	}
-	for k, v := range autoUpdateFields(s.AutoUpdate) {
-		args[k] = v
-	}
-	for k, v := range gitFields(s.GitConfig) {
-		args[k] = v
-	}
+	maps.Copy(args, autoUpdateFields(s.AutoUpdate))
+	maps.Copy(args, gitFields(s.GitConfig))
 
 	res, err := CreateResource(runtime, "portainer.stack", args)
 	if err != nil {

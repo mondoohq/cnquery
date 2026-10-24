@@ -233,7 +233,7 @@ func parseApkWorldPins(r io.Reader) map[string]bool {
 	pins := map[string]bool{}
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
-		for _, dep := range strings.Fields(scanner.Text()) {
+		for dep := range strings.FieldsSeq(scanner.Text()) {
 			if strings.HasPrefix(dep, "!") {
 				continue
 			}
@@ -300,7 +300,7 @@ func apkUpdateCheck(stdout io.Reader, stderr io.Reader, exitStatus int) (map[str
 	}
 
 	var unreadable []string
-	for _, line := range strings.Split(errOut, "\n") {
+	for line := range strings.SplitSeq(errOut, "\n") {
 		if m := apkUnreadableIndexRegex.FindStringSubmatch(strings.TrimSpace(line)); m != nil {
 			unreadable = append(unreadable, m[1]+": "+m[2])
 		}

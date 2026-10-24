@@ -20,6 +20,7 @@ import (
 	"errors"
 	"math"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -200,7 +201,7 @@ func rpmvercmp(strA, strB string) int {
 	segs := int(math.Min(float64(len(segsa)), float64(len(segsb))))
 
 	// compare each segment
-	for i := 0; i < segs; i++ {
+	for i := range segs {
 		a := segsa[i]
 		b := segsb[i]
 
@@ -282,10 +283,5 @@ func validSymbol(r rune) bool {
 }
 
 func containsRune(s []rune, e rune) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s, e)
 }

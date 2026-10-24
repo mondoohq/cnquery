@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -30,9 +31,7 @@ func initRuntime(t *testing.T, extra map[string]string, h http.HandlerFunc) *plu
 		connection.OPTION_TOKEN:    "test-token",
 		connection.OPTION_ENDPOINT: srv.URL,
 	}
-	for k, v := range extra {
-		opts[k] = v
-	}
+	maps.Copy(opts, extra)
 	conn, err := connection.NewHetznerConnection(0, &inventory.Asset{}, &inventory.Config{Options: opts})
 	require.NoError(t, err)
 	return plugin.NewRuntime(conn, nil, false, CreateResource, NewResource, GetData, SetData, nil)

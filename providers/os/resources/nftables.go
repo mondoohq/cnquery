@@ -563,7 +563,7 @@ func parseNftText(out string) (*nftRuleset, error) {
 		lineCount int
 	)
 
-	for _, raw := range strings.Split(out, "\n") {
+	for raw := range strings.SplitSeq(out, "\n") {
 		lineCount++
 		line := strings.TrimSpace(raw)
 		if line == "" {
@@ -698,7 +698,7 @@ func nftTextHandle(s string) (handle int64, noHandle bool) {
 // the JSON form the flag parsers expect.
 func nftTextFlags(s string) json.RawMessage {
 	var flags []string
-	for _, f := range strings.Split(s, ",") {
+	for f := range strings.SplitSeq(s, ",") {
 		if f = strings.TrimSpace(f); f != "" {
 			flags = append(flags, f)
 		}
@@ -905,7 +905,7 @@ var nftMinJSONVersion = [3]int{0, 9, 1}
 // parseNftVersion extracts the version from `nft --version` output, which is
 // "nftables v<version> (<release name>)" on every release from 0.8 to 1.1.
 func parseNftVersion(out string) string {
-	for _, field := range strings.Fields(out) {
+	for field := range strings.FieldsSeq(out) {
 		if len(field) > 1 && field[0] == 'v' && field[1] >= '0' && field[1] <= '9' {
 			return field[1:]
 		}
@@ -1156,7 +1156,7 @@ const capNetAdmin = 12
 // reports whether CAP_NET_ADMIN is in the effective set. ok is false when
 // the line is missing or unparsable.
 func hasEffectiveCapNetAdmin(status string) (has bool, ok bool) {
-	for _, line := range strings.Split(status, "\n") {
+	for line := range strings.SplitSeq(status, "\n") {
 		v, found := strings.CutPrefix(line, "CapEff:")
 		if !found {
 			continue

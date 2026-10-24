@@ -95,8 +95,8 @@ func (r *mqlAlicloudEs) instances() ([]any, error) {
 		firstPage := true
 		for {
 			resp, err := client.ListInstance(&esclient.ListInstanceRequest{
-				Page: tea.Int32(page),
-				Size: tea.Int32(size),
+				Page: new(page),
+				Size: new(size),
 			})
 			if err != nil {
 				// A first-page error means the region has no Elasticsearch or the
@@ -266,7 +266,7 @@ func initAlicloudEsInstance(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return nil, nil, err
 	}
 	resp, err := client.ListInstance(&esclient.ListInstanceRequest{
-		InstanceId: tea.String(instanceID),
+		InstanceId: new(instanceID),
 		Page:       tea.Int32(1),
 		Size:       tea.Int32(100),
 	})
@@ -336,7 +336,7 @@ func (r *mqlAlicloudEsInstance) detailFor() (*esclient.DescribeInstanceResponseB
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.DescribeInstance(tea.String(r.InstanceId.Data))
+	resp, err := client.DescribeInstance(new(r.InstanceId.Data))
 	if err != nil {
 		return nil, err
 	}
@@ -473,7 +473,7 @@ func (r *mqlAlicloudEsInstance) snapshotSettingFor() (*esclient.DescribeSnapshot
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.DescribeSnapshotSetting(tea.String(r.InstanceId.Data))
+	resp, err := client.DescribeSnapshotSetting(new(r.InstanceId.Data))
 	if err != nil {
 		return nil, esClassifyError(err, "elasticsearch:DescribeSnapshotSetting")
 	}

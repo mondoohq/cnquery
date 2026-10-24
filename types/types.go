@@ -230,11 +230,11 @@ func (typ Type) ContainsResource() bool {
 
 // Function for creating a function type signature
 func Function(required rune, args []Type) Type {
-	var sig string
+	var sig strings.Builder
 	for _, arg := range args {
-		sig += string(arg) + "\x00"
+		sig.WriteString(string(arg) + "\x00")
 	}
-	return FunctionLike + Type(required) + Type(sig)
+	return FunctionLike + Type(required) + Type(sig.String())
 }
 
 // IsFunction checks if this type is a map
@@ -476,7 +476,7 @@ var Equal = map[Type]func(any, any) bool{
 // bytecode and from provider schemas, where an unexpected shape is a reason to
 // skip the value rather than to crash the query.
 func ResourceOf(typ Type) string {
-	for i := 0; i < 8; i++ {
+	for range 8 {
 		if typ.NotSet() {
 			return ""
 		}

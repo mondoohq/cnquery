@@ -216,16 +216,14 @@ func TestMemoIndex(t *testing.T) {
 
 		var wg sync.WaitGroup
 		for range 32 {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				got, err := memo.get(build)
 				assert.Error(t, err)
 				// A failed listing leaves a nil index, which every lookup has to
 				// treat as a miss so the caller falls back.
 				_, ok := lookupIndexed(got, databaseIndexKey("PROD"))
 				assert.False(t, ok)
-			}()
+			})
 		}
 		wg.Wait()
 

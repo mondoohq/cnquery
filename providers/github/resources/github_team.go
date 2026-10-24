@@ -91,7 +91,7 @@ func (g *mqlGithubTeam) members() ([]any, error) {
 	orgID := org.Id.Data
 
 	listOpts := &github.TeamListTeamMembersOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 	var allMembers []*github.User
 	for {

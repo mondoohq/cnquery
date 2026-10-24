@@ -221,7 +221,7 @@ func TestSetInstanceSettingsPolicyArgsCoversEveryDecodedSetting(t *testing.T) {
 	args := map[string]*llx.RawData{}
 	setInstanceSettingsPolicyArgs(args, &instanceSettingsPolicy{})
 
-	assert.Equal(t, reflect.TypeOf(instanceSettingsPolicy{}).NumField(), len(args),
+	assert.Equal(t, reflect.TypeFor[instanceSettingsPolicy]().NumField(), len(args),
 		"every setting decoded from the response has to reach the resource, or it is dead schema")
 }
 

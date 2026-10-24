@@ -191,8 +191,7 @@ func (a *mqlAwsPrivatecaCertificateAuthority) fetchCertificate() error {
 	})
 	if err != nil {
 		// CA may not have a certificate yet (PENDING_CERTIFICATE state)
-		var rnfe *acmpcatypes.ResourceNotFoundException
-		if errors.As(err, &rnfe) {
+		if _, ok := errors.AsType[*acmpcatypes.ResourceNotFoundException](err); ok {
 			a.fetchedCert = true
 			return nil
 		}
@@ -266,8 +265,7 @@ func (a *mqlAwsPrivatecaCertificateAuthority) policy() (string, error) {
 		ResourceArn: &arn,
 	})
 	if err != nil {
-		var rnfe *acmpcatypes.ResourceNotFoundException
-		if errors.As(err, &rnfe) {
+		if _, ok := errors.AsType[*acmpcatypes.ResourceNotFoundException](err); ok {
 			return "", nil
 		}
 		if Is400AccessDeniedError(err) {

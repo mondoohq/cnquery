@@ -76,7 +76,7 @@ func TestLookupStorage_ErrorMemoized(t *testing.T) {
 	f.errorRoute("/storage", 403, "Permission check failed")
 	conn := f.conn()
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		_, found, err := conn.LookupStorage("local")
 		require.Error(t, err)
 		require.False(t, found)

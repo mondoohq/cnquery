@@ -20,7 +20,7 @@ type mqlSnowflakeExternalTableInternal struct {
 
 func (r *mqlSnowflakeAccount) externalTables() ([]any, error) {
 	return listSnowflakeExternalTables(r.MqlRuntime,
-		sdk.In{Account: sdk.Bool(true)})
+		sdk.In{Account: new(true)})
 }
 
 func (r *mqlSnowflakeDatabase) externalTables() ([]any, error) {

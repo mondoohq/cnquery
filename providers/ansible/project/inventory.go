@@ -182,7 +182,7 @@ func inventorySources(root string) []string {
 // INI inventories open with a `[section]` header or bare host lines, whereas
 // YAML inventories use `key:` mappings.
 func isINIInventory(data []byte) bool {
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") {
 			continue
@@ -213,7 +213,7 @@ func parseINIInventory(b *inventoryBuilder, data []byte) {
 	section := "ungrouped"
 	sectionType := "hosts"
 
-	for _, raw := range strings.Split(string(data), "\n") {
+	for raw := range strings.SplitSeq(string(data), "\n") {
 		line := strings.TrimSpace(raw)
 		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") {
 			continue

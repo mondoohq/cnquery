@@ -7,7 +7,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -43,7 +42,7 @@ func tagDefaultsIn(ctx context.Context, runtime *plugin.Runtime, compartmentID s
 
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.TagDefaultSummary, *string, error) {
 		response, err := svc.ListTagDefaults(ctx, identity.ListTagDefaultsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		})
 		if err != nil {

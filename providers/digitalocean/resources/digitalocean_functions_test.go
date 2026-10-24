@@ -12,7 +12,7 @@ import (
 func TestOwTruthy(t *testing.T) {
 	tests := []struct {
 		name  string
-		value interface{}
+		value any
 		want  bool
 	}{
 		{"bool true", true, true},

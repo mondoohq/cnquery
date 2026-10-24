@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -455,8 +456,8 @@ func (a *mqlAzureSubscription) managementGroups() ([]any, error) {
 
 	res := []any{}
 	// Reverse the root-first chain so the immediate parent comes first.
-	for i := len(chain) - 1; i >= 0; i-- {
-		e, ok := byName[strings.ToLower(chain[i])]
+	for _, c := range slices.Backward(chain) {
+		e, ok := byName[strings.ToLower(c)]
 		if !ok {
 			continue
 		}

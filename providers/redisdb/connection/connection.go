@@ -193,7 +193,7 @@ func (c *RedisdbConnection) Context() context.Context {
 // section headers and blank lines.
 func ParseInfo(info string) map[string]string {
 	out := map[string]string{}
-	for _, line := range strings.Split(info, "\n") {
+	for line := range strings.SplitSeq(info, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue

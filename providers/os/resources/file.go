@@ -87,8 +87,7 @@ func fileContentOrEmpty(file *mqlFile) (string, error) {
 
 	content := file.GetContent()
 	if content.Error != nil {
-		var notFound resources.NotFoundError
-		if errors.As(content.Error, &notFound) {
+		if _, ok := errors.AsType[resources.NotFoundError](content.Error); ok {
 			return "", nil
 		}
 		return "", content.Error
@@ -231,8 +230,7 @@ func (s *mqlFile) cacheOwnership(stat shared.FileInfoDetails) error {
 		// minimal container image) resolves the owner to null and fails
 		// cleanly, rather than erroring the whole check. Other errors (e.g. the
 		// users list could not be loaded) still propagate.
-		var notFound resources.NotFoundError
-		if !errors.As(err, &notFound) {
+		if _, ok := errors.AsType[resources.NotFoundError](err); !ok {
 			return err
 		}
 		s.User = plugin.TValue[*mqlUser]{
@@ -255,8 +253,7 @@ func (s *mqlFile) cacheOwnership(stat shared.FileInfoDetails) error {
 	if err != nil {
 		// See the user lookup above: an unknown gid resolves to a null group
 		// rather than erroring the whole check.
-		var notFound resources.NotFoundError
-		if !errors.As(err, &notFound) {
+		if _, ok := errors.AsType[resources.NotFoundError](err); !ok {
 			return err
 		}
 		s.Group = plugin.TValue[*mqlGroup]{

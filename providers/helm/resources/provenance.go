@@ -99,7 +99,7 @@ func provenanceKeyID(block *clearsign.Block) string {
 // separator and inspect each part. It returns the .tgz entry's digest,
 // falling back to the first recorded file when no .tgz entry is present.
 func provenanceDigest(plaintext []byte) string {
-	for _, part := range bytes.Split(plaintext, []byte("\n...\n")) {
+	for part := range bytes.SplitSeq(plaintext, []byte("\n...\n")) {
 		var doc map[string]any
 		if err := yaml.Unmarshal(part, &doc); err != nil {
 			continue

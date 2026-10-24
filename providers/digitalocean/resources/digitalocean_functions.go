@@ -35,8 +35,8 @@ type owAction struct {
 }
 
 type owKeyValue struct {
-	Key   string      `json:"key"`
-	Value interface{} `json:"value"`
+	Key   string `json:"key"`
+	Value any    `json:"value"`
 }
 
 type owLimits struct {
@@ -46,7 +46,7 @@ type owLimits struct {
 	Concurrency int `json:"concurrency"`
 }
 
-func owAnnotation(anns []owKeyValue, key string) (interface{}, bool) {
+func owAnnotation(anns []owKeyValue, key string) (any, bool) {
 	for _, a := range anns {
 		if a.Key == key {
 			return a.Value, true
@@ -59,7 +59,7 @@ func owAnnotation(anns []owKeyValue, key string) (interface{}, bool) {
 // web-export and require-whisk-auth annotations may arrive as a bool, or
 // as a string ("true", "raw", or an auth token), so any non-empty,
 // non-false value counts as true.
-func owTruthy(v interface{}) bool {
+func owTruthy(v any) bool {
 	switch t := v.(type) {
 	case bool:
 		return t
@@ -86,7 +86,7 @@ func openWhiskWebUrl(apiHost, namespace, pkg, action string, webExported bool) s
 	return strings.TrimRight(apiHost, "/") + "/api/v1/web/" + namespace + "/" + pkg + "/" + action
 }
 
-func owString(v interface{}) string {
+func owString(v any) string {
 	if s, ok := v.(string); ok {
 		return s
 	}
@@ -136,19 +136,19 @@ func listOpenWhiskActions(ctx context.Context, apiHost, uuid, key string) ([]owA
 	return all, nil
 }
 
-func (r *mqlDigitaloceanFunctionNamespace) accessKeys() ([]interface{}, error) {
+func (r *mqlDigitaloceanFunctionNamespace) accessKeys() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
 	keys, _, err := client.Functions.ListAccessKeys(context.Background(), r.Namespace.Data)
 	if err != nil {
 		if isDoNotFound(err) {
-			return []interface{}{}, nil
+			return []any{}, nil
 		}
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(keys))
+	all := make([]any, 0, len(keys))
 	for _, k := range keys {
 		id, err := resourceID("digitalocean.function.accessKey", r.Namespace.Data, k.ID)
 		if err != nil {
@@ -172,7 +172,7 @@ func (r *mqlDigitaloceanFunctionNamespace) accessKeys() ([]interface{}, error) {
 	return all, nil
 }
 
-func (r *mqlDigitaloceanFunctionNamespace) functions() ([]interface{}, error) {
+func (r *mqlDigitaloceanFunctionNamespace) functions() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -186,16 +186,16 @@ func (r *mqlDigitaloceanFunctionNamespace) functions() ([]interface{}, error) {
 	ns, _, err := client.Functions.GetNamespace(ctx, r.Namespace.Data)
 	if err != nil {
 		if isDoNotFound(err) {
-			return []interface{}{}, nil
+			return []any{}, nil
 		}
 		return nil, err
 	}
 	if ns == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	if ns.ApiHost == "" || ns.Key == "" {
 		// Without an API host and key we can't reach the OpenWhisk host.
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	actions, err := listOpenWhiskActions(ctx, ns.ApiHost, ns.UUID, ns.Key)
@@ -203,7 +203,7 @@ func (r *mqlDigitaloceanFunctionNamespace) functions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(actions))
+	all := make([]any, 0, len(actions))
 	for _, a := range actions {
 		// The action's namespace field is "<namespace>" or
 		// "<namespace>/<package>".

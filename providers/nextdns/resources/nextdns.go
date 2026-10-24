@@ -73,7 +73,7 @@ func fetchProfiles(conn *connection.NextdnsConnection) ([]profileData, error) {
 		cursor   string
 		seen     = map[string]struct{}{}
 	)
-	for page := 0; page < maxProfilePages; page++ {
+	for page := range maxProfilePages {
 		path := "/profiles"
 		if cursor != "" {
 			path += "?cursor=" + url.QueryEscape(cursor)

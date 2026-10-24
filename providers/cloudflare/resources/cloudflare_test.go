@@ -106,10 +106,10 @@ func TestAccountsPagination(t *testing.T) {
 	root := newTestRoot(t, env)
 
 	const totalPages = 3
-	var calls int32
+	var calls atomic.Int32
 
 	env.Mux.HandleFunc("/accounts", func(w http.ResponseWriter, r *http.Request) {
-		atomic.AddInt32(&calls, 1)
+		calls.Add(1)
 		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 		if page == 0 {
 			page = 1
@@ -130,7 +130,7 @@ func TestAccountsPagination(t *testing.T) {
 	result, err := root.accounts()
 	require.NoError(t, err)
 	require.Len(t, result, totalPages)
-	require.Equal(t, int32(totalPages), atomic.LoadInt32(&calls), "handler should be called once per page, no repeats")
+	require.Equal(t, int32(totalPages), calls.Load(), "handler should be called once per page, no repeats")
 
 	ids := make([]string, len(result))
 	for i, r := range result {

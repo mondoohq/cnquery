@@ -34,7 +34,7 @@ func initCloudflareZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	for _, platformId := range conn.Asset().PlatformIds {
-		if zoneId := strings.TrimPrefix(platformId, connection.PlatformIdCloudflareZone); zoneId != platformId {
+		if zoneId, ok := strings.CutPrefix(platformId, connection.PlatformIdCloudflareZone); ok {
 			zone, ok := runtime.Resources.Get("cloudflare.zone\x00" + zoneId)
 			if !ok {
 				return nil, nil, errors.New("zone not found")

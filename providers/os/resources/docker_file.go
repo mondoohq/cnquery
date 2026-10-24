@@ -881,13 +881,7 @@ func (p *mqlDockerFile) runCommandResources(parentID string, argvs [][]string) (
 }
 
 func (p *mqlDockerFile) mountResources(cmd *instructions.RunCommand) ([]any, error) {
-	hasMount := false
-	for _, f := range cmd.FlagsUsed {
-		if f == "mount" {
-			hasMount = true
-			break
-		}
-	}
+	hasMount := slices.Contains(cmd.FlagsUsed, "mount")
 	if !hasMount {
 		return nil, nil
 	}

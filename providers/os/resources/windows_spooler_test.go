@@ -188,30 +188,30 @@ func runSpoolerEnumCases(t *testing.T, valueName string, decode func(map[string]
 // as true.
 func TestSpoolerRegisterRemoteRpcEndpoint(t *testing.T) {
 	runSpoolerEnumCases(t, "RegisterSpoolerRemoteRpcEndPoint", spoolerRegisterRemoteRpcEndpoint, []spoolerEnumCase{
-		{"enabled (1) accepts client connections", int64Ptr(1), boolPtr(true)},
-		{"disabled (2) is the hardened state", int64Ptr(2), boolPtr(false)},
-		{"0 is not a defined value", int64Ptr(0), nil},
-		{"unknown value", int64Ptr(5), nil},
+		{"enabled (1) accepts client connections", new(int64(1)), new(true)},
+		{"disabled (2) is the hardened state", new(int64(2)), new(false)},
+		{"0 is not a defined value", new(int64(0)), nil},
+		{"unknown value", new(int64(5)), nil},
 		{"not configured", nil, nil},
 	})
 }
 
 func TestSpoolerRedirectionGuardEnabled(t *testing.T) {
 	runSpoolerEnumCases(t, "RedirectionguardPolicy", spoolerRedirectionGuardEnabled, []spoolerEnumCase{
-		{"enabled (1)", int64Ptr(1), boolPtr(true)},
-		{"disabled (0)", int64Ptr(0), boolPtr(false)},
-		{"audit (2) does not block redirections", int64Ptr(2), boolPtr(false)},
-		{"unknown value", int64Ptr(3), nil},
+		{"enabled (1)", new(int64(1)), new(true)},
+		{"disabled (0)", new(int64(0)), new(false)},
+		{"audit (2) does not block redirections", new(int64(2)), new(false)},
+		{"unknown value", new(int64(3)), nil},
 		{"not configured", nil, nil},
 	})
 }
 
 func TestSpoolerCopyFilesRestricted(t *testing.T) {
 	runSpoolerEnumCases(t, "CopyFilesPolicy", spoolerCopyFilesRestricted, []spoolerEnumCase{
-		{"do not allow queue-specific files (0)", int64Ptr(0), boolPtr(true)},
-		{"limit to color profiles (1)", int64Ptr(1), boolPtr(true)},
-		{"allow all (2) is unrestricted", int64Ptr(2), boolPtr(false)},
-		{"unknown value", int64Ptr(3), nil},
+		{"do not allow queue-specific files (0)", new(int64(0)), new(true)},
+		{"limit to color profiles (1)", new(int64(1)), new(true)},
+		{"allow all (2) is unrestricted", new(int64(2)), new(false)},
+		{"unknown value", new(int64(3)), nil},
 		{"not configured", nil, nil},
 	})
 }

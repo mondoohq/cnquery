@@ -18,7 +18,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/core/resources/regex"
 	"go.mondoo.com/mql/providers/network/connection"
 	"go.mondoo.com/mql/providers/network/resources/certificates"
@@ -494,7 +493,7 @@ func (s *mqlTls) unsafeTLSTest(socket *mqlSocket, domainName string) error {
 			Interface("findings", s.tester.Findings).
 			Bool("tls_enabled", false).
 			Msg("network.tls> detection")
-		s.tlsEnabled = convert.ToPtr(false)
+		s.tlsEnabled = new(false)
 
 		if errors.Is(err, tlsshake.ErrFailedToConnect) ||
 			errors.Is(err, tlsshake.ErrFailedToWrite) ||
@@ -514,7 +513,7 @@ func (s *mqlTls) unsafeTLSTest(socket *mqlSocket, domainName string) error {
 		return s.Error
 	}
 
-	s.tlsEnabled = convert.ToPtr(len(s.tester.Findings.Versions) != 0)
+	s.tlsEnabled = new(len(s.tester.Findings.Versions) != 0)
 
 	log.Debug().
 		Str("host", host).

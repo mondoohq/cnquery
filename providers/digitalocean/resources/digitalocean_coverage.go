@@ -27,8 +27,7 @@ import (
 // only a godo error response, never a transport error: a connection reset
 // is not evidence about permissions.
 func isDoForbidden(err error) bool {
-	var er *godo.ErrorResponse
-	if errors.As(err, &er) {
+	if er, ok := errors.AsType[*godo.ErrorResponse](err); ok {
 		return er.Response != nil && er.Response.StatusCode == http.StatusForbidden
 	}
 	return false
@@ -50,7 +49,7 @@ func urnResourceType(urn string) string {
 // ----- VPC membership -----
 
 // members lists the resources placed inside the VPC.
-func (r *mqlDigitaloceanVpc) members() ([]interface{}, error) {
+func (r *mqlDigitaloceanVpc) members() ([]any, error) {
 	vpcID := r.Id.Data
 	if vpcID == "" {
 		return nil, errors.New("cannot list VPC members without a VPC id")
@@ -67,12 +66,12 @@ func (r *mqlDigitaloceanVpc) members() ([]interface{}, error) {
 		// answers 404; that is genuinely an empty membership. Denied and
 		// transient reads propagate.
 		if isDoNotFound(err) {
-			return []interface{}{}, nil
+			return []any{}, nil
 		}
 		return nil, err
 	}
 
-	out := make([]interface{}, 0, len(members))
+	out := make([]any, 0, len(members))
 	for _, m := range members {
 		// godo hands back a slice of pointers; a nil entry would panic the
 		// provider and take the whole scan with it.
@@ -104,7 +103,7 @@ func (r *mqlDigitaloceanVpc) members() ([]interface{}, error) {
 // ----- VPC routes -----
 
 // routes lists the routes directing traffic out of the VPC.
-func (r *mqlDigitaloceanVpc) routes() ([]interface{}, error) {
+func (r *mqlDigitaloceanVpc) routes() ([]any, error) {
 	vpcID := r.Id.Data
 	if vpcID == "" {
 		return nil, errors.New("cannot list VPC routes without a VPC id")
@@ -121,12 +120,12 @@ func (r *mqlDigitaloceanVpc) routes() ([]interface{}, error) {
 		// is genuinely an empty route table. Denied and transient reads
 		// propagate rather than being reported as "no routes".
 		if isDoNotFound(err) {
-			return []interface{}{}, nil
+			return []any{}, nil
 		}
 		return nil, err
 	}
 
-	out := make([]interface{}, 0, len(routes))
+	out := make([]any, 0, len(routes))
 	for _, rt := range routes {
 		// godo hands back a slice of pointers; a nil entry would panic the
 		// provider and take the whole scan with it.
@@ -153,7 +152,7 @@ func vpcRouteArgs(vpcID string, rt *godo.Route) (map[string]*llx.RawData, error)
 	if err != nil {
 		return nil, err
 	}
-	targets := make([]interface{}, len(rt.TargetURNs))
+	targets := make([]any, len(rt.TargetURNs))
 	for i, u := range rt.TargetURNs {
 		targets[i] = u
 	}
@@ -191,7 +190,7 @@ func (r *mqlDigitaloceanKubernetesCluster) kubeconfigUsername() (string, error) 
 
 // kubeconfigGroups returns the groups the platform-issued kubeconfig
 // identity belongs to.
-func (r *mqlDigitaloceanKubernetesCluster) kubeconfigGroups() ([]interface{}, error) {
+func (r *mqlDigitaloceanKubernetesCluster) kubeconfigGroups() ([]any, error) {
 	user, err := r.clusterUser()
 	if err != nil {
 		return nil, err
@@ -248,7 +247,7 @@ func (r *mqlDigitaloceanKubernetesCluster) clusterUser() (*godo.KubernetesCluste
 // holds. Accounts that do not have the multi-registry endpoint answer
 // 404, and those fall back to the legacy endpoint so a single-registry
 // account still lists its registry.
-func (r *mqlDigitalocean) registries() ([]interface{}, error) {
+func (r *mqlDigitalocean) registries() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 	ctx := context.Background()
@@ -266,12 +265,12 @@ func (r *mqlDigitalocean) registries() ([]interface{}, error) {
 		if legacyErr != nil {
 			// No registry configured at all is an empty list, not a failure.
 			if isDoNotFound(legacyErr) {
-				return []interface{}{}, nil
+				return []any{}, nil
 			}
 			return nil, legacyErr
 		}
 		if reg == nil {
-			return []interface{}{}, nil
+			return []any{}, nil
 		}
 		regs = []*godo.Registry{reg}
 	}
@@ -280,7 +279,7 @@ func (r *mqlDigitalocean) registries() ([]interface{}, error) {
 	// it is read once and reported on each.
 	tier, subDict := registrySubscription(client)
 
-	out := make([]interface{}, 0, len(regs))
+	out := make([]any, 0, len(regs))
 	for _, reg := range regs {
 		if reg == nil || reg.Name == "" {
 			continue
@@ -295,7 +294,7 @@ func (r *mqlDigitalocean) registries() ([]interface{}, error) {
 }
 
 // registryArgs maps a registry onto the resource's fields.
-func registryArgs(reg *godo.Registry, tier string, subDict map[string]interface{}) map[string]*llx.RawData {
+func registryArgs(reg *godo.Registry, tier string, subDict map[string]any) map[string]*llx.RawData {
 	return map[string]*llx.RawData{
 		"name":              llx.StringData(reg.Name),
 		"storageUsageBytes": llx.IntData(int64(reg.StorageUsageBytes)),
@@ -314,8 +313,8 @@ func registryArgs(reg *godo.Registry, tier string, subDict map[string]interface{
 // The subscription is supplementary metadata rather than a posture
 // verdict, so a failure to read it leaves the tier empty instead of
 // failing the registry listing.
-func registrySubscription(client *godo.Client) (string, map[string]interface{}) {
-	subDict := map[string]interface{}{}
+func registrySubscription(client *godo.Client) (string, map[string]any) {
+	subDict := map[string]any{}
 	sub, _, err := client.Registry.GetSubscription(context.Background())
 	if err != nil || sub == nil {
 		return "", subDict
@@ -338,7 +337,7 @@ func registrySubscription(client *godo.Client) (string, map[string]interface{}) 
 // ----- Partner Network Connect advertised routes -----
 
 // routes lists the CIDRs the remote side advertises into the attachment.
-func (r *mqlDigitaloceanPartnerAttachment) routes() ([]interface{}, error) {
+func (r *mqlDigitaloceanPartnerAttachment) routes() ([]any, error) {
 	attachmentID := r.Id.Data
 	if attachmentID == "" {
 		return nil, errors.New("cannot list routes without a partner attachment id")
@@ -355,12 +354,12 @@ func (r *mqlDigitaloceanPartnerAttachment) routes() ([]interface{}, error) {
 		// attachment torn down mid-scan answers 404. Both are genuinely no
 		// routes. A denied read is not, and propagates.
 		if isDoNotFound(err) {
-			return []interface{}{}, nil
+			return []any{}, nil
 		}
 		return nil, err
 	}
 
-	out := make([]interface{}, 0, len(routes))
+	out := make([]any, 0, len(routes))
 	for _, rt := range routes {
 		if rt == nil || rt.Cidr == "" {
 			continue
@@ -373,15 +372,15 @@ func (r *mqlDigitaloceanPartnerAttachment) routes() ([]interface{}, error) {
 // ----- Spaces key grants -----
 
 // bucketGrants resolves the key's permission bindings to grant resources.
-func (r *mqlDigitaloceanSpacesKey) bucketGrants() ([]interface{}, error) {
+func (r *mqlDigitaloceanSpacesKey) bucketGrants() ([]any, error) {
 	accessKey := r.AccessKey.Data
 	if accessKey == "" {
 		return nil, errors.New("cannot build spaces key grants without an access key id")
 	}
 
-	out := make([]interface{}, 0, len(r.Grants.Data))
+	out := make([]any, 0, len(r.Grants.Data))
 	for i, raw := range r.Grants.Data {
-		grant, ok := raw.(map[string]interface{})
+		grant, ok := raw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -471,13 +470,13 @@ func (r *mqlDigitalocean) spacesBucketByName(name string) (*mqlDigitaloceanSpace
 // ----- App Platform log destinations -----
 
 // logDestinations lists the third-party services the app forwards logs to.
-func (r *mqlDigitaloceanApp) logDestinations() ([]interface{}, error) {
+func (r *mqlDigitaloceanApp) logDestinations() ([]any, error) {
 	appID := r.Id.Data
 	if appID == "" {
 		return nil, errors.New("cannot list log destinations without an app id")
 	}
 
-	out := []interface{}{}
+	out := []any{}
 	for _, d := range appLogDestinations(r.cacheSpec) {
 		id, err := resourceID("digitalocean.app.logDestination", appID, d.component, d.spec.Name)
 		if err != nil {
@@ -611,11 +610,11 @@ func logDestinationTarget(d *godo.AppLogDestinationSpec) (provider, endpoint str
 //
 // Only the names are read. Header values on a log destination routinely
 // carry the receiving service's API token, so they are never surfaced.
-func logDestinationHeaderKeys(d *godo.AppLogDestinationSpec) []interface{} {
+func logDestinationHeaderKeys(d *godo.AppLogDestinationSpec) []any {
 	if d == nil {
-		return []interface{}{}
+		return []any{}
 	}
-	keys := make([]interface{}, 0, len(d.Headers))
+	keys := make([]any, 0, len(d.Headers))
 	for _, h := range d.Headers {
 		if h == nil || h.Key == "" {
 			continue

@@ -27,10 +27,10 @@ func TestDictListData(t *testing.T) {
 	// "nothing came back" reads as "there is nothing".
 	assert.Equal(t, llx.NilData, dictListData(nil))
 
-	read := dictListData([]interface{}{})
+	read := dictListData([]any{})
 	assert.NotEqual(t, llx.NilData, read)
 	assert.Equal(t, types.Array(types.Dict), read.Type)
-	assert.Equal(t, []interface{}{}, read.Value)
+	assert.Equal(t, []any{}, read.Value)
 }
 
 // hasWildcardPolicy has to separate a bucket with no policy from a bucket whose

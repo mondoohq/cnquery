@@ -177,7 +177,7 @@ const maxPages = 1000
 // same way an empty one does.
 func walkPages(fetch func(token string) (string, error)) error {
 	token := ""
-	for i := 0; i < maxPages; i++ {
+	for range maxPages {
 		next, err := fetch(token)
 		if err != nil {
 			return err
@@ -441,7 +441,7 @@ type SsoBypassUser struct {
 // empty-string entry that would read as a configured range.
 func SplitIPRanges(v string) []string {
 	out := []string{}
-	for _, part := range strings.Split(v, ",") {
+	for part := range strings.SplitSeq(v, ",") {
 		part = strings.TrimSpace(part)
 		if part == "" {
 			continue

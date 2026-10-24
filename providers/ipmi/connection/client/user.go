@@ -71,10 +71,7 @@ func (c *IpmiClient) Users(channel uint8) ([]*User, error) {
 		return nil, err
 	}
 
-	slots := first.MaxUserIDs
-	if slots > maxUserSlots {
-		slots = maxUserSlots
-	}
+	slots := min(first.MaxUserIDs, maxUserSlots)
 
 	users := make([]*User, 0, slots)
 	for id := int64(1); id <= slots; id++ {

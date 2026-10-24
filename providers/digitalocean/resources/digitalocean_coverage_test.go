@@ -291,7 +291,7 @@ func TestLogDestinationHeaderKeys(t *testing.T) {
 				{Key: "X-Tenant", Value: "acme"},
 			},
 		})
-		assert.Equal(t, []interface{}{"Authorization", "X-Tenant"}, keys)
+		assert.Equal(t, []any{"Authorization", "X-Tenant"}, keys)
 		for _, k := range keys {
 			assert.NotContains(t, k, "SECRET-TOKEN")
 		}
@@ -394,7 +394,7 @@ func TestRegistryArgs(t *testing.T) {
 			StorageUsageBytes:          4096,
 			StorageUsageBytesUpdatedAt: time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC),
 			CreatedAt:                  time.Date(2025, 6, 1, 0, 0, 0, 0, time.UTC),
-		}, "professional", map[string]interface{}{"tierSlug": "professional"})
+		}, "professional", map[string]any{"tierSlug": "professional"})
 
 		assert.Equal(t, "team-registry", args["name"].Value)
 		assert.Equal(t, "nyc3", args["region"].Value)
@@ -404,7 +404,7 @@ func TestRegistryArgs(t *testing.T) {
 	})
 
 	t.Run("never-recomputed storage timestamp stays null", func(t *testing.T) {
-		args := registryArgs(&godo.Registry{Name: "r"}, "", map[string]interface{}{})
+		args := registryArgs(&godo.Registry{Name: "r"}, "", map[string]any{})
 		assert.Nil(t, args["storageUsageBytesUpdatedAt"].Value,
 			"a registry whose storage was never recomputed must not report the zero time")
 	})

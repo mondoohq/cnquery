@@ -6,6 +6,7 @@ package resources
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -81,10 +82,8 @@ func TestParseContainersPolicyMalformed(t *testing.T) {
 func TestContainersPolicyPath(t *testing.T) {
 	existing := func(paths ...string) func(string) (bool, error) {
 		return func(p string) (bool, error) {
-			for _, x := range paths {
-				if x == p {
-					return true, nil
-				}
+			if slices.Contains(paths, p) {
+				return true, nil
 			}
 			return false, nil
 		}

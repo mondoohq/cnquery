@@ -23,11 +23,11 @@ func TestCloudfwPolicyEnabled(t *testing.T) {
 		release  *string
 		expected bool
 	}{
-		{tea.String("true"), true},
-		{tea.String("True"), true},
-		{tea.String(" true "), true},
-		{tea.String("false"), false},
-		{tea.String(""), false},
+		{new("true"), true},
+		{new("True"), true},
+		{new(" true "), true},
+		{new("false"), false},
+		{new(""), false},
 		{nil, false},
 	}
 	for _, test := range tests {
@@ -37,22 +37,22 @@ func TestCloudfwPolicyEnabled(t *testing.T) {
 }
 
 func TestCloudfwVpcFirewallEnabled(t *testing.T) {
-	assert.True(t, cloudfwVpcFirewallEnabled(tea.String("opened")))
-	assert.True(t, cloudfwVpcFirewallEnabled(tea.String("OPENED")))
-	assert.False(t, cloudfwVpcFirewallEnabled(tea.String("closed")))
+	assert.True(t, cloudfwVpcFirewallEnabled(new("opened")))
+	assert.True(t, cloudfwVpcFirewallEnabled(new("OPENED")))
+	assert.False(t, cloudfwVpcFirewallEnabled(new("closed")))
 	// a pair with no firewall configured carries traffic uninspected, exactly
 	// as a closed one does
-	assert.False(t, cloudfwVpcFirewallEnabled(tea.String("notconfigured")))
+	assert.False(t, cloudfwVpcFirewallEnabled(new("notconfigured")))
 	assert.False(t, cloudfwVpcFirewallEnabled(nil))
 }
 
 func TestCloudfwNatFirewallEnabled(t *testing.T) {
-	assert.True(t, cloudfwNatFirewallEnabled(tea.String("normal")))
+	assert.True(t, cloudfwNatFirewallEnabled(new("normal")))
 	// abnormal means the firewall exists but is not inspecting, which must not
 	// read as protected
-	assert.False(t, cloudfwNatFirewallEnabled(tea.String("abnormal")))
-	assert.False(t, cloudfwNatFirewallEnabled(tea.String("opening")))
-	assert.False(t, cloudfwNatFirewallEnabled(tea.String("closed")))
+	assert.False(t, cloudfwNatFirewallEnabled(new("abnormal")))
+	assert.False(t, cloudfwNatFirewallEnabled(new("opening")))
+	assert.False(t, cloudfwNatFirewallEnabled(new("closed")))
 	assert.False(t, cloudfwNatFirewallEnabled(nil))
 }
 
@@ -91,14 +91,14 @@ func TestCloudfwPolicyMore(t *testing.T) {
 		total     *string
 		expected  bool
 	}{
-		{"more pages remain", 50, tea.String("120"), true},
-		{"all collected", 120, tea.String("120"), false},
-		{"over-collected", 130, tea.String("120"), false},
-		{"whitespace tolerated", 10, tea.String(" 20 "), true},
+		{"more pages remain", 50, new("120"), true},
+		{"all collected", 120, new("120"), false},
+		{"over-collected", 130, new("120"), false},
+		{"whitespace tolerated", 10, new(" 20 "), true},
 		// an unusable total must terminate the walk, not loop forever
 		{"absent total", 10, nil, false},
-		{"unparseable total", 10, tea.String("many"), false},
-		{"empty total", 10, tea.String(""), false},
+		{"unparseable total", 10, new("many"), false},
+		{"empty total", 10, new(""), false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

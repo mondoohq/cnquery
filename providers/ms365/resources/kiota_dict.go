@@ -33,7 +33,7 @@ func kiotaToDict(p serialization.Parsable) (map[string]any, error) {
 	}
 	// A non-nil interface can still hold a nil model pointer, which the
 	// check above lets through and Serialize would dereference.
-	if rv := reflect.ValueOf(p); rv.Kind() == reflect.Ptr && rv.IsNil() {
+	if rv := reflect.ValueOf(p); rv.Kind() == reflect.Pointer && rv.IsNil() {
 		return nil, nil
 	}
 
@@ -81,7 +81,7 @@ func detachDurations(v any) *detachedDurations {
 	if !ok {
 		return nil
 	}
-	if rv := reflect.ValueOf(v); rv.Kind() == reflect.Ptr && rv.IsNil() {
+	if rv := reflect.ValueOf(v); rv.Kind() == reflect.Pointer && rv.IsNil() {
 		return nil
 	}
 	bs := bm.GetBackingStore()

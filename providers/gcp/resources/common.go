@@ -80,8 +80,8 @@ func resolveServiceAccountRef(runtime *plugin.Runtime, raw, fallbackProjectId st
 		return nil, nil
 	}
 	projectId, email := fallbackProjectId, raw
-	if idx := strings.Index(raw, "/serviceAccounts/"); idx != -1 {
-		email = raw[idx+len("/serviceAccounts/"):]
+	if _, after, ok := strings.Cut(raw, "/serviceAccounts/"); ok {
+		email = after
 		if p := projectFromResourceName(raw); p != "" {
 			projectId = p
 		}
@@ -210,7 +210,7 @@ func protoToDict(msg proto.Message) (map[string]any, error) {
 	if msg == nil {
 		return nil, nil
 	}
-	if v := reflect.ValueOf(msg); v.Kind() == reflect.Ptr && v.IsNil() {
+	if v := reflect.ValueOf(msg); v.Kind() == reflect.Pointer && v.IsNil() {
 		return nil, nil
 	}
 	data, err := protojson.Marshal(msg)

@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/oracle/oci-go-sdk/v65/apigateway"
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -156,7 +155,7 @@ func TestFlattenMutualTls(t *testing.T) {
 	t.Run("partial: required flag only", func(t *testing.T) {
 		required, sans := flattenMutualTls(&apigateway.ApiSpecificationRequestPolicies{
 			MutualTls: &apigateway.MutualTlsDetails{
-				IsVerifiedCertificateRequired: common.Bool(true),
+				IsVerifiedCertificateRequired: new(true),
 			},
 		})
 		assert.True(t, required)
@@ -176,7 +175,7 @@ func TestFlattenMutualTls(t *testing.T) {
 	t.Run("populated: both fields", func(t *testing.T) {
 		required, sans := flattenMutualTls(&apigateway.ApiSpecificationRequestPolicies{
 			MutualTls: &apigateway.MutualTlsDetails{
-				IsVerifiedCertificateRequired: common.Bool(true),
+				IsVerifiedCertificateRequired: new(true),
 				AllowedSans:                   []string{"client.example.com"},
 			},
 		})
@@ -187,7 +186,7 @@ func TestFlattenMutualTls(t *testing.T) {
 	t.Run("required explicitly false is preserved", func(t *testing.T) {
 		required, _ := flattenMutualTls(&apigateway.ApiSpecificationRequestPolicies{
 			MutualTls: &apigateway.MutualTlsDetails{
-				IsVerifiedCertificateRequired: common.Bool(false),
+				IsVerifiedCertificateRequired: new(false),
 			},
 		})
 		assert.False(t, required)
@@ -211,7 +210,7 @@ func TestFlattenCors(t *testing.T) {
 		allow, origins := flattenCors(&apigateway.ApiSpecificationRequestPolicies{
 			Cors: &apigateway.CorsPolicy{
 				AllowedOrigins:            []string{"https://a.example.com", "https://b.example.com"},
-				IsAllowCredentialsEnabled: common.Bool(true),
+				IsAllowCredentialsEnabled: new(true),
 			},
 		})
 		assert.True(t, allow)

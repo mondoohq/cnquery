@@ -583,7 +583,7 @@ func inferCodexVersion(runtime *plugin.Runtime, configPath string) (string, erro
 	if cmd.GetExitcode().Data != 0 {
 		return "", nil
 	}
-	for _, field := range strings.Fields(cmd.GetStdout().Data) {
+	for field := range strings.FieldsSeq(cmd.GetStdout().Data) {
 		// Validate with MQL's semver parser instead of a bespoke regex. The
 		// parser exposes only Compare, so we parse by self-compare: a valid
 		// version compares against itself without error.
@@ -967,7 +967,7 @@ func probeOllamaVersion(runtime *plugin.Runtime, command string) (string, error)
 // at, which may be another machine entirely.
 func parseOllamaVersion(stdout string) string {
 	var serverVersion string
-	for _, line := range strings.Split(stdout, "\n") {
+	for line := range strings.SplitSeq(stdout, "\n") {
 		_, rest, found := strings.Cut(line, "version is")
 		if !found {
 			continue

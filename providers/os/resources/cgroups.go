@@ -184,7 +184,7 @@ func (c *mqlCgroups) doProbe() (*cgroupDetection, error) {
 //	cpuset	3	1	1
 func parseProcCgroups(content string) []string {
 	controllers := []string{}
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue

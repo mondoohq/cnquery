@@ -53,8 +53,7 @@ func (a *mqlAwsEcrRegistry) policy() (string, error) {
 	svc := conn.Ecr(a.Region.Data)
 	out, err := svc.GetRegistryPolicy(context.Background(), &ecr.GetRegistryPolicyInput{})
 	if err != nil {
-		var notFound *ecrtypes.RegistryPolicyNotFoundException
-		if errors.As(err, &notFound) {
+		if _, ok := errors.AsType[*ecrtypes.RegistryPolicyNotFoundException](err); ok {
 			a.Policy.State = plugin.StateIsSet | plugin.StateIsNull
 			return "", nil
 		}
@@ -126,8 +125,7 @@ func (a *mqlAwsEcrRegistry) signingRules() ([]any, error) {
 	svc := conn.Ecr(a.Region.Data)
 	out, err := svc.GetSigningConfiguration(context.Background(), &ecr.GetSigningConfigurationInput{})
 	if err != nil {
-		var notFound *ecrtypes.SigningConfigurationNotFoundException
-		if errors.As(err, &notFound) {
+		if _, ok := errors.AsType[*ecrtypes.SigningConfigurationNotFoundException](err); ok {
 			return []any{}, nil
 		}
 		if Is400AccessDeniedError(err) {

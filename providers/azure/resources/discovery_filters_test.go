@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
@@ -60,5 +59,5 @@ func TestDiscoveredAssetsKeepDiscoveryFilters(t *testing.T) {
 }
 
 func subscriptionsSubscription(id string) subscriptions.Subscription {
-	return subscriptions.Subscription{SubscriptionID: to.Ptr(id), TenantID: to.Ptr("tenant-1")}
+	return subscriptions.Subscription{SubscriptionID: new(id), TenantID: new("tenant-1")}
 }

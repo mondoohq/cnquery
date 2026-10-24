@@ -203,12 +203,12 @@ func procHidesPids(afs *afero.Afero) bool {
 // hidepid to anything but 0 ("off"): 1 or "noaccess", 2 or "invisible", and 4
 // or "ptraceable" all keep a process's command line from other users.
 func procMountHidesPids(mounts string) bool {
-	for _, line := range strings.Split(mounts, "\n") {
+	for line := range strings.SplitSeq(mounts, "\n") {
 		fields := strings.Fields(line)
 		if len(fields) < 4 || fields[1] != "/proc" || fields[2] != "proc" {
 			continue
 		}
-		for _, opt := range strings.Split(fields[3], ",") {
+		for opt := range strings.SplitSeq(fields[3], ",") {
 			if v, ok := strings.CutPrefix(opt, "hidepid="); ok {
 				return v != "0" && v != "off"
 			}

@@ -21,12 +21,12 @@ func TestAutomountFromSpecAndAccount(t *testing.T) {
 		want    bool
 	}{
 		{name: "neither set defaults to true", want: true},
-		{name: "pod true", pod: boolPtr(true), want: true},
-		{name: "pod false", pod: boolPtr(false), want: false},
-		{name: "account false applies when pod is unset", account: boolPtr(false), want: false},
-		{name: "account true applies when pod is unset", account: boolPtr(true), want: true},
-		{name: "pod true overrides account false", pod: boolPtr(true), account: boolPtr(false), want: true},
-		{name: "pod false overrides account true", pod: boolPtr(false), account: boolPtr(true), want: false},
+		{name: "pod true", pod: new(true), want: true},
+		{name: "pod false", pod: new(false), want: false},
+		{name: "account false applies when pod is unset", account: new(false), want: false},
+		{name: "account true applies when pod is unset", account: new(true), want: true},
+		{name: "pod true overrides account false", pod: new(true), account: new(false), want: true},
+		{name: "pod false overrides account true", pod: new(false), account: new(true), want: false},
 	}
 
 	for _, tt := range tests {

@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 	"sync"
@@ -51,9 +52,7 @@ func parseStsPolicyDefinition(definition []any) (map[string]any, error) {
 		if res == nil {
 			res = make(map[string]any, len(doc))
 		}
-		for k, v := range doc {
-			res[k] = v
-		}
+		maps.Copy(res, doc)
 	}
 	return res, nil
 }

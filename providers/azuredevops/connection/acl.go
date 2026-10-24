@@ -6,6 +6,7 @@ package connection
 import (
 	"context"
 	"net/url"
+	"slices"
 	"strings"
 )
 
@@ -102,8 +103,8 @@ func (c *Client) AccessControlList(ctx context.Context, token string) (*AccessCo
 func EffectiveAllow(chain []*AccessControlList) map[string]int64 {
 	allow := map[string]int64{}
 	decided := map[string]int64{}
-	for i := len(chain) - 1; i >= 0; i-- {
-		acl := chain[i]
+	for _, acl := range slices.Backward(chain) {
+
 		if acl == nil {
 			continue
 		}

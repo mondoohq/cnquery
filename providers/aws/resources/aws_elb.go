@@ -765,8 +765,7 @@ func (a *mqlAwsElbListener) sniCertificates() ([]any, error) {
 				return res, nil
 			}
 			// A listener that terminates no TLS has no certificate list at all.
-			var notFound *elbtypes.ListenerNotFoundException
-			if errors.As(err, &notFound) {
+			if _, ok := errors.AsType[*elbtypes.ListenerNotFoundException](err); ok {
 				return res, nil
 			}
 			return nil, err

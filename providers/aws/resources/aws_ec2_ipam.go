@@ -197,7 +197,7 @@ func (a *mqlAwsEc2Ipam) scopes() ([]any, error) {
 
 	res := []any{}
 	paginator := ec2.NewDescribeIpamScopesPaginator(svc, &ec2.DescribeIpamScopesInput{
-		Filters: []types.Filter{{Name: stringPtr("ipam-id"), Values: []string{ipamId}}},
+		Filters: []types.Filter{{Name: new("ipam-id"), Values: []string{ipamId}}},
 	})
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
@@ -243,7 +243,7 @@ func (a *mqlAwsEc2Ipam) pools() ([]any, error) {
 
 	res := []any{}
 	paginator := ec2.NewDescribeIpamPoolsPaginator(svc, &ec2.DescribeIpamPoolsInput{
-		Filters: []types.Filter{{Name: stringPtr("owner-id"), Values: []string{a.OwnerId.Data}}, {Name: stringPtr("ipam-id"), Values: []string{ipamId}}},
+		Filters: []types.Filter{{Name: new("owner-id"), Values: []string{a.OwnerId.Data}}, {Name: new("ipam-id"), Values: []string{ipamId}}},
 	})
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)

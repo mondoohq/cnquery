@@ -152,17 +152,10 @@ func allowsAnyHost(hostIps, hostNamesRegexp, hostNamesLike []string) bool {
 			return true
 		}
 	}
-	for _, re := range hostNamesRegexp {
-		if matchesAnyHostName(re) {
-			return true
-		}
+	if slices.ContainsFunc(hostNamesRegexp, matchesAnyHostName) {
+		return true
 	}
-	for _, like := range hostNamesLike {
-		if likeMatchesAnyHostName(like) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(hostNamesLike, likeMatchesAnyHostName)
 }
 
 // anyHostNameRegexps are the regular expressions that match every host name,

@@ -420,8 +420,8 @@ func (g *mqlGithubRepository) getMergeRequests(state string) ([]any, error) {
 	}
 
 	listOpts := &github.PullRequestListOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
-		State:       state,
+		PerPage: paginationPerPage,
+		State:   state,
 	}
 	var allPulls []*github.PullRequest
 	for {
@@ -584,7 +584,7 @@ func (g *mqlGithubRepository) branches() ([]any, error) {
 	repoDefaultBranchName := g.DefaultBranchName.Data
 
 	listOpts := &github.BranchListOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 	var allBranches []*github.Branch
 	for {
@@ -991,7 +991,7 @@ func (g *mqlGithubRepository) commits() ([]any, error) {
 	}
 
 	listOpts := &github.CommitsListOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 	var allCommits []*github.RepositoryCommit
 	for {
@@ -1152,7 +1152,7 @@ func (g *mqlGithubRepository) contributors() ([]any, error) {
 	}
 
 	listOpts := &github.ListContributorsOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 	var allContributors []*github.Contributor
 	for {
@@ -1192,7 +1192,7 @@ func (g *mqlGithubRepository) collaborators() ([]any, error) {
 	}
 
 	listOpts := &github.ListCollaboratorsOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 	var allContributors []*github.User
 	for {
@@ -1283,8 +1283,8 @@ func (g *mqlGithubRepository) adminCollaborators() ([]any, error) {
 	}
 
 	listOpts := &github.ListCollaboratorsOptions{
-		Permission:  "admin",
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		Permission: "admin",
+		PerPage:    paginationPerPage,
 	}
 	var adminCollaborators []*github.User
 	for {
@@ -1825,9 +1825,7 @@ func (g *mqlGithubRepository) forks() ([]any, error) {
 	}
 
 	listOpts := &github.RepositoryListForksOptions{
-		ListOptions: github.ListOptions{
-			PerPage: paginationPerPage,
-		},
+		PerPage: paginationPerPage,
 	}
 	var allForks []*github.Repository
 	for {
@@ -2107,10 +2105,8 @@ func (g *mqlGithubRepository) milestones() ([]any, error) {
 	}
 
 	listOpts := &github.MilestoneListOptions{
-		State: "all",
-		ListOptions: github.ListOptions{
-			PerPage: paginationPerPage,
-		},
+		State:   "all",
+		PerPage: paginationPerPage,
 	}
 	var allMilestones []*github.Milestone
 	for {
@@ -2602,7 +2598,7 @@ func (g *mqlGithubRepository) codeScanningEnabled() (bool, error) {
 	}
 
 	analyses, _, analysisErr := conn.Client().CodeScanning.ListAnalysesForRepo(conn.Context(), ownerLogin, repoName,
-		&github.AnalysesListOptions{ListOptions: github.ListOptions{PerPage: 1}})
+		&github.AnalysesListOptions{PerPage: 1})
 	if analysisErr == nil {
 		return len(analyses) > 0, nil
 	}
@@ -2837,7 +2833,7 @@ func (g *mqlGithubRepository) rulesets() ([]any, error) {
 	}
 
 	listOpts := &github.RepositoryListRulesetsOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 	var allRulesets []*github.RepositoryRuleset
 	for {

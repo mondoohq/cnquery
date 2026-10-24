@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/containerengine"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -32,7 +31,7 @@ func (o *mqlOciOkeCluster) addons() ([]any, error) {
 	clusterID := o.Id.Data
 	items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]containerengine.AddonSummary, *string, error) {
 		resp, err := svc.ListAddons(ctx, containerengine.ListAddonsRequest{
-			ClusterId: common.String(clusterID),
+			ClusterId: new(clusterID),
 			Page:      page,
 		})
 		if err != nil {
@@ -90,8 +89,8 @@ func (o *mqlOciOkeCluster) fetchAddonOptions() (map[string]containerengine.Addon
 		k8sVersion := o.KubernetesVersion.Data
 		items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]containerengine.AddonOptionSummary, *string, error) {
 			resp, err := svc.ListAddonOptions(ctx, containerengine.ListAddonOptionsRequest{
-				KubernetesVersion:     common.String(k8sVersion),
-				ShouldShowAllVersions: common.Bool(true),
+				KubernetesVersion:     new(k8sVersion),
+				ShouldShowAllVersions: new(true),
 				Page:                  page,
 			})
 			if err != nil {

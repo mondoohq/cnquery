@@ -7,7 +7,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,11 +15,11 @@ import (
 
 func TestVolumeAttachmentArgs(t *testing.T) {
 	iscsi := volumeAttachmentArgs(core.IScsiVolumeAttachment{
-		Id:                             common.String("ocid1.volumeattachment..a"),
-		IsPvEncryptionInTransitEnabled: common.Bool(false),
+		Id:                             new("ocid1.volumeattachment..a"),
+		IsPvEncryptionInTransitEnabled: new(false),
 		EncryptionInTransitType:        core.EncryptionInTransitTypeBmEncryptionInTransit,
-		ChapUsername:                   common.String("ocid1.volume..v"),
-		ChapSecret:                     common.String("never-read"),
+		ChapUsername:                   new("ocid1.volume..v"),
+		ChapSecret:                     new("never-read"),
 	})
 	assert.Equal(t, "iscsi", iscsi["attachmentType"].Value)
 	assert.Equal(t, "BM_ENCRYPTION_IN_TRANSIT", iscsi["encryptionInTransitType"].Value)
@@ -29,27 +28,27 @@ func TestVolumeAttachmentArgs(t *testing.T) {
 		assert.NotEqual(t, "never-read", v.Value, "the CHAP secret must not reach field %s", k)
 	}
 
-	noChap := volumeAttachmentArgs(core.IScsiVolumeAttachment{Id: common.String("a")})
+	noChap := volumeAttachmentArgs(core.IScsiVolumeAttachment{Id: new("a")})
 	assert.Equal(t, false, noChap["chapEnabled"].Value)
 
 	pv := volumeAttachmentArgs(core.ParavirtualizedVolumeAttachment{
-		Id:                             common.String("b"),
-		IsPvEncryptionInTransitEnabled: common.Bool(true),
+		Id:                             new("b"),
+		IsPvEncryptionInTransitEnabled: new(true),
 	})
 	assert.Equal(t, "paravirtualized", pv["attachmentType"].Value)
 	assert.Equal(t, true, pv["isPvEncryptionInTransitEnabled"].Value)
 	assert.Equal(t, "", pv["encryptionInTransitType"].Value, "only iSCSI attachments have an in-transit encryption type")
 	assert.Equal(t, false, pv["chapEnabled"].Value)
 
-	em := volumeAttachmentArgs(core.EmulatedVolumeAttachment{Id: common.String("c")})
+	em := volumeAttachmentArgs(core.EmulatedVolumeAttachment{Id: new("c")})
 	assert.Equal(t, "emulated", em["attachmentType"].Value)
 	assert.Nil(t, em["isPvEncryptionInTransitEnabled"].Value, "absent is null, not false")
 	assert.Nil(t, em["isEncryptionInTransitEnabled"].Value, "absent is null, not false")
 
 	nvme := volumeAttachmentArgs(core.NvmeVolumeAttachment{
-		Id:                             common.String("d"),
-		IsPvEncryptionInTransitEnabled: common.Bool(false),
-		IsEncryptionInTransitEnabled:   common.Bool(true),
+		Id:                             new("d"),
+		IsPvEncryptionInTransitEnabled: new(false),
+		IsEncryptionInTransitEnabled:   new(true),
 	})
 	assert.Equal(t, "nvme", nvme["attachmentType"].Value)
 	assert.Equal(t, true, nvme["isEncryptionInTransitEnabled"].Value, "read from isEncryptionInTransitEnabled, not the deprecated pv flag")
@@ -64,7 +63,7 @@ func TestVolumeBackupScheduleArgs(t *testing.T) {
 		BackupType:             core.VolumeBackupScheduleBackupTypeIncremental,
 		Period:                 core.VolumeBackupSchedulePeriodDay,
 		RetentionSeconds:       &week,
-		IsRetentionLockEnabled: common.Bool(true),
+		IsRetentionLockEnabled: new(true),
 	})
 	assert.Equal(t, int64(7), args["retentionDays"].Value, "retention is whole days, rounded down")
 	assert.Equal(t, "ONE_DAY", args["period"].Value)
@@ -76,10 +75,10 @@ func TestVolumeBackupScheduleArgs(t *testing.T) {
 }
 
 func TestVolumeBackupPolicyArgs(t *testing.T) {
-	assert.Equal(t, true, volumeBackupPolicyArgs(core.VolumeBackupPolicy{Id: common.String("gold")})["isOracleDefined"].Value,
+	assert.Equal(t, true, volumeBackupPolicyArgs(core.VolumeBackupPolicy{Id: new("gold")})["isOracleDefined"].Value,
 		"Oracle's predefined policies have no compartment")
 	assert.Equal(t, false, volumeBackupPolicyArgs(core.VolumeBackupPolicy{
-		Id: common.String("custom"), CompartmentId: common.String("ocid1.compartment..c"),
+		Id: new("custom"), CompartmentId: new("ocid1.compartment..c"),
 	})["isOracleDefined"].Value)
 }
 

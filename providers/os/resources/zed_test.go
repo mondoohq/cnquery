@@ -42,15 +42,15 @@ func TestZedSettingsParsing(t *testing.T) {
 	afs := testAfero()
 	dir := createTestZedConfig(t)
 
-	var settings map[string]interface{}
+	var settings map[string]any
 	err := readJSONFileAfero(afs, dir, "settings.json", &settings)
 	require.NoError(t, err)
 	assert.Equal(t, float64(16), settings["ui_font_size"])
 
-	theme := settings["theme"].(map[string]interface{})
+	theme := settings["theme"].(map[string]any)
 	assert.Equal(t, "system", theme["mode"])
 
-	telemetry := settings["telemetry"].(map[string]interface{})
+	telemetry := settings["telemetry"].(map[string]any)
 	assert.Equal(t, false, telemetry["diagnostics"])
 }
 
@@ -93,11 +93,11 @@ func TestZedSettingsJSONC(t *testing.T) {
 	clean, err := hujson.Standardize(data)
 	require.NoError(t, err)
 
-	var settings map[string]interface{}
+	var settings map[string]any
 	require.NoError(t, json.Unmarshal(clean, &settings))
 	assert.Equal(t, float64(14), settings["ui_font_size"])
 
-	theme := settings["theme"].(map[string]interface{})
+	theme := settings["theme"].(map[string]any)
 	assert.Equal(t, "system", theme["mode"])
 }
 
@@ -111,7 +111,7 @@ func TestZedConfigMissing(t *testing.T) {
 	afs := testAfero()
 	dir := t.TempDir()
 
-	var settings map[string]interface{}
+	var settings map[string]any
 	err := readJSONFileAfero(afs, dir, "settings.json", &settings)
 	assert.Error(t, err)
 }

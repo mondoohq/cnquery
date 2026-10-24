@@ -189,7 +189,7 @@ func initSnowflakeSecurityIntegration(runtime *plugin.Runtime, args map[string]*
 	client := conn.Client()
 	ctx := context.Background()
 
-	integrations, err := client.SecurityIntegrations.Show(ctx, sdk.NewShowSecurityIntegrationRequest().WithLike(sdk.Like{Pattern: sdk.String(name)}))
+	integrations, err := client.SecurityIntegrations.Show(ctx, sdk.NewShowSecurityIntegrationRequest().WithLike(sdk.Like{Pattern: new(name)}))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -286,7 +286,7 @@ func parseSecurityIntegrationList(value string) []any {
 	value = strings.TrimPrefix(value, "[")
 	value = strings.TrimSuffix(value, "]")
 	out := []any{}
-	for _, part := range strings.Split(value, ",") {
+	for part := range strings.SplitSeq(value, ",") {
 		part = strings.TrimSpace(part)
 		part = strings.Trim(part, `'"`)
 		part = strings.TrimSpace(part)

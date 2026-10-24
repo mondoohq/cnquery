@@ -9,7 +9,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/resourcemanager"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -34,7 +33,7 @@ func (o *mqlOciResourceManager) stacks() ([]any, error) {
 
 			stacks, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]resourcemanager.StackSummary, *string, error) {
 				response, err := client.ListStacks(ctx, resourcemanager.ListStacksRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -100,7 +99,7 @@ func (o *mqlOciResourceManagerStack) getDetail() (*resourcemanager.Stack, error)
 		}
 
 		response, err := client.GetStack(context.Background(), resourcemanager.GetStackRequest{
-			StackId: common.String(o.Id.Data),
+			StackId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -188,7 +187,7 @@ func (o *mqlOciResourceManagerStack) jobs() ([]any, error) {
 	ctx := context.Background()
 	jobs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]resourcemanager.JobSummary, *string, error) {
 		response, err := client.ListJobs(ctx, resourcemanager.ListJobsRequest{
-			StackId: common.String(o.Id.Data),
+			StackId: new(o.Id.Data),
 			Page:    page,
 		})
 		if err != nil {

@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"slices"
 	"strconv"
 	"time"
 
@@ -58,12 +59,7 @@ func gpgKeyCanSignCommits(key *github.GPGKey) bool {
 	if key.GetCanSign() {
 		return true
 	}
-	for _, sub := range key.Subkeys {
-		if gpgKeyCanSignCommits(sub) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(key.Subkeys, gpgKeyCanSignCommits)
 }
 
 // gpgKeyEmails maps each address attached to the key to whether GitHub verified

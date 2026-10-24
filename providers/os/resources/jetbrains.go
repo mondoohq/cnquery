@@ -10,6 +10,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"maps"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -251,7 +252,7 @@ func readJetBrainsDisabledPlugins(afs *afero.Afero, configDir string) map[string
 		return disabled
 	}
 
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		if id := strings.TrimSpace(line); id != "" {
 			disabled[id] = true
 		}
@@ -430,12 +431,8 @@ func jetbrainsPluginDirs(afs *afero.Afero, platformKey string, users []targetUse
 		// system-wide one of the same name, since that is the one their
 		// configuration directory belongs to.
 		productBuilds := map[string]string{}
-		for dataDir, build := range builds {
-			productBuilds[dataDir] = build
-		}
-		for dataDir, build := range userBuilds {
-			productBuilds[dataDir] = build
-		}
+		maps.Copy(productBuilds, builds)
+		maps.Copy(productBuilds, userBuilds)
 
 		for _, root := range jetbrainsConfigRoots[platformKey] {
 			configRoot := filepath.Join(u.home, root.relPath)

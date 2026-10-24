@@ -149,12 +149,10 @@ func httpNotReachable(err error) bool {
 	if errors.As(err, &netErr) && netErr.Timeout() {
 		return false
 	}
-	var dnsErr *net.DNSError
-	if errors.As(err, &dnsErr) {
+	if _, ok := errors.AsType[*net.DNSError](err); ok {
 		return true
 	}
-	var opErr *net.OpError
-	if errors.As(err, &opErr) {
+	if _, ok := errors.AsType[*net.OpError](err); ok {
 		// dial/read/write at the socket level: connection refused, reset, no route
 		return true
 	}

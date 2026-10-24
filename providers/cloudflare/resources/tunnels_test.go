@@ -151,10 +151,10 @@ func TestTunnelRoutesPagination(t *testing.T) {
 	acc := createTestAccount(t, env)
 
 	const perPage = 50
-	var calls int32
+	var calls atomic.Int32
 
 	env.Mux.HandleFunc(fmt.Sprintf("/accounts/%s/teamnet/routes", testAccountID), func(w http.ResponseWriter, r *http.Request) {
-		atomic.AddInt32(&calls, 1)
+		calls.Add(1)
 		w.Header().Set("Content-Type", "application/json")
 		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 		if page == 0 {
@@ -177,7 +177,7 @@ func TestTunnelRoutesPagination(t *testing.T) {
 	result, err := acc.tunnelRoutes()
 	require.NoError(t, err)
 	require.Equal(t, perPage*2+7, len(result), "all three pages must be consumed")
-	require.Equal(t, int32(3), atomic.LoadInt32(&calls), "exactly three calls (page=1,2,3)")
+	require.Equal(t, int32(3), calls.Load(), "exactly three calls (page=1,2,3)")
 }
 
 // tunnelsForConfigTest returns the two tunnels from the standard fixture, with

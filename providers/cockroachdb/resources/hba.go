@@ -36,7 +36,7 @@ func (r hbaRule) optionsAny() map[string]any {
 // them, because CockroachDB validates it when it is set.
 func parseHBA(conf string) []hbaRule {
 	rules := []hbaRule{}
-	for _, raw := range strings.Split(conf, "\n") {
+	for raw := range strings.SplitSeq(conf, "\n") {
 		tokens := hbaTokens(raw)
 		if len(tokens) < 4 {
 			continue

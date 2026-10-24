@@ -48,8 +48,8 @@ func initSnowflakeSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
 	secrets, err := conn.Client().Secrets.Show(context.Background(), sdk.NewShowSecretRequest().
-		WithLike(sdk.Like{Pattern: sdk.String(name)}).
-		WithIn(sdk.ExtendedIn{In: sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)}}))
+		WithLike(sdk.Like{Pattern: new(name)}).
+		WithIn(sdk.ExtendedIn{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)}))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -66,11 +66,11 @@ func initSnowflakeSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 }
 
 func (r *mqlSnowflakeAccount) secrets() ([]any, error) {
-	return listSnowflakeSecrets(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}})
+	return listSnowflakeSecrets(r.MqlRuntime, sdk.ExtendedIn{Account: new(true)})
 }
 
 func (r *mqlSnowflakeDatabase) secrets() ([]any, error) {
-	return listSnowflakeSecrets(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)}})
+	return listSnowflakeSecrets(r.MqlRuntime, sdk.ExtendedIn{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)})
 }
 
 // listSnowflakeSecrets fetches secrets within the given scope (account-wide or a

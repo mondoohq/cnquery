@@ -96,13 +96,13 @@ func TestParseW32tm(t *testing.T) {
 		wantSynced *bool
 		wantSource *string
 	}{
-		{"domain member", w32tmDomainMember, "dc01.corp.example.com\n", boolPtr(true), strPtr("dc01.corp.example.com")},
-		{"workgroup, flags trimmed", w32tmWorkgroup, "time.windows.com,0x9\n", boolPtr(true), strPtr("time.windows.com")},
-		{"German labels", w32tmWorkgroupGerman, "time.windows.com,0x9\n", boolPtr(true), strPtr("time.windows.com")},
-		{"Hyper-V guest", w32tmHyperV, "VM IC Time Synchronization Provider\n", boolPtr(true), strPtr("VM IC Time Synchronization Provider")},
-		{"local CMOS clock", w32tmLocalCMOS, "Local CMOS Clock\n", boolPtr(false), nil},
-		{"free-running clock", w32tmFreeRunning, "Free-running System Clock\n", boolPtr(false), nil},
-		{"service not started", w32tmNotStarted, w32tmNotStarted, boolPtr(false), nil},
+		{"domain member", w32tmDomainMember, "dc01.corp.example.com\n", new(true), new("dc01.corp.example.com")},
+		{"workgroup, flags trimmed", w32tmWorkgroup, "time.windows.com,0x9\n", new(true), new("time.windows.com")},
+		{"German labels", w32tmWorkgroupGerman, "time.windows.com,0x9\n", new(true), new("time.windows.com")},
+		{"Hyper-V guest", w32tmHyperV, "VM IC Time Synchronization Provider\n", new(true), new("VM IC Time Synchronization Provider")},
+		{"local CMOS clock", w32tmLocalCMOS, "Local CMOS Clock\n", new(false), nil},
+		{"free-running clock", w32tmFreeRunning, "Free-running System Clock\n", new(false), nil},
+		{"service not started", w32tmNotStarted, w32tmNotStarted, new(false), nil},
 		{"no output", "", "", nil, nil},
 		{"unrelated text", "Access is denied.", "Access is denied.", nil, nil},
 		{"status without reference ID", "Leap Indicator: 0(no warning)\nStratum: 3 (secondary reference - syncd by (S)NTP)\n", "", nil, nil},
@@ -120,7 +120,7 @@ func TestParseW32tmCRLF(t *testing.T) {
 	got := parseW32tm(strings.ReplaceAll(w32tmWorkgroup, "\n", "\r\n"), "time.windows.com,0x9\r\n")
 	require.NotNil(t, got.Synchronized)
 	assert.True(t, *got.Synchronized)
-	assert.Equal(t, strPtr("time.windows.com"), got.Source)
+	assert.Equal(t, new("time.windows.com"), got.Source)
 }
 
 func TestParseChronycTracking(t *testing.T) {
@@ -133,19 +133,19 @@ func TestParseChronycTracking(t *testing.T) {
 		{
 			name:       "synchronized to a server",
 			stdout:     "C0000201,192.0.2.1,3,1760040765.402166235,-0.000004012,-0.000001789,0.000021553,-7.462,-0.001,0.026,0.000474853,0.000140421,1024.4,Normal\n",
-			wantSynced: boolPtr(true),
-			wantSource: strPtr("192.0.2.1"),
+			wantSynced: new(true),
+			wantSource: new("192.0.2.1"),
 		},
 		{
 			name:       "synchronized to a reference clock",
 			stdout:     "50484330,PHC0,1,1760040765.402166235,0.000000012,0.000000004,0.000000031,-2.104,0.000,0.003,0.000000001,0.000010210,8.0,Normal\n",
-			wantSynced: boolPtr(true),
-			wantSource: strPtr("PHC0"),
+			wantSynced: new(true),
+			wantSource: new("PHC0"),
 		},
 		{
 			name:       "not synchronized",
 			stdout:     "00000000,,0,0.000000000,0.000000000,0.000000000,0.000000000,0.000,0.000,0.000,1.000000000,1.000000000,0.0,Not synchronised\n",
-			wantSynced: boolPtr(false),
+			wantSynced: new(false),
 		},
 		{
 			name:   "daemon not reachable",
@@ -170,13 +170,13 @@ func TestMacOSTimeSource(t *testing.T) {
 		fs := afero.NewMemMapFs()
 		// /etc/ntp.conf as macOS 15 writes it
 		require.NoError(t, afero.WriteFile(fs, "/etc/ntp.conf", []byte("server time.apple.com\n"), 0o644))
-		assert.Equal(t, strPtr("time.apple.com"), MacOSTimeSource(fs))
+		assert.Equal(t, new("time.apple.com"), MacOSTimeSource(fs))
 	})
 
 	t.Run("custom server after comments", func(t *testing.T) {
 		fs := afero.NewMemMapFs()
 		require.NoError(t, afero.WriteFile(fs, "/etc/ntp.conf", []byte("# set in System Settings\n\nserver ntp.corp.example.com iburst\nserver time.apple.com\n"), 0o644))
-		assert.Equal(t, strPtr("ntp.corp.example.com"), MacOSTimeSource(fs))
+		assert.Equal(t, new("ntp.corp.example.com"), MacOSTimeSource(fs))
 	})
 
 	t.Run("no file", func(t *testing.T) {
@@ -190,8 +190,9 @@ func TestMacOSTimeSource(t *testing.T) {
 	})
 }
 
+//go:fix inline
 func strPtr(s string) *string {
-	return &s
+	return new(s)
 }
 
 func TestWindowsTimeSource(t *testing.T) {

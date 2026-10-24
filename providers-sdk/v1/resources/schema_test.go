@@ -89,7 +89,7 @@ func TestAddDoesNotMutateSourceSchema(t *testing.T) {
 	}
 
 	// Rebuild the aggregate repeatedly, the way unsafeRefresh does.
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		agg := &Schema{
 			Resources:    map[string]*ResourceInfo{},
 			Dependencies: map[string]*ProviderInfo{},

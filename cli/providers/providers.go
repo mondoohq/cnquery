@@ -223,13 +223,7 @@ func attachProvidersToCmd(existing providers.Providers, cmd *Command) {
 
 			attach := true
 			if len(cmd.SupportedConnectors) > 0 {
-				attach = false // only attach if the connector is in the list
-				for k := range cmd.SupportedConnectors {
-					if cmd.SupportedConnectors[k] == conn.Name {
-						attach = true
-						break
-					}
-				}
+				attach = slices.Contains(cmd.SupportedConnectors, conn.Name)
 			}
 			if attach {
 				attachConnectorCmd(provider.Provider, &conn, cmd, existing)

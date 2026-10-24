@@ -150,7 +150,7 @@ func run(baselinePath, defaultsPath, reportPath string, update bool, oldest int)
 func (u *upstream) get(url string) ([]byte, error) {
 	var lastErr error
 	wait := time.Duration(0)
-	for attempt := 0; attempt < 4; attempt++ {
+	for attempt := range 4 {
 		if attempt > 0 {
 			time.Sleep(wait)
 		}
@@ -200,10 +200,7 @@ func retryDelay(retryAfter string, fallback time.Duration) time.Duration {
 	if err != nil || secs < 0 {
 		return fallback
 	}
-	d := time.Duration(secs) * time.Second
-	if d < fallback {
-		d = fallback
-	}
+	d := max(time.Duration(secs)*time.Second, fallback)
 	return min(d, maxRetryDelay)
 }
 

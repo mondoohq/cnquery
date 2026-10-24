@@ -411,7 +411,7 @@ func TestParseAideConfig_MatchesAideRuleTree(t *testing.T) {
 	// a negative rule carries no attributes: '!/etc/mtab (none)'
 	ruleLine := regexp.MustCompile(`'(\S+) \S+(?: ([^' ]*))?' \(/etc/aide\.conf:(\d+):`)
 	checked := 0
-	for _, line := range strings.Split(readAideTestdata(t, "rhel9-aide-config-check-rules.txt"), "\n") {
+	for line := range strings.SplitSeq(readAideTestdata(t, "rhel9-aide-config-check-rules.txt"), "\n") {
 		m := ruleLine.FindStringSubmatch(line)
 		if m == nil {
 			continue
@@ -771,7 +771,7 @@ func TestParseAideConfig_MatchesDebian13RuleTree(t *testing.T) {
 	}
 
 	checked := 0
-	for _, line := range strings.Split(readAideTestdata(t, "debian13/config-check-rules.txt"), "\n") {
+	for line := range strings.SplitSeq(readAideTestdata(t, "debian13/config-check-rules.txt"), "\n") {
 		m := negative.FindStringSubmatch(line)
 		if m == nil {
 			m = positive.FindStringSubmatch(line)

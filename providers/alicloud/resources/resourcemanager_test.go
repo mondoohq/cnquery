@@ -53,24 +53,24 @@ func TestResourceGroupTagsToMap(t *testing.T) {
 		assert.Empty(t, got)
 	})
 	t.Run("key and value are carried through", func(t *testing.T) {
-		got := resourceGroupTagsToMap(tag(strp("env"), strp("production")))
+		got := resourceGroupTagsToMap(tag(new("env"), new("production")))
 		assert.Equal(t, map[string]any{"env": "production"}, got)
 	})
 	t.Run("nil value becomes an empty string", func(t *testing.T) {
-		got := resourceGroupTagsToMap(tag(strp("env"), nil))
+		got := resourceGroupTagsToMap(tag(new("env"), nil))
 		assert.Equal(t, map[string]any{"env": ""}, got)
 	})
 	t.Run("nil key is dropped", func(t *testing.T) {
-		assert.Empty(t, resourceGroupTagsToMap(tag(nil, strp("production"))))
+		assert.Empty(t, resourceGroupTagsToMap(tag(nil, new("production"))))
 	})
 	t.Run("empty key is dropped", func(t *testing.T) {
-		assert.Empty(t, resourceGroupTagsToMap(tag(strp(""), strp("production"))))
+		assert.Empty(t, resourceGroupTagsToMap(tag(new(""), new("production"))))
 	})
 	t.Run("nil tag entry is skipped", func(t *testing.T) {
 		tags := &rmclient.ListResourceGroupsResponseBodyResourceGroupsResourceGroupTags{
 			Tag: []*rmclient.ListResourceGroupsResponseBodyResourceGroupsResourceGroupTagsTag{
 				nil,
-				{TagKey: strp("env"), TagValue: strp("staging")},
+				{TagKey: new("env"), TagValue: new("staging")},
 			},
 		}
 		assert.Equal(t, map[string]any{"env": "staging"}, resourceGroupTagsToMap(tags))

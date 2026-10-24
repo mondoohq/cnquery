@@ -6,6 +6,7 @@ package plugin
 import (
 	"context"
 	"errors"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -362,9 +363,7 @@ func TestAzureDevOpsSession_NilRequestsReachTheUnderlyingSession(t *testing.T) {
 func restoreProtocols(t *testing.T) {
 	t.Helper()
 	saved := make(map[string]transport.Transport, len(client.Protocols))
-	for scheme, tr := range client.Protocols {
-		saved[scheme] = tr
-	}
+	maps.Copy(saved, client.Protocols)
 	t.Cleanup(func() {
 		for scheme := range client.Protocols {
 			if _, kept := saved[scheme]; !kept {
@@ -535,7 +534,7 @@ func TestClone_ConcurrentClonesWithAndWithoutTheOptionDoNotInterfere(t *testing.
 		_, err = os.Stat(filepath.Join(dir, "main.tf"))
 		errs <- err
 	}
-	for i := 0; i < perServer; i++ {
+	for range perServer {
 		wg.Add(2)
 		go cloneOnce(adoURL, withGitServer(GitServerAzureDevOps))
 		go cloneOnce(otherURL)

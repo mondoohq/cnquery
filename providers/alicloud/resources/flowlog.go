@@ -34,9 +34,9 @@ func (r *mqlAlicloudVpc) flowLogs() ([]any, error) {
 		pageSize := int32(50)
 		for {
 			resp, err := client.DescribeFlowLogs(&vpcclient.DescribeFlowLogsRequest{
-				RegionId:   tea.String(region),
-				PageNumber: tea.Int32(pageNumber),
-				PageSize:   tea.Int32(pageSize),
+				RegionId:   new(region),
+				PageNumber: new(pageNumber),
+				PageSize:   new(pageSize),
 			})
 			if err != nil {
 				// a region may be un-activated or access-denied; skip it rather
@@ -91,11 +91,11 @@ func (r *mqlAlicloudVpcNetwork) flowLogs() ([]any, error) {
 	pageSize := int32(50)
 	for {
 		resp, err := client.DescribeFlowLogs(&vpcclient.DescribeFlowLogsRequest{
-			RegionId:     tea.String(r.cacheRegion),
-			ResourceType: tea.String("VPC"),
-			ResourceId:   tea.String(r.cacheVpcID),
-			PageNumber:   tea.Int32(pageNumber),
-			PageSize:     tea.Int32(pageSize),
+			RegionId:     new(r.cacheRegion),
+			ResourceType: new("VPC"),
+			ResourceId:   new(r.cacheVpcID),
+			PageNumber:   new(pageNumber),
+			PageSize:     new(pageSize),
 		})
 		if err != nil {
 			return nil, err

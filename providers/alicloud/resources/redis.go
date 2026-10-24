@@ -80,9 +80,9 @@ func (r *mqlAlicloudRedis) instances() ([]any, error) {
 		pageSize := int32(50)
 		for {
 			resp, err := client.DescribeInstances(&rkvclient.DescribeInstancesRequest{
-				RegionId:   tea.String(region),
-				PageNumber: tea.Int32(pageNumber),
-				PageSize:   tea.Int32(pageSize),
+				RegionId:   new(region),
+				PageNumber: new(pageNumber),
+				PageSize:   new(pageSize),
 			})
 			if err != nil {
 				// Skip regions that reject the call (for example a region the
@@ -196,8 +196,8 @@ func initAlicloudRedisInstance(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return nil, nil, err
 	}
 	resp, err := client.DescribeInstances(&rkvclient.DescribeInstancesRequest{
-		RegionId:    tea.String(region),
-		InstanceIds: tea.String(instanceID),
+		RegionId:    new(region),
+		InstanceIds: new(instanceID),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -254,7 +254,7 @@ func (r *mqlAlicloudRedisInstance) sslEnabled() (bool, error) {
 		return false, err
 	}
 	resp, err := client.DescribeInstanceSSL(&rkvclient.DescribeInstanceSSLRequest{
-		InstanceId: tea.String(id),
+		InstanceId: new(id),
 	})
 	if err != nil {
 		return false, err
@@ -271,7 +271,7 @@ func (r *mqlAlicloudRedisInstance) tdeEnabled() (bool, error) {
 		return false, err
 	}
 	resp, err := client.DescribeInstanceTDEStatus(&rkvclient.DescribeInstanceTDEStatusRequest{
-		InstanceId: tea.String(id),
+		InstanceId: new(id),
 	})
 	if err != nil {
 		return false, err
@@ -288,7 +288,7 @@ func (r *mqlAlicloudRedisInstance) securityIPList() ([]any, error) {
 		return nil, err
 	}
 	resp, err := client.DescribeSecurityIps(&rkvclient.DescribeSecurityIpsRequest{
-		InstanceId: tea.String(id),
+		InstanceId: new(id),
 	})
 	if err != nil {
 		return nil, err
@@ -304,7 +304,7 @@ func (r *mqlAlicloudRedisInstance) securityIPList() ([]any, error) {
 		if group == nil || group.SecurityIpList == nil {
 			continue
 		}
-		for _, ip := range strings.Split(*group.SecurityIpList, ",") {
+		for ip := range strings.SplitSeq(*group.SecurityIpList, ",") {
 			ip = strings.TrimSpace(ip)
 			if ip == "" {
 				continue
@@ -336,7 +336,7 @@ func (r *mqlAlicloudRedisInstance) fetchSecurityGroupIds() ([]any, error) {
 		return nil, err
 	}
 	resp, err := client.DescribeSecurityGroupConfiguration(&rkvclient.DescribeSecurityGroupConfigurationRequest{
-		InstanceId: tea.String(id),
+		InstanceId: new(id),
 	})
 	if err != nil {
 		return nil, err
@@ -361,7 +361,7 @@ func (r *mqlAlicloudRedisInstance) authEnabled() (bool, error) {
 		return false, err
 	}
 	resp, err := client.DescribeInstanceAttribute(&rkvclient.DescribeInstanceAttributeRequest{
-		InstanceId: tea.String(id),
+		InstanceId: new(id),
 	})
 	if err != nil {
 		return false, err

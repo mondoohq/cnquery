@@ -206,7 +206,7 @@ func initAlicloudFcFunction(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetFunction(tea.String(functionName), &fcclient.GetFunctionRequest{})
+	resp, err := client.GetFunction(new(functionName), &fcclient.GetFunctionRequest{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -284,7 +284,7 @@ func (r *mqlAlicloudFcFunction) triggers() ([]any, error) {
 	res := []any{}
 	var nextToken *string
 	for {
-		resp, err := client.ListTriggers(tea.String(r.functionName), &fcclient.ListTriggersRequest{
+		resp, err := client.ListTriggers(new(r.functionName), &fcclient.ListTriggersRequest{
 			Limit:     tea.Int32(100),
 			NextToken: nextToken,
 		})

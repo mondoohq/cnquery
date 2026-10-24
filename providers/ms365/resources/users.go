@@ -938,9 +938,7 @@ func buildUserAuthentication(userID string, methods []models.AuthenticationMetho
 			}
 
 			m := phoneMethod{
-				authMethod: authMethod{
-					Id: *x.GetId(),
-				},
+				Id:          *x.GetId(),
 				PhoneNumber: x.GetPhoneNumber(),
 			}
 
@@ -958,9 +956,7 @@ func buildUserAuthentication(userID string, methods []models.AuthenticationMetho
 				continue
 			}
 			m := fido2Method{
-				authMethod: authMethod{
-					Id: *x.GetId(),
-				},
+				Id:                      *x.GetId(),
 				Name:                    x.GetDisplayName(),
 				Model:                   x.GetModel(),
 				AttestationCertificates: x.GetAttestationCertificates(),
@@ -974,9 +970,7 @@ func buildUserAuthentication(userID string, methods []models.AuthenticationMetho
 				continue
 			}
 			m := softwareMethod{
-				authMethod: authMethod{
-					Id: *x.GetId(),
-				},
+				Id: *x.GetId(),
 			}
 
 			ua.SoftwareMethods = append(ua.SoftwareMethods, m)
@@ -985,9 +979,7 @@ func buildUserAuthentication(userID string, methods []models.AuthenticationMetho
 				continue
 			}
 			m := microsoftAuthenticatorMethod{
-				authMethod: authMethod{
-					Id: *x.GetId(),
-				},
+				Id:              *x.GetId(),
 				Name:            x.GetDisplayName(),
 				PhoneAppVersion: x.GetPhoneAppVersion(),
 				DeviceTag:       x.GetDeviceTag(),
@@ -999,9 +991,7 @@ func buildUserAuthentication(userID string, methods []models.AuthenticationMetho
 				continue
 			}
 			m := passwordMethod{
-				authMethod: authMethod{
-					Id: *x.GetId(),
-				},
+				Id: *x.GetId(),
 			}
 
 			ua.PasswordMethods = append(ua.PasswordMethods, m)
@@ -1010,9 +1000,7 @@ func buildUserAuthentication(userID string, methods []models.AuthenticationMetho
 				continue
 			}
 			m := temporaryAccessPassMethod{
-				authMethod: authMethod{
-					Id: *x.GetId(),
-				},
+				Id:                *x.GetId(),
 				IsUsable:          x.GetIsUsable(),
 				IsUsableOnce:      x.GetIsUsableOnce(),
 				LifetimeInMinutes: x.GetLifetimeInMinutes(),
@@ -1023,9 +1011,7 @@ func buildUserAuthentication(userID string, methods []models.AuthenticationMetho
 				continue
 			}
 			m := windowsHelloMethod{
-				authMethod: authMethod{
-					Id: *x.GetId(),
-				},
+				Id:   *x.GetId(),
 				Name: x.GetDisplayName(),
 			}
 			if x.GetDevice() != nil {
@@ -1043,9 +1029,7 @@ func buildUserAuthentication(userID string, methods []models.AuthenticationMetho
 			}
 
 			m := emailMethod{
-				authMethod: authMethod{
-					Id: *x.GetId(),
-				},
+				Id:           *x.GetId(),
 				EmailAddress: x.GetEmailAddress(),
 			}
 			ua.EmailMethods = append(ua.EmailMethods, m)

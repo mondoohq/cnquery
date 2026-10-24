@@ -100,8 +100,8 @@ func (r *mqlAlicloudKms) keys() ([]any, error) {
 		firstPage := true
 		for {
 			resp, err := client.ListKeys(&kmsclient.ListKeysRequest{
-				PageNumber: tea.Int32(pageNumber),
-				PageSize:   tea.Int32(pageSize),
+				PageNumber: new(pageNumber),
+				PageSize:   new(pageSize),
 			})
 			if err != nil {
 				// A first-page error means the region has no KMS or the
@@ -161,7 +161,7 @@ func describeKmsKey(conn *connection.AlicloudConnection, region, keyID string) (
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.DescribeKey(&kmsclient.DescribeKeyRequest{KeyId: tea.String(keyID)})
+	resp, err := client.DescribeKey(&kmsclient.DescribeKeyRequest{KeyId: new(keyID)})
 	if err != nil {
 		return nil, err
 	}
@@ -279,9 +279,9 @@ func (r *mqlAlicloudKmsKey) aliases() ([]any, error) {
 	pageSize := int32(100)
 	for {
 		resp, err := client.ListAliasesByKeyId(&kmsclient.ListAliasesByKeyIdRequest{
-			KeyId:      tea.String(r.keyId),
-			PageNumber: tea.Int32(pageNumber),
-			PageSize:   tea.Int32(pageSize),
+			KeyId:      new(r.keyId),
+			PageNumber: new(pageNumber),
+			PageSize:   new(pageSize),
 		})
 		if err != nil || resp == nil || resp.Body == nil || resp.Body.Aliases == nil {
 			break
@@ -321,8 +321,8 @@ func (r *mqlAlicloudKms) secrets() ([]any, error) {
 		firstPage := true
 		for {
 			resp, err := client.ListSecrets(&kmsclient.ListSecretsRequest{
-				PageNumber: tea.Int32(pageNumber),
-				PageSize:   tea.Int32(pageSize),
+				PageNumber: new(pageNumber),
+				PageSize:   new(pageSize),
 			})
 			if err != nil {
 				// First-page error = region has no KMS / no access (skip);
@@ -368,8 +368,8 @@ func newKmsSecret(runtime *plugin.Runtime, conn *connection.AlicloudConnection, 
 	var detail *kmsclient.DescribeSecretResponseBody
 	if client, err := conn.KmsClient(region); err == nil {
 		if resp, err := client.DescribeSecret(&kmsclient.DescribeSecretRequest{
-			SecretName: tea.String(secretName),
-			FetchTags:  tea.String("true"),
+			SecretName: new(secretName),
+			FetchTags:  new("true"),
 		}); err == nil && resp != nil {
 			detail = resp.Body
 		}

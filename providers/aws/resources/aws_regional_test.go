@@ -203,11 +203,9 @@ func TestCoverageGapsDeduplicate(t *testing.T) {
 	conn := testConn("us-east-1")
 	var wg sync.WaitGroup
 	for range 20 {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			conn.RecordGap("ecr", "us-east-1", connection.GapDenied)
-		}()
+		})
 	}
 	wg.Wait()
 	require.Len(t, conn.CoverageGaps(), 1)

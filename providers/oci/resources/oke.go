@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/containerengine"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -57,7 +56,7 @@ func (o *mqlOciOke) clusters() ([]any, error) {
 
 			clusters, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]containerengine.ClusterSummary, *string, error) {
 				response, err := svc.ListClusters(ctx, containerengine.ListClustersRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -368,7 +367,7 @@ func (o *mqlOciOkeCluster) fetchCluster() (*containerengine.Cluster, error) {
 		}
 
 		resp, err := svc.GetCluster(context.Background(), containerengine.GetClusterRequest{
-			ClusterId: common.String(o.Id.Data),
+			ClusterId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -409,8 +408,8 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 	clusterId := o.Id.Data
 	pools, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]containerengine.NodePoolSummary, *string, error) {
 		response, err := svc.ListNodePools(ctx, containerengine.ListNodePoolsRequest{
-			CompartmentId: common.String(o.cacheCompartmentID),
-			ClusterId:     common.String(clusterId),
+			CompartmentId: new(o.cacheCompartmentID),
+			ClusterId:     new(clusterId),
 			Page:          page,
 		})
 		if err != nil {

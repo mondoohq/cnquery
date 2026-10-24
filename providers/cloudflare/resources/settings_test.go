@@ -137,8 +137,8 @@ func TestExtractSettingNestedBool(t *testing.T) {
 	}{
 		{"absent setting stays null", []zoneSetting{{ID: "ssl", Value: "strict"}}, nil},
 		{"object without the key stays null", []zoneSetting{{ID: "nel", Value: map[string]any{}}}, nil},
-		{"enabled", []zoneSetting{{ID: "nel", Value: map[string]any{"enabled": true}}}, boolPtr(true)},
-		{"disabled", []zoneSetting{{ID: "nel", Value: map[string]any{"enabled": false}}}, boolPtr(false)},
+		{"enabled", []zoneSetting{{ID: "nel", Value: map[string]any{"enabled": true}}}, new(true)},
+		{"disabled", []zoneSetting{{ID: "nel", Value: map[string]any{"enabled": false}}}, new(false)},
 		{"wrong value type stays null", []zoneSetting{{ID: "nel", Value: "on"}}, nil},
 	}
 	for _, tc := range tests {

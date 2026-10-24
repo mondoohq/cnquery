@@ -130,7 +130,7 @@ func TestDeprecatedAddRuntime(t *testing.T) {
 	wg.Add(4)
 	addRuntimes := func() {
 		defer wg.Done()
-		for i := 0; i < 50; i++ {
+		for range 50 {
 			_, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 				return &Runtime{}, nil
 			})
@@ -139,7 +139,7 @@ func TestDeprecatedAddRuntime(t *testing.T) {
 	}
 
 	// Add runtimes concurrently
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		go addRuntimes()
 	}
 
@@ -268,7 +268,7 @@ func TestGetRuntime(t *testing.T) {
 	require.NoError(t, err)
 
 	// Add some more runtimes
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		_, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 			return &Runtime{
 				Connection: newTestConnection(connId),
@@ -339,7 +339,7 @@ func TestShutdown(t *testing.T) {
 	s := NewService()
 
 	// Add some more runtimes
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		_, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 			return &Runtime{
 				Connection: newTestConnection(connId),
@@ -359,7 +359,7 @@ func TestShutdown_Closer(t *testing.T) {
 
 	// Add some more runtimes
 	runtimes := []*Runtime{}
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		runtime, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 			return &Runtime{
 				Connection: newTestConnectionWithClose(connId),

@@ -37,8 +37,7 @@ func (e *APIError) Error() string {
 // endpoints this provider reads are administrator-only, so a token issued for
 // a normal account reaches them with a 401 or a 403.
 func IsForbidden(err error) bool {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*APIError](err); ok {
 		return apiErr.StatusCode == http.StatusUnauthorized || apiErr.StatusCode == http.StatusForbidden
 	}
 	return false
@@ -48,8 +47,7 @@ func IsForbidden(err error) bool {
 // later product version answers 404 on an older instance, which is how this
 // provider tells an absent feature from a denied read.
 func IsNotFound(err error) bool {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*APIError](err); ok {
 		return apiErr.StatusCode == http.StatusNotFound
 	}
 	return false

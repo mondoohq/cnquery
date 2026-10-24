@@ -8,7 +8,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/waf"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -35,7 +34,7 @@ func (o *mqlOciWaf) firewalls() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]waf.WebAppFirewallSummary, *string, error) {
 				response, err := svc.ListWebAppFirewalls(ctx, waf.ListWebAppFirewallsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -139,7 +138,7 @@ func (o *mqlOciWaf) policies() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]waf.WebAppFirewallPolicySummary, *string, error) {
 				response, err := svc.ListWebAppFirewallPolicies(ctx, waf.ListWebAppFirewallPoliciesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {

@@ -330,16 +330,16 @@ func parseSysrcAssignments(content string) []sysrcAssignment {
 		}
 
 		// Parse key=value assignments
-		eqIdx := strings.Index(line, "=")
-		if eqIdx < 0 {
+		before, after, ok := strings.Cut(line, "=")
+		if !ok {
 			continue
 		}
 
-		name := line[:eqIdx]
+		name := before
 		if !isShellName(name) {
 			continue
 		}
-		word := line[eqIdx+1:]
+		word := after
 		if _, ok := parseShellWord(word, nil); !ok {
 			continue
 		}
@@ -564,8 +564,8 @@ func ResolveSysrcValues(read func(path string) (string, bool, error), rcConfs []
 	values["rc_conf_files"] = initial
 
 	sourced := map[string]bool{}
-	for pass := 0; pass < 2; pass++ {
-		for _, path := range strings.Fields(values["rc_conf_files"]) {
+	for range 2 {
+		for path := range strings.FieldsSeq(values["rc_conf_files"]) {
 			if sourced[path] {
 				continue
 			}

@@ -258,8 +258,8 @@ func (r *mqlAlicloudSasConfig) webPaths() ([]any, error) {
 	currentPage := int32(1)
 	for {
 		resp, err := r.client.DescribeWebPath(&sasclient.DescribeWebPathRequest{
-			CurrentPage: tea.Int32(currentPage),
-			PageSize:    tea.Int32(sasPageSize),
+			CurrentPage: new(currentPage),
+			PageSize:    new(sasPageSize),
 		})
 		if err != nil {
 			return nil, err
@@ -397,7 +397,7 @@ func (r *mqlAlicloudSasConfig) propertySchedules() ([]any, error) {
 	res := []any{}
 	for _, scheduleType := range sasPropertyScheduleTypes {
 		resp, err := r.client.GetPropertyScheduleConfig(&sasclient.GetPropertyScheduleConfigRequest{
-			Type: tea.String(scheduleType),
+			Type: new(scheduleType),
 		})
 		if err != nil {
 			// one fingerprint kind that cannot be read must not drop the rest

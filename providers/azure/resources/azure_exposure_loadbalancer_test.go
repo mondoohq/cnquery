@@ -27,9 +27,9 @@ func sub(id string) *network.SubResource { return &network.SubResource{ID: &id} 
 func frontend(id string, public bool) *network.FrontendIPConfiguration {
 	props := &network.FrontendIPConfigurationPropertiesFormat{}
 	if public {
-		props.PublicIPAddress = &network.PublicIPAddress{ID: strPtr("/…/publicIPAddresses/pip")}
+		props.PublicIPAddress = &network.PublicIPAddress{ID: new("/…/publicIPAddresses/pip")}
 	} else {
-		props.PrivateIPAddress = strPtr("10.0.0.9")
+		props.PrivateIPAddress = new("10.0.0.9")
 	}
 	return &network.FrontendIPConfiguration{ID: &id, Properties: props}
 }
@@ -37,7 +37,7 @@ func frontend(id string, public bool) *network.FrontendIPConfiguration {
 func pool(id string, memberIPConfigIDs ...string) *network.BackendAddressPool {
 	members := make([]*network.InterfaceIPConfiguration, 0, len(memberIPConfigIDs))
 	for _, member := range memberIPConfigIDs {
-		members = append(members, &network.InterfaceIPConfiguration{ID: strPtr(member)})
+		members = append(members, &network.InterfaceIPConfiguration{ID: new(member)})
 	}
 	return &network.BackendAddressPool{
 		ID:         &id,
@@ -125,7 +125,7 @@ func TestInternetForwardedIPConfigIDs(t *testing.T) {
 				InboundNatRules: []*network.InboundNatRule{{
 					Properties: &network.InboundNatRulePropertiesFormat{
 						FrontendIPConfiguration: sub(publicFrontendID),
-						BackendIPConfiguration:  &network.InterfaceIPConfiguration{ID: strPtr(vmIPConfig)},
+						BackendIPConfiguration:  &network.InterfaceIPConfiguration{ID: new(vmIPConfig)},
 					},
 				}},
 			},
@@ -152,7 +152,7 @@ func TestInternetForwardedIPConfigIDs(t *testing.T) {
 				InboundNatRules: []*network.InboundNatRule{{
 					Properties: &network.InboundNatRulePropertiesFormat{
 						FrontendIPConfiguration: sub(privateFrontendID),
-						BackendIPConfiguration:  &network.InterfaceIPConfiguration{ID: strPtr(vmIPConfig)},
+						BackendIPConfiguration:  &network.InterfaceIPConfiguration{ID: new(vmIPConfig)},
 					},
 				}},
 			},

@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -288,12 +289,7 @@ func TestResolveKubeletExecutable(t *testing.T) {
 				return p
 			},
 			trustedBinary: func(p string) bool {
-				for _, have := range trusted {
-					if p == have {
-						return true
-					}
-				}
-				return false
+				return slices.Contains(trusted, p)
 			},
 		}
 	}
@@ -491,12 +487,13 @@ func TestSetDefaults_ByVersion(t *testing.T) {
 	assert.Nil(t, v137.MemoryThrottlingFactor, "no longer defaulted in 1.37")
 
 	// a value the file sets is kept
-	set := &kubeletconfigv1beta1.KubeletConfiguration{FailCgroupV1: ptrBool(false)}
+	set := &kubeletconfigv1beta1.KubeletConfiguration{FailCgroupV1: new(false)}
 	SetDefaults_KubeletConfiguration(set, 37)
 	assert.False(t, *set.FailCgroupV1)
 }
 
-func ptrBool(b bool) *bool { return &b }
+//go:fix inline
+func ptrBool(b bool) *bool { return new(b) }
 
 // kubeadm writes explicit zero durations into config.yaml, which the kubelet
 // replaces with its defaults.

@@ -1772,9 +1772,8 @@ func (a *mqlAwsRdsDbinstance) backupSettings() ([]any, error) {
 	paginator := rds.NewDescribeDBInstanceAutomatedBackupsPaginator(svc, params)
 	for paginator.HasMorePages() {
 		resp, err := paginator.NextPage(ctx)
-		var respErr *http.ResponseError
 		if err != nil {
-			if errors.As(err, &respErr) {
+			if respErr, ok := errors.AsType[*http.ResponseError](err); ok {
 				if respErr.HTTPStatusCode() == 404 {
 					return nil, nil
 				}
@@ -1824,9 +1823,8 @@ func (a *mqlAwsRdsDbcluster) backupSettings() ([]any, error) {
 	paginator := rds.NewDescribeDBClusterAutomatedBackupsPaginator(svc, params)
 	for paginator.HasMorePages() {
 		resp, err := paginator.NextPage(ctx)
-		var respErr *http.ResponseError
 		if err != nil {
-			if errors.As(err, &respErr) {
+			if respErr, ok := errors.AsType[*http.ResponseError](err); ok {
 				if respErr.HTTPStatusCode() == 404 {
 					return nil, nil
 				}

@@ -69,7 +69,7 @@ func (r *mqlDigitaloceanTeam) id() (string, error) {
 	return resourceID("digitalocean.team", r.Uuid.Data)
 }
 
-func (r *mqlDigitalocean) teams() ([]interface{}, error) {
+func (r *mqlDigitalocean) teams() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 	ctx := context.Background()
@@ -100,7 +100,7 @@ func (r *mqlDigitalocean) teams() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(root.Teams))
+	all := make([]any, 0, len(root.Teams))
 	for i := range root.Teams {
 		t := root.Teams[i]
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.team", map[string]*llx.RawData{

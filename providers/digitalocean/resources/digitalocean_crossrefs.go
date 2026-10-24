@@ -128,7 +128,7 @@ func (r *mqlDigitaloceanAlertPolicy) droplets() ([]any, error) {
 // appear in the account-wide snapshot list tagged with the volume they came
 // from, so they are read from there rather than through the per-volume
 // endpoint, which would cost one call per volume.
-func (r *mqlDigitaloceanVolume) snapshots() ([]interface{}, error) {
+func (r *mqlDigitaloceanVolume) snapshots() ([]any, error) {
 	parent, err := parentDigitalocean(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -285,7 +285,7 @@ func (r *mqlDigitalocean) registry() (*mqlDigitaloceanRegistry, error) {
 
 // ----- VPC peering -----
 
-func (r *mqlDigitaloceanVpcPeering) vpcs() ([]interface{}, error) {
+func (r *mqlDigitaloceanVpcPeering) vpcs() ([]any, error) {
 	uuids := make([]string, 0, len(r.VpcIds.Data))
 	for _, v := range r.VpcIds.Data {
 		if s, ok := v.(string); ok {
@@ -330,7 +330,7 @@ func (r *mqlDigitaloceanKubernetesNodePool) cluster() (*mqlDigitaloceanKubernete
 
 // ----- Droplet -----
 
-func (r *mqlDigitaloceanDroplet) volumes() ([]interface{}, error) {
+func (r *mqlDigitaloceanDroplet) volumes() ([]any, error) {
 	parent, err := parentDigitalocean(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -338,7 +338,7 @@ func (r *mqlDigitaloceanDroplet) volumes() ([]interface{}, error) {
 	return parent.volumesByIDs(r.cacheVolumeIDs)
 }
 
-func (r *mqlDigitaloceanDroplet) snapshots() ([]interface{}, error) {
+func (r *mqlDigitaloceanDroplet) snapshots() ([]any, error) {
 	parent, err := parentDigitalocean(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -350,7 +350,7 @@ func (r *mqlDigitaloceanDroplet) snapshots() ([]interface{}, error) {
 	return parent.snapshotsByIDs(ids)
 }
 
-func (r *mqlDigitaloceanDroplet) backups() ([]interface{}, error) {
+func (r *mqlDigitaloceanDroplet) backups() ([]any, error) {
 	parent, err := parentDigitalocean(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -364,7 +364,7 @@ func (r *mqlDigitaloceanLoadBalancer) project() (*mqlDigitaloceanProject, error)
 	return projectRef(r.MqlRuntime, r.ProjectId.Data, &r.Project)
 }
 
-func (r *mqlDigitaloceanLoadBalancer) targetLoadBalancers() ([]interface{}, error) {
+func (r *mqlDigitaloceanLoadBalancer) targetLoadBalancers() ([]any, error) {
 	parent, err := parentDigitalocean(r.MqlRuntime)
 	if err != nil {
 		return nil, err

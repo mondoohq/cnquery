@@ -62,20 +62,20 @@ func TestGroupsHoldingRole(t *testing.T) {
 	users := testGroup("rbacgrp_users", []string{"rbacrole_user"})
 	none := testGroup("rbacgrp_none", []string{})
 
-	got, err := groupsHoldingRole([]interface{}{admins, users, none}, "rbacrole_admin")
+	got, err := groupsHoldingRole([]any{admins, users, none}, "rbacrole_admin")
 	require.NoError(t, err)
-	assert.Equal(t, []interface{}{admins}, got)
+	assert.Equal(t, []any{admins}, got)
 
-	got, err = groupsHoldingRole([]interface{}{admins, users, none}, "rbacrole_user")
+	got, err = groupsHoldingRole([]any{admins, users, none}, "rbacrole_user")
 	require.NoError(t, err)
-	assert.Equal(t, []interface{}{admins, users}, got)
+	assert.Equal(t, []any{admins, users}, got)
 }
 
 // One group whose roles could not be read makes "which groups hold this
 // role" unanswerable. A shorter list would pass an assertion that the role is
 // held by no one.
 func TestGroupsHoldingRoleFailsOnUnreadableGroup(t *testing.T) {
-	_, err := groupsHoldingRole([]interface{}{
+	_, err := groupsHoldingRole([]any{
 		testGroup("rbacgrp_ok", []string{"rbacrole_admin"}),
 		testGroup("rbacgrp_unknown", nil),
 	}, "rbacrole_admin")
@@ -310,7 +310,7 @@ func TestPluginsInMarketplace(t *testing.T) {
 	a.cacheMarketplaceID = "marketplace_1"
 	b := &mqlClaudeOrganizationPlugin{}
 	b.cacheMarketplaceID = "marketplace_2"
-	assert.Equal(t, []interface{}{b}, pluginsInMarketplace([]interface{}{a, b}, "marketplace_2"))
+	assert.Equal(t, []any{b}, pluginsInMarketplace([]any{a, b}, "marketplace_2"))
 }
 
 // External keys
@@ -377,7 +377,7 @@ func TestWorkspacesUsingKey(t *testing.T) {
 	b := testWorkspace("wrkspc_b", &other)
 	c := testWorkspace("wrkspc_c", nil)
 
-	assert.Equal(t, []interface{}{a}, workspacesUsingKey([]interface{}{a, b, c}, "ekey_01"))
-	assert.Empty(t, workspacesUsingKey([]interface{}{a, b, c}, ""),
+	assert.Equal(t, []any{a}, workspacesUsingKey([]any{a, b, c}, "ekey_01"))
+	assert.Empty(t, workspacesUsingKey([]any{a, b, c}, ""),
 		"an empty key id must not match every unencrypted workspace")
 }

@@ -6,6 +6,7 @@ package resources
 import (
 	"bufio"
 	"errors"
+	"maps"
 	"strings"
 
 	"go.mondoo.com/mql/llx"
@@ -63,9 +64,7 @@ func (x *mqlSystemdTargets) list() ([]any, error) {
 	if len(propsByName) == 0 {
 		propsByName = services.ReadSystemdFSTargetProperties(conn.FileSystem(), names)
 	} else if len(templates) > 0 {
-		for name, props := range services.ReadSystemdFSTargetProperties(conn.FileSystem(), templates) {
-			propsByName[name] = props
-		}
+		maps.Copy(propsByName, services.ReadSystemdFSTargetProperties(conn.FileSystem(), templates))
 	}
 
 	res := make([]any, 0, len(names))
@@ -119,7 +118,7 @@ func listSystemdTargetNames(runtime *plugin.Runtime) ([]string, error) {
 
 	seen := map[string]struct{}{}
 	var names []string
-	for _, line := range strings.Split(installed+"\n"+active, "\n") {
+	for line := range strings.SplitSeq(installed+"\n"+active, "\n") {
 		fields := strings.Fields(line)
 		if len(fields) == 0 {
 			continue
@@ -195,7 +194,7 @@ func mapSystemdShowBlocksToNames(blocks []string, names []string) map[string]map
 		}
 		// a unit name belongs to exactly one unit, so these never collide
 		byUnit[id] = props
-		for _, alias := range strings.Fields(props["Names"]) {
+		for alias := range strings.FieldsSeq(props["Names"]) {
 			byUnit[alias] = props
 		}
 	}
@@ -226,7 +225,7 @@ func splitSystemctlShowBlocks(stdout string) []string {
 		blocks = append(blocks, cur.String())
 		cur.Reset()
 	}
-	for _, line := range strings.Split(stdout, "\n") {
+	for line := range strings.SplitSeq(stdout, "\n") {
 		if line == "" {
 			flush()
 			continue

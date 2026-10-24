@@ -67,9 +67,7 @@ func newExecutionManager(schema resources.ResourcesSchema, runtime llx.Runtime, 
 }
 
 func (em *executionManager) Start() {
-	em.wg.Add(1)
-	go func() {
-		defer em.wg.Done()
+	em.wg.Go(func() {
 		// current is the code bundle being executed; the deferred panic
 		// handler snapshots it at crash time so the report carries WHICH
 		// query was running, not just where the engine died. The recover
@@ -141,7 +139,7 @@ func (em *executionManager) Start() {
 				return
 			}
 		}
-	}()
+	})
 }
 
 func (em *executionManager) Err() chan error {

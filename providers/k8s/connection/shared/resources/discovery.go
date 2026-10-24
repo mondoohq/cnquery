@@ -7,6 +7,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"slices"
 	"sync"
 	"time"
 
@@ -182,10 +183,5 @@ func (d *Discovery) GetKindResources(ctx context.Context, apiRes ApiResource, ns
 }
 
 func contains(v []string, s string) bool {
-	for _, vv := range v {
-		if vv == s {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(v, s)
 }

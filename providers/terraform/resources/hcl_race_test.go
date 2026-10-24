@@ -48,7 +48,7 @@ func newHclRaceRuntime(t *testing.T) *plugin.Runtime {
 func TestHclCache_ConcurrentAccess(t *testing.T) {
 	const iterations = 300
 
-	for i := 0; i < iterations; i++ {
+	for i := range iterations {
 		rt := newHclRaceRuntime(t)
 
 		tfraw, err := CreateResource(rt, "terraform", map[string]*llx.RawData{})
@@ -62,26 +62,22 @@ func TestHclCache_ConcurrentAccess(t *testing.T) {
 		for _, get := range []func() *plugin.TValue[[]any]{
 			tf.GetBlocks, tf.GetProviders, tf.GetDatasources, tf.GetVariables, tf.GetOutputs,
 		} {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				get()
-			}()
+			})
 		}
 
 		// Readers: terraform.resources init, which reads the internal
 		// `resources` slice.
 		gotLen := make([]int, 3)
 		for r := range gotLen {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				args, _, err := initTerraformResources(rt, map[string]*llx.RawData{})
 				if err != nil {
 					return
 				}
 				gotLen[r] = len(args["list"].Value.([]any))
-			}()
+			})
 		}
 
 		wg.Wait()

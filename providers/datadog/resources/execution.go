@@ -61,7 +61,7 @@ func listExecutionPolicies(ctx context.Context, api executionPolicyLister) ([]da
 	var all []datadogV2.ExecutionPolicyResponseData
 	seen := map[string]struct{}{}
 
-	for page := int32(0); page < executionPolicyMaxPages; page++ {
+	for page := range int32(executionPolicyMaxPages) {
 		resp, httpResp, err := api.ListExecutionPolicies(ctx,
 			*datadogV2.NewListExecutionPoliciesOptionalParameters().
 				WithPageSize(executionPolicyPageSize).
@@ -119,7 +119,7 @@ func listExecutionPolicies(ctx context.Context, api executionPolicyLister) ([]da
 	return all, nil, nil
 }
 
-func (r *mqlDatadog) executionPolicies() ([]interface{}, error) {
+func (r *mqlDatadog) executionPolicies() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewExecutionPolicyApi(conn.ApiClient())
 
@@ -132,7 +132,7 @@ func (r *mqlDatadog) executionPolicies() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(policies))
+	all := make([]any, 0, len(policies))
 	for _, policy := range policies {
 		args, err := executionPolicyArgs(r.MqlRuntime, policy)
 		if err != nil {
@@ -307,13 +307,13 @@ func createExecutionPolicyScope(runtime *plugin.Runtime, policyID string, scope 
 	return res.(*mqlDatadogExecutionPolicyScopeRestriction), nil
 }
 
-func createExecutionPolicyRemoteShellRules(runtime *plugin.Runtime, policyID string, scope *datadogV2.ExecutionPolicyScope) ([]interface{}, error) {
+func createExecutionPolicyRemoteShellRules(runtime *plugin.Runtime, policyID string, scope *datadogV2.ExecutionPolicyScope) ([]any, error) {
 	if scope == nil || scope.RemoteActionRshell == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	rules := scope.RemoteActionRshell.GetRules()
-	out := make([]interface{}, 0, len(rules))
+	out := make([]any, 0, len(rules))
 	for i, rule := range rules {
 		res, err := CreateResource(runtime, "datadog.executionPolicy.remoteShellRule", map[string]*llx.RawData{
 			// The rules carry no identifier of their own, so position within
@@ -330,8 +330,8 @@ func createExecutionPolicyRemoteShellRules(runtime *plugin.Runtime, policyID str
 	return out, nil
 }
 
-func createExecutionPolicyTargets(runtime *plugin.Runtime, policyID string, targets []datadogV2.ExecutionPolicyTarget) ([]interface{}, error) {
-	out := make([]interface{}, 0, len(targets))
+func createExecutionPolicyTargets(runtime *plugin.Runtime, policyID string, targets []datadogV2.ExecutionPolicyTarget) ([]any, error) {
+	out := make([]any, 0, len(targets))
 	for i, target := range targets {
 		res, err := CreateResource(runtime, "datadog.executionPolicy.target", map[string]*llx.RawData{
 			// Targets carry no identifier of their own either, and two targets

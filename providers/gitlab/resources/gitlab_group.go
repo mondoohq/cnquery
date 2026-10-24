@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"slices"
 	"strconv"
 	"time"
 
@@ -183,12 +184,7 @@ func isGitlabStatus(err error, codes ...int) bool {
 	if status == 0 && respErr.Response != nil {
 		status = respErr.Response.StatusCode
 	}
-	for _, c := range codes {
-		if status == c {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(codes, status)
 }
 
 // init initializes the gitlab group with the arguments
@@ -342,10 +338,8 @@ func (g *mqlGitlabGroup) projects() ([]any, error) {
 
 	for {
 		projects, resp, err := conn.Client().Groups.ListGroupProjects(gid, &gitlab.ListGroupProjectsOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -383,10 +377,8 @@ func (g *mqlGitlabGroup) members() ([]any, error) {
 
 	for {
 		members, resp, err := conn.Client().Groups.ListAllGroupMembers(groupID, &gitlab.ListGroupMembersOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 			// GitLab omits is_using_seat from the members payload unless it is
 			// asked for, and the SDK models it as a plain bool — without this
 			// every member would decode as isUsingSeat=false.
@@ -474,10 +466,8 @@ func (g *mqlGitlabGroup) subgroups() ([]any, error) {
 
 	for {
 		subgroups, resp, err := conn.Client().Groups.ListSubGroups(groupID, &gitlab.ListSubGroupsOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -527,10 +517,8 @@ func (g *mqlGitlabGroup) labels() ([]any, error) {
 
 	for {
 		labels, resp, err := conn.Client().GroupLabels.ListGroupLabels(groupID, &gitlab.ListGroupLabelsOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -641,10 +629,8 @@ func (g *mqlGitlabGroup) accessTokens() ([]any, error) {
 
 	for {
 		tokens, resp, err := conn.Client().GroupAccessTokens.ListGroupAccessTokens(groupID, &gitlab.ListGroupAccessTokensOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -730,10 +716,8 @@ func (g *mqlGitlabGroup) deployTokens() ([]any, error) {
 
 	for {
 		tokens, resp, err := conn.Client().DeployTokens.ListGroupDeployTokens(groupID, &gitlab.ListGroupDeployTokensOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -917,10 +901,8 @@ func (g *mqlGitlabGroup) auditEvents() ([]any, error) {
 
 	for {
 		events, resp, err := conn.Client().AuditEvents.ListGroupAuditEvents(groupID, &gitlab.ListAuditEventsOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
@@ -984,10 +966,8 @@ func (g *mqlGitlabGroup) protectedBranches() ([]any, error) {
 
 	for {
 		branches, resp, err := conn.Client().GroupProtectedBranches.ListProtectedBranches(groupID, &gitlab.ListGroupProtectedBranchesOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err
@@ -1095,10 +1075,8 @@ func (g *mqlGitlabGroup) variables() ([]any, error) {
 
 	for {
 		vars, resp, err := conn.Client().GroupVariables.ListVariables(groupID, &gitlab.ListGroupVariablesOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			return nil, err

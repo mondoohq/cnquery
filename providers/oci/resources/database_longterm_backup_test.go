@@ -20,8 +20,8 @@ func TestLongTermBackupArgs(t *testing.T) {
 	args := longTermBackupArgs(&database.LongTermBackUpScheduleDetails{
 		RepeatCadence:         database.LongTermBackUpScheduleDetailsRepeatCadenceMonthly,
 		TimeOfBackup:          &common.SDKTime{Time: backupAt},
-		RetentionPeriodInDays: intPtr(365),
-		IsDisabled:            boolPtr(false),
+		RetentionPeriodInDays: new(365),
+		IsDisabled:            new(false),
 	}, &common.SDKTime{Time: nextAt})
 
 	assert.Equal(t, "MONTHLY", args["longTermBackupRepeatCadence"].Value)
@@ -56,7 +56,7 @@ func TestLongTermBackupArgsAreNullWithoutASchedule(t *testing.T) {
 func TestLongTermBackupArgsDistinguishDisabledFromAbsent(t *testing.T) {
 	disabled := longTermBackupArgs(&database.LongTermBackUpScheduleDetails{
 		RepeatCadence: database.LongTermBackUpScheduleDetailsRepeatCadenceYearly,
-		IsDisabled:    boolPtr(true),
+		IsDisabled:    new(true),
 	}, nil)
 	assert.Equal(t, true, disabled["longTermBackupScheduleDisabled"].Value)
 
@@ -69,7 +69,7 @@ func TestLongTermBackupArgsDistinguishDisabledFromAbsent(t *testing.T) {
 // cadence while looking like a configured value.
 func TestLongTermBackupArgsEmptyCadenceIsNull(t *testing.T) {
 	args := longTermBackupArgs(&database.LongTermBackUpScheduleDetails{
-		RetentionPeriodInDays: intPtr(90),
+		RetentionPeriodInDays: new(90),
 	}, nil)
 
 	assert.Nil(t, args["longTermBackupRepeatCadence"].Value)

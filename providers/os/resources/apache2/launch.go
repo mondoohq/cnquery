@@ -104,7 +104,7 @@ func (s SUSESysconfig) Launch() Launch {
 	v := s.Vars
 
 	l := Launch{Defines: []string{"SYSCONFIG"}}
-	for _, f := range strings.Fields(v["APACHE_SERVER_FLAGS"]) {
+	for f := range strings.FieldsSeq(v["APACHE_SERVER_FLAGS"]) {
 		switch {
 		case f == "-D":
 		case strings.HasPrefix(f, "-D"):
@@ -152,7 +152,7 @@ func (s SUSESysconfig) Launch() Launch {
 	}
 
 	// include.conf
-	for _, f := range strings.Fields(v["APACHE_CONF_INCLUDE_FILES"]) {
+	for f := range strings.FieldsSeq(v["APACHE_CONF_INCLUDE_FILES"]) {
 		if !strings.HasPrefix(f, "/") {
 			f = "/etc/apache2/" + f
 		}
@@ -160,7 +160,7 @@ func (s SUSESysconfig) Launch() Launch {
 			l.PostDirectives = append(l.PostDirectives, "Include "+f)
 		}
 	}
-	for _, d := range strings.Fields(v["APACHE_CONF_INCLUDE_DIRS"]) {
+	for d := range strings.FieldsSeq(v["APACHE_CONF_INCLUDE_DIRS"]) {
 		if !strings.HasPrefix(d, "/") {
 			d = "/etc/apache2/" + d
 		}
@@ -185,7 +185,7 @@ func (s SUSESysconfig) Launch() Launch {
 // whose shared object is not installed is left out, as start_apache2 does.
 func (s SUSESysconfig) loadModules() []string {
 	var res []string
-	for _, module := range strings.Fields(s.Vars["APACHE_MODULES"]) {
+	for module := range strings.FieldsSeq(s.Vars["APACHE_MODULES"]) {
 		switch module {
 		case "mod_cgid", "cgid":
 			if s.MPM == "prefork" {

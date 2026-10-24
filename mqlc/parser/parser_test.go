@@ -35,8 +35,9 @@ func TestParser_Lex(t *testing.T) {
 	}
 }
 
+//go:fix inline
 func sPtr(s string) *string {
-	return &s
+	return new(s)
 }
 
 func vBool(b bool) *Value {
@@ -322,7 +323,7 @@ func TestParser_Comments(t *testing.T) {
 				Calls: []*Call{
 					{
 						Comments: "2\n3\n",
-						Ident:    sPtr("config"),
+						Ident:    new("config"),
 					},
 				},
 			}},

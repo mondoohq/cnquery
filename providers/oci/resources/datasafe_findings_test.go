@@ -62,7 +62,7 @@ func TestOciDataSafeFindingRiskAccepted(t *testing.T) {
 		{
 			name: "waived by an operator",
 			finding: datasafe.FindingSummary{
-				IsRiskModified: boolPtr(true),
+				IsRiskModified: new(true),
 				Severity:       datasafe.FindingSummarySeverityPass,
 			},
 			want: true,
@@ -73,7 +73,7 @@ func TestOciDataSafeFindingRiskAccepted(t *testing.T) {
 			// suppressed ones.
 			name: "passed on its own merits",
 			finding: datasafe.FindingSummary{
-				IsRiskModified: boolPtr(false),
+				IsRiskModified: new(false),
 				Severity:       datasafe.FindingSummarySeverityPass,
 			},
 			want: false,
@@ -83,7 +83,7 @@ func TestOciDataSafeFindingRiskAccepted(t *testing.T) {
 			// different thing from waived, and isRiskModified reports it.
 			name: "downgraded but still a risk",
 			finding: datasafe.FindingSummary{
-				IsRiskModified: boolPtr(true),
+				IsRiskModified: new(true),
 				Severity:       datasafe.FindingSummarySeverityLow,
 			},
 			want: false,

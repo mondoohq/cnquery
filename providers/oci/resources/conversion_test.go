@@ -160,7 +160,7 @@ func TestSdkTimeData(t *testing.T) {
 func TestDefinedTagsToAny(t *testing.T) {
 	assert.Empty(t, definedTagsToAny(nil))
 
-	out := definedTagsToAny(map[string]map[string]interface{}{
+	out := definedTagsToAny(map[string]map[string]any{
 		"Operations": {"CostCenter": "42", "Reviewed": true},
 	})
 	ns, ok := out["Operations"].(map[string]any)
@@ -190,7 +190,7 @@ func TestStrMapToAnyMatchesInlineCopy(t *testing.T) {
 		{"env": "prod"},
 		{"env": "prod", "owner": "platform", "": "empty-key"},
 	} {
-		want := make(map[string]interface{}, len(in))
+		want := make(map[string]any, len(in))
 		for k, v := range in {
 			want[k] = v
 		}
@@ -199,7 +199,7 @@ func TestStrMapToAnyMatchesInlineCopy(t *testing.T) {
 }
 
 func TestDefinedTagsToAnyMatchesInlineCopy(t *testing.T) {
-	for _, in := range []map[string]map[string]interface{}{
+	for _, in := range []map[string]map[string]any{
 		nil,
 		{},
 		{"Operations": {"CostCenter": "42"}},
@@ -208,7 +208,7 @@ func TestDefinedTagsToAnyMatchesInlineCopy(t *testing.T) {
 			"Empty":      {},
 		},
 	} {
-		want := make(map[string]interface{}, len(in))
+		want := make(map[string]any, len(in))
 		for k, v := range in {
 			want[k] = v
 		}

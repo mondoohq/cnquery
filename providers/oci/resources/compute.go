@@ -8,7 +8,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -75,7 +74,7 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 					created = &instance.TimeCreated.Time
 				}
 
-				metadata := make(map[string]interface{}, len(instance.Metadata))
+				metadata := make(map[string]any, len(instance.Metadata))
 				for k, v := range instance.Metadata {
 					metadata[k] = v
 				}
@@ -207,7 +206,7 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 func (o *mqlOciCompute) getComputeInstancesForRegion(ctx context.Context, computeClient *core.ComputeClient, compartmentID string) ([]core.Instance, error) {
 	instances, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Instance, *string, error) {
 		request := core.ListInstancesRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		}
 
@@ -442,8 +441,8 @@ func (o *mqlOciComputeInstance) vnics() ([]any, error) {
 
 	attachments, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.VnicAttachment, *string, error) {
 		response, err := computeSvc.ListVnicAttachments(ctx, core.ListVnicAttachmentsRequest{
-			CompartmentId: common.String(compartmentID),
-			InstanceId:    common.String(o.Id.Data),
+			CompartmentId: new(compartmentID),
+			InstanceId:    new(o.Id.Data),
 			Page:          page,
 		})
 		if err != nil {
@@ -609,7 +608,7 @@ func (o *mqlOciCompute) images() ([]any, error) {
 func (o *mqlOciCompute) getComputeImagesForRegion(ctx context.Context, computeClient *core.ComputeClient, compartmentID string) ([]core.Image, error) {
 	images, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Image, *string, error) {
 		request := core.ListImagesRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		}
 
@@ -701,7 +700,7 @@ func (o *mqlOciCompute) blockVolumes() ([]any, error) {
 func (o *mqlOciCompute) getBlockVolumesForRegion(ctx context.Context, client *core.BlockstorageClient, compartmentID string) ([]core.Volume, error) {
 	volumes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Volume, *string, error) {
 		request := core.ListVolumesRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		}
 
@@ -809,7 +808,7 @@ func (o *mqlOciCompute) bootVolumes() ([]any, error) {
 func (o *mqlOciCompute) getBootVolumesForRegion(ctx context.Context, client *core.BlockstorageClient, compartmentID string) ([]core.BootVolume, error) {
 	bootVolumes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.BootVolume, *string, error) {
 		request := core.ListBootVolumesRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		}
 

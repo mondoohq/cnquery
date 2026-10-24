@@ -19,11 +19,11 @@ type mqlSnowflakeStreamInternal struct {
 }
 
 func (r *mqlSnowflakeAccount) streams() ([]any, error) {
-	return listSnowflakeStreams(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Account: sdk.Bool(true)}})
+	return listSnowflakeStreams(r.MqlRuntime, sdk.ExtendedIn{Account: new(true)})
 }
 
 func (r *mqlSnowflakeDatabase) streams() ([]any, error) {
-	return listSnowflakeStreams(r.MqlRuntime, sdk.ExtendedIn{In: sdk.In{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)}})
+	return listSnowflakeStreams(r.MqlRuntime, sdk.ExtendedIn{Database: sdk.NewAccountObjectIdentifier(r.Name.Data)})
 }
 
 // listSnowflakeStreams fetches streams within the given scope (account-wide or

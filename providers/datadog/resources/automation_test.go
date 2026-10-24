@@ -41,7 +41,7 @@ func testApiClient(t *testing.T, srv *httptest.Server, unstable ...string) (*dat
 // SDK decodes each record rather than discarding it.
 func workflowPage(offset, n int, total int) string {
 	records := make([]string, 0, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		records = append(records, fmt.Sprintf(`{"id":"wf-%d","type":"workflows","attributes":{"name":"w%d"}}`, offset+i, offset+i))
 	}
 	meta := ""
@@ -63,10 +63,7 @@ func TestListWorkflowsPaginatesAndIncludesDrafts(t *testing.T) {
 		}
 		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 		start := page * size
-		n := total - start
-		if n > size {
-			n = size
-		}
+		n := min(total-start, size)
 		if n < 0 {
 			n = 0
 		}
@@ -91,10 +88,7 @@ func TestListWorkflowsSurvivesServerSidePageCap(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 		start := page * capped
-		n := total - start
-		if n > capped {
-			n = capped
-		}
+		n := min(total-start, capped)
 		if n < 0 {
 			n = 0
 		}

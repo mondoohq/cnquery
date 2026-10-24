@@ -120,12 +120,12 @@ type bucketRef struct {
 	b      s3types.Bucket
 }
 
-func (r *mqlDigitalocean) spacesBuckets() ([]interface{}, error) {
+func (r *mqlDigitalocean) spacesBuckets() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	if _, _, ok := conn.SpacesCredentials(); !ok {
 		// Spaces credentials are optional — return an empty list so
 		// the rest of the provider stays usable without them.
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	regions := []string{conn.SpacesRegion()}
@@ -191,8 +191,8 @@ func listSpacesBucketRefs(conn *connection.DigitaloceanConnection, regions []str
 // newSpacesBucket never returns (nil, nil), but the slot stays nil
 // if a future variant ever filters a bucket without erroring, and we
 // don't want nil leaking into the user-facing list.
-func fetchSpacesBucketDetails(r *mqlDigitalocean, refs []bucketRef) ([]interface{}, error) {
-	results := make([]interface{}, len(refs))
+func fetchSpacesBucketDetails(r *mqlDigitalocean, refs []bucketRef) ([]any, error) {
+	results := make([]any, len(refs))
 	jobs := make([]*jobpool.Job, 0, len(refs))
 	for i, ref := range refs {
 		idx, ref := i, ref
@@ -210,7 +210,7 @@ func fetchSpacesBucketDetails(r *mqlDigitalocean, refs []bucketRef) ([]interface
 	if pool.HasErrors() {
 		return nil, pool.GetErrors()
 	}
-	out := make([]interface{}, 0, len(results))
+	out := make([]any, 0, len(results))
 	for _, res := range results {
 		if res != nil {
 			out = append(out, res)
@@ -224,7 +224,7 @@ func fetchSpacesBucketDetails(r *mqlDigitalocean, refs []bucketRef) ([]interface
 // Each call tolerates the "not configured" S3 error codes so an
 // un-customized bucket still produces a resource with sensible nil
 // defaults.
-func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, b s3types.Bucket) (interface{}, error) {
+func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, b s3types.Bucket) (any, error) {
 	ctx := context.Background()
 	name := aws.ToString(b.Name)
 
@@ -262,10 +262,10 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 		publicReadAcl        *bool
 		publicWriteAcl       *bool
 		authenticatedReadAcl *bool
-		aclGrants            []interface{} // nil means the ACL was not read
+		aclGrants            []any // nil means the ACL was not read
 	)
 	if acl, err := client.GetBucketAcl(ctx, &s3.GetBucketAclInput{Bucket: aws.String(name)}); err == nil {
-		grants := []interface{}{}
+		grants := []any{}
 		publicRead, publicWrite, authenticatedRead := false, false, false
 		for _, g := range acl.Grants {
 			perm := string(g.Permission)
@@ -276,7 +276,7 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 				ty = string(grantee.Type)
 				display = aws.ToString(grantee.DisplayName)
 			}
-			grants = append(grants, map[string]interface{}{
+			grants = append(grants, map[string]any{
 				"granteeType":        ty,
 				"granteeUri":         uri,
 				"granteeDisplayName": display,
@@ -351,13 +351,13 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 	// policyRead separates "this bucket has no policy" from "the policy was
 	// never read". Both leave policy null, but only the first lets
 	// hasWildcardPolicy answer false.
-	var policyDict interface{}
+	var policyDict any
 	policyRead := false
 	if p, err := client.GetBucketPolicy(ctx, &s3.GetBucketPolicyInput{Bucket: aws.String(name)}); err == nil {
 		policyRead = true
 		raw := aws.ToString(p.Policy)
 		if raw != "" {
-			var parsed interface{}
+			var parsed any
 			if jerr := json.Unmarshal([]byte(raw), &parsed); jerr == nil {
 				policyDict = parsed
 			} else {
@@ -373,26 +373,26 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 		return nil, err
 	}
 
-	var corsRules []interface{} // nil means the CORS configuration was not read
+	var corsRules []any // nil means the CORS configuration was not read
 	if c, err := client.GetBucketCors(ctx, &s3.GetBucketCorsInput{Bucket: aws.String(name)}); err == nil {
-		corsRules = []interface{}{}
+		corsRules = []any{}
 		for _, rule := range c.CORSRules {
 			corsRules = append(corsRules, spacesCorsRuleDict(rule))
 		}
 	} else if isNoSuchConfiguration(err) {
-		corsRules = []interface{}{}
+		corsRules = []any{}
 	} else if !isUnsupportedOperation(err) {
 		return nil, err
 	}
 
-	var lifecycleRules []interface{} // nil means the lifecycle rules were not read
+	var lifecycleRules []any // nil means the lifecycle rules were not read
 	if l, err := client.GetBucketLifecycleConfiguration(ctx, &s3.GetBucketLifecycleConfigurationInput{Bucket: aws.String(name)}); err == nil {
-		lifecycleRules = []interface{}{}
+		lifecycleRules = []any{}
 		for _, rule := range l.Rules {
 			lifecycleRules = append(lifecycleRules, spacesLifecycleRuleDict(rule))
 		}
 	} else if isNoSuchConfiguration(err) {
-		lifecycleRules = []interface{}{}
+		lifecycleRules = []any{}
 	} else if !isUnsupportedOperation(err) {
 		return nil, err
 	}
@@ -425,7 +425,7 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 // dictListData renders a dict list that was never read as null rather than as
 // an empty list, so "nothing came back" cannot be mistaken for "there is
 // nothing".
-func dictListData(v []interface{}) *llx.RawData {
+func dictListData(v []any) *llx.RawData {
 	if v == nil {
 		return llx.NilData
 	}
@@ -435,8 +435,8 @@ func dictListData(v []interface{}) *llx.RawData {
 // spacesCorsRuleDict builds the dict for one CORS rule. dict values must
 // be JSON-native, so the SDK's []string members are widened to []any and
 // the *int32 max-age is dereferenced to int64 (only when the API set it).
-func spacesCorsRuleDict(rule s3types.CORSRule) map[string]interface{} {
-	entry := map[string]interface{}{
+func spacesCorsRuleDict(rule s3types.CORSRule) map[string]any {
+	entry := map[string]any{
 		"id":             aws.ToString(rule.ID),
 		"allowedHeaders": toStringSlice(rule.AllowedHeaders),
 		"allowedMethods": toStringSlice(rule.AllowedMethods),
@@ -452,8 +452,8 @@ func spacesCorsRuleDict(rule s3types.CORSRule) map[string]interface{} {
 // spacesLifecycleRuleDict builds the dict for one lifecycle rule. The SDK
 // models the day-counts as *int32; dict values must be JSON-native int64,
 // so each is dereferenced only when the API actually set it.
-func spacesLifecycleRuleDict(rule s3types.LifecycleRule) map[string]interface{} {
-	entry := map[string]interface{}{
+func spacesLifecycleRuleDict(rule s3types.LifecycleRule) map[string]any {
+	entry := map[string]any{
 		"id":     aws.ToString(rule.ID),
 		"status": string(rule.Status),
 	}
@@ -492,8 +492,7 @@ func isNoSuchConfiguration(err error) bool {
 	if err == nil {
 		return false
 	}
-	var ae smithy.APIError
-	if errors.As(err, &ae) {
+	if ae, ok := errors.AsType[smithy.APIError](err); ok {
 		for _, code := range noSuchConfigurationCodes {
 			if ae.ErrorCode() == code {
 				return true
@@ -548,8 +547,7 @@ func isUnsupportedOperation(err error) bool {
 	if err == nil {
 		return false
 	}
-	var ae smithy.APIError
-	if errors.As(err, &ae) {
+	if ae, ok := errors.AsType[smithy.APIError](err); ok {
 		switch ae.ErrorCode() {
 		case "NotImplemented", "MethodNotAllowed":
 			return true
@@ -562,8 +560,7 @@ func isAccessDenied(err error) bool {
 	if err == nil {
 		return false
 	}
-	var ae smithy.APIError
-	if errors.As(err, &ae) {
+	if ae, ok := errors.AsType[smithy.APIError](err); ok {
 		return ae.ErrorCode() == "AccessDenied"
 	}
 	return strings.Contains(err.Error(), "AccessDenied")

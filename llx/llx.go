@@ -8,6 +8,8 @@ package llx
 import (
 	"context"
 	"errors"
+	"maps"
+	"slices"
 	"sort"
 	"strconv"
 	"sync"
@@ -55,10 +57,8 @@ func (c *Calls) Store(k uint64, v uint64) bool {
 	if !ok {
 		calls = []uint64{}
 	} else {
-		for k := range calls {
-			if calls[k] == v {
-				return true
-			}
+		if slices.Contains(calls, v) {
+			return true
 		}
 	}
 
@@ -491,13 +491,9 @@ type arrayBlockCallResult struct {
 func (a arrayBlockCallResult) toRawData() *RawData {
 	v := make(map[string]any, len(a.entrypoints)+len(a.datapoints))
 
-	for checksum, res := range a.entrypoints {
-		v[checksum] = res
-	}
+	maps.Copy(v, a.entrypoints)
 
-	for checksum, res := range a.datapoints {
-		v[checksum] = res
-	}
+	maps.Copy(v, a.datapoints)
 
 	v["__t"] = &RawData{
 		Type:  types.Bool,

@@ -62,12 +62,13 @@ func sidString(b []byte) string {
 	for i := 2; i < 8; i++ {
 		authority = authority<<8 | uint64(b[i])
 	}
-	s := fmt.Sprintf("S-%d-%d", revision, authority)
-	for i := 0; i < subCount; i++ {
+	var s strings.Builder
+	s.WriteString(fmt.Sprintf("S-%d-%d", revision, authority))
+	for i := range subCount {
 		off := 8 + 4*i
-		s += fmt.Sprintf("-%d", binary.LittleEndian.Uint32(b[off:off+4]))
+		s.WriteString(fmt.Sprintf("-%d", binary.LittleEndian.Uint32(b[off:off+4])))
 	}
-	return s
+	return s.String()
 }
 
 // isActiveDirectoryType reports whether a SQL Server principal type maps to a

@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/generativeai"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -44,7 +43,7 @@ func (o *mqlOciAiGenerativeAi) fetchDedicatedAiClusters(svc *generativeai.Genera
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]generativeai.DedicatedAiClusterSummary, *string, error) {
 		resp, err := svc.ListDedicatedAiClusters(ctx, generativeai.ListDedicatedAiClustersRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		})
 		if err != nil {
@@ -110,7 +109,7 @@ func (o *mqlOciAiGenerativeAi) fetchModels(svc *generativeai.GenerativeAiClient,
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]generativeai.ModelSummary, *string, error) {
 		resp, err := svc.ListModels(ctx, generativeai.ListModelsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		})
 		if err != nil {
@@ -193,7 +192,7 @@ func (o *mqlOciAiGenerativeAi) fetchEndpoints(svc *generativeai.GenerativeAiClie
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]generativeai.EndpointSummary, *string, error) {
 		resp, err := svc.ListEndpoints(ctx, generativeai.ListEndpointsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		})
 		if err != nil {

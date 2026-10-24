@@ -456,7 +456,7 @@ func TestResolveDictPath_ProbeBudget(t *testing.T) {
 			return m
 		}
 		key := "a"
-		for i := 0; i < 4; i++ {
+		for range 4 {
 			m[key] = build(depth - 1)
 			key += ".a"
 		}

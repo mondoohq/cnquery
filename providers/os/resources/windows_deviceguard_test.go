@@ -125,10 +125,10 @@ func TestComputeDeviceGuard(t *testing.T) {
 			value int64
 			want  *bool
 		}{
-			{1, boolPtr(true)},
-			{2, boolPtr(false)}, // disabled by policy, read as enabled before
-			{0, nil},            // unmanaged
-			{3, nil},            // not defined by the policy
+			{1, new(true)},
+			{2, new(false)}, // disabled by policy, read as enabled before
+			{0, nil},        // unmanaged
+			{3, nil},        // not defined by the policy
 		} {
 			v := computeDeviceGuard(dwordItems(map[string]int64{"configuresystemguardlaunch": tc.value}))
 			assert.Equal(t, tc.want, v.systemGuardLaunch, "ConfigureSystemGuardLaunch=%d", tc.value)

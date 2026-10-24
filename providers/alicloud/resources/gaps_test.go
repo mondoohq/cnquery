@@ -91,16 +91,16 @@ func TestConfigEpochMillis(t *testing.T) {
 // ActionTrail.
 func TestAlicloudParseTime(t *testing.T) {
 	assert.Nil(t, alicloudParseTime(nil))
-	assert.Nil(t, alicloudParseTime(strp("")))
-	assert.Nil(t, alicloudParseTime(strp("not-a-time")))
-	got := alicloudParseTime(strp("2026-01-02T15:04:05Z"))
+	assert.Nil(t, alicloudParseTime(new("")))
+	assert.Nil(t, alicloudParseTime(new("not-a-time")))
+	got := alicloudParseTime(new("2026-01-02T15:04:05Z"))
 	require.NotNil(t, got)
 	assert.Equal(t, 2026, got.Year())
 	assert.Equal(t, 5, got.Second())
 
 	// A timezone offset must parse and normalize (12:00+08:00 == 04:00 UTC),
 	// not just Z-suffixed UTC.
-	off := alicloudParseTime(strp("2026-07-20T12:00:00+08:00"))
+	off := alicloudParseTime(new("2026-07-20T12:00:00+08:00"))
 	require.NotNil(t, off)
 	assert.Equal(t, 4, off.UTC().Hour())
 }
@@ -111,15 +111,15 @@ func TestAlicloudParseTime(t *testing.T) {
 // offset-stamped times).
 func TestSlsParseTime(t *testing.T) {
 	assert.Nil(t, slsParseTime(nil))
-	assert.Nil(t, slsParseTime(strp("")))
-	assert.Nil(t, slsParseTime(strp("not-a-time")))
+	assert.Nil(t, slsParseTime(new("")))
+	assert.Nil(t, slsParseTime(new("not-a-time")))
 
-	got := slsParseTime(strp("2026-01-02T15:04:05Z"))
+	got := slsParseTime(new("2026-01-02T15:04:05Z"))
 	require.NotNil(t, got)
 	assert.Equal(t, 2026, got.Year())
 	assert.Equal(t, 5, got.Second())
 
-	off := slsParseTime(strp("2026-07-20T12:00:00+08:00"))
+	off := slsParseTime(new("2026-07-20T12:00:00+08:00"))
 	require.NotNil(t, off)
 	assert.Equal(t, 4, off.UTC().Hour())
 }
@@ -128,15 +128,15 @@ func TestSlsParseTime(t *testing.T) {
 // fractional-second form the API returns.
 func TestRmParseTime(t *testing.T) {
 	assert.Nil(t, rmParseTime(nil))
-	assert.Nil(t, rmParseTime(strp("")))
+	assert.Nil(t, rmParseTime(new("")))
 	t.Run("fractional seconds parse", func(t *testing.T) {
-		got := rmParseTime(strp("2020-11-01T09:00:00.000Z"))
+		got := rmParseTime(new("2020-11-01T09:00:00.000Z"))
 		require.NotNil(t, got)
 		assert.Equal(t, 2020, got.Year())
 		assert.Equal(t, 9, got.Hour())
 	})
 	t.Run("plain RFC3339 parses", func(t *testing.T) {
-		got := rmParseTime(strp("2020-11-01T09:00:00Z"))
+		got := rmParseTime(new("2020-11-01T09:00:00Z"))
 		require.NotNil(t, got)
 		assert.Equal(t, 2020, got.Year())
 	})

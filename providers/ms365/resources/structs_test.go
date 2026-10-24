@@ -49,7 +49,7 @@ func TestDirectoryPrincipalInfo(t *testing.T) {
 
 	t.Run("user with display name", func(t *testing.T) {
 		p := models.NewDirectoryObject()
-		p.SetOdataType(ptr("#microsoft.graph.user"))
+		p.SetOdataType(new("#microsoft.graph.user"))
 		p.SetAdditionalData(map[string]any{"displayName": "Alice Admin"})
 		pt, pn := directoryPrincipalInfo(p)
 		assert.Equal(t, "user", pt)
@@ -58,7 +58,7 @@ func TestDirectoryPrincipalInfo(t *testing.T) {
 
 	t.Run("group without display name", func(t *testing.T) {
 		p := models.NewDirectoryObject()
-		p.SetOdataType(ptr("#microsoft.graph.group"))
+		p.SetOdataType(new("#microsoft.graph.group"))
 		pt, pn := directoryPrincipalInfo(p)
 		assert.Equal(t, "group", pt)
 		assert.Empty(t, pn)
@@ -73,8 +73,8 @@ func TestDirectoryPrincipalInfo(t *testing.T) {
 
 	t.Run("typed principal reads its typed displayName", func(t *testing.T) {
 		u := models.NewUser()
-		u.SetOdataType(ptr("#microsoft.graph.user"))
-		u.SetDisplayName(ptr("Alice Admin"))
+		u.SetOdataType(new("#microsoft.graph.user"))
+		u.SetDisplayName(new("Alice Admin"))
 		pt, pn := directoryPrincipalInfo(u)
 		assert.Equal(t, "user", pt)
 		assert.Equal(t, "Alice Admin", pn)
@@ -136,7 +136,7 @@ func TestDirectoryPrincipalInfoFromExpandedGroup(t *testing.T) {
 // fallback must still work.
 func TestDirectoryPrincipalInfoFallsBackToAdditionalData(t *testing.T) {
 	p := models.NewDirectoryObject()
-	p.SetOdataType(ptr("#microsoft.graph.user"))
+	p.SetOdataType(new("#microsoft.graph.user"))
 	p.SetAdditionalData(map[string]any{"displayName": "Bare Object"})
 	pt, pn := directoryPrincipalInfo(p)
 	assert.Equal(t, "user", pt)

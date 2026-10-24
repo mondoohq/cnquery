@@ -82,7 +82,7 @@ func (s *mqlMacosSharing) fetchState() (map[string]bool, error) {
 // don't match the On/Off shape and are quietly skipped.
 func parseSharingOutput(stdout string) map[string]bool {
 	out := map[string]bool{}
-	for _, raw := range strings.Split(stdout, "\n") {
+	for raw := range strings.SplitSeq(stdout, "\n") {
 		line := strings.TrimSpace(raw)
 		if line == "" {
 			continue

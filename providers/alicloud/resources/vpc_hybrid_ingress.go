@@ -67,8 +67,8 @@ func (r *mqlAlicloudVpc) sslVpnServers() ([]any, error) {
 		collected := int32(0)
 		for {
 			resp, err := client.DescribeSslVpnServers(&vpcclient.DescribeSslVpnServersRequest{
-				RegionId:   tea.String(region),
-				PageNumber: tea.Int32(pageNumber),
+				RegionId:   new(region),
+				PageNumber: new(pageNumber),
 				PageSize:   tea.Int32(vpcHybridPageSize),
 			})
 			if err != nil {
@@ -201,9 +201,9 @@ func (r *mqlAlicloudVpcSslVpnServer) clientCerts() ([]any, error) {
 	collected := int32(0)
 	for {
 		resp, err := client.DescribeSslVpnClientCerts(&vpcclient.DescribeSslVpnClientCertsRequest{
-			RegionId:       tea.String(r.region),
-			SslVpnServerId: tea.String(r.SslVpnServerId.Data),
-			PageNumber:     tea.Int32(pageNumber),
+			RegionId:       new(r.region),
+			SslVpnServerId: new(r.SslVpnServerId.Data),
+			PageNumber:     new(pageNumber),
 			PageSize:       tea.Int32(vpcHybridPageSize),
 		})
 		if err != nil {
@@ -274,8 +274,8 @@ func (r *mqlAlicloudVpc) customerGateways() ([]any, error) {
 		collected := int32(0)
 		for {
 			resp, err := client.DescribeCustomerGateways(&vpcclient.DescribeCustomerGatewaysRequest{
-				RegionId:   tea.String(region),
-				PageNumber: tea.Int32(pageNumber),
+				RegionId:   new(region),
+				PageNumber: new(pageNumber),
 				PageSize:   tea.Int32(vpcHybridPageSize),
 			})
 			if err != nil {
@@ -406,8 +406,8 @@ func (r *mqlAlicloudVpc) physicalConnections() ([]any, error) {
 		collected := int32(0)
 		for {
 			resp, err := client.DescribePhysicalConnections(&vpcclient.DescribePhysicalConnectionsRequest{
-				RegionId:   tea.String(region),
-				PageNumber: tea.Int32(pageNumber),
+				RegionId:   new(region),
+				PageNumber: new(pageNumber),
 				PageSize:   tea.Int32(vpcHybridPageSize),
 			})
 			if err != nil {
@@ -490,8 +490,8 @@ func (r *mqlAlicloudVpc) virtualBorderRouters() ([]any, error) {
 		collected := int32(0)
 		for {
 			resp, err := client.DescribeVirtualBorderRouters(&vpcclient.DescribeVirtualBorderRoutersRequest{
-				RegionId:   tea.String(region),
-				PageNumber: tea.Int32(pageNumber),
+				RegionId:   new(region),
+				PageNumber: new(pageNumber),
 				PageSize:   tea.Int32(vpcHybridPageSize),
 			})
 			if err != nil {

@@ -154,13 +154,13 @@ func TestIdentityFailureIsReportedNotGuessed(t *testing.T) {
 // so a rate limit never reaches this layer as an error; the failures that do
 // reach it are decode and transport errors, which is what this exercises.
 func TestIdentityFailureIsNotLatched(t *testing.T) {
-	var calls int32
+	var calls atomic.Int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/whoami" {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		n := atomic.AddInt32(&calls, 1)
+		n := calls.Add(1)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		if n == 1 {
@@ -192,6 +192,6 @@ func TestIdentityFailureIsNotLatched(t *testing.T) {
 		_, err := get()
 		require.NoError(t, err)
 	}
-	assert.Equal(t, int32(2), atomic.LoadInt32(&calls),
+	assert.Equal(t, int32(2), calls.Load(),
 		"one failed call plus one successful call, then the memo serves every field")
 }

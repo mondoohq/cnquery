@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/filestorage"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -47,8 +46,8 @@ func (o *mqlOciFileStorage) mountTargets() ([]any, error) {
 				func(ctx context.Context, svc *filestorage.FileStorageClient, availabilityDomain string) ([]filestorage.MountTargetSummary, error) {
 					return ociPaginate(ctx, func(ctx context.Context, page *string) ([]filestorage.MountTargetSummary, *string, error) {
 						resp, err := svc.ListMountTargets(ctx, filestorage.ListMountTargetsRequest{
-							CompartmentId:      common.String(compartmentID),
-							AvailabilityDomain: common.String(availabilityDomain),
+							CompartmentId:      new(compartmentID),
+							AvailabilityDomain: new(availabilityDomain),
 							Page:               page,
 						})
 						if err != nil {
@@ -133,7 +132,7 @@ func (o *mqlOciFileStorageMountTarget) fetchDetail() (*filestorage.MountTarget, 
 			return nil, err
 		}
 		resp, err := svc.GetMountTarget(context.Background(), filestorage.GetMountTargetRequest{
-			MountTargetId: common.String(o.Id.Data),
+			MountTargetId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -337,8 +336,8 @@ func (o *mqlOciFileStorage) exportSets() ([]any, error) {
 				func(ctx context.Context, svc *filestorage.FileStorageClient, availabilityDomain string) ([]filestorage.ExportSetSummary, error) {
 					return ociPaginate(ctx, func(ctx context.Context, page *string) ([]filestorage.ExportSetSummary, *string, error) {
 						resp, err := svc.ListExportSets(ctx, filestorage.ListExportSetsRequest{
-							CompartmentId:      common.String(compartmentID),
-							AvailabilityDomain: common.String(availabilityDomain),
+							CompartmentId:      new(compartmentID),
+							AvailabilityDomain: new(availabilityDomain),
 							Page:               page,
 						})
 						if err != nil {
@@ -394,7 +393,7 @@ func (o *mqlOciFileStorageExportSet) fetchDetail() (*filestorage.ExportSet, erro
 			return nil, err
 		}
 		resp, err := svc.GetExportSet(context.Background(), filestorage.GetExportSetRequest{
-			ExportSetId: common.String(o.Id.Data),
+			ExportSetId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -436,7 +435,7 @@ func (o *mqlOciFileStorageExportSet) exports() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]filestorage.ExportSummary, *string, error) {
 		resp, err := svc.ListExports(ctx, filestorage.ListExportsRequest{
-			ExportSetId: common.String(o.Id.Data),
+			ExportSetId: new(o.Id.Data),
 			Page:        page,
 		})
 		if err != nil {
@@ -473,7 +472,7 @@ func (o *mqlOciFileStorage) exports() ([]any, error) {
 			// availability domain: one call covers the whole compartment.
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]filestorage.ExportSummary, *string, error) {
 				resp, err := svc.ListExports(ctx, filestorage.ListExportsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -544,7 +543,7 @@ func (o *mqlOciFileStorageExport) options() ([]any, error) {
 			return nil, err
 		}
 		resp, err := svc.GetExport(context.Background(), filestorage.GetExportRequest{
-			ExportId: common.String(o.Id.Data),
+			ExportId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -645,8 +644,8 @@ func (o *mqlOciFileStorage) snapshotPolicies() ([]any, error) {
 				func(ctx context.Context, svc *filestorage.FileStorageClient, availabilityDomain string) ([]filestorage.FilesystemSnapshotPolicySummary, error) {
 					return ociPaginate(ctx, func(ctx context.Context, page *string) ([]filestorage.FilesystemSnapshotPolicySummary, *string, error) {
 						resp, err := svc.ListFilesystemSnapshotPolicies(ctx, filestorage.ListFilesystemSnapshotPoliciesRequest{
-							CompartmentId:      common.String(compartmentID),
-							AvailabilityDomain: common.String(availabilityDomain),
+							CompartmentId:      new(compartmentID),
+							AvailabilityDomain: new(availabilityDomain),
 							Page:               page,
 						})
 						if err != nil {
@@ -705,7 +704,7 @@ func (o *mqlOciFileStorageSnapshotPolicy) schedules() ([]any, error) {
 			return nil, err
 		}
 		resp, err := svc.GetFilesystemSnapshotPolicy(context.Background(), filestorage.GetFilesystemSnapshotPolicyRequest{
-			FilesystemSnapshotPolicyId: common.String(o.Id.Data),
+			FilesystemSnapshotPolicyId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -757,8 +756,8 @@ func (o *mqlOciFileStorage) replications() ([]any, error) {
 				func(ctx context.Context, svc *filestorage.FileStorageClient, availabilityDomain string) ([]filestorage.ReplicationSummary, error) {
 					return ociPaginate(ctx, func(ctx context.Context, page *string) ([]filestorage.ReplicationSummary, *string, error) {
 						resp, err := svc.ListReplications(ctx, filestorage.ListReplicationsRequest{
-							CompartmentId:      common.String(compartmentID),
-							AvailabilityDomain: common.String(availabilityDomain),
+							CompartmentId:      new(compartmentID),
+							AvailabilityDomain: new(availabilityDomain),
 							Page:               page,
 						})
 						if err != nil {
@@ -820,7 +819,7 @@ func (o *mqlOciFileStorageReplication) fetchDetail() (*filestorage.Replication, 
 			return nil, err
 		}
 		resp, err := svc.GetReplication(context.Background(), filestorage.GetReplicationRequest{
-			ReplicationId: common.String(o.Id.Data),
+			ReplicationId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -900,8 +899,8 @@ func (o *mqlOciFileStorage) outboundConnectors() ([]any, error) {
 				func(ctx context.Context, svc *filestorage.FileStorageClient, availabilityDomain string) ([]filestorage.OutboundConnectorSummary, error) {
 					return ociPaginate(ctx, func(ctx context.Context, page *string) ([]filestorage.OutboundConnectorSummary, *string, error) {
 						resp, err := svc.ListOutboundConnectors(ctx, filestorage.ListOutboundConnectorsRequest{
-							CompartmentId:      common.String(compartmentID),
-							AvailabilityDomain: common.String(availabilityDomain),
+							CompartmentId:      new(compartmentID),
+							AvailabilityDomain: new(availabilityDomain),
 							Page:               page,
 						})
 						if err != nil {
@@ -988,7 +987,7 @@ func (o *mqlOciFileStorageOutboundConnector) fetchLdapAccount() (*filestorage.Ld
 			return nil, err
 		}
 		resp, err := svc.GetOutboundConnector(context.Background(), filestorage.GetOutboundConnectorRequest{
-			OutboundConnectorId: common.String(o.Id.Data),
+			OutboundConnectorId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err

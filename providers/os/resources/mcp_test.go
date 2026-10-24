@@ -32,13 +32,13 @@ func TestDeriveMcpTransport(t *testing.T) {
 
 func TestStrSliceToArrayData(t *testing.T) {
 	rd := strSliceToArrayData([]string{"-y", "server", "/tmp"})
-	arr, ok := rd.Value.([]interface{})
+	arr, ok := rd.Value.([]any)
 	assert.True(t, ok)
-	assert.Equal(t, []interface{}{"-y", "server", "/tmp"}, arr)
+	assert.Equal(t, []any{"-y", "server", "/tmp"}, arr)
 
 	// nil slice yields an empty, non-nil array
 	empty := strSliceToArrayData(nil)
-	emptyArr, ok := empty.Value.([]interface{})
+	emptyArr, ok := empty.Value.([]any)
 	assert.True(t, ok)
 	assert.Empty(t, emptyArr)
 }

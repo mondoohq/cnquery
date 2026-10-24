@@ -173,8 +173,8 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) managedBy() (string, error) {
 // image as the version that was used
 // (".../cryptoKeys/<key>/cryptoKeyVersions/<n>"), which GetCryptoKey rejects.
 func cryptoKeyPath(name string) string {
-	if i := strings.Index(name, "/cryptoKeyVersions/"); i >= 0 {
-		return name[:i]
+	if before, _, ok := strings.Cut(name, "/cryptoKeyVersions/"); ok {
+		return before
 	}
 	return name
 }

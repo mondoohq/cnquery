@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	polardb "github.com/alibabacloud-go/polardb-20170801/v10/client"
-	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/mql/llx"
@@ -73,12 +72,12 @@ func listKnowledgeBaseRecords(client *polardb.Client, region, knowledgeSpaceID s
 		pn := pageNumber
 		ps := pageSize
 		req := &polardb.DescribeKnowledgeBasesRequest{
-			RegionId:   tea.String(region),
+			RegionId:   new(region),
 			PageNumber: &pn,
 			PageSize:   &ps,
 		}
 		if knowledgeSpaceID != "" {
-			req.KnowledgeSpaceId = tea.String(knowledgeSpaceID)
+			req.KnowledgeSpaceId = new(knowledgeSpaceID)
 		}
 		resp, err := client.DescribeKnowledgeBases(req)
 		if err != nil {
@@ -236,8 +235,8 @@ func (r *mqlAlicloudPolardb) knowledgeSpaces() ([]any, error) {
 // carries no space as a not-found error rather than as an empty record.
 func describeKnowledgeSpace(client *polardb.Client, region, knowledgeSpaceID string) (*polardb.DescribeKnowledgeSpaceAttributeResponseBody, error) {
 	resp, err := client.DescribeKnowledgeSpaceAttribute(&polardb.DescribeKnowledgeSpaceAttributeRequest{
-		RegionId:         tea.String(region),
-		KnowledgeSpaceId: tea.String(knowledgeSpaceID),
+		RegionId:         new(region),
+		KnowledgeSpaceId: new(knowledgeSpaceID),
 	})
 	if err != nil {
 		return nil, err
@@ -486,8 +485,8 @@ func (r *mqlAlicloudPolardbKnowledgeBase) syncLinks() ([]any, error) {
 			pn := pageNumber
 			ps := pageSize
 			resp, err := client.DescribeKBSyncLinks(&polardb.DescribeKBSyncLinksRequest{
-				RegionId:        tea.String(r.region),
-				KnowledgeBaseId: tea.String(r.knowledgeBaseId),
+				RegionId:        new(r.region),
+				KnowledgeBaseId: new(r.knowledgeBaseId),
 				PageNumber:      &pn,
 				PageSize:        &ps,
 			})

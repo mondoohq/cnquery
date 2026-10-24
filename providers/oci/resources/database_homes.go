@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/database"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -32,7 +31,7 @@ func (o *mqlOciDatabase) dbHomes() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]database.DbHomeSummary, *string, error) {
 				response, err := svc.ListDbHomes(ctx, database.ListDbHomesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -167,8 +166,8 @@ func (o *mqlOciDatabase) databases() ([]any, error) {
 			}
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]database.DatabaseSummary, *string, error) {
 				response, err := svc.ListDatabases(ctx, database.ListDatabasesRequest{
-					CompartmentId: common.String(home.cacheCompartmentID),
-					DbHomeId:      common.String(home.Id.Data),
+					CompartmentId: new(home.cacheCompartmentID),
+					DbHomeId:      new(home.Id.Data),
 					Page:          page,
 				})
 				if err != nil {
@@ -334,7 +333,7 @@ func (o *mqlOciDatabaseDatabase) backups() ([]any, error) {
 	}
 	items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]database.BackupSummary, *string, error) {
 		response, err := svc.ListBackups(ctx, database.ListBackupsRequest{
-			DatabaseId: common.String(o.Id.Data),
+			DatabaseId: new(o.Id.Data),
 			Page:       page,
 		})
 		if err != nil {

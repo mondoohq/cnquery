@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 
@@ -41,12 +42,7 @@ func gkeControlPlaneInternetReachable(publicEndpointEnabled, authorizedNetworksE
 	if !authorizedNetworksEnforced {
 		return true
 	}
-	for _, c := range authorizedCIDRs {
-		if isOpenCIDR(c) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(authorizedCIDRs, isOpenCIDR)
 }
 
 func (g *mqlGcpProjectGkeServiceCluster) controlPlaneInternetReachable() (bool, error) {

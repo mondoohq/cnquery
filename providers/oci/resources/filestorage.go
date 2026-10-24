@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/filestorage"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -89,8 +88,8 @@ func (o *mqlOciFileStorage) fileSystems() ([]any, error) {
 func ociListFileSystems(ctx context.Context, fsClient *filestorage.FileStorageClient, compartmentID string, availabilityDomain string) ([]filestorage.FileSystemSummary, error) {
 	return ociPaginate(ctx, func(ctx context.Context, page *string) ([]filestorage.FileSystemSummary, *string, error) {
 		response, err := fsClient.ListFileSystems(ctx, filestorage.ListFileSystemsRequest{
-			CompartmentId:      common.String(compartmentID),
-			AvailabilityDomain: common.String(availabilityDomain),
+			CompartmentId:      new(compartmentID),
+			AvailabilityDomain: new(availabilityDomain),
 			Page:               page,
 		})
 		if err != nil {
@@ -129,7 +128,7 @@ func (o *mqlOciFileStorageFileSystem) fetchDetail() (*filestorage.FileSystem, er
 			return nil, err
 		}
 		resp, err := svc.GetFileSystem(context.Background(), filestorage.GetFileSystemRequest{
-			FileSystemId: common.String(o.Id.Data),
+			FileSystemId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -165,7 +164,7 @@ func (o *mqlOciFileStorageFileSystem) exports() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]filestorage.ExportSummary, *string, error) {
 		resp, err := svc.ListExports(ctx, filestorage.ListExportsRequest{
-			FileSystemId: common.String(o.Id.Data),
+			FileSystemId: new(o.Id.Data),
 			Page:         page,
 		})
 		if err != nil {
@@ -188,7 +187,7 @@ func (o *mqlOciFileStorageFileSystem) snapshots() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]filestorage.SnapshotSummary, *string, error) {
 		resp, err := svc.ListSnapshots(ctx, filestorage.ListSnapshotsRequest{
-			FileSystemId: common.String(o.Id.Data),
+			FileSystemId: new(o.Id.Data),
 			Page:         page,
 		})
 		if err != nil {
@@ -254,7 +253,7 @@ func (o *mqlOciFileStorageFileSystem) quotaRules() ([]any, error) {
 	for _, principalType := range ociQuotaRulePrincipalTypes {
 		items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]filestorage.QuotaRuleSummary, *string, error) {
 			resp, err := svc.ListQuotaRules(ctx, filestorage.ListQuotaRulesRequest{
-				FileSystemId:  common.String(o.Id.Data),
+				FileSystemId:  new(o.Id.Data),
 				PrincipalType: principalType,
 				Page:          page,
 			})

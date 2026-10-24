@@ -407,7 +407,7 @@ func (s *mqlRsyslogConf) expandIncludePattern(parentDir, pattern string) ([]stri
 // mirroring glob(3)'s "no match" behaviour.
 func (s *mqlRsyslogConf) resolveIncludeDirs(dir string) ([]string, error) {
 	paths := []string{"/"}
-	for _, seg := range strings.Split(dir, "/") {
+	for seg := range strings.SplitSeq(dir, "/") {
 		if seg == "" {
 			continue
 		}
@@ -513,7 +513,7 @@ func (s *mqlRsyslogConf) settings(content string) ([]any, error) {
 // directive appears more than once the last occurrence wins.
 func (s *mqlRsyslogConf) params(content string) (map[string]any, error) {
 	params := map[string]any{}
-	for _, raw := range strings.Split(content, "\n") {
+	for raw := range strings.SplitSeq(content, "\n") {
 		line := strings.Trim(stripRsyslogComment(raw), " \t\r")
 		if !strings.HasPrefix(line, "$") {
 			continue

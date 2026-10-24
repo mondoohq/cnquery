@@ -84,7 +84,7 @@ func ParseDNSSECKeyFile(name, content string) *DNSSECKey {
 		KeyTag:    keyTag,
 	}
 
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue

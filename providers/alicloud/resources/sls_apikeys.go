@@ -72,9 +72,9 @@ func (r *mqlAlicloudLogProject) apiKeys() ([]any, error) {
 	pages := 0
 	firstPage := true
 	for {
-		resp, err := client.ListApiKeys(tea.String(projectName), &slsclient.ListApiKeysRequest{
-			Offset: tea.Int32(offset),
-			Size:   tea.Int32(size),
+		resp, err := client.ListApiKeys(new(projectName), &slsclient.ListApiKeysRequest{
+			Offset: new(offset),
+			Size:   new(size),
 		})
 		if err != nil {
 			// A first-page error means the project has no API key surface or

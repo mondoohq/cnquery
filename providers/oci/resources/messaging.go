@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/managedkafka"
 	"github.com/oracle/oci-go-sdk/v65/queue"
 	"github.com/oracle/oci-go-sdk/v65/streaming"
@@ -36,7 +35,7 @@ func (o *mqlOciStreaming) streams() ([]any, error) {
 
 			streams, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]streaming.StreamSummary, *string, error) {
 				response, err := client.ListStreams(ctx, streaming.ListStreamsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -87,7 +86,7 @@ func (o *mqlOciStreaming) streamPools() ([]any, error) {
 
 			pools, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]streaming.StreamPoolSummary, *string, error) {
 				response, err := client.ListStreamPools(ctx, streaming.ListStreamPoolsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -218,7 +217,7 @@ func (o *mqlOciStreamingStreamPool) getDetail() (*streaming.StreamPool, error) {
 		}
 
 		response, err := client.GetStreamPool(context.Background(), streaming.GetStreamPoolRequest{
-			StreamPoolId: common.String(o.Id.Data),
+			StreamPoolId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -355,7 +354,7 @@ func (o *mqlOciQueue) queues() ([]any, error) {
 
 			queues, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]queue.QueueSummary, *string, error) {
 				response, err := client.ListQueues(ctx, queue.ListQueuesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -428,7 +427,7 @@ func (o *mqlOciQueueQueue) getDetail() (*queue.Queue, error) {
 		}
 
 		response, err := client.GetQueue(context.Background(), queue.GetQueueRequest{
-			QueueId: common.String(o.Id.Data),
+			QueueId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -495,7 +494,7 @@ func (o *mqlOciKafka) clusters() ([]any, error) {
 
 			clusters, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]managedkafka.KafkaClusterSummary, *string, error) {
 				response, err := client.ListKafkaClusters(ctx, managedkafka.ListKafkaClustersRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -606,7 +605,7 @@ func (o *mqlOciKafkaCluster) getDetail() (*managedkafka.KafkaCluster, error) {
 		}
 
 		response, err := client.GetKafkaCluster(context.Background(), managedkafka.GetKafkaClusterRequest{
-			KafkaClusterId: common.String(o.Id.Data),
+			KafkaClusterId: new(o.Id.Data),
 		})
 		if err != nil {
 			return nil, err

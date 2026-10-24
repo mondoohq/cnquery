@@ -48,7 +48,7 @@ func userHivePath(sid, subPath string) string {
 // the key in both.
 func registryReadPath(path string) string {
 	var parts []string
-	for _, p := range strings.Split(path, `\`) {
+	for p := range strings.SplitSeq(path, `\`) {
 		if p != "" {
 			parts = append(parts, p)
 		}
@@ -134,7 +134,7 @@ func classifyRegistryStderr(path string, stderr string) (absent bool, err error)
 // powershellErrorMessage returns the first line of a PowerShell error record,
 // the message, without the "Get-Item : " prefix that names the command.
 func powershellErrorMessage(stderr string) string {
-	for _, line := range strings.Split(stderr, "\n") {
+	for line := range strings.SplitSeq(stderr, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue

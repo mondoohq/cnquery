@@ -327,8 +327,8 @@ func (m findFilesMatcher) matchesPerm(path string) bool {
 
 func createFindFilesMatcher(iofs fs.FS, typeStr string, from string, r *regexp.Regexp, perm *uint32, depth *int) findFilesMatcher {
 	allowed := []byte{}
-	types := strings.Split(typeStr, ",")
-	for _, t := range types {
+	types := strings.SplitSeq(typeStr, ",")
+	for t := range types {
 		if len(t) == 0 {
 			continue
 		}

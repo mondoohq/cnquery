@@ -135,7 +135,7 @@ func readSystemdUnit(afs *afero.Afero, units ...string) (string, string, error) 
 func systemdUnitAliases(content string) []string {
 	var aliases []string
 	install := false
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "[") {
 			install = line == "[Install]"

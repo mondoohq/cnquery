@@ -21,10 +21,10 @@ func TestNewMqlImageCachesReferences(t *testing.T) {
 	runtime := newTestRuntime()
 
 	img, err := newMqlImage(runtime, &vmmcontent.Image{
-		ExtId:                 sp("image-1"),
-		Name:                  sp("ubuntu-22.04"),
+		ExtId:                 new("image-1"),
+		Name:                  new("ubuntu-22.04"),
 		ClusterLocationExtIds: []string{"cluster-a", "cluster-b"},
-		OwnerExtId:            sp("owner-1"),
+		OwnerExtId:            new("owner-1"),
 	})
 	if err != nil {
 		t.Fatalf("newMqlImage returned error: %v", err)
@@ -46,8 +46,8 @@ func TestNewMqlImageAbsentReferences(t *testing.T) {
 	runtime := newTestRuntime()
 
 	img, err := newMqlImage(runtime, &vmmcontent.Image{
-		ExtId: sp("image-2"),
-		Name:  sp("no-placement"),
+		ExtId: new("image-2"),
+		Name:  new("no-placement"),
 	})
 	if err != nil {
 		t.Fatalf("newMqlImage returned error: %v", err)
@@ -153,14 +153,14 @@ func TestNewMqlVpcCachesExternalSubnets(t *testing.T) {
 	runtime := newTestRuntime()
 
 	vpc, err := newMqlVpc(runtime, &netconfig.Vpc{
-		ExtId: sp("vpc-1"),
-		Name:  sp("prod"),
+		ExtId: new("vpc-1"),
+		Name:  new("prod"),
 		ExternalSubnets: []netconfig.ExternalSubnet{
-			{SubnetReference: sp("subnet-a")},
+			{SubnetReference: new("subnet-a")},
 			// A reference the API left out or blanked is not a subnet.
 			{SubnetReference: nil},
-			{SubnetReference: sp("")},
-			{SubnetReference: sp("subnet-b")},
+			{SubnetReference: new("")},
+			{SubnetReference: new("subnet-b")},
 		},
 	})
 	if err != nil {
@@ -217,10 +217,10 @@ func TestNewMqlStorageContainerCachesAffinityHost(t *testing.T) {
 	runtime := newTestRuntime()
 
 	container, err := newMqlStorageContainer(runtime, &clustermgmtconfig.StorageContainer{
-		ExtId:             sp("container-1"),
-		Name:              sp("rf1"),
-		ClusterExtId:      sp("cluster-a"),
-		AffinityHostExtId: sp("host-1"),
+		ExtId:             new("container-1"),
+		Name:              new("rf1"),
+		ClusterExtId:      new("cluster-a"),
+		AffinityHostExtId: new("host-1"),
 	})
 	if err != nil {
 		t.Fatalf("newMqlStorageContainer returned error: %v", err)
@@ -239,9 +239,9 @@ func TestNewMqlStorageContainerAbsentAffinityHost(t *testing.T) {
 	runtime := newTestRuntime()
 
 	container, err := newMqlStorageContainer(runtime, &clustermgmtconfig.StorageContainer{
-		ExtId:        sp("container-2"),
-		Name:         sp("rf2"),
-		ClusterExtId: sp("cluster-a"),
+		ExtId:        new("container-2"),
+		Name:         new("rf2"),
+		ClusterExtId: new("cluster-a"),
 	})
 	if err != nil {
 		t.Fatalf("newMqlStorageContainer returned error: %v", err)

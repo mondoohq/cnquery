@@ -39,12 +39,12 @@ func (r *mqlZed) id() (string, error) {
 	return "zed/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlZed) settings() (interface{}, error) {
+func (r *mqlZed) settings() (any, error) {
 	afs := connectionAfs(r.MqlRuntime)
 	data, err := afs.ReadFile(filepath.Join(r.ConfigPath.Data, "settings.json"))
 	if err != nil {
 		if os.IsNotExist(err) {
-			return map[string]interface{}{}, nil
+			return map[string]any{}, nil
 		}
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (r *mqlZed) settings() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var settings map[string]interface{}
+	var settings map[string]any
 	if err := json.Unmarshal(clean, &settings); err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (r *mqlZed) modelProvider() (string, error) {
 	return provider, err
 }
 
-func (r *mqlZed) extensions() ([]interface{}, error) {
+func (r *mqlZed) extensions() ([]any, error) {
 	afs := connectionAfs(r.MqlRuntime)
 	extensionsDir := filepath.Join(r.ConfigPath.Data, "extensions")
 
@@ -147,7 +147,7 @@ func (r *mqlZed) extensions() ([]interface{}, error) {
 		return zedExtensionsFromDir(afs, extensionsDir)
 	}
 
-	var result []interface{}
+	var result []any
 	for name := range installed {
 		result = append(result, name)
 	}
@@ -155,7 +155,7 @@ func (r *mqlZed) extensions() ([]interface{}, error) {
 }
 
 // zedExtensionsFromDir lists extension names by scanning subdirectories.
-func zedExtensionsFromDir(afs *afero.Afero, extensionsDir string) ([]interface{}, error) {
+func zedExtensionsFromDir(afs *afero.Afero, extensionsDir string) ([]any, error) {
 	subdirs, err := listSubdirsAfero(afs, extensionsDir)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -164,7 +164,7 @@ func zedExtensionsFromDir(afs *afero.Afero, extensionsDir string) ([]interface{}
 		return nil, err
 	}
 
-	var result []interface{}
+	var result []any
 	for _, dir := range subdirs {
 		result = append(result, dir.name)
 	}
@@ -175,7 +175,7 @@ func (r *mqlZedRepo) id() (string, error) {
 	return "zed.repo/" + r.Path.Data, nil
 }
 
-func (r *mqlZed) repos() ([]interface{}, error) {
+func (r *mqlZed) repos() ([]any, error) {
 	paths, err := r.workspacePaths()
 	if err != nil {
 		return nil, err
@@ -281,7 +281,7 @@ func readZedWorkspacePaths(afs *afero.Afero, dbPath string) []string {
 	var out []string
 	for rows.Next() {
 		raw := make([]sql.RawBytes, len(cols))
-		dest := make([]interface{}, len(cols))
+		dest := make([]any, len(cols))
 		for i := range raw {
 			dest[i] = &raw[i]
 		}

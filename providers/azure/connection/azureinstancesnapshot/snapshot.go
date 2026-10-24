@@ -189,9 +189,9 @@ func (sc *snapshotCreator) attachDisk(targetInstance instanceInfo, diskName, dis
 		CreateOption: to.Ptr(compute.DiskCreateOptionTypesAttach),
 		DeleteOption: to.Ptr(compute.DiskDeleteOptionTypesDelete),
 		Caching:      to.Ptr(compute.CachingTypesNone),
-		Lun:          to.Ptr(int32(lun)),
+		Lun:          new(int32(lun)),
 		ManagedDisk: &compute.ManagedDiskParameters{
-			ID: to.Ptr(diskId),
+			ID: new(diskId),
 		},
 	})
 	vm := compute.VirtualMachineUpdate{

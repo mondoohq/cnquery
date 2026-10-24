@@ -83,8 +83,7 @@ func (a *mqlAwsFms) fetchAdminAccount() (string, string, error) {
 }
 
 func isFmsNotAdminError(err error) bool {
-	var notFound *fmstypes.ResourceNotFoundException
-	if errors.As(err, &notFound) {
+	if _, ok := errors.AsType[*fmstypes.ResourceNotFoundException](err); ok {
 		return true
 	}
 	var invalidOp *fmstypes.InvalidOperationException
@@ -147,8 +146,7 @@ func (a *mqlAwsFms) policies() ([]any, error) {
 				if Is400AccessDeniedError(err) {
 					continue
 				}
-				var notFound *fmstypes.ResourceNotFoundException
-				if errors.As(err, &notFound) {
+				if _, ok := errors.AsType[*fmstypes.ResourceNotFoundException](err); ok {
 					continue
 				}
 				return nil, err
@@ -288,8 +286,7 @@ func (a *mqlAwsFmsPolicy) complianceStatuses() ([]any, error) {
 			if Is400AccessDeniedError(err) {
 				return res, nil
 			}
-			var notFound *fmstypes.ResourceNotFoundException
-			if errors.As(err, &notFound) {
+			if _, ok := errors.AsType[*fmstypes.ResourceNotFoundException](err); ok {
 				return res, nil
 			}
 			return nil, err
@@ -499,8 +496,7 @@ func (a *mqlAwsFms) resourceSets() ([]any, error) {
 				if Is400AccessDeniedError(err) {
 					continue
 				}
-				var notFound *fmstypes.ResourceNotFoundException
-				if errors.As(err, &notFound) {
+				if _, ok := errors.AsType[*fmstypes.ResourceNotFoundException](err); ok {
 					continue
 				}
 				return nil, err
@@ -562,8 +558,7 @@ func initAwsFmsResourceSet(runtime *plugin.Runtime, args map[string]*llx.RawData
 		if Is400AccessDeniedError(err) || isFmsNotAdminError(err) {
 			return args, nil, nil
 		}
-		var notFound *fmstypes.ResourceNotFoundException
-		if errors.As(err, &notFound) {
+		if _, ok := errors.AsType[*fmstypes.ResourceNotFoundException](err); ok {
 			return args, nil, nil
 		}
 		return nil, nil, err
@@ -624,8 +619,9 @@ func (a *mqlAwsFmsPolicy) resourceSets() ([]any, error) {
 	return out, nil
 }
 
+//go:fix inline
 func intPtr32(v int32) *int32 {
-	return &v
+	return new(v)
 }
 
 // fmsTagsForArn reads the tags of a Firewall Manager policy, apps list,

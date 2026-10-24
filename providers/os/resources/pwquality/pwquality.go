@@ -10,6 +10,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"maps"
 	"path"
 	"sort"
 	"strconv"
@@ -239,9 +240,7 @@ func (s Settings) Int(name string, legacy bool) int64 {
 // configuration files.
 func (s Settings) Clone() Settings {
 	res := make(Settings, len(s))
-	for k, v := range s {
-		res[k] = v
-	}
+	maps.Copy(res, s)
 	return res
 }
 

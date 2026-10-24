@@ -8,7 +8,6 @@ import (
 	"errors"
 	"testing"
 
-	tea "github.com/alibabacloud-go/tea/tea"
 	credential "github.com/aliyun/credentials-go/credentials"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,8 +36,8 @@ func TestDarabonbaOssCredentials(t *testing.T) {
 	t.Run("an access key pair is passed through", func(t *testing.T) {
 		p := &darabonbaOssCredentials{cred: &fakeCredential{
 			model: &credential.CredentialModel{
-				AccessKeyId:     tea.String("akid"),
-				AccessKeySecret: tea.String("aksecret"),
+				AccessKeyId:     new("akid"),
+				AccessKeySecret: new("aksecret"),
 			},
 		}}
 		creds, err := p.GetCredentials(context.Background())
@@ -51,9 +50,9 @@ func TestDarabonbaOssCredentials(t *testing.T) {
 	t.Run("a session token is carried too", func(t *testing.T) {
 		p := &darabonbaOssCredentials{cred: &fakeCredential{
 			model: &credential.CredentialModel{
-				AccessKeyId:     tea.String("akid"),
-				AccessKeySecret: tea.String("aksecret"),
-				SecurityToken:   tea.String("token"),
+				AccessKeyId:     new("akid"),
+				AccessKeySecret: new("aksecret"),
+				SecurityToken:   new("token"),
 			},
 		}}
 		creds, err := p.GetCredentials(context.Background())
@@ -78,8 +77,8 @@ func TestDarabonbaOssCredentials(t *testing.T) {
 
 	t.Run("the credential is resolved on every call so a refreshed token is seen", func(t *testing.T) {
 		f := &fakeCredential{model: &credential.CredentialModel{
-			AccessKeyId:     tea.String("akid"),
-			AccessKeySecret: tea.String("aksecret"),
+			AccessKeyId:     new("akid"),
+			AccessKeySecret: new("aksecret"),
 		}}
 		p := &darabonbaOssCredentials{cred: f}
 		_, err := p.GetCredentials(context.Background())

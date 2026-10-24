@@ -8,22 +8,21 @@ import (
 	"testing"
 
 	rkvclient "github.com/alibabacloud-go/r-kvstore-20150101/v8/client"
-	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRedisAuditEnabled(t *testing.T) {
 	// the API returns this member as a string, not a boolean
-	assert.True(t, redisAuditEnabled(tea.String("true")))
-	assert.True(t, redisAuditEnabled(tea.String("True")))
-	assert.True(t, redisAuditEnabled(tea.String(" true ")))
-	assert.False(t, redisAuditEnabled(tea.String("false")))
+	assert.True(t, redisAuditEnabled(new("true")))
+	assert.True(t, redisAuditEnabled(new("True")))
+	assert.True(t, redisAuditEnabled(new(" true ")))
+	assert.False(t, redisAuditEnabled(new("false")))
 	// an instance nobody could read must fail an "auditing is on" check, not
 	// pass it
 	assert.False(t, redisAuditEnabled(nil))
-	assert.False(t, redisAuditEnabled(tea.String("")))
-	assert.False(t, redisAuditEnabled(tea.String("1")))
+	assert.False(t, redisAuditEnabled(new("")))
+	assert.False(t, redisAuditEnabled(new("1")))
 }
 
 func TestRedisAuditRetentionDays(t *testing.T) {
@@ -32,15 +31,15 @@ func TestRedisAuditRetentionDays(t *testing.T) {
 		retention *string
 		expected  int64
 	}{
-		{"typical", tea.String("30"), 30},
-		{"whitespace tolerated", tea.String(" 365 "), 365},
-		{"zero", tea.String("0"), 0},
+		{"typical", new("30"), 30},
+		{"whitespace tolerated", new(" 365 "), 365},
+		{"zero", new("0"), 0},
 		// an unusable value must fail a minimum-retention check rather than
 		// satisfy it
 		{"absent", nil, 0},
-		{"empty", tea.String(""), 0},
-		{"unparseable", tea.String("thirty"), 0},
-		{"negative", tea.String("-1"), 0},
+		{"empty", new(""), 0},
+		{"unparseable", new("thirty"), 0},
+		{"negative", new("-1"), 0},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -50,14 +49,14 @@ func TestRedisAuditRetentionDays(t *testing.T) {
 }
 
 func TestPolardbAuditCollecting(t *testing.T) {
-	assert.True(t, polardbAuditCollecting(tea.String("Enable")))
-	assert.True(t, polardbAuditCollecting(tea.String("enable")))
+	assert.True(t, polardbAuditCollecting(new("Enable")))
+	assert.True(t, polardbAuditCollecting(new("enable")))
 	// transitional states are not yet recording
-	assert.False(t, polardbAuditCollecting(tea.String("Enabling")))
-	assert.False(t, polardbAuditCollecting(tea.String("Disabling")))
-	assert.False(t, polardbAuditCollecting(tea.String("Disable")))
+	assert.False(t, polardbAuditCollecting(new("Enabling")))
+	assert.False(t, polardbAuditCollecting(new("Disabling")))
+	assert.False(t, polardbAuditCollecting(new("Disable")))
 	assert.False(t, polardbAuditCollecting(nil))
-	assert.False(t, polardbAuditCollecting(tea.String("")))
+	assert.False(t, polardbAuditCollecting(new("")))
 }
 
 // TestRedisAuditConfigDecode pins the struct tags the two Redis fields depend

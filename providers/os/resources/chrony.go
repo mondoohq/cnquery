@@ -185,7 +185,7 @@ func (c *chronyConfig) read(afs *afero.Afero, path string, level int) error {
 	}
 	c.files = append(c.files, path)
 
-	for _, raw := range strings.Split(string(data), "\n") {
+	for raw := range strings.SplitSeq(string(data), "\n") {
 		line := strings.TrimSpace(raw)
 		// chrony discards lines starting with any of !;#% (CPS_NormalizeLine)
 		if line == "" || strings.ContainsRune("!;#%", rune(line[0])) {

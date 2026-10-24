@@ -5,6 +5,7 @@ package resources
 
 import (
 	"encoding/json"
+	"slices"
 	"sort"
 	"strings"
 
@@ -22,12 +23,7 @@ func jsonHasContent(raw json.RawMessage, emptyForms ...string) bool {
 	if s == "" || s == "null" {
 		return false
 	}
-	for _, e := range emptyForms {
-		if s == e {
-			return false
-		}
-	}
-	return true
+	return !slices.Contains(emptyForms, s)
 }
 
 // esRole is one role from GET /_security/role. Field- and document-level

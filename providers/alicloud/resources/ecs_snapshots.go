@@ -78,9 +78,9 @@ func (r *mqlAlicloudEcsImage) sharePermission() ([]any, []any) {
 		pageNumber := int32(1)
 		for {
 			resp, err := client.DescribeImageSharePermission(&ecsclient.DescribeImageSharePermissionRequest{
-				RegionId:   tea.String(region),
-				ImageId:    tea.String(r.ImageId.Data),
-				PageNumber: tea.Int32(pageNumber),
+				RegionId:   new(region),
+				ImageId:    new(r.ImageId.Data),
+				PageNumber: new(pageNumber),
 				PageSize:   tea.Int32(ecsSnapshotPageSize),
 			})
 			if err != nil {
@@ -186,7 +186,7 @@ func (r *mqlAlicloudEcs) snapshots() ([]any, error) {
 		}
 
 		req := &ecsclient.DescribeSnapshotsRequest{
-			RegionId:   tea.String(region),
+			RegionId:   new(region),
 			MaxResults: tea.Int32(ecsSnapshotPageSize),
 		}
 		for {

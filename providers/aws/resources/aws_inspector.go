@@ -355,8 +355,7 @@ func (a *mqlAwsInspector) getConfigurations(conn *connection.AwsConnection) []*j
 				// GetConfiguration returns ResourceNotFoundException ("No
 				// CustomerRecord exists") in regions where Inspector was never
 				// enabled; treat that as no configuration rather than an error
-				var notFound *types.ResourceNotFoundException
-				if errors.As(err, &notFound) {
+				if _, ok := errors.AsType[*types.ResourceNotFoundException](err); ok {
 					return res, nil
 				}
 				if Is400AccessDeniedError(err) {

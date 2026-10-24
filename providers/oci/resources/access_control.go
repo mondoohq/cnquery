@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/oracle/oci-go-sdk/v65/apiaccesscontrol"
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/delegateaccesscontrol"
 	"github.com/oracle/oci-go-sdk/v65/lockbox"
 	"github.com/oracle/oci-go-sdk/v65/operatoraccesscontrol"
@@ -53,7 +52,7 @@ func (o *mqlOciOperatorAccessControl) controls() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]operatoraccesscontrol.OperatorControlSummary, *string, error) {
 				resp, err := svc.ListOperatorControls(ctx, operatoraccesscontrol.ListOperatorControlsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -117,7 +116,7 @@ func (o *mqlOciOperatorAccessControl) controlAssignments() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]operatoraccesscontrol.OperatorControlAssignmentSummary, *string, error) {
 				resp, err := svc.ListOperatorControlAssignments(ctx, operatoraccesscontrol.ListOperatorControlAssignmentsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -193,7 +192,7 @@ func (o *mqlOciOperatorAccessControl) accessRequests() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]operatoraccesscontrol.AccessRequestSummary, *string, error) {
 				resp, err := svc.ListAccessRequests(ctx, operatoraccesscontrol.ListAccessRequestsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -265,7 +264,7 @@ func (o *mqlOciOperatorAccessControl) actions() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]operatoraccesscontrol.OperatorActionSummary, *string, error) {
 				resp, err := svc.ListOperatorActions(ctx, operatoraccesscontrol.ListOperatorActionsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -330,7 +329,7 @@ func (o *mqlOciDelegateAccessControl) delegationControls() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]delegateaccesscontrol.DelegationControlSummary, *string, error) {
 				resp, err := svc.ListDelegationControls(ctx, delegateaccesscontrol.ListDelegationControlsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -394,7 +393,7 @@ func (o *mqlOciDelegateAccessControl) delegationSubscriptions() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]delegateaccesscontrol.DelegationSubscriptionSummary, *string, error) {
 				resp, err := svc.ListDelegationSubscriptions(ctx, delegateaccesscontrol.ListDelegationSubscriptionsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -464,7 +463,7 @@ func (o *mqlOciDelegateAccessControl) accessRequests() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]delegateaccesscontrol.DelegatedResourceAccessRequestSummary, *string, error) {
 				resp, err := svc.ListDelegatedResourceAccessRequests(ctx, delegateaccesscontrol.ListDelegatedResourceAccessRequestsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -545,7 +544,7 @@ func (o *mqlOciDelegateAccessControl) serviceProviders() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]delegateaccesscontrol.ServiceProviderSummary, *string, error) {
 				resp, err := svc.ListServiceProviders(ctx, delegateaccesscontrol.ListServiceProvidersRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -635,7 +634,7 @@ func (o *mqlOciApiAccessControl) privilegedApiControls() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]apiaccesscontrol.PrivilegedApiControlSummary, *string, error) {
 				resp, err := svc.ListPrivilegedApiControls(ctx, apiaccesscontrol.ListPrivilegedApiControlsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -699,7 +698,7 @@ func (o *mqlOciApiAccessControl) privilegedApiRequests() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]apiaccesscontrol.PrivilegedApiRequestSummary, *string, error) {
 				resp, err := svc.ListPrivilegedApiRequests(ctx, apiaccesscontrol.ListPrivilegedApiRequestsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -785,7 +784,7 @@ func (o *mqlOciLockbox) lockboxes() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]lockbox.LockboxSummary, *string, error) {
 				resp, err := svc.ListLockboxes(ctx, lockbox.ListLockboxesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -858,7 +857,7 @@ func (o *mqlOciLockboxLockbox) accessRequests() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]lockbox.AccessRequestSummary, *string, error) {
 		resp, err := svc.ListAccessRequests(ctx, lockbox.ListAccessRequestsRequest{
-			LockboxId: common.String(o.Id.Data),
+			LockboxId: new(o.Id.Data),
 			Page:      page,
 		})
 		if err != nil {
@@ -916,7 +915,7 @@ func (o *mqlOciLockbox) approvalTemplates() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]lockbox.ApprovalTemplateSummary, *string, error) {
 				resp, err := svc.ListApprovalTemplates(ctx, lockbox.ListApprovalTemplatesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {

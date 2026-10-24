@@ -251,10 +251,7 @@ func decodeCipherSuiteCount(data []byte) (int, error) {
 	if len(data) < 1 {
 		return 0, fmt.Errorf("ipmi: short cipher suite support parameter, expected at least 1 byte, got %d", len(data))
 	}
-	n := int(data[0] & 0x1f)
-	if n > maxCipherSuiteEntries {
-		n = maxCipherSuiteEntries
-	}
+	n := min(int(data[0]&0x1f), maxCipherSuiteEntries)
 	return n, nil
 }
 
@@ -297,7 +294,7 @@ func decodeCipherSuitePrivileges(data []byte) ([maxCipherSuiteEntries]uint8, err
 	if len(data) < 9 {
 		return privs, fmt.Errorf("ipmi: short cipher suite privilege parameter, expected at least 9 bytes, got %d", len(data))
 	}
-	for i := 0; i < 8; i++ {
+	for i := range 8 {
 		b := data[i+1]
 		privs[2*i] = b & 0x0f
 		privs[2*i+1] = (b >> 4) & 0x0f

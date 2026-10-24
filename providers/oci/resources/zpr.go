@@ -117,8 +117,8 @@ func (o *mqlOciSecurityAttributesAttribute) fetchDetail() (*securityattribute.Se
 		}
 
 		resp, err := svc.GetSecurityAttribute(context.Background(), securityattribute.GetSecurityAttributeRequest{
-			SecurityAttributeNamespaceId: common.String(o.cacheNamespace.Id.Data),
-			SecurityAttributeName:        common.String(o.Name.Data),
+			SecurityAttributeNamespaceId: new(o.cacheNamespace.Id.Data),
+			SecurityAttributeName:        new(o.Name.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -214,7 +214,7 @@ func (o *mqlOciZpr) policies() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]zpr.ZprPolicySummary, *string, error) {
 				resp, err := svc.ListZprPolicies(ctx, zpr.ListZprPoliciesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -351,7 +351,7 @@ func (o *mqlOciSecurityAttributes) namespaces() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]securityattribute.SecurityAttributeNamespaceSummary, *string, error) {
 				resp, err := svc.ListSecurityAttributeNamespaces(ctx, securityattribute.ListSecurityAttributeNamespacesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -465,7 +465,7 @@ func ociSecurityAttributesFor(conn *connection.OciConnection, namespaceID string
 
 	return ociPaginate(ctx, func(ctx context.Context, page *string) ([]securityattribute.SecurityAttributeSummary, *string, error) {
 		resp, err := svc.ListSecurityAttributes(ctx, securityattribute.ListSecurityAttributesRequest{
-			SecurityAttributeNamespaceId: common.String(namespaceID),
+			SecurityAttributeNamespaceId: new(namespaceID),
 			Page:                         page,
 		})
 		if err != nil {
@@ -565,7 +565,7 @@ func ociZprConfiguration(conn *connection.OciConnection) (*zpr.Configuration, er
 	}
 
 	resp, err := svc.GetConfiguration(ctx, zpr.GetConfigurationRequest{
-		CompartmentId: common.String(conn.TenantID()),
+		CompartmentId: new(conn.TenantID()),
 	})
 	if err != nil {
 		if ociZprAbsent(err) {
@@ -606,7 +606,7 @@ func ociSecurityAttributeNamespacesFor(conn *connection.OciConnection) ([]securi
 
 	return ociPaginate(ctx, func(ctx context.Context, page *string) ([]securityattribute.SecurityAttributeNamespaceSummary, *string, error) {
 		resp, err := svc.ListSecurityAttributeNamespaces(ctx, securityattribute.ListSecurityAttributeNamespacesRequest{
-			CompartmentId: common.String(conn.TenantID()),
+			CompartmentId: new(conn.TenantID()),
 			Page:          page,
 		})
 		if err != nil {

@@ -77,7 +77,7 @@ func NewAlicloudConnection(id uint32, asset *inventory.Asset, conf *inventory.Co
 
 	conn.region = firstNonEmpty(opts[OptionRegion], os.Getenv("ALIBABA_CLOUD_REGION"), os.Getenv("ALIBABA_CLOUD_REGION_ID"), DefaultRegion)
 	if regions := opts[OptionRegions]; regions != "" {
-		for _, r := range strings.Split(regions, ",") {
+		for r := range strings.SplitSeq(regions, ",") {
 			if r = strings.TrimSpace(r); r != "" {
 				conn.regionFilter = append(conn.regionFilter, r)
 			}
@@ -126,24 +126,24 @@ func resolveCredential(opts map[string]string, accessKeyID, accessKeySecret, sec
 	case roleArn != "" && accessKeyID != "" && accessKeySecret != "":
 		sessionName := firstNonEmpty(opts[OptionRoleSessionName], "mondoo")
 		return credential.NewCredential(&credential.Config{
-			Type:            strPtr("ram_role_arn"),
-			AccessKeyId:     strPtr(accessKeyID),
-			AccessKeySecret: strPtr(accessKeySecret),
-			RoleArn:         strPtr(roleArn),
-			RoleSessionName: strPtr(sessionName),
+			Type:            new("ram_role_arn"),
+			AccessKeyId:     new(accessKeyID),
+			AccessKeySecret: new(accessKeySecret),
+			RoleArn:         new(roleArn),
+			RoleSessionName: new(sessionName),
 		})
 	case accessKeyID != "" && accessKeySecret != "" && securityToken != "":
 		return credential.NewCredential(&credential.Config{
-			Type:            strPtr("sts"),
-			AccessKeyId:     strPtr(accessKeyID),
-			AccessKeySecret: strPtr(accessKeySecret),
-			SecurityToken:   strPtr(securityToken),
+			Type:            new("sts"),
+			AccessKeyId:     new(accessKeyID),
+			AccessKeySecret: new(accessKeySecret),
+			SecurityToken:   new(securityToken),
 		})
 	case accessKeyID != "" && accessKeySecret != "":
 		return credential.NewCredential(&credential.Config{
-			Type:            strPtr("access_key"),
-			AccessKeyId:     strPtr(accessKeyID),
-			AccessKeySecret: strPtr(accessKeySecret),
+			Type:            new("access_key"),
+			AccessKeyId:     new(accessKeyID),
+			AccessKeySecret: new(accessKeySecret),
 		})
 	default:
 		// Default credential chain: environment variables, the shared
@@ -204,4 +204,5 @@ func firstNonEmpty(vals ...string) string {
 	return ""
 }
 
-func strPtr(s string) *string { return &s }
+//go:fix inline
+func strPtr(s string) *string { return new(s) }

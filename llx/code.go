@@ -5,7 +5,7 @@ package llx
 
 import (
 	"bytes"
-	"sort"
+	"slices"
 
 	"go.mondoo.com/mql/checksums"
 	"go.mondoo.com/mql/types"
@@ -170,7 +170,7 @@ func (l *CodeV2) checksum() string {
 	for k := range l.Assertions {
 		assertionRefs = append(assertionRefs, k)
 	}
-	sort.Slice(assertionRefs, func(i, j int) bool { return assertionRefs[i] < assertionRefs[j] })
+	slices.Sort(assertionRefs)
 	for _, ref := range assertionRefs {
 		checksum = checksum.Add(l.Checksums[ref])
 	}
@@ -361,7 +361,7 @@ func (l *CodeV2) Entrypoint2Assessment(bundle *CodeBundle, ref uint64, lookup fu
 
 			cnt := len(assertion.Checksums) - 1
 			res.Data = make([]*Primitive, cnt)
-			for i := 0; i < cnt; i++ {
+			for i := range cnt {
 				sum = assertion.Checksums[i+1]
 				res.Data[i], ok = dataMap[sum]
 				if !ok {
@@ -435,25 +435,19 @@ func (l *CodeV2) Entrypoint2Assessment(bundle *CodeBundle, ref uint64, lookup fu
 			// We need to find this datapoint and use it as the listRef.
 		OUTER:
 			for i := range code.Blocks {
-				refIsEntrypoint := false
-				for j := range code.Blocks[i].Entrypoints {
-					if code.Blocks[i].Entrypoints[j] == ref {
-						refIsEntrypoint = true
-						break
-					}
-				}
+				refIsEntrypoint := slices.Contains(code.Blocks[i].Entrypoints, ref)
 				if !refIsEntrypoint {
 					continue
 				}
-				for j := len(code.Blocks[i].Datapoints) - 1; j >= 0; j-- {
+				for _, v := range slices.Backward(code.Blocks[i].Datapoints) {
 					// skip the resource ids datapoint
-					if code.Blocks[i].Datapoints[j] == listRef {
+					if v == listRef {
 						continue
 					}
-					cc := code.Chunk(code.Blocks[i].Datapoints[j])
+					cc := code.Chunk(v)
 					// this contains the default values
 					if cc.Function != nil && cc.Function.Binding == listRef {
-						listRef = code.Blocks[i].Datapoints[j]
+						listRef = v
 						break OUTER
 					}
 				}

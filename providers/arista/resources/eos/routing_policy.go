@@ -106,7 +106,7 @@ func ParseRouteMaps(runningConfig string) []RouteMap {
 			MatchPrefixLists: []string{},
 		}
 
-		for _, line := range strings.Split(body, "\n") {
+		for line := range strings.SplitSeq(body, "\n") {
 			line = strings.TrimSpace(line)
 			switch {
 			case line == "":
@@ -184,7 +184,7 @@ func ParsePrefixLists(runningConfig string) []PrefixList {
 		// nested beneath it.
 		if m := prefixListBlockRe.FindStringSubmatch(header); m != nil {
 			pl := get(m[1], m[2])
-			for _, line := range strings.Split(body, "\n") {
+			for line := range strings.SplitSeq(body, "\n") {
 				line = strings.TrimSpace(line)
 				if line == "" {
 					continue

@@ -6,6 +6,7 @@ package resources
 import (
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
 	"testing"
 
@@ -104,9 +105,7 @@ func TestLoadChronyConfigConfdirFirstDirWins(t *testing.T) {
 		"/etc/chrony.d/ignored.txt":     "server 10.9.9.9\n",
 		"/run/chrony-dhcp/eth0.sources": "server 10.0.0.53 iburst\n",
 	}
-	for k, v := range leap16Chrony {
-		files[k] = v
-	}
+	maps.Copy(files, leap16Chrony)
 	files["/usr/etc/chrony.d/aa-vendor.conf"] = "server 192.0.2.1\n"
 
 	cfg, err := loadChronyConfig(chronyFs(t, files), "/usr/etc/chrony.conf")

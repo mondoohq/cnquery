@@ -192,26 +192,27 @@ func splitPathList(path string, isWindows bool) []any {
 	return res
 }
 
+//go:fix inline
 func MqlTime(t time.Time) *time.Time {
-	return &t
+	return new(t)
 }
 
 // returns uptime in nanoseconds
 func (p *mqlOs) uptime() (*time.Time, error) {
 	uptime, err := uptime.New(p.MqlRuntime.Connection.(shared.Connection))
 	if err != nil {
-		return MqlTime(llx.DurationToTime(0)), err
+		return new(llx.DurationToTime(0)), err
 	}
 
 	t, err := uptime.Duration()
 	if err != nil {
-		return MqlTime(llx.DurationToTime(0)), err
+		return new(llx.DurationToTime(0)), err
 	}
 
 	// we get nano seconds but duration to time only takes seconds
 	bootTime := time.Now().Add(-t)
 	up := time.Now().Unix() - bootTime.Unix()
-	return MqlTime(llx.DurationToTime(up)), nil
+	return new(llx.DurationToTime(up)), nil
 }
 
 func (p *mqlOsUpdate) id() (string, error) {
@@ -541,18 +542,18 @@ func (p *mqlOsBase) uptime() (*time.Time, error) {
 	conn := p.MqlRuntime.Connection.(shared.Connection)
 	uptime, err := uptime.New(conn)
 	if err != nil {
-		return MqlTime(llx.DurationToTime(0)), err
+		return new(llx.DurationToTime(0)), err
 	}
 
 	t, err := uptime.Duration()
 	if err != nil {
-		return MqlTime(llx.DurationToTime(0)), err
+		return new(llx.DurationToTime(0)), err
 	}
 
 	// we get nano seconds but duration to time only takes seconds
 	bootTime := time.Now().Add(-t)
 	up := time.Now().Unix() - bootTime.Unix()
-	return MqlTime(llx.DurationToTime(up)), nil
+	return new(llx.DurationToTime(up)), nil
 }
 
 func (p *mqlOsBase) updates() ([]any, error) {

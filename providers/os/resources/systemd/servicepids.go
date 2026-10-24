@@ -31,7 +31,7 @@ func ServicePids(afs *afero.Afero, unitName string) []string {
 			continue
 		}
 		var pids []string
-		for _, pid := range strings.Fields(string(data)) {
+		for pid := range strings.FieldsSeq(string(data)) {
 			if _, err := strconv.Atoi(pid); err == nil {
 				pids = append(pids, pid)
 			}

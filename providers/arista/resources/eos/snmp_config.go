@@ -5,6 +5,7 @@ package eos
 
 import (
 	"bufio"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -315,10 +316,8 @@ func ParseSnmpConfig(runningConfig string) *SnmpConfig {
 }
 
 func appendIfMissing(list []string, v string) []string {
-	for _, existing := range list {
-		if existing == v {
-			return list
-		}
+	if slices.Contains(list, v) {
+		return list
 	}
 	return append(list, v)
 }

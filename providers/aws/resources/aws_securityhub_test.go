@@ -70,10 +70,8 @@ func TestSecurityHubEnabledStandardsUsesCache(t *testing.T) {
 	}
 
 	hub := &mqlAwsSecurityhubHub{
-		mqlAwsSecurityhubHubInternal: mqlAwsSecurityhubHubInternal{
-			standardsFetched: true,
-			standards:        cached,
-		},
+		standardsFetched: true,
+		standards:        cached,
 	}
 
 	// Cache hit path: returns the pre-populated slice without touching the
@@ -89,25 +87,21 @@ func TestSecurityHubEnabledStandardsUsesCache(t *testing.T) {
 // same slice with no data race (meaningful under `go test -race`).
 func TestSecurityHubStandardsCacheConcurrentHits(t *testing.T) {
 	hub := &mqlAwsSecurityhubHub{
-		mqlAwsSecurityhubHubInternal: mqlAwsSecurityhubHubInternal{
-			standardsFetched: true,
-			standards: []types.StandardsSubscription{
-				{StandardsArn: aws.String("arn:aws:securityhub:::ruleset/x")},
-			},
+		standardsFetched: true,
+		standards: []types.StandardsSubscription{
+			{StandardsArn: aws.String("arn:aws:securityhub:::ruleset/x")},
 		},
 	}
 
 	var wg sync.WaitGroup
 	var got int64
-	for i := 0; i < 50; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 50 {
+		wg.Go(func() {
 			standards, err := hub.getEnabledStandards()
 			if err == nil && len(standards) == 1 {
 				atomic.AddInt64(&got, 1)
 			}
-		}()
+		})
 	}
 	wg.Wait()
 	assert.Equal(t, int64(50), got)

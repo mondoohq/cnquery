@@ -55,7 +55,7 @@ func paginate[T any](ctx context.Context, c *AdminClient, path string) ([]T, err
 	const maxPages = 1000
 	var all []T
 	afterID := ""
-	for page := 0; page < maxPages; page++ {
+	for range maxPages {
 		reqURL := withQuery(path, "limit", "100")
 		if afterID != "" {
 			reqURL = withQuery(reqURL, "after_id", afterID)
@@ -259,7 +259,7 @@ func paginatePageToken[T any](ctx context.Context, client *AdminClient, basePath
 	const maxPages = 1000
 	var all []T
 	pageToken := ""
-	for i := 0; i < maxPages; i++ {
+	for range maxPages {
 		reqURL := basePath
 		if pageToken != "" {
 			reqURL = withQuery(reqURL, "page", pageToken)

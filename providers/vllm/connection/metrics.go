@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"sort"
 	"strings"
@@ -111,16 +112,14 @@ func ParseMetrics(raw []byte) *MetricsSnapshot {
 			// The engine cache settings travel as the labels of this series.
 			// Only its labels are harvested: a label read off any other series
 			// would report a value that is not part of the cache configuration.
-			for key, value := range labels {
-				snapshot.CacheConfig[key] = value
-			}
+			maps.Copy(snapshot.CacheConfig, labels)
 		}
 		if model := strings.TrimSpace(labels[labelModelName]); model != "" {
 			models[model] = struct{}{}
 		}
 		if name == loraMetricName {
 			for _, label := range []string{labelRunningLoraAdapter, labelWaitingLoraAdapter} {
-				for _, adapter := range strings.Split(labels[label], ",") {
+				for adapter := range strings.SplitSeq(labels[label], ",") {
 					adapter = strings.TrimSpace(adapter)
 					if adapter != "" {
 						adapters[adapter] = struct{}{}
@@ -149,8 +148,8 @@ func sortedKeys(set map[string]struct{}) []string {
 // model path containing a quote or a backslash is read whole rather than
 // truncated at the escape.
 func parseMetricLine(line string) (string, map[string]string, bool) {
-	open := strings.IndexByte(line, '{')
-	if open < 0 {
+	before, after, ok := strings.Cut(line, "{")
+	if !ok {
 		name, _, _ := strings.Cut(line, " ")
 		name = strings.TrimSpace(name)
 		if name == "" {
@@ -159,13 +158,13 @@ func parseMetricLine(line string) (string, map[string]string, bool) {
 		return name, map[string]string{}, true
 	}
 
-	name := strings.TrimSpace(line[:open])
+	name := strings.TrimSpace(before)
 	if name == "" {
 		return "", nil, false
 	}
 
 	labels := map[string]string{}
-	rest := line[open+1:]
+	rest := after
 	for {
 		rest = strings.TrimLeft(rest, " ,")
 		if rest == "" {

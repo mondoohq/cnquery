@@ -87,8 +87,8 @@ type KernelVersion struct {
 // concatenates a non-zero / non-"(none)" epoch into pkg.Version, so this
 // matters whenever the underlying kernel rpm declares an Epoch.
 func stripRPMEpoch(version string) string {
-	if idx := strings.IndexByte(version, ':'); idx >= 0 {
-		return version[idx+1:]
+	if _, after, ok := strings.Cut(version, ":"); ok {
+		return after
 	}
 	return version
 }

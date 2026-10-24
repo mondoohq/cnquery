@@ -91,8 +91,7 @@ func (e *exchangeHTTPError) Error() string { return e.msg }
 // back is only meaningful when the endpoint or the credential cannot serve the
 // request at all, which is what the remaining statuses mean.
 func exchangeErrorIsTransient(err error) bool {
-	var httpErr *exchangeHTTPError
-	if errors.As(err, &httpErr) {
+	if httpErr, ok := errors.AsType[*exchangeHTTPError](err); ok {
 		return httpErr.StatusCode == http.StatusRequestTimeout ||
 			httpErr.StatusCode == http.StatusTooManyRequests ||
 			httpErr.StatusCode >= 500
@@ -553,9 +552,7 @@ func runExchangeSections(ctx context.Context, client *exchangeRestClient, sectio
 
 	for i := range sections {
 		section := sections[i]
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			sem <- struct{}{}
 			defer func() { <-sem }()
 
@@ -569,7 +566,7 @@ func runExchangeSections(ctx context.Context, client *exchangeRestClient, sectio
 			if err := section.assign(rows, report); err != nil {
 				failures[section.name] = err
 			}
-		}()
+		})
 	}
 	wg.Wait()
 

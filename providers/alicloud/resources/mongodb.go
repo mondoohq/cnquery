@@ -78,9 +78,9 @@ func (r *mqlAlicloudMongodb) instances() ([]any, error) {
 		pageSize := int32(100)
 		for {
 			resp, err := client.DescribeDBInstances(&ddsclient.DescribeDBInstancesRequest{
-				RegionId:   tea.String(region),
-				PageNumber: tea.Int32(pageNumber),
-				PageSize:   tea.Int32(pageSize),
+				RegionId:   new(region),
+				PageNumber: new(pageNumber),
+				PageSize:   new(pageSize),
 			})
 			if err != nil {
 				// a region may be un-activated or access-denied; skip it rather than failing the whole scan
@@ -216,8 +216,8 @@ func initAlicloudMongodbInstance(runtime *plugin.Runtime, args map[string]*llx.R
 		return nil, nil, err
 	}
 	resp, err := client.DescribeDBInstances(&ddsclient.DescribeDBInstancesRequest{
-		RegionId:     tea.String(region),
-		DBInstanceId: tea.String(instanceID),
+		RegionId:     new(region),
+		DBInstanceId: new(instanceID),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -261,7 +261,7 @@ func (r *mqlAlicloudMongodbInstance) attribute() (*ddsclient.DescribeDBInstanceA
 		return nil, err
 	}
 	resp, err := client.DescribeDBInstanceAttribute(&ddsclient.DescribeDBInstanceAttributeRequest{
-		DBInstanceId: tea.String(r.instanceId),
+		DBInstanceId: new(r.instanceId),
 	})
 	if err != nil {
 		return nil, err
@@ -388,7 +388,7 @@ func (r *mqlAlicloudMongodbInstance) sslInfo() (*ddsclient.DescribeDBInstanceSSL
 			return
 		}
 		resp, err := client.DescribeDBInstanceSSL(&ddsclient.DescribeDBInstanceSSLRequest{
-			DBInstanceId: tea.String(r.instanceId),
+			DBInstanceId: new(r.instanceId),
 		})
 		if err != nil {
 			r.sslErr = err
@@ -424,7 +424,7 @@ func (r *mqlAlicloudMongodbInstance) tdeEnabled() (bool, error) {
 		return false, err
 	}
 	resp, err := client.DescribeDBInstanceTDEInfo(&ddsclient.DescribeDBInstanceTDEInfoRequest{
-		DBInstanceId: tea.String(r.instanceId),
+		DBInstanceId: new(r.instanceId),
 	})
 	if err != nil {
 		return false, err
@@ -442,7 +442,7 @@ func (r *mqlAlicloudMongodbInstance) securityIPList() ([]any, error) {
 		return nil, err
 	}
 	resp, err := client.DescribeSecurityIps(&ddsclient.DescribeSecurityIpsRequest{
-		DBInstanceId: tea.String(r.instanceId),
+		DBInstanceId: new(r.instanceId),
 	})
 	if err != nil {
 		return nil, err
@@ -457,7 +457,7 @@ func (r *mqlAlicloudMongodbInstance) securityIPList() ([]any, error) {
 		if raw == nil {
 			return
 		}
-		for _, ip := range strings.Split(*raw, ",") {
+		for ip := range strings.SplitSeq(*raw, ",") {
 			ip = strings.TrimSpace(ip)
 			if ip == "" {
 				continue
@@ -500,7 +500,7 @@ func (r *mqlAlicloudMongodbInstance) fetchSecurityGroupIds() ([]any, error) {
 		return nil, err
 	}
 	resp, err := client.DescribeSecurityGroupConfiguration(&ddsclient.DescribeSecurityGroupConfigurationRequest{
-		DBInstanceId: tea.String(r.instanceId),
+		DBInstanceId: new(r.instanceId),
 	})
 	if err != nil {
 		return nil, err
@@ -526,7 +526,7 @@ func (r *mqlAlicloudMongodbInstance) auditPolicyEnabled() (bool, error) {
 		return false, err
 	}
 	resp, err := client.DescribeAuditPolicy(&ddsclient.DescribeAuditPolicyRequest{
-		DBInstanceId: tea.String(r.instanceId),
+		DBInstanceId: new(r.instanceId),
 	})
 	if err != nil {
 		return false, err

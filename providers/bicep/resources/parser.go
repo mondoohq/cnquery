@@ -1075,16 +1075,16 @@ func parseFunctionDecl(text string, decorators []string) (parsedFunction, bool) 
 	// first `=>` is the function arrow; any later `=>` belongs to a lambda
 	// inside the body, so splitting on the first occurrence is correct.
 	rest := strings.TrimSpace(trimmed[closeParen+1:])
-	arrow := strings.Index(rest, "=>")
-	if arrow < 0 {
+	before, after, ok := strings.Cut(rest, "=>")
+	if !ok {
 		return parsedFunction{}, false
 	}
 
 	fn := parsedFunction{
 		name:       name,
 		parameters: parseFunctionParams(paramList),
-		returnType: strings.TrimSpace(rest[:arrow]),
-		expression: strings.Join(strings.Fields(rest[arrow+2:]), " "),
+		returnType: strings.TrimSpace(before),
+		expression: strings.Join(strings.Fields(after), " "),
 		decorators: decorators,
 	}
 	decText := strings.Join(decorators, "\n")
@@ -1262,7 +1262,7 @@ func parseImportDecl(text string) (parsedImport, bool) {
 
 	if m := importNamedRe.FindStringSubmatch(trimmed); len(m) > 2 {
 		var symbols []string
-		for _, s := range strings.Split(m[1], ",") {
+		for s := range strings.SplitSeq(m[1], ",") {
 			s = strings.TrimSpace(s)
 			if s != "" {
 				symbols = append(symbols, s)
@@ -1422,8 +1422,8 @@ func joinDeclHeader(lines []string, startIdx int) string {
 
 func extractCondition(line string) string {
 	// condition is expressed as: resource foo 'Type@ver' = if (expr) { ... }
-	if idx := strings.Index(line, "= if"); idx >= 0 {
-		rest := strings.TrimSpace(line[idx+4:])
+	if _, after, ok := strings.Cut(line, "= if"); ok {
+		rest := strings.TrimSpace(after)
 		// Extract the condition expression in parens
 		// matchingParenIndex shares the string-aware lexer, so a `)` inside a
 		// quoted value (`if (tag == 'a)b')`) no longer closes the condition

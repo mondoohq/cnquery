@@ -46,7 +46,7 @@ func parseRouterOSTime(s string) *time.Time {
 // commonNameOf extracts the CN component of a distinguished name as RouterOS
 // reports it, for example "C=US,O=Example,CN=Example CA".
 func commonNameOf(dn string) string {
-	for _, part := range strings.Split(dn, ",") {
+	for part := range strings.SplitSeq(dn, ",") {
 		part = strings.TrimSpace(part)
 		if v, ok := strings.CutPrefix(part, "CN="); ok {
 			return strings.TrimSpace(v)

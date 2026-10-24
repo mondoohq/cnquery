@@ -43,7 +43,7 @@ type identifiedResource interface {
 
 // findByID returns the entry of list carrying the given id. Callers get a typed
 // zero value and false when no entry matches.
-func findByID[T identifiedResource](list []interface{}, id string) (T, bool) {
+func findByID[T identifiedResource](list []any, id string) (T, bool) {
 	var zero T
 	for _, item := range list {
 		entry, ok := item.(T)
@@ -57,7 +57,7 @@ func findByID[T identifiedResource](list []interface{}, id string) (T, bool) {
 // claudeChildren reads one of the lists hanging off the shared claude resource
 // through its memoized accessor, so resolving references on every row of a
 // result set costs a single list call.
-func claudeChildren(runtime *plugin.Runtime, get func(*mqlClaude) *plugin.TValue[[]interface{}]) ([]interface{}, error) {
+func claudeChildren(runtime *plugin.Runtime, get func(*mqlClaude) *plugin.TValue[[]any]) ([]any, error) {
 	res, err := CreateResource(runtime, "claude", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func claudeChildren(runtime *plugin.Runtime, get func(*mqlClaude) *plugin.TValue
 
 // lookupClaudeChild resolves a reference against one of those lists. An empty
 // id resolves to nothing without listing at all.
-func lookupClaudeChild[T identifiedResource](runtime *plugin.Runtime, id string, get func(*mqlClaude) *plugin.TValue[[]interface{}]) (T, bool, error) {
+func lookupClaudeChild[T identifiedResource](runtime *plugin.Runtime, id string, get func(*mqlClaude) *plugin.TValue[[]any]) (T, bool, error) {
 	var zero T
 	if id == "" {
 		return zero, false, nil
@@ -88,7 +88,7 @@ func lookupClaudeChild[T identifiedResource](runtime *plugin.Runtime, id string,
 
 // lookupOrganizationChild resolves a reference against one of the lists hanging
 // off the shared claude.organization resource, with the same memoization.
-func lookupOrganizationChild[T identifiedResource](runtime *plugin.Runtime, id string, get func(*mqlClaudeOrganization) *plugin.TValue[[]interface{}]) (T, bool, error) {
+func lookupOrganizationChild[T identifiedResource](runtime *plugin.Runtime, id string, get func(*mqlClaudeOrganization) *plugin.TValue[[]any]) (T, bool, error) {
 	var zero T
 	if id == "" {
 		return zero, false, nil
@@ -109,8 +109,8 @@ func lookupOrganizationChild[T identifiedResource](runtime *plugin.Runtime, id s
 
 // toInterfaceMap converts an API string map into the interface map llx expects
 // for a map[string]string field.
-func toInterfaceMap(m map[string]string) map[string]interface{} {
-	res := make(map[string]interface{}, len(m))
+func toInterfaceMap(m map[string]string) map[string]any {
+	res := make(map[string]any, len(m))
 	for k, v := range m {
 		res[k] = v
 	}
@@ -119,8 +119,8 @@ func toInterfaceMap(m map[string]string) map[string]interface{} {
 
 // toInterfaceSlice converts an API string slice into the interface slice llx
 // expects for a []string field.
-func toInterfaceSlice(s []string) []interface{} {
-	res := make([]interface{}, len(s))
+func toInterfaceSlice(s []string) []any {
+	res := make([]any, len(s))
 	for i, v := range s {
 		res[i] = v
 	}
@@ -129,11 +129,11 @@ func toInterfaceSlice(s []string) []interface{} {
 
 // rawJSONToDict decodes a raw API JSON fragment into the JSON-native values a
 // dict field accepts. An absent fragment decodes to nil, which renders as null.
-func rawJSONToDict(raw string) (interface{}, error) {
+func rawJSONToDict(raw string) (any, error) {
 	if raw == "" || raw == "null" {
 		return nil, nil
 	}
-	var res interface{}
+	var res any
 	if err := json.Unmarshal([]byte(raw), &res); err != nil {
 		return nil, err
 	}
@@ -170,13 +170,13 @@ func (r *mqlClaude) host() (string, error) {
 	return conn(r.MqlRuntime).Host(), nil
 }
 
-func (r *mqlClaude) models() ([]interface{}, error) {
+func (r *mqlClaude) models() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
 
 	pager := client.Models.ListAutoPaging(context.Background(), anthropic.ModelListParams{})
 
-	var res []interface{}
+	var res []any
 	for pager.Next() {
 		m := pager.Current()
 

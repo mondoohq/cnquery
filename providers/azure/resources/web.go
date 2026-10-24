@@ -62,7 +62,7 @@ type AzureWebAppStackRuntime struct {
 	IsDeprecated  bool      `json:"isDeprecated,omitempty"`
 	IsHidden      bool      `json:"isHidden,omitempty"`
 	AutoUpdate    bool      `json:"autoUpdate,omitempty"`
-	EndOfLifeDate time.Time `json:"endOfLifeDate,omitempty"`
+	EndOfLifeDate time.Time `json:"endOfLifeDate"`
 }
 
 func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, site *web.Site) (any, error) {

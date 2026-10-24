@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/database"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,8 +15,8 @@ import (
 func TestOciDatabaseArgs(t *testing.T) {
 	t.Run("a database with no backup configuration is not backed up", func(t *testing.T) {
 		args := ociDatabaseArgs(&database.DatabaseSummary{
-			Id:     common.String("ocid1.database.oc1..a"),
-			DbName: common.String("ORCL"),
+			Id:     new("ocid1.database.oc1..a"),
+			DbName: new("ORCL"),
 		})
 		// False rather than null: a null would pass an assertion that
 		// automatic backups are enabled.
@@ -29,12 +28,12 @@ func TestOciDatabaseArgs(t *testing.T) {
 
 	t.Run("the backup configuration is reported", func(t *testing.T) {
 		args := ociDatabaseArgs(&database.DatabaseSummary{
-			Id:     common.String("ocid1.database.oc1..b"),
-			DbName: common.String("PROD"),
-			IsCdb:  common.Bool(true),
+			Id:     new("ocid1.database.oc1..b"),
+			DbName: new("PROD"),
+			IsCdb:  new(true),
 			DbBackupConfig: &database.DbBackupConfig{
-				AutoBackupEnabled:    common.Bool(true),
-				RecoveryWindowInDays: common.Int(30),
+				AutoBackupEnabled:    new(true),
+				RecoveryWindowInDays: new(30),
 				AutoBackupWindow:     database.DbBackupConfigAutoBackupWindowTwo,
 				BackupDeletionPolicy: database.DbBackupConfigBackupDeletionPolicyAfterRetentionPeriod,
 				BackupDestinationDetails: []database.BackupDestinationDetails{
@@ -55,15 +54,15 @@ func TestOciBackupDestinations(t *testing.T) {
 	got := ociBackupDestinations([]database.BackupDestinationDetails{
 		{
 			Type:                   database.BackupDestinationDetailsTypeRecoveryAppliance,
-			Id:                     common.String("ocid1.backupdestination.oc1..zdlra"),
-			VpcUser:                common.String("vpc_backup"),
-			VpcPassword:            common.String("Recovery-Appliance-Pa55"),
-			IsRetentionLockEnabled: common.Bool(true),
+			Id:                     new("ocid1.backupdestination.oc1..zdlra"),
+			VpcUser:                new("vpc_backup"),
+			VpcPassword:            new("Recovery-Appliance-Pa55"),
+			IsRetentionLockEnabled: new(true),
 		},
 		{
 			Type:         database.BackupDestinationDetailsTypeObjectStore,
-			IsRemote:     common.Bool(true),
-			RemoteRegion: common.String("us-phoenix-1"),
+			IsRemote:     new(true),
+			RemoteRegion: new("us-phoenix-1"),
 		},
 	})
 	require.Len(t, got, 2)

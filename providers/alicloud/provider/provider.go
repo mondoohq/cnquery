@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"errors"
+	"maps"
 	"os"
 	"strings"
 
@@ -111,9 +112,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", secret))
 	}
 
-	for k, v := range parseFlagsToFiltersOpts(flags) {
-		conf.Options[k] = v
-	}
+	maps.Copy(conf.Options, parseFlagsToFiltersOpts(flags))
 
 	discoverTargets := []string{resources.DiscoveryAuto}
 	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {

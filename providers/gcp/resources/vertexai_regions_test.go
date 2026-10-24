@@ -3,6 +3,8 @@
 
 package resources
 
+import "slices"
+
 import "testing"
 
 // TestSkippedRegionsAreScopedPerKind pins the region-discovery contract.
@@ -48,11 +50,8 @@ func TestMarkRegionSkippedIsIsolated(t *testing.T) {
 	}
 
 	var found bool
-	for _, r := range svc.getRegions("datasets") {
-		if r == "europe-west4" {
-			found = true
-			break
-		}
+	if slices.Contains(svc.getRegions("datasets"), "europe-west4") {
+		found = true
 	}
 	if !found {
 		t.Error("datasets lost europe-west4 because endpoints skipped it")

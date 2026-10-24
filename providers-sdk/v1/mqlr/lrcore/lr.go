@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"path"
 	"strings"
 	"text/scanner"
@@ -1035,9 +1036,7 @@ func (lr *LR) exposedMembers(byID map[string]*Resource, id string, depth int) ma
 			continue
 		}
 		if f.BasicField.isEmbedded && f.BasicField.Type.SimpleType != nil {
-			for name, m := range lr.exposedMembers(byID, f.BasicField.Type.SimpleType.Type, depth+1) {
-				res[name] = m
-			}
+			maps.Copy(res, lr.exposedMembers(byID, f.BasicField.Type.SimpleType.Type, depth+1))
 			continue
 		}
 		res[f.BasicField.ID] = exposedMember{

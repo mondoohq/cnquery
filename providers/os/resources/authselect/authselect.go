@@ -336,7 +336,7 @@ var nsswitchMapRe = regexp.MustCompile(`^\s*([^\s:]+):`)
 // gives way to the profile's `automount:`.
 func MergeUserNsswitch(generated, user string) string {
 	var profileMaps []string
-	for _, line := range strings.Split(generated, "\n") {
+	for line := range strings.SplitSeq(generated, "\n") {
 		if m := nsswitchMapRe.FindStringSubmatch(line); m != nil {
 			profileMaps = append(profileMaps, m[1])
 		}
@@ -367,7 +367,7 @@ func SameContent(written, expected string) bool {
 // and comments.
 func significantLines(content string) []string {
 	var lines []string
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue

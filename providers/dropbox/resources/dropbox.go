@@ -4,7 +4,6 @@
 package resources
 
 import (
-	dropboxsdk "github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/team"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/team_policies"
 	"github.com/rs/zerolog/log"
@@ -48,7 +47,7 @@ func initDropboxTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 
 	var uploadRateLimit int64
 	features, err := client.FeaturesGetValues(&team.FeaturesGetValuesBatchArg{
-		Features: []*team.Feature{{Tagged: dropboxsdk.Tagged{Tag: team.FeatureUploadApiRateLimit}}},
+		Features: []*team.Feature{{Tag: team.FeatureUploadApiRateLimit}},
 	})
 	if err != nil {
 		// A missing scope or transient failure leaves uploadApiRateLimit at 0,

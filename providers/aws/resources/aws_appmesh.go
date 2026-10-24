@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"maps"
 	"strings"
 	"sync"
 	"time"
@@ -1846,11 +1847,9 @@ func appmeshTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (map
 			}
 			return nil, err
 		}
-		for k, v := range tagsToMap(page.Tags,
+		maps.Copy(tags, tagsToMap(page.Tags,
 			func(t appmesh_types.TagRef) *string { return t.Key },
-			func(t appmesh_types.TagRef) *string { return t.Value }) {
-			tags[k] = v
-		}
+			func(t appmesh_types.TagRef) *string { return t.Value }))
 	}
 	return tags, nil
 }

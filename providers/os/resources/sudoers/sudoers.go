@@ -506,8 +506,8 @@ func parseLine(line string) *parsedLine {
 
 	// Find the boundary between user list and host list
 	var userEndIndex int
-	for i := len(tokens) - 1; i >= 0; i-- {
-		token := strings.TrimSpace(tokens[i])
+	for i, token := range slices.Backward(tokens) {
+		token := strings.TrimSpace(token)
 		if strings.HasSuffix(token, ",") {
 			continue
 		}

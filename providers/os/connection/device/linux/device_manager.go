@@ -441,8 +441,8 @@ func getLunsFromOpts(opts map[string]string) ([]int, error) {
 		luns = append(luns, lun)
 	}
 	if opts[LunsOption] != "" {
-		vals := strings.Split(opts[LunsOption], ",")
-		for _, l := range vals {
+		vals := strings.SplitSeq(opts[LunsOption], ",")
+		for l := range vals {
 			lun, err := strconv.Atoi(l)
 			if err != nil {
 				return nil, err

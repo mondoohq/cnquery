@@ -132,7 +132,7 @@ func (r *mqlOpenaiCodex) modelProvider() (string, error) {
 	return cfg.ModelProvider, nil
 }
 
-func (r *mqlOpenaiCodex) plugins() ([]interface{}, error) {
+func (r *mqlOpenaiCodex) plugins() ([]any, error) {
 	afs := r.afs()
 	pluginsDir := filepath.Join(r.codexDir(), ".tmp", "plugins", "plugins")
 
@@ -144,7 +144,7 @@ func (r *mqlOpenaiCodex) plugins() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var result []interface{}
+	var result []any
 	for _, dir := range subdirs {
 		p := codexPluginInfo{name: dir.name}
 
@@ -178,11 +178,11 @@ func (r *mqlOpenaiCodex) plugins() ([]interface{}, error) {
 		hooksExists, _ := afs.Exists(filepath.Join(dir.path, "hooks.json"))
 		p.hasHooks = hooksExists
 
-		capAny := make([]interface{}, len(p.capabilities))
+		capAny := make([]any, len(p.capabilities))
 		for i, c := range p.capabilities {
 			capAny[i] = c
 		}
-		skillAny := make([]interface{}, len(p.skillNames))
+		skillAny := make([]any, len(p.skillNames))
 		for i, s := range p.skillNames {
 			skillAny[i] = s
 		}
@@ -207,9 +207,9 @@ func (r *mqlOpenaiCodex) plugins() ([]interface{}, error) {
 	return result, nil
 }
 
-func (r *mqlOpenaiCodex) skills() ([]interface{}, error) {
+func (r *mqlOpenaiCodex) skills() ([]any, error) {
 	afs := r.afs()
-	var result []interface{}
+	var result []any
 	seen := map[string]struct{}{}
 
 	dirs, err := r.codexDirs()
@@ -304,8 +304,8 @@ func (r *mqlOpenaiCodex) readCodexSkill(afs *afero.Afero, name, dirPath, plugin 
 	return newCodexSkillResource(r.MqlRuntime, parseSkillMd(name, skillPath, string(data)), plugin)
 }
 
-func (r *mqlOpenaiCodex) mcpServers() ([]interface{}, error) {
-	var result []interface{}
+func (r *mqlOpenaiCodex) mcpServers() ([]any, error) {
+	var result []any
 
 	// Servers the user configured in config.toml. No plugin declared them, so
 	// `plugin` is empty.
@@ -383,7 +383,7 @@ func (r *mqlOpenaiCodex) mcpServers() ([]interface{}, error) {
 	return result, nil
 }
 
-func (r *mqlOpenaiCodex) connectors() ([]interface{}, error) {
+func (r *mqlOpenaiCodex) connectors() ([]any, error) {
 	afs := r.afs()
 	pluginsDir := filepath.Join(r.codexDir(), ".tmp", "plugins", "plugins")
 
@@ -395,7 +395,7 @@ func (r *mqlOpenaiCodex) connectors() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var result []interface{}
+	var result []any
 	for _, dir := range subdirs {
 		var appConfig struct {
 			Apps map[string]struct {
@@ -538,7 +538,7 @@ func (r *mqlOpenaiCodexRepo) id() (string, error) {
 	return "openai.codex.repo/" + r.Path.Data, nil
 }
 
-func (r *mqlOpenaiCodex) repos() ([]interface{}, error) {
+func (r *mqlOpenaiCodex) repos() ([]any, error) {
 	return gitReposFromPaths(r.MqlRuntime, "openai.codex.repo", r.sessionWorkingDirs())
 }
 

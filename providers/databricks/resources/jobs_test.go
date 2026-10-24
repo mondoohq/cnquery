@@ -453,10 +453,10 @@ func TestSettingsOf(t *testing.T) {
 // through reflection and fail at SDK upgrade time instead.
 
 func TestNotificationEmailsOfCoversEverySdkEvent(t *testing.T) {
-	typ := reflect.TypeOf(jobs.JobEmailNotifications{})
+	typ := reflect.TypeFor[jobs.JobEmailNotifications]()
 	for i := 0; i < typ.NumField(); i++ {
 		f := typ.Field(i)
-		if f.Type != reflect.TypeOf([]string{}) || !strings.HasPrefix(f.Name, "On") {
+		if f.Type != reflect.TypeFor[[]string]() || !strings.HasPrefix(f.Name, "On") {
 			continue
 		}
 		t.Run(f.Name, func(t *testing.T) {
@@ -472,10 +472,10 @@ func TestNotificationEmailsOfCoversEverySdkEvent(t *testing.T) {
 }
 
 func TestWebhookNotificationIdsOfCoversEverySdkEvent(t *testing.T) {
-	typ := reflect.TypeOf(jobs.WebhookNotifications{})
+	typ := reflect.TypeFor[jobs.WebhookNotifications]()
 	for i := 0; i < typ.NumField(); i++ {
 		f := typ.Field(i)
-		if f.Type != reflect.TypeOf([]jobs.Webhook{}) || !strings.HasPrefix(f.Name, "On") {
+		if f.Type != reflect.TypeFor[[]jobs.Webhook]() || !strings.HasPrefix(f.Name, "On") {
 			continue
 		}
 		t.Run(f.Name, func(t *testing.T) {

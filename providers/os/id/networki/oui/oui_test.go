@@ -80,7 +80,7 @@ func TestVendorDoesNotAllocate(t *testing.T) {
 func TestTableIsWellFormed(t *testing.T) {
 	var assigned, prev int64 = 0, -1
 
-	for v := int64(0); v < 1<<24; v++ {
+	for v := range int64(1 << 24) {
 		vendor := oui.Vendor(hex6(v))
 		if vendor == "" {
 			continue

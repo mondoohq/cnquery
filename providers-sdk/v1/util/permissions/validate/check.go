@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -212,13 +213,7 @@ func checkOperations(m manifest, cat *catalog) map[string][]problem {
 			continue
 		}
 		seen[key+"="+d.Permission] = true
-		match := false
-		for _, a := range authorized {
-			if a == d.Permission {
-				match = true
-				break
-			}
-		}
+		match := slices.Contains(authorized, d.Permission)
 		if !match {
 			out[d.Permission] = append(out[d.Permission], problem{d.Permission, fmt.Sprintf("the %s operation %s is authorized by %s, not by this (%s)",
 				d.Service, d.Action, strings.Join(authorized, " and "), d.SourceFile)})

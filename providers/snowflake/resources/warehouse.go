@@ -34,7 +34,7 @@ func initSnowflakeWarehouse(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	client := conn.Client()
 	ctx := context.Background()
 
-	warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseRequest{Like: &sdk.Like{Pattern: sdk.String(name)}})
+	warehouses, err := client.Warehouses.Show(ctx, &sdk.ShowWarehouseRequest{Like: &sdk.Like{Pattern: new(name)}})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -67,7 +67,7 @@ func snowflakeWarehouseByName(runtime *plugin.Runtime, name string) (*mqlSnowfla
 		return newMqlSnowflakeWarehouse(runtime, warehouse)
 	}
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
-	warehouses, err := conn.Client().Warehouses.Show(context.Background(), &sdk.ShowWarehouseRequest{Like: &sdk.Like{Pattern: sdk.String(name)}})
+	warehouses, err := conn.Client().Warehouses.Show(context.Background(), &sdk.ShowWarehouseRequest{Like: &sdk.Like{Pattern: new(name)}})
 	if err != nil {
 		return nil, err
 	}

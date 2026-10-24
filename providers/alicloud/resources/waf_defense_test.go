@@ -35,14 +35,14 @@ func TestWafTemplateEnabled(t *testing.T) {
 
 func TestParseWafRuleConfig(t *testing.T) {
 	t.Run("object", func(t *testing.T) {
-		cfg := parseWafRuleConfig(tea.String(`{"action":"block","ratio":10}`))
+		cfg := parseWafRuleConfig(new(`{"action":"block","ratio":10}`))
 		obj, ok := cfg.(map[string]any)
 		require.True(t, ok, "a JSON object config decodes to a map")
 		assert.Equal(t, "block", obj["action"])
 	})
 
 	t.Run("array", func(t *testing.T) {
-		cfg := parseWafRuleConfig(tea.String(`["203.0.113.0/24"]`))
+		cfg := parseWafRuleConfig(new(`["203.0.113.0/24"]`))
 		entries, ok := cfg.([]any)
 		require.True(t, ok, "a JSON array config decodes to a slice")
 		assert.Equal(t, []any{"203.0.113.0/24"}, entries)
@@ -52,9 +52,9 @@ func TestParseWafRuleConfig(t *testing.T) {
 		// null rather than an empty object: an empty object would read as
 		// "the rule matches nothing", which is a different claim
 		assert.Nil(t, parseWafRuleConfig(nil))
-		assert.Nil(t, parseWafRuleConfig(tea.String("")))
-		assert.Nil(t, parseWafRuleConfig(tea.String("   ")))
-		assert.Nil(t, parseWafRuleConfig(tea.String("not json")))
+		assert.Nil(t, parseWafRuleConfig(new("")))
+		assert.Nil(t, parseWafRuleConfig(new("   ")))
+		assert.Nil(t, parseWafRuleConfig(new("not json")))
 	})
 }
 

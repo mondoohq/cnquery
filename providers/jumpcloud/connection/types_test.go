@@ -266,27 +266,27 @@ func TestUserMFAExclusion(t *testing.T) {
 			name:           "configured with no exclusion is compliant",
 			raw:            `{"id":"u1","mfa":{"configured":true,"exclusion":false}}`,
 			wantConfigured: true,
-			wantExclusion:  boolPtr(false),
+			wantExclusion:  new(false),
 		},
 		{
 			name:              "configured with a live exclusion surfaces the bypass",
 			raw:               `{"id":"u2","mfa":{"configured":true,"exclusion":true,"exclusionUntil":"` + future + `"}}`,
 			wantConfigured:    true,
-			wantExclusion:     boolPtr(true),
+			wantExclusion:     new(true),
 			wantExclusionTime: mustTime(t, future),
 		},
 		{
 			name:              "expired exclusion still reports its end time",
 			raw:               `{"id":"u3","mfa":{"configured":true,"exclusion":true,"exclusionUntil":"` + past + `"}}`,
 			wantConfigured:    true,
-			wantExclusion:     boolPtr(true),
+			wantExclusion:     new(true),
 			wantExclusionTime: mustTime(t, past),
 		},
 		{
 			name:           "open-ended exclusion has no expiry",
 			raw:            `{"id":"u4","mfa":{"configured":true,"exclusion":true}}`,
 			wantConfigured: true,
-			wantExclusion:  boolPtr(true),
+			wantExclusion:  new(true),
 		},
 		{
 			// encoding/json leaves the zero value on a missing key, and false
@@ -438,7 +438,8 @@ func TestUserPasswordExpirationDecode(t *testing.T) {
 	})
 }
 
-func boolPtr(b bool) *bool { return &b }
+//go:fix inline
+func boolPtr(b bool) *bool { return new(b) }
 
 func mustTime(t *testing.T, s string) *time.Time {
 	t.Helper()

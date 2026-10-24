@@ -20,16 +20,16 @@ import (
 // in cleartext instead of the "***" mask. The Secret case must win.
 func TestSimpleConfigurationSettingValue_SecretRedaction(t *testing.T) {
 	secret := betamodels.NewDeviceManagementConfigurationSecretSettingValue()
-	secret.SetValue(ptr("super-secret-value"))
+	secret.SetValue(new("super-secret-value"))
 	assert.Equal(t, "***", simpleConfigurationSettingValue(secret),
 		"secret setting values must be masked, never returned in cleartext")
 
 	str := betamodels.NewDeviceManagementConfigurationStringSettingValue()
-	str.SetValue(ptr("plain-value"))
+	str.SetValue(new("plain-value"))
 	assert.Equal(t, "plain-value", simpleConfigurationSettingValue(str))
 
 	integer := betamodels.NewDeviceManagementConfigurationIntegerSettingValue()
-	integer.SetValue(ptr(int32(42)))
+	integer.SetValue(new(int32(42)))
 	assert.Equal(t, int64(42), simpleConfigurationSettingValue(integer))
 
 	assert.Nil(t, simpleConfigurationSettingValue(nil))

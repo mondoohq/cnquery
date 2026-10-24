@@ -48,8 +48,7 @@ func inspectPrivateKey(data []byte) (privateKeyInfo, error) {
 		return privateKeyInfo{Algorithm: algo, Bits: bits}, nil
 	}
 
-	var passphraseErr *ssh.PassphraseMissingError
-	if errors.As(err, &passphraseErr) {
+	if passphraseErr, ok := errors.AsType[*ssh.PassphraseMissingError](err); ok {
 		info := privateKeyInfo{Encrypted: true}
 		if passphraseErr.PublicKey != nil {
 			if cpk, ok := passphraseErr.PublicKey.(ssh.CryptoPublicKey); ok {

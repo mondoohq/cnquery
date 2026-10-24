@@ -250,7 +250,7 @@ func parseYumBaseurls(value string) []string {
 	if len(m) < 2 {
 		return res
 	}
-	for _, u := range strings.Split(m[1], ",") {
+	for u := range strings.SplitSeq(m[1], ",") {
 		if u = strings.TrimSpace(u); u != "" {
 			res = append(res, u)
 		}

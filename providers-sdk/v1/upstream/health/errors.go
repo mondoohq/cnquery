@@ -6,6 +6,7 @@ package health
 import (
 	"context"
 	"fmt"
+	"maps"
 	"runtime"
 	"runtime/debug"
 	"time"
@@ -32,9 +33,7 @@ func WithTags(tags map[string]string) ReportOption {
 		if o.tags == nil {
 			o.tags = make(map[string]string, len(tags))
 		}
-		for k, v := range tags {
-			o.tags[k] = v
-		}
+		maps.Copy(o.tags, tags)
 	}
 }
 
@@ -201,9 +200,7 @@ func sendPanic(product, version, build string, r any, stacktrace []byte, tags ma
 // asset context is available (e.g. panics outside a scan).
 func panicEvent(product, version, build string, r any, stacktrace []byte, tags map[string]string) *SendErrorReq {
 	allTags := make(map[string]string, len(tags)+2)
-	for k, v := range tags {
-		allTags[k] = v
-	}
+	maps.Copy(allTags, tags)
 	// Platform tags are written last so caller-supplied tags cannot
 	// overwrite them.
 	allTags["os"] = runtime.GOOS

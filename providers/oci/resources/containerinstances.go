@@ -7,7 +7,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/containerinstances"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -78,7 +77,7 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]containerinstances.ContainerInstanceSummary, *string, error) {
 				response, err := svc.ListContainerInstances(ctx, containerinstances.ListContainerInstancesRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -185,8 +184,8 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]containerinstances.ContainerSummary, *string, error) {
 		response, err := svc.ListContainers(ctx, containerinstances.ListContainersRequest{
-			CompartmentId:       common.String(o.cacheCompartmentID),
-			ContainerInstanceId: common.String(o.Id.Data),
+			CompartmentId:       new(o.cacheCompartmentID),
+			ContainerInstanceId: new(o.Id.Data),
 			Page:                page,
 		})
 		if err != nil {

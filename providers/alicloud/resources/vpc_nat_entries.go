@@ -58,9 +58,9 @@ func (r *mqlAlicloudVpcNatGateway) snatEntries() ([]any, error) {
 	collected := int32(0)
 	for {
 		resp, err := client.DescribeSnatTableEntries(&vpcclient.DescribeSnatTableEntriesRequest{
-			RegionId:     tea.String(r.cacheRegion),
-			NatGatewayId: tea.String(r.NatGatewayId.Data),
-			PageNumber:   tea.Int32(pageNumber),
+			RegionId:     new(r.cacheRegion),
+			NatGatewayId: new(r.NatGatewayId.Data),
+			PageNumber:   new(pageNumber),
 			PageSize:     tea.Int32(natEntryPageSize),
 		})
 		if err != nil {
@@ -131,9 +131,9 @@ func (r *mqlAlicloudVpcNatGateway) forwardEntries() ([]any, error) {
 	collected := int32(0)
 	for {
 		resp, err := client.DescribeForwardTableEntries(&vpcclient.DescribeForwardTableEntriesRequest{
-			RegionId:     tea.String(r.cacheRegion),
-			NatGatewayId: tea.String(r.NatGatewayId.Data),
-			PageNumber:   tea.Int32(pageNumber),
+			RegionId:     new(r.cacheRegion),
+			NatGatewayId: new(r.NatGatewayId.Data),
+			PageNumber:   new(pageNumber),
 			PageSize:     tea.Int32(natEntryPageSize),
 		})
 		if err != nil {

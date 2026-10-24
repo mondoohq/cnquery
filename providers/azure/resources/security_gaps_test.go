@@ -145,19 +145,19 @@ func TestClassifyAzureRefusalPassesThroughNonRefusals(t *testing.T) {
 
 func TestVmExtensionFields(t *testing.T) {
 	f, err := vmExtensionFields(&compute.VirtualMachineExtensionProperties{
-		Publisher:          to.Ptr("Microsoft.Compute"),
-		Type:               to.Ptr("CustomScriptExtension"),
-		TypeHandlerVersion: to.Ptr("1.10"),
-		SuppressFailures:   to.Ptr(true),
+		Publisher:          new("Microsoft.Compute"),
+		Type:               new("CustomScriptExtension"),
+		TypeHandlerVersion: new("1.10"),
+		SuppressFailures:   new(true),
 		Settings: map[string]any{
 			"fileUris":         []any{"https://a.blob.core.windows.net/c/s.ps1?sig=LEAK"},
 			"commandToExecute": "powershell s.ps1",
 		},
 		ProtectedSettings: map[string]any{"storageAccountKey": "PROTECTEDLEAK"},
 		ProtectedSettingsFromKeyVault: &compute.KeyVaultSecretReference{
-			SecretURL: to.Ptr("https://kv.vault.azure.net/secrets/s/1"),
+			SecretURL: new("https://kv.vault.azure.net/secrets/s/1"),
 		},
-		ProvisionAfterExtensions: []*string{to.Ptr("first"), nil},
+		ProvisionAfterExtensions: []*string{new("first"), nil},
 	})
 	require.NoError(t, err)
 	args := f.args()
@@ -176,8 +176,8 @@ func TestVmExtensionFields(t *testing.T) {
 
 func TestVmssExtensionFields(t *testing.T) {
 	f, err := vmssExtensionFields(&compute.VirtualMachineScaleSetExtensionProperties{
-		Publisher: to.Ptr("Microsoft.Azure.Extensions"),
-		Type:      to.Ptr("CustomScript"),
+		Publisher: new("Microsoft.Azure.Extensions"),
+		Type:      new("CustomScript"),
 		Settings:  map[string]any{"script": "ZWNobw==", "password": "LEAK"},
 	})
 	require.NoError(t, err)
@@ -189,9 +189,9 @@ func TestVmssExtensionFields(t *testing.T) {
 
 func TestChildResourceID(t *testing.T) {
 	parent := "/subscriptions/s/resourceGroups/rg/providers/Microsoft.Compute/virtualMachineScaleSets/ss"
-	assert.Equal(t, "/own/id", childResourceID(to.Ptr("/own/id"), parent, "extensions", to.Ptr("ext")))
-	assert.Equal(t, parent+"/extensions/ext", childResourceID(nil, parent, "extensions", to.Ptr("ext")))
-	assert.Equal(t, parent+"/extensions/ext", childResourceID(to.Ptr(""), parent, "extensions", to.Ptr("ext")))
+	assert.Equal(t, "/own/id", childResourceID(new("/own/id"), parent, "extensions", new("ext")))
+	assert.Equal(t, parent+"/extensions/ext", childResourceID(nil, parent, "extensions", new("ext")))
+	assert.Equal(t, parent+"/extensions/ext", childResourceID(new(""), parent, "extensions", new("ext")))
 	assert.Equal(t, "", childResourceID(nil, parent, "extensions", nil))
 }
 
@@ -236,34 +236,34 @@ func TestAvailablePatchSummary(t *testing.T) {
 
 func TestRunCommandScriptSource(t *testing.T) {
 	assert.Equal(t, "", runCommandScriptSource(nil))
-	assert.Equal(t, "", runCommandScriptSource(&compute.VirtualMachineRunCommandScriptSource{Script: to.Ptr("")}))
-	assert.Equal(t, runCommandSourceInline, runCommandScriptSource(&compute.VirtualMachineRunCommandScriptSource{Script: to.Ptr("id")}))
-	assert.Equal(t, runCommandSourceURI, runCommandScriptSource(&compute.VirtualMachineRunCommandScriptSource{ScriptURI: to.Ptr("https://x/y.sh")}))
-	assert.Equal(t, runCommandSourceCommandID, runCommandScriptSource(&compute.VirtualMachineRunCommandScriptSource{CommandID: to.Ptr("RunShellScript")}))
-	assert.Equal(t, runCommandSourceGallery, runCommandScriptSource(&compute.VirtualMachineRunCommandScriptSource{GalleryScriptReferenceID: to.Ptr("/g/s/v")}))
+	assert.Equal(t, "", runCommandScriptSource(&compute.VirtualMachineRunCommandScriptSource{Script: new("")}))
+	assert.Equal(t, runCommandSourceInline, runCommandScriptSource(&compute.VirtualMachineRunCommandScriptSource{Script: new("id")}))
+	assert.Equal(t, runCommandSourceURI, runCommandScriptSource(&compute.VirtualMachineRunCommandScriptSource{ScriptURI: new("https://x/y.sh")}))
+	assert.Equal(t, runCommandSourceCommandID, runCommandScriptSource(&compute.VirtualMachineRunCommandScriptSource{CommandID: new("RunShellScript")}))
+	assert.Equal(t, runCommandSourceGallery, runCommandScriptSource(&compute.VirtualMachineRunCommandScriptSource{GalleryScriptReferenceID: new("/g/s/v")}))
 }
 
 func TestRunCommandArgsNeverCopySecrets(t *testing.T) {
 	start := time.Date(2026, 9, 1, 10, 0, 0, 0, time.UTC)
 	rc := &compute.VirtualMachineRunCommand{
-		ID:       to.Ptr("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm/runCommands/rc"),
-		Name:     to.Ptr("rc"),
-		Location: to.Ptr("westeurope"),
+		ID:       new("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm/runCommands/rc"),
+		Name:     new("rc"),
+		Location: new("westeurope"),
 		Properties: &compute.VirtualMachineRunCommandProperties{
 			Source: &compute.VirtualMachineRunCommandScriptSource{
-				ScriptURI: to.Ptr("https://acct.blob.core.windows.net/c/run.sh?sv=1&sig=SASLEAK"),
+				ScriptURI: new("https://acct.blob.core.windows.net/c/run.sh?sv=1&sig=SASLEAK"),
 			},
-			RunAsUser:           to.Ptr("deploy"),
-			RunAsPassword:       to.Ptr("PASSWORDLEAK"),
-			Parameters:          []*compute.RunCommandInputParameter{{Name: to.Ptr("p"), Value: to.Ptr("PARAMLEAK")}},
-			ProtectedParameters: []*compute.RunCommandInputParameter{{Name: to.Ptr("q"), Value: to.Ptr("PROTECTEDLEAK")}},
-			OutputBlobURI:       to.Ptr("https://acct.blob.core.windows.net/out/o.txt?sig=OUTLEAK"),
+			RunAsUser:           new("deploy"),
+			RunAsPassword:       new("PASSWORDLEAK"),
+			Parameters:          []*compute.RunCommandInputParameter{{Name: new("p"), Value: new("PARAMLEAK")}},
+			ProtectedParameters: []*compute.RunCommandInputParameter{{Name: new("q"), Value: new("PROTECTEDLEAK")}},
+			OutputBlobURI:       new("https://acct.blob.core.windows.net/out/o.txt?sig=OUTLEAK"),
 			TimeoutInSeconds:    to.Ptr[int32](600),
 			InstanceView: &compute.VirtualMachineRunCommandInstanceView{
 				ExecutionState: to.Ptr(compute.ExecutionStateFailed),
 				ExitCode:       to.Ptr[int32](2),
-				Output:         to.Ptr("OUTPUTLEAK"),
-				Error:          to.Ptr("ERRORLEAK"),
+				Output:         new("OUTPUTLEAK"),
+				Error:          new("ERRORLEAK"),
 				StartTime:      &start,
 			},
 		},
@@ -292,8 +292,8 @@ func TestRunCommandArgsNeverCopySecrets(t *testing.T) {
 
 func TestRunCommandArgsWithoutInstanceView(t *testing.T) {
 	args := runCommandArgs(&compute.VirtualMachineRunCommand{
-		ID:         to.Ptr("/x/runCommands/rc"),
-		Properties: &compute.VirtualMachineRunCommandProperties{Source: &compute.VirtualMachineRunCommandScriptSource{Script: to.Ptr("whoami")}},
+		ID:         new("/x/runCommands/rc"),
+		Properties: &compute.VirtualMachineRunCommandProperties{Source: &compute.VirtualMachineRunCommandScriptSource{Script: new("whoami")}},
 	})
 	assert.Equal(t, runCommandSourceInline, args["scriptSource"].Value)
 	assert.Equal(t, true, args["hasInlineScript"].Value)
@@ -307,24 +307,24 @@ func TestRunCommandArgsWithoutInstanceView(t *testing.T) {
 
 func TestParseAgentBool(t *testing.T) {
 	assert.Nil(t, parseAgentBool(nil))
-	assert.Nil(t, parseAgentBool(to.Ptr("")))
-	assert.Nil(t, parseAgentBool(to.Ptr("maybe")))
-	require.NotNil(t, parseAgentBool(to.Ptr("True")))
-	assert.True(t, *parseAgentBool(to.Ptr("True")))
-	require.NotNil(t, parseAgentBool(to.Ptr(" false ")))
-	assert.False(t, *parseAgentBool(to.Ptr(" false ")))
+	assert.Nil(t, parseAgentBool(new("")))
+	assert.Nil(t, parseAgentBool(new("maybe")))
+	require.NotNil(t, parseAgentBool(new("True")))
+	assert.True(t, *parseAgentBool(new("True")))
+	require.NotNil(t, parseAgentBool(new(" false ")))
+	assert.False(t, *parseAgentBool(new(" false ")))
 }
 
 func TestHybridAgentConfigArgs(t *testing.T) {
 	args := hybridAgentConfigArgs(&hybridcompute.AgentConfiguration{
-		ExtensionsEnabled:         to.Ptr("false"),
-		GuestConfigurationEnabled: to.Ptr("true"),
+		ExtensionsEnabled:         new("false"),
+		GuestConfigurationEnabled: new("true"),
 		ConfigMode:                to.Ptr(hybridcompute.AgentConfigurationModeMonitor),
-		ProxyURL:                  to.Ptr(withUserinfo("proxy.corp:3128", "", "")),
-		ProxyBypass:               []*string{to.Ptr("Arc"), nil},
-		IncomingConnectionsPorts:  []*string{to.Ptr("22")},
+		ProxyURL:                  new(withUserinfo("proxy.corp:3128", "", "")),
+		ProxyBypass:               []*string{new("Arc"), nil},
+		IncomingConnectionsPorts:  []*string{new("22")},
 		ExtensionsAllowList: []*hybridcompute.ConfigurationExtension{
-			{Publisher: to.Ptr("Microsoft.Azure.Monitor"), Type: to.Ptr("AzureMonitorLinuxAgent")},
+			{Publisher: new("Microsoft.Azure.Monitor"), Type: new("AzureMonitorLinuxAgent")},
 			{},
 			nil,
 		},
@@ -350,8 +350,8 @@ func TestManagedInstanceAdminArgs(t *testing.T) {
 	assert.Nil(t, none["azureAdAdminLogin"].Value)
 
 	args := managedInstanceAdminArgs(&sql.ManagedInstanceExternalAdministrator{
-		AzureADOnlyAuthentication: to.Ptr(true),
-		Login:                     to.Ptr("sql-admins"),
+		AzureADOnlyAuthentication: new(true),
+		Login:                     new("sql-admins"),
 		PrincipalType:             to.Ptr(sql.PrincipalTypeGroup),
 		AdministratorType:         to.Ptr(sql.AdministratorTypeActiveDirectory),
 	})
@@ -364,11 +364,11 @@ func TestManagedInstanceAdminArgs(t *testing.T) {
 
 func TestManagedInstancePolicyArgsDropStorageKeys(t *testing.T) {
 	alert := managedInstanceSecurityAlertPolicyArgs(&sql.ManagedServerSecurityAlertPolicy{
-		ID: to.Ptr("/mi/securityAlertPolicies/Default"),
+		ID: new("/mi/securityAlertPolicies/Default"),
 		Properties: &sql.SecurityAlertsPolicyProperties{
 			State:                   to.Ptr(sql.SecurityAlertsPolicyStateEnabled),
-			StorageAccountAccessKey: to.Ptr("KEYLEAK"),
-			DisabledAlerts:          []*string{to.Ptr("Sql_Injection")},
+			StorageAccountAccessKey: new("KEYLEAK"),
+			DisabledAlerts:          []*string{new("Sql_Injection")},
 		},
 	})
 	assert.False(t, argsContain(t, alert, "KEYLEAK"))
@@ -376,12 +376,12 @@ func TestManagedInstancePolicyArgsDropStorageKeys(t *testing.T) {
 	assert.Equal(t, []any{"Sql_Injection"}, alert["disabledAlerts"].Value)
 
 	va := managedInstanceVulnerabilityAssessmentArgs(&sql.ManagedInstanceVulnerabilityAssessment{
-		ID: to.Ptr("/mi/vulnerabilityAssessments/default"),
+		ID: new("/mi/vulnerabilityAssessments/default"),
 		Properties: &sql.ManagedInstanceVulnerabilityAssessmentProperties{
-			StorageContainerPath:    to.Ptr("https://acct.blob.core.windows.net/va"),
-			StorageAccountAccessKey: to.Ptr("KEYLEAK"),
-			StorageContainerSasKey:  to.Ptr("SASLEAK"),
-			RecurringScans:          &sql.VulnerabilityAssessmentRecurringScansProperties{IsEnabled: to.Ptr(true)},
+			StorageContainerPath:    new("https://acct.blob.core.windows.net/va"),
+			StorageAccountAccessKey: new("KEYLEAK"),
+			StorageContainerSasKey:  new("SASLEAK"),
+			RecurringScans:          &sql.VulnerabilityAssessmentRecurringScansProperties{IsEnabled: new(true)},
 		},
 	})
 	assert.False(t, argsContain(t, va, "KEYLEAK"))
@@ -392,17 +392,17 @@ func TestManagedInstancePolicyArgsDropStorageKeys(t *testing.T) {
 
 func TestApimBackendArgs(t *testing.T) {
 	args := apimBackendArgs(&apim.BackendContract{
-		ID:   to.Ptr("/service/s/backends/b"),
-		Name: to.Ptr("b"),
+		ID:   new("/service/s/backends/b"),
+		Name: new("b"),
 		Properties: &apim.BackendContractProperties{
-			URL:      to.Ptr("https://logic.azure.com/workflows/w/triggers/manual/paths/invoke?sig=SIGLEAK"),
+			URL:      new("https://logic.azure.com/workflows/w/triggers/manual/paths/invoke?sig=SIGLEAK"),
 			Protocol: to.Ptr(apim.BackendProtocolHTTP),
-			TLS:      &apim.BackendTLSProperties{ValidateCertificateChain: to.Ptr(false)},
+			TLS:      &apim.BackendTLSProperties{ValidateCertificateChain: new(false)},
 			Credentials: &apim.BackendCredentialsContract{
-				Authorization: &apim.BackendAuthorizationHeaderCredentials{Scheme: to.Ptr("Basic"), Parameter: to.Ptr("AUTHLEAK")},
-				Header:        map[string][]*string{"x-key": {to.Ptr("HEADERLEAK")}},
+				Authorization: &apim.BackendAuthorizationHeaderCredentials{Scheme: new("Basic"), Parameter: new("AUTHLEAK")},
+				Header:        map[string][]*string{"x-key": {new("HEADERLEAK")}},
 			},
-			Proxy: &apim.BackendProxyContract{URL: to.Ptr("http://proxy:8080"), Password: to.Ptr("PROXYLEAK")},
+			Proxy: &apim.BackendProxyContract{URL: new("http://proxy:8080"), Password: new("PROXYLEAK")},
 		},
 	})
 	for _, leak := range []string{"SIGLEAK", "AUTHLEAK", "HEADERLEAK", "PROXYLEAK"} {
@@ -419,7 +419,7 @@ func TestApimBackendArgs(t *testing.T) {
 	assert.Equal(t, "http://proxy:8080", args["proxyUrl"].Value)
 	assert.Equal(t, true, args["proxyCredentialsConfigured"].Value)
 
-	bare := apimBackendArgs(&apim.BackendContract{ID: to.Ptr("/x"), Properties: &apim.BackendContractProperties{URL: to.Ptr("https://api")}})
+	bare := apimBackendArgs(&apim.BackendContract{ID: new("/x"), Properties: &apim.BackendContractProperties{URL: new("https://api")}})
 	assert.Nil(t, bare["validateCertificateChain"].Value)
 	assert.Equal(t, false, bare["authorizationHeaderConfigured"].Value)
 	assert.Equal(t, false, bare["proxyCredentialsConfigured"].Value)
@@ -428,12 +428,12 @@ func TestApimBackendArgs(t *testing.T) {
 func TestWebhookArgsNeverCopyURI(t *testing.T) {
 	expiry := time.Date(2036, 1, 1, 0, 0, 0, 0, time.UTC)
 	args := webhookArgs(&armautomation.Webhook{
-		ID:   to.Ptr("/aa/webhooks/w"),
-		Name: to.Ptr("w"),
+		ID:   new("/aa/webhooks/w"),
+		Name: new("w"),
 		Properties: &armautomation.WebhookProperties{
-			URI:        to.Ptr("https://s1.webhook.azure-automation.net/webhooks?token=URILEAK"),
-			Parameters: map[string]*string{"p": to.Ptr("PARAMLEAK")},
-			IsEnabled:  to.Ptr(true),
+			URI:        new("https://s1.webhook.azure-automation.net/webhooks?token=URILEAK"),
+			Parameters: map[string]*string{"p": new("PARAMLEAK")},
+			IsEnabled:  new(true),
 			ExpiryTime: &expiry,
 		},
 	})
@@ -446,11 +446,11 @@ func TestWebhookArgsNeverCopyURI(t *testing.T) {
 
 func TestRunbookArgs(t *testing.T) {
 	args := runbookArgs(&armautomation.Runbook{
-		ID: to.Ptr("/aa/runbooks/r"),
+		ID: new("/aa/runbooks/r"),
 		Properties: &armautomation.RunbookProperties{
 			RunbookType: to.Ptr(armautomation.RunbookTypeEnumPowerShell72),
 			State:       to.Ptr(armautomation.RunbookStatePublished),
-			LogVerbose:  to.Ptr(false),
+			LogVerbose:  new(false),
 		},
 	})
 	assert.Equal(t, "PowerShell72", args["runbookType"].Value)
@@ -458,7 +458,7 @@ func TestRunbookArgs(t *testing.T) {
 	assert.Equal(t, false, args["logVerbose"].Value)
 	assert.Nil(t, args["logProgress"].Value)
 
-	bare := runbookArgs(&armautomation.Runbook{ID: to.Ptr("/aa/runbooks/r")})
+	bare := runbookArgs(&armautomation.Runbook{ID: new("/aa/runbooks/r")})
 	assert.Nil(t, bare["runbookType"].Value)
 }
 
@@ -467,21 +467,21 @@ func TestBackupPolicyRetentionRules(t *testing.T) {
 		return &armdataprotection.DataStoreInfoBase{DataStoreType: &s}
 	}
 	rules := []armdataprotection.BasePolicyRuleClassification{
-		&armdataprotection.AzureBackupRule{Name: to.Ptr("BackupDaily")},
+		&armdataprotection.AzureBackupRule{Name: new("BackupDaily")},
 		&armdataprotection.AzureRetentionRule{
-			Name:      to.Ptr("Monthly"),
-			IsDefault: to.Ptr(false),
+			Name:      new("Monthly"),
+			IsDefault: new(false),
 			Lifecycles: []*armdataprotection.SourceLifeCycle{{
 				SourceDataStore: store(armdataprotection.DataStoreTypesVaultStore),
-				DeleteAfter:     &armdataprotection.AbsoluteDeleteOption{Duration: to.Ptr("P1Y")},
+				DeleteAfter:     &armdataprotection.AbsoluteDeleteOption{Duration: new("P1Y")},
 			}},
 		},
 		&armdataprotection.AzureRetentionRule{
-			Name:      to.Ptr("Default"),
-			IsDefault: to.Ptr(true),
+			Name:      new("Default"),
+			IsDefault: new(true),
 			Lifecycles: []*armdataprotection.SourceLifeCycle{nil, {
 				SourceDataStore: store(armdataprotection.DataStoreTypesOperationalStore),
-				DeleteAfter:     &armdataprotection.AbsoluteDeleteOption{Duration: to.Ptr("P7D")},
+				DeleteAfter:     &armdataprotection.AbsoluteDeleteOption{Duration: new("P7D")},
 			}},
 		},
 	}
@@ -507,13 +507,13 @@ func TestBackupDatasourceIs(t *testing.T) {
 
 func TestBackupInstanceArgs(t *testing.T) {
 	args, policyID := backupInstanceArgs(&armdataprotection.BackupInstanceResource{
-		ID: to.Ptr("/vault/backupInstances/bi"),
+		ID: new("/vault/backupInstances/bi"),
 		Properties: &armdataprotection.BackupInstance{
 			DataSourceInfo: &armdataprotection.Datasource{
-				DatasourceType: to.Ptr("Microsoft.Compute/disks"),
-				ResourceID:     to.Ptr("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Compute/disks/d"),
+				DatasourceType: new("Microsoft.Compute/disks"),
+				ResourceID:     new("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Compute/disks/d"),
 			},
-			PolicyInfo:             &armdataprotection.PolicyInfo{PolicyID: to.Ptr("/vault/backupPolicies/p")},
+			PolicyInfo:             &armdataprotection.PolicyInfo{PolicyID: new("/vault/backupPolicies/p")},
 			ProtectionStatus:       &armdataprotection.ProtectionStatusDetails{Status: to.Ptr(armdataprotection.StatusProtectionStopped)},
 			CurrentProtectionState: to.Ptr(armdataprotection.CurrentProtectionStateBackupSchedulesSuspended),
 		},
@@ -523,7 +523,7 @@ func TestBackupInstanceArgs(t *testing.T) {
 	assert.Equal(t, "BackupSchedulesSuspended", args["currentProtectionState"].Value)
 	assert.Equal(t, "Microsoft.Compute/disks", args["datasourceType"].Value)
 
-	bare, none := backupInstanceArgs(&armdataprotection.BackupInstanceResource{ID: to.Ptr("/x")})
+	bare, none := backupInstanceArgs(&armdataprotection.BackupInstanceResource{ID: new("/x")})
 	assert.Equal(t, "", none)
 	assert.Nil(t, bare["protectionStatus"].Value)
 }
@@ -534,23 +534,23 @@ func TestVaultResourceGuardID(t *testing.T) {
 	got := vaultResourceGuardID([]*armdataprotection.ResourceGuardProxyBaseResource{
 		nil,
 		{Properties: &armdataprotection.ResourceGuardProxyBase{}},
-		{Properties: &armdataprotection.ResourceGuardProxyBase{ResourceGuardResourceID: to.Ptr(guard)}},
+		{Properties: &armdataprotection.ResourceGuardProxyBase{ResourceGuardResourceID: new(guard)}},
 	})
 	assert.Equal(t, guard, got)
 }
 
 func TestResourceGuardArgs(t *testing.T) {
 	args := resourceGuardArgs(&armdataprotection.ResourceGuardResource{
-		ID:       to.Ptr("/g"),
-		Location: to.Ptr("westeurope"),
+		ID:       new("/g"),
+		Location: new("westeurope"),
 		Properties: &armdataprotection.ResourceGuard{
-			AllowAutoApprovals: to.Ptr(false),
+			AllowAutoApprovals: new(false),
 			ResourceGuardOperations: []*armdataprotection.ResourceGuardOperation{
-				{VaultCriticalOperation: to.Ptr("Microsoft.DataProtection/backupVaults/delete")},
+				{VaultCriticalOperation: new("Microsoft.DataProtection/backupVaults/delete")},
 				{},
 				nil,
 			},
-			VaultCriticalOperationExclusionList: []*string{to.Ptr("Microsoft.DataProtection/backupVaults/backupInstances/delete")},
+			VaultCriticalOperationExclusionList: []*string{new("Microsoft.DataProtection/backupVaults/backupInstances/delete")},
 		},
 	})
 	assert.Equal(t, false, args["allowAutoApprovals"].Value)
@@ -578,8 +578,8 @@ func TestAppsitePlanAndEnvironmentIDs(t *testing.T) {
 // properties are turned into the raw dict the appsite carries.
 func TestAppsitePropertyKeysMatchSDKJSON(t *testing.T) {
 	props, err := convert.JsonToDict(&web.SiteProperties{
-		ServerFarmID:              to.Ptr("/p"),
-		HostingEnvironmentProfile: &web.HostingEnvironmentProfile{ID: to.Ptr("/e")},
+		ServerFarmID:              new("/p"),
+		HostingEnvironmentProfile: &web.HostingEnvironmentProfile{ID: new("/e")},
 	})
 	require.NoError(t, err)
 	assert.Equal(t, "/p", appsiteServerFarmID(props))

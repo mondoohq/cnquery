@@ -198,7 +198,7 @@ func parseExternalAccessList(raw string) []any {
 	raw = strings.TrimSpace(raw)
 	raw = strings.TrimPrefix(raw, "[")
 	raw = strings.TrimSuffix(raw, "]")
-	for _, part := range strings.Split(raw, ",") {
+	for part := range strings.SplitSeq(raw, ",") {
 		p := strings.TrimSpace(part)
 		if p != "" {
 			out = append(out, p)

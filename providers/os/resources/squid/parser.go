@@ -18,6 +18,7 @@ package squid
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -568,8 +569,8 @@ func splitAndClean(content string) []string {
 		}
 
 		// Continuation: a single trailing backslash means "join with next".
-		if strings.HasSuffix(trim, "\\") {
-			continued.WriteString(strings.TrimSuffix(trim, "\\"))
+		if before, ok := strings.CutSuffix(trim, "\\"); ok {
+			continued.WriteString(before)
 			continued.WriteByte(' ')
 			continue
 		}
@@ -674,12 +675,7 @@ func isNumeric(s string) bool {
 }
 
 func containsString(s []string, v string) bool {
-	for i := range s {
-		if s[i] == v {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s, v)
 }
 
 // setMultiParam stores a directive value in the flat params map.

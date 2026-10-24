@@ -20,25 +20,25 @@ import (
 // It is shared by the sizes() catalog collection and the droplet/nodePool
 // dropletSize() accessors.
 func newMqlDigitaloceanSize(runtime *plugin.Runtime, size godo.Size) (*mqlDigitaloceanSize, error) {
-	regions := make([]interface{}, len(size.Regions))
+	regions := make([]any, len(size.Regions))
 	for i, rg := range size.Regions {
 		regions[i] = rg
 	}
 
-	var gpuInfo interface{}
+	var gpuInfo any
 	if size.GPUInfo != nil {
-		gi := map[string]interface{}{
+		gi := map[string]any{
 			"count": int64(size.GPUInfo.Count),
 			"model": size.GPUInfo.Model,
 		}
 		if size.GPUInfo.VRAM != nil {
-			gi["vram"] = map[string]interface{}{
+			gi["vram"] = map[string]any{
 				"amount": int64(size.GPUInfo.VRAM.Amount),
 				"unit":   size.GPUInfo.VRAM.Unit,
 			}
 		}
 		if len(size.GPUInfo.SupportedPartitionModes) > 0 {
-			modes := make([]interface{}, len(size.GPUInfo.SupportedPartitionModes))
+			modes := make([]any, len(size.GPUInfo.SupportedPartitionModes))
 			for i, m := range size.GPUInfo.SupportedPartitionModes {
 				modes[i] = m
 			}
@@ -68,7 +68,7 @@ func newMqlDigitaloceanSize(runtime *plugin.Runtime, size godo.Size) (*mqlDigita
 
 // sizes lists the DigitalOcean droplet size catalog — the hardware tiers a
 // droplet or Kubernetes worker node can run on.
-func (r *mqlDigitalocean) sizes() ([]interface{}, error) {
+func (r *mqlDigitalocean) sizes() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -77,7 +77,7 @@ func (r *mqlDigitalocean) sizes() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(sizes))
+	all := make([]any, 0, len(sizes))
 	for _, s := range sizes {
 		res, err := newMqlDigitaloceanSize(r.MqlRuntime, s)
 		if err != nil {

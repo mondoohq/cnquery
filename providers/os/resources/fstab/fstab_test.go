@@ -12,7 +12,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"k8s.io/utils/ptr"
 )
 
 func TestFstabEntries(t *testing.T) {
@@ -33,24 +32,24 @@ UUID=b411dc99-f0a0-4c87-9e05-184977be8539 /home ext4   defaults  0      2`
 			Mountpoint: "/",
 			Fstype:     "ext4",
 			Options:    []string{"defaults"},
-			Dump:       ptr.To(0),
-			Fsck:       ptr.To(1),
+			Dump:       new(0),
+			Fsck:       new(1),
 		}, entries[0])
 		require.Equal(t, Entry{
 			Device:     "UUID=f9fe0b69-a280-415d-a03a-a32752370dee",
 			Mountpoint: "none",
 			Fstype:     "swap",
 			Options:    []string{"defaults"},
-			Dump:       ptr.To(0),
-			Fsck:       ptr.To(0),
+			Dump:       new(0),
+			Fsck:       new(0),
 		}, entries[1])
 		require.Equal(t, Entry{
 			Device:     "UUID=b411dc99-f0a0-4c87-9e05-184977be8539",
 			Mountpoint: "/home",
 			Fstype:     "ext4",
 			Options:    []string{"defaults"},
-			Dump:       ptr.To(0),
-			Fsck:       ptr.To(2),
+			Dump:       new(0),
+			Fsck:       new(2),
 		}, entries[2])
 	})
 
@@ -103,24 +102,24 @@ LABEL=UEFI	/boot/efi	vfat	umask=0077	0 1`
 			Mountpoint: "/",
 			Fstype:     "ext4",
 			Options:    []string{"discard", "commit=30", "errors=remount-ro"},
-			Dump:       ptr.To(0),
-			Fsck:       ptr.To(1),
+			Dump:       new(0),
+			Fsck:       new(1),
 		}, entries[0])
 		require.Equal(t, Entry{
 			Device:     "LABEL=BOOT",
 			Mountpoint: "/boot",
 			Fstype:     "ext4",
 			Options:    []string{"defaults"},
-			Dump:       ptr.To(0),
-			Fsck:       ptr.To(2),
+			Dump:       new(0),
+			Fsck:       new(2),
 		}, entries[1])
 		require.Equal(t, Entry{
 			Device:     "LABEL=UEFI",
 			Mountpoint: "/boot/efi",
 			Fstype:     "vfat",
 			Options:    []string{"umask=0077"},
-			Dump:       ptr.To(0),
-			Fsck:       ptr.To(1),
+			Dump:       new(0),
+			Fsck:       new(1),
 		}, entries[2])
 	})
 
@@ -198,8 +197,8 @@ UUID=b411dc99-f0a0-4c87-9e05-184977be8539 /home ext4   defaults  0      A` // no
 			Mountpoint: "/",
 			Fstype:     "ext4",
 			Options:    []string{"defaults"},
-			Dump:       ptr.To(0),
-			Fsck:       ptr.To(1),
+			Dump:       new(0),
+			Fsck:       new(1),
 		}, entries[0])
 	})
 }
@@ -237,7 +236,7 @@ func TestFstabSkipsMalformedLines(t *testing.T) {
 	}
 	require.Equal(t, []string{"/m3", "/m4", "/m7"}, mountpoints)
 	require.Empty(t, entries[0].Options)
-	require.Equal(t, ptr.To(1), entries[2].Dump)
+	require.Equal(t, new(1), entries[2].Dump)
 	require.Nil(t, entries[2].Fsck)
 }
 

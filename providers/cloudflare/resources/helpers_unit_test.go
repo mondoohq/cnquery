@@ -135,9 +135,9 @@ func TestCfGetPagedTerminatesOnZeroEchoedPage(t *testing.T) {
 	env := setupTestEnv(t)
 
 	const totalPages = 3
-	var calls int32
+	var calls atomic.Int32
 	env.Mux.HandleFunc("/widgets", func(w http.ResponseWriter, r *http.Request) {
-		n := atomic.AddInt32(&calls, 1)
+		n := calls.Add(1)
 		if int(n) > totalPages+2 {
 			// Bound a regression so it fails loudly instead of hanging CI.
 			t.Errorf("cfGetPaged did not terminate: %d requests for %d pages", n, totalPages)
@@ -154,7 +154,7 @@ func TestCfGetPagedTerminatesOnZeroEchoedPage(t *testing.T) {
 	got, err := cfGetPaged[pagedTestItem](env.Conn, "widgets")
 	require.NoError(t, err)
 	require.Len(t, got, totalPages, "one item collected per page, then stop")
-	assert.Equal(t, int32(totalPages), atomic.LoadInt32(&calls), "exactly one request per page — no infinite loop")
+	assert.Equal(t, int32(totalPages), calls.Load(), "exactly one request per page — no infinite loop")
 	assert.Equal(t, []string{"w1", "w2", "w3"}, []string{got[0].ID, got[1].ID, got[2].ID})
 }
 

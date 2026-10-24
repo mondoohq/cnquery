@@ -21,12 +21,12 @@ func TestExpressRoutePortLinksDict(t *testing.T) {
 	adminState := network.ExpressRouteLinkAdminStateEnabled
 	links := []*network.ExpressRouteLink{
 		{
-			Name: strPtr("link1"),
+			Name: new("link1"),
 			Properties: &network.ExpressRouteLinkPropertiesFormat{
 				AdminState:    &adminState,
-				InterfaceName: strPtr("HundredGigE0/0/0/0"),
-				PatchPanelID:  strPtr("PP-42"),
-				RackID:        strPtr("RACK-7"),
+				InterfaceName: new("HundredGigE0/0/0/0"),
+				PatchPanelID:  new("PP-42"),
+				RackID:        new("RACK-7"),
 			},
 		},
 	}

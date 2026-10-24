@@ -214,11 +214,11 @@ func (r *mqlDatabricks) workspaceSettings() (*mqlDatabricksWorkspaceConf, error)
 	)
 
 	res, err := CreateResource(r.MqlRuntime, "databricks.workspaceConf", map[string]*llx.RawData{
-		"__id":                                             llx.StringData("databricks.workspaceConf/" + id),
-		"tokensEnabled":                                    llx.BoolDataPtr(confBoolFrom(conf, "enableTokens")),
-		"maxTokenLifetimeDays":                             llx.IntDataPtr(confIntFrom(conf, "maxTokenLifetimeDays")),
-		"ipAccessListsEnabled":                             llx.BoolDataPtr(confBoolFrom(conf, "enableIpAccessLists")),
-		"deprecatedGlobalInitScriptsEnabled":               llx.BoolDataPtr(confBoolFrom(conf, "enableDeprecatedGlobalInitScripts")),
+		"__id":                               llx.StringData("databricks.workspaceConf/" + id),
+		"tokensEnabled":                      llx.BoolDataPtr(confBoolFrom(conf, "enableTokens")),
+		"maxTokenLifetimeDays":               llx.IntDataPtr(confIntFrom(conf, "maxTokenLifetimeDays")),
+		"ipAccessListsEnabled":               llx.BoolDataPtr(confBoolFrom(conf, "enableIpAccessLists")),
+		"deprecatedGlobalInitScriptsEnabled": llx.BoolDataPtr(confBoolFrom(conf, "enableDeprecatedGlobalInitScripts")),
 		"deprecatedClusterNamedInitScriptsEnabled":         llx.BoolDataPtr(confBoolFrom(conf, "enableDeprecatedClusterNamedInitScripts")),
 		"storeInteractiveNotebookResultsInCustomerAccount": llx.BoolDataPtr(confBoolFrom(conf, "storeInteractiveNotebookResultsInCustomerAccount")),
 	})

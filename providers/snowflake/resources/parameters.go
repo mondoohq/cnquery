@@ -66,7 +66,7 @@ func (r *mqlSnowflakeAccount) showAccountParameters() ([]*sdk.Parameter, error) 
 
 		r.cachedParameters, r.cachedParametersErr = client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
 			In: &sdk.ParametersIn{
-				Account: sdk.Bool(true),
+				Account: new(true),
 			},
 		})
 	})

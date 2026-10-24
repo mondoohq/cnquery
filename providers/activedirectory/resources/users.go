@@ -32,7 +32,7 @@ func (a *mqlActivedirectoryUser) id() (string, error) {
 	return a.DistinguishedName.Data, nil
 }
 
-func (a *mqlActivedirectory) users() ([]interface{}, error) {
+func (a *mqlActivedirectory) users() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 	baseDN := conn.BaseDN()
 
@@ -71,7 +71,7 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 	}
 
 	now := time.Now().UTC()
-	res := make([]interface{}, 0, len(entries))
+	res := make([]any, 0, len(entries))
 	for _, entry := range entries {
 		samAccountName := connection.GetStringAttr(entry, "sAMAccountName")
 		dn := connection.GetStringAttr(entry, "distinguishedName")
@@ -122,7 +122,7 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 
 		// Group memberships as []interface{} for llx
 		memberOfSlice := connection.GetStringSliceAttr(entry, "memberOf")
-		memberOfIface := make([]interface{}, len(memberOfSlice))
+		memberOfIface := make([]any, len(memberOfSlice))
 		for i, m := range memberOfSlice {
 			memberOfIface[i] = m
 		}
@@ -152,15 +152,15 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 		}
 
 		// Convert string slices to []interface{} for llx array data
-		spnIface := make([]interface{}, len(spns))
+		spnIface := make([]any, len(spns))
 		for i, s := range spns {
 			spnIface[i] = s
 		}
-		sidHistIface := make([]interface{}, len(sidHistory))
+		sidHistIface := make([]any, len(sidHistory))
 		for i, s := range sidHistory {
 			sidHistIface[i] = s
 		}
-		constrainedIface := make([]interface{}, len(constrainedTargets))
+		constrainedIface := make([]any, len(constrainedTargets))
 		for i, s := range constrainedTargets {
 			constrainedIface[i] = s
 		}

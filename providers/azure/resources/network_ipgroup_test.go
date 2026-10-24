@@ -17,10 +17,10 @@ func TestAzureNetworkSubResourceIDs(t *testing.T) {
 
 	t.Run("skips nil entries and nil inner IDs", func(t *testing.T) {
 		subs := []*network.SubResource{
-			{ID: strPtr("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Network/azureFirewalls/fw-a")},
+			{ID: new("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Network/azureFirewalls/fw-a")},
 			nil,
 			{ID: nil},
-			{ID: strPtr("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Network/azureFirewalls/fw-b")},
+			{ID: new("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Network/azureFirewalls/fw-b")},
 		}
 		got := azureNetworkSubResourceIDs(subs)
 		assert.Equal(t, []string{
@@ -42,7 +42,7 @@ func TestAzureStrPtrsToStr(t *testing.T) {
 
 	t.Run("skips nil elements without panicking", func(t *testing.T) {
 		// a nil element is exactly what convert.SliceStrPtrToStr crashes on
-		got := azureStrPtrsToStr([]*string{strPtr("/ipGroups/a"), nil, strPtr("/ipGroups/b")})
+		got := azureStrPtrsToStr([]*string{new("/ipGroups/a"), nil, new("/ipGroups/b")})
 		assert.Equal(t, []string{"/ipGroups/a", "/ipGroups/b"}, got)
 	})
 

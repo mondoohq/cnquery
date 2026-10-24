@@ -47,7 +47,6 @@ func (a *mqlAwsApigatewayv2) getApis(conn *connection.AwsConnection) []*jobpool.
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			res := []any{}
 			svc := conn.Apigatewayv2(region)
@@ -523,7 +522,6 @@ func (a *mqlAwsApigatewayv2) getDomainNames(conn *connection.AwsConnection) []*j
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			res := []any{}
 			svc := conn.Apigatewayv2(region)

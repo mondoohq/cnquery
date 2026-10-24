@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"sort"
@@ -108,19 +109,19 @@ func (r *mqlClaudeCode) organizationId() (string, error) {
 	return acct.OrganizationUuid, nil
 }
 
-func (r *mqlClaudeCode) settings() (interface{}, error) {
-	var settings map[string]interface{}
+func (r *mqlClaudeCode) settings() (any, error) {
+	var settings map[string]any
 	err := readJSONFileAfero(r.afs(), r.configDir(), "settings.json", &settings)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return map[string]interface{}{}, nil
+			return map[string]any{}, nil
 		}
 		return nil, err
 	}
 	return settings, nil
 }
 
-func (r *mqlClaudeCode) enabledPlugins() ([]interface{}, error) {
+func (r *mqlClaudeCode) enabledPlugins() ([]any, error) {
 	var settings struct {
 		EnabledPlugins map[string]bool `json:"enabledPlugins"`
 	}
@@ -131,7 +132,7 @@ func (r *mqlClaudeCode) enabledPlugins() ([]interface{}, error) {
 		}
 		return nil, err
 	}
-	var result []interface{}
+	var result []any
 	for name, enabled := range settings.EnabledPlugins {
 		if enabled {
 			result = append(result, name)
@@ -143,7 +144,7 @@ func (r *mqlClaudeCode) enabledPlugins() ([]interface{}, error) {
 	return result, nil
 }
 
-func (r *mqlClaudeCode) skills() ([]interface{}, error) {
+func (r *mqlClaudeCode) skills() ([]any, error) {
 	dirs, err := resolvePerUserDirs(r.MqlRuntime, r.configDir(), defaultClaudeCodeConfigDir,
 		filepath.Join(defaultClaudeCodeConfigDir, "skills"), filepath.Join(r.configDir(), "skills"))
 	if err != nil {
@@ -162,7 +163,7 @@ func (r *mqlClaudeCode) skills() ([]interface{}, error) {
 	return readSkillsFromDirs(r.MqlRuntime, dirs, "claude.code.skill")
 }
 
-func (r *mqlClaudeCode) projects() ([]interface{}, error) {
+func (r *mqlClaudeCode) projects() ([]any, error) {
 	afs := r.afs()
 	state, err := r.loadBackupState()
 	if err != nil {
@@ -177,7 +178,7 @@ func (r *mqlClaudeCode) projects() ([]interface{}, error) {
 	}
 
 	projectsDir := filepath.Join(r.configDir(), "projects")
-	var result []interface{}
+	var result []any
 	for projectPath, dirName := range state.projectDirMap() {
 		memoryDir := filepath.Join(projectsDir, dirName, "memory")
 		hasMemory := dirHasFilesAfero(afs, memoryDir)
@@ -196,7 +197,7 @@ func (r *mqlClaudeCode) projects() ([]interface{}, error) {
 	return result, nil
 }
 
-func (r *mqlClaudeCode) repos() ([]interface{}, error) {
+func (r *mqlClaudeCode) repos() ([]any, error) {
 	state, err := r.loadBackupState()
 	if err != nil {
 		// A missing backup is expected on hosts without Claude Code history;
@@ -216,7 +217,7 @@ func (r *mqlClaudeCode) repos() ([]interface{}, error) {
 	return gitReposFromPaths(r.MqlRuntime, "claude.code.repo", paths)
 }
 
-func (r *mqlClaudeCode) mcpServers() ([]interface{}, error) {
+func (r *mqlClaudeCode) mcpServers() ([]any, error) {
 	// The needs-auth cache records which servers require authentication and
 	// when that was last verified. Presence in this file means needsAuth.
 	var authCache map[string]struct {
@@ -246,7 +247,7 @@ func (r *mqlClaudeCode) mcpServers() ([]interface{}, error) {
 	}
 	servers = withAuthCacheOnlyServers(servers, authNames)
 
-	var result []interface{}
+	var result []any
 	for _, scoped := range servers {
 		name, srv := scoped.name, scoped.entry
 		needsAuth := false
@@ -317,7 +318,7 @@ func (r *mqlClaudeCode) model() (string, error) {
 	return settings.Model, nil
 }
 
-func (r *mqlClaudeCode) models() ([]interface{}, error) {
+func (r *mqlClaudeCode) models() ([]any, error) {
 	state, err := r.loadBackupState()
 	if err != nil {
 		// A missing backup is expected on hosts without Claude Code history;
@@ -342,7 +343,7 @@ func (r *mqlClaudeCode) models() ([]interface{}, error) {
 	return claudeModelUsageResources(r.MqlRuntime, "", totals)
 }
 
-func (p *mqlClaudeCodeProject) models() ([]interface{}, error) {
+func (p *mqlClaudeCodeProject) models() ([]any, error) {
 	return claudeModelUsageResources(p.MqlRuntime, p.Path.Data+"/", p.modelUsage)
 }
 
@@ -406,14 +407,14 @@ func (u *claudeModelUsage) add(o claudeModelUsage) {
 // claudeModelUsageResources turns a per-model usage map into claude.code.modelUsage
 // resources, sorted by model name. idPrefix disambiguates the cache key between
 // the host-wide aggregate ("") and a per-project breakdown ("<projectPath>/").
-func claudeModelUsageResources(runtime *plugin.Runtime, idPrefix string, usage map[string]claudeModelUsage) ([]interface{}, error) {
+func claudeModelUsageResources(runtime *plugin.Runtime, idPrefix string, usage map[string]claudeModelUsage) ([]any, error) {
 	names := make([]string, 0, len(usage))
 	for name := range usage {
 		names = append(names, name)
 	}
 	sort.Strings(names)
 
-	result := make([]interface{}, 0, len(names))
+	result := make([]any, 0, len(names))
 	for _, name := range names {
 		u := usage[name]
 		res, err := CreateResource(runtime, "claude.code.modelUsage", map[string]*llx.RawData{
@@ -480,12 +481,8 @@ func claudeMcpServers(afs *afero.Afero, state *claudeBackupState) []claudeScoped
 				log.Debug().Err(err).Str("project", projectPath).Msg("could not parse claude project .mcp.json")
 			}
 		}
-		for name, srv := range repo.McpServers {
-			scoped[name] = srv
-		}
-		for name, srv := range project.McpServers {
-			scoped[name] = srv
-		}
+		maps.Copy(scoped, repo.McpServers)
+		maps.Copy(scoped, project.McpServers)
 		for name, srv := range scoped {
 			out = append(out, claudeScopedMcpServer{project: projectPath, name: name, entry: srv})
 		}

@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"slices"
 	"strings"
 	"time"
 
@@ -343,10 +344,8 @@ func sameAsset(a *inventory.Asset, b *inventory.Asset) bool {
 		return true
 	}
 	for _, id := range a.PlatformIds {
-		for _, other := range b.PlatformIds {
-			if id == other {
-				return true
-			}
+		if slices.Contains(b.PlatformIds, id) {
+			return true
 		}
 	}
 	if a.Mrn != "" || b.Mrn != "" || len(a.PlatformIds) > 0 || len(b.PlatformIds) > 0 {

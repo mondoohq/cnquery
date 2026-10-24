@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/oracle/oci-go-sdk/v65/artifacts"
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -86,11 +85,11 @@ func TestOciArtifactsSelectByOwner(t *testing.T) {
 func TestOciArtifactRepositoryFields(t *testing.T) {
 	t.Run("a generic repository is flattened", func(t *testing.T) {
 		fields, err := ociArtifactRepositoryFields(artifacts.GenericRepositorySummary{
-			Id:             common.String("ocid1.artifactrepository.oc1..aaa"),
-			DisplayName:    common.String("release-artifacts"),
-			CompartmentId:  common.String("ocid1.compartment.oc1..bbb"),
-			Description:    common.String("signed release bundles"),
-			IsImmutable:    common.Bool(true),
+			Id:             new("ocid1.artifactrepository.oc1..aaa"),
+			DisplayName:    new("release-artifacts"),
+			CompartmentId:  new("ocid1.compartment.oc1..bbb"),
+			Description:    new("signed release bundles"),
+			IsImmutable:    new(true),
 			LifecycleState: artifacts.RepositoryLifecycleStateAvailable,
 		})
 		require.NoError(t, err)
@@ -107,8 +106,8 @@ func TestOciArtifactRepositoryFields(t *testing.T) {
 		// isImmutable is the tamper control, so it has to survive the
 		// flattening in both directions rather than only when set.
 		fields, err := ociArtifactRepositoryFields(artifacts.GenericRepositorySummary{
-			Id:          common.String("ocid1.artifactrepository.oc1..aaa"),
-			IsImmutable: common.Bool(false),
+			Id:          new("ocid1.artifactrepository.oc1..aaa"),
+			IsImmutable: new(false),
 		})
 		require.NoError(t, err)
 		assert.Equal(t, false, fields["isImmutable"].Value)

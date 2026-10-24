@@ -309,10 +309,7 @@ func pagedHandler(t *testing.T, ids []string, pageSize int, requests *[]string) 
 				return
 			}
 		}
-		end := start + pageSize
-		if end > len(ids) {
-			end = len(ids)
-		}
+		end := min(start+pageSize, len(ids))
 
 		body := map[string]any{"object": "list"}
 		data := make([]map[string]any, 0, end-start)
@@ -441,8 +438,8 @@ func TestListAllPageCapTerminates(t *testing.T) {
 // fieldSet returns the exported field names of a struct type.
 func fieldSet(t reflect.Type) map[string]struct{} {
 	m := make(map[string]struct{}, t.NumField())
-	for i := 0; i < t.NumField(); i++ {
-		m[t.Field(i).Name] = struct{}{}
+	for field := range t.Fields() {
+		m[field.Name] = struct{}{}
 	}
 	return m
 }
@@ -496,7 +493,7 @@ func TestOpenAPISpecGaps(t *testing.T) {
 	// and manage. The provider exposes both on collectionAccess/groupAccess/
 	// memberAccess, so adopting the generated model would silently report every
 	// grant as hidePasswords=false, manage=false.
-	assoc := fieldSet(reflect.TypeOf(bwapi.AssociationWithPermissionsResponseModel{}))
+	assoc := fieldSet(reflect.TypeFor[bwapi.AssociationWithPermissionsResponseModel]())
 	for _, f := range []string{"HidePasswords", "Manage"} {
 		if _, ok := assoc[f]; ok {
 			t.Errorf("spec now models AssociationWithPermissionsResponseModel.%s; SelectionReadOnly can adopt the generated model", f)
@@ -504,12 +501,12 @@ func TestOpenAPISpecGaps(t *testing.T) {
 	}
 
 	// The member model omits resetPasswordEnrolled, which the provider exposes.
-	if _, ok := fieldSet(reflect.TypeOf(bwapi.MemberResponseModel{}))["ResetPasswordEnrolled"]; ok {
+	if _, ok := fieldSet(reflect.TypeFor[bwapi.MemberResponseModel]())["ResetPasswordEnrolled"]; ok {
 		t.Error("spec now models MemberResponseModel.ResetPasswordEnrolled; revisit the hand-written Member")
 	}
 
 	// The collection model omits name, which the provider exposes.
-	if _, ok := fieldSet(reflect.TypeOf(bwapi.CollectionResponseModel{}))["Name"]; ok {
+	if _, ok := fieldSet(reflect.TypeFor[bwapi.CollectionResponseModel]())["Name"]; ok {
 		t.Error("spec now models CollectionResponseModel.Name; revisit the hand-written Collection")
 	}
 

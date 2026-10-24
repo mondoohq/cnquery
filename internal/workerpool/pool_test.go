@@ -211,7 +211,7 @@ func TestPoolWithManyTasks(t *testing.T) {
 		return random, nil
 	}
 
-	for i := 0; i < requestCount; i++ {
+	for range requestCount {
 		pool.Submit(task)
 	}
 

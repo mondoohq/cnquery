@@ -59,7 +59,6 @@ func (a *mqlAwsPersonalize) getDatasetGroups(conn *connection.AwsConnection) []*
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("personalize>getDatasetGroups>region %s", region)
 			svc := conn.Personalize(region)
@@ -485,7 +484,6 @@ func (a *mqlAwsPersonalize) getSchemas(conn *connection.AwsConnection) []*jobpoo
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("personalize>getSchemas>region %s", region)
 			svc := conn.Personalize(region)

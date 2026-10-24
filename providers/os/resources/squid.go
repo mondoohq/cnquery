@@ -597,8 +597,8 @@ func squidParamScalar(params map[string]any, name string) string {
 	if !ok {
 		return ""
 	}
-	if comma := strings.IndexByte(str, ','); comma >= 0 {
-		return strings.TrimSpace(str[:comma])
+	if before, _, ok := strings.Cut(str, ","); ok {
+		return strings.TrimSpace(before)
 	}
 	return str
 }

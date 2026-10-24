@@ -383,7 +383,7 @@ func splitChainBlocks(output string) []string {
 	var blocks []string
 	var current []string
 
-	for _, line := range strings.Split(output, "\n") {
+	for line := range strings.SplitSeq(output, "\n") {
 		if strings.HasPrefix(line, "Chain ") && len(current) > 0 {
 			blocks = append(blocks, strings.Join(current, "\n"))
 			current = nil

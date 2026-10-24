@@ -329,8 +329,8 @@ func parseSoftwareUpdateList(stdout string) []parsedSoftwareUpdate {
 	var out []parsedSoftwareUpdate
 	var current *parsedSoftwareUpdate
 
-	lines := strings.Split(stdout, "\n")
-	for _, raw := range lines {
+	lines := strings.SplitSeq(stdout, "\n")
+	for raw := range lines {
 		trimmed := strings.TrimSpace(raw)
 		if trimmed == "" {
 			continue
@@ -364,7 +364,7 @@ func parseSoftwareUpdateList(stdout string) []parsedSoftwareUpdate {
 // the in-progress entry. Unknown keys (some macOS versions add `Build`
 // or extra annotations) are quietly ignored.
 func applySoftwareUpdateMetadata(line string, u *parsedSoftwareUpdate) {
-	for _, field := range strings.Split(line, ", ") {
+	for field := range strings.SplitSeq(line, ", ") {
 		field = strings.TrimRight(field, ",")
 		field = strings.TrimSpace(field)
 		if field == "" {

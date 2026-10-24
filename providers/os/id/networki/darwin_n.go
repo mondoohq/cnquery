@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -207,7 +205,7 @@ func (n *neti) getMacIfconfigInterfaces() (interfaces []Interface, err error) {
 			}
 			currentInterface = &Interface{Name: header[1]}
 			if strings.HasPrefix(currentInterface.Name, "vmnet") {
-				currentInterface.Virtual = convert.ToPtr(true)
+				currentInterface.Virtual = new(true)
 			}
 
 			// Flags and MTU are only ever on this line, and reading them here
@@ -289,9 +287,9 @@ func (n *neti) getMacIfconfigInterfaces() (interfaces []Interface, err error) {
 				if len(fields) > 1 {
 					switch fields[1] {
 					case "active":
-						currentInterface.Active = convert.ToPtr(true)
+						currentInterface.Active = new(true)
 					case "inactive":
-						currentInterface.Active = convert.ToPtr(false)
+						currentInterface.Active = new(false)
 					}
 				}
 			}

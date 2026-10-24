@@ -44,7 +44,7 @@ func (r *mqlAlicloudApigateway) groups() ([]any, error) {
 		page := int32(1)
 		for {
 			resp, err := client.DescribeApiGroups(&cloudapiclient.DescribeApiGroupsRequest{
-				PageNumber: tea.Int32(page),
+				PageNumber: new(page),
 				PageSize:   tea.Int32(apiGatewayGroupPageSize),
 			})
 			if err != nil {
@@ -140,7 +140,7 @@ func (r *mqlAlicloudApigatewayGroup) detailFor() (*cloudapiclient.DescribeApiGro
 		return nil, err
 	}
 	resp, err := client.DescribeApiGroup(&cloudapiclient.DescribeApiGroupRequest{
-		GroupId: tea.String(r.GroupId.Data),
+		GroupId: new(r.GroupId.Data),
 	})
 	if err != nil {
 		return nil, classifyAlicloudError(err, "apigateway:DescribeApiGroup")
@@ -233,8 +233,8 @@ func (r *mqlAlicloudApigatewayGroup) apis() ([]any, error) {
 	page := int32(1)
 	for {
 		resp, err := client.DescribeApis(&cloudapiclient.DescribeApisRequest{
-			GroupId:    tea.String(r.GroupId.Data),
-			PageNumber: tea.Int32(page),
+			GroupId:    new(r.GroupId.Data),
+			PageNumber: new(page),
 			PageSize:   tea.Int32(apiGatewayApiPageSize),
 		})
 		if err != nil {
@@ -331,9 +331,9 @@ func (r *mqlAlicloudApigatewayApi) detailFor() (*cloudapiclient.DescribeApiRespo
 	if err != nil {
 		return nil, err
 	}
-	req := &cloudapiclient.DescribeApiRequest{ApiId: tea.String(r.ApiId.Data)}
+	req := &cloudapiclient.DescribeApiRequest{ApiId: new(r.ApiId.Data)}
 	if r.parentGroup != nil {
-		req.GroupId = tea.String(r.parentGroup.GroupId.Data)
+		req.GroupId = new(r.parentGroup.GroupId.Data)
 	}
 	resp, err := client.DescribeApi(req)
 	if err != nil {

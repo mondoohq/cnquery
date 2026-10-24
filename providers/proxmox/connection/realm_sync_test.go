@@ -49,7 +49,7 @@ func TestRealmSyncJobsListedOnce(t *testing.T) {
 		{"id": "j1", "realm": "corp", "schedule": "daily", "enabled": 1},
 	})
 	conn := f.conn()
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		_, readable, err := conn.GetRealmSyncJobs()
 		require.NoError(t, err)
 		require.True(t, readable)

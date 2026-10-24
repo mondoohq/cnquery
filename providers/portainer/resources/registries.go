@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"sort"
+	"slices"
 	"strconv"
 
 	"github.com/portainer/client-api-go/v2/pkg/models"
@@ -84,7 +84,7 @@ func registryAccessEndpointIDs(accesses models.PortainerRegistryAccesses) []int6
 		}
 		ids = append(ids, id)
 	}
-	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+	slices.Sort(ids)
 	return ids
 }
 

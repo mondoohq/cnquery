@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"maps"
 	"strings"
 	"sync"
 	"time"
@@ -776,9 +777,7 @@ func (a *mqlAwsStoragegatewayVolume) tags() (map[string]any, error) {
 				}
 				return nil, err
 			}
-			for k, v := range tagsToMap(resp.Tags, func(t sgwtypes.Tag) *string { return t.Key }, func(t sgwtypes.Tag) *string { return t.Value }) {
-				tags[k] = v
-			}
+			maps.Copy(tags, tagsToMap(resp.Tags, func(t sgwtypes.Tag) *string { return t.Key }, func(t sgwtypes.Tag) *string { return t.Value }))
 			if resp.Marker == nil || *resp.Marker == "" {
 				break
 			}

@@ -33,8 +33,7 @@ func (e *APIError) Error() string {
 // degrade to null rather than failing the whole scan, since a personal API key
 // cannot read organization-scoped endpoints and plan-gated features answer 403.
 func IsForbidden(err error) bool {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*APIError](err); ok {
 		return apiErr.StatusCode == http.StatusUnauthorized || apiErr.StatusCode == http.StatusForbidden
 	}
 	return false
@@ -42,8 +41,7 @@ func IsForbidden(err error) bool {
 
 // IsNotFound reports whether err is a 404 response.
 func IsNotFound(err error) bool {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*APIError](err); ok {
 		return apiErr.StatusCode == http.StatusNotFound
 	}
 	return false
@@ -130,7 +128,7 @@ func GetPagedCursor[T any](ctx context.Context, c *NeonConnection, path string, 
 	query.Set("limit", strconv.Itoa(pageSize))
 
 	var results []T
-	for page := 0; page < maxPages; page++ {
+	for range maxPages {
 		sent := query.Get("cursor")
 
 		body, err := c.do(ctx, path, query)

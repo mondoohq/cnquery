@@ -34,11 +34,11 @@ type mqlDatadogOauthClientAuthorizationInternal struct {
 	cacheUserId string
 }
 
-func (r *mqlDatadog) oauthClients() ([]interface{}, error) {
+func (r *mqlDatadog) oauthClients() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewOrgAuthorizedClientsApi(conn.ApiClient())
 
-	var all []interface{}
+	var all []any
 	pageSize := int64(100)
 	page := int64(0)
 
@@ -89,11 +89,11 @@ func (r *mqlDatadogOauthClient) id() (string, error) {
 // authorizations lists the per-member grants made to this client. It is
 // deliberately fetched per client rather than pre-loaded for every client at
 // once, so querying one application does not pay for the whole org's grants.
-func (r *mqlDatadogOauthClient) authorizations() ([]interface{}, error) {
+func (r *mqlDatadogOauthClient) authorizations() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewOrgAuthorizedClientsApi(conn.ApiClient())
 
-	var all []interface{}
+	var all []any
 	pageSize := int64(100)
 	page := int64(0)
 
@@ -114,7 +114,7 @@ func (r *mqlDatadogOauthClient) authorizations() ([]interface{}, error) {
 			attrs := a.GetAttributes()
 			rels := a.GetRelationships()
 
-			scopes := make([]interface{}, 0, len(rels.Scopes.GetData()))
+			scopes := make([]any, 0, len(rels.Scopes.GetData()))
 			for _, s := range rels.Scopes.GetData() {
 				scopes = append(scopes, s.GetId())
 			}
@@ -155,7 +155,7 @@ func (r *mqlDatadogOauthClientAuthorization) user() (*mqlDatadogUser, error) {
 
 // --- Identity providers ---
 
-func (r *mqlDatadog) identityProviders() ([]interface{}, error) {
+func (r *mqlDatadog) identityProviders() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewIdentityProvidersApi(conn.ApiClient())
 
@@ -168,7 +168,7 @@ func (r *mqlDatadog) identityProviders() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var all []interface{}
+	var all []any
 	for _, p := range resp.GetData() {
 		attrs := p.GetAttributes()
 		res, err := CreateResource(r.MqlRuntime, "datadog.identityProvider", map[string]*llx.RawData{
@@ -195,11 +195,11 @@ type mqlDatadogOrgConnectionInternal struct {
 	cacheCreatedById string
 }
 
-func (r *mqlDatadog) orgConnections() ([]interface{}, error) {
+func (r *mqlDatadog) orgConnections() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewOrgConnectionsApi(conn.ApiClient())
 
-	var all []interface{}
+	var all []any
 	limit := int64(100)
 	offset := int64(0)
 
@@ -219,7 +219,7 @@ func (r *mqlDatadog) orgConnections() ([]interface{}, error) {
 			attrs := c.GetAttributes()
 			rels := c.GetRelationships()
 
-			connectionTypes := make([]interface{}, 0, len(attrs.GetConnectionTypes()))
+			connectionTypes := make([]any, 0, len(attrs.GetConnectionTypes()))
 			for _, t := range attrs.GetConnectionTypes() {
 				connectionTypes = append(connectionTypes, string(t))
 			}

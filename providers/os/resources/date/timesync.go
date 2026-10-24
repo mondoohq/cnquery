@@ -79,12 +79,12 @@ func parseW32tm(status, source string) *TimeSync {
 	res := &TimeSync{}
 	if strings.Contains(status, w32tmServiceNotStarted) {
 		// No service, no synchronization.
-		res.Synchronized = boolPtr(false)
+		res.Synchronized = new(false)
 		return res
 	}
 
 	var values []string
-	for _, line := range strings.Split(status, "\n") {
+	for line := range strings.SplitSeq(status, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
@@ -178,9 +178,9 @@ func ParseChronycTracking(stdout string) *TimeSync {
 	leap := strings.TrimSpace(fields[len(fields)-1])
 	switch leap {
 	case "Normal", "Insert second", "Delete second":
-		res.Synchronized = boolPtr(true)
+		res.Synchronized = new(true)
 	case "Not synchronised":
-		res.Synchronized = boolPtr(false)
+		res.Synchronized = new(false)
 		return res
 	default:
 		return res
@@ -222,6 +222,7 @@ func parseNtpConfServer(r io.Reader) *string {
 	return nil
 }
 
+//go:fix inline
 func boolPtr(b bool) *bool {
-	return &b
+	return new(b)
 }

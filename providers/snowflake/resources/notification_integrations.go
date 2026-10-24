@@ -54,7 +54,7 @@ func resolveNotificationIntegrationRef(runtime *plugin.Runtime, name string, fie
 
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
 	integrations, err := conn.Client().NotificationIntegrations.Show(context.Background(),
-		sdk.NewShowNotificationIntegrationRequest().WithLike(sdk.Like{Pattern: sdk.String(name)}))
+		sdk.NewShowNotificationIntegrationRequest().WithLike(sdk.Like{Pattern: new(name)}))
 	if err != nil {
 		return nil, err
 	}

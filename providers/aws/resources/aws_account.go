@@ -311,8 +311,7 @@ func (a *mqlAwsAccount) alternateContacts() ([]any, error) {
 		// "contact not configured" — the only signal MQL needs is exists=false.
 		notConfigured := false
 		if err != nil {
-			var notFoundErr *types.ResourceNotFoundException
-			if !errors.As(err, &notFoundErr) {
+			if _, ok := errors.AsType[*types.ResourceNotFoundException](err); !ok {
 				return nil, err
 			}
 			notConfigured = true

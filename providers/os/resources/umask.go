@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -120,9 +121,9 @@ func (u *mqlUmask) lastSetting(source string) *mqlUmaskSetting {
 	if err := u.load(); err != nil {
 		return nil
 	}
-	for i := len(u.cachedSettings) - 1; i >= 0; i-- {
-		if u.cachedSettings[i].Source.Data == source {
-			return u.cachedSettings[i]
+	for _, v := range slices.Backward(u.cachedSettings) {
+		if v.Source.Data == source {
+			return v
 		}
 	}
 	return nil

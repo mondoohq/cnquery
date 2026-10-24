@@ -336,7 +336,7 @@ func TestParseCspDirectives(t *testing.T) {
 }
 
 func TestHttpBodyRejectsOversize(t *testing.T) {
-	get := &mqlHttpGet{mqlHttpGetInternal: mqlHttpGetInternal{resp: plugin.TValue[*http.Response]{Data: &http.Response{Body: io.NopCloser(strings.NewReader(strings.Repeat("x", (16<<20)+1)))}, State: plugin.StateIsSet}}}
+	get := &mqlHttpGet{resp: plugin.TValue[*http.Response]{Data: &http.Response{Body: io.NopCloser(strings.NewReader(strings.Repeat("x", (16<<20)+1)))}, State: plugin.StateIsSet}}
 	body, err := get.body()
 	require.ErrorContains(t, err, "exceeds")
 	require.Empty(t, body)
@@ -363,9 +363,9 @@ func TestHttpBodyCachedAfterClose(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			body := &countedHTTPBody{Reader: strings.NewReader(strings.Repeat("x", tc.size))}
-			get := &mqlHttpGet{mqlHttpGetInternal: mqlHttpGetInternal{resp: plugin.TValue[*http.Response]{
+			get := &mqlHttpGet{resp: plugin.TValue[*http.Response]{
 				Data: &http.Response{Body: body}, State: plugin.StateIsSet,
-			}}}
+			}}
 			for range 2 {
 				got := get.GetBody()
 				if tc.wantError {
@@ -383,9 +383,9 @@ func TestHttpBodyCachedAfterClose(t *testing.T) {
 
 func TestHttpBodyReadOnceForConcurrentCalls(t *testing.T) {
 	body := &countedHTTPBody{Reader: strings.NewReader("complete")}
-	get := &mqlHttpGet{mqlHttpGetInternal: mqlHttpGetInternal{resp: plugin.TValue[*http.Response]{
+	get := &mqlHttpGet{resp: plugin.TValue[*http.Response]{
 		Data: &http.Response{Body: body}, State: plugin.StateIsSet,
-	}}}
+	}}
 	var workers sync.WaitGroup
 	for range 8 {
 		workers.Go(func() {

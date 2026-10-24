@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/anthropics/anthropic-sdk-go/v2"
@@ -23,7 +24,7 @@ type mqlClaudeOrganizationRbacGroupInternal struct {
 	cacheRoleIDs []string
 }
 
-func (r *mqlClaudeOrganization) rbacGroups() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) rbacGroups() ([]any, error) {
 	client, err := adminSDKClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -35,7 +36,7 @@ func (r *mqlClaudeOrganization) rbacGroups() ([]interface{}, error) {
 		return nil, classifyAdminError(fmt.Errorf("listing rbac groups: %w", err), endpointUnavailable)
 	}
 
-	res := make([]interface{}, 0, len(groups))
+	res := make([]any, 0, len(groups))
 	for _, g := range groups {
 		mqlGroup, err := CreateResource(r.MqlRuntime, "claude.organization.rbacGroup", rbacGroupArgs(g))
 		if err != nil {
@@ -76,11 +77,11 @@ var errRoleDataUnavailable = errors.New("the API reported this group's role data
 
 // roles resolves the group's role ids against the organization's role list,
 // which is fetched once for every group.
-func (r *mqlClaudeOrganizationRbacGroup) roles() ([]interface{}, error) {
+func (r *mqlClaudeOrganizationRbacGroup) roles() ([]any, error) {
 	if r.cacheRoleIDs == nil {
 		return nil, llx.Unavailable(errRoleDataUnavailable)
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, id := range r.cacheRoleIDs {
 		role, ok, err := lookupOrganizationChild[*mqlClaudeOrganizationRbacRole](
 			r.MqlRuntime, id, (*mqlClaudeOrganization).GetRbacRoles)
@@ -94,7 +95,7 @@ func (r *mqlClaudeOrganizationRbacGroup) roles() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlClaudeOrganizationRbacGroup) members() ([]interface{}, error) {
+func (r *mqlClaudeOrganizationRbacGroup) members() ([]any, error) {
 	client, err := adminSDKClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -107,7 +108,7 @@ func (r *mqlClaudeOrganizationRbacGroup) members() ([]interface{}, error) {
 		return nil, classifyAdminError(fmt.Errorf("listing members of rbac group %s: %w", groupID, err), parentMissing)
 	}
 
-	res := make([]interface{}, 0, len(members))
+	res := make([]any, 0, len(members))
 	for _, m := range members {
 		mqlMember, err := CreateResource(r.MqlRuntime, "claude.organization.rbacGroup.member", rbacGroupMemberArgs(groupID, m))
 		if err != nil {
@@ -149,7 +150,7 @@ func (r *mqlClaudeOrganizationRbacGroupMember) user() (*mqlClaudeOrganizationMem
 
 // claude.organization.rbacRole
 
-func (r *mqlClaudeOrganization) rbacRoles() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) rbacRoles() ([]any, error) {
 	client, err := adminSDKClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -161,7 +162,7 @@ func (r *mqlClaudeOrganization) rbacRoles() ([]interface{}, error) {
 		return nil, classifyAdminError(fmt.Errorf("listing rbac roles: %w", err), endpointUnavailable)
 	}
 
-	res := make([]interface{}, 0, len(roles))
+	res := make([]any, 0, len(roles))
 	for _, role := range roles {
 		mqlRole, err := CreateResource(r.MqlRuntime, "claude.organization.rbacRole", map[string]*llx.RawData{
 			"__id":      llx.StringData(role.ID),
@@ -178,7 +179,7 @@ func (r *mqlClaudeOrganization) rbacRoles() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlClaudeOrganizationRbacRole) permissions() ([]interface{}, error) {
+func (r *mqlClaudeOrganizationRbacRole) permissions() ([]any, error) {
 	client, err := adminSDKClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -191,7 +192,7 @@ func (r *mqlClaudeOrganizationRbacRole) permissions() ([]interface{}, error) {
 		return nil, classifyAdminError(fmt.Errorf("listing permissions of rbac role %s: %w", roleID, err), parentMissing)
 	}
 
-	res := make([]interface{}, 0, len(perms))
+	res := make([]any, 0, len(perms))
 	for _, p := range perms {
 		mqlPerm, err := CreateResource(r.MqlRuntime, "claude.organization.rbacRole.permission", rbacRolePermissionArgs(roleID, p))
 		if err != nil {
@@ -223,8 +224,8 @@ func rbacRolePermissionArgs(roleID string, p anthropic.BetaRBACRolePermission) m
 // groups lists the groups the role is attached to. Role attachment is only
 // reported from the group side, so the organization's group list, fetched
 // once, is scanned for groups naming this role.
-func (r *mqlClaudeOrganizationRbacRole) groups() ([]interface{}, error) {
-	groups, err := organizationList(r.MqlRuntime, func(o *mqlClaudeOrganization) *plugin.TValue[[]interface{}] {
+func (r *mqlClaudeOrganizationRbacRole) groups() ([]any, error) {
+	groups, err := organizationList(r.MqlRuntime, func(o *mqlClaudeOrganization) *plugin.TValue[[]any] {
 		return o.GetRbacGroups()
 	})
 	if err != nil {
@@ -236,8 +237,8 @@ func (r *mqlClaudeOrganizationRbacRole) groups() ([]interface{}, error) {
 // groupsHoldingRole returns the groups whose role ids include roleID. A group
 // whose role data the API could not read makes the answer unknowable, so it
 // is an error rather than a list that silently leaves the group out.
-func groupsHoldingRole(groups []interface{}, roleID string) ([]interface{}, error) {
-	res := []interface{}{}
+func groupsHoldingRole(groups []any, roleID string) ([]any, error) {
+	res := []any{}
 	for _, item := range groups {
 		group, ok := item.(*mqlClaudeOrganizationRbacGroup)
 		if !ok {
@@ -246,11 +247,8 @@ func groupsHoldingRole(groups []interface{}, roleID string) ([]interface{}, erro
 		if group.cacheRoleIDs == nil {
 			return nil, llx.Unavailable(fmt.Errorf("rbac group %s: %w", group.Id.Data, errRoleDataUnavailable))
 		}
-		for _, id := range group.cacheRoleIDs {
-			if id == roleID {
-				res = append(res, group)
-				break
-			}
+		if slices.Contains(group.cacheRoleIDs, roleID) {
+			res = append(res, group)
 		}
 	}
 	return res, nil

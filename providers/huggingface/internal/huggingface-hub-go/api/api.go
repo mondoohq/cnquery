@@ -60,9 +60,9 @@ func (a *API) buildURL(endpoint string) (string, error) {
 
 	pathPart := endpoint
 	queryPart := ""
-	if idx := strings.Index(endpoint, "?"); idx != -1 {
-		pathPart = endpoint[:idx]
-		queryPart = endpoint[idx+1:]
+	if before, after, ok := strings.Cut(endpoint, "?"); ok {
+		pathPart = before
+		queryPart = after
 	}
 
 	u.Path = path.Join(u.Path, "api", pathPart)
@@ -81,7 +81,7 @@ func parseNextLink(header string) string {
 	if header == "" {
 		return ""
 	}
-	for _, part := range strings.Split(header, ",") {
+	for part := range strings.SplitSeq(header, ",") {
 		segments := strings.Split(part, ";")
 		if len(segments) < 2 {
 			continue
@@ -121,7 +121,7 @@ func setExpand(params url.Values, expand []string, full bool) {
 // getPaged performs a GET against a relative endpoint or an absolute URL (as
 // returned by parseNextLink), decodes the body into result, and returns the
 // URL of the next page (empty when the response has no rel="next" link).
-func (a *API) getPaged(ctx context.Context, endpointOrURL string, result interface{}) (string, error) {
+func (a *API) getPaged(ctx context.Context, endpointOrURL string, result any) (string, error) {
 	rawURL := endpointOrURL
 	if !strings.HasPrefix(endpointOrURL, "http://") && !strings.HasPrefix(endpointOrURL, "https://") {
 		var err error
@@ -163,7 +163,7 @@ func (a *API) getPaged(ctx context.Context, endpointOrURL string, result interfa
 	return parseNextLink(resp.Header.Get("Link")), nil
 }
 
-func (a *API) request(ctx context.Context, method, endpoint string, body interface{}, result interface{}) error {
+func (a *API) request(ctx context.Context, method, endpoint string, body any, result any) error {
 	rawURL, err := a.buildURL(endpoint)
 	if err != nil {
 		return err

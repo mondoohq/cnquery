@@ -12,7 +12,8 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 )
 
-func int32Ptr(i int32) *int32 { return &i }
+//go:fix inline
+func int32Ptr(i int32) *int32 { return new(i) }
 
 // TestFirewallPolicyRuleCollectionsDict guards the assumption that
 // firewallPolicy.ruleCollectionGroups relies on: converting the polymorphic
@@ -27,16 +28,16 @@ func TestFirewallPolicyRuleCollectionsDict(t *testing.T) {
 
 	collections := []network.FirewallPolicyRuleCollectionClassification{
 		&network.FirewallPolicyFilterRuleCollection{
-			Name:     strPtr("allow-web"),
+			Name:     new("allow-web"),
 			Priority: int32Ptr(200),
 			Action: &network.FirewallPolicyFilterRuleCollectionAction{
 				Type: &filterAction,
 			},
 			Rules: []network.FirewallPolicyRuleClassification{
 				&network.ApplicationRule{
-					Name:            strPtr("allow-github"),
-					SourceAddresses: []*string{strPtr("10.0.0.0/8")},
-					TargetFqdns:     []*string{strPtr("github.com")},
+					Name:            new("allow-github"),
+					SourceAddresses: []*string{new("10.0.0.0/8")},
+					TargetFqdns:     []*string{new("github.com")},
 					Protocols: []*network.FirewallPolicyRuleApplicationProtocol{
 						{ProtocolType: &httpsProto, Port: int32Ptr(443)},
 					},

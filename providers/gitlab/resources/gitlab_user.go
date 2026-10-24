@@ -411,10 +411,8 @@ func (u *mqlGitlabUser) sshKeys() ([]any, error) {
 
 	for {
 		keys, resp, err := conn.Client().Users.ListSSHKeysForUser(u.Id.Data, &gitlab.ListSSHKeysForUserOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
+			Page:    page,
+			PerPage: perPage,
 		})
 		if err != nil {
 			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
@@ -468,8 +466,8 @@ func (u *mqlGitlabUser) personalAccessTokens() ([]any, error) {
 	var all []*gitlab.PersonalAccessToken
 	for {
 		tokens, resp, err := conn.Client().PersonalAccessTokens.ListPersonalAccessTokens(&gitlab.ListPersonalAccessTokensOptions{
-			ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage},
-			UserID:      &userID,
+			Page: page, PerPage: perPage,
+			UserID: &userID,
 		})
 		if err != nil {
 			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
@@ -525,7 +523,7 @@ func (u *mqlGitlabUser) emails() ([]any, error) {
 	var all []*gitlab.Email
 	for {
 		emails, resp, err := conn.Client().Users.ListEmailsForUser(u.Id.Data, &gitlab.ListEmailsForUserOptions{
-			ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage},
+			Page: page, PerPage: perPage,
 		})
 		if err != nil {
 			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {

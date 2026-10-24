@@ -434,8 +434,8 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 							TruststoreUri                    string `json:"truststoreUri"`
 						}
 						type mqlSecurityConfig struct {
-							IdentityConfig mqlSecurityIdentity `json:"identityConfig,omitempty"`
-							KerberosConfig mqlSecurityKerberos `json:"kerberosConfig,omitempty"`
+							IdentityConfig mqlSecurityIdentity `json:"identityConfig"`
+							KerberosConfig mqlSecurityKerberos `json:"kerberosConfig"`
 						}
 						var mqlSecurityCfg map[string]any
 						if c.Config.SecurityConfig != nil {

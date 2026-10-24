@@ -75,7 +75,7 @@ func setK8sSourceContext(runtime *plugin.Runtime, kt shared.Connection, obj meta
 	}
 
 	rv := reflect.ValueOf(res)
-	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+	if rv.Kind() != reflect.Pointer || rv.IsNil() {
 		return nil
 	}
 	field := rv.Elem().FieldByName("Context")

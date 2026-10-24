@@ -51,13 +51,13 @@ func TestSasSwitchEnabled(t *testing.T) {
 		want  bool
 	}{
 		{"nil is off", nil, false},
-		{"empty is off", tea.String(""), false},
-		{"on", tea.String("on"), true},
-		{"case insensitive", tea.String("ON"), true},
-		{"surrounding space", tea.String(" on "), true},
-		{"off", tea.String("off"), false},
-		{"unknown value is off", tea.String("partial"), false},
-		{"substring must not match", tea.String("gone"), false},
+		{"empty is off", new(""), false},
+		{"on", new("on"), true},
+		{"case insensitive", new("ON"), true},
+		{"surrounding space", new(" on "), true},
+		{"off", new("off"), false},
+		{"unknown value is off", new("partial"), false},
+		{"substring must not match", new("gone"), false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, sasSwitchEnabled(tc.value))
@@ -75,13 +75,13 @@ func TestSasScheduleHours(t *testing.T) {
 		want  int64
 	}{
 		{"nil is zero", nil, 0},
-		{"empty is zero", tea.String(""), 0},
-		{"garbage is zero", tea.String("daily"), 0},
-		{"negative is zero", tea.String("-12"), 0},
-		{"twice a day", tea.String("12"), 12},
-		{"daily", tea.String("24"), 24},
-		{"weekly", tea.String("168"), 168},
-		{"surrounding space", tea.String(" 24 "), 24},
+		{"empty is zero", new(""), 0},
+		{"garbage is zero", new("daily"), 0},
+		{"negative is zero", new("-12"), 0},
+		{"twice a day", new("12"), 12},
+		{"daily", new("24"), 24},
+		{"weekly", new("168"), 168},
+		{"surrounding space", new(" 24 "), 24},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, sasScheduleHours(tc.value))
@@ -94,10 +94,10 @@ func TestSasScheduleHours(t *testing.T) {
 // scan path covering nothing.
 func TestSasStrings(t *testing.T) {
 	assert.Equal(t, []any{}, sasStrings(nil))
-	assert.Equal(t, []any{}, sasStrings([]*string{nil, tea.String("")}))
-	assert.Equal(t, []any{"/var/www"}, sasStrings([]*string{tea.String("/var/www"), nil}))
+	assert.Equal(t, []any{}, sasStrings([]*string{nil, new("")}))
+	assert.Equal(t, []any{"/var/www"}, sasStrings([]*string{new("/var/www"), nil}))
 	assert.Equal(t, []any{"/var/www", "/srv/http"},
-		sasStrings([]*string{tea.String("/var/www"), tea.String(""), tea.String("/srv/http")}))
+		sasStrings([]*string{new("/var/www"), new(""), new("/srv/http")}))
 }
 
 // TestSasPropertyScheduleTypes pins the fingerprint kinds walked by

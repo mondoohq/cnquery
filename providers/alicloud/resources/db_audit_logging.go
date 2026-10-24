@@ -67,8 +67,8 @@ func (r *mqlAlicloudRedisInstance) auditLogConfig() *rkvclient.DescribeAuditLogC
 			return
 		}
 		resp, err := client.DescribeAuditLogConfig(&rkvclient.DescribeAuditLogConfigRequest{
-			RegionId:   tea.String(r.region),
-			InstanceId: tea.String(r.InstanceId.Data),
+			RegionId:   new(r.region),
+			InstanceId: new(r.InstanceId.Data),
 		})
 		if err != nil {
 			log.Debug().Err(err).Str("instance", r.InstanceId.Data).
@@ -118,7 +118,7 @@ func (r *mqlAlicloudPolardbCluster) auditCollectorStatus() string {
 			return
 		}
 		resp, err := client.DescribeDBClusterAuditLogCollector(&polardbclient.DescribeDBClusterAuditLogCollectorRequest{
-			DBClusterId: tea.String(r.dbClusterId),
+			DBClusterId: new(r.dbClusterId),
 		})
 		if err != nil {
 			log.Debug().Err(err).Str("cluster", r.dbClusterId).

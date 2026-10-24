@@ -13,7 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func ptr[T any](v T) *T { return &v }
+//go:fix inline
+func ptr[T any](v T) *T { return new(v) }
 
 // assignmentTargetJSON is the wire shape Graph returns for a group assignment
 // carrying an include filter. Tests that care about how filter metadata is
@@ -33,7 +34,7 @@ const assignmentTargetJSON = `{
 func TestAdditionalDataString(t *testing.T) {
 	bag := map[string]any{
 		"str":     "plain",
-		"ptr":     ptr("pointed"),
+		"ptr":     new("pointed"),
 		"nilPtr":  (*string)(nil),
 		"notText": 42,
 		"untyped": nil,
@@ -105,8 +106,8 @@ func TestAssignmentTargetInfo_GroupTarget(t *testing.T) {
 
 func TestAssignmentTargetInfo_ExclusionGroupTarget(t *testing.T) {
 	target := models.NewExclusionGroupAssignmentTarget()
-	target.SetOdataType(ptr("#microsoft.graph.exclusionGroupAssignmentTarget"))
-	target.SetGroupId(ptr("group-xyz"))
+	target.SetOdataType(new("#microsoft.graph.exclusionGroupAssignmentTarget"))
+	target.SetGroupId(new("group-xyz"))
 
 	tt, gid, ex, ft, fid := assignmentTargetInfo(target)
 	assert.Equal(t, "exclusionGroupAssignmentTarget", tt)
@@ -166,7 +167,7 @@ func TestBetaAssignmentTargetInfo_NoFilter(t *testing.T) {
 
 func TestBetaAssignmentTargetInfo_ExclusionGroupTarget(t *testing.T) {
 	target := betamodels.NewExclusionGroupAssignmentTarget()
-	target.SetGroupId(ptr("beta-excl"))
+	target.SetGroupId(new("beta-excl"))
 
 	_, gid, ex, _, _ := betaAssignmentTargetInfo(target)
 	assert.Equal(t, "beta-excl", gid)

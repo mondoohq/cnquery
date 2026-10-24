@@ -24,7 +24,7 @@ func (r *mqlWindsurf) id() (string, error) {
 	return "windsurf/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlWindsurf) rules() ([]interface{}, error) {
+func (r *mqlWindsurf) rules() ([]any, error) {
 	afs := connectionAfs(r.MqlRuntime)
 	memoriesDir := filepath.Join(r.ConfigPath.Data, "memories")
 
@@ -36,7 +36,7 @@ func (r *mqlWindsurf) rules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var result []interface{}
+	var result []any
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -68,7 +68,7 @@ func (r *mqlWindsurf) rules() ([]interface{}, error) {
 	return result, nil
 }
 
-func (r *mqlWindsurf) mcpServers() ([]interface{}, error) {
+func (r *mqlWindsurf) mcpServers() ([]any, error) {
 	afs := connectionAfs(r.MqlRuntime)
 	configDir := r.ConfigPath.Data
 
@@ -86,7 +86,7 @@ func (r *mqlWindsurf) mcpServers() ([]interface{}, error) {
 		return nil, fmt.Errorf("failed to parse windsurf mcp_config.json: %w", err)
 	}
 
-	var result []interface{}
+	var result []any
 	for name, server := range config.McpServers {
 		url := server.URL
 		if url == "" {
@@ -110,7 +110,7 @@ func (r *mqlWindsurf) mcpServers() ([]interface{}, error) {
 	return result, nil
 }
 
-func (r *mqlWindsurf) skills() ([]interface{}, error) {
+func (r *mqlWindsurf) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "windsurf.skill", r.ConfigPath.Data, defaultWindsurfConfigDir,
 		filepath.Join(defaultWindsurfConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -121,7 +121,7 @@ func (r *mqlWindsurfRule) id() (string, error) {
 	return "windsurf.rule/" + r.Name.Data, nil
 }
 
-func (r *mqlWindsurf) repos() ([]interface{}, error) {
+func (r *mqlWindsurf) repos() ([]any, error) {
 	folders, err := vscodeWorkspaceFolders(r.MqlRuntime, "Windsurf")
 	if err != nil {
 		return nil, err

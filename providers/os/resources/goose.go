@@ -90,7 +90,7 @@ func gooseTelemetryEnabled(config *gooseConfig) bool {
 	return config.TelemetryEnabled != nil && *config.TelemetryEnabled
 }
 
-func (r *mqlGoose) extensions() ([]interface{}, error) {
+func (r *mqlGoose) extensions() ([]any, error) {
 	config, err := r.loadConfig()
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -99,7 +99,7 @@ func (r *mqlGoose) extensions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var result []interface{}
+	var result []any
 	for name, ext := range config.Extensions {
 		res, err := NewResource(r.MqlRuntime, "goose.extension", map[string]*llx.RawData{
 			"__id":        llx.StringData("goose.extension/" + name),
@@ -153,7 +153,7 @@ func gooseMcpServers(config *gooseConfig, source string) []mcpServerSpec {
 	return specs
 }
 
-func (r *mqlGoose) mcpServers() ([]interface{}, error) {
+func (r *mqlGoose) mcpServers() ([]any, error) {
 	config, err := r.loadConfig()
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -178,7 +178,7 @@ func (r *mqlGooseMcpServer) MqlAsset() (*inventory.Asset, error) {
 	return mcpServerAssetFor(r.MqlRuntime, r)
 }
 
-func (r *mqlGoose) skills() ([]interface{}, error) {
+func (r *mqlGoose) skills() ([]any, error) {
 	dir := gooseConfigDir(runtimeOSFamily(r.MqlRuntime))
 	return agentSkills(r.MqlRuntime, "goose.skill", r.ConfigPath.Data, dir,
 		filepath.Join(dir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))

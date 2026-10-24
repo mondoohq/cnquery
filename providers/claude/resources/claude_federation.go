@@ -57,11 +57,11 @@ func nullableString(s string) *string {
 // rawJSONDict decodes the SDK's captured response body for a nested object
 // into the map a dict field expects. An object the API omitted arrives as an
 // empty raw string and reads as null rather than as an empty object.
-func rawJSONDict(raw string) (map[string]interface{}, error) {
+func rawJSONDict(raw string) (map[string]any, error) {
 	if raw == "" || raw == "null" {
 		return nil, nil
 	}
-	var out map[string]interface{}
+	var out map[string]any
 	if err := json.Unmarshal([]byte(raw), &out); err != nil {
 		return nil, fmt.Errorf("decoding nested object: %w", err)
 	}
@@ -70,7 +70,7 @@ func rawJSONDict(raw string) (map[string]interface{}, error) {
 
 // organizationList reads one of the lists hanging off the shared
 // claude.organization resource.
-func organizationList(runtime *plugin.Runtime, get func(*mqlClaudeOrganization) *plugin.TValue[[]interface{}]) ([]interface{}, error) {
+func organizationList(runtime *plugin.Runtime, get func(*mqlClaudeOrganization) *plugin.TValue[[]any]) ([]any, error) {
 	res, err := CreateResource(runtime, "claude.organization", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func organizationList(runtime *plugin.Runtime, get func(*mqlClaudeOrganization) 
 
 // claude.organization.serviceAccount
 
-func (r *mqlClaudeOrganization) serviceAccounts() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) serviceAccounts() ([]any, error) {
 	client, err := adminSDKClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func (r *mqlClaudeOrganization) serviceAccounts() ([]interface{}, error) {
 	pager := client.Beta.Organization.ServiceAccounts.ListAutoPaging(
 		context.Background(), anthropic.BetaOrganizationServiceAccountListParams{})
 
-	var res []interface{}
+	var res []any
 	for pager.Next() {
 		sa := pager.Current()
 		mqlSA, err := CreateResource(r.MqlRuntime, "claude.organization.serviceAccount",
@@ -128,7 +128,7 @@ func serviceAccountArgs(sa anthropic.BetaServiceAccount) map[string]*llx.RawData
 
 // claude.organization.federationIssuer
 
-func (r *mqlClaudeOrganization) federationIssuers() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) federationIssuers() ([]any, error) {
 	client, err := adminSDKClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ func (r *mqlClaudeOrganization) federationIssuers() ([]interface{}, error) {
 	pager := client.Beta.Organization.Federation.Issuers.ListAutoPaging(
 		context.Background(), anthropic.BetaOrganizationFederationIssuerListParams{})
 
-	var res []interface{}
+	var res []any
 	for pager.Next() {
 		iss := pager.Current()
 		args, err := federationIssuerArgs(iss)
@@ -189,8 +189,8 @@ func federationIssuerArgs(iss anthropic.BetaFederationIssuer) (map[string]*llx.R
 // The rules are listed once for the organization and filtered here rather than
 // fetched per issuer, so an organization with many issuers still costs one
 // call.
-func (r *mqlClaudeOrganizationFederationIssuer) rules() ([]interface{}, error) {
-	rules, err := organizationList(r.MqlRuntime, func(o *mqlClaudeOrganization) *plugin.TValue[[]interface{}] {
+func (r *mqlClaudeOrganizationFederationIssuer) rules() ([]any, error) {
+	rules, err := organizationList(r.MqlRuntime, func(o *mqlClaudeOrganization) *plugin.TValue[[]any] {
 		return o.GetFederationRules()
 	})
 	if err != nil {
@@ -198,7 +198,7 @@ func (r *mqlClaudeOrganizationFederationIssuer) rules() ([]interface{}, error) {
 	}
 
 	issuerID := r.Id.Data
-	res := []interface{}{}
+	res := []any{}
 	for _, item := range rules {
 		rule, ok := item.(*mqlClaudeOrganizationFederationRule)
 		if !ok {
@@ -219,7 +219,7 @@ type mqlClaudeOrganizationFederationRuleInternal struct {
 	cacheWorkspaceIDs     []string
 }
 
-func (r *mqlClaudeOrganization) federationRules() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) federationRules() ([]any, error) {
 	client, err := adminSDKClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -228,7 +228,7 @@ func (r *mqlClaudeOrganization) federationRules() ([]interface{}, error) {
 	pager := client.Beta.Organization.Federation.Rules.ListAutoPaging(
 		context.Background(), anthropic.BetaOrganizationFederationRuleListParams{})
 
-	var res []interface{}
+	var res []any
 	for pager.Next() {
 		rule := pager.Current()
 		args, err := federationRuleArgs(rule)
@@ -296,7 +296,7 @@ func federationRuleArgs(rule anthropic.BetaFederationRule) (map[string]*llx.RawD
 func (r *mqlClaudeOrganizationFederationRule) issuer() (*mqlClaudeOrganizationFederationIssuer, error) {
 	found, ok, err := lookupOrganizationChild[*mqlClaudeOrganizationFederationIssuer](
 		r.MqlRuntime, r.cacheIssuerID,
-		func(o *mqlClaudeOrganization) *plugin.TValue[[]interface{}] { return o.GetFederationIssuers() })
+		func(o *mqlClaudeOrganization) *plugin.TValue[[]any] { return o.GetFederationIssuers() })
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +310,7 @@ func (r *mqlClaudeOrganizationFederationRule) issuer() (*mqlClaudeOrganizationFe
 func (r *mqlClaudeOrganizationFederationRule) serviceAccount() (*mqlClaudeOrganizationServiceAccount, error) {
 	found, ok, err := lookupOrganizationChild[*mqlClaudeOrganizationServiceAccount](
 		r.MqlRuntime, r.cacheServiceAccountID,
-		func(o *mqlClaudeOrganization) *plugin.TValue[[]interface{}] { return o.GetServiceAccounts() })
+		func(o *mqlClaudeOrganization) *plugin.TValue[[]any] { return o.GetServiceAccounts() })
 	if err != nil {
 		return nil, err
 	}
@@ -321,12 +321,12 @@ func (r *mqlClaudeOrganizationFederationRule) serviceAccount() (*mqlClaudeOrgani
 	return found, nil
 }
 
-func (r *mqlClaudeOrganizationFederationRule) workspaces() ([]interface{}, error) {
-	res := []interface{}{}
+func (r *mqlClaudeOrganizationFederationRule) workspaces() ([]any, error) {
+	res := []any{}
 	for _, id := range r.cacheWorkspaceIDs {
 		found, ok, err := lookupOrganizationChild[*mqlClaudeOrganizationWorkspace](
 			r.MqlRuntime, id,
-			func(o *mqlClaudeOrganization) *plugin.TValue[[]interface{}] { return o.GetWorkspaces() })
+			func(o *mqlClaudeOrganization) *plugin.TValue[[]any] { return o.GetWorkspaces() })
 		if err != nil {
 			return nil, err
 		}

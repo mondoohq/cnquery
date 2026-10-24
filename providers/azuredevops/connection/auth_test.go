@@ -267,11 +267,9 @@ func TestConcurrentCallersShareOneMintedToken(t *testing.T) {
 	tokens := make([]string, callers)
 	errs := make([]error, callers)
 	for i := range callers {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			tokens[i], errs[i] = auth.Token(context.Background())
-		}()
+		})
 	}
 	wg.Wait()
 

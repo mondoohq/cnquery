@@ -19,7 +19,7 @@ type mqlSnowflakePipeInternal struct {
 }
 
 func (r *mqlSnowflakeAccount) pipes() ([]any, error) {
-	return listSnowflakePipes(r.MqlRuntime, &sdk.In{Account: sdk.Bool(true)})
+	return listSnowflakePipes(r.MqlRuntime, &sdk.In{Account: new(true)})
 }
 
 func (r *mqlSnowflakeDatabase) pipes() ([]any, error) {

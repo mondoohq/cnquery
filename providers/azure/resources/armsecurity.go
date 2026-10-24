@@ -148,7 +148,7 @@ type PolicyAssignment struct {
 		Type        string `json:"type"`
 		PrincipalID string `json:"principalId"`
 		TenantID    string `json:"tenantId"`
-	} `json:"identity,omitempty"`
+	} `json:"identity"`
 	Properties struct {
 		DisplayName     string `json:"displayName"`
 		Description     string `json:"description"`

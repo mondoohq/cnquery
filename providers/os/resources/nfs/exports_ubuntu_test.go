@@ -31,7 +31,7 @@ type exportfsRow struct {
 func parseExportfsV(t *testing.T, out string) map[[2]string]exportfsRow {
 	t.Helper()
 	res := map[[2]string]exportfsRow{}
-	for _, line := range strings.Split(strings.TrimSpace(out), "\n") {
+	for line := range strings.SplitSeq(strings.TrimSpace(out), "\n") {
 		fields := strings.Fields(line)
 		require.Len(t, fields, 2, line)
 		client, opts, ok := strings.Cut(strings.TrimSuffix(fields[1], ")"), "(")

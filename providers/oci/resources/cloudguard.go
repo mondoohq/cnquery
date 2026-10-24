@@ -125,7 +125,7 @@ func (o *mqlOciCloudGuard) getConfig() (*cloudguard.Configuration, error) {
 		}
 
 		response, err := client.GetConfiguration(context.Background(), cloudguard.GetConfigurationRequest{
-			CompartmentId: common.String(conn.TenantID()),
+			CompartmentId: new(conn.TenantID()),
 		})
 		if err != nil {
 			if ociCloudGuardNotSubscribed(err) {
@@ -204,10 +204,10 @@ func (o *mqlOciCloudGuard) listTargets() ([]any, error) {
 	ctx := context.Background()
 	targets, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.TargetSummary, *string, error) {
 		response, err := client.ListTargets(ctx, cloudguard.ListTargetsRequest{
-			CompartmentId: common.String(conn.TenantID()),
+			CompartmentId: new(conn.TenantID()),
 			// Cloud Guard targets are attached to sub-compartments far more
 			// often than to the tenancy root.
-			CompartmentIdInSubtree: common.Bool(true),
+			CompartmentIdInSubtree: new(true),
 			// Cloud Guard rejects the subtree flag outright unless an access
 			// level comes with it, so this is required rather than an
 			// optimization. ACCESSIBLE degrades to the compartments the caller
@@ -299,10 +299,10 @@ func (o *mqlOciCloudGuard) listProblems() ([]any, error) {
 	for _, state := range ociCloudGuardProblemStates {
 		perState, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.ProblemSummary, *string, error) {
 			response, err := client.ListProblems(ctx, cloudguard.ListProblemsRequest{
-				CompartmentId: common.String(conn.TenantID()),
+				CompartmentId: new(conn.TenantID()),
 				// Problems are raised against resources in sub-compartments, so
 				// without the subtree flag the tenancy root reports almost none.
-				CompartmentIdInSubtree: common.Bool(true),
+				CompartmentIdInSubtree: new(true),
 				// ACCESSIBLE degrades to the compartments the caller can read
 				// instead of failing the whole listing on the first one it cannot.
 				AccessLevel:                          cloudguard.ListProblemsAccessLevelAccessible,
@@ -424,11 +424,11 @@ func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
 	ctx := context.Background()
 	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.DetectorRecipeDetectorRuleSummary, *string, error) {
 		response, err := client.ListDetectorRecipeDetectorRules(ctx, cloudguard.ListDetectorRecipeDetectorRulesRequest{
-			DetectorRecipeId: common.String(o.Id.Data),
+			DetectorRecipeId: new(o.Id.Data),
 			// The compartment OCID is no longer a schema field, so it comes
 			// from the value recorded when the recipe was listed. An empty
 			// value here would quietly scope this listing to nothing.
-			CompartmentId: common.String(o.cacheCompartmentID),
+			CompartmentId: new(o.cacheCompartmentID),
 			Page:          page,
 		})
 		if err != nil {
@@ -546,8 +546,8 @@ func (o *mqlOciCloudGuard) listDetectorRecipes() ([]any, error) {
 	ctx := context.Background()
 	recipes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.DetectorRecipeSummary, *string, error) {
 		response, err := client.ListDetectorRecipes(ctx, cloudguard.ListDetectorRecipesRequest{
-			CompartmentId:          common.String(conn.TenantID()),
-			CompartmentIdInSubtree: common.Bool(true),
+			CompartmentId:          new(conn.TenantID()),
+			CompartmentIdInSubtree: new(true),
 			// Required whenever the subtree flag is set: Cloud Guard rejects
 			// the combination without it. See targets for the full reasoning.
 			AccessLevel: cloudguard.ListDetectorRecipesAccessLevelAccessible,
@@ -625,8 +625,8 @@ func (o *mqlOciCloudGuard) listSecurityZones() ([]any, error) {
 		// the tenancy root, so without the subtree flag a correctly zoned
 		// tenancy reported none at all.
 		response, err := client.ListSecurityZones(ctx, cloudguard.ListSecurityZonesRequest{
-			CompartmentId:                    common.String(conn.TenantID()),
-			IsRequiredSecurityZonesInSubtree: common.Bool(true),
+			CompartmentId:                    new(conn.TenantID()),
+			IsRequiredSecurityZonesInSubtree: new(true),
 			Page:                             page,
 		})
 		if err != nil {
@@ -688,7 +688,7 @@ func (o *mqlOciCloudGuard) securityZoneRecipes() ([]any, error) {
 	items, err := ociCollectGlobal(o.MqlRuntime, func(ctx context.Context, compartmentID string) ([]any, error) {
 		recipes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.SecurityRecipeSummary, *string, error) {
 			response, err := client.ListSecurityRecipes(ctx, cloudguard.ListSecurityRecipesRequest{
-				CompartmentId: common.String(compartmentID),
+				CompartmentId: new(compartmentID),
 				Page:          page,
 			})
 			if err != nil {
@@ -763,7 +763,7 @@ func (o *mqlOciCloudGuard) securityPolicies() ([]any, error) {
 	ctx := context.Background()
 	policies, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.SecurityPolicySummary, *string, error) {
 		response, err := client.ListSecurityPolicies(ctx, cloudguard.ListSecurityPoliciesRequest{
-			CompartmentId: common.String(conn.TenantID()),
+			CompartmentId: new(conn.TenantID()),
 			Page:          page,
 		})
 		if err != nil {

@@ -91,8 +91,7 @@ func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, e
 		KmsKeyId:     kmsKeyID,
 	})
 	if err != nil {
-		var aerr *types.ResourceExistsException
-		if errors.As(err, &aerr) {
+		if _, ok := errors.AsType[*types.ResourceExistsException](err); ok {
 			return v.updateSecret(ctx, cred)
 		}
 

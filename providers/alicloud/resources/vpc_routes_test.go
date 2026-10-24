@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	tea "github.com/alibabacloud-go/tea/tea"
 	vpcclient "github.com/alibabacloud-go/vpc-20160428/v7/client"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,7 +18,7 @@ func TestRouteEntryNextHop(t *testing.T) {
 	hop := func(hopType, hopID string) *vpcclient.DescribeRouteEntryListResponseBodyRouteEntrysRouteEntryNextHops {
 		return &vpcclient.DescribeRouteEntryListResponseBodyRouteEntrysRouteEntryNextHops{
 			NextHop: []*vpcclient.DescribeRouteEntryListResponseBodyRouteEntrysRouteEntryNextHopsNextHop{
-				{NextHopType: tea.String(hopType), NextHopId: tea.String(hopID)},
+				{NextHopType: new(hopType), NextHopId: new(hopID)},
 			},
 		}
 	}
@@ -55,7 +54,7 @@ func TestRouteEntryNextHop(t *testing.T) {
 			NextHops: &vpcclient.DescribeRouteEntryListResponseBodyRouteEntrysRouteEntryNextHops{
 				NextHop: []*vpcclient.DescribeRouteEntryListResponseBodyRouteEntrysRouteEntryNextHopsNextHop{
 					nil,
-					{NextHopType: tea.String("Instance"), NextHopId: tea.String("i-abc")},
+					{NextHopType: new("Instance"), NextHopId: new("i-abc")},
 				},
 			},
 		}
@@ -71,44 +70,44 @@ func TestRouteEntryNextHop(t *testing.T) {
 func TestVpcNetworkAclEntryKey(t *testing.T) {
 	t.Run("the rule id is used when present", func(t *testing.T) {
 		key := vpcNetworkAclEntryKey("ingress", vpcNetworkAclEntryArgs{
-			entryID:  tea.String("nae-bp1abc"),
-			protocol: tea.String("tcp"),
+			entryID:  new("nae-bp1abc"),
+			protocol: new("tcp"),
 		})
 		assert.Equal(t, "nae-bp1abc", key)
 	})
 
 	t.Run("id-less rules stay distinct from each other", func(t *testing.T) {
 		ssh := vpcNetworkAclEntryKey("ingress", vpcNetworkAclEntryArgs{
-			protocol:     tea.String("tcp"),
-			port:         tea.String("22/22"),
-			sourceCidrIp: tea.String("0.0.0.0/0"),
+			protocol:     new("tcp"),
+			port:         new("22/22"),
+			sourceCidrIp: new("0.0.0.0/0"),
 		})
 		https := vpcNetworkAclEntryKey("ingress", vpcNetworkAclEntryArgs{
-			protocol:     tea.String("tcp"),
-			port:         tea.String("443/443"),
-			sourceCidrIp: tea.String("0.0.0.0/0"),
+			protocol:     new("tcp"),
+			port:         new("443/443"),
+			sourceCidrIp: new("0.0.0.0/0"),
 		})
 		assert.NotEqual(t, ssh, https)
 	})
 
 	t.Run("direction separates an otherwise identical rule", func(t *testing.T) {
 		in := vpcNetworkAclEntryKey("ingress", vpcNetworkAclEntryArgs{
-			protocol: tea.String("all"), port: tea.String("-1/-1"),
+			protocol: new("all"), port: new("-1/-1"),
 		})
 		out := vpcNetworkAclEntryKey("egress", vpcNetworkAclEntryArgs{
-			protocol: tea.String("all"), port: tea.String("-1/-1"),
+			protocol: new("all"), port: new("-1/-1"),
 		})
 		assert.NotEqual(t, in, out)
 	})
 
 	t.Run("source and destination share one slot in the key", func(t *testing.T) {
 		src := vpcNetworkAclEntryKey("ingress", vpcNetworkAclEntryArgs{
-			protocol: tea.String("tcp"), port: tea.String("22/22"),
-			sourceCidrIp: tea.String("10.0.0.0/8"),
+			protocol: new("tcp"), port: new("22/22"),
+			sourceCidrIp: new("10.0.0.0/8"),
 		})
 		dst := vpcNetworkAclEntryKey("ingress", vpcNetworkAclEntryArgs{
-			protocol: tea.String("tcp"), port: tea.String("22/22"),
-			destinationCidrIp: tea.String("10.0.0.0/8"),
+			protocol: new("tcp"), port: new("22/22"),
+			destinationCidrIp: new("10.0.0.0/8"),
 		})
 		assert.Equal(t, src, dst,
 			"source and destination are never both set on one rule, so they share the slot")

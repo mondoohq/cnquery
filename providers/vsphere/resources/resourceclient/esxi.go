@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"regexp"
+	"slices"
 	"strings"
 
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
@@ -37,12 +38,7 @@ var sliceKeys = []string{"Uplinks", "Portgroups"}
 // The issue is that esx.Values always return []string values although that does not make
 // any sense for most values. We want to avoid to expose this as a bad user experience
 func isSliceKey(key string) bool {
-	for i := range sliceKeys {
-		if sliceKeys[i] == key {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(sliceKeys, key)
 }
 
 func esxiValuesToDict(val esx.Values) map[string]any {

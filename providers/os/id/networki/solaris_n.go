@@ -12,7 +12,6 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 )
 
 // detectSolarisInterfaces detects network interfaces on Solaris and illumos.
@@ -88,7 +87,7 @@ func parseSolarisIfconfig(output string) []Interface {
 
 		if m := solarisIfconfigHeader.FindStringSubmatch(raw); len(m) > 0 {
 			current = find(m[1])
-			for _, flag := range strings.Split(m[2], ",") {
+			for flag := range strings.SplitSeq(m[2], ",") {
 				if flag != "" && !slices.Contains(current.Flags, flag) {
 					current.Flags = append(current.Flags, flag)
 				}
@@ -143,10 +142,10 @@ func parseSolarisIfconfig(output string) []Interface {
 	for i := range interfaces {
 		iface := &interfaces[i]
 		// RUNNING is the link-up flag on Solaris
-		iface.Active = convert.ToPtr(slices.Contains(iface.Flags, "RUNNING"))
+		iface.Active = new(slices.Contains(iface.Flags, "RUNNING"))
 		// the loopback and other interfaces with no datalink under them
 		if slices.Contains(iface.Flags, "VIRTUAL") {
-			iface.Virtual = convert.ToPtr(true)
+			iface.Virtual = new(true)
 		}
 	}
 
@@ -214,7 +213,7 @@ func parseSolarisDatalinks(macs string, classes string) []Interface {
 		if !ok || class == "" {
 			continue
 		}
-		get(link).Virtual = convert.ToPtr(class != "phys")
+		get(link).Virtual = new(class != "phys")
 	}
 
 	res := make([]Interface, 0, len(order))

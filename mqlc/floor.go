@@ -53,10 +53,7 @@ func DefaultDowngradeFloor(providerVersions map[string]string) map[string]string
 			continue
 		}
 
-		floor := major - DowngradeMajorSpan
-		if floor < MinDowngradeMajor {
-			floor = MinDowngradeMajor
-		}
+		floor := max(major-DowngradeMajorSpan, MinDowngradeMajor)
 		res[resources.ProviderKey(provider)] = strconv.Itoa(floor) + ".0.0"
 	}
 

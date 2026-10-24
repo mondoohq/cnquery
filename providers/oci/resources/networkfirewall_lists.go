@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/networkfirewall"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -45,8 +44,8 @@ func (o *mqlOciNetworkFirewallPolicyAddressList) fetchDetail() (*networkfirewall
 			return nil, err
 		}
 		resp, err := svc.GetAddressList(context.Background(), networkfirewall.GetAddressListRequest{
-			NetworkFirewallPolicyId: common.String(o.cachePolicyID),
-			AddressListName:         common.String(o.Name.Data),
+			NetworkFirewallPolicyId: new(o.cachePolicyID),
+			AddressListName:         new(o.Name.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -72,7 +71,7 @@ func (o *mqlOciNetworkFirewallPolicy) addressLists() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.AddressListSummary, *string, error) {
 		resp, err := svc.ListAddressLists(ctx, networkfirewall.ListAddressListsRequest{
-			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			NetworkFirewallPolicyId: new(o.Id.Data),
 			Page:                    page,
 		})
 		if err != nil {
@@ -122,8 +121,8 @@ func (o *mqlOciNetworkFirewallPolicyUrlList) urls() ([]any, error) {
 			return nil, err
 		}
 		resp, err := svc.GetUrlList(context.Background(), networkfirewall.GetUrlListRequest{
-			NetworkFirewallPolicyId: common.String(o.cachePolicyID),
-			UrlListName:             common.String(o.Name.Data),
+			NetworkFirewallPolicyId: new(o.cachePolicyID),
+			UrlListName:             new(o.Name.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -145,7 +144,7 @@ func (o *mqlOciNetworkFirewallPolicy) urlLists() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.UrlListSummary, *string, error) {
 		resp, err := svc.ListUrlLists(ctx, networkfirewall.ListUrlListsRequest{
-			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			NetworkFirewallPolicyId: new(o.Id.Data),
 			Page:                    page,
 		})
 		if err != nil {
@@ -198,8 +197,8 @@ func (o *mqlOciNetworkFirewallPolicyService) portRanges() ([]any, error) {
 			return nil, err
 		}
 		resp, err := svc.GetService(context.Background(), networkfirewall.GetServiceRequest{
-			NetworkFirewallPolicyId: common.String(o.cachePolicyID),
-			ServiceName:             common.String(o.Name.Data),
+			NetworkFirewallPolicyId: new(o.cachePolicyID),
+			ServiceName:             new(o.Name.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -240,7 +239,7 @@ func (o *mqlOciNetworkFirewallPolicy) services() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.ServiceSummary, *string, error) {
 		resp, err := svc.ListServices(ctx, networkfirewall.ListServicesRequest{
-			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			NetworkFirewallPolicyId: new(o.Id.Data),
 			Page:                    page,
 		})
 		if err != nil {
@@ -287,8 +286,8 @@ func (o *mqlOciNetworkFirewallPolicyServiceList) services() ([]any, error) {
 			return nil, err
 		}
 		resp, err := svc.GetServiceList(context.Background(), networkfirewall.GetServiceListRequest{
-			NetworkFirewallPolicyId: common.String(o.cachePolicyID),
-			ServiceListName:         common.String(o.Name.Data),
+			NetworkFirewallPolicyId: new(o.cachePolicyID),
+			ServiceListName:         new(o.Name.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -310,7 +309,7 @@ func (o *mqlOciNetworkFirewallPolicy) serviceLists() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.ServiceListSummary, *string, error) {
 		resp, err := svc.ListServiceLists(ctx, networkfirewall.ListServiceListsRequest{
-			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			NetworkFirewallPolicyId: new(o.Id.Data),
 			Page:                    page,
 		})
 		if err != nil {
@@ -355,7 +354,7 @@ func (o *mqlOciNetworkFirewallPolicy) applications() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.ApplicationSummary, *string, error) {
 		resp, err := svc.ListApplications(ctx, networkfirewall.ListApplicationsRequest{
-			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			NetworkFirewallPolicyId: new(o.Id.Data),
 			Page:                    page,
 		})
 		if err != nil {
@@ -448,8 +447,8 @@ func (o *mqlOciNetworkFirewallPolicyApplicationGroup) applications() ([]any, err
 			return nil, err
 		}
 		resp, err := svc.GetApplicationGroup(context.Background(), networkfirewall.GetApplicationGroupRequest{
-			NetworkFirewallPolicyId: common.String(o.cachePolicyID),
-			ApplicationGroupName:    common.String(o.Name.Data),
+			NetworkFirewallPolicyId: new(o.cachePolicyID),
+			ApplicationGroupName:    new(o.Name.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -471,7 +470,7 @@ func (o *mqlOciNetworkFirewallPolicy) applicationGroups() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.ApplicationGroupSummary, *string, error) {
 		resp, err := svc.ListApplicationGroups(ctx, networkfirewall.ListApplicationGroupsRequest{
-			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			NetworkFirewallPolicyId: new(o.Id.Data),
 			Page:                    page,
 		})
 		if err != nil {
@@ -523,8 +522,8 @@ func (o *mqlOciNetworkFirewallPolicyMappedSecret) fetchDetail() (networkfirewall
 			return nil, err
 		}
 		resp, err := svc.GetMappedSecret(context.Background(), networkfirewall.GetMappedSecretRequest{
-			NetworkFirewallPolicyId: common.String(o.cachePolicyID),
-			MappedSecretName:        common.String(o.Name.Data),
+			NetworkFirewallPolicyId: new(o.cachePolicyID),
+			MappedSecretName:        new(o.Name.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -577,7 +576,7 @@ func (o *mqlOciNetworkFirewallPolicy) mappedSecrets() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.MappedSecretSummary, *string, error) {
 		resp, err := svc.ListMappedSecrets(ctx, networkfirewall.ListMappedSecretsRequest{
-			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			NetworkFirewallPolicyId: new(o.Id.Data),
 			Page:                    page,
 		})
 		if err != nil {
@@ -622,7 +621,7 @@ func (o *mqlOciNetworkFirewallPolicy) natRules() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.NatRuleSummary, *string, error) {
 		resp, err := svc.ListNatRules(ctx, networkfirewall.ListNatRulesRequest{
-			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			NetworkFirewallPolicyId: new(o.Id.Data),
 			Page:                    page,
 		})
 		if err != nil {
@@ -676,7 +675,7 @@ func (o *mqlOciNetworkFirewallPolicy) tunnelInspectionRules() ([]any, error) {
 	ctx := context.Background()
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.TunnelInspectionRuleSummary, *string, error) {
 		resp, err := svc.ListTunnelInspectionRules(ctx, networkfirewall.ListTunnelInspectionRulesRequest{
-			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			NetworkFirewallPolicyId: new(o.Id.Data),
 			Page:                    page,
 		})
 		if err != nil {
@@ -767,8 +766,8 @@ func (o *mqlOciNetworkFirewallPolicySecurityRule) fetchDetail() (*networkfirewal
 			return nil, err
 		}
 		resp, err := svc.GetSecurityRule(context.Background(), networkfirewall.GetSecurityRuleRequest{
-			NetworkFirewallPolicyId: common.String(o.cachePolicy.Id.Data),
-			SecurityRuleName:        common.String(o.Name.Data),
+			NetworkFirewallPolicyId: new(o.cachePolicy.Id.Data),
+			SecurityRuleName:        new(o.Name.Data),
 		})
 		if err != nil {
 			return nil, err

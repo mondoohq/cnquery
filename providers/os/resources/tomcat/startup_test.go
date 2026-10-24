@@ -4,6 +4,7 @@
 package tomcat
 
 import (
+	"maps"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -96,9 +97,7 @@ fi
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			env := map[string]string{}
-			for k, v := range tc.seed {
-				env[k] = v
-			}
+			maps.Copy(env, tc.seed)
 			ShellAssignments(tc.content, env)
 			assert.Equal(t, tc.want, env)
 		})

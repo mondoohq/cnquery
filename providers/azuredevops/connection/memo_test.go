@@ -22,13 +22,11 @@ func TestMemoLoadsEachKeyOnce(t *testing.T) {
 
 	var wg sync.WaitGroup
 	for range 20 {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			v, err := m.get("a", load)
 			assert.NoError(t, err)
 			assert.Equal(t, 42, v)
-		}()
+		})
 	}
 	wg.Wait()
 	assert.Equal(t, int32(1), calls.Load())

@@ -148,8 +148,7 @@ func (v *verifier) usable(proxy, target *url.URL) error {
 		v.mu.Lock()
 		e.err = err
 		e.expires = time.Now().Add(ttl)
-		var unreachable *unreachableError
-		if errors.As(err, &unreachable) {
+		if _, ok := errors.AsType[*unreachableError](err); ok {
 			if v.unreachable == nil {
 				v.unreachable = map[string]*probeEntry{}
 			}

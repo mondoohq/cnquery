@@ -357,7 +357,7 @@ func appendVlans(existing, added []string) []string {
 // it would turn a two-VLAN configuration line into a hundred-element list.
 func splitVlanList(s string) []string {
 	res := []string{}
-	for _, tok := range strings.Split(strings.TrimSpace(s), ",") {
+	for tok := range strings.SplitSeq(strings.TrimSpace(s), ",") {
 		tok = strings.TrimSpace(tok)
 		if tok != "" {
 			res = append(res, tok)

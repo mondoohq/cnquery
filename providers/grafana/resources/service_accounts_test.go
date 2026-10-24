@@ -294,9 +294,9 @@ func TestParseGrafanaTimePtr(t *testing.T) {
 		want string // empty means nil
 	}{
 		{"absent", nil, ""},
-		{"empty string", strPtr(""), ""},
-		{"grafana zero sentinel", strPtr("0001-01-01T00:00:00Z"), ""},
-		{"valid timestamp", strPtr("2026-08-02T11:30:00Z"), "2026-08-02T11:30:00Z"},
+		{"empty string", new(""), ""},
+		{"grafana zero sentinel", new("0001-01-01T00:00:00Z"), ""},
+		{"valid timestamp", new("2026-08-02T11:30:00Z"), "2026-08-02T11:30:00Z"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -311,4 +311,5 @@ func TestParseGrafanaTimePtr(t *testing.T) {
 	}
 }
 
-func strPtr(s string) *string { return &s }
+//go:fix inline
+func strPtr(s string) *string { return new(s) }

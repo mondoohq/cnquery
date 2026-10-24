@@ -24,11 +24,11 @@ func benchTar(n int, targetSize int) []byte {
 			_, _ = tw.Write(make([]byte, size))
 		}
 	}
-	for i := 0; i < n; i++ {
+	for i := range n {
 		write(fmt.Sprintf("usr/share/doc/f-%06d", i), 128)
 	}
 	write("usr/bin/target", targetSize)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		write(fmt.Sprintf("usr/lib/g-%06d", i), 128)
 	}
 	tw.Close()

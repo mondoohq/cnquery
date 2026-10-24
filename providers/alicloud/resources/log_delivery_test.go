@@ -22,15 +22,15 @@ func TestWafLogDelivering(t *testing.T) {
 		want   bool
 	}{
 		{"nil is not delivering", nil, false},
-		{"empty is not delivering", tea.String(""), false},
-		{"normal is delivering", tea.String("normal"), true},
-		{"case insensitive", tea.String("Normal"), true},
-		{"surrounding space", tea.String(" normal "), true},
-		{"initializing is not delivering", tea.String("initializing"), false},
-		{"initialize_failed is not delivering", tea.String("initialize_failed"), false},
-		{"releasing is not delivering", tea.String("releasing"), false},
-		{"release_failed is not delivering", tea.String("release_failed"), false},
-		{"unknown state is not delivering", tea.String("paused"), false},
+		{"empty is not delivering", new(""), false},
+		{"normal is delivering", new("normal"), true},
+		{"case insensitive", new("Normal"), true},
+		{"surrounding space", new(" normal "), true},
+		{"initializing is not delivering", new("initializing"), false},
+		{"initialize_failed is not delivering", new("initialize_failed"), false},
+		{"releasing is not delivering", new("releasing"), false},
+		{"release_failed is not delivering", new("release_failed"), false},
+		{"unknown state is not delivering", new("paused"), false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, wafLogDelivering(tc.status))
@@ -49,13 +49,13 @@ func TestSasLogEnabled(t *testing.T) {
 		want   bool
 	}{
 		{"nil is off", nil, false},
-		{"empty is off", tea.String(""), false},
-		{"enabled", tea.String("enabled"), true},
-		{"case insensitive", tea.String("Enabled"), true},
-		{"surrounding space", tea.String(" enabled "), true},
-		{"disabled", tea.String("disabled"), false},
-		{"unknown state is off", tea.String("pending"), false},
-		{"substring must not match", tea.String("not-enabled"), false},
+		{"empty is off", new(""), false},
+		{"enabled", new("enabled"), true},
+		{"case insensitive", new("Enabled"), true},
+		{"surrounding space", new(" enabled "), true},
+		{"disabled", new("disabled"), false},
+		{"unknown state is off", new("pending"), false},
+		{"substring must not match", new("not-enabled"), false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, sasLogEnabled(tc.status))
@@ -79,27 +79,27 @@ func TestCloudfwLogDelivering(t *testing.T) {
 
 	t.Run("project without logstore is off", func(t *testing.T) {
 		assert.False(t, cloudfwLogDelivering(&cloudfwclient.DescribeLogStoreInfoResponseBody{
-			ProjectName: tea.String("cloudfirewall-project-1234-cn-hangzhou"),
+			ProjectName: new("cloudfirewall-project-1234-cn-hangzhou"),
 		}))
 	})
 
 	t.Run("logstore without project is off", func(t *testing.T) {
 		assert.False(t, cloudfwLogDelivering(&cloudfwclient.DescribeLogStoreInfoResponseBody{
-			LogStoreName: tea.String("cloudfirewall-logstore"),
+			LogStoreName: new("cloudfirewall-logstore"),
 		}))
 	})
 
 	t.Run("empty strings are off", func(t *testing.T) {
 		assert.False(t, cloudfwLogDelivering(&cloudfwclient.DescribeLogStoreInfoResponseBody{
-			ProjectName:  tea.String(""),
-			LogStoreName: tea.String(""),
+			ProjectName:  new(""),
+			LogStoreName: new(""),
 		}))
 	})
 
 	t.Run("both present is on", func(t *testing.T) {
 		assert.True(t, cloudfwLogDelivering(&cloudfwclient.DescribeLogStoreInfoResponseBody{
-			ProjectName:  tea.String("cloudfirewall-project-1234-cn-hangzhou"),
-			LogStoreName: tea.String("cloudfirewall-logstore"),
+			ProjectName:  new("cloudfirewall-project-1234-cn-hangzhou"),
+			LogStoreName: new("cloudfirewall-logstore"),
 		}))
 	})
 

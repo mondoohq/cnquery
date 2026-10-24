@@ -11,7 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func boolp(v bool) *bool { return &v }
+//go:fix inline
+func boolp(v bool) *bool { return new(v) }
 
 func TestParseSmartScreenSettings_Configured(t *testing.T) {
 	data, err := os.ReadFile("testdata/smartscreen_configured.json")
@@ -20,14 +21,14 @@ func TestParseSmartScreenSettings_Configured(t *testing.T) {
 	s, err := ParseSmartScreenSettings(data)
 	require.NoError(t, err)
 
-	assert.Equal(t, boolp(true), s.ExplorerEnabled())
+	assert.Equal(t, new(true), s.ExplorerEnabled())
 	require.NotNil(t, s.ShellSmartScreenLevel)
 	assert.Equal(t, "Block", *s.ShellSmartScreenLevel)
-	assert.Equal(t, boolp(true), s.EdgeEnabled())
-	assert.Equal(t, boolp(true), s.EdgePuaEnabled())
-	assert.Equal(t, boolp(true), s.EdgePreventOverrideEnabled())
-	assert.Equal(t, boolp(true), s.EdgePreventOverrideForFilesEnabled())
-	assert.Equal(t, boolp(true), s.StoreAppsEnabled())
+	assert.Equal(t, new(true), s.EdgeEnabled())
+	assert.Equal(t, new(true), s.EdgePuaEnabled())
+	assert.Equal(t, new(true), s.EdgePreventOverrideEnabled())
+	assert.Equal(t, new(true), s.EdgePreventOverrideForFilesEnabled())
+	assert.Equal(t, new(true), s.StoreAppsEnabled())
 }
 
 // No SmartScreen policy at all, as on stock Windows 10 22H2 and Windows 11
@@ -53,11 +54,11 @@ func TestParseSmartScreenSettings_NotConfigured(t *testing.T) {
 func TestParseSmartScreenSettings_ExplicitlyDisabled(t *testing.T) {
 	s, err := ParseSmartScreenSettings([]byte(`{"EnableSmartScreen":0,"ShellSmartScreenLevel":"Warn","EdgeSmartScreenEnabled":0,"EdgePreventOverrideForFiles":0}`))
 	require.NoError(t, err)
-	assert.Equal(t, boolp(false), s.ExplorerEnabled())
+	assert.Equal(t, new(false), s.ExplorerEnabled())
 	require.NotNil(t, s.ShellSmartScreenLevel)
 	assert.Equal(t, "Warn", *s.ShellSmartScreenLevel)
-	assert.Equal(t, boolp(false), s.EdgeEnabled())
-	assert.Equal(t, boolp(false), s.EdgePreventOverrideForFilesEnabled())
+	assert.Equal(t, new(false), s.EdgeEnabled())
+	assert.Equal(t, new(false), s.EdgePreventOverrideForFilesEnabled())
 	assert.Nil(t, s.EdgePuaEnabled())
 }
 
@@ -65,8 +66,8 @@ func TestParseSmartScreenSettings_ExplicitlyDisabled(t *testing.T) {
 func TestParseSmartScreenSettings_Mixed(t *testing.T) {
 	s, err := ParseSmartScreenSettings([]byte(`{"EnableSmartScreen":1,"ShellSmartScreenLevel":"Block","EdgeSmartScreenEnabled":0}`))
 	require.NoError(t, err)
-	assert.Equal(t, boolp(true), s.ExplorerEnabled())
-	assert.Equal(t, boolp(false), s.EdgeEnabled())
+	assert.Equal(t, new(true), s.ExplorerEnabled())
+	assert.Equal(t, new(false), s.EdgeEnabled())
 	// untouched surfaces are unconfigured, not disabled
 	assert.Nil(t, s.StoreAppsEnabled())
 }
@@ -82,9 +83,9 @@ func TestSmartScreenEnabledFlag(t *testing.T) {
 	one := int64(1)
 	two := int64(2)
 	zero := int64(0)
-	assert.Equal(t, boolp(true), enabledFlag(&one))
-	assert.Equal(t, boolp(false), enabledFlag(&two))
-	assert.Equal(t, boolp(false), enabledFlag(&zero))
+	assert.Equal(t, new(true), enabledFlag(&one))
+	assert.Equal(t, new(false), enabledFlag(&two))
+	assert.Equal(t, new(false), enabledFlag(&zero))
 	assert.Nil(t, enabledFlag(nil))
 }
 
@@ -104,7 +105,7 @@ func TestSmartScreenResult(t *testing.T) {
 	t.Run("success parses stdout", func(t *testing.T) {
 		s, err := smartScreenResult([]byte(`{"EnableSmartScreen":1}`), 0, nil)
 		require.NoError(t, err)
-		assert.Equal(t, boolp(true), s.ExplorerEnabled())
+		assert.Equal(t, new(true), s.ExplorerEnabled())
 	})
 }
 
@@ -140,7 +141,7 @@ func TestParseSmartScreenSettings_ServerBaselines(t *testing.T) {
 			assert.Nil(t, s.EdgePreventOverrideForFilesEnabled())
 			assert.Nil(t, s.ShellSmartScreenLevel)
 
-			assert.Equal(t, boolp(tc.storeEnabled), s.StoreAppsEnabled())
+			assert.Equal(t, new(tc.storeEnabled), s.StoreAppsEnabled())
 		})
 	}
 }

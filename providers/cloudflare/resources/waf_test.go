@@ -226,8 +226,8 @@ func TestParseWafLogging(t *testing.T) {
 		want *bool
 	}{
 		{"absent block is null", "", nil},
-		{"logging on", `{"enabled":true}`, boolPtr(true)},
-		{"logging off", `{"enabled":false}`, boolPtr(false)},
+		{"logging on", `{"enabled":true}`, new(true)},
+		{"logging off", `{"enabled":false}`, new(false)},
 		{"block present but enabled omitted is null", `{}`, nil},
 		{"malformed json is null", `{"enabled":`, nil},
 	}

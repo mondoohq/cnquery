@@ -379,6 +379,7 @@ func TestReachableRequiresSuccessOrRedirect(t *testing.T) {
 	}
 }
 
+//go:fix inline
 func intPtr(v int) *int {
-	return &v
+	return new(v)
 }

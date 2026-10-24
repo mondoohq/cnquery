@@ -14,7 +14,7 @@ import (
 // actionListOpts is the paging window every per-resource action listing uses.
 // 50 is hcloud's maximum page size, matching the paginate helper.
 func actionListOpts() hcloud.ActionListOpts {
-	return hcloud.ActionListOpts{ListOpts: hcloud.ListOpts{PerPage: 50}}
+	return hcloud.ActionListOpts{PerPage: 50}
 }
 
 func (r *mqlHetznerAction) id() (string, error) {

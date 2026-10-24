@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -180,9 +181,7 @@ func (c *Connection) ManifestSource() (map[string]string, map[string]shared.Sour
 		c.positions = map[string]shared.SourcePosition{}
 		for _, src := range c.sources {
 			c.contents[src.Path] = string(src.Content)
-			for id, pos := range shared.BuildManifestPositionIndex(src.Content, src.Path, c.ManifestParser.EffectiveNamespace) {
-				c.positions[id] = pos
-			}
+			maps.Copy(c.positions, shared.BuildManifestPositionIndex(src.Content, src.Path, c.ManifestParser.EffectiveNamespace))
 		}
 	})
 	return c.contents, c.positions

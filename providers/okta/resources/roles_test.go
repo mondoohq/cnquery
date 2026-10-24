@@ -22,12 +22,12 @@ import (
 func TestFlattenOktaAssignedRoleCoversUnion(t *testing.T) {
 	t.Parallel()
 
-	union := reflect.TypeOf(okta.ListGroupAssignedRoles200ResponseInner{})
+	union := reflect.TypeFor[okta.ListGroupAssignedRoles200ResponseInner]()
 	require.NotZero(t, union.NumField(), "the union type has no members to check")
 
 	for i := 0; i < union.NumField(); i++ {
 		field := union.Field(i)
-		if !field.IsExported() || field.Type.Kind() != reflect.Ptr {
+		if !field.IsExported() || field.Type.Kind() != reflect.Pointer {
 			continue
 		}
 

@@ -72,7 +72,7 @@ func parseShellProbe(stdout string) remoteShell {
 	}
 	// the last line that is not empty is what the second part printed
 	var last string
-	for _, line := range strings.Split(stdout, "\n") {
+	for line := range strings.SplitSeq(stdout, "\n") {
 		if line = strings.TrimSpace(line); line != "" {
 			last = line
 		}

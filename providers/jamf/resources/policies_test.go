@@ -24,7 +24,7 @@ func TestPolicyScriptParameters_CollectsOnlyNonEmpty(t *testing.T) {
 
 	got := policyScriptParameters(s)
 
-	assert.Equal(t, map[string]interface{}{
+	assert.Equal(t, map[string]any{
 		"parameter4":  "four",
 		"parameter6":  "six",
 		"parameter9":  "nine",
@@ -46,7 +46,7 @@ func TestScriptParameters_CollectsOnlyNonEmpty(t *testing.T) {
 
 	got := scriptParameters(s)
 
-	assert.Equal(t, map[string]interface{}{
+	assert.Equal(t, map[string]any{
 		"parameter4":  "a",
 		"parameter7":  "b",
 		"parameter11": "c",
@@ -67,9 +67,9 @@ func TestJamfScopeEntities_RendersIdNameDicts(t *testing.T) {
 
 	got := jamfScopeEntities(items, idName)
 
-	assert.Equal(t, []interface{}{
-		map[string]interface{}{"id": int64(1), "name": "mac-1"},
-		map[string]interface{}{"id": int64(2), "name": "mac-2"},
+	assert.Equal(t, []any{
+		map[string]any{"id": int64(1), "name": "mac-1"},
+		map[string]any{"id": int64(2), "name": "mac-2"},
 	}, got)
 }
 
@@ -98,7 +98,7 @@ func TestJamfScopeEntitiesPtr_PopulatedSliceRenders(t *testing.T) {
 
 	got := jamfScopeEntitiesPtr(&items, idName)
 
-	assert.Equal(t, []interface{}{
-		map[string]interface{}{"id": int64(7), "name": "mac-7"},
+	assert.Equal(t, []any{
+		map[string]any{"id": int64(7), "name": "mac-7"},
 	}, got)
 }

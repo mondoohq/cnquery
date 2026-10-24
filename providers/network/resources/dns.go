@@ -514,7 +514,7 @@ func (d *mqlDns) spf(params any) ([]any, error) {
 // parseDMARC splits a DMARC TXT record into its lowercased tag map.
 func parseDMARC(txt string) map[string]string {
 	tags := map[string]string{}
-	for _, part := range strings.Split(txt, ";") {
+	for part := range strings.SplitSeq(txt, ";") {
 		kv := strings.SplitN(part, "=", 2)
 		if len(kv) != 2 {
 			continue
@@ -529,7 +529,7 @@ func dmarcUris(raw string) []any {
 	if raw == "" {
 		return uris
 	}
-	for _, u := range strings.Split(raw, ",") {
+	for u := range strings.SplitSeq(raw, ",") {
 		if u = strings.TrimSpace(u); u != "" {
 			uris = append(uris, u)
 		}

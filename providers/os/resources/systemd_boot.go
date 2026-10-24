@@ -69,19 +69,19 @@ const (
 // in the same form as the LoaderInfo EFI variable, or an empty string when the
 // binary carries no such marker.
 func parseLoaderInfoMagic(binary []byte) string {
-	start := bytes.Index(binary, []byte(loaderInfoMagicPrefix))
-	if start < 0 {
+	_, after, ok := bytes.Cut(binary, []byte(loaderInfoMagicPrefix))
+	if !ok {
 		return ""
 	}
-	rest := binary[start+len(loaderInfoMagicPrefix):]
+	rest := after
 
-	end := bytes.Index(rest, []byte(loaderInfoMagicSuffix))
-	if end < 0 {
+	before0, _, ok0 := bytes.Cut(rest, []byte(loaderInfoMagicSuffix))
+	if !ok0 {
 		// Without the closing marker there is no telling where the version
 		// ends, and the rest of the file is not a version.
 		return ""
 	}
-	return string(rest[:end])
+	return string(before0)
 }
 
 // Paths the EFI system partition and the extended boot loader partition are
@@ -233,7 +233,7 @@ func xbootldrChecker(fs afero.Fs) func(mount string) bool {
 // mountpoint in /proc/self/mountinfo, which is the one in effect.
 func mountinfoSource(mountinfo string, mountpoint string) (string, bool) {
 	source, found := "", false
-	for _, line := range strings.Split(mountinfo, "\n") {
+	for line := range strings.SplitSeq(mountinfo, "\n") {
 		// 61 43 0:35 /boot /boot rw,relatime shared:166 - btrfs /dev/nvme0n1p3 rw,...
 		pre, post, ok := strings.Cut(line, " - ")
 		if !ok {
@@ -266,7 +266,7 @@ func partitionType(fs afero.Fs, device string) string {
 	if err != nil {
 		return ""
 	}
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		if v, ok := strings.CutPrefix(strings.TrimSpace(line), "E:ID_PART_ENTRY_TYPE="); ok {
 			return strings.ToLower(strings.TrimSpace(v))
 		}

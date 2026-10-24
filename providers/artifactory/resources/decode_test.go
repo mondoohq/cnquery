@@ -838,9 +838,9 @@ func TestReplicationsDecodeBothShapes(t *testing.T) {
 // reach a struct field, so it cannot reach a resource field, a log line, or a
 // recording.
 func TestReplicationRecordHasNoPasswordField(t *testing.T) {
-	value := reflect.TypeOf(replicationRecord{})
-	for i := 0; i < value.NumField(); i++ {
-		field := value.Field(i)
+	value := reflect.TypeFor[replicationRecord]()
+	for field := range value.Fields() {
+		field := field
 		tag := strings.ToLower(field.Tag.Get("json"))
 		name := strings.ToLower(field.Name)
 		if strings.Contains(tag, "password") || strings.Contains(name, "password") {
@@ -1034,7 +1034,7 @@ func TestIgnoreRulesPaginationStopsOnARepeatedPage(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
 		entries := make([]string, 0, 100)
-		for i := 0; i < 100; i++ {
+		for i := range 100 {
 			entries = append(entries, fmt.Sprintf(`{"id":"rule-%d"}`, i))
 		}
 		fmt.Fprintf(w, `{"total_count":0,"data":[%s]}`, strings.Join(entries, ","))
@@ -1094,7 +1094,7 @@ func TestIgnoreRulesPaginationStopsOnRepeatedIdentifierlessRecords(t *testing.T)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
 		entries := make([]string, 0, 100)
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			entries = append(entries, `{"notes":"accepted"}`)
 		}
 		fmt.Fprintf(w, `{"total_count":0,"data":[%s]}`, strings.Join(entries, ","))

@@ -53,7 +53,6 @@ func (a *mqlAwsApprunner) getServices(conn *connection.AwsConnection) []*jobpool
 	}
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("apprunner>getServices>calling aws with region %s", region)
 			svc := conn.AppRunner(region)
@@ -486,7 +485,6 @@ func (a *mqlAwsApprunner) getAutoScalingConfigurations(conn *connection.AwsConne
 	}
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("apprunner>getAutoScalingConfigurations>calling aws with region %s", region)
 			svc := conn.AppRunner(region)
@@ -726,7 +724,6 @@ func (a *mqlAwsApprunner) getConnections(conn *connection.AwsConnection) []*jobp
 	}
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("apprunner>getConnections>calling aws with region %s", region)
 			svc := conn.AppRunner(region)
@@ -811,7 +808,6 @@ func (a *mqlAwsApprunner) getVpcConnectors(conn *connection.AwsConnection) []*jo
 	accountID := conn.AccountId()
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("apprunner>getVpcConnectors>calling aws with region %s", region)
 			svc := conn.AppRunner(region)
@@ -974,7 +970,6 @@ func (a *mqlAwsApprunner) getObservabilityConfigurations(conn *connection.AwsCon
 	}
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("apprunner>getObservabilityConfigurations>calling aws with region %s", region)
 			svc := conn.AppRunner(region)
@@ -1203,7 +1198,6 @@ func (a *mqlAwsApprunner) getVpcIngressConnections(conn *connection.AwsConnectio
 	}
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("apprunner>getVpcIngressConnections>calling aws with region %s", region)
 			svc := conn.AppRunner(region)

@@ -183,7 +183,7 @@ func strMapToAny(in map[string]string) map[string]any {
 // definedTagsToAny converts the OCI defined-tags shape (namespace -> key -> value)
 // to map[string]any (namespace -> map[string]any), preserving string values and
 // passing through anything non-string unchanged.
-func definedTagsToAny(in map[string]map[string]interface{}) map[string]any {
+func definedTagsToAny(in map[string]map[string]any) map[string]any {
 	out := make(map[string]any, len(in))
 	for ns, kv := range in {
 		nsOut := make(map[string]any, len(kv))
@@ -224,8 +224,7 @@ func ociRegionServiceUnavailable(err error) bool {
 	}
 	// Regions where the service is not deployed have no regional endpoint, so
 	// the DNS lookup for the host fails with "no such host".
-	var dnsErr *net.DNSError
-	if errors.As(err, &dnsErr) {
+	if _, ok := errors.AsType[*net.DNSError](err); ok {
 		return true
 	}
 	// Some regions publish a wildcard DNS record for a service that is not
@@ -328,7 +327,7 @@ func ociAvailabilityDomains(ctx context.Context, conn *connection.OciConnection,
 			return nil, err
 		}
 		resp, err := client.ListAvailabilityDomains(ctx, identity.ListAvailabilityDomainsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 		})
 		if err != nil {
 			return nil, err

@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"maps"
 	"net/http"
 	"strings"
 	"time"
@@ -165,9 +166,7 @@ func newMqlFirewallEndpoint(runtime *plugin.Runtime, e *networksecurity.Firewall
 		"created":                    llx.TimeDataPtr(parseTime(e.CreateTime)),
 		"updated":                    llx.TimeDataPtr(parseTime(e.UpdateTime)),
 	}
-	for k, v := range firewallEndpointWildfireArgs(e.WildfireSettings) {
-		args[k] = v
-	}
+	maps.Copy(args, firewallEndpointWildfireArgs(e.WildfireSettings))
 	res, err := CreateResource(runtime, "gcp.organization.firewallEndpoint", args)
 	if err != nil {
 		return nil, err

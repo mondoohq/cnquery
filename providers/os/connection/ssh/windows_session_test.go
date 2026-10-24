@@ -310,14 +310,12 @@ func TestRunCommandInSessionConcurrently(t *testing.T) {
 
 	var wg sync.WaitGroup
 	for i := range 40 {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			res, err := c.RunCommand(powershell.Encode(fmt.Sprintf("n %d", i)))
 			require.NoError(t, err)
 			out, _ := io.ReadAll(res.Stdout)
 			assert.Equal(t, fmt.Sprintf("ran n %d\r\n", i), string(out), "every command gets its own output")
-		}()
+		})
 	}
 	wg.Wait()
 	assert.LessOrEqual(t, *opened, 3, "no more sessions than commands may run at once")

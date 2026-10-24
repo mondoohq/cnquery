@@ -37,7 +37,7 @@ func walkPagedList[T any](what string, pageSize int64, idOf func(T) string, fetc
 	var all []T
 	seen := map[string]struct{}{}
 
-	for page := int64(0); page < pagedListMaxPages; page++ {
+	for page := range int64(pagedListMaxPages) {
 		data, total, httpResp, err := fetch(page)
 		if err != nil {
 			return nil, httpResp, err
@@ -164,7 +164,7 @@ func workflowArgs(w datadogV2.WorkflowListItem) map[string]*llx.RawData {
 	}
 }
 
-func (r *mqlDatadog) workflows() ([]interface{}, error) {
+func (r *mqlDatadog) workflows() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewWorkflowAutomationApi(conn.ApiClient())
 
@@ -176,7 +176,7 @@ func (r *mqlDatadog) workflows() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(items))
+	all := make([]any, 0, len(items))
 	for _, w := range items {
 		res, err := CreateResource(r.MqlRuntime, "datadog.workflow", workflowArgs(w))
 		if err != nil {
@@ -369,7 +369,7 @@ func securityInboxRuleArgs(rule securityInboxRule) map[string]*llx.RawData {
 	}
 }
 
-func (r *mqlDatadog) securityInboxRules() ([]interface{}, error) {
+func (r *mqlDatadog) securityInboxRules() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewSecurityMonitoringApi(conn.ApiClient())
 
@@ -381,7 +381,7 @@ func (r *mqlDatadog) securityInboxRules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(rules))
+	all := make([]any, 0, len(rules))
 	for _, rule := range rules {
 		res, err := CreateResource(r.MqlRuntime, "datadog.securityInboxRule", securityInboxRuleArgs(rule))
 		if err != nil {

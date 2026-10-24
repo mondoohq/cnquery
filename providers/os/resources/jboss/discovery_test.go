@@ -391,7 +391,7 @@ func TestSystemdUnitsFiltered(t *testing.T) {
 		"/usr/lib/systemd/system/domain.service": "[Service]\nEnvironment=JBOSS_HOME=/opt/sweep-domain\nExecStart=/opt/sweep-domain/bin/domain.sh\n",
 	}
 	// a host carries hundreds of unrelated units
-	for i := 0; i < 500; i++ {
+	for i := range 500 {
 		files[path.Join("/usr/lib/systemd/system", "unit"+strconv.Itoa(i)+".service")] = "[Service]\nExecStart=/usr/bin/true\n"
 	}
 	mem := newFs(t, files)

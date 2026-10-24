@@ -662,15 +662,15 @@ func (c *rc2Cipher) Decrypt(dst, src []byte) {
 		}
 	}
 
-	for n := 0; n < 5; n++ {
+	for range 5 {
 		mix()
 	}
 	mash()
-	for n := 0; n < 6; n++ {
+	for range 6 {
 		mix()
 	}
 	mash()
-	for n := 0; n < 5; n++ {
+	for range 5 {
 		mix()
 	}
 

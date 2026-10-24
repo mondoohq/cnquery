@@ -310,10 +310,7 @@ func (c *VllmConnection) EndpointObservations(ctx context.Context) ([]EndpointOb
 	c.endpointsOnce.Do(func() {
 		specs := DefaultEndpointSpecs()
 		c.endpoints = make([]EndpointObservation, len(specs))
-		workers := endpointProbeWorkers
-		if len(specs) < workers {
-			workers = len(specs)
-		}
+		workers := min(len(specs), endpointProbeWorkers)
 		jobs := make(chan int)
 		var wg sync.WaitGroup
 		wg.Add(workers)

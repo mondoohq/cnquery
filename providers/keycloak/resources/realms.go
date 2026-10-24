@@ -168,7 +168,7 @@ func (r *mqlKeycloakRealm) id() (string, error) {
 func ParsePasswordPolicy(policy string) map[string]string {
 	rules := map[string]string{}
 
-	for _, part := range strings.Split(policy, " and ") {
+	for part := range strings.SplitSeq(policy, " and ") {
 		part = strings.TrimSpace(part)
 		if part == "" {
 			continue

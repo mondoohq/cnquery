@@ -411,7 +411,7 @@ func passwdHome(afs *afero.Afero, user string) string {
 	if err != nil {
 		return ""
 	}
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		fields := strings.Split(line, ":")
 		if len(fields) >= 6 && fields[0] == user {
 			return fields[5]

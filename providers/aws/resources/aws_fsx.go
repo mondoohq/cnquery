@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	fsxtypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
@@ -777,9 +778,7 @@ func (a *mqlAwsFsxCache) tags() (map[string]any, error) {
 				}
 				return nil, err
 			}
-			for k, v := range tagsToMap(resp.Tags, func(t fsxtypes.Tag) *string { return t.Key }, func(t fsxtypes.Tag) *string { return t.Value }) {
-				tags[k] = v
-			}
+			maps.Copy(tags, tagsToMap(resp.Tags, func(t fsxtypes.Tag) *string { return t.Key }, func(t fsxtypes.Tag) *string { return t.Value }))
 		}
 		return tags, nil
 	})

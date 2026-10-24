@@ -248,15 +248,13 @@ space_mrn: //captain.api.mondoo.app/spaces/musing-saha-952142
 		viper.SetOptions(viper.KeyDelimiter("\\"))
 
 		cfg := &Config{
-			CommonOpts: CommonOpts{
-				AgentMrn:          "//agents.api.mondoo.app/spaces/test/agents/abc",
-				ServiceAccountMrn: "//agents.api.mondoo.app/spaces/test/serviceaccounts/xyz",
-				APIEndpoint:       "https://custom.api.mondoo.com",
-				APIProxy:          "http://proxy:3128",
-				Features:          []string{"feature1", "feature2"},
-				Labels:            map[string]string{"env": "test"},
-				Annotations:       map[string]string{"team": "platform"},
-			},
+			AgentMrn:               "//agents.api.mondoo.app/spaces/test/agents/abc",
+			ServiceAccountMrn:      "//agents.api.mondoo.app/spaces/test/serviceaccounts/xyz",
+			APIEndpoint:            "https://custom.api.mondoo.com",
+			APIProxy:               "http://proxy:3128",
+			Features:               []string{"feature1", "feature2"},
+			Labels:                 map[string]string{"env": "test"},
+			Annotations:            map[string]string{"team": "platform"},
 			Category:               "cicd",
 			AutoDetectCICDCategory: true,
 		}
@@ -288,14 +286,10 @@ space_mrn: //captain.api.mondoo.app/spaces/musing-saha-952142
 
 	t.Run("test configToMap produces correct keys", func(t *testing.T) {
 		cfg := &Config{
-			CommonOpts: CommonOpts{
-				AgentMrn:    "agent-123",
-				APIEndpoint: "https://api.example.com",
-				WIF: WIF{
-					Audience: "//captain.api.mondoo.app/spaces/test",
-				},
-			},
-			Category: "server",
+			AgentMrn:    "agent-123",
+			APIEndpoint: "https://api.example.com",
+			Audience:    "//captain.api.mondoo.app/spaces/test",
+			Category:    "server",
 		}
 
 		m, err := configToMap(cfg)
@@ -364,7 +358,7 @@ func TestGetProviderPortRange(t *testing.T) {
 		viper.Reset()
 		viper.SetConfigType("yaml")
 		viper.SetOptions(viper.KeyDelimiter("\\"))
-		require.NoError(t, ApplyConfig(&Config{CommonOpts: CommonOpts{ProviderPortRange: "50000-50100"}}))
+		require.NoError(t, ApplyConfig(&Config{ProviderPortRange: "50000-50100"}))
 		assert.Equal(t, "50000-50100", GetProviderPortRange())
 
 		cfg, err := Read()

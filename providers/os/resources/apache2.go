@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -471,7 +472,7 @@ func apacheServerRoot(conn shared.Connection) string {
 // prescanServerRoot does a quick scan of the config content for a ServerRoot
 // directive so that relative Include paths can be resolved before full parsing.
 func prescanServerRoot(content string) string {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || line[0] == '#' {
 			continue
@@ -990,8 +991,8 @@ func apacheParamScalar(params map[string]any, name string) string {
 		if !ok {
 			continue
 		}
-		if comma := strings.IndexByte(s, ','); comma >= 0 {
-			return strings.TrimSpace(s[:comma])
+		if before, _, ok := strings.Cut(s, ","); ok {
+			return strings.TrimSpace(before)
 		}
 		return s
 	}
@@ -1235,9 +1236,7 @@ func apacheUnitEnvironment(afs *afero.Afero, dirs systemd.DropInDirs) (map[strin
 		if err != nil {
 			return nil, nil, err
 		}
-		for k, v := range apache2.ParseEnvironmentFile(string(data)) {
-			env[k] = v
-		}
+		maps.Copy(env, apache2.ParseEnvironmentFile(string(data)))
 	}
 	return env, apache2.UnitDefines(unit.ExecStart, env), nil
 }

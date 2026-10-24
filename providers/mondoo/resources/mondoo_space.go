@@ -101,7 +101,7 @@ func (m *mqlMondooSpace) assets() ([]any, error) {
 		if !q.Assets.PageInfo.HasNextPage {
 			break
 		}
-		after = mondoogql.NewStringPtr(mondoogql.String(q.Assets.PageInfo.EndCursor))
+		after = new(mondoogql.String(q.Assets.PageInfo.EndCursor))
 	}
 
 	return res, nil

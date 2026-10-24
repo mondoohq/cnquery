@@ -4,6 +4,7 @@
 package haproxy
 
 import (
+	"maps"
 	"strconv"
 	"strings"
 )
@@ -63,9 +64,7 @@ func ParseBindLines(dirs []Directive) []Bind {
 			// Copy Params so downstream mutations don't bleed across forms.
 			if base.Params != nil {
 				b.Params = make(map[string]string, len(base.Params))
-				for k, v := range base.Params {
-					b.Params[k] = v
-				}
+				maps.Copy(b.Params, base.Params)
 			}
 			out = append(out, b)
 		}

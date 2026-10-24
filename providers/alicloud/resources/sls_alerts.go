@@ -72,9 +72,9 @@ func (r *mqlAlicloudLogProject) alerts() ([]any, error) {
 	offset := int32(0)
 	firstPage := true
 	for {
-		resp, err := client.ListAlerts(tea.String(projectName), &slsclient.ListAlertsRequest{
-			Offset: tea.Int32(offset),
-			Size:   tea.Int32(slsAlertPageSize),
+		resp, err := client.ListAlerts(new(projectName), &slsclient.ListAlertsRequest{
+			Offset: new(offset),
+			Size:   new(slsAlertPageSize),
 		})
 		if err != nil {
 			// Same split as the logstore listing: a first-page failure means

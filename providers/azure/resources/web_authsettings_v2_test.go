@@ -22,36 +22,36 @@ import (
 // false negative the V1-only read produced, just one level down.
 func TestAuthSettingsV2Args(t *testing.T) {
 	full := web.SiteAuthSettingsV2{
-		ID:   to.Ptr("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Web/sites/app/config/authsettingsV2"),
-		Name: to.Ptr("authsettingsV2"),
-		Kind: to.Ptr("app"),
-		Type: to.Ptr("Microsoft.Web/sites/config"),
+		ID:   new("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Web/sites/app/config/authsettingsV2"),
+		Name: new("authsettingsV2"),
+		Kind: new("app"),
+		Type: new("Microsoft.Web/sites/config"),
 		Properties: &web.SiteAuthSettingsV2Properties{
 			Platform: &web.AuthPlatform{
-				Enabled:        to.Ptr(true),
-				RuntimeVersion: to.Ptr("~1"),
+				Enabled:        new(true),
+				RuntimeVersion: new("~1"),
 			},
 			GlobalValidation: &web.GlobalValidation{
-				RequireAuthentication:       to.Ptr(true),
+				RequireAuthentication:       new(true),
 				UnauthenticatedClientAction: to.Ptr(web.UnauthenticatedClientActionV2Return403),
-				RedirectToProvider:          to.Ptr("azureactivedirectory"),
-				ExcludedPaths:               []*string{to.Ptr("/health"), to.Ptr("/metrics")},
+				RedirectToProvider:          new("azureactivedirectory"),
+				ExcludedPaths:               []*string{new("/health"), new("/metrics")},
 			},
 			HTTPSettings: &web.HTTPSettings{
-				RequireHTTPS: to.Ptr(true),
+				RequireHTTPS: new(true),
 			},
 			Login: &web.Login{
-				TokenStore: &web.TokenStore{Enabled: to.Ptr(true)},
+				TokenStore: &web.TokenStore{Enabled: new(true)},
 			},
 			IdentityProviders: &web.IdentityProviders{
 				AzureActiveDirectory: &web.AzureActiveDirectory{
-					Enabled: to.Ptr(true),
+					Enabled: new(true),
 					Validation: &web.AzureActiveDirectoryValidation{
-						AllowedAudiences: []*string{to.Ptr("api://00000000-0000-0000-0000-000000000000")},
+						AllowedAudiences: []*string{new("api://00000000-0000-0000-0000-000000000000")},
 						DefaultAuthorizationPolicy: &web.DefaultAuthorizationPolicy{
 							AllowedApplications: []*string{
-								to.Ptr("11111111-1111-1111-1111-111111111111"),
-								to.Ptr("22222222-2222-2222-2222-222222222222"),
+								new("11111111-1111-1111-1111-111111111111"),
+								new("22222222-2222-2222-2222-222222222222"),
 							},
 						},
 					},
@@ -89,11 +89,11 @@ func TestAuthSettingsV2Args(t *testing.T) {
 	// empty rather than carrying over.
 	t.Run("an unauthenticated app reads as unauthenticated", func(t *testing.T) {
 		args := authSettingsV2Args(web.SiteAuthSettingsV2{
-			ID: to.Ptr("/subscriptions/s/.../config/authsettingsV2"),
+			ID: new("/subscriptions/s/.../config/authsettingsV2"),
 			Properties: &web.SiteAuthSettingsV2Properties{
-				Platform: &web.AuthPlatform{Enabled: to.Ptr(false)},
+				Platform: &web.AuthPlatform{Enabled: new(false)},
 				GlobalValidation: &web.GlobalValidation{
-					RequireAuthentication:       to.Ptr(false),
+					RequireAuthentication:       new(false),
 					UnauthenticatedClientAction: to.Ptr(web.UnauthenticatedClientActionV2AllowAnonymous),
 				},
 			},
@@ -111,17 +111,17 @@ func TestAuthSettingsV2Args(t *testing.T) {
 	// protection that is not configured.
 	t.Run("absent groups do not panic and stay at the safe reading", func(t *testing.T) {
 		for name, settings := range map[string]web.SiteAuthSettingsV2{
-			"nil properties":   {ID: to.Ptr("/a")},
-			"empty properties": {ID: to.Ptr("/b"), Properties: &web.SiteAuthSettingsV2Properties{}},
-			"login without store": {ID: to.Ptr("/c"), Properties: &web.SiteAuthSettingsV2Properties{
+			"nil properties":   {ID: new("/a")},
+			"empty properties": {ID: new("/b"), Properties: &web.SiteAuthSettingsV2Properties{}},
+			"login without store": {ID: new("/c"), Properties: &web.SiteAuthSettingsV2Properties{
 				Login: &web.Login{},
 			}},
-			"aad without validation": {ID: to.Ptr("/d"), Properties: &web.SiteAuthSettingsV2Properties{
+			"aad without validation": {ID: new("/d"), Properties: &web.SiteAuthSettingsV2Properties{
 				IdentityProviders: &web.IdentityProviders{
-					AzureActiveDirectory: &web.AzureActiveDirectory{Enabled: to.Ptr(true)},
+					AzureActiveDirectory: &web.AzureActiveDirectory{Enabled: new(true)},
 				},
 			}},
-			"validation without policy": {ID: to.Ptr("/e"), Properties: &web.SiteAuthSettingsV2Properties{
+			"validation without policy": {ID: new("/e"), Properties: &web.SiteAuthSettingsV2Properties{
 				IdentityProviders: &web.IdentityProviders{
 					AzureActiveDirectory: &web.AzureActiveDirectory{
 						Validation: &web.AzureActiveDirectoryValidation{},
@@ -145,7 +145,7 @@ func TestAuthSettingsV2Args(t *testing.T) {
 	// previous record held.
 	t.Run("absent booleans decode to false", func(t *testing.T) {
 		args := authSettingsV2Args(web.SiteAuthSettingsV2{
-			ID: to.Ptr("/f"),
+			ID: new("/f"),
 			Properties: &web.SiteAuthSettingsV2Properties{
 				GlobalValidation: &web.GlobalValidation{},
 				HTTPSettings:     &web.HTTPSettings{},

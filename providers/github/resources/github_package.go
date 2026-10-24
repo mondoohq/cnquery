@@ -84,7 +84,7 @@ func (g *mqlGithubPackage) versions() ([]any, error) {
 	}
 
 	listOpts := &github.PackageListOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 	var allVersions []*github.PackageVersion
 	for {
@@ -133,8 +133,8 @@ func newMqlGithubPackages(runtime *plugin.Runtime, visibility *string) ([]any, e
 	res := []any{}
 	for i := range pkgTypes {
 		listOpts := &github.PackageListOptions{
-			ListOptions: github.ListOptions{PerPage: paginationPerPage},
-			PackageType: github.String(pkgTypes[i]),
+			PerPage:     paginationPerPage,
+			PackageType: new(pkgTypes[i]),
 			Visibility:  visibility,
 		}
 

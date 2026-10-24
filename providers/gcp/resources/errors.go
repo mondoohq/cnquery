@@ -54,8 +54,7 @@ var serviceDisabledMarkers = []string{
 // error a caller wrapped for context, so the degrade path does not fire and a
 // permission gap on one sub-resource fails the entire query.
 func googleAPIError(err error) (*googleapi.Error, bool) {
-	var gerr *googleapi.Error
-	if errors.As(err, &gerr) {
+	if gerr, ok := errors.AsType[*googleapi.Error](err); ok {
 		return gerr, true
 	}
 	return nil, false

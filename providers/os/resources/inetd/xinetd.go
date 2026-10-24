@@ -30,7 +30,7 @@ type XinetdService struct {
 // columns, so a `defaults`, `service <name>`, `include` or `includedir` line
 // never appears in one.
 func IsXinetd(content string) bool {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		fields := strings.Fields(line)
 		if len(fields) == 0 || strings.HasPrefix(fields[0], "#") {
 			continue

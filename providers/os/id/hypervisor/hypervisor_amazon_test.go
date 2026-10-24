@@ -118,7 +118,7 @@ func TestMapHypervisorDMIVendors(t *testing.T) {
 // both "red hat" (7) and "rhev" (4), and the two map to DIFFERENT products, so
 // iteration order was observable in the result.
 func TestMapHypervisorLongestMatchWinsDeterministically(t *testing.T) {
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		v, ok := mapHypervisor("Red Hat RHEV Hypervisor")
 		assert.True(t, ok)
 		assert.Equal(t, "OpenShift Virtualization", v,

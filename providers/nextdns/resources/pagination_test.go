@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,9 +20,7 @@ func testConn(t *testing.T, baseURL string, opts map[string]string) *connection.
 	t.Setenv("NEXTDNS_API_KEY", "test-key")
 
 	options := map[string]string{"base-url": baseURL}
-	for k, v := range opts {
-		options[k] = v
-	}
+	maps.Copy(options, opts)
 
 	conn, err := connection.NewNextdnsConnection(1, &inventory.Asset{}, &inventory.Config{Options: options})
 	if err != nil {

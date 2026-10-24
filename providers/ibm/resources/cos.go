@@ -86,7 +86,7 @@ func (r *mqlIbm) cosBuckets() ([]any, error) {
 
 func (r *mqlIbm) listBuckets(client *s3.S3, instanceCRN string) ([]any, error) {
 	var buckets []*s3.BucketExtended
-	err := client.ListBucketsExtendedPages(&s3.ListBucketsExtendedInput{IBMServiceInstanceId: aws.String(instanceCRN)},
+	err := client.ListBucketsExtendedPages(&s3.ListBucketsExtendedInput{IBMServiceInstanceId: new(instanceCRN)},
 		func(page *s3.ListBucketsExtendedOutput, _ bool) bool {
 			buckets = append(buckets, page.Buckets...)
 			return true
@@ -319,7 +319,7 @@ func s3Call[T any](r *mqlIbmCosBucket, name string, fn func(c *s3.S3, bucket *st
 		if err != nil {
 			return nil, err
 		}
-		return fn(client, aws.String(r.Name.Data))
+		return fn(client, new(r.Name.Data))
 	})
 	if err != nil {
 		return zero, err

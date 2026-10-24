@@ -19,7 +19,7 @@ var x = testutils.InitTester(GithubProvider(), github.Registry)
 
 func GithubProvider() *github.GithubConnection {
 	p, err := github.NewGithubConnection(&inventory.Config{
-		Type:    "github",
+		Type: "github",
 		Options: map[string]string{
 			"owner":      "mondoohq",
 			"repository": "ranger-rpc",

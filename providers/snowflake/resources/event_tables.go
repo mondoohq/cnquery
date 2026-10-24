@@ -17,7 +17,7 @@ type mqlSnowflakeEventTableInternal struct {
 }
 
 func (r *mqlSnowflakeAccount) eventTables() ([]any, error) {
-	return listSnowflakeEventTables(r.MqlRuntime, sdk.In{Account: sdk.Bool(true)})
+	return listSnowflakeEventTables(r.MqlRuntime, sdk.In{Account: new(true)})
 }
 
 func (r *mqlSnowflakeDatabase) eventTables() ([]any, error) {

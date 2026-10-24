@@ -6,6 +6,7 @@ package systemd
 import (
 	"path"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -184,8 +185,8 @@ func resolveUnitEnv(afs *afero.Afero, unitName string, dropIns func() []string) 
 // has one. /lib is usually a symlink to /usr/lib, so the same file can appear
 // twice; the first hit wins and the duplicate is never read.
 func findFragment(afs *afero.Afero, unitName string) (string, bool) {
-	for i := len(UnitDirs) - 1; i >= 0; i-- {
-		p := path.Join(UnitDirs[i], unitName)
+	for _, UnitDir := range slices.Backward(UnitDirs) {
+		p := path.Join(UnitDir, unitName)
 		if ok, err := afs.Exists(p); err == nil && ok {
 			return p, true
 		}
@@ -267,16 +268,16 @@ func findDropIns(afs *afero.Afero, unitName string, dirs DropInDirs, aliases ...
 	}
 
 	var searched []string
-	for i := len(UnitDirs) - 1; i >= 0; i-- {
+	for _, UnitDir := range slices.Backward(UnitDirs) {
 		for _, n := range names {
-			searched = append(searched, path.Join(UnitDirs[i], n+".d"))
+			searched = append(searched, path.Join(UnitDir, n+".d"))
 		}
 	}
 	if dirs.TypeLevel {
 		if dot := strings.LastIndex(unitName, "."); dot >= 0 && dot < len(unitName)-1 {
 			typeDir := unitName[dot+1:] + ".d"
-			for i := len(UnitDirs) - 1; i >= 0; i-- {
-				searched = append(searched, path.Join(UnitDirs[i], typeDir))
+			for _, UnitDir := range slices.Backward(UnitDirs) {
+				searched = append(searched, path.Join(UnitDir, typeDir))
 			}
 		}
 	}
@@ -347,7 +348,7 @@ func unitNamePrefixes(unitName string) []string {
 func ParseDropInPaths(out string) ([]string, bool) {
 	var loaded, seen bool
 	var paths []string
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		k, v, ok := strings.Cut(strings.TrimSpace(line), "=")
 		if !ok {
 			continue
@@ -509,8 +510,8 @@ func joinContinuations(content string) []string {
 
 	for _, line := range raw {
 		trimmedRight := strings.TrimRight(line, " \t")
-		if strings.HasSuffix(trimmedRight, "\\") {
-			buf.WriteString(strings.TrimSuffix(trimmedRight, "\\"))
+		if before, ok := strings.CutSuffix(trimmedRight, "\\"); ok {
+			buf.WriteString(before)
 			buf.WriteString(" ")
 			continuing = true
 			continue

@@ -52,7 +52,7 @@ func queryNTDSSettingsGC(conn *connection.ActiveDirectoryConnection, serverRef s
 }
 
 func currentConnectionGCState(conn *connection.ActiveDirectoryConnection) (*currentGCState, error) {
-	raw, err := conn.CachedFetch("currentConnectionGCState", func() (interface{}, error) {
+	raw, err := conn.CachedFetch("currentConnectionGCState", func() (any, error) {
 		resp, err := conn.LDAPConn().Search(ldap.NewSearchRequest(
 			"",
 			ldap.ScopeBaseObject,

@@ -229,7 +229,7 @@ func TestRpmFilesResolvesDBPathOnce(t *testing.T) {
 	mgr := &RpmPkgManager{conn: conn, platform: pf}
 
 	const pkgCount = 500
-	for i := 0; i < pkgCount; i++ {
+	for range pkgCount {
 		files, err := mgr.Files("which", "2.21-12.el8", "x86_64")
 		require.NoError(t, err)
 		require.Equal(t, []FileRecord{{Path: "/var/lib/rpm/rpmdb.sqlite"}}, files)

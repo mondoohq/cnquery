@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/datasafe"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -100,7 +99,7 @@ func (o *mqlOciDataSafe) configurations() ([]any, error) {
 				return nil, err
 			}
 			resp, err := svc.GetDataSafeConfiguration(context.Background(), datasafe.GetDataSafeConfigurationRequest{
-				CompartmentId: common.String(conn.TenantID()),
+				CompartmentId: new(conn.TenantID()),
 			})
 			if err != nil {
 				log.Debug().Err(err).Str("region", regionId).Msg("could not get Data Safe configuration")
@@ -169,7 +168,7 @@ func (o *mqlOciDataSafe) listTargetDatabases() ([]any, error) {
 			compartmentId, subtree := dataSafeFromTenantSubtree(conn.TenantID())
 			items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]datasafe.TargetDatabaseSummary, *string, error) {
 				resp, err := svc.ListTargetDatabases(ctx, datasafe.ListTargetDatabasesRequest{
-					CompartmentId:          common.String(compartmentId),
+					CompartmentId:          new(compartmentId),
 					CompartmentIdInSubtree: subtree,
 					Page:                   page,
 				})
@@ -244,7 +243,7 @@ func (o *mqlOciDataSafe) listSecurityAssessments() ([]any, error) {
 			compartmentId, subtree := dataSafeFromTenantSubtree(conn.TenantID())
 			items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]datasafe.SecurityAssessmentSummary, *string, error) {
 				resp, err := svc.ListSecurityAssessments(ctx, datasafe.ListSecurityAssessmentsRequest{
-					CompartmentId:          common.String(compartmentId),
+					CompartmentId:          new(compartmentId),
 					CompartmentIdInSubtree: subtree,
 					Page:                   page,
 				})
@@ -317,7 +316,7 @@ func (o *mqlOciDataSafe) listUserAssessments() ([]any, error) {
 			compartmentId, subtree := dataSafeFromTenantSubtree(conn.TenantID())
 			items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]datasafe.UserAssessmentSummary, *string, error) {
 				resp, err := svc.ListUserAssessments(ctx, datasafe.ListUserAssessmentsRequest{
-					CompartmentId:          common.String(compartmentId),
+					CompartmentId:          new(compartmentId),
 					CompartmentIdInSubtree: subtree,
 					Page:                   page,
 				})
@@ -390,7 +389,7 @@ func (o *mqlOciDataSafe) listSensitiveDataModels() ([]any, error) {
 			compartmentId, subtree := dataSafeFromTenantSubtree(conn.TenantID())
 			items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]datasafe.SensitiveDataModelSummary, *string, error) {
 				resp, err := svc.ListSensitiveDataModels(ctx, datasafe.ListSensitiveDataModelsRequest{
-					CompartmentId:          common.String(compartmentId),
+					CompartmentId:          new(compartmentId),
 					CompartmentIdInSubtree: subtree,
 					Page:                   page,
 				})
@@ -462,7 +461,7 @@ func (o *mqlOciDataSafe) listSensitiveTypes() ([]any, error) {
 			compartmentId, subtree := dataSafeFromTenantSubtree(conn.TenantID())
 			items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]datasafe.SensitiveTypeSummary, *string, error) {
 				resp, err := svc.ListSensitiveTypes(ctx, datasafe.ListSensitiveTypesRequest{
-					CompartmentId:          common.String(compartmentId),
+					CompartmentId:          new(compartmentId),
 					CompartmentIdInSubtree: subtree,
 					Page:                   page,
 				})
@@ -534,7 +533,7 @@ func (o *mqlOciDataSafe) listMaskingPolicies() ([]any, error) {
 			compartmentId, subtree := dataSafeFromTenantSubtree(conn.TenantID())
 			items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]datasafe.MaskingPolicySummary, *string, error) {
 				resp, err := svc.ListMaskingPolicies(ctx, datasafe.ListMaskingPoliciesRequest{
-					CompartmentId:          common.String(compartmentId),
+					CompartmentId:          new(compartmentId),
 					CompartmentIdInSubtree: subtree,
 					Page:                   page,
 				})

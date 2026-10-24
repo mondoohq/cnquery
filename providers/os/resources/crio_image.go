@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"path"
 	"regexp"
 	"sort"
@@ -240,9 +241,7 @@ func (c *mqlCrio) images() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		for k, v := range parsed {
-			layers[k] = v
-		}
+		maps.Copy(layers, parsed)
 	}
 
 	res := []any{}

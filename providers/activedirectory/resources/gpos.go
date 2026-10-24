@@ -102,7 +102,7 @@ type scopeLink struct {
 // sites, parses them, and indexes by GPO DN. The result is cached on the
 // connection under "gpoLinkMap".
 func buildGPOLinkMap(conn *connection.ActiveDirectoryConnection) (*gpoLinkMap, error) {
-	raw, err := conn.CachedFetch("gpoLinkMap", func() (interface{}, error) {
+	raw, err := conn.CachedFetch("gpoLinkMap", func() (any, error) {
 		m := &gpoLinkMap{byGPO: make(map[string][]scopeLink)}
 
 		collect := func(scopeDN, gplink string) {
@@ -209,7 +209,7 @@ func gpoStatusLabel(flags int64) string {
 	}
 }
 
-func (a *mqlActivedirectory) gpos() ([]interface{}, error) {
+func (a *mqlActivedirectory) gpos() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 	baseDN := conn.BaseDN()
 
@@ -243,7 +243,7 @@ func (a *mqlActivedirectory) gpos() ([]interface{}, error) {
 		linkMap = &gpoLinkMap{byGPO: make(map[string][]scopeLink)}
 	}
 
-	res := make([]interface{}, 0, len(entries))
+	res := make([]any, 0, len(entries))
 	for _, entry := range entries {
 		cn := connection.GetStringAttr(entry, "cn")
 		displayName := connection.GetStringAttr(entry, "displayName")
@@ -280,7 +280,7 @@ func (a *mqlActivedirectory) gpos() ([]interface{}, error) {
 
 // links returns all scope objects (domain root, OUs, sites) that link this GPO,
 // as activedirectory.gpoLink resources.
-func (a *mqlActivedirectoryGpo) links() ([]interface{}, error) {
+func (a *mqlActivedirectoryGpo) links() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 
 	linkMap, err := buildGPOLinkMap(conn)
@@ -291,10 +291,10 @@ func (a *mqlActivedirectoryGpo) links() ([]interface{}, error) {
 	gpoDN := strings.ToLower(a.DistinguishedName.Data)
 	scopeLinks := linkMap.byGPO[gpoDN]
 	if len(scopeLinks) == 0 {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
-	res := make([]interface{}, 0, len(scopeLinks))
+	res := make([]any, 0, len(scopeLinks))
 	for _, sl := range scopeLinks {
 		id := fmt.Sprintf("%s|%s/%d", a.DistinguishedName.Data, sl.scopeDN, sl.link.order)
 		resource, err := CreateResource(a.MqlRuntime, "activedirectory.gpoLink",

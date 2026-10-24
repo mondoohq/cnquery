@@ -177,7 +177,7 @@ func parseLogEntry(l Log, pos int64) (logEntry, int64, error) {
 	e.pages = make([]pageDesc, 0, count)
 	dataOff := pos + int64(refsEnd)
 	room := uint64(size) - refsEnd
-	for i := uint64(0); i < count; i++ {
+	for i := range count {
 		off := binary.LittleEndian.Uint32(refs[8*i:])
 		sz := binary.LittleEndian.Uint32(refs[8*i+4:])
 		if sz == 0 || sz%pageSize != 0 || off%pageSize != 0 {

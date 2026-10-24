@@ -45,8 +45,8 @@ func (r *mqlAlicloudNas) fileSystems() ([]any, error) {
 		firstPage := true
 		for {
 			resp, err := client.DescribeFileSystems(&nasclient.DescribeFileSystemsRequest{
-				PageNumber: tea.Int32(pageNumber),
-				PageSize:   tea.Int32(pageSize),
+				PageNumber: new(pageNumber),
+				PageSize:   new(pageSize),
 			})
 			if err != nil {
 				if firstPage {
@@ -157,7 +157,7 @@ func initAlicloudNasFileSystem(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return nil, nil, err
 	}
 	resp, err := client.DescribeFileSystems(&nasclient.DescribeFileSystemsRequest{
-		FileSystemId: tea.String(fsID),
+		FileSystemId: new(fsID),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -302,8 +302,8 @@ func (r *mqlAlicloudNas) accessGroups() ([]any, error) {
 		firstPage := true
 		for {
 			resp, err := client.DescribeAccessGroups(&nasclient.DescribeAccessGroupsRequest{
-				PageNumber: tea.Int32(pageNumber),
-				PageSize:   tea.Int32(pageSize),
+				PageNumber: new(pageNumber),
+				PageSize:   new(pageSize),
 			})
 			if err != nil {
 				if firstPage {
@@ -394,7 +394,7 @@ func initAlicloudNasAccessGroup(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return nil, nil, err
 	}
 	resp, err := client.DescribeAccessGroups(&nasclient.DescribeAccessGroupsRequest{
-		AccessGroupName: tea.String(name),
+		AccessGroupName: new(name),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -432,9 +432,9 @@ func (r *mqlAlicloudNasAccessGroup) accessRules() ([]any, error) {
 	pageSize := int32(100)
 	for {
 		resp, err := client.DescribeAccessRules(&nasclient.DescribeAccessRulesRequest{
-			AccessGroupName: tea.String(groupName),
-			PageNumber:      tea.Int32(pageNumber),
-			PageSize:        tea.Int32(pageSize),
+			AccessGroupName: new(groupName),
+			PageNumber:      new(pageNumber),
+			PageSize:        new(pageSize),
 		})
 		if err != nil {
 			// the access group exists (it was listed/resolved), so an error

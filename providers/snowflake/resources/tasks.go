@@ -130,8 +130,8 @@ func initSnowflakeTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	ctx := context.Background()
 
 	tasks, err := client.Tasks.Show(ctx, sdk.NewShowTaskRequest().
-		WithLike(sdk.Like{Pattern: sdk.String(name)}).
-		WithIn(sdk.ExtendedIn{In: sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)}}))
+		WithLike(sdk.Like{Pattern: new(name)}).
+		WithIn(sdk.ExtendedIn{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)}))
 	if err != nil {
 		return nil, nil, err
 	}

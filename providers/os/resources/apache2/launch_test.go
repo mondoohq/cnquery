@@ -106,7 +106,7 @@ func TestSUSESysconfigLaunch(t *testing.T) {
 		// sysconfig.d/loadmodule.conf and global.conf from the host, in order
 		var want []string
 		want = append(want, "PidFile /run/httpd.pid")
-		for _, m := range strings.Fields(suseSysconfig["APACHE_MODULES"]) {
+		for m := range strings.FieldsSeq(suseSysconfig["APACHE_MODULES"]) {
 			want = append(want, "LoadModule "+m+"_module /usr/lib64/apache2-prefork/mod_"+m+".so")
 		}
 		want = append(want,

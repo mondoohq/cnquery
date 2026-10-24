@@ -74,12 +74,12 @@ func (r *mqlDigitaloceanDatabase) fetchBackups() ([]godo.DatabaseBackup, error) 
 	return all, nil
 }
 
-func (r *mqlDigitaloceanDatabase) backups() ([]interface{}, error) {
+func (r *mqlDigitaloceanDatabase) backups() ([]any, error) {
 	backups, err := r.fetchBackups()
 	if err != nil {
 		return nil, err
 	}
-	all := make([]interface{}, 0, len(backups))
+	all := make([]any, 0, len(backups))
 	for i := range backups {
 		b := backups[i]
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.database.backup", map[string]*llx.RawData{

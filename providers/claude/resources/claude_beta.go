@@ -20,13 +20,13 @@ type mqlClaudeAgentInternal struct {
 	cacheSubagentIDs []string
 }
 
-func (r *mqlClaude) agents() ([]interface{}, error) {
+func (r *mqlClaude) agents() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
 
 	pager := client.Beta.Agents.ListAutoPaging(context.Background(), anthropic.BetaAgentListParams{})
 
-	var res []interface{}
+	var res []any
 	for pager.Next() {
 		a := pager.Current()
 
@@ -39,7 +39,7 @@ func (r *mqlClaude) agents() ([]interface{}, error) {
 			return nil, err
 		}
 
-		mcpServers := make(map[string]interface{}, len(a.MCPServers))
+		mcpServers := make(map[string]any, len(a.MCPServers))
 		for _, server := range a.MCPServers {
 			mcpServers[server.Name] = server.URL
 		}
@@ -47,7 +47,7 @@ func (r *mqlClaude) agents() ([]interface{}, error) {
 		// The roster mixes agent references, which name another managed
 		// agent, with advisors, which only name a model.
 		var subagentIDs []string
-		advisorModels := []interface{}{}
+		advisorModels := []any{}
 		for _, entry := range a.Multiagent.Agents {
 			switch entry.Type {
 			case "agent":
@@ -95,8 +95,8 @@ func (r *mqlClaude) agents() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlClaudeAgent) subagents() ([]interface{}, error) {
-	res := []interface{}{}
+func (r *mqlClaudeAgent) subagents() ([]any, error) {
+	res := []any{}
 	if len(r.cacheSubagentIDs) == 0 {
 		return res, nil
 	}
@@ -119,8 +119,8 @@ type mqlClaudeAgentSkillInternal struct {
 	cacheSkillID string
 }
 
-func agentSkills(runtime *plugin.Runtime, agentID string, skills []anthropic.BetaManagedAgentsAgentSkillUnion) ([]interface{}, error) {
-	res := make([]interface{}, 0, len(skills))
+func agentSkills(runtime *plugin.Runtime, agentID string, skills []anthropic.BetaManagedAgentsAgentSkillUnion) ([]any, error) {
+	res := make([]any, 0, len(skills))
 	for _, s := range skills {
 		mqlSkill, err := CreateResource(runtime, "claude.agent.skill", map[string]*llx.RawData{
 			"__id":    llx.StringData(agentID + "/skill/" + s.SkillID + "/" + s.Version),
@@ -153,9 +153,9 @@ func (r *mqlClaudeAgentSkill) skill() (*mqlClaudeSkill, error) {
 // agentTools splits the agent's tool entries into toolsets, which carry a
 // permission policy and the tools configured under it, and custom tools, which
 // are declared inline on the agent and have no policy of their own.
-func agentTools(runtime *plugin.Runtime, agentID string, entries []anthropic.BetaManagedAgentsAgentToolUnion) ([]interface{}, []interface{}, error) {
-	toolsets := []interface{}{}
-	customTools := []interface{}{}
+func agentTools(runtime *plugin.Runtime, agentID string, entries []anthropic.BetaManagedAgentsAgentToolUnion) ([]any, []any, error) {
+	toolsets := []any{}
+	customTools := []any{}
 
 	for i, entry := range entries {
 		switch entry.Type {
@@ -243,7 +243,7 @@ type toolsetSpec struct {
 func newToolset(runtime *plugin.Runtime, agentID string, toolsetIndex int, spec toolsetSpec) (plugin.Resource, error) {
 	toolsetID := agentID + "/toolset/" + strconv.Itoa(toolsetIndex)
 
-	tools := make([]interface{}, 0, len(spec.tools))
+	tools := make([]any, 0, len(spec.tools))
 	for _, tool := range spec.tools {
 		mqlTool, err := CreateResource(runtime, "claude.agent.toolset.tool", map[string]*llx.RawData{
 			"__id":             llx.StringData(toolsetID + "/" + tool.name),
@@ -269,13 +269,13 @@ func newToolset(runtime *plugin.Runtime, agentID string, toolsetIndex int, spec 
 
 // claude.environment
 
-func (r *mqlClaude) environments() ([]interface{}, error) {
+func (r *mqlClaude) environments() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
 
 	pager := client.Beta.Environments.ListAutoPaging(context.Background(), anthropic.BetaEnvironmentListParams{})
 
-	var res []interface{}
+	var res []any
 	for pager.Next() {
 		e := pager.Current()
 
@@ -355,13 +355,13 @@ func (r *mqlClaudeSession) environment() (*mqlClaudeEnvironment, error) {
 	return env, nil
 }
 
-func (r *mqlClaude) sessions() ([]interface{}, error) {
+func (r *mqlClaude) sessions() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
 
 	pager := client.Beta.Sessions.ListAutoPaging(context.Background(), anthropic.BetaSessionListParams{})
 
-	var res []interface{}
+	var res []any
 	for pager.Next() {
 		s := pager.Current()
 
@@ -392,13 +392,13 @@ func (r *mqlClaude) sessions() ([]interface{}, error) {
 
 // claude.file
 
-func (r *mqlClaude) files() ([]interface{}, error) {
+func (r *mqlClaude) files() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
 
 	pager := client.Beta.Files.ListAutoPaging(context.Background(), anthropic.BetaFileListParams{})
 
-	var res []interface{}
+	var res []any
 	for pager.Next() {
 		f := pager.Current()
 
@@ -426,13 +426,13 @@ func (r *mqlClaude) files() ([]interface{}, error) {
 
 // claude.skill
 
-func (r *mqlClaude) skills() ([]interface{}, error) {
+func (r *mqlClaude) skills() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
 
 	pager := client.Beta.Skills.ListAutoPaging(context.Background(), anthropic.BetaSkillListParams{})
 
-	var res []interface{}
+	var res []any
 	for pager.Next() {
 		s := pager.Current()
 
@@ -460,13 +460,13 @@ func (r *mqlClaude) skills() ([]interface{}, error) {
 
 // claude.vault
 
-func (r *mqlClaude) vaults() ([]interface{}, error) {
+func (r *mqlClaude) vaults() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
 
 	pager := client.Beta.Vaults.ListAutoPaging(context.Background(), anthropic.BetaVaultListParams{})
 
-	var res []interface{}
+	var res []any
 	for pager.Next() {
 		v := pager.Current()
 
@@ -508,13 +508,13 @@ func (r *mqlClaudeVaultCredential) vault() (*mqlClaudeVault, error) {
 	return vault, nil
 }
 
-func (r *mqlClaudeVault) credentials() ([]interface{}, error) {
+func (r *mqlClaudeVault) credentials() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
 
 	pager := client.Beta.Vaults.Credentials.ListAutoPaging(context.Background(), r.GetId().Data, anthropic.BetaVaultCredentialListParams{})
 
-	var res []interface{}
+	var res []any
 	for pager.Next() {
 		cred := pager.Current()
 
@@ -544,13 +544,13 @@ func (r *mqlClaudeVault) credentials() ([]interface{}, error) {
 
 // claude.memoryStore
 
-func (r *mqlClaude) memoryStores() ([]interface{}, error) {
+func (r *mqlClaude) memoryStores() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
 
 	pager := client.Beta.MemoryStores.ListAutoPaging(context.Background(), anthropic.BetaMemoryStoreListParams{})
 
-	var res []interface{}
+	var res []any
 	for pager.Next() {
 		ms := pager.Current()
 
@@ -578,13 +578,13 @@ func (r *mqlClaude) memoryStores() ([]interface{}, error) {
 
 // claude.messageBatch
 
-func (r *mqlClaude) messageBatches() ([]interface{}, error) {
+func (r *mqlClaude) messageBatches() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
 
 	pager := client.Beta.Messages.Batches.ListAutoPaging(context.Background(), anthropic.BetaMessageBatchListParams{})
 
-	var res []interface{}
+	var res []any
 	for pager.Next() {
 		b := pager.Current()
 
@@ -617,13 +617,13 @@ type mqlClaudeUserProfileInternal struct {
 	cacheEnforcementActions []anthropic.UserProfileEnforcementActionUnion
 }
 
-func (r *mqlClaude) userProfiles() ([]interface{}, error) {
+func (r *mqlClaude) userProfiles() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
 
 	pager := client.UserProfiles.ListAutoPaging(context.Background(), anthropic.UserProfileListParams{Limit: anthropic.Int(100)})
 
-	var res []interface{}
+	var res []any
 	for pager.Next() {
 		p := pager.Current()
 
@@ -663,8 +663,8 @@ func userProfileArgs(p anthropic.UserProfile) map[string]*llx.RawData {
 	}
 }
 
-func (r *mqlClaudeUserProfile) enforcementActions() ([]interface{}, error) {
-	res := make([]interface{}, 0, len(r.cacheEnforcementActions))
+func (r *mqlClaudeUserProfile) enforcementActions() ([]any, error) {
+	res := make([]any, 0, len(r.cacheEnforcementActions))
 	for _, a := range r.cacheEnforcementActions {
 		mqlAction, err := CreateResource(r.MqlRuntime, "claude.userProfile.enforcementAction",
 			enforcementActionArgs(r.Id.Data, a))

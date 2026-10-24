@@ -150,8 +150,8 @@ func TestCategoryAnonymousAccessible(t *testing.T) {
 		{
 			name: "any accessible endpoint wins",
 			observations: []EndpointObservation{
-				obs("development", intPtr(404)),
-				obs("development", intPtr(200)),
+				obs("development", new(404)),
+				obs("development", new(200)),
 			},
 			category:       "development",
 			wantAccessible: true,
@@ -160,8 +160,8 @@ func TestCategoryAnonymousAccessible(t *testing.T) {
 		{
 			name: "all known but not accessible",
 			observations: []EndpointObservation{
-				obs("development", intPtr(401)),
-				obs("development", intPtr(403)),
+				obs("development", new(401)),
+				obs("development", new(403)),
 			},
 			category:       "development",
 			wantAccessible: false,
@@ -170,7 +170,7 @@ func TestCategoryAnonymousAccessible(t *testing.T) {
 		{
 			name: "all unknown reports not known",
 			observations: []EndpointObservation{
-				obs("development", intPtr(500)),
+				obs("development", new(500)),
 				obs("development", nil),
 			},
 			category:       "development",
@@ -180,7 +180,7 @@ func TestCategoryAnonymousAccessible(t *testing.T) {
 		{
 			name: "ignores other categories",
 			observations: []EndpointObservation{
-				obs("profiler", intPtr(200)),
+				obs("profiler", new(200)),
 			},
 			category:       "development",
 			wantAccessible: false,

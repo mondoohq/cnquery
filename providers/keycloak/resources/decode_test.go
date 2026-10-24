@@ -883,7 +883,7 @@ func TestHoldsAdminRoleEvaluatesTheWholeList(t *testing.T) {
 	// The administering role sits last, behind many ordinary ones. A check
 	// that stopped at the first non-matching entry would answer false.
 	roles := make([]RoleRef, 0, 51)
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		roles = append(roles, RoleRef{Name: "team-role-" + strconv.Itoa(i)})
 	}
 	roles = append(roles, RoleRef{Name: "realm-admin", ClientRole: true, ClientID: "realm-management"})

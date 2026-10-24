@@ -46,23 +46,23 @@ func TestSkeAutoUpdate(t *testing.T) {
 			payload: `{"name":"c1","kubernetes":{"version":"1.30.5"},"nodepools":[],` +
 				`"maintenance":{"timeWindow":{"start":"2026-01-01T01:00:00Z","end":"2026-01-01T03:00:00Z"},` +
 				`"autoUpdate":{"kubernetesVersion":true,"machineImageVersion":true}}}`,
-			wantKubernetes:   boolPtr(true),
-			wantMachineImage: boolPtr(true),
+			wantKubernetes:   new(true),
+			wantMachineImage: new(true),
 		},
 		{
 			name: "both explicitly disabled",
 			payload: `{"name":"c1","kubernetes":{"version":"1.30.5"},"nodepools":[],` +
 				`"maintenance":{"timeWindow":{"start":"2026-01-01T01:00:00Z","end":"2026-01-01T03:00:00Z"},` +
 				`"autoUpdate":{"kubernetesVersion":false,"machineImageVersion":false}}}`,
-			wantKubernetes:   boolPtr(false),
-			wantMachineImage: boolPtr(false),
+			wantKubernetes:   new(false),
+			wantMachineImage: new(false),
 		},
 		{
 			name: "one flag reported, the other left out stays null",
 			payload: `{"name":"c1","kubernetes":{"version":"1.30.5"},"nodepools":[],` +
 				`"maintenance":{"timeWindow":{"start":"2026-01-01T01:00:00Z","end":"2026-01-01T03:00:00Z"},` +
 				`"autoUpdate":{"kubernetesVersion":true}}}`,
-			wantKubernetes: boolPtr(true),
+			wantKubernetes: new(true),
 		},
 	}
 	for _, tc := range cases {

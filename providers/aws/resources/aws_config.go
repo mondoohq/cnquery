@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"maps"
 	"sync"
 	"time"
 
@@ -51,9 +52,7 @@ func configTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (map[
 			}
 			return nil, err
 		}
-		for k, v := range configTagsToMap(resp.Tags) {
-			tags[k] = v
-		}
+		maps.Copy(tags, configTagsToMap(resp.Tags))
 		if resp.NextToken == nil {
 			break
 		}

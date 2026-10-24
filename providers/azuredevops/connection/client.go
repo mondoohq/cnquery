@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -172,8 +173,7 @@ func (e *APIError) retryable() bool {
 }
 
 func apiStatus(err error) int {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*APIError](err); ok {
 		return apiErr.Status
 	}
 	return 0
@@ -412,9 +412,7 @@ func (c *Client) urlFor(r request) string {
 		b.WriteString(url.PathEscape(seg))
 	}
 	q := url.Values{}
-	for k, v := range r.query {
-		q[k] = v
-	}
+	maps.Copy(q, r.query)
 	if !r.noVersion {
 		version := r.apiVersion
 		if version == "" {
@@ -624,9 +622,7 @@ func listAll[T any](ctx context.Context, c *Client, r request, pageSize int) ([]
 	token := ""
 	for pages := 1; ; pages++ {
 		q := url.Values{}
-		for k, v := range r.query {
-			q[k] = v
-		}
+		maps.Copy(q, r.query)
 		if token != "" {
 			q.Set("continuationToken", token)
 		}

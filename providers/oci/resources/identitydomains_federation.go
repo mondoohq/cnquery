@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identitydomains"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -24,8 +23,8 @@ func (o *mqlOciIdentityDomain) identityProviders() ([]any, error) {
 	ctx := context.Background()
 	providers, err := ociScimPaginate(ctx, func(ctx context.Context, startIndex int) ([]identitydomains.IdentityProvider, *int, error) {
 		response, err := client.ListIdentityProviders(ctx, identitydomains.ListIdentityProvidersRequest{
-			StartIndex:    common.Int(startIndex),
-			Count:         common.Int(ociScimPageSize),
+			StartIndex:    new(startIndex),
+			Count:         new(ociScimPageSize),
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {

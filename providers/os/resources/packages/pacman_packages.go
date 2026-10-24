@@ -303,7 +303,7 @@ func packageFromPacmanFields(pf *inventory.Platform, fields map[string]string) *
 // meaning.
 func pacmanLicense(block string) string {
 	var licenses []string
-	for _, l := range strings.Split(block, "\n") {
+	for l := range strings.SplitSeq(block, "\n") {
 		if l = strings.TrimSpace(l); l != "" {
 			licenses = append(licenses, l)
 		}

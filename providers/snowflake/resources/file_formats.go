@@ -20,7 +20,7 @@ type mqlSnowflakeFileFormatInternal struct {
 }
 
 func (r *mqlSnowflakeAccount) fileFormats() ([]any, error) {
-	return listSnowflakeFileFormats(r.MqlRuntime, sdk.In{Account: sdk.Bool(true)})
+	return listSnowflakeFileFormats(r.MqlRuntime, sdk.In{Account: new(true)})
 }
 
 func (r *mqlSnowflakeDatabase) fileFormats() ([]any, error) {
@@ -166,7 +166,7 @@ func resolveFileFormatRef(runtime *plugin.Runtime, fqn string, field *plugin.TVa
 
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
 	formats, err := conn.Client().FileFormats.Show(context.Background(), sdk.NewShowFileFormatRequest().
-		WithLike(sdk.Like{Pattern: sdk.String(id.Name())}).
+		WithLike(sdk.Like{Pattern: new(id.Name())}).
 		WithIn(sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}))
 	if err != nil {
 		return nil, err

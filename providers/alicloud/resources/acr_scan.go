@@ -104,9 +104,9 @@ func (r *mqlAlicloudAcrRepository) imageTags() ([]any, error) {
 	pageNo := int32(1)
 	for {
 		resp, err := client.ListRepoTag(&crclient.ListRepoTagRequest{
-			InstanceId: tea.String(instanceID),
-			RepoId:     tea.String(repoID),
-			PageNo:     tea.Int32(pageNo),
+			InstanceId: new(instanceID),
+			RepoId:     new(repoID),
+			PageNo:     new(pageNo),
 			PageSize:   tea.Int32(acrTagPageSize),
 		})
 		if err != nil {
@@ -161,9 +161,9 @@ func (r *mqlAlicloudAcrRepositoryTag) scanStatusText() string {
 			return
 		}
 		resp, err := client.GetRepoTagScanStatus(&crclient.GetRepoTagScanStatusRequest{
-			InstanceId: tea.String(r.InstanceId.Data),
-			RepoId:     tea.String(r.RepoId.Data),
-			Tag:        tea.String(r.Tag.Data),
+			InstanceId: new(r.InstanceId.Data),
+			RepoId:     new(r.RepoId.Data),
+			Tag:        new(r.Tag.Data),
 		})
 		if err != nil {
 			log.Debug().Err(err).Str("repository", r.RepoId.Data).Str("tag", r.Tag.Data).
@@ -201,11 +201,11 @@ func (r *mqlAlicloudAcrRepositoryTag) vulnerabilities() ([]any, error) {
 	collected := 0
 	for {
 		resp, err := client.ListRepoTagScanResult(&crclient.ListRepoTagScanResultRequest{
-			InstanceId: tea.String(r.InstanceId.Data),
-			RepoId:     tea.String(r.RepoId.Data),
-			Tag:        tea.String(r.Tag.Data),
-			Digest:     tea.String(r.Digest.Data),
-			PageNo:     tea.Int32(pageNo),
+			InstanceId: new(r.InstanceId.Data),
+			RepoId:     new(r.RepoId.Data),
+			Tag:        new(r.Tag.Data),
+			Digest:     new(r.Digest.Data),
+			PageNo:     new(pageNo),
 			PageSize:   tea.Int32(acrTagPageSize),
 		})
 		if err != nil {

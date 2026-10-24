@@ -501,8 +501,7 @@ func (r *mqlOpenstackBlockstorageVolumeType) fetchEncryption() (*volumetypes.Get
 		}
 		enc, err := volumetypes.GetEncryption(ctx(), client, r.Id.Data).Extract()
 		if err != nil {
-			var resp gophercloud.ErrUnexpectedResponseCode
-			if errors.As(err, &resp) {
+			if resp, ok := errors.AsType[gophercloud.ErrUnexpectedResponseCode](err); ok {
 				switch resp.Actual {
 				case 401, 403, 404:
 					return

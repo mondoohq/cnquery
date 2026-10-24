@@ -68,7 +68,7 @@ func TestParseXbpsPkgdb(t *testing.T) {
 // different order on every scan of the same host.
 func TestParseXbpsPkgdbIsStable(t *testing.T) {
 	var first []string
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		f, err := os.Open("./testdata/xbps_pkgdb.plist")
 		require.NoError(t, err)
 

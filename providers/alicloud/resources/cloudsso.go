@@ -216,8 +216,8 @@ func (r *mqlAlicloudCloudssoDirectory) users() ([]any, error) {
 
 	res := []any{}
 	req := &cloudssoclient.ListUsersRequest{
-		DirectoryId: tea.String(directoryID),
-		MaxResults:  tea.Int32(cloudssoPageSize),
+		DirectoryId: new(directoryID),
+		MaxResults:  new(cloudssoPageSize),
 	}
 	for {
 		resp, err := client.ListUsers(req)
@@ -309,8 +309,8 @@ func initAlicloudCloudssoUser(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	resp, err := client.GetUser(&cloudssoclient.GetUserRequest{
-		DirectoryId: tea.String(directoryID),
-		UserId:      tea.String(userID),
+		DirectoryId: new(directoryID),
+		UserId:      new(userID),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -337,8 +337,8 @@ func (r *mqlAlicloudCloudssoUser) mfaDevices() ([]any, error) {
 	}
 
 	resp, err := client.ListMFADevicesForUser(&cloudssoclient.ListMFADevicesForUserRequest{
-		DirectoryId: tea.String(r.DirectoryId.Data),
-		UserId:      tea.String(r.UserId.Data),
+		DirectoryId: new(r.DirectoryId.Data),
+		UserId:      new(r.UserId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -380,9 +380,9 @@ func (r *mqlAlicloudCloudssoUser) groups() ([]any, error) {
 	directoryID := r.DirectoryId.Data
 	res := []any{}
 	req := &cloudssoclient.ListJoinedGroupsForUserRequest{
-		DirectoryId: tea.String(directoryID),
-		UserId:      tea.String(r.UserId.Data),
-		MaxResults:  tea.Int32(cloudssoPageSize),
+		DirectoryId: new(directoryID),
+		UserId:      new(r.UserId.Data),
+		MaxResults:  new(cloudssoPageSize),
 	}
 	for {
 		resp, err := client.ListJoinedGroupsForUser(req)
@@ -435,8 +435,8 @@ func (r *mqlAlicloudCloudssoDirectory) groups() ([]any, error) {
 
 	res := []any{}
 	req := &cloudssoclient.ListGroupsRequest{
-		DirectoryId: tea.String(directoryID),
-		MaxResults:  tea.Int32(cloudssoPageSize),
+		DirectoryId: new(directoryID),
+		MaxResults:  new(cloudssoPageSize),
 	}
 	for {
 		resp, err := client.ListGroups(req)
@@ -516,8 +516,8 @@ func initAlicloudCloudssoGroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	resp, err := client.GetGroup(&cloudssoclient.GetGroupRequest{
-		DirectoryId: tea.String(directoryID),
-		GroupId:     tea.String(groupID),
+		DirectoryId: new(directoryID),
+		GroupId:     new(groupID),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -545,9 +545,9 @@ func (r *mqlAlicloudCloudssoGroup) members() ([]any, error) {
 	directoryID := r.DirectoryId.Data
 	res := []any{}
 	req := &cloudssoclient.ListGroupMembersRequest{
-		DirectoryId: tea.String(directoryID),
-		GroupId:     tea.String(r.GroupId.Data),
-		MaxResults:  tea.Int32(cloudssoPageSize),
+		DirectoryId: new(directoryID),
+		GroupId:     new(r.GroupId.Data),
+		MaxResults:  new(cloudssoPageSize),
 	}
 	for {
 		resp, err := client.ListGroupMembers(req)
@@ -602,7 +602,7 @@ func (r *mqlAlicloudCloudssoDirectory) passwordPolicy() (*mqlAlicloudCloudssoPas
 	}
 
 	resp, err := client.GetPasswordPolicy(&cloudssoclient.GetPasswordPolicyRequest{
-		DirectoryId: tea.String(directoryID),
+		DirectoryId: new(directoryID),
 	})
 	if err != nil {
 		return nil, err
@@ -640,7 +640,7 @@ func (r *mqlAlicloudCloudssoDirectory) mfaAuthenticationStatus() (string, error)
 		return "", err
 	}
 	resp, err := client.GetMFAAuthenticationStatus(&cloudssoclient.GetMFAAuthenticationStatusRequest{
-		DirectoryId: tea.String(directoryID),
+		DirectoryId: new(directoryID),
 	})
 	if err != nil {
 		return "", err
@@ -678,7 +678,7 @@ func (r *mqlAlicloudCloudssoDirectory) loginPreference() (*cloudssoclient.GetLog
 			return
 		}
 		resp, err := client.GetLoginPreference(&cloudssoclient.GetLoginPreferenceRequest{
-			DirectoryId: tea.String(directoryID),
+			DirectoryId: new(directoryID),
 		})
 		if err != nil {
 			r.loginPreferenceErr = err
@@ -698,7 +698,7 @@ func (r *mqlAlicloudCloudssoDirectory) scimSynchronizationEnabled() (bool, error
 		return false, err
 	}
 	resp, err := client.GetSCIMSynchronizationStatus(&cloudssoclient.GetSCIMSynchronizationStatusRequest{
-		DirectoryId: tea.String(directoryID),
+		DirectoryId: new(directoryID),
 	})
 	if err != nil {
 		return false, err
@@ -732,8 +732,8 @@ func (r *mqlAlicloudCloudssoDirectory) accessConfigurations() ([]any, error) {
 
 	res := []any{}
 	req := &cloudssoclient.ListAccessConfigurationsRequest{
-		DirectoryId: tea.String(directoryID),
-		MaxResults:  tea.Int32(cloudssoPageSize),
+		DirectoryId: new(directoryID),
+		MaxResults:  new(cloudssoPageSize),
 	}
 	for {
 		resp, err := client.ListAccessConfigurations(req)
@@ -816,8 +816,8 @@ func initAlicloudCloudssoAccessConfiguration(runtime *plugin.Runtime, args map[s
 	}
 
 	resp, err := client.GetAccessConfiguration(&cloudssoclient.GetAccessConfigurationRequest{
-		DirectoryId:           tea.String(directoryID),
-		AccessConfigurationId: tea.String(acID),
+		DirectoryId:           new(directoryID),
+		AccessConfigurationId: new(acID),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -846,8 +846,8 @@ func (r *mqlAlicloudCloudssoAccessConfiguration) permissionPolicies() ([]any, er
 	directoryID := r.DirectoryId.Data
 	acID := r.AccessConfigurationId.Data
 	resp, err := client.ListPermissionPoliciesInAccessConfiguration(&cloudssoclient.ListPermissionPoliciesInAccessConfigurationRequest{
-		DirectoryId:           tea.String(directoryID),
-		AccessConfigurationId: tea.String(acID),
+		DirectoryId:           new(directoryID),
+		AccessConfigurationId: new(acID),
 	})
 	if err != nil {
 		return nil, err
@@ -914,8 +914,8 @@ func (r *mqlAlicloudCloudssoDirectory) accessAssignments() ([]any, error) {
 
 	res := []any{}
 	req := &cloudssoclient.ListAccessAssignmentsRequest{
-		DirectoryId: tea.String(directoryID),
-		MaxResults:  tea.Int32(cloudssoPageSize),
+		DirectoryId: new(directoryID),
+		MaxResults:  new(cloudssoPageSize),
 	}
 	for {
 		resp, err := client.ListAccessAssignments(req)

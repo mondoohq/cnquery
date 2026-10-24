@@ -237,7 +237,7 @@ func TestDeterminismPerType(t *testing.T) {
 func TestMapOrderInsensitivity(t *testing.T) {
 	build := func(reverse bool) *llx.Primitive {
 		m := map[string]*llx.Primitive{}
-		for i := 0; i < 20; i++ {
+		for i := range 20 {
 			idx := i
 			if reverse {
 				idx = 19 - i
@@ -248,7 +248,7 @@ func TestMapOrderInsensitivity(t *testing.T) {
 	}
 
 	want := hashPrim(t, build(false))
-	for i := 0; i < 25; i++ {
+	for i := range 25 {
 		assert.Equal(t, want, hashPrim(t, build(false)), "iteration %d", i)
 	}
 	assert.Equal(t, want, hashPrim(t, build(true)), "insertion order is not content")
@@ -278,7 +278,7 @@ func TestArrayOrderInsensitivityMixed(t *testing.T) {
 	want := hashPrim(t, arr(elements))
 
 	rng := rand.New(rand.NewSource(42))
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		shuffled := make([]*llx.Primitive, len(elements))
 		copy(shuffled, elements)
 		rng.Shuffle(len(shuffled), func(a, b int) { shuffled[a], shuffled[b] = shuffled[b], shuffled[a] })
@@ -364,7 +364,7 @@ func TestNilPrimitiveSentinel(t *testing.T) {
 // overflowing the stack; the caller fails open to a full upload.
 func TestCanonDepthLimit(t *testing.T) {
 	cur := llx.StringPrimitive("x")
-	for i := 0; i < maxCanonDepth+1; i++ {
+	for range maxCanonDepth + 1 {
 		b, err := proto.Marshal(cur)
 		require.NoError(t, err)
 		cur = &llx.Primitive{Type: string(types.Dict), Value: b}

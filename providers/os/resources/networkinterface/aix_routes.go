@@ -6,6 +6,7 @@ package networkinterface
 import (
 	"bufio"
 	"net"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -213,10 +214,5 @@ func parseAixRouteFlags(col string) []string {
 }
 
 func hasFlag(flags []string, flag string) bool {
-	for _, f := range flags {
-		if f == flag {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(flags, flag)
 }

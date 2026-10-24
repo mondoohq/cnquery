@@ -332,7 +332,7 @@ func cosmosCorsOrigins(policies []*cosmosdb.CorsPolicy) []any {
 		if cors == nil || cors.AllowedOrigins == nil {
 			continue
 		}
-		for _, origin := range strings.Split(*cors.AllowedOrigins, ",") {
+		for origin := range strings.SplitSeq(*cors.AllowedOrigins, ",") {
 			if origin = strings.TrimSpace(origin); origin != "" {
 				origins = append(origins, origin)
 			}

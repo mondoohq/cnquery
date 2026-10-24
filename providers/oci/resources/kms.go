@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/keymanagement"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -77,7 +76,7 @@ func (o *mqlOciKms) vaults() ([]any, error) {
 func (o *mqlOciKms) getVaultsForRegion(ctx context.Context, client *keymanagement.KmsVaultClient, compartmentID string) ([]keymanagement.VaultSummary, error) {
 	entries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]keymanagement.VaultSummary, *string, error) {
 		request := keymanagement.ListVaultsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		}
 
@@ -193,7 +192,7 @@ func (o *mqlOciKmsVault) keys() ([]any, error) {
 func (o *mqlOciKmsVault) getKeysForVault(ctx context.Context, client *keymanagement.KmsManagementClient, compartmentID string) ([]keymanagement.KeySummary, error) {
 	entries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]keymanagement.KeySummary, *string, error) {
 		request := keymanagement.ListKeysRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		}
 
@@ -278,7 +277,7 @@ func (o *mqlOciKmsKey) getKeyDetail() (*keymanagement.Key, error) {
 			return
 		}
 		resp, err := svc.GetKey(context.Background(), keymanagement.GetKeyRequest{
-			KeyId: common.String(o.Id.Data),
+			KeyId: new(o.Id.Data),
 		})
 		if err != nil {
 			o.keyDetailErr = err
@@ -433,7 +432,7 @@ func (o *mqlOciKmsKey) keyVersions() ([]any, error) {
 
 	versions, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]keymanagement.KeyVersionSummary, *string, error) {
 		response, err := svc.ListKeyVersions(ctx, keymanagement.ListKeyVersionsRequest{
-			KeyId: common.String(o.Id.Data),
+			KeyId: new(o.Id.Data),
 			Page:  page,
 		})
 		if err != nil {

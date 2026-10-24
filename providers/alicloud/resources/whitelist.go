@@ -5,6 +5,7 @@ package resources
 
 import (
 	"net/netip"
+	"slices"
 	"strings"
 
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -22,12 +23,7 @@ import (
 // still misses the bare address, the wildcard and the ranges, while resting on
 // the prefix length happening to be the last thing in the entry.
 func whitelistAllowsAllAddresses(entries []string) bool {
-	for _, entry := range entries {
-		if whitelistEntryAllowsAllAddresses(entry) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(entries, whitelistEntryAllowsAllAddresses)
 }
 
 // whitelistEntryAllowsAllAddresses reports whether one whitelist entry admits

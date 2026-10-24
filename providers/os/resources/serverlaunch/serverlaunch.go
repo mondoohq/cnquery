@@ -42,7 +42,7 @@ const PsCommand = "ps -A -o pid= -o ppid= -o args="
 // the options a server is recognized by are not affected.
 func ParsePs(out string) []Process {
 	var procs []Process
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		fields := strings.Fields(line)
 		if len(fields) < 3 {
 			continue

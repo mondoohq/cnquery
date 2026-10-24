@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	rdsclient "github.com/alibabacloud-go/rds-20140815/v17/client"
-	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -25,15 +24,15 @@ func TestRdsStatusEnabled(t *testing.T) {
 		want   bool
 	}{
 		{"nil is off", nil, false},
-		{"empty is off", tea.String(""), false},
-		{"TDE spelling", tea.String("Enabled"), true},
-		{"SQL Explorer spelling", tea.String("Enable"), true},
-		{"lowercase", tea.String("enabled"), true},
-		{"surrounding space", tea.String("  Enable  "), true},
-		{"disabled", tea.String("Disabled"), false},
-		{"disable", tea.String("Disable"), false},
-		{"unrecognised value is off", tea.String("Pending"), false},
-		{"substring must not match", tea.String("NotEnabled"), false},
+		{"empty is off", new(""), false},
+		{"TDE spelling", new("Enabled"), true},
+		{"SQL Explorer spelling", new("Enable"), true},
+		{"lowercase", new("enabled"), true},
+		{"surrounding space", new("  Enable  "), true},
+		{"disabled", new("Disabled"), false},
+		{"disable", new("Disable"), false},
+		{"unrecognised value is off", new("Pending"), false},
+		{"substring must not match", new("NotEnabled"), false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, rdsStatusEnabled(tc.status))
@@ -51,12 +50,12 @@ func TestRdsRetentionDays(t *testing.T) {
 		want  int64
 	}{
 		{"nil is zero", nil, 0},
-		{"empty is zero", tea.String(""), 0},
-		{"garbage is zero", tea.String("forever"), 0},
-		{"negative is zero", tea.String("-1"), 0},
-		{"thirty days", tea.String("30"), 30},
-		{"surrounding space", tea.String(" 365 "), 365},
-		{"six months", tea.String("180"), 180},
+		{"empty is zero", new(""), 0},
+		{"garbage is zero", new("forever"), 0},
+		{"negative is zero", new("-1"), 0},
+		{"thirty days", new("30"), 30},
+		{"surrounding space", new(" 365 "), 365},
+		{"six months", new("180"), 180},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, rdsRetentionDays(tc.value))
@@ -71,8 +70,8 @@ func TestRdsRetentionDays(t *testing.T) {
 func TestRdsRunningParameters(t *testing.T) {
 	param := func(name, value string) *rdsclient.DescribeParametersResponseBodyRunningParametersDBInstanceParameter {
 		return &rdsclient.DescribeParametersResponseBodyRunningParametersDBInstanceParameter{
-			ParameterName:  tea.String(name),
-			ParameterValue: tea.String(value),
+			ParameterName:  new(name),
+			ParameterValue: new(value),
 		}
 	}
 
@@ -106,8 +105,8 @@ func TestRdsRunningParameters(t *testing.T) {
 			RunningParameters: &rdsclient.DescribeParametersResponseBodyRunningParameters{
 				DBInstanceParameter: []*rdsclient.DescribeParametersResponseBodyRunningParametersDBInstanceParameter{
 					nil,
-					{ParameterName: tea.String("")},
-					{ParameterName: nil, ParameterValue: tea.String("on")},
+					{ParameterName: new("")},
+					{ParameterName: nil, ParameterValue: new("on")},
 					param("log_duration", "on"),
 				},
 			},
@@ -119,7 +118,7 @@ func TestRdsRunningParameters(t *testing.T) {
 		got := rdsRunningParameters(&rdsclient.DescribeParametersResponseBody{
 			RunningParameters: &rdsclient.DescribeParametersResponseBodyRunningParameters{
 				DBInstanceParameter: []*rdsclient.DescribeParametersResponseBodyRunningParametersDBInstanceParameter{
-					{ParameterName: tea.String("log_statement")},
+					{ParameterName: new("log_statement")},
 				},
 			},
 		})
@@ -130,7 +129,7 @@ func TestRdsRunningParameters(t *testing.T) {
 		got := rdsRunningParameters(&rdsclient.DescribeParametersResponseBody{
 			ConfigParameters: &rdsclient.DescribeParametersResponseBodyConfigParameters{
 				DBInstanceParameter: []*rdsclient.DescribeParametersResponseBodyConfigParametersDBInstanceParameter{
-					{ParameterName: tea.String("log_connections"), ParameterValue: tea.String("on")},
+					{ParameterName: new("log_connections"), ParameterValue: new("on")},
 				},
 			},
 		})
@@ -152,10 +151,10 @@ func TestRdsPeerInstance(t *testing.T) {
 		wantRegion string
 	}{
 		{"absent", nil, nil, "", ""},
-		{"empty id ignores region", tea.String(""), tea.String("cn-shanghai"), "", ""},
-		{"blank id", tea.String("  "), nil, "", ""},
-		{"cross-region peer", tea.String("rm-dr1"), tea.String("cn-shanghai"), "rm-dr1", "cn-shanghai"},
-		{"peer without region uses own region", tea.String("rm-dr1"), tea.String(""), "rm-dr1", "cn-hangzhou"},
+		{"empty id ignores region", new(""), new("cn-shanghai"), "", ""},
+		{"blank id", new("  "), nil, "", ""},
+		{"cross-region peer", new("rm-dr1"), new("cn-shanghai"), "rm-dr1", "cn-shanghai"},
+		{"peer without region uses own region", new("rm-dr1"), new(""), "rm-dr1", "cn-hangzhou"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			id, region := rdsPeerInstance(tc.insName, tc.region, "cn-hangzhou")

@@ -10,6 +10,7 @@ import (
 	"maps"
 	"net/http"
 	"os"
+	"slices"
 	"sync"
 	"time"
 
@@ -451,12 +452,7 @@ func (c *StackitConnection) areaHoldsProject(ctx context.Context, client *iaas.A
 		log.Debug().Err(err).Str("area", areaID).Msg("stackit> network area project list failed")
 		return false
 	}
-	for _, projectID := range projects.GetItems() {
-		if projectID == c.projectID {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(projects.GetItems(), c.projectID)
 }
 
 func (c *StackitConnection) IaaS() (*iaas.APIClient, error) {

@@ -92,27 +92,28 @@ func sitePasswordProtected(raw json.RawMessage) *bool {
 	if err := json.Unmarshal(raw, &v); err != nil {
 		// The key was returned in a shape we cannot read. A value is present,
 		// which is the signal we report.
-		return ptr(true)
+		return new(true)
 	}
 
 	switch t := v.(type) {
 	case nil:
 		// Explicitly reported as having no password.
-		return ptr(false)
+		return new(false)
 	case string:
 		// A literal password or a redacted placeholder. Either way a password
 		// is set; an empty string is the API saying none is.
-		return ptr(t != "")
+		return new(t != "")
 	case bool:
-		return ptr(t)
+		return new(t)
 	case float64:
-		return ptr(t != 0)
+		return new(t != 0)
 	default:
-		return ptr(true)
+		return new(true)
 	}
 }
 
-func ptr[T any](v T) *T { return &v }
+//go:fix inline
+func ptr[T any](v T) *T { return new(v) }
 
 // buildSettingsData is the repository configuration a build runs from. Netlify
 // returns it inline with the site.
@@ -242,7 +243,7 @@ func initNetlifySite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	}
 	if siteID == "" && c.Asset() != nil {
 		for _, pid := range c.Asset().PlatformIds {
-			if t := strings.TrimPrefix(pid, connection.PlatformIdNetlifySite); t != pid {
+			if t, ok := strings.CutPrefix(pid, connection.PlatformIdNetlifySite); ok {
 				siteID = t
 				break
 			}

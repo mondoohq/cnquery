@@ -237,7 +237,7 @@ func TestGetLatestVersionFetchesOncePerTTL(t *testing.T) {
 	var hits int64
 	reg := NewMondooProviderRegistry(WithBaseURL(latestJSONServer(t, &hits).URL))
 
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		v, err := reg.GetLatestVersion(context.Background(), "aws")
 		require.NoError(t, err)
 		assert.Equal(t, "1.2.3", v)
@@ -262,10 +262,10 @@ func TestGetLatestVersionSharesOneFetchAcrossProviders(t *testing.T) {
 // Provider starts overlap, so without single-flighting every concurrent
 // caller misses the cache and fetches its own copy.
 func TestGetLatestVersionCollapsesConcurrentFetches(t *testing.T) {
-	var hits int64
+	var hits atomic.Int64
 	release := make(chan struct{})
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		atomic.AddInt64(&hits, 1)
+		hits.Add(1)
 		<-release // hold the first request open so the rest pile up behind it
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(ProviderVersions{Providers: []ProviderVersion{{Name: "aws", Version: "1.2.3"}}})
@@ -274,19 +274,17 @@ func TestGetLatestVersionCollapsesConcurrentFetches(t *testing.T) {
 	reg := NewMondooProviderRegistry(WithBaseURL(srv.URL))
 
 	var wg sync.WaitGroup
-	for i := 0; i < 8; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 8 {
+		wg.Go(func() {
 			v, err := reg.GetLatestVersion(context.Background(), "aws")
 			assert.NoError(t, err)
 			assert.Equal(t, "1.2.3", v)
-		}()
+		})
 	}
 	close(release)
 	wg.Wait()
 
-	assert.Equal(t, int64(1), atomic.LoadInt64(&hits), "concurrent callers should share one fetch")
+	assert.Equal(t, int64(1), hits.Load(), "concurrent callers should share one fetch")
 }
 
 // The cache is a TTL, not a permanent memo: a long-running process must pick
@@ -317,11 +315,11 @@ func TestGetLatestVersionRefetchesAfterTTL(t *testing.T) {
 // transient failure has to recover within the same run -- so failures are
 // remembered on a much shorter TTL than successes.
 func TestGetLatestVersionCachesFailuresBriefly(t *testing.T) {
-	var hits int64
+	var hits atomic.Int64
 	var broken atomic.Bool
 	broken.Store(true)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		atomic.AddInt64(&hits, 1)
+		hits.Add(1)
 		w.Header().Set("Content-Type", "application/json")
 		if broken.Load() {
 			// malformed rather than a 5xx: the retrying client would otherwise
@@ -337,11 +335,11 @@ func TestGetLatestVersionCachesFailuresBriefly(t *testing.T) {
 	now := time.Now()
 	reg.now = func() time.Time { return now }
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		_, err := reg.GetLatestVersion(context.Background(), "aws")
 		require.Error(t, err)
 	}
-	assert.Equal(t, int64(1), atomic.LoadInt64(&hits), "a failure must not be retried by every caller")
+	assert.Equal(t, int64(1), hits.Load(), "a failure must not be retried by every caller")
 
 	// the failure TTL is short, so the run recovers on its own
 	broken.Store(false)
@@ -349,13 +347,13 @@ func TestGetLatestVersionCachesFailuresBriefly(t *testing.T) {
 	v, err := reg.GetLatestVersion(context.Background(), "aws")
 	require.NoError(t, err)
 	assert.Equal(t, "1.2.3", v)
-	assert.Equal(t, int64(2), atomic.LoadInt64(&hits))
+	assert.Equal(t, int64(2), hits.Load())
 
 	// a success must not then be re-fetched on the short failure TTL
 	now = now.Add(2 * failedLatestVersionsTTL)
 	_, err = reg.GetLatestVersion(context.Background(), "aws")
 	require.NoError(t, err)
-	assert.Equal(t, int64(2), atomic.LoadInt64(&hits), "a success is held for the full TTL")
+	assert.Equal(t, int64(2), hits.Load(), "a success is held for the full TTL")
 }
 
 func TestFlushVersionCacheForcesRefetch(t *testing.T) {

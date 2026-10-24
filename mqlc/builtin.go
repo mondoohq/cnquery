@@ -5,6 +5,7 @@ package mqlc
 
 import (
 	"errors"
+	"maps"
 
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/mqlc/parser"
@@ -361,9 +362,7 @@ func publicFieldsInfoFlat(c *compiler, resourceInfo *resources.ResourceInfo, fla
 				continue
 			}
 			childFields := publicFieldsInfoFlat(c, child, flattenEmbedded)
-			for k, v := range childFields {
-				res[k] = v
-			}
+			maps.Copy(res, childFields)
 			continue
 		}
 

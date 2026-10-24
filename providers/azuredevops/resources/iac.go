@@ -61,7 +61,7 @@ func classifyIacTree(items []connection.Item) repoIac {
 // isHiddenPath reports whether any segment of a repository path starts with a
 // dot. Azure DevOps paths begin with a slash, which only adds an empty segment.
 func isHiddenPath(p string) bool {
-	for _, segment := range strings.Split(p, "/") {
+	for segment := range strings.SplitSeq(p, "/") {
 		if strings.HasPrefix(segment, ".") {
 			return true
 		}

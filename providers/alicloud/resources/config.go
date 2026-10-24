@@ -53,8 +53,8 @@ func (r *mqlAlicloudConfig) rules() ([]any, error) {
 	pageSize := int32(100)
 	for {
 		resp, err := client.ListConfigRules(&configclient.ListConfigRulesRequest{
-			PageNumber: tea.Int32(pageNumber),
-			PageSize:   tea.Int32(pageSize),
+			PageNumber: new(pageNumber),
+			PageSize:   new(pageSize),
 		})
 		if err != nil {
 			return nil, err
@@ -89,7 +89,7 @@ func (r *mqlAlicloudConfig) rules() ([]any, error) {
 func newConfigRule(runtime *plugin.Runtime, rule *configclient.ListConfigRulesResponseBodyConfigRulesConfigRuleList) (*mqlAlicloudConfigRule, error) {
 	resourceTypes := []any{}
 	if rule.ResourceTypesScope != nil {
-		for _, t := range strings.Split(*rule.ResourceTypesScope, ",") {
+		for t := range strings.SplitSeq(*rule.ResourceTypesScope, ",") {
 			t = strings.TrimSpace(t)
 			if t != "" {
 				resourceTypes = append(resourceTypes, t)
@@ -262,7 +262,7 @@ func (r *mqlAlicloudConfigRule) detailFor() (*configclient.GetConfigRuleResponse
 		return nil, err
 	}
 	resp, err := client.GetConfigRule(&configclient.GetConfigRuleRequest{
-		ConfigRuleId: tea.String(r.ConfigRuleId.Data),
+		ConfigRuleId: new(r.ConfigRuleId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -538,8 +538,8 @@ func (r *mqlAlicloudConfig) compliancePacks() ([]any, error) {
 	pageSize := int32(100)
 	for {
 		resp, err := client.ListCompliancePacks(&configclient.ListCompliancePacksRequest{
-			PageNumber: tea.Int32(pageNumber),
-			PageSize:   tea.Int32(pageSize),
+			PageNumber: new(pageNumber),
+			PageSize:   new(pageSize),
 		})
 		if err != nil {
 			return nil, err
@@ -601,7 +601,7 @@ func (r *mqlAlicloudConfigCompliancePack) rules() ([]any, error) {
 		return nil, err
 	}
 	resp, err := client.GetCompliancePack(&configclient.GetCompliancePackRequest{
-		CompliancePackId: tea.String(r.CompliancePackId.Data),
+		CompliancePackId: new(r.CompliancePackId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -642,7 +642,7 @@ func (r *mqlAlicloudConfig) aggregators() ([]any, error) {
 	for {
 		req := &configclient.ListAggregatorsRequest{MaxResults: tea.Int32(100)}
 		if token != "" {
-			req.NextToken = tea.String(token)
+			req.NextToken = new(token)
 		}
 		resp, err := client.ListAggregators(req)
 		if err != nil {
@@ -745,13 +745,13 @@ func listConfigEvaluationResults(runtime *plugin.Runtime, ruleID, complianceType
 	for {
 		req := &configclient.ListConfigRuleEvaluationResultsRequest{MaxResults: tea.Int32(100)}
 		if ruleID != "" {
-			req.ConfigRuleId = tea.String(ruleID)
+			req.ConfigRuleId = new(ruleID)
 		}
 		if complianceType != "" {
-			req.ComplianceType = tea.String(complianceType)
+			req.ComplianceType = new(complianceType)
 		}
 		if token != "" {
-			req.NextToken = tea.String(token)
+			req.NextToken = new(token)
 		}
 		resp, err := client.ListConfigRuleEvaluationResults(req)
 		if err != nil {

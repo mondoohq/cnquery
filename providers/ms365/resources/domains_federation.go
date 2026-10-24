@@ -60,7 +60,7 @@ func systemBrowserEnabledOnList(enabledOn *models.SystemBrowserEnabledOn) []any 
 	if enabledOn == nil {
 		return res
 	}
-	for _, platform := range strings.Split(enabledOn.String(), ",") {
+	for platform := range strings.SplitSeq(enabledOn.String(), ",") {
 		if platform == "" {
 			continue
 		}

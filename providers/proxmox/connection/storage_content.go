@@ -121,7 +121,7 @@ func (c *PveConnection) StorageNodes(s StorageInfo) ([]string, error) {
 	candidates := online
 	if s.Nodes != "" {
 		restricted := map[string]bool{}
-		for _, n := range strings.Split(s.Nodes, ",") {
+		for n := range strings.SplitSeq(s.Nodes, ",") {
 			restricted[strings.TrimSpace(n)] = true
 		}
 		candidates = nil
@@ -225,7 +225,7 @@ func storageHoldsBackups(s StorageInfo) bool {
 	if s.Enabled == 0 {
 		return false
 	}
-	for _, class := range strings.Split(s.Content, ",") {
+	for class := range strings.SplitSeq(s.Content, ",") {
 		if strings.TrimSpace(class) == "backup" {
 			return true
 		}

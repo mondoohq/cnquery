@@ -178,7 +178,7 @@ func initAlicloudAlbLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.R
 		return nil, nil, err
 	}
 	resp, err := client.ListLoadBalancers(&albclient.ListLoadBalancersRequest{
-		LoadBalancerIds: []*string{tea.String(lbID)},
+		LoadBalancerIds: []*string{new(lbID)},
 	})
 	if err != nil {
 		return nil, nil, err
@@ -257,7 +257,7 @@ func (r *mqlAlicloudAlbLoadBalancer) attribute() (*albclient.GetLoadBalancerAttr
 		return nil, err
 	}
 	resp, err := client.GetLoadBalancerAttribute(&albclient.GetLoadBalancerAttributeRequest{
-		LoadBalancerId: tea.String(r.loadBalancerId),
+		LoadBalancerId: new(r.loadBalancerId),
 	})
 	if err != nil {
 		return nil, err
@@ -309,7 +309,7 @@ func (r *mqlAlicloudAlbLoadBalancer) listeners() ([]any, error) {
 	var nextToken *string
 	for {
 		resp, err := client.ListListeners(&albclient.ListListenersRequest{
-			LoadBalancerIds: []*string{tea.String(r.loadBalancerId)},
+			LoadBalancerIds: []*string{new(r.loadBalancerId)},
 			MaxResults:      tea.Int32(100),
 			NextToken:       nextToken,
 		})
@@ -436,7 +436,7 @@ func (r *mqlAlicloudAlbListener) listenerAttribute() (*albclient.GetListenerAttr
 		return nil, err
 	}
 	resp, err := client.GetListenerAttribute(&albclient.GetListenerAttributeRequest{
-		ListenerId: tea.String(r.listenerId),
+		ListenerId: new(r.listenerId),
 	})
 	if err != nil {
 		return nil, err
@@ -633,7 +633,7 @@ func initAlicloudAlbServerGroup(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return nil, nil, err
 	}
 	resp, err := client.ListServerGroups(&albclient.ListServerGroupsRequest{
-		ServerGroupIds: []*string{tea.String(sgID)},
+		ServerGroupIds: []*string{new(sgID)},
 	})
 	if err != nil {
 		return nil, nil, err

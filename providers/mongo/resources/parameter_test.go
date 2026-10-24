@@ -43,7 +43,7 @@ func TestParameterValue(t *testing.T) {
 
 func TestParameterValueSortsMapKeys(t *testing.T) {
 	m := bson.M{"b": int32(2), "a": bson.M{"d": true, "c": "x"}}
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		if got := parameterValue(m); got != `{"a":{"c":"x","d":true},"b":2}` {
 			t.Fatalf("run %d: %s", i, got)
 		}

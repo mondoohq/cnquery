@@ -103,7 +103,7 @@ func readGGUFSizeLabel(r io.Reader) (string, error) {
 		return "", err
 	}
 
-	for i := uint64(0); i < kvCount; i++ {
+	for range kvCount {
 		key, err := g.str()
 		if err != nil {
 			return "", err
@@ -203,7 +203,7 @@ func (g *ggufReader) skip(typ uint32) error {
 		if n > ggufHeaderBudget {
 			return errGGUFBudget
 		}
-		for j := uint64(0); j < n; j++ {
+		for range n {
 			if err := g.skip(elem); err != nil {
 				return err
 			}

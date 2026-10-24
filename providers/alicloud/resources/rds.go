@@ -124,9 +124,9 @@ func (r *mqlAlicloudRds) instances() ([]any, error) {
 		pageSize := int32(100)
 		for {
 			resp, err := client.DescribeDBInstances(&rdsclient.DescribeDBInstancesRequest{
-				RegionId:   tea.String(region),
-				PageNumber: tea.Int32(pageNumber),
-				PageSize:   tea.Int32(pageSize),
+				RegionId:   new(region),
+				PageNumber: new(pageNumber),
+				PageSize:   new(pageSize),
 			})
 			if err != nil {
 				// A region may not have RDS enabled or the credential may lack
@@ -264,8 +264,8 @@ func initAlicloudRdsInstance(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return nil, nil, err
 	}
 	resp, err := client.DescribeDBInstances(&rdsclient.DescribeDBInstancesRequest{
-		RegionId:     tea.String(region),
-		DBInstanceId: tea.String(dbInstanceID),
+		RegionId:     new(region),
+		DBInstanceId: new(dbInstanceID),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -306,7 +306,7 @@ func (r *mqlAlicloudRdsInstance) fetchAttribute() *rdsclient.DescribeDBInstanceA
 		return nil
 	}
 	resp, err := client.DescribeDBInstanceAttribute(&rdsclient.DescribeDBInstanceAttributeRequest{
-		DBInstanceId: tea.String(r.instanceId),
+		DBInstanceId: new(r.instanceId),
 	})
 	if err != nil || resp == nil || resp.Body == nil || resp.Body.Items == nil {
 		return nil
@@ -398,8 +398,8 @@ func (r *mqlAlicloudRdsInstance) tags() (map[string]any, error) {
 		return map[string]any{}, nil
 	}
 	resp, err := client.DescribeTags(&rdsclient.DescribeTagsRequest{
-		RegionId:     tea.String(r.region),
-		DBInstanceId: tea.String(r.instanceId),
+		RegionId:     new(r.region),
+		DBInstanceId: new(r.instanceId),
 	})
 	if err != nil || resp == nil || resp.Body == nil || resp.Body.Items == nil {
 		return map[string]any{}, nil
@@ -431,7 +431,7 @@ func (r *mqlAlicloudRdsInstance) fetchSSL() *rdsclient.DescribeDBInstanceSSLResp
 		return nil
 	}
 	resp, err := client.DescribeDBInstanceSSL(&rdsclient.DescribeDBInstanceSSLRequest{
-		DBInstanceId: tea.String(r.instanceId),
+		DBInstanceId: new(r.instanceId),
 	})
 	if err != nil || resp == nil || resp.Body == nil {
 		return nil
@@ -481,7 +481,7 @@ func (r *mqlAlicloudRdsInstance) fetchTDE() *rdsclient.DescribeDBInstanceTDEResp
 		return nil
 	}
 	resp, err := client.DescribeDBInstanceTDE(&rdsclient.DescribeDBInstanceTDERequest{
-		DBInstanceId: tea.String(r.instanceId),
+		DBInstanceId: new(r.instanceId),
 	})
 	if err != nil || resp == nil || resp.Body == nil {
 		return nil
@@ -534,7 +534,7 @@ func (r *mqlAlicloudRdsInstance) sqlAuditEnabled() (bool, error) {
 		return false, nil
 	}
 	resp, err := client.DescribeSQLCollectorPolicy(&rdsclient.DescribeSQLCollectorPolicyRequest{
-		DBInstanceId: tea.String(r.instanceId),
+		DBInstanceId: new(r.instanceId),
 	})
 	if err != nil || resp == nil || resp.Body == nil {
 		return false, nil
@@ -552,7 +552,7 @@ func (r *mqlAlicloudRdsInstance) sqlAuditRetentionDays() (int64, error) {
 		return 0, nil
 	}
 	resp, err := client.DescribeSQLCollectorRetention(&rdsclient.DescribeSQLCollectorRetentionRequest{
-		DBInstanceId: tea.String(r.instanceId),
+		DBInstanceId: new(r.instanceId),
 	})
 	if err != nil || resp == nil || resp.Body == nil {
 		return 0, nil
@@ -572,7 +572,7 @@ func (r *mqlAlicloudRdsInstance) parameters() (map[string]any, error) {
 		return nil, err
 	}
 	resp, err := client.DescribeParameters(&rdsclient.DescribeParametersRequest{
-		DBInstanceId: tea.String(r.instanceId),
+		DBInstanceId: new(r.instanceId),
 	})
 	if err != nil {
 		return nil, err
@@ -590,7 +590,7 @@ func (r *mqlAlicloudRdsInstance) securityIPList() ([]any, error) {
 		return nil, err
 	}
 	resp, err := client.DescribeDBInstanceIPArrayList(&rdsclient.DescribeDBInstanceIPArrayListRequest{
-		DBInstanceId: tea.String(r.instanceId),
+		DBInstanceId: new(r.instanceId),
 	})
 	// Propagate a real fetch error rather than returning an empty list: a
 	// swallowed error here reads as a locked-down (empty) whitelist and lets an
@@ -607,7 +607,7 @@ func (r *mqlAlicloudRdsInstance) securityIPList() ([]any, error) {
 		if arr == nil || arr.SecurityIPList == nil {
 			continue
 		}
-		for _, ip := range strings.Split(*arr.SecurityIPList, ",") {
+		for ip := range strings.SplitSeq(*arr.SecurityIPList, ",") {
 			ip = strings.TrimSpace(ip)
 			if ip != "" {
 				res = append(res, ip)
@@ -699,7 +699,7 @@ func (r *mqlAlicloudRdsInstance) fetchSecurityGroupIds() ([]any, error) {
 		return []any{}, nil
 	}
 	resp, err := client.DescribeSecurityGroupConfiguration(&rdsclient.DescribeSecurityGroupConfigurationRequest{
-		DBInstanceId: tea.String(r.instanceId),
+		DBInstanceId: new(r.instanceId),
 	})
 	if err != nil || resp == nil || resp.Body == nil || resp.Body.Items == nil {
 		return []any{}, nil

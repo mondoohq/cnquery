@@ -45,7 +45,7 @@ func ParseServerHelp(output string) (ServerDefaults, bool) {
 			continue
 		}
 		if rest, ok := strings.CutPrefix(line, "The following groups are read:"); ok {
-			for _, g := range strings.Fields(rest) {
+			for g := range strings.FieldsSeq(rest) {
 				d.Groups = append(d.Groups, strings.ToLower(g))
 			}
 		}

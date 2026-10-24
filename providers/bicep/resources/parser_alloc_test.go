@@ -18,7 +18,7 @@ import (
 // carrying a trailing comment so the comment-skipping path is exercised too.
 func objectBody(entries int) string {
 	var sb strings.Builder
-	for i := 0; i < entries; i++ {
+	for i := range entries {
 		n := strconv.Itoa(i)
 		sb.WriteString("  property" + n + ": 'a moderately long literal value " + n + "' // trailing comment\n")
 	}
@@ -52,7 +52,7 @@ func TestSplitTopLevelEntriesDoesNotAllocatePerEntry(t *testing.T) {
 // vars, i.e. 2*pairs statements.
 func twoStatementTemplate(pairs int) string {
 	var sb strings.Builder
-	for i := 0; i < pairs; i++ {
+	for i := range pairs {
 		n := strconv.Itoa(i)
 		sb.WriteString("param p" + n + " string = 'value" + n + "'\n")
 		sb.WriteString("var v" + n + " = {\n  key: 'value" + n + "'\n  other: 42\n}\n")
@@ -93,7 +93,7 @@ func TestUnindentedLinesBoundStatementCount(t *testing.T) {
 			require.NoError(t, err)
 
 			unindented := 0
-			for _, line := range strings.Split(stripBlockComments(string(content)), "\n") {
+			for line := range strings.SplitSeq(stripBlockComments(string(content)), "\n") {
 				if line != "" && line[0] != ' ' && line[0] != '\t' {
 					unindented++
 				}
@@ -116,7 +116,7 @@ func BenchmarkParseBicep(b *testing.B) {
 	require.NoError(b, err)
 
 	var sb strings.Builder
-	for c := 0; c < 40; c++ {
+	for c := range 40 {
 		n := strconv.Itoa(c)
 		for _, f := range files {
 			content, err := os.ReadFile(f)

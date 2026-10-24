@@ -192,7 +192,7 @@ func TestIdleTimeoutReader_ClosesBodyOnce(t *testing.T) {
 	})
 
 	t.Run("close and timer racing close the body once", func(t *testing.T) {
-		for i := 0; i < 50; i++ {
+		for range 50 {
 			body := &closeCountingBody{}
 			itr := NewIdleTimeoutReader(body, time.Millisecond)
 			time.Sleep(time.Millisecond)

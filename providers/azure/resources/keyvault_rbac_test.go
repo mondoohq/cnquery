@@ -26,13 +26,13 @@ func TestRoleAssignmentRoleDefinitionId(t *testing.T) {
 
 	t.Run("carries the role definition id", func(t *testing.T) {
 		ra, err := newMqlRoleAssignment(cacheIDTestRuntime(), &authorization.RoleAssignment{
-			ID:   to.Ptr("/subscriptions/s/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/v/providers/Microsoft.Authorization/roleAssignments/a"),
-			Name: to.Ptr("a"),
+			ID:   new("/subscriptions/s/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/v/providers/Microsoft.Authorization/roleAssignments/a"),
+			Name: new("a"),
 			Properties: &authorization.RoleAssignmentProperties{
-				PrincipalID:      to.Ptr("11111111-1111-1111-1111-111111111111"),
+				PrincipalID:      new("11111111-1111-1111-1111-111111111111"),
 				PrincipalType:    to.Ptr(authorization.PrincipalTypeServicePrincipal),
 				RoleDefinitionID: to.Ptr(roleDefID),
-				Scope:            to.Ptr("/subscriptions/s/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/v"),
+				Scope:            new("/subscriptions/s/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/v"),
 			},
 		})
 		require.NoError(t, err)
@@ -45,8 +45,8 @@ func TestRoleAssignmentRoleDefinitionId(t *testing.T) {
 
 	t.Run("empty when the assignment carries no role definition", func(t *testing.T) {
 		ra, err := newMqlRoleAssignment(cacheIDTestRuntime(), &authorization.RoleAssignment{
-			ID:         to.Ptr("/subscriptions/s/providers/Microsoft.Authorization/roleAssignments/b"),
-			Name:       to.Ptr("b"),
+			ID:         new("/subscriptions/s/providers/Microsoft.Authorization/roleAssignments/b"),
+			Name:       new("b"),
 			Properties: &authorization.RoleAssignmentProperties{},
 		})
 		require.NoError(t, err)
@@ -61,8 +61,8 @@ func TestRoleAssignmentRoleDefinitionId(t *testing.T) {
 	// second consumer of that normalization.
 	t.Run("nil properties does not panic", func(t *testing.T) {
 		ra, err := newMqlRoleAssignment(cacheIDTestRuntime(), &authorization.RoleAssignment{
-			ID:   to.Ptr("/subscriptions/s/providers/Microsoft.Authorization/roleAssignments/c"),
-			Name: to.Ptr("c"),
+			ID:   new("/subscriptions/s/providers/Microsoft.Authorization/roleAssignments/c"),
+			Name: new("c"),
 		})
 		require.NoError(t, err)
 

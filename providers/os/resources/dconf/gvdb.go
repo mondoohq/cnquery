@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"slices"
 )
 
 // A compiled dconf database is a GVDB file (glib's gvdb-format.h): a header,
@@ -184,8 +185,8 @@ func (t *gvdbTable) name(i int) (string, error) {
 		i = int(item.parent)
 	}
 	var b bytes.Buffer
-	for j := len(parts) - 1; j >= 0; j-- {
-		b.Write(parts[j])
+	for _, part := range slices.Backward(parts) {
+		b.Write(part)
 	}
 	return b.String(), nil
 }

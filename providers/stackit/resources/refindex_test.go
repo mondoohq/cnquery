@@ -307,10 +307,8 @@ func TestRoleIndexByName(t *testing.T) {
 		i := &mqlStackitIam{Roles: setList([]any{iamRole("reader")})}
 
 		var wg sync.WaitGroup
-		for n := 0; n < 8; n++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+		for range 8 {
+			wg.Go(func() {
 				idx, err := i.roleIndexByName()
 				if err != nil {
 					t.Errorf("roleIndexByName() error = %v", err)
@@ -319,7 +317,7 @@ func TestRoleIndexByName(t *testing.T) {
 				if len(idx) != 1 {
 					t.Errorf("index size = %d, want 1", len(idx))
 				}
-			}()
+			})
 		}
 		wg.Wait()
 	})

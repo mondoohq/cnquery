@@ -14,7 +14,7 @@ import (
 
 // claude.organization.externalKey
 
-func (r *mqlClaudeOrganization) externalKeys() ([]interface{}, error) {
+func (r *mqlClaudeOrganization) externalKeys() ([]any, error) {
 	client, err := adminSDKClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func (r *mqlClaudeOrganization) externalKeys() ([]interface{}, error) {
 		return nil, classifyAdminError(fmt.Errorf("listing external keys: %w", err), endpointUnavailable)
 	}
 
-	res := make([]interface{}, 0, len(keys))
+	res := make([]any, 0, len(keys))
 	for _, k := range keys {
 		mqlKey, err := CreateResource(r.MqlRuntime, "claude.organization.externalKey", externalKeyArgs(k))
 		if err != nil {
@@ -71,8 +71,8 @@ func externalKeyArgs(k anthropic.ExternalKey) map[string]*llx.RawData {
 
 // workspaces lists the workspaces bound to this key, read from the
 // organization's workspace list, which includes archived workspaces.
-func (r *mqlClaudeOrganizationExternalKey) workspaces() ([]interface{}, error) {
-	all, err := organizationList(r.MqlRuntime, func(o *mqlClaudeOrganization) *plugin.TValue[[]interface{}] {
+func (r *mqlClaudeOrganizationExternalKey) workspaces() ([]any, error) {
+	all, err := organizationList(r.MqlRuntime, func(o *mqlClaudeOrganization) *plugin.TValue[[]any] {
 		return o.GetWorkspaces()
 	})
 	if err != nil {
@@ -81,8 +81,8 @@ func (r *mqlClaudeOrganizationExternalKey) workspaces() ([]interface{}, error) {
 	return workspacesUsingKey(all, r.Id.Data), nil
 }
 
-func workspacesUsingKey(all []interface{}, keyID string) []interface{} {
-	res := []interface{}{}
+func workspacesUsingKey(all []any, keyID string) []any {
+	res := []any{}
 	if keyID == "" {
 		return res
 	}

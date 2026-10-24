@@ -94,7 +94,8 @@ func splitType(token string) (string, bool) {
 
 func complicatedParse(fields []string) (*PamLine, error) {
 	pamType, ignoreMissing := splitType(fields[0])
-	control := fields[1]
+	var control strings.Builder
+	control.WriteString(fields[1])
 	i := 2
 	closed := false
 	// Accumulate fields into the bracketed control until the closing `]`.
@@ -102,7 +103,7 @@ func complicatedParse(fields []string) (*PamLine, error) {
 	// control that runs to the end of the line is never recognized as closed.
 	for ; i < len(fields); i++ {
 		str := fields[i]
-		control += " " + str
+		control.WriteString(" " + str)
 		if strings.HasSuffix(str, "]") {
 			closed = true
 			break
@@ -123,7 +124,7 @@ func complicatedParse(fields []string) (*PamLine, error) {
 	}
 	pl := &PamLine{
 		PamType:       pamType,
-		Control:       control,
+		Control:       control.String(),
 		Module:        module,
 		Options:       options,
 		IgnoreMissing: ignoreMissing,

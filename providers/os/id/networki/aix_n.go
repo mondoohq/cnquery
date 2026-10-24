@@ -11,7 +11,6 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 )
 
 // detectAixInterfaces detects network interfaces on AIX. ifconfig -a lists
@@ -41,7 +40,7 @@ func (n *neti) detectAixInterfaces() ([]Interface, error) {
 	// resources when it is RUNNING.
 	for i := range interfaces {
 		if interfaces[i].Active == nil && interfaces[i].Flags != nil {
-			interfaces[i].Active = convert.ToPtr(slices.Contains(interfaces[i].Flags, "RUNNING"))
+			interfaces[i].Active = new(slices.Contains(interfaces[i].Flags, "RUNNING"))
 		}
 	}
 

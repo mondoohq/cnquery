@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"maps"
 	"strconv"
 	"time"
 
@@ -81,9 +82,7 @@ func initGitlabNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		if err != nil {
 			return nil, nil, err
 		}
-		for k, v := range namespaceArgs(ns) {
-			args[k] = v
-		}
+		maps.Copy(args, namespaceArgs(ns))
 		return args, nil, nil
 	}
 
@@ -101,9 +100,7 @@ func initGitlabNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return nil, nil, err
 	}
 
-	for k, v := range namespaceArgs(ns) {
-		args[k] = v
-	}
+	maps.Copy(args, namespaceArgs(ns))
 
 	return args, nil, nil
 }

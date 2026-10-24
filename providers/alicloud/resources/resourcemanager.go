@@ -174,7 +174,7 @@ func initAlicloudResourceManagerAccount(runtime *plugin.Runtime, args map[string
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetAccount(&rmclient.GetAccountRequest{AccountId: tea.String(accountID)})
+	resp, err := client.GetAccount(&rmclient.GetAccountRequest{AccountId: new(accountID)})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -213,8 +213,8 @@ func (r *mqlAlicloudResourceManager) accounts() ([]any, error) {
 	pageSize := int32(100)
 	for {
 		resp, err := client.ListAccounts(&rmclient.ListAccountsRequest{
-			PageNumber: tea.Int32(pageNumber),
-			PageSize:   tea.Int32(pageSize),
+			PageNumber: new(pageNumber),
+			PageSize:   new(pageSize),
 		})
 		if err != nil {
 			return nil, err
@@ -286,9 +286,9 @@ func (r *mqlAlicloudResourceManager) folders() ([]any, error) {
 		pageSize := int32(100)
 		for {
 			resp, err := client.ListFoldersForParent(&rmclient.ListFoldersForParentRequest{
-				ParentFolderId: tea.String(parent),
-				PageNumber:     tea.Int32(pageNumber),
-				PageSize:       tea.Int32(pageSize),
+				ParentFolderId: new(parent),
+				PageNumber:     new(pageNumber),
+				PageSize:       new(pageSize),
 			})
 			if err != nil || resp == nil || resp.Body == nil || resp.Body.Folders == nil {
 				break
@@ -298,7 +298,7 @@ func (r *mqlAlicloudResourceManager) folders() ([]any, error) {
 				if f == nil || f.FolderId == nil {
 					continue
 				}
-				resource, err := newResourceManagerFolder(r.MqlRuntime, f.FolderId, f.FolderName, tea.String(parent), f.CreateTime)
+				resource, err := newResourceManagerFolder(r.MqlRuntime, f.FolderId, f.FolderName, new(parent), f.CreateTime)
 				if err != nil {
 					return nil, err
 				}
@@ -328,9 +328,9 @@ func (r *mqlAlicloudResourceManager) controlPolicies() ([]any, error) {
 		pageSize := int32(100)
 		for {
 			resp, err := client.ListControlPolicies(&rmclient.ListControlPoliciesRequest{
-				PolicyType: tea.String(policyType),
-				PageNumber: tea.Int32(pageNumber),
-				PageSize:   tea.Int32(pageSize),
+				PolicyType: new(policyType),
+				PageNumber: new(pageNumber),
+				PageSize:   new(pageSize),
 			})
 			if err != nil || resp == nil || resp.Body == nil || resp.Body.ControlPolicies == nil {
 				break
@@ -430,7 +430,7 @@ func initAlicloudResourceManagerFolder(runtime *plugin.Runtime, args map[string]
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetFolder(&rmclient.GetFolderRequest{FolderId: tea.String(folderID)})
+	resp, err := client.GetFolder(&rmclient.GetFolderRequest{FolderId: new(folderID)})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -497,9 +497,9 @@ func (r *mqlAlicloudResourceManager) loadResourceGroups() error {
 		pageSize := int32(100)
 		for {
 			resp, err := client.ListResourceGroups(&rmclient.ListResourceGroupsRequest{
-				IncludeTags: tea.Bool(true),
-				PageNumber:  tea.Int32(pageNumber),
-				PageSize:    tea.Int32(pageSize),
+				IncludeTags: new(true),
+				PageNumber:  new(pageNumber),
+				PageSize:    new(pageSize),
 			})
 			if err != nil {
 				return err

@@ -5,6 +5,7 @@ package resources
 
 import (
 	"fmt"
+	"maps"
 	"path"
 	"reflect"
 	"sort"
@@ -544,9 +545,7 @@ func mergeContainerdConfig(dst, src map[string]any, major int) {
 				dstTable = map[string]any{}
 				dst[k] = dstTable
 			}
-			for name, entry := range table {
-				dstTable[name] = entry
-			}
+			maps.Copy(dstTable, table)
 		default:
 			dst[k] = mergeContainerdValue(dst[k], v)
 		}
@@ -1214,7 +1213,7 @@ func (cfg *containerdConfig) registryConfigPaths(major int) ([]string, bool) {
 // splitContainerdConfigPath splits a config_path into its directories.
 func splitContainerdConfigPath(s string) []string {
 	res := []string{}
-	for _, p := range strings.Split(s, ":") {
+	for p := range strings.SplitSeq(s, ":") {
 		if p != "" {
 			res = append(res, p)
 		}
@@ -1296,17 +1295,11 @@ func effectiveContainerdRuntimes(cfg map[string]any, version int64, major int) m
 	res := map[string]any{}
 	switch {
 	case major == 1:
-		for k, v := range v2Table {
-			res[k] = v
-		}
+		maps.Copy(res, v2Table)
 	case version >= 3:
-		for k, v := range v3Table {
-			res[k] = v
-		}
+		maps.Copy(res, v3Table)
 	default:
-		for k, v := range v3Table {
-			res[k] = v
-		}
+		maps.Copy(res, v3Table)
 		for k, v := range v2Table {
 			if _, ok := res[k]; !ok {
 				res[k] = v

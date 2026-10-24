@@ -142,8 +142,7 @@ func zyppHistoryReadError(p string, err error) (*LastInstalledUpdate, error) {
 		if !plugin.StructuredErrors() {
 			return nil, nil
 		}
-		var pathErr *fs.PathError
-		if !errors.As(err, &pathErr) {
+		if _, ok := errors.AsType[*fs.PathError](err); !ok {
 			err = fmt.Errorf("%s: %w", p, err)
 		}
 		return nil, llx.Forbidden(err)

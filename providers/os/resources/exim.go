@@ -698,18 +698,18 @@ lines:
 			break lines
 		}
 
-		idx := strings.Index(trimmed, "=")
-		if idx < 0 {
+		before, after, ok := strings.Cut(trimmed, "=")
+		if !ok {
 			continue
 		}
-		key := strings.TrimSpace(trimmed[:idx])
+		key := strings.TrimSpace(before)
 		key = strings.TrimSpace(strings.TrimPrefix(key, "hide ")) // `hide key = value`
 		// a simple option or macro has a single-token name; skip named lists
 		// (`domainlist x = …`) and other multi-token left-hand sides
 		if key == "" || strings.ContainsAny(key, " \t") {
 			continue
 		}
-		value := trimmed[idx+1:]
+		value := after
 
 		if isEximMacroName(key) {
 			// `NAME == value` redefines an existing macro
@@ -850,7 +850,7 @@ func joinEximContinuations(content string) []string {
 	var buf strings.Builder
 	continuing := false
 
-	for _, raw := range strings.Split(content, "\n") {
+	for raw := range strings.SplitSeq(content, "\n") {
 		line := strings.TrimRight(raw, "\r")
 		if continuing {
 			buf.WriteString(strings.TrimLeft(line, " \t"))
@@ -974,7 +974,7 @@ func (m *eximBuiltinMacros) defined(name string) (bool, error) {
 // returns nil when the output holds no built-in macro.
 func parseEximMacrosOutput(out string) *eximBuiltinMacros {
 	names := map[string]struct{}{}
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		name, _, _ := strings.Cut(strings.TrimSpace(line), "=")
 		name = strings.TrimSpace(name)
 		if len(name) > 1 && name[0] == '_' && isEximMacroName("A"+name[1:]) {
@@ -1047,7 +1047,7 @@ var eximFeatureMacros = map[string][]string{
 // as unknown rather than as undefined. It returns nil when the output has no
 // `Support for:` line.
 func parseEximVersionOutput(out string) *eximBuiltinMacros {
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		features, ok := strings.CutPrefix(strings.TrimSpace(line), "Support for:")
 		if !ok {
 			continue
@@ -1058,7 +1058,7 @@ func parseEximVersionOutput(out string) *eximBuiltinMacros {
 				m.known[name] = struct{}{}
 			}
 		}
-		for _, feature := range strings.Fields(features) {
+		for feature := range strings.FieldsSeq(features) {
 			for _, name := range eximFeatureMacros[feature] {
 				m.names[name] = struct{}{}
 			}

@@ -4,6 +4,7 @@
 package resources
 
 import (
+	maps0 "maps"
 	"os"
 	"path"
 	"testing"
@@ -68,9 +69,7 @@ func newLaunchRuntime(t *testing.T, files map[string]string, commands map[string
 func mergeFiles(maps ...map[string]string) map[string]string {
 	out := map[string]string{}
 	for _, m := range maps {
-		for k, v := range m {
-			out[k] = v
-		}
+		maps0.Copy(out, m)
 	}
 	return out
 }

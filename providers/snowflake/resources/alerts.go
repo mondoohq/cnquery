@@ -18,7 +18,7 @@ type mqlSnowflakeAlertInternal struct {
 }
 
 func (r *mqlSnowflakeAccount) alerts() ([]any, error) {
-	return listSnowflakeAlerts(r.MqlRuntime, &sdk.In{Account: sdk.Bool(true)})
+	return listSnowflakeAlerts(r.MqlRuntime, &sdk.In{Account: new(true)})
 }
 
 func (r *mqlSnowflakeDatabase) alerts() ([]any, error) {

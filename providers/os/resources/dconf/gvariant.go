@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"strconv"
 )
 
@@ -166,8 +167,8 @@ func readOffset(b []byte, order binary.ByteOrder) int {
 // DecodeVariant decodes a serialized variant: the value, a zero byte and
 // the value's type string.
 func DecodeVariant(data []byte, order binary.ByteOrder) (any, error) {
-	for i := len(data) - 1; i >= 0; i-- {
-		if data[i] != 0 {
+	for i, d := range slices.Backward(data) {
+		if d != 0 {
 			continue
 		}
 		t, err := ParseType(string(data[i+1:]))
@@ -246,7 +247,7 @@ func decodeArray(t *gvType, data []byte, order binary.ByteOrder) (any, error) {
 		}
 		n := (len(data) - last) / osz
 		start := 0
-		for i := 0; i < n; i++ {
+		for i := range n {
 			end := readOffset(data[last+i*osz:last+(i+1)*osz], order)
 			start = align(start, t.elem.alignment())
 			if start > end || end > last {

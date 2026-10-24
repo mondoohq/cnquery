@@ -169,7 +169,7 @@ func TestDiamondIsNotALoop(t *testing.T) {
 
 func TestDepthLimit(t *testing.T) {
 	var sb strings.Builder
-	for i := 0; i < loginconf.MaxTcDepth+2; i++ {
+	for i := range loginconf.MaxTcDepth + 2 {
 		sb.WriteString("c")
 		sb.WriteString(strings.Repeat("x", i))
 		sb.WriteString(":tc=c")

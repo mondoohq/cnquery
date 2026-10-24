@@ -79,7 +79,7 @@ func (p *mqlGitlabProject) containerRegistryRepositories() ([]any, error) {
 	for {
 		repos, resp, err := conn.Client().ContainerRegistry.ListProjectRegistryRepositories(projectID,
 			&gitlab.ListProjectRegistryRepositoriesOptions{
-				ListOptions: gitlab.ListOptions{Page: page, PerPage: 50},
+				Page: page, PerPage: 50,
 				// GitLab omits tags_count unless it is requested, and the SDK
 				// models it as a plain int64 — without this every repository
 				// reports tagsCount: 0.
@@ -107,7 +107,7 @@ func (g *mqlGitlabGroup) containerRegistryRepositories() ([]any, error) {
 	page := int64(1)
 	for {
 		repos, resp, err := conn.Client().ContainerRegistry.ListGroupRegistryRepositories(groupID,
-			&gitlab.ListGroupRegistryRepositoriesOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: 50}})
+			&gitlab.ListGroupRegistryRepositoriesOptions{Page: page, PerPage: 50})
 		if err != nil {
 			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
 				return []any{}, nil
@@ -177,7 +177,7 @@ func (r *mqlGitlabProjectContainerRegistryRepository) tags() ([]any, error) {
 	var all []*gitlab.RegistryRepositoryTag
 	for {
 		tags, resp, err := conn.Client().ContainerRegistry.ListRegistryRepositoryTags(projectID, repoID,
-			&gitlab.ListRegistryRepositoryTagsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: 100}})
+			&gitlab.ListRegistryRepositoryTagsOptions{Page: page, PerPage: 100})
 		if err != nil {
 			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
 				return []any{}, nil
@@ -329,7 +329,7 @@ func (p *mqlGitlabProject) packages() ([]any, error) {
 	var all []*gitlab.Package
 	for {
 		pkgs, resp, err := conn.Client().Packages.ListProjectPackages(projectID,
-			&gitlab.ListProjectPackagesOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: 100}})
+			&gitlab.ListProjectPackagesOptions{Page: page, PerPage: 100})
 		if err != nil {
 			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
 				return []any{}, nil
@@ -352,7 +352,7 @@ func (g *mqlGitlabGroup) packages() ([]any, error) {
 	var all []*gitlab.GroupPackage
 	for {
 		pkgs, resp, err := conn.Client().Packages.ListGroupPackages(groupID,
-			&gitlab.ListGroupPackagesOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: 100}})
+			&gitlab.ListGroupPackagesOptions{Page: page, PerPage: 100})
 		if err != nil {
 			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
 				return []any{}, nil
@@ -533,7 +533,7 @@ func (p *mqlGitlabProjectPackage) files() ([]any, error) {
 	var all []*gitlab.PackageFile
 	for {
 		files, resp, err := conn.Client().Packages.ListPackageFiles(projectID, packageID,
-			&gitlab.ListPackageFilesOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: 100}})
+			&gitlab.ListPackageFilesOptions{Page: page, PerPage: 100})
 		if err != nil {
 			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
 				return []any{}, nil
@@ -587,7 +587,7 @@ func (p *mqlGitlabProject) packageProtectionRules() ([]any, error) {
 	projectID := int(p.Id.Data)
 
 	var all []*gitlab.PackageProtectionRule
-	opts := &gitlab.ListPackageProtectionRulesOptions{ListOptions: gitlab.ListOptions{PerPage: 100}}
+	opts := &gitlab.ListPackageProtectionRulesOptions{PerPage: 100}
 	var nextOpts []gitlab.RequestOptionFunc
 	for {
 		rules, resp, err := conn.Client().ProtectedPackages.ListPackageProtectionRules(projectID, opts, nextOpts...)

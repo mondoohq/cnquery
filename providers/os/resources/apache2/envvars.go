@@ -14,7 +14,7 @@ import (
 // startup.
 func ParseEnvvars(content string) map[string]string {
 	vars := map[string]string{}
-	for _, raw := range strings.Split(content, "\n") {
+	for raw := range strings.SplitSeq(content, "\n") {
 		line := strings.TrimSpace(raw)
 		if line == "" || line[0] == '#' {
 			continue

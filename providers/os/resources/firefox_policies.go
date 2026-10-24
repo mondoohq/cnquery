@@ -356,7 +356,7 @@ func (f *mqlFirefoxPolicies) readRegistryChildNames(conn shared.Connection, path
 	}
 
 	names := []string{}
-	for _, line := range strings.Split(stdout.Data, "\n") {
+	for line := range strings.SplitSeq(stdout.Data, "\n") {
 		name := strings.TrimSpace(line)
 		if name != "" {
 			names = append(names, name)

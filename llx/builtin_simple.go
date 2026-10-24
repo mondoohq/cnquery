@@ -2735,8 +2735,8 @@ func stringsliceEqString(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 	return dataOpV2(e, bind, chunk, ref, types.Int, func(left any, right any) *RawData {
 		l := left.(string)
 		r := right.(string)
-		idx := strings.Index(l, r)
-		if idx == -1 {
+		found := strings.Contains(l, r)
+		if !found {
 			return StringData("")
 		}
 		return StringData(r)
@@ -2763,8 +2763,8 @@ func stringsliceEqArrayString(e *blockExecutor, bind *RawData, chunk *Chunk, ref
 		arr := right.([]any)
 		for i := range arr {
 			r := arr[i].(string)
-			idx := strings.Index(l, r)
-			if idx != -1 {
+			found := strings.Contains(l, r)
+			if found {
 				return StringData(r)
 			}
 		}

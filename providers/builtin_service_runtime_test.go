@@ -72,12 +72,10 @@ func TestBuiltinServiceConnectsConcurrently(t *testing.T) {
 	var wg sync.WaitGroup
 	errs := make([]error, n)
 	for i := range n {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			name := "asset-" + strconv.Itoa(i)
 			errs[i] = connectMock(runtimeWithOwnRecording(name), name)
-		}()
+		})
 	}
 	wg.Wait()
 

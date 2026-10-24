@@ -22,7 +22,7 @@ func (r *mqlRoo) id() (string, error) {
 	return "roo/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlRoo) skills() ([]interface{}, error) {
+func (r *mqlRoo) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "roo.skill", r.ConfigPath.Data, defaultRooConfigDir,
 		filepath.Join(defaultRooConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -45,7 +45,7 @@ func (r *mqlCline) id() (string, error) {
 	return "cline/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlCline) skills() ([]interface{}, error) {
+func (r *mqlCline) skills() ([]any, error) {
 	// Cline reads skills from the shared ~/.agents/skills directory (not its own
 	// ~/.cline config dir), matching the vercel-labs/skills convention.
 	return agentSkills(r.MqlRuntime, "cline.skill", r.ConfigPath.Data, defaultClineConfigDir,
@@ -71,7 +71,7 @@ func (r *mqlKiro) id() (string, error) {
 	return "kiro/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlKiro) skills() ([]interface{}, error) {
+func (r *mqlKiro) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "kiro.skill", r.ConfigPath.Data, defaultKiroConfigDir,
 		filepath.Join(defaultKiroConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -94,7 +94,7 @@ func (r *mqlContinuedev) id() (string, error) {
 	return "continuedev/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlContinuedev) skills() ([]interface{}, error) {
+func (r *mqlContinuedev) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "continuedev.skill", r.ConfigPath.Data, defaultContinueConfigDir,
 		filepath.Join(defaultContinueConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -117,7 +117,7 @@ func (r *mqlTrae) id() (string, error) {
 	return "trae/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlTrae) skills() ([]interface{}, error) {
+func (r *mqlTrae) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "trae.skill", r.ConfigPath.Data, defaultTraeConfigDir,
 		filepath.Join(defaultTraeConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -140,7 +140,7 @@ func (r *mqlOpencode) id() (string, error) {
 	return "opencode/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlOpencode) skills() ([]interface{}, error) {
+func (r *mqlOpencode) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "opencode.skill", r.ConfigPath.Data, defaultOpenCodeConfigDir,
 		filepath.Join(defaultOpenCodeConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -163,7 +163,7 @@ func (r *mqlPi) id() (string, error) {
 	return "pi/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlPi) skills() ([]interface{}, error) {
+func (r *mqlPi) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "pi.skill", r.ConfigPath.Data, defaultPiConfigDir,
 		filepath.Join(defaultPiConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -186,7 +186,7 @@ func (r *mqlMistralVibe) id() (string, error) {
 	return "mistral.vibe/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlMistralVibe) skills() ([]interface{}, error) {
+func (r *mqlMistralVibe) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "mistral.vibe.skill", r.ConfigPath.Data, defaultMistralVibeConfigDir,
 		filepath.Join(defaultMistralVibeConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -209,7 +209,7 @@ func (r *mqlAntigravity) id() (string, error) {
 	return "antigravity/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlAntigravity) skills() ([]interface{}, error) {
+func (r *mqlAntigravity) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "antigravity.skill", r.ConfigPath.Data, defaultAntigravityConfigDir,
 		filepath.Join(defaultAntigravityConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -232,7 +232,7 @@ func (r *mqlIbmBob) id() (string, error) {
 	return "ibm.bob/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlIbmBob) skills() ([]interface{}, error) {
+func (r *mqlIbmBob) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "ibm.bob.skill", r.ConfigPath.Data, defaultBobConfigDir,
 		filepath.Join(defaultBobConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -255,7 +255,7 @@ func (r *mqlOpenclaw) id() (string, error) {
 	return "openclaw/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlOpenclaw) skills() ([]interface{}, error) {
+func (r *mqlOpenclaw) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "openclaw.skill", r.ConfigPath.Data, defaultOpenClawConfigDir,
 		filepath.Join(defaultOpenClawConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -278,7 +278,7 @@ func (r *mqlSnowflakeCortex) id() (string, error) {
 	return "snowflake.cortex/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlSnowflakeCortex) skills() ([]interface{}, error) {
+func (r *mqlSnowflakeCortex) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "snowflake.cortex.skill", r.ConfigPath.Data, defaultCortexConfigDir,
 		filepath.Join(defaultCortexConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -303,7 +303,7 @@ func (r *mqlJunie) id() (string, error) {
 	return "junie/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlJunie) skills() ([]interface{}, error) {
+func (r *mqlJunie) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "junie.skill", r.ConfigPath.Data, defaultJunieConfigDir,
 		filepath.Join(defaultJunieConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -326,7 +326,7 @@ func (r *mqlAugment) id() (string, error) {
 	return "augment/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlAugment) skills() ([]interface{}, error) {
+func (r *mqlAugment) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "augment.skill", r.ConfigPath.Data, defaultAugmentConfigDir,
 		filepath.Join(defaultAugmentConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -349,7 +349,7 @@ func (r *mqlWarp) id() (string, error) {
 	return "warp/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlWarp) skills() ([]interface{}, error) {
+func (r *mqlWarp) skills() ([]any, error) {
 	// Warp reads skills from the shared ~/.agents/skills directory.
 	return agentSkills(r.MqlRuntime, "warp.skill", r.ConfigPath.Data, defaultWarpConfigDir,
 		filepath.Join(".agents", "skills"),
@@ -374,7 +374,7 @@ func (r *mqlKilocode) id() (string, error) {
 	return "kilocode/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlKilocode) skills() ([]interface{}, error) {
+func (r *mqlKilocode) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "kilocode.skill", r.ConfigPath.Data, defaultKiloCodeConfigDir,
 		filepath.Join(defaultKiloCodeConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -397,7 +397,7 @@ func (r *mqlOpenhands) id() (string, error) {
 	return "openhands/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlOpenhands) skills() ([]interface{}, error) {
+func (r *mqlOpenhands) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "openhands.skill", r.ConfigPath.Data, defaultOpenHandsConfigDir,
 		filepath.Join(defaultOpenHandsConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -420,7 +420,7 @@ func (r *mqlQwenCode) id() (string, error) {
 	return "qwen.code/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlQwenCode) skills() ([]interface{}, error) {
+func (r *mqlQwenCode) skills() ([]any, error) {
 	dirs, err := resolvePerUserDirs(r.MqlRuntime, r.ConfigPath.Data, defaultQwenCodeConfigDir,
 		filepath.Join(defaultQwenCodeConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 	if err != nil {
@@ -464,7 +464,7 @@ func (r *mqlDevinDesktop) id() (string, error) {
 	return "devin.desktop/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlDevinDesktop) skills() ([]interface{}, error) {
+func (r *mqlDevinDesktop) skills() ([]any, error) {
 	defaultDir := devinDesktopConfigDir(runtimeOSFamily(r.MqlRuntime))
 	return agentSkills(r.MqlRuntime, "devin.desktop.skill", r.ConfigPath.Data, defaultDir,
 		filepath.Join(defaultDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
@@ -490,7 +490,7 @@ func (r *mqlZcode) id() (string, error) {
 	return "zcode/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlZcode) skills() ([]interface{}, error) {
+func (r *mqlZcode) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "zcode.skill", r.ConfigPath.Data, defaultZcodeConfigDir,
 		filepath.Join(defaultZcodeConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
@@ -536,7 +536,7 @@ func (r *mqlBuilderio) id() (string, error) {
 	return "builderio/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlBuilderio) skills() ([]interface{}, error) {
+func (r *mqlBuilderio) skills() ([]any, error) {
 	return agentSkills(r.MqlRuntime, "builderio.skill", r.ConfigPath.Data, defaultBuilderioConfigDir,
 		filepath.Join(defaultBuilderioConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }

@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/functions"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -219,11 +218,11 @@ func TestDecodeFunctionSource(t *testing.T) {
 
 	t.Run("pointer variants", func(t *testing.T) {
 		src := decodeFunctionSource(&functions.ArchiveFunctionSourceDetails{
-			RuntimeConfig: &functions.ManualRuntimeConfig{FunctionsRuntimeName: common.String("python312")},
+			RuntimeConfig: &functions.ManualRuntimeConfig{FunctionsRuntimeName: new("python312")},
 			ArchiveSourceDetails: &functions.ObjectStorageArchiveSourceDetails{
-				BucketName: common.String("b"),
-				Namespace:  common.String("ns"),
-				ObjectName: common.String("o.zip"),
+				BucketName: new("b"),
+				Namespace:  new("ns"),
+				ObjectName: new("o.zip"),
 			},
 		})
 		require.NotNil(t, src.sourceType)

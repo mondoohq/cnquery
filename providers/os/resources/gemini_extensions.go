@@ -195,8 +195,8 @@ func extensionEnabledFor(rules []string, dir string, def bool) bool {
 	for _, rule := range rules {
 		pattern := strings.TrimPrefix(rule, "!")
 		var match bool
-		if strings.HasSuffix(pattern, "*") {
-			match = strings.HasPrefix(dir, strings.TrimSuffix(pattern, "*"))
+		if before, ok := strings.CutSuffix(pattern, "*"); ok {
+			match = strings.HasPrefix(dir, before)
 		} else {
 			match = strings.TrimSuffix(pattern, "/")+"/" == dir
 		}

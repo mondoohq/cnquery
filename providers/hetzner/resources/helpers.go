@@ -30,8 +30,7 @@ func translateHcloudError(err error) error {
 	if err == nil {
 		return nil
 	}
-	var hErr hcloud.Error
-	if errors.As(err, &hErr) {
+	if hErr, ok := errors.AsType[hcloud.Error](err); ok {
 		switch hErr.Code {
 		case hcloud.ErrorCodeNotFound:
 			// A collection endpoint answering 404 means the product is not
@@ -56,8 +55,7 @@ func isRemovedAPIEndpoint(err error) bool {
 	if err == nil {
 		return false
 	}
-	var hErr hcloud.Error
-	if errors.As(err, &hErr) {
+	if hErr, ok := errors.AsType[hcloud.Error](err); ok {
 		return hErr.Code == hcloud.ErrorDeprecatedAPIEndpoint
 	}
 	return false

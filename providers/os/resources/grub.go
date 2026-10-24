@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 
@@ -561,15 +562,15 @@ func parseGrubDefaultsInto(r io.Reader, vars map[string]string) error {
 // parseGrubDefaultsLineLiteral stores KEY=VALUE without interpreting the
 // value beyond removing the quotes around it.
 func parseGrubDefaultsLineLiteral(line string, vars map[string]string) {
-	idx := strings.IndexByte(line, '=')
-	if idx < 0 {
+	before, after, ok := strings.Cut(line, "=")
+	if !ok {
 		return
 	}
-	key := strings.TrimSpace(line[:idx])
+	key := strings.TrimSpace(before)
 	if fields := strings.Fields(key); len(fields) == 2 && fields[0] == "export" {
 		key = fields[1]
 	}
-	vars[key] = stripQuotes(strings.TrimSpace(line[idx+1:]))
+	vars[key] = stripQuotes(strings.TrimSpace(after))
 }
 
 // grubMkconfigComputedVars are the variables grub-mkconfig sets itself
@@ -594,9 +595,9 @@ func parseGrubShellAssignments(stmt string, vars map[string]string) (unterminate
 	type assignment struct{ key, value string }
 	var pending []assignment
 	lookup := func(name string) (string, bool) {
-		for i := len(pending) - 1; i >= 0; i-- {
-			if pending[i].key == name {
-				return pending[i].value, true
+		for _, p := range slices.Backward(pending) {
+			if p.key == name {
+				return p.value, true
 			}
 		}
 		v, ok := vars[name]

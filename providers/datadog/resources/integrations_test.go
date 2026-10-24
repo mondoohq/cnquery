@@ -65,7 +65,7 @@ func TestSnowflakeAccountArgs(t *testing.T) {
 		t.Fatalf("expected authType snowflake_private_key, got %v", got)
 	}
 
-	flows := args["dataflows"].Value.(map[string]interface{})
+	flows := args["dataflows"].Value.(map[string]any)
 	if flows["snowflake-security-logs"] != true {
 		t.Errorf("expected security logs enabled, got %v", flows["snowflake-security-logs"])
 	}
@@ -92,7 +92,7 @@ func TestSnowflakeAccountWithoutAuthOrDataflows(t *testing.T) {
 	if v := args["authType"].Value; v != nil {
 		t.Fatalf("expected authType null without authentication, got %v", v)
 	}
-	if flows := args["dataflows"].Value.(map[string]interface{}); len(flows) != 0 {
+	if flows := args["dataflows"].Value.(map[string]any); len(flows) != 0 {
 		t.Fatalf("expected no dataflows, got %v", flows)
 	}
 }
@@ -145,7 +145,7 @@ func TestDatabricksDataflows(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	flows := args["dataflows"].Value.(map[string]interface{})
+	flows := args["dataflows"].Value.(map[string]any)
 	if flows["databricks-cloud-cost-metrics"] != true || flows["databricks-model-serving-metrics"] != false || len(flows) != 2 {
 		t.Fatalf("unexpected dataflows %v", flows)
 	}

@@ -32,7 +32,7 @@ func TestStorageTurboTier(t *testing.T) {
 	t.Run("target percent is carried", func(t *testing.T) {
 		enabled, target := storageTurboTier(&storage.TurboTier{
 			Status:        ptr(storage.TurboTierStatusEnabled),
-			TargetPercent: ptr(int32(35)),
+			TargetPercent: new(int32(35)),
 		})
 		if assert.NotNil(t, enabled) {
 			assert.True(t, *enabled)
@@ -42,7 +42,7 @@ func TestStorageTurboTier(t *testing.T) {
 		}
 	})
 	t.Run("target without status leaves enabled null", func(t *testing.T) {
-		enabled, target := storageTurboTier(&storage.TurboTier{TargetPercent: ptr(int32(20))})
+		enabled, target := storageTurboTier(&storage.TurboTier{TargetPercent: new(int32(20))})
 		assert.Nil(t, enabled)
 		if assert.NotNil(t, target) {
 			assert.Equal(t, int64(20), *target)

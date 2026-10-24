@@ -123,10 +123,8 @@ func TestConcurrentMaterializationIsRaceFree(t *testing.T) {
 	const workers = 8
 	var wg sync.WaitGroup
 	errs := make(chan error, workers*8)
-	for i := 0; i < workers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range workers {
+		wg.Go(func() {
 
 			flat, err := bicepRes.resources()
 			if err != nil {
@@ -204,7 +202,7 @@ func TestConcurrentMaterializationIsRaceFree(t *testing.T) {
 					}
 				}
 			}
-		}()
+		})
 	}
 	wg.Wait()
 	close(errs)

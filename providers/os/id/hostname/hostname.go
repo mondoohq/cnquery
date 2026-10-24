@@ -163,7 +163,7 @@ var linuxHostnameFiles = []hostnameFile{
 // hostname(5) the file holds a single name; blank lines and comments are skipped
 // because systemd's own parser tolerates them.
 func parseEtcHostname(content string) string {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
@@ -177,7 +177,7 @@ func parseEtcHostname(content string) string {
 // EnvironmentFile, which is the shape Bottlerocket renders to
 // /etc/network/hostname.env.
 func parseHostnameEnv(content string) string {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
@@ -202,7 +202,7 @@ func parseHostnameEnv(content string) string {
 // are considered: any other line is as likely to name a different machine as it
 // is to name this one.
 func parseEtcHosts(content string) string {
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		if idx := strings.Index(line, "#"); idx >= 0 {
 			line = line[:idx]
 		}

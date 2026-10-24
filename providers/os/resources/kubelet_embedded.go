@@ -165,7 +165,7 @@ func microk8sKubeletFlags(content string, argsFile string) map[string]any {
 	}
 
 	flags := map[string]any{}
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		if !strings.HasPrefix(line, "-") {
 			continue
@@ -188,7 +188,7 @@ func microk8sKubeletFlags(content string, argsFile string) map[string]any {
 // "v1.35.6". kubelite has no --version: run with it, it starts a second
 // MicroK8s, so the version is read, never run.
 func microk8sSnapVersion(snapYAML string) string {
-	for _, line := range strings.Split(snapYAML, "\n") {
+	for line := range strings.SplitSeq(snapYAML, "\n") {
 		if v, ok := strings.CutPrefix(line, "version:"); ok {
 			return strings.Trim(strings.TrimSpace(v), `"'`)
 		}

@@ -199,7 +199,7 @@ func newObjectPrivilege(runtime *plugin.Runtime, parentID, granteeStr string, p 
 func routinePrivileges(schema, routine, routineType, procPriv string) []objectPrivilege {
 	var types []string
 	grantable := false
-	for _, p := range strings.Split(procPriv, ",") {
+	for p := range strings.SplitSeq(procPriv, ",") {
 		p = strings.TrimSpace(p)
 		switch {
 		case p == "":

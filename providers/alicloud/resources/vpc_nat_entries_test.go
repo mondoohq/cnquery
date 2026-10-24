@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,14 +15,14 @@ func TestNatForwardsAllPorts(t *testing.T) {
 		externalPort, internalPort *string
 		expected                   bool
 	}{
-		{"single port mapping", tea.String("443"), tea.String("8443"), false},
+		{"single port mapping", new("443"), new("8443"), false},
 		// "any" on either end publishes every listening service on the private
 		// address, not the one that was meant to be exposed
-		{"any inbound", tea.String("any"), tea.String("any"), true},
-		{"any only outside", tea.String("any"), tea.String("22"), true},
-		{"any only inside", tea.String("22"), tea.String("any"), true},
-		{"case insensitive", tea.String("Any"), tea.String("Any"), true},
-		{"whitespace tolerated", tea.String(" any "), tea.String("443"), true},
+		{"any inbound", new("any"), new("any"), true},
+		{"any only outside", new("any"), new("22"), true},
+		{"any only inside", new("22"), new("any"), true},
+		{"case insensitive", new("Any"), new("Any"), true},
+		{"whitespace tolerated", new(" any "), new("443"), true},
 		{"absent ports", nil, nil, false},
 	}
 	for _, test := range tests {
@@ -34,9 +33,9 @@ func TestNatForwardsAllPorts(t *testing.T) {
 }
 
 func TestNatPortIsAny(t *testing.T) {
-	assert.True(t, natPortIsAny(tea.String("any")))
-	assert.True(t, natPortIsAny(tea.String("ANY")))
-	assert.False(t, natPortIsAny(tea.String("443")))
-	assert.False(t, natPortIsAny(tea.String("")))
+	assert.True(t, natPortIsAny(new("any")))
+	assert.True(t, natPortIsAny(new("ANY")))
+	assert.False(t, natPortIsAny(new("443")))
+	assert.False(t, natPortIsAny(new("")))
 	assert.False(t, natPortIsAny(nil))
 }

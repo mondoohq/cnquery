@@ -422,16 +422,16 @@ func (a *mqlAwsApigatewayAuthorizer) iamRole() (*mqlAwsIamRole, error) {
 // is not a Lambda invocation URI (e.g. for COGNITO_USER_POOLS authorizers).
 func extractLambdaArnFromAuthorizerUri(uri string) string {
 	const marker = "/functions/"
-	idx := strings.Index(uri, marker)
-	if idx < 0 {
+	_, after, ok := strings.Cut(uri, marker)
+	if !ok {
 		return ""
 	}
-	rest := uri[idx+len(marker):]
-	end := strings.Index(rest, "/invocations")
-	if end < 0 {
+	rest := after
+	before0, _, ok0 := strings.Cut(rest, "/invocations")
+	if !ok0 {
 		return rest
 	}
-	return rest[:end]
+	return before0
 }
 
 func (a *mqlAwsApigatewayAuthorizer) lambdaFunction() (*mqlAwsLambdaFunction, error) {

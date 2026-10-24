@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/vault"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -41,7 +40,7 @@ func (o *mqlOciVault) secrets() ([]any, error) {
 
 			secrets, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]vault.SecretSummary, *string, error) {
 				response, err := svc.ListSecrets(ctx, vault.ListSecretsRequest{
-					CompartmentId: common.String(compartmentID),
+					CompartmentId: new(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -332,7 +331,7 @@ func (o *mqlOciVaultSecret) secretVersions() ([]any, error) {
 
 	versions, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]vault.SecretVersionSummary, *string, error) {
 		response, err := svc.ListSecretVersions(ctx, vault.ListSecretVersionsRequest{
-			SecretId: common.String(o.Id.Data),
+			SecretId: new(o.Id.Data),
 			Page:     page,
 		})
 		if err != nil {

@@ -110,7 +110,7 @@ func parseRFC3339(s string) *time.Time {
 // delimited all-digit token counts, so the "256" in "P-256" is not mistaken
 // for a bit size.
 func parseKeyBitSize(s string) *int64 {
-	for _, tok := range strings.Fields(s) {
+	for tok := range strings.FieldsSeq(s) {
 		if n, err := strconv.ParseInt(tok, 10, 64); err == nil {
 			return &n
 		}
@@ -172,7 +172,7 @@ func labelData(in any) *llx.RawData {
 		for k, v := range m {
 			out[k] = v
 		}
-	case map[string]interface{}:
+	case map[string]any:
 		for k, v := range m {
 			if s, ok := v.(string); ok {
 				out[k] = s
@@ -244,13 +244,13 @@ func dictAny(v any) any {
 	switch t := v.(type) {
 	case nil:
 		return nil
-	case map[string]interface{}:
+	case map[string]any:
 		out := make(map[string]any, len(t))
 		for k, val := range t {
 			out[k] = dictAny(val)
 		}
 		return out
-	case []interface{}:
+	case []any:
 		out := make([]any, len(t))
 		for i, val := range t {
 			out[i] = dictAny(val)
@@ -270,8 +270,7 @@ func isAccessDenied(err error) bool {
 	if err == nil {
 		return false
 	}
-	var oerr *oapierror.GenericOpenAPIError
-	if errors.As(err, &oerr) {
+	if oerr, ok := errors.AsType[*oapierror.GenericOpenAPIError](err); ok {
 		switch oerr.StatusCode {
 		case http.StatusUnauthorized, http.StatusForbidden:
 			return true
@@ -291,8 +290,7 @@ func refusal(err error) error {
 		return nil
 	}
 	status := 0
-	var oerr *oapierror.GenericOpenAPIError
-	if errors.As(err, &oerr) {
+	if oerr, ok := errors.AsType[*oapierror.GenericOpenAPIError](err); ok {
 		status = oerr.StatusCode
 	} else {
 		msg := err.Error()
@@ -329,8 +327,7 @@ func isNotFound(err error) bool {
 	if err == nil {
 		return false
 	}
-	var oerr *oapierror.GenericOpenAPIError
-	if errors.As(err, &oerr) {
+	if oerr, ok := errors.AsType[*oapierror.GenericOpenAPIError](err); ok {
 		return oerr.StatusCode == http.StatusNotFound
 	}
 	return strings.Contains(err.Error(), "status 404")

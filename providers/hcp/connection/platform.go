@@ -5,6 +5,7 @@ package connection
 
 import (
 	"fmt"
+	"strings"
 
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 )
@@ -53,11 +54,12 @@ func NewPlatform(scope string, idSegments ...string) *inventory.Platform {
 // NewPlatformID builds the stable platform id for a scoped asset by joining the
 // scope and its identifying segments under the HCP runtime prefix.
 func NewPlatformID(scope string, idSegments ...string) string {
-	id := platformIDPrefix + scope
+	var id strings.Builder
+	id.WriteString(platformIDPrefix + scope)
 	for _, seg := range idSegments {
-		id += "/" + seg
+		id.WriteString("/" + seg)
 	}
-	return id
+	return id.String()
 }
 
 // PlatformInfo returns the platform for this connection's own asset based on

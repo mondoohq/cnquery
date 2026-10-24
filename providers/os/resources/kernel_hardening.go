@@ -51,7 +51,7 @@ func (c *mqlKernelCmdline) id() (string, error) {
 func parseKernelCmdline(raw string) (map[string]any, []any) {
 	params := map[string]any{}
 	var flags []any
-	for _, tok := range strings.Fields(raw) {
+	for tok := range strings.FieldsSeq(raw) {
 		if idx := strings.IndexByte(tok, '='); idx > 0 {
 			params[tok[:idx]] = tok[idx+1:]
 			continue
@@ -199,7 +199,7 @@ func parseLockdownMode(raw string) string {
 	if raw == "" {
 		return "unknown"
 	}
-	for _, tok := range strings.Fields(raw) {
+	for tok := range strings.FieldsSeq(raw) {
 		if len(tok) >= 2 && tok[0] == '[' && tok[len(tok)-1] == ']' {
 			return tok[1 : len(tok)-1]
 		}

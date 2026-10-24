@@ -22,9 +22,9 @@ func TestAddressPrefixItemsToDict(t *testing.T) {
 
 	t.Run("preserves addressPrefixType and skips nil items", func(t *testing.T) {
 		items := []*network.AddressPrefixItem{
-			{AddressPrefix: strPtr("10.0.0.0/8"), AddressPrefixType: &ipPrefix},
+			{AddressPrefix: new("10.0.0.0/8"), AddressPrefixType: &ipPrefix},
 			nil,
-			{AddressPrefix: strPtr("Internet"), AddressPrefixType: &serviceTag},
+			{AddressPrefix: new("Internet"), AddressPrefixType: &serviceTag},
 		}
 		assert.Equal(t, []any{
 			map[string]any{"addressPrefix": "10.0.0.0/8", "addressPrefixType": "IPPrefix"},
@@ -39,7 +39,7 @@ func TestStrPtrsToAny(t *testing.T) {
 	})
 
 	t.Run("skips nil elements", func(t *testing.T) {
-		assert.Equal(t, []any{"80", "443"}, strPtrsToAny([]*string{strPtr("80"), nil, strPtr("443")}))
+		assert.Equal(t, []any{"80", "443"}, strPtrsToAny([]*string{new("80"), nil, new("443")}))
 	})
 }
 
@@ -50,10 +50,10 @@ func TestManagerSecurityGroupIDs(t *testing.T) {
 
 	t.Run("skips nil items and nil IDs", func(t *testing.T) {
 		items := []*network.ManagerSecurityGroupItem{
-			{NetworkGroupID: strPtr("/networkManagers/m/networkGroups/g1")},
+			{NetworkGroupID: new("/networkManagers/m/networkGroups/g1")},
 			nil,
 			{NetworkGroupID: nil},
-			{NetworkGroupID: strPtr("/networkManagers/m/networkGroups/g2")},
+			{NetworkGroupID: new("/networkManagers/m/networkGroups/g2")},
 		}
 		assert.Equal(t, []string{
 			"/networkManagers/m/networkGroups/g1",
@@ -67,7 +67,7 @@ func TestManagerSecurityGroupIDs(t *testing.T) {
 // and resourceType keys.
 func TestConnectivityConfigurationHubsDict(t *testing.T) {
 	hubs := []*network.Hub{
-		{ResourceID: strPtr("/vnets/hub-vnet"), ResourceType: strPtr("Microsoft.Network/virtualNetworks")},
+		{ResourceID: new("/vnets/hub-vnet"), ResourceType: new("Microsoft.Network/virtualNetworks")},
 	}
 	dicts, err := convert.JsonToDictSlice(hubs)
 	require.NoError(t, err)

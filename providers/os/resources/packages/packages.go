@@ -67,7 +67,7 @@ type Package struct {
 	// Time the package was installed on this asset. Zero when the
 	// backend doesn't surface install time (dpkg-without-log, apk,
 	// pacman, macOS).
-	InstallDate time.Time `json:"install_date,omitempty"`
+	InstallDate time.Time `json:"install_date"`
 
 	// InstallScope is "machine" for a package installed system-wide (every
 	// user), or "user" for one installed into a single user's own profile.

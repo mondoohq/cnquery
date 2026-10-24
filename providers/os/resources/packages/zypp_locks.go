@@ -97,7 +97,7 @@ func parseZyppLockConfig(files ...[]byte) zyppLockConfig {
 	apply := true
 	for _, raw := range files {
 		inMain := false
-		for _, line := range strings.Split(string(raw), "\n") {
+		for line := range strings.SplitSeq(string(raw), "\n") {
 			line = strings.TrimSpace(line)
 			if line == "" || line[0] == '#' {
 				continue
@@ -203,7 +203,7 @@ func parseZypperLocks(content string) zypperLocks {
 		hasKind, isPackage, empty = false, false, true
 	}
 
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		if strings.TrimSpace(line) == "" {
 			flush()
 			continue

@@ -146,7 +146,7 @@ func fetchAllServiceAccounts(ctx context.Context, conn *connection.GrafanaConnec
 	return allSAs, nil
 }
 
-func (g *mqlGrafana) serviceAccounts() ([]interface{}, error) {
+func (g *mqlGrafana) serviceAccounts() ([]any, error) {
 	conn, err := grafanaConnection(g.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -157,7 +157,7 @@ func (g *mqlGrafana) serviceAccounts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	list := make([]interface{}, 0, len(allSAs))
+	list := make([]any, 0, len(allSAs))
 	for _, sa := range allSAs {
 		res, err := CreateResource(g.MqlRuntime, "grafana.serviceAccount", map[string]*llx.RawData{
 			"id":         llx.IntData(int64(sa.ID)),
@@ -180,7 +180,7 @@ func (g *mqlGrafanaServiceAccount) id() (string, error) {
 	return "grafana-sa/" + strconv.FormatInt(g.Id.Data, 10), nil
 }
 
-func (g *mqlGrafanaServiceAccount) tokens() ([]interface{}, error) {
+func (g *mqlGrafanaServiceAccount) tokens() ([]any, error) {
 	conn, err := grafanaConnection(g.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -202,7 +202,7 @@ func (g *mqlGrafanaServiceAccount) tokens() ([]interface{}, error) {
 		return nil, fmt.Errorf("grafana: decoding %s response: %w", path, err)
 	}
 
-	list := make([]interface{}, 0, len(raw))
+	list := make([]any, 0, len(raw))
 	for _, tok := range raw {
 		created := parseGrafanaTime(tok.Created)
 		expiration := parseGrafanaTime(tok.Expiration)

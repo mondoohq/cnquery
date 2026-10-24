@@ -4,6 +4,7 @@
 package apache2
 
 import (
+	"maps"
 	"path"
 	"regexp"
 	"strconv"
@@ -129,9 +130,7 @@ type parseState struct {
 func newParseState(fileContent fileContentFunc, globExpand globExpandFunc, vars map[string]string, opts ParseOptions) *parseState {
 	// Copy the caller's map so we don't mutate it when handling Define.
 	working := make(map[string]string, len(vars))
-	for k, v := range vars {
-		working[k] = v
-	}
+	maps.Copy(working, vars)
 	st := &parseState{
 		fileContent: fileContent,
 		globExpand:  globExpand,
@@ -359,7 +358,7 @@ func conditionArg(arg string) (string, bool) {
 // file per line).
 func ParseStaticModuleList(out string) []string {
 	var mods []string
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.ContainsAny(line, " \t:") || !strings.HasSuffix(line, ".c") {
 			continue
@@ -858,8 +857,8 @@ func splitAndClean(content string) []string {
 		}
 
 		// Handle continuation lines
-		if strings.HasSuffix(line, "\\") {
-			continued += strings.TrimSuffix(line, "\\") + " "
+		if before, ok := strings.CutSuffix(line, "\\"); ok {
+			continued += before + " "
 			continue
 		}
 		if continued != "" {

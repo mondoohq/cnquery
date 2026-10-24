@@ -92,7 +92,7 @@ sysinit.target            loaded active active   System Initialization
 `
 	seen := map[string]struct{}{}
 	var names []string
-	for _, line := range strings.Split(installed+"\n"+active, "\n") {
+	for line := range strings.SplitSeq(installed+"\n"+active, "\n") {
 		fields := strings.Fields(line)
 		if len(fields) == 0 {
 			continue

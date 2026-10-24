@@ -91,7 +91,7 @@ func TestFeatureOrderIsDeterministic(t *testing.T) {
 		return out
 	}
 	first := read()
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		assert.Equal(t, first, read())
 	}
 }

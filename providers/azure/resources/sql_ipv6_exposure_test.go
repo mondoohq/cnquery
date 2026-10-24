@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -97,12 +96,12 @@ func TestDatabaseInternetReachableIPv6(t *testing.T) {
 func TestIPv6FirewallRuleArgs(t *testing.T) {
 	t.Run("maps the IPv6 endpoints", func(t *testing.T) {
 		args := ipv6FirewallRuleArgs(&sql.IPv6FirewallRule{
-			ID:   to.Ptr("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Sql/servers/srv/ipv6FirewallRules/AllowAll"),
-			Name: to.Ptr("AllowAll"),
-			Type: to.Ptr("Microsoft.Sql/servers/ipv6FirewallRules"),
+			ID:   new("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Sql/servers/srv/ipv6FirewallRules/AllowAll"),
+			Name: new("AllowAll"),
+			Type: new("Microsoft.Sql/servers/ipv6FirewallRules"),
 			Properties: &sql.IPv6ServerFirewallRuleProperties{
-				StartIPv6Address: to.Ptr("::"),
-				EndIPv6Address:   to.Ptr("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"),
+				StartIPv6Address: new("::"),
+				EndIPv6Address:   new("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"),
 			},
 		})
 
@@ -119,8 +118,8 @@ func TestIPv6FirewallRuleArgs(t *testing.T) {
 
 	t.Run("nil properties does not panic and yields empty endpoints", func(t *testing.T) {
 		args := ipv6FirewallRuleArgs(&sql.IPv6FirewallRule{
-			ID:   to.Ptr("/subscriptions/s/.../ipv6FirewallRules/empty"),
-			Name: to.Ptr("empty"),
+			ID:   new("/subscriptions/s/.../ipv6FirewallRules/empty"),
+			Name: new("empty"),
 		})
 		assert.Empty(t, args["startIpAddress"].Value)
 		assert.Empty(t, args["endIpAddress"].Value)
@@ -135,11 +134,11 @@ func TestSqlIPv6FirewallRanges(t *testing.T) {
 
 	rule, err := CreateResource(runtime, "azure.subscription.sqlService.server.ipv6FirewallRule",
 		ipv6FirewallRuleArgs(&sql.IPv6FirewallRule{
-			ID:   to.Ptr("/subscriptions/s/.../ipv6FirewallRules/AllowAll"),
-			Name: to.Ptr("AllowAll"),
+			ID:   new("/subscriptions/s/.../ipv6FirewallRules/AllowAll"),
+			Name: new("AllowAll"),
 			Properties: &sql.IPv6ServerFirewallRuleProperties{
-				StartIPv6Address: to.Ptr("::"),
-				EndIPv6Address:   to.Ptr("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"),
+				StartIPv6Address: new("::"),
+				EndIPv6Address:   new("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"),
 			},
 		}))
 	require.NoError(t, err)

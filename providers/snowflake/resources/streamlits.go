@@ -18,7 +18,7 @@ type mqlSnowflakeStreamlitInternal struct {
 }
 
 func (r *mqlSnowflakeAccount) streamlits() ([]any, error) {
-	return listSnowflakeStreamlits(r.MqlRuntime, sdk.In{Account: sdk.Bool(true)})
+	return listSnowflakeStreamlits(r.MqlRuntime, sdk.In{Account: new(true)})
 }
 
 func (r *mqlSnowflakeDatabase) streamlits() ([]any, error) {

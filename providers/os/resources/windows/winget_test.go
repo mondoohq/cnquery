@@ -232,7 +232,8 @@ const userSourcesDoc = `Sources:
     TrustLevel: 0
     Priority: 0`
 
-func int64p(v int64) *int64 { return &v }
+//go:fix inline
+func int64p(v int64) *int64 { return new(v) }
 
 func TestResolveWingetSources(t *testing.T) {
 	t.Run("defaults only", func(t *testing.T) {
@@ -252,20 +253,20 @@ func TestResolveWingetSources(t *testing.T) {
 
 	t.Run("policy requiring msstore ignores the tombstone", func(t *testing.T) {
 		doc := userSourcesDoc
-		got := ResolveWingetSources(&WingetPolicy{EnableMicrosoftStoreSource: int64p(1)}, &doc)
+		got := ResolveWingetSources(&WingetPolicy{EnableMicrosoftStoreSource: new(int64(1))}, &doc)
 		assert.Equal(t, []string{"user:contoso", "default:msstore", "default:winget", "default:winget-font"}, sourceNames(got))
 	})
 
 	t.Run("policy disables the default source and blocks user sources", func(t *testing.T) {
 		doc := userSourcesDoc
-		got := ResolveWingetSources(&WingetPolicy{EnableDefaultSource: int64p(0), EnableAllowedSources: int64p(0)}, &doc)
+		got := ResolveWingetSources(&WingetPolicy{EnableDefaultSource: new(int64(0)), EnableAllowedSources: new(int64(0))}, &doc)
 		assert.Equal(t, []string{"default:winget-font"}, sourceNames(got))
 	})
 
 	t.Run("allowed list admits only listed sources", func(t *testing.T) {
 		doc := userSourcesDoc
 		p := &WingetPolicy{
-			EnableAllowedSources: int64p(1),
+			EnableAllowedSources: new(int64(1)),
 			AllowedSources:       PSStringArray{`{"Name":"contoso","Arg":"https://pkgs.contoso.example/api","Type":"Microsoft.Rest","Data":"","Identifier":"contoso"}`},
 		}
 		got := ResolveWingetSources(p, &doc)
@@ -279,7 +280,7 @@ func TestResolveWingetSources(t *testing.T) {
 	t.Run("policy adds a source that wins over a user source of the same name", func(t *testing.T) {
 		doc := userSourcesDoc
 		p := &WingetPolicy{
-			EnableAdditionalSources: int64p(1),
+			EnableAdditionalSources: new(int64(1)),
 			AdditionalSources: PSStringArray{
 				`{"Name":"contoso","Arg":"https://mirror.contoso.example/api","Type":"Microsoft.Rest","Data":"","Identifier":"contoso-mirror","Explicit":true}`,
 				`{"Name":"incomplete","Arg":"https://x.example"}`,

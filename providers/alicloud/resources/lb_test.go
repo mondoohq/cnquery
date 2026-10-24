@@ -15,11 +15,11 @@ import (
 func TestStrPtrHelpers(t *testing.T) {
 	t.Run("strPtrsToStrings drops nil and empty", func(t *testing.T) {
 		assert.Equal(t, []string{}, strPtrsToStrings(nil))
-		assert.Equal(t, []string{"sg-a", "sg-b"}, strPtrsToStrings([]*string{strp("sg-a"), strp(""), nil, strp("sg-b")}))
+		assert.Equal(t, []string{"sg-a", "sg-b"}, strPtrsToStrings([]*string{new("sg-a"), new(""), nil, new("sg-b")}))
 	})
 	t.Run("strPtrsToAny returns []any of non-empty strings", func(t *testing.T) {
 		assert.Equal(t, []any{}, strPtrsToAny(nil))
-		assert.Equal(t, []any{"cert-1", "cert-2"}, strPtrsToAny([]*string{strp("cert-1"), strp(""), strp("cert-2")}))
+		assert.Equal(t, []any{"cert-1", "cert-2"}, strPtrsToAny([]*string{new("cert-1"), new(""), new("cert-2")}))
 	})
 }
 

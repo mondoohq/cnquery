@@ -222,7 +222,7 @@ var headerCommentEnd = regexp.MustCompile(`\s*(?:\*/|\?>).*`)
 // insensitively. The first match wins.
 func parsePluginHeaders(head []byte) map[string]string {
 	headers := map[string]string{}
-	for _, line := range strings.Split(strings.ReplaceAll(string(head), "\r", "\n"), "\n") {
+	for line := range strings.SplitSeq(strings.ReplaceAll(string(head), "\r", "\n"), "\n") {
 		rest := strings.TrimLeft(line, " \t")
 		rest = strings.TrimPrefix(rest, "<?php")
 		rest = strings.TrimLeft(rest, " \t/*#@")

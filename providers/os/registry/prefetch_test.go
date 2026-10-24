@@ -158,12 +158,10 @@ func TestPrefetchLookupEachRootOnce(t *testing.T) {
 
 	var wg sync.WaitGroup
 	for range 20 {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			res, _ := p.Lookup(`HKLM\SOFTWARE\Policies\Microsoft\Windows\System`)
 			assert.Equal(t, PrefetchMissing, res)
-		}()
+		})
 	}
 	wg.Wait()
 	assert.Equal(t, int32(1), f.runs.Load())

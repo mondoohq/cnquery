@@ -50,7 +50,7 @@ func packageToArgs(c jamfpro.ResourcePackage) map[string]*llx.RawData {
 	}
 }
 
-func (r *mqlJamf) packages() ([]interface{}, error) {
+func (r *mqlJamf) packages() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.JamfConnection)
 	client := conn.Client
 
@@ -61,7 +61,7 @@ func (r *mqlJamf) packages() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var res []interface{}
+	var res []any
 	for _, c := range inventory.Results {
 		item, err := CreateResource(r.MqlRuntime, "jamf.package", packageToArgs(c))
 		if err != nil {

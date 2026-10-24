@@ -29,7 +29,7 @@ func tagIndex(runtime *plugin.Runtime) (map[string]resourceTags, error) {
 	v, err := c.Memo("tags", func() (any, error) {
 		return searchTags(func(cursor *string) (*globalsearchv2.ScanResult, error) {
 			res, _, err := c.GlobalSearch().Search(&globalsearchv2.SearchOptions{
-				Query:        core.StringPtr("*"),
+				Query:        new("*"),
 				Fields:       []string{"crn", "tags", "access_tags"},
 				Limit:        core.Int64Ptr(searchPageSize),
 				SearchCursor: cursor,

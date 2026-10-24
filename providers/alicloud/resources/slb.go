@@ -110,9 +110,9 @@ func (r *mqlAlicloudSlb) loadBalancers() ([]any, error) {
 		firstPage := true
 		for {
 			resp, err := client.DescribeLoadBalancers(&slbclient.DescribeLoadBalancersRequest{
-				RegionId:   tea.String(region),
-				PageNumber: tea.Int32(pageNumber),
-				PageSize:   tea.Int32(pageSize),
+				RegionId:   new(region),
+				PageNumber: new(pageNumber),
+				PageSize:   new(pageSize),
 			})
 			if err != nil {
 				// A first-page error means the region has no SLB or the
@@ -226,8 +226,8 @@ func initAlicloudSlbLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.R
 		return nil, nil, err
 	}
 	resp, err := client.DescribeLoadBalancers(&slbclient.DescribeLoadBalancersRequest{
-		RegionId:       tea.String(region),
-		LoadBalancerId: tea.String(lbID),
+		RegionId:       new(region),
+		LoadBalancerId: new(lbID),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -279,8 +279,8 @@ func (r *mqlAlicloudSlbLoadBalancer) listeners() ([]any, error) {
 	var nextToken *string
 	for {
 		resp, err := client.DescribeLoadBalancerListeners(&slbclient.DescribeLoadBalancerListenersRequest{
-			RegionId:       tea.String(r.region),
-			LoadBalancerId: []*string{tea.String(lbId)},
+			RegionId:       new(r.region),
+			LoadBalancerId: []*string{new(lbId)},
 			MaxResults:     tea.Int32(100),
 			NextToken:      nextToken,
 		})

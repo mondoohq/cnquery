@@ -331,13 +331,7 @@ func (c *chunkReader) Read(p []byte) (int, error) {
 	if c.pos >= len(c.data) {
 		return 0, io.EOF
 	}
-	n := len(c.data) - c.pos
-	if n > c.max {
-		n = c.max
-	}
-	if n > len(p) {
-		n = len(p)
-	}
+	n := min(min(len(c.data)-c.pos, c.max), len(p))
 	copy(p, c.data[c.pos:c.pos+n])
 	c.pos += n
 	return n, nil

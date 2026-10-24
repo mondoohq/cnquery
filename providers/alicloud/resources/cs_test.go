@@ -19,13 +19,13 @@ import (
 // whether a cluster's API server is reachable from the internet.
 func TestParseCsMasterURL(t *testing.T) {
 	t.Run("public and intranet endpoints present", func(t *testing.T) {
-		public, intranet := parseCsMasterURL(strp(`{"api_server_endpoint":"https://1.2.3.4:6443","intranet_api_server_endpoint":"https://10.0.0.1:6443"}`))
+		public, intranet := parseCsMasterURL(new(`{"api_server_endpoint":"https://1.2.3.4:6443","intranet_api_server_endpoint":"https://10.0.0.1:6443"}`))
 		assert.Equal(t, "https://1.2.3.4:6443", public)
 		assert.Equal(t, "https://10.0.0.1:6443", intranet)
 		assert.True(t, public != "", "public endpoint present => internet exposed")
 	})
 	t.Run("private-only cluster has empty public endpoint", func(t *testing.T) {
-		public, intranet := parseCsMasterURL(strp(`{"api_server_endpoint":"","intranet_api_server_endpoint":"https://10.0.0.1:6443"}`))
+		public, intranet := parseCsMasterURL(new(`{"api_server_endpoint":"","intranet_api_server_endpoint":"https://10.0.0.1:6443"}`))
 		assert.Equal(t, "", public)
 		assert.Equal(t, "https://10.0.0.1:6443", intranet)
 		assert.False(t, public != "", "no public endpoint => not internet exposed")
@@ -36,12 +36,12 @@ func TestParseCsMasterURL(t *testing.T) {
 		assert.Equal(t, "", intranet)
 	})
 	t.Run("empty string (initializing cluster) yields empties", func(t *testing.T) {
-		public, intranet := parseCsMasterURL(strp(""))
+		public, intranet := parseCsMasterURL(new(""))
 		assert.Equal(t, "", public)
 		assert.Equal(t, "", intranet)
 	})
 	t.Run("malformed JSON yields empties, not a panic", func(t *testing.T) {
-		public, intranet := parseCsMasterURL(strp("not-json"))
+		public, intranet := parseCsMasterURL(new("not-json"))
 		assert.Equal(t, "", public)
 		assert.Equal(t, "", intranet)
 	})
@@ -54,19 +54,19 @@ func TestParseCsMasterURL(t *testing.T) {
 func TestCsControlPlaneLogComponentEnabled(t *testing.T) {
 	t.Run("component collected", func(t *testing.T) {
 		body := &csclient.CheckControlPlaneLogEnableResponseBody{
-			Components: []*string{strp("kube-apiserver"), strp("kube-scheduler")},
+			Components: []*string{new("kube-apiserver"), new("kube-scheduler")},
 		}
 		assert.True(t, csControlPlaneLogComponentEnabled(body, "kube-apiserver"))
 	})
 	t.Run("match is case insensitive and ignores padding", func(t *testing.T) {
 		body := &csclient.CheckControlPlaneLogEnableResponseBody{
-			Components: []*string{strp(" Kube-APIServer ")},
+			Components: []*string{new(" Kube-APIServer ")},
 		}
 		assert.True(t, csControlPlaneLogComponentEnabled(body, "kube-apiserver"))
 	})
 	t.Run("component not collected", func(t *testing.T) {
 		body := &csclient.CheckControlPlaneLogEnableResponseBody{
-			Components: []*string{strp("kube-apiserver"), strp("ccm")},
+			Components: []*string{new("kube-apiserver"), new("ccm")},
 		}
 		assert.False(t, csControlPlaneLogComponentEnabled(body, "kube-scheduler"))
 	})
@@ -76,8 +76,8 @@ func TestCsControlPlaneLogComponentEnabled(t *testing.T) {
 		// audit component never appears in this list.
 		body := &csclient.CheckControlPlaneLogEnableResponseBody{
 			Components: []*string{
-				strp("kube-apiserver"), strp("kube-controller-manager"),
-				strp("kube-scheduler"), strp("ccm"), strp("controlplane-events"),
+				new("kube-apiserver"), new("kube-controller-manager"),
+				new("kube-scheduler"), new("ccm"), new("controlplane-events"),
 			},
 		}
 		assert.False(t, csControlPlaneLogComponentEnabled(body, "audit"))
@@ -88,7 +88,7 @@ func TestCsControlPlaneLogComponentEnabled(t *testing.T) {
 	})
 	t.Run("nil component pointer is skipped, not a panic", func(t *testing.T) {
 		body := &csclient.CheckControlPlaneLogEnableResponseBody{
-			Components: []*string{nil, strp("ccm")},
+			Components: []*string{nil, new("ccm")},
 		}
 		assert.True(t, csControlPlaneLogComponentEnabled(body, "ccm"))
 		assert.False(t, csControlPlaneLogComponentEnabled(body, "kube-apiserver"))
@@ -105,21 +105,21 @@ func TestCsControlPlaneLogComponentEnabled(t *testing.T) {
 func TestCsClusterAuditEnabled(t *testing.T) {
 	t.Run("auditing enabled", func(t *testing.T) {
 		enabled, known := csClusterAuditEnabled(&csclient.GetClusterAuditProjectResponseBody{
-			AuditEnabled: tea.Bool(true),
+			AuditEnabled: new(true),
 		})
 		assert.True(t, known)
 		assert.True(t, enabled)
 	})
 	t.Run("auditing measured off", func(t *testing.T) {
 		enabled, known := csClusterAuditEnabled(&csclient.GetClusterAuditProjectResponseBody{
-			AuditEnabled: tea.Bool(false),
+			AuditEnabled: new(false),
 		})
 		assert.True(t, known)
 		assert.False(t, enabled)
 	})
 	t.Run("setting absent from the response is unknown, not false", func(t *testing.T) {
 		enabled, known := csClusterAuditEnabled(&csclient.GetClusterAuditProjectResponseBody{
-			SlsProjectName: strp("k8s-log-c123"),
+			SlsProjectName: new("k8s-log-c123"),
 		})
 		assert.False(t, known, "an absent audit_enabled must read as null")
 		assert.False(t, enabled)
@@ -136,12 +136,12 @@ func TestCsClusterAuditEnabled(t *testing.T) {
 func TestCsClusterAuditProjectName(t *testing.T) {
 	t.Run("project name present", func(t *testing.T) {
 		assert.Equal(t, "k8s-log-c123", csClusterAuditProjectName(&csclient.GetClusterAuditProjectResponseBody{
-			SlsProjectName: strp("  k8s-log-c123 "),
+			SlsProjectName: new("  k8s-log-c123 "),
 		}))
 	})
 	t.Run("auditing off has no project", func(t *testing.T) {
 		assert.Empty(t, csClusterAuditProjectName(&csclient.GetClusterAuditProjectResponseBody{
-			AuditEnabled: tea.Bool(false),
+			AuditEnabled: new(false),
 		}))
 	})
 	t.Run("absent response has no project", func(t *testing.T) {

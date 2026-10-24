@@ -342,7 +342,7 @@ func haproxyProcessConfigs(afs *afero.Afero, pidFile string) []string {
 	// A pid file can list several pids (the master first, then workers or
 	// old processes during a reload). They all run with the same `-f`
 	// arguments, so the first readable haproxy command line answers.
-	for _, pid := range strings.Fields(string(data)) {
+	for pid := range strings.FieldsSeq(string(data)) {
 		if _, err := strconv.Atoi(pid); err != nil {
 			continue
 		}
@@ -957,7 +957,7 @@ func (s *mqlHaproxyConfig) userlists(file *mqlFile) ([]any, error) {
 					case "groups":
 						if j+1 < len(d.Args) {
 							var gs []any
-							for _, g := range strings.Split(d.Args[j+1], ",") {
+							for g := range strings.SplitSeq(d.Args[j+1], ",") {
 								gs = append(gs, strings.TrimSpace(g))
 							}
 							u["groups"] = gs
@@ -976,7 +976,7 @@ func (s *mqlHaproxyConfig) userlists(file *mqlFile) ([]any, error) {
 				for j := 1; j < len(d.Args); j++ {
 					if d.Args[j] == "users" && j+1 < len(d.Args) {
 						var us []any
-						for _, u := range strings.Split(d.Args[j+1], ",") {
+						for u := range strings.SplitSeq(d.Args[j+1], ",") {
 							us = append(us, strings.TrimSpace(u))
 						}
 						g["users"] = us

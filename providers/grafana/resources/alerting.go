@@ -33,7 +33,7 @@ type grafanaNotificationPolicyJSON struct {
 	Routes   json.RawMessage `json:"routes"`
 }
 
-func (g *mqlGrafana) contactPoints() ([]interface{}, error) {
+func (g *mqlGrafana) contactPoints() ([]any, error) {
 	conn, err := grafanaConnection(g.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -52,11 +52,11 @@ func (g *mqlGrafana) contactPoints() ([]interface{}, error) {
 		return nil, fmt.Errorf("grafana: decoding /api/v1/provisioning/contact-points response: %w", err)
 	}
 
-	list := make([]interface{}, 0, len(raw))
+	list := make([]any, 0, len(raw))
 	for _, cp := range raw {
-		var settingsDict interface{}
+		var settingsDict any
 		if len(cp.Settings) > 0 && string(cp.Settings) != "null" {
-			var parsed interface{}
+			var parsed any
 			if err := json.Unmarshal(cp.Settings, &parsed); err != nil {
 				return nil, fmt.Errorf("grafana: parsing settings for contact point %s: %w", cp.UID, err)
 			}
@@ -228,19 +228,19 @@ func (g *mqlGrafana) notificationPolicy() (*mqlGrafanaNotificationPolicy, error)
 	}
 
 	// Convert groupBy string slice to []interface{} for the MQL array.
-	groupByAny := make([]interface{}, len(policy.GroupBy))
+	groupByAny := make([]any, len(policy.GroupBy))
 	for i, v := range policy.GroupBy {
 		groupByAny[i] = v
 	}
 
 	// Decode routes to []interface{} and convert each element to a dict.
-	var rawRoutes []interface{}
+	var rawRoutes []any
 	if len(policy.Routes) > 0 && string(policy.Routes) != "null" {
 		if err := json.Unmarshal(policy.Routes, &rawRoutes); err != nil {
 			return nil, fmt.Errorf("grafana: parsing routes in notification policy: %w", err)
 		}
 	}
-	routeDicts := make([]interface{}, 0, len(rawRoutes))
+	routeDicts := make([]any, 0, len(rawRoutes))
 	for _, r := range rawRoutes {
 		d, err := convert.JsonToDict(r)
 		if err != nil {

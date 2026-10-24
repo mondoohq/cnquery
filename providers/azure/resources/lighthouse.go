@@ -381,8 +381,8 @@ func lastPathSegment(s string) string {
 // trimming the Microsoft.ManagedServices resource-provider suffix from the
 // assignment's resource ID.
 func assignmentScope(assignmentId string) string {
-	if idx := strings.Index(assignmentId, "/providers/Microsoft.ManagedServices"); idx != -1 {
-		return assignmentId[:idx]
+	if before, _, ok := strings.Cut(assignmentId, "/providers/Microsoft.ManagedServices"); ok {
+		return before
 	}
 	return assignmentId
 }

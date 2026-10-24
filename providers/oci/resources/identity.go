@@ -8,7 +8,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -32,7 +31,7 @@ func (o *mqlOciIdentity) users() ([]any, error) {
 func (s *mqlOciIdentity) listUsers(ctx context.Context, identityClient identity.IdentityClient, compartmentID string) ([]identity.User, error) {
 	users, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.User, *string, error) {
 		request := identity.ListUsersRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		}
 
@@ -216,7 +215,7 @@ func (o *mqlOciIdentityUser) apiKeys() ([]any, error) {
 
 	ctx := context.Background()
 	resp, err := client.ListApiKeys(ctx, identity.ListApiKeysRequest{
-		UserId: common.String(userId),
+		UserId: new(userId),
 	})
 	if err != nil {
 		return nil, err
@@ -263,7 +262,7 @@ func (o *mqlOciIdentityUser) customerSecretKeys() ([]any, error) {
 
 	ctx := context.Background()
 	resp, err := client.ListCustomerSecretKeys(ctx, identity.ListCustomerSecretKeysRequest{
-		UserId: common.String(userId),
+		UserId: new(userId),
 	})
 	if err != nil {
 		return nil, err
@@ -309,7 +308,7 @@ func (o *mqlOciIdentityUser) authTokens() ([]any, error) {
 
 	ctx := context.Background()
 	resp, err := client.ListAuthTokens(ctx, identity.ListAuthTokensRequest{
-		UserId: common.String(userId),
+		UserId: new(userId),
 	})
 	if err != nil {
 		return nil, err
@@ -363,8 +362,8 @@ func (o *mqlOciIdentityUser) groups() ([]any, error) {
 	grpMember := map[string]bool{}
 	memberships, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.UserGroupMembership, *string, error) {
 		response, err := client.ListUserGroupMemberships(ctx, identity.ListUserGroupMembershipsRequest{
-			CompartmentId: common.String(compartmentID),
-			UserId:        common.String(userId),
+			CompartmentId: new(compartmentID),
+			UserId:        new(userId),
 			Page:          page,
 		})
 		if err != nil {
@@ -415,7 +414,7 @@ func (o *mqlOciIdentity) groups() ([]any, error) {
 func (s *mqlOciIdentity) listGroups(ctx context.Context, identityClient identity.IdentityClient, compartmentID string) ([]identity.Group, error) {
 	groups, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.Group, *string, error) {
 		request := identity.ListGroupsRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		}
 
@@ -497,7 +496,7 @@ func (o *mqlOciIdentity) policies() ([]any, error) {
 func (s *mqlOciIdentity) listPolicies(ctx context.Context, identityClient identity.IdentityClient, compartmentID string) ([]identity.Policy, error) {
 	policies, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.Policy, *string, error) {
 		request := identity.ListPoliciesRequest{
-			CompartmentId: common.String(compartmentID),
+			CompartmentId: new(compartmentID),
 			Page:          page,
 		}
 
@@ -620,7 +619,7 @@ func (o *mqlOciIdentityUser) mfaDevices() ([]any, error) {
 	ctx := context.Background()
 	devices, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.MfaTotpDeviceSummary, *string, error) {
 		response, err := client.ListMfaTotpDevices(ctx, identity.ListMfaTotpDevicesRequest{
-			UserId: common.String(o.Id.Data),
+			UserId: new(o.Id.Data),
 			Page:   page,
 		})
 		if err != nil {
@@ -678,8 +677,8 @@ func (o *mqlOciIdentityGroup) members() ([]any, error) {
 	userMember := map[string]bool{}
 	memberships, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.UserGroupMembership, *string, error) {
 		response, err := client.ListUserGroupMemberships(ctx, identity.ListUserGroupMembershipsRequest{
-			CompartmentId: common.String(o.cacheCompartmentID),
-			GroupId:       common.String(o.Id.Data),
+			CompartmentId: new(o.cacheCompartmentID),
+			GroupId:       new(o.Id.Data),
 			Page:          page,
 		})
 		if err != nil {
@@ -729,7 +728,7 @@ func (o *mqlOciIdentityUser) dbCredentials() ([]any, error) {
 	ctx := context.Background()
 	creds, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.DbCredentialSummary, *string, error) {
 		resp, err := client.ListDbCredentials(ctx, identity.ListDbCredentialsRequest{
-			UserId: common.String(o.Id.Data),
+			UserId: new(o.Id.Data),
 			Page:   page,
 		})
 		if err != nil {
@@ -775,7 +774,7 @@ func (o *mqlOciIdentityUser) smtpCredentials() ([]any, error) {
 
 	// ListSmtpCredentials returns the full set in a single response.
 	resp, err := client.ListSmtpCredentials(context.Background(), identity.ListSmtpCredentialsRequest{
-		UserId: common.String(o.Id.Data),
+		UserId: new(o.Id.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -823,7 +822,7 @@ func (o *mqlOciIdentityUser) oauth2ClientCredentials() ([]any, error) {
 	ctx := context.Background()
 	creds, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.OAuth2ClientCredentialSummary, *string, error) {
 		resp, err := client.ListOAuthClientCredentials(ctx, identity.ListOAuthClientCredentialsRequest{
-			UserId: common.String(o.Id.Data),
+			UserId: new(o.Id.Data),
 			Page:   page,
 		})
 		if err != nil {
@@ -889,7 +888,7 @@ func (o *mqlOciIdentity) dynamicGroups() ([]any, error) {
 	ctx := context.Background()
 	groups, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.DynamicGroup, *string, error) {
 		resp, err := client.ListDynamicGroups(ctx, identity.ListDynamicGroupsRequest{
-			CompartmentId: common.String(conn.TenantID()),
+			CompartmentId: new(conn.TenantID()),
 			Page:          page,
 		})
 		if err != nil {
@@ -941,7 +940,7 @@ func (o *mqlOciIdentity) identityProviders() ([]any, error) {
 		// SAML2 is the only federation protocol the ListIdentityProviders API accepts.
 		resp, err := client.ListIdentityProviders(ctx, identity.ListIdentityProvidersRequest{
 			Protocol:      identity.ListIdentityProvidersProtocolSaml2,
-			CompartmentId: common.String(conn.TenantID()),
+			CompartmentId: new(conn.TenantID()),
 			Page:          page,
 		})
 		if err != nil {
@@ -1016,7 +1015,7 @@ func (o *mqlOciIdentity) networkSources() ([]any, error) {
 	res := []any{}
 	sources, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.NetworkSourcesSummary, *string, error) {
 		resp, err := client.ListNetworkSources(ctx, identity.ListNetworkSourcesRequest{
-			CompartmentId: common.String(conn.TenantID()),
+			CompartmentId: new(conn.TenantID()),
 			Page:          page,
 		})
 		if err != nil {
@@ -1074,7 +1073,7 @@ func (o *mqlOciIdentityNetworkSource) id() (string, error) {
 // for a tenancy, defaulting any unset password or network rule.
 func ociAuthenticationPolicyArgs(client identity.IdentityClient, tenantID string) (map[string]*llx.RawData, error) {
 	resp, err := client.GetAuthenticationPolicy(context.Background(), identity.GetAuthenticationPolicyRequest{
-		CompartmentId: common.String(tenantID),
+		CompartmentId: new(tenantID),
 	})
 	if err != nil {
 		return nil, err

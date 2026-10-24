@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"slices"
 	"sort"
 
 	alb "github.com/stackitcloud/stackit-sdk-go/services/alb/v2api"
@@ -170,7 +171,7 @@ func albPlaintextListenerPorts(listeners []alb.Listener) []int64 {
 			out = append(out, int64(*port))
 		}
 	}
-	sort.Slice(out, func(a, b int) bool { return out[a] < out[b] })
+	slices.Sort(out)
 	return out
 }
 

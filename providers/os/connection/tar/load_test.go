@@ -21,7 +21,7 @@ func imageTarBytes(t testing.TB, n int) []byte {
 	var buf bytes.Buffer
 	tw := archivetar.NewWriter(&buf)
 	dirs := []string{"usr/share/doc", "usr/lib/python3.11/site-packages", "usr/bin", "etc", "var/lib/dpkg/info"}
-	for i := 0; i < n; i++ {
+	for i := range n {
 		name := fmt.Sprintf("%s/package-%06d/module_%d.py", dirs[i%len(dirs)], i/7, i)
 		require.NoError(t, tw.WriteHeader(&archivetar.Header{
 			Name: name, Typeflag: archivetar.TypeReg, Mode: 0o644, Uname: "root", Gname: "root",

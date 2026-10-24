@@ -80,7 +80,7 @@ func TestDestinationForwarderSplunk(t *testing.T) {
 
 func TestDestinationForwarderElasticsearch(t *testing.T) {
 	elastic := datadogV2.NewCustomDestinationResponseForwardDestinationElasticsearch(
-		map[string]interface{}{}, "https://es.example.com", "datadog-logs",
+		map[string]any{}, "https://es.example.com", "datadog-logs",
 		datadogV2.CUSTOMDESTINATIONRESPONSEFORWARDDESTINATIONELASTICSEARCHTYPE_ELASTICSEARCH)
 
 	got := destinationForwarder(attrsWithForwarder(datadogV2.CustomDestinationResponseForwardDestination{

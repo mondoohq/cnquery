@@ -143,7 +143,7 @@ type mqlDigitaloceanGradientaiAgentInternal struct {
 	cacheVPCUUID string
 }
 
-func (r *mqlDigitaloceanGradientai) agents() ([]interface{}, error) {
+func (r *mqlDigitaloceanGradientai) agents() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -152,7 +152,7 @@ func (r *mqlDigitaloceanGradientai) agents() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(agents))
+	all := make([]any, 0, len(agents))
 	for _, a := range agents {
 		if a != nil && skipGradientaiAgent(conn.Filters.General, a) {
 			continue
@@ -177,18 +177,18 @@ func newMqlGradientaiAgent(runtime *plugin.Runtime, a *godo.Agent) (*mqlDigitalo
 		return nil, nil
 	}
 
-	egressIPs := make([]interface{}, len(a.VPCEgressIPs))
+	egressIPs := make([]any, len(a.VPCEgressIPs))
 	for i, ip := range a.VPCEgressIPs {
 		egressIPs[i] = ip
 	}
-	tags := make([]interface{}, len(a.Tags))
+	tags := make([]any, len(a.Tags))
 	for i, t := range a.Tags {
 		tags[i] = t
 	}
 
-	chatbot := map[string]interface{}{}
+	chatbot := map[string]any{}
 	if a.ChatBot != nil {
-		chatbot = map[string]interface{}{
+		chatbot = map[string]any{
 			"name":            a.ChatBot.Name,
 			"primaryColor":    a.ChatBot.PrimaryColor,
 			"secondaryColor":  a.ChatBot.SecondaryColor,
@@ -307,8 +307,8 @@ func (r *mqlDigitaloceanGradientaiAgent) model() (*mqlDigitaloceanGradientaiMode
 	return newMqlGradientaiModel(r.MqlRuntime, r.cachedModel)
 }
 
-func (r *mqlDigitaloceanGradientaiAgent) knowledgeBases() ([]interface{}, error) {
-	out := make([]interface{}, 0, len(r.cachedKnowledgeB))
+func (r *mqlDigitaloceanGradientaiAgent) knowledgeBases() ([]any, error) {
+	out := make([]any, 0, len(r.cachedKnowledgeB))
 	for _, kb := range r.cachedKnowledgeB {
 		mkb, err := newMqlGradientaiKnowledgeBase(r.MqlRuntime, kb)
 		if err != nil {
@@ -321,23 +321,23 @@ func (r *mqlDigitaloceanGradientaiAgent) knowledgeBases() ([]interface{}, error)
 	return out, nil
 }
 
-func (r *mqlDigitaloceanGradientaiAgent) childAgents() ([]interface{}, error) {
+func (r *mqlDigitaloceanGradientaiAgent) childAgents() ([]any, error) {
 	return agentsByUUIDs(r.MqlRuntime, r.childUUIDs)
 }
 
-func (r *mqlDigitaloceanGradientaiAgent) parentAgents() ([]interface{}, error) {
+func (r *mqlDigitaloceanGradientaiAgent) parentAgents() ([]any, error) {
 	return agentsByUUIDs(r.MqlRuntime, r.parentUUIDs)
 }
 
-func agentsByUUIDs(runtime *plugin.Runtime, uuids []string) ([]interface{}, error) {
+func agentsByUUIDs(runtime *plugin.Runtime, uuids []string) ([]any, error) {
 	if len(uuids) == 0 {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	parent, err := parentGradientai(runtime)
 	if err != nil {
 		return nil, err
 	}
-	out := make([]interface{}, 0, len(uuids))
+	out := make([]any, 0, len(uuids))
 	for _, uuid := range uuids {
 		agent, err := parent.agentByUUID(uuid)
 		if err != nil {
@@ -374,8 +374,8 @@ func (r *mqlDigitaloceanGradientaiAgent) openaiApiKey() (*mqlDigitaloceanGradien
 	return newMqlGradientaiOpenaiApiKey(r.MqlRuntime, r.cachedOpenAIKey)
 }
 
-func (r *mqlDigitaloceanGradientaiAgent) guardrails() ([]interface{}, error) {
-	out := make([]interface{}, 0, len(r.cachedGuardrails))
+func (r *mqlDigitaloceanGradientaiAgent) guardrails() ([]any, error) {
+	out := make([]any, 0, len(r.cachedGuardrails))
 	for _, g := range r.cachedGuardrails {
 		if g == nil {
 			continue
@@ -402,8 +402,8 @@ func (r *mqlDigitaloceanGradientaiAgent) guardrails() ([]interface{}, error) {
 	return out, nil
 }
 
-func (r *mqlDigitaloceanGradientaiAgent) functions() ([]interface{}, error) {
-	out := make([]interface{}, 0, len(r.cachedFunctions))
+func (r *mqlDigitaloceanGradientaiAgent) functions() ([]any, error) {
+	out := make([]any, 0, len(r.cachedFunctions))
 	for _, f := range r.cachedFunctions {
 		if f == nil {
 			continue
@@ -429,7 +429,7 @@ func (r *mqlDigitaloceanGradientaiAgent) functions() ([]interface{}, error) {
 	return out, nil
 }
 
-func (r *mqlDigitaloceanGradientaiAgent) versions() ([]interface{}, error) {
+func (r *mqlDigitaloceanGradientaiAgent) versions() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -440,12 +440,12 @@ func (r *mqlDigitaloceanGradientaiAgent) versions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(versions))
+	all := make([]any, 0, len(versions))
 	for _, v := range versions {
 		if v == nil {
 			continue
 		}
-		tags := make([]interface{}, len(v.Tags))
+		tags := make([]any, len(v.Tags))
 		for i, t := range v.Tags {
 			tags[i] = t
 		}
@@ -479,7 +479,7 @@ func (r *mqlDigitaloceanGradientaiAgent) versions() ([]interface{}, error) {
 	return all, nil
 }
 
-func (r *mqlDigitaloceanGradientaiAgent) apiKeys() ([]interface{}, error) {
+func (r *mqlDigitaloceanGradientaiAgent) apiKeys() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -490,7 +490,7 @@ func (r *mqlDigitaloceanGradientaiAgent) apiKeys() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(keys))
+	all := make([]any, 0, len(keys))
 	for _, k := range keys {
 		if k == nil {
 			continue
@@ -515,7 +515,7 @@ func (r *mqlDigitaloceanGradientaiAgent) apiKeys() ([]interface{}, error) {
 
 // ----- Models -----
 
-func (r *mqlDigitaloceanGradientai) models() ([]interface{}, error) {
+func (r *mqlDigitaloceanGradientai) models() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -524,7 +524,7 @@ func (r *mqlDigitaloceanGradientai) models() ([]interface{}, error) {
 		return nil, err
 	}
 
-	all := make([]interface{}, 0, len(models))
+	all := make([]any, 0, len(models))
 	for _, m := range models {
 		res, err := newMqlGradientaiModel(r.MqlRuntime, m)
 		if err != nil {
@@ -542,31 +542,31 @@ func newMqlGradientaiModel(runtime *plugin.Runtime, m *godo.Model) (*mqlDigitalo
 		return nil, nil
 	}
 
-	capabilities := make([]interface{}, len(m.Capabilities))
+	capabilities := make([]any, len(m.Capabilities))
 	for i, c := range m.Capabilities {
 		capabilities[i] = c
 	}
-	usecases := make([]interface{}, len(m.Usecases))
+	usecases := make([]any, len(m.Usecases))
 	for i, u := range m.Usecases {
 		usecases[i] = u
 	}
 
-	modalities := map[string]interface{}{}
+	modalities := map[string]any{}
 	if m.Modalities != nil {
-		in := make([]interface{}, len(m.Modalities.Input))
+		in := make([]any, len(m.Modalities.Input))
 		for i, v := range m.Modalities.Input {
 			in[i] = v
 		}
-		out := make([]interface{}, len(m.Modalities.Output))
+		out := make([]any, len(m.Modalities.Output))
 		for i, v := range m.Modalities.Output {
 			out[i] = v
 		}
-		modalities = map[string]interface{}{"input": in, "output": out}
+		modalities = map[string]any{"input": in, "output": out}
 	}
 
-	pricing := map[string]interface{}{}
+	pricing := map[string]any{}
 	if p := m.Pricing; p != nil {
-		pricing = map[string]interface{}{
+		pricing = map[string]any{
 			"inputPricePerMillion":      p.InputPricePerMillion,
 			"outputPricePerMillion":     p.OutputPricePerMillion,
 			"pricePerImage":             p.PricePerImage,
@@ -576,9 +576,9 @@ func newMqlGradientaiModel(runtime *plugin.Runtime, m *godo.Model) (*mqlDigitalo
 		}
 	}
 
-	version := map[string]interface{}{}
+	version := map[string]any{}
 	if v := m.Version; v != nil {
-		version = map[string]interface{}{"major": int64(v.Major), "minor": int64(v.Minor), "patch": int64(v.Patch)}
+		version = map[string]any{"major": int64(v.Major), "minor": int64(v.Minor), "patch": int64(v.Patch)}
 	}
 
 	agreementName, agreementURL := "", ""
@@ -619,12 +619,12 @@ func newMqlGradientaiModel(runtime *plugin.Runtime, m *godo.Model) (*mqlDigitalo
 
 // ----- Custom models -----
 
-func (r *mqlDigitaloceanGradientai) customModels() ([]interface{}, error) {
+func (r *mqlDigitaloceanGradientai) customModels() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.CustomModelListOptions{ListOptions: godo.ListOptions{PerPage: 200}}
+	var all []any
+	opt := &godo.CustomModelListOptions{PerPage: 200}
 	for {
 		resp, httpResp, err := client.AgentPlatform.ListCustomModels(context.Background(), opt)
 		if err != nil {
@@ -635,26 +635,26 @@ func (r *mqlDigitaloceanGradientai) customModels() ([]interface{}, error) {
 				if m == nil {
 					continue
 				}
-				inputMods := make([]interface{}, len(m.InputModalities))
+				inputMods := make([]any, len(m.InputModalities))
 				for i, v := range m.InputModalities {
 					inputMods[i] = v
 				}
-				outputMods := make([]interface{}, len(m.OutputModalities))
+				outputMods := make([]any, len(m.OutputModalities))
 				for i, v := range m.OutputModalities {
 					outputMods[i] = v
 				}
-				deployments := make([]interface{}, 0, len(m.ActiveDeployments))
+				deployments := make([]any, 0, len(m.ActiveDeployments))
 				for _, d := range m.ActiveDeployments {
 					if d == nil {
 						continue
 					}
 					deployments = append(deployments, convert.ToValue(d))
 				}
-				var sourceRef map[string]interface{}
+				var sourceRef map[string]any
 				if m.SourceRef != nil {
 					// Surface the source location, but omit the Hugging Face
 					// access token.
-					sourceRef = map[string]interface{}{
+					sourceRef = map[string]any{
 						"repoId":     m.SourceRef.RepoId,
 						"commitSha":  m.SourceRef.CommitSha,
 						"accessType": string(m.SourceRef.AccessType),

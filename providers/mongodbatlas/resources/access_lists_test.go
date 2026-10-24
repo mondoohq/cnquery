@@ -17,12 +17,12 @@ func TestApiKeyAccessEntry(t *testing.T) {
 	lastUsed := time.Date(2026, 8, 10, 14, 30, 0, 0, time.UTC)
 
 	got := apiKeyAccessEntry(admin.UserAccessListResponse{
-		CidrBlock:       admin.PtrString("10.0.0.0/24"),
-		IpAddress:       admin.PtrString("10.0.0.1"),
+		CidrBlock:       new("10.0.0.0/24"),
+		IpAddress:       new("10.0.0.1"),
 		Created:         &created,
-		Count:           admin.PtrInt(42),
+		Count:           new(42),
 		LastUsed:        &lastUsed,
-		LastUsedAddress: admin.PtrString("10.0.0.7"),
+		LastUsedAddress: new("10.0.0.7"),
 	})
 
 	assert.Equal(t, "10.0.0.0/24", got.cidrBlock)
@@ -42,7 +42,7 @@ func TestApiKeyAccessEntryUnused(t *testing.T) {
 	// stay null rather than becoming the zero time, which would render as a
 	// real date in year 1 and read as "used long ago".
 	got := apiKeyAccessEntry(admin.UserAccessListResponse{
-		CidrBlock: admin.PtrString("192.168.1.0/24"),
+		CidrBlock: new("192.168.1.0/24"),
 	})
 
 	assert.Equal(t, "192.168.1.0/24", got.cidrBlock)
@@ -58,12 +58,12 @@ func TestServiceAccountAccessEntry(t *testing.T) {
 	lastUsed := time.Date(2026, 8, 11, 11, 45, 0, 0, time.UTC)
 
 	got := serviceAccountAccessEntry(admin.ServiceAccountIPAccessListEntry{
-		CidrBlock:       admin.PtrString("172.16.0.0/16"),
-		IpAddress:       admin.PtrString("172.16.4.9"),
+		CidrBlock:       new("172.16.0.0/16"),
+		IpAddress:       new("172.16.4.9"),
 		CreatedAt:       &created,
-		RequestCount:    admin.PtrInt(7),
+		RequestCount:    new(7),
 		LastUsedAt:      &lastUsed,
-		LastUsedAddress: admin.PtrString("172.16.4.9"),
+		LastUsedAddress: new("172.16.4.9"),
 	})
 
 	assert.Equal(t, "172.16.0.0/16", got.cidrBlock)
@@ -81,7 +81,7 @@ func TestServiceAccountAccessEntry(t *testing.T) {
 
 func TestServiceAccountAccessEntryUnused(t *testing.T) {
 	got := serviceAccountAccessEntry(admin.ServiceAccountIPAccessListEntry{
-		IpAddress: admin.PtrString("203.0.113.5"),
+		IpAddress: new("203.0.113.5"),
 	})
 
 	assert.Empty(t, got.cidrBlock)
@@ -131,13 +131,13 @@ func TestLabelMap(t *testing.T) {
 	assert.Equal(t, map[string]any{}, labelMap([]admin.ComponentLabel{}))
 
 	assert.Equal(t, map[string]any{"team": "payments", "tier": "prod"}, labelMap([]admin.ComponentLabel{
-		{Key: admin.PtrString("team"), Value: admin.PtrString("payments")},
-		{Key: admin.PtrString("tier"), Value: admin.PtrString("prod")},
+		{Key: new("team"), Value: new("payments")},
+		{Key: new("tier"), Value: new("prod")},
 	}))
 
 	assert.Equal(t, map[string]any{"team": "platform"}, labelMap([]admin.ComponentLabel{
-		{Key: admin.PtrString("team"), Value: admin.PtrString("payments")},
-		{Key: admin.PtrString("team"), Value: admin.PtrString("platform")},
+		{Key: new("team"), Value: new("payments")},
+		{Key: new("team"), Value: new("platform")},
 	}), "a later label wins on a duplicate key")
 
 	assert.Equal(t, map[string]any{"": ""}, labelMap([]admin.ComponentLabel{{}}),

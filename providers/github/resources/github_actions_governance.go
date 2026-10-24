@@ -46,7 +46,7 @@ func (g *mqlGithubOrganization) runnerGroups() ([]any, error) {
 	orgLogin := g.Login.Data
 
 	listOpts := &github.ListOrgRunnerGroupOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		PerPage: paginationPerPage,
 	}
 	var allGroups []*github.RunnerGroup
 	for {

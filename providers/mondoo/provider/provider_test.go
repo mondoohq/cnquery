@@ -24,9 +24,7 @@ func TestFillAsset(t *testing.T) {
 			Connection: plugin.NewConnection(1, a),
 			Type:       connection.ConnTypeOrganization,
 			Upstream: &upstream.UpstreamClient{
-				UpstreamConfig: upstream.UpstreamConfig{
-					SpaceMrn: "//captain.api.mondoo.app/organization/romantic-hopper-662653",
-				},
+				SpaceMrn: "//captain.api.mondoo.app/organization/romantic-hopper-662653",
 			},
 		}
 		fillAsset(conn, a)
@@ -53,9 +51,7 @@ func TestFillAsset(t *testing.T) {
 			Connection: plugin.NewConnection(1, a),
 			Type:       connection.ConnTypeSpace,
 			Upstream: &upstream.UpstreamClient{
-				UpstreamConfig: upstream.UpstreamConfig{
-					SpaceMrn: "//captain.api.mondoo.app/spaces/romantic-hopper-662653",
-				},
+				SpaceMrn: "//captain.api.mondoo.app/spaces/romantic-hopper-662653",
 			},
 		}
 		fillAsset(conn, a)

@@ -37,7 +37,7 @@ func connectionAccountID(runtime *plugin.Runtime) (string, error) {
 	}
 
 	for _, platformID := range conn.Asset().PlatformIds {
-		if accID := strings.TrimPrefix(platformID, connection.PlatformIdCloudflareAccount); accID != platformID {
+		if accID, ok := strings.CutPrefix(platformID, connection.PlatformIdCloudflareAccount); ok {
 			return accID, nil
 		}
 	}

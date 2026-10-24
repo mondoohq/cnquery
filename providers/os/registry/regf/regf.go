@@ -27,6 +27,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 	"unicode/utf16"
 
@@ -456,7 +457,7 @@ func (k Key) Values() (values []Value, err error) {
 	}
 	seen := make(map[uint32]struct{}, n)
 	values = make([]Value, 0, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		off := binary.LittleEndian.Uint32(list[4*i:])
 		if _, dup := seen[off]; dup {
 			log.Debug().Uint32("offset", off).Str("key", k.Name).Msg("registry key lists a value twice, skipping it")
@@ -572,7 +573,7 @@ func (h *Hive) bigData(v Value, c cell, size int) ([]byte, error) {
 		return nil, err
 	}
 	data := make([]byte, 0, size)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		take := min(bigDataSegmentMax, size-len(data))
 		sc, err := h.cell(binary.LittleEndian.Uint32(list[4*i:]))
 		if err != nil {
@@ -614,12 +615,12 @@ func (h *Hive) Walk(maxKeys int, fn func(Key) error) (err error) {
 		if err != nil {
 			log.Debug().Err(err).Str("key", k.Name).Msg("skipping the subkeys of a key with an invalid subkey list")
 		}
-		for i := len(subs) - 1; i >= 0; i-- {
-			if _, ok := visited[subs[i].Offset]; ok {
+		for _, sub := range slices.Backward(subs) {
+			if _, ok := visited[sub.Offset]; ok {
 				continue
 			}
-			visited[subs[i].Offset] = struct{}{}
-			stack = append(stack, subs[i])
+			visited[sub.Offset] = struct{}{}
+			stack = append(stack, sub)
 		}
 	}
 	return nil

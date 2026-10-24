@@ -151,7 +151,7 @@ func TestParseFiles_MutualCycleStillDetected(t *testing.T) {
 func TestParseFiles_DepthCap(t *testing.T) {
 	files := map[string]string{}
 	total := maxIncludeDepth + 10
-	for i := 0; i < total; i++ {
+	for i := range total {
 		files[fmt.Sprintf("/etc/nginx/%d.conf", i)] = fmt.Sprintf("include /etc/nginx/%d.conf;\n", i+1)
 	}
 	files[fmt.Sprintf("/etc/nginx/%d.conf", total)] = "worker_processes 1;\n"

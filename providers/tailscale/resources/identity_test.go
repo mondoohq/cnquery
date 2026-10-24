@@ -176,7 +176,7 @@ func TestMemo(t *testing.T) {
 			return 42, nil
 		}
 
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			got, err := m.get(compute)
 			require.NoError(t, err)
 			assert.Equal(t, 42, got)
@@ -193,7 +193,7 @@ func TestMemo(t *testing.T) {
 			return 0, wantErr
 		}
 
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			_, err := m.get(compute)
 			assert.ErrorIs(t, err, wantErr)
 		}
@@ -212,14 +212,12 @@ func TestMemo(t *testing.T) {
 		}
 
 		var wg sync.WaitGroup
-		for i := 0; i < 64; i++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+		for range 64 {
+			wg.Go(func() {
 				got, err := m.get(compute)
 				assert.NoError(t, err)
 				assert.Equal(t, 7, got)
-			}()
+			})
 		}
 		wg.Wait()
 		assert.Equal(t, 1, calls)

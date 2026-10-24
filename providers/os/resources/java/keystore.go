@@ -175,7 +175,7 @@ func ParseJKS(data []byte) (*Keystore, error) {
 	}
 
 	ks := &Keystore{Format: FormatJKS, Entries: make([]Entry, 0, count)}
-	for i := uint32(0); i < count; i++ {
+	for i := range count {
 		entry, err := readJKSEntry(r, version)
 		if err != nil {
 			return nil, fmt.Errorf("entry %d: %w", i, err)
@@ -251,7 +251,7 @@ func readJKSEntry(r *reader, version uint32) (Entry, error) {
 		if chainLen > maxEntries {
 			return entry, fmt.Errorf("chain length %d is implausible", chainLen)
 		}
-		for j := uint32(0); j < chainLen; j++ {
+		for j := range chainLen {
 			der, err := readJKSCert(r, version)
 			if err != nil {
 				return entry, fmt.Errorf("chain certificate %d: %w", j, err)
@@ -333,8 +333,7 @@ func ParsePKCS12(data []byte, password string) (*Keystore, error) {
 		// The reader types these, so this reads the type rather than the
 		// message: the wording is an internal detail and would change without
 		// notice.
-		var notImplemented pkcs12.NotImplementedError
-		if errors.As(err, &notImplemented) {
+		if _, ok := errors.AsType[pkcs12.NotImplementedError](err); ok {
 			return nil, fmt.Errorf("%w: %v", ErrUnsupportedPKCS12, err)
 		}
 

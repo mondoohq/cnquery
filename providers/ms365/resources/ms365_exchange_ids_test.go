@@ -51,7 +51,7 @@ func TestExchangeEntryIDIsUniquePerRow(t *testing.T) {
 
 	t.Run("no identity at all", func(t *testing.T) {
 		seen := map[string]bool{}
-		for i := 0; i < 169; i++ {
+		for i := range 169 {
 			key := exchangeEntryID("mailboxAuditBypassAssociation", "", i)
 			assert.False(t, seen[key], "duplicate cache key %q at row %d", key, i)
 			seen[key] = true

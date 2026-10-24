@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -158,11 +159,9 @@ func regEnumBoolPtr(items map[string]registry.RegistryKeyItem, name string, true
 		res := true
 		return &res
 	}
-	for _, f := range falseValues {
-		if *v == f {
-			res := false
-			return &res
-		}
+	if slices.Contains(falseValues, *v) {
+		res := false
+		return &res
 	}
 	return nil
 }

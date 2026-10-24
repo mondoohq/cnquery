@@ -33,7 +33,7 @@ func (a *mqlActivedirectoryDomainController) id() (string, error) {
 	return a.DistinguishedName.Data, nil
 }
 
-func (a *mqlActivedirectory) domainControllers() ([]interface{}, error) {
+func (a *mqlActivedirectory) domainControllers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 	baseDN := conn.BaseDN()
 
@@ -61,7 +61,7 @@ func (a *mqlActivedirectory) domainControllers() ([]interface{}, error) {
 		return nil, fmt.Errorf("failed to query domain controllers: %w", err)
 	}
 
-	res := make([]interface{}, 0, len(result))
+	res := make([]any, 0, len(result))
 	for _, entry := range result {
 		name := entry.GetAttributeValue("dNSHostName")
 		dn := entry.GetAttributeValue("distinguishedName")

@@ -233,8 +233,8 @@ func initAlicloudPolardbCluster(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return nil, nil, err
 	}
 	resp, err := client.DescribeDBClusters(&polardb.DescribeDBClustersRequest{
-		RegionId:     tea.String(region),
-		DBClusterIds: tea.String(clusterID),
+		RegionId:     new(region),
+		DBClusterIds: new(clusterID),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -364,7 +364,7 @@ func (r *mqlAlicloudPolardbCluster) accessWhitelist() ([]any, error) {
 		if arr == nil || arr.SecurityIps == nil {
 			continue
 		}
-		for _, ip := range strings.Split(*arr.SecurityIps, ",") {
+		for ip := range strings.SplitSeq(*arr.SecurityIps, ",") {
 			ip = strings.TrimSpace(ip)
 			if ip != "" {
 				res = append(res, ip)

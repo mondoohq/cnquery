@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	crclient "github.com/alibabacloud-go/cr-20181201/v3/client"
-	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
@@ -87,11 +86,11 @@ func TestAcrSeverityCounts(t *testing.T) {
 func TestAcrVulnerabilityIDSeparatesPackages(t *testing.T) {
 	base := func() *crclient.ListRepoTagScanResultResponseBodyVulnerabilities {
 		return &crclient.ListRepoTagScanResultResponseBodyVulnerabilities{
-			CveName:     tea.String("CVE-2021-3711"),
-			Feature:     tea.String("openssl"),
-			Version:     tea.String("1.1.1k-1"),
-			AddedBy:     tea.String("sha256:aaaa"),
-			CveLocation: tea.String("/usr/lib/libssl.so.1.1"),
+			CveName:     new("CVE-2021-3711"),
+			Feature:     new("openssl"),
+			Version:     new("1.1.1k-1"),
+			AddedBy:     new("sha256:aaaa"),
+			CveLocation: new("/usr/lib/libssl.so.1.1"),
 		}
 	}
 
@@ -100,16 +99,16 @@ func TestAcrVulnerabilityIDSeparatesPackages(t *testing.T) {
 		mutate func(*crclient.ListRepoTagScanResultResponseBodyVulnerabilities)
 	}{
 		{"different package", func(v *crclient.ListRepoTagScanResultResponseBodyVulnerabilities) {
-			v.Feature = tea.String("libssl-dev")
+			v.Feature = new("libssl-dev")
 		}},
 		{"different package version", func(v *crclient.ListRepoTagScanResultResponseBodyVulnerabilities) {
-			v.Version = tea.String("1.1.1n-2")
+			v.Version = new("1.1.1n-2")
 		}},
 		{"different image layer", func(v *crclient.ListRepoTagScanResultResponseBodyVulnerabilities) {
-			v.AddedBy = tea.String("sha256:bbbb")
+			v.AddedBy = new("sha256:bbbb")
 		}},
 		{"different location", func(v *crclient.ListRepoTagScanResultResponseBodyVulnerabilities) {
-			v.CveLocation = tea.String("/opt/app/libssl.so.1.1")
+			v.CveLocation = new("/opt/app/libssl.so.1.1")
 		}},
 	}
 
@@ -130,11 +129,11 @@ func TestAcrVulnerabilityIDSeparatesPackages(t *testing.T) {
 // double counted, and the key does not change between scans.
 func TestAcrVulnerabilityIDIsStable(t *testing.T) {
 	v := &crclient.ListRepoTagScanResultResponseBodyVulnerabilities{
-		CveName:     tea.String("CVE-2009-5155"),
-		Feature:     tea.String("eglibc"),
-		Version:     tea.String("2.19-6.9"),
-		AddedBy:     tea.String("sha256:cccc"),
-		CveLocation: tea.String("/lib/x86_64-linux-gnu/libc.so.6"),
+		CveName:     new("CVE-2009-5155"),
+		Feature:     new("eglibc"),
+		Version:     new("2.19-6.9"),
+		AddedBy:     new("sha256:cccc"),
+		CveLocation: new("/lib/x86_64-linux-gnu/libc.so.6"),
 	}
 	assert.Equal(t, acrVulnerabilityID("repo-1", "v1", v), acrVulnerabilityID("repo-1", "v1", v))
 
@@ -149,12 +148,12 @@ func TestAcrVulnerabilityIDIsStable(t *testing.T) {
 // every field but CveName is nullable in the API.
 func TestAcrVulnerabilityIDToleratesAbsentFields(t *testing.T) {
 	sparse := &crclient.ListRepoTagScanResultResponseBodyVulnerabilities{
-		CveName: tea.String("CVE-2020-0001"),
+		CveName: new("CVE-2020-0001"),
 	}
 	assert.NotEmpty(t, acrVulnerabilityID("repo-1", "latest", sparse))
 	assert.NotEqual(t,
 		acrVulnerabilityID("repo-1", "latest", sparse),
 		acrVulnerabilityID("repo-1", "latest", &crclient.ListRepoTagScanResultResponseBodyVulnerabilities{
-			CveName: tea.String("CVE-2020-0002"),
+			CveName: new("CVE-2020-0002"),
 		}))
 }

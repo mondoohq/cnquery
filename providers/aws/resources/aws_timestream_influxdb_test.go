@@ -20,13 +20,13 @@ func TestParseInfluxdbExpiry(t *testing.T) {
 		want  *time.Time
 	}{
 		{"nil", nil, nil},
-		{"empty", ptrStr(""), nil},
-		{"not a time", ptrStr("tomorrow"), nil},
+		{"empty", new(""), nil},
+		{"not a time", new("tomorrow"), nil},
 		// the API reports the expiry as a string, not as a timestamp
-		{"utc", ptrStr("2026-08-06T14:35:11Z"), timePtr(time.Date(2026, 8, 6, 14, 35, 11, 0, time.UTC))},
-		{"with offset", ptrStr("2026-08-06T07:35:11-07:00"), timePtr(time.Date(2026, 8, 6, 14, 35, 11, 0, time.UTC))},
+		{"utc", new("2026-08-06T14:35:11Z"), new(time.Date(2026, 8, 6, 14, 35, 11, 0, time.UTC))},
+		{"with offset", new("2026-08-06T07:35:11-07:00"), new(time.Date(2026, 8, 6, 14, 35, 11, 0, time.UTC))},
 		// a unix timestamp is not RFC 3339, and must not be read as one
-		{"unix timestamp", ptrStr("1786026911"), nil},
+		{"unix timestamp", new("1786026911"), nil},
 	}
 
 	for _, test := range tests {
@@ -45,7 +45,7 @@ func TestParseInfluxdbExpiry(t *testing.T) {
 // ===== backup typed-ref null-state =====
 
 func TestInfluxdbBackupDbInstanceNullWhenNoResourceId(t *testing.T) {
-	for _, cached := range []*string{nil, ptrStr("")} {
+	for _, cached := range []*string{nil, new("")} {
 		b := &mqlAwsTimestreamInfluxdbBackup{}
 		b.cacheDbResourceId = cached
 		got, err := b.dbInstance()
@@ -57,7 +57,7 @@ func TestInfluxdbBackupDbInstanceNullWhenNoResourceId(t *testing.T) {
 }
 
 func TestInfluxdbBackupKmsKeyNullWhenNoKeyId(t *testing.T) {
-	for _, cached := range []*string{nil, ptrStr("")} {
+	for _, cached := range []*string{nil, new("")} {
 		b := &mqlAwsTimestreamInfluxdbBackup{}
 		b.cacheKmsKeyId = cached
 		got, err := b.kmsKey()
@@ -68,6 +68,8 @@ func TestInfluxdbBackupKmsKeyNullWhenNoKeyId(t *testing.T) {
 	}
 }
 
-func ptrStr(s string) *string { return &s }
+//go:fix inline
+func ptrStr(s string) *string { return new(s) }
 
-func timePtr(t time.Time) *time.Time { return &t }
+//go:fix inline
+func timePtr(t time.Time) *time.Time { return new(t) }

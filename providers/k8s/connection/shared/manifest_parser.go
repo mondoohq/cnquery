@@ -204,8 +204,8 @@ func (t *ManifestParser) Namespaces() ([]v1.Namespace, error) {
 			continue
 		}
 		namespaces[ns] = v1.Namespace{
-			TypeMeta:   metav1.TypeMeta{Kind: "Namespace"},
-			ObjectMeta: metav1.ObjectMeta{Name: ns},
+			Kind: "Namespace",
+			Name: ns,
 		}
 	}
 
@@ -341,7 +341,7 @@ func load(manifest []byte) ([]k8sRuntime.Object, error) {
 				addedCrds[crdName] = struct{}{}
 				res = append(
 					res,
-					&apiextensionsv1.CustomResourceDefinition{TypeMeta: metav1.TypeMeta{Kind: "CustomResourceDefinition"}, ObjectMeta: metav1.ObjectMeta{Name: crdName}})
+					&apiextensionsv1.CustomResourceDefinition{Kind: "CustomResourceDefinition", Name: crdName})
 			}
 		}
 	}

@@ -90,7 +90,7 @@ func exists(fs afero.Fs, path string) bool {
 // environNamesContainer reads a NUL-separated /proc/<pid>/environ and reports
 // whether it names a container manager.
 func environNamesContainer(environ []byte) bool {
-	for _, kv := range bytes.Split(environ, []byte{0}) {
+	for kv := range bytes.SplitSeq(environ, []byte{0}) {
 		key, value, ok := bytes.Cut(kv, []byte("="))
 		if !ok || len(value) == 0 {
 			continue
@@ -106,7 +106,7 @@ func environNamesContainer(environ []byte) bool {
 // cgroupNamesContainer reads /proc/<pid>/cgroup and reports whether a cgroup
 // path names a container.
 func cgroupNamesContainer(cgroup string) bool {
-	for _, line := range strings.Split(cgroup, "\n") {
+	for line := range strings.SplitSeq(cgroup, "\n") {
 		// hierarchy-ID:controller-list:cgroup-path
 		parts := strings.SplitN(line, ":", 3)
 		if len(parts) != 3 {

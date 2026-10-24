@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/containerinstances"
 	"github.com/oracle/oci-go-sdk/v65/networkfirewall"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -17,11 +16,11 @@ import (
 // satisfies the interface but matches neither concrete case.
 type unknownDecryptionProfile struct{}
 
-func (unknownDecryptionProfile) GetName() *string { return common.String("future-profile") }
+func (unknownDecryptionProfile) GetName() *string { return new("future-profile") }
 func (unknownDecryptionProfile) GetParentResourceId() *string {
-	return common.String("ocid1.networkfirewallpolicy.oc1..example")
+	return new("ocid1.networkfirewallpolicy.oc1..example")
 }
-func (unknownDecryptionProfile) GetDescription() *string { return common.String("unknown") }
+func (unknownDecryptionProfile) GetDescription() *string { return new("unknown") }
 
 // TestDecryptionProfileFieldsUnknownTypeBlocksNothing covers the branch the
 // existing TestDecryptionProfileFields never exercised. Every control on a
@@ -30,9 +29,9 @@ func (unknownDecryptionProfile) GetDescription() *string { return common.String(
 // a certificate-validation check it was never measured for.
 func TestDecryptionProfileFieldsUnknownTypeBlocksNothing(t *testing.T) {
 	summary := networkfirewall.DecryptionProfileSummary{
-		Name:        common.String("future-profile"),
+		Name:        new("future-profile"),
 		Type:        "SSL_SOMETHING_NEW",
-		Description: common.String("an inspection type newer than the pinned SDK"),
+		Description: new("an inspection type newer than the pinned SDK"),
 	}
 
 	// A profile the type switch does not know about, standing in for whatever
@@ -103,8 +102,8 @@ func TestOciContainerSecurityContext(t *testing.T) {
 		view := ociContainerSecurityContext(containerinstances.LinuxSecurityContext{
 			RunAsUser:                 &uid,
 			RunAsGroup:                &gid,
-			IsNonRootUserCheckEnabled: common.Bool(true),
-			IsRootFileSystemReadonly:  common.Bool(true),
+			IsNonRootUserCheckEnabled: new(true),
+			IsRootFileSystemReadonly:  new(true),
 			Capabilities: &containerinstances.ContainerCapabilities{
 				DropCapabilities: []containerinstances.ContainerCapabilityTypeEnum{
 					containerinstances.ContainerCapabilityTypeCapChown,
@@ -196,10 +195,10 @@ func TestOciTunnelCryptoFlag(t *testing.T) {
 	if ociTunnelCryptoFlag(nil) {
 		t.Error("nil must read as false, so an unmeasured tunnel fails the check")
 	}
-	if ociTunnelCryptoFlag(common.Bool(false)) {
+	if ociTunnelCryptoFlag(new(false)) {
 		t.Error("false must stay false")
 	}
-	if !ociTunnelCryptoFlag(common.Bool(true)) {
+	if !ociTunnelCryptoFlag(new(true)) {
 		t.Error("true must stay true")
 	}
 }

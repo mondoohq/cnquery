@@ -6,6 +6,7 @@ package aix
 import (
 	"bufio"
 	"io"
+	"maps"
 	"strings"
 )
 
@@ -61,14 +62,10 @@ func (s *Stanzas) Effective(name, key string) (string, bool) {
 func (s *Stanzas) EffectiveAttrs(name string) map[string]string {
 	res := map[string]string{}
 	if st := s.Get("default"); st != nil {
-		for k, v := range st.Attrs {
-			res[k] = v
-		}
+		maps.Copy(res, st.Attrs)
 	}
 	if st := s.Get(name); st != nil && name != "default" {
-		for k, v := range st.Attrs {
-			res[k] = v
-		}
+		maps.Copy(res, st.Attrs)
 	}
 	return res
 }
@@ -140,7 +137,7 @@ func ParseStanzas(r io.Reader) (*Stanzas, error) {
 // ttys) and drops empty items.
 func SplitList(v string) []string {
 	res := []string{}
-	for _, item := range strings.Split(v, ",") {
+	for item := range strings.SplitSeq(v, ",") {
 		if item = strings.TrimSpace(item); item != "" {
 			res = append(res, item)
 		}

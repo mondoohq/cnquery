@@ -125,9 +125,9 @@ func TestVolumeSecretNames(t *testing.T) {
 			name: "every projected secret source is reported",
 			source: corev1.VolumeSource{Projected: &corev1.ProjectedVolumeSource{
 				Sources: []corev1.VolumeProjection{
-					{Secret: &corev1.SecretProjection{LocalObjectReference: corev1.LocalObjectReference{Name: "one"}}},
-					{ConfigMap: &corev1.ConfigMapProjection{LocalObjectReference: corev1.LocalObjectReference{Name: "cm"}}},
-					{Secret: &corev1.SecretProjection{LocalObjectReference: corev1.LocalObjectReference{Name: "two"}}},
+					{Secret: &corev1.SecretProjection{Name: "one"}},
+					{ConfigMap: &corev1.ConfigMapProjection{Name: "cm"}},
+					{Secret: &corev1.SecretProjection{Name: "two"}},
 					{ServiceAccountToken: &corev1.ServiceAccountTokenProjection{Path: "token"}},
 				},
 			}},
@@ -155,16 +155,16 @@ func TestVolumeConfigMapNames(t *testing.T) {
 		},
 		{
 			name:     "plain configMap source",
-			source:   corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{LocalObjectReference: corev1.LocalObjectReference{Name: "settings"}}},
+			source:   corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{Name: "settings"}},
 			expected: []string{"settings"},
 		},
 		{
 			name: "every projected configMap source is reported",
 			source: corev1.VolumeSource{Projected: &corev1.ProjectedVolumeSource{
 				Sources: []corev1.VolumeProjection{
-					{ConfigMap: &corev1.ConfigMapProjection{LocalObjectReference: corev1.LocalObjectReference{Name: "ca"}}},
-					{Secret: &corev1.SecretProjection{LocalObjectReference: corev1.LocalObjectReference{Name: "s"}}},
-					{ConfigMap: &corev1.ConfigMapProjection{LocalObjectReference: corev1.LocalObjectReference{Name: "extra"}}},
+					{ConfigMap: &corev1.ConfigMapProjection{Name: "ca"}},
+					{Secret: &corev1.SecretProjection{Name: "s"}},
+					{ConfigMap: &corev1.ConfigMapProjection{Name: "extra"}},
 				},
 			}},
 			expected: []string{"ca", "extra"},
@@ -190,7 +190,7 @@ func TestProjectedServiceAccountTokens(t *testing.T) {
 		assert.Equal(t, []any{}, projectedServiceAccountTokens(
 			corev1.VolumeSource{Projected: &corev1.ProjectedVolumeSource{
 				Sources: []corev1.VolumeProjection{
-					{ConfigMap: &corev1.ConfigMapProjection{LocalObjectReference: corev1.LocalObjectReference{Name: "ca"}}},
+					{ConfigMap: &corev1.ConfigMapProjection{Name: "ca"}},
 				},
 			}}))
 	})

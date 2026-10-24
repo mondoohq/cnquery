@@ -108,7 +108,7 @@ func TestCoordinatorProvidersSnapshot(t *testing.T) {
 		// The installDependencies shape: mutates under coordinator.mutex.
 		go func() {
 			defer wg.Done()
-			for i := 0; i < 500; i++ {
+			for range 500 {
 				c.mutex.Lock()
 				c.Providers().Add(&Provider{Provider: &snapshotProviderB})
 				c.mutex.Unlock()
@@ -117,14 +117,14 @@ func TestCoordinatorProvidersSnapshot(t *testing.T) {
 		// The EnsureProvider shape: mutates with no lock at all.
 		go func() {
 			defer wg.Done()
-			for i := 0; i < 500; i++ {
+			for range 500 {
 				c.Providers().Add(&Provider{Provider: &snapshotProviderB})
 			}
 		}()
 		// LoadSchema's read, which holds only providersMu.
 		go func() {
 			defer wg.Done()
-			for i := 0; i < 500; i++ {
+			for range 500 {
 				_, _ = c.LoadSchema(snapshotProviderA.ID)
 			}
 		}()

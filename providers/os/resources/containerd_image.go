@@ -80,7 +80,7 @@ func parseCtrImageList(output string) []ctrImage {
 			img.platforms = strings.Split(p, ",")
 		}
 		if l := cell(row, 5); l != "" && l != "-" {
-			for _, kv := range strings.Split(l, ",") {
+			for kv := range strings.SplitSeq(l, ",") {
 				k, v, _ := strings.Cut(kv, "=")
 				img.labels[k] = v
 			}

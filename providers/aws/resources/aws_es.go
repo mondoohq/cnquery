@@ -37,10 +37,7 @@ func chunkStrings(s []string, size int) [][]string {
 	}
 	out := make([][]string, 0, (len(s)+size-1)/size)
 	for i := 0; i < len(s); i += size {
-		end := i + size
-		if end > len(s) {
-			end = len(s)
-		}
+		end := min(i+size, len(s))
 		out = append(out, s[i:end])
 	}
 	return out
@@ -595,9 +592,8 @@ func esResolveLogGroup(runtime *plugin.Runtime, arnPtr *string, field *plugin.TV
 
 func getESTags(ctx context.Context, svc *elasticsearchservice.Client, arn *string) (map[string]any, error) {
 	resp, err := svc.ListTags(ctx, &elasticsearchservice.ListTagsInput{ARN: arn})
-	var respErr *http.ResponseError
 	if err != nil {
-		if errors.As(err, &respErr) {
+		if respErr, ok := errors.AsType[*http.ResponseError](err); ok {
 			if respErr.HTTPStatusCode() == 404 {
 				return nil, nil
 			}

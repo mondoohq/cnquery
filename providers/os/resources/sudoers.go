@@ -168,8 +168,8 @@ func (s *mqlSudoers) collectSudoersFiles(conn shared.Connection, path string, vi
 
 	// Parse include directives. Relative paths resolve against this file's
 	// directory and %h expands to the short host name, as sudo does.
-	lines := strings.Split(content.Data, "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(content.Data, "\n")
+	for line := range lines {
 		line = strings.TrimSpace(line)
 
 		// Check for @include or #include

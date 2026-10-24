@@ -247,8 +247,8 @@ func (v *mqlVulnmgmt) getIncognitoReport(mondooClient *gql.MondooClient) (*gql.V
 	platform := conn.Asset().Platform
 
 	gqlVulnReport, err := mondooClient.GetIncognitoVulnReport(mondoogql.PlatformInput{
-		Name:    mondoogql.NewStringPtr(mondoogql.String(platform.Name)),
-		Release: mondoogql.NewStringPtr(mondoogql.String(platform.Version)),
+		Name:    new(mondoogql.String(platform.Name)),
+		Release: new(mondoogql.String(platform.Version)),
 	}, []mondoogql.PackageInput{})
 	if err != nil {
 		return nil, err

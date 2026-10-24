@@ -17,8 +17,8 @@ import (
 func schemaFields(resource any) []string {
 	t := reflect.TypeOf(resource).Elem()
 	res := []string{}
-	for i := 0; i < t.NumField(); i++ {
-		f := t.Field(i)
+	for f := range t.Fields() {
+		f := f
 		if !f.IsExported() || !strings.HasPrefix(f.Type.String(), "plugin.TValue[") {
 			continue
 		}

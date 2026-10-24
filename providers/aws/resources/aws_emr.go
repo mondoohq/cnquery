@@ -1179,7 +1179,6 @@ func (a *mqlAwsEmr) getSecurityConfigurations(conn *connection.AwsConnection) []
 	}
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Emr(region)
 			ctx := context.Background()
@@ -1350,7 +1349,6 @@ func (a *mqlAwsEmr) getStudios(conn *connection.AwsConnection) []*jobpool.Job {
 	}
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Emr(region)
 			ctx := context.Background()

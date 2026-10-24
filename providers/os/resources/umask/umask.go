@@ -13,6 +13,7 @@ import (
 	"io"
 	"math"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -79,7 +80,7 @@ func parseSymbolic(s string) (Mask, error) {
 	var known [3]bool
 	var deny [3]uint32
 
-	for _, clause := range strings.Split(s, ",") {
+	for clause := range strings.SplitSeq(s, ",") {
 		i := 0
 		var who []int
 		for ; i < len(clause); i++ {
@@ -173,8 +174,8 @@ func ParseShell(r io.Reader) []Statement {
 			if pending == "" {
 				pendingStart = lineNo
 			}
-			if strings.HasSuffix(line, "\\") {
-				pending += strings.TrimSuffix(line, "\\") + " "
+			if before, ok := strings.CutSuffix(line, "\\"); ok {
+				pending += before + " "
 				continue
 			}
 			line = pending + line
@@ -326,8 +327,8 @@ func (st *shellState) push(b block) {
 // pop closes the innermost block of kind b, and any block opened after it
 // that was never closed.
 func (st *shellState) pop(b block) {
-	for i := len(st.blocks) - 1; i >= 0; i-- {
-		if st.blocks[i] == b {
+	for i, v := range slices.Backward(st.blocks) {
+		if v == b {
 			st.blocks = st.blocks[:i]
 			return
 		}

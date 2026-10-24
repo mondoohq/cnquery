@@ -73,8 +73,8 @@ func casCertificatesIn(conn *connection.AlicloudConnection, center string) ([]*c
 	page := int64(1)
 	for {
 		resp, err := client.ListUserCertificateOrder(&casclient.ListUserCertificateOrderRequest{
-			OrderType:   tea.String("CERT"),
-			CurrentPage: tea.Int64(page),
+			OrderType:   new("CERT"),
+			CurrentPage: new(page),
 			ShowSize:    tea.Int64(casPageSize),
 		})
 		if err != nil {

@@ -48,7 +48,7 @@ func (r *mqlAlicloudPolardbApplication) applicationAttribute() (*polardb.Describ
 		return nil, err
 	}
 	resp, err := client.DescribeApplicationAttribute(&polardb.DescribeApplicationAttributeRequest{
-		ApplicationId: tea.String(r.applicationId),
+		ApplicationId: new(r.applicationId),
 	})
 	if err != nil {
 		return nil, err

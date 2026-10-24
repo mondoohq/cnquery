@@ -192,9 +192,7 @@ func (d *DnsClient) Query(dnsTypes ...string) (map[string]DnsRecord, error) {
 	for i := range dnsTypes {
 		dnsType := dnsTypes[i]
 
-		workers.Add(1)
-		go func() {
-			defer workers.Done()
+		workers.Go(func() {
 
 			records, err := d.queryDnsType(d.fqdn, dnsType)
 			if err != nil {
@@ -209,7 +207,7 @@ func (d *DnsClient) Query(dnsTypes ...string) (map[string]DnsRecord, error) {
 				res[k] = records[k]
 			}
 			d.sync.Unlock()
-		}()
+		})
 	}
 
 	workers.Wait()
@@ -250,9 +248,7 @@ func (d *DnsClient) QueryAuthoritative(dnsTypes ...string) (map[string]DnsRecord
 	for i := range dnsTypes {
 		dnsType := dnsTypes[i]
 
-		workers.Add(1)
-		go func() {
-			defer workers.Done()
+		workers.Go(func() {
 
 			// Try each nameserver in turn: an individual one may refuse, be
 			// unreachable, or lag behind its peers, and any authoritative server
@@ -278,7 +274,7 @@ func (d *DnsClient) QueryAuthoritative(dnsTypes ...string) (map[string]DnsRecord
 				errs.Add(lastErr)
 				d.sync.Unlock()
 			}
-		}()
+		})
 	}
 
 	workers.Wait()
@@ -306,13 +302,10 @@ func (d *DnsClient) queryNS(zone string) (map[string]DnsRecord, error) {
 		return nil, errors.New("no resolver configured to query NS for " + zone)
 	}
 
-	attempts := d.config.Attempts
-	if attempts < 1 {
-		attempts = 1
-	}
+	attempts := max(d.config.Attempts, 1)
 
 	var lastErr error
-	for attempt := 0; attempt < attempts; attempt++ {
+	for range attempts {
 		for _, server := range d.config.Servers {
 			records, err := d.queryDnsTypeAt(server, true, zone, "NS")
 			if err != nil {

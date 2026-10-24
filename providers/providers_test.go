@@ -114,7 +114,7 @@ func TestProvider_LoadResources_ConcurrentIsRaceFree(t *testing.T) {
 		errCount atomic.Int32
 	)
 	wg.Add(goroutines)
-	for i := 0; i < goroutines; i++ {
+	for range goroutines {
 		go func() {
 			defer wg.Done()
 			<-start

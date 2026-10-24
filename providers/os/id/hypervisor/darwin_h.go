@@ -4,6 +4,7 @@
 package hypervisor
 
 import (
+	"slices"
 	"strings"
 )
 
@@ -64,17 +65,14 @@ var darwinHardwareModelKeys = []string{"Model Name", "Model Identifier"}
 // joined by a newline so a key cannot match across two of them.
 func darwinHardwareModel(stdout string) string {
 	var models []string
-	for _, line := range strings.Split(stdout, "\n") {
+	for line := range strings.SplitSeq(stdout, "\n") {
 		label, value, found := strings.Cut(line, ":")
 		if !found {
 			continue
 		}
 		label = strings.TrimSpace(label)
-		for _, key := range darwinHardwareModelKeys {
-			if label == key {
-				models = append(models, strings.TrimSpace(value))
-				break
-			}
+		if slices.Contains(darwinHardwareModelKeys, label) {
+			models = append(models, strings.TrimSpace(value))
 		}
 	}
 	return strings.Join(models, "\n")

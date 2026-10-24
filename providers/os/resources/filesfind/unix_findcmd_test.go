@@ -9,7 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func ptrInt64(v int64) *int64 { return &v }
+//go:fix inline
+func ptrInt64(v int64) *int64 { return new(v) }
 
 func TestUnixFilesCmdGeneration(t *testing.T) {
 	tests := []struct {
@@ -33,7 +34,7 @@ func TestUnixFilesCmdGeneration(t *testing.T) {
 			// -maxdepth must be decimal: depth 12 stays 12, not octal 14.
 			From:        "/etc",
 			FileType:    "file",
-			Depth:       ptrInt64(12),
+			Depth:       new(int64(12)),
 			ExpectedCmd: "find -L \"/etc\" -xdev -type f -perm -0 -maxdepth 12",
 		},
 		{
@@ -48,7 +49,7 @@ func TestUnixFilesCmdGeneration(t *testing.T) {
 			From:        "/home/user",
 			FileType:    "file",
 			Search:      ".*",
-			Depth:       ptrInt64(1),
+			Depth:       new(int64(1)),
 			ExpectedCmd: "find -L \"/home/user\" -xdev -type f -perm -0 -name '.*' -maxdepth 1",
 		},
 		{
@@ -117,7 +118,7 @@ func TestUnixFilesCmdGeneration(t *testing.T) {
 			From:        "/etc",
 			HasGNUFind:  true,
 			Search:      "*.conf",
-			Depth:       ptrInt64(1),
+			Depth:       new(int64(1)),
 			ExpectedCmd: "find -L \"/etc\" -xdev \\( -path '/etc' -o -xtype l -prune -o -true \\) -perm -0 -name '*.conf' -maxdepth 1 -print",
 		},
 		{
@@ -125,21 +126,21 @@ func TestUnixFilesCmdGeneration(t *testing.T) {
 			// printed nothing; pruning below the depth is POSIX.
 			From:        "/etc",
 			Search:      "passwd",
-			Depth:       ptrInt64(1),
+			Depth:       new(int64(1)),
 			NoMaxDepth:  true,
 			ExpectedCmd: "find -L \"/etc\" -xdev -path '/etc/?*/?*' -prune -o -perm -0 -name 'passwd' -print",
 		},
 		{
 			From:        "/",
 			FileType:    "directory",
-			Depth:       ptrInt64(0),
+			Depth:       new(int64(0)),
 			NoMaxDepth:  true,
 			ExpectedCmd: "find -L \"/\" -xdev -path '/?*' -prune -o -type d -perm -0 -print",
 		},
 		{
 			// glob characters in the start path match themselves
 			From:        "/opt/a*b/",
-			Depth:       ptrInt64(2),
+			Depth:       new(int64(2)),
 			NoMaxDepth:  true,
 			ExpectedCmd: "find -L \"/opt/a*b/\" -xdev -path '/opt/a\\*b/?*/?*/?*' -prune -o -perm -0 -print",
 		},

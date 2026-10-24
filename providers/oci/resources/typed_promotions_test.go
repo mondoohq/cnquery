@@ -22,10 +22,10 @@ func TestOciShieldedInstanceFlags(t *testing.T) {
 		// The four getters are declared on core.PlatformConfig itself, so any
 		// member answers them without a type switch.
 		secureBoot, tpm, measuredBoot, memoryEncryption := ociShieldedInstanceFlags(core.AmdVmPlatformConfig{
-			IsSecureBootEnabled:            boolPtr(true),
-			IsTrustedPlatformModuleEnabled: boolPtr(true),
-			IsMeasuredBootEnabled:          boolPtr(false),
-			IsMemoryEncryptionEnabled:      boolPtr(true),
+			IsSecureBootEnabled:            new(true),
+			IsTrustedPlatformModuleEnabled: new(true),
+			IsMeasuredBootEnabled:          new(false),
+			IsMemoryEncryptionEnabled:      new(true),
 		})
 
 		require.NotNil(t, secureBoot)
@@ -42,9 +42,9 @@ func TestOciShieldedInstanceFlags(t *testing.T) {
 		// Proves no type switch crept back in: an Intel shape must read the
 		// same way an AMD one does.
 		secureBoot, tpm, measuredBoot, memoryEncryption := ociShieldedInstanceFlags(core.IntelVmPlatformConfig{
-			IsSecureBootEnabled:            boolPtr(false),
-			IsTrustedPlatformModuleEnabled: boolPtr(true),
-			IsMeasuredBootEnabled:          boolPtr(true),
+			IsSecureBootEnabled:            new(false),
+			IsTrustedPlatformModuleEnabled: new(true),
+			IsMeasuredBootEnabled:          new(true),
 		})
 
 		require.NotNil(t, secureBoot)
@@ -76,8 +76,8 @@ func TestOciInstanceSource(t *testing.T) {
 		// pointer type in the switch would match nothing, and the instance
 		// would report no boot source at all while still looking read.
 		bootVolumeID, image := ociInstanceSource(core.InstanceSourceViaImageDetails{
-			ImageId:             strPtr("ocid1.image.oc1..img"),
-			KmsKeyId:            strPtr("ocid1.key.oc1..key"),
+			ImageId:             new("ocid1.image.oc1..img"),
+			KmsKeyId:            new("ocid1.key.oc1..key"),
 			BootVolumeSizeInGBs: int64Ptr(120),
 			BootVolumeVpusPerGB: int64Ptr(20),
 		})
@@ -94,7 +94,7 @@ func TestOciInstanceSource(t *testing.T) {
 		// image source to report. A non-nil image here would publish a boot
 		// volume size of null as a fact about the instance.
 		bootVolumeID, image := ociInstanceSource(core.InstanceSourceViaBootVolumeDetails{
-			BootVolumeId: strPtr("ocid1.bootvolume.oc1..vol"),
+			BootVolumeId: new("ocid1.bootvolume.oc1..vol"),
 		})
 
 		assert.Equal(t, "ocid1.bootvolume.oc1..vol", bootVolumeID)
@@ -128,18 +128,18 @@ func TestOciRuleValuesOpenIngressAcrossBothRuleSources(t *testing.T) {
 	// normalize onto securityRule before they reach MQL, so the predicate sees
 	// the same values whichever layer wrote the rule.
 	nsgRule := securityRuleFromNsg(core.SecurityRule{
-		Id:          strPtr("ocid1.securityrule.oc1..open"),
+		Id:          new("ocid1.securityrule.oc1..open"),
 		Direction:   core.SecurityRuleDirectionIngress,
-		Protocol:    strPtr("6"),
-		Source:      strPtr("0.0.0.0/0"),
+		Protocol:    new("6"),
+		Source:      new("0.0.0.0/0"),
 		SourceType:  core.SecurityRuleSourceTypeCidrBlock,
-		IsStateless: boolPtr(true),
+		IsStateless: new(true),
 	})
 	listRule := securityRuleFromIngress(core.IngressSecurityRule{
-		Protocol:    strPtr("6"),
-		Source:      strPtr("0.0.0.0/0"),
+		Protocol:    new("6"),
+		Source:      new("0.0.0.0/0"),
 		SourceType:  core.IngressSecurityRuleSourceTypeCidrBlock,
-		IsStateless: boolPtr(true),
+		IsStateless: new(true),
 	})
 
 	assert.True(t, ociRuleValuesOpenIngress(ociIngressValuesOf(nsgRule)),
@@ -159,20 +159,20 @@ func TestOciRuleValuesOpenIngressAcrossBothRuleSources(t *testing.T) {
 
 	t.Run("narrow and internal sources do not match", func(t *testing.T) {
 		narrow := securityRuleFromIngress(core.IngressSecurityRule{
-			Source:     strPtr("10.0.0.0/16"),
+			Source:     new("10.0.0.0/16"),
 			SourceType: core.IngressSecurityRuleSourceTypeCidrBlock,
 		})
 		assert.False(t, ociRuleValuesOpenIngress(ociIngressValuesOf(narrow)))
 
 		service := securityRuleFromIngress(core.IngressSecurityRule{
-			Source:     strPtr("all-services-in-oracle-services-network"),
+			Source:     new("all-services-in-oracle-services-network"),
 			SourceType: core.IngressSecurityRuleSourceTypeServiceCidrBlock,
 		})
 		assert.False(t, ociRuleValuesOpenIngress(ociIngressValuesOf(service)))
 
 		egress := securityRuleFromNsg(core.SecurityRule{
 			Direction:       core.SecurityRuleDirectionEgress,
-			Destination:     strPtr("0.0.0.0/0"),
+			Destination:     new("0.0.0.0/0"),
 			DestinationType: core.SecurityRuleDestinationTypeCidrBlock,
 		})
 		assert.False(t, ociRuleValuesOpenIngress(ociIngressValuesOf(egress)),
@@ -182,7 +182,7 @@ func TestOciRuleValuesOpenIngressAcrossBothRuleSources(t *testing.T) {
 	t.Run("ipv6 any-address source matches", func(t *testing.T) {
 		v6 := securityRuleFromNsg(core.SecurityRule{
 			Direction:  core.SecurityRuleDirectionIngress,
-			Source:     strPtr("::/0"),
+			Source:     new("::/0"),
 			SourceType: core.SecurityRuleSourceTypeCidrBlock,
 		})
 		assert.True(t, ociRuleValuesOpenIngress(ociIngressValuesOf(v6)))
@@ -195,15 +195,15 @@ func TestOciDnssecKeyVersionArgs(t *testing.T) {
 
 	t.Run("key-signing key with a full lifecycle", func(t *testing.T) {
 		args := ociKskKeyVersionArgs("ocid1.dns-zone.oc1..zone", dns.KskDnssecKeyVersion{
-			Uuid:                            strPtr("uuid-ksk"),
+			Uuid:                            new("uuid-ksk"),
 			Algorithm:                       dns.DnssecSigningAlgorithmRsasha256,
-			LengthInBytes:                   intPtr(256),
-			KeyTag:                          intPtr(12345),
+			LengthInBytes:                   new(256),
+			KeyTag:                          new(12345),
 			TimeCreated:                     sdkTime,
 			TimeActivated:                   sdkTime,
-			PredecessorDnssecKeyVersionUuid: strPtr("uuid-old"),
+			PredecessorDnssecKeyVersionUuid: new("uuid-old"),
 			DsData: []dns.DnssecKeyVersionDsData{
-				{Rdata: strPtr("12345 8 2 ABCD"), DigestType: dns.DnssecDigestTypeSha256},
+				{Rdata: new("12345 8 2 ABCD"), DigestType: dns.DnssecDigestTypeSha256},
 			},
 		})
 
@@ -229,7 +229,7 @@ func TestOciDnssecKeyVersionArgs(t *testing.T) {
 		// "expired before now" or "activated before X" audit would treat that
 		// key as long expired instead of as never scheduled.
 		args := ociKskKeyVersionArgs("ocid1.dns-zone.oc1..zone", dns.KskDnssecKeyVersion{
-			Uuid:        strPtr("uuid-ksk"),
+			Uuid:        new("uuid-ksk"),
 			TimeCreated: sdkTime,
 		})
 
@@ -244,7 +244,7 @@ func TestOciDnssecKeyVersionArgs(t *testing.T) {
 
 	t.Run("an absent key length and tag read null, not zero", func(t *testing.T) {
 		args := ociZskKeyVersionArgs("ocid1.dns-zone.oc1..zone", dns.ZskDnssecKeyVersion{
-			Uuid: strPtr("uuid-zsk"),
+			Uuid: new("uuid-zsk"),
 		})
 
 		assert.Nil(t, args["lengthInBytes"].Value, "a zero-byte key is not the same as an unreported one")
@@ -255,7 +255,7 @@ func TestOciDnssecKeyVersionArgs(t *testing.T) {
 		// The chain of trust runs through the key-signing key, so an empty list
 		// here is a fact about the key rather than a gap in the mapping.
 		args := ociZskKeyVersionArgs("ocid1.dns-zone.oc1..zone", dns.ZskDnssecKeyVersion{
-			Uuid:      strPtr("uuid-zsk"),
+			Uuid:      new("uuid-zsk"),
 			Algorithm: dns.DnssecSigningAlgorithmRsasha256,
 		})
 
@@ -320,14 +320,14 @@ func TestOciMaintenanceWindowArgs(t *testing.T) {
 		args := ociMaintenanceWindowArgs(&database.MaintenanceWindow{
 			Preference:                   database.MaintenanceWindowPreferenceCustomPreference,
 			PatchingMode:                 database.MaintenanceWindowPatchingModeNonrolling,
-			IsCustomActionTimeoutEnabled: boolPtr(true),
-			CustomActionTimeoutInMins:    intPtr(30),
-			IsMonthlyPatchingEnabled:     boolPtr(false),
+			IsCustomActionTimeoutEnabled: new(true),
+			CustomActionTimeoutInMins:    new(30),
+			IsMonthlyPatchingEnabled:     new(false),
 			Months:                       []database.Month{{Name: database.MonthNameJanuary}, {Name: database.MonthNameApril}},
 			WeeksOfMonth:                 []int{2},
 			DaysOfWeek:                   []database.DayOfWeek{{Name: database.DayOfWeekNameSunday}},
 			HoursOfDay:                   []int{4, 20},
-			LeadTimeInWeeks:              intPtr(2),
+			LeadTimeInWeeks:              new(2),
 			SkipRu:                       []bool{true},
 		})
 		require.NotNil(t, args)

@@ -237,7 +237,7 @@ func (s *mqlPostfixService) id() (string, error) {
 // parsePostconf parses `postconf` output (one `name = value` per line).
 func parsePostconf(out string) map[string]any {
 	params := map[string]any{}
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		line = strings.TrimRight(line, "\r")
 		idx := strings.Index(line, "=")
 		if idx < 0 {
@@ -269,18 +269,18 @@ func parsePostfixMainCf(content string) map[string]any {
 		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
 			continue
 		}
-		idx := strings.Index(trimmed, "=")
-		if idx < 0 {
+		before, after, ok := strings.Cut(trimmed, "=")
+		if !ok {
 			continue
 		}
-		key := strings.TrimSpace(trimmed[:idx])
+		key := strings.TrimSpace(before)
 		if key == "" {
 			continue
 		}
 		if _, seen := raw[key]; !seen {
 			order = append(order, key)
 		}
-		raw[key] = strings.TrimSpace(trimmed[idx+1:])
+		raw[key] = strings.TrimSpace(after)
 	}
 
 	// $name / ${name} references are expanded a single level against the
@@ -312,7 +312,7 @@ func parsePostfixMainCf(content string) map[string]any {
 // line is discarded, as Postfix does with a warning.
 func foldContinuationLines(content string) []string {
 	var logical []string
-	for _, raw := range strings.Split(content, "\n") {
+	for raw := range strings.SplitSeq(content, "\n") {
 		line := strings.TrimRight(raw, "\r")
 		trimmed := strings.TrimSpace(line)
 		if trimmed == "" || trimmed[0] == '#' {

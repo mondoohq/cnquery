@@ -5,6 +5,7 @@ package lrcore
 
 import (
 	"bytes"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -879,9 +880,7 @@ os.host {
 }
 `
 			local := map[string]string{"providers/os/resources/os.lr": src}
-			for k, v := range files {
-				local[k] = v
-			}
+			maps.Copy(local, files)
 
 			res, err := Resolve("providers/os/resources/os.lr", func(path string) ([]byte, error) {
 				raw, ok := local[path]

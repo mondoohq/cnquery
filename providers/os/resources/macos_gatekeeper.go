@@ -75,7 +75,7 @@ func spctlStatus(stdout string, stderr string, exitCode int64) (string, error) {
 // and use the first non-empty line so trailing newlines or stray banner
 // lines don't trip up downstream matchers.
 func parseSpctlStatus(raw string) string {
-	for _, line := range strings.Split(raw, "\n") {
+	for line := range strings.SplitSeq(raw, "\n") {
 		trimmed := strings.TrimSpace(line)
 		if trimmed != "" {
 			return trimmed

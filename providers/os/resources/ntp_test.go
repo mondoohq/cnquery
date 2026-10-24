@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -116,12 +117,7 @@ func TestNtpConfPoolsAndPeers(t *testing.T) {
 func TestNtpConfPath(t *testing.T) {
 	has := func(paths ...string) func(string) bool {
 		return func(p string) bool {
-			for _, x := range paths {
-				if x == p {
-					return true
-				}
-			}
-			return false
+			return slices.Contains(paths, p)
 		}
 	}
 	// classic ntp (Debian 9 to 11)

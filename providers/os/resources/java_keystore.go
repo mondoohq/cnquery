@@ -433,7 +433,7 @@ func resolveTruststorePaths(conn shared.Connection, candidates []string) map[str
 // prints. An empty resolution (a dangling link, or no readlink -f) is skipped.
 func parseReadlinkOutput(out string) map[string]string {
 	res := map[string]string{}
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		p, r, ok := strings.Cut(line, "\t")
 		if !ok || p == "" || !strings.HasPrefix(r, "/") {
 			continue

@@ -25,8 +25,7 @@ func (r *mqlMongo) id() (string, error) {
 // (command error code 13). Only these should be treated as "not visible";
 // every other error must propagate.
 func isUnauthorized(err error) bool {
-	var ce mongo.CommandError
-	if errors.As(err, &ce) {
+	if ce, ok := errors.AsType[mongo.CommandError](err); ok {
 		return ce.Code == 13
 	}
 	return false

@@ -239,7 +239,7 @@ func DetectOllamaModels(afs *afero.Afero, modelsDir string) []ModelInfo {
 
 					// Build tags from tag name parts (split on -)
 					var modelTags []string
-					for _, part := range strings.Split(tag.Name(), "-") {
+					for part := range strings.SplitSeq(tag.Name(), "-") {
 						if part != "" && part != "latest" {
 							modelTags = append(modelTags, part)
 						}

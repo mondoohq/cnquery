@@ -473,7 +473,7 @@ func gitCredentials(conf *inventory.Config) []*vault.Credential {
 // isHiddenPath reports whether any path segment is hidden (starts with a dot),
 // e.g. files under .github/ or a top-level .drone.yml.
 func isHiddenPath(p string) bool {
-	for _, fragment := range strings.Split(p, "/") {
+	for fragment := range strings.SplitSeq(p, "/") {
 		if strings.HasPrefix(fragment, ".") {
 			return true
 		}
@@ -486,7 +486,7 @@ func isHiddenPath(p string) bool {
 // (30 by default), so a repo with many matching files would otherwise be
 // silently truncated to the first page.
 func searchCode(ctx context.Context, client *github.Client, query string) ([]*github.CodeResult, error) {
-	opts := &github.SearchOptions{ListOptions: github.ListOptions{PerPage: 100}}
+	opts := &github.SearchOptions{PerPage: 100}
 	var results []*github.CodeResult
 	for {
 		res, resp, err := client.Search.Code(ctx, query, opts)

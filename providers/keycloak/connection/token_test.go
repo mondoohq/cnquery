@@ -64,7 +64,7 @@ func TestTokenIsCachedUntilItExpires(t *testing.T) {
 	ts := newTokenSource(srv.Client(), srv.URL, passwordGrant())
 	ts.now = func() time.Time { return now }
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		token, err := ts.Token(context.Background())
 		require.NoError(t, err)
 		assert.Equal(t, "access-1", token)

@@ -128,7 +128,7 @@ func Resolve(vars map[string]string, home string, settings *ServerSettings) *Con
 	}
 
 	if s := get(vars, "OLLAMA_ORIGINS"); s != "" {
-		for _, o := range strings.Split(s, ",") {
+		for o := range strings.SplitSeq(s, ",") {
 			o = strings.TrimSpace(o)
 			if o == "" {
 				continue
@@ -159,7 +159,7 @@ func Resolve(vars map[string]string, home string, settings *ServerSettings) *Con
 	}
 
 	if s := get(vars, "OLLAMA_REMOTES"); s != "" {
-		for _, r := range strings.Split(s, ",") {
+		for r := range strings.SplitSeq(s, ",") {
 			if r = strings.TrimSpace(r); r != "" {
 				c.Remotes = append(c.Remotes, r)
 			}

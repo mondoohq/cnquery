@@ -50,7 +50,7 @@ func TestStripCtlAndExtFromUnicode(t *testing.T) {
 
 func TestStripCtlAndExtFromUnicodeRandom(t *testing.T) {
 	r := rand.New(rand.NewSource(1))
-	for i := 0; i < 2000; i++ {
+	for range 2000 {
 		var sb strings.Builder
 		for j := 0; j < 1+r.Intn(20); j++ {
 			sb.WriteRune(rune(r.Intn(0x300)))

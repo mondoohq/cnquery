@@ -644,8 +644,7 @@ func efsPolicyNotFound(err error) bool {
 	if err == nil {
 		return false
 	}
-	var respErr *http.ResponseError
-	if errors.As(err, &respErr) {
+	if respErr, ok := errors.AsType[*http.ResponseError](err); ok {
 		return respErr.HTTPStatusCode() == 404
 	}
 	return false

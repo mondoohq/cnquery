@@ -245,7 +245,7 @@ func ParseSshSettings(runningConfig string) *SshSettings {
 			// A sub-block exists to enable the service in that instance, so
 			// it counts unless it explicitly shuts it down.
 			enabled := true
-			for _, sub := range strings.Split(block, "\n") {
+			for sub := range strings.SplitSeq(block, "\n") {
 				switch strings.TrimSpace(sub) {
 				case "shutdown":
 					enabled = false
@@ -675,7 +675,7 @@ func ParseNtpAuth(runningConfig string) *NtpAuthState {
 			}
 		case strings.HasPrefix(line, "ntp trusted-key"):
 			if m := ntpTrustedKeyRe.FindStringSubmatch(line); m != nil {
-				for _, tok := range strings.Fields(m[1]) {
+				for tok := range strings.FieldsSeq(m[1]) {
 					id, err := strconv.Atoi(tok)
 					if err == nil {
 						state.TrustedKeyIDs = append(state.TrustedKeyIDs, id)

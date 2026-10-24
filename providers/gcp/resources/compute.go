@@ -14,8 +14,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aws/smithy-go/ptr"
-
 	computev1 "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/rs/zerolog/log"
@@ -3304,7 +3302,7 @@ func (g *mqlGcpProjectComputeService) forwardingRules() ([]any, error) {
 	}
 
 	var fwRules []any
-	it := fwrSvc.AggregatedList(ctx, &computepb.AggregatedListForwardingRulesRequest{Project: projectId, IncludeAllScopes: ptr.Bool(true)})
+	it := fwrSvc.AggregatedList(ctx, &computepb.AggregatedListForwardingRulesRequest{Project: projectId, IncludeAllScopes: new(true)})
 	for {
 		resp, err := it.Next()
 		if err == iterator.Done {

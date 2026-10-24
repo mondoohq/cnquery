@@ -4,6 +4,7 @@
 package logrotate
 
 import (
+	"maps"
 	"strings"
 )
 
@@ -93,8 +94,8 @@ func ParseContent(filePath string, content string) (globalConfig map[string]stri
 		}
 
 		// Check for block opening: paths followed by { on the same line
-		if strings.HasSuffix(trimmed, "{") {
-			pathsPart := strings.TrimSuffix(trimmed, "{")
+		if before, ok := strings.CutSuffix(trimmed, "{"); ok {
+			pathsPart := before
 			pathsPart = strings.TrimSpace(pathsPart)
 			if pathsPart != "" {
 				blockPaths = splitPaths(pathsPart)
@@ -208,8 +209,6 @@ func isScriptDirective(line string) bool {
 
 func copyMap(m map[string]string) map[string]string {
 	cp := make(map[string]string, len(m))
-	for k, v := range m {
-		cp[k] = v
-	}
+	maps.Copy(cp, m)
 	return cp
 }

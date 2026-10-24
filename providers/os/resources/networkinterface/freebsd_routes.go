@@ -6,6 +6,7 @@ package networkinterface
 import (
 	"encoding/json"
 	"net"
+	"slices"
 	"sort"
 	"strings"
 
@@ -159,13 +160,7 @@ func freebsdRouteDestination(dest string, ipv6 bool, flags []string) string {
 	// A host route carries no prefix in netstat's output. The route matches
 	// the one address exactly, so spell out the full-length prefix the way
 	// the other detectors report every destination.
-	isHost := false
-	for _, f := range flags {
-		if f == "HOST" {
-			isHost = true
-			break
-		}
-	}
+	isHost := slices.Contains(flags, "HOST")
 	if !isHost {
 		return dest
 	}

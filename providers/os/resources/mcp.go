@@ -65,7 +65,7 @@ func deriveMcpTransport(explicitType, command, url string) string {
 // strSliceToArrayData converts a string slice into an llx string-array RawData,
 // the shape every mcpServer resource uses for its args field.
 func strSliceToArrayData(in []string) *llx.RawData {
-	out := make([]interface{}, len(in))
+	out := make([]any, len(in))
 	for i, v := range in {
 		out[i] = v
 	}

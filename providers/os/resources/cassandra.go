@@ -85,7 +85,7 @@ func runningCassandraConfig(runtime *plugin.Runtime, afs *afero.Afero) string {
 	if cmd.GetExitcode().Data != 0 {
 		return ""
 	}
-	for _, pid := range strings.Fields(cmd.GetStdout().Data) {
+	for pid := range strings.FieldsSeq(cmd.GetStdout().Data) {
 		raw, err := afs.ReadFile(path.Join("/proc", pid, "cmdline"))
 		if err != nil {
 			continue

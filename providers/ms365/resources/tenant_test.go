@@ -90,10 +90,10 @@ func TestEnabledServicePlanServices(t *testing.T) {
 func TestSumPaidLicenses(t *testing.T) {
 	sub := func(sku, status string, trial bool, seats int32) companySubscription {
 		return companySubscription{
-			SkuPartNumber: ptr(sku),
-			Status:        ptr(status),
-			IsTrial:       ptr(trial),
-			TotalLicenses: ptr(seats),
+			SkuPartNumber: new(sku),
+			Status:        new(status),
+			IsTrial:       new(trial),
+			TotalLicenses: new(seats),
 		}
 	}
 
@@ -135,8 +135,8 @@ func TestSumPaidLicenses(t *testing.T) {
 		{
 			name: "nil pointers are tolerated",
 			in: []companySubscription{
-				{TotalLicenses: ptr(int32(25))},                                   // nil status/trial/sku
-				{SkuPartNumber: ptr("ENTERPRISEPREMIUM"), Status: ptr("Enabled")}, // nil seats
+				{TotalLicenses: new(int32(25))},                                   // nil status/trial/sku
+				{SkuPartNumber: new("ENTERPRISEPREMIUM"), Status: new("Enabled")}, // nil seats
 			},
 			want: 25,
 		},

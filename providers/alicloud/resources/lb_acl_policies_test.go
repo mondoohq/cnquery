@@ -6,7 +6,6 @@ package resources
 import (
 	"testing"
 
-	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,13 +39,13 @@ func TestSplitCommaList(t *testing.T) {
 		raw      *string
 		expected []string
 	}{
-		{"single", tea.String("TLSv1.2"), []string{"TLSv1.2"}},
-		{"multiple", tea.String("TLSv1.2,TLSv1.3"), []string{"TLSv1.2", "TLSv1.3"}},
-		{"whitespace tolerated", tea.String(" TLSv1.2 , TLSv1.3 "), []string{"TLSv1.2", "TLSv1.3"}},
-		{"trailing separator", tea.String("TLSv1.2,"), []string{"TLSv1.2"}},
+		{"single", new("TLSv1.2"), []string{"TLSv1.2"}},
+		{"multiple", new("TLSv1.2,TLSv1.3"), []string{"TLSv1.2", "TLSv1.3"}},
+		{"whitespace tolerated", new(" TLSv1.2 , TLSv1.3 "), []string{"TLSv1.2", "TLSv1.3"}},
+		{"trailing separator", new("TLSv1.2,"), []string{"TLSv1.2"}},
 		// nil rather than a list holding "": an empty value is no versions,
 		// not one blank version
-		{"empty", tea.String(""), nil},
+		{"empty", new(""), nil},
 		{"absent", nil, nil},
 	}
 	for _, test := range tests {

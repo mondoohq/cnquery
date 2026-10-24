@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
@@ -729,12 +730,8 @@ func walkNginxConfig(directives []nginx.Directive, sslProtocols string) nginxWal
 
 	// Merge main + http params for the top-level params field.
 	w.params = make(map[string]any, len(mainParams)+len(w.httpParams))
-	for k, v := range mainParams {
-		w.params[k] = v
-	}
-	for k, v := range w.httpParams {
-		w.params[k] = v
-	}
+	maps.Copy(w.params, mainParams)
+	maps.Copy(w.params, w.httpParams)
 	return w
 }
 
@@ -794,12 +791,8 @@ func nginxBlockScope(directives []nginx.Directive) nginxScope {
 // (the parent's come first, then own's).
 func (parent nginxScope) child(own nginxScope) nginxScope {
 	eff := nginxScope{values: make(map[string]string, len(parent.values)+len(own.values))}
-	for k, v := range parent.values {
-		eff.values[k] = v
-	}
-	for k, v := range own.values {
-		eff.values[k] = v
-	}
+	maps.Copy(eff.values, parent.values)
+	maps.Copy(eff.values, own.values)
 
 	switch eff.values["add_header_inherit"] {
 	case "off":
@@ -1097,7 +1090,7 @@ func walkHTTPBlock(directives []nginx.Directive, httpParams map[string]any, serv
 			srv := parseNginxServerBlock(d.Block)
 			*servers = append(*servers, srv)
 			if srv.Listen != "" {
-				for _, l := range strings.Split(srv.Listen, ",") {
+				for l := range strings.SplitSeq(srv.Listen, ",") {
 					*listenAddrs = append(*listenAddrs, strings.TrimSpace(l))
 				}
 			}

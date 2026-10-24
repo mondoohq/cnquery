@@ -6,6 +6,7 @@ package cmd
 import (
 	stdctx "context"
 	"fmt"
+	"maps"
 	"os"
 	"regexp"
 	"strconv"
@@ -616,13 +617,13 @@ func (h *LRHandler) textDocumentDocumentSymbol(context *glsp.Context, params *pr
 
 		// Add detail for resource modifiers
 		if resource.IsPrivate {
-			resourceSymbol.Detail = stringPtr("private")
+			resourceSymbol.Detail = new("private")
 		}
 		if resource.IsExtension {
 			if resourceSymbol.Detail != nil {
-				resourceSymbol.Detail = stringPtr(*resourceSymbol.Detail + " extend")
+				resourceSymbol.Detail = new(*resourceSymbol.Detail + " extend")
 			} else {
-				resourceSymbol.Detail = stringPtr("extend")
+				resourceSymbol.Detail = new("extend")
 			}
 		}
 
@@ -1469,9 +1470,7 @@ func (h *LRHandler) getResourceInfo(resourceID string, ast *lrcore.LR) (*resourc
 
 	// Copy original options safely
 	if ast.Options != nil {
-		for k, v := range ast.Options {
-			astCopy.Options[k] = v
-		}
+		maps.Copy(astCopy.Options, ast.Options)
 	}
 
 	// Add provider if missing
@@ -1511,6 +1510,8 @@ func (h *LRHandler) getResourceInfo(resourceID string, ast *lrcore.LR) (*resourc
 }
 
 // stringPtr returns a pointer to a string (helper function)
+//
+//go:fix inline
 func stringPtr(s string) *string {
-	return &s
+	return new(s)
 }

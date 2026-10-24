@@ -442,7 +442,7 @@ func parseBlockPairs(out string) (blockdevices, error) {
 	nodes := map[string]*pairNode{}
 	order := []string{}
 
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue

@@ -162,7 +162,7 @@ func (c *PveConnection) GetWebhookEndpoints() ([]WebhookEndpoint, error) {
 func PropertyStringNames(entries []string) []string {
 	out := make([]string, 0, len(entries))
 	for _, entry := range entries {
-		for _, part := range strings.Split(entry, ",") {
+		for part := range strings.SplitSeq(entry, ",") {
 			key, value, found := strings.Cut(strings.TrimSpace(part), "=")
 			if !found || key != "name" || value == "" {
 				continue

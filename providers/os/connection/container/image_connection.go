@@ -5,6 +5,7 @@ package container
 
 import (
 	"errors"
+	"maps"
 	"os"
 	"slices"
 
@@ -199,9 +200,7 @@ func NewRegistryImage(id uint32, conf *inventory.Config, asset *inventory.Asset)
 		asset.Labels = map[string]string{}
 	}
 
-	for k, v := range labels {
-		asset.Labels[k] = v
-	}
+	maps.Copy(asset.Labels, labels)
 
 	return conn, err
 }

@@ -6,14 +6,13 @@ package resources
 import (
 	"testing"
 
-	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/mql/providers/oci/connection"
 )
 
 func scopeCompartment(id, name string) identity.Compartment {
-	return identity.Compartment{Id: common.String(id), Name: common.String(name)}
+	return identity.Compartment{Id: new(id), Name: new(name)}
 }
 
 // compartmentItem stands in for a listed resource that records its

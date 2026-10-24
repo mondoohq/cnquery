@@ -18,11 +18,12 @@ import (
 // notInUseErr is what every Organizations call answers on a standalone account.
 func notInUseErr() error {
 	return &orgtypes.AWSOrganizationsNotInUseException{
-		Message: strPtrOrg("Your account is not a member of an organization."),
+		Message: new("Your account is not a member of an organization."),
 	}
 }
 
-func strPtrOrg(s string) *string { return &s }
+//go:fix inline
+func strPtrOrg(s string) *string { return new(s) }
 
 // orgDeniedErr is the 403 shape Is400AccessDeniedError matches, which is a
 // different situation: the account may well be in an organization, we were

@@ -30,7 +30,7 @@ func testConn(srv *httptest.Server) *NeonConnection {
 func writePage(w http.ResponseWriter, key string, page, n int, cursor string) {
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, `{%q:[`, key)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if i > 0 {
 			io.WriteString(w, ",")
 		}
@@ -281,7 +281,7 @@ func TestClassifiersRejectNonAPIErrors(t *testing.T) {
 func writeNextPage(w http.ResponseWriter, key string, page, n int, next string) {
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, `{%q:[`, key)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if i > 0 {
 			io.WriteString(w, ",")
 		}
@@ -352,7 +352,7 @@ func TestGetPagedCursorPrefersNextOverCursor(t *testing.T) {
 		case "":
 			w.Header().Set("Content-Type", "application/json")
 			io.WriteString(w, `{"items":[`)
-			for i := 0; i < pageSize; i++ {
+			for i := range pageSize {
 				if i > 0 {
 					io.WriteString(w, ",")
 				}

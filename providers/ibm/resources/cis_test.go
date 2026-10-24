@@ -100,7 +100,7 @@ func TestListCisZonesPages(t *testing.T) {
 			"created_on": "2026-10-01T08:00:00.123456Z", "modified_on": "2026-10-02T08:00:00Z"}`
 	}
 	full := "["
-	for i := 0; i < int(cisZonePageSize); i++ {
+	for i := range int(cisZonePageSize) {
 		if i > 0 {
 			full += ","
 		}
@@ -251,7 +251,7 @@ func TestListCisDnsRecords(t *testing.T) {
 		require.Equal(t, "/v1/"+testCisCRN+"/zones/"+testCisZone+"/dns_records", r.URL.Path)
 		if r.URL.Query().Get("page") == "1" {
 			page := "["
-			for i := 0; i < int(cisRecordPageSize); i++ {
+			for i := range int(cisRecordPageSize) {
 				if i > 0 {
 					page += ","
 				}

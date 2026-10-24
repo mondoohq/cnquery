@@ -43,7 +43,7 @@ func plainSchemaFields(t *testing.T, resource string) []string {
 	require.NotNil(t, loc, "%s is not declared in mikrotik.lr", resource)
 
 	fields := []string{}
-	for _, line := range strings.Split(string(raw)[loc[1]:], "\n") {
+	for line := range strings.SplitSeq(string(raw)[loc[1]:], "\n") {
 		trimmed := strings.TrimSpace(line)
 		if trimmed == "}" {
 			break
