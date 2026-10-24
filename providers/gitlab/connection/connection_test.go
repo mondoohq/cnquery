@@ -4,10 +4,12 @@
 package connection
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v3"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/vault"
 )
@@ -136,4 +138,37 @@ func TestIsGroupIsProject(t *testing.T) {
 		assert.True(t, conn.IsGroup())
 		assert.Equal(t, "acme/platform/api", conn.GroupName())
 	})
+}
+
+func TestMemberRolesFetchesOncePerKey(t *testing.T) {
+	// Synthetic: no target showed this.
+	c := &GitLabConnection{}
+	calls := map[string]int{}
+	fetch := func(key string, roles []*gitlab.MemberRole, err error) func() ([]*gitlab.MemberRole, error) {
+		return func() ([]*gitlab.MemberRole, error) {
+			calls[key]++
+			return roles, err
+		}
+	}
+
+	groupRoles := []*gitlab.MemberRole{{ID: 7}}
+	for range 3 {
+		got, err := c.MemberRoles("group/acme", fetch("group/acme", groupRoles, nil))
+		require.NoError(t, err)
+		assert.Equal(t, groupRoles, got)
+	}
+	assert.Equal(t, 1, calls["group/acme"])
+
+	refused := errors.New("403 Forbidden")
+	for range 2 {
+		got, err := c.MemberRoles("instance", fetch("instance", nil, refused))
+		assert.Nil(t, got)
+		assert.ErrorIs(t, err, refused)
+	}
+	assert.Equal(t, 1, calls["instance"], "a refused listing is remembered, not retried per grant")
+
+	other, err := c.MemberRoles("group/other", fetch("group/other", nil, nil))
+	require.NoError(t, err)
+	assert.Empty(t, other)
+	assert.Equal(t, 1, calls["group/other"])
 }

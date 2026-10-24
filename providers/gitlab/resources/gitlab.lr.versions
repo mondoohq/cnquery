@@ -866,6 +866,7 @@ gitlab.protectedBranch.accessLevel.accessLevel 13.3.9
 gitlab.protectedBranch.accessLevel.accessLevelDescription 13.3.9
 gitlab.protectedBranch.accessLevel.deployKeyId 13.3.9
 gitlab.protectedBranch.accessLevel.group 13.3.9
+gitlab.protectedBranch.accessLevel.memberRole 14.1.6
 gitlab.protectedBranch.accessLevel.user 13.3.9
 gitlab.settings 13.0.3
 gitlab.settings.adminMode 13.6.2

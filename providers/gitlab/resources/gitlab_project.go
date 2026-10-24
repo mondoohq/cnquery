@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -325,7 +326,7 @@ func (p *mqlGitlabProject) approvalRules() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		branches, err := approvalRuleProtectedBranches(p.MqlRuntime, p.Id.Data, rule.ProtectedBranches, defaultBranchName)
+		branches, err := approvalRuleProtectedBranches(p.MqlRuntime, p.Id.Data, p.FullPath.Data, rule.ProtectedBranches, defaultBranchName)
 		if err != nil {
 			return nil, err
 		}
@@ -407,18 +408,18 @@ func groupsToDicts(groups []*gitlab.Group) []any {
 // unique within a project. Keying on the name alone made every project in a
 // `gitlab.group.projects { protectedBranches }` query resolve to the first
 // project's branch settings.
-func newMqlProtectedBranch(runtime *plugin.Runtime, projectID int64, b *gitlab.ProtectedBranch, defaultBranchName string) (plugin.Resource, error) {
+func newMqlProtectedBranch(runtime *plugin.Runtime, projectID int64, projectPath string, b *gitlab.ProtectedBranch, defaultBranchName string) (plugin.Resource, error) {
 	prefix := projectScopedID("gitlab.project.protectedBranch", projectID, b.Name)
 
-	push, err := projectBranchAccessLevels(runtime, prefix+"/push", b.PushAccessLevels)
+	push, err := projectBranchAccessLevels(runtime, prefix+"/push", projectPath, b.PushAccessLevels)
 	if err != nil {
 		return nil, err
 	}
-	merge, err := projectBranchAccessLevels(runtime, prefix+"/merge", b.MergeAccessLevels)
+	merge, err := projectBranchAccessLevels(runtime, prefix+"/merge", projectPath, b.MergeAccessLevels)
 	if err != nil {
 		return nil, err
 	}
-	unprotect, err := projectBranchAccessLevels(runtime, prefix+"/unprotect", b.UnprotectAccessLevels)
+	unprotect, err := projectBranchAccessLevels(runtime, prefix+"/unprotect", projectPath, b.UnprotectAccessLevels)
 	if err != nil {
 		return nil, err
 	}
@@ -441,13 +442,13 @@ func newMqlProtectedBranch(runtime *plugin.Runtime, projectID int64, b *gitlab.P
 // values surfaced by gitlab.project.protectedBranches(). The GitLab
 // `/approval_rules` response embeds the full ProtectedBranch object, not a
 // name-only summary, so the shared constructor can populate every field.
-func approvalRuleProtectedBranches(runtime *plugin.Runtime, projectID int64, branches []*gitlab.ProtectedBranch, defaultBranchName string) ([]any, error) {
+func approvalRuleProtectedBranches(runtime *plugin.Runtime, projectID int64, projectPath string, branches []*gitlab.ProtectedBranch, defaultBranchName string) ([]any, error) {
 	out := make([]any, 0, len(branches))
 	for _, b := range branches {
 		if b == nil {
 			continue
 		}
-		mqlBranch, err := newMqlProtectedBranch(runtime, projectID, b, defaultBranchName)
+		mqlBranch, err := newMqlProtectedBranch(runtime, projectID, projectPath, b, defaultBranchName)
 		if err != nil {
 			return nil, err
 		}
@@ -560,7 +561,7 @@ func (p *mqlGitlabProject) protectedBranches() ([]any, error) {
 
 	var mqlProtectedBranches []any
 	for _, branch := range protectedBranches {
-		mqlProtectedBranch, err := newMqlProtectedBranch(p.MqlRuntime, p.Id.Data, branch, defaultBranch)
+		mqlProtectedBranch, err := newMqlProtectedBranch(p.MqlRuntime, p.Id.Data, p.FullPath.Data, branch, defaultBranch)
 		if err != nil {
 			return nil, err
 		}
@@ -577,6 +578,100 @@ func (p *mqlGitlabProject) protectedBranches() ([]any, error) {
 type mqlGitlabProtectedBranchAccessLevelInternal struct {
 	cacheUserID  int64
 	cacheGroupID int64
+	// cacheMemberRoleID is the custom role the grant targets, 0 when none.
+	cacheMemberRoleID int64
+	// cacheNamespacePath is the full path of the project or group that owns
+	// the protected branch; its top-level group holds the custom roles.
+	cacheNamespacePath string
+}
+
+// memberRole resolves the custom role a grant targets. Custom roles are defined
+// on the top-level group on GitLab.com and on the instance on self-managed
+// GitLab, so the grant's role id is looked up in the top-level group's role
+// list first and the instance list second. Each list is fetched once per
+// connection and shared by every grant.
+func (a *mqlGitlabProtectedBranchAccessLevel) memberRole() (*mqlGitlabMemberRole, error) {
+	conn := a.MqlRuntime.Connection.(*connection.GitLabConnection)
+	root := topLevelNamespacePath(a.cacheNamespacePath)
+
+	role, err := resolveMemberRole(a.cacheMemberRoleID,
+		func() ([]*gitlab.MemberRole, error) {
+			if root == "" {
+				return nil, nil
+			}
+			return conn.MemberRoles("group/"+root, func() ([]*gitlab.MemberRole, error) {
+				roles, err := listGroupMemberRoles(conn.Client(), root)
+				return roles, classifyMemberRolesError(err, "group "+root)
+			})
+		},
+		func() ([]*gitlab.MemberRole, error) {
+			return conn.MemberRoles("instance", func() ([]*gitlab.MemberRole, error) {
+				roles, err := listInstanceMemberRoles(conn.Client())
+				return roles, classifyMemberRolesError(err, "instance")
+			})
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	if role == nil {
+		a.MemberRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newMqlGitlabMemberRole(a.MqlRuntime, role)
+}
+
+// resolveMemberRole finds the custom role with the given id in the first list
+// that holds it. An id of 0 means the grant targets no custom role and returns
+// nil without reading any list. A list that could not be read does not stop
+// the search; its error is returned only when no other list held the role,
+// because then the answer is unknown rather than absent.
+func resolveMemberRole(id int64, lists ...func() ([]*gitlab.MemberRole, error)) (*gitlab.MemberRole, error) {
+	if id <= 0 {
+		return nil, nil
+	}
+	var firstErr error
+	for _, list := range lists {
+		roles, err := list()
+		if err != nil {
+			if firstErr == nil {
+				firstErr = err
+			}
+			continue
+		}
+		for _, r := range roles {
+			if r != nil && r.ID == id {
+				return r, nil
+			}
+		}
+	}
+	return nil, firstErr
+}
+
+// topLevelNamespacePath returns the first segment of a project or group full
+// path ("acme" for "acme/platform/api"), which names the top-level group.
+func topLevelNamespacePath(fullPath string) string {
+	root, _, _ := strings.Cut(strings.Trim(fullPath, "/"), "/")
+	return root
+}
+
+// classifyMemberRolesError maps a member-role listing failure. A 404 means
+// the scope has no custom roles to list (a personal namespace, a tier
+// without them, an instance that only defines them per group), so it reads
+// as an empty list. A 401 or 403 is a refusal and stays an error.
+func classifyMemberRolesError(err error, scope string) error {
+	switch {
+	case err == nil:
+		return nil
+	case isGitlabStatus(err, 404):
+		return nil
+	case isGitlabStatus(err, 401):
+		return llx.Unauthenticated(fmt.Errorf("listing custom member roles of %s: %w", scope, err))
+	case isGitlabStatus(err, 403):
+		return llx.Forbidden(fmt.Errorf("listing custom member roles of %s: %w", scope, err))
+	default:
+		return err
+	}
 }
 
 func (a *mqlGitlabProtectedBranchAccessLevel) user() (*mqlGitlabUser, error) {
@@ -626,7 +721,7 @@ func newMqlProtectedBranchAccessLevel(runtime *plugin.Runtime, idPrefix string, 
 	return al, nil
 }
 
-func projectBranchAccessLevels(runtime *plugin.Runtime, idPrefix string, descs []*gitlab.BranchAccessDescription) ([]any, error) {
+func projectBranchAccessLevels(runtime *plugin.Runtime, idPrefix, projectPath string, descs []*gitlab.BranchAccessDescription) ([]any, error) {
 	out := make([]any, 0, len(descs))
 	for _, d := range descs {
 		if d == nil {
@@ -636,6 +731,8 @@ func projectBranchAccessLevels(runtime *plugin.Runtime, idPrefix string, descs [
 		if err != nil {
 			return nil, err
 		}
+		al.cacheMemberRoleID = d.MemberRoleID
+		al.cacheNamespacePath = projectPath
 		out = append(out, al)
 	}
 	return out, nil
