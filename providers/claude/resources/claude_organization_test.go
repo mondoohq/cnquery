@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/anthropics/anthropic-sdk-go/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers/claude/connection"
@@ -361,4 +362,60 @@ func TestWorkspaceArgsRejectsUnparseableArchivedAt(t *testing.T) {
 	_, err := workspaceArgs(w)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "archivedAt")
+}
+
+func decodeWebhook(t *testing.T, payload string) anthropic.BetaOrganizationWebhookEndpoint {
+	t.Helper()
+	var w anthropic.BetaOrganizationWebhookEndpoint
+	require.NoError(t, json.Unmarshal([]byte(payload), &w))
+	return w
+}
+
+// Synthetic: payload shaped after the SDK's webhook endpoint type; no
+// organization with webhooks turned on was available.
+func TestWebhookArgsDisabledEndpoint(t *testing.T) {
+	w := decodeWebhook(t, `{
+		"id": "whep_0001",
+		"name": "enforcement",
+		"description": "Pages the trust team",
+		"url": "https://hooks.example.invalid/claude",
+		"enabled_events": ["user_profile.enforcement_action_opened", "user_profile.enforcement_action_resolved"],
+		"state": "disabled",
+		"disabled_reason": "too_many_failed_deliveries",
+		"created_at": "2026-10-10T09:00:00Z",
+		"updated_at": "2026-10-12T09:00:00Z"
+	}`)
+
+	args := webhookArgs(w)
+	assert.Equal(t, "whep_0001", args["__id"].Value)
+	assert.Equal(t, "enforcement", args["name"].Value)
+	assert.Equal(t, "Pages the trust team", args["description"].Value)
+	assert.Equal(t, "https://hooks.example.invalid/claude", args["url"].Value)
+	assert.Equal(t, []interface{}{"user_profile.enforcement_action_opened", "user_profile.enforcement_action_resolved"}, args["enabledEvents"].Value)
+	assert.Equal(t, "disabled", args["state"].Value)
+	assert.Equal(t, "too_many_failed_deliveries", args["disabledReason"].Value)
+	assert.Equal(t, time.Date(2026, 10, 12, 9, 0, 0, 0, time.UTC), *(args["updatedAt"].Value.(*time.Time)))
+}
+
+// Synthetic: the API sends empty strings for an unset name, description and
+// disabled reason. Those must read null, so a check for endpoints Anthropic
+// disabled does not match an enabled one with an empty reason.
+func TestWebhookArgsEmptyStringsReadNull(t *testing.T) {
+	w := decodeWebhook(t, `{
+		"id": "whep_0002",
+		"name": "",
+		"description": "",
+		"url": "https://hooks.example.invalid/other",
+		"enabled_events": ["user_profile.enforcement_action_opened"],
+		"state": "enabled",
+		"disabled_reason": "",
+		"created_at": "2026-10-10T09:00:00Z",
+		"updated_at": "2026-10-10T09:00:00Z"
+	}`)
+
+	args := webhookArgs(w)
+	assert.Nil(t, args["name"].Value)
+	assert.Nil(t, args["description"].Value)
+	assert.Nil(t, args["disabledReason"].Value)
+	assert.Equal(t, "enabled", args["state"].Value)
 }

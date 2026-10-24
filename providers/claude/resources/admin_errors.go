@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/anthropics/anthropic-sdk-go"
-	"github.com/anthropics/anthropic-sdk-go/packages/pagination"
+	"github.com/anthropics/anthropic-sdk-go/v2"
+	"github.com/anthropics/anthropic-sdk-go/v2/packages/pagination"
 	"go.mondoo.com/mql/llx"
 )
 

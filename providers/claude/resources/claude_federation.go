@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/anthropics/anthropic-sdk-go"
-	"github.com/anthropics/anthropic-sdk-go/option"
+	"github.com/anthropics/anthropic-sdk-go/v2"
+	"github.com/anthropics/anthropic-sdk-go/v2/option"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/types"
@@ -20,8 +20,8 @@ import (
 // admin key.
 //
 // The connection's own client carries the workspace API key, which the
-// organization endpoints reject. Both keys travel in the same x-api-key
-// header, so the only difference is which credential is used.
+// organization endpoints reject. Both keys travel in the same header, so the
+// only difference is which credential is used.
 func adminSDKClient(runtime *plugin.Runtime) (*anthropic.Client, error) {
 	c := conn(runtime)
 	if c.AdminToken() == "" {

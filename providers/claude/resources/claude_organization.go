@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/anthropics/anthropic-sdk-go"
+	"github.com/anthropics/anthropic-sdk-go/v2"
 
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -622,4 +622,55 @@ func (r *mqlClaudeOrganizationActivity) apiKey() (*mqlClaudeOrganizationApiKey, 
 		return nil, nil
 	}
 	return key, nil
+}
+
+// claude.organization.webhook
+
+// webhooks lists the organization's webhook endpoints. Anthropic turns the
+// API on per organization and answers 404 until it is, so a 404 means the
+// question does not apply to this organization. The response never carries
+// an endpoint's signing secret.
+func (r *mqlClaudeOrganization) webhooks() ([]interface{}, error) {
+	client, err := adminSDKClient(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.Beta.Organization.Webhooks.ListAutoPaging(
+		context.Background(), anthropic.BetaOrganizationWebhookListParams{Limit: anthropic.Int(100)})
+
+	res := []interface{}{}
+	for pager.Next() {
+		mqlHook, err := CreateResource(r.MqlRuntime, "claude.organization.webhook", webhookArgs(pager.Current()))
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlHook)
+	}
+	if err := pager.Err(); err != nil {
+		return nil, classifyAdminError(fmt.Errorf("listing organization webhooks: %w", err), endpointUnavailable)
+	}
+	return res, nil
+}
+
+// webhookArgs maps an organization webhook endpoint onto resource arguments.
+// The API sends an empty string for an absent name, description and
+// disabled reason; those read as null.
+func webhookArgs(w anthropic.BetaOrganizationWebhookEndpoint) map[string]*llx.RawData {
+	events := make([]interface{}, 0, len(w.EnabledEvents))
+	for _, e := range w.EnabledEvents {
+		events = append(events, e)
+	}
+	return map[string]*llx.RawData{
+		"__id":           llx.StringData(w.ID),
+		"id":             llx.StringData(w.ID),
+		"name":           llx.StringDataPtr(nullableString(w.Name)),
+		"description":    llx.StringDataPtr(nullableString(w.Description)),
+		"url":            llx.StringData(w.URL),
+		"enabledEvents":  llx.ArrayData(events, types.String),
+		"state":          llx.StringDataPtr(nullableString(string(w.State))),
+		"disabledReason": llx.StringDataPtr(nullableString(w.DisabledReason)),
+		"createdAt":      llx.TimeDataPtr(nullableTime(w.CreatedAt)),
+		"updatedAt":      llx.TimeDataPtr(nullableTime(w.UpdatedAt)),
+	}
 }

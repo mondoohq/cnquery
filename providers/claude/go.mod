@@ -5,7 +5,7 @@ replace go.mondoo.com/mql => ../..
 go 1.26.10
 
 require (
-	github.com/anthropics/anthropic-sdk-go v1.82.0
+	github.com/anthropics/anthropic-sdk-go/v2 v2.3.0
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
 	go.mondoo.com/mql v0.0.0-20261019065417-1fcdd84493fd
